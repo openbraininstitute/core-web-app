@@ -87,6 +87,12 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const chat = useChat({
     id: threadId,
+    // Without this, every stream chunk notifies React subscribers synchronously
+    // (`chat.react` Set.forEach → forceStoreRerender) and heavy assistant UIs
+    // (Optimize + markdown + tool parts) hit "Maximum update depth exceeded".
+    // See https://ai-sdk.dev/docs/troubleshooting/react-maximum-update-depth-exceeded
+    // and prod-ai#121.
+    experimental_throttle: 50,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     transport: new DefaultChatTransport({
       api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
