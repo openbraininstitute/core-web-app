@@ -10,6 +10,8 @@ import {
   turnCamera,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/rotation';
 
+import { expectClose, screenUp } from './mesh-utils';
+
 const target = new THREE.Vector3(10, 20, 30);
 
 /** Controls wired as the viewer wires them, eased, the camera 100 µm in front of the target and upright. */
@@ -35,13 +37,8 @@ function dragDown(controls: OrbitControls, angle: number): void {
   settle(controls);
 }
 
-const screenUp = (c: THREE.Camera) => new THREE.Vector3(0, 1, 0).applyQuaternion(c.quaternion);
 const screenRight = (c: THREE.Camera) => new THREE.Vector3(1, 0, 0).applyQuaternion(c.quaternion);
 const from = (c: THREE.Camera) => c.position.clone().sub(target).divideScalar(100);
-
-function expectClose(a: THREE.Vector3, b: THREE.Vector3): void {
-  expect(a.distanceTo(b)).toBeLessThan(1e-6);
-}
 
 describe('rotation', () => {
   it("turns about the screen's vertical on a sideways drag, from above, below and in between", () => {
@@ -49,12 +46,12 @@ describe('rotation', () => {
       const controls = orbit();
       const camera = controls.object;
       dragDown(controls, down);
-      const up = screenUp(camera),
+      const up = screenUp(camera.quaternion),
         right = screenRight(camera),
         start = from(camera);
       controls.rotateLeft(0.3);
       settle(controls);
-      expectClose(screenUp(camera), up);
+      expectClose(screenUp(camera.quaternion), up);
       // The camera goes left, so the cell turns right with the pointer.
       expect(from(camera).sub(start).dot(right)).toBeLessThan(-0.1);
       expect(camera.position.distanceTo(target)).toBeCloseTo(100, 6);
@@ -75,10 +72,10 @@ describe('rotation', () => {
     const controls = orbit();
     const camera = controls.object;
     dragDown(controls, Math.PI / 2);
-    const up = screenUp(camera);
+    const up = screenUp(camera.quaternion);
     controls.autoRotate = true;
     for (let i = 0; i < 60; i++) controls.update();
-    expectClose(screenUp(camera), up);
+    expectClose(screenUp(camera.quaternion), up);
     expect(Math.abs(from(camera).y)).toBeLessThan(0.99);
   });
 
@@ -116,7 +113,7 @@ describe('rotation', () => {
       }
       settle(controls);
       expectClose(from(camera), facing);
-      if (up) expectClose(screenUp(camera), up);
+      if (up) expectClose(screenUp(camera.quaternion), up);
       expect(camera.quaternion.angleTo(end)).toBeLessThan(1e-6);
     }
   });

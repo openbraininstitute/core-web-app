@@ -282,7 +282,6 @@ export class Viewer {
     }
   }
 
-  /** Move the camera along its turn to an axis. */
   private stepTurn(): void {
     const turn = this.turn;
     if (!turn) return;
@@ -315,7 +314,13 @@ export class Viewer {
     this.updatePixelScale();
   };
 
-  // A gesture takes the camera over from a turn to an axis.
+  /** Drop what is left of a turn to an axis and of OrbitControls' easing, so that a view set now stays put. */
+  private stopCamera(): void {
+    this.turn = null;
+    stopGlide(this.controls);
+  }
+
+  // A gesture takes the camera over from a turn to an axis, keeping OrbitControls' easing.
   private onControlsStart = (): void => {
     this.turn = null;
   };
@@ -877,8 +882,7 @@ export class Viewer {
       camera.position.set(0, 0, Math.max(distanceFor(half, FOV), r * 1.05));
     }
     camera.up.set(0, 1, 0);
-    this.turn = null;
-    stopGlide(this.controls);
+    this.stopCamera();
     this.controls.target.set(0, 0, 0);
     this.controls.update();
     this.invalidate();
@@ -887,9 +891,9 @@ export class Viewer {
 
   /** Turn the camera about the target to view the cell from the tip of an axis, or from the opposite tip when it already does. */
   viewAlong(axis: Axis, sign: Sign): void {
+    this.stopCamera();
     const from = this.camera.quaternion.clone();
     this.turn = { from, to: axisView(axis, sign, from), start: performance.now() };
-    stopGlide(this.controls);
     this.invalidate();
   }
 

@@ -6,28 +6,19 @@ import {
   type Axis,
   axisView,
   gizmoTips,
+  orientationFrom,
   type Sign,
 } from '@/features/entities/cell-morphology/morpho-viewer/engine/gizmo';
 
-/** A camera's orientation looking at the origin from `from`, with `up` up. */
-function looking(from: THREE.Vector3, up: THREE.Vector3): THREE.Quaternion {
-  return new THREE.Quaternion().setFromRotationMatrix(
-    new THREE.Matrix4().lookAt(from, new THREE.Vector3(), up)
-  );
-}
+import { expectClose, screenUp } from './mesh-utils';
 
 const X = new THREE.Vector3(1, 0, 0);
 const Y = new THREE.Vector3(0, 1, 0);
 const Z = new THREE.Vector3(0, 0, 1);
 const neg = (v: THREE.Vector3) => v.clone().negate();
-const front = looking(Z, Y);
+const front = orientationFrom(Z, Y);
 
 const facing = (q: THREE.Quaternion) => new THREE.Vector3(0, 0, 1).applyQuaternion(q);
-const screenUp = (q: THREE.Quaternion) => new THREE.Vector3(0, 1, 0).applyQuaternion(q);
-
-function expectClose(a: THREE.Vector3, b: THREE.Vector3): void {
-  expect(a.distanceTo(b)).toBeLessThan(1e-6);
-}
 
 function tipAt(q: THREE.Quaternion, axis: Axis, sign: Sign) {
   const tip = gizmoTips(q).find((t) => t.axis === axis && t.sign === sign);
@@ -43,13 +34,14 @@ describe('gizmo', () => {
     expectClose(tipAt(front, 0, -1), neg(X));
     const tips = gizmoTips(front);
     expect(tips).toHaveLength(6);
-    expect(tips.map((t) => t.depth)).toEqual([...tips.map((t) => t.depth)].sort((a, b) => a - b));
+    const depths = tips.map((t) => t.depth);
+    expect(depths).toEqual([...depths].sort((a, b) => a - b));
     expect(tips.at(0)).toMatchObject({ axis: 2, sign: -1 });
     expect(tips.at(-1)).toMatchObject({ axis: 2, sign: 1 });
   });
 
   it('follows the camera round: from +X, Z is on the left', () => {
-    const q = looking(X, Y);
+    const q = orientationFrom(X, Y);
     expectClose(tipAt(q, 0, 1), Z);
     expectClose(tipAt(q, 2, 1), neg(X));
     expectClose(tipAt(q, 1, 1), Y);
@@ -61,7 +53,7 @@ describe('gizmo', () => {
       [0, -1, neg(X)],
       [2, -1, neg(Z)],
     ] as const) {
-      const q = axisView(axis, sign, looking(new THREE.Vector3(1, 0.5, 2).normalize(), Y));
+      const q = axisView(axis, sign, orientationFrom(new THREE.Vector3(1, 0.5, 2).normalize(), Y));
       expectClose(facing(q), from);
       expectClose(screenUp(q), Y);
     }
@@ -77,7 +69,7 @@ describe('gizmo', () => {
   });
 
   it('keeps the side that was up when turning to Y from a side view', () => {
-    const q = axisView(1, 1, looking(X, Y));
+    const q = axisView(1, 1, orientationFrom(X, Y));
     expectClose(facing(q), Y);
     expectClose(screenUp(q), neg(X));
   });

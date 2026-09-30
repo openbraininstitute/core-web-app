@@ -39,7 +39,7 @@ export function turnCamera(
   const camera = controls.object;
   const target = controls.target;
   const d = camera.position.distanceTo(target);
-  camera.quaternion.slerpQuaternions(from, to, t * t * (3 - 2 * t));
+  camera.quaternion.slerpQuaternions(from, to, THREE.MathUtils.smoothstep(t, 0, 1));
   camera.position.set(0, 0, d).applyQuaternion(camera.quaternion).add(target);
   followScreenUp(controls);
 }
