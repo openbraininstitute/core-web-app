@@ -79,18 +79,20 @@ export function DebugMenu({ name, state, settings, update, look }: DebugMenuProp
   const palette = currentPalette(settings);
   // Here and not in the menu's content, so that an export survives the menu closing.
   const [running, setRunning] = useState<ExportFormat | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // With the mesh it is about: a mesh built since was never exported.
+  const [failed, setFailed] = useState<{ mesh: MeshResult; error: string } | null>(null);
   const reason = unavailable(state);
   const { mesh } = state.layers;
+  const error = failed?.mesh === mesh ? failed.error : null;
 
   const save = (format: Format, close: () => void) => {
     if (!mesh || reason) return;
     setRunning(format.format);
-    setError(null);
+    setFailed(null);
     saveMesh(format, mesh, palette, name)
       .then(close, (e: unknown) => {
         logError('Could not export the morphology mesh', e);
-        setError(errorMessage(e));
+        setFailed({ mesh, error: errorMessage(e) });
       })
       .finally(() => setRunning(null));
   };

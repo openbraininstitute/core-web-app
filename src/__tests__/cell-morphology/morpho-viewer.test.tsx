@@ -941,6 +941,22 @@ describe('MorphoViewer', () => {
     expect(h.saveAs).not.toHaveBeenCalled();
   });
 
+  it('drops an export error once the mesh is built again, as the new one was never exported', async () => {
+    h.exportMesh.mockRejectedValueOnce(new Error('out of memory'));
+    const next = { stats: meshStats({ triangles: 100 }) };
+    h.setup = (pool) => pool.build.mockResolvedValueOnce(h.result).mockResolvedValueOnce(next);
+    const { viewer } = await renderViewer();
+    await waitFor(() => expect(viewer.setMesh).toHaveBeenCalledWith(h.result));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'STL' }));
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide axon' }));
+    await waitFor(() => expect(viewer.setMesh).toHaveBeenCalledWith(next));
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('frees the viewer and the workers when it goes', async () => {
     const { unmount, viewer, pool } = await renderViewer();
 
