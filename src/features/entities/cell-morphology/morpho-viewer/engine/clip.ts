@@ -96,6 +96,12 @@ export function clipMesh(
 /** Cells of the triangle grid, as a multiple of the largest `farLimit`. */
 const GRID_CELL_FACTOR = 2;
 
+/**
+ * Most vertices a mesh to clip may have. An edge's key is a · 2³² + b, exact in a double while a < 2²¹; the splits of a
+ * clip add a few vertices.
+ */
+const MAX_VERTICES = 2 ** 20;
+
 class WorkMesh {
   private pos: number[];
   private nrm: number[];
@@ -114,6 +120,8 @@ class WorkMesh {
     private center: [number, number, number],
     private cell: number
   ) {
+    if (input.positions.length / 3 > MAX_VERTICES)
+      throw new Error(`clip: ${input.positions.length / 3} vertices, more than ${MAX_VERTICES}`);
     this.pos = Array.from(input.positions);
     this.nrm = Array.from(input.normals);
     this.typ = Array.from(input.vertexTypes);

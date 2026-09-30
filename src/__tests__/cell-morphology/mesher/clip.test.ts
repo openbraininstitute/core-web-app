@@ -340,4 +340,16 @@ describe('clipMesh', () => {
       );
     }).toThrow(/stub/);
   });
+
+  it('refuses a mesh too big for its edge keys to be exact, rather than join the wrong edges', () => {
+    const n = 2 ** 20 + 1;
+    const huge = {
+      positions: new Float32Array(3 * n),
+      normals: new Float32Array(3 * n),
+      vertexTypes: new Uint8Array(n),
+      radii: new Float32Array(n),
+      indices: new Uint32Array(0),
+    };
+    expect(() => clipMesh(huge, [0, 0, 0], [], () => {})).toThrow(/more than 1048576/);
+  });
 });
