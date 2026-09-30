@@ -129,6 +129,21 @@ describe('untangleSections', () => {
     expect(report.movedLength).toBeLessThan(20);
   });
 
+  it('finds a fibre that touches a fork only with its fillet, whatever cells the two fall in', () => {
+    // What the fork looks up ends short of x = 8 and the stray fibre is listed from past it: in cells of their own,
+    // 1.45 µm apart, closer than the radii, the clearance and the fork's fillet add up to.
+    const m = parseSwc(
+      [
+        line(1, 3, [7.2, -10, 0], [7.2, 0, 0], 0.5, -1),
+        line(20, 3, [7.2, 0.9, -0.45], [7.2, 10, -5], 0.5, 11),
+        line(40, 3, [7.2, 0.9, 0.45], [7.2, 10, 5], 0.5, 11),
+        line(100, 2, [8.65, -10, 0], [8.65, 10, 0], 0.5, -1),
+      ].join('\n')
+    );
+    const { report } = untangleSections(m, m.sections, OPTIONS);
+    expect(report.contacts).toBeGreaterThan(0);
+  });
+
   it('sends a thin fibre around a thick one that it goes through the middle of', () => {
     const m = parseSwc(
       [

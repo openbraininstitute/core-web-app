@@ -292,12 +292,17 @@ export function untangleSections(
   const stamp = new Int32Array(S).fill(-1);
   const pairs = new Set<number>();
   const found: number[] = [];
+  // A pair in a star touches with its fillets on: the search reaches as far, by the widest they can be.
+  let widest = h;
+  for (const sec of sections)
+    for (let q = 3; q < sec.points.length; q += 4)
+      widest = Math.max(widest, o.blend * sec.points[q]);
   for (let g = 0; g < S; g++) {
     const s = segSection[g],
       k = g - segStart[s];
     const P = sections[s].points;
     found.length = 0;
-    hash.query(P, k, 0.5 * c, found);
+    hash.query(P, k, 0.5 * c + 2 * widest, found);
     for (const j of found) {
       if (j <= g || stamp[j] === g) continue;
       stamp[j] = g;
