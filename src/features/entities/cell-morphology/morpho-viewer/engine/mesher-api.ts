@@ -91,13 +91,14 @@ export function createMesherApi() {
     return morph;
   };
 
-  // The WASM simplifier loads asynchronously and a GPU slab waits for its readbacks, so calls are chained: each one
-  // runs after the one before it has finished, even when the pool has moved on to a newer build.
-  let queue: Promise<unknown> = simplifierReady;
+  // A GPU slab waits for its readbacks, so calls are chained: each one runs after the one before it has finished, even
+  // when the pool has moved on to a newer build. Only the meshing waits for the WASM simplifier, so the skeleton loads
+  // and shows even if the simplifier fails.
+  let queue: Promise<unknown> = Promise.resolve();
   const serial =
-    <A extends unknown[], R>(fn: (...args: A) => R | Promise<R>) =>
+    <A extends unknown[], R>(fn: (...args: A) => R | Promise<R>, meshes = false) =>
     (...args: A): Promise<R> => {
-      const run = queue.then(() => fn(...args));
+      const run = queue.then(() => (meshes ? simplifierReady : undefined)).then(() => fn(...args));
       queue = run.catch(() => undefined);
       return run;
     };
@@ -133,7 +134,7 @@ export function createMesherApi() {
         result = meshSlab(job);
       }
       return Comlink.transfer(result, resultTransfer(result));
-    }),
+    }, true),
     merge: serial((plan: PlanInfo, results: SlabResult[]) => {
       const mesh = mergeSlabs(plan, results);
       return Comlink.transfer(mesh, meshTransfer(mesh));
@@ -145,7 +146,7 @@ export function createMesherApi() {
     hybridBatch: serial((batch: HybridBatch) => {
       const result = meshBatch(batch);
       return Comlink.transfer(result, batchResultTransfer(result));
-    }),
+    }, true),
     /** Stitch and clip a big patch from the results of its slabs. */
     hybridPatch: serial((patch: BigPatchInfo, results: SlabResult[]) => {
       const result = finishPatch(patch, results);

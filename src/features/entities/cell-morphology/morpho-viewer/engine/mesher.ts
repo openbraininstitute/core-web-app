@@ -419,6 +419,8 @@ let simplifierUp = false;
 export const simplifierReady: Promise<void> = MeshoptSimplifier.ready.then(() => {
   simplifierUp = true;
 });
+// The meshing reports a failed simplifier; nothing else waits for it.
+simplifierReady.catch(() => undefined);
 
 export interface Block {
   bx: number;
