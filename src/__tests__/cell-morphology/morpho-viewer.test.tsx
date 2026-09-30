@@ -127,6 +127,7 @@ const h = vi.hoisted(() => {
       })
     );
     cancel = vi.fn();
+    releaseGpu = vi.fn();
     dispose = vi.fn();
     isDisposed = false;
 
@@ -319,6 +320,7 @@ describe('GPU', () => {
     ]);
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(await screen.findByText('built on the CPU')).toBeInTheDocument();
+    expect(pool.releaseGpu).not.toHaveBeenCalled();
   });
 
   it('builds on the CPU while the GPU is switched off in the Debug menu, and on it again after', async () => {
@@ -355,6 +357,8 @@ describe('GPU', () => {
       { backend: 'gpu', mesher: 'hybrid' },
       { backend: 'cpu', mesher: 'hybrid' },
     ]);
+    // Off for the session: the workers let their devices go.
+    expect(pool.releaseGpu).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     expect(
       await screen.findByText(/built on the CPU \(GPU turned off: 3 open quads\)/)

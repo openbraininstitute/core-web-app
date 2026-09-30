@@ -1303,6 +1303,12 @@ export class GpuMesher {
     return new GpuMesher(device, name, pipelines);
   }
 
+  /** Free the device, and every buffer on it. */
+  destroy(): void {
+    this.idle.length = 0;
+    this.device.destroy();
+  }
+
   /** `meshSlab` with the field, and in "gpu" mode the extraction, on the GPU. One slab at a time per instance. */
   async meshSlab(job: SlabJob, mode: GpuMode): Promise<SlabResult> {
     const t0 = performance.now();

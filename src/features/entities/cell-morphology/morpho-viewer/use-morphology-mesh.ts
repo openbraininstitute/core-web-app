@@ -104,11 +104,14 @@ async function buildMesh(
       if (result.stats.defects === 0) return { result, backend: `GPU (${gpu.adapter})` };
       // The GPU did not give shared samples the same value everywhere: this device cannot be used.
       gpu = turnGpuOff(`${result.stats.defects} open quads`);
+      pool.releaseGpu();
     } catch (e) {
       if (pool.isDisposed) return null;
       // Only the GPU's own failures turn it off for the session; any other error gets one try on the CPU.
-      if (e instanceof GpuError) gpu = turnGpuOff(e);
-      else logWarn(`GPU build failed, building on the CPU: ${errorMessage(e)}`);
+      if (e instanceof GpuError) {
+        gpu = turnGpuOff(e);
+        pool.releaseGpu();
+      } else logWarn(`GPU build failed, building on the CPU: ${errorMessage(e)}`);
     }
   }
   const result = await pool.build(params, { ...options, backend: 'cpu' });

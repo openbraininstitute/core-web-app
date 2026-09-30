@@ -86,6 +86,12 @@ export function createMesherApi() {
   /** Created on first use; resolves to null without WebGPU, and rejects where the device cannot build the shaders. */
   let gpuMesher: Promise<GpuMesher | null> | null = null;
   const gpu = (): Promise<GpuMesher | null> => (gpuMesher ??= GpuMesher.create());
+  /** Free the GPU mesher's device: after a GPU error, which leaves buffers behind, or once the GPU is not to be used. */
+  const dropGpu = async (): Promise<void> => {
+    const pending = gpuMesher;
+    gpuMesher = null;
+    (await pending?.catch(() => null))?.destroy();
+  };
   const loaded = (): Morphology => {
     if (!morph) throw new Error('no morphology loaded');
     return morph;
@@ -118,6 +124,7 @@ export function createMesherApi() {
       const plan = planMesh(loaded(), params, options);
       return Comlink.transfer(plan, planTransfer(plan));
     }),
+    releaseGpu: serial(dropGpu),
     /** Name of the WebGPU adapter, or null without WebGPU. */
     probeGpu: serial(async () => {
       const mesher = await gpu();
@@ -129,7 +136,12 @@ export function createMesherApi() {
         const mesher = await gpu();
         // No quiet fallback: a mesh must not mix slabs from the CPU and the GPU field.
         if (!mesher) throw new GpuError('WebGPU is not available in this worker');
-        result = await mesher.meshSlab(job, backend);
+        try {
+          result = await mesher.meshSlab(job, backend);
+        } catch (e) {
+          if (e instanceof GpuError) await dropGpu();
+          throw e;
+        }
       } else {
         result = meshSlab(job);
       }

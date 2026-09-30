@@ -161,6 +161,13 @@ export class MeshPool {
     return this.call(0, (api) => api.probeGpu());
   }
 
+  /** Free the WebGPU device of every worker started, once the GPU is not to be used. */
+  releaseGpu(): void {
+    this.slots.forEach((slot, w) => {
+      if (slot) this.call(w, (api) => api.releaseGpu()).catch(() => undefined);
+    });
+  }
+
   load(text: string): Promise<{ summary: MorphologySummary; skeleton: SkeletonData }> {
     this.cancel();
     return this.call(0, (api) => api.load(text));
