@@ -62,13 +62,13 @@ describe('path distances to the soma', () => {
     expect(Array.from(d)).toEqual([0, 0, 0, 20]);
   });
 
-  it('cuts a loop in a broken file instead of hanging', () => {
-    const m = parseSwc(`
-      1 3 0 0 0 1 3
-      2 3 10 0 0 1 1
-      3 3 20 0 0 1 2
-    `);
-    const d = nodeDistances(m);
+  it('cuts a loop in the parents instead of hanging, which the parser rejects in a file', () => {
+    const d = nodeDistances({
+      nodeCount: 3,
+      xyz: Float64Array.from([0, 0, 0, 10, 0, 0, 20, 0, 0]),
+      parent: Int32Array.from([2, 0, 1]),
+      types: Uint8Array.from([3, 3, 3]),
+    });
     expect(d.every((x) => Number.isFinite(x) && x >= 0)).toBe(true);
   });
 

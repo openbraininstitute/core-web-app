@@ -72,8 +72,9 @@ export interface Morphology {
 }
 
 export function parseSwc(text: string): Morphology {
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(/\r\n?|\n/);
   const idList: number[] = [];
+  const lineOfId = new Map<number, number>();
   const typeList: number[] = [];
   const xyzList: number[] = [];
   const rList: number[] = [];
@@ -94,6 +95,10 @@ export function parseSwc(text: string): Morphology {
     if (![id, type, x, y, z, r, parent].every(Number.isFinite)) {
       throw new Error(`SWC line ${li + 1}: non-numeric value`);
     }
+    const first = lineOfId.get(id);
+    if (first !== undefined)
+      throw new Error(`SWC line ${li + 1}: sample ${id} is on line ${first} too`);
+    lineOfId.set(id, li + 1);
     idList.push(id);
     typeList.push(type);
     xyzList.push(x, y, z);
@@ -117,6 +122,15 @@ export function parseSwc(text: string): Morphology {
     const p = parentIdList[i];
     const pi = p < 0 ? -1 : (indexById.get(p) ?? -1);
     parent[i] = pi === i ? -1 : pi;
+  }
+  // Parents that lead back round have no root: their samples would start no section and drop out.
+  const walk = new Uint8Array(n);
+  for (let i = 0; i < n; i++) {
+    let j = i;
+    for (; j >= 0 && walk[j] === 0; j = parent[j]) walk[j] = 1;
+    if (j >= 0 && walk[j] === 1)
+      throw new Error(`SWC sample ${ids[j]}: its parents lead back to it`);
+    for (j = i; j >= 0 && walk[j] === 1; j = parent[j]) walk[j] = 2;
   }
 
   // Children in CSR form so we can follow single-child chains cheaply.

@@ -88,4 +88,22 @@ describe('parseSwc', () => {
     expect(() => parseSwc('1 1 0 0 0')).toThrow(/7 columns/);
     expect(() => parseSwc('# only comments\n')).toThrow(/no sample points/);
   });
+
+  it('reads lines ended the classic Mac way, with a bare carriage return', () => {
+    const m = parseSwc('1 1 0 0 0 5 -1\r2 3 10 0 0 1 1\r3 3 20 0 0 1 2\r');
+    expect(m.nodeCount).toBe(3);
+    expect(m.cableLength.get(3)).toBeCloseTo(20 - 0, 6);
+  });
+
+  it('rejects a sample id given twice, saying where', () => {
+    expect(() => parseSwc('1 1 0 0 0 5 -1\n2 3 10 0 0 1 1\n2 3 20 0 0 1 1')).toThrow(
+      'SWC line 3: sample 2 is on line 2 too'
+    );
+  });
+
+  it('rejects parents that lead back round, which would leave their samples out', () => {
+    expect(() =>
+      parseSwc('1 1 0 0 0 5 -1\n2 3 10 0 0 1 4\n3 3 20 0 0 1 2\n4 3 30 0 0 1 3')
+    ).toThrow(/parents lead back/);
+  });
 });
