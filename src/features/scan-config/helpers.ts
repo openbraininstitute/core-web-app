@@ -44,7 +44,6 @@ export const VALID_AI_CONFIG_KEYS = [
   'em_synapse_mapping_config',
   // Appended rather than inserted: findConfigKeyInState returns the FIRST non-null match,
   // so the order of this list decides which key wins if more than one is ever present.
-  'ion_channel_fitting_config',
   'emodel_optimization_config',
 ] as const;
 
