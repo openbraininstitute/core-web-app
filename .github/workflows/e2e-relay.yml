@@ -5,6 +5,8 @@ on:
     branches: [main]
 
 concurrency:
+  # A newer merge supersedes the wait for an older one: only the latest commit is
+  # sure to be served, and a run for it tests the older changes too.
   group: e2e-main-preview
   cancel-in-progress: true
 
@@ -19,15 +21,15 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           : "${PREVIEW_APP_URI:?set the PREVIEW_APP_URI repository variable}"
+          sleep 420
           until curl -sf "$PREVIEW_APP_URI/app/version" | jq -e --arg sha "${SHA:0:7}" \
               '.version | contains("g" + $sha)' > /dev/null; do
             echo "Waiting for $PREVIEW_APP_URI to serve ${SHA:0:7}…"
-            sleep 30
+            sleep 60
           done
 
       - name: Dispatch to obi-e2e
         env:
-          # The same token `core-web-app-release.example.yml` uses.
           GH_TOKEN: ${{ secrets.OBI_E2E_DISPATCH_TOKEN }}
         run: |
           gh api repos/openbraininstitute/obi-e2e/dispatches \
