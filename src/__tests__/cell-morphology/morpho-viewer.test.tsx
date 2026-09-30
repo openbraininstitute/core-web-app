@@ -586,6 +586,14 @@ describe('MorphoViewer', () => {
     expect(viewer.viewAlong).toHaveBeenLastCalledWith(1, -1);
   });
 
+  it("rings a tip in the chrome's foreground, which reads on the look's background", async () => {
+    await renderViewer();
+    const ring = () => screen.getByTestId('axes-gizmo').style.getPropertyValue('--tip-ring');
+    expect(ring()).toBe('rgb(64,64,64)');
+    await chooseLook('EM segmentation');
+    expect(ring()).toBe('rgba(255,255,255,0.92)');
+  });
+
   it('says to hold Ctrl when a plain wheel turns over the view', async () => {
     const { viewer } = await renderViewer();
     const hint = screen.getByText(/to zoom/);

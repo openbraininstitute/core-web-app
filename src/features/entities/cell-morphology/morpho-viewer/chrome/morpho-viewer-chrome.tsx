@@ -10,7 +10,7 @@ import {
 import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
-import { AxesGizmo } from './axes-gizmo';
+import { AxesGizmo, GIZMO_SIZE } from './axes-gizmo';
 import { ColorByMenu } from './color-by-menu';
 import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
@@ -97,7 +97,11 @@ export function MorphoViewerChrome({
         </ChromeButton>
       </div>
 
-      <div className="pointer-events-auto absolute top-3 right-3 flex flex-col items-end gap-2">
+      {/* Down to the axes at most: in a short view the key scrolls rather than run under them. */}
+      <div
+        className="pointer-events-auto absolute top-3 right-3 flex flex-col items-end gap-2"
+        style={{ maxHeight: `calc(100% - ${GIZMO_SIZE}px - 2rem)` }}
+      >
         <div className="flex items-center gap-1">
           <ColorByMenu
             value={settings.colorBy}
@@ -122,7 +126,7 @@ export function MorphoViewerChrome({
           </button>
         </div>
         {keyOpen && (
-          <div className={styles.panelReveal}>
+          <div className={cn(styles.panelReveal, 'min-h-0 overflow-y-auto rounded-xl')}>
             <NeuritesKey
               settings={settings}
               actions={actions}
@@ -141,7 +145,7 @@ export function MorphoViewerChrome({
       {settings.scalebar && settings.projection === 'orthographic' && (
         <Scalebar viewer={viewer} color={theme.foreground} />
       )}
-      <AxesGizmo viewer={viewer} />
+      <AxesGizmo viewer={viewer} ring={theme.foreground} />
       <WheelHint visible={wheelHint} theme={theme} />
     </div>
   );

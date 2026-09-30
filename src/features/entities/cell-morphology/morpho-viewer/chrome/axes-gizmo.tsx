@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { type CSSProperties, useLayoutEffect, useRef } from 'react';
 
 import { cn } from '@/utils/css-class';
 
@@ -12,14 +12,15 @@ const AXES = [
   { name: 'Z', color: '#2446ff', shade: '#0a1458', ink: '#fff' },
 ];
 
-/** How far from the gizmo's centre a tip seen side on is, in CSS pixels. */
+/** The gizmo's side, and how far from its centre a tip seen side on is, in CSS pixels. */
+export const GIZMO_SIZE = 96;
 const REACH = 30;
 
 /**
  * The morphology's axes as the camera sees them, in the bottom-right corner: X, Y and Z labelled, their opposites
  * ringed, the nearer tips larger. A click on a tip views the cell from it.
  */
-export function AxesGizmo({ viewer }: { viewer: Viewer }) {
+export function AxesGizmo({ viewer, ring }: { viewer: Viewer; ring: string }) {
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   useLayoutEffect(
@@ -37,7 +38,8 @@ export function AxesGizmo({ viewer }: { viewer: Viewer }) {
 
   return (
     <div
-      className="pointer-events-none absolute right-3 bottom-3 size-[96px]"
+      className="pointer-events-none absolute right-3 bottom-3"
+      style={{ width: GIZMO_SIZE, height: GIZMO_SIZE, '--tip-ring': ring } as CSSProperties}
       data-testid="axes-gizmo"
     >
       {TIPS.map(({ axis, sign }, index) => {
@@ -60,7 +62,7 @@ export function AxesGizmo({ viewer }: { viewer: Viewer }) {
             className={cn(
               'pointer-events-auto absolute inset-0 m-auto flex size-[18px] items-center justify-center rounded-full',
               'text-[11px] leading-none font-bold select-none hover:brightness-125 focus-visible:outline-none',
-              'hover:ring-2 hover:ring-white/80 focus-visible:ring-2 focus-visible:ring-white/80',
+              'hover:ring-2 hover:ring-(--tip-ring) focus-visible:ring-2 focus-visible:ring-(--tip-ring)',
               sign < 0 && 'border-2'
             )}
           >
