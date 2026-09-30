@@ -119,8 +119,6 @@ export function DistanceFunctionInput({
   const linterCompartment = useRef(new Compartment());
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const paramsRef = useRef(declaredParameters);
-  paramsRef.current = declaredParameters;
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -175,8 +173,6 @@ export function DistanceFunctionInput({
   }, [value]);
 
   // Debounced server validation, re-run when the value or declared parameters change.
-  const paramsKey = declaredParameters.join('\u0000');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: value and paramsKey are the triggers; the body reads stable refs/setters.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return undefined;
@@ -189,7 +185,7 @@ export function DistanceFunctionInput({
     const timer = window.setTimeout(() => {
       validateDistanceFunction({
         function: value,
-        parameters: paramsRef.current,
+        parameters: declaredParameters,
         signal: controller.signal,
       })
         .then((result) => {
@@ -204,7 +200,7 @@ export function DistanceFunctionInput({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [value, paramsKey]);
+  }, [value, declaredParameters]);
 
   const hasError = errorMessage !== null;
   return (
