@@ -47,6 +47,8 @@ export interface Look {
   env?: boolean;
   /** Material of the inverted-hull outline mesh, if the look draws one. */
   outline?: THREE.Material;
+  /** False for a look that leaves out the renderer's tone mapping, which the composer's output pass would otherwise put on it. */
+  toneMapped?: false;
   /** Depth cue: fog towards the background. The viewer keeps its range tied to the camera distance. */
   fog?: THREE.Fog;
   /** Add a bloom pass in the single view (glow for the fluorescence look). */
@@ -918,6 +920,8 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'own',
       hint: 'Ink drawing: cross-hatching thickens with the shading, a contour line follows the edges. Chalk on slate in the dark theme.',
       material: cajal,
+      // The paper is the CSS background's colour, and stays it.
+      toneMapped: false,
       background: { light: ['#f3ecd9', '#e6dcc3'], dark: ['#2f343a', '#22262b'] },
       onTheme: (dark) => {
         cajal.uniforms.uInk.value.set(dark ? 0xece7da : 0x2a1c10);

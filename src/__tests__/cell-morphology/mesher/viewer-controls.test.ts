@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { ACESFilmicToneMapping, NoToneMapping } from 'three';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
@@ -13,7 +14,7 @@ const { FakeRenderer } = vi.hoisted(() => {
       setPointerCapture() {},
       releasePointerCapture() {},
     });
-    toneMapping = 0;
+    toneMapping = -1;
     toneMappingExposure = 1;
     loop: (() => void) | null = null;
 
@@ -153,6 +154,24 @@ describe('viewer controls', () => {
     // One for each frame of the 0.3 s turn, the last where the camera stopped.
     expect(heard.length).toBeGreaterThan(15);
     expect(heard.at(-1)?.angleTo(camera.quaternion)).toBeLessThan(1e-9);
+  });
+
+  it('tone-maps every look but Cajal, whose paper is the background, the composer included', () => {
+    expect(renderer.toneMapping).toBe(ACESFilmicToneMapping);
+    viewer.setLook('cajal');
+    expect(renderer.toneMapping).toBe(NoToneMapping);
+    viewer.setLook('studio');
+    expect(renderer.toneMapping).toBe(ACESFilmicToneMapping);
+  });
+
+  it('hides the Toon outline in the wireframe, where it would stand solid behind the wires', () => {
+    const { outlines } = viewer as unknown as { outlines: THREE.Group };
+    viewer.setLook('toon');
+    expect(outlines.visible).toBe(true);
+    viewer.setWireframe(true);
+    expect(outlines.visible).toBe(false);
+    viewer.setWireframe(false);
+    expect(outlines.visible).toBe(true);
   });
 
   it('lets a drag take over from a turn to an axis', () => {

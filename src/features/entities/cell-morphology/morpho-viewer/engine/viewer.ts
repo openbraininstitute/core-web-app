@@ -145,6 +145,7 @@ export class Viewer {
   private environment: THREE.Texture | null = null;
   private look: Look;
   private meshVisible = true;
+  private wireframe = false;
   private dark = false;
   private ao = false;
   private composer: EffectComposer | null = null;
@@ -180,7 +181,6 @@ export class Viewer {
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setClearColor(0x000000, 0);
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 0.95;
     const canvas = this.renderer.domElement;
     canvas.style.display = 'block';
@@ -380,7 +380,10 @@ export class Viewer {
     const look = this.look;
     for (const l of this.looks) if (l.rig) l.rig.visible = l === look;
     for (const m of this.chunks.children) (m as THREE.Mesh).material = look.material;
-    this.outlines.visible = this.meshVisible && look.outline !== undefined;
+    // An outline is a solid silhouette, which would stand behind the wires.
+    this.outlines.visible = this.meshVisible && look.outline !== undefined && !this.wireframe;
+    this.renderer.toneMapping =
+      look.toneMapped === false ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
     if (look.outline) {
       for (const m of this.outlines.children) (m as THREE.Mesh).material = look.outline;
     }
@@ -673,11 +676,12 @@ export class Viewer {
   }
 
   setWireframe(v: boolean): void {
+    this.wireframe = v;
     for (const l of this.looks) {
       const m = l.material as THREE.Material & { wireframe?: boolean };
       if ('wireframe' in m) m.wireframe = v;
     }
-    this.invalidate();
+    this.applyLook();
   }
 
   setDark(dark: boolean): void {
