@@ -3,7 +3,10 @@ import * as Comlink from 'comlink';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createMesherApi } from '@/features/entities/cell-morphology/morpho-viewer/engine/mesher-api';
-import { MeshPool } from '@/features/entities/cell-morphology/morpho-viewer/engine/pool';
+import {
+  MeshPool,
+  workersFor,
+} from '@/features/entities/cell-morphology/morpho-viewer/engine/pool';
 import { GpuError } from '@/features/entities/cell-morphology/morpho-viewer/engine/protocol';
 import { SWC_SOMA } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
 
@@ -61,6 +64,26 @@ describe('MeshPool over Comlink', () => {
     expectWatertight(mesh!);
     const [done, total] = progress.at(-1)!;
     expect(done).toBe(total);
+  });
+
+  it('starts a worker when it is first needed, and a build only on the workers it asks for', async () => {
+    const create = vi.fn(inProcessWorker);
+    const p = pool(4, create);
+    expect(create).not.toHaveBeenCalled();
+    await p.load(BRANCHED);
+    expect(create).toHaveBeenCalledTimes(1);
+    const mesh = await p.build(params(), { mesher: 'hybrid', workers: 2 });
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(mesh?.stats.workers).toBeLessThanOrEqual(2);
+    await p.build(params(), { mesher: 'hybrid' });
+    expect(create).toHaveBeenCalledTimes(4);
+  });
+
+  it('gives a build at least four workers, and one per 2 mm of cable up to the pool', () => {
+    expect(workersFor(1300, 12)).toBe(4);
+    expect(workersFor(12_000, 12)).toBe(6);
+    expect(workersFor(247_000, 12)).toBe(12);
+    expect(workersFor(12_000, 3)).toBe(3);
   });
 
   it('leaves the soma out of the skeleton of a file without one', async () => {

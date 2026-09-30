@@ -219,7 +219,7 @@ gpu-slab.ts       WebGPU backend: segment binning, field / count / vertex / face
 protocol.ts       types and transfer lists shared by the pool and the workers
 mesher-api.ts     what a worker exposes over Comlink: parse / plan / slab / merge, one call at a time
 mesher.worker.ts  worker entry: exposes the mesher API
-pool.ts           worker pool: task queue, cancellation of superseded builds, failed workers
+pool.ts           worker pool: workers started when first needed and sized to the cell, task queue, cancellation of superseded builds, failed workers
 viewer.ts         three.js scene: chunked mesh upload, looks, skeleton overlays, both cameras, AO and bloom passes
 looks.ts          shading styles: materials, light rigs, procedural matcap / environment, bumps and width floor
 colors.ts         neurite and distance colours written into the 8-bit vertex colours

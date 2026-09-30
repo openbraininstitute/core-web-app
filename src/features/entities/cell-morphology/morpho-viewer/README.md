@@ -35,7 +35,7 @@ flowchart TB
 ```
 
 - [morpho-viewer.tsx](morpho-viewer.tsx) creates one `Viewer` and one `MeshPool` per mounted viewer, and disposes of both when it unmounts, which terminates the workers and releases the WebGL context. It keeps what the user chose in [use-viewer-settings.ts](use-viewer-settings.ts) and applies each setting to the `Viewer` as it changes.
-- `MeshPool` ([engine/pool.ts](engine/pool.ts)) talks to the workers through Comlink. Worker 0 holds the parsed morphology: it parses, plans and merges. Every worker, worker 0 included, meshes the pieces of a build. A worker that dies fails its calls instead of leaving them hanging.
+- `MeshPool` ([engine/pool.ts](engine/pool.ts)) talks to the workers through Comlink. Worker 0 holds the parsed morphology: it parses, plans and merges. Every worker a build uses, worker 0 included, meshes the pieces of it. A worker starts the first time it is needed and is kept for the next builds. A build uses at least 4 workers and one more per 2 mm of the cable it meshes, up to the pool's size (`workersFor`), so a small cell does not start a dozen. A worker that dies fails its calls instead of leaving them hanging.
 - Each worker runs [engine/mesher-api.ts](engine/mesher-api.ts), which takes one call at a time.
 - `Viewer` ([engine/viewer.ts](engine/viewer.ts)) knows nothing of React. The hooks call it (`setMesh`, `setSkeleton`, `setColors`, `setLook` and so on), and it only renders a frame when the camera moves or something changed.
 
@@ -193,7 +193,7 @@ The file holds the mesh on show, in µm around the soma, with the current neurit
 | --- | --- |
 | Build parameters (voxel size, smoothing, blends, tolerances) | `DEFAULT_BUILD` in [constants.ts](constants.ts), described in [engine/README.md](engine/README.md#build-parameters); their controls in [chrome/debug-controls.tsx](chrome/debug-controls.tsx) |
 | Default palettes, bumps and min. width | [constants.ts](constants.ts) |
-| Number of workers | `defaultPoolSize` in [engine/pool.ts](engine/pool.ts) |
+| Number of workers | `defaultPoolSize`, and per build `workersFor`, in [engine/pool.ts](engine/pool.ts) |
 | Rebuild delay, GPU and CPU policy | [use-morphology-mesh.ts](use-morphology-mesh.ts) |
 | Looks | `createLooks` in [engine/looks.ts](engine/looks.ts) |
 | Settings, key, Debug menu (statistics, controls and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |

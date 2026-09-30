@@ -1,8 +1,9 @@
 /**
  * A pool of mesher workers. Worker 0 parses the morphology, plans the slabs
- * and merges them; every worker (including 0) meshes slabs from a shared
- * queue. Starting a build or a load supersedes the running build: its queued
- * slabs are dropped and its result is discarded.
+ * and merges them; every worker a build uses (including 0) meshes slabs from a
+ * shared queue. A worker starts the first time it is needed, and is kept for
+ * the next builds. Starting a build or a load supersedes the running build: its
+ * queued slabs are dropped and its result is discarded.
  *
  * A hybrid build (hybrid.ts) queues batches of tubes and small patches along
  * with the slabs of its big patches; a big patch is stitched and clipped by
@@ -50,6 +51,19 @@ export function defaultPoolSize(
   return Math.max(1, Math.min(MAX_DEFAULT_WORKERS, cores - (cores < 10 ? 1 : 2)));
 }
 
+/** A build uses at least this many workers, and one more per so many µm of cable, up to the pool's size. */
+const MIN_BUILD_WORKERS = 4;
+const CABLE_PER_WORKER = 2000;
+
+/**
+ * Workers for a build of `cable` µm, of at most `max`. The build time follows the cable length. On 40 cells, a rebuild
+ * on 4 workers instead of 12 took 25 ms more below 8 mm of cable (median), and 75 to 110 ms more from 8 to 40 mm
+ * (M4 Pro, WebGPU; 2026-09-29).
+ */
+export function workersFor(cable: number, max: number): number {
+  return Math.min(max, Math.max(MIN_BUILD_WORKERS, Math.ceil(cable / CABLE_PER_WORKER)));
+}
+
 interface Build {
   cancelled: boolean;
 }
@@ -75,32 +89,51 @@ export interface BuildOptions {
   /** The GPU backends need WebGPU in the workers (check `probeGpu` first). */
   backend?: Backend;
   mesher?: Mesher;
+  /** How many of the pool's workers to use, all of them by default (`workersFor`). */
+  workers?: number;
 }
 
 export class MeshPool {
-  private readonly slots: Slot[];
+  /** The workers started so far, by index: each starts on its first call. */
+  private readonly slots: (Slot | undefined)[];
   private current: Build | null = null;
   private disposed = false;
 
-  constructor(size: number, createWorker: CreateWorker = createMesherWorker) {
-    this.slots = Array.from({ length: Math.max(1, Math.floor(size)) }, () => {
-      const worker = createWorker();
-      const slot: Slot = {
-        worker,
-        api: Comlink.wrap<MesherApi>(worker),
-        pending: new Set(),
-        dead: null,
-      };
-      // Comlink never settles a call to a worker that died, so its calls fail here instead of hanging.
-      worker.addEventListener('error', (e) =>
-        this.fail(slot, (e as ErrorEvent).message || 'mesher worker failed')
-      );
-      return slot;
-    });
+  constructor(
+    size: number,
+    private readonly createWorker: CreateWorker = createMesherWorker
+  ) {
+    this.slots = new Array(Math.max(1, Math.floor(size)));
   }
 
   get size(): number {
     return this.slots.length;
+  }
+
+  private slot(index: number): Slot {
+    const started = this.slots[index];
+    if (started) return started;
+    const worker = this.createWorker();
+    const slot: Slot = {
+      worker,
+      api: Comlink.wrap<MesherApi>(worker),
+      pending: new Set(),
+      dead: null,
+    };
+    // Comlink never settles a call to a worker that died, so its calls fail here instead of hanging.
+    worker.addEventListener('error', (e) =>
+      this.fail(slot, (e as ErrorEvent).message || 'mesher worker failed')
+    );
+    this.slots[index] = slot;
+    return slot;
+  }
+
+  /** The first `options.workers` workers, started now so that they load while worker 0 plans. */
+  private workers({ workers = this.size }: BuildOptions): number[] {
+    const count = Math.max(1, Math.min(this.size, Math.floor(workers)));
+    const indices = Array.from({ length: count }, (_, w) => w);
+    if (!this.disposed) for (const w of indices) this.slot(w);
+    return indices;
   }
 
   get isDisposed(): boolean {
@@ -113,6 +146,7 @@ export class MeshPool {
     this.disposed = true;
     this.cancel();
     for (const slot of this.slots) {
+      if (!slot) continue;
       this.fail(slot, 'mesher pool disposed');
       slot.api[Comlink.releaseProxy]();
       slot.worker.terminate();
@@ -172,11 +206,13 @@ export class MeshPool {
   private async buildVoxel(
     build: Build,
     params: MeshParams,
-    { onProgress, onPlanned, backend = 'cpu' }: BuildOptions
+    buildOptions: BuildOptions
   ): Promise<MeshResult | null> {
+    const { onProgress, onPlanned, backend = 'cpu' } = buildOptions;
     const t0 = performance.now();
+    const workers = this.workers(buildOptions);
     const options = {
-      maxSlabs: this.size * SLABS_PER_WORKER,
+      maxSlabs: workers.length * SLABS_PER_WORKER,
       // The GPU extraction takes a slab in one batch, so a large mesh is cut into more slabs for it.
       maxBandVoxelsPerSlab: backend === 'gpu' ? GPU_MAX_BAND_VOXELS_PER_SLAB : undefined,
     };
@@ -197,7 +233,7 @@ export class MeshPool {
       }
     };
     // The first slabs are posted before the skeleton is drawn.
-    const drains = this.slots.map((_, w) => drain(w));
+    const drains = workers.map(drain);
     onPlanned?.(skeleton);
     await Promise.all(drains);
     if (build.cancelled) return null;
@@ -207,19 +243,21 @@ export class MeshPool {
     );
     if (build.cancelled) return null;
     mesh.stats.totalMs = performance.now() - t0;
-    mesh.stats.workers = Math.min(this.size, jobs.length);
+    mesh.stats.workers = Math.min(workers.length, jobs.length);
     return mesh;
   }
 
   private async buildHybrid(
     build: Build,
     params: HybridParams,
-    { onProgress, onPlanned, backend = 'cpu' }: BuildOptions
+    buildOptions: BuildOptions
   ): Promise<MeshResult | null> {
+    const { onProgress, onPlanned, backend = 'cpu' } = buildOptions;
     const t0 = performance.now();
+    const workers = this.workers(buildOptions);
     const options = {
-      maxBatches: this.size * SLABS_PER_WORKER,
-      maxSlabs: this.size * SLABS_PER_WORKER,
+      maxBatches: workers.length * SLABS_PER_WORKER,
+      maxSlabs: workers.length * SLABS_PER_WORKER,
       maxBandVoxelsPerSlab: backend === 'gpu' ? GPU_MAX_BAND_VOXELS_PER_SLAB : undefined,
       // With the field on the GPU a patch is cheaper there than on the worker, so nearly all of them go as slabs.
       bigPatchBandVoxels: backend === 'cpu' ? undefined : GPU_BIG_PATCH_BAND_VOXELS,
@@ -284,7 +322,7 @@ export class MeshPool {
         throw e;
       });
     // Every worker comes to rest before the fallback starts, so that it does not queue behind abandoned tasks.
-    const drains = Promise.allSettled(this.slots.map((_, w) => drain(w)));
+    const drains = Promise.allSettled(workers.map(drain));
     onPlanned?.(skeleton);
     const rejected = (await drains).find((r) => r.status === 'rejected');
     if (rejected) throw (rejected as PromiseRejectedResult).reason;
@@ -295,7 +333,7 @@ export class MeshPool {
     );
     if (build.cancelled) return null;
     mesh.stats.totalMs = performance.now() - t0;
-    mesh.stats.workers = Math.min(this.size, total);
+    mesh.stats.workers = Math.min(workers.length, total);
     return mesh;
   }
 
@@ -307,7 +345,8 @@ export class MeshPool {
 
   /** Call worker `index`; its errors come back as they were thrown there, a GpuError included. */
   private call<T>(index: number, ask: (api: Comlink.Remote<MesherApi>) => Promise<T>): Promise<T> {
-    const slot = this.slots[index];
+    if (this.disposed) return Promise.reject(new Error('mesher pool disposed'));
+    const slot = this.slot(index);
     if (slot.dead) return Promise.reject(slot.dead);
     return new Promise<T>((resolve, reject) => {
       slot.pending.add(reject);

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { logError, logWarn } from '@/utils/logger';
 
 import { type BuildSettings, buildParams } from './constants';
+import { workersFor } from './engine/pool';
 import {
   errorMessage,
   GpuError,
@@ -223,8 +224,12 @@ export function useMorphologyMesh(
         // The first probe can outlast the pause: a build started now would cancel the newer one.
         if (!live) return;
         patch({ gpu });
+        const cable = summary.types
+          .filter((t) => types.includes(t.type))
+          .reduce((sum, t) => sum + t.cableLength, 0);
         const built = await buildMesh(pool, buildParams(b, types), gpu, b.gpu, {
           mesher: b.tubes ? 'hybrid' : 'voxel',
+          workers: workersFor(cable, pool.size),
           onProgress: (done, total) => {
             const next = total > 0 ? Math.round((100 * done) / total) : 0;
             if (next === percent) return;

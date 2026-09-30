@@ -112,6 +112,7 @@ const h = vi.hoisted(() => {
   }
 
   class FakePool {
+    size = 12;
     load = vi.fn(() => Promise.resolve({ summary: state.summary, skeleton: state.skeleton }));
     probeGpu = vi.fn((): Promise<string | null> => Promise.resolve(null));
     build = vi.fn(
@@ -155,10 +156,16 @@ vi.mock('@/features/entities/cell-morphology/morpho-viewer/engine/viewer', () =>
   Viewer: h.FakeViewer,
 }));
 
-vi.mock('@/features/entities/cell-morphology/morpho-viewer/engine/pool', () => ({
-  MeshPool: h.FakePool,
-  defaultPoolSize: () => 1,
-}));
+vi.mock(
+  '@/features/entities/cell-morphology/morpho-viewer/engine/pool',
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import('@/features/entities/cell-morphology/morpho-viewer/engine/pool')
+    >()),
+    MeshPool: h.FakePool,
+    defaultPoolSize: () => 1,
+  })
+);
 
 vi.mock('@/features/entities/cell-morphology/morpho-viewer/export', () => {
   h.exportLoaded = true;
@@ -632,6 +639,26 @@ describe('MorphoViewer', () => {
     await act(async () => rebuilt.resolve(next));
     expect(viewer.setMesh).toHaveBeenLastCalledWith(next);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('builds on as many workers as the cable it meshes needs', async () => {
+    h.summary = {
+      ...SUMMARY,
+      types: SUMMARY.types.map((t) => ({ ...t, cableLength: t.type === 2 ? 30_000 : 1500 })),
+    };
+    const { pool } = await renderViewer();
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(1));
+    expect(pool.build).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ workers: 12 })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide axon' }));
+    await waitFor(() => expect(pool.build).toHaveBeenCalledTimes(2));
+    expect(pool.build).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ workers: 4 })
+    );
   });
 
   it('rebuilds once for quick toggles, and not at all when they end where they started', async () => {
