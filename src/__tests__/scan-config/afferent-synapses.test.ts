@@ -314,10 +314,10 @@ describe('loadAfferentSynapses', () => {
 
     let calls = 0;
     const { close, run } = harness(file, {
-      loadTree: async () => {
+      placementOf: () => {
         calls += 1;
-        if (calls === 1) throw new Error('morphology service is down');
-        return somaOnlyTree();
+        if (calls === 1) throw new Error('placement is corrupt');
+        return AT_ORIGIN;
       },
     });
 
@@ -327,5 +327,19 @@ describe('loadAfferentSynapses', () => {
     // whole circuit's.
     expect(groups.map((g) => g.populationName)).toEqual(['second']);
     expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps synapses unprojected when their cell’s morphology fails to load', async () => {
+    const file = writeEdgesFile('edges-no-morphology.h5', {
+      default: [{ position: [20, 0, 0], sectionId: 0, targetNodeId: 0 }],
+    });
+
+    const [group] = await harness(file, {
+      loadTree: async () => {
+        throw new Error('morphology service is down');
+      },
+    }).run([{ file, populations: ['default'] }]);
+
+    expect(pointAt(group.coordinates, 0)).toEqual([20, 0, 0]);
   });
 });

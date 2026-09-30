@@ -123,7 +123,7 @@ export function useSmallCircuitSource({
   const [sonataSectionIds, setSonataSectionIds] =
     useState<Map<string, Map<number, string>>>(EMPTY_SECTION_IDS);
 
-  /** The population on show, which is what the synapses and the anchor are for. */
+  /** The population on show, which is what the anchor is for. */
   const subject = useMemo(
     () => placed.find((entry) => entry.population.name === populationName) ?? null,
     [placed, populationName]
@@ -329,16 +329,22 @@ export function useSmallCircuitSource({
     [placed, morphologyRequest, showAxons]
   );
 
+  /** Population the afferent synapses target: the first one with morphologies, whatever is on show. */
+  const synapseTarget = useMemo(
+    () => placed.find((entry) => locations.get(entry.population.name) != null) ?? null,
+    [placed, locations]
+  );
+
   /**
    * @see useAfferentSynapses. Always whole, axons included.
    *
-   * Indices are the population on show's own, which is what the edge files
+   * Indices are the target population's own, which is what the edge files
    * address: synapses are drawn for a single-cell circuit, where that
    * population is the only one with anything to target.
    */
   const loadTree = useCallback(
     async (index: number) => {
-      const request = subject ? morphologyRequest(subject, index, true) : null;
+      const request = synapseTarget ? morphologyRequest(synapseTarget, index, true) : null;
       if (!request) return null;
 
       // Its own queue: the projection must not be dropped by the axon toggle's
@@ -346,14 +352,14 @@ export function useSmallCircuitSource({
       const cell = await projectionCellLoader.load(request);
       return cell?.data ?? null;
     },
-    [morphologyRequest, subject]
+    [morphologyRequest, synapseTarget]
   );
 
   const synapses = useAfferentSynapses({
     enabled: withSynapses,
     circuit,
     config,
-    geometry: subject?.geometry ?? null,
+    geometry: synapseTarget?.geometry ?? null,
     loadTree,
   });
 

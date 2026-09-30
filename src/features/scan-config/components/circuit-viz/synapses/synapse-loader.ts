@@ -384,7 +384,16 @@ async function buildCellSurfaces(
     return null;
   }
 
-  const tree = await loadTree(cellIndex);
+  let tree: MorphoViewerTree | null;
+  try {
+    tree = await loadTree(cellIndex);
+  } catch (error) {
+    report.logTask(
+      `Cell #${cellIndex} morphology failed to load; leaving its synapses unprojected.`
+    );
+    report.logFailure(error);
+    return null;
+  }
   const somaSegments: SurfaceSegment[] = [];
   const wholeSegments: SurfaceSegment[] = [];
   const stack = (tree?.roots ?? []).map((item) => ({
