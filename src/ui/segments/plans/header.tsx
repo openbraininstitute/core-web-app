@@ -31,8 +31,8 @@ export default function PlanHeader({
     : [];
   const advantages = plan.advantages ?? [];
 
-  const textColor = 'text-white';
-  const iconColor = 'text-white';
+  const textColor = 'text-primary-9';
+  const iconColor = 'text-primary-9';
 
   return (
     <header
@@ -90,7 +90,7 @@ export default function PlanHeader({
             <div
               key={`feature-${advantage.title}`}
               className={cn(
-                'flex items-center justify-center gap-2 text-lg font-normal w-full',
+                'flex items-center justify-start gap-2 text-lg font-normal w-full',
                 textColor
               )}
             >
@@ -109,7 +109,7 @@ export default function PlanHeader({
             <div
               key={`advantage-${advantage.title}`}
               className={cn(
-                'flex items-center justify-center gap-2 text-lg font-normal w-full',
+                'flex items-center justify-start gap-2 text-lg font-normal w-full',
                 textColor
               )}
             >
