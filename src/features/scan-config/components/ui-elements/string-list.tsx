@@ -6,7 +6,6 @@ import { useState } from 'react';
 
 import { SweepIconButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
-import { cn } from '@/utils/css-class';
 
 export interface IStringListProps {
   value: string[] | null;
@@ -73,10 +72,8 @@ export function StringListBase({
           <SweepIconButton
             label="Add a value"
             testId="scan-config-string-list-add"
-            className={cn(
-              'absolute top-1/2 right-2 -translate-y-1/2',
-              draft.trim() === '' && 'pointer-events-none opacity-50'
-            )}
+            disabled={disabled || draft.trim() === ''}
+            className="absolute top-1/2 right-2 -translate-y-1/2"
             onClick={addValue}
           >
             <RiAddLine className="size-3.5" />
@@ -102,6 +99,7 @@ export function StringListBase({
                   <SweepIconButton
                     label={`Remove ${item}`}
                     testId="scan-config-string-list-remove"
+                    disabled={disabled}
                     onClick={() => removeAt(index)}
                   >
                     <RiDeleteBinLine className="size-3.5" />

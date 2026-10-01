@@ -173,6 +173,10 @@ export function DistanceFunctionInput({
   }, [value]);
 
   // Debounced server validation, re-run when the value or declared parameters change.
+  // `declaredParameters` is often a fresh array on each parent render, so depend on its joined
+  // contents instead of its identity to avoid aborting and rescheduling the request every render.
+  const declaredParametersKey = declaredParameters.join(',');
+  // biome-ignore lint/correctness/useExhaustiveDependencies: declaredParametersKey tracks declaredParameters by value.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return undefined;
@@ -200,7 +204,7 @@ export function DistanceFunctionInput({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [value, declaredParameters]);
+  }, [value, declaredParametersKey]);
 
   const hasError = errorMessage !== null;
   return (
