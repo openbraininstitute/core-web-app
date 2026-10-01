@@ -115,10 +115,14 @@ const NEURITE_PROBE_LIMIT = 256;
 const NEURITE_PROBE_CELL_LIMIT = 8;
 
 /**
- * Furthest a morphology's root may sit from its local origin, in µm. Beyond it
- * the morphology is in world coordinates and placing it would offset it twice.
+ * Median distance, in µm, from a cell's synapses to its drawn surface beyond
+ * which the morphology is taken to be misplaced (e.g. stored in world
+ * coordinates) and its synapses are left unprojected.
  */
-const MAX_LOCAL_ROOT_OFFSET = 50;
+const MISPLACED_MEDIAN_DISTANCE = 20;
+
+/** Synapses per cell measured to decide {@link MISPLACED_MEDIAN_DISTANCE}. */
+const MISPLACED_PROBE_LIMIT = 16;
 
 /** Where a synapse sits, in order of preference: on the neurite surface, else on its axis. */
 const POSITION_PREFIXES = ['afferent_surface', 'afferent_center'] as const;
@@ -215,6 +219,7 @@ async function readPopulation(
   const arrTarget = ds('target_node_id');
 
   const surfaces = await getCellSurfaces(input, arrSectionId, arrTarget);
+  dropMisplacedCells(report, surfaces, [arrXs, arrYs, arrZs], arrTarget);
 
   const coordinates = new Float32Array(arrXs.length * 3);
   let somaTotal = 0;
@@ -339,6 +344,43 @@ function splitBySynapseType(
 }
 
 /**
+ * Remove cells whose drawn surface sits far from their own synapses, so those
+ * synapses keep their SONATA positions instead of being pulled onto it.
+ */
+function dropMisplacedCells(
+  report: Report,
+  surfaces: Map<number, CellSurfaces>,
+  [xs, ys, zs]: number[][],
+  targetNodeIds: number[]
+) {
+  for (const [cellIndex, { whole }] of surfaces) {
+    if (!whole) continue;
+
+    const indices: number[] = [];
+    for (let i = 0; i < targetNodeIds.length; i++) {
+      if (targetNodeIds[i] === cellIndex) indices.push(i);
+    }
+    const stride = Math.max(1, Math.ceil(indices.length / MISPLACED_PROBE_LIMIT));
+    const distances: number[] = [];
+    for (let n = 0; n < indices.length; n += stride) {
+      const i = indices[n];
+      distances.push(Math.abs(whole([xs[i], ys[i], zs[i]]).distance));
+    }
+    if (distances.length === 0) continue;
+
+    distances.sort((a, b) => a - b);
+    const median = distances[Math.floor(distances.length / 2)];
+    if (median > MISPLACED_MEDIAN_DISTANCE) {
+      report.logTask(
+        `Cell #${cellIndex} synapses sit a median ${median.toFixed(1)}µm from its drawn ` +
+          'surface; leaving them unprojected.'
+      );
+      surfaces.delete(cellIndex);
+    }
+  }
+}
+
+/**
  * Build the drawn surfaces of every *distinct* target cell in a population.
  *
  * Why up front: a cell's geometry is identical for all of its synapses, and a
@@ -398,13 +440,6 @@ async function buildCellSurfaces(
       `Cell #${cellIndex} morphology failed to load; leaving its synapses unprojected.`
     );
     report.logFailure(error);
-    return null;
-  }
-  const root = tree?.roots[0];
-  if (root && Math.hypot(root.x, root.y, root.z) > MAX_LOCAL_ROOT_OFFSET) {
-    report.logTask(
-      `Cell #${cellIndex} morphology is not soma-centred; leaving its synapses unprojected.`
-    );
     return null;
   }
   const somaSegments: SurfaceSegment[] = [];
