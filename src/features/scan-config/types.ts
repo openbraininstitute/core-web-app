@@ -166,6 +166,7 @@ export const ScanConfigUIElementDict = {
   // components
   StringInput: 'string_input',
   DistanceFunctionInput: 'distance_function_input',
+  DistanceFunctionInputNullable: 'distance_function_input_nullable',
   ModelIdentifier: 'model_identifier',
   FloatParameterSweep: 'float_parameter_sweep',
   IntParameterSweep: 'int_parameter_sweep',
@@ -231,7 +232,18 @@ export interface StringInput extends TBlockElement {
 
 export interface DistanceFunctionInputField extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInput;
+  /** `max_length` of the function string; sits at the schema root for the non-nullable field. */
   maxLength?: number;
+}
+
+/**
+ * Nullable distance function (`str | None`): the string branch (carrying `maxLength`) comes
+ * first, the null branch second. The two elements differ only in where `maxLength` lives, so the
+ * frontend reads it from a fixed position without branching per field.
+ */
+export interface DistanceFunctionInputNullableField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInputNullable;
+  anyOf: [{ type: 'string'; maxLength?: number }, { type: 'null' }];
 }
 
 export interface ModelIdentifier extends TBlockElement {
@@ -679,6 +691,7 @@ export type TBlockElement = {
 export type ParamSchema =
   | StringInput
   | DistanceFunctionInputField
+  | DistanceFunctionInputNullableField
   | ModelIdentifier
   | TModelIdentifierMultiple
   | FloatParameterSweep

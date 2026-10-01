@@ -6,7 +6,10 @@ import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/h
 import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
-import { DistanceFunctionInput } from '@/features/scan-config/components/ui-elements/distance-function/distance-function-input';
+import {
+  DistanceFunctionField,
+  DistanceFunctionNullableField,
+} from '@/features/scan-config/components/ui-elements/distance-function/distance-function-field';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
@@ -120,11 +123,28 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInput },
       },
       ({ paramSchema }) => (
-        <DistanceFunctionInput
+        <DistanceFunctionField
+          paramSchema={paramSchema}
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
           declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
-          maxLength={paramSchema.maxLength}
+          errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+          onChange={(next) => {
+            setState({ ...state, [k]: next || null });
+          }}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInputNullable },
+      },
+      ({ paramSchema }) => (
+        <DistanceFunctionNullableField
+          paramSchema={paramSchema}
+          value={typeof value === 'string' ? value : ''}
+          disabled={disabled}
+          declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
           errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
             setState({ ...state, [k]: next || null });
