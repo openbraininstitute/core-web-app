@@ -42,6 +42,9 @@ export const VALID_AI_CONFIG_KEYS = [
   'ion_channel_model_simulation_config',
   'skeletonization_config',
   'em_synapse_mapping_config',
+  // Appended rather than inserted: findConfigKeyInState returns the FIRST non-null match,
+  // so the order of this list decides which key wins if more than one is ever present.
+  'emodel_optimization_config',
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -57,13 +60,20 @@ export function findConfigKeyInState(state: Record<string, unknown>): TAIConfigK
  * Resolves the correct AI config key for a given entity type and activity.
  * Handles the circuit-scale ambiguity where Circuit + Simulate can map to
  * either circuit_simulation_config or me_model_with_synapses_simulation_config.
+ *
+ * Returns null when the activity has no AI config key, rather than falling back to a
+ * circuit-simulation key. The old fallback meant any unhandled activity silently published
+ * its config under the wrong key, which is how Optimize behaved before it was handled here.
  */
 export function getConfigKeyForEntity(
   entityType: TExtendedEntitiesTypeDict,
   activity: TScanConfigActivity,
   entity?: { scale?: string }
-): TAIConfigKey {
+): TAIConfigKey | null {
   if (activity === ScanConfigActivity.Process) return 'skeletonization_config';
+  if (activity === ScanConfigActivity.Optimize) return 'emodel_optimization_config';
+
+  if (activity !== ScanConfigActivity.Simulate) return null;
 
   // Simulate activity — resolve by entity type
   if (entityType === ExtendedEntitiesTypeDict.MemodelCircuit) {

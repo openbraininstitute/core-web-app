@@ -248,8 +248,13 @@ export function useScanConfiguration({
       };
     }
 
+    // Build is deliberately excluded: em_synapse_mapping_config is already in
+    // VALID_AI_CONFIG_KEYS but dormant, and admitting Build here would activate it before
+    // that path has been verified end to end.
     const aiEnabled =
-      activity === ScanConfigActivity.Simulate || activity === ScanConfigActivity.Process;
+      activity === ScanConfigActivity.Simulate ||
+      activity === ScanConfigActivity.Process ||
+      activity === ScanConfigActivity.Optimize;
 
     if (!entity && !resolved.usedType) {
       return { isLoading: false, error: null, unresolvedMessage: null, ready: null };
