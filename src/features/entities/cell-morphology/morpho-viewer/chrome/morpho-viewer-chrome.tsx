@@ -1,5 +1,4 @@
 import { RiArrowDownSLine, RiFocus3Line } from '@remixicon/react';
-import chroma from 'chroma-js';
 import { useState } from 'react';
 
 import { morphologyDebugFlag, useFlag } from '@/features/feature-flags';
@@ -7,8 +6,9 @@ import {
   ChromeButton,
   FullscreenButton,
 } from '@/features/scan-config/components/color-by/chrome-button';
-import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { AxesGizmo, GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
+import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
 import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { cn } from '@/utils/css-class';
@@ -62,8 +62,7 @@ export function MorphoViewerChrome({
   const debug = useFlag(morphologyDebugFlag.key);
   const { update } = actions;
   const look = viewer.looks.find((l) => l.id === settings.look) ?? viewer.looks[0];
-  // The chrome reads against the look's background, not the Background switch: SEM is black in either.
-  const theme = viewerTheme(isDarkBackground(look.background[settings.dark ? 'dark' : 'light']));
+  const theme = lookTheme(look, settings.dark);
   const reason = colorsReason(look, settings.typeTint);
   const types = new Set(mesh.summary?.types.map((t) => t.type));
 
@@ -158,10 +157,4 @@ function colorsReason(look: Look, typeTint: boolean): string | null {
     return 'Turn on Type tint in the settings to use the neurite colours.';
   }
   return null;
-}
-
-/** Whether light text reads better than dark over a background gradient, top to bottom. */
-function isDarkBackground([top, bottom]: [string, string]): boolean {
-  const middle = chroma.mix(top, bottom, 0.5, 'rgb');
-  return chroma.contrast(middle, '#fff') > chroma.contrast(middle, '#000');
 }

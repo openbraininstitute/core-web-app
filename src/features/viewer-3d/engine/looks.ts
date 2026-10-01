@@ -936,7 +936,7 @@ export function createLooks(
       id: 'em',
       label: 'EM segmentation',
       colors: 'tint',
-      hint: 'Render of a segmented electron-microscopy volume: matte waxy grey, lumpy membrane, occlusion in the creases, dark field. Turns the bumps and the ambient occlusion on.',
+      hint: `Render of a segmented electron-microscopy volume: matte waxy grey, lumpy membrane, occlusion in the creases, dark field. Turns ${displaced ? 'the bumps and ' : ''}the ambient occlusion on.`,
       material: makeEm(colors),
       // A broad sky light keeps the shadows open, a soft key from the upper left models the form, and a rim light
       // from behind lifts the silhouettes off the dark field.
@@ -946,7 +946,7 @@ export function createLooks(
         viewLight(0xdfe7ff, 3, [0.4, 0.55, -2])
       ),
       background: { light: ['#3c3e42', '#2a2b2e'], dark: ['#131416', '#060607'] },
-      bumps: { amplitude: 0.12, scale: 1.3, smoothness: 0.5 },
+      ...(displaced && { bumps: { amplitude: 0.12, scale: 1.3, smoothness: 0.5 } }),
       ao: true,
     },
     {

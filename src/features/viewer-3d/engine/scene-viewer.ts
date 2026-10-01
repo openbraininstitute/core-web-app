@@ -41,6 +41,8 @@ const FIT_FILL = 0.92;
 const FOV = 45;
 /** How long the camera takes to turn to an axis the gizmo was clicked on, ms. */
 const TURN_MS = 300;
+/** The layer of what `drawUnseen` draws, which the lights are on as well. */
+const UNSEEN_LAYER = 31;
 
 export type Projection = 'orthographic' | 'perspective';
 
@@ -53,6 +55,8 @@ export interface ViewControls {
   viewAlong(axis: Axis, sign: Sign): void;
 }
 
+export type AODepth = 'own-pass' | 'main-pass';
+
 export interface SceneViewerOptions {
   /** The vertex attributes of the content's surface, which the looks are built for (`createLooks`). */
   surface: readonly SurfaceAttribute[];
@@ -61,7 +65,7 @@ export interface SceneViewerOptions {
    * they are drawn, into a depth and normal target of its own. The main pass's depth costs no second draw, and the
    * normals are rebuilt from it.
    */
-  aoDepth?: 'own-pass' | 'main-pass';
+  aoDepth?: AODepth;
   /**
    * Draw every frame through the composer's multisampled target, onto a canvas without antialiasing of its own. By
    * default frames go straight to an antialiased canvas whenever no pass is on.
@@ -144,6 +148,7 @@ export class SceneViewer implements ViewControls {
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     container.appendChild(canvas);
+    canvas.addEventListener('webglcontextrestored', this.onContextRestored);
 
     this.perspective.position.set(0, 0, 500);
     this.orthographic.position.set(0, 0, 500);
@@ -160,7 +165,11 @@ export class SceneViewer implements ViewControls {
 
     // Light rigs ride on the camera so every look keeps its lighting while orbiting.
     this.looks = createLooks(this.renderer.getPixelRatio(), options.surface);
-    for (const l of this.looks) if (l.rig) this.camera.add(l.rig);
+    for (const l of this.looks) {
+      if (!l.rig) continue;
+      this.camera.add(l.rig);
+      l.rig.traverse((o) => o.layers.enable(UNSEEN_LAYER));
+    }
     this.scene.add(this.perspective, this.orthographic);
     this.outlines.name = 'outline';
     this.surfaces.add(this.chunks, this.outlines);
@@ -183,6 +192,7 @@ export class SceneViewer implements ViewControls {
   dispose(): void {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
+    this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.resizeObserver.disconnect();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
@@ -195,9 +205,7 @@ export class SceneViewer implements ViewControls {
       if (l.outline) disposeMaterial(l.outline);
     }
     this.environment?.dispose();
-    this.gtao?.dispose();
-    this.bloom?.dispose();
-    this.composer?.dispose();
+    this.disposeComposer();
     this.renderer.dispose();
     this.renderer.forceContextLoss();
     this.renderer.domElement.remove();
@@ -214,6 +222,7 @@ export class SceneViewer implements ViewControls {
 
   /** Render only when the camera moved (including damping and spin) or the scene changed, and stop when neither did. */
   private frame(): void {
+    const turning = this.turn !== null;
     this.stepTurn();
     const moved = this.controls.update();
     if (!moved && !this.dirty) {
@@ -221,9 +230,12 @@ export class SceneViewer implements ViewControls {
       this.looping = false;
       return;
     }
-    this.updateCameraTied();
-    this.draw();
+    // Before the hooks, which may ask for another frame.
     this.dirty = false;
+    this.updateCameraTied();
+    this.beforeDraw(moved || turning);
+    this.draw();
+    this.afterDraw();
     const orientation = this.camera.quaternion;
     if (!orientation.equals(this.heardOrientation)) {
       this.heardOrientation.copy(orientation);
@@ -239,6 +251,14 @@ export class SceneViewer implements ViewControls {
     if (t === 1) this.turn = null;
     this.dirty = true;
   }
+
+  /** Before a frame is drawn, with whether the camera is moving: what the content draws may depend on it. */
+  protected beforeDraw(_moving: boolean): void {}
+
+  protected afterDraw(): void {}
+
+  /** After the view changed size. */
+  protected resized(): void {}
 
   private composing(): boolean {
     return this.options.composeAlways === true || this.ao || this.look.bloom === true;
@@ -295,6 +315,77 @@ export class SceneViewer implements ViewControls {
       this.chunks.remove(surface);
       if (outline) this.outlines.remove(outline);
       this.invalidate();
+    }
+  }
+
+  // three rebuilds what it kept the sources of; the environment was drawn on the GPU, and went with the context.
+  private onContextRestored = (): void => {
+    if (this.environment) {
+      this.environment.dispose();
+      this.environment = null;
+      this.applyLook();
+    }
+    this.invalidate();
+  };
+
+  /**
+   * Draw `objects`, which must be in the scene, once where frames are drawn, writing no pixel: three uploads their
+   * buffers and builds their programs, and the driver does its first-draw work (ANGLE's vertex conversions, its lazily
+   * made storage), ahead of the frame that shows them.
+   */
+  protected drawUnseen(objects: THREE.Object3D[]): void {
+    const renderer = this.renderer;
+    const { color, depth } = renderer.state.buffers;
+    const camera = this.camera;
+    const layers = camera.layers.mask;
+    const saved = objects.map((o) => ({ mask: o.layers.mask, culled: o.frustumCulled }));
+    const autoClear = renderer.autoClear;
+    const previous = renderer.getRenderTarget();
+    if (this.composing()) this.ensureComposer();
+    const target = this.composing() ? (this.composer?.renderTarget2 ?? null) : null;
+    const scissor = target
+      ? { box: target.scissor.clone(), test: target.scissorTest }
+      : { box: renderer.getScissor(new THREE.Vector4()), test: renderer.getScissorTest() };
+    try {
+      for (const o of objects) {
+        o.layers.set(UNSEEN_LAYER);
+        o.frustumCulled = false;
+      }
+      camera.layers.set(UNSEEN_LAYER);
+      renderer.autoClear = false;
+      color.setMask(false);
+      color.setLocked(true);
+      depth.setMask(false);
+      depth.setLocked(true);
+      // Its resolve is scissored too.
+      if (target) {
+        target.scissor.set(0, 0, 1, 1);
+        target.scissorTest = true;
+      } else {
+        renderer.setScissor(0, 0, 1, 1);
+        renderer.setScissorTest(true);
+      }
+      renderer.setRenderTarget(target);
+      renderer.render(this.scene, camera);
+    } finally {
+      color.setLocked(false);
+      color.setMask(true);
+      depth.setLocked(false);
+      depth.setMask(true);
+      renderer.autoClear = autoClear;
+      if (target) {
+        target.scissor.copy(scissor.box);
+        target.scissorTest = scissor.test;
+      } else {
+        renderer.setScissor(scissor.box);
+        renderer.setScissorTest(scissor.test);
+      }
+      renderer.setRenderTarget(previous);
+      camera.layers.mask = layers;
+      objects.forEach((o, i) => {
+        o.layers.mask = saved[i].mask;
+        o.frustumCulled = saved[i].culled;
+      });
     }
   }
 
@@ -369,13 +460,18 @@ export class SceneViewer implements ViewControls {
   protected applyLook(): void {
     const look = this.look;
     for (const l of this.looks) if (l.rig) l.rig.visible = l === look;
-    for (const m of this.chunks.children) (m as THREE.Mesh).material = look.material;
+    this.chunks.traverse((m) => {
+      if (m instanceof THREE.Mesh) m.material = look.material;
+    });
     // An outline is a solid silhouette, which would stand behind the wires.
     this.outlines.visible = this.meshVisible && look.outline !== undefined && !this.wireframe;
     this.renderer.toneMapping =
       look.toneMapped === false ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
-    if (look.outline) {
-      for (const m of this.outlines.children) (m as THREE.Mesh).material = look.outline;
+    const outline = look.outline;
+    if (outline) {
+      this.outlines.traverse((m) => {
+        if (m instanceof THREE.Mesh) m.material = outline;
+      });
     }
     if (look.env) this.environment ??= makeEnvironment(this.renderer);
     this.scene.environment = look.env ? this.environment : null;
@@ -412,6 +508,7 @@ export class SceneViewer implements ViewControls {
     this.sizeEffects(w, h);
     this.invalidate();
     this.updatePixelScale();
+    this.resized();
   }
 
   /** AO runs at a fraction of the device resolution; bloom at CSS resolution. Both are upsampled when blended. */
@@ -464,6 +561,16 @@ export class SceneViewer implements ViewControls {
 
   setSpin(on: boolean): void {
     this.controls.autoRotate = on;
+    this.invalidate();
+  }
+
+  /** Where the ambient occlusion takes its depth from (`SceneViewerOptions.aoDepth`), to compare the two. */
+  setAODepth(depth: AODepth): void {
+    if ((this.options.aoDepth ?? 'own-pass') === depth) return;
+    this.options = { ...this.options, aoDepth: depth };
+    if (!this.composer) return;
+    this.disposeComposer();
+    this.ensureComposer();
     this.invalidate();
   }
 
@@ -550,6 +657,16 @@ export class SceneViewer implements ViewControls {
     this.sizeEffects(w, h);
   }
 
+  private disposeComposer(): void {
+    this.gtao?.dispose();
+    this.bloom?.dispose();
+    this.composer?.dispose();
+    this.composer = null;
+    this.renderPass = null;
+    this.gtao = null;
+    this.bloom = null;
+  }
+
   /** The passes that draw from the camera, onto the one in use. GTAO reconstructs positions differently per projection. */
   private retargetPasses(): void {
     const camera = this.camera;
@@ -567,6 +684,17 @@ export class SceneViewer implements ViewControls {
   /** µm per CSS pixel in the orthographic view, null in perspective. */
   get currentPixelScale(): number | null {
     return this.pixelScale;
+  }
+
+  /** µm per CSS pixel at the point of `box` nearest the camera: the same everywhere in the orthographic view. */
+  protected cssPixelNear(box: THREE.Box3): number {
+    if (this.projection === 'orthographic') {
+      const o = this.orthographic;
+      return orthoPixelScale(o.top, o.bottom, o.zoom, this.height);
+    }
+    const camera = this.perspective;
+    const d = Math.max(box.distanceToPoint(camera.position), camera.near);
+    return (2 * halfHeightAt(d, FOV)) / this.height;
   }
 
   /**

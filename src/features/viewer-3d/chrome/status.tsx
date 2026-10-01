@@ -3,6 +3,7 @@ import { RiAlertLine, RiLoader4Line } from '@remixicon/react';
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
 /** A line of status over the view, top-centre: work under way, or a warning. */
@@ -36,15 +37,17 @@ export function StatusPill({
   );
 }
 
-/** Why there is nothing to view, in the middle of it. */
+/** Why there is nothing to view, in the middle of it, and what can be done about it. */
 export function StatusAlert({
   title,
   message,
   theme,
+  children,
 }: {
   title: string;
   message: string;
   theme: ViewerTheme;
+  children?: ReactNode;
 }) {
   return (
     <div className="absolute inset-0 flex items-center justify-center p-8">
@@ -55,6 +58,7 @@ export function StatusAlert({
       >
         <span className="font-semibold">{title}</span>
         <span>{message}</span>
+        {children && <div className="mt-2 flex gap-2">{children}</div>}
       </div>
     </div>
   );

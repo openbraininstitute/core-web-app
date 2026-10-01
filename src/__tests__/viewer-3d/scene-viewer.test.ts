@@ -18,7 +18,29 @@ const { FakeRenderer } = vi.hoisted(() => {
     loop: (() => void) | null = null;
     target: unknown = null;
     compiledFor: unknown[] = [];
-    render = vi.fn();
+    autoClear = true;
+    scissor = [0, 0, 400, 300];
+    scissorTest = false;
+    writes = { color: true, depth: true };
+    state = {
+      buffers: {
+        color: { setMask: (v: boolean) => this.setWrite('color', v), setLocked() {} },
+        depth: { setMask: (v: boolean) => this.setWrite('depth', v), setLocked() {} },
+      },
+    };
+    /** What each draw wrote to, with what scissor. */
+    drawn: {
+      writes: { color: boolean; depth: boolean };
+      scissor: number[] | null;
+      autoClear: boolean;
+    }[] = [];
+    render = vi.fn(() => {
+      this.drawn.push({
+        writes: { ...this.writes },
+        scissor: this.scissorTest ? [...this.scissor] : null,
+        autoClear: this.autoClear,
+      });
+    });
 
     constructor(readonly parameters: { antialias?: boolean }) {
       Object.defineProperties(this.domElement, {
@@ -50,6 +72,26 @@ const { FakeRenderer } = vi.hoisted(() => {
     compileAsync(): Promise<void> {
       this.compiledFor.push(this.target);
       return Promise.resolve();
+    }
+
+    private setWrite(buffer: 'color' | 'depth', v: boolean): void {
+      this.writes[buffer] = v;
+    }
+
+    getScissor(v: { set(...xywh: number[]): unknown }) {
+      return v.set(...this.scissor);
+    }
+
+    getScissorTest(): boolean {
+      return this.scissorTest;
+    }
+
+    setScissor(x: number | { toArray(): number[] }, y?: number, w?: number, h?: number): void {
+      this.scissor = typeof x === 'number' ? [x, y ?? 0, w ?? 0, h ?? 0] : x.toArray();
+    }
+
+    setScissorTest(on: boolean): void {
+      this.scissorTest = on;
     }
 
     setPixelRatio(): void {}
@@ -179,6 +221,55 @@ describe('scene viewer', () => {
     await warm;
     expect(composerRender).toHaveBeenCalledTimes(1);
     expect(chunks.children).toHaveLength(0);
+  });
+
+  it('switches where the ambient occlusion reads its depth, building the passes again', () => {
+    const viewer = make(BARE);
+    const before = viewer.composer;
+    const dispose = vi.spyOn(before as EffectComposer, 'dispose');
+    (viewer as unknown as SceneViewer).setAODepth('own-pass');
+    expect(dispose).toHaveBeenCalled();
+    expect(viewer.composer).not.toBe(before);
+    expect(viewer.composer?.renderTarget2.depthTexture).toBeNull();
+    expect(viewer.gtao?._renderGBuffer).toBe(true);
+    (viewer as unknown as SceneViewer).setAODepth('main-pass');
+    expect(viewer.gtao?.depthTexture).toBe(viewer.composer?.renderTarget2.depthTexture);
+  });
+
+  it('tells the content before each frame whether the camera moves, and draws again when it asks to', () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const heard: boolean[] = [];
+    class Content extends SceneViewer {
+      protected override beforeDraw(moving: boolean): void {
+        heard.push(moving);
+        if (heard.length === 1) this.invalidate();
+      }
+    }
+    const viewer = new Content(host, BARE);
+    viewers.push(viewer);
+    const { renderer } = viewer as unknown as Internals;
+    for (let i = 0; i < 5 && renderer.loop; i++) renderer.loop();
+    expect(heard).toEqual([false, false]);
+    expect(renderer.loop).toBeNull();
+    viewer.setSpin(true);
+    renderer.loop?.();
+    expect(heard.at(-1)).toBe(true);
+  });
+
+  it('draws unseen onto the canvas, writing nothing, scissored to a pixel, and puts it all back', () => {
+    const viewer = make({ surface: MORPHOLOGY_SURFACE });
+    const { renderer, chunks } = viewer;
+    const mesh = new THREE.Mesh(placeholder());
+    chunks.add(mesh);
+    (viewer as unknown as { drawUnseen(o: THREE.Object3D[]): void }).drawUnseen([mesh]);
+    expect(renderer.drawn).toEqual([
+      { writes: { color: false, depth: false }, scissor: [0, 0, 1, 1], autoClear: false },
+    ]);
+    expect(renderer.writes).toEqual({ color: true, depth: true });
+    expect(renderer.scissorTest).toBe(false);
+    expect(renderer.autoClear).toBe(true);
+    expect(mesh.layers.mask).toBe(1);
+    expect(mesh.frustumCulled).toBe(true);
   });
 
   it('compiles for the canvas when frames go straight to it', async () => {

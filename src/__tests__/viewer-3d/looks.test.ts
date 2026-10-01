@@ -208,6 +208,12 @@ describe('looks for a surface without colours, types or radii', () => {
     for (const l of bare) {
       expect(compile(l.material).vertexShader, l.id).not.toContain('bumpDisplace');
     }
+    // EM segmentation still brings its occlusion, and no longer promises bumps.
+    const em = bare.find((l) => l.id === 'em');
+    expect(em?.bumps).toBeUndefined();
+    expect(em?.ao).toBe(true);
+    expect(em?.hint).not.toContain('bumps');
+    expect(looks.find((l) => l.id === 'em')?.hint).toContain('bumps');
     const outline = bare.find((l) => l.outline)?.outline as THREE.Material;
     const s = compile(outline);
     expect(s.vertexShader).toContain('length( modelMatrix[ 0 ].xyz )');
