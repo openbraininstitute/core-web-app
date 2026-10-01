@@ -114,6 +114,12 @@ const NEURITE_PROBE_LIMIT = 256;
  */
 const NEURITE_PROBE_CELL_LIMIT = 8;
 
+/**
+ * Furthest a morphology's root may sit from its local origin, in µm. Beyond it
+ * the morphology is in world coordinates and placing it would offset it twice.
+ */
+const MAX_LOCAL_ROOT_OFFSET = 50;
+
 /** Where a synapse sits, in order of preference: on the neurite surface, else on its axis. */
 const POSITION_PREFIXES = ['afferent_surface', 'afferent_center'] as const;
 
@@ -392,6 +398,13 @@ async function buildCellSurfaces(
       `Cell #${cellIndex} morphology failed to load; leaving its synapses unprojected.`
     );
     report.logFailure(error);
+    return null;
+  }
+  const root = tree?.roots[0];
+  if (root && Math.hypot(root.x, root.y, root.z) > MAX_LOCAL_ROOT_OFFSET) {
+    report.logTask(
+      `Cell #${cellIndex} morphology is not soma-centred; leaving its synapses unprojected.`
+    );
     return null;
   }
   const somaSegments: SurfaceSegment[] = [];

@@ -342,4 +342,18 @@ describe('loadAfferentSynapses', () => {
 
     expect(pointAt(group.coordinates, 0)).toEqual([20, 0, 0]);
   });
+
+  it('keeps synapses unprojected when the morphology is in world coordinates', async () => {
+    const file = writeEdgesFile('edges-world-morphology.h5', {
+      default: [{ position: [20, 0, 0], sectionId: 0, targetNodeId: 0 }],
+    });
+    const tree = somaOnlyTree();
+    tree.roots[0] = { ...tree.roots[0], x: 700, y: 650, z: 840 };
+
+    const [group] = await harness(file, { loadTree: async () => tree }).run([
+      { file, populations: ['default'] },
+    ]);
+
+    expect(pointAt(group.coordinates, 0)).toEqual([20, 0, 0]);
+  });
 });
