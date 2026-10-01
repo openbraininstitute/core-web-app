@@ -314,10 +314,10 @@ describe('loadAfferentSynapses', () => {
 
     let calls = 0;
     const { close, run } = harness(file, {
-      loadTree: async () => {
+      placementOf: () => {
         calls += 1;
-        if (calls === 1) throw new Error('morphology service is down');
-        return somaOnlyTree();
+        if (calls === 1) throw new Error('placement is corrupt');
+        return AT_ORIGIN;
       },
     });
 
@@ -327,5 +327,47 @@ describe('loadAfferentSynapses', () => {
     // whole circuit's.
     expect(groups.map((g) => g.populationName)).toEqual(['second']);
     expect(close).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps synapses unprojected when their cell’s morphology fails to load', async () => {
+    const file = writeEdgesFile('edges-no-morphology.h5', {
+      default: [{ position: [20, 0, 0], sectionId: 0, targetNodeId: 0 }],
+    });
+
+    const [group] = await harness(file, {
+      loadTree: async () => {
+        throw new Error('morphology service is down');
+      },
+    }).run([{ file, populations: ['default'] }]);
+
+    expect(pointAt(group.coordinates, 0)).toEqual([20, 0, 0]);
+  });
+
+  it('projects onto a morphology that is not centred but matches its synapses', async () => {
+    const file = writeEdgesFile('edges-offset-morphology.h5', {
+      default: [{ position: [720, 650, 840], sectionId: 0, targetNodeId: 0 }],
+    });
+    const tree = somaOnlyTree();
+    tree.roots[0] = { ...tree.roots[0], x: 700, y: 650, z: 840 };
+
+    const [group] = await harness(file, { loadTree: async () => tree }).run([
+      { file, populations: ['default'] },
+    ]);
+
+    expect(pointAt(group.coordinates, 0)).toEqual([700 + SOMA_RADIUS, 650, 840]);
+  });
+
+  it('keeps synapses unprojected when the morphology is in world coordinates', async () => {
+    const file = writeEdgesFile('edges-world-morphology.h5', {
+      default: [{ position: [20, 0, 0], sectionId: 0, targetNodeId: 0 }],
+    });
+    const tree = somaOnlyTree();
+    tree.roots[0] = { ...tree.roots[0], x: 700, y: 650, z: 840 };
+
+    const [group] = await harness(file, { loadTree: async () => tree }).run([
+      { file, populations: ['default'] },
+    ]);
+
+    expect(pointAt(group.coordinates, 0)).toEqual([20, 0, 0]);
   });
 });
