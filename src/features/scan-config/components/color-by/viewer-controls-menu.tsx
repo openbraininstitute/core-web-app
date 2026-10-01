@@ -1,15 +1,4 @@
-import {
-  RiCameraLine,
-  RiCloseLine,
-  RiEqualizerLine,
-  RiMoonFill,
-  RiMoonLine,
-  RiResetLeftLine,
-  RiSunFill,
-  RiSunLine,
-} from '@remixicon/react';
-import { Slider, Switch } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { RiCameraLine, RiEqualizerLine, RiResetLeftLine } from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
@@ -17,9 +6,15 @@ import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin'
 import { TooltipIcon } from '@/components/icons/Tooltip';
 import { ZoomInArea } from '@/components/icons/ZoomInArea';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
-import { cn } from '@/utils/css-class';
+
+import {
+  BackgroundToggle,
+  ChromeMenu,
+  MenuButton,
+  MenuRow,
+  MenuSlider,
+  ViewerSwitch,
+} from './chrome-menu';
 
 export interface ViewerControlsMenuProps {
   /** capture a PNG of the circuit canvas (excludes gizmo, scalebar, chrome) */
@@ -90,81 +85,23 @@ export function ViewerControlsMenu({
   onResetConfig,
   className,
 }: ViewerControlsMenuProps) {
-  const [open, setOpen] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const settingsLabel = open ? 'Close settings' : 'Viewer settings';
-
-  useEffect(() => {
-    if (!open) return;
-    // capture phase so a click on the WebGL canvas (which may stop propagation)
-    // still closes the menu.
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null;
-      if (!target) return;
-      if (contentRef.current?.contains(target) || triggerRef.current?.contains(target)) return;
-      setOpen(false);
-    };
-    window.addEventListener('pointerdown', onPointerDown, true);
-    return () => window.removeEventListener('pointerdown', onPointerDown, true);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onFullscreenChange = () => setOpen(false);
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
-  }, [open]);
-
-  const handleCaptureImage = () => {
-    setOpen(false);
-    onCaptureImage();
-  };
-
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <Tooltip open={open ? false : undefined}>
-        <TooltipTrigger asChild>
-          <PopoverTrigger
-            data-testid="viewer-settings"
-            ref={triggerRef}
-            aria-label={settingsLabel}
-            className={cn(
-              'inline-flex size-8 items-center justify-center rounded-full bg-white',
-              'text-primary-9 shadow-md ring-1 ring-black/5 focus-visible:outline-none',
-              'transition-colors hover:bg-neutral-100',
-              className
-            )}
-          >
-            {open ? (
-              <RiCloseLine className="size-4 shrink-0" />
-            ) : (
-              <RiEqualizerLine className="size-4 shrink-0" />
-            )}
-          </PopoverTrigger>
-        </TooltipTrigger>
-        <TooltipContent
-          align="center"
-          side="bottom"
-          sideOffset={0}
-          arrowClassName="bg-gray-200"
-          className="text-primary-9 bg-gray-200"
-        >
-          {settingsLabel}
-        </TooltipContent>
-      </Tooltip>
-      <PopoverContent
-        side="right"
-        align="start"
-        sideOffset={8}
-        className="w-56 rounded-xl border-neutral-200 bg-white p-1 shadow-xl"
-      >
-        <div ref={contentRef}>
+    <ChromeMenu
+      label="Viewer settings"
+      testId="viewer-settings"
+      icon={<RiEqualizerLine className="size-4 shrink-0" />}
+      className={className}
+    >
+      {(close) => (
+        <>
           <MenuButton
             icon={<RiCameraLine className="size-4 shrink-0" />}
             label="Capture image"
             testId="viewer-capture-image"
-            onClick={handleCaptureImage}
+            onClick={() => {
+              close();
+              onCaptureImage();
+            }}
           />
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
@@ -267,197 +204,9 @@ export function ViewerControlsMenu({
               onClick={onResetConfig}
             />
           )}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function BackgroundToggle({
-  dark,
-  onChange,
-}: {
-  dark: boolean;
-  onChange: (dark: boolean) => void;
-}) {
-  return (
-    <div className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 p-0.5">
-      <BackgroundButton
-        active={!dark}
-        label="Light background"
-        icon={
-          dark ? (
-            <RiSunLine className="size-4 shrink-0" />
-          ) : (
-            <RiSunFill className="size-4 shrink-0" />
-          )
-        }
-        onClick={() => onChange(false)}
-      />
-      <BackgroundButton
-        active={dark}
-        label="Dark background"
-        icon={
-          dark ? (
-            <RiMoonFill className="size-4 shrink-0" />
-          ) : (
-            <RiMoonLine className="size-4 shrink-0" />
-          )
-        }
-        onClick={() => onChange(true)}
-      />
-    </div>
-  );
-}
-
-function BackgroundButton({
-  active,
-  label,
-  icon,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      aria-pressed={active}
-      onClick={onClick}
-      className={cn(
-        'inline-flex size-7 items-center justify-center rounded-full transition-colors',
-        'focus-visible:outline-none',
-        active ? 'bg-primary-8 text-white' : 'text-neutral-500 hover:bg-white'
+        </>
       )}
-    >
-      {icon}
-    </button>
-  );
-}
-
-/** icons inherit currentColor; parent row hover shifts them to primary-8 */
-const menuItemIconClass =
-  'inline-flex size-4 shrink-0 items-center justify-center text-neutral-700 transition-colors group-hover:text-primary-8';
-
-function MenuButton({
-  icon,
-  label,
-  testId,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  /** E2E handle. Several of these labels change with the state they toggle. */
-  testId?: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-testid={testId}
-      onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100"
-    >
-      <span className={menuItemIconClass}>{icon}</span>
-      {label}
-    </button>
-  );
-}
-
-/** A labelled slider row: {@link MenuRow} for controls that take a range. */
-/**
- * Antd paints its own blue when a control is on; these bring it to primary-9 so the menu
- * matches the rest of the app. Applied per control rather than through a provider, which
- * would recolour every antd control on the page.
- */
-const ON_COLOR = 'var(--color-primary-9)';
-
-/** A settings switch, primary-9 while on. */
-function ViewerSwitch({
-  checked,
-  testId,
-  onChange,
-}: {
-  checked: boolean;
-  testId?: string;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <Switch
-      data-testid={testId}
-      size="small"
-      checked={checked}
-      onChange={onChange}
-      style={checked ? { backgroundColor: ON_COLOR } : undefined}
-    />
-  );
-}
-
-function MenuSlider({
-  label,
-  testId,
-  min,
-  max,
-  step,
-  value,
-  onChange,
-  format,
-}: {
-  label: string;
-  testId?: string;
-  min: number;
-  max: number;
-  step: number;
-  value: number;
-  onChange: (value: number) => void;
-  format?: (value: number) => string;
-}) {
-  return (
-    <div
-      data-testid={testId}
-      className="group flex w-full flex-col gap-1 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span>{label}</span>
-        <span className="tabular-nums text-neutral-500">{format ? format(value) : value}</span>
-      </div>
-      <Slider
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={onChange}
-        tooltip={{ formatter: null }}
-        styles={{
-          track: { backgroundColor: ON_COLOR },
-          handle: { borderColor: ON_COLOR },
-        }}
-      />
-    </div>
-  );
-}
-
-function MenuRow({
-  label,
-  icon,
-  children,
-}: {
-  label: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="group flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100">
-      <span className="flex items-center gap-2">
-        {/* reserve the icon column so labels align with the icon'd menu buttons */}
-        <span className={menuItemIconClass}>{icon}</span>
-        {label}
-      </span>
-      {children}
-    </div>
+    </ChromeMenu>
   );
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
+import { mutedStyle, panelStyle } from './contrast';
 import { labelForProperty } from './properties';
 
 import type { ViewerTheme } from './contrast';
@@ -77,14 +78,8 @@ export function ColorByDropdown({
     setOpen(false);
   };
 
-  const panelStyle = theme
-    ? {
-        background: theme.panelBackground,
-        color: theme.foreground,
-        boxShadow: `0 0 0 1px ${theme.panelRing}`,
-      }
-    : undefined;
-  const mutedStyle = theme ? { color: theme.mutedForeground } : undefined;
+  const panel = theme ? panelStyle(theme) : undefined;
+  const muted = theme ? mutedStyle(theme) : undefined;
 
   return (
     <Popover data-testid="color-by-dropdown" open={open} onOpenChange={setOpen}>
@@ -92,7 +87,7 @@ export function ColorByDropdown({
         ref={triggerRef}
         id="color-by-dropdown-trigger"
         data-testid="color-by-dropdown-trigger"
-        style={panelStyle}
+        style={panel}
         className={cn(
           styles.trigger,
           'group inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold',
@@ -103,7 +98,7 @@ export function ColorByDropdown({
           className
         )}
       >
-        <span className={cn(!theme && 'text-neutral-400')} style={mutedStyle}>
+        <span className={cn(!theme && 'text-neutral-400')} style={muted}>
           Colour by
         </span>
         <span>{label}</span>
@@ -115,14 +110,11 @@ export function ColorByDropdown({
               'size-4',
               !theme && 'text-neutral-400'
             )}
-            style={mutedStyle}
+            style={muted}
             onAnimationEnd={() => setRefreshSpin(false)}
           />
         ) : (
-          <RiArrowDownSLine
-            className={cn('size-4', !theme && 'text-neutral-400')}
-            style={mutedStyle}
-          />
+          <RiArrowDownSLine className={cn('size-4', !theme && 'text-neutral-400')} style={muted} />
         )}
       </PopoverTrigger>
       <PopoverContent
@@ -130,7 +122,7 @@ export function ColorByDropdown({
         id="color-by-dropdown-content"
         align="end"
         sideOffset={6}
-        style={panelStyle}
+        style={panel}
         className={cn(
           'w-52 rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl',
           !theme && 'bg-white ring-1 ring-black/5'
@@ -161,7 +153,7 @@ export function ColorByDropdown({
             ))}
             {error && properties.length === 0 ? (
               <li className="px-2 py-1.5 text-sm">
-                <div style={mutedStyle}>Couldn&apos;t load properties.</div>
+                <div style={muted}>Couldn&apos;t load properties.</div>
                 {onRetry && (
                   <button
                     type="button"
@@ -179,7 +171,7 @@ export function ColorByDropdown({
             ) : (
               loading &&
               properties.length === 0 && (
-                <li className="px-2 py-1.5 text-sm" style={mutedStyle}>
+                <li className="px-2 py-1.5 text-sm" style={muted}>
                   Loading properties…
                 </li>
               )

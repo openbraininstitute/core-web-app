@@ -20,8 +20,6 @@ import {
   Vector3,
   WebGLRenderer,
 } from 'three';
-// TODO: to check if three js version is compatible with this
-// @ts-expect-error
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 import { Labels } from './labels';
