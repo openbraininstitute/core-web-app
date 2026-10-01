@@ -46,6 +46,7 @@ export function SubmitButton<
         entityId: createdEntityId,
         virtualLabId,
         projectId,
+        values: form.getFieldsValue(true) as TFormValues,
       })
     : null;
 

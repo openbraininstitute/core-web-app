@@ -30,8 +30,7 @@ export function useCellMorphologyPipeline({
   const createCellMorphologyAsync = useMutation({
     mutationFn: async (values: TCellMorphologyForm) => {
       // 1. Identify the file to upload from the assets object
-      const assetKeys = Object.keys(values.assets);
-      const fileAsset = assetKeys.length > 0 ? values.assets[assetKeys[0]] : null;
+      const fileAsset = Object.values(values.assets).find((asset) => asset instanceof File);
 
       if (!fileAsset) {
         throw new Error('No morphology file provided in assets.');
@@ -66,6 +65,9 @@ export function useCellMorphologyPipeline({
         ...(values.repair_pipeline_state
           ? { repair_pipeline_state: values.repair_pipeline_state }
           : {}),
+        // Keep a file that fails validation instead of rejecting it; obi-one then registers
+        // it with lifecycle_status "disqualified" and no morphometrics.
+        store_if_invalid: true,
       };
 
       // 3. Execute the new registration function
@@ -74,10 +76,6 @@ export function useCellMorphologyPipeline({
         virtualLabId,
       });
 
-      if (!result.isValid) {
-        throw new Error('Failed to register morphology with metrics.');
-      }
-
       // Return the ID to maintain compatibility with downstream mutations
       return { id: result.id };
     },
@@ -85,7 +83,7 @@ export function useCellMorphologyPipeline({
       invalidateEntityListings(queryClient, [
         ExtendedEntitiesTypeDict.CellMorphology,
         ExtendedEntitiesTypeDict.UniversalCellMorphology,
-        ExtendedEntitiesTypeDict.ComputationallySynthesizedCellMorphology,
+        ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
       ]),
   });
 

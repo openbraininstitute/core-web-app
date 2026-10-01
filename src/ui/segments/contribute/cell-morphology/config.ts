@@ -1,4 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { protocolTypeFilter } from '@/entity-configuration/domain';
 import { CellMorphologySchema } from '@/ui/segments/contribute/cell-morphology/schema';
 import { DEFAULT_LICENSE_ID } from '@/ui/segments/contribute/shared/schemas';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
@@ -31,6 +32,12 @@ export const CELL_MORPHOLOGY_PROGRESS_STEPS: Array<{
   },
 ];
 
+// "Morphology" (experimental) and "Synthesized morphology" (model) list the same entity type,
+// split by the protocol's generation type, so the created entity belongs to whichever side
+// matches its protocol.
+const SYNTHESIZED_GENERATION_TYPES: ReadonlyArray<string> =
+  protocolTypeFilter.cell_morphology_protocol__generation_type__in;
+
 export function createCellMorphologyConfig(
   steps: Array<IContributionStep<TCellMorphologyForm>>
 ): IContributionFormConfig<TCellMorphologyForm, typeof CellMorphologySchema> {
@@ -45,11 +52,13 @@ export function createCellMorphologyConfig(
       contribution: [{}] as unknown as TCellMorphologyForm['contribution'],
       license_id: DEFAULT_LICENSE_ID,
     }),
-    buildDetailsUrl: ({ entityId, virtualLabId, projectId }) =>
+    buildDetailsUrl: ({ entityId, virtualLabId, projectId, values }) =>
       resolveExploreDetailsPageUrl({
         ctx: { virtualLabId, projectId },
         entityId,
-        dataType: ExtendedEntitiesTypeDict.CellMorphology,
+        dataType: SYNTHESIZED_GENERATION_TYPES.includes(values._protocol_generation_type ?? '')
+          ? ExtendedEntitiesTypeDict.SynthesizedCellMorphology
+          : ExtendedEntitiesTypeDict.CellMorphology,
       }),
   };
 }
