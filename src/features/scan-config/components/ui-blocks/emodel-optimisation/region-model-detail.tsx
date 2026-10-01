@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import {
-  DEFAULT_DISTRIBUTION,
   defaultOptimizationValue,
   entryModelId,
   entryParameters,
@@ -19,6 +18,7 @@ import {
   readOptimizationValue,
   readRegionEntries,
   regionPath,
+  type TDistributionOption,
   type TOptimizationValue,
   writeRegionEntries,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
@@ -45,8 +45,8 @@ type Props = {
   disabled?: boolean;
   /** ajv errors inside `value` (paths relative to it), to flag the parameters that fail */
   errors: readonly ErrorObject[];
-  /** distribution names selectable per parameter: built-ins plus user-declared custom ones */
-  availableDistributions: readonly string[];
+  /** custom distributions selectable per parameter (name + python function) */
+  availableDistributions: readonly TDistributionOption[];
 };
 
 /**
@@ -156,7 +156,7 @@ function NeuronBlockParameters({
   onChange: (next: ConfigValue) => void;
   disabled?: boolean;
   errors: readonly ErrorObject[];
-  availableDistributions: readonly string[];
+  availableDistributions: readonly TDistributionOption[];
 }) {
   const parameters = extractNeuronBlockParameters(neuronBlock);
 
@@ -204,7 +204,7 @@ function NeuronBlockParameters({
     });
   };
 
-  const setParameterDistribution = (parameterName: string, distribution: string) => {
+  const setParameterDistribution = (parameterName: string, distribution: string | null) => {
     // Keep the parameter's value when its distribution changes.
     const optimizationValue = readOptimizationValue(parametersDict[parameterName]);
     writeParameters({
@@ -249,9 +249,7 @@ function NeuronBlockParameters({
               `${regionPath(choiceName)}/${entryIndex}/${PARAMETERS_KEY}/${param.name}/value`
             )}
             optimizationValue={checked ? readOptimizationValue(parametersDict[param.name]) : null}
-            distribution={
-              checked ? readDistribution(parametersDict[param.name]) : DEFAULT_DISTRIBUTION
-            }
+            distribution={checked ? readDistribution(parametersDict[param.name]) : null}
             availableDistributions={availableDistributions}
             onToggle={(next) => toggleParameter(param.name, next)}
             onValueChange={(next) => setParameterValue(param.name, next)}

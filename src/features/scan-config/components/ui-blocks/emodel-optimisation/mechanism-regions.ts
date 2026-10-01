@@ -10,7 +10,10 @@
  *     parameters: { "<nmodlVariable>": ParameterSelection }
  *   }
  * and a ParameterSelection is
- *   { type: "ParameterSelection", value: OptimizationValue, distribution: "uniform" }
+ *   { type: "ParameterSelection", value: OptimizationValue, distribution?: "<name>" }
+ * where `distribution` is an optional non-nullable string naming a custom distribution declared
+ * under `distance_dependent_distributions`. The key is omitted when no distribution is chosen, and
+ * the backend applies its default.
  * with
  *   OptimizationValue = { mode: "fixed"|"bounds", value: number|null, bounds: [number, number] | null }
  * where the schema requires a `value` in fixed mode, and increasing `bounds` in bounds mode.
@@ -38,26 +41,13 @@ export const PARAMETERS_KEY = 'parameters';
 export const IonChannelModelFromIdType = 'IonChannelModelFromID';
 export const MechanismRegionSelectionType = 'MechanismRegionSelection';
 export const ParameterSelectionType = 'ParameterSelection';
-export const DEFAULT_DISTRIBUTION = 'uniform';
 export const DISTANCE_DISTRIBUTIONS_KEY = 'distance_dependent_distributions';
 
-/**
- * The ten built-in distance-dependent distributions, always selectable by name without being
- * declared (mirrors bluepyemodel `STANDARD_DISTANCE_DEPENDENT_DISTRIBUTIONS`). Users can define
- * more under the config's `distance_dependent_distributions`; those are merged in at runtime.
- */
-export const STANDARD_DISTRIBUTIONS = [
-  'uniform',
-  'exp',
-  'step',
-  'exp_na_dend',
-  'linear_hd_apic',
-  'sigmoid_kad_apic',
-  'linear_e_pas_apic',
-  'linear_hdpas',
-  'sigmoid_kad',
-  'sigmoid_kdbm_apic',
-] as const;
+/** A distribution the user can pick for a parameter: its declared name and python `function`. */
+export type TDistributionOption = {
+  name: string;
+  function: string;
+};
 
 export const ParameterMode = {
   Fixed: 'fixed',
@@ -104,7 +94,9 @@ export function readRegionEntries(
 ): Array<Record<string, ConfigValue>> {
   const region = readRegions(mechanisms)[choiceName];
   if (!Array.isArray(region)) return [];
-  return region.filter(isPlainObject);
+  // `region` narrows to a union of array types, which breaks `filter`'s type-guard overload, so
+  // widen to a single `ConfigValue[]` before filtering down to the plain-object entries.
+  return (region as ConfigValue[]).filter(isPlainObject);
 }
 
 /** The model id (`id_str`) referenced by a region entry, or undefined when malformed. */
@@ -148,31 +140,26 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
   return { mode, value, bounds };
 }
 
-/** Reads a stored `ParameterSelection.distribution`, defaulting to uniform. */
-export function readDistribution(parameterSelection: ConfigValue): string {
+/** Reads a stored `ParameterSelection.distribution`; `null` when unset (the default: no distribution). */
+export function readDistribution(parameterSelection: ConfigValue): string | null {
   const selection = asRecord(parameterSelection);
   return typeof selection.distribution === 'string' && selection.distribution.length > 0
     ? selection.distribution
-    : DEFAULT_DISTRIBUTION;
+    : null;
 }
 
 /**
- * The distribution names a parameter may use: the ten built-ins plus any custom distributions
- * declared under the root config's `distance_dependent_distributions`, de-duplicated and with the
- * standard set first. `uniform` is always present.
+ * The distributions a parameter may use: the custom distributions declared under the root config's
+ * `distance_dependent_distributions`, each with its name and python `function`. The built-in
+ * distance distributions are not offered here; a parameter with no declared distribution keeps the
+ * schema default (`uniform`).
  */
-export function availableDistributions(config: Config): string[] {
+export function availableDistributions(config: Config): TDistributionOption[] {
   const declared = asRecord(config.distance_dependent_distributions);
-  const custom = Object.keys(declared);
-  const seen = new Set<string>();
-  const result: string[] = [];
-  for (const name of [...STANDARD_DISTRIBUTIONS, ...custom]) {
-    if (!seen.has(name)) {
-      seen.add(name);
-      result.push(name);
-    }
-  }
-  return result;
+  return Object.entries(declared).map(([name, entry]) => {
+    const fn = asRecord(entry).function;
+    return { name, function: typeof fn === 'string' ? fn : '' };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -275,16 +262,21 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
   };
 }
 
-/** Wraps a UI OptimizationValue into a schema `ParameterSelection`, keeping its distribution. */
+/**
+ * Wraps a UI OptimizationValue into a schema `ParameterSelection`. The schema's `distribution` is
+ * an optional non-nullable string (`minLength: 1`, default `uniform`), so a `null` distribution
+ * omits the key entirely rather than writing `null`, letting the backend apply its default.
+ */
 export function makeParameterSelection(
   optimizationValue: TOptimizationValue,
-  distribution: string = DEFAULT_DISTRIBUTION
+  distribution: string | null = null
 ): ConfigValue {
-  return {
+  const selection: Record<string, ConfigValue> = {
     type: ParameterSelectionType,
     value: optimizationValue,
-    distribution,
   };
+  if (distribution !== null) selection.distribution = distribution;
+  return selection;
 }
 
 // ---------------------------------------------------------------------------
@@ -331,8 +323,9 @@ export function pruneRegionsToModelIds(
 /**
  * Rewrites every parameter's `distribution` across all emodel optimisation elements when a custom
  * distribution is renamed or deleted. On rename, references to `oldName` become `newName`; on
- * delete (`newName` omitted), they fall back to `uniform`. Only `mechanism_regions` parameters
- * carry a distribution (global parameters do not). Returns a new config; unchanged keys are kept.
+ * delete (`newName` omitted), the `distribution` key is dropped so the backend applies its default
+ * (the schema's `distribution` is non-nullable). Only `mechanism_regions` parameters carry a
+ * distribution (global parameters do not). Returns a new config; unchanged keys are kept.
  */
 export function remapParameterDistributions(
   config: Config,
@@ -340,8 +333,7 @@ export function remapParameterDistributions(
   oldName: string,
   newName: string | null
 ): Config {
-  const replacement = newName ?? DEFAULT_DISTRIBUTION;
-  if (oldName === replacement) return config;
+  if (oldName === newName) return config;
 
   let changed = false;
   const next = Object.fromEntries(
@@ -369,7 +361,13 @@ export function remapParameterDistributions(
                 if (isPlainObject(selection) && selection.distribution === oldName) {
                   entryChanged = true;
                   changed = true;
-                  return [paramName, { ...selection, distribution: replacement }];
+                  if (newName === null) {
+                    // Delete: drop the distribution key so the backend applies its default
+                    // (the schema's `distribution` is non-nullable, so `null` is invalid).
+                    const { distribution: _dropped, ...rest } = selection;
+                    return [paramName, rest];
+                  }
+                  return [paramName, { ...selection, distribution: newName }];
                 }
                 return [paramName, selection];
               })

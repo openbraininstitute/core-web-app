@@ -16,7 +16,6 @@ import { useFieldErrors } from '@/features/scan-config/components/hooks/field-er
 import {
   DISTANCE_DISTRIBUTIONS_KEY,
   remapParameterDistributions,
-  STANDARD_DISTRIBUTIONS,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
@@ -147,14 +146,7 @@ export default function BlockDictionaryEntries({
   highlights?: ConfigHighlight[];
   visible: boolean;
 }) {
-  // A custom distance distribution must not shadow a built-in name: references are stored by plain
-  // string, so a custom `exp` would be indistinguishable from the built-in `exp`, and renaming or
-  // deleting it would wrongly remap parameters that meant the built-in.
-  const shadowsBuiltinDistribution =
-    selectedRootElement === DISTANCE_DISTRIBUTIONS_KEY &&
-    (STANDARD_DISTRIBUTIONS as readonly string[]).includes(newKey);
-  const newKeyError =
-    allEntries.has(newKey) || !newKey || newKey === selectedEntry || shadowsBuiltinDistribution;
+  const newKeyError = allEntries.has(newKey) || !newKey || newKey === selectedEntry;
   const fieldErrors = useFieldErrors();
 
   const renameInputRef = useRef<InputRef>(null);

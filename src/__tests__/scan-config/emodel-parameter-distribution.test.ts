@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import {
   availableDistributions,
-  DEFAULT_DISTRIBUTION,
   defaultOptimizationValue,
   entryParameters,
   makeParameterSelection,
@@ -10,7 +9,6 @@ import {
   readMechanisms,
   readRegionEntries,
   remapParameterDistributions,
-  STANDARD_DISTRIBUTIONS,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
@@ -21,7 +19,7 @@ const emodelSchema = {
   },
 } as unknown as ConfigSchema;
 
-/** A config with two params: one using `mouse_decay`, one using `uniform`. */
+/** A config with two params: one using the given distribution, one using an unrelated `other_decay`. */
 function configWithDistribution(distribution: string): Config {
   return {
     emodel_optimisation_parameters: {
@@ -33,7 +31,7 @@ function configWithDistribution(distribution: string): Config {
               ion_channel_model: { type: 'IonChannelModelFromID', id_str: 'icm-1' },
               parameters: {
                 gNa: { type: 'ParameterSelection', value: {}, distribution },
-                gK: { type: 'ParameterSelection', value: {}, distribution: 'uniform' },
+                gK: { type: 'ParameterSelection', value: {}, distribution: 'other_decay' },
               },
             },
           ],
@@ -44,22 +42,34 @@ function configWithDistribution(distribution: string): Config {
 }
 
 describe('availableDistributions', () => {
-  it('returns the ten built-ins when no custom distributions are declared', () => {
+  it('returns no distributions when none are declared', () => {
     const config: Config = { emodel_optimisation_parameters: {} };
-    expect(availableDistributions(config)).toEqual([...STANDARD_DISTRIBUTIONS]);
+    expect(availableDistributions(config)).toEqual([]);
   });
 
-  it('merges user-declared custom distributions after the built-ins, de-duplicated', () => {
+  it('returns the declared custom distributions with their name and python function', () => {
+    const config: Config = {
+      distance_dependent_distributions: {
+        mouse_decay: {
+          type: 'CustomDistanceDependentDistribution',
+          function: 'math.exp({distance})*{value}',
+        },
+        rat_decay: { type: 'CustomDistanceDependentDistribution', function: '{value}' },
+      },
+    };
+    expect(availableDistributions(config)).toEqual([
+      { name: 'mouse_decay', function: 'math.exp({distance})*{value}' },
+      { name: 'rat_decay', function: '{value}' },
+    ]);
+  });
+
+  it('uses an empty function when the entry has none', () => {
     const config: Config = {
       distance_dependent_distributions: {
         mouse_decay: { type: 'CustomDistanceDependentDistribution' },
-        // A custom name colliding with a built-in must not appear twice.
-        exp: { type: 'CustomDistanceDependentDistribution' },
       },
     };
-    const result = availableDistributions(config);
-    expect(result).toEqual([...STANDARD_DISTRIBUTIONS, 'mouse_decay']);
-    expect(result.filter((d) => d === 'exp')).toHaveLength(1);
+    expect(availableDistributions(config)).toEqual([{ name: 'mouse_decay', function: '' }]);
   });
 });
 
@@ -68,17 +78,17 @@ describe('readDistribution', () => {
     expect(readDistribution({ distribution: 'mouse_decay' })).toBe('mouse_decay');
   });
 
-  it('defaults to uniform when missing or empty', () => {
-    expect(readDistribution({})).toBe(DEFAULT_DISTRIBUTION);
-    expect(readDistribution({ distribution: '' })).toBe(DEFAULT_DISTRIBUTION);
-    expect(readDistribution(null)).toBe(DEFAULT_DISTRIBUTION);
+  it('returns null when missing or empty (the nullable default)', () => {
+    expect(readDistribution({})).toBeNull();
+    expect(readDistribution({ distribution: '' })).toBeNull();
+    expect(readDistribution(null)).toBeNull();
   });
 });
 
 describe('makeParameterSelection', () => {
-  it('applies the uniform default to a new parameter', () => {
+  it('omits the distribution key for a new parameter (schema is non-nullable with a default)', () => {
     const selection = makeParameterSelection(defaultOptimizationValue());
-    expect(selection).toMatchObject({ distribution: DEFAULT_DISTRIBUTION });
+    expect(selection).not.toHaveProperty('distribution');
   });
 
   it('preserves an explicitly passed distribution', () => {
@@ -105,22 +115,28 @@ describe('remapParameterDistributions', () => {
     );
     expect(distributionOf(next, 'gNa')).toBe('rat_decay');
     // Unrelated params are untouched.
-    expect(distributionOf(next, 'gK')).toBe('uniform');
+    expect(distributionOf(next, 'gK')).toBe('other_decay');
   });
 
-  it('resets parameters to uniform when the distribution is deleted', () => {
+  it('drops the distribution key when the distribution is deleted', () => {
     const next = remapParameterDistributions(
       configWithDistribution('mouse_decay'),
       emodelSchema,
       'mouse_decay',
       null
     );
-    expect(distributionOf(next, 'gNa')).toBe(DEFAULT_DISTRIBUTION);
-    expect(distributionOf(next, 'gK')).toBe('uniform');
+    const entry = readRegionEntries(
+      readMechanisms(next.emodel_optimisation_parameters),
+      'somatic'
+    )[0];
+    // The key is removed, not set to null (the schema's `distribution` is a non-nullable string).
+    expect(entryParameters(entry).gNa).not.toHaveProperty('distribution');
+    expect(distributionOf(next, 'gNa')).toBeNull();
+    expect(distributionOf(next, 'gK')).toBe('other_decay');
   });
 
   it('returns the same config when no parameter uses the name', () => {
-    const config = configWithDistribution('uniform');
+    const config = configWithDistribution('other_decay');
     expect(remapParameterDistributions(config, emodelSchema, 'mouse_decay', null)).toBe(config);
   });
 });
