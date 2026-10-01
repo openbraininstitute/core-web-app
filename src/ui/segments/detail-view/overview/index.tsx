@@ -23,6 +23,7 @@ import {
   getViewDefinitionByExtendedType,
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -57,6 +58,7 @@ import {
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
+import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -168,6 +170,38 @@ export default async function Overview({
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
+  // a result opens as its campaign's scan config, like a simulation campaign; one whose campaign
+  // cannot be traced keeps the plain overview below
+  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
+    const { data: extraction } = await tryCatch(
+      resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+    );
+
+    if (extraction && scanConfig) {
+      return (
+        <ScanConfiguration
+          entityId={extraction.recordingIds.at(0)}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={extraction.campaign.id}
+          initialConfig={extraction.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
+        />
+      );
+    }
+  }
+
   // TODO: new simulation and extraction campaigns should be handled here
   if (entity.type === EntityTypeDict.TaskConfig) {
     if (

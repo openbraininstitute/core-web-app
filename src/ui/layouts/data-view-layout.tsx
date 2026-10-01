@@ -5,6 +5,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { ViewVariant, WorkspaceScope } from '@/constants';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -71,9 +72,16 @@ export async function DataViewLayout({
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
+  // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
+  const opensAsCampaign =
+    type === ExtendedEntitiesTypeDict.EFeatureExtractionResult &&
+    Boolean(
+      (await tryCatch(resolveEFeatureExtractionResultCampaign(id, virtualLabId, projectId))).data
+    );
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
-    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
+    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ||
+    opensAsCampaign;
   const useClassicLayout =
     entityType.group === EntityTypeGroup.Simulations || rendersFullPageWorkflowUi;
   const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
@@ -94,7 +102,7 @@ export async function DataViewLayout({
   );
   const closePage = <ClosePage url={parentLink} variant={chromeVariant} />;
 
-  if (includes(LeftMenuUnsupportedEntityTypes, type)) {
+  if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
     if (useClassicLayout) {
       return (
         <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3 pt-3">
