@@ -55,6 +55,7 @@ export function RegionChoiceCards({
             <TooltipTrigger asChild>
               <button
                 type="button"
+                data-testid={`scan-config-emodel-section-list-${choice.name}`}
                 disabled={!choice.available}
                 aria-pressed={isSelected}
                 aria-expanded={isSelected}

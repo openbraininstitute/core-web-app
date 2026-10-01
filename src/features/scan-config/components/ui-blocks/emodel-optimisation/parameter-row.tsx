@@ -86,7 +86,10 @@ export function ParameterRow({
   };
 
   return (
-    <li className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3">
+    <li
+      data-testid={`scan-config-emodel-parameter-${name}`}
+      className="flex flex-col gap-2 rounded border border-gray-200 bg-white p-3"
+    >
       <div className="flex items-center justify-between gap-3">
         <span className="text-primary-8 min-w-0 truncate text-sm font-medium">{name}</span>
         <div className="flex shrink-0 items-center gap-3">

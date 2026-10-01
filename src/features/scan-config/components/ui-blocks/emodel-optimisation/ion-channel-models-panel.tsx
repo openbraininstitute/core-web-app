@@ -148,6 +148,7 @@ export function IonChannelModelsPanel({
             return (
               <li
                 key={ref.id_str}
+                data-testid={`scan-config-emodel-assign-${ref.id_str}`}
                 className="flex items-center justify-between gap-3 rounded border border-gray-200 bg-white p-3"
               >
                 <span className="text-primary-8 min-w-0 flex-1 truncate text-sm font-medium">

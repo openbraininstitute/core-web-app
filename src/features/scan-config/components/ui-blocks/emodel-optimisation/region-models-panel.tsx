@@ -106,6 +106,7 @@ export function RegionModelsPanel({
               <li key={idStr}>
                 <button
                   type="button"
+                  data-testid={`scan-config-emodel-model-${idStr}`}
                   aria-pressed={isSelected}
                   aria-expanded={isSelected}
                   // toggle: reselecting the open model closes the detail drawer
