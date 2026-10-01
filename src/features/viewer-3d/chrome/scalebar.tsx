@@ -3,13 +3,13 @@ import { type ComponentProps, useMemo } from 'react';
 
 import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 
-import type { Viewer } from '../engine/viewer';
+import type { ViewControls } from '../engine/scene-viewer';
 
 /**
  * The circuit viewer's vertical ruler, down the left of the view. It listens for µm per pixel as
  * the circuit viewer's camera sends them; the viewer's pixel scale is the same thing.
  */
-export function Scalebar({ viewer, color }: { viewer: Viewer; color: string }) {
+export function Scalebar({ viewer, color }: { viewer: ViewControls; color: string }) {
   const spacePerPixel = useMemo(() => pixelScaleEvent(viewer), [viewer]);
   const config = useMemo(() => resolveScalebar(true, color), [color]);
   return <MorphoViewerScalebar className={config} spacePerPixelEvent={spacePerPixel} />;
@@ -19,7 +19,7 @@ export function Scalebar({ viewer, color }: { viewer: Viewer; color: string }) {
 type SpacePerPixelEvent = ComponentProps<typeof MorphoViewerScalebar>['spacePerPixelEvent'];
 
 /** What the ruler needs of a tgd event, fed by the viewer; the current scale goes to a new listener at once. */
-function pixelScaleEvent(viewer: Viewer): SpacePerPixelEvent {
+function pixelScaleEvent(viewer: ViewControls): SpacePerPixelEvent {
   const unsubscribe = new Map<(scale: number) => void, () => void>();
   const event = {
     addListener(listener: (scale: number) => void) {

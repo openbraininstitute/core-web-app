@@ -28,10 +28,23 @@
  * The same hook (`withDisplacement`) can widen a fibre thinner than a few
  * pixels on screen (`WIDEN_GLSL`), so that a whole-cell view of a large cell
  * is not left blank.
+ *
+ * A surface without some of those vertex attributes (an EM mesh has neither
+ * colours, types nor radii) gets looks built for it (`createLooks`): one plain
+ * colour where the neurite colours would go, no bumps or width floor, and none
+ * of the looks that cannot do without what it lacks (`Look.needs`).
  */
 
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/** A vertex attribute of a morphology's surface, which other surfaces may lack. */
+export type SurfaceAttribute = 'color' | 'radius' | 'swcType';
+
+export const MORPHOLOGY_SURFACE: readonly SurfaceAttribute[] = ['color', 'radius', 'swcType'];
+
+/** What the looks that draw in the neurite colours draw a surface without vertex colours in. */
+const PLAIN_COLOR = '#c4c7cc';
 
 export interface Look {
   id: string;
@@ -66,6 +79,8 @@ export interface Look {
   colors: 'palette' | 'tint' | 'own';
   /** The key to the look's own colours, where they mean something. */
   legend?: LookLegend;
+  /** Vertex attributes the look can't do without; a surface that lacks one isn't offered it. */
+  needs?: SurfaceAttribute[];
 }
 
 export type LookLegend =
@@ -110,6 +125,21 @@ export function setBumpParams(p: BumpParams): void {
   bumpUniforms.uBumpDetail.value = 1 + 2 * (1 - Math.max(0, Math.min(1, p.smoothness)));
 }
 
+/** GLSL of the integer hash of a lattice cell (pcg3d), which the noise and the gold leaf's flakes are built on. */
+const HASH_GLSL = /* glsl */ `
+uvec3 latticeHash( uvec3 v ) {
+	v = v * 1664525u + 1013904223u;
+	v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+	v ^= v >> 16u;
+	v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
+	return v;
+}
+// Three numbers in [0, 1) for the lattice cell c, different ones for another salt.
+vec3 latticeRandom( vec3 c, uint salt ) {
+	return vec3( latticeHash( uvec3( ivec3( c ) ) + uvec3( salt, 2u * salt, 3u * salt ) ) ) * ( 1.0 / 4294967296.0 );
+}
+`;
+
 /**
  * GLSL of a gradient noise with its gradient, for either shader stage, and of the integer hash of a lattice cell it
  * is built on. The bumps are made of it, and the gold leaf's flakes are placed by the hash.
@@ -125,17 +155,7 @@ export function setBumpParams(p: BumpParams): void {
  * deviation of 0.23, and a median slope of 0.94 per unit of the argument.
  */
 const NOISE_GLSL = /* glsl */ `
-uvec3 latticeHash( uvec3 v ) {
-	v = v * 1664525u + 1013904223u;
-	v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
-	v ^= v >> 16u;
-	v.x += v.y * v.z; v.y += v.z * v.x; v.z += v.x * v.y;
-	return v;
-}
-// Three numbers in [0, 1) for the lattice cell c, different ones for another salt.
-vec3 latticeRandom( vec3 c, uint salt ) {
-	return vec3( latticeHash( uvec3( ivec3( c ) ) + uvec3( salt, 2u * salt, 3u * salt ) ) ) * ( 1.0 / 4294967296.0 );
-}
+${HASH_GLSL}
 // A lattice corner o of cell q, at w within the cell: its gradient's value there (x) and the gradient (yzw), each
 // gradient component in [-1, 1].
 vec4 noiseCorner( uvec3 q, vec3 w, vec3 o ) {
@@ -231,20 +251,26 @@ export function setWidthFloor(pixels: number): void {
 }
 
 /**
- * GLSL for a vertex shader of `pixelSize`, the length in mesh coordinates (µm, which the model matrix leaves
- * unscaled) of a CSS pixel at a point's depth, where the viewport's height spans 2 w / P[1][1] (w, the clip w, is the
- * depth); and of the width floor: `widenToPixels` pushes a point of a fibre of radius r out along its unit normal
- * until it lies half of `uMinWidth` pixels from the axis. Fibres that are wide enough, and points behind the camera,
- * are left alone. Out along the normal is away from the axis on a tube, and an offset of the surface on a patch.
+ * GLSL for a vertex shader of `pixelSize`, the length in mesh coordinates of a CSS pixel at a point's depth, where the
+ * viewport's height spans 2 w / P[1][1] (w, the clip w, is the depth). That is µm, divided by the model matrix's scale,
+ * which is uniform: 1 for a morphology, the grid step for a mesh whose positions are on a grid.
  */
-const WIDEN_GLSL = /* glsl */ `
-uniform float uMinWidth;
+const PIXEL_SIZE_GLSL = /* glsl */ `
 uniform float uViewHeight;
 
 float pixelSize( vec3 p ) {
 	float w = projectionMatrix[ 2 ][ 3 ] * ( modelViewMatrix * vec4( p, 1.0 ) ).z + projectionMatrix[ 3 ][ 3 ];
-	return 2.0 * w / ( projectionMatrix[ 1 ][ 1 ] * uViewHeight );
+	return 2.0 * w / ( projectionMatrix[ 1 ][ 1 ] * uViewHeight * length( modelMatrix[ 0 ].xyz ) );
 }
+`;
+
+/**
+ * GLSL for a vertex shader of the width floor: `widenToPixels` pushes a point of a fibre of radius r out along its unit
+ * normal until it lies half of `uMinWidth` pixels from the axis. Fibres that are wide enough, and points behind the
+ * camera, are left alone. Out along the normal is away from the axis on a tube, and an offset of the surface on a patch.
+ */
+const WIDEN_GLSL = /* glsl */ `
+uniform float uMinWidth;
 
 void widenToPixels( inout vec3 p, vec3 n, float r ) {
 	if ( uMinWidth <= 0.0 ) return;
@@ -288,15 +314,14 @@ export function addShaderHook<T extends THREE.Material>(
  * declarations, `vBumpPosition` among them, go in front of the shader, for any other hook to use.
  */
 export function withDisplacement<T extends THREE.Material>(m: T, { perFragment = true } = {}): T {
-  const before = m.onBeforeRender;
-  m.onBeforeRender = (renderer, ...rest) => {
-    before.call(m, renderer, ...rest);
-    widenUniforms.uViewHeight.value = Math.max(1, renderer.getViewport(viewport).w);
-  };
+  trackViewHeight(m);
   return addShaderHook(m, perFragment ? 'displace' : 'displace-per-vertex', (shader) => {
     Object.assign(shader.uniforms, bumpUniforms, widenUniforms);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${BUMP_GLSL}\n${WIDEN_GLSL}`)
+      .replace(
+        '#include <common>',
+        `#include <common>\n${BUMP_GLSL}\n${PIXEL_SIZE_GLSL}\n${WIDEN_GLSL}`
+      )
       .replace(
         'void main() {',
         'void main() {\n\tvec3 displacedPosition = vec3( position ), displacedNormal = vec3( normal );' +
@@ -315,6 +340,26 @@ export function withDisplacement<T extends THREE.Material>(m: T, { perFragment =
         '#include <beginnormal_vertex>\n\tobjectNormal = displacedNormal;'
       );
   });
+}
+
+/** `pixelSize` without the displacement, for the outline of a surface without radii. */
+export function withPixelSize<T extends THREE.Material>(m: T): T {
+  trackViewHeight(m);
+  return addShaderHook(m, 'pixel-size', (shader) => {
+    shader.uniforms.uViewHeight = widenUniforms.uViewHeight;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      `#include <common>\n${PIXEL_SIZE_GLSL}`
+    );
+  });
+}
+
+function trackViewHeight(m: THREE.Material): void {
+  const before = m.onBeforeRender;
+  m.onBeforeRender = (renderer, ...rest) => {
+    before.call(m, renderer, ...rest);
+    widenUniforms.uViewHeight.value = Math.max(1, renderer.getViewport(viewport).w);
+  };
 }
 
 /**
@@ -444,15 +489,16 @@ export function showTypeTint(on: boolean): void {
 
 /**
  * EM segmentation, as a segmented electron-microscopy volume is rendered (Neuroglancer, FlyWire, MICrONS): one matte
- * grey for the whole cell and, with the type tint on, a faint tint of the type colours' hue.
+ * grey for the whole cell and, with the type tint on, a faint tint of the type colours' hue where there are any.
  */
-function makeEm(): THREE.MeshStandardMaterial {
+function makeEm(colors: boolean): THREE.MeshStandardMaterial {
   const m = new THREE.MeshStandardMaterial({
     color: 0xb3aba1,
     roughness: 0.55,
     metalness: 0,
-    vertexColors: true,
+    vertexColors: colors,
   });
+  if (!colors) return withGrain(m, 0.03);
   addShaderHook(m, 'type-tint', (shader) => {
     shader.uniforms.uTypeTint = typeTintUniform;
     shader.fragmentShader = shader.fragmentShader
@@ -656,17 +702,18 @@ function makeDepthCoded(): THREE.ShaderMaterial {
 const GOLD_KEY: [number, number, number] = [-0.6, 0.8, 1.3];
 
 /**
- * The gold leaf's flakes, for the fragment shader's declarations. The hash, `normalMatrix` and `vBumpPosition` are
- * `withDisplacement`'s, which must be applied on top: it puts them in front of the shader.
+ * The gold leaf's flakes, for the fragment shader's declarations, after the hash. They are placed in world space, µm,
+ * whatever the model matrix scales the mesh by.
  */
 const GLINT_PARS_GLSL = /* glsl */ `
 uniform vec3 uGlintLight;
 uniform vec3 uGlintColor;
+varying vec3 vGlintPosition;
 // The flakes of one size, cubes size µm on edge, each tilted its own way off the surface: how squarely the flake at p
 // mirrors the key light into the eye (half vector h), 0 to 1.
 float glintFlakes( vec3 p, float size, vec3 n, vec3 h ) {
 	vec3 tilt = 2.0 * latticeRandom( floor( p / size ), 71u ) - 1.0;
-	vec3 f = normalize( n + 0.45 * ( normalMatrix * tilt ) );
+	vec3 f = normalize( n + 0.45 * ( mat3( viewMatrix ) * tilt ) );
 	return smoothstep( 0.988, 0.998, dot( f, h ) );
 }
 `;
@@ -676,12 +723,12 @@ const GLINT_GLSL = /* glsl */ `
 	{
 		// Flakes a couple of pixels across at any zoom: the two sizes (powers of two, µm) either side of that are mixed,
 		// so that a flake stays on its spot of the surface and fades out as the next size takes over.
-		float glintLevel = log2( max( 2.5 * length( fwidth( vBumpPosition ) ), 1e-4 ) );
+		float glintLevel = log2( max( 2.5 * length( fwidth( vGlintPosition ) ), 1e-4 ) );
 		float glintSize = exp2( floor( glintLevel ) );
 		vec3 glintH = normalize( uGlintLight + geometryViewDir );
 		float glint = mix(
-			glintFlakes( vBumpPosition, glintSize, normal, glintH ),
-			glintFlakes( vBumpPosition, 2.0 * glintSize, normal, glintH ),
+			glintFlakes( vGlintPosition, glintSize, normal, glintH ),
+			glintFlakes( vGlintPosition, 2.0 * glintSize, normal, glintH ),
 			fract( glintLevel ) );
 		outgoingLight += uGlintColor * glint;
 	}
@@ -690,16 +737,26 @@ const GLINT_GLSL = /* glsl */ `
 /**
  * Gold leaf on black lacquer, after the reflective microetchings of neurons: polished gold under the room
  * environment, and flakes of the leaf, anchored to the surface, that catch the key light and go out as the cell turns.
+ * The flakes are placed by the bumps' hash, which `withDisplacement` puts in front of a displaced surface's shader.
  */
-function makeGoldLeaf(): THREE.MeshPhysicalMaterial {
+function makeGoldLeaf(displaced: boolean): THREE.MeshPhysicalMaterial {
   const m = new THREE.MeshPhysicalMaterial({ color: 0xf2b544, metalness: 1, roughness: 0.3 });
   return addShaderHook(m, 'gold-leaf', (shader) => {
     Object.assign(shader.uniforms, {
       uGlintLight: { value: new THREE.Vector3(...GOLD_KEY).normalize() },
       uGlintColor: { value: new THREE.Color(0xfff0c8).multiplyScalar(8) },
     });
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vGlintPosition;')
+      .replace(
+        '#include <begin_vertex>',
+        '#include <begin_vertex>\n\tvGlintPosition = ( modelMatrix * vec4( position, 1.0 ) ).xyz;'
+      );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${GLINT_PARS_GLSL}`)
+      .replace(
+        '#include <common>',
+        `#include <common>\n${displaced ? '' : HASH_GLSL}\n${GLINT_PARS_GLSL}`
+      )
       .replace('#include <opaque_fragment>', `${GLINT_GLSL}\n\t#include <opaque_fragment>`);
   });
 }
@@ -714,7 +771,17 @@ export function makeEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
   return tex;
 }
 
-export function createLooks(pixelRatio: number): Look[] {
+/**
+ * The looks for a surface with the vertex attributes `has`: those that draw in the neurite colours draw a surface
+ * without them in one plain colour, and a surface without radii has no bumps and no width floor.
+ */
+export function createLooks(
+  pixelRatio: number,
+  has: readonly SurfaceAttribute[] = MORPHOLOGY_SURFACE
+): Look[] {
+  const colors = has.includes('color');
+  const displaced = has.includes('radius');
+  const painted = colors ? { vertexColors: true } : { color: PLAIN_COLOR };
   const cajal = makeCajal(pixelRatio);
   const looks: Look[] = [
     {
@@ -723,7 +790,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Headlight and sky light, matte surface. The neutral baseline.',
       material: new THREE.MeshStandardMaterial({
-        vertexColors: true,
+        ...painted,
         roughness: 0.7,
         metalness: 0,
       }),
@@ -739,7 +806,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Three-point lighting: warm key, cool fill and a rim light from behind.',
       material: new THREE.MeshStandardMaterial({
-        vertexColors: true,
+        ...painted,
         roughness: 0.45,
         metalness: 0.05,
       }),
@@ -757,7 +824,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Matcap shading: a sculpted, lighting-independent look that reads shape well.',
       material: new THREE.MeshMatcapMaterial({
-        vertexColors: true,
+        ...painted,
         matcap: makeMatcap([
           [0, '#ffffff'],
           [0.22, '#f6f6f8'],
@@ -774,7 +841,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Clear-coated surface reflecting a soft room environment. Wet, alive.',
       material: new THREE.MeshPhysicalMaterial({
-        vertexColors: true,
+        ...painted,
         roughness: 0.3,
         metalness: 0,
         clearcoat: 0.8,
@@ -794,7 +861,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Velvet sheen with a bright rim under the room environment. Soft and organic.',
       material: new THREE.MeshPhysicalMaterial({
-        vertexColors: true,
+        ...painted,
         roughness: 0.55,
         metalness: 0,
         sheen: 0.5,
@@ -815,7 +882,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Four-step cel shading with a dark outline. Illustration style.',
       material: new THREE.MeshToonMaterial({
-        vertexColors: true,
+        ...painted,
         gradientMap: makeToonGradient([80, 150, 215, 255]),
       }),
       rig: rig(
@@ -831,7 +898,7 @@ export function createLooks(pixelRatio: number): Look[] {
       colors: 'palette',
       hint: 'Fog towards the background: far branches fade, near ones stand out, as in molecular viewers.',
       material: new THREE.MeshStandardMaterial({
-        vertexColors: true,
+        ...painted,
         roughness: 0.65,
         metalness: 0,
       }),
@@ -870,7 +937,7 @@ export function createLooks(pixelRatio: number): Look[] {
       label: 'EM segmentation',
       colors: 'tint',
       hint: 'Render of a segmented electron-microscopy volume: matte waxy grey, lumpy membrane, occlusion in the creases, dark field. Turns the bumps and the ambient occlusion on.',
-      material: makeEm(),
+      material: makeEm(colors),
       // A broad sky light keeps the shadows open, a soft key from the upper left models the form, and a rim light
       // from behind lifts the silhouettes off the dark field.
       rig: rig(
@@ -895,6 +962,7 @@ export function createLooks(pixelRatio: number): Look[] {
       },
       hint: 'Confocal-style projection: GFP-green dendrites and soma, red axon, additive glow with bloom.',
       material: makeFluorescence(),
+      needs: ['swcType'],
       background: { light: ['#000000', '#000000'], dark: ['#000000', '#000000'] },
       bloom: true,
     },
@@ -942,15 +1010,15 @@ export function createLooks(pixelRatio: number): Look[] {
       label: 'Gold leaf',
       colors: 'own',
       hint: 'Gold leaf on black lacquer, after the reflective microetchings of neurons: flakes catch the light and go out as the cell turns.',
-      material: makeGoldLeaf(),
+      material: makeGoldLeaf(displaced),
       rig: rig(viewLight(0xfff0d8, 3, GOLD_KEY), viewLight(0xffffff, 1.5, [0.8, 0.3, -1])),
       env: true,
       background: { light: ['#1d1814', '#060504'], dark: ['#1d1814', '#060504'] },
     },
   ];
   for (const l of looks) {
-    withDisplacement(l.material);
-    if (l.outline) withDisplacement(l.outline);
+    if (displaced) withDisplacement(l.material);
+    if (l.outline) (displaced ? withDisplacement : withPixelSize)(l.outline);
   }
-  return looks;
+  return looks.filter((l) => l.needs?.every((a) => has.includes(a)) ?? true);
 }

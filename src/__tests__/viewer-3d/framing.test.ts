@@ -7,7 +7,7 @@ import {
   depthSpan,
   fitDistance,
   orbitRadius,
-} from '@/features/entities/cell-morphology/morpho-viewer/engine/framing';
+} from '@/features/viewer-3d/engine/framing';
 
 describe('orbitRadius', () => {
   it('reaches the farthest corner of a box around the origin', () => {

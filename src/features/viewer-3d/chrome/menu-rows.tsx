@@ -1,3 +1,5 @@
+import { createElement } from 'react';
+
 import {
   MenuRow,
   MenuSlider,
@@ -7,39 +9,10 @@ import { cn } from '@/utils/css-class';
 
 import { HelpButton } from '../help/help-button';
 
-import type { ReactNode } from 'react';
-import type { HelpKey } from '../help/help-text';
+import type { ComponentType, ReactNode } from 'react';
+import type { HelpText } from '../help/help-button';
 
 export const ICON = 'size-4 shrink-0';
-
-/** A menu section's title with its "?", and what goes at the other end of the row. */
-export function SectionTitle({
-  title,
-  topic,
-  className,
-  children,
-}: {
-  title: string;
-  topic: HelpKey;
-  className?: string;
-  children?: ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center justify-between text-sm font-semibold text-primary-9',
-        className
-      )}
-      data-help-anchor
-    >
-      <span className="flex items-center">
-        {title}
-        <HelpButton topic={topic} title={title} />
-      </span>
-      {children}
-    </div>
-  );
-}
 
 export function Note({ children }: { children: ReactNode }) {
   return <p className="m-0 px-2 text-xs italic">{children}</p>;
@@ -53,11 +26,42 @@ export function Heading({ children }: { children: ReactNode }) {
   );
 }
 
-function Label({ title, topic }: { title: string; topic: HelpKey }) {
+/** A label's help: the card's text, and its topic, which names it for tests. */
+interface Help {
+  topic: string;
+  help: HelpText;
+}
+
+/** A menu section's title with its "?", and what goes at the other end of the row. */
+export function SectionTitle({
+  title,
+  topic,
+  help,
+  className,
+  children,
+}: Help & { title: string; className?: string; children?: ReactNode }) {
+  return (
+    <div
+      className={cn(
+        'flex items-center justify-between text-sm font-semibold text-primary-9',
+        className
+      )}
+      data-help-anchor
+    >
+      <span className="flex items-center">
+        {title}
+        <HelpButton topic={topic} title={title} help={help} />
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function Label({ title, topic, help }: Help & { title: string }) {
   return (
     <span className="flex items-center">
       {title}
-      <HelpButton topic={topic} title={title} />
+      <HelpButton topic={topic} title={title} help={help} />
     </span>
   );
 }
@@ -66,13 +70,13 @@ function Label({ title, topic }: { title: string; topic: HelpKey }) {
 export function HelpRow({
   title,
   topic,
+  help,
   icon,
   disabled,
   className,
   children,
-}: {
+}: Help & {
   title: string;
-  topic: HelpKey;
   icon: ReactNode;
   disabled?: boolean;
   className?: string;
@@ -81,7 +85,7 @@ export function HelpRow({
   return (
     <div data-help-anchor>
       <MenuRow
-        label={<Label title={title} topic={topic} />}
+        label={<Label title={title} topic={topic} help={help} />}
         icon={icon}
         disabled={disabled}
         className={className}
@@ -95,20 +99,20 @@ export function HelpRow({
 export function ToggleRow({
   title,
   topic,
+  help,
   icon,
   checked,
   onChange,
   disabled,
-}: {
+}: Help & {
   title: string;
-  topic: HelpKey;
   icon: ReactNode;
   checked: boolean;
   onChange(value: boolean): void;
   disabled?: boolean;
 }) {
   return (
-    <HelpRow title={title} topic={topic} icon={icon} disabled={disabled}>
+    <HelpRow title={title} topic={topic} help={help} icon={icon} disabled={disabled}>
       <ViewerSwitch checked={checked} onChange={onChange} label={title} disabled={disabled} />
     </HelpRow>
   );
@@ -117,10 +121,10 @@ export function ToggleRow({
 export function SliderRow({
   title,
   topic,
+  help,
   ...slider
-}: {
+}: Help & {
   title: string;
-  topic: HelpKey;
   min: number;
   max: number;
   step: number;
@@ -131,7 +135,22 @@ export function SliderRow({
 }) {
   return (
     <div data-help-anchor>
-      <MenuSlider label={<Label title={title} topic={topic} />} {...slider} />
+      <MenuSlider label={<Label title={title} topic={topic} help={help} />} {...slider} />
     </div>
   );
+}
+
+/** The rows and the "?" with a viewer's own help cards, each looked up by its topic. */
+export function createHelpRows<K extends string>(texts: Record<K, HelpText>) {
+  const bind = <P extends Help>(Row: ComponentType<P>) =>
+    function WithHelp({ topic, ...props }: Omit<P, keyof Help> & { topic: K }) {
+      return createElement(Row, { ...props, topic, help: texts[topic] } as unknown as P);
+    };
+  return {
+    HelpButton: bind(HelpButton),
+    SectionTitle: bind(SectionTitle),
+    HelpRow: bind(HelpRow),
+    ToggleRow: bind(ToggleRow),
+    SliderRow: bind(SliderRow),
+  };
 }

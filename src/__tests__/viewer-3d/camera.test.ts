@@ -8,7 +8,7 @@ import {
   halfHeightAt,
   orthoClip,
   orthoPixelScale,
-} from '@/features/entities/cell-morphology/morpho-viewer/engine/camera';
+} from '@/features/viewer-3d/engine/camera';
 
 describe('projection switch', () => {
   it('keeps how large the cell is at the target, there and back', () => {

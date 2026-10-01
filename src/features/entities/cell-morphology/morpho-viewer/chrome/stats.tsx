@@ -9,8 +9,7 @@ import {
   STEM_MIN_DISTANCE,
 } from '../engine/soma';
 import { SWC_SOMA, typeName } from '../engine/swc';
-import { HelpButton } from '../help/help-button';
-import { SectionTitle } from './menu-rows';
+import { HelpButton, SectionTitle } from './menu-rows';
 
 import type { Palette } from '../engine/colors';
 import type { MeshStats } from '../engine/mesher';

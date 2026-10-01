@@ -11,8 +11,8 @@ import { DebugControls } from './debug-controls';
 import { Note, SectionTitle } from './menu-rows';
 import { Stats } from './stats';
 
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { Palette } from '../engine/colors';
-import type { Look } from '../engine/looks';
 import type { MeshResult } from '../engine/mesher';
 import type { ExportFormat } from '../export';
 import type { MorphologyMeshState } from '../use-morphology-mesh';

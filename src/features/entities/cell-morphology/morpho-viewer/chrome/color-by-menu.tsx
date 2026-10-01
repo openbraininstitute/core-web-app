@@ -3,12 +3,12 @@ import { useState } from 'react';
 
 import { useChromeDismiss } from '@/features/scan-config/components/color-by/chrome-menu';
 import { mutedStyle, panelStyle } from '@/features/scan-config/components/color-by/contrast';
+import { focusChosen, PillOption } from '@/features/viewer-3d/chrome/pill-option';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
-import { HelpButton } from '../help/help-button';
-import { focusChosen, PillOption } from './pill-option';
+import { HelpButton } from './menu-rows';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { ColorBy } from '../use-viewer-settings';

@@ -9,11 +9,11 @@ import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import { DISTANCE_RAMP, PALETTE_KEYS } from '../engine/colors';
 import { SWC_APICAL, SWC_AXON, SWC_BASAL, SWC_SOMA } from '../engine/swc';
-import { HelpButton } from '../help/help-button';
 import { currentPalette, type ViewerSettings } from '../use-viewer-settings';
+import { HelpButton } from './menu-rows';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
-import type { Look, LookLegend } from '../engine/looks';
+import type { Look, LookLegend } from '@/features/viewer-3d/engine/looks';
 import type { ViewerActions } from '../use-viewer-settings';
 
 const ROWS = [

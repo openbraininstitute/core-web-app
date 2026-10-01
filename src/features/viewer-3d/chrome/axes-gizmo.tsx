@@ -4,7 +4,7 @@ import { cn } from '@/utils/css-class';
 
 import { gizmoTips, TIPS } from '../engine/gizmo';
 
-import type { Viewer } from '../engine/viewer';
+import type { ViewControls } from '../engine/scene-viewer';
 
 const AXES = [
   { name: 'X', color: '#f03c2e', shade: '#4a0d08', ink: '#fff' },
@@ -17,10 +17,10 @@ export const GIZMO_SIZE = 96;
 const REACH = 30;
 
 /**
- * The morphology's axes as the camera sees them, in the bottom-right corner: X, Y and Z labelled, their opposites
+ * The scene's axes as the camera sees them, in the bottom-right corner: X, Y and Z labelled, their opposites
  * ringed, the nearer tips larger. A click on a tip views the cell from it.
  */
-export function AxesGizmo({ viewer, ring }: { viewer: Viewer; ring: string }) {
+export function AxesGizmo({ viewer, ring }: { viewer: ViewControls; ring: string }) {
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
 
   useLayoutEffect(

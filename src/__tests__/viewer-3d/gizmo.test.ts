@@ -8,9 +8,9 @@ import {
   gizmoTips,
   orientationFrom,
   type Sign,
-} from '@/features/entities/cell-morphology/morpho-viewer/engine/gizmo';
+} from '@/features/viewer-3d/engine/gizmo';
 
-import { expectClose, screenUp } from './mesh-utils';
+import { expectClose, screenUp } from './orientation-utils';
 
 const X = new THREE.Vector3(1, 0, 0);
 const Y = new THREE.Vector3(0, 1, 0);

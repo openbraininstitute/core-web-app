@@ -2,11 +2,7 @@
 import * as THREE from 'three';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import {
-  createLooks,
-  type Look,
-  withDisplacement,
-} from '@/features/entities/cell-morphology/morpho-viewer/engine/looks';
+import { createLooks, type Look, withDisplacement } from '@/features/viewer-3d/engine/looks';
 
 /** The shader lib entry three compiles a built-in material from (WebGLPrograms' `shaderIDs`). */
 const SHADER_IDS: Record<string, string> = {
@@ -182,6 +178,60 @@ describe('looks', () => {
           compile(l.material).fragmentShader
         );
       byKey.set(key, l);
+    }
+  });
+});
+
+describe('looks for a surface without colours, types or radii', () => {
+  let bare: Look[];
+
+  beforeAll(() => {
+    bare = createLooks(1, []);
+  });
+
+  it('leaves out the looks that need what the surface lacks', () => {
+    expect(bare.map((l) => l.id)).toEqual(
+      looks.filter((l) => l.id !== 'fluorescence').map((l) => l.id)
+    );
+  });
+
+  it('draws in one plain colour where the neurite colours would go', () => {
+    for (const l of bare) {
+      expect((l.material as THREE.MeshStandardMaterial).vertexColors, l.id).toBeFalsy();
+      expect(compile(l.material).fragmentShader, l.id).not.toContain('vColor');
+    }
+    const studio = bare.find((l) => l.id === 'studio')?.material as THREE.MeshStandardMaterial;
+    expect(studio.color.getHexString()).not.toBe('ffffff');
+  });
+
+  it("neither bumps nor widens the surface, and pushes the toon outline out by pixels at the model's scale", () => {
+    for (const l of bare) {
+      expect(compile(l.material).vertexShader, l.id).not.toContain('bumpDisplace');
+    }
+    const outline = bare.find((l) => l.outline)?.outline as THREE.Material;
+    const s = compile(outline);
+    expect(s.vertexShader).toContain('length( modelMatrix[ 0 ].xyz )');
+    expect(s.vertexShader.indexOf('float pixelSize( vec3 p )')).toBeLessThan(
+      s.vertexShader.indexOf('pixelSize( transformed )')
+    );
+    expect(s.vertexShader).not.toContain('widenToPixels');
+    expect(s.uniforms.uViewHeight).toBeDefined();
+    expect(redeclared(s.vertexShader)).toEqual([]);
+  });
+
+  it("places the gold leaf's flakes in world space, displaced or not", () => {
+    for (const set of [looks, bare]) {
+      const s = compile(set.find((l) => l.id === 'gold-leaf')?.material as THREE.Material);
+      expect(s.vertexShader).toContain(
+        'vGlintPosition = ( modelMatrix * vec4( position, 1.0 ) ).xyz;'
+      );
+      expect(s.fragmentShader).toContain('mat3( viewMatrix ) * tilt');
+      expect(s.fragmentShader.indexOf('vec3 latticeRandom(')).toBeGreaterThan(-1);
+      expect(s.fragmentShader.indexOf('float glintFlakes(')).toBeGreaterThan(
+        s.fragmentShader.indexOf('vec3 latticeRandom(')
+      );
+      expect(redeclared(s.vertexShader)).toEqual([]);
+      expect(redeclared(s.fragmentShader)).toEqual([]);
     }
   });
 });

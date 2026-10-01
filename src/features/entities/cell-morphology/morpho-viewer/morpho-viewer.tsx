@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 
+import { useSignal } from '@/features/viewer-3d/use-signal';
 import { cn } from '@/utils/css-class';
 import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 
@@ -11,7 +12,6 @@ import { defaultPoolSize, MeshPool } from './engine/pool';
 import { Viewer } from './engine/viewer';
 import { type Engine, useMorphologyMesh } from './use-morphology-mesh';
 import { usePathDistances } from './use-path-distances';
-import { useSignal } from './use-signal';
 import { currentPalette, useViewerSettings, type ViewerSettings } from './use-viewer-settings';
 
 import type { DistanceData } from './engine/colors';

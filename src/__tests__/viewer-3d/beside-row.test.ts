@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { besideRow } from '@/features/entities/cell-morphology/morpho-viewer/help/beside-row';
+import { besideRow } from '@/features/viewer-3d/help/beside-row';
 
 const WIDTH = window.innerWidth;
 

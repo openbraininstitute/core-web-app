@@ -1,18 +1,14 @@
+import { MAX_BUMP_AMPLITUDE } from '@/features/viewer-3d/engine/looks';
+
 import { MAX_REFINE } from '../engine/hybrid';
-import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
 import { MIN_RADIUS_VOXELS } from '../engine/mesher';
 import { HEAVY_AXON_FACTOR } from '../engine/prepare';
 import { BASE_RADIUS_FRACTION, SOMA_MIN_RADIUS, STEM_MIN_DISTANCE } from '../engine/soma';
 import { MAX_SHIFT } from '../engine/untangle';
 
-/** What the help card of a control says. engine/README.md has the long form. */
-export interface HelpText {
-  text: string;
-  /** What a change does, each under a short key: "Higher" and "Lower", "On" and "Off", or a menu's options. */
-  effects?: [string, string][];
-  /** A change shows at once in the view only, or rebuilds the mesh: the card says so. Not for a section's card. */
-  applies?: 'view' | 'build';
-}
+import type { HelpText } from '@/features/viewer-3d/help/help-button';
+
+/** The help cards of the morphology viewer's controls. engine/README.md has the long form. */
 
 export const HELP = {
   dark: {

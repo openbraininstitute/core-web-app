@@ -8,17 +8,18 @@ import {
   FullscreenButton,
 } from '@/features/scan-config/components/color-by/chrome-button';
 import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import { AxesGizmo, GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
+import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
+import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { cn } from '@/utils/css-class';
 
-import { AxesGizmo, GIZMO_SIZE } from './axes-gizmo';
 import { ColorByMenu } from './color-by-menu';
 import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
-import { Scalebar } from './scalebar';
 import { SettingsMenu } from './settings-menu';
-import { BuildStatus, WheelHint } from './status';
+import { BuildStatus } from './status';
 
-import type { Look } from '../engine/looks';
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { Viewer } from '../engine/viewer';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
 import type { ViewerActions, ViewerSettings } from '../use-viewer-settings';

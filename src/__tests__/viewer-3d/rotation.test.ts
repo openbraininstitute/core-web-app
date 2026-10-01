@@ -3,14 +3,10 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { describe, expect, it } from 'vitest';
 
-import { axisView } from '@/features/entities/cell-morphology/morpho-viewer/engine/gizmo';
-import {
-  followScreenUp,
-  stopGlide,
-  turnCamera,
-} from '@/features/entities/cell-morphology/morpho-viewer/engine/rotation';
+import { axisView } from '@/features/viewer-3d/engine/gizmo';
+import { followScreenUp, stopGlide, turnCamera } from '@/features/viewer-3d/engine/rotation';
 
-import { expectClose, screenUp } from './mesh-utils';
+import { expectClose, screenUp } from './orientation-utils';
 
 const target = new THREE.Vector3(10, 20, 30);
 

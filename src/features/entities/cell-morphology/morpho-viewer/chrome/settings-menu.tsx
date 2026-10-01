@@ -1,9 +1,7 @@
 import {
-  RiArrowRightSLine,
   RiBubbleChartLine,
   RiCameraLensLine,
   RiContrast2Line,
-  RiContrastDrop2Line,
   RiDropLine,
   RiEqualizerLine,
   RiGridLine,
@@ -11,7 +9,6 @@ import {
   RiNodeTree,
   RiShapeLine,
 } from '@remixicon/react';
-import { useRef, useState } from 'react';
 
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
 import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
@@ -20,15 +17,13 @@ import {
   ChromeMenu,
   SegmentedToggle,
 } from '@/features/scan-config/components/color-by/chrome-menu';
-import { viewerTheme } from '@/features/scan-config/components/color-by/contrast';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { LookSelect } from '@/features/viewer-3d/chrome/look-select';
 
 import { MIN_WIDTH } from '../constants';
-import { besideRow, type Placement } from '../help/beside-row';
+import { HELP } from '../help/help-text';
 import { Heading, HelpRow, ICON, SliderRow, ToggleRow } from './menu-rows';
-import { focusChosen, PillOption } from './pill-option';
 
-import type { Look } from '../engine/looks';
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { SkeletonKind } from '../engine/viewer';
 import type { UpdateSettings, ViewerSettings } from '../use-viewer-settings';
 
@@ -42,10 +37,6 @@ interface SettingsMenuProps {
   /** The skeleton choice takes over from the traced skeleton once there is a mesh. */
   hasMesh: boolean;
 }
-
-const LIGHT = viewerTheme(false);
-/** The look list's width (`w-72`), px. */
-const LOOKS_WIDTH = 288;
 
 /** The circuit viewer's settings popover, with what the morphology viewer can change. */
 export function SettingsMenu({
@@ -64,7 +55,13 @@ export function SettingsMenu({
       contentClassName="w-64 max-h-[min(36rem,calc(100vh-6rem))] overflow-y-auto"
     >
       <Heading>Look</Heading>
-      <LookSelect looks={looks} look={look} onChange={onLook} />
+      <LookSelect
+        looks={looks}
+        look={look}
+        onChange={onLook}
+        help={HELP.look}
+        testId="morphology-look"
+      />
       {look.colors === 'tint' && (
         <ToggleRow
           title="Type tint"
@@ -158,65 +155,5 @@ export function SettingsMenu({
         <BackgroundToggle dark={settings.dark} onChange={(dark) => update({ dark })} />
       </HelpRow>
     </ChromeMenu>
-  );
-}
-
-/** The look, from a list beside the menu that gives the line describing each. */
-function LookSelect({
-  looks,
-  look,
-  onChange,
-}: {
-  looks: Look[];
-  look: Look;
-  onChange(id: string): void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [place, setPlace] = useState<Placement>({ side: 'right', sideOffset: 0, alignOffset: 0 });
-  const trigger = useRef<HTMLButtonElement>(null);
-
-  return (
-    <HelpRow title="Look" topic="look" icon={<RiContrastDrop2Line className={ICON} />}>
-      <Popover
-        open={open}
-        onOpenChange={(next) => {
-          if (next && trigger.current) setPlace(besideRow(trigger.current, LOOKS_WIDTH));
-          setOpen(next);
-        }}
-      >
-        <PopoverTrigger
-          ref={trigger}
-          data-testid="morphology-look"
-          aria-label={`Look: ${look.label}`}
-          className="inline-flex items-center gap-0.5 rounded-full bg-neutral-100 py-1 pr-1 pl-2.5 text-xs font-medium text-primary-9 transition-colors hover:bg-neutral-200"
-        >
-          {look.label}
-          <RiArrowRightSLine className="size-4" />
-        </PopoverTrigger>
-        <PopoverContent
-          {...place}
-          align="start"
-          collisionPadding={8}
-          className="w-72 rounded-xl border-neutral-200 bg-white p-1 text-neutral-700 shadow-xl"
-          onOpenAutoFocus={focusChosen}
-        >
-          <ul className="max-h-[min(30rem,calc(100vh-6rem))] overflow-y-auto" aria-label="Looks">
-            {looks.map((l) => (
-              <PillOption
-                key={l.id}
-                label={l.label}
-                detail={l.hint}
-                selected={l.id === look.id}
-                theme={LIGHT}
-                onClick={() => {
-                  onChange(l.id);
-                  setOpen(false);
-                }}
-              />
-            ))}
-          </ul>
-        </PopoverContent>
-      </Popover>
-    </HelpRow>
   );
 }

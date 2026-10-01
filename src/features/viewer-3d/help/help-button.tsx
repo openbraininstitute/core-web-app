@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 
 import { besideRow, type Placement } from './beside-row';
-import { HELP, type HelpKey, type HelpText } from './help-text';
 
 import styles from './help-button.module.css';
 
@@ -16,13 +15,30 @@ const CARD_WIDTH = 300;
 
 type State = 'closed' | 'peek' | 'pinned';
 
+/** What the help card of a control says. */
+export interface HelpText {
+  text: string;
+  /** What a change does, each under a short key: "Higher" and "Lower", "On" and "Off", or a menu's options. */
+  effects?: [string, string][];
+  /** A change shows at once in the view only, or rebuilds the mesh: the card says so. Not for a section's card. */
+  applies?: 'view' | 'build';
+}
+
 /**
  * A "?" after a label, with a card that says what the control does. The card opens while the pointer rests on the
  * button or a keyboard focuses it, and stays open after a click until the next click elsewhere or Escape. It sits
  * beside the nearest `data-help-anchor` (a row of a menu), so it covers the view and not the other controls.
  */
-export function HelpButton({ topic, title }: { topic: HelpKey; title: string }) {
-  const help: HelpText = HELP[topic];
+export function HelpButton({
+  topic,
+  title,
+  help,
+}: {
+  /** Names the card for tests. */
+  topic: string;
+  title: string;
+  help: HelpText;
+}) {
   const [state, setState] = useState<State>('closed');
   const button = useRef<HTMLButtonElement>(null);
   const timer = useRef<number | undefined>(undefined);
