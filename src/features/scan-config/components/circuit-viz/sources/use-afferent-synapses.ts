@@ -32,7 +32,9 @@ type Options = {
   enabled: boolean;
   circuit: ICircuit;
   config: ParsedCircuitConfig | undefined;
-  /** Placement of the drawn population; synapses wait for it. */
+  /** Whether node placement has finished loading; synapses wait for it. */
+  placementSettled: boolean;
+  /** Placement of the target population; null draws the synapses unprojected. */
   geometry: NodeGeometry | null;
   /**
    * One node's morphology, in morphology-local coordinates. Asked for with its
@@ -65,6 +67,7 @@ export function useAfferentSynapses({
   enabled,
   circuit,
   config,
+  placementSettled,
   geometry,
   loadTree,
 }: Options): TSmallCircuitSynapseGroup[] {
@@ -79,10 +82,10 @@ export function useAfferentSynapses({
     if (!enabled) return;
 
     const report = new Report();
-    if (!geometry || !edges || !circuitAssetId) {
+    if (!placementSettled || !edges || !circuitAssetId) {
       report
         .logTask(
-          `Afferent synapses waiting: geometry=${!!geometry} ` +
+          `Afferent synapses waiting: placement=${placementSettled} ` +
             `edges=${edges?.length ?? 'none'} circuitAssetId=${circuitAssetId ?? 'none'}`
         )
         .debug();
@@ -120,7 +123,7 @@ export function useAfferentSynapses({
       report,
       edges: groupByFile(edges),
       openEdgesFile,
-      placementOf: (index) => placementAt(geometry, index),
+      placementOf: (index) => (geometry ? placementAt(geometry, index) : null),
       loadTree,
     })
       .then((loaded) => {
@@ -156,7 +159,7 @@ export function useAfferentSynapses({
     return () => {
       cancelled = true;
     };
-  }, [enabled, ctx, circuitId, circuitAssetId, edges, geometry, loadTree]);
+  }, [enabled, ctx, circuitId, circuitAssetId, edges, placementSettled, geometry, loadTree]);
 
   return groups;
 }

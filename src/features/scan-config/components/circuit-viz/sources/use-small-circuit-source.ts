@@ -359,6 +359,7 @@ export function useSmallCircuitSource({
     enabled: withSynapses,
     circuit,
     config,
+    placementSettled: settled,
     geometry: synapseTarget?.geometry ?? null,
     loadTree,
   });
