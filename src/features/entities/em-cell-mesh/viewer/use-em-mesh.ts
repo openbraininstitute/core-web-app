@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { logError } from '@/utils/logger';
 
 import { type Budget, deviceOf } from './engine/budget';
@@ -15,16 +14,6 @@ import type { WorkspaceContext } from '@/types/common';
 import type { DownloadRequest } from './engine/download';
 import type { EmMeshViewer } from './engine/em-mesh-viewer';
 import type { Grid, PackedMesh } from './engine/types';
-
-/** The mesh's GLB, which the viewer loads; a mesh without one has no viewer. */
-export function meshAsset(assets: IAsset[] | null | undefined): IAsset | null {
-  return (
-    assets?.find(
-      (a) =>
-        a.label === AssetLabel.cell_surface_mesh && a.content_type === AssetContentType.gltf_binary
-    ) ?? null
-  );
-}
 
 export interface EmMeshSource {
   entityId: string;

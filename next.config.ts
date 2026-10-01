@@ -172,10 +172,10 @@ const config: NextConfig = {
         destination: '/app/virtual-lab/:vlabId/:projectId/data/view/:type/:id/overview',
         permanent: false,
       },
-      // Morphologies had a Mesh viewer tab, which the Overview now shows.
+      // Morphologies and EM cell meshes had a Mesh viewer tab, which the Overview now shows.
       {
         source:
-          '/app/virtual-lab/:vlabId/:projectId/:area(data|workflows)/view/:type(cell-morphology|universal-cell-morphology)/:id/mesh-viewer',
+          '/app/virtual-lab/:vlabId/:projectId/:area(data|workflows)/view/:type(cell-morphology|universal-cell-morphology|em-cell-mesh)/:id/mesh-viewer',
         destination: '/app/virtual-lab/:vlabId/:projectId/:area/view/:type/:id/overview',
         permanent: false,
       },

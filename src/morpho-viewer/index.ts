@@ -27,7 +27,6 @@ export type {
   MorphoViewerMorphologyLocationMarker,
   MorphoViewerMorphologyLocationPick,
   MorphoViewerMorphologyLocationSelection,
-  MorphoViewerOctreeProps,
   /** Absolute origin + rotation from electrode overlay drag/rotate (`phase: 'end'`). */
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSmallCircuitCell,
@@ -40,11 +39,6 @@ export type {
   MorphoViewerTreeItem,
   SectionColors,
 } from '@openbraininstitute/morphoviewer';
-
-export const MorphoViewerOctree = dynamic(
-  () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerOctree),
-  { ssr: false }
-);
 
 export const MorphoViewerSingleNeuron = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSimul),

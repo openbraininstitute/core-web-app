@@ -10,7 +10,8 @@ import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 
 import { EmViewerChrome } from './chrome/em-viewer-chrome';
 import { EmMeshViewer } from './engine/em-mesh-viewer';
-import { meshAsset, useEmMesh } from './use-em-mesh';
+import { meshAsset } from './mesh-asset';
+import { useEmMesh } from './use-em-mesh';
 import { type EmViewerSettings, useEmViewerSettings } from './use-em-viewer-settings';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';

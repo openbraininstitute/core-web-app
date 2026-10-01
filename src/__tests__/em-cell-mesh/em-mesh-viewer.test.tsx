@@ -3,10 +3,11 @@ import { type ComponentType, lazy, Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { EmCellMeshViewerCard } from '@/features/entities/em-cell-mesh/detail-view';
 import { EmCellMeshViewer } from '@/features/entities/em-cell-mesh/viewer/em-mesh-viewer';
 import { LoadError } from '@/features/entities/em-cell-mesh/viewer/engine/load';
 import { HELP } from '@/features/entities/em-cell-mesh/viewer/help/help-text';
-import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/use-em-mesh';
+import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
 import { defaultFlags } from '@/features/feature-flags/config';
 import { emMeshDebugFlag } from '@/features/feature-flags/flags';
 import { FlagsProvider } from '@/features/feature-flags/provider';
@@ -84,6 +85,7 @@ const h = vi.hoisted(() => {
     });
 
     constructor() {
+      if (state.startError) throw state.startError;
       state.viewers.push(this);
     }
 
@@ -145,6 +147,7 @@ const h = vi.hoisted(() => {
       })
     ),
     saveAs: vi.fn(),
+    startError: null as Error | null,
     FakeViewer,
   };
   return state;
@@ -264,6 +267,7 @@ beforeEach(() => {
   h.loads.length = 0;
   h.request.mockClear();
   h.saveAs.mockClear();
+  h.startError = null;
 });
 
 describe('meshAsset', () => {
@@ -271,6 +275,17 @@ describe('meshAsset', () => {
     expect(meshAsset([OBJ, LOD, GLB])).toBe(GLB);
     expect(meshAsset([OBJ, LOD])).toBeNull();
     expect(meshAsset(undefined)).toBeNull();
+  });
+});
+
+describe('EmCellMeshViewerCard', () => {
+  it("shows why where the viewer can't start, as without WebGL, and loads nothing", async () => {
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.startError = new Error('Error creating WebGL context.');
+    render(<EmCellMeshViewerCard entity={ENTITY} />);
+    expect(await screen.findByText('Error creating WebGL context.')).toBeInTheDocument();
+    expect(h.loads).toHaveLength(0);
+    quiet.mockRestore();
   });
 });
 
