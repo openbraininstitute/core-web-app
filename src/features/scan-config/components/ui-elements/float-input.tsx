@@ -29,6 +29,14 @@ export function FloatInput({
   // the raw string to tell non-numeric input apart from an empty field.
   const [rawInput, setRawInput] = useState('');
 
+  // When the value is replaced from outside (loading a saved config, reset), antd updates the
+  // displayed value without firing onInput, so clear the stale raw text to drop its error.
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setRawInput('');
+  }
+
   const errorMessage = (() => {
     if (rawInput.trim() !== '' && Number.isNaN(Number(rawInput))) return 'Value must be a number';
     if (isNil(value)) return undefined;
@@ -49,6 +57,7 @@ export function FloatInput({
         status={errorMessage ? 'error' : undefined}
         value={value}
         onInput={setRawInput}
+        onBlur={() => setRawInput('')}
         onChange={onChange}
         className="w-full"
       />

@@ -873,6 +873,7 @@ export function UIElementRender({
         schema={schema}
         entity={entity}
         schemaMappingConfig={schemaMappingConfig}
+        errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
         onChange={(nextObject) => setState({ ...state, [k]: nextObject })}
       />
     ))

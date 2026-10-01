@@ -32,6 +32,7 @@ export function ObjectField({
   schema,
   entity,
   schemaMappingConfig,
+  errorPathPrefix,
   onChange,
 }: {
   value: ConfigValue;
@@ -41,6 +42,7 @@ export function ObjectField({
   schema: ConfigSchema;
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;
+  errorPathPrefix?: string;
   onChange: (value: Record<string, ConfigValue>) => void;
 }) {
   const objectValue = isPlainObject(value) ? value : {};
@@ -87,6 +89,7 @@ export function ObjectField({
                         schema={schema}
                         entity={entity}
                         schemaMappingConfig={schemaMappingConfig}
+                        errorPathPrefix={errorPathPrefix}
                       />
                     </div>
                   </span>
