@@ -24,6 +24,7 @@ import {
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
+import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -170,11 +171,22 @@ export default async function Overview({
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
-  // a result opens as its campaign's scan config, like a simulation campaign; one whose campaign
-  // cannot be traced keeps the plain overview below
-  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
+  // a result or its campaign opens as the campaign's scan config, like a simulation campaign; one
+  // that cannot be resolved keeps the plain overview below
+  if (
+    extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ||
+    extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+  ) {
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    const resolveCampaign = EFeatureExtractionCampaign.api.query.resolve!;
     const { data: extraction } = await tryCatch(
-      resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
+      extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+        ? resolveCampaign({ id: entity.id, context })
+        : resolveEFeatureExtractionResultCampaign(
+            entity.id,
+            context.virtualLabId,
+            context.projectId
+          )
     );
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
