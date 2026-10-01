@@ -341,8 +341,10 @@ export function ParameterRow({
           )}
 
           {distribution !== undefined && availableDistributions && onDistributionChange && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-gray-500">Distance distribution</span>
+            <div className="mt-1 flex flex-col gap-1.5">
+              <span className="text-[11px] font-medium tracking-wide text-gray-400 uppercase">
+                Distance distribution
+              </span>
               <DistributionPicker
                 value={distribution}
                 options={availableDistributions}
