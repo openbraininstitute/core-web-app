@@ -25,7 +25,11 @@ import {
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  type TActivityCustomFile,
+  type TAssetBackedFile,
+} from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
   makeTaskConfigurationFile,
@@ -77,14 +81,14 @@ function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCusto
   return {
     id: entity.id,
     entity,
-    asset: entity.assets[0],
     name: entity.name,
+    dataType: entity.type as TExtendedEntitiesTypeDict,
     renderer: ActivityCustomFileRenderer.MiniDetailView,
   };
 }
 
 function makeAssetOutputFiles(entity: BuiltEntityWithAssets): TActivityCustomFile[] {
-  return entity.assets.map((asset) => ({
+  return entity.assets.map((asset: IAsset) => ({
     id: asset.id,
     entity,
     asset,
@@ -195,7 +199,7 @@ export function InOutFiles({
     executionId: execution?.execution_id,
   });
 
-  const inputFiles: TActivityCustomFile[] = [];
+  const inputFiles: TAssetBackedFile[] = [];
   if (configAsset) {
     inputFiles.push({
       id: configAsset.id,
@@ -254,9 +258,9 @@ export function InOutFiles({
       outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFilesWithLogs.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.id === selectedFile?.id}
-          key={file.asset?.id}
+          id={file.id ?? file.asset.id}
+          selected={(file.id ?? file.asset.id) === selectedFile?.id}
+          key={file.id ?? file.asset.id}
           file={file}
           onSelect={onSelect}
           name={file.name}

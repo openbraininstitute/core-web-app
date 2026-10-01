@@ -12,7 +12,11 @@ import {
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useGeneratedOutputs } from '@/features/scan-config/outputs/use-generated-outputs';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  type TActivityCustomFile,
+  type TAssetBackedFile,
+} from '@/features/scan-config/types';
 import { arrangeOptimizationOutputFiles } from '@/features/scan-config/use-cases/optimization/output-files';
 import {
   makeLogStreamFileDescriptors,
@@ -65,8 +69,8 @@ export function InOutFiles({
     [config.id, execution?.execution_id]
   );
 
-  const inputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files: TActivityCustomFile[] = [];
+  const inputFiles: TAssetBackedFile[] = useMemo(() => {
+    const files: TAssetBackedFile[] = [];
     if (configAsset) {
       files.push({
         id: configAsset.id,
@@ -123,9 +127,9 @@ export function InOutFiles({
       outputIsEmpty={generatedFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
-          id={file.asset.id}
-          selected={file.asset.id === selectedFile?.id}
-          key={file.asset?.id}
+          id={file.id ?? file.asset.id}
+          selected={(file.id ?? file.asset.id) === selectedFile?.id}
+          key={file.id ?? file.asset.id}
           file={file}
           onSelect={onSelect}
           name={file.name}

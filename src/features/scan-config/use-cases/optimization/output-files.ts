@@ -1,6 +1,15 @@
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  isAssetBackedFile,
+  type TActivityCustomFile,
+} from '@/features/scan-config/types';
+
+/** The asset label of a file row, or `undefined` for an entity mini-detail row. */
+function assetLabelOf(file: TActivityCustomFile): string | undefined {
+  return isAssetBackedFile(file) ? file.asset.label : undefined;
+}
 
 /**
  * Rank of each listed output, lowest first: the models the run built, then the task result's
@@ -9,8 +18,8 @@ import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features
 const OPTIMIZATION_OUTPUT_RANK: readonly ((file: TActivityCustomFile) => boolean)[] = [
   (file) => isEntityRow(file, EntityTypeDict.Emodel),
   (file) => isEntityRow(file, EntityTypeDict.Memodel),
-  (file) => file.asset?.label === AssetLabel.emodel_analysis_summary,
-  (file) => file.asset?.label === AssetLabel.emodel_analysis_figures,
+  (file) => assetLabelOf(file) === AssetLabel.emodel_analysis_summary,
+  (file) => assetLabelOf(file) === AssetLabel.emodel_analysis_figures,
 ];
 
 /** Only useful to resume a run, so it is not worth a row. */
@@ -41,6 +50,6 @@ export function arrangeOptimizationOutputFiles(
   files: readonly TActivityCustomFile[]
 ): TActivityCustomFile[] {
   return files
-    .filter((file) => !HIDDEN_ASSET_LABELS.has(file.asset?.label ?? ''))
+    .filter((file) => !HIDDEN_ASSET_LABELS.has(assetLabelOf(file) ?? ''))
     .sort((a, b) => rank(a) - rank(b));
 }

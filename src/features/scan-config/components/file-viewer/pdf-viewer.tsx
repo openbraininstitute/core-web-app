@@ -10,7 +10,7 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -19,7 +19,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 const DOCUMENT_OPTIONS = { standardFontDataUrl: '/standard_fonts/' };
 
 type PdfFileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
 };
 

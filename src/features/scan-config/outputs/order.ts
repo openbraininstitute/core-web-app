@@ -51,7 +51,7 @@ export function orderOutputFiles(
     // the entity row stands for the output as a whole, so it is listed ahead of its own artefacts
     if (file.renderer === ActivityCustomFileRenderer.MiniDetailView) return -1;
 
-    const index = order.indexOf(file.asset?.label ?? '');
+    const index = order.indexOf(file.asset.label ?? '');
     return index === -1 ? order.length : index;
   };
 
