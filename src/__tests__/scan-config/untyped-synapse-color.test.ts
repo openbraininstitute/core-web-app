@@ -15,9 +15,11 @@ describe('untypedSynapseColor', () => {
     );
 
     expect(used.filter((color) => typeColors.has(color))).toEqual([]);
-    // Vermillion is a shade off the excitatory red; keeping it out is the point
-    // of the reserved list, and a palette edit must not quietly let it back in.
+    // Vermillion is a shade off the excitatory orange and cyan off the
+    // inhibitory sky blue; keeping them out is the point of the reserved list,
+    // and a palette edit must not quietly let them back in.
     expect(used).not.toContain('#d55e00');
+    expect(used).not.toContain('#17becf');
   });
 
   it('gives consecutive untyped populations distinct colours', () => {

@@ -70,7 +70,8 @@ export const WorkflowSchemaSelectionMode = {
 
 type TWorkflowInitializeModelUiElement =
   | typeof ScanConfigUIElementDict.ModelIdentifier
-  | typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
+  | typeof ScanConfigUIElementDict.ModelIdentifierMultiple
+  | typeof ScanConfigUIElementDict.ModelIdentifierGrouped;
 
 type TWorkflowSchemaSelectionBase = {
   schemaName?: SchemaName;
@@ -99,9 +100,9 @@ export type TWorkflowSchemaSelectionMultiple = TWorkflowSchemaSelectionBase & {
   tableSelectionType: typeof WorkflowBrowseTableSelection.Checkbox;
 };
 
-/** `model_identifier_multiple` with grouped NamedTuple shape. */
+/** `model_identifier_grouped` with grouped NamedTuple shape. */
 export type TWorkflowSchemaSelectionGrouped = TWorkflowSchemaSelectionBase & {
-  uiElement: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
+  uiElement: typeof ScanConfigUIElementDict.ModelIdentifierGrouped;
   selectionMode: typeof WorkflowSchemaSelectionMode.Grouped;
   acceptedEntityTypes: readonly TExtendedEntitiesTypeDict[];
   tableSelectionType: typeof WorkflowBrowseTableSelection.Checkbox;
@@ -118,7 +119,8 @@ function isModelIdentifierUiElement(
 ): uiElement is TWorkflowInitializeModelUiElement {
   return (
     uiElement === ScanConfigUIElementDict.ModelIdentifier ||
-    uiElement === ScanConfigUIElementDict.ModelIdentifierMultiple
+    uiElement === ScanConfigUIElementDict.ModelIdentifierMultiple ||
+    uiElement === ScanConfigUIElementDict.ModelIdentifierGrouped
   );
 }
 
@@ -358,15 +360,14 @@ export function resolvePrimaryEntityIdFromConfigForm(
 }
 
 /**
- * Maps schema UI element + property shape to {@link WorkflowSchemaSelectionMode}.
+ * Maps schema UI element to {@link WorkflowSchemaSelectionMode}.
  *
  * - `model_identifier` → `single`
- * - `model_identifier_multiple` + NamedTuple → `grouped`
- * - `model_identifier_multiple` otherwise → `multiple`
+ * - `model_identifier_grouped` → `grouped`
+ * - `model_identifier_multiple` → `multiple`
  */
 function resolveSelectionMode(
-  uiElement: TWorkflowInitializeModelUiElement,
-  property: Record<string, unknown>
+  uiElement: TWorkflowInitializeModelUiElement
 ):
   | typeof WorkflowSchemaSelectionMode.Single
   | typeof WorkflowSchemaSelectionMode.Multiple
@@ -375,7 +376,7 @@ function resolveSelectionMode(
     return WorkflowSchemaSelectionMode.Single;
   }
 
-  if (hasNamedTupleShape(property)) {
+  if (uiElement === ScanConfigUIElementDict.ModelIdentifierGrouped) {
     return WorkflowSchemaSelectionMode.Grouped;
   }
 
@@ -397,8 +398,7 @@ function buildModelFieldSelection(opts: {
   modelField: TBlockElement & { ui_element: TWorkflowInitializeModelUiElement };
   acceptedFromIdTypes: readonly string[];
 }): TWorkflowSchemaSelection {
-  const propertyRecord = opts.modelField as unknown as Record<string, unknown>;
-  const selectionMode = resolveSelectionMode(opts.modelField.ui_element, propertyRecord);
+  const selectionMode = resolveSelectionMode(opts.modelField.ui_element);
 
   if (selectionMode === WorkflowSchemaSelectionMode.Single) {
     return {
@@ -407,6 +407,17 @@ function buildModelFieldSelection(opts: {
       selectionMode,
       acceptedFromIdTypes: opts.acceptedFromIdTypes,
       tableSelectionType: WorkflowBrowseTableSelection.None,
+    };
+  }
+
+  if (selectionMode === WorkflowSchemaSelectionMode.Grouped) {
+    return {
+      schemaName: opts.schemaName,
+      uiElement: ScanConfigUIElementDict.ModelIdentifierGrouped,
+      selectionMode,
+      acceptedFromIdTypes: opts.acceptedFromIdTypes,
+      acceptedEntityTypes: mapScanConfigFromIdTypesToEntityTypes(opts.acceptedFromIdTypes),
+      tableSelectionType: WorkflowBrowseTableSelection.Checkbox,
     };
   }
 

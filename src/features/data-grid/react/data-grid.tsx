@@ -43,6 +43,8 @@ export interface IDataGridSelection<Row> {
   onChange: (rows: Row[]) => void;
   /** when false, the row's checkbox/radio is disabled and cannot be picked. */
   isRowSelectable?: (row: Row) => boolean;
+  /** overrides the schema's header select-all checkbox for this render (multi-select only). */
+  headerCheckbox?: boolean;
 }
 
 export interface IDataGridProps<Row> {
@@ -222,6 +224,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     getRowClass,
     getRowTestId,
     isRowSelectable: selection?.isRowSelectable,
+    headerCheckbox: selection?.headerCheckbox,
     expandColumn,
     loadingLabel,
   };

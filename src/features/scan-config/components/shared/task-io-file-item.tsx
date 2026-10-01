@@ -25,9 +25,9 @@ type Props = {
 };
 
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset.path.split('/').at(-1);
-  const isDirectory = isDirectoryAsset(file.asset);
-  const isCircuitDirectory = isDirectory && file.asset.label === AssetLabel.sonata_circuit;
+  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset?.path.split('/').at(-1);
+  const isDirectory = !!file.asset && isDirectoryAsset(file.asset);
+  const isCircuitDirectory = isDirectory && file.asset?.label === AssetLabel.sonata_circuit;
   const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));

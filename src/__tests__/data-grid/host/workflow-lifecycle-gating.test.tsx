@@ -5,7 +5,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
-import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 
@@ -70,7 +69,27 @@ describe('EntityDataGrid workflow lifecycle gating', () => {
     renderGrid(WorkspaceSection.SimulateWorkflow);
 
     await waitFor(() => expect(lastRendererProps).toBeDefined());
-    expect(lastRendererProps?.isRowSelectable).toBe(isEntitySelectableForWorkflow);
+    // isRowSelectable now wraps the lifecycle gate, so assert its behavior rather than identity:
+    // draft is blocked, active is allowed.
+    expect(lastRendererProps?.isRowSelectable).toBeTypeOf('function');
+    expect(
+      lastRendererProps?.isRowSelectable?.({
+        id: 'd',
+        name: 'draft',
+        type: ExtendedEntitiesTypeDict.Memodel,
+        legacy_id: null,
+        lifecycle_status: EntityLifecycleStatus.Draft,
+      } as EntityCoreIdentifiableNamed)
+    ).toBe(false);
+    expect(
+      lastRendererProps?.isRowSelectable?.({
+        id: 'a',
+        name: 'active',
+        type: ExtendedEntitiesTypeDict.Memodel,
+        legacy_id: null,
+        lifecycle_status: EntityLifecycleStatus.Active,
+      } as EntityCoreIdentifiableNamed)
+    ).toBe(true);
     expect(lastRendererProps?.getRowClass).toBeTypeOf('function');
     expect(
       lastRendererProps?.getRowClass?.({

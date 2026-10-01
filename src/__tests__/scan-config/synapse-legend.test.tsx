@@ -14,13 +14,13 @@ describe('SynapseLegend', () => {
     render(
       <SynapseLegend
         groups={[
-          group('Excitatory', '#cc3311'),
-          group('Inhibitory', '#009e73'),
+          group('Excitatory', '#e69f00'),
+          group('Inhibitory', '#56b4e9'),
           // A second typed population repeats both types.
-          group('Excitatory', '#cc3311'),
-          group('Inhibitory', '#009e73'),
+          group('Excitatory', '#e69f00'),
+          group('Inhibitory', '#56b4e9'),
           // An untyped one is named by its population instead.
-          group('nodeA__nodeA__chemical', '#e69f00'),
+          group('nodeA__nodeA__chemical', '#cc79a7'),
         ]}
       />
     );
@@ -33,11 +33,11 @@ describe('SynapseLegend', () => {
   });
 
   it('takes the corner unless the host draws controls there', () => {
-    const { rerender } = render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
+    const { rerender } = render(<SynapseLegend groups={[group('Excitatory', '#e69f00')]} />);
 
     expect(screen.getByRole('complementary').className).toContain('top-3');
 
-    rerender(<SynapseLegend belowChrome groups={[group('Excitatory', '#cc3311')]} />);
+    rerender(<SynapseLegend belowChrome groups={[group('Excitatory', '#e69f00')]} />);
 
     expect(screen.getByRole('complementary').className).toContain('top-14');
   });
@@ -49,7 +49,7 @@ describe('SynapseLegend', () => {
   });
 
   it('collapses to its icon and comes back', () => {
-    render(<SynapseLegend groups={[group('Excitatory', '#cc3311')]} />);
+    render(<SynapseLegend groups={[group('Excitatory', '#e69f00')]} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse synapse colours' }));
 
@@ -66,7 +66,7 @@ describe('SynapseLegend', () => {
     const onToggle = vi.fn();
     render(
       <SynapseLegend
-        groups={[group('Excitatory', '#cc3311'), group('Inhibitory', '#009e73')]}
+        groups={[group('Excitatory', '#e69f00'), group('Inhibitory', '#56b4e9')]}
         onToggle={onToggle}
       />
     );
@@ -84,7 +84,7 @@ describe('SynapseLegend', () => {
   it('offers to show back a hidden group, and leaves its colour alone', () => {
     render(
       <SynapseLegend
-        groups={[group('Excitatory', '#cc3311'), group('Inhibitory', '#009e73')]}
+        groups={[group('Excitatory', '#e69f00'), group('Inhibitory', '#56b4e9')]}
         hidden={new Set(['Inhibitory'])}
       />
     );

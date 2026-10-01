@@ -5,12 +5,10 @@ import { Spin } from 'antd';
 import { useParams } from 'next/navigation';
 import { ErrorBoundary } from 'react-error-boundary';
 
-// We disable enhanced somas until they are fixed on the backend.
-// import { useSwcContentUrl } from '@/util/content-url';
-
 import { withErrorConfig } from '@/components/GenericErrorFallback';
-import { MorphoViewer } from '@/components/MorphoViewer';
-import { useLoadCellMorphology3DAsset } from '@/state/morpho-viewer';
+
+import { MorphoViewer } from './morpho-viewer/morpho-viewer';
+import { useCellMorphologySwc } from './morpho-viewer/use-cell-morphology-swc';
 
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { WorkspaceContext } from '@/types/common';
@@ -19,8 +17,9 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
-    <div className="h-[min(360px,42vh)] min-h-[260px] w-full overflow-hidden rounded-2xl border border-neutral-2 bg-white">
-      <div className="h-full">
+    // As tall as the circuit viewer: its chrome and menus need the room.
+    <div className="h-[min(740px,80vh)] min-h-90 w-full overflow-hidden rounded-2xl border border-white/20 text-primary-9">
+      <div className="h-full bg-white">
         <ErrorBoundary
           FallbackComponent={withErrorConfig({
             cls: { container: 'bg-white' },
@@ -38,9 +37,7 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
 function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
   const ctx = useParams<WorkspaceContext>();
 
-  const { isLoading, result, error } = useLoadCellMorphology3DAsset({ morphology, ctx });
-  // We disable enhanced somas until they are fixed on the backend.
-  // const swcContentUrl = useSwcContentUrl(resource.distribution);
+  const { isLoading, result, error } = useCellMorphologySwc({ morphology, ctx });
   if (isLoading) {
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-3">
@@ -50,21 +47,7 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
     );
   }
   if (result) {
-    return (
-      <MorphoViewer
-        className="h-full overflow-hidden rounded-2xl border-0!"
-        swc={result}
-        // We disable enhanced somas until they are fixed on the backend.
-        // contentUrl={swcContentUrl}
-      />
-    );
-  }
-  if (!isLoading && !result) {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-white">
-        No morphology data available.
-      </div>
-    );
+    return <MorphoViewer className="h-full" swc={result} name={morphology.name} />;
   }
   if (error) {
     return (
@@ -73,4 +56,9 @@ function MorphoViewerLoader({ morphology }: { morphology: ICellMorphology }) {
       </div>
     );
   }
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-white">
+      No morphology data available.
+    </div>
+  );
 }

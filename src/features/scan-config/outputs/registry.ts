@@ -44,8 +44,9 @@ function makeMiniDetailFile(
   entity: TOutputEntity,
   dataType: TExtendedEntitiesTypeDict | undefined
 ): TActivityCustomFile[] {
+  // A me-model carries no top-level asset of its own — its content lives in its nested morphology
+  // and e-model — so the row leaves `asset` undefined and stands for the entity as a whole.
   const [asset] = assetsOf(entity);
-  if (!asset) return [];
 
   return [
     {

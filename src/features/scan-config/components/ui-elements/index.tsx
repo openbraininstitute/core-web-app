@@ -19,7 +19,10 @@ import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/range';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
-import { ModelIdentifierMultiple } from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
+import {
+  ModelIdentifierGrouped,
+  ModelIdentifierMultiple,
+} from '@/features/scan-config/components/ui-elements/model-identifier-multiple';
 import { EntitySelectorSingle } from '@/features/scan-config/components/ui-elements/model-selector-single';
 import MorphologyLocationSelection from '@/features/scan-config/components/ui-elements/morphology-location-selection';
 import { MorphologySectionTypeSelection } from '@/features/scan-config/components/ui-elements/morphology-section-type-selection';
@@ -165,6 +168,22 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <ModelIdentifierMultiple
+          fieldKey={k}
+          value={value}
+          state={state}
+          setState={setState}
+          paramSchema={paramSchema}
+          disabled={disabled}
+          errorPathPrefix={errorPathPrefix}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifierGrouped },
+      },
+      ({ paramSchema }) => (
+        <ModelIdentifierGrouped
           fieldKey={k}
           value={value}
           state={state}

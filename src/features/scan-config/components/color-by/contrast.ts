@@ -1,5 +1,7 @@
 import chroma from 'chroma-js';
 
+import type { CSSProperties } from 'react';
+
 /**
  * in-house flag: when true, node colors, the legend, and the scalebar adapt to
  * the canvas background so everything stays legible. Canvas background is
@@ -90,4 +92,17 @@ export function themeFromBackground(background: string): ViewerTheme {
 
 export function viewerTheme(isDark: boolean): ViewerTheme {
   return isDark ? DARK_THEME : LIGHT_THEME;
+}
+
+/** The chrome's glass panel, in the colours read against the background. */
+export function panelStyle(theme: ViewerTheme): CSSProperties {
+  return {
+    background: theme.panelBackground,
+    color: theme.foreground,
+    boxShadow: `0 0 0 1px ${theme.panelRing}`,
+  };
+}
+
+export function mutedStyle(theme: ViewerTheme): CSSProperties {
+  return { color: theme.mutedForeground };
 }

@@ -115,6 +115,23 @@ const NEURITE_PROBE_LIMIT = 256;
 const NEURITE_PROBE_CELL_LIMIT = 8;
 
 /**
+ * Median distance, in µm, from a cell's synapses to its drawn surface beyond
+ * which the morphology is taken to be misplaced (e.g. stored in world
+ * coordinates) and its synapses are left unprojected.
+ */
+const MISPLACED_MEDIAN_DISTANCE = 20;
+
+/** Synapses per cell measured to decide {@link MISPLACED_MEDIAN_DISTANCE}. */
+const MISPLACED_PROBE_LIMIT = 16;
+
+/** Where a synapse sits, in order of preference: on the neurite surface, else on its axis. */
+const POSITION_PREFIXES = ['afferent_surface', 'afferent_center'] as const;
+
+function positionAxes(prefix: (typeof POSITION_PREFIXES)[number]) {
+  return [`0/${prefix}_x`, `0/${prefix}_y`, `0/${prefix}_z`];
+}
+
+/**
  * Retrieve afferent synapses from the circuit's edge files, one entry per edge
  * population, each holding a flat `[x, y, z, ...]` array of world coordinates.
  *
@@ -172,34 +189,37 @@ async function readPopulation(
 ): Promise<AfferentSynapseGroup[]> {
   const { report } = input;
   report.logTask(`Reading afferent synapse positions for population "${populationName}"...`);
+  const has = (name: string) => hasDataset(edgesFile, `edges/${populationName}/${name}`);
+  // Surface first; the centre when that is all a circuit states (Build Synaptome
+  // writes `afferent_center_*` alone). Both are world coordinates per SONATA.
+  const prefix = POSITION_PREFIXES.find((p) => positionAxes(p).every(has)) ?? 'afferent_surface';
+  const onAxis = prefix === 'afferent_center';
   // Every dataset this function goes on to read, not just the first: a population
   // carrying `afferent_surface_x` and no `y` is one this cannot draw, and saying
   // which is missing beats `getNumberArray` throwing three lines later.
   // `target_node_id`, unlike the `afferent_*` ones, is not nested under `0/`.
-  const required = [
-    '0/afferent_surface_x',
-    '0/afferent_surface_y',
-    '0/afferent_surface_z',
-    '0/afferent_section_id',
-    'target_node_id',
-  ];
-  const missing = required.filter(
-    (name) => !hasDataset(edgesFile, `edges/${populationName}/${name}`)
-  );
+  const required = [...positionAxes(prefix), '0/afferent_section_id', 'target_node_id'];
+  const missing = required.filter((name) => !has(name));
   if (missing.length > 0) {
     report.logTask(
-      `Population "${populationName}" has no afferent surfaces: ${missing.join(', ')}`
+      `Population "${populationName}" has no usable afferent positions (nor a complete ` +
+        `afferent_center_*): ${missing.join(', ')}`
     );
     return [];
   }
+  if (onAxis) {
+    report.logTask(
+      `Population "${populationName}" has no afferent_surface_*; ` +
+        'using afferent_center_* pushed onto the drawn surface.'
+    );
+  }
   const ds = (name: string) => getNumberArray(report, edgesFile, `edges/${populationName}/${name}`);
-  const arrXs = ds('0/afferent_surface_x');
-  const arrYs = ds('0/afferent_surface_y');
-  const arrZs = ds('0/afferent_surface_z');
+  const [arrXs, arrYs, arrZs] = positionAxes(prefix).map(ds);
   const arrSectionId = ds('0/afferent_section_id');
   const arrTarget = ds('target_node_id');
 
   const surfaces = await getCellSurfaces(input, arrSectionId, arrTarget);
+  dropMisplacedCells(report, surfaces, [arrXs, arrYs, arrZs], arrTarget);
 
   const coordinates = new Float32Array(arrXs.length * 3);
   let somaTotal = 0;
@@ -210,6 +230,7 @@ async function readPopulation(
   // and "projection ran against the wrong shape".
   let worstResidual = 0;
   let rescued = 0;
+  let pushed = 0;
   for (let i = 0; i < arrXs.length; i++) {
     const surface: Vec3 = [arrXs[i], arrYs[i], arrZs[i]];
     const isSoma = isSomaSection(arrSectionId[i]);
@@ -221,6 +242,15 @@ async function readPopulation(
       point = projectOntoSurface(surface, sdf);
       projected++;
       worstResidual = Math.max(worstResidual, Math.abs(sdf(point).distance));
+    } else if (onAxis && cell?.whole) {
+      // A centre sits on the branch axis, inside the tube, so its marker hides on
+      // any branch thicker than it. The finite check is a last guard: a NaN in
+      // the buffer would lose the marker, where the centre at least draws it.
+      const onSurface = projectOntoSurface(surface, cell.whole);
+      if (onSurface.every(Number.isFinite)) {
+        point = onSurface;
+        pushed++;
+      }
     } else if (cell?.whole && cell.somaEnvelope) {
       const rescue = rescueOffSurface(
         surface,
@@ -242,6 +272,7 @@ async function readPopulation(
       `${somaTotal} on a soma, ${projected} projected` +
       (projected > 0 ? `, worst residual ${worstResidual.toFixed(3)}µm` : '') +
       (rescued > 0 ? `, ${rescued} rescued off the surface near a soma` : '') +
+      (pushed > 0 ? `, ${pushed} pushed from the centre onto the surface` : '') +
       '.'
   );
   // Diagnostic only, and up to `NEURITE_PROBE_LIMIT` SDF queries that each walk
@@ -313,6 +344,43 @@ function splitBySynapseType(
 }
 
 /**
+ * Remove cells whose drawn surface sits far from their own synapses, so those
+ * synapses keep their SONATA positions instead of being pulled onto it.
+ */
+function dropMisplacedCells(
+  report: Report,
+  surfaces: Map<number, CellSurfaces>,
+  [xs, ys, zs]: number[][],
+  targetNodeIds: number[]
+) {
+  for (const [cellIndex, { whole }] of surfaces) {
+    if (!whole) continue;
+
+    const indices: number[] = [];
+    for (let i = 0; i < targetNodeIds.length; i++) {
+      if (targetNodeIds[i] === cellIndex) indices.push(i);
+    }
+    const stride = Math.max(1, Math.ceil(indices.length / MISPLACED_PROBE_LIMIT));
+    const distances: number[] = [];
+    for (let n = 0; n < indices.length; n += stride) {
+      const i = indices[n];
+      distances.push(Math.abs(whole([xs[i], ys[i], zs[i]]).distance));
+    }
+    if (distances.length === 0) continue;
+
+    distances.sort((a, b) => a - b);
+    const median = distances[Math.floor(distances.length / 2)];
+    if (median > MISPLACED_MEDIAN_DISTANCE) {
+      report.logTask(
+        `Cell #${cellIndex} synapses sit a median ${median.toFixed(1)}µm from its drawn ` +
+          'surface; leaving them unprojected.'
+      );
+      surfaces.delete(cellIndex);
+    }
+  }
+}
+
+/**
  * Build the drawn surfaces of every *distinct* target cell in a population.
  *
  * Why up front: a cell's geometry is identical for all of its synapses, and a
@@ -364,7 +432,16 @@ async function buildCellSurfaces(
     return null;
   }
 
-  const tree = await loadTree(cellIndex);
+  let tree: MorphoViewerTree | null;
+  try {
+    tree = await loadTree(cellIndex);
+  } catch (error) {
+    report.logTask(
+      `Cell #${cellIndex} morphology failed to load; leaving its synapses unprojected.`
+    );
+    report.logFailure(error);
+    return null;
+  }
   const somaSegments: SurfaceSegment[] = [];
   const wholeSegments: SurfaceSegment[] = [];
   const stack = (tree?.roots ?? []).map((item) => ({

@@ -110,6 +110,25 @@ describe('workflow output strategies', () => {
     expect(files?.[0].name).toBe('Extracted circuit');
   });
 
+  it('shows a me-model (which carries no top-level asset) as an assetless mini-detail row', () => {
+    // a me-model's content lives in its nested morphology and e-model, so it has no `assets` of
+    // its own; the row must still appear, keyed on the entity id, with `asset` left undefined
+    const strategy = resolveOutputStrategy({ id: 'm', type: EntityTypeDict.Memodel });
+
+    const files = strategy?.toFiles(
+      makeResolved(
+        { id: 'memodel-id', name: 'Draft me-model', type: EntityTypeDict.Memodel },
+        'registered-entity'
+      )
+    );
+
+    expect(files).toHaveLength(1);
+    expect(files?.[0].renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
+    expect(files?.[0].id).toBe('memodel-id');
+    expect(files?.[0].name).toBe('Draft me-model');
+    expect(files?.[0].asset).toBeUndefined();
+  });
+
   it('stops polling a circuit once its visualization asset lands', () => {
     const strategy = resolveOutputStrategy({ id: 'g', type: EntityTypeDict.Circuit });
 

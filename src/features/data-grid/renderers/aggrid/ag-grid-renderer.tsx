@@ -81,6 +81,8 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     loadingLabel,
   } = props;
 
+  const headerCheckboxOverride = props.headerCheckbox;
+
   // AG Grid is client-only: render a sized placeholder until mounted, or hydration breaks.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -175,12 +177,18 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     return {
       mode: 'multiRow',
       checkboxes: (p) => !isDetailRow(p.data),
-      headerCheckbox: selectionSpec?.headerCheckbox ?? true,
+      headerCheckbox: headerCheckboxOverride ?? selectionSpec?.headerCheckbox ?? true,
       selectAll: 'currentPage',
       enableClickSelection: false,
       isRowSelectable: isSelectable,
     };
-  }, [selectionEnabled, effectiveSelectionMode, selectionSpec?.headerCheckbox, rowIsSelectable]);
+  }, [
+    selectionEnabled,
+    effectiveSelectionMode,
+    selectionSpec?.headerCheckbox,
+    headerCheckboxOverride,
+    rowIsSelectable,
+  ]);
 
   const selectionColumnDef = useMemo(
     () =>

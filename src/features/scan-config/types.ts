@@ -181,6 +181,7 @@ export const ScanConfigUIElementDict = {
   SelectRecordableIonChannelVariable: 'select_recordable_ion_channel_variable',
   VoltageDuration: 'voltage_duration',
   ModelIdentifierMultiple: 'model_identifier_multiple',
+  ModelIdentifierGrouped: 'model_identifier_grouped',
   StringSelection: 'string_selection',
   StringSelectionEnhanced: 'string_selection_enhanced',
   StringListInput: 'string_list_input',
@@ -252,6 +253,10 @@ export interface ModelIdentifier extends TBlockElement {
 
 export interface TModelIdentifierMultiple extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifierMultiple;
+}
+
+export interface TModelIdentifierGrouped extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.ModelIdentifierGrouped;
 }
 export interface FloatParameterSweep extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.FloatParameterSweep;
@@ -694,6 +699,7 @@ export type ParamSchema =
   | DistanceFunctionInputNullableField
   | ModelIdentifier
   | TModelIdentifierMultiple
+  | TModelIdentifierGrouped
   | FloatParameterSweep
   | IntParameterSweep
   | FloatOptional
@@ -789,7 +795,8 @@ export type TActivityCustomFileRenderer =
 
 export type TActivityCustomFile = {
   id?: string;
-  asset: IAsset;
+  /** Absent for a mini-detail row whose entity carries no top-level asset, e.g. a me-model. */
+  asset?: IAsset;
   entity: IEntity;
   assetPath?: string;
   name?: string;

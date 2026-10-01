@@ -7,7 +7,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
-import { circuitSynapticPhysiologyBuildFlag, flags } from '@/features/feature-flags/flags';
+import { extracellularRecordingArrayBuildFlag, flags } from '@/features/feature-flags/flags';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   readWorkflowSessionSelection,
@@ -236,7 +236,7 @@ const cases: TCase[] = [
     },
     href: `${base}/build/configure/circuit-synaptic-physiology-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
-    flags: { [circuitSynapticPhysiologyBuildFlag.key]: true } as FeatureFlags,
+    flags: { ...allFlags, [extracellularRecordingArrayBuildFlag.key]: false },
   },
   {
     name: 'electrical cell recording → intracellular e-feature extraction',
