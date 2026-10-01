@@ -23,6 +23,8 @@ import {
   getViewDefinitionByExtendedType,
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
+import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -57,6 +59,7 @@ import {
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
+import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -168,6 +171,49 @@ export default async function Overview({
 
     (entity as ISingleNeuronSynaptome).me_model = meModel;
   }
+  // a result or its campaign opens as the campaign's scan config, like a simulation campaign; one
+  // that cannot be resolved keeps the plain overview below
+  if (
+    extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ||
+    extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+  ) {
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    const resolveCampaign = EFeatureExtractionCampaign.api.query.resolve!;
+    const { data: extraction } = await tryCatch(
+      extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+        ? resolveCampaign({ id: entity.id, context })
+        : resolveEFeatureExtractionResultCampaign(
+            entity.id,
+            context.virtualLabId,
+            context.projectId
+          )
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+    );
+
+    if (extraction && scanConfig) {
+      return (
+        <ScanConfiguration
+          entityId={extraction.recordingIds.at(0)}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={extraction.campaign.id}
+          initialConfig={extraction.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
+        />
+      );
+    }
+  }
+
   // TODO: new simulation and extraction campaigns should be handled here
   if (entity.type === EntityTypeDict.TaskConfig) {
     if (
