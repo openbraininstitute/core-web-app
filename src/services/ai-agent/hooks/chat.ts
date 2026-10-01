@@ -15,7 +15,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { presignedUrlCache } from '@/features/ai-assistant/message-item/storage-image-part';
 import { atomRateLimit } from '@/features/ai-assistant/state';
-import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -391,23 +390,17 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: string, config?: Config) {
+export function useAgentState(key: string | null, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
-  const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
-    // The default is a CircuitSimulationScanConfig, so it is only a sane stand-in for the
-    // circuit-simulation key. Applying it to any other key published a circuit-simulation
-    // config under that key on first render (before `config` had hydrated), which the agent
-    // would then read back and try to validate against the wrong schema.
-    const stateConfig = config ?? (key === 'circuit_simulation_config' ? defaultConfig : undefined);
-    if (!stateConfig) return;
+    if (!config) return;
 
     setAIAgentState(
       key
         ? {
-            [key]: stateConfig,
+            [key]: config,
           }
         : {}
     );
@@ -415,7 +408,7 @@ export function useAgentState(key: string, config?: Config) {
     return () => {
       setAIAgentState({});
     };
-  }, [defaultConfig, config, key, setAIAgentState]);
+  }, [config, key, setAIAgentState]);
 
   // Clear stale flash state on unmount so the next page doesn't flash
   useEffect(() => {
