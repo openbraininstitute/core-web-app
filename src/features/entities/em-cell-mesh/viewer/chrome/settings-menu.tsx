@@ -26,7 +26,7 @@ interface SettingsMenuProps {
   looks: Look[];
   look: Look;
   /** Choose a look, with the occlusion it comes with. */
-  onLook(id: string): void;
+  onLook(look: Look): void;
 }
 
 /** The circuit viewer's settings popover, with what the EM mesh viewer can change. */

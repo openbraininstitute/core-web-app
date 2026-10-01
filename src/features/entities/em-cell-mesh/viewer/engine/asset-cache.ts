@@ -113,8 +113,13 @@ async function readOpened(cache: Cache): Promise<Record<string, number>> {
 }
 
 /** Mark the `opened` keys as opened now, and forget the `gone` ones. */
-async function touch(cache: Cache, opened: string[], gone: string[]): Promise<void> {
-  const index = await readOpened(cache);
+async function touch(
+  cache: Cache,
+  opened: string[],
+  gone: string[],
+  read?: Record<string, number>
+): Promise<void> {
+  const index = read ?? (await readOpened(cache));
   const now = Date.now();
   for (const key of opened) index[key] = now;
   for (const key of gone) delete index[key];
@@ -126,10 +131,11 @@ async function prune(cache: Cache, bounds: CacheBounds, written: string): Promis
   const now = Date.now();
   const entries: { key: string; size: number; opened: number }[] = [];
   const gone: string[] = [];
-  for (const request of await cache.keys()) {
+  const requests = (await cache.keys()).filter((r) => r.url !== OPENED);
+  const hits = await Promise.all(requests.map((r) => cache.match(r)));
+  for (const [i, request] of requests.entries()) {
     const key = request.url;
-    if (key === OPENED) continue;
-    const hit = await cache.match(request);
+    const hit = hits[i];
     const stored = Number(hit?.headers.get(STORED_AT));
     if (!hit || !(now - stored < bounds.ttlMs)) {
       await cache.delete(request);
@@ -147,5 +153,5 @@ async function prune(cache: Cache, bounds: CacheBounds, written: string): Promis
     gone.push(e.key);
     total -= e.size;
   }
-  await touch(cache, [written], gone);
+  await touch(cache, [written], gone, index);
 }

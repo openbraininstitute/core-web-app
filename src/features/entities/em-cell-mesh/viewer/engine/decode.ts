@@ -40,11 +40,7 @@ export interface DecodeResult {
   dracoHeapBytes: number | null;
 }
 
-export function decodeGlb(
-  bytes: Uint8Array,
-  draco: DracoModule | null,
-  unitUm = EM_UNIT_UM
-): DecodeResult {
+export function decodeGlb(bytes: Uint8Array, draco: DracoModule | null): DecodeResult {
   const { json, bin } = parseGlb(bytes);
   const header = meshHeader(json);
   if (header.draco && !draco) throw new Error('Draco-compressed GLB without a decoder');
@@ -57,15 +53,15 @@ export function decodeGlb(
   const fileBounds = header.bounds ?? partsBounds(parts);
   const centre = fileBounds.min.map((v, k) => (v + fileBounds.max[k]) / 2) as Vec3;
   const bounds = {
-    min: fileBounds.min.map((v, k) => (v - centre[k]) * unitUm) as Vec3,
-    max: fileBounds.max.map((v, k) => (v - centre[k]) * unitUm) as Vec3,
+    min: fileBounds.min.map((v, k) => (v - centre[k]) * EM_UNIT_UM) as Vec3,
+    max: fileBounds.max.map((v, k) => (v - centre[k]) * EM_UNIT_UM) as Vec3,
   };
 
   const only = parts.length === 1 ? parts[0].quantized : null;
   if (only && only.values instanceof Uint16Array) {
     const grid: Grid = {
-      origin: only.min.map((v, k) => (v - centre[k]) * unitUm) as Vec3,
-      step: (only.range / (2 ** only.bits - 1)) * unitUm,
+      origin: only.min.map((v, k) => (v - centre[k]) * EM_UNIT_UM) as Vec3,
+      step: (only.range / (2 ** only.bits - 1)) * EM_UNIT_UM,
     };
     return {
       mesh: {
@@ -96,7 +92,7 @@ export function decodeGlb(
     for (let i = 3 * vertex, end = 3 * (vertex + n), j = 0; i < end; i += 3, j += 3) {
       for (let k = 0; k < 3; k++) {
         const v = q ? q.min[k] + q.values[j + k] * scale : (p.positions as Float32Array)[j + k];
-        positions[i + k] = (v - centre[k]) * unitUm;
+        positions[i + k] = (v - centre[k]) * EM_UNIT_UM;
       }
     }
     if (indices !== p.indices) {

@@ -4,4 +4,4 @@ import { HELP } from '../help/help-text';
 
 export { Heading, ICON, Note } from '@/features/viewer-3d/chrome/menu-rows';
 
-export const { HelpButton, SectionTitle, HelpRow, ToggleRow } = createHelpRows(HELP);
+export const { SectionTitle, HelpRow, ToggleRow } = createHelpRows(HELP);

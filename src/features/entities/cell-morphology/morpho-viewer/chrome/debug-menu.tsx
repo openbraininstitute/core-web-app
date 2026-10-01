@@ -1,8 +1,9 @@
-import { RiBugLine, RiDownload2Line, RiLoader4Line } from '@remixicon/react';
+import { RiBugLine } from '@remixicon/react';
 import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
 import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
+import { DownloadRow, fileName } from '@/features/viewer-3d/chrome/debug-rows';
 import { logError } from '@/utils/logger';
 
 import { errorMessage } from '../engine/protocol';
@@ -119,25 +120,14 @@ export function DebugMenu({ name, state, settings, update, look }: DebugMenuProp
           <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
             <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
             {FORMATS.map((f) => (
-              <button
+              <DownloadRow
                 key={f.format}
-                type="button"
-                aria-label={f.label}
-                aria-description={f.detail}
+                label={f.label}
+                detail={f.detail}
+                busy={running === f.format ? f.busy : null}
                 disabled={reason !== null || running !== null}
                 onClick={() => save(f, close)}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
-              >
-                {running === f.format ? (
-                  <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-                ) : (
-                  <RiDownload2Line aria-hidden className="size-4 shrink-0" />
-                )}
-                <span className="flex flex-col">
-                  <span className="text-sm">{running === f.format ? f.busy : f.label}</span>
-                  <span className="text-xs text-neutral-500">{f.detail}</span>
-                </span>
-              </button>
+              />
             ))}
             {reason && <Note>{reason}</Note>}
             {error && (
@@ -155,10 +145,8 @@ export function DebugMenu({ name, state, settings, update, look }: DebugMenuProp
 /** The mesh as a file of the format, saved under the morphology's name. */
 async function saveMesh(format: Format, mesh: MeshResult, palette: Palette, name: string) {
   const { exportMesh } = await import('../export');
-  saveAs(await exportMesh(format.format, mesh, palette), `${fileName(name)}${format.extension}`);
-}
-
-/** The morphology's name, without what a file name cannot hold. */
-function fileName(name: string): string {
-  return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'morphology';
+  saveAs(
+    await exportMesh(format.format, mesh, palette),
+    `${fileName(name, 'morphology')}${format.extension}`
+  );
 }

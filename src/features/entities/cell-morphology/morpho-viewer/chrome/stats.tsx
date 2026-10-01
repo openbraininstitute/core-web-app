@@ -1,5 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 
+import { fmt, Lines } from '@/features/viewer-3d/chrome/debug-rows';
+
 import { PALETTE_KEYS } from '../engine/colors';
 import {
   BASE_RADIUS_FRACTION,
@@ -52,24 +54,6 @@ export function Stats({ name, state, palette }: StatsProps) {
       </div>
     </div>
   );
-}
-
-function Lines({ lines }: { lines: ReactNode[] }) {
-  return (
-    <div className="flex flex-col gap-0.5 text-xs leading-snug tabular-nums [overflow-wrap:anywhere] [&_b]:font-semibold [&_b]:text-neutral-900">
-      {lines.map((line, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: the lines are rebuilt as a whole
-        <div key={i}>{line}</div>
-      ))}
-    </div>
-  );
-}
-
-function fmt(n: number, digits = 0): string {
-  return n.toLocaleString(undefined, {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits,
-  });
 }
 
 /** "1 neck", "3 necks"; "1 batch", "2 batches" given the plural. */

@@ -5,8 +5,8 @@ import {
   MAX_CHUNK_VERTICES,
   packMesh,
   splitChunks,
-  vertexNormals,
 } from '@/features/entities/em-cell-mesh/viewer/engine/chunks';
+import { vertexNormals } from '@/features/viewer-3d/engine/normals';
 
 import { torus } from './mesh-fixtures';
 

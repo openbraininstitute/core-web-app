@@ -13,7 +13,7 @@ export const STAND_IN_TRIANGLES = 1_000_000;
 export function makeStandIn(
   mesh: DecodedMesh,
   simplifier: typeof MeshoptSimplifier,
-  target = STAND_IN_TRIANGLES
+  target: number
 ): { standIn: StandIn; timings: Timing[] } {
   const timings: Timing[] = [];
   const t0 = performance.now();

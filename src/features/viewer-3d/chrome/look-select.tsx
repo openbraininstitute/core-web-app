@@ -25,7 +25,7 @@ export function LookSelect({
 }: {
   looks: Look[];
   look: Look;
-  onChange(id: string): void;
+  onChange(look: Look): void;
   help: HelpText;
   testId: string;
 }) {
@@ -67,7 +67,7 @@ export function LookSelect({
                 selected={l.id === look.id}
                 theme={LIGHT}
                 onClick={() => {
-                  onChange(l.id);
+                  onChange(l);
                   setOpen(false);
                 }}
               />

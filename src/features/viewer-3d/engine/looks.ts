@@ -35,6 +35,7 @@
  * of the looks that cannot do without what it lacks (`Look.needs`).
  */
 
+import chroma from 'chroma-js';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
@@ -343,7 +344,7 @@ export function withDisplacement<T extends THREE.Material>(m: T, { perFragment =
 }
 
 /** `pixelSize` without the displacement, for the outline of a surface without radii. */
-export function withPixelSize<T extends THREE.Material>(m: T): T {
+function withPixelSize<T extends THREE.Material>(m: T): T {
   trackViewHeight(m);
   return addShaderHook(m, 'pixel-size', (shader) => {
     shader.uniforms.uViewHeight = widenUniforms.uViewHeight;
@@ -415,6 +416,13 @@ function shadeBumpsPerFragment(shader: THREE.WebGLProgramParametersWithUniforms)
 export function backgroundCss(look: Look, dark: boolean): string {
   const [top, bottom] = look.background[dark ? 'dark' : 'light'];
   return `linear-gradient(${top}, ${bottom})`;
+}
+
+/** Whether light text and lines read better than dark over the look's background: SEM is black in either theme. */
+export function isDarkBackground(look: Look, dark: boolean): boolean {
+  const [top, bottom] = look.background[dark ? 'dark' : 'light'];
+  const middle = chroma.mix(top, bottom, 0.5, 'rgb');
+  return chroma.contrast(middle, '#fff') > chroma.contrast(middle, '#000');
 }
 
 /** A directional light coming from direction `from` in camera space: x right, y up, z towards the viewer. */

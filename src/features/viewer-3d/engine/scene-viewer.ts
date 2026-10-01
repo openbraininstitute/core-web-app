@@ -109,7 +109,7 @@ export class SceneViewer implements ViewControls {
   protected look: Look;
   protected meshVisible = true;
   protected wireframe = false;
-  private dark = false;
+  protected dark = false;
   private ao = false;
   private composer: EffectComposer | null = null;
   private renderPass: RenderPass | null = null;
@@ -148,6 +148,7 @@ export class SceneViewer implements ViewControls {
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     container.appendChild(canvas);
+    canvas.addEventListener('webglcontextlost', this.onContextLost);
     canvas.addEventListener('webglcontextrestored', this.onContextRestored);
 
     this.perspective.position.set(0, 0, 500);
@@ -192,6 +193,7 @@ export class SceneViewer implements ViewControls {
   dispose(): void {
     this.disposed = true;
     this.renderer.setAnimationLoop(null);
+    this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.resizeObserver.disconnect();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
@@ -260,6 +262,12 @@ export class SceneViewer implements ViewControls {
   /** After the view changed size. */
   protected resized(): void {}
 
+  /** The GPU took the context, and what was uploaded with it. */
+  protected contextLost(): void {}
+
+  /** After three rebuilt what it kept the sources of. */
+  protected contextRestored(): void {}
+
   private composing(): boolean {
     return this.options.composeAlways === true || this.ao || this.look.bloom === true;
   }
@@ -318,6 +326,8 @@ export class SceneViewer implements ViewControls {
     }
   }
 
+  private onContextLost = (): void => this.contextLost();
+
   // three rebuilds what it kept the sources of; the environment was drawn on the GPU, and went with the context.
   private onContextRestored = (): void => {
     if (this.environment) {
@@ -326,6 +336,7 @@ export class SceneViewer implements ViewControls {
       this.applyLook();
     }
     this.invalidate();
+    this.contextRestored();
   };
 
   /**

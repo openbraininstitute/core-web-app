@@ -6,7 +6,7 @@
 import * as Comlink from 'comlink';
 
 import { packedBuffers, packMesh } from './chunks';
-import { type DracoModule, decodeGlb } from './decode';
+import { type DecodeResult, type DracoModule, decodeGlb } from './decode';
 import { type DownloadHooks, type DownloadRequest, downloadGlb } from './download';
 import { makeStandIn, STAND_IN_TRIANGLES } from './stand-in';
 
@@ -37,15 +37,15 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
     async download(
       request: DownloadRequest,
       hooks: DownloadHooks
-    ): Promise<{ kind: 'done' | 'stopped'; fromCache: boolean; header: MeshHeader }> {
+    ): Promise<{ kind: 'done' | 'stopped'; fromCache: boolean }> {
       const result = await downloadGlb(request, cache, hooks);
       header = result.header;
-      if (result.kind === 'stopped') return { kind: 'stopped', fromCache: false, header };
+      if (result.kind === 'stopped') return { kind: 'stopped', fromCache: false };
       bytes = result.bytes;
-      return { kind: 'done', fromCache: result.fromCache, header };
+      return { kind: 'done', fromCache: result.fromCache };
     },
 
-    async decode(): Promise<{ mesh: DecodedMesh; dracoHeapBytes: number | null }> {
+    async decode(): Promise<DecodeResult> {
       if (!bytes || !header) throw new Error('nothing downloaded to decode');
       const result = decodeGlb(bytes, header.draco ? await dracoModule() : null);
       bytes = null;

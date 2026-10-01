@@ -9,15 +9,15 @@ import type { MeshHeader } from './glb';
 /** Draco's WASM memory can't grow past 2 GiB, and peaks at 73–76 bytes a triangle. */
 export const DRACO_MAX_TRIANGLES = Math.floor(2 ** 31 / 76);
 /** The peak while loading: Draco's memory, plus the arrays it hands over. */
-export const PEAK_BYTES_PER_TRIANGLE = 95;
+const PEAK_BYTES_PER_TRIANGLE = 95;
 /** On the GPU once loaded: 12-byte vertices, about half as many as triangles, border copies included, and 16-bit indices. */
-export const GPU_BYTES_PER_TRIANGLE = 12.2;
+const GPU_BYTES_PER_TRIANGLE = 12.2;
 /** The composer's 4× multisampled target and its depth, their resolves, the second target and the canvas. */
 export const FRAMEBUFFER_BYTES_PER_PIXEL = 80;
 /** The share of the device's memory a mesh may take at its peak. */
-export const MEMORY_SHARE = 0.5;
+const MEMORY_SHARE = 0.5;
 /** What to assume where the browser doesn't say (Firefox, Safari), GB. */
-export const ASSUMED_MEMORY_GB = { desktop: 8, mobile: 4 };
+const ASSUMED_MEMORY_GB = { desktop: 8, mobile: 4 };
 
 export interface Device {
   /** GB, as `navigator.deviceMemory` reports it, or as assumed. */

@@ -236,12 +236,12 @@ function report(patch: Partial<LoadReport> = {}): LoadReport {
   } as LoadReport;
 }
 
-const ENTITY = { id: 'cell-a', name: 'Cell A', assets: [OBJ, LOD, GLB] };
+const ENTITY = { id: 'cell-a', name: 'Cell A' };
 
-async function renderViewer({ debug = true, entity = ENTITY } = {}) {
+async function renderViewer({ debug = true } = {}) {
   const view = render(
     <FlagsProvider flags={{ ...defaultFlags, [emMeshDebugFlag.key]: debug }}>
-      <EmCellMeshViewer entity={entity} />
+      <EmCellMeshViewer entity={ENTITY} asset={GLB} />
     </FlagsProvider>
   );
   await screen.findByRole('button', { name: 'Viewer settings' });
@@ -282,7 +282,7 @@ describe('EmCellMeshViewerCard', () => {
   it("shows why where the viewer can't start, as without WebGL, and loads nothing", async () => {
     const quiet = vi.spyOn(console, 'error').mockImplementation(() => {});
     h.startError = new Error('Error creating WebGL context.');
-    render(<EmCellMeshViewerCard entity={ENTITY} />);
+    render(<EmCellMeshViewerCard entity={ENTITY} asset={GLB} />);
     expect(await screen.findByText('Error creating WebGL context.')).toBeInTheDocument();
     expect(h.loads).toHaveLength(0);
     quiet.mockRestore();
@@ -308,12 +308,6 @@ describe('EmCellMeshViewer', () => {
     expect(load.options.ignoreBudget).toBe(false);
     // jsdom's navigator has no deviceMemory, as Firefox and Safari: a desktop is taken for 8 GB.
     expect(load.options.device.memoryGB).toBe(8);
-  });
-
-  it('loads nothing for an entity without a GLB', async () => {
-    await renderViewer({ entity: { ...ENTITY, assets: [OBJ] } });
-    await new Promise((r) => setTimeout(r, 20));
-    expect(h.loads).toHaveLength(0);
   });
 
   it('says how far the download is, then decoding, then full detail, and nothing once it is drawn', async () => {
@@ -409,10 +403,12 @@ describe('EmCellMeshViewer', () => {
   it('aborts the load and clears the view for another cell, and aborts it when it goes', async () => {
     const { rerender, unmount, viewer } = await renderViewer();
     const first = await started();
-    const next = { id: 'cell-b', name: 'Cell B', assets: [asset({ id: 'glb-b', size: 6e6 })] };
     rerender(
       <FlagsProvider flags={{ ...defaultFlags, [emMeshDebugFlag.key]: true }}>
-        <EmCellMeshViewer entity={next} />
+        <EmCellMeshViewer
+          entity={{ id: 'cell-b', name: 'Cell B' }}
+          asset={asset({ id: 'glb-b', size: 6e6 })}
+        />
       </FlagsProvider>
     );
     const second = await started(2);

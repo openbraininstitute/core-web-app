@@ -1,4 +1,8 @@
 import { saveAs } from 'file-saver';
+import { useState } from 'react';
+
+import { fileName } from '@/features/viewer-3d/chrome/debug-rows';
+import { logError } from '@/utils/logger';
 
 import { GLB_CACHE, readEntry } from './engine/asset-cache';
 
@@ -12,6 +16,23 @@ export async function saveGlb(request: DownloadRequest, name: string): Promise<v
     if (!response.ok) throw new Error(`the download failed (${response.status})`);
     bytes = await response.arrayBuffer();
   }
-  const file = name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'em-cell-mesh';
-  saveAs(new Blob([bytes], { type: 'model/gltf-binary' }), `${file}.glb`);
+  saveAs(new Blob([bytes], { type: 'model/gltf-binary' }), `${fileName(name, 'em-cell-mesh')}.glb`);
+}
+
+/** Saving the GLB, nothing until the request is known, and why the last try failed. */
+export function useSaveGlb(request: DownloadRequest | null, name: string) {
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const save = () => {
+    if (!request) return;
+    setSaving(true);
+    setError(null);
+    saveGlb(request, name)
+      .catch((e: unknown) => {
+        logError('Could not download the EM cell mesh', e);
+        setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => setSaving(false));
+  };
+  return { save, saving, error };
 }

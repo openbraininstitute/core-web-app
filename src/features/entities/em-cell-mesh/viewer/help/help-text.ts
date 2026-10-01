@@ -1,3 +1,5 @@
+import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
+
 import { FULL_ABOVE_PX, SLOW_FRAME_MS, STAND_IN_BELOW_PX } from '../engine/mesh-choice';
 
 import type { HelpText } from '@/features/viewer-3d/help/help-button';
@@ -27,26 +29,7 @@ export const HELP = {
     text: 'Turns the view slowly around the centre of the cell.',
     applies: 'view',
   },
-  perspective: {
-    text: 'How the cell is projected onto the screen.',
-    effects: [
-      [
-        'On',
-        'Perspective: nearer parts look larger, and depth reads naturally. There is no scale bar, as no one scale holds.',
-      ],
-      [
-        'Off',
-        'Orthographic: a micron is as long on screen at any depth, so the scale bar holds for the whole cell.',
-      ],
-    ],
-    applies: 'view',
-  },
-  'scale-bar': {
-    text:
-      'A ruler down the left of the view, in microns. Only in the orthographic view: in perspective nearer parts ' +
-      'look larger, and no one scale holds.',
-    applies: 'view',
-  },
+  ...VIEW_HELP,
   dark: {
     text: "The light or the dark variant of the look's background. Some looks keep their own background either way.",
     applies: 'view',

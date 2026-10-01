@@ -453,16 +453,15 @@ export default async function Overview({
     : undefined;
 
   // Only a mesh with a GLB has a viewer.
-  const viewableMesh =
-    extendedType === ExtendedEntitiesTypeDict.EMCellMesh &&
-    meshAsset((entity as IEMCellMesh).assets)
-      ? (entity as IEMCellMesh)
-      : undefined;
+  const meshGlb =
+    extendedType === ExtendedEntitiesTypeDict.EMCellMesh
+      ? meshAsset((entity as IEMCellMesh).assets)
+      : null;
 
   const hasVisualization =
     (circuitTypes.includes(extendedType) && Boolean(circuitVisualizationAsset)) ||
     includes(morphologyTypes, extendedType) ||
-    Boolean(viewableMesh) ||
+    Boolean(meshGlb) ||
     extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
@@ -513,10 +512,8 @@ export default async function Overview({
       {includes(morphologyTypes, extendedType) && (
         <CellMorphologyViewer entity={entity as ICellMorphology} />
       )}
-      {viewableMesh && (
-        <EmCellMeshViewerCard
-          entity={{ id: viewableMesh.id, name: viewableMesh.name, assets: viewableMesh.assets }}
-        />
+      {meshGlb && (
+        <EmCellMeshViewerCard entity={{ id: entity.id, name: entity.name }} asset={meshGlb} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer

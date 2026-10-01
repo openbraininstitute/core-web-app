@@ -49,7 +49,7 @@ function handle<T>(worker: Worker): WorkerHandle<T> {
   };
 }
 
-export const browserWorkers: Workers = {
+const browserWorkers: Workers = {
   decode: () =>
     handle(new Worker(new URL('./decode.worker.ts', import.meta.url), { type: 'module' })),
   standIn: () =>
@@ -136,9 +136,13 @@ export async function loadEmMesh(
     worker.terminate();
     live.delete(worker);
   };
+  // Every step's race leaves a reaction on `aborted` holding its result: the listener goes when the load is done, or
+  // the signal would keep the full mesh's arrays alive for as long as it lives.
+  let onAbort = () => {};
   const aborted = new Promise<never>((_, reject) => {
-    if (signal.aborted) reject(abortError());
-    signal.addEventListener('abort', () => reject(abortError()), { once: true });
+    onAbort = () => reject(abortError());
+    if (signal.aborted) onAbort();
+    signal.addEventListener('abort', onAbort, { once: true });
   });
   aborted.catch(() => {});
   /** The call, unless the load is aborted or the worker dies first; a failure is the stage's. */
@@ -253,6 +257,7 @@ export async function loadEmMesh(
     return { kind: 'loaded' };
   } finally {
     finished = true;
+    signal.removeEventListener('abort', onAbort);
     for (const worker of live) worker.terminate();
   }
 }

@@ -14,6 +14,7 @@ import { DebugMenu } from './debug-menu';
 import { LoadStatus } from './load-status';
 import { SettingsMenu } from './settings-menu';
 
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { EmMeshViewer } from '../engine/em-mesh-viewer';
 import type { EmMeshLoad } from '../use-em-mesh';
 import type { EmViewerSettings, UpdateEmSettings } from '../use-em-viewer-settings';
@@ -24,7 +25,7 @@ interface EmViewerChromeProps {
   root: HTMLElement | null;
   settings: EmViewerSettings;
   update: UpdateEmSettings;
-  chooseLook(id: string): void;
+  chooseLook(look: Look): void;
   load: EmMeshLoad;
   /** The mesh's name, for the Debug menu and the GLB's file. */
   name: string;

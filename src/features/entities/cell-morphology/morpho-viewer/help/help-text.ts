@@ -1,4 +1,5 @@
 import { MAX_BUMP_AMPLITUDE } from '@/features/viewer-3d/engine/looks';
+import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
 
 import { MAX_REFINE } from '../engine/hybrid';
 import { MIN_RADIUS_VOXELS } from '../engine/mesher';
@@ -142,26 +143,7 @@ export const HELP = {
     text: 'Turns the view slowly around the soma.',
     applies: 'view',
   },
-  perspective: {
-    text: 'How the cell is projected onto the screen.',
-    effects: [
-      [
-        'On',
-        'Perspective: nearer parts look larger, and depth reads naturally. There is no scale bar, as no one scale holds.',
-      ],
-      [
-        'Off',
-        'Orthographic: a micron is as long on screen at any depth, so the scale bar holds for the whole cell.',
-      ],
-    ],
-    applies: 'view',
-  },
-  'scale-bar': {
-    text:
-      'A ruler down the left of the view, in microns. Only in the orthographic view: in perspective nearer parts ' +
-      'look larger, and no one scale holds.',
-    applies: 'view',
-  },
+  ...VIEW_HELP,
   export: {
     text:
       'Downloads the mesh on show, in microns, with the soma centre at the origin as in the view. The hidden types ' +

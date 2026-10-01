@@ -10,7 +10,6 @@ import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 
 import { EmViewerChrome } from './chrome/em-viewer-chrome';
 import { EmMeshViewer } from './engine/em-mesh-viewer';
-import { meshAsset } from './mesh-asset';
 import { useEmMesh } from './use-em-mesh';
 import { type EmViewerSettings, useEmViewerSettings } from './use-em-viewer-settings';
 
@@ -19,29 +18,25 @@ import type { WorkspaceContext } from '@/types/common';
 
 interface EmCellMeshViewerProps {
   className?: string;
-  entity: { id: string; name: string; assets: IAsset[] };
+  entity: { id: string; name: string };
+  /** The mesh's GLB. */
+  asset: Pick<IAsset, 'id' | 'size'>;
 }
 
-function EmCellMeshViewerComponent({ className, entity }: EmCellMeshViewerProps) {
+function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewerProps) {
   const ctx = useParams<WorkspaceContext>();
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const refHost = useRef<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<EmMeshViewer | null>(null);
   const { settings, update, chooseLook } = useEmViewerSettings();
-  const asset = meshAsset(entity.assets);
-  const assetId = asset?.id;
-  const size = asset?.size ?? 0;
   const { virtualLabId, projectId } = ctx ?? {};
   const source = useMemo(
-    () =>
-      assetId
-        ? {
-            entityId: entity.id,
-            asset: { id: assetId, size },
-            ctx: virtualLabId && projectId ? { virtualLabId, projectId } : null,
-          }
-        : null,
-    [entity.id, assetId, size, virtualLabId, projectId]
+    () => ({
+      entityId: entity.id,
+      asset: { id: asset.id, size: asset.size },
+      ctx: virtualLabId && projectId ? { virtualLabId, projectId } : null,
+    }),
+    [entity.id, asset.id, asset.size, virtualLabId, projectId]
   );
   const load = useEmMesh(viewer, source);
   const [wheelHint, setWheelHint] = useSignal(10000);
@@ -85,10 +80,7 @@ function EmCellMeshViewerComponent({ className, entity }: EmCellMeshViewerProps)
             root={root}
             settings={settings}
             update={update}
-            chooseLook={(id) => {
-              const next = viewer.looks.find((l) => l.id === id);
-              if (next) chooseLook(next);
-            }}
+            chooseLook={chooseLook}
             load={load}
             name={entity.name}
             wheelHint={wheelHint}

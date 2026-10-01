@@ -1,21 +1,14 @@
-import {
-  RiBox3Line,
-  RiBugLine,
-  RiContrast2Line,
-  RiDownload2Line,
-  RiLoader4Line,
-  RiStackLine,
-} from '@remixicon/react';
+import { RiBox3Line, RiBugLine, RiContrast2Line, RiStackLine } from '@remixicon/react';
 import { Fragment, type ReactNode, useEffect, useState } from 'react';
 
 import {
   ChromeMenu,
   SegmentedToggle,
 } from '@/features/scan-config/components/color-by/chrome-menu';
-import { logError } from '@/utils/logger';
+import { DownloadRow, fmt, Lines } from '@/features/viewer-3d/chrome/debug-rows';
 
 import { FRAMEBUFFER_BYTES_PER_PIXEL } from '../engine/budget';
-import { saveGlb } from '../save-glb';
+import { useSaveGlb } from '../save-glb';
 import { HelpRow, ICON, Note, SectionTitle, ToggleRow } from './menu-rows';
 
 import type { AODepth } from '@/features/viewer-3d/engine/scene-viewer';
@@ -45,20 +38,7 @@ interface DebugMenuProps {
 /** How the mesh was loaded, what it takes, which of its two meshes is on show and why, and switches to compare. */
 export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuProps) {
   // Here and not in the menu's content, so that a download survives the menu closing.
-  const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState<string | null>(null);
-
-  const save = () => {
-    if (!load.request) return;
-    setSaving(true);
-    setFailed(null);
-    saveGlb(load.request, name)
-      .catch((e: unknown) => {
-        logError('Could not download the EM cell mesh', e);
-        setFailed(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => setSaving(false));
-  };
+  const { save, saving, error: failed } = useSaveGlb(load.request, name);
 
   return (
     <ChromeMenu
@@ -121,23 +101,13 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
         </div>
         <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
           <SectionTitle title="Download" topic="download" className="px-1 pb-1" />
-          <button
-            type="button"
-            aria-label="GLB"
+          <DownloadRow
+            label="GLB"
+            detail="As stored, Draco-compressed"
+            busy={saving ? 'Downloading…' : null}
             disabled={!load.request || saving}
             onClick={save}
-            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
-          >
-            {saving ? (
-              <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-            ) : (
-              <RiDownload2Line aria-hidden className="size-4 shrink-0" />
-            )}
-            <span className="flex flex-col">
-              <span className="text-sm">{saving ? 'Downloading…' : 'GLB'}</span>
-              <span className="text-xs text-neutral-500">As stored, Draco-compressed</span>
-            </span>
-          </button>
+          />
           {!load.request && <Note>The download is being prepared.</Note>}
           {failed && (
             <p role="alert" className="m-0 px-2 text-xs text-error">
@@ -161,24 +131,6 @@ function LiveLines({
   const [status, setStatus] = useState<ViewStatus | null>(null);
   useEffect(() => viewer.onStatus(setStatus), [viewer]);
   return status ? <Lines lines={lines(status)} /> : null;
-}
-
-function Lines({ lines }: { lines: ReactNode[] }) {
-  return (
-    <div className="flex flex-col gap-0.5 text-xs leading-snug tabular-nums [overflow-wrap:anywhere] [&_b]:font-semibold [&_b]:text-neutral-900">
-      {lines.map((line, i) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: the lines are rebuilt as a whole
-        <div key={i}>{line}</div>
-      ))}
-    </div>
-  );
-}
-
-function fmt(n: number, digits = 0): string {
-  return n.toLocaleString(undefined, {
-    maximumFractionDigits: digits,
-    minimumFractionDigits: digits,
-  });
 }
 
 const MB = (bytes: number) => `${fmt(bytes / 2 ** 20)} MB`;

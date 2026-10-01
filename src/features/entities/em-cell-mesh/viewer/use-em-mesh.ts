@@ -7,7 +7,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { logError } from '@/utils/logger';
 
 import { type Budget, deviceOf } from './engine/budget';
-import { type LoadReport, loadEmMesh, type Stage } from './engine/load';
+import { LoadError, type LoadReport, loadEmMesh, type Stage } from './engine/load';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { WorkspaceContext } from '@/types/common';
@@ -40,8 +40,6 @@ export interface EmMeshState {
   /** Bytes of the GLB received, of all of them. */
   received: number;
   total: number;
-  /** The stand-in is on show. */
-  hasStandIn: boolean;
   /** The full mesh can be drawn, or the stand-in is the whole mesh. */
   fullReady: boolean;
   /** Why the mesh was not loaded: too large for the browser, or for this device until "Load anyway". */
@@ -59,7 +57,6 @@ export interface EmMeshState {
 const INITIAL: EmMeshState = {
   received: 0,
   total: 0,
-  hasStandIn: false,
   fullReady: false,
   refused: null,
   error: null,
@@ -78,13 +75,13 @@ function fullscreenPixels(): number {
  * Loads the mesh into the viewer: the stand-in as soon as there is one, then the full mesh. Another mesh, or the
  * viewer going, aborts the load; a context lost with the full mesh loads it again, keeping the stand-in.
  */
-export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource | null) {
+export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
   const [state, setState] = useState(INITIAL);
   /** The mesh the user chose to load over the budget. */
   const [loadAnywayKey, setLoadAnywayKey] = useState<string | null>(null);
   const [rebuilds, setRebuilds] = useState(0);
-  const key = source ? `${source.entityId}/${source.asset.id}` : null;
-  const ignoreBudget = key !== null && loadAnywayKey === key;
+  const key = `${source.entityId}/${source.asset.id}`;
+  const ignoreBudget = loadAnywayKey === key;
   /** The mesh the viewer has, which a rebuild keeps the stand-in of. */
   const shown = useRef<string | null>(null);
   const started = useRef(0);
@@ -107,7 +104,7 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource | nu
   // biome-ignore lint/correctness/useExhaustiveDependencies: a rebuild is asked for by its count
   useEffect(() => {
     const src = sourceRef.current;
-    if (!viewer || !src || !key) return;
+    if (!viewer) return;
     const again = shown.current === key;
     shown.current = key;
     if (!again) viewer.clear();
@@ -146,7 +143,6 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource | nu
             if (signal.aborted) return;
             viewer.setStandIn(standIn);
             patch((s) => ({
-              hasStandIn: true,
               report,
               times: { ...s.times, standIn: since() },
               meshes: { ...s.meshes, standIn: summary(standIn) },
@@ -167,7 +163,7 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource | nu
     })().catch((e: unknown) => {
       if (signal.aborted) return;
       logError('Could not load the EM cell mesh', e);
-      const stage: Stage = (e as { stage?: Stage }).stage ?? 'download';
+      const stage = e instanceof LoadError ? e.stage : 'download';
       patch(() => ({ error: { stage, message: e instanceof Error ? e.message : String(e) } }));
     });
     return () => controller.abort();

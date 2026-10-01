@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+import { isDarkBackground } from '@/features/viewer-3d/engine/looks';
 import { type AODepth, SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { GpuTimer, type TimerKind } from './gpu-timer';
@@ -38,6 +39,13 @@ export interface ViewStatus {
   gpuBytes: number;
   /** The canvas's device pixels, which the frame buffers take bytes per. */
   pixels: number;
+}
+
+/** A mesh's chunks as made, before they go in the scene as a layer. */
+interface Parts {
+  meshes: THREE.Mesh[];
+  outlines: THREE.Mesh[];
+  boxes: THREE.Box3[];
 }
 
 /** One of the two meshes in the scene: a Mesh per chunk, and its outline for the looks that have one. */
@@ -148,14 +156,8 @@ export class EmMeshViewer extends SceneViewer {
   private standIn: (Layer & { data: StandIn }) | null = null;
   private full: Layer | null = null;
   /** The full mesh's chunks going up, a few a frame, before it can be drawn. */
-  private pending: {
-    mesh: PackedMesh;
-    next: number;
-    meshes: THREE.Mesh[];
-    outlines: THREE.Mesh[];
-    boxes: THREE.Box3[];
-    started: number | null;
-  } | null = null;
+  private pending: (Parts & { mesh: PackedMesh; next: number; started: number | null }) | null =
+    null;
   /** The stand-in is the whole mesh. */
   private whole = false;
   /** A lost context took the full mesh with it. */
@@ -172,7 +174,6 @@ export class EmMeshViewer extends SceneViewer {
   private timing = false;
   private upload: ViewStatus['upload'] = null;
   private wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6 });
-  private darkBackground = false;
   private statusListeners = new Set<(status: ViewStatus) => void>();
   private readyListeners = new Set<() => void>();
   private rebuildListeners = new Set<() => void>();
@@ -181,17 +182,11 @@ export class EmMeshViewer extends SceneViewer {
   constructor(container: HTMLElement) {
     super(container, { surface: [], aoDepth: 'main-pass', composeAlways: true });
     this.chunks.name = 'em mesh';
-    const canvas = this.renderer.domElement;
-    canvas.addEventListener('webglcontextlost', this.contextLost);
-    canvas.addEventListener('webglcontextrestored', this.contextRestored);
     this.makeTimer();
     this.paintWire();
   }
 
   protected override disposeContent(): void {
-    const canvas = this.renderer.domElement;
-    canvas.removeEventListener('webglcontextlost', this.contextLost);
-    canvas.removeEventListener('webglcontextrestored', this.contextRestored);
     this.timer?.dispose();
     this.clear();
     this.wire.dispose();
@@ -212,21 +207,11 @@ export class EmMeshViewer extends SceneViewer {
   /** Show the stand-in, framing the view on the first. */
   setStandIn(standIn: StandIn): void {
     this.dropLayer(this.standIn);
-    const meshes: THREE.Mesh[] = [];
-    const outlines: THREE.Mesh[] = [];
-    const boxes: THREE.Box3[] = [];
-    for (const chunk of standIn.chunks) {
-      const made = this.chunkMesh(standIn.grid, chunk, false);
-      meshes.push(made.mesh);
-      if (made.outline) outlines.push(made.outline);
-      boxes.push(made.box);
-    }
-    this.standIn = {
-      ...this.makeLayer(standIn, meshes, outlines, boxes, STAND_IN_BOXES),
-      data: standIn,
-    };
+    const parts: Parts = { meshes: [], outlines: [], boxes: [] };
+    for (const chunk of standIn.chunks) this.chunkMesh(standIn.grid, chunk, false, parts);
+    this.standIn = { ...this.makeLayer(standIn, parts, STAND_IN_BOXES), data: standIn };
     this.bounds.makeEmpty();
-    for (const b of boxes) this.bounds.union(b);
+    for (const b of parts.boxes) this.bounds.union(b);
     this.bounds.expandByScalar(standIn.errorUm);
     this.fitPoints = this.depthSample = samplePoints(standIn);
     if (!this.framed) {
@@ -275,25 +260,19 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   // three uploads the stand-in again from the arrays it keeps; the full mesh's are gone.
-  private contextLost = (): void => {
+  protected override contextLost(): void {
     if (this.dropFull()) this.lostFull = true;
-  };
+  }
 
-  private contextRestored = (): void => {
+  protected override contextRestored(): void {
     this.makeTimer();
     if (!this.lostFull) return;
     this.lostFull = false;
     for (const listener of this.rebuildListeners) listener();
-  };
+  }
 
   /** A mesh's chunks in the scene, hidden until a frame chooses it. */
-  private makeLayer(
-    data: PackedMesh,
-    meshes: THREE.Mesh[],
-    outlines: THREE.Mesh[],
-    boxes: THREE.Box3[],
-    color: number
-  ): Layer {
+  private makeLayer(data: PackedMesh, { meshes, outlines, boxes }: Parts, color: number): Layer {
     const surface = new THREE.Group();
     const outline = new THREE.Group();
     surface.visible = outline.visible = false;
@@ -311,16 +290,18 @@ export class EmMeshViewer extends SceneViewer {
     };
   }
 
-  /** A chunk placed in µm, its outline, and its bounds in µm. */
-  private chunkMesh(grid: Grid, chunk: PackedChunk, release: boolean) {
+  /** A chunk placed in µm, its outline, and its bounds in µm, added to `parts`. */
+  private chunkMesh(grid: Grid, chunk: PackedChunk, release: boolean, parts: Parts) {
     const geo = chunkGeometry(chunk, release);
     const mesh = new THREE.Mesh(geo, this.look.material);
     place(mesh, grid, chunk);
     const outlineMaterial = this.looks.find((l) => l.outline)?.outline;
     const outline = outlineMaterial ? new THREE.Mesh(geo, outlineMaterial) : null;
     if (outline) place(outline, grid, chunk);
-    const box = (geo.boundingBox as THREE.Box3).clone().applyMatrix4(mesh.matrix);
-    return { mesh, outline, box };
+    parts.meshes.push(mesh);
+    if (outline) parts.outlines.push(outline);
+    parts.boxes.push((geo.boundingBox as THREE.Box3).clone().applyMatrix4(mesh.matrix));
+    return { mesh, outline };
   }
 
   private dropLayer(layer: Layer | null): void {
@@ -343,22 +324,19 @@ export class EmMeshViewer extends SceneViewer {
     const { chunks, grid } = p.mesh;
     do {
       const chunk = chunks[p.next++];
-      const { mesh: m, outline: o, box } = this.chunkMesh(grid, chunk, true);
+      const { mesh: m, outline: o } = this.chunkMesh(grid, chunk, true, p);
       this.chunks.add(m);
       if (o) this.outlines.add(o);
       this.drawUnseen(o ? [m, o] : [m]);
       m.removeFromParent();
       o?.removeFromParent();
-      p.meshes.push(m);
-      if (o) p.outlines.push(o);
-      p.boxes.push(box);
     } while (p.next < chunks.length && performance.now() - t0 < UPLOAD_BUDGET_MS);
     const ms = performance.now() - p.started;
     this.upload = { done: p.next, total: chunks.length, ms };
     if (p.next < chunks.length) return;
 
     this.pending = null;
-    this.full = this.makeLayer(p.mesh, p.meshes, p.outlines, p.boxes, FULL_BOXES);
+    this.full = this.makeLayer(p.mesh, p, FULL_BOXES);
     // The stand-in's bounds fall short of the mesh's by up to its error.
     for (const b of p.boxes) this.bounds.union(b);
     this.applyLook();
@@ -448,7 +426,6 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   override setDark(dark: boolean): void {
-    this.darkBackground = dark;
     super.setDark(dark);
     this.paintWire();
   }
@@ -488,10 +465,7 @@ export class EmMeshViewer extends SceneViewer {
 
   /** Light wires on a dark background, dark ones on a light. */
   private paintWire(): void {
-    const [top, bottom] = this.look.background[this.darkBackground ? 'dark' : 'light'];
-    const middle = new THREE.Color(top).lerp(new THREE.Color(bottom), 0.5);
-    const luminance = 0.2126 * middle.r + 0.7152 * middle.g + 0.0722 * middle.b;
-    this.wire.color.set(luminance < 0.2 ? 0xd8dce3 : 0x30343b);
+    this.wire.color.set(isDarkBackground(this.look, this.dark) ? 0xd8dce3 : 0x30343b);
     this.invalidate();
   }
 

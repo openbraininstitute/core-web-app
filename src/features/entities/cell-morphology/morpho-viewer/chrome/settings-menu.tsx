@@ -33,7 +33,7 @@ interface SettingsMenuProps {
   looks: Look[];
   look: Look;
   /** Choose a look, with the bumps and occlusion it comes with. */
-  onLook(id: string): void;
+  onLook(look: Look): void;
   /** The skeleton choice takes over from the traced skeleton once there is a mesh. */
   hasMesh: boolean;
 }

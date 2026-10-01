@@ -10,45 +10,18 @@
  * Draco's own grid where that fits 16 bits, and then every chunk has the same origin and matrix. Otherwise a step is
  * chosen so that every chunk spans at most 65,535 steps, and each chunk's origin is on the grid.
  */
+import { vertexNormals } from '@/features/viewer-3d/engine/normals';
+
 import type { Grid, PackedChunk, PackedMesh, Timing, Vec3 } from './types';
 
 /** WebGL 2 always takes index 65,535 as a primitive restart: a chunk has at most this many vertices, 0 to 65,534. */
 export const MAX_CHUNK_VERTICES = 65535;
 /** About what the vertex cap allows on a closed surface, which has twice as many triangles as vertices. */
-export const MAX_CHUNK_TRIANGLES = 131072;
+const MAX_CHUNK_TRIANGLES = 131072;
 /** The largest grid value. */
 const GRID_MAX = 65535;
 
 type Positions = Uint16Array | Float32Array;
-
-/** Each vertex's normal: the sum of its triangles' normals weighted by their areas, not normalised. */
-export function vertexNormals(positions: Positions, indices: Uint32Array): Float32Array {
-  const normals = new Float32Array(positions.length);
-  for (let t = 0; t < indices.length; t += 3) {
-    const a = 3 * indices[t],
-      b = 3 * indices[t + 1],
-      c = 3 * indices[t + 2];
-    const abx = positions[b] - positions[a],
-      aby = positions[b + 1] - positions[a + 1],
-      abz = positions[b + 2] - positions[a + 2];
-    const acx = positions[c] - positions[a],
-      acy = positions[c + 1] - positions[a + 1],
-      acz = positions[c + 2] - positions[a + 2];
-    const nx = aby * acz - abz * acy,
-      ny = abz * acx - abx * acz,
-      nz = abx * acy - aby * acx;
-    normals[a] += nx;
-    normals[a + 1] += ny;
-    normals[a + 2] += nz;
-    normals[b] += nx;
-    normals[b + 1] += ny;
-    normals[b + 2] += nz;
-    normals[c] += nx;
-    normals[c + 1] += ny;
-    normals[c + 2] += nz;
-  }
-  return normals;
-}
 
 /** Each 10-bit number's bits spread over thirty, two zeros after each. */
 const SPREAD = Uint32Array.from({ length: 1024 }, (_, v) => {

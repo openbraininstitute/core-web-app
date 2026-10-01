@@ -196,6 +196,18 @@ describe('loadEmMesh', () => {
     for (const buffer of handedOver) expect(buffer.byteLength).toBe(0);
   });
 
+  it('leaves no listener on the signal, which would keep the full mesh alive for as long as the signal', async () => {
+    vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
+    const { signal } = new AbortController();
+    const added = vi.spyOn(signal, 'addEventListener');
+    const removed = vi.spyOn(signal, 'removeEventListener');
+    await load({ signal }).promise;
+    const listeners = (spy: typeof added) =>
+      spy.mock.calls.filter(([type]) => type === 'abort').map(([, listener]) => listener);
+    expect(listeners(added)).not.toHaveLength(0);
+    expect(listeners(removed)).toEqual(listeners(added));
+  });
+
   it('starts the decode and stand-in workers, which compile their WASM, before the download ends', async () => {
     vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
     await load().promise;

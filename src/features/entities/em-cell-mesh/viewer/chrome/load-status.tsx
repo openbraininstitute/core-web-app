@@ -1,9 +1,7 @@
-import { useState } from 'react';
-
 import { StatusAlert, StatusPill } from '@/features/viewer-3d/chrome/status';
 
 import { DRACO_MAX_TRIANGLES } from '../engine/budget';
-import { saveGlb } from '../save-glb';
+import { useSaveGlb } from '../save-glb';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { EmMeshLoad } from '../use-em-mesh';
@@ -22,7 +20,8 @@ export function LoadStatus({
   name: string;
   theme: ViewerTheme;
 }) {
-  const { refused, error, hasStandIn, fullReady, received, total } = load;
+  const { refused, error, fullReady, received, total } = load;
+  const hasStandIn = load.meshes.standIn !== null;
   if (refused?.kind === 'too-large') {
     return (
       <StatusAlert
@@ -85,25 +84,10 @@ function ActionButton({
 
 /** Downloads the GLB, for a viewer elsewhere. */
 function SaveButton({ load, name }: { load: EmMeshLoad; name: string }) {
-  const [state, setState] = useState<'idle' | 'saving' | 'failed'>('idle');
-  const { request } = load;
+  const { save, saving, error } = useSaveGlb(load.request, name);
   return (
-    <ActionButton
-      disabled={!request || state === 'saving'}
-      onClick={() => {
-        if (!request) return;
-        setState('saving');
-        saveGlb(request, name).then(
-          () => setState('idle'),
-          () => setState('failed')
-        );
-      }}
-    >
-      {state === 'saving'
-        ? 'Downloading…'
-        : state === 'failed'
-          ? 'Download failed, try again'
-          : 'Download the GLB'}
+    <ActionButton disabled={!load.request || saving} onClick={save}>
+      {saving ? 'Downloading…' : error ? 'Download failed, try again' : 'Download the GLB'}
     </ActionButton>
   );
 }

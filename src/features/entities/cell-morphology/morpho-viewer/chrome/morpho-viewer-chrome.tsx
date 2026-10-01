@@ -66,11 +66,6 @@ export function MorphoViewerChrome({
   const reason = colorsReason(look, settings.typeTint);
   const types = new Set(mesh.summary?.types.map((t) => t.type));
 
-  const chooseLook = (id: string) => {
-    const next = viewer.looks.find((l) => l.id === id);
-    if (next) actions.chooseLook(next);
-  };
-
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       <div className="pointer-events-auto absolute top-3 left-3 flex flex-col items-start gap-2">
@@ -81,7 +76,7 @@ export function MorphoViewerChrome({
             update={update}
             looks={viewer.looks}
             look={look}
-            onLook={chooseLook}
+            onLook={actions.chooseLook}
             hasMesh={mesh.layers.mesh !== null}
           />
           {debug && (
