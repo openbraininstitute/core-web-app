@@ -13,6 +13,7 @@ import {
   type MeshKind,
   type Reason,
 } from './mesh-choice';
+import { MotionQuality } from './motion-quality';
 
 import type { Grid, PackedChunk, PackedMesh, StandIn } from './types';
 
@@ -35,6 +36,10 @@ export interface ViewStatus {
   /** The full mesh's frame cost on the GPU, ms. */
   frameMs: number | null;
   slow: boolean;
+  /** What frames drawn while the view moves cost the GPU at the scale they are drawn at, ms. */
+  movingMs: number | null;
+  /** The fraction of the resolution moving frames are drawn at, without the occlusion; null where in full. */
+  movingScale: number | null;
   timer: TimerKind | null;
   /** The full mesh's chunks uploaded, and how long it took from the first to the last, ms. */
   upload: { done: number; total: number; ms: number } | null;
@@ -157,7 +162,8 @@ function placeholder(): THREE.BufferGeometry {
 /**
  * An EM cell mesh on the shared scene: a coarse stand-in, drawn at once, and the full mesh, uploaded over several
  * frames. Each frame draws one of them (`MeshChooser`): the stand-in wherever its error is under about a device pixel,
- * and while the view moves where the full mesh is too slow for the GPU.
+ * and while the view moves where the full mesh is too slow for the GPU. Moving frames still too slow leave out the
+ * occlusion, then pixels (`MotionQuality`).
  *
  * Both are in chunks of 16-bit positions on a grid, which each chunk's matrix scales to µm, and 8-bit normals. Once
  * uploaded, the full mesh's arrays are let go of; a lost context drops it, and the content is asked to rebuild it.
@@ -190,9 +196,12 @@ export class EmMeshViewer extends SceneViewer {
   private forced: ForcedMesh = 'auto';
   private boxesShown = false;
   private cost = new FrameCost();
+  private motion = new MotionQuality();
   private timer: GpuTimer | null = null;
   /** Whether the frame being drawn is timed. */
   private timing = false;
+  /** What the frame last timed is measured for: the full mesh's cost, drawn in full, and the moving frames'. */
+  private timed = { full: false, moving: false };
   private upload: ViewStatus['upload'] = null;
   private wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6 });
   private statusListeners = new Set<(status: ViewStatus) => void>();
@@ -399,6 +408,7 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   protected override beforeDraw(moving: boolean): void {
+    this.motionScale = this.motion.scale;
     const standIn = this.standIn;
     if (!standIn) {
       this.choice = null;
@@ -421,10 +431,17 @@ export class EmMeshViewer extends SceneViewer {
     this.show(standIn, !full);
     if (this.full) this.show(this.full, full);
     if (full && this.cost.wantsFrame()) this.invalidate();
-    if (full && this.timer && !this.timer.busy && this.cost.measure()) {
-      this.timer.begin();
-      this.timing = true;
-    }
+    this.startTiming(full && (!moving || this.motionScale === null), moving);
+  }
+
+  private startTiming(fullInFull: boolean, moving: boolean): void {
+    if (!this.timer || this.timer.busy) return;
+    const full = fullInFull && this.cost.measure();
+    const motion = moving && this.motion.measure();
+    if (!full && !motion) return;
+    this.timed = { full, moving: motion };
+    this.timer.begin();
+    this.timing = true;
   }
 
   protected override afterDraw(): void {
@@ -447,7 +464,8 @@ export class EmMeshViewer extends SceneViewer {
     this.timer =
       typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext
         ? new GpuTimer(gl, (ms) => {
-            this.cost.add(ms);
+            if (this.timed.full) this.cost.add(ms);
+            if (this.timed.moving) this.motion.add(ms);
             this.tellStatus();
           })
         : null;
@@ -477,6 +495,7 @@ export class EmMeshViewer extends SceneViewer {
 
   protected override frameChanged(): void {
     this.cost.reset();
+    this.motion.reset();
     this.tellStatus();
   }
 
@@ -536,6 +555,8 @@ export class EmMeshViewer extends SceneViewer {
       errorPx: this.errorPx === null ? null : Math.round(this.errorPx * 100) / 100,
       frameMs: this.cost.ms,
       slow: this.cost.slow,
+      movingMs: this.motion.ms,
+      movingScale: this.motion.scale,
       timer: this.timer?.kind ?? null,
       upload: this.upload,
       gpuBytes: (this.standIn?.bytes ?? 0) + (this.full?.bytes ?? 0),

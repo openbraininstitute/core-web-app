@@ -216,7 +216,10 @@ function memoryLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
   const { report } = load;
   const budget = report?.budget;
   const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory;
-  const framebuffers = status.pixels * FRAMEBUFFER_BYTES_PER_PIXEL;
+  // Moving frames under full resolution have frame buffers of their own.
+  const scale = status.movingScale ?? 1;
+  const framebuffers =
+    status.pixels * FRAMEBUFFER_BYTES_PER_PIXEL * (1 + (scale < 1 ? scale * scale : 0));
   const lines: ReactNode[] = [
     `WASM at its peak: Draco ${report?.dracoHeapBytes ? MB(report.dracoHeapBytes) : '–'}, ` +
       `meshoptimizer ${report?.meshoptHeapBytes ? MB(report.meshoptHeapBytes) : '–'}`,
@@ -234,6 +237,15 @@ function memoryLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
     </Fragment>
   );
   return lines;
+}
+
+function movingLine({ movingMs, movingScale }: ViewStatus): string {
+  const cost = movingMs === null ? 'not measured' : `${fmt(movingMs, 1)} ms`;
+  if (movingScale === null) return `${cost}, drawn as still ones`;
+  return (
+    `${cost}, without the occlusion` +
+    (movingScale < 1 ? ` at ${fmt(100 * movingScale)}% of the resolution` : '')
+  );
 }
 
 function viewLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
@@ -256,6 +268,7 @@ function viewLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
       (status.timer ? ` (${status.timer === 'timer-query' ? 'timer query' : 'fence'})` : '') +
       (status.slow ? ', slow' : '')
   );
+  lines.push(`moving frames: ${movingLine(status)}`);
   if (status.upload) {
     lines.push(
       `upload: ${fmt(status.upload.done)} of ${fmt(status.upload.total)} chunks in ${ms(status.upload.ms)}`

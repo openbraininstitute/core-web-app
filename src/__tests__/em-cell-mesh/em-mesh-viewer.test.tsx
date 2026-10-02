@@ -60,6 +60,8 @@ const h = vi.hoisted(() => {
       errorPx: 2.42,
       frameMs: 12.5,
       slow: false,
+      movingMs: 6.2,
+      movingScale: null,
       timer: 'timer-query',
       upload: { done: 386, total: 386, ms: 183 },
       gpuBytes: 300 * 2 ** 20,
@@ -630,12 +632,22 @@ describe('EmCellMeshViewer', () => {
     expect(text).toContain('by its error on screen');
     expect(text).toContain('2.42 device px here');
     expect(text).toContain('full frame: 12.5 ms (timer query)');
+    expect(text).toContain('moving frames: 6.2 ms, drawn as still ones');
 
     act(() => {
       for (const listener of viewer.listeners.status)
-        listener({ ...(viewer.status as ViewStatus), shown: 'stand-in', reason: 'moving' });
+        listener({
+          ...(viewer.status as ViewStatus),
+          shown: 'stand-in',
+          reason: 'moving',
+          movingMs: 9.4,
+          movingScale: 0.5,
+        });
     });
     expect(document.body.textContent).toContain('the view moves, and full frames are slow');
+    expect(document.body.textContent).toContain(
+      'moving frames: 9.4 ms, without the occlusion at 50% of the resolution'
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'A pass of its own' }));
     expect(viewer.setAODepth).toHaveBeenLastCalledWith('own-pass');

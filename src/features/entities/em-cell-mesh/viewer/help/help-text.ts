@@ -1,6 +1,6 @@
 import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
 
-import { FULL_ABOVE_PX, SLOW_FRAME_MS, STAND_IN_BELOW_PX } from '../engine/mesh-choice';
+import { FRAME_BUDGET_MS, FULL_ABOVE_PX, STAND_IN_BELOW_PX } from '../engine/mesh-choice';
 
 import type { HelpText } from '@/features/viewer-3d/help/help-button';
 
@@ -49,7 +49,8 @@ export const HELP = {
     text:
       `The stand-in is drawn while its error is well under a device pixel, as it loses the thinnest fibres: the ` +
       `full mesh comes in past ${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. Where a full frame takes the GPU more than ` +
-      `${SLOW_FRAME_MS} ms, the stand-in is drawn while the view moves.`,
+      `${FRAME_BUDGET_MS} ms, the stand-in is drawn while the view moves. Where moving frames still take more, they leave out ` +
+      'the ambient occlusion, then draw fewer pixels, a step at a time, and take them back once there is time for them.',
   },
   'ao-depth': {
     text: 'Where the ambient occlusion reads the depth from, to compare the two.',

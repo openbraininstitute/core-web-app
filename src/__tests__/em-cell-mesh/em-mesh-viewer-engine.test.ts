@@ -160,6 +160,8 @@ interface Internals {
   controls: { object: THREE.OrthographicCamera | THREE.PerspectiveCamera; update(): boolean };
   wire: THREE.Material;
   cost: { add(ms: number): void };
+  motion: { add(ms: number): void; measure(): boolean };
+  small: { composer: EffectComposer } | null;
   invalidate(): void;
 }
 
@@ -176,6 +178,8 @@ const FULL = packed(48, 16, 100);
 let viewers: EmMeshViewer[] = [];
 /** The meshes each frame drew, through the composer. */
 let frames: THREE.Mesh[][] = [];
+/** The composer each frame was drawn with. */
+let composers: EffectComposer[] = [];
 
 function make(): { viewer: EmMeshViewer; v: Internals } {
   const host = document.body.appendChild(document.createElement('div'));
@@ -227,9 +231,11 @@ beforeAll(() => {
 
 beforeEach(() => {
   frames = [];
+  composers = [];
   vi.spyOn(EffectComposer.prototype, 'render').mockImplementation(function (this: EffectComposer) {
     const pass = this.passes[0] as RenderPass;
     frames.push(FakeRenderer.drawn(pass.scene, pass.camera));
+    composers.push(this);
   });
 });
 
@@ -497,20 +503,7 @@ describe('EmMeshViewer', () => {
   });
 
   it('measures a full frame once the mesh is up, without waiting for the view to move', async () => {
-    class WebGL2 {
-      getInternalformatParameter = () => Int32Array.from([4]);
-      SYNC_STATUS = 1;
-      SIGNALED = 2;
-      SYNC_GPU_COMMANDS_COMPLETE = 3;
-      getExtension = () => null;
-      fenceSync = () => ({});
-      flush = () => {};
-      getSyncParameter = () => 2;
-      deleteSync = () => {};
-    }
-    vi.stubGlobal('WebGL2RenderingContext', WebGL2);
-    FakeRenderer.prototype.getContext = () => new WebGL2();
-    try {
+    await withFence(async () => {
       const { viewer, v } = make();
       viewer.setStandIn(STAND_IN);
       zoom(v, 8);
@@ -530,18 +523,88 @@ describe('EmMeshViewer', () => {
       await new Promise((r) => setTimeout(r, 20));
       expect((status as ViewStatus | null)?.frameMs).toEqual(expect.any(Number));
       expect((status as ViewStatus | null)?.timer).toBe('fence');
-    } finally {
-      FakeRenderer.prototype.getContext = function (this: { context: unknown }) {
-        return this.context;
-      };
-      vi.unstubAllGlobals();
-      vi.stubGlobal(
-        'ResizeObserver',
-        class {
-          observe() {}
-          disconnect() {}
-        }
-      );
+    });
+  });
+
+  it('cuts frames down while the view moves and they are slow, and draws the still frame in full', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    const status: ViewStatus[] = [];
+    viewer.onStatus((s) => status.push(s));
+    zoom(v, 8);
+    frame(v);
+    const main = composers.at(-1);
+    for (let i = 0; i < 5; i++) v.cost.add(50);
+    // The occlusion, then two halvings of the pixels.
+    for (let step = 0; step < 3; step++) {
+      while (!v.motion.measure());
+      for (let i = 0; i < 3; i++) v.motion.add(40);
     }
+    viewer.setSpin(true);
+    for (let i = 0; i < 3; i++, now += 16) frame(v);
+    expect(composers.at(-1)).toBe(v.small?.composer);
+    expect(v.small?.composer.renderTarget2.width).toBe(200);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+    expect(status.at(-1)).toMatchObject({ movingScale: 0.5, slow: true });
+
+    viewer.setSpin(false);
+    for (let i = 0; i < 500 && v.renderer.loop; i++, now += 16) frame(v);
+    clock.mockRestore();
+    expect(composers.at(-1)).toBe(main);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+  });
+
+  it("measures moving frames of the stand-in for the moving frames' cost, not the full mesh's", async () => {
+    await withFence(async () => {
+      const { viewer, v } = loaded();
+      zoom(v, 8);
+      frame(v);
+      for (let i = 0; i < 5; i++) v.cost.add(50);
+      let status: ViewStatus | null = null;
+      viewer.onStatus((s) => {
+        status = s;
+      });
+      viewer.setSpin(true);
+      for (let i = 0; i < 12; i++) {
+        frame(v);
+        await new Promise((r) => setTimeout(r, 5));
+      }
+      expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+      expect((status as ViewStatus | null)?.movingMs).toEqual(expect.any(Number));
+      expect((status as ViewStatus | null)?.frameMs).toBe(50);
+    });
   });
 });
+
+/** Run `body` on a WebGL 2 context whose frames are timed with a fence, signalled at once. */
+async function withFence(body: () => Promise<void>): Promise<void> {
+  class WebGL2 {
+    getInternalformatParameter = () => Int32Array.from([4]);
+    SYNC_STATUS = 1;
+    SIGNALED = 2;
+    SYNC_GPU_COMMANDS_COMPLETE = 3;
+    getExtension = () => null;
+    fenceSync = () => ({});
+    flush = () => {};
+    getSyncParameter = () => 2;
+    deleteSync = () => {};
+  }
+  vi.stubGlobal('WebGL2RenderingContext', WebGL2);
+  FakeRenderer.prototype.getContext = () => new WebGL2();
+  try {
+    await body();
+  } finally {
+    FakeRenderer.prototype.getContext = function (this: { context: unknown }) {
+      return this.context;
+    };
+    vi.unstubAllGlobals();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe() {}
+        disconnect() {}
+      }
+    );
+  }
+}

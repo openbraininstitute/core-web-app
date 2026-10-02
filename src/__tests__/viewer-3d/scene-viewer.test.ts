@@ -351,6 +351,54 @@ describe('scene viewer', () => {
     expect(heard.at(-1)).toBe(true);
   });
 
+  it('draws moving frames without the occlusion, or at a fraction of the resolution, as the content asks', () => {
+    class Content extends SceneViewer {
+      scale: number | null = null;
+      protected override beforeDraw(): void {
+        this.motionScale = this.scale;
+      }
+    }
+    const host = document.body.appendChild(document.createElement('div'));
+    Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+    const viewer = new Content(host, BARE);
+    viewers.push(viewer);
+    viewer.setAO(true);
+    const v = viewer as unknown as Internals & {
+      small: { composer: EffectComposer; render: { camera: THREE.Camera } } | null;
+    };
+    const drawn: { composer: EffectComposer; ao: boolean | undefined }[] = [];
+    composerRender.mockImplementation(function (this: EffectComposer) {
+      drawn.push({ composer: this, ao: v.gtao?.enabled });
+    });
+    const output = v.composer?.passes.at(-1) as OutputPass;
+
+    // Still, a scale changes nothing.
+    viewer.scale = 0.5;
+    v.renderer.loop?.();
+    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
+
+    viewer.setSpin(true);
+    viewer.scale = null;
+    v.renderer.loop?.();
+    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
+    viewer.scale = 1;
+    v.renderer.loop?.();
+    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: false });
+    expect(v.gtao?.enabled).toBe(true);
+    expect(output.uniforms.aoIntensity.value).toBe(1);
+
+    viewer.scale = 0.5;
+    v.renderer.loop?.();
+    const small = v.small?.composer;
+    expect(drawn.at(-1)?.composer).toBe(small);
+    expect(small?.renderTarget2.width).toBe(200);
+    expect(small?.renderTarget2.samples).toBe(4);
+    expect(small?.passes.map((p) => p.constructor.name)).toEqual(['RenderPass', 'OutputPass']);
+
+    viewer.setProjection('perspective');
+    expect(v.small?.render.camera).toBeInstanceOf(THREE.PerspectiveCamera);
+  });
+
   it('stops drawing off screen, and holds what waits to be seen until it is on screen in a page on show', async () => {
     const observers: ((entries: { isIntersecting: boolean }[]) => void)[] = [];
     vi.stubGlobal(

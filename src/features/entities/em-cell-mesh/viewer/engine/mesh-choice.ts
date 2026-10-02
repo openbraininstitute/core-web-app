@@ -10,8 +10,11 @@
  */
 export const FULL_ABOVE_PX = 0.4;
 export const STAND_IN_BELOW_PX = 0.25;
-/** A full frame slower than this, ms, draws the stand-in while the view moves. */
-export const SLOW_FRAME_MS = 20;
+/**
+ * What a frame drawn while the view moves may cost the GPU, ms: a frame of a 60 Hz screen, with time to spare. A full
+ * frame over it draws the stand-in while the view moves, and moving frames over it are cut down (`MotionQuality`).
+ */
+export const FRAME_BUDGET_MS = 14;
 /** The full frames measured, the median of which is the frame cost. */
 const SAMPLES = 5;
 /** The full frames left unmeasured after an upload or a resize, which pay for it. */
@@ -112,6 +115,6 @@ export class FrameCost {
 
   get slow(): boolean {
     const ms = this.ms;
-    return ms === null ? this.wasSlow : ms > SLOW_FRAME_MS;
+    return ms === null ? this.wasSlow : ms > FRAME_BUDGET_MS;
   }
 }

@@ -4,10 +4,10 @@ import { describe, expect, it } from 'vitest';
 import {
   type ChoiceInput,
   errorPixels,
+  FRAME_BUDGET_MS,
   FrameCost,
   MeshChooser,
   SKIP_FRAMES,
-  SLOW_FRAME_MS,
 } from '@/features/entities/em-cell-mesh/viewer/engine/mesh-choice';
 
 const AUTO: ChoiceInput = {
@@ -101,7 +101,7 @@ describe('FrameCost', () => {
     for (const ms of [30, 35]) cost.add(ms);
     expect(cost.ms).toBe(30);
     expect(cost.slow).toBe(true);
-    expect(SLOW_FRAME_MS).toBeLessThan(30);
+    expect(FRAME_BUDGET_MS).toBeLessThan(30);
   });
 
   it('skips the frames that pay for a change, and asks for no more than it takes to measure one', () => {
