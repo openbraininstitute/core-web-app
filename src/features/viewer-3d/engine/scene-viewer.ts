@@ -14,6 +14,7 @@ import {
   orthoClip,
   orthoPixelScale,
 } from './camera';
+import { DepthNormalsPass } from './depth-normals-pass';
 import { clipRange, depthSpan, fitDistance, orbitRadius } from './framing';
 import { type Axis, axisView, type Sign } from './gizmo';
 import {
@@ -139,6 +140,8 @@ export class SceneViewer implements ViewControls {
   private composer: EffectComposer | null = null;
   private renderPass: RenderPass | null = null;
   private gtao: GTAOPass | null = null;
+  /** The normals the occlusion reads, where it takes its depth from the main pass. */
+  private depthNormals: DepthNormalsPass | null = null;
   private bloom: UnrealBloomPass | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
   private width = 1;
@@ -578,10 +581,10 @@ export class SceneViewer implements ViewControls {
   /** AO runs at a fraction of the device resolution; bloom at CSS resolution. Both are upsampled when blended. */
   private sizeEffects(w: number, h: number): void {
     const pr = this.renderer.getPixelRatio();
-    this.gtao?.setSize(
-      Math.max(1, Math.round(w * pr * AO_SCALE)),
-      Math.max(1, Math.round(h * pr * AO_SCALE))
-    );
+    const aoWidth = Math.max(1, Math.round(w * pr * AO_SCALE));
+    const aoHeight = Math.max(1, Math.round(h * pr * AO_SCALE));
+    this.gtao?.setSize(aoWidth, aoHeight);
+    this.depthNormals?.resize(aoWidth, aoHeight);
     this.bloom?.setSize(w, h);
   }
 
@@ -646,6 +649,7 @@ export class SceneViewer implements ViewControls {
     this.ao = on;
     if (on) this.ensureComposer();
     if (this.gtao) this.gtao.enabled = on;
+    if (this.depthNormals) this.depthNormals.enabled = on;
     this.resolveDepth();
     this.invalidate();
     this.frameChanged();
@@ -720,8 +724,13 @@ export class SceneViewer implements ViewControls {
     });
     gtao.blendIntensity = 1;
     gtao.enabled = this.ao;
-    if (target.depthTexture) gtao.setGBuffer(target.depthTexture);
-    else if (this.options.surface.includes('radius')) {
+    let depthNormals: DepthNormalsPass | null = null;
+    if (target.depthTexture) {
+      depthNormals = new DepthNormalsPass(target.depthTexture, this.camera);
+      depthNormals.enabled = this.ao;
+      composer.addPass(depthNormals);
+      gtao.setGBuffer(target.depthTexture, depthNormals.texture);
+    } else if (this.options.surface.includes('radius')) {
       // The pass draws its own normals and depth: with the bumps and the width floor in them the occlusion follows
       // the surface as drawn. The normals tilt per vertex, as the depth it reconstructs the surface from is displaced:
       // tilted per pixel, they would disagree with it and occlude themselves.
@@ -737,6 +746,7 @@ export class SceneViewer implements ViewControls {
     this.composer = composer;
     this.renderPass = renderPass;
     this.gtao = gtao;
+    this.depthNormals = depthNormals;
     this.bloom = bloom;
     this.sizeEffects(w, h);
     this.resolveDepth();
@@ -744,11 +754,13 @@ export class SceneViewer implements ViewControls {
 
   private disposeComposer(): void {
     this.gtao?.dispose();
+    this.depthNormals?.dispose();
     this.bloom?.dispose();
     this.composer?.dispose();
     this.composer = null;
     this.renderPass = null;
     this.gtao = null;
+    this.depthNormals = null;
     this.bloom = null;
   }
 
@@ -756,6 +768,7 @@ export class SceneViewer implements ViewControls {
   private retargetPasses(): void {
     const camera = this.camera;
     if (this.renderPass) this.renderPass.camera = camera;
+    if (this.depthNormals) this.depthNormals.camera = camera;
     const gtao = this.gtao;
     if (!gtao) return;
     gtao.camera = camera;

@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
+import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass';
 import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
 import { SceneViewer, type SceneViewerOptions } from '@/features/viewer-3d/engine/scene-viewer';
 
@@ -241,8 +242,16 @@ describe('scene viewer', () => {
     expect(target?.depthTexture).toBeInstanceOf(THREE.DepthTexture);
     expect(gtao?.depthTexture).toBe(target?.depthTexture);
     expect(gtao?._renderGBuffer).toBe(false);
-    // No normals of its own: they are rebuilt from the depth.
-    expect(gtao?.gtaoMaterial.defines.NORMAL_VECTOR_TYPE).toBe(0);
+    // No normals drawn: they are rebuilt from the depth once, by a pass of their own before the occlusion.
+    const passes = composer?.passes ?? [];
+    const normals = passes[passes.indexOf(gtao as GTAOPass) - 1] as DepthNormalsPass;
+    expect(normals).toBeInstanceOf(DepthNormalsPass);
+    expect(normals.enabled).toBe(true);
+    expect(gtao?.normalTexture).toBe(normals.texture);
+    expect(gtao?.gtaoMaterial.defines.NORMAL_VECTOR_TYPE).toBe(1);
+    expect(gtao?.pdMaterial.defines.NORMAL_VECTOR_TYPE).toBe(1);
+    (viewer as unknown as SceneViewer).setAO(false);
+    expect(normals.enabled).toBe(false);
   });
 
   it("draws into 8-bit colour where the GPU can't draw into half floats, with what samples it allows", () => {
