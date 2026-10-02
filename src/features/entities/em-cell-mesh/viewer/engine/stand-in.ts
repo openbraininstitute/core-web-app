@@ -22,17 +22,15 @@ export function makeStandIn(
   let indices = mesh.indices;
   let error = 0;
   if (indices.length / 3 > target) {
+    // The simplifier's grid has at most 1,024 cells across the mesh, and that grid alone leaves most meshes under
+    // `target`. Asked for every triangle it takes that grid at once, rather than searching for one that fits the target.
     // The error comes back relative to the mesh's extent; a limit of 1 leaves the triangle count to decide.
-    const [simplified, relative] = simplifier.simplifySloppy(
-      indices,
-      floats,
-      3,
-      null,
-      3 * target,
-      1
-    );
+    const sloppy = (count: number) => simplifier.simplifySloppy(indices, floats, 3, null, count, 1);
+    let [simplified, relative] = sloppy(indices.length);
+    if (simplified.length / 3 > target) [simplified, relative] = sloppy(3 * target);
     indices = simplified;
-    error = relative * simplifier.getScale(floats, 3) * (mesh.grid?.step ?? 1);
+    const { min, max } = mesh.bounds;
+    error = relative * Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2]);
   }
   timings.push({ step: 'simplify', ms: performance.now() - t0 });
 

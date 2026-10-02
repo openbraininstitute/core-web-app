@@ -58,12 +58,14 @@ function packedTriangles(mesh: PackedMesh): string[] {
 }
 
 describe('splitChunks', () => {
-  it('puts every triangle in exactly one chunk, within both caps', () => {
+  it('puts every triangle in exactly one chunk, within both caps, leaving out those marked flat', () => {
     const { positions, indices } = microns(120, 60);
-    const { order, starts } = splitChunks(positions, indices, 2000, 1200);
+    const flat = new Uint8Array(indices.length / 3);
+    flat[7] = flat[100] = 1;
+    const { order, starts } = splitChunks(positions, indices, flat, 2000, 1200);
     expect(starts.length).toBeGreaterThan(8);
     expect(Array.from(order).sort((a, b) => a - b)).toEqual(
-      Array.from({ length: indices.length / 3 }, (_, i) => i)
+      Array.from({ length: indices.length / 3 }, (_, i) => i).filter((t) => !flat[t])
     );
     for (let c = 0; c + 1 < starts.length; c++) {
       expect(starts[c + 1] - starts[c]).toBeLessThanOrEqual(2000);
@@ -165,5 +167,20 @@ describe('packMesh', () => {
         );
       }
     }
+  });
+
+  it('drops the triangles without an area, which draw nothing, and their vertices with them', () => {
+    const mesh = onGrid(120, 60);
+    const n = mesh.positions.length / 3;
+    const [x, y, z] = mesh.positions.subarray(0, 3);
+    // A vertex on the same grid point as another, as Draco's rounding leaves them, and two in a line with it.
+    const positions = new Uint16Array([...mesh.positions, x, y, z, x + 1, y, z, x + 2, y, z]);
+    const flat = [0, n, 1, 0, 1, 1, 0, n + 1, n + 2];
+    const indices = new Uint32Array([...mesh.indices, ...flat]);
+    const packed = packMesh(positions, mesh.grid, indices).mesh;
+    const clean = packMesh(mesh.positions, mesh.grid, mesh.indices.slice()).mesh;
+    expect(packed.triangles).toBe(mesh.indices.length / 3);
+    expect(packed.vertices).toBe(clean.vertices);
+    expect(packedTriangles(packed)).toEqual(packedTriangles(clean));
   });
 });

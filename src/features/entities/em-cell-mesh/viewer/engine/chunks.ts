@@ -36,10 +36,14 @@ const SPREAD = Uint32Array.from({ length: 1024 }, (_, v) => {
  * The triangles in chunks: `order` lists them chunk after chunk, and chunk i is `order[starts[i]]` up to
  * `order[starts[i + 1]]`. A range of triangles is split at the octree plane of the highest bit where their centroids'
  * Morton codes differ, until it is within both caps, so the chunks come out compact, and in Morton order.
+ *
+ * The triangles `flat` marks, which have no area, are left out: they draw nothing, and on a grid as coarse as Draco's
+ * they are a sixth of the mesh.
  */
 export function splitChunks(
   positions: Positions,
   indices: Uint32Array,
+  flat: Uint8Array,
   maxTriangles = MAX_CHUNK_TRIANGLES,
   maxVertices = MAX_CHUNK_VERTICES
 ): { order: Uint32Array; starts: number[] } {
@@ -58,8 +62,9 @@ export function splitChunks(
   const extent = Math.max(max[0] - min[0], max[1] - min[1], max[2] - min[2], 1e-30);
   const scale = 1023.99 / (3 * extent);
   const [x0, y0, z0] = min.map((v) => 3 * v);
-  const order = new Uint32Array(n);
-  const keys = new Uint32Array(n);
+  const all = new Uint32Array(n);
+  const allKeys = new Uint32Array(n);
+  let drawn = 0;
   for (let t = 0; t < n; t++) {
     const a = 3 * indices[3 * t],
       b = 3 * indices[3 * t + 1],
@@ -67,9 +72,13 @@ export function splitChunks(
     const x = ((positions[a] + positions[b] + positions[c] - x0) * scale) | 0;
     const y = ((positions[a + 1] + positions[b + 1] + positions[c + 1] - y0) * scale) | 0;
     const z = ((positions[a + 2] + positions[b + 2] + positions[c + 2] - z0) * scale) | 0;
-    order[t] = t;
-    keys[t] = SPREAD[x] | (SPREAD[y] << 1) | (SPREAD[z] << 2);
+    // Without a branch: a flat triangle's slot is taken by the next one.
+    all[drawn] = t;
+    allKeys[drawn] = SPREAD[x] | (SPREAD[y] << 1) | (SPREAD[z] << 2);
+    drawn += 1 - flat[t];
   }
+  const order = all.subarray(0, drawn);
+  const keys = allKeys.subarray(0, drawn);
 
   const seen = new Int32Array(positions.length / 3).fill(-1);
   let stamp = 0;
@@ -90,7 +99,7 @@ export function splitChunks(
   };
 
   const starts: number[] = [];
-  const stack: number[] = [0, n];
+  const stack: number[] = [0, drawn];
   while (stack.length > 0) {
     const hi = stack.pop() as number;
     const lo = stack.pop() as number;
@@ -126,7 +135,7 @@ export function splitChunks(
     // The low half on top, so that the chunks come out in order.
     stack.push(mid, hi, lo, mid);
   }
-  starts.push(n);
+  starts.push(drawn);
   return { order, starts };
 }
 
@@ -162,7 +171,7 @@ function chooseGrid(positions: Float32Array, chunks: Uint32Array[]): { grid: Gri
 
 /**
  * The mesh split and packed. `grid` says what the positions are: values on it, or µm where it is null, and a grid
- * is chosen for them.
+ * is chosen for them. The triangles without an area are left out (`splitChunks`).
  */
 export function packMesh(
   positions: Positions,
@@ -177,9 +186,10 @@ export function packMesh(
     timings.push({ step, ms: performance.now() - t0 });
     return result;
   };
-  const normals = time('normals', () => vertexNormals(positions, indices));
+  const flat = new Uint8Array(indices.length / 3);
+  const normals = time('normals', () => vertexNormals(positions, indices, flat));
   const { order, starts } = time('split', () =>
-    splitChunks(positions, indices, caps.triangles, caps.vertices)
+    splitChunks(positions, indices, flat, caps.triangles, caps.vertices)
   );
 
   return time('pack', () => {
@@ -224,7 +234,7 @@ export function packMesh(
       );
     });
     return {
-      mesh: { grid: g, chunks, triangles: indices.length / 3, vertices },
+      mesh: { grid: g, chunks, triangles: order.length, vertices },
       timings,
     };
   });
