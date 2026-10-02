@@ -227,7 +227,11 @@ export async function loadEmMesh(
       return { kind: 'loaded' };
     }
 
-    if (options.seen) await Promise.race([options.seen, aborted]);
+    if (options.seen) {
+      const t0 = performance.now();
+      await Promise.race([options.seen, aborted]);
+      report.timings.push({ step: 'unseen', ms: performance.now() - t0 });
+    }
     await oneAtATime(signal, async () => {
       const decoded = await step('decode', decoder, decoder.api.decode());
       stop(decoder);

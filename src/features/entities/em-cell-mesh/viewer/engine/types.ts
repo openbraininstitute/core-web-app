@@ -39,6 +39,8 @@ export interface PackedMesh {
   triangles: number;
   /** The vertices in all chunks, those on chunk borders counted in each. */
   vertices: number;
+  /** The vertices the triangles use, each counted once; missing from stand-ins cached before it was counted. */
+  distinctVertices?: number;
 }
 
 /** A coarse copy of the mesh, drawn wherever its error is under a pixel. */

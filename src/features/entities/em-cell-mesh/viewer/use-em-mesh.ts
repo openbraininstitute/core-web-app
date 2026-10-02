@@ -27,6 +27,7 @@ export interface EmMeshSource {
 export interface MeshSummary {
   triangles: number;
   vertices: number;
+  distinctVertices?: number;
   chunks: number;
   grid: Grid;
   /** The stand-in's, µm. */
@@ -34,8 +35,8 @@ export interface MeshSummary {
 }
 
 function summary(mesh: PackedMesh & { errorUm?: number }): MeshSummary {
-  const { triangles, vertices, grid, errorUm } = mesh;
-  return { triangles, vertices, grid, errorUm, chunks: mesh.chunks.length };
+  const { triangles, vertices, distinctVertices, grid, errorUm } = mesh;
+  return { triangles, vertices, distinctVertices, grid, errorUm, chunks: mesh.chunks.length };
 }
 
 export interface EmMeshState {

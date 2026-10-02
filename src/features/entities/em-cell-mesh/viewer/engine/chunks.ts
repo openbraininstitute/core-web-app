@@ -199,6 +199,7 @@ export function packMesh(
     const scratch = new Uint32Array(MAX_CHUNK_VERTICES);
     const lists: Uint32Array[] = [];
     const chunkIndices: Uint16Array[] = [];
+    let distinct = 0;
     for (let c = 0; c + 1 < starts.length; c++) {
       const tag = c + 1;
       const local = new Uint16Array(3 * (starts[c + 1] - starts[c]));
@@ -210,6 +211,7 @@ export function packMesh(
           const s = slot[v];
           if (s >>> 16 === tag) local[j] = s & 0xffff;
           else {
+            if (s === 0) distinct++;
             slot[v] = ((tag << 16) | count) >>> 0;
             scratch[count] = v;
             local[j] = count++;
@@ -234,7 +236,7 @@ export function packMesh(
       );
     });
     return {
-      mesh: { grid: g, chunks, triangles: order.length, vertices },
+      mesh: { grid: g, chunks, triangles: order.length, vertices, distinctVertices: distinct },
       timings,
     };
   });

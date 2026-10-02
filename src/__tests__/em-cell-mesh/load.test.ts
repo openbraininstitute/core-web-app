@@ -242,6 +242,9 @@ describe('loadEmMesh', () => {
     show();
     expect(await promise).toEqual({ kind: 'loaded' });
     expect(log).toContain('decode.decode');
+    // Timed, for the Debug menu, as the times since the load started include it.
+    const waited = events.reports.at(-1)?.timings.find((t) => t.step === 'unseen');
+    expect(waited?.ms).toBeGreaterThanOrEqual(15);
   });
 
   it('shows a cached stand-in before the download ends, and makes none', async () => {

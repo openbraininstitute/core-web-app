@@ -226,6 +226,7 @@ const MESH: PackedMesh = {
   chunks: [],
   triangles: 27_459_402,
   vertices: 13_868_988,
+  distinctVertices: 13_756_001,
 };
 const STAND_IN: StandIn = { ...MESH, triangles: 340_540, vertices: 142_478, errorUm: 1.56 };
 

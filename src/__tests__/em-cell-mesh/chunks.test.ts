@@ -114,6 +114,7 @@ describe('packMesh', () => {
     const ratio = packed.vertices / (big.positions.length / 3);
     expect(ratio).toBeGreaterThan(1);
     expect(ratio).toBeLessThan(1.05);
+    expect(packed.distinctVertices).toBe(big.positions.length / 3);
   });
 
   it('packs the area-weighted normals to within half a degree, the same in every chunk', () => {
@@ -181,6 +182,8 @@ describe('packMesh', () => {
     const clean = packMesh(mesh.positions, mesh.grid, mesh.indices.slice()).mesh;
     expect(packed.triangles).toBe(mesh.indices.length / 3);
     expect(packed.vertices).toBe(clean.vertices);
+    // The vertices only flat triangles used are not counted.
+    expect(packed.distinctVertices).toBe(n);
     expect(packedTriangles(packed)).toEqual(packedTriangles(clean));
   });
 });

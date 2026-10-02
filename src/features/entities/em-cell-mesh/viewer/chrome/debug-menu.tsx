@@ -180,9 +180,10 @@ function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
   }
   if (meshes.full) {
     lines.push(meshLine('full', meshes.full));
-    if (header) {
+    const { vertices, distinctVertices } = meshes.full;
+    if (distinctVertices) {
       lines.push(
-        `${fmt(100 * (meshes.full.vertices / header.vertices - 1), 1)}% of vertices on chunk borders, twice`
+        `${fmt(100 * (vertices / distinctVertices - 1), 1)}% of vertices on chunk borders, twice`
       );
     }
   }
@@ -191,7 +192,10 @@ function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
       picture after <b>{ms(times.standIn)}</b>, full mesh after {ms(times.full)}, drawn after{' '}
       <b>{ms(times.ready)}</b>
     </Fragment>,
-    `download ${ms(took(t, 'download'))}, decode ${ms(took(t, 'decode'))}`
+    `download ${ms(took(t, 'download'))}, ` +
+      // A tab opened in the background waits to be shown before it decodes, which the times above include.
+      ((took(t, 'unseen') ?? 0) >= 100 ? `waited ${ms(took(t, 'unseen'))} to be seen, ` : '') +
+      `decode ${ms(took(t, 'decode'))}`
   );
   if (report?.standInFrom === 'build') {
     lines.push(
