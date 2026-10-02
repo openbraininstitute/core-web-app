@@ -94,34 +94,44 @@ export function MorphologySectionTypeSelection({
     return toSelectedValues(value, optionValues);
   }, [value, options]);
 
+  const noOptions = !isLoading && !isError && !!endpoint && options.length === 0;
+
   return (
-    <Select<number[]>
-      data-scan-config-block-element={ScanConfigUIElementDict.MorphologySectionTypeSelection}
-      mode="multiple"
-      className="w-full"
-      disabled={disabled || !endpoint}
-      loading={isLoading}
-      status={isError ? 'error' : undefined}
-      value={selected}
-      placeholder={
-        isLoading
-          ? 'Loading section types…'
-          : isError
-            ? 'Section types could not be loaded'
-            : 'Select section types…'
-      }
-      optionFilterProp="label"
-      suffixIcon={isLoading ? <LoadingOutlined spin /> : undefined}
-      notFoundContent={
-        isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-2 text-gray-400">
-            <LoadingOutlined spin />
-            <span>Loading section types…</span>
-          </div>
-        ) : undefined
-      }
-      options={options.map((option) => ({ label: option.label, value: option.value }))}
-      onChange={(next) => onChange(next.length > 0 ? next : null)}
-    />
+    <>
+      <Select<number[]>
+        data-scan-config-block-element={ScanConfigUIElementDict.MorphologySectionTypeSelection}
+        mode="multiple"
+        className="w-full"
+        disabled={disabled || !endpoint}
+        loading={isLoading}
+        status={isError || noOptions ? 'error' : undefined}
+        value={selected}
+        placeholder={
+          isLoading
+            ? 'Loading section types…'
+            : isError
+              ? 'Section types could not be loaded'
+              : 'Select section types…'
+        }
+        optionFilterProp="label"
+        suffixIcon={isLoading ? <LoadingOutlined spin /> : undefined}
+        notFoundContent={
+          isLoading ? (
+            <div className="flex items-center justify-center gap-2 py-2 text-gray-400">
+              <LoadingOutlined spin />
+              <span>Loading section types…</span>
+            </div>
+          ) : undefined
+        }
+        options={options.map((option) => ({ label: option.label, value: option.value }))}
+        onChange={(next) => onChange(next.length > 0 ? next : null)}
+      />
+      {noOptions && (
+        <p className="mt-1 text-red-500 text-xs">
+          No section types found for the selected morphology. Choose a different morphology to place
+          synapses.
+        </p>
+      )}
+    </>
   );
 }
