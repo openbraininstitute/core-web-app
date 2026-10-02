@@ -195,13 +195,28 @@ describe('looks for a surface without colours, types or radii', () => {
     );
   });
 
-  it('draws in one plain colour where the neurite colours would go', () => {
+  it('draws in a colour of its theme where the neurite colours would go: darker than a light background, lighter than a dark one', () => {
     for (const l of bare) {
       expect((l.material as THREE.MeshStandardMaterial).vertexColors, l.id).toBeFalsy();
       expect(compile(l.material).fragmentShader, l.id).not.toContain('vColor');
     }
-    const studio = bare.find((l) => l.id === 'studio')?.material as THREE.MeshStandardMaterial;
-    expect(studio.color.getHexString()).not.toBe('ffffff');
+    const luminance = (c: THREE.Color) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    const painted = bare.filter((l) => l.colors === 'palette');
+    expect(painted).toHaveLength(7);
+    for (const l of painted) {
+      const { color } = l.material as THREE.MeshStandardMaterial;
+      expect(color.getHexString(), l.id).toBe(l.plain?.light.slice(1));
+      for (const dark of [true, false]) {
+        const theme = dark ? 'dark' : 'light';
+        l.onTheme?.(dark);
+        expect(color.getHexString(), `${l.id}, ${theme}`).toBe(l.plain?.[theme].slice(1));
+        const background = new THREE.Color(l.background[theme][0]);
+        expect(luminance(color) > luminance(background), `${l.id}, ${theme}`).toBe(dark);
+      }
+    }
+    // A surface with its own colours keeps them in either theme.
+    for (const l of looks.filter((x) => x.colors === 'palette'))
+      expect(l.onTheme, l.id).toBeUndefined();
   });
 
   it("neither bumps nor widens the surface, and pushes the toon outline out by pixels at the model's scale", () => {

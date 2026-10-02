@@ -44,8 +44,8 @@ export type SurfaceAttribute = 'color' | 'radius' | 'swcType';
 
 export const MORPHOLOGY_SURFACE: readonly SurfaceAttribute[] = ['color', 'radius', 'swcType'];
 
-/** What the looks that draw in the neurite colours draw a surface without vertex colours in. */
-const PLAIN_COLOR = '#c4c7cc';
+/** What most looks draw a surface without vertex colours in over their dark background: they light it alike there. */
+const PLAIN_ON_DARK = '#c4c7cc';
 
 export interface Look {
   id: string;
@@ -78,6 +78,12 @@ export interface Look {
    * they tint it while the type tint is on (`showTypeTint`), or nothing, as it draws in colours of its own.
    */
   colors: 'palette' | 'tint' | 'own';
+  /**
+   * What a look that draws in the neurite colours draws a surface without vertex colours in, per theme: no one colour
+   * stands out from both backgrounds. Over the light one, a slate blue as light as the look's lighting allows for about
+   * 5:1 against its background.
+   */
+  plain?: { light: string; dark: string };
   /** The key to the look's own colours, where they mean something. */
   legend?: LookLegend;
   /** Vertex attributes the look can't do without; a surface that lacks one isn't offered it. */
@@ -789,7 +795,7 @@ export function createLooks(
 ): Look[] {
   const colors = has.includes('color');
   const displaced = has.includes('radius');
-  const painted = colors ? { vertexColors: true } : { color: PLAIN_COLOR };
+  const painted = colors ? { vertexColors: true } : {};
   const cajal = makeCajal(pixelRatio);
   const looks: Look[] = [
     {
@@ -807,6 +813,7 @@ export function createLooks(
         viewLight(0xffffff, 2.2, [0.4, 0.6, 2])
       ),
       background: { light: ['#f4f5f7', '#f4f5f7'], dark: ['#0f1115', '#0f1115'] },
+      plain: { light: '#5a6a85', dark: PLAIN_ON_DARK },
     },
     {
       id: 'studio',
@@ -825,6 +832,7 @@ export function createLooks(
         viewLight(0xffffff, 2.2, [0.35, 0.7, 0])
       ),
       background: { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] },
+      plain: { light: '#5a6a85', dark: PLAIN_ON_DARK },
     },
     {
       id: 'clay',
@@ -842,6 +850,8 @@ export function createLooks(
         ]),
       }),
       background: { light: ['#faf8f4', '#e2ddd4'], dark: ['#2a2926', '#121110'] },
+      // The matcap darkens what it is given: a lighter colour in either theme.
+      plain: { light: '#94a0b5', dark: '#eef1f5' },
     },
     {
       id: 'glossy',
@@ -862,6 +872,8 @@ export function createLooks(
       ),
       env: true,
       background: { light: ['#eef1f5', '#c4cad6'], dark: ['#1e2330', '#07080b'] },
+      // The room's reflections lighten it.
+      plain: { light: '#26324a', dark: PLAIN_ON_DARK },
     },
     {
       id: 'pearl',
@@ -883,6 +895,8 @@ export function createLooks(
       ),
       env: true,
       background: { light: ['#f6f4f8', '#d6d2dd'], dark: ['#242030', '#0b0a10'] },
+      // The white sheen and the room light it, whatever its colour: about 4:1 at most over the light background.
+      plain: { light: '#1b2433', dark: PLAIN_ON_DARK },
     },
     {
       id: 'toon',
@@ -899,6 +913,7 @@ export function createLooks(
       ),
       outline: makeOutline(),
       background: { light: ['#ffffff', '#ffffff'], dark: ['#15161c', '#15161c'] },
+      plain: { light: '#56657e', dark: PLAIN_ON_DARK },
     },
     {
       id: 'depth',
@@ -916,6 +931,8 @@ export function createLooks(
       ),
       background: { light: ['#e8eaee', '#e8eaee'], dark: ['#0f1115', '#0f1115'] },
       fog: new THREE.Fog(0xe8eaee, 1, 2),
+      // The far branches fade into the background by design; the near ones stand out.
+      plain: { light: '#33415a', dark: PLAIN_ON_DARK },
     },
     {
       id: 'sem',
@@ -1027,6 +1044,12 @@ export function createLooks(
   for (const l of looks) {
     if (displaced) withDisplacement(l.material);
     if (l.outline) (displaced ? withDisplacement : withPixelSize)(l.outline);
+    const { plain } = l;
+    if (!colors && plain) {
+      const { color } = l.material as THREE.Material & { color: THREE.Color };
+      l.onTheme = (dark) => color.set(plain[dark ? 'dark' : 'light']);
+      l.onTheme(false);
+    }
   }
   return looks.filter((l) => l.needs?.every((a) => has.includes(a)) ?? true);
 }
