@@ -11,6 +11,8 @@ import {
   OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
+  type SchemaName,
+  SchemaNameDict,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
@@ -45,6 +47,9 @@ export const VALID_AI_CONFIG_KEYS = [
   // Appended rather than inserted: findConfigKeyInState returns the FIRST non-null match,
   // so the order of this list decides which key wins if more than one is ever present.
   'emodel_optimization_config',
+  'me_model_synaptic_model_placement_config',
+  'create_extracellular_recording_array_config',
+  'synapse_parameterization_config',
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -65,13 +70,30 @@ export function findConfigKeyInState(state: Record<string, unknown>): TAIConfigK
  * circuit-simulation key. The old fallback meant any unhandled activity silently published
  * its config under the wrong key, which is how Optimize behaved before it was handled here.
  */
+/**
+ * Build activity isn't 1:1 with a single key (several Build schemas share
+ * the activity), so it dispatches by schemaName rather than entityType —
+ * several of these workflows resolve the same Circuit entityType.
+ */
+const BUILD_CONFIG_KEY_BY_SCHEMA: Partial<Record<SchemaName, TAIConfigKey>> = {
+  [SchemaNameDict.EMSynapseMappingScanConfig]: 'em_synapse_mapping_config',
+  [SchemaNameDict.BuildSynaptomeScanConfig]: 'me_model_synaptic_model_placement_config',
+  [SchemaNameDict.ExtracellularRecordingArrayScanConfig]:
+    'create_extracellular_recording_array_config',
+  [SchemaNameDict.SynapseParameterizationScanConfig]: 'synapse_parameterization_config',
+};
+
 export function getConfigKeyForEntity(
   entityType: TExtendedEntitiesTypeDict,
   activity: TScanConfigActivity,
-  entity?: { scale?: string }
+  entity?: { scale?: string },
+  schemaName?: SchemaName
 ): TAIConfigKey | null {
   if (activity === ScanConfigActivity.Process) return 'skeletonization_config';
   if (activity === ScanConfigActivity.Optimize) return 'emodel_optimization_config';
+  if (activity === ScanConfigActivity.Build) {
+    return (schemaName && BUILD_CONFIG_KEY_BY_SCHEMA[schemaName]) ?? null;
+  }
 
   if (activity !== ScanConfigActivity.Simulate) return null;
 
