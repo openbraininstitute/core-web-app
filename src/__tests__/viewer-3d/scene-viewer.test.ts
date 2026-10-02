@@ -9,6 +9,7 @@ import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass
 import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
 import { SceneViewer, type SceneViewerOptions } from '@/features/viewer-3d/engine/scene-viewer';
 
+import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 const { FakeRenderer } = vi.hoisted(() => {
@@ -177,6 +178,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // A test that failed before putting the clock back leaves it to the next.
+  if (vi.isMockFunction(performance.now)) vi.mocked(performance.now).mockRestore();
   for (const v of viewers) v.dispose();
   viewers = [];
   composerRender.mockRestore();
@@ -351,6 +354,241 @@ describe('scene viewer', () => {
     expect(heard.at(-1)).toBe(true);
   });
 
+  it("counts a zoom made in OrbitControls' own wheel handler as movement, and a view set in code as still", () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const heard: boolean[] = [];
+    class Content extends SceneViewer {
+      protected override beforeDraw(moving: boolean): void {
+        heard.push(moving);
+      }
+    }
+    const viewer = new Content(host, BARE);
+    viewers.push(viewer);
+    const { renderer } = viewer as unknown as Internals;
+    const settle = () => {
+      for (let i = 0; i < 5 && renderer.loop; i++) renderer.loop();
+    };
+    settle();
+    const camera = (viewer as unknown as { controls: OrbitControls }).controls
+      .object as THREE.OrthographicCamera;
+    const zoom = camera.zoom;
+    // A trackpad pinch: OrbitControls zooms at once, in its handler.
+    renderer.domElement.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true })
+    );
+    expect(camera.zoom).toBeGreaterThan(zoom);
+    renderer.loop?.();
+    expect(heard.at(-1)).toBe(true);
+
+    const fresh = new Content(host, BARE);
+    viewers.push(fresh);
+    heard.length = 0;
+    fresh.resetView();
+    for (let i = 0; i < 5 && (fresh as unknown as Internals).renderer.loop; i++) {
+      (fresh as unknown as Internals).renderer.loop?.();
+    }
+    expect(heard).not.toContain(true);
+  });
+
+  /**
+   * A glide let go of, at `fps`: when it ended, how far short of it the view stopped, in CSS px at the cell's far side
+   * as the viewer reckons them, and what each frame after it drew, at ms after it.
+   */
+  function glide({
+    fps,
+    kind = 'theta',
+    perspectiveAt,
+  }: {
+    fps: number;
+    kind?: 'theta' | 'phi' | 'pan';
+    perspectiveAt?: number;
+  }) {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const drawn: { at: number; moving: boolean }[] = [];
+    class Content extends SceneViewer {
+      protected override beforeDraw(moving: boolean): void {
+        drawn.push({ at: now, moving });
+      }
+    }
+    const host = document.body.appendChild(document.createElement('div'));
+    Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+    const viewer = new Content(host, BARE) as Content & {
+      invalidate(): void;
+      cssPixelNear(box: THREE.Box3, nearest?: number): number;
+      bounds: THREE.Box3;
+    };
+    viewers.push(viewer);
+    const { renderer } = viewer as unknown as Internals;
+    const { controls } = viewer as unknown as { controls: OrbitControls };
+    const left = controls as unknown as {
+      _sphericalDelta: THREE.Spherical;
+      _panOffset: THREE.Vector3;
+    };
+    viewer.resetView();
+    if (perspectiveAt !== undefined) {
+      viewer.setProjection('perspective');
+      controls.object.position.set(0, 0, perspectiveAt);
+      controls.update();
+    }
+    for (let i = 0; i < 20 && renderer.loop; i++, now += 1000 / fps) renderer.loop();
+    const d = controls.getDistance();
+    const reach = Math.min(50 * Math.sqrt(3), perspectiveAt === undefined ? Infinity : 1.25 * d);
+    const pixel =
+      perspectiveAt === undefined
+        ? viewer.cssPixelNear(viewer.bounds)
+        : viewer.cssPixelNear(viewer.bounds, 0.25 * d);
+    const offset = () => controls.object.position.clone().sub(controls.target);
+    const fromOffset = offset();
+    const fromTarget = controls.target.clone();
+    // A drag let go of with 0.3 rad, or 30 µm of pan, still to go.
+    if (kind === 'pan') left._panOffset.set(30, 0, 0);
+    else left._sphericalDelta[kind] = 0.3;
+    viewer.invalidate();
+    const t0 = now;
+    let ended = Number.NaN;
+    for (let i = 0; i < 1000 && renderer.loop; i++) {
+      now += 1000 / fps;
+      renderer.loop();
+      const rest = Math.abs(left._sphericalDelta.theta) + Math.abs(left._sphericalDelta.phi);
+      if (Number.isNaN(ended) && rest + left._panOffset.length() === 0) ended = now - t0;
+    }
+    const shortPx =
+      kind === 'pan'
+        ? (30 - controls.target.distanceTo(fromTarget)) / pixel
+        : ((0.3 - fromOffset.angleTo(offset())) * reach) / pixel;
+    return {
+      ended,
+      shortPx,
+      stopped: renderer.loop === null,
+      drawn: drawn.filter((f) => f.at > t0).map((f) => ({ ...f, at: f.at - t0 })),
+    };
+  }
+
+  it('eases a glide let go of by time, not by frame, and ends it once what is left would move under 2 px', () => {
+    const slow = glide({ fps: 15 });
+    const fast = glide({ fps: 120 });
+    for (const [g, fps] of [
+      [slow, 15],
+      [fast, 120],
+    ] as const) {
+      expect(g.ended).toBeLessThan(1000);
+      expect(g.shortPx).toBeGreaterThanOrEqual(0);
+      expect(g.shortPx).toBeLessThan(2);
+      // No wait for another wheel notch: the still frame is the next one.
+      const still = g.drawn.find((f) => !f.moving);
+      expect((still?.at ?? Number.NaN) - g.ended).toBeLessThanOrEqual(1000 / fps + 1e-6);
+    }
+    expect(Math.abs(slow.ended - fast.ended)).toBeLessThan(100);
+  });
+
+  it('ends a glide up and down, a pan, and one inside the cell in perspective, under 2 px short', () => {
+    for (const g of [
+      glide({ fps: 60, kind: 'phi' }),
+      glide({ fps: 60, kind: 'pan' }),
+      glide({ fps: 15, perspectiveAt: 10 }),
+    ]) {
+      expect(g.ended).toBeLessThan(1000);
+      expect(g.shortPx).toBeGreaterThanOrEqual(0);
+      expect(g.shortPx).toBeLessThan(2);
+    }
+  });
+
+  it('draws a glide zoomed in close as moving to its end, though three reports its last frames only now and then', () => {
+    const g = glide({ fps: 120, perspectiveAt: 5 });
+    expect(Number.isFinite(g.ended)).toBe(true);
+    expect(g.drawn.filter((f) => f.at < g.ended && !f.moving)).toEqual([]);
+    expect(g.stopped).toBe(true);
+  });
+
+  it('draws the still frame on the frame after a turn to an axis, or a spin, ends', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const drawn: { at: number; moving: boolean }[] = [];
+    class Content extends SceneViewer {
+      protected override beforeDraw(moving: boolean): void {
+        drawn.push({ at: now, moving });
+      }
+    }
+    const host = document.body.appendChild(document.createElement('div'));
+    Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+    const viewer = new Content(host, BARE);
+    viewers.push(viewer);
+    const { renderer } = viewer as unknown as Internals;
+    const frames = () => {
+      for (let i = 0; i < 100 && renderer.loop; i++) {
+        now += 16;
+        renderer.loop();
+      }
+    };
+    viewer.resetView();
+    frames();
+    const turnAt = now;
+    viewer.viewAlong(0, 1);
+    frames();
+    const turned = drawn.filter((f) => f.at > turnAt);
+    const lastMoving = turned.filter((f) => f.moving).at(-1)?.at ?? Number.NaN;
+    expect(turned.find((f) => !f.moving)?.at).toBe(lastMoving + 16);
+    expect(lastMoving - turnAt).toBeLessThanOrEqual(300 + 16);
+
+    viewer.setSpin(true);
+    for (let i = 0; i < 10; i++) {
+      now += 16;
+      renderer.loop?.();
+    }
+    viewer.setSpin(false);
+    const offAt = now;
+    frames();
+    const still = drawn.find((f) => f.at > offAt && !f.moving);
+    expect((still?.at ?? Number.NaN) - offAt).toBeLessThan(150);
+  });
+
+  it('keeps what is left to glide while a gesture is under way, and while the view spins', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    try {
+      const v = make(BARE);
+      const viewer = v as unknown as SceneViewer & { invalidate(): void };
+      const { controls } = v as unknown as { controls: OrbitControls };
+      const delta = (controls as unknown as { _sphericalDelta: THREE.Spherical })._sphericalDelta;
+      viewer.resetView();
+      const frame = () => {
+        now += 16;
+        v.renderer.loop?.();
+      };
+      // A slow drag adds a fraction of a pixel a move, which is all turned at once.
+      controls.dispatchEvent({ type: 'start' });
+      let start = controls.getAzimuthalAngle();
+      delta.theta = 0.001;
+      viewer.invalidate();
+      frame();
+      expect(controls.getAzimuthalAngle() - start).toBeCloseTo(0.001, 6);
+      expect(delta.theta).toBe(0);
+      // Only that update; the pointer's own, between frames, ease, here by the loop's first frame.
+      expect(controls.dampingFactor).toBeCloseTo(1 - Math.exp(-1000 / 120 / 160), 9);
+      // Let go of, so little is left where it is.
+      controls.dispatchEvent({ type: 'end' });
+      start = controls.getAzimuthalAngle();
+      delta.theta = 0.001;
+      viewer.invalidate();
+      frame();
+      expect(controls.getAzimuthalAngle()).toBe(start);
+      expect(delta.theta).toBe(0);
+
+      // Zoomed out, the spin's own easing is under 2 px.
+      const camera = controls.object as THREE.OrthographicCamera;
+      camera.zoom = 0.1;
+      camera.updateProjectionMatrix();
+      viewer.setSpin(true);
+      start = controls.getAzimuthalAngle();
+      for (let i = 0; i < 30; i++) frame();
+      expect(delta.theta).not.toBe(0);
+      expect(Math.abs(controls.getAzimuthalAngle() - start)).toBeGreaterThan(0.02);
+    } finally {
+      clock.mockRestore();
+    }
+  });
+
   it('draws moving frames without the occlusion, or at a fraction of the resolution, as the content asks', () => {
     class Content extends SceneViewer {
       scale: number | null = null;
@@ -371,24 +609,31 @@ describe('scene viewer', () => {
       drawn.push({ composer: this, ao: v.gtao?.enabled });
     });
     const output = v.composer?.passes.at(-1) as OutputPass;
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const frame = () => {
+      now += 16;
+      v.renderer.loop?.();
+    };
 
     // Still, a scale changes nothing.
     viewer.scale = 0.5;
-    v.renderer.loop?.();
+    frame();
     expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
 
     viewer.setSpin(true);
     viewer.scale = null;
-    v.renderer.loop?.();
+    frame();
     expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
     viewer.scale = 1;
-    v.renderer.loop?.();
+    frame();
     expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: false });
     expect(v.gtao?.enabled).toBe(true);
     expect(output.uniforms.aoIntensity.value).toBe(1);
 
     viewer.scale = 0.5;
-    v.renderer.loop?.();
+    frame();
+    clock.mockRestore();
     const small = v.small?.composer;
     expect(drawn.at(-1)?.composer).toBe(small);
     expect(small?.renderTarget2.width).toBe(200);

@@ -118,3 +118,25 @@ export class FrameCost {
     return ms === null ? this.wasSlow : ms > FRAME_BUDGET_MS;
   }
 }
+
+/**
+ * Whether the full mesh, drawn while the view moves, has turned too slow since the view set off. The frame cost is
+ * measured where the view was: zoomed in, most chunks are culled, and zooming out makes each frame dearer. Two moving
+ * frames of the full mesh in a row past twice the budget draw the stand-in until the view stops; one alone may only be
+ * the GPU waking up.
+ */
+export class MovingCost {
+  private dear = 0;
+  slow = false;
+
+  add(ms: number): void {
+    this.dear = ms > 2 * FRAME_BUDGET_MS ? this.dear + 1 : 0;
+    if (this.dear >= 2) this.slow = true;
+  }
+
+  /** The view stopped. */
+  stop(): void {
+    this.dear = 0;
+    this.slow = false;
+  }
+}

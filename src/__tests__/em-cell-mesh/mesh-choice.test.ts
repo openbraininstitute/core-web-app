@@ -7,6 +7,7 @@ import {
   FRAME_BUDGET_MS,
   FrameCost,
   MeshChooser,
+  MovingCost,
   SKIP_FRAMES,
 } from '@/features/entities/em-cell-mesh/viewer/engine/mesh-choice';
 
@@ -124,6 +125,26 @@ describe('FrameCost', () => {
     expect(cost.wantsFrame()).toBe(false);
     expect(cost.slow).toBe(false);
     cost.reset();
+    expect(cost.slow).toBe(false);
+  });
+});
+
+describe('MovingCost', () => {
+  it('turns slow on two moving frames of the full mesh in a row past twice the budget, not one, until the view stops', () => {
+    const cost = new MovingCost();
+    const dear = 2 * FRAME_BUDGET_MS + 1;
+    cost.add(dear);
+    expect(cost.slow).toBe(false);
+    cost.add(FRAME_BUDGET_MS);
+    cost.add(dear);
+    expect(cost.slow).toBe(false);
+    cost.add(dear);
+    expect(cost.slow).toBe(true);
+    cost.add(1);
+    expect(cost.slow).toBe(true);
+    cost.stop();
+    expect(cost.slow).toBe(false);
+    cost.add(dear);
     expect(cost.slow).toBe(false);
   });
 });

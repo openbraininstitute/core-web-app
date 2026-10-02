@@ -266,7 +266,7 @@ function viewLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
   lines.push(
     `full frame: ${status.frameMs === null ? 'not measured' : `${fmt(status.frameMs, 1)} ms`}` +
       (status.timer ? ` (${status.timer === 'timer-query' ? 'timer query' : 'fence'})` : '') +
-      (status.slow ? ', slow' : '')
+      (status.slow ? ', slow' : status.slowMoving ? ', slow while moving' : '')
   );
   lines.push(`moving frames: ${movingLine(status)}`);
   if (status.upload) {

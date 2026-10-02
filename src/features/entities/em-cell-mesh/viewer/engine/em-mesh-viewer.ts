@@ -11,6 +11,7 @@ import {
   FrameCost,
   MeshChooser,
   type MeshKind,
+  MovingCost,
   type Reason,
 } from './mesh-choice';
 import { MotionQuality } from './motion-quality';
@@ -36,6 +37,8 @@ export interface ViewStatus {
   /** The full mesh's frame cost on the GPU, ms. */
   frameMs: number | null;
   slow: boolean;
+  /** Moving frames of the full mesh turned too slow since the view set off, as zooming out does. */
+  slowMoving: boolean;
   /** What frames drawn while the view moves cost the GPU at the scale they are drawn at, ms. */
   movingMs: number | null;
   /** The fraction of the resolution moving frames are drawn at, without the occlusion; null where in full. */
@@ -197,11 +200,12 @@ export class EmMeshViewer extends SceneViewer {
   private boxesShown = false;
   private cost = new FrameCost();
   private motion = new MotionQuality();
+  private movingCost = new MovingCost();
   private timer: GpuTimer | null = null;
   /** Whether the frame being drawn is timed. */
   private timing = false;
-  /** What the frame last timed is measured for: the full mesh's cost, drawn in full, and the moving frames'. */
-  private timed = { full: false, moving: false };
+  /** What the frame last timed is measured for: the full mesh's cost drawn in full, and the moving frames'. */
+  private timed = { full: false, moving: false, fullMoving: false };
   private upload: ViewStatus['upload'] = null;
   private wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6 });
   private statusListeners = new Set<(status: ViewStatus) => void>();
@@ -409,6 +413,7 @@ export class EmMeshViewer extends SceneViewer {
 
   protected override beforeDraw(moving: boolean): void {
     this.motionScale = this.motion.scale;
+    if (!moving) this.movingCost.stop();
     const standIn = this.standIn;
     if (!standIn) {
       this.choice = null;
@@ -424,25 +429,32 @@ export class EmMeshViewer extends SceneViewer {
       wireframe: this.wireframe,
       errorPx: this.errorPx,
       moving,
-      slow: this.cost.slow,
+      slow: this.cost.slow || this.movingCost.slow,
     });
     this.choice = choice;
     const full = choice.mesh === 'full';
     this.show(standIn, !full);
     if (this.full) this.show(this.full, full);
     if (full && this.cost.wantsFrame()) this.invalidate();
-    this.startTiming(full && (!moving || this.motionScale === null), moving);
+    this.startTiming(full, moving);
   }
 
-  private startTiming(fullInFull: boolean, moving: boolean): void {
+  private startTiming(fullDrawn: boolean, moving: boolean): void {
     if (!this.timer || this.timer.busy) return;
-    const full = fullInFull && this.cost.measure();
+    const full = fullDrawn && (!moving || this.motionScale === null) && this.cost.measure();
     const motion = moving && this.motion.measure();
     if (!full && !motion) return;
-    this.timed = { full, moving: motion };
+    this.timed = { full, moving: motion, fullMoving: motion && fullDrawn };
     this.timer.begin();
     this.timing = true;
   }
+
+  private measured = (ms: number): void => {
+    if (this.timed.full) this.cost.add(ms);
+    if (this.timed.moving) this.motion.add(ms);
+    if (this.timed.fullMoving) this.movingCost.add(ms);
+    this.tellStatus();
+  };
 
   protected override afterDraw(): void {
     if (this.timing) {
@@ -463,11 +475,7 @@ export class EmMeshViewer extends SceneViewer {
     const gl = this.renderer.getContext();
     this.timer =
       typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext
-        ? new GpuTimer(gl, (ms) => {
-            if (this.timed.full) this.cost.add(ms);
-            if (this.timed.moving) this.motion.add(ms);
-            this.tellStatus();
-          })
+        ? new GpuTimer(gl, this.measured)
         : null;
   }
 
@@ -555,6 +563,7 @@ export class EmMeshViewer extends SceneViewer {
       errorPx: this.errorPx === null ? null : Math.round(this.errorPx * 100) / 100,
       frameMs: this.cost.ms,
       slow: this.cost.slow,
+      slowMoving: this.movingCost.slow,
       movingMs: this.motion.ms,
       movingScale: this.motion.scale,
       timer: this.timer?.kind ?? null,

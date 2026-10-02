@@ -161,6 +161,8 @@ interface Internals {
   wire: THREE.Material;
   cost: { add(ms: number): void };
   motion: { add(ms: number): void; measure(): boolean };
+  timer: unknown;
+  measured(ms: number): void;
   small: { composer: EffectComposer } | null;
   invalidate(): void;
 }
@@ -240,6 +242,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // A test that failed before putting the clock back leaves it to the next.
+  if (vi.isMockFunction(performance.now)) vi.mocked(performance.now).mockRestore();
   for (const v of viewers) v.dispose();
   viewers = [];
   vi.mocked(EffectComposer.prototype.render).mockRestore();
@@ -451,15 +455,16 @@ describe('EmMeshViewer', () => {
     expect(same(drawn(), full)).toBe(true);
   });
 
-  it('waits a moment after a move of one frame, as a wheel notch makes, before it draws in full on a slow GPU', () => {
+  it('draws a wheel notch as a move, which OrbitControls zooms in its own handler, and waits a moment before it draws in full on a slow GPU', () => {
     let now = 0;
     const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
     const { v } = loaded();
     zoom(v, 8);
     frame(v);
     for (let i = 0; i < 5; i++) v.cost.add(50);
-    const update = vi.spyOn(v.controls, 'update').mockReturnValueOnce(true);
-    v.invalidate();
+    v.renderer.domElement.dispatchEvent(
+      new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true })
+    );
     frame(v);
     expect(drawn()).toHaveLength(meshesOf(STAND_IN));
     const drawnBefore = frames.length;
@@ -468,7 +473,6 @@ describe('EmMeshViewer', () => {
     expect(frames.length).toBe(drawnBefore);
     now += 200;
     frame(v);
-    update.mockRestore();
     clock.mockRestore();
     expect(drawn()).toHaveLength(meshesOf(FULL));
   });
@@ -552,6 +556,62 @@ describe('EmMeshViewer', () => {
     for (let i = 0; i < 500 && v.renderer.loop; i++, now += 16) frame(v);
     clock.mockRestore();
     expect(composers.at(-1)).toBe(main);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+  });
+
+  it('draws the stand-in once two moving frames of the full mesh in a row are dear, as zooming out does, until the view stops', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    const status: ViewStatus[] = [];
+    viewer.onStatus((s) => status.push(s));
+    zoom(v, 8);
+    frame(v);
+    // Zoomed in, full frames are cheap, and moving frames are cut down.
+    for (let i = 0; i < 5; i++) v.cost.add(5);
+    for (let step = 0; step < 2; step++) {
+      while (!v.motion.measure());
+      for (let i = 0; i < 3; i++) v.motion.add(40);
+    }
+    const timer = {
+      kind: 'fence',
+      busy: false,
+      begin() {
+        this.busy = true;
+      },
+      end() {},
+      dispose() {},
+    };
+    v.timer = timer;
+    /** A moving frame; true where it was timed and came back at `ms`. */
+    const moving = (ms: number) => {
+      now += 16;
+      frame(v);
+      if (!timer.busy) return false;
+      timer.busy = false;
+      v.measured(ms);
+      return true;
+    };
+    viewer.setSpin(true);
+    // The first dear frame may be the GPU waking up.
+    while (!moving(40));
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    expect(composers.at(-1)).toBe(v.small?.composer);
+    while (!moving(40));
+    now += 16;
+    frame(v);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+    // Measured while cut down, they leave the full frame's cost alone.
+    expect(status.at(-1)).toMatchObject({ frameMs: 5, slow: false, slowMoving: true });
+
+    viewer.setSpin(false);
+    for (let i = 0; i < 100 && v.renderer.loop; i++) {
+      now += 16;
+      frame(v);
+    }
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    viewer.setSpin(true);
+    moving(5);
     expect(drawn()).toHaveLength(meshesOf(FULL));
   });
 

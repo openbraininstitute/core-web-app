@@ -22,6 +22,16 @@ export function followScreenUp(controls: OrbitControls): void {
   _quatInverse.copy(_quat).invert();
 }
 
+/** What OrbitControls' easing has yet to apply: the turn, rad, and the pan, in world units. Null where three renamed them. */
+export function glideLeft(controls: OrbitControls): { angle: number; pan: number } | null {
+  const { _sphericalDelta, _panOffset } = controls as unknown as Internals;
+  if (!_sphericalDelta || !_panOffset) return null;
+  return {
+    angle: Math.hypot(_sphericalDelta.theta, _sphericalDelta.phi),
+    pan: _panOffset.length(),
+  };
+}
+
 /** Drop what is left of OrbitControls' easing, so that a view set now stays put. */
 export function stopGlide(controls: OrbitControls): void {
   const { _sphericalDelta, _panOffset } = controls as unknown as Internals;

@@ -27,7 +27,7 @@ import {
   setDepthRange,
   withDisplacement,
 } from './looks';
-import { followScreenUp, stopGlide, turnCamera } from './rotation';
+import { followScreenUp, glideLeft, stopGlide, turnCamera } from './rotation';
 
 /**
  * Ambient occlusion is computed at this fraction of the device resolution.
@@ -45,10 +45,21 @@ const TURN_MS = 300;
 /** The layer of what `drawUnseen` draws, which the lights are on as well. */
 const UNSEEN_LAYER = 31;
 /**
- * How long the view still counts as moving once it stopped, ms. A wheel notch moves it in a single frame: without the
- * wait, a content that draws less while the view moves would draw in full between two notches.
+ * How long the view still counts as moving once a gesture moved it, ms. A wheel notch moves it at once, in OrbitControls'
+ * own handler: without the wait, a content that draws less while the view moves would draw in full between two notches.
  */
 const MOVING_FOR_MS = 200;
+/**
+ * How fast OrbitControls' glide after a gesture dies away, ms: as three's damping of 0.05 a frame does at 120 Hz. Three
+ * damps by the frame, which drew the glide out over seconds where frames are slow. Its handlers damp between frames by
+ * the factor the last frame set, so a drag keeps the lag it has at 120 Hz, as browsers send a pointer move a frame.
+ */
+const GLIDE_MS = 160;
+/** What is left of a glide when it ends, in CSS pixels at the cell's far side: too little to see. */
+const GLIDE_STOP_PX = 2;
+/** The frame times the glide's easing is worked out for, ms: past a stall, or with a clock that stands still. */
+const FRAME_MS = { min: 1000 / 240, max: 250 };
+const sphere = new THREE.Sphere();
 
 export type Projection = 'orthographic' | 'perspective';
 
@@ -198,9 +209,17 @@ export class SceneViewer implements ViewControls {
   private dirty = true;
   /** The animation loop stops once nothing moves and nothing has changed; `invalidate` starts it again. */
   private looping = false;
-  /** When the camera last moved, and whether the last frame was drawn as moving: a still one is owed after it. */
+  /**
+   * When a gesture last moved the camera, which counts as moving for `MOVING_FOR_MS`, and whether the last frame was
+   * drawn as moving: a still one is owed after it.
+   */
   private movedAt = Number.NEGATIVE_INFINITY;
   private drawnMoving = false;
+  /** A gesture is under way, between OrbitControls' start and end: a drag, a wheel turned, a pinch. */
+  private gesture = false;
+  /** When the loop last turned, null while it is stopped, and how long its last turn took, for the glide's easing. */
+  private lastFrameAt: number | null = null;
+  private frameMs = 1000 / 120;
   private disposed = false;
   private resizeObserver: ResizeObserver;
   /** Off screen, nothing is drawn, and the loop doesn't turn: a spinning view scrolled past costs nothing. */
@@ -331,16 +350,26 @@ export class SceneViewer implements ViewControls {
   private frame(): void {
     const turning = this.turn !== null;
     this.stepTurn();
-    const moved = this.controls.update();
     const now = performance.now();
-    if (moved || turning) this.movedAt = now;
-    const moving = now - this.movedAt < MOVING_FOR_MS;
+    const eased = this.easing(now);
+    // Let go of, a glide stops short of the little left; held, that is turned at once, as a slow drag adds a pixel or
+    // two a move, all of which must be turned.
+    // The spin adds to the glide every frame, but not while a pointer holds the view.
+    const creeping = !(this.controls.autoRotate && !this.gesture) && this.creeping();
+    if (creeping && !this.gesture) stopGlide(this.controls);
+    this.controls.dampingFactor = creeping && this.gesture ? 1 : eased;
+    const moved = this.controls.update();
+    this.controls.dampingFactor = eased;
+    // Zoomed in close, three reports a glide's last frames only every few, as each moves the camera too little; it
+    // ends all the same, once what is left creeps.
+    const left = glideLeft(this.controls);
+    const gliding = left !== null && (left.angle > 0 || left.pan > 0);
+    const moving = moved || turning || gliding || now - this.movedAt < MOVING_FOR_MS;
     if (this.drawnMoving && !moving) this.dirty = true;
     const working = this.work(moving);
     if (!moved && !this.dirty) {
       if (moving || working) return;
-      this.renderer.setAnimationLoop(null);
-      this.looping = false;
+      this.stopLoop();
       return;
     }
     // Before the hooks, which may ask for another frame.
@@ -355,6 +384,44 @@ export class SceneViewer implements ViewControls {
       this.heardOrientation.copy(orientation);
       for (const listener of this.viewListeners) listener(orientation);
     }
+  }
+
+  private stopLoop(): void {
+    this.renderer.setAnimationLoop(null);
+    this.looping = false;
+    this.lastFrameAt = null;
+  }
+
+  /** OrbitControls' damping for the time since the last turn of the loop: the glide lasts as long at any frame rate. */
+  private easing(now: number): number {
+    if (this.lastFrameAt !== null) {
+      this.frameMs = Math.min(Math.max(now - this.lastFrameAt, FRAME_MS.min), FRAME_MS.max);
+    }
+    this.lastFrameAt = now;
+    return 1 - Math.exp(-this.frameMs / GLIDE_MS);
+  }
+
+  /**
+   * Whether what is left of OrbitControls' glide would move the view by under `GLIDE_STOP_PX`. Three glides on until
+   * the camera moves by a nanometre a frame: a second or more of creep too small to see, which holds back the frames
+   * drawn still.
+   */
+  private creeping(): boolean {
+    const left = glideLeft(this.controls);
+    if (!left || (left.angle === 0 && left.pan === 0)) return false;
+    if (this.bounds.isEmpty()) return true;
+    const { center, radius } = this.bounds.getBoundingSphere(sphere);
+    let reach = center.distanceTo(this.controls.target) + radius;
+    let pixel = this.cssPixelNear(this.bounds);
+    if (this.projection === 'perspective') {
+      // The camera can be inside the bounds, where the nearest point is at the near plane. Taken a quarter of the way
+      // to the target, within 1.25 times that way of it: what is nearer still, so close to the eye, may move a few
+      // pixels more as the glide ends.
+      const d = this.controls.getDistance();
+      reach = Math.min(reach, 1.25 * d);
+      pixel = this.cssPixelNear(this.bounds, Math.max(0.25 * d, this.perspective.near));
+    }
+    return !((left.angle * reach + left.pan) / pixel >= GLIDE_STOP_PX);
   }
 
   private stepTurn(): void {
@@ -447,10 +514,7 @@ export class SceneViewer implements ViewControls {
     this.onScreen = on;
     this.checkSeen();
     if (on) this.invalidate();
-    else {
-      this.renderer.setAnimationLoop(null);
-      this.looping = false;
-    }
+    else this.stopLoop();
   }
 
   private checkSeen = (): void => {
@@ -594,6 +658,8 @@ export class SceneViewer implements ViewControls {
   }
 
   private onControlsChange = (): void => {
+    // A wheel or a pinch zooms inside OrbitControls' own handler, which leaves the next frame's update nothing to do.
+    if (this.gesture) this.movedAt = performance.now();
     followScreenUp(this.controls);
     this.invalidate();
     this.updatePixelScale();
@@ -608,10 +674,14 @@ export class SceneViewer implements ViewControls {
   // A gesture takes the camera over from a turn to an axis, keeping OrbitControls' easing.
   private onControlsStart = (): void => {
     this.turn = null;
+    this.gesture = true;
   };
 
   // A spin held off by a still pointer can have let the loop stop by the time the pointer is let go.
-  private onControlsEnd = (): void => this.invalidate();
+  private onControlsEnd = (): void => {
+    this.gesture = false;
+    this.invalidate();
+  };
 
   private onWheel = (e: WheelEvent): void => {
     if (e.ctrlKey || document.fullscreenElement?.contains(this.container)) return;
@@ -958,14 +1028,17 @@ export class SceneViewer implements ViewControls {
     return this.pixelScale;
   }
 
-  /** µm per CSS pixel at the point of `box` nearest the camera: the same everywhere in the orthographic view. */
-  protected cssPixelNear(box: THREE.Box3): number {
+  /**
+   * µm per CSS pixel at the point of `box` nearest the camera, or at `nearest` from it if that is farther: the same
+   * everywhere in the orthographic view.
+   */
+  protected cssPixelNear(box: THREE.Box3, nearest = this.perspective.near): number {
     if (this.projection === 'orthographic') {
       const o = this.orthographic;
       return orthoPixelScale(o.top, o.bottom, o.zoom, this.height);
     }
     const camera = this.perspective;
-    const d = Math.max(box.distanceToPoint(camera.position), camera.near);
+    const d = Math.max(box.distanceToPoint(camera.position), nearest);
     return (2 * halfHeightAt(d, FOV)) / this.height;
   }
 
