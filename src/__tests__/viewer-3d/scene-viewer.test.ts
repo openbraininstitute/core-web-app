@@ -351,6 +351,49 @@ describe('scene viewer', () => {
     expect(heard.at(-1)).toBe(true);
   });
 
+  it('stops drawing off screen, and holds what waits to be seen until it is on screen in a page on show', async () => {
+    const observers: ((entries: { isIntersecting: boolean }[]) => void)[] = [];
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+          observers.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    try {
+      const viewer = make(BARE);
+      const sceneViewer = viewer as unknown as SceneViewer;
+      const seen = vi.fn();
+      sceneViewer.seen().then(seen);
+      const show = (on: boolean) => observers.at(-1)?.([{ isIntersecting: on }]);
+
+      show(false);
+      expect(viewer.renderer.loop).toBeNull();
+      sceneViewer.setSpin(true);
+      expect(viewer.renderer.loop).toBeNull();
+      show(true);
+      expect(viewer.renderer.loop).not.toBeNull();
+      // On screen, but in a tab not on show.
+      await Promise.resolve();
+      expect(seen).not.toHaveBeenCalled();
+
+      hidden.mockReturnValue(false);
+      document.dispatchEvent(new Event('visibilitychange'));
+      await Promise.resolve();
+      expect(seen).toHaveBeenCalledTimes(1);
+      // Seen once is seen: off screen again, it holds nothing.
+      show(false);
+      await expect(sceneViewer.seen()).resolves.toBeUndefined();
+    } finally {
+      hidden.mockRestore();
+      vi.stubGlobal('IntersectionObserver', undefined);
+    }
+  });
+
   it('draws unseen onto the canvas, writing nothing, scissored to a pixel, and puts it all back', () => {
     const viewer = make({ surface: MORPHOLOGY_SURFACE });
     const { renderer, chunks } = viewer;

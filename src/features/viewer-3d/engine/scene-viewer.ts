@@ -170,6 +170,7 @@ export class SceneViewer implements ViewControls {
   private depthNormals: DepthNormalsPass | null = null;
   private bloom: UnrealBloomPass | null = null;
   private output: OutputPass | null = null;
+  private unseenTarget: THREE.WebGLRenderTarget | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
   private width = 1;
   private height = 1;
@@ -183,6 +184,12 @@ export class SceneViewer implements ViewControls {
   private drawnMoving = false;
   private disposed = false;
   private resizeObserver: ResizeObserver;
+  /** Off screen, nothing is drawn, and the loop doesn't turn: a spinning view scrolled past costs nothing. */
+  private onScreen = true;
+  private intersection: IntersectionObserver | null = null;
+  /** The view has been on screen in a page on show (`seen`). */
+  private seenOnce = false;
+  private seenListeners = new Set<() => void>();
   private pixelScale: number | null = null;
   private pixelScaleListeners = new Set<(scale: number | null) => void>();
   private wheelListeners = new Set<() => void>();
@@ -246,6 +253,14 @@ export class SceneViewer implements ViewControls {
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
+    if (typeof IntersectionObserver !== 'undefined') {
+      this.intersection = new IntersectionObserver((entries) => {
+        const entry = entries.at(-1);
+        if (entry) this.screenChanged(entry.isIntersecting);
+      });
+      this.intersection.observe(container);
+    } else this.checkSeen();
+    document.addEventListener('visibilitychange', this.checkSeen);
     this.fitCanvas();
     if (options.composeAlways) this.ensureComposer();
     this.invalidate();
@@ -261,6 +276,9 @@ export class SceneViewer implements ViewControls {
     this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
     this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.resizeObserver.disconnect();
+    this.intersection?.disconnect();
+    document.removeEventListener('visibilitychange', this.checkSeen);
+    this.seenListeners.clear();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
     this.controls.removeEventListener('start', this.onControlsStart);
@@ -289,7 +307,7 @@ export class SceneViewer implements ViewControls {
 
   /**
    * Render only when the camera moved (including damping and spin) or the scene changed, and stop when neither did,
-   * once a frame has been drawn still after the camera stopped.
+   * once a frame has been drawn still after the camera stopped, and the content has no work left (`work`).
    */
   private frame(): void {
     const turning = this.turn !== null;
@@ -299,8 +317,9 @@ export class SceneViewer implements ViewControls {
     if (moved || turning) this.movedAt = now;
     const moving = now - this.movedAt < MOVING_FOR_MS;
     if (this.drawnMoving && !moving) this.dirty = true;
+    const working = this.work(moving);
     if (!moved && !this.dirty) {
-      if (moving) return;
+      if (moving || working) return;
       this.renderer.setAnimationLoop(null);
       this.looping = false;
       return;
@@ -326,6 +345,14 @@ export class SceneViewer implements ViewControls {
     turnCamera(this.controls, turn.from, turn.to, t);
     if (t === 1) this.turn = null;
     this.dirty = true;
+  }
+
+  /**
+   * Work the content does a little of on each turn of the loop, drawn or not, and less of while the camera moves; true
+   * while some is left, which keeps the loop turning. What it changes on show it asks a frame for (`invalidate`).
+   */
+  protected work(_moving: boolean): boolean {
+    return false;
   }
 
   /** Before a frame is drawn, with whether the camera is moving: what the content draws may depend on it. */
@@ -358,9 +385,35 @@ export class SceneViewer implements ViewControls {
 
   protected invalidate(): void {
     this.dirty = true;
-    if (this.looping || this.disposed) return;
+    if (this.looping || this.disposed || !this.onScreen) return;
     this.looping = true;
     this.renderer.setAnimationLoop(() => this.frame());
+  }
+
+  private screenChanged(on: boolean): void {
+    this.onScreen = on;
+    this.checkSeen();
+    if (on) this.invalidate();
+    else {
+      this.renderer.setAnimationLoop(null);
+      this.looping = false;
+    }
+  }
+
+  private checkSeen = (): void => {
+    if (this.seenOnce || !this.onScreen || document.hidden) return;
+    this.seenOnce = true;
+    for (const listener of this.seenListeners) listener();
+    this.seenListeners.clear();
+  };
+
+  /**
+   * Resolves once the view has been on screen in a page on show, at once from then on: a tab opened in the background,
+   * or a view scrolled past unseen, waits.
+   */
+  seen(): Promise<void> {
+    if (this.seenOnce) return Promise.resolve();
+    return new Promise((resolve) => this.seenListeners.add(resolve));
   }
 
   /**
@@ -417,6 +470,10 @@ export class SceneViewer implements ViewControls {
    * Draw `objects`, which must be in the scene, once where frames are drawn, writing no pixel: three uploads their
    * buffers and builds their programs, and the driver does its first-draw work (ANGLE's vertex conversions, its lazily
    * made storage), ahead of the frame that shows them.
+   *
+   * Through the composer, they are drawn into a target of a pixel, of the formats the scene is drawn into, which is
+   * what the GPU's pipelines are built for: three resolves a multisampled target after each draw, which Direct3D
+   * likely does whole, whatever the scissor.
    */
   protected drawUnseen(objects: THREE.Object3D[]): void {
     const renderer = this.renderer;
@@ -427,9 +484,10 @@ export class SceneViewer implements ViewControls {
     const autoClear = renderer.autoClear;
     const previous = renderer.getRenderTarget();
     if (this.composing()) this.ensureComposer();
-    const target = this.composing() ? (this.composer?.renderTarget2 ?? null) : null;
+    const target = this.composing() ? this.pixelTarget() : null;
+    // The canvas, where there is no composer, is scissored to a pixel instead.
     const scissor = target
-      ? { box: target.scissor.clone(), test: target.scissorTest }
+      ? null
       : { box: renderer.getScissor(new THREE.Vector4()), test: renderer.getScissorTest() };
     try {
       for (const o of objects) {
@@ -442,11 +500,7 @@ export class SceneViewer implements ViewControls {
       color.setLocked(true);
       depth.setMask(false);
       depth.setLocked(true);
-      // Its resolve is scissored too.
-      if (target) {
-        target.scissor.set(0, 0, 1, 1);
-        target.scissorTest = true;
-      } else {
+      if (scissor) {
         renderer.setScissor(0, 0, 1, 1);
         renderer.setScissorTest(true);
       }
@@ -458,10 +512,7 @@ export class SceneViewer implements ViewControls {
       depth.setLocked(false);
       depth.setMask(true);
       renderer.autoClear = autoClear;
-      if (target) {
-        target.scissor.copy(scissor.box);
-        target.scissorTest = scissor.test;
-      } else {
+      if (scissor) {
         renderer.setScissor(scissor.box);
         renderer.setScissorTest(scissor.test);
       }
@@ -472,6 +523,21 @@ export class SceneViewer implements ViewControls {
         o.frustumCulled = saved[i].culled;
       });
     }
+  }
+
+  /** A pixel's target of the formats of the one the scene is drawn into (`drawUnseen`). */
+  private pixelTarget(): THREE.WebGLRenderTarget | null {
+    const scene = this.composer?.renderTarget2;
+    if (!scene) return null;
+    if (!this.unseenTarget) {
+      this.unseenTarget = new THREE.WebGLRenderTarget(1, 1, {
+        type: scene.texture.type,
+        samples: scene.samples,
+        depthTexture: scene.depthTexture ? new THREE.DepthTexture(1, 1) : null,
+        resolveDepthBuffer: false,
+      });
+    }
+    return this.unseenTarget;
   }
 
   private onControlsChange = (): void => {
@@ -804,6 +870,8 @@ export class SceneViewer implements ViewControls {
     this.depthNormals?.dispose();
     this.bloom?.dispose();
     this.composer?.dispose();
+    this.unseenTarget?.dispose();
+    this.unseenTarget = null;
     this.composer = null;
     this.renderPass = null;
     this.gtao = null;

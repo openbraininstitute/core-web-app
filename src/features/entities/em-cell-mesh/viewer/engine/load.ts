@@ -89,6 +89,8 @@ export interface LoadOptions {
   device: Device;
   /** Load a mesh over the device's budget all the same: the user said so. */
   ignoreBudget?: boolean;
+  /** Settles once the view is seen, which the decode waits for: a tab opened in the background only downloads. */
+  seen?: Promise<void>;
   signal: AbortSignal;
   workers?: Workers;
   standIns?: {
@@ -225,6 +227,7 @@ export async function loadEmMesh(
       return { kind: 'loaded' };
     }
 
+    if (options.seen) await Promise.race([options.seen, aborted]);
     await oneAtATime(signal, async () => {
       const decoded = await step('decode', decoder, decoder.api.decode());
       stop(decoder);

@@ -66,6 +66,7 @@ const h = vi.hoisted(() => {
       pixels: 2e6,
     };
     prepare = vi.fn(() => Promise.resolve());
+    seen = vi.fn(() => Promise.resolve());
     setStandIn = vi.fn();
     setFull = vi.fn();
     clear = vi.fn();

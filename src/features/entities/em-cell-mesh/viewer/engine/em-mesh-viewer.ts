@@ -16,8 +16,11 @@ import {
 
 import type { Grid, PackedChunk, PackedMesh, StandIn } from './types';
 
-/** How long the uploads may take of a frame, ms; one chunk goes up every frame however long it takes. */
-const UPLOAD_BUDGET_MS = 4;
+/**
+ * How long the uploads may take of a frame, ms, while the view moves, and while it is still, when no frame is dropped
+ * that anyone would see; one chunk goes up every frame however long it takes.
+ */
+const UPLOAD_BUDGET_MS = { moving: 4, still: 12 };
 /** At most this many of the stand-in's vertices frame the view and give the depth-coded look its range. */
 const SAMPLE_POINTS = 16384;
 const STAND_IN_BOXES = 0x2ec4ff;
@@ -94,8 +97,11 @@ function place(mesh: THREE.Object3D, grid: Grid, chunk: PackedChunk): void {
   mesh.updateMatrix();
 }
 
-function chunkBytes(chunk: PackedChunk): number {
-  return chunk.positions.byteLength + chunk.normals.byteLength + chunk.indices.byteLength;
+function meshBytes(mesh: PackedMesh): number {
+  return mesh.chunks.reduce(
+    (n, c) => n + c.positions.byteLength + c.normals.byteLength + c.indices.byteLength,
+    0
+  );
 }
 
 /** The edges of boxes in µm, as line segments. */
@@ -159,9 +165,19 @@ function placeholder(): THREE.BufferGeometry {
 export class EmMeshViewer extends SceneViewer {
   private standIn: (Layer & { data: StandIn }) | null = null;
   private full: Layer | null = null;
-  /** The full mesh's chunks going up, a few a frame, before it can be drawn. */
-  private pending: (Parts & { mesh: PackedMesh; next: number; started: number | null }) | null =
-    null;
+  /**
+   * The full mesh's chunks going up, a few a frame, before it can be drawn. Each chunk is let go of as it goes up, so
+   * that its arrays go with three's copy of them.
+   */
+  private pending:
+    | (Parts & {
+        grid: Grid;
+        chunks: (PackedChunk | null)[];
+        bytes: number;
+        next: number;
+        started: number | null;
+      })
+    | null = null;
   /** The stand-in is the whole mesh. */
   private whole = false;
   /** A lost context took the full mesh with it. */
@@ -220,7 +236,7 @@ export class EmMeshViewer extends SceneViewer {
     this.dropLayer(this.standIn);
     const parts: Parts = { meshes: [], outlines: [], boxes: [] };
     for (const chunk of standIn.chunks) this.chunkMesh(standIn.grid, chunk, false, parts);
-    this.standIn = { ...this.makeLayer(standIn, parts, STAND_IN_BOXES), data: standIn };
+    this.standIn = { ...this.makeLayer(parts, STAND_IN_BOXES, meshBytes(standIn)), data: standIn };
     this.bounds.makeEmpty();
     for (const b of parts.boxes) this.bounds.union(b);
     this.bounds.expandByScalar(standIn.errorUm);
@@ -238,7 +254,18 @@ export class EmMeshViewer extends SceneViewer {
     this.dropFull();
     this.whole = mesh === this.standIn?.data;
     if (this.whole) this.tellReady();
-    else this.pending = { mesh, next: 0, meshes: [], outlines: [], boxes: [], started: null };
+    else {
+      this.pending = {
+        grid: mesh.grid,
+        chunks: [...mesh.chunks],
+        bytes: meshBytes(mesh),
+        next: 0,
+        meshes: [],
+        outlines: [],
+        boxes: [],
+        started: null,
+      };
+    }
     this.invalidate();
   }
 
@@ -285,7 +312,7 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   /** A mesh's chunks in the scene, hidden until a frame chooses it. */
-  private makeLayer(data: PackedMesh, { meshes, outlines, boxes }: Parts, color: number): Layer {
+  private makeLayer({ meshes, outlines, boxes }: Parts, color: number, bytes: number): Layer {
     const surface = new THREE.Group();
     const outline = new THREE.Group();
     surface.visible = outline.visible = false;
@@ -296,12 +323,7 @@ export class EmMeshViewer extends SceneViewer {
     this.outlines.add(outline);
     const lines = boxLines(boxes, color);
     this.scene.add(lines);
-    return {
-      surface,
-      outline,
-      boxes: lines,
-      bytes: data.chunks.reduce((n, c) => n + chunkBytes(c), 0),
-    };
+    return { surface, outline, boxes: lines, bytes };
   }
 
   /** A chunk placed in µm, its outline, and its bounds in µm, added to `parts`. */
@@ -329,28 +351,30 @@ export class EmMeshViewer extends SceneViewer {
     layer.boxes.removeFromParent();
   }
 
-  /** Upload chunks for up to the frame's budget; once the last is up, the full mesh can be drawn. */
-  private uploadSome(): void {
+  /** Upload chunks for up to `budgetMs`; once the last is up, the full mesh can be drawn. */
+  private uploadSome(budgetMs: number): void {
     const p = this.pending;
     if (!p) return;
     const t0 = performance.now();
     p.started ??= t0;
-    const { chunks, grid } = p.mesh;
+    const { chunks, grid } = p;
     do {
-      const chunk = chunks[p.next++];
+      const chunk = chunks[p.next] as PackedChunk;
+      chunks[p.next++] = null;
       const { mesh: m, outline: o } = this.chunkMesh(grid, chunk, true, p);
       this.chunks.add(m);
       if (o) this.outlines.add(o);
       this.drawUnseen(o ? [m, o] : [m]);
       m.removeFromParent();
       o?.removeFromParent();
-    } while (p.next < chunks.length && performance.now() - t0 < UPLOAD_BUDGET_MS);
+    } while (p.next < chunks.length && performance.now() - t0 < budgetMs);
     const ms = performance.now() - p.started;
     this.upload = { done: p.next, total: chunks.length, ms };
+    this.tellStatus();
     if (p.next < chunks.length) return;
 
     this.pending = null;
-    this.full = this.makeLayer(p.mesh, p, FULL_BOXES);
+    this.full = this.makeLayer(p, FULL_BOXES, p.bytes);
     // The stand-in's bounds fall short of the mesh's by up to its error.
     for (const b of p.boxes) this.bounds.union(b);
     this.applyLook();
@@ -361,9 +385,13 @@ export class EmMeshViewer extends SceneViewer {
   // ---------------------------------------------------------------------------
   // Frames
 
+  // Chunks go up whether or not a frame is drawn: while the view is still, nothing on show changes until the last.
+  protected override work(moving: boolean): boolean {
+    this.uploadSome(UPLOAD_BUDGET_MS[moving ? 'moving' : 'still']);
+    return this.pending !== null;
+  }
+
   protected override beforeDraw(moving: boolean): void {
-    this.uploadSome();
-    if (this.pending) this.invalidate();
     const standIn = this.standIn;
     if (!standIn) {
       this.choice = null;

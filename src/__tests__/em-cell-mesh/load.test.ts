@@ -229,6 +229,21 @@ describe('loadEmMesh', () => {
     expect(log.indexOf('standIn.warmUp')).toBeLessThan(log.indexOf('decode.decode'));
   });
 
+  it('downloads while the view has not been seen, and decodes once it is', async () => {
+    vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
+    let show: () => void = () => {};
+    const seen = new Promise<void>((resolve) => {
+      show = resolve;
+    });
+    const { promise, events } = load({ seen });
+    await vi.waitFor(() => expect(events.progress.at(-1)).toBe(glb.byteLength));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(log).not.toContain('decode.decode');
+    show();
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(log).toContain('decode.decode');
+  });
+
   it('shows a cached stand-in before the download ends, and makes none', async () => {
     const cached = { ...(await cachedStandIn()), errorUm: 0.5 };
     let release: () => void = () => {};

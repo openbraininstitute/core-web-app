@@ -260,10 +260,13 @@ describe('EmMeshViewer', () => {
     viewer.setFull(FULL);
 
     const perFrame: number[] = [];
+    let drawnFrames = 0;
     while (v.renderer.unseen.length < meshesOf(FULL)) {
       const before = v.renderer.unseen.length;
+      const framesBefore = frames.length;
       frame(v);
       perFrame.push(v.renderer.unseen.length - before);
+      drawnFrames += frames.length - framesBefore;
       if (v.renderer.unseen.length < meshesOf(FULL)) {
         // Not one full chunk in the frame until all are up.
         expect(drawn().every((m) => standIn.has(m))).toBe(true);
@@ -271,29 +274,52 @@ describe('EmMeshViewer', () => {
       }
     }
     clock.mockRestore();
-    expect(perFrame.length).toBeGreaterThan(2);
+    expect(perFrame.length).toBeGreaterThan(1);
     expect(Math.max(...perFrame)).toBeLessThan(meshesOf(FULL));
-    // Each chunk once, alone, writing nothing, into the frame's own target, scissored to a pixel.
+    // While the view is still, the picture is not drawn again while the chunks go up: only the frame setFull asked
+    // for, and the one in which the last chunk goes up and the full mesh comes in.
+    expect(drawnFrames).toBe(2);
+    expect(ready).toHaveBeenCalledTimes(1);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    // Each chunk once, alone, writing nothing, into a target of a pixel of the scene's formats.
+    const scene = v.composer.renderTarget2;
     const chunks = v.renderer.unseen.flatMap((u) => u.meshes);
     expect(new Set(chunks.map((m) => m.geometry)).size).toBe(meshesOf(FULL));
     for (const u of v.renderer.unseen) {
       expect(u.meshes).toHaveLength(1);
       expect(u.writes).toEqual({ color: false, depth: false, locked: true });
       expect(u.autoClear).toBe(false);
-      expect(u.target).toBe(v.composer.renderTarget2);
-      expect(u.scissor).toEqual([0, 0, 1, 1]);
+      const target = u.target as THREE.WebGLRenderTarget;
+      expect([target.width, target.height]).toEqual([1, 1]);
+      expect(target.samples).toBe(scene.samples);
+      expect(target.texture.type).toBe(scene.texture.type);
+      expect(target.depthTexture).toBeInstanceOf(THREE.DepthTexture);
       // A layer of their own, which nothing else is on.
       expect(u.layers).toBe(2 ** 31);
     }
     // And put back as it was.
     expect(v.renderer.autoClear).toBe(true);
     expect(v.renderer.color).toEqual({ mask: true, locked: false });
-    expect(v.composer.renderTarget2.scissorTest).toBe(false);
-
-    frame(v);
-    expect(ready).toHaveBeenCalledTimes(1);
-    expect(drawn()).toHaveLength(meshesOf(FULL));
     expect(drawn().some((m) => standIn.has(m))).toBe(false);
+  });
+
+  it('uploads fewer chunks a frame while the view moves, drawing each frame', () => {
+    const { viewer, v } = make();
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1.5));
+    viewer.setStandIn(STAND_IN);
+    zoom(v, 8);
+    frame(v);
+    viewer.setFull(FULL);
+    viewer.setSpin(true);
+    const before = frames.length;
+    frame(v);
+    const moving = v.renderer.unseen.length;
+    viewer.setSpin(false);
+    clock.mockRestore();
+    expect(frames.length).toBe(before + 1);
+    expect(moving).toBeGreaterThan(0);
+    expect(moving).toBeLessThan(5);
   });
 
   it("lets go of the full mesh's arrays once they are up, and keeps the stand-in's", () => {

@@ -219,7 +219,13 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
         return;
       }
       const outcome = await loadEmMesh(
-        { request, device: deviceOf(navigator, fullscreenPixels()), ignoreBudget, signal },
+        {
+          request,
+          device: deviceOf(navigator, fullscreenPixels()),
+          ignoreBudget,
+          seen: viewer.seen(),
+          signal,
+        },
         {
           onStage: (stage) => {
             if (stage === 'download' || signal.aborted) return;
