@@ -165,6 +165,8 @@ export const ScanConfigUIElementDict = {
   BlockDictionary: 'block_dictionary',
   // components
   StringInput: 'string_input',
+  DistanceFunctionInput: 'distance_function_input',
+  DistanceFunctionInputNullable: 'distance_function_input_nullable',
   ModelIdentifier: 'model_identifier',
   FloatParameterSweep: 'float_parameter_sweep',
   IntParameterSweep: 'int_parameter_sweep',
@@ -183,6 +185,8 @@ export const ScanConfigUIElementDict = {
   StringSelection: 'string_selection',
   StringSelectionEnhanced: 'string_selection_enhanced',
   StringListInput: 'string_list_input',
+  StringListOptional: 'string_list_optional',
+  FloatInput: 'float_input',
   Stochasticity: 'stochasticity',
   NeuronPropertyFilter: 'neuron_property_filter',
   NeuronSetCombination: 'neuron_set_combination',
@@ -194,6 +198,7 @@ export const ScanConfigUIElementDict = {
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
   AxonModifier: 'axon_modifier',
+  Object: 'object',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -224,6 +229,22 @@ export function isCircuitNeuronalManipulationType(typeConst: string | undefined)
 }
 export interface StringInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringInput;
+}
+
+export interface DistanceFunctionInputField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInput;
+  /** `max_length` of the function string; sits at the schema root for the non-nullable field. */
+  maxLength?: number;
+}
+
+/**
+ * Nullable distance function (`str | None`): the string branch (carrying `maxLength`) comes
+ * first, the null branch second. The two elements differ only in where `maxLength` lives, so the
+ * frontend reads it from a fixed position without branching per field.
+ */
+export interface DistanceFunctionInputNullableField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DistanceFunctionInputNullable;
+  anyOf: [{ type: 'string'; maxLength?: number }, { type: 'null' }];
 }
 
 export interface ModelIdentifier extends TBlockElement {
@@ -302,6 +323,16 @@ export interface FloatOptional extends TBlockElement {
   ];
 }
 
+/** A required, non-nullable single number (`{ type: 'number' }`, no sweep, no null). */
+export interface FloatInput extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.FloatInput;
+  type: 'number';
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
+}
+
 /**
  * The object behind the per-protocol e-feature picker. One widget renders the whole thing, so
  * the nested fields carry no `ui_element` of their own.
@@ -310,6 +341,17 @@ export interface TSelectEFeaturesByProtocol extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectEFeaturesByProtocol;
   type: 'object';
   property_endpoints?: string;
+}
+
+/**
+ * A fixed-shape object: a closed set of declared properties, each rendered by its own nested
+ * block-element `ui_element`. Becomes a plain dict; keys are written individually.
+ */
+export interface ObjectElement extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.Object;
+  type: 'object';
+  additionalProperties: false;
+  properties: Record<string, ParamSchema> & { type?: Type };
 }
 
 export interface Reference extends TBlockElement {
@@ -489,6 +531,12 @@ export interface StringListInput extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringListInput;
 }
 
+/** Nullable list of strings (`anyOf: [{ array of string }, { null }]`); `null` means unset. */
+export interface StringListOptional extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.StringListOptional;
+  anyOf: [{ type: 'array'; items: { type: 'string' } }, { type: 'null' }];
+}
+
 export interface StringSelectionEnhanced extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringSelectionEnhanced;
   enum: string[];
@@ -647,6 +695,8 @@ export type TBlockElement = {
 
 export type ParamSchema =
   | StringInput
+  | DistanceFunctionInputField
+  | DistanceFunctionInputNullableField
   | ModelIdentifier
   | TModelIdentifierMultiple
   | TModelIdentifierGrouped
@@ -671,6 +721,9 @@ export type ParamSchema =
   | DiscreteProbabilities
   | StringSelectionEnhanced
   | StringListInput
+  | StringListOptional
+  | FloatInput
+  | ObjectElement
   | AxonModifier
   | Stochasticity
   | NeuronPropertyFilter
