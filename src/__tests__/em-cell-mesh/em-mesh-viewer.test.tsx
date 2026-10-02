@@ -52,6 +52,7 @@ const h = vi.hoisted(() => {
       ready: new Set<() => void>(),
       rebuild: new Set<() => void>(),
       status: new Set<(status: unknown) => void>(),
+      context: new Set<(lost: boolean) => void>(),
     };
     status: unknown = {
       shown: 'full',
@@ -124,8 +125,20 @@ const h = vi.hoisted(() => {
       return this.on(this.listeners.status, listener);
     }
 
+    onContextChange(listener: (lost: boolean) => void) {
+      return this.on(this.listeners.context, listener);
+    }
+
     tell(kind: 'ready' | 'rebuild') {
       for (const listener of this.listeners[kind]) listener();
+    }
+
+    /** The context lost, and given back where `restored`: with the full mesh, which then needs loading again. */
+    loseContext(restored: boolean) {
+      for (const listener of this.listeners.context) listener(true);
+      if (!restored) return;
+      for (const listener of this.listeners.context) listener(false);
+      this.tell('rebuild');
     }
   }
 
@@ -424,20 +437,108 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.dispose).toHaveBeenCalled();
   });
 
-  it('loads the full mesh again after a lost context, keeping the stand-in', async () => {
-    const { viewer } = await renderViewer();
+  /** The viewer with the stand-in and the full mesh drawn. */
+  async function drawn() {
+    const view = await renderViewer();
     const load = await started();
     act(() => load.callbacks.onProgress?.(8e6, 8e6));
     act(() => load.callbacks.onStandIn(STAND_IN, report()));
     act(() => load.callbacks.onFull(MESH, report()));
-    act(() => viewer.tell('ready'));
+    act(() => view.viewer.tell('ready'));
     await act(async () => load.resolve({ kind: 'loaded' }));
     expect(pill()).toBeNull();
+    return view;
+  }
 
-    act(() => viewer.tell('rebuild'));
-    await started(2);
+  it('loads the full mesh again after a lost context, keeping the stand-in, and only when asked the second time', async () => {
+    const { viewer } = await drawn();
+    act(() => viewer.loseContext(true));
+    const again = await started(2);
     expect(viewer.clear).toHaveBeenCalledTimes(1);
     expect(pill()).toBe('Loading full detail…');
+    act(() => again.callbacks.onFull(MESH, report()));
+    act(() => viewer.tell('ready'));
+    await act(async () => again.resolve({ kind: 'loaded' }));
+
+    act(() => viewer.loseContext(true));
+    await waitFor(() =>
+      expect(pill()).toBe('Full detail was let go of after the graphics resetLoad it')
+    );
+    expect(h.loads).toHaveLength(2);
+    fireEvent.click(screen.getByRole('button', { name: 'Load it' }));
+    await started(3);
+    expect(viewer.clear).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the graphics were reset while they are, and to reload once they have not come back for a while', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const { viewer } = await drawn();
+      act(() => viewer.loseContext(false));
+      expect(pill()).toBe('The graphics were reset, restoring…');
+      act(() => vi.advanceTimersByTime(5000));
+      expect(screen.getByRole('alert')).toHaveTextContent('The graphics were reset');
+      expect(screen.getByRole('button', { name: 'Reload the page' })).toBeInTheDocument();
+      act(() => {
+        for (const listener of viewer.listeners.context) listener(false);
+      });
+      expect(screen.queryByRole('alert')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('waits for the page to be on show before it loads the full mesh again', async () => {
+    const { viewer } = await drawn();
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    act(() => viewer.loseContext(true));
+    await act(async () => {});
+    expect(h.loads).toHaveLength(1);
+    hidden.mockReturnValue(false);
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await started(2);
+    hidden.mockRestore();
+  });
+
+  it('marks the load past its download until the full mesh is drawn, and clears the mark when it goes', async () => {
+    const { viewer, unmount } = await renderViewer();
+    const load = await started();
+    const mark = () => localStorage.getItem('em-mesh-load:glb');
+    act(() => load.callbacks.onStage?.('download'));
+    expect(mark()).toBeNull();
+    act(() => load.callbacks.onStage?.('decode'));
+    expect(mark()).toBe('decode');
+    act(() => load.callbacks.onStage?.('full'));
+    expect(mark()).toBe('full');
+    act(() => viewer.tell('ready'));
+    expect(mark()).toBeNull();
+    act(() => load.callbacks.onStage?.('decode'));
+    unmount();
+    expect(mark()).toBeNull();
+  });
+
+  it('offers to try again a mesh whose load stopped the page last time, loading nothing until asked', async () => {
+    localStorage.setItem('em-mesh-load:glb', 'decode');
+    try {
+      const { unmount } = await renderViewer();
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Loading this mesh stopped the page last time'
+      );
+      expect(screen.getByRole('button', { name: 'Download the GLB' })).toBeInTheDocument();
+      expect(h.loads).toHaveLength(0);
+      // Left without trying again, the mark stays for the next visit.
+      unmount();
+      expect(localStorage.getItem('em-mesh-load:glb')).toBe('decode');
+
+      await renderViewer();
+      fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+      await started();
+      expect(screen.queryByRole('alert')).toBeNull();
+    } finally {
+      localStorage.clear();
+    }
   });
 
   it('compiles the shaders of the look it opens with, the EM segmentation with its occlusion', async () => {

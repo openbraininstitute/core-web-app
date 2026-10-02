@@ -177,6 +177,7 @@ export class EmMeshViewer extends SceneViewer {
   private statusListeners = new Set<(status: ViewStatus) => void>();
   private readyListeners = new Set<() => void>();
   private rebuildListeners = new Set<() => void>();
+  private contextListeners = new Set<(lost: boolean) => void>();
   private heard: ViewStatus | null = null;
 
   constructor(container: HTMLElement) {
@@ -193,6 +194,7 @@ export class EmMeshViewer extends SceneViewer {
     this.statusListeners.clear();
     this.readyListeners.clear();
     this.rebuildListeners.clear();
+    this.contextListeners.clear();
   }
 
   /** Compile the look's shaders for a chunk, before the mesh arrives. */
@@ -262,10 +264,12 @@ export class EmMeshViewer extends SceneViewer {
   // three uploads the stand-in again from the arrays it keeps; the full mesh's are gone.
   protected override contextLost(): void {
     if (this.dropFull()) this.lostFull = true;
+    for (const listener of this.contextListeners) listener(true);
   }
 
   protected override contextRestored(): void {
     this.makeTimer();
+    for (const listener of this.contextListeners) listener(false);
     if (!this.lostFull) return;
     this.lostFull = false;
     for (const listener of this.rebuildListeners) listener();
@@ -461,6 +465,12 @@ export class EmMeshViewer extends SceneViewer {
   onRebuildNeeded(listener: () => void): () => void {
     this.rebuildListeners.add(listener);
     return () => this.rebuildListeners.delete(listener);
+  }
+
+  /** The GPU took the context, with all that was drawn (true), or gave it back (false). */
+  onContextChange(listener: (lost: boolean) => void): () => void {
+    this.contextListeners.add(listener);
+    return () => this.contextListeners.delete(listener);
   }
 
   /** What is on show and why, now and whenever it changes. */

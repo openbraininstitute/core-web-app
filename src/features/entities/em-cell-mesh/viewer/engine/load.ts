@@ -99,6 +99,8 @@ export interface LoadOptions {
 }
 
 export interface LoadCallbacks {
+  /** A step of the load starts. */
+  onStage?(stage: Stage): void;
   onProgress?(received: number, total: number): void;
   onReport?(report: LoadReport): void;
   onStandIn(standIn: StandIn, report: LoadReport): void;
@@ -153,6 +155,7 @@ export async function loadEmMesh(
     worker: WorkerHandle<unknown>,
     call: Promise<T>
   ): Promise<T> => {
+    callbacks.onStage?.(stage);
     const t0 = performance.now();
     try {
       return await Promise.race([call, worker.died, aborted]);

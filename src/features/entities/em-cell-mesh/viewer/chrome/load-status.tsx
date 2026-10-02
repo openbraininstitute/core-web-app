@@ -20,8 +20,34 @@ export function LoadStatus({
   name: string;
   theme: ViewerTheme;
 }) {
-  const { refused, error, fullReady, received, total } = load;
+  const { refused, error, fullReady, received, total, stopped, context } = load;
   const hasStandIn = load.meshes.standIn !== null;
+  if (context === 'gone') {
+    return (
+      <StatusAlert
+        title="The graphics were reset"
+        message="The browser has not given them back. Reload the page to view the mesh again."
+        theme={theme}
+      >
+        <ActionButton onClick={() => window.location.reload()}>Reload the page</ActionButton>
+      </StatusAlert>
+    );
+  }
+  if (context === 'lost') {
+    return <StatusPill text="The graphics were reset, restoring…" failed={false} theme={theme} />;
+  }
+  if (stopped) {
+    return (
+      <StatusAlert
+        title="Loading this mesh stopped the page last time"
+        message={`The browser probably ran out of memory${hasStandIn ? ': this is the coarse copy kept from before' : ''}. Loading it again may stop the page again.`}
+        theme={theme}
+      >
+        <ActionButton onClick={load.loadAgain}>Try again</ActionButton>
+        <SaveButton load={load} name={name} />
+      </StatusAlert>
+    );
+  }
   if (refused?.kind === 'too-large') {
     return (
       <StatusAlert
@@ -50,6 +76,13 @@ export function LoadStatus({
     );
   }
   if (error) return <StatusPill text="Full detail could not be loaded" failed theme={theme} />;
+  if (load.fullDropped) {
+    return (
+      <StatusPill text="Full detail was let go of after the graphics reset" failed theme={theme}>
+        <ActionButton onClick={load.loadAgain}>Load it</ActionButton>
+      </StatusPill>
+    );
+  }
   if (fullReady) return null;
   const downloading = total > 0 && received < total;
   let text: string;

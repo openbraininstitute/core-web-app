@@ -6,21 +6,26 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
-/** A line of status over the view, top-centre: work under way, or a warning. */
+/** A line of status over the view, top-centre: work under way, or a warning, with what can be done about it. */
 export function StatusPill({
   text,
   failed,
   theme,
+  children,
 }: {
   text: string;
   failed: boolean;
   theme: ViewerTheme;
+  children?: ReactNode;
 }) {
   return (
     <div className="absolute top-3 left-1/2 flex max-w-[calc(100%-24rem)] -translate-x-1/2 justify-center">
       <div
         role="status"
-        className="flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs tabular-nums backdrop-blur-sm"
+        className={cn(
+          'flex min-w-0 items-center gap-2 rounded-full px-3 py-1.5 text-xs tabular-nums backdrop-blur-sm',
+          children && 'pointer-events-auto py-1 pr-1'
+        )}
         style={{
           ...panelStyle(theme),
           ...(failed && { boxShadow: '0 0 0 1px var(--color-warning)' }),
@@ -32,6 +37,7 @@ export function StatusPill({
           <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
         )}
         <span className="truncate">{text}</span>
+        {children}
       </div>
     </div>
   );

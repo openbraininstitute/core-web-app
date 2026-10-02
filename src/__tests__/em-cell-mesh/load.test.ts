@@ -129,9 +129,11 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
     full?: PackedMesh;
     reports: LoadReport[];
     progress: number[];
+    stages: string[];
   } = {
     reports: [],
     progress: [],
+    stages: [],
   };
   const stored: ArrayBuffer[] = [];
   const promise = loadEmMesh(
@@ -147,6 +149,7 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
       ...overrides,
     },
     {
+      onStage: (stage) => events.stages.push(stage),
       onProgress: (received) => events.progress.push(received),
       onReport: (report) => events.reports.push(report),
       onStandIn: (standIn) => {
@@ -180,6 +183,7 @@ describe('loadEmMesh', () => {
       'onFull',
       'unlock',
     ]);
+    expect(events.stages).toEqual(['download', 'decode', 'stand-in', 'full']);
     expect(events.standIn?.triangles).toBeLessThanOrEqual(2000);
     expect(events.standIn?.errorUm).toBeGreaterThan(0);
     expect(events.full?.triangles).toBe(120 * 60 * 2);
