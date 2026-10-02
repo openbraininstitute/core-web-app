@@ -78,6 +78,24 @@ export interface SceneViewerOptions {
   composeAlways?: boolean;
 }
 
+/**
+ * What the composer's targets hold: half floats, 4× multisampled where the scene is drawn, or 8-bit colour where the
+ * GPU can't draw into half floats, which would leave the view blank; and no more samples than the format allows.
+ */
+function composerFormat(gl: WebGL2RenderingContext): {
+  type: THREE.TextureDataType;
+  samples: number;
+} {
+  const samples = (format: GLenum) => {
+    const counts = gl.getInternalformatParameter(gl.RENDERBUFFER, format, gl.SAMPLES);
+    // In descending order; none where the format can't be drawn into.
+    return counts instanceof Int32Array && counts.length > 0 ? Math.min(4, counts[0]) : null;
+  };
+  const half = samples(gl.RGBA16F);
+  if (half !== null) return { type: THREE.HalfFloatType, samples: half };
+  return { type: THREE.UnsignedByteType, samples: samples(gl.RGBA8) ?? 0 };
+}
+
 function disposeMaterial(material: THREE.Material): void {
   for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose();
   material.dispose();
@@ -635,7 +653,10 @@ export class SceneViewer implements ViewControls {
     // ambient occlusion from the main pass's depth reads the scene's depth back.
     const target = composer.renderTarget2;
     const mainDepth = this.options.aoDepth === 'main-pass';
-    target.samples = 4;
+    const { type, samples } = composerFormat(this.renderer.getContext() as WebGL2RenderingContext);
+    composer.renderTarget1.texture.type = type;
+    target.texture.type = type;
+    target.samples = samples;
     target.resolveDepthBuffer = mainDepth;
     if (mainDepth) target.depthTexture = new THREE.DepthTexture(target.width, target.height);
     composer.renderTarget1.depthBuffer = false;

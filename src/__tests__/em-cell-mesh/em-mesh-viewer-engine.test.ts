@@ -36,7 +36,13 @@ const { FakeRenderer } = vi.hoisted(() => {
     loop: (() => void) | null = null;
     target: (THREE.WebGLRenderTarget & { scissor: THREE.Vector4 }) | null = null;
     unseen: Unseen[] = [];
-    context: unknown = {};
+    context: unknown = {
+      RENDERBUFFER: 1,
+      SAMPLES: 2,
+      RGBA16F: 3,
+      RGBA8: 4,
+      getInternalformatParameter: () => Int32Array.from([8, 4, 2]),
+    };
     color = { mask: true, locked: false };
     depth = { mask: true, locked: false };
     state = {
@@ -452,6 +458,7 @@ describe('EmMeshViewer', () => {
 
   it('measures a full frame once the mesh is up, without waiting for the view to move', async () => {
     class WebGL2 {
+      getInternalformatParameter = () => Int32Array.from([4]);
       SYNC_STATUS = 1;
       SIGNALED = 2;
       SYNC_GPU_COMMANDS_COMPLETE = 3;

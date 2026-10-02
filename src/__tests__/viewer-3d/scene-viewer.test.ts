@@ -42,6 +42,19 @@ const { FakeRenderer } = vi.hoisted(() => {
       });
     });
 
+    /** Each colour format's sample counts, as WebGL 2 gives them, in descending order; none where it can't be drawn into. */
+    static samples: Record<number, number[]> = { 34842: [8, 4, 2], 32856: [8, 4, 2] };
+    gl = {
+      RENDERBUFFER: 0x8d41,
+      SAMPLES: 0x80a9,
+      RGBA16F: 0x881a,
+      RGBA8: 0x8058,
+      getInternalformatParameter: (_target: number, format: number) => {
+        const counts = FakeRenderer.samples[format];
+        return counts ? Int32Array.from(counts) : null;
+      },
+    };
+
     constructor(readonly parameters: { antialias?: boolean }) {
       Object.defineProperties(this.domElement, {
         clientWidth: { value: 400 },
@@ -92,6 +105,10 @@ const { FakeRenderer } = vi.hoisted(() => {
 
     setScissorTest(on: boolean): void {
       this.scissorTest = on;
+    }
+
+    getContext(): unknown {
+      return this.gl;
     }
 
     setPixelRatio(): void {}
@@ -220,6 +237,23 @@ describe('scene viewer', () => {
     expect(gtao?._renderGBuffer).toBe(false);
     // No normals of its own: they are rebuilt from the depth.
     expect(gtao?.gtaoMaterial.defines.NORMAL_VECTOR_TYPE).toBe(0);
+  });
+
+  it("draws into 8-bit colour where the GPU can't draw into half floats, with what samples it allows", () => {
+    const formats = FakeRenderer.samples;
+    try {
+      FakeRenderer.samples = { 32856: [4, 2] };
+      const eight = make(BARE).composer;
+      expect(eight?.renderTarget2.texture.type).toBe(THREE.UnsignedByteType);
+      expect(eight?.renderTarget1.texture.type).toBe(THREE.UnsignedByteType);
+      expect(eight?.renderTarget2.samples).toBe(4);
+      FakeRenderer.samples = { 34842: [2], 32856: [4] };
+      const two = make(BARE).composer;
+      expect(two?.renderTarget2.texture.type).toBe(THREE.HalfFloatType);
+      expect(two?.renderTarget2.samples).toBe(2);
+    } finally {
+      FakeRenderer.samples = formats;
+    }
   });
 
   it("keeps the morphology's own occlusion pass, displaced as the surface is drawn", () => {
