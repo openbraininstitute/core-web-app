@@ -219,7 +219,7 @@ function report(patch: Partial<LoadReport> = {}): LoadReport {
   return {
     header: { triangles: 27_459_405, vertices: 13_756_001, draco: true, bounds: null },
     budget: { kind: 'ok', peakBytes: 3.18 * 2 ** 30, allowedBytes: 8 * 2 ** 30 },
-    glbFromCache: false,
+    glbFrom: 'network',
     standInFrom: 'build',
     dracoBits: 14,
     dracoHeapBytes: 1882 * 2 ** 20,
@@ -485,6 +485,7 @@ describe('EmCellMeshViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     await screen.findByText('Memory');
     const text = document.body.textContent ?? '';
+    expect(text).toContain('GLB 8.0 MB, downloaded: 27,459,405 triangles');
     expect(text).toContain("Draco's grid, 14 bits: 58.0 nm a step");
     expect(text).toContain('error 1.56 µm');
     expect(text).toContain('0.8% of vertices on chunk borders');
@@ -506,6 +507,20 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.setForcedMesh).toHaveBeenLastCalledWith('full');
     fireEvent.click(screen.getByRole('switch', { name: 'Chunk boxes' }));
     expect(viewer.showChunkBoxes).toHaveBeenLastCalledWith(true);
+  });
+
+  it('tells in the Debug menu that no GLB was needed where the cached stand-in is the whole mesh', async () => {
+    await renderViewer();
+    const load = await started();
+    const whole = { ...STAND_IN, errorUm: 0 };
+    const cached = report({ header: null, glbFrom: null, standInFrom: 'cache', timings: [] });
+    act(() => load.callbacks.onStandIn(whole, cached));
+    act(() => load.callbacks.onFull(whole, cached));
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    await screen.findByText('Memory');
+    expect(document.body.textContent).toContain(
+      'GLB 8.0 MB, not needed: the cached stand-in is the whole mesh'
+    );
   });
 
   it('has a help text for every "?" and a "?" for every help text', async () => {

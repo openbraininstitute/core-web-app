@@ -37,6 +37,15 @@ function available(): boolean {
 
 const normal = (key: string) => new URL(key).href;
 
+/** The entry if it is there and fresh; an expired one is deleted. */
+async function fresh(cache: Cache, bounds: CacheBounds, key: string): Promise<Response | null> {
+  const hit = await cache.match(key);
+  if (!hit) return null;
+  if (Date.now() - Number(hit.headers.get(STORED_AT)) < bounds.ttlMs) return hit;
+  await cache.delete(key);
+  return null;
+}
+
 /** The entry's body if it is there, fresh and whole, which counts as opening it; null otherwise. */
 export async function readEntry(
   bounds: CacheBounds,
@@ -46,17 +55,36 @@ export async function readEntry(
   if (!available()) return null;
   try {
     const cache = await caches.open(bounds.name);
-    const hit = await cache.match(key);
+    const hit = await fresh(cache, bounds, key);
     if (!hit) return null;
-    const stored = Number(hit.headers.get(STORED_AT));
     const expected = size ?? Number(hit.headers.get('Content-Length'));
-    const body = Date.now() - stored < bounds.ttlMs ? await hit.arrayBuffer() : null;
-    if (!body || body.byteLength !== expected) {
+    const body = await hit.arrayBuffer();
+    if (body.byteLength !== expected) {
       await cache.delete(key);
       return null;
     }
-    await touch(cache, [normal(key)], []);
+    await touch(cache, normal(key));
     return body;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The entry's body as a stream, if it is there and fresh, which counts as opening it; null otherwise. The reader can
+ * stop early, and must check that the body is whole, deleting it (`deleteEntry`) where it is short.
+ */
+export async function openEntry(
+  bounds: CacheBounds,
+  key: string
+): Promise<ReadableStream<Uint8Array> | null> {
+  if (!available()) return null;
+  try {
+    const cache = await caches.open(bounds.name);
+    const hit = await fresh(cache, bounds, key);
+    if (!hit?.body) return null;
+    await touch(cache, normal(key));
+    return hit.body;
   } catch {
     return null;
   }
@@ -112,25 +140,21 @@ async function readOpened(cache: Cache): Promise<Record<string, number>> {
   return hit ? hit.json() : {};
 }
 
-/** Mark the `opened` keys as opened now, and forget the `gone` ones. */
-async function touch(
-  cache: Cache,
-  opened: string[],
-  gone: string[],
-  read?: Record<string, number>
-): Promise<void> {
-  const index = read ?? (await readOpened(cache));
-  const now = Date.now();
-  for (const key of opened) index[key] = now;
-  for (const key of gone) delete index[key];
+async function writeOpened(cache: Cache, index: Record<string, number>): Promise<void> {
   await cache.put(OPENED, new Response(JSON.stringify(index)));
+}
+
+/** Mark the entry as opened now. */
+async function touch(cache: Cache, key: string): Promise<void> {
+  const index = await readOpened(cache);
+  index[key] = Date.now();
+  await writeOpened(cache, index);
 }
 
 async function prune(cache: Cache, bounds: CacheBounds, written: string): Promise<void> {
   const index = await readOpened(cache);
   const now = Date.now();
   const entries: { key: string; size: number; opened: number }[] = [];
-  const gone: string[] = [];
   const requests = (await cache.keys()).filter((r) => r.url !== OPENED);
   const hits = await Promise.all(requests.map((r) => cache.match(r)));
   for (const [i, request] of requests.entries()) {
@@ -139,7 +163,6 @@ async function prune(cache: Cache, bounds: CacheBounds, written: string): Promis
     const stored = Number(hit?.headers.get(STORED_AT));
     if (!hit || !(now - stored < bounds.ttlMs)) {
       await cache.delete(request);
-      gone.push(key);
       continue;
     }
     const size = Number(hit.headers.get('Content-Length')) || 0;
@@ -147,11 +170,13 @@ async function prune(cache: Cache, bounds: CacheBounds, written: string): Promis
   }
   entries.sort((a, b) => a.opened - b.opened);
   let total = entries.reduce((sum, e) => sum + e.size, 0);
+  // Made afresh from the entries left, so that it forgets those deleted anywhere else too: short, expired, aborted.
+  const opened: Record<string, number> = {};
   for (const e of entries) {
-    if (total <= bounds.maxBytes || e.key === written) break;
-    await cache.delete(e.key);
-    gone.push(e.key);
-    total -= e.size;
+    if (total > bounds.maxBytes && e.key !== written) {
+      await cache.delete(e.key);
+      total -= e.size;
+    } else opened[e.key] = e.opened;
   }
-  await touch(cache, [written], gone, index);
+  await writeOpened(cache, opened);
 }

@@ -11,10 +11,28 @@ export class FakeCache {
   quotaBytes = Infinity;
   /** What a failed write leaves: nothing, as Chrome commits, or what had arrived, as Firefox may. */
   onFailure: 'nothing' | 'partial' = 'nothing';
+  /** A body is read out in chunks of this many bytes, counted in `chunksRead`. */
+  chunk = Infinity;
+  chunksRead = 0;
 
   async match(key: Key): Promise<Response | undefined> {
     const entry = this.entries.get(urlOf(key));
-    return entry && new Response(entry.body.slice(), { headers: entry.headers });
+    if (!entry) return undefined;
+    const body = entry.body.slice();
+    if (!Number.isFinite(this.chunk)) return new Response(body, { headers: entry.headers });
+    let at = 0;
+    const stream = new ReadableStream<Uint8Array>({
+      pull: (controller) => {
+        if (at >= body.byteLength) {
+          controller.close();
+          return;
+        }
+        this.chunksRead++;
+        controller.enqueue(body.slice(at, at + this.chunk));
+        at += this.chunk;
+      },
+    });
+    return new Response(stream, { headers: entry.headers });
   }
 
   async put(key: Key, response: Response): Promise<void> {

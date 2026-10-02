@@ -75,7 +75,8 @@ export class LoadError extends Error {
 export interface LoadReport {
   header: MeshHeader | null;
   budget: Budget | null;
-  glbFromCache: boolean;
+  /** Where the GLB came from; null until it is in, and where a cached stand-in is the whole mesh. */
+  glbFrom: 'cache' | 'network' | null;
   standInFrom: 'cache' | 'build' | null;
   dracoBits: number | null;
   dracoHeapBytes: number | null;
@@ -92,7 +93,8 @@ export interface LoadOptions {
   workers?: Workers;
   standIns?: {
     read(downloadUrl: string): Promise<StandIn | null>;
-    store(downloadUrl: string, standIn: StandIn): Promise<unknown>;
+    /** `encoded` is the stand-in as `encodeStandIn` makes it. */
+    store(downloadUrl: string, encoded: ArrayBuffer): Promise<unknown>;
   };
 }
 
@@ -117,7 +119,7 @@ export async function loadEmMesh(
   const report: LoadReport = {
     header: null,
     budget: null,
-    glbFromCache: false,
+    glbFrom: null,
     standInFrom: null,
     dracoBits: null,
     dracoHeapBytes: null,
@@ -195,17 +197,23 @@ export async function loadEmMesh(
     });
     const downloading = step('download', decoder, decoder.api.download(request, hooks));
     downloading.catch(() => {});
-    // A stand-in with no error is the whole mesh, cached by a visit before: the download can stop.
+    // A stand-in with no error is the whole mesh, cached by a visit before: the download can stop. A download that
+    // fails first, offline say, leaves it to the cache all the same.
+    const wholeCached = cached.then((standIn) => (standIn?.errorUm === 0 ? standIn : null));
     const whole = await Promise.race([
-      cached.then((standIn) => (standIn?.errorUm === 0 ? standIn : null)),
-      downloading.then(() => null),
+      wholeCached,
+      downloading.then(
+        () => null,
+        () => wholeCached
+      ),
+      aborted,
     ]);
     if (whole) {
       callbacks.onFull(whole, snapshot());
       return { kind: 'loaded' };
     }
     const downloaded = await downloading;
-    report.glbFromCache = downloaded.fromCache;
+    if (downloaded.kind === 'done') report.glbFrom = downloaded.fromCache ? 'cache' : 'network';
     const standInFromCache = await cached;
     if (downloaded.kind === 'stopped' && report.budget)
       return { kind: 'refused', budget: report.budget };
@@ -235,8 +243,8 @@ export async function loadEmMesh(
         report.meshoptHeapBytes = made.heapBytes;
         report.timings.push(...made.timings);
         tell();
-        standIns.store(request.url, made.standIn).catch(() => {});
         callbacks.onStandIn(made.standIn, snapshot());
+        standIns.store(request.url, made.encoded).catch(() => {});
         if (made.standIn.errorUm === 0) {
           callbacks.onFull(made.standIn, snapshot());
           return;

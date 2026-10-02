@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 import { isDarkBackground } from '@/features/viewer-3d/engine/looks';
-import { type AODepth, SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
+import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { GpuTimer, type TimerKind } from './gpu-timer';
 import {
@@ -411,8 +411,6 @@ export class EmMeshViewer extends SceneViewer {
 
   protected override applyLook(): void {
     super.applyLook();
-    // Called by the base class's constructor too, before this one's fields are set.
-    if (!this.wire) return;
     this.paintWire();
     if (this.wireframe && this.standIn) {
       for (const m of this.standIn.surface.children) (m as THREE.Mesh).material = this.wire;
@@ -430,24 +428,7 @@ export class EmMeshViewer extends SceneViewer {
     this.paintWire();
   }
 
-  override setLook(id: string): void {
-    super.setLook(id);
-    this.cost.reset();
-  }
-
-  override setAO(on: boolean): void {
-    super.setAO(on);
-    this.cost.reset();
-  }
-
-  override setAODepth(depth: AODepth): void {
-    super.setAODepth(depth);
-    this.cost.reset();
-  }
-
-  protected override resized(): void {
-    // Called by the base class's constructor too, before this one's fields are set.
-    if (!this.cost) return;
+  protected override frameChanged(): void {
     this.cost.reset();
     this.tellStatus();
   }

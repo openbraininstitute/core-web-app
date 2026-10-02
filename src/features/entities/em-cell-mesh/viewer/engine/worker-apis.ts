@@ -9,6 +9,7 @@ import { packedBuffers, packMesh } from './chunks';
 import { type DecodeResult, type DracoModule, decodeGlb } from './decode';
 import { type DownloadHooks, type DownloadRequest, downloadGlb } from './download';
 import { makeStandIn, STAND_IN_TRIANGLES } from './stand-in';
+import { encodeStandIn } from './stand-in-cache';
 
 import type { MeshoptSimplifier } from 'meshoptimizer';
 import type { CacheBounds } from './asset-cache';
@@ -54,7 +55,7 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
   };
 }
 
-/** Makes the stand-in, and hands the mesh back for the full build. */
+/** Makes the stand-in, and its copy for the cache, and hands the mesh back for the full build. */
 export function createStandInApi(
   loadSimplifier: () => Promise<typeof MeshoptSimplifier>,
   heapBytes: () => number | null,
@@ -73,14 +74,18 @@ export function createStandInApi(
 
     async make(mesh: DecodedMesh): Promise<{
       standIn: StandIn;
+      /** The stand-in as the cache keeps it (`encodeStandIn`), made here rather than on the page. */
+      encoded: ArrayBuffer;
       mesh: DecodedMesh;
       timings: Timing[];
       heapBytes: number | null;
     }> {
       const { standIn, timings } = makeStandIn(mesh, await ready(), target);
-      return Comlink.transfer({ standIn, mesh, timings, heapBytes: heapBytes() }, [
+      const encoded = encodeStandIn(standIn);
+      return Comlink.transfer({ standIn, encoded, mesh, timings, heapBytes: heapBytes() }, [
         ...packedBuffers(standIn),
         ...meshBuffers(mesh),
+        encoded,
       ]);
     },
   };

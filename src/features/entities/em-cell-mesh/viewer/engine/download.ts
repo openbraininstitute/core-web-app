@@ -4,9 +4,10 @@
  * entitycore download URL, which holds the asset's id and doesn't change, unlike the presigned S3 URL behind it.
  *
  * The header is checked as soon as its JSON chunk has arrived, which is the GLB's first few kilobytes: a mesh too
- * large for the browser stops the download there.
+ * large for the browser stops the download there. A GLB in the cache is read the same way, so that one refused is not
+ * read whole either.
  */
-import { type CacheBounds, deleteEntry, readEntry, writeEntry } from './asset-cache';
+import { type CacheBounds, deleteEntry, openEntry, writeEntry } from './asset-cache';
 import { type MeshHeader, meshHeader, readGlbJson } from './glb';
 
 export interface DownloadRequest {
@@ -26,6 +27,10 @@ export type Download =
   | { kind: 'done'; bytes: Uint8Array; fromCache: boolean; header: MeshHeader }
   | { kind: 'stopped'; header: MeshHeader };
 
+type Read =
+  | { kind: 'stopped'; header: MeshHeader }
+  | { kind: 'read'; bytes: Uint8Array; header: MeshHeader | null };
+
 /** Progress at most this often, ms: a message to the page per network chunk would be thousands. */
 const PROGRESS_MS = 100;
 
@@ -34,14 +39,22 @@ export async function downloadGlb(
   cache: CacheBounds | null,
   hooks: DownloadHooks
 ): Promise<Download> {
-  const cached = cache && (await readEntry(cache, request.url, request.size));
-  if (cached) {
-    const bytes = new Uint8Array(cached);
-    const header = headerOf(bytes, bytes.byteLength);
-    if (!header) throw new Error('not a GLB file');
-    hooks.onProgress?.(bytes.byteLength, bytes.byteLength);
-    if (!(await hooks.onHeader(header))) return { kind: 'stopped', header };
-    return { kind: 'done', bytes, fromCache: true, header };
+  // Asked once: a short entry in the cache sends the read on to the network after its header.
+  let verdict: Promise<boolean> | null = null;
+  const check = (header: MeshHeader) => {
+    verdict ??= Promise.resolve(hooks.onHeader(header));
+    return verdict;
+  };
+
+  const entry = cache && (await openEntry(cache, request.url));
+  if (entry) {
+    const read = await readBody(entry, request.size, hooks, check).catch(() => null);
+    if (read?.kind === 'stopped') return read;
+    if (read?.header && read.bytes.byteLength === request.size) {
+      return { kind: 'done', bytes: read.bytes, fromCache: true, header: read.header };
+    }
+    // Short or broken, as an interrupted write leaves it: downloaded afresh.
+    await deleteEntry(cache, request.url);
   }
 
   const abort = new AbortController();
@@ -62,52 +75,75 @@ export async function downloadGlb(
     if (stored && cache && (await stored)) await deleteEntry(cache, request.url);
   };
 
-  let bytes = new Uint8Array(total);
-  let received = 0;
-  let header: MeshHeader | null = null;
-  let reported = 0;
-  const reader = body.getReader();
+  let read: Read;
   try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (received + value.byteLength > bytes.byteLength) {
-        // Longer than announced: grow rather than fail, as a server without a length may be right.
-        const grown = new Uint8Array(Math.max(2 * bytes.byteLength, received + value.byteLength));
-        grown.set(bytes.subarray(0, received));
-        bytes = grown;
-      }
-      bytes.set(value, received);
-      received += value.byteLength;
-      if (!header) {
-        header = headerOf(bytes, received);
-        if (header && !(await hooks.onHeader(header))) {
-          await drop();
-          return { kind: 'stopped', header };
-        }
-      }
-      const now = performance.now();
-      if (now - reported >= PROGRESS_MS) {
-        reported = now;
-        hooks.onProgress?.(received, total);
-      }
-    }
+    read = await readBody(body, total, hooks, check);
   } catch (e) {
     await drop();
     throw e;
   }
+  if (read.kind === 'stopped') {
+    await drop();
+    return read;
+  }
+  const received = read.bytes.byteLength;
   if (received < total) {
     await drop();
     throw new Error(`Download ended early: ${received} of ${total} bytes`);
   }
-  hooks.onProgress?.(received, total);
-  if (!header) {
+  if (!read.header) {
     await drop();
     throw new Error('not a GLB file');
   }
   // Awaited, so that a second viewer of the same mesh finds the entry.
   await stored;
-  return { kind: 'done', bytes: bytes.subarray(0, received), fromCache: false, header };
+  return { kind: 'done', bytes: read.bytes, fromCache: false, header: read.header };
+}
+
+/**
+ * A body read into a buffer of `total` bytes, grown where it is longer, with progress. The header is checked as soon
+ * as its JSON chunk has arrived, and the read stops there if it is refused.
+ */
+async function readBody(
+  body: ReadableStream<Uint8Array>,
+  total: number,
+  hooks: DownloadHooks,
+  check: (header: MeshHeader) => Promise<boolean>
+): Promise<Read> {
+  let bytes = new Uint8Array(total);
+  let received = 0;
+  let header: MeshHeader | null = null;
+  let reportedAt = 0;
+  let reported = 0;
+  const reader = body.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (received + value.byteLength > bytes.byteLength) {
+      // Longer than announced: grow rather than fail, as a server without a length may be right.
+      const grown = new Uint8Array(Math.max(2 * bytes.byteLength, received + value.byteLength));
+      grown.set(bytes.subarray(0, received));
+      bytes = grown;
+    }
+    bytes.set(value, received);
+    received += value.byteLength;
+    if (!header) {
+      header = headerOf(bytes, received);
+      if (header && !(await check(header))) {
+        // Not awaited: a branch of a tee is only done cancelling once the other branch is.
+        reader.cancel().catch(() => {});
+        return { kind: 'stopped', header };
+      }
+    }
+    const now = performance.now();
+    if (now - reportedAt >= PROGRESS_MS) {
+      reportedAt = now;
+      reported = received;
+      hooks.onProgress?.(received, total);
+    }
+  }
+  if (reported !== received) hooks.onProgress?.(received, total);
+  return { kind: 'read', bytes: bytes.subarray(0, received), header };
 }
 
 function headerOf(bytes: Uint8Array, received: number): MeshHeader | null {

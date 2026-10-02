@@ -12,6 +12,7 @@ import {
   type WorkerHandle,
   type Workers,
 } from '@/features/entities/em-cell-mesh/viewer/engine/load';
+import { decodeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in-cache';
 import {
   buildApi,
   createDecodeApi,
@@ -132,7 +133,7 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
     reports: [],
     progress: [],
   };
-  const stored: StandIn[] = [];
+  const stored: ArrayBuffer[] = [];
   const promise = loadEmMesh(
     {
       request: { url: URL_A, headers: {}, size: glb.byteLength },
@@ -141,7 +142,7 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
       workers: workers(),
       standIns: {
         read: async () => cached,
-        store: async (_url, standIn) => stored.push(standIn),
+        store: async (_url, encoded) => stored.push(encoded),
       },
       ...overrides,
     },
@@ -182,10 +183,17 @@ describe('loadEmMesh', () => {
     expect(events.standIn?.triangles).toBeLessThanOrEqual(2000);
     expect(events.standIn?.errorUm).toBeGreaterThan(0);
     expect(events.full?.triangles).toBe(120 * 60 * 2);
-    expect(stored).toEqual([events.standIn]);
+    // Encoded for the cache in the stand-in worker, and stored once shown.
+    expect(stored).toHaveLength(1);
+    expect(decodeStandIn(stored[0])).toEqual(events.standIn);
     expect(events.progress.at(-1)).toBe(glb.byteLength);
     const report = events.reports.at(-1);
-    expect(report).toMatchObject({ dracoBits: 14, standInFrom: 'build', budget: { kind: 'ok' } });
+    expect(report).toMatchObject({
+      dracoBits: 14,
+      standInFrom: 'build',
+      glbFrom: 'network',
+      budget: { kind: 'ok' },
+    });
     expect(report?.header?.triangles).toBe(120 * 60 * 2);
   });
 
@@ -254,6 +262,24 @@ describe('loadEmMesh', () => {
     expect(events.full).toBe(whole);
     expect(log).not.toContain('decode.decode');
     expect(log).toContain('decode terminated');
+  });
+
+  it('takes a cached stand-in without error for the whole mesh though the download fails before it is read', async () => {
+    const whole = { ...(await cachedStandIn()), errorUm: 0 };
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    vi.stubGlobal('fetch', async () => {
+      // Offline: the request fails at once, and the stand-in's read comes in after.
+      setTimeout(release, 20);
+      throw new TypeError('Failed to fetch');
+    });
+    const { promise, events } = load({
+      standIns: { read: () => gate.then(() => whole), store: async () => {} },
+    });
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(events.full).toBe(whole);
   });
 
   it('refuses a mesh over the budget at its header, unless told to load it anyway', async () => {

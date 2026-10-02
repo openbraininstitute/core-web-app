@@ -186,6 +186,30 @@ describe('scene viewer', () => {
     expect(composerRender).not.toHaveBeenCalled();
   });
 
+  it("calls none of a subclass's overrides while it is built, and tells it when what a frame costs changes", () => {
+    const heard: string[] = [];
+    class Content extends SceneViewer {
+      // Set only once the base class's constructor has returned.
+      private log = heard;
+      protected override applyLook(): void {
+        super.applyLook();
+        this.log.push('look');
+      }
+      protected override frameChanged(): void {
+        this.log.push('frame');
+      }
+    }
+    const host = document.body.appendChild(document.createElement('div'));
+    Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+    const viewer = new Content(host, BARE);
+    viewers.push(viewer);
+    expect(heard).toEqual([]);
+    viewer.setLook('studio');
+    viewer.setAO(true);
+    viewer.setAODepth('own-pass');
+    expect(heard).toEqual(['look', 'frame', 'frame', 'frame']);
+  });
+
   it("takes the ambient occlusion's depth from the main pass, resolved from its multisampled target", () => {
     const { composer, gtao } = make(BARE);
     const target = composer?.renderTarget2;

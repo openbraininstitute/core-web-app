@@ -83,7 +83,7 @@ export async function readStandIn(downloadUrl: string): Promise<StandIn | null> 
   }
 }
 
-export function storeStandIn(downloadUrl: string, standIn: StandIn): Promise<boolean> {
-  const buffer = encodeStandIn(standIn);
-  return writeEntry(STAND_IN_CACHE, standInKey(downloadUrl), buffer, buffer.byteLength);
+/** Store a stand-in as `encodeStandIn` made it. */
+export function storeStandIn(downloadUrl: string, encoded: ArrayBuffer): Promise<boolean> {
+  return writeEntry(STAND_IN_CACHE, standInKey(downloadUrl), encoded, encoded.byteLength);
 }

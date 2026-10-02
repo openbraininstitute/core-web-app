@@ -152,13 +152,20 @@ function meshLine(label: string, m: MeshSummary): ReactNode {
   );
 }
 
+function glbSource({ report, meshes }: EmMeshLoad): string {
+  if (report?.glbFrom) return report.glbFrom === 'cache' ? 'from the cache' : 'downloaded';
+  if (report?.standInFrom === 'cache' && meshes.standIn?.errorUm === 0)
+    return 'not needed: the cached stand-in is the whole mesh';
+  return 'not loaded';
+}
+
 function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
   const { report, meshes, times } = load;
   const header = report?.header;
   const t = report?.timings ?? [];
   const lines: ReactNode[] = [<b key="name">{name}</b>];
   lines.push(
-    `GLB ${fmt(load.total / 1e6, 1)} MB, ${report?.glbFromCache ? 'from the cache' : 'downloaded'}` +
+    `GLB ${fmt(load.total / 1e6, 1)} MB, ${glbSource(load)}` +
       (header ? `: ${fmt(header.triangles)} triangles, ${fmt(header.vertices)} vertices` : '')
   );
   const grid = meshes.full?.grid ?? meshes.standIn?.grid;

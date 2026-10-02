@@ -78,6 +78,18 @@ describe('the bounded cache', () => {
     expect(kept).not.toContain(key('b'));
   });
 
+  it('forgets in its index the entries deleted outside its pruning', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(100).buffer, 100);
+    const cache = storage.bucket(BOUNDS.name);
+    const entry = cache.entries.get(key('a'));
+    if (entry) entry.body = entry.body.slice(0, 60);
+    expect(await readEntry(BOUNDS, key('a'), 100)).toBeNull();
+    await writeEntry(BOUNDS, key('b'), bytes(10).buffer, 10);
+    const index = cache.entries.get('https://opened.invalid/');
+    const opened = JSON.parse(new TextDecoder().decode(index?.body));
+    expect(Object.keys(opened)).toEqual([key('b')]);
+  });
+
   it('stores nothing larger than itself, and lets go of the stream it was given', async () => {
     const stream = new Response(bytes(20_000)).body as ReadableStream<Uint8Array>;
     expect(await writeEntry(BOUNDS, key('a'), stream, 20_000)).toBe(false);
@@ -120,22 +132,43 @@ describe('downloadGlb', () => {
     expect(progress).toEqual([glb.byteLength]);
   });
 
-  it('downloads again over a short cache entry, and replaces it', async () => {
+  it('downloads again over a short cache entry, and replaces it, asking about the header once', async () => {
     const glb = await encodeGlb(torus(60, 24), 14);
     const { fetch, served } = fakeServer({ [URL_A]: glb });
     vi.stubGlobal('fetch', fetch);
     const bounds = { ...BOUNDS, maxBytes: 1e9 };
-    await writeEntry(bounds, URL_A, glb.slice(0, 100).buffer, glb.byteLength);
+    // Past the header, which the short entry holds.
+    const short = glb.slice(0, glb.byteLength >> 1);
+    await writeEntry(bounds, URL_A, short.buffer, glb.byteLength);
     const entry = storage.bucket(BOUNDS.name).entries.get(URL_A);
     if (entry) entry.headers.set('Content-Length', String(glb.byteLength));
-    const result = await downloadGlb(
-      { url: URL_A, headers: {}, size: glb.byteLength },
-      bounds,
-      always
-    );
+    const onHeader = vi.fn(() => true);
+    const result = await downloadGlb({ url: URL_A, headers: {}, size: glb.byteLength }, bounds, {
+      onHeader,
+    });
     expect(result).toMatchObject({ kind: 'done', fromCache: false });
     expect(served.requests).toBe(1);
+    expect(onHeader).toHaveBeenCalledTimes(1);
     expect(storage.bucket(BOUNDS.name).entries.get(URL_A)?.body).toEqual(glb);
+  });
+
+  it('reads no more of a cached GLB than its header where the header is refused, and keeps the entry', async () => {
+    const glb = await encodeGlb(torus(200, 100), 14);
+    const { fetch, served } = fakeServer({ [URL_A]: glb });
+    vi.stubGlobal('fetch', fetch);
+    const request = { url: URL_A, headers: {}, size: glb.byteLength };
+    const bounds = { ...BOUNDS, maxBytes: 1e9 };
+    await downloadGlb(request, bounds, always);
+    const cache = storage.bucket(BOUNDS.name);
+    cache.chunk = 512;
+    const result = await downloadGlb(request, bounds, {
+      onHeader: (header) => header.triangles < 1000,
+    });
+    expect(result).toMatchObject({ kind: 'stopped', header: { triangles: 200 * 100 * 2 } });
+    expect(served.requests).toBe(1);
+    expect(cache.chunksRead).toBeLessThan(glb.byteLength / 512 / 2);
+    // There for a "Load anyway".
+    expect(cache.entries.get(URL_A)?.body).toEqual(glb);
   });
 
   it('stops as soon as the header is refused, and caches nothing', async () => {

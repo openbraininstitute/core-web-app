@@ -176,12 +176,13 @@ export class SceneViewer implements ViewControls {
     this.surfaces.add(this.chunks, this.outlines);
     this.scene.add(this.surfaces);
     this.look = this.looks.find((l) => l.id === DEFAULT_LOOK) ?? this.looks[0];
-    this.applyLook();
+    // Nothing here calls a method a subclass overrides: its fields are only set once this returns.
+    this.paintLook();
     this.applyBackground();
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
     this.resizeObserver.observe(container);
-    this.resize();
+    this.fitCanvas();
     if (options.composeAlways) this.ensureComposer();
     this.invalidate();
   }
@@ -259,8 +260,8 @@ export class SceneViewer implements ViewControls {
 
   protected afterDraw(): void {}
 
-  /** After the view changed size. */
-  protected resized(): void {}
+  /** After what a frame costs changed: the view's size, the look, or the passes. */
+  protected frameChanged(): void {}
 
   /** The GPU took the context, and what was uploaded with it. */
   protected contextLost(): void {}
@@ -469,6 +470,10 @@ export class SceneViewer implements ViewControls {
   }
 
   protected applyLook(): void {
+    this.paintLook();
+  }
+
+  private paintLook(): void {
     const look = this.look;
     for (const l of this.looks) if (l.rig) l.rig.visible = l === look;
     this.chunks.traverse((m) => {
@@ -502,10 +507,15 @@ export class SceneViewer implements ViewControls {
   }
 
   private resize(): void {
+    if (this.fitCanvas()) this.frameChanged();
+  }
+
+  /** Size the canvas, the cameras and the passes to the container; false where it is hidden. */
+  private fitCanvas(): boolean {
     const w = this.container.clientWidth;
     const h = this.container.clientHeight;
     // Hidden (display: none): keep the last size rather than draw into a point.
-    if (w === 0 || h === 0) return;
+    if (w === 0 || h === 0) return false;
     this.width = w;
     this.height = h;
     this.renderer.setSize(w, h, false);
@@ -519,7 +529,7 @@ export class SceneViewer implements ViewControls {
     this.sizeEffects(w, h);
     this.invalidate();
     this.updatePixelScale();
-    this.resized();
+    return true;
   }
 
   /** AO runs at a fraction of the device resolution; bloom at CSS resolution. Both are upsampled when blended. */
@@ -568,6 +578,7 @@ export class SceneViewer implements ViewControls {
     if (look.bloom) this.ensureComposer();
     this.applyLook();
     this.applyBackground();
+    this.frameChanged();
   }
 
   setSpin(on: boolean): void {
@@ -579,10 +590,12 @@ export class SceneViewer implements ViewControls {
   setAODepth(depth: AODepth): void {
     if ((this.options.aoDepth ?? 'own-pass') === depth) return;
     this.options = { ...this.options, aoDepth: depth };
-    if (!this.composer) return;
-    this.disposeComposer();
-    this.ensureComposer();
-    this.invalidate();
+    if (this.composer) {
+      this.disposeComposer();
+      this.ensureComposer();
+      this.invalidate();
+    }
+    this.frameChanged();
   }
 
   /** Screen-space ambient occlusion (GTAO). */
@@ -591,6 +604,7 @@ export class SceneViewer implements ViewControls {
     if (on) this.ensureComposer();
     if (this.gtao) this.gtao.enabled = on;
     this.invalidate();
+    this.frameChanged();
   }
 
   /** Render pass → GTAO → bloom → output; the middle two are toggled per state and look. */

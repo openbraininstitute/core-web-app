@@ -30,9 +30,10 @@
  * is not left blank.
  *
  * A surface without some of those vertex attributes (an EM mesh has neither
- * colours, types nor radii) gets looks built for it (`createLooks`): one plain
- * colour where the neurite colours would go, no bumps or width floor, and none
- * of the looks that cannot do without what it lacks (`Look.needs`).
+ * colours, types nor radii) gets looks built for it (`createLooks`): a plain
+ * colour of each look's and theme's where the neurite colours would go
+ * (`Look.plain`), no bumps or width floor, and none of the looks that cannot do
+ * without what it lacks (`Look.needs`).
  */
 
 import chroma from 'chroma-js';
@@ -633,8 +634,9 @@ const OUTLINE_WIDTH = 1.5;
 
 /**
  * Back faces pushed out along the normal by `OUTLINE_WIDTH` pixels at their depth: an outline as wide at any distance,
- * in any viewport. `pixelSize` is `withDisplacement`'s, which must be applied on top, and places the displaced point
- * in `transformed` before this pushes it out, just before it is projected.
+ * in any viewport. `pixelSize` comes from the hook applied on top: `withDisplacement`, which places the displaced point
+ * in `transformed` before this pushes it out, just before it is projected, or `withPixelSize` on a surface without
+ * radii.
  */
 function makeOutline(): THREE.Material {
   const m = new THREE.MeshBasicMaterial({ color: 0x14141c, side: THREE.BackSide });
@@ -787,7 +789,8 @@ export function makeEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
 
 /**
  * The looks for a surface with the vertex attributes `has`: those that draw in the neurite colours draw a surface
- * without them in one plain colour, and a surface without radii has no bumps and no width floor.
+ * without them in their plain colour for the theme (`Look.plain`), and a surface without radii has no bumps and no
+ * width floor.
  */
 export function createLooks(
   pixelRatio: number,
@@ -1044,10 +1047,13 @@ export function createLooks(
   for (const l of looks) {
     if (displaced) withDisplacement(l.material);
     if (l.outline) (displaced ? withDisplacement : withPixelSize)(l.outline);
-    const { plain } = l;
+    const { plain, onTheme } = l;
     if (!colors && plain) {
       const { color } = l.material as THREE.Material & { color: THREE.Color };
-      l.onTheme = (dark) => color.set(plain[dark ? 'dark' : 'light']);
+      l.onTheme = (dark) => {
+        onTheme?.(dark);
+        color.set(plain[dark ? 'dark' : 'light']);
+      };
       l.onTheme(false);
     }
   }

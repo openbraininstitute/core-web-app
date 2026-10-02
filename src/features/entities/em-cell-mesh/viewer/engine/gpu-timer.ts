@@ -52,13 +52,15 @@ export class GpuTimer {
     const { gl, ext, query } = this;
     if (ext && query) {
       gl.endQuery(ext.TIME_ELAPSED_EXT);
-      this.poll(() => {
-        if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) return null;
-        const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
-        const ns = gl.getQueryParameter(query, gl.QUERY_RESULT) as number;
-        gl.deleteQuery(query);
-        return disjoint ? Number.NaN : ns / 1e6;
-      });
+      this.poll(
+        () => {
+          if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) return null;
+          const disjoint = gl.getParameter(ext.GPU_DISJOINT_EXT);
+          const ns = gl.getQueryParameter(query, gl.QUERY_RESULT) as number;
+          return disjoint ? Number.NaN : ns / 1e6;
+        },
+        () => gl.deleteQuery(query)
+      );
       return;
     }
     const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -67,26 +69,31 @@ export class GpuTimer {
       this.pending = false;
       return;
     }
-    this.poll(() => {
-      if (gl.getSyncParameter(sync, gl.SYNC_STATUS) !== gl.SIGNALED) return null;
-      gl.deleteSync(sync);
-      return performance.now() - this.started;
-    });
+    this.poll(
+      () =>
+        gl.getSyncParameter(sync, gl.SYNC_STATUS) === gl.SIGNALED
+          ? performance.now() - this.started
+          : null,
+      () => gl.deleteSync(sync)
+    );
   }
 
   dispose(): void {
     this.disposed = true;
   }
 
-  /** `read` until it gives a result: NaN where the measurement is void. */
-  private poll(read: () => number | null): void {
+  /**
+   * `read` until it gives a result, NaN where the measurement is void, then `release` what was measured with; also
+   * once given up on, or disposed of.
+   */
+  private poll(read: () => number | null, release: () => void): void {
     const tick = () => {
-      if (this.disposed) return;
-      const ms = read();
-      if (ms === null && performance.now() - this.started < GIVE_UP_MS) {
+      const ms = this.disposed ? null : read();
+      if (!this.disposed && ms === null && performance.now() - this.started < GIVE_UP_MS) {
         setTimeout(tick, POLL_MS);
         return;
       }
+      release();
       this.pending = false;
       this.query = null;
       if (ms !== null && Number.isFinite(ms)) this.onResult(ms);

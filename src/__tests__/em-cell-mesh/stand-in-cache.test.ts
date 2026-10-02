@@ -67,7 +67,7 @@ describe('the stand-in cache', () => {
 
   it('stores a stand-in in its own bucket, and reads it back', async () => {
     expect(await readStandIn(URL_A)).toBeNull();
-    expect(await storeStandIn(URL_A, standIn)).toBe(true);
+    expect(await storeStandIn(URL_A, encodeStandIn(standIn))).toBe(true);
     expect((caches as unknown as FakeCacheStorage).buckets.has(STAND_IN_CACHE.name)).toBe(true);
     expect(await readStandIn(URL_A)).toEqual(standIn);
   });

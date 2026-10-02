@@ -96,8 +96,8 @@ describe('GpuTimer', () => {
     expect(calls).toEqual(['fenceSync', 'flush', 'deleteSync']);
   });
 
-  it('gives up on a result that never comes, and polls no more once disposed', async () => {
-    const { gl } = fakeGl({ timerQuery: false, ready: Infinity });
+  it('gives up on a result that never comes, and polls no more once disposed, deleting the fence either way', async () => {
+    const { gl, calls } = fakeGl({ timerQuery: false, ready: Infinity });
     const results: number[] = [];
     const timer = new GpuTimer(gl, (ms) => results.push(ms));
     timer.begin();
@@ -105,6 +105,7 @@ describe('GpuTimer', () => {
     await vi.advanceTimersByTimeAsync(1100);
     expect(timer.busy).toBe(false);
     expect(results).toEqual([]);
+    expect(calls).toEqual(['fenceSync', 'flush', 'deleteSync']);
 
     const poll = vi.spyOn(gl, 'getSyncParameter');
     timer.begin();
@@ -112,5 +113,16 @@ describe('GpuTimer', () => {
     timer.dispose();
     await vi.advanceTimersByTimeAsync(100);
     expect(poll).not.toHaveBeenCalled();
+    expect(calls.filter((c) => c === 'deleteSync')).toHaveLength(2);
+  });
+
+  it('deletes a timer query given up on', async () => {
+    const { gl, calls } = fakeGl({ timerQuery: true, ready: Infinity });
+    const timer = new GpuTimer(gl, () => {});
+    timer.begin();
+    timer.end();
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(timer.busy).toBe(false);
+    expect(calls).toEqual(['beginQuery', 'endQuery', 'deleteQuery']);
   });
 });
