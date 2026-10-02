@@ -12,10 +12,13 @@ import {
   MeshChooser,
   type MeshKind,
   MovingCost,
+  median,
   type Reason,
+  WAKE_FRAMES,
 } from './mesh-choice';
-import { MotionQuality } from './motion-quality';
+import { DEFAULT_MOTION, type MotionOptions, MotionQuality } from './motion-quality';
 
+import type { MovingFrame } from '@/features/viewer-3d/engine/scene-viewer';
 import type { Grid, PackedChunk, PackedMesh, StandIn } from './types';
 
 /**
@@ -25,6 +28,10 @@ import type { Grid, PackedChunk, PackedMesh, StandIn } from './types';
 const UPLOAD_BUDGET_MS = { moving: 4, still: 12 };
 /** At most this many of the stand-in's vertices frame the view and give the depth-coded look its range. */
 const SAMPLE_POINTS = 16384;
+/** The times between moving frames the frame rate is the median of. */
+const INTERVALS = 30;
+/** How often the frame rate is worked out while the view moves, ms: often enough to follow, seldom enough to read. */
+const FPS_EVERY_MS = 250;
 const STAND_IN_BOXES = 0x2ec4ff;
 const FULL_BOXES = 0xff8a00;
 
@@ -34,15 +41,19 @@ export interface ViewStatus {
   reason: Reason | null;
   /** The stand-in's error on screen now, in device pixels. */
   errorPx: number | null;
-  /** The full mesh's frame cost on the GPU, ms. */
+  /** The full mesh's frame cost on the GPU, ms, a cold frame counted at what it would have cost warm. */
   frameMs: number | null;
   slow: boolean;
   /** Moving frames of the full mesh turned too slow since the view set off, as zooming out does. */
   slowMoving: boolean;
-  /** What frames drawn while the view moves cost the GPU at the scale they are drawn at, ms. */
+  /** What frames drawn while the view moves cost the GPU, as they are drawn now, ms. */
   movingMs: number | null;
-  /** The fraction of the resolution moving frames are drawn at, without the occlusion; null where in full. */
-  movingScale: number | null;
+  /** How the last frame drawn while the view moved was drawn. */
+  moving: ({ mesh: MeshKind } & MovingFrame) | null;
+  /** Frames a second while the view last moved. */
+  movingFps: number | null;
+  /** The device pixels moving frames are drawn into with frame buffers of their own, 0 without. */
+  movingPixels: number;
   timer: TimerKind | null;
   /** The full mesh's chunks uploaded, and how long it took from the first to the last, ms. */
   upload: { done: number; total: number; ms: number } | null;
@@ -198,14 +209,28 @@ export class EmMeshViewer extends SceneViewer {
   private errorPx: number | null = null;
   private forced: ForcedMesh = 'auto';
   private boxesShown = false;
+  private motionOptions: MotionOptions = DEFAULT_MOTION;
   private cost = new FrameCost();
   private motion = new MotionQuality();
   private movingCost = new MovingCost();
   private timer: GpuTimer | null = null;
   /** Whether the frame being drawn is timed. */
   private timing = false;
-  /** What the frame last timed is measured for: the full mesh's cost drawn in full, and the moving frames'. */
-  private timed = { full: false, moving: false, fullMoving: false };
+  /**
+   * What the frame last timed is measured for: the full mesh's cost drawn in full, cold or not, and the moving frames'.
+   */
+  private timed = { full: false, cold: false, moving: false, fullMoving: false };
+  /**
+   * What the last frame drew: the mesh, and how it was cut down while the view moved, null drawn as a still one. A frame
+   * drawn otherwise is cold, as the GPU pays for the change.
+   */
+  private last: { mesh: MeshKind; cut: MovingFrame | null } | null = null;
+  private lastMoving: ViewStatus['moving'] = null;
+  /** When the last frame was drawn, for the times between moving frames, and the frame rate from them. */
+  private drawnAt = 0;
+  private intervals: number[] = [];
+  private movingFps: number | null = null;
+  private fpsAt = 0;
   private upload: ViewStatus['upload'] = null;
   private wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6 });
   private statusListeners = new Set<(status: ViewStatus) => void>();
@@ -297,6 +322,7 @@ export class EmMeshViewer extends SceneViewer {
     this.framed = false;
     this.chooser.reset();
     this.choice = null;
+    this.last = null;
     this.errorPx = null;
     this.fitPoints = this.depthSample = null;
     this.invalidate();
@@ -412,8 +438,14 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   protected override beforeDraw(moving: boolean): void {
-    this.motionScale = this.motion.scale;
-    if (!moving) this.movingCost.stop();
+    this.timeFrame(moving);
+    if (!moving) {
+      this.movingCost.stop();
+      const ms = this.cost.ms;
+      if (ms !== null) this.motion.still(ms);
+    }
+    const rung = this.motion.rung;
+    this.motionFrame = rung.ao && rung.scale === 1 && rung.antialias ? null : rung;
     const standIn = this.standIn;
     if (!standIn) {
       this.choice = null;
@@ -429,38 +461,74 @@ export class EmMeshViewer extends SceneViewer {
       wireframe: this.wireframe,
       errorPx: this.errorPx,
       moving,
-      slow: this.cost.slow || this.movingCost.slow,
+      slow: this.movingStandIn(),
     });
     this.choice = choice;
     const full = choice.mesh === 'full';
     this.show(standIn, !full);
     if (this.full) this.show(this.full, full);
     if (full && this.cost.wantsFrame()) this.invalidate();
-    this.startTiming(full, moving);
+    const cut = moving ? this.motionFrame : null;
+    const last = this.last;
+    this.last = { mesh: choice.mesh, cut };
+    // A still frame is cold only after the other mesh: counted at half after cut-down moving frames too, the full mesh
+    // would come out cheaper than it is.
+    this.startTiming(
+      full,
+      moving,
+      this.framesDrawn >= WAKE_FRAMES && last?.mesh === choice.mesh && (!moving || last.cut === cut)
+    );
   }
 
-  private startTiming(fullDrawn: boolean, moving: boolean): void {
-    if (!this.timer || this.timer.busy) return;
-    const full = fullDrawn && (!moving || this.motionScale === null) && this.cost.measure();
-    const motion = moving && this.motion.measure();
-    if (!full && !motion) return;
-    this.timed = { full, moving: motion, fullMoving: motion && fullDrawn };
+  /** Whether moving frames draw the stand-in: as set, or where the full mesh is too slow for them. */
+  private movingStandIn(): boolean {
+    const { mesh, standInMs } = this.motionOptions;
+    return mesh === 'auto'
+      ? this.cost.slow(standInMs) || this.movingCost.slow
+      : mesh === 'stand-in';
+  }
+
+  /** The time since the last moving frame, while the view keeps moving, and every so often the frame rate from them. */
+  private timeFrame(moving: boolean): void {
+    const now = performance.now();
+    const since = now - this.drawnAt;
+    this.drawnAt = now;
+    if (!moving) return;
+    if (this.framesDrawn === 0 || !this.drawnMoving) {
+      this.intervals = [];
+      this.fpsAt = now;
+      return;
+    }
+    this.intervals.push(since);
+    if (this.intervals.length > INTERVALS) this.intervals.shift();
+    if (now - this.fpsAt < FPS_EVERY_MS) return;
+    this.movingFps = Math.round(1000 / median(this.intervals));
+    this.fpsAt = now;
+  }
+
+  /** A moving frame is measured once the GPU has woken up, and drawing what it drew the frame before: `warm`. */
+  private startTiming(fullDrawn: boolean, moving: boolean, warm: boolean): void {
+    if (!this.timer || this.timer.busy || (moving && !warm)) return;
+    const full = fullDrawn && (!moving || this.motionFrame === null) && this.cost.measure();
+    if (!full && !moving) return;
+    this.timed = { full, cold: !warm, moving, fullMoving: moving && fullDrawn };
     this.timer.begin();
     this.timing = true;
   }
 
   private measured = (ms: number): void => {
-    if (this.timed.full) this.cost.add(ms);
+    if (this.timed.full) this.cost.add(ms, this.timed.cold);
     if (this.timed.moving) this.motion.add(ms);
-    if (this.timed.fullMoving) this.movingCost.add(ms);
+    if (this.timed.fullMoving) this.movingCost.add(ms, this.motionOptions.standInMs);
     this.tellStatus();
   };
 
-  protected override afterDraw(): void {
+  protected override afterDraw(moved: MovingFrame | null): void {
     if (this.timing) {
       this.timing = false;
       this.timer?.end();
     }
+    if (moved && this.choice) this.lastMoving = { mesh: this.choice.mesh, ...moved };
     this.tellStatus();
   }
 
@@ -504,6 +572,21 @@ export class EmMeshViewer extends SceneViewer {
   protected override frameChanged(): void {
     this.cost.reset();
     this.motion.reset();
+    this.last = null;
+    this.tellStatus();
+  }
+
+  /** How frames drawn while the view moves are cut down: from the top again, by what they cost, where left to it. */
+  setMotion(options: MotionOptions): void {
+    // Moving frames no longer draw through a pipeline of their own, or not that one: it is for the other antialiasing.
+    if (
+      options.antialias !== this.motionOptions.antialias ||
+      (options.antialias && options.scale === 1)
+    )
+      this.dropMovingPipeline();
+    this.motionOptions = options;
+    this.motion.configure(options);
+    this.invalidate();
     this.tellStatus();
   }
 
@@ -562,10 +645,12 @@ export class EmMeshViewer extends SceneViewer {
       reason: this.choice?.reason ?? null,
       errorPx: this.errorPx === null ? null : Math.round(this.errorPx * 100) / 100,
       frameMs: this.cost.ms,
-      slow: this.cost.slow,
+      slow: this.cost.slow(this.motionOptions.standInMs),
       slowMoving: this.movingCost.slow,
       movingMs: this.motion.ms,
-      movingScale: this.motion.scale,
+      moving: this.lastMoving,
+      movingFps: this.movingFps,
+      movingPixels: this.movingPixels(),
       timer: this.timer?.kind ?? null,
       upload: this.upload,
       gpuBytes: (this.standIn?.bytes ?? 0) + (this.full?.bytes ?? 0),
@@ -577,11 +662,23 @@ export class EmMeshViewer extends SceneViewer {
     if (this.statusListeners.size === 0) return;
     const status = this.status();
     const heard = this.heard;
-    if (heard && (Object.keys(status) as (keyof ViewStatus)[]).every((k) => heard[k] === status[k]))
+    if (
+      heard &&
+      (Object.keys(status) as (keyof ViewStatus)[]).every((k) => alike(heard[k], status[k]))
+    )
       return;
     this.heard = status;
     for (const listener of this.statusListeners) listener(status);
   }
+}
+
+/** The same, or objects of the same fields: the status is made anew with every frame. */
+function alike(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
+  const x = a as Record<string, unknown>;
+  const y = b as Record<string, unknown>;
+  return Object.keys(y).every((k) => x[k] === y[k]);
 }
 
 /** Every so many of the stand-in's vertices, in µm. */

@@ -9,6 +9,7 @@ import {
   type ViewStatus,
 } from '@/features/entities/em-cell-mesh/viewer/engine/em-mesh-viewer';
 import { SKIP_FRAMES } from '@/features/entities/em-cell-mesh/viewer/engine/mesh-choice';
+import { DEFAULT_MOTION } from '@/features/entities/em-cell-mesh/viewer/engine/motion-quality';
 
 import { torus } from './mesh-fixtures';
 
@@ -155,15 +156,15 @@ vi.mock('@/features/viewer-3d/engine/looks', async (importOriginal) => ({
 
 interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
-  composer: EffectComposer;
+  main: { composer: EffectComposer };
   scene: THREE.Scene;
   controls: { object: THREE.OrthographicCamera | THREE.PerspectiveCamera; update(): boolean };
   wire: THREE.Material;
-  cost: { add(ms: number): void };
-  motion: { add(ms: number): void; measure(): boolean };
+  cost: { add(ms: number, cold?: boolean): void; measure(): boolean };
+  motion: { add(ms: number): void };
   timer: unknown;
   measured(ms: number): void;
-  small: { composer: EffectComposer } | null;
+  movingPipeline: { composer: EffectComposer; gtao: { enabled: boolean } } | null;
   invalidate(): void;
 }
 
@@ -215,6 +216,32 @@ function loaded(): { viewer: EmMeshViewer; v: Internals } {
   made.viewer.setFull(FULL);
   frame(made.v, 100);
   return made;
+}
+
+function frameCost(v: Internals, ms: number): void {
+  for (let i = 0; i < 3; i++) v.cost.add(ms);
+}
+
+/** A timer answered by hand: the frame after `tick`, and whether it was timed, which then came back at `ms`. */
+function timedFrames(v: Internals, tick: () => void): (ms: number) => boolean {
+  const timer = {
+    kind: 'fence',
+    busy: false,
+    begin() {
+      this.busy = true;
+    },
+    end() {},
+    dispose() {},
+  };
+  v.timer = timer;
+  return (ms) => {
+    tick();
+    frame(v);
+    if (!timer.busy) return false;
+    timer.busy = false;
+    v.measured(ms);
+    return true;
+  };
 }
 
 beforeAll(() => {
@@ -292,7 +319,7 @@ describe('EmMeshViewer', () => {
     expect(ready).toHaveBeenCalledTimes(1);
     expect(drawn()).toHaveLength(meshesOf(FULL));
     // Each chunk once, alone, writing nothing, into a target of a pixel of the scene's formats.
-    const scene = v.composer.renderTarget2;
+    const scene = v.main.composer.renderTarget2;
     const chunks = v.renderer.unseen.flatMap((u) => u.meshes);
     expect(new Set(chunks.map((m) => m.geometry)).size).toBe(meshesOf(FULL));
     for (const u of v.renderer.unseen) {
@@ -443,7 +470,7 @@ describe('EmMeshViewer', () => {
     zoom(v, 8);
     frame(v);
     const full = drawn();
-    for (let i = 0; i < 5; i++) v.cost.add(50);
+    frameCost(v, 50);
     viewer.setSpin(true);
     for (let i = 0; i < 3; i++, now += 16) frame(v);
     expect(drawn()).toHaveLength(meshesOf(STAND_IN));
@@ -461,7 +488,7 @@ describe('EmMeshViewer', () => {
     const { v } = loaded();
     zoom(v, 8);
     frame(v);
-    for (let i = 0; i < 5; i++) v.cost.add(50);
+    frameCost(v, 50);
     v.renderer.domElement.dispatchEvent(
       new WheelEvent('wheel', { deltaY: -100, ctrlKey: true, bubbles: true, cancelable: true })
     );
@@ -539,18 +566,18 @@ describe('EmMeshViewer', () => {
     zoom(v, 8);
     frame(v);
     const main = composers.at(-1);
-    for (let i = 0; i < 5; i++) v.cost.add(50);
-    // The occlusion, then two halvings of the pixels.
-    for (let step = 0; step < 3; step++) {
-      while (!v.motion.measure());
-      for (let i = 0; i < 3; i++) v.motion.add(40);
-    }
+    frameCost(v, 50);
+    // Three steps: the occlusion, then two halvings of the pixels.
+    for (let i = 0; i < 9; i++) v.motion.add(40);
     viewer.setSpin(true);
     for (let i = 0; i < 3; i++, now += 16) frame(v);
-    expect(composers.at(-1)).toBe(v.small?.composer);
-    expect(v.small?.composer.renderTarget2.width).toBe(200);
+    expect(composers.at(-1)).toBe(v.movingPipeline?.composer);
+    expect(v.movingPipeline?.composer.renderTarget2.width).toBe(200);
     expect(drawn()).toHaveLength(meshesOf(STAND_IN));
-    expect(status.at(-1)).toMatchObject({ movingScale: 0.5, slow: true });
+    expect(status.at(-1)).toMatchObject({
+      moving: { mesh: 'stand-in', ao: false, scale: 0.5, antialias: true },
+      slow: true,
+    });
 
     viewer.setSpin(false);
     for (let i = 0; i < 500 && v.renderer.loop; i++, now += 16) frame(v);
@@ -568,35 +595,16 @@ describe('EmMeshViewer', () => {
     zoom(v, 8);
     frame(v);
     // Zoomed in, full frames are cheap, and moving frames are cut down.
-    for (let i = 0; i < 5; i++) v.cost.add(5);
-    for (let step = 0; step < 2; step++) {
-      while (!v.motion.measure());
-      for (let i = 0; i < 3; i++) v.motion.add(40);
-    }
-    const timer = {
-      kind: 'fence',
-      busy: false,
-      begin() {
-        this.busy = true;
-      },
-      end() {},
-      dispose() {},
-    };
-    v.timer = timer;
-    /** A moving frame; true where it was timed and came back at `ms`. */
-    const moving = (ms: number) => {
+    frameCost(v, 5);
+    for (let i = 0; i < 6; i++) v.motion.add(40);
+    const moving = timedFrames(v, () => {
       now += 16;
-      frame(v);
-      if (!timer.busy) return false;
-      timer.busy = false;
-      v.measured(ms);
-      return true;
-    };
+    });
     viewer.setSpin(true);
     // The first dear frame may be the GPU waking up.
     while (!moving(40));
     expect(drawn()).toHaveLength(meshesOf(FULL));
-    expect(composers.at(-1)).toBe(v.small?.composer);
+    expect(composers.at(-1)).toBe(v.movingPipeline?.composer);
     while (!moving(40));
     now += 16;
     frame(v);
@@ -620,7 +628,7 @@ describe('EmMeshViewer', () => {
       const { viewer, v } = loaded();
       zoom(v, 8);
       frame(v);
-      for (let i = 0; i < 5; i++) v.cost.add(50);
+      frameCost(v, 50);
       let status: ViewStatus | null = null;
       viewer.onStatus((s) => {
         status = s;
@@ -634,6 +642,151 @@ describe('EmMeshViewer', () => {
       expect((status as ViewStatus | null)?.movingMs).toEqual(expect.any(Number));
       expect((status as ViewStatus | null)?.frameMs).toBe(50);
     });
+  });
+  it('draws moving frames as set, whatever they cost: the mesh, the occlusion, the resolution, the antialiasing', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    const status: ViewStatus[] = [];
+    viewer.onStatus((s) => status.push(s));
+    viewer.setAO(true);
+    zoom(v, 8);
+    frame(v);
+    // Fast: by their cost, moving frames would be drawn as still ones.
+    frameCost(v, 5);
+    viewer.setMotion({
+      ...DEFAULT_MOTION,
+      mesh: 'stand-in',
+      ao: 'on',
+      scale: 0.5,
+      antialias: false,
+    });
+    viewer.setSpin(true);
+    for (let i = 0; i < 3; i++, now += 16) frame(v);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+    expect(composers.at(-1)).toBe(v.movingPipeline?.composer);
+    expect(v.movingPipeline?.composer.renderTarget2).toMatchObject({ width: 200, samples: 0 });
+    expect(v.movingPipeline?.gtao.enabled).toBe(true);
+    expect(status.at(-1)?.moving).toEqual({
+      mesh: 'stand-in',
+      ao: true,
+      scale: 0.5,
+      antialias: false,
+    });
+
+    // Slow: by their cost, they would draw the stand-in.
+    frameCost(v, 50);
+    viewer.setMotion({ ...DEFAULT_MOTION, mesh: 'full', ao: 'on', scale: 1 });
+    // Nothing draws through the moving frames' own pipeline any more: it goes.
+    expect(v.movingPipeline).toBeNull();
+    for (let i = 0; i < 2; i++, now += 16) frame(v);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    expect(composers.at(-1)).toBe(v.main.composer);
+    expect(status.at(-1)?.moving).toEqual({ mesh: 'full', ao: true, scale: 1, antialias: true });
+  });
+
+  it('brings the occlusion back to moving frames once a still frame shows there is time for it', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    const status: ViewStatus[] = [];
+    viewer.onStatus((s) => status.push(s));
+    viewer.setAO(true);
+    zoom(v, 8);
+    frame(v);
+    // A slow median of moving frames, as a hitch makes.
+    for (let i = 0; i < 3; i++) v.motion.add(20);
+    viewer.setSpin(true);
+    for (let i = 0; i < 3; i++, now += 16) frame(v);
+    expect(status.at(-1)?.moving).toMatchObject({ mesh: 'full', ao: false });
+
+    frameCost(v, 8);
+    viewer.setSpin(false);
+    for (let i = 0; i < 500 && v.renderer.loop; i++, now += 16) frame(v);
+    viewer.setSpin(true);
+    for (let i = 0; i < 3; i++, now += 16) frame(v);
+    expect(status.at(-1)?.moving).toMatchObject({ mesh: 'full', ao: true });
+  });
+
+  it('draws the stand-in while the view moves where full frames cost more than the time set for it', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    zoom(v, 8);
+    frame(v);
+    frameCost(v, 20);
+    viewer.setSpin(true);
+    for (let i = 0; i < 2; i++, now += 16) frame(v);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    viewer.setMotion({ ...DEFAULT_MOTION, standInMs: 15 });
+    for (let i = 0; i < 2; i++, now += 16) frame(v);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+  });
+
+  it('times moving frames from the third after the loop starts, and a full frame after the stand-in as cold', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    zoom(v, 8);
+    frame(v, 10);
+    expect(v.renderer.loop).toBeNull();
+    // No timer measured the frames after the upload, which pay for it.
+    while (!v.cost.measure());
+    frameCost(v, 40);
+    const added = vi.spyOn(v.cost, 'add');
+    const next = timedFrames(v, () => {
+      now += 16;
+    });
+    viewer.setSpin(true);
+    expect([next(3), next(3), next(3), next(3)]).toEqual([false, false, true, true]);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+
+    viewer.setSpin(false);
+    for (let i = 0; i < 200 && drawn().length !== meshesOf(FULL); i++) next(30);
+    expect(drawn()).toHaveLength(meshesOf(FULL));
+    expect(added).toHaveBeenLastCalledWith(30, true);
+    // Drawn again, it is warm.
+    v.invalidate();
+    next(9);
+    expect(added).toHaveBeenLastCalledWith(9, false);
+  });
+
+  it('times moving frames again from the third after the page was hidden, and not the first cut down otherwise', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    zoom(v, 8);
+    frame(v, 10);
+    const next = timedFrames(v, () => {
+      now += 16;
+    });
+    viewer.setSpin(true);
+    expect([next(3), next(3), next(3)]).toEqual([false, false, true]);
+
+    // The loop stays on in a hidden page, which draws nothing meanwhile.
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true);
+    document.dispatchEvent(new Event('visibilitychange'));
+    hidden.mockRestore();
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect([next(3), next(3), next(3)]).toEqual([false, false, true]);
+
+    viewer.setMotion({ ...DEFAULT_MOTION, ao: 'off' });
+    expect([next(3), next(3)]).toEqual([false, true]);
+  });
+
+  it('tells the frames a second while the view moves, from the time between them, a few times a second', () => {
+    let now = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { viewer, v } = loaded();
+    const status: ViewStatus[] = [];
+    viewer.onStatus((s) => status.push(s));
+    zoom(v, 8);
+    frame(v, 10);
+    viewer.setSpin(true);
+    for (let i = 0; i < 10; i++, now += 20) frame(v);
+    expect(status.at(-1)?.movingFps).toBeNull();
+    for (let i = 0; i < 10; i++, now += 20) frame(v);
+    expect(status.at(-1)?.movingFps).toBe(50);
   });
 });
 

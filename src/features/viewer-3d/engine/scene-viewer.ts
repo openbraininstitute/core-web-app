@@ -110,18 +110,41 @@ function composerFormat(gl: WebGL2RenderingContext): {
   return { type: THREE.UnsignedByteType, samples: samples(gl.RGBA8) ?? 0 };
 }
 
-/** A composer whose scene target is multisampled, in the formats `composerFormat` finds. */
-function makeComposer(renderer: THREE.WebGLRenderer): EffectComposer {
+/** A composer whose scene target is multisampled where `antialias`, in the formats `composerFormat` finds. */
+function makeComposer(renderer: THREE.WebGLRenderer, antialias: boolean): EffectComposer {
   const composer = new EffectComposer(renderer);
   const { type, samples } = composerFormat(renderer.getContext() as WebGL2RenderingContext);
   composer.renderTarget1.texture.type = type;
   composer.renderTarget2.texture.type = type;
-  composer.renderTarget2.samples = samples;
+  composer.renderTarget2.samples = antialias ? samples : 0;
   composer.renderTarget1.depthBuffer = false;
   return composer;
 }
 
-/** three's output pass, which can also darken the scene by the occlusion (`SceneViewer.blendAO`) as it tone maps. */
+/** A composer and its passes: render → normals from depth → GTAO → bloom → output, drawing at `scale` of the resolution. */
+interface Pipeline {
+  composer: EffectComposer;
+  render: RenderPass;
+  gtao: GTAOPass;
+  /** The normals the occlusion reads, where it takes its depth from the main pass. */
+  depthNormals: DepthNormalsPass | null;
+  bloom: UnrealBloomPass | null;
+  output: OutputPass;
+  scale: number;
+  antialias: boolean;
+}
+
+/** How a frame drawn while the camera moves is cut down, or was drawn. */
+export interface MovingFrame {
+  /** With the ambient occlusion, where it is on. */
+  ao: boolean;
+  /** At this fraction of the resolution, scaled up onto the canvas. */
+  scale: number;
+  /** Multisampled, as still frames are. */
+  antialias: boolean;
+}
+
+/** three's output pass, which can also darken the scene by the occlusion (`blendAO`) as it tone maps. */
 function aoOutputPass(): OutputPass {
   const pass = new OutputPass();
   const material = pass.material as THREE.RawShaderMaterial;
@@ -145,6 +168,54 @@ function aoOutputPass(): OutputPass {
   pass.uniforms.tAO = { value: null };
   pass.uniforms.aoIntensity = { value: 0 };
   return pass;
+}
+
+/**
+ * Draw a frame through `p`. The scene goes into the read buffer, which must be the multisampled one; the passes
+ * enabled may swap the two an odd number of times per frame.
+ */
+function composeFrame(p: Pipeline): void {
+  const c = p.composer;
+  if (c.readBuffer !== c.renderTarget2) c.swapBuffers();
+  c.render();
+}
+
+/**
+ * The scene's depth is resolved out of its multisampled target only for the occlusion that reads it, and otherwise
+ * not kept past the frame: a tiled GPU then never writes it out.
+ */
+function resolveDepth(p: Pipeline, on: boolean): void {
+  const target = p.composer.renderTarget2;
+  const read = on && target.depthTexture !== null;
+  target.resolveDepthBuffer = read;
+  // Not with the occlusion on: three then discards the resolved depth with the multisampled one.
+  target.storeMultisampledDepthBuffer = read;
+}
+
+/** The occlusion's passes on or off: as set, or for a frame drawn without them. */
+function passAO(p: Pipeline, on: boolean): void {
+  p.gtao.enabled = on;
+  if (p.depthNormals) p.depthNormals.enabled = on;
+  resolveDepth(p, on);
+  blendAO(p, on);
+}
+
+/**
+ * Where the occlusion darkens the scene: in the output pass, as it tone maps, sparing a copy of the scene and a blend
+ * over it at full size; or, with bloom on, by GTAO itself, so that what blooms is occluded already.
+ */
+function blendAO({ gtao, output, bloom }: Pipeline, on: boolean): void {
+  if (!output.uniforms.aoIntensity) return;
+  const inOutput = on && !bloom?.enabled;
+  gtao.output = inOutput ? GTAOPass.OUTPUT.Off : GTAOPass.OUTPUT.Default;
+  gtao.needsSwap = !inOutput;
+  output.uniforms.tAO.value = gtao.gtaoMap;
+  output.uniforms.aoIntensity.value = inOutput ? gtao.blendIntensity : 0;
+}
+
+function disposePipeline(p: Pipeline): void {
+  for (const pass of p.composer.passes) pass.dispose();
+  p.composer.dispose();
 }
 
 function disposeMaterial(material: THREE.Material): void {
@@ -185,21 +256,15 @@ export class SceneViewer implements ViewControls {
   protected wireframe = false;
   protected dark = false;
   private ao = false;
-  private composer: EffectComposer | null = null;
-  private renderPass: RenderPass | null = null;
-  private gtao: GTAOPass | null = null;
-  /** The normals the occlusion reads, where it takes its depth from the main pass. */
-  private depthNormals: DepthNormalsPass | null = null;
-  private bloom: UnrealBloomPass | null = null;
-  private output: OutputPass | null = null;
+  /** What frames are drawn through: the scene into a multisampled target, then the passes. */
+  private main: Pipeline | null = null;
   /**
-   * How frames drawn while the camera moves are cut down, on a GPU too slow to draw them as still ones. At 1 they
-   * leave out the ambient occlusion. Under 1 they are also drawn at that fraction of the resolution, and scaled up onto
-   * the canvas. Null draws them in full. It applies only through the composer, and not where the look blooms.
+   * How frames drawn while the camera moves are cut down, as on a GPU too slow to draw them as still ones; null draws
+   * them as still ones. It applies only through the composer, and where the look blooms only to the occlusion.
    */
-  protected motionScale: number | null = null;
-  /** The composer moving frames are drawn with under full resolution, made the first time one is. */
-  private small: { composer: EffectComposer; render: RenderPass; scale: number } | null = null;
+  protected motionFrame: MovingFrame | null = null;
+  /** What moving frames are drawn through under full resolution or without antialiasing, made the first time one is. */
+  private movingPipeline: Pipeline | null = null;
   private unseenTarget: THREE.WebGLRenderTarget | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
   private width = 1;
@@ -214,7 +279,9 @@ export class SceneViewer implements ViewControls {
    * drawn as moving: a still one is owed after it.
    */
   private movedAt = Number.NEGATIVE_INFINITY;
-  private drawnMoving = false;
+  protected drawnMoving = false;
+  /** Frames drawn since the loop last started, or the page was hidden: the GPU wakes up over the first few. */
+  protected framesDrawn = 0;
   /** A gesture is under way, between OrbitControls' start and end: a drag, a wheel turned, a pinch. */
   private gesture = false;
   /** When the loop last turned, null while it is stopped, and how long its last turn took, for the glide's easing. */
@@ -298,7 +365,7 @@ export class SceneViewer implements ViewControls {
       });
       this.intersection.observe(container);
     } else this.checkSeen();
-    document.addEventListener('visibilitychange', this.checkSeen);
+    document.addEventListener('visibilitychange', this.onVisibility);
     this.fitCanvas();
     if (options.composeAlways) this.ensureComposer();
     this.invalidate();
@@ -315,7 +382,7 @@ export class SceneViewer implements ViewControls {
     this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.resizeObserver.disconnect();
     this.intersection?.disconnect();
-    document.removeEventListener('visibilitychange', this.checkSeen);
+    document.removeEventListener('visibilitychange', this.onVisibility);
     this.seenListeners.clear();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
@@ -376,9 +443,10 @@ export class SceneViewer implements ViewControls {
     this.dirty = false;
     this.updateCameraTied();
     this.beforeDraw(moving);
-    this.draw(moving);
+    const drawn = this.draw(moving);
     this.drawnMoving = moving;
-    this.afterDraw();
+    this.afterDraw(moving ? drawn : null);
+    this.framesDrawn++;
     const orientation = this.camera.quaternion;
     if (!orientation.equals(this.heardOrientation)) {
       this.heardOrientation.copy(orientation);
@@ -390,6 +458,7 @@ export class SceneViewer implements ViewControls {
     this.renderer.setAnimationLoop(null);
     this.looping = false;
     this.lastFrameAt = null;
+    this.framesDrawn = 0;
   }
 
   /** OrbitControls' damping for the time since the last turn of the loop: the glide lasts as long at any frame rate. */
@@ -444,7 +513,8 @@ export class SceneViewer implements ViewControls {
   /** Before a frame is drawn, with whether the camera is moving: what the content draws may depend on it. */
   protected beforeDraw(_moving: boolean): void {}
 
-  protected afterDraw(): void {}
+  /** After a frame is drawn: how, through the composer, where the camera moved; null where it was still. */
+  protected afterDraw(_moved: MovingFrame | null): void {}
 
   /** After what a frame costs changed: the view's size, the look, or the passes. */
   protected frameChanged(): void {}
@@ -459,48 +529,44 @@ export class SceneViewer implements ViewControls {
     return this.options.composeAlways === true || this.ao || this.look.bloom === true;
   }
 
-  private draw(moving = false): void {
-    const c = this.composer;
-    if (!c || !this.composing()) {
+  /** A frame, cut down as `motionFrame` says where the camera moves: how it was drawn, or null without the composer. */
+  private draw(moving = false): MovingFrame | null {
+    const main = this.main;
+    if (!main || !this.composing()) {
       this.renderer.render(this.scene, this.camera);
-      return;
+      return null;
     }
-    const scale = moving ? this.motionScale : null;
-    if (scale !== null && scale < 1 && !this.look.bloom) {
-      this.drawSmall(scale);
-      return;
-    }
-    // The scene goes into the read buffer, which must be the multisampled one; the passes enabled may swap the two
-    // an odd number of times per frame.
-    if (c.readBuffer !== c.renderTarget2) c.swapBuffers();
-    if (scale === null || !this.ao) {
-      c.render();
-      return;
-    }
-    this.passAO(false);
+    const cut = moving ? this.motionFrame : null;
+    if (cut && (cut.scale < 1 || !cut.antialias) && !this.look.bloom) return this.drawMotion(cut);
+    const ao = this.ao && (cut?.ao ?? true);
+    if (ao !== this.ao) passAO(main, false);
     try {
-      c.render();
+      composeFrame(main);
     } finally {
-      this.passAO(true);
+      if (ao !== this.ao) passAO(main, true);
     }
+    return { ao, scale: 1, antialias: true };
   }
 
-  /** A moving frame at `scale` of the resolution, without the occlusion, which the output pass scales up. */
-  private drawSmall(scale: number): void {
-    if (!this.small) {
-      const composer = makeComposer(this.renderer);
-      const render = new RenderPass(this.scene, this.camera);
-      composer.addPass(render);
-      composer.addPass(new OutputPass());
-      this.small = { composer, render, scale: 0 };
+  /** A moving frame drawn through a pipeline of its own, which the output pass scales up onto the canvas. */
+  private drawMotion(cut: MovingFrame): MovingFrame {
+    if (this.movingPipeline?.antialias !== cut.antialias) this.dropMovingPipeline();
+    this.movingPipeline ??= this.buildPipeline(cut);
+    const p = this.movingPipeline;
+    if (p.scale !== cut.scale) {
+      p.scale = cut.scale;
+      this.fitPipeline(p);
     }
-    const { composer } = this.small;
-    if (this.small.scale !== scale) {
-      this.small.scale = scale;
-      composer.setPixelRatio(this.renderer.getPixelRatio() * scale);
-    }
-    if (composer.readBuffer !== composer.renderTarget2) composer.swapBuffers();
-    composer.render();
+    const ao = this.ao && cut.ao;
+    if (p.gtao.enabled !== ao) passAO(p, ao);
+    composeFrame(p);
+    return { ...cut, ao };
+  }
+
+  /** Free the pipeline of moving frames' own, which they no longer draw through. */
+  protected dropMovingPipeline(): void {
+    if (this.movingPipeline) disposePipeline(this.movingPipeline);
+    this.movingPipeline = null;
   }
 
   protected invalidate(): void {
@@ -516,6 +582,12 @@ export class SceneViewer implements ViewControls {
     if (on) this.invalidate();
     else this.stopLoop();
   }
+
+  // Hidden, a page draws nothing though its loop stays on: the GPU idles, and wakes up over the first frames again.
+  private onVisibility = (): void => {
+    if (document.hidden) this.framesDrawn = 0;
+    this.checkSeen();
+  };
 
   private checkSeen = (): void => {
     if (this.seenOnce || !this.onScreen || document.hidden) return;
@@ -554,7 +626,7 @@ export class SceneViewer implements ViewControls {
     let compiled: Promise<unknown>;
     try {
       this.renderer.setRenderTarget(
-        this.composing() ? (this.composer?.renderTarget2 ?? null) : null
+        this.composing() ? (this.main?.composer.renderTarget2 ?? null) : null
       );
       compiled = this.renderer.compileAsync(this.scene, this.camera);
     } finally {
@@ -644,7 +716,7 @@ export class SceneViewer implements ViewControls {
 
   /** A pixel's target of the formats of the one the scene is drawn into (`drawUnseen`). */
   private pixelTarget(): THREE.WebGLRenderTarget | null {
-    const scene = this.composer?.renderTarget2;
+    const scene = this.main?.composer.renderTarget2;
     if (!scene) return null;
     if (!this.unseenTarget) {
       this.unseenTarget = new THREE.WebGLRenderTarget(1, 1, {
@@ -754,8 +826,8 @@ export class SceneViewer implements ViewControls {
     if (look.env) this.environment ??= makeEnvironment(this.renderer);
     this.scene.environment = look.env ? this.environment : null;
     this.scene.fog = look.fog ?? null;
-    if (this.bloom) this.bloom.enabled = look.bloom === true;
-    this.blendAO(this.ao);
+    if (this.main?.bloom) this.main.bloom.enabled = look.bloom === true;
+    if (this.main) blendAO(this.main, this.ao);
     this.invalidate();
   }
 
@@ -788,22 +860,30 @@ export class SceneViewer implements ViewControls {
     o.left = -o.top * (w / h);
     o.right = o.top * (w / h);
     o.updateProjectionMatrix();
-    this.composer?.setSize(w, h);
-    this.small?.composer.setSize(w, h);
-    this.sizeEffects(w, h);
+    for (const p of this.pipelines) this.fitPipeline(p);
     this.invalidate();
     this.updatePixelScale();
     return true;
   }
 
-  /** AO runs at a fraction of the device resolution; bloom at CSS resolution. Both are upsampled when blended. */
-  private sizeEffects(w: number, h: number): void {
-    const pr = this.renderer.getPixelRatio();
+  /**
+   * Size `p` to the canvas, at its fraction of the resolution. AO runs at a fraction of that, its radius following, and
+   * bloom at CSS resolution: both are upsampled when blended.
+   */
+  private fitPipeline(p: Pipeline): void {
+    const { width: w, height: h } = this;
+    const pr = this.renderer.getPixelRatio() * p.scale;
+    // The composer sizes every pass to its own size, before the occlusion and bloom take theirs.
+    p.composer.setPixelRatio(pr);
+    p.composer.setSize(w, h);
     const aoWidth = Math.max(1, Math.round(w * pr * AO_SCALE));
     const aoHeight = Math.max(1, Math.round(h * pr * AO_SCALE));
-    this.gtao?.setSize(aoWidth, aoHeight);
-    this.depthNormals?.resize(aoWidth, aoHeight);
-    this.bloom?.setSize(w, h);
+    p.gtao.setSize(aoWidth, aoHeight);
+    p.depthNormals?.resize(aoWidth, aoHeight);
+    p.bloom?.setSize(w, h);
+    // The shader counts a screen-space radius in hundreds of pixels of the AO target.
+    const radius = (AO_RADIUS_CSS * pr * AO_SCALE) / 100;
+    p.gtao.updateGtaoMaterial({ radius, thickness: radius });
   }
 
   private updatePixelScale(): void {
@@ -854,7 +934,7 @@ export class SceneViewer implements ViewControls {
   setAODepth(depth: AODepth): void {
     if ((this.options.aoDepth ?? 'own-pass') === depth) return;
     this.options = { ...this.options, aoDepth: depth };
-    if (this.composer) {
+    if (this.main) {
       this.disposeComposer();
       this.ensureComposer();
       this.invalidate();
@@ -866,62 +946,33 @@ export class SceneViewer implements ViewControls {
   setAO(on: boolean): void {
     this.ao = on;
     if (on) this.ensureComposer();
-    this.passAO(on);
+    if (this.main) passAO(this.main, on);
     this.invalidate();
     this.frameChanged();
   }
 
-  /** The occlusion's passes on or off: as set, or for a frame drawn without them. */
-  private passAO(on: boolean): void {
-    if (this.gtao) this.gtao.enabled = on;
-    if (this.depthNormals) this.depthNormals.enabled = on;
-    this.resolveDepth(on);
-    this.blendAO(on);
-  }
-
-  /**
-   * Where the occlusion darkens the scene: in the output pass, as it tone maps, sparing a copy of the scene and a blend
-   * over it at full size; or, with bloom on, by GTAO itself, so that what blooms is occluded already.
-   */
-  private blendAO(on: boolean): void {
-    const gtao = this.gtao;
-    const output = this.output;
-    if (!gtao || !output?.uniforms.aoIntensity) return;
-    const inOutput = on && !this.bloom?.enabled;
-    gtao.output = inOutput ? GTAOPass.OUTPUT.Off : GTAOPass.OUTPUT.Default;
-    gtao.needsSwap = !inOutput;
-    output.uniforms.tAO.value = gtao.gtaoMap;
-    output.uniforms.aoIntensity.value = inOutput ? gtao.blendIntensity : 0;
-  }
-
-  /**
-   * The scene's depth is resolved out of its multisampled target only for the occlusion that reads it, and otherwise
-   * not kept past the frame: a tiled GPU then never writes it out.
-   */
-  private resolveDepth(on: boolean): void {
-    const target = this.composer?.renderTarget2;
-    if (!target) return;
-    const read = on && target.depthTexture !== null;
-    target.resolveDepthBuffer = read;
-    // Not with the occlusion on: three then discards the resolved depth with the multisampled one.
-    target.storeMultisampledDepthBuffer = read;
-  }
-
-  /** Render pass → GTAO → bloom → output; the middle two are toggled per state and look. */
   private ensureComposer(): void {
-    if (this.composer) return;
+    this.main ??= this.buildPipeline(null);
+  }
+
+  /**
+   * Render pass → GTAO → bloom → output, for still frames, or for moving ones cut down as `cut`: at its fraction of the
+   * resolution, and without bloom. The middle two are toggled per state and look.
+   */
+  private buildPipeline(cut: MovingFrame | null): Pipeline {
+    const { scale, antialias } = cut ?? { scale: 1, antialias: true };
     const w = this.width,
       h = this.height;
     // The scene is drawn into renderTarget2 (see draw), multisampled like the canvas: without, a fibre thinner than a
     // pixel breaks into dashes whenever a pass is on. The other buffer only takes full-screen passes, and only the
     // ambient occlusion from the main pass's depth reads the scene's depth back.
-    const composer = makeComposer(this.renderer);
+    const composer = makeComposer(this.renderer, antialias);
     const target = composer.renderTarget2;
     if (this.options.aoDepth === 'main-pass') {
       target.depthTexture = new THREE.DepthTexture(target.width, target.height);
     }
-    const renderPass = new RenderPass(this.scene, this.camera);
-    composer.addPass(renderPass);
+    const render = new RenderPass(this.scene, this.camera);
+    composer.addPass(render);
     const gtao = new GTAOPass(this.surfaces, this.camera, w, h);
     gtao.output = GTAOPass.OUTPUT.Default;
     // three's GTAO scales its depth range by the screen-space radius (distanceFalloffToUse) but tests the unscaled
@@ -935,14 +986,11 @@ export class SceneViewer implements ViewControls {
     if (ao.fragmentShader === unscaled) {
       console.warn('GTAOShader has changed: the AO depth range no longer follows the zoom');
     }
-    // Radius in pixels of the AO target so the effect follows the zoom: neighbouring fibres shade each other close
-    // up, dense regions darken from afar. The shader counts a screen-space radius in hundreds of pixels. A sample
-    // occludes within a depth as long as the radius is wide.
-    const radius = (AO_RADIUS_CSS * this.renderer.getPixelRatio() * AO_SCALE) / 100;
+    // A radius in pixels of the AO target (`fitPipeline`), so the effect follows the zoom: neighbouring fibres shade
+    // each other close up, dense regions darken from afar. A sample occludes within a depth as long as the radius is
+    // wide.
     gtao.updateGtaoMaterial({
-      radius,
       distanceExponent: 1,
-      thickness: radius,
       scale: 1.5,
       samples: 16,
       distanceFallOff: 1,
@@ -970,57 +1018,52 @@ export class SceneViewer implements ViewControls {
       withDisplacement(gtao.normalMaterial, { perFragment: false });
     }
     composer.addPass(gtao);
-    const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.65, 0.5, 0.2);
-    bloom.enabled = this.look.bloom === true;
-    composer.addPass(bloom);
+    let bloom: UnrealBloomPass | null = null;
+    if (!cut) {
+      bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.65, 0.5, 0.2);
+      bloom.enabled = this.look.bloom === true;
+      composer.addPass(bloom);
+    }
     const output = aoOutputPass();
     composer.addPass(output);
-    composer.setPixelRatio(this.renderer.getPixelRatio());
-    composer.setSize(w, h);
-    this.composer = composer;
-    this.renderPass = renderPass;
-    this.gtao = gtao;
-    this.depthNormals = depthNormals;
-    this.bloom = bloom;
-    this.output = output;
-    this.sizeEffects(w, h);
-    this.passAO(this.ao);
+    const p: Pipeline = { composer, render, gtao, depthNormals, bloom, output, scale, antialias };
+    this.fitPipeline(p);
+    passAO(p, this.ao);
+    return p;
+  }
+
+  private get pipelines(): Pipeline[] {
+    return [this.main, this.movingPipeline].filter((p) => p !== null);
   }
 
   private disposeComposer(): void {
-    this.gtao?.dispose();
-    this.depthNormals?.dispose();
-    this.bloom?.dispose();
-    this.composer?.dispose();
+    for (const p of this.pipelines) disposePipeline(p);
+    this.main = null;
+    this.movingPipeline = null;
     this.unseenTarget?.dispose();
     this.unseenTarget = null;
-    if (this.small) {
-      for (const pass of this.small.composer.passes) pass.dispose();
-      this.small.composer.dispose();
-      this.small = null;
-    }
-    this.composer = null;
-    this.renderPass = null;
-    this.gtao = null;
-    this.depthNormals = null;
-    this.bloom = null;
-    this.output = null;
   }
 
   /** The passes that draw from the camera, onto the one in use. GTAO reconstructs positions differently per projection. */
   private retargetPasses(): void {
     const camera = this.camera;
-    if (this.renderPass) this.renderPass.camera = camera;
-    if (this.small) this.small.render.camera = camera;
-    if (this.depthNormals) this.depthNormals.camera = camera;
-    const gtao = this.gtao;
-    if (!gtao) return;
-    gtao.camera = camera;
     const perspective = this.projection === 'perspective' ? 1 : 0;
-    for (const m of [gtao.gtaoMaterial, gtao.depthRenderMaterial]) {
-      m.defines.PERSPECTIVE_CAMERA = perspective;
-      m.needsUpdate = true;
+    for (const p of this.pipelines) {
+      p.render.camera = camera;
+      if (p.depthNormals) p.depthNormals.camera = camera;
+      p.gtao.camera = camera;
+      for (const m of [p.gtao.gtaoMaterial, p.gtao.depthRenderMaterial]) {
+        m.defines.PERSPECTIVE_CAMERA = perspective;
+        m.needsUpdate = true;
+      }
     }
+  }
+
+  /** The device pixels moving frames are drawn into through a pipeline of their own, 0 without one. */
+  protected movingPixels(): number {
+    if (!this.movingPipeline) return 0;
+    const { width, height } = this.movingPipeline.composer.renderTarget2;
+    return width * height;
   }
 
   /** µm per CSS pixel in the orthographic view, null in perspective. */

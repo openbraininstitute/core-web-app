@@ -1,15 +1,25 @@
-import { RiBox3Line, RiBugLine, RiContrast2Line, RiStackLine } from '@remixicon/react';
-import { Fragment, type ReactNode, useEffect, useState } from 'react';
+import {
+  RiAspectRatioLine,
+  RiBlurOffLine,
+  RiBox3Line,
+  RiBugLine,
+  RiContrast2Line,
+  RiDashboard3Line,
+  RiStackLine,
+} from '@remixicon/react';
+import { Fragment, type ReactNode } from 'react';
 
 import {
   ChromeMenu,
   SegmentedToggle,
 } from '@/features/scan-config/components/color-by/chrome-menu';
-import { DownloadRow, fmt, Lines } from '@/features/viewer-3d/chrome/debug-rows';
+import { DownloadRow, fmt, Lines, ms } from '@/features/viewer-3d/chrome/debug-rows';
 
 import { FRAMEBUFFER_BYTES_PER_PIXEL } from '../engine/budget';
+import { MOTION_SCALES, type MotionOptions } from '../engine/motion-quality';
 import { useSaveGlb } from '../save-glb';
-import { HelpRow, ICON, Note, SectionTitle, ToggleRow } from './menu-rows';
+import { HelpRow, ICON, Note, SectionTitle, SliderRow, ToggleRow } from './menu-rows';
+import { useViewStatus } from './use-view-status';
 
 import type { AODepth } from '@/features/viewer-3d/engine/scene-viewer';
 import type { EmMeshViewer, ViewStatus } from '../engine/em-mesh-viewer';
@@ -23,7 +33,7 @@ const REASONS: Record<Reason, string> = {
   loading: 'the full mesh is not in yet',
   wireframe: 'wireframe draws the stand-in',
   forced: 'chosen below',
-  moving: 'the view moves, and full frames are slow',
+  moving: 'the view moves',
   error: 'by its error on screen',
 };
 
@@ -56,7 +66,10 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
             <SectionTitle title="Memory" topic="memory" />
             <LiveLines viewer={viewer} lines={(status) => memoryLines(load, status)} />
             <SectionTitle title="View" topic="view-status" />
-            <LiveLines viewer={viewer} lines={(status) => viewLines(load, status)} />
+            <LiveLines
+              viewer={viewer}
+              lines={(status) => viewLines(load, status, settings.motion)}
+            />
           </div>
           <div className="flex flex-col border-t border-neutral-200 p-1 pb-2 text-neutral-700">
             <HelpRow
@@ -98,6 +111,7 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
               onChange={(chunkBoxes) => update({ chunkBoxes })}
             />
           </div>
+          <MotionRows settings={settings} update={update} />
         </div>
         <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
           <SectionTitle title="Download" topic="download" className="px-1 pb-1" />
@@ -120,6 +134,102 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
   );
 }
 
+/** How frames drawn while the view moves are cut down, each way chosen by their cost or set, to compare. */
+function MotionRows({ settings, update }: Pick<DebugMenuProps, 'settings' | 'update'>) {
+  const motion = settings.motion;
+  const set = (patch: Partial<MotionOptions>) => update({ motion: { ...motion, ...patch } });
+  return (
+    <div className="flex flex-col border-t border-neutral-200 p-1 pb-2 text-neutral-700">
+      <SectionTitle title="Moving frames" topic="moving-frames" className="px-2 pt-1 pb-1" />
+      <HelpRow
+        title="Mesh"
+        topic="moving-mesh"
+        icon={<RiStackLine className={ICON} />}
+        className="flex-wrap"
+      >
+        <SegmentedToggle<ForcedMesh>
+          value={motion.mesh}
+          onChange={(mesh) => set({ mesh })}
+          options={[
+            { value: 'auto', label: 'Moving: mesh chosen by its cost', text: 'Auto' },
+            { value: 'stand-in', label: 'Moving: always the stand-in', text: 'Stand-in' },
+            { value: 'full', label: 'Moving: always the full mesh', text: 'Full' },
+          ]}
+        />
+      </HelpRow>
+      <HelpRow
+        title="Occlusion"
+        topic="moving-ao"
+        icon={<RiContrast2Line className={ICON} />}
+        className="flex-wrap"
+      >
+        <SegmentedToggle<MotionOptions['ao']>
+          value={motion.ao}
+          onChange={(ao) => set({ ao })}
+          options={[
+            { value: 'auto', label: 'Moving: occlusion chosen by the cost', text: 'Auto' },
+            { value: 'off', label: 'Moving: without the occlusion', text: 'Off' },
+            { value: 'on', label: 'Moving: with the occlusion', text: 'On' },
+          ]}
+        />
+      </HelpRow>
+      <HelpRow
+        title="Resolution"
+        topic="moving-scale"
+        icon={<RiAspectRatioLine className={ICON} />}
+        className="flex-wrap"
+      >
+        <SegmentedToggle<string>
+          value={String(motion.scale)}
+          onChange={(v) => set({ scale: v === 'auto' ? 'auto' : Number(v) })}
+          options={[
+            { value: 'auto', label: 'Moving: resolution chosen by the cost', text: 'Auto' },
+            ...MOTION_SCALES.map((s) => ({
+              value: String(s),
+              label: `Moving: ${fmt(100 * s)}% of the resolution`,
+              text: fmt(100 * s),
+            })),
+          ]}
+        />
+      </HelpRow>
+      <ToggleRow
+        title="Antialiasing"
+        topic="moving-antialias"
+        icon={<RiBlurOffLine className={ICON} />}
+        checked={motion.antialias}
+        onChange={(antialias) => set({ antialias })}
+      />
+      <SliderRow
+        title="Cut down past"
+        topic="moving-budget"
+        min={4}
+        max={50}
+        step={1}
+        value={motion.budgetMs}
+        onChange={(budgetMs) => set({ budgetMs })}
+        format={ms}
+      />
+      <SliderRow
+        title="Stand-in past"
+        topic="stand-in-past"
+        min={4}
+        max={100}
+        step={1}
+        value={motion.standInMs}
+        onChange={(standInMs) => set({ standInMs })}
+        format={ms}
+      />
+      <ToggleRow
+        title="Frame times"
+        topic="frame-times"
+        icon={<RiDashboard3Line className={ICON} />}
+        checked={settings.frameTimes}
+        onChange={(frameTimes) => update({ frameTimes })}
+      />
+    </div>
+  );
+}
+
 /** Lines that follow the view, while the menu is open. */
 function LiveLines({
   viewer,
@@ -128,13 +238,11 @@ function LiveLines({
   viewer: EmMeshViewer;
   lines(status: ViewStatus): ReactNode[];
 }) {
-  const [status, setStatus] = useState<ViewStatus | null>(null);
-  useEffect(() => viewer.onStatus(setStatus), [viewer]);
+  const status = useViewStatus(viewer);
   return status ? <Lines lines={lines(status)} /> : null;
 }
 
 const MB = (bytes: number) => `${fmt(bytes / 2 ** 20)} MB`;
-const ms = (t: number | null | undefined) => (t == null ? '–' : `${fmt(t)} ms`);
 
 /** The time of each step named, summed. */
 function took(timings: Timing[], ...steps: string[]): number | null {
@@ -216,10 +324,8 @@ function memoryLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
   const { report } = load;
   const budget = report?.budget;
   const deviceMemory = (navigator as { deviceMemory?: number }).deviceMemory;
-  // Moving frames under full resolution have frame buffers of their own.
-  const scale = status.movingScale ?? 1;
-  const framebuffers =
-    status.pixels * FRAMEBUFFER_BYTES_PER_PIXEL * (1 + (scale < 1 ? scale * scale : 0));
+  // Moving frames cut down have frame buffers of their own.
+  const framebuffers = (status.pixels + status.movingPixels) * FRAMEBUFFER_BYTES_PER_PIXEL;
   const lines: ReactNode[] = [
     `WASM at its peak: Draco ${report?.dracoHeapBytes ? MB(report.dracoHeapBytes) : '–'}, ` +
       `meshoptimizer ${report?.meshoptHeapBytes ? MB(report.meshoptHeapBytes) : '–'}`,
@@ -239,21 +345,33 @@ function memoryLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
   return lines;
 }
 
-function movingLine({ movingMs, movingScale }: ViewStatus): string {
-  const cost = movingMs === null ? 'not measured' : `${fmt(movingMs, 1)} ms`;
-  if (movingScale === null) return `${cost}, drawn as still ones`;
+function movingLine({ movingMs, movingFps, moving }: ViewStatus): string {
+  const cost = movingMs === null ? 'not measured' : ms(movingMs, 1);
+  const rate = movingFps === null ? '' : `, ${movingFps} fps`;
+  if (!moving) return `${cost}${rate}, none drawn yet`;
   return (
-    `${cost}, without the occlusion` +
-    (movingScale < 1 ? ` at ${fmt(100 * movingScale)}% of the resolution` : '')
+    `${cost}${rate}: ${moving.mesh === 'full' ? 'the full mesh' : 'the stand-in'}, ` +
+    `${moving.ao ? 'with' : 'without'} the occlusion, ` +
+    (moving.scale < 1 ? `at ${fmt(100 * moving.scale)}% of the resolution` : 'at full resolution') +
+    (moving.antialias ? '' : ', not antialiased')
   );
 }
 
-function viewLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
+/** Why moving frames draw the stand-in: as set, or as the full mesh is slow. */
+function movingReason({ slow, slowMoving }: ViewStatus, motion: MotionOptions): string {
+  if (motion.mesh === 'stand-in') return ', and moving frames draw the stand-in, as set below';
+  if (slow) return `, and full frames take over ${motion.standInMs} ms`;
+  if (slowMoving) return `, and moving frames of the full mesh took over ${motion.standInMs} ms`;
+  return '';
+}
+
+function viewLines(load: EmMeshLoad, status: ViewStatus, motion: MotionOptions): ReactNode[] {
   const lines: ReactNode[] = [
     status.shown ? (
       <Fragment key="shown">
         on show: <b>{status.shown === 'full' ? 'the full mesh' : 'the stand-in'}</b>
         {status.reason && `, ${REASONS[status.reason]}`}
+        {status.reason === 'moving' && movingReason(status, motion)}
       </Fragment>
     ) : (
       'nothing on show yet'
@@ -264,9 +382,13 @@ function viewLines(load: EmMeshLoad, status: ViewStatus): ReactNode[] {
     lines.push(`stand-in's error: ${fmt(errorUm, 2)} µm, ${fmt(status.errorPx, 2)} device px here`);
   }
   lines.push(
-    `full frame: ${status.frameMs === null ? 'not measured' : `${fmt(status.frameMs, 1)} ms`}` +
+    `full frame: ${status.frameMs === null ? 'not measured' : ms(status.frameMs, 1)}` +
       (status.timer ? ` (${status.timer === 'timer-query' ? 'timer query' : 'fence'})` : '') +
-      (status.slow ? ', slow' : status.slowMoving ? ', slow while moving' : '')
+      (status.slow
+        ? `, slow: over ${motion.standInMs} ms`
+        : status.slowMoving
+          ? ', slow while moving'
+          : '')
   );
   lines.push(`moving frames: ${movingLine(status)}`);
   if (status.upload) {

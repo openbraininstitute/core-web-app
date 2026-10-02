@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { DEFAULT_MOTION, type MotionOptions } from './engine/motion-quality';
+
 import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { AODepth, Projection } from '@/features/viewer-3d/engine/scene-viewer';
 import type { ForcedMesh } from './engine/mesh-choice';
@@ -15,10 +17,15 @@ export interface EmViewerSettings {
   projection: Projection;
   /** In the orthographic view: a perspective one has no single scale. */
   scalebar: boolean;
-  /** The Debug menu's: where the occlusion reads its depth, a mesh drawn whatever the zoom, and the chunks' bounds. */
+  /**
+   * The Debug menu's: where the occlusion reads its depth, a mesh drawn whatever the zoom, the chunks' bounds, how
+   * moving frames are cut down, and what they cost over the view.
+   */
   aoDepth: AODepth;
   mesh: ForcedMesh;
   chunkBoxes: boolean;
+  motion: MotionOptions;
+  frameTimes: boolean;
   /** The occlusion before the look turned it on, to be put back when another is chosen. */
   beforeLook: Pick<EmViewerSettings, 'ao'> | null;
 }
@@ -34,6 +41,8 @@ const DEFAULT_SETTINGS: EmViewerSettings = {
   aoDepth: 'main-pass',
   mesh: 'auto',
   chunkBoxes: false,
+  motion: DEFAULT_MOTION,
+  frameTimes: false,
   beforeLook: { ao: false },
 };
 

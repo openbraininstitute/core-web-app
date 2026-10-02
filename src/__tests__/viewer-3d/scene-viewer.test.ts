@@ -7,7 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
 import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass';
 import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
-import { SceneViewer, type SceneViewerOptions } from '@/features/viewer-3d/engine/scene-viewer';
+import {
+  type MovingFrame,
+  SceneViewer,
+  type SceneViewerOptions,
+} from '@/features/viewer-3d/engine/scene-viewer';
 
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
@@ -128,10 +132,18 @@ vi.mock('three', async (importOriginal) => ({
   WebGLRenderer: FakeRenderer,
 }));
 
+interface Pipeline {
+  composer: EffectComposer;
+  render: { camera: THREE.Camera };
+  gtao: GTAOPass & { _renderGBuffer: boolean };
+  bloom: { enabled: boolean } | null;
+  output: OutputPass;
+}
+
 interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
-  composer: EffectComposer | null;
-  gtao: (GTAOPass & { _renderGBuffer: boolean }) | null;
+  main: Pipeline | null;
+  movingPipeline: Pipeline | null;
   chunks: THREE.Group;
 }
 
@@ -202,7 +214,7 @@ describe('scene viewer', () => {
     composerRender.mockClear();
     const morphology = make({ surface: MORPHOLOGY_SURFACE });
     expect(morphology.renderer.parameters).toMatchObject({ antialias: true, depth: true });
-    expect(morphology.composer).toBeNull();
+    expect(morphology.main).toBeNull();
     morphology.renderer.loop?.();
     expect(morphology.renderer.render).toHaveBeenCalledTimes(1);
     expect(composerRender).not.toHaveBeenCalled();
@@ -234,7 +246,7 @@ describe('scene viewer', () => {
 
   it("takes the ambient occlusion's depth from the main pass, resolved from its multisampled target while it is on", () => {
     const viewer = make(BARE);
-    const { composer, gtao } = viewer;
+    const { composer, gtao } = viewer.main as Pipeline;
     const target = composer?.renderTarget2;
     expect(target?.samples).toBe(4);
     // Off, the depth is neither resolved nor kept past the frame.
@@ -262,12 +274,12 @@ describe('scene viewer', () => {
     const formats = FakeRenderer.samples;
     try {
       FakeRenderer.samples = { 32856: [4, 2] };
-      const eight = make(BARE).composer;
+      const eight = make(BARE).main?.composer;
       expect(eight?.renderTarget2.texture.type).toBe(THREE.UnsignedByteType);
       expect(eight?.renderTarget1.texture.type).toBe(THREE.UnsignedByteType);
       expect(eight?.renderTarget2.samples).toBe(4);
       FakeRenderer.samples = { 34842: [2], 32856: [4] };
-      const two = make(BARE).composer;
+      const two = make(BARE).main?.composer;
       expect(two?.renderTarget2.texture.type).toBe(THREE.HalfFloatType);
       expect(two?.renderTarget2.samples).toBe(2);
     } finally {
@@ -278,7 +290,7 @@ describe('scene viewer', () => {
   it('darkens the scene by the occlusion in the output pass, or in GTAO where bloom comes after it', () => {
     const viewer = make(BARE);
     (viewer as unknown as SceneViewer).setAO(true);
-    const { gtao, composer } = viewer;
+    const { gtao, composer } = viewer.main as Pipeline;
     const output = composer?.passes.at(-1) as OutputPass;
     expect(gtao?.output).toBe(GTAOPass.OUTPUT.Off);
     expect(gtao?.needsSwap).toBe(false);
@@ -288,8 +300,7 @@ describe('scene viewer', () => {
       'gl_FragColor.rgb *= mix( vec3( 1.0 ), texture2D( tAO, vUv ).rgb, aoIntensity )'
     );
 
-    const internals = viewer as unknown as { bloom: { enabled: boolean } };
-    internals.bloom.enabled = true;
+    (viewer.main?.bloom as { enabled: boolean }).enabled = true;
     (viewer as unknown as SceneViewer).setAO(true);
     expect(gtao?.output).toBe(GTAOPass.OUTPUT.Default);
     expect(gtao?.needsSwap).toBe(true);
@@ -301,7 +312,7 @@ describe('scene viewer', () => {
     const viewer = new Viewer(host);
     viewers.push(viewer);
     viewer.setAO(true);
-    const { composer, gtao } = viewer as unknown as Internals;
+    const { composer, gtao } = (viewer as unknown as Internals).main as Pipeline;
     expect(composer?.renderTarget2.depthTexture).toBeNull();
     expect(composer?.renderTarget2.resolveDepthBuffer).toBe(false);
     expect(gtao?._renderGBuffer).toBe(true);
@@ -310,7 +321,8 @@ describe('scene viewer', () => {
 
   it("compiles the look for the composer's target, then draws the placeholder once and takes it away", async () => {
     const viewer = make(BARE);
-    const { renderer, composer, chunks } = viewer;
+    const { renderer, chunks } = viewer;
+    const { composer } = viewer.main as Pipeline;
     const geo = placeholder();
     const warm = (viewer as unknown as SceneViewer).warmUp(geo);
     expect(renderer.compiledFor).toEqual([composer?.renderTarget2]);
@@ -323,15 +335,15 @@ describe('scene viewer', () => {
 
   it('switches where the ambient occlusion reads its depth, building the passes again', () => {
     const viewer = make(BARE);
-    const before = viewer.composer;
+    const before = viewer.main?.composer;
     const dispose = vi.spyOn(before as EffectComposer, 'dispose');
     (viewer as unknown as SceneViewer).setAODepth('own-pass');
     expect(dispose).toHaveBeenCalled();
-    expect(viewer.composer).not.toBe(before);
-    expect(viewer.composer?.renderTarget2.depthTexture).toBeNull();
-    expect(viewer.gtao?._renderGBuffer).toBe(true);
+    expect(viewer.main?.composer).not.toBe(before);
+    expect(viewer.main?.composer.renderTarget2.depthTexture).toBeNull();
+    expect(viewer.main?.gtao._renderGBuffer).toBe(true);
     (viewer as unknown as SceneViewer).setAODepth('main-pass');
-    expect(viewer.gtao?.depthTexture).toBe(viewer.composer?.renderTarget2.depthTexture);
+    expect(viewer.main?.gtao.depthTexture).toBe(viewer.main?.composer.renderTarget2.depthTexture);
   });
 
   it('tells the content before each frame whether the camera moves, and draws again when it asks to', () => {
@@ -589,26 +601,34 @@ describe('scene viewer', () => {
     }
   });
 
-  it('draws moving frames without the occlusion, or at a fraction of the resolution, as the content asks', () => {
+  it('draws moving frames as the content cuts them down: without the occlusion, fewer pixels, no antialiasing', () => {
     class Content extends SceneViewer {
-      scale: number | null = null;
+      cut: MovingFrame | null = null;
+      moved: (MovingFrame | null)[] = [];
       protected override beforeDraw(): void {
-        this.motionScale = this.scale;
+        this.motionFrame = this.cut;
+      }
+      protected override afterDraw(moved: MovingFrame | null): void {
+        this.moved.push(moved);
+      }
+      drop(): void {
+        this.dropMovingPipeline();
       }
     }
     const host = document.body.appendChild(document.createElement('div'));
     Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
-    const viewer = new Content(host, BARE);
+    // A morphology's surface, which has a look that blooms.
+    const viewer = new Content(host, { ...BARE, surface: MORPHOLOGY_SURFACE });
     viewers.push(viewer);
     viewer.setAO(true);
-    const v = viewer as unknown as Internals & {
-      small: { composer: EffectComposer; render: { camera: THREE.Camera } } | null;
-    };
-    const drawn: { composer: EffectComposer; ao: boolean | undefined }[] = [];
+    const v = viewer as unknown as Internals;
+    const main = v.main as Pipeline;
+    const drawn: { composer: EffectComposer; ao: boolean }[] = [];
     composerRender.mockImplementation(function (this: EffectComposer) {
-      drawn.push({ composer: this, ao: v.gtao?.enabled });
+      const p = [v.main, v.movingPipeline].find((x) => x?.composer === this);
+      drawn.push({ composer: this, ao: p?.gtao.enabled === true });
     });
-    const output = v.composer?.passes.at(-1) as OutputPass;
+    const radius = (p: Pipeline) => p.gtao.gtaoMaterial.uniforms.radius.value as number;
     let now = 0;
     const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
     const frame = () => {
@@ -616,32 +636,63 @@ describe('scene viewer', () => {
       v.renderer.loop?.();
     };
 
-    // Still, a scale changes nothing.
-    viewer.scale = 0.5;
+    // Still, a cut changes nothing.
+    viewer.cut = { ao: false, scale: 0.5, antialias: false };
     frame();
-    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
+    expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: true });
+    expect(viewer.moved.at(-1)).toBeNull();
 
     viewer.setSpin(true);
-    viewer.scale = null;
+    viewer.cut = null;
     frame();
-    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: true });
-    viewer.scale = 1;
+    expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: true });
+    expect(viewer.moved.at(-1)).toEqual({ ao: true, scale: 1, antialias: true });
+    viewer.cut = { ao: false, scale: 1, antialias: true };
     frame();
-    expect(drawn.at(-1)).toEqual({ composer: v.composer, ao: false });
-    expect(v.gtao?.enabled).toBe(true);
-    expect(output.uniforms.aoIntensity.value).toBe(1);
+    expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: false });
+    expect(viewer.moved.at(-1)).toEqual(viewer.cut);
+    expect(main.gtao.enabled).toBe(true);
+    expect(main.output.uniforms.aoIntensity.value).toBe(1);
 
-    viewer.scale = 0.5;
+    // Fewer pixels, with the occlusion: a pipeline of its own, whose occlusion reaches as far on screen.
+    viewer.cut = { ao: true, scale: 0.5, antialias: true };
+    frame();
+    const moving = v.movingPipeline as Pipeline;
+    expect(drawn.at(-1)).toEqual({ composer: moving.composer, ao: true });
+    expect(moving.composer.renderTarget2.width).toBe(200);
+    expect(moving.composer.renderTarget2.samples).toBe(4);
+    expect(moving.composer.passes.map((p) => p.constructor.name)).toEqual([
+      'RenderPass',
+      'DepthNormalsPass',
+      'GTAOPass',
+      'OutputPass',
+    ]);
+    expect(radius(moving)).toBeCloseTo(radius(main) / 2, 9);
+    viewer.cut = { ao: false, scale: 0.5, antialias: true };
+    frame();
+    expect(drawn.at(-1)).toEqual({ composer: moving.composer, ao: false });
+
+    // Not antialiased: made again without samples, here at full resolution.
+    viewer.cut = { ao: false, scale: 1, antialias: false };
+    frame();
+    expect(v.movingPipeline).not.toBe(moving);
+    expect(drawn.at(-1)?.composer).toBe(v.movingPipeline?.composer);
+    expect(v.movingPipeline?.composer.renderTarget2.samples).toBe(0);
+    expect(v.movingPipeline?.composer.renderTarget2.width).toBe(400);
+    expect(viewer.moved.at(-1)).toEqual(viewer.cut);
+
+    // Where the look blooms, only the occlusion is left out.
+    viewer.setLook('fluorescence');
+    viewer.cut = { ao: false, scale: 0.5, antialias: false };
     frame();
     clock.mockRestore();
-    const small = v.small?.composer;
-    expect(drawn.at(-1)?.composer).toBe(small);
-    expect(small?.renderTarget2.width).toBe(200);
-    expect(small?.renderTarget2.samples).toBe(4);
-    expect(small?.passes.map((p) => p.constructor.name)).toEqual(['RenderPass', 'OutputPass']);
+    expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: false });
+    expect(viewer.moved.at(-1)).toEqual({ ao: false, scale: 1, antialias: true });
 
     viewer.setProjection('perspective');
-    expect(v.small?.render.camera).toBeInstanceOf(THREE.PerspectiveCamera);
+    expect(v.movingPipeline?.render.camera).toBeInstanceOf(THREE.PerspectiveCamera);
+    viewer.drop();
+    expect(v.movingPipeline).toBeNull();
   });
 
   it('stops drawing off screen, and holds what waits to be seen until it is on screen in a page on show', async () => {

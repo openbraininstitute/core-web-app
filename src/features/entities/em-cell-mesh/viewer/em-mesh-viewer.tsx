@@ -102,6 +102,7 @@ function useViewerSync(viewer: EmMeshViewer | null, settings: EmViewerSettings) 
   useEffect(() => viewer?.setAODepth(settings.aoDepth), [viewer, settings.aoDepth]);
   useEffect(() => viewer?.setForcedMesh(settings.mesh), [viewer, settings.mesh]);
   useEffect(() => viewer?.showChunkBoxes(settings.chunkBoxes), [viewer, settings.chunkBoxes]);
+  useEffect(() => viewer?.setMotion(settings.motion), [viewer, settings.motion]);
 }
 
 const EmCellMeshViewer = dynamic(() => Promise.resolve(EmCellMeshViewerComponent), {

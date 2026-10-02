@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 import {
   type ChoiceInput,
   errorPixels,
-  FRAME_BUDGET_MS,
   FrameCost,
   MeshChooser,
   MovingCost,
@@ -91,27 +90,42 @@ describe('MeshChooser', () => {
 });
 
 describe('FrameCost', () => {
-  it('is the median of the last five full frames, and slow past the limit', () => {
+  it('is the median of the last three full frames, and slow past the limit given', () => {
     const cost = new FrameCost();
     expect(cost.ms).toBeNull();
-    expect(cost.slow).toBe(false);
-    for (const ms of [5, 40, 6, 7, 50]) cost.add(ms);
+    expect(cost.slow(28)).toBe(false);
+    for (const ms of [5, 40, 7]) cost.add(ms);
     expect(cost.ms).toBe(7);
-    expect(cost.slow).toBe(false);
-    // The first two have gone: 6, 7, 50, 30, 35.
+    expect(cost.slow(28)).toBe(false);
+    // The first two have gone: 7, 30, 35.
     for (const ms of [30, 35]) cost.add(ms);
     expect(cost.ms).toBe(30);
-    expect(cost.slow).toBe(true);
-    expect(FRAME_BUDGET_MS).toBeLessThan(30);
+    expect(cost.slow(28)).toBe(true);
+    expect(cost.slow(30)).toBe(false);
+  });
+
+  it('counts a cold frame, the first after a pause, after the stand-in or after a change, at half', () => {
+    const cost = new FrameCost();
+    cost.add(24);
+    expect(cost.ms).toBe(12);
+    expect(cost.slow(14)).toBe(false);
+    cost.add(30, true);
+    cost.add(30);
+    expect(cost.ms).toBe(15);
+    expect(cost.slow(14)).toBe(true);
+    cost.reset();
+    cost.add(20);
+    expect(cost.ms).toBe(10);
   });
 
   it('skips the frames that pay for a change, and asks for no more than it takes to measure one', () => {
     const cost = new FrameCost();
-    cost.add(30);
+    cost.add(60);
     cost.reset();
     expect(cost.ms).toBeNull();
-    // Slow as it was, until a frame is measured after the change.
-    expect(cost.slow).toBe(true);
+    // Slow as it was, until a frame is measured after the change, against the limit as it is now.
+    expect(cost.slow(28)).toBe(true);
+    expect(cost.slow(40)).toBe(false);
     const measured: boolean[] = [];
     const asked: boolean[] = [];
     for (let i = 0; i < SKIP_FRAMES + 2; i++) {
@@ -123,28 +137,27 @@ describe('FrameCost', () => {
     expect(asked).toEqual([true, true, false, false]);
     cost.add(10);
     expect(cost.wantsFrame()).toBe(false);
-    expect(cost.slow).toBe(false);
+    expect(cost.slow(28)).toBe(false);
     cost.reset();
-    expect(cost.slow).toBe(false);
+    expect(cost.slow(28)).toBe(false);
   });
 });
 
 describe('MovingCost', () => {
-  it('turns slow on two moving frames of the full mesh in a row past twice the budget, not one, until the view stops', () => {
+  it('turns slow on two moving frames of the full mesh in a row past its limit, not one, until the view stops', () => {
     const cost = new MovingCost();
-    const dear = 2 * FRAME_BUDGET_MS + 1;
-    cost.add(dear);
+    cost.add(29, 28);
     expect(cost.slow).toBe(false);
-    cost.add(FRAME_BUDGET_MS);
-    cost.add(dear);
+    cost.add(28, 28);
+    cost.add(29, 28);
     expect(cost.slow).toBe(false);
-    cost.add(dear);
+    cost.add(29, 28);
     expect(cost.slow).toBe(true);
-    cost.add(1);
+    cost.add(1, 28);
     expect(cost.slow).toBe(true);
     cost.stop();
     expect(cost.slow).toBe(false);
-    cost.add(dear);
+    cost.add(29, 28);
     expect(cost.slow).toBe(false);
   });
 });

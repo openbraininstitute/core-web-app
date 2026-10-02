@@ -1,6 +1,7 @@
 import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
 
-import { FRAME_BUDGET_MS, FULL_ABOVE_PX, STAND_IN_BELOW_PX } from '../engine/mesh-choice';
+import { COLD, FULL_ABOVE_PX, STAND_IN_BELOW_PX, WAKE_FRAMES } from '../engine/mesh-choice';
+import { DEFAULT_MOTION } from '../engine/motion-quality';
 
 import type { HelpText } from '@/features/viewer-3d/help/help-button';
 
@@ -48,9 +49,11 @@ export const HELP = {
   'view-status': {
     text:
       `The stand-in is drawn while its error is well under a device pixel, as it loses the thinnest fibres: the ` +
-      `full mesh comes in past ${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. Where a full frame takes the GPU more than ` +
-      `${FRAME_BUDGET_MS} ms, the stand-in is drawn while the view moves. Where moving frames still take more, they leave out ` +
-      'the ambient occlusion, then draw fewer pixels, a step at a time, and take them back once there is time for them.',
+      `full mesh comes in past ${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. While the view moves, frames ` +
+      'are cut down as set under Moving frames. Frames are timed on the GPU, which takes longer over a cold one: the ' +
+      `first after a pause, or after a change. A cold full frame, or the first after a change, is counted divided by ` +
+      `${COLD}. Moving frames are left untimed for the first ${WAKE_FRAMES} after a pause, the page hidden included, and ` +
+      'the first after the other mesh or another cut.',
   },
   'ao-depth': {
     text: 'Where the ambient occlusion reads the depth from, to compare the two.',
@@ -70,6 +73,68 @@ export const HELP = {
       ['Stand-in', 'The simplified copy.'],
       ['Full', 'Every triangle, once it is uploaded.'],
     ],
+    applies: 'view',
+  },
+  'moving-frames': {
+    text:
+      'How frames are drawn while the view moves, to keep up on a slow GPU, each way chosen by what frames cost (Auto) ' +
+      'or set, to compare. Auto leaves out the occlusion first, then draws fewer pixels, a step at a time, while ' +
+      'moving frames cost more than the time below, and takes them back once there is time for them. The still frame ' +
+      'is drawn in full.',
+  },
+  'moving-mesh': {
+    text:
+      'The mesh drawn while the view moves, where Mesh above is Auto. The stand-in is still drawn where its error is too ' +
+      'small to see.',
+    effects: [
+      [
+        'Auto',
+        'The stand-in where a full frame costs more than the time below, or where two moving frames of the full mesh ' +
+          'in a row do, until the view stops.',
+      ],
+      ['Stand-in', 'Always the stand-in.'],
+      ['Full', 'Always the full mesh.'],
+    ],
+    applies: 'view',
+  },
+  'moving-ao': {
+    text: 'The ambient occlusion while the view moves, where it is on.',
+    effects: [
+      ['Auto', 'Left out first where moving frames are slow.'],
+      ['Off', 'Always left out.'],
+      ['On', 'Always drawn, at a lower resolution too.'],
+    ],
+    applies: 'view',
+  },
+  'moving-scale': {
+    text:
+      'The share of the resolution frames are drawn at while the view moves, scaled up onto the screen. Each step ' +
+      'halves the pixels.',
+    effects: [['Auto', 'Full, then a step down at a time where moving frames are slow.']],
+    applies: 'view',
+  },
+  'moving-antialias': {
+    text:
+      'Moving frames multisampled four times, as still ones are. Without, thin fibres break into dashes and crawl, but ' +
+      'each pixel costs less.',
+    applies: 'view',
+  },
+  'moving-budget': {
+    text:
+      `What a moving frame may cost the GPU before Auto cuts the occlusion and the resolution, by default ` +
+      `${DEFAULT_MOTION.budgetMs} ms: a 60 Hz frame with time to spare.`,
+    applies: 'view',
+  },
+  'stand-in-past': {
+    text:
+      `What a frame of the full mesh may cost the GPU before Auto draws the stand-in while the view moves, by ` +
+      `default ${DEFAULT_MOTION.standInMs} ms.`,
+    applies: 'view',
+  },
+  'frame-times': {
+    text:
+      'Over the view: how the last moving frame was drawn, what moving frames cost the GPU and how many come a ' +
+      'second, and what a full frame costs. The menu closes as the view is dragged.',
     applies: 'view',
   },
   'chunk-boxes': {

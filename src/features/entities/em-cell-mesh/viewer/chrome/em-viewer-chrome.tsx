@@ -11,6 +11,7 @@ import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
 import { WheelHint } from '@/features/viewer-3d/chrome/status';
 
 import { DebugMenu } from './debug-menu';
+import { FrameTimes } from './frame-times';
 import { LoadStatus } from './load-status';
 import { SettingsMenu } from './settings-menu';
 
@@ -83,6 +84,7 @@ export function EmViewerChrome({
       </div>
 
       <LoadStatus load={load} name={name} theme={theme} />
+      {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
       {settings.scalebar && settings.projection === 'orthographic' && (
         <Scalebar viewer={viewer} color={theme.foreground} />
       )}

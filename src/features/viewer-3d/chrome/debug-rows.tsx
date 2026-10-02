@@ -9,6 +9,9 @@ export function fmt(n: number, digits = 0): string {
   });
 }
 
+export const ms = (t: number | null | undefined, digits = 0) =>
+  t == null ? '–' : `${fmt(t, digits)} ms`;
+
 export function Lines({ lines }: { lines: ReactNode[] }) {
   return (
     <div className="flex flex-col gap-0.5 text-xs leading-snug tabular-nums [overflow-wrap:anywhere] [&_b]:font-semibold [&_b]:text-neutral-900">

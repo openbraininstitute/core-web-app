@@ -10,13 +10,15 @@
  */
 export const FULL_ABOVE_PX = 0.4;
 export const STAND_IN_BELOW_PX = 0.25;
-/**
- * What a frame drawn while the view moves may cost the GPU, ms: a frame of a 60 Hz screen, with time to spare. A full
- * frame over it draws the stand-in while the view moves, and moving frames over it are cut down (`MotionQuality`).
- */
-export const FRAME_BUDGET_MS = 14;
 /** The full frames measured, the median of which is the frame cost. */
-const SAMPLES = 5;
+const SAMPLES = 3;
+/**
+ * How much more a cold frame costs: the first after a pause, after frames of the stand-in, or after a change. An M4 Pro
+ * drew the largest cell in 13 to 31 ms so, and in 8 ms from the third frame on.
+ */
+export const COLD = 2;
+/** The frames after the loop starts left unmeasured while the view moves, as the GPU wakes up over them. */
+export const WAKE_FRAMES = 2;
 /** The full frames left unmeasured after an upload or a resize, which pay for it. */
 export const SKIP_FRAMES = 2;
 
@@ -71,20 +73,26 @@ export class MeshChooser {
   }
 }
 
-/** The full mesh's frame cost: the median of the last few frames measured, skipping those that pay for a change. */
+export const median = (values: readonly number[]) =>
+  [...values].sort((a, b) => a - b)[values.length >> 1];
+
+/**
+ * The full mesh's frame cost: the median of the last few frames measured, skipping those that pay for a change, and
+ * each cold one counted at what it would have cost warm.
+ */
 export class FrameCost {
   private samples: number[] = [];
   private skip = SKIP_FRAMES;
   private asked = 0;
-  /** Whether the frames measured before the last reset were slow, which stands until one is measured after it. */
-  private wasSlow = false;
+  /** The cost measured before the last reset, which stands until a frame is measured after it. */
+  private was: number | null = null;
 
   /**
-   * Forget the frames measured, as what a frame costs has changed: its size, the occlusion, the look. Whether they were
-   * slow stands meanwhile, so that the first frames after going fullscreen, say, don't draw in full on a slow GPU.
+   * Forget the frames measured, as what a frame costs has changed: its size, the occlusion, the look. What they cost
+   * stands meanwhile, so that the first frames after going fullscreen, say, don't draw in full on a slow GPU.
    */
   reset(): void {
-    this.wasSlow = this.slow;
+    this.was = this.ms ?? this.was;
     this.samples = [];
     this.skip = SKIP_FRAMES;
     this.asked = 0;
@@ -102,35 +110,34 @@ export class FrameCost {
     return false;
   }
 
-  add(ms: number): void {
-    this.samples.push(ms);
+  /** A frame measured, `cold` or not; the first after a change pays for some of it still. */
+  add(ms: number, cold = false): void {
+    this.samples.push(cold || this.samples.length === 0 ? ms / COLD : ms);
     if (this.samples.length > SAMPLES) this.samples.shift();
   }
 
   get ms(): number | null {
-    if (this.samples.length === 0) return null;
-    const sorted = [...this.samples].sort((a, b) => a - b);
-    return sorted[sorted.length >> 1];
+    return this.samples.length === 0 ? null : median(this.samples);
   }
 
-  get slow(): boolean {
-    const ms = this.ms;
-    return ms === null ? this.wasSlow : ms > FRAME_BUDGET_MS;
+  /** Past `limitMs` the full mesh is too slow to draw while the view moves. */
+  slow(limitMs: number): boolean {
+    const ms = this.ms ?? this.was;
+    return ms !== null && ms > limitMs;
   }
 }
 
 /**
  * Whether the full mesh, drawn while the view moves, has turned too slow since the view set off. The frame cost is
  * measured where the view was: zoomed in, most chunks are culled, and zooming out makes each frame dearer. Two moving
- * frames of the full mesh in a row past twice the budget draw the stand-in until the view stops; one alone may only be
- * the GPU waking up.
+ * frames of the full mesh in a row past the limit draw the stand-in until the view stops: one alone may be a hitch.
  */
 export class MovingCost {
   private dear = 0;
   slow = false;
 
-  add(ms: number): void {
-    this.dear = ms > 2 * FRAME_BUDGET_MS ? this.dear + 1 : 0;
+  add(ms: number, limitMs: number): void {
+    this.dear = ms > limitMs ? this.dear + 1 : 0;
     if (this.dear >= 2) this.slow = true;
   }
 

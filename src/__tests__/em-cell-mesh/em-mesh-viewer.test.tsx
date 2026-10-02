@@ -6,6 +6,7 @@ import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/glob
 import { EmCellMeshViewerCard } from '@/features/entities/em-cell-mesh/detail-view';
 import { EmCellMeshViewer } from '@/features/entities/em-cell-mesh/viewer/em-mesh-viewer';
 import { LoadError } from '@/features/entities/em-cell-mesh/viewer/engine/load';
+import { DEFAULT_MOTION } from '@/features/entities/em-cell-mesh/viewer/engine/motion-quality';
 import { HELP } from '@/features/entities/em-cell-mesh/viewer/help/help-text';
 import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
 import { defaultFlags } from '@/features/feature-flags/config';
@@ -60,8 +61,11 @@ const h = vi.hoisted(() => {
       errorPx: 2.42,
       frameMs: 12.5,
       slow: false,
+      slowMoving: false,
       movingMs: 6.2,
-      movingScale: null,
+      moving: { mesh: 'full', ao: true, scale: 1, antialias: true },
+      movingFps: 118,
+      movingPixels: 0,
       timer: 'timer-query',
       upload: { done: 386, total: 386, ms: 183 },
       gpuBytes: 300 * 2 ** 20,
@@ -80,6 +84,7 @@ const h = vi.hoisted(() => {
     setWireframe = vi.fn();
     setSpin = vi.fn();
     setForcedMesh = vi.fn();
+    setMotion = vi.fn();
     showChunkBoxes = vi.fn();
     resetView = vi.fn();
     viewAlong = vi.fn();
@@ -632,7 +637,9 @@ describe('EmCellMeshViewer', () => {
     expect(text).toContain('by its error on screen');
     expect(text).toContain('2.42 device px here');
     expect(text).toContain('full frame: 12.5 ms (timer query)');
-    expect(text).toContain('moving frames: 6.2 ms, drawn as still ones');
+    expect(text).toContain(
+      'moving frames: 6.2 ms, 118 fps: the full mesh, with the occlusion, at full resolution'
+    );
 
     act(() => {
       for (const listener of viewer.listeners.status)
@@ -640,13 +647,18 @@ describe('EmCellMeshViewer', () => {
           ...(viewer.status as ViewStatus),
           shown: 'stand-in',
           reason: 'moving',
+          frameMs: 40,
+          slow: true,
           movingMs: 9.4,
-          movingScale: 0.5,
+          moving: { mesh: 'stand-in', ao: false, scale: 0.5, antialias: false },
         });
     });
-    expect(document.body.textContent).toContain('the view moves, and full frames are slow');
+    expect(document.body.textContent).toContain('the view moves, and full frames take over 28 ms');
     expect(document.body.textContent).toContain(
-      'moving frames: 9.4 ms, without the occlusion at 50% of the resolution'
+      'full frame: 40.0 ms (timer query), slow: over 28 ms'
+    );
+    expect(document.body.textContent).toContain(
+      'moving frames: 9.4 ms, 118 fps: the stand-in, without the occlusion, at 50% of the resolution, not antialiased'
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'A pass of its own' }));
@@ -655,6 +667,32 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.setForcedMesh).toHaveBeenLastCalledWith('full');
     fireEvent.click(screen.getByRole('switch', { name: 'Chunk boxes' }));
     expect(viewer.showChunkBoxes).toHaveBeenLastCalledWith(true);
+  });
+
+  it('sets in the Debug menu how moving frames are cut down, and shows what they cost over the view', async () => {
+    const { viewer } = await renderViewer();
+    fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+    await screen.findByText('Moving frames');
+    expect(viewer.setMotion).toHaveBeenLastCalledWith(DEFAULT_MOTION);
+    fireEvent.click(screen.getByRole('button', { name: 'Moving: always the full mesh' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Moving: with the occlusion' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Moving: 50% of the resolution' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Antialiasing' }));
+    expect(viewer.setMotion).toHaveBeenLastCalledWith({
+      ...DEFAULT_MOTION,
+      mesh: 'full',
+      ao: 'on',
+      scale: 0.5,
+      antialias: false,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Moving: resolution chosen by the cost' }));
+    expect(viewer.setMotion).toHaveBeenLastCalledWith(expect.objectContaining({ scale: 'auto' }));
+
+    expect(screen.queryByTestId('em-frame-times')).toBeNull();
+    fireEvent.click(screen.getByRole('switch', { name: 'Frame times' }));
+    expect(screen.getByTestId('em-frame-times').textContent).toBe(
+      'moving: full mesh · AO · 100% · AA6.2 ms GPU · 118 fpsfull frame: 12.5 ms'
+    );
   });
 
   it('tells in the Debug menu that no GLB was needed where the cached stand-in is the whole mesh', async () => {
