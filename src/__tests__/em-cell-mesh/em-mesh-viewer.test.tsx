@@ -161,6 +161,12 @@ const h = vi.hoisted(() => {
       })
     ),
     saveAs: vi.fn(),
+    /** What each keeper made for a built mesh was given, and whether it was stopped. */
+    keepers: [] as {
+      url: string;
+      keep: ReturnType<typeof vi.fn>;
+      stop: ReturnType<typeof vi.fn>;
+    }[],
     startError: null as Error | null,
     FakeViewer,
   };
@@ -177,6 +183,11 @@ vi.mock('@/features/entities/em-cell-mesh/viewer/engine/load', async (importOrig
     new Promise<LoadOutcome>((resolve, reject) => {
       h.loads.push({ options, callbacks, resolve, reject });
     }),
+  keepFullMesh: (url: string) => {
+    const keeper = { url, keep: vi.fn(), stop: vi.fn() };
+    h.keepers.push(keeper);
+    return keeper;
+  },
 }));
 
 vi.mock('@/api/entitycore/queries/assets', () => ({ buildAssetDownloadRequest: h.request }));
@@ -280,6 +291,7 @@ beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   h.viewers.length = 0;
   h.loads.length = 0;
+  h.keepers.length = 0;
   h.request.mockClear();
   h.saveAs.mockClear();
   h.startError = null;
@@ -337,8 +349,13 @@ describe('EmCellMeshViewer', () => {
     act(() => callbacks.onStandIn(STAND_IN, report()));
     expect(viewer.setStandIn).toHaveBeenCalledWith(STAND_IN);
     expect(pill()).toBe('Loading full detail…');
-    act(() => callbacks.onFull(MESH, report()));
-    expect(viewer.setFull).toHaveBeenCalledWith(MESH);
+    act(() => callbacks.onFull(MESH, report({ fullFrom: 'build' })));
+    // Kept for the next visit as it goes up.
+    expect(h.keepers).toHaveLength(1);
+    expect(h.keepers[0].url).toBe(
+      'https://entitycore.test/em_cell_mesh/cell-a/assets/glb/download'
+    );
+    expect(viewer.setFull).toHaveBeenCalledWith(MESH, h.keepers[0].keep);
     // Until it is uploaded.
     expect(pill()).toBe('Loading full detail…');
     act(() => viewer.tell('ready'));
@@ -437,6 +454,22 @@ describe('EmCellMeshViewer', () => {
     unmount();
     expect(second.options.signal.aborted).toBe(true);
     expect(viewer.dispose).toHaveBeenCalled();
+  });
+
+  it('keeps no mesh that came from its cache, and stops keeping one when the load goes', async () => {
+    const { viewer, unmount } = await renderViewer();
+    const load = await started();
+    act(() => load.callbacks.onStandIn(STAND_IN, report({ standInFrom: 'cache' })));
+    act(() => load.callbacks.onFull(MESH, report({ standInFrom: 'cache', fullFrom: 'cache' })));
+    expect(h.keepers).toHaveLength(0);
+    expect(viewer.setFull).toHaveBeenCalledWith(MESH, undefined);
+
+    act(() => viewer.loseContext(true));
+    const again = await started(2);
+    act(() => again.callbacks.onFull(MESH, report({ fullFrom: 'build' })));
+    expect(h.keepers).toHaveLength(1);
+    unmount();
+    expect(h.keepers[0].stop).toHaveBeenCalled();
   });
 
   /** The viewer with the stand-in and the full mesh drawn. */

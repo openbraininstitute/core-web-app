@@ -7,7 +7,7 @@ import { EntityTypeDict } from '@/api/entitycore/types';
 import { logError } from '@/utils/logger';
 
 import { type Budget, deviceOf } from './engine/budget';
-import { LoadError, type LoadReport, loadEmMesh, type Stage } from './engine/load';
+import { keepFullMesh, LoadError, type LoadReport, loadEmMesh, type Stage } from './engine/load';
 import { readStandIn } from './engine/stand-in-cache';
 import { clearLoading, markLoading, stoppedLoading } from './load-mark';
 
@@ -246,7 +246,10 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
           },
           onFull: (mesh, report) => {
             if (signal.aborted) return;
-            viewer.setFull(mesh);
+            // Kept for the next visit as it goes up, unless it came from its cache.
+            const keeper = report.fullFrom === 'build' ? keepFullMesh(request.url, mesh) : null;
+            if (keeper) signal.addEventListener('abort', keeper.stop, { once: true });
+            viewer.setFull(mesh, keeper?.keep);
             patch((s) => ({
               report,
               times: { ...s.times, full: since() },

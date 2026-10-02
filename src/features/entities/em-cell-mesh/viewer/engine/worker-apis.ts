@@ -5,16 +5,19 @@
  */
 import * as Comlink from 'comlink';
 
+import { type CacheBounds, hasEntry, readEntry, writeEntry } from './asset-cache';
 import { packedBuffers, packMesh } from './chunks';
 import { type DecodeResult, type DracoModule, decodeGlb } from './decode';
 import { type DownloadHooks, type DownloadRequest, downloadGlb } from './download';
+import { decodeFull, type EncodedChunk, encodeChunk, encodeFull, fullKey } from './full-cache';
 import { makeStandIn, STAND_IN_TRIANGLES } from './stand-in';
 import { encodeStandIn } from './stand-in-cache';
 
 import type { MeshoptSimplifier } from 'meshoptimizer';
-import type { CacheBounds } from './asset-cache';
+import type { MeshoptDecoder } from 'meshoptimizer/decoder';
+import type { MeshoptEncoder } from 'meshoptimizer/encoder';
 import type { MeshHeader } from './glb';
-import type { DecodedMesh, PackedMesh, StandIn, Timing } from './types';
+import type { DecodedMesh, PackedChunk, PackedMesh, StandIn, Timing } from './types';
 
 export function meshBuffers(mesh: DecodedMesh): ArrayBuffer[] {
   return [mesh.positions.buffer, mesh.indices.buffer] as ArrayBuffer[];
@@ -99,6 +102,49 @@ export const buildApi = {
   },
 };
 
+/**
+ * Keeps the full mesh in its cache, and reads it back. The chunks come one by one as they go up to the GPU, each
+ * encoded as it comes, so that the entry is stored soon after the last; then the worker is terminated.
+ */
+export function createFullCacheApi(
+  loadEncoder: () => Promise<typeof MeshoptEncoder>,
+  loadDecoder: () => Promise<typeof MeshoptDecoder>,
+  cache: CacheBounds | null
+) {
+  const encoded: EncodedChunk[] = [];
+  /** The chunks added, encoded in turn: `store` waits for the last. */
+  let encoding = Promise.resolve();
+  return {
+    async has(downloadUrl: string): Promise<boolean> {
+      return cache !== null && hasEntry(cache, fullKey(downloadUrl));
+    },
+
+    async restore(downloadUrl: string): Promise<PackedMesh | null> {
+      const buffer = cache && (await readEntry(cache, fullKey(downloadUrl)));
+      if (!buffer) return null;
+      const mesh = decodeFull(await loadDecoder(), buffer);
+      return mesh && Comlink.transfer(mesh, packedBuffers(mesh));
+    },
+
+    add(index: number, chunk: PackedChunk): Promise<void> {
+      encoding = encoding.then(async () => {
+        encoded[index] = encodeChunk(await loadEncoder(), chunk);
+      });
+      return encoding;
+    },
+
+    /** Store the chunks added, `mesh` saying what else the mesh is; resolves whether it was stored. */
+    async store(downloadUrl: string, mesh: Omit<PackedMesh, 'chunks'>): Promise<boolean> {
+      if (!cache) return false;
+      await encoding;
+      const buffer = encodeFull(mesh, encoded);
+      encoded.length = 0;
+      return writeEntry(cache, fullKey(downloadUrl), buffer, buffer.byteLength);
+    },
+  };
+}
+
 export type DecodeApi = ReturnType<typeof createDecodeApi>;
 export type StandInApi = ReturnType<typeof createStandInApi>;
 export type BuildApi = typeof buildApi;
+export type FullCacheApi = ReturnType<typeof createFullCacheApi>;

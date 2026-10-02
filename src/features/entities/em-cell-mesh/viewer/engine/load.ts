@@ -11,11 +11,17 @@ import * as Comlink from 'comlink';
 
 import { type Budget, checkBudget, type Device } from './budget';
 import { readStandIn, storeStandIn } from './stand-in-cache';
-import { type BuildApi, type DecodeApi, meshBuffers, type StandInApi } from './worker-apis';
+import {
+  type BuildApi,
+  type DecodeApi,
+  type FullCacheApi,
+  meshBuffers,
+  type StandInApi,
+} from './worker-apis';
 
 import type { DownloadRequest } from './download';
 import type { MeshHeader } from './glb';
-import type { DecodedMesh, PackedMesh, StandIn, Timing } from './types';
+import type { DecodedMesh, PackedChunk, PackedMesh, StandIn, Timing } from './types';
 
 /** Held from the decode until the full mesh is built, so that two tabs don't reach their peaks together. */
 export const DECODE_LOCK = 'em-mesh-decode';
@@ -31,6 +37,7 @@ export interface Workers {
   decode(): WorkerHandle<DecodeApi>;
   standIn(): WorkerHandle<StandInApi>;
   build(): WorkerHandle<BuildApi>;
+  fullCache(): WorkerHandle<FullCacheApi>;
 }
 
 function handle<T>(worker: Worker): WorkerHandle<T> {
@@ -56,6 +63,8 @@ const browserWorkers: Workers = {
     handle(new Worker(new URL('./stand-in.worker.ts', import.meta.url), { type: 'module' })),
   build: () =>
     handle(new Worker(new URL('./build.worker.ts', import.meta.url), { type: 'module' })),
+  fullCache: () =>
+    handle(new Worker(new URL('./full-cache.worker.ts', import.meta.url), { type: 'module' })),
 };
 
 /** Where loading failed: a failure after the stand-in leaves it on show. */
@@ -75,9 +84,10 @@ export class LoadError extends Error {
 export interface LoadReport {
   header: MeshHeader | null;
   budget: Budget | null;
-  /** Where the GLB came from; null until it is in, and where a cached stand-in is the whole mesh. */
+  /** Where the GLB came from; null until it is in, and where the meshes came from their caches. */
   glbFrom: 'cache' | 'network' | null;
   standInFrom: 'cache' | 'build' | null;
+  fullFrom: 'cache' | 'build' | null;
   dracoBits: number | null;
   dracoHeapBytes: number | null;
   meshoptHeapBytes: number | null;
@@ -125,6 +135,7 @@ export async function loadEmMesh(
     budget: null,
     glbFrom: null,
     standInFrom: null,
+    fullFrom: null,
     dracoBits: null,
     dracoHeapBytes: null,
     meshoptHeapBytes: null,
@@ -202,30 +213,37 @@ export async function loadEmMesh(
     });
     const downloading = step('download', decoder, decoder.api.download(request, hooks));
     downloading.catch(() => {});
-    // A stand-in with no error is the whole mesh, cached by a visit before: the download can stop. A download that
-    // fails first, offline say, leaves it to the cache all the same.
-    const wholeCached = cached.then((standIn) => (standIn?.errorUm === 0 ? standIn : null));
-    const whole = await Promise.race([
-      wholeCached,
+    // The full mesh, as a visit before kept it, where the stand-in was kept too: a stand-in with no error is the whole
+    // mesh, and otherwise the full mesh's own cache is read. Either way the download can stop, and nothing is decoded
+    // or built. A download that fails first, offline say, leaves it to the caches all the same.
+    const fromCache = cached.then(async (standIn) => {
+      if (!standIn || standIn.errorUm === 0) return standIn;
+      const fullCache = start(workers.fullCache);
+      if (!(await fullCache.api.has(request.url).catch(() => false))) return null;
+      return step('full', fullCache, fullCache.api.restore(request.url)).catch(() => null);
+    });
+    const quick = await Promise.race([
+      fromCache,
       downloading.then(
         () => null,
-        () => wholeCached
+        () => fromCache
       ),
       aborted,
     ]);
-    if (whole) {
-      callbacks.onFull(whole, snapshot());
-      return { kind: 'loaded' };
-    }
+    const fromCaches = (full: PackedMesh) => {
+      report.fullFrom = 'cache';
+      tell();
+      callbacks.onFull(full, snapshot());
+      return { kind: 'loaded' } as const;
+    };
+    if (quick) return fromCaches(quick);
     const downloaded = await downloading;
     if (downloaded.kind === 'done') report.glbFrom = downloaded.fromCache ? 'cache' : 'network';
     const standInFromCache = await cached;
+    const full = await Promise.race([fromCache, aborted]);
+    if (full) return fromCaches(full);
     if (downloaded.kind === 'stopped' && report.budget)
       return { kind: 'refused', budget: report.budget };
-    if (standInFromCache?.errorUm === 0) {
-      callbacks.onFull(standInFromCache, snapshot());
-      return { kind: 'loaded' };
-    }
 
     if (options.seen) {
       const t0 = performance.now();
@@ -268,6 +286,7 @@ export async function loadEmMesh(
         builder.api.build(Comlink.transfer(mesh, meshBuffers(mesh)))
       );
       stop(builder);
+      report.fullFrom = 'build';
       report.timings.push(...built.timings);
       tell();
       callbacks.onFull(built.mesh, snapshot());
@@ -278,6 +297,48 @@ export async function loadEmMesh(
     signal.removeEventListener('abort', onAbort);
     for (const worker of live) worker.terminate();
   }
+}
+
+export interface FullMeshKeeper {
+  /** A chunk of the full mesh, uploaded: its arrays go to the cache's worker, and are gone from here. */
+  keep(chunk: PackedChunk, index: number): void;
+  /** Keep no more: the worker is terminated, with what it has. */
+  stop(): void;
+}
+
+/**
+ * Keep the full mesh in its cache for the next visit, from its chunks as they go up to the GPU: each is handed to a
+ * worker as it goes, which encodes it, and once the last is in, stores them all and is terminated.
+ */
+export function keepFullMesh(
+  downloadUrl: string,
+  mesh: PackedMesh,
+  workers: Workers = browserWorkers
+): FullMeshKeeper {
+  const { chunks, ...rest } = mesh;
+  const total = chunks.length;
+  const worker = workers.fullCache();
+  let kept = 0;
+  let stopped = false;
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    worker.terminate();
+  };
+  worker.died.catch(stop);
+  return {
+    keep(chunk, index) {
+      if (stopped) return;
+      const buffers = [chunk.positions.buffer, chunk.normals.buffer, chunk.indices.buffer];
+      worker.api.add(index, Comlink.transfer(chunk, buffers as ArrayBuffer[])).catch(stop);
+      if (++kept === total)
+        worker.api
+          .store(downloadUrl, rest)
+          .catch(() => false)
+          .finally(stop);
+    },
+    stop,
+  };
 }
 
 /** Run `work` holding the decode lock, where the browser has Web Locks; giving up the wait if the load is aborted. */

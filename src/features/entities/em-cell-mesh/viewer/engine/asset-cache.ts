@@ -70,6 +70,16 @@ export async function readEntry(
   }
 }
 
+/** Whether the entry is there and fresh, without reading it, which doesn't count as opening it. */
+export async function hasEntry(bounds: CacheBounds, key: string): Promise<boolean> {
+  if (!available()) return false;
+  try {
+    return (await fresh(await caches.open(bounds.name), bounds, key)) !== null;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * The entry's body as a stream, if it is there and fresh, which counts as opening it; null otherwise. The reader can
  * stop early, and must check that the body is whole, deleting it (`deleteEntry`) where it is short.

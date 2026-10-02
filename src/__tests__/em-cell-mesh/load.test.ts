@@ -3,8 +3,10 @@ import * as Comlink from 'comlink';
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { fullKey } from '@/features/entities/em-cell-mesh/viewer/engine/full-cache';
 import {
   DECODE_LOCK,
+  keepFullMesh,
   LoadError,
   type LoadOptions,
   type LoadReport,
@@ -16,12 +18,14 @@ import { decodeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/st
 import {
   buildApi,
   createDecodeApi,
+  createFullCacheApi,
   createStandInApi,
 } from '@/features/entities/em-cell-mesh/viewer/engine/worker-apis';
 
-import { fakeServer } from './fake-caches';
+import { FakeCacheStorage, fakeServer } from './fake-caches';
 import { dracoDecoder, encodeGlb, torus } from './mesh-fixtures';
 
+import type { CacheBounds } from '@/features/entities/em-cell-mesh/viewer/engine/asset-cache';
 import type { PackedMesh, StandIn } from '@/features/entities/em-cell-mesh/viewer/engine/types';
 
 const URL_A = 'https://entitycore.test/em-cell-mesh/1/assets/a/download';
@@ -42,6 +46,7 @@ beforeEach(() => {
   log = [];
   handles = [];
   handedOver = [];
+  fullCache = null;
   vi.stubGlobal('navigator', {
     locks: {
       async request(name: string, _options: unknown, work: () => Promise<void>) {
@@ -106,7 +111,22 @@ function inProcess<T extends object>(name: string, api: T, kill?: string): Worke
   return handle;
 }
 
-function workers(kill: { decode?: string; standIn?: string; build?: string } = {}): Workers {
+const encoder = async () => {
+  const { MeshoptEncoder } = await import('meshoptimizer/encoder');
+  await MeshoptEncoder.ready;
+  return MeshoptEncoder;
+};
+const decoder = async () => {
+  const { MeshoptDecoder } = await import('meshoptimizer/decoder');
+  await MeshoptDecoder.ready;
+  return MeshoptDecoder;
+};
+/** The full mesh's cache, where a test stubs Cache Storage. */
+let fullCache: CacheBounds | null = null;
+
+function workers(
+  kill: { decode?: string; standIn?: string; build?: string; fullCache?: string } = {}
+): Workers {
   return {
     decode: () => inProcess('decode', createDecodeApi(dracoDecoder, null), kill.decode),
     standIn: () =>
@@ -120,6 +140,8 @@ function workers(kill: { decode?: string; standIn?: string; build?: string } = {
         kill.standIn
       ),
     build: () => inProcess('build', buildApi, kill.build),
+    fullCache: () =>
+      inProcess('fullCache', createFullCacheApi(encoder, decoder, fullCache), kill.fullCache),
   };
 }
 
@@ -247,6 +269,37 @@ describe('loadEmMesh', () => {
     expect(waited?.ms).toBeGreaterThanOrEqual(15);
   });
 
+  it('keeps the full mesh as it goes up, and takes it from its cache the next time, decoding nothing', async () => {
+    const standIn = await cachedStandIn();
+    const storage = new FakeCacheStorage();
+    vi.stubGlobal('caches', storage);
+    fullCache = { name: 'test-full', ttlMs: 1e9, maxBytes: 1e9 };
+    vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
+    const first = load();
+    await first.promise;
+    const built = first.events.full as PackedMesh;
+    const triangles = packedTriangleCount(built);
+    const keeper = keepFullMesh(URL_A, built, workers());
+    // As the viewer hands each chunk over once it is up.
+    built.chunks.forEach((chunk, i) => {
+      keeper.keep(chunk, i);
+    });
+    await vi.waitFor(() =>
+      expect(storage.bucket('test-full').entries.has(fullKey(URL_A))).toBe(true)
+    );
+    // Its arrays went to the worker.
+    expect(built.chunks[0].indices.length).toBe(0);
+
+    log = [];
+    const second = load({}, standIn);
+    expect(await second.promise).toEqual({ kind: 'loaded' });
+    expect(log).not.toContain('decode.decode');
+    expect(log).not.toContain('build.build');
+    expect(second.events.reports.at(-1)?.fullFrom).toBe('cache');
+    expect(second.events.full?.triangles).toBe(built.triangles);
+    expect(packedTriangleCount(second.events.full as PackedMesh)).toBe(triangles);
+  });
+
   it('shows a cached stand-in before the download ends, and makes none', async () => {
     const cached = { ...(await cachedStandIn()), errorUm: 0.5 };
     let release: () => void = () => {};
@@ -355,6 +408,9 @@ describe('loadEmMesh', () => {
 });
 
 /** A stand-in as the cache would give one back, from a load of the same mesh. */
+const packedTriangleCount = (mesh: PackedMesh) =>
+  mesh.chunks.reduce((n, c) => n + c.indices.length / 3, 0);
+
 async function cachedStandIn(): Promise<StandIn> {
   const saved = log;
   log = [];

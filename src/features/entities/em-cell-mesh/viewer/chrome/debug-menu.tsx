@@ -156,6 +156,7 @@ function glbSource({ report, meshes }: EmMeshLoad): string {
   if (report?.glbFrom) return report.glbFrom === 'cache' ? 'from the cache' : 'downloaded';
   if (report?.standInFrom === 'cache' && meshes.standIn?.errorUm === 0)
     return 'not needed: the cached stand-in is the whole mesh';
+  if (report?.fullFrom === 'cache') return 'not needed: the meshes came from their caches';
   return 'not loaded';
 }
 
@@ -179,7 +180,7 @@ function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
     lines.push(meshLine(`stand-in, from the ${report?.standInFrom ?? '…'}`, meshes.standIn));
   }
   if (meshes.full) {
-    lines.push(meshLine('full', meshes.full));
+    lines.push(meshLine(`full, from the ${report?.fullFrom ?? '…'}`, meshes.full));
     const { vertices, distinctVertices } = meshes.full;
     if (distinctVertices) {
       lines.push(
@@ -204,7 +205,9 @@ function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
     );
   }
   lines.push(
-    `full ${ms(took(t, 'full'))}: normals ${ms(took(t, 'normals'))}, split ${ms(took(t, 'split'))}, pack ${ms(took(t, 'pack'))}`
+    report?.fullFrom === 'cache'
+      ? `full ${ms(took(t, 'full'))}, read and decoded`
+      : `full ${ms(took(t, 'full'))}: normals ${ms(took(t, 'normals'))}, split ${ms(took(t, 'split'))}, pack ${ms(took(t, 'pack'))}`
   );
   return lines;
 }

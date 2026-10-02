@@ -322,6 +322,19 @@ describe('EmMeshViewer', () => {
     expect(moving).toBeLessThan(5);
   });
 
+  it('hands each chunk of the full mesh, once it is up, to what keeps it, in order', () => {
+    const { viewer, v } = make();
+    viewer.setStandIn(STAND_IN);
+    const kept: [number, number][] = [];
+    viewer.setFull(FULL, (_, index) => {
+      kept.push([index, v.renderer.unseen.length]);
+    });
+    frame(v, 100);
+    expect(kept.map(([i]) => i)).toEqual(FULL.chunks.map((_, i) => i));
+    // Each after its own unseen draw, which uploaded it.
+    for (const [i, drawn] of kept) expect(drawn).toBe(i + 1);
+  });
+
   it("lets go of the full mesh's arrays once they are up, and keeps the stand-in's", () => {
     const { v } = loaded();
     const full = v.renderer.unseen.flatMap((u) => u.meshes);

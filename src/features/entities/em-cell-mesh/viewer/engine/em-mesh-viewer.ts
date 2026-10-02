@@ -176,6 +176,7 @@ export class EmMeshViewer extends SceneViewer {
         bytes: number;
         next: number;
         started: number | null;
+        keep?: (chunk: PackedChunk, index: number) => void;
       })
     | null = null;
   /** The stand-in is the whole mesh. */
@@ -249,8 +250,11 @@ export class EmMeshViewer extends SceneViewer {
     this.invalidate();
   }
 
-  /** Upload the full mesh over the next frames, and draw it once all of it is up. The stand-in itself, it is whole. */
-  setFull(mesh: PackedMesh): void {
+  /**
+   * Upload the full mesh over the next frames, and draw it once all of it is up. The stand-in itself, it is whole. Each
+   * chunk, once up, goes to `keep`, which may take its arrays: three is done with them.
+   */
+  setFull(mesh: PackedMesh, keep?: (chunk: PackedChunk, index: number) => void): void {
     this.dropFull();
     this.whole = mesh === this.standIn?.data;
     if (this.whole) this.tellReady();
@@ -264,6 +268,7 @@ export class EmMeshViewer extends SceneViewer {
         outlines: [],
         boxes: [],
         started: null,
+        keep,
       };
     }
     this.invalidate();
@@ -359,14 +364,16 @@ export class EmMeshViewer extends SceneViewer {
     p.started ??= t0;
     const { chunks, grid } = p;
     do {
-      const chunk = chunks[p.next] as PackedChunk;
-      chunks[p.next++] = null;
+      const index = p.next++;
+      const chunk = chunks[index] as PackedChunk;
+      chunks[index] = null;
       const { mesh: m, outline: o } = this.chunkMesh(grid, chunk, true, p);
       this.chunks.add(m);
       if (o) this.outlines.add(o);
       this.drawUnseen(o ? [m, o] : [m]);
       m.removeFromParent();
       o?.removeFromParent();
+      p.keep?.(chunk, index);
     } while (p.next < chunks.length && performance.now() - t0 < budgetMs);
     const ms = performance.now() - p.started;
     this.upload = { done: p.next, total: chunks.length, ms };
