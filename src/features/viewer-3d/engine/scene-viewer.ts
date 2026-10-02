@@ -43,6 +43,11 @@ const FOV = 45;
 const TURN_MS = 300;
 /** The layer of what `drawUnseen` draws, which the lights are on as well. */
 const UNSEEN_LAYER = 31;
+/**
+ * How long the view still counts as moving once it stopped, ms. A wheel notch moves it in a single frame: without the
+ * wait, a content that draws less while the view moves would draw in full between two notches.
+ */
+const MOVING_FOR_MS = 200;
 
 export type Projection = 'orthographic' | 'perspective';
 
@@ -123,6 +128,9 @@ export class SceneViewer implements ViewControls {
   private dirty = true;
   /** The animation loop stops once nothing moves and nothing has changed; `invalidate` starts it again. */
   private looping = false;
+  /** When the camera last moved, and whether the last frame was drawn as moving: a still one is owed after it. */
+  private movedAt = Number.NEGATIVE_INFINITY;
+  private drawnMoving = false;
   private disposed = false;
   private resizeObserver: ResizeObserver;
   private pixelScale: number | null = null;
@@ -223,12 +231,20 @@ export class SceneViewer implements ViewControls {
   // ---------------------------------------------------------------------------
   // Rendering
 
-  /** Render only when the camera moved (including damping and spin) or the scene changed, and stop when neither did. */
+  /**
+   * Render only when the camera moved (including damping and spin) or the scene changed, and stop when neither did,
+   * once a frame has been drawn still after the camera stopped.
+   */
   private frame(): void {
     const turning = this.turn !== null;
     this.stepTurn();
     const moved = this.controls.update();
+    const now = performance.now();
+    if (moved || turning) this.movedAt = now;
+    const moving = now - this.movedAt < MOVING_FOR_MS;
+    if (this.drawnMoving && !moving) this.dirty = true;
     if (!moved && !this.dirty) {
+      if (moving) return;
       this.renderer.setAnimationLoop(null);
       this.looping = false;
       return;
@@ -236,8 +252,9 @@ export class SceneViewer implements ViewControls {
     // Before the hooks, which may ask for another frame.
     this.dirty = false;
     this.updateCameraTied();
-    this.beforeDraw(moved || turning);
+    this.beforeDraw(moving);
     this.draw();
+    this.drawnMoving = moving;
     this.afterDraw();
     const orientation = this.camera.quaternion;
     if (!orientation.equals(this.heardOrientation)) {

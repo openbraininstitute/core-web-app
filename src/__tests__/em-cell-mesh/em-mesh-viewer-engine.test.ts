@@ -381,19 +381,44 @@ describe('EmMeshViewer', () => {
   });
 
   it('draws the stand-in while the view moves on a slow GPU, then a frame of the full mesh once it stops', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
     const { viewer, v } = loaded();
     zoom(v, 8);
     frame(v);
     const full = drawn();
     for (let i = 0; i < 5; i++) v.cost.add(50);
     viewer.setSpin(true);
-    frame(v, 3);
+    for (let i = 0; i < 3; i++, now += 16) frame(v);
     expect(drawn()).toHaveLength(meshesOf(STAND_IN));
     viewer.setSpin(false);
     // The damping runs out, and the loop draws once more before it stops.
-    frame(v, 500);
+    for (let i = 0; i < 500 && v.renderer.loop; i++, now += 16) frame(v);
+    clock.mockRestore();
     expect(v.renderer.loop).toBeNull();
     expect(same(drawn(), full)).toBe(true);
+  });
+
+  it('waits a moment after a move of one frame, as a wheel notch makes, before it draws in full on a slow GPU', () => {
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { v } = loaded();
+    zoom(v, 8);
+    frame(v);
+    for (let i = 0; i < 5; i++) v.cost.add(50);
+    const update = vi.spyOn(v.controls, 'update').mockReturnValueOnce(true);
+    v.invalidate();
+    frame(v);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
+    const drawnBefore = frames.length;
+    // Nothing drawn for a while, in case another notch comes, then the full mesh.
+    for (let i = 0; i < 10; i++, now += 16) frame(v);
+    expect(frames.length).toBe(drawnBefore);
+    now += 200;
+    frame(v);
+    update.mockRestore();
+    clock.mockRestore();
+    expect(drawn()).toHaveLength(meshesOf(FULL));
   });
 
   it('drops the full mesh with a lost context, and asks for it again once restored, keeping the stand-in', () => {

@@ -69,9 +69,15 @@ export class FrameCost {
   private samples: number[] = [];
   private skip = SKIP_FRAMES;
   private asked = 0;
+  /** Whether the frames measured before the last reset were slow, which stands until one is measured after it. */
+  private wasSlow = false;
 
-  /** Forget the frames measured, as what a frame costs has changed: its size, the occlusion, the look. */
+  /**
+   * Forget the frames measured, as what a frame costs has changed: its size, the occlusion, the look. Whether they were
+   * slow stands meanwhile, so that the first frames after going fullscreen, say, don't draw in full on a slow GPU.
+   */
   reset(): void {
+    this.wasSlow = this.slow;
     this.samples = [];
     this.skip = SKIP_FRAMES;
     this.asked = 0;
@@ -102,6 +108,6 @@ export class FrameCost {
 
   get slow(): boolean {
     const ms = this.ms;
-    return ms !== null && ms > SLOW_FRAME_MS;
+    return ms === null ? this.wasSlow : ms > SLOW_FRAME_MS;
   }
 }

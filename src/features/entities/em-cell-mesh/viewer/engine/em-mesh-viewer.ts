@@ -371,8 +371,6 @@ export class EmMeshViewer extends SceneViewer {
     const full = choice.mesh === 'full';
     this.show(standIn, !full);
     if (this.full) this.show(this.full, full);
-    // Once the view stops, a frame with the full mesh.
-    if (choice.reason === 'moving') this.invalidate();
     if (full && this.cost.wantsFrame()) this.invalidate();
     if (full && this.timer && !this.timer.busy && this.cost.measure()) {
       this.timer.begin();

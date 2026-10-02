@@ -109,6 +109,8 @@ describe('FrameCost', () => {
     cost.add(30);
     cost.reset();
     expect(cost.ms).toBeNull();
+    // Slow as it was, until a frame is measured after the change.
+    expect(cost.slow).toBe(true);
     const measured: boolean[] = [];
     const asked: boolean[] = [];
     for (let i = 0; i < SKIP_FRAMES + 2; i++) {
@@ -120,5 +122,8 @@ describe('FrameCost', () => {
     expect(asked).toEqual([true, true, false, false]);
     cost.add(10);
     expect(cost.wantsFrame()).toBe(false);
+    expect(cost.slow).toBe(false);
+    cost.reset();
+    expect(cost.slow).toBe(false);
   });
 });

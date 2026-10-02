@@ -7,8 +7,11 @@
 
 /** How often a result is looked for, ms: it becomes available only between tasks. */
 const POLL_MS = 2;
-/** A result not in by then is given up on, ms: the context may have been lost. */
-const GIVE_UP_MS = 1000;
+/**
+ * A result not in by then is given up on, ms, and taken for a frame that long: the slowest GPUs are the ones the
+ * measurement is for. Unless the context was lost, which is why it never came.
+ */
+export const GIVE_UP_MS = 1000;
 
 export type TimerKind = 'timer-query' | 'fence';
 
@@ -97,6 +100,7 @@ export class GpuTimer {
       this.pending = false;
       this.query = null;
       if (ms !== null && Number.isFinite(ms)) this.onResult(ms);
+      else if (ms === null && !this.disposed && !this.gl.isContextLost()) this.onResult(GIVE_UP_MS);
     };
     setTimeout(tick, POLL_MS);
   }

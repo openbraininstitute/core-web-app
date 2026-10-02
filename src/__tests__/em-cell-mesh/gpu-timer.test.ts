@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-timer';
+import { GIVE_UP_MS, GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-timer';
 
 const QUERY_RESULT = 1;
 const QUERY_RESULT_AVAILABLE = 2;
@@ -15,10 +15,12 @@ function fakeGl({
   timerQuery,
   ready = 2,
   disjoint = false,
+  lost = false,
 }: {
   timerQuery: boolean;
   ready?: number;
   disjoint?: boolean;
+  lost?: boolean;
 }) {
   let polls = 0;
   const calls: string[] = [];
@@ -44,6 +46,7 @@ function fakeGl({
     flush: () => calls.push('flush'),
     getSyncParameter: () => (++polls >= ready ? SIGNALED : 0),
     deleteSync: () => calls.push('deleteSync'),
+    isContextLost: () => lost,
   };
   return { gl: gl as unknown as WebGL2RenderingContext, calls };
 }
@@ -96,7 +99,7 @@ describe('GpuTimer', () => {
     expect(calls).toEqual(['fenceSync', 'flush', 'deleteSync']);
   });
 
-  it('gives up on a result that never comes, and polls no more once disposed, deleting the fence either way', async () => {
+  it('takes a result that never comes for a frame as long as it waited, and polls no more once disposed, deleting the fence either way', async () => {
     const { gl, calls } = fakeGl({ timerQuery: false, ready: Infinity });
     const results: number[] = [];
     const timer = new GpuTimer(gl, (ms) => results.push(ms));
@@ -104,7 +107,7 @@ describe('GpuTimer', () => {
     timer.end();
     await vi.advanceTimersByTimeAsync(1100);
     expect(timer.busy).toBe(false);
-    expect(results).toEqual([]);
+    expect(results).toEqual([GIVE_UP_MS]);
     expect(calls).toEqual(['fenceSync', 'flush', 'deleteSync']);
 
     const poll = vi.spyOn(gl, 'getSyncParameter');
@@ -114,6 +117,17 @@ describe('GpuTimer', () => {
     await vi.advanceTimersByTimeAsync(100);
     expect(poll).not.toHaveBeenCalled();
     expect(calls.filter((c) => c === 'deleteSync')).toHaveLength(2);
+    expect(results).toEqual([GIVE_UP_MS]);
+  });
+
+  it('takes nothing from a result that never came because the context was lost', async () => {
+    const { gl } = fakeGl({ timerQuery: true, ready: Infinity, lost: true });
+    const results: number[] = [];
+    const timer = new GpuTimer(gl, (ms) => results.push(ms));
+    timer.begin();
+    timer.end();
+    await vi.advanceTimersByTimeAsync(1100);
+    expect(results).toEqual([]);
   });
 
   it('deletes a timer query given up on', async () => {
