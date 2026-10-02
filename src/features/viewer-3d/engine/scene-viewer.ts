@@ -76,6 +76,8 @@ export interface SceneViewerOptions {
    * default frames go straight to an antialiased canvas whenever no pass is on.
    */
   composeAlways?: boolean;
+  /** Which GPU to ask for, where there are two: the discrete one for a heavy surface, at some battery. */
+  powerPreference?: WebGLPowerPreference;
 }
 
 /**
@@ -164,8 +166,14 @@ export class SceneViewer implements ViewControls {
     protected container: HTMLElement,
     private options: SceneViewerOptions
   ) {
-    // Transparent canvas over CSS backgrounds: gradients stay untouched by tone mapping and post-processing.
-    this.renderer = new THREE.WebGLRenderer({ antialias: !options.composeAlways, alpha: true });
+    // Transparent canvas over CSS backgrounds: gradients stay untouched by tone mapping and post-processing. Drawn
+    // through the composer every frame, the canvas only takes the output pass's quad: no depth, nor antialiasing.
+    this.renderer = new THREE.WebGLRenderer({
+      antialias: !options.composeAlways,
+      depth: !options.composeAlways,
+      alpha: true,
+      powerPreference: options.powerPreference ?? 'default',
+    });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.toneMappingExposure = 0.95;
@@ -496,8 +504,8 @@ export class SceneViewer implements ViewControls {
         l.fog.far = fog.far;
       }
     }
-    // Only the surface is drawn by depth.
-    if (this.depthSample !== null) {
+    // Only the surface is drawn by depth, and only by the look that colours by it.
+    if (this.depthSample !== null && this.look.depthRange) {
       const dir = camera.getWorldDirection(this.viewDir);
       const span = depthSpan(this.depthSample, camera.position, dir, d, reach);
       setDepthRange(span.near, span.far);
@@ -638,8 +646,22 @@ export class SceneViewer implements ViewControls {
     this.ao = on;
     if (on) this.ensureComposer();
     if (this.gtao) this.gtao.enabled = on;
+    this.resolveDepth();
     this.invalidate();
     this.frameChanged();
+  }
+
+  /**
+   * The scene's depth is resolved out of its multisampled target only for the occlusion that reads it, and otherwise
+   * not kept past the frame: a tiled GPU then never writes it out.
+   */
+  private resolveDepth(): void {
+    const target = this.composer?.renderTarget2;
+    if (!target) return;
+    const read = this.ao && target.depthTexture !== null;
+    target.resolveDepthBuffer = read;
+    // Not with the occlusion on: three then discards the resolved depth with the multisampled one.
+    target.storeMultisampledDepthBuffer = read;
   }
 
   /** Render pass → GTAO → bloom → output; the middle two are toggled per state and look. */
@@ -657,7 +679,6 @@ export class SceneViewer implements ViewControls {
     composer.renderTarget1.texture.type = type;
     target.texture.type = type;
     target.samples = samples;
-    target.resolveDepthBuffer = mainDepth;
     if (mainDepth) target.depthTexture = new THREE.DepthTexture(target.width, target.height);
     composer.renderTarget1.depthBuffer = false;
     const renderPass = new RenderPass(this.scene, this.camera);
@@ -718,6 +739,7 @@ export class SceneViewer implements ViewControls {
     this.gtao = gtao;
     this.bloom = bloom;
     this.sizeEffects(w, h);
+    this.resolveDepth();
   }
 
   private disposeComposer(): void {

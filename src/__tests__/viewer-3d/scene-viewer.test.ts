@@ -55,7 +55,7 @@ const { FakeRenderer } = vi.hoisted(() => {
       },
     };
 
-    constructor(readonly parameters: { antialias?: boolean }) {
+    constructor(readonly parameters: { antialias?: boolean; depth?: boolean }) {
       Object.defineProperties(this.domElement, {
         clientWidth: { value: 400 },
         clientHeight: { value: 300 },
@@ -187,16 +187,16 @@ afterAll(() => {
 });
 
 describe('scene viewer', () => {
-  it('draws every frame through the composer onto a canvas without antialiasing, where asked to', () => {
+  it('draws every frame through the composer onto a canvas without antialiasing or depth, where asked to', () => {
     const bare = make(BARE);
-    expect(bare.renderer.parameters.antialias).toBe(false);
+    expect(bare.renderer.parameters).toMatchObject({ antialias: false, depth: false });
     bare.renderer.loop?.();
     expect(composerRender).toHaveBeenCalledTimes(1);
     expect(bare.renderer.render).not.toHaveBeenCalled();
 
     composerRender.mockClear();
     const morphology = make({ surface: MORPHOLOGY_SURFACE });
-    expect(morphology.renderer.parameters.antialias).toBe(true);
+    expect(morphology.renderer.parameters).toMatchObject({ antialias: true, depth: true });
     expect(morphology.composer).toBeNull();
     morphology.renderer.loop?.();
     expect(morphology.renderer.render).toHaveBeenCalledTimes(1);
@@ -227,11 +227,17 @@ describe('scene viewer', () => {
     expect(heard).toEqual(['look', 'frame', 'frame', 'frame']);
   });
 
-  it("takes the ambient occlusion's depth from the main pass, resolved from its multisampled target", () => {
-    const { composer, gtao } = make(BARE);
+  it("takes the ambient occlusion's depth from the main pass, resolved from its multisampled target while it is on", () => {
+    const viewer = make(BARE);
+    const { composer, gtao } = viewer;
     const target = composer?.renderTarget2;
     expect(target?.samples).toBe(4);
+    // Off, the depth is neither resolved nor kept past the frame.
+    expect(target?.resolveDepthBuffer).toBe(false);
+    expect(target?.storeMultisampledDepthBuffer).toBe(false);
+    (viewer as unknown as SceneViewer).setAO(true);
     expect(target?.resolveDepthBuffer).toBe(true);
+    expect(target?.storeMultisampledDepthBuffer).toBe(true);
     expect(target?.depthTexture).toBeInstanceOf(THREE.DepthTexture);
     expect(gtao?.depthTexture).toBe(target?.depthTexture);
     expect(gtao?._renderGBuffer).toBe(false);

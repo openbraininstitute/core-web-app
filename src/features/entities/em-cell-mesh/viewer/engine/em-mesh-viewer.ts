@@ -79,8 +79,12 @@ function releaseArray(this: THREE.BufferAttribute): void {
   (this as unknown as { array: null }).array = null;
 }
 
-/** The chunk's grid values to µm: one scale for all three axes, so that the normals need no other matrix. */
+/**
+ * The chunk's grid values to µm: one scale for all three axes, so that the normals need no other matrix. Set once:
+ * three need not compose it again every frame, for each of hundreds of chunks.
+ */
 function place(mesh: THREE.Object3D, grid: Grid, chunk: PackedChunk): void {
+  mesh.matrixAutoUpdate = false;
   mesh.position.set(
     grid.origin[0] + grid.step * chunk.origin[0],
     grid.origin[1] + grid.step * chunk.origin[1],
@@ -181,7 +185,12 @@ export class EmMeshViewer extends SceneViewer {
   private heard: ViewStatus | null = null;
 
   constructor(container: HTMLElement) {
-    super(container, { surface: [], aoDepth: 'main-pass', composeAlways: true });
+    super(container, {
+      surface: [],
+      aoDepth: 'main-pass',
+      composeAlways: true,
+      powerPreference: 'high-performance',
+    });
     this.chunks.name = 'em mesh';
     this.makeTimer();
     this.paintWire();
@@ -280,6 +289,7 @@ export class EmMeshViewer extends SceneViewer {
     const surface = new THREE.Group();
     const outline = new THREE.Group();
     surface.visible = outline.visible = false;
+    surface.matrixAutoUpdate = outline.matrixAutoUpdate = false;
     if (meshes.length > 0) surface.add(...meshes);
     if (outlines.length > 0) outline.add(...outlines);
     this.chunks.add(surface);

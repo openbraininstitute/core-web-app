@@ -89,6 +89,8 @@ export interface Look {
   legend?: LookLegend;
   /** Vertex attributes the look can't do without; a surface that lacks one isn't offered it. */
   needs?: SurfaceAttribute[];
+  /** Whether the look colours by depth, over the range the viewer keeps up to date as the view turns (`setDepthRange`). */
+  depthRange?: true;
 }
 
 export type LookLegend =
@@ -1032,6 +1034,7 @@ export function createLooks(
       hint: 'Depth-coded maximum-intensity projection, as confocal stacks are published: glowing fibres on black, red near through the spectrum to violet far.',
       material: makeDepthCoded(),
       background: { light: ['#000000', '#000000'], dark: ['#000000', '#000000'] },
+      depthRange: true,
     },
     {
       id: 'gold-leaf',
