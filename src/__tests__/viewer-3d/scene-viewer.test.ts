@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
@@ -8,7 +9,7 @@ import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass
 import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
 import { SceneViewer, type SceneViewerOptions } from '@/features/viewer-3d/engine/scene-viewer';
 
-import type { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import type { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 const { FakeRenderer } = vi.hoisted(() => {
   /** Draws nothing; it keeps what it was made with, the target bound, and the target each compile was for. */
@@ -269,6 +270,27 @@ describe('scene viewer', () => {
     } finally {
       FakeRenderer.samples = formats;
     }
+  });
+
+  it('darkens the scene by the occlusion in the output pass, or in GTAO where bloom comes after it', () => {
+    const viewer = make(BARE);
+    (viewer as unknown as SceneViewer).setAO(true);
+    const { gtao, composer } = viewer;
+    const output = composer?.passes.at(-1) as OutputPass;
+    expect(gtao?.output).toBe(GTAOPass.OUTPUT.Off);
+    expect(gtao?.needsSwap).toBe(false);
+    expect(output.uniforms.tAO.value).toBe(gtao?.gtaoMap);
+    expect(output.uniforms.aoIntensity.value).toBe(1);
+    expect((output.material as THREE.ShaderMaterial).fragmentShader).toContain(
+      'gl_FragColor.rgb *= mix( vec3( 1.0 ), texture2D( tAO, vUv ).rgb, aoIntensity )'
+    );
+
+    const internals = viewer as unknown as { bloom: { enabled: boolean } };
+    internals.bloom.enabled = true;
+    (viewer as unknown as SceneViewer).setAO(true);
+    expect(gtao?.output).toBe(GTAOPass.OUTPUT.Default);
+    expect(gtao?.needsSwap).toBe(true);
+    expect(output.uniforms.aoIntensity.value).toBe(0);
   });
 
   it("keeps the morphology's own occlusion pass, displaced as the surface is drawn", () => {

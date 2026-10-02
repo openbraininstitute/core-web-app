@@ -99,6 +99,32 @@ function composerFormat(gl: WebGL2RenderingContext): {
   return { type: THREE.UnsignedByteType, samples: samples(gl.RGBA8) ?? 0 };
 }
 
+/** three's output pass, which can also darken the scene by the occlusion (`SceneViewer.blendAO`) as it tone maps. */
+function aoOutputPass(): OutputPass {
+  const pass = new OutputPass();
+  const material = pass.material as THREE.RawShaderMaterial;
+  const blended = material.fragmentShader
+    .replace(
+      'uniform sampler2D tDiffuse;',
+      'uniform sampler2D tDiffuse;\nuniform sampler2D tAO;\nuniform float aoIntensity;'
+    )
+    .replace(
+      'gl_FragColor = texture2D( tDiffuse, vUv );',
+      // The same multiply as GTAO's own blend.
+      'gl_FragColor = texture2D( tDiffuse, vUv );\n' +
+        'if ( aoIntensity > 0.0 ) gl_FragColor.rgb *= mix( vec3( 1.0 ), texture2D( tAO, vUv ).rgb, aoIntensity );'
+    );
+  if (!blended.includes('uniform float aoIntensity') || !blended.includes('aoIntensity > 0.0')) {
+    console.warn('OutputShader has changed: GTAO blends the ambient occlusion itself again');
+    return pass;
+  }
+  material.fragmentShader = blended;
+  // Uniforms, not defines: the pass rebuilds its defines whenever the tone mapping changes.
+  pass.uniforms.tAO = { value: null };
+  pass.uniforms.aoIntensity = { value: 0 };
+  return pass;
+}
+
 function disposeMaterial(material: THREE.Material): void {
   for (const value of Object.values(material)) if (value instanceof THREE.Texture) value.dispose();
   material.dispose();
@@ -143,6 +169,7 @@ export class SceneViewer implements ViewControls {
   /** The normals the occlusion reads, where it takes its depth from the main pass. */
   private depthNormals: DepthNormalsPass | null = null;
   private bloom: UnrealBloomPass | null = null;
+  private output: OutputPass | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
   private width = 1;
   private height = 1;
@@ -539,6 +566,7 @@ export class SceneViewer implements ViewControls {
     this.scene.environment = look.env ? this.environment : null;
     this.scene.fog = look.fog ?? null;
     if (this.bloom) this.bloom.enabled = look.bloom === true;
+    this.blendAO();
     this.invalidate();
   }
 
@@ -651,8 +679,24 @@ export class SceneViewer implements ViewControls {
     if (this.gtao) this.gtao.enabled = on;
     if (this.depthNormals) this.depthNormals.enabled = on;
     this.resolveDepth();
+    this.blendAO();
     this.invalidate();
     this.frameChanged();
+  }
+
+  /**
+   * Where the occlusion darkens the scene: in the output pass, as it tone maps, sparing a copy of the scene and a blend
+   * over it at full size; or, with bloom on, by GTAO itself, so that what blooms is occluded already.
+   */
+  private blendAO(): void {
+    const gtao = this.gtao;
+    const output = this.output;
+    if (!gtao || !output?.uniforms.aoIntensity) return;
+    const inOutput = this.ao && !this.bloom?.enabled;
+    gtao.output = inOutput ? GTAOPass.OUTPUT.Off : GTAOPass.OUTPUT.Default;
+    gtao.needsSwap = !inOutput;
+    output.uniforms.tAO.value = gtao.gtaoMap;
+    output.uniforms.aoIntensity.value = inOutput ? gtao.blendIntensity : 0;
   }
 
   /**
@@ -740,7 +784,8 @@ export class SceneViewer implements ViewControls {
     const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.65, 0.5, 0.2);
     bloom.enabled = this.look.bloom === true;
     composer.addPass(bloom);
-    composer.addPass(new OutputPass());
+    const output = aoOutputPass();
+    composer.addPass(output);
     composer.setPixelRatio(this.renderer.getPixelRatio());
     composer.setSize(w, h);
     this.composer = composer;
@@ -748,8 +793,10 @@ export class SceneViewer implements ViewControls {
     this.gtao = gtao;
     this.depthNormals = depthNormals;
     this.bloom = bloom;
+    this.output = output;
     this.sizeEffects(w, h);
     this.resolveDepth();
+    this.blendAO();
   }
 
   private disposeComposer(): void {
@@ -762,6 +809,7 @@ export class SceneViewer implements ViewControls {
     this.gtao = null;
     this.depthNormals = null;
     this.bloom = null;
+    this.output = null;
   }
 
   /** The passes that draw from the camera, onto the one in use. GTAO reconstructs positions differently per projection. */
