@@ -48,7 +48,7 @@ export const HELP = {
   },
   'view-status': {
     text:
-      `The stand-in is drawn while its error is well under a device pixel, as it loses the thinnest fibres: the ` +
+      `The stand-in is drawn while its error is far under a device pixel, as it loses spines and the thinnest fibres: the ` +
       `full mesh comes in past ${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. While the view moves, frames ` +
       'are cut down as set under Moving frames. Frames are timed on the GPU, which takes longer over a cold one: the ' +
       `first after a pause, or after a change. A cold full frame, or the first after a change, is counted divided by ` +
@@ -74,6 +74,13 @@ export const HELP = {
       ['Full', 'Every triangle, once it is uploaded.'],
     ],
     applies: 'view',
+  },
+  'stand-in-size': {
+    text:
+      'The most triangles the simplified copy may have. Its vertices are merged on cubes as fine as keep it within ' +
+      'them: more triangles keep thinner fibres whole while the view moves on a slow GPU, and take longer to draw, to ' +
+      'make and to keep.',
+    applies: 'build',
   },
   'moving-frames': {
     text:
@@ -122,7 +129,7 @@ export const HELP = {
   'moving-budget': {
     text:
       `What a moving frame may cost the GPU before Auto cuts the occlusion and the resolution, by default ` +
-      `${DEFAULT_MOTION.budgetMs} ms: a 60 Hz frame with time to spare.`,
+      `${DEFAULT_MOTION.budgetMs} ms: ${Math.floor(1000 / DEFAULT_MOTION.budgetMs)} frames a second.`,
     applies: 'view',
   },
   'stand-in-past': {

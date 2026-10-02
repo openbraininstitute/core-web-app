@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { DEFAULT_MOTION, type MotionOptions } from './engine/motion-quality';
+import { STAND_IN_TRIANGLES } from './engine/stand-in';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { AODepth, Projection } from '@/features/viewer-3d/engine/scene-viewer';
@@ -18,11 +19,12 @@ export interface EmViewerSettings {
   /** In the orthographic view: a perspective one has no single scale. */
   scalebar: boolean;
   /**
-   * The Debug menu's: where the occlusion reads its depth, a mesh drawn whatever the zoom, the chunks' bounds, how
-   * moving frames are cut down, and what they cost over the view.
+   * The Debug menu's: where the occlusion reads its depth, a mesh drawn whatever the zoom, the most triangles of the
+   * stand-in, the chunks' bounds, how moving frames are cut down, and what they cost over the view.
    */
   aoDepth: AODepth;
   mesh: ForcedMesh;
+  standInTriangles: number;
   chunkBoxes: boolean;
   motion: MotionOptions;
   frameTimes: boolean;
@@ -40,6 +42,7 @@ const DEFAULT_SETTINGS: EmViewerSettings = {
   scalebar: true,
   aoDepth: 'main-pass',
   mesh: 'auto',
+  standInTriangles: STAND_IN_TRIANGLES,
   chunkBoxes: false,
   motion: DEFAULT_MOTION,
   frameTimes: false,

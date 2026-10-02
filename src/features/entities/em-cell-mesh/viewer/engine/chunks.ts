@@ -12,7 +12,7 @@
  */
 import { vertexNormals } from '@/features/viewer-3d/engine/normals';
 
-import type { Grid, PackedChunk, PackedMesh, Timing, Vec3 } from './types';
+import type { DecodedMesh, Grid, PackedChunk, PackedMesh, Timing, Vec3 } from './types';
 
 /** WebGL 2 always takes index 65,535 as a primitive restart: a chunk has at most this many vertices, 0 to 65,534. */
 export const MAX_CHUNK_VERTICES = 65535;
@@ -302,6 +302,42 @@ function packChunk(
     } else n[4 * i + 2] = 127;
   }
   return { positions: values, normals: n, indices, origin, bounds };
+}
+
+/**
+ * The chunks as one mesh again: their vertices one after the other, those on chunk borders once in each, and their
+ * triangles. On the mesh's grid where every chunk shares its origin, as on Draco's; otherwise in µm.
+ */
+export function unpackMesh(mesh: PackedMesh): DecodedMesh {
+  const { chunks, grid } = mesh;
+  const shared = chunks.every((c) => c.origin.every((o) => o === 0));
+  let vertices = 0;
+  let corners = 0;
+  for (const c of chunks) {
+    vertices += c.positions.length / 4;
+    corners += c.indices.length;
+  }
+  const positions = shared ? new Uint16Array(3 * vertices) : new Float32Array(3 * vertices);
+  const indices = new Uint32Array(corners);
+  const min: Vec3 = [Infinity, Infinity, Infinity];
+  const max: Vec3 = [-Infinity, -Infinity, -Infinity];
+  const um = (c: PackedChunk, k: number, value: number) =>
+    grid.origin[k] + grid.step * (c.origin[k] + value);
+  let v = 0;
+  let i = 0;
+  for (const c of chunks) {
+    for (let j = 0; j < c.indices.length; j++) indices[i++] = v + c.indices[j];
+    for (let k = 0; k < 3; k++) {
+      min[k] = Math.min(min[k], um(c, k, c.bounds[k]));
+      max[k] = Math.max(max[k], um(c, k, c.bounds[k + 3]));
+    }
+    for (let j = 0; j < c.positions.length; j += 4, v++) {
+      for (let k = 0; k < 3; k++) {
+        positions[3 * v + k] = shared ? c.positions[j + k] : um(c, k, c.positions[j + k]);
+      }
+    }
+  }
+  return { positions, grid: shared ? grid : null, indices, bounds: { min, max }, dracoBits: null };
 }
 
 /** A packed mesh's arrays, to hand to another thread. */

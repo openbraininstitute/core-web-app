@@ -1,21 +1,20 @@
 /**
  * The stand-in: a coarse copy of the mesh, drawn wherever its error is under a pixel, and while the view moves on a
- * slow GPU. On Draco's grid it is the mesh clustered on cubes of about half a micron (`clusterOnGrid`); otherwise
- * meshoptimizer's sloppy simplifier makes it. It is packed like the full mesh, so that one material draws both.
+ * slow GPU. On Draco's grid it is the mesh clustered on cubes as fine as its triangles allow (`clusterWithin`);
+ * otherwise meshoptimizer's sloppy simplifier makes it. It is packed like the full mesh, so that one material draws
+ * both.
  */
 import { packMesh } from './chunks';
-import { clusterOnGrid } from './cluster';
+import { clusterWithin } from './cluster';
 
 import type { MeshoptSimplifier } from 'meshoptimizer';
 import type { DecodedMesh, StandIn, Timing } from './types';
 
-/** The most triangles a stand-in has: a mesh with no more is its own stand-in, whole. */
-export const STAND_IN_TRIANGLES = 1_500_000;
 /**
- * The cube a mesh on a grid is clustered on, µm, unless that leaves it over `STAND_IN_TRIANGLES`: no vertex moves
- * much more. On the largest cell, at overview zoom, under a device pixel on a screen at twice the CSS resolution.
+ * The most triangles a stand-in has, unless the Debug menu sets another: as many as a slow GPU draws while the view
+ * moves. A mesh with no more is its own stand-in, whole. The largest cell is clustered on cubes of 0.31 µm.
  */
-export const STAND_IN_CUBE_UM = 0.5;
+export const STAND_IN_TRIANGLES = 3_000_000;
 
 export function makeStandIn(
   mesh: DecodedMesh,
@@ -27,13 +26,8 @@ export function makeStandIn(
   if (mesh.indices.length / 3 <= target) {
     made = { positions: mesh.positions, indices: mesh.indices, errorUm: 0 };
   } else if (mesh.grid && mesh.positions instanceof Uint16Array) {
-    const { step } = mesh.grid;
-    let shift = Math.max(0, Math.round(Math.log2(STAND_IN_CUBE_UM / step)));
-    let clustered = clusterOnGrid(mesh.positions, mesh.indices, shift);
-    while (clustered.indices.length / 3 > target && shift < 16) {
-      clustered = clusterOnGrid(mesh.positions, mesh.indices, ++shift);
-    }
-    made = { ...clustered, errorUm: clustered.moved * step };
+    const clustered = clusterWithin(mesh.positions, mesh.indices, target);
+    made = { ...clustered, errorUm: clustered.moved * mesh.grid.step };
   } else made = sloppy(mesh, simplifier, target);
   const timings: Timing[] = [{ step: 'simplify', ms: performance.now() - t0 }];
 

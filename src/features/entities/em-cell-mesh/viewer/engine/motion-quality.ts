@@ -28,13 +28,13 @@ export interface MotionOptions {
   standInMs: number;
 }
 
-/** Moving frames within a 60 Hz frame with time to spare, and the full mesh in them down to 36 frames a second. */
+/** Moving frames cut down under 55 a second, and the full mesh in them down to 36 frames a second. */
 export const DEFAULT_MOTION: MotionOptions = {
   mesh: 'auto',
   ao: 'auto',
   scale: 'auto',
   antialias: true,
-  budgetMs: 14,
+  budgetMs: 18,
   standInMs: 28,
 };
 

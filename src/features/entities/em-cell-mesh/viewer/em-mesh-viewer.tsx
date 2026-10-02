@@ -38,7 +38,7 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
     }),
     [entity.id, asset.id, asset.size, virtualLabId, projectId]
   );
-  const load = useEmMesh(viewer, source);
+  const load = useEmMesh(viewer, source, settings.standInTriangles);
   const [wheelHint, setWheelHint] = useSignal(10000);
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import {
   MAX_CHUNK_VERTICES,
   packMesh,
   splitChunks,
+  unpackMesh,
 } from '@/features/entities/em-cell-mesh/viewer/engine/chunks';
 import { vertexNormals } from '@/features/viewer-3d/engine/normals';
 
@@ -185,5 +186,54 @@ describe('packMesh', () => {
     // The vertices only flat triangles used are not counted.
     expect(packed.distinctVertices).toBe(n);
     expect(packedTriangles(packed)).toEqual(packedTriangles(clean));
+  });
+});
+
+describe('unpackMesh', () => {
+  /** The triangles as sorted triples of their corners' positions, rounded onto `grid`. */
+  const onto = (grid: Grid, positions: ArrayLike<number>, indices: ArrayLike<number>) =>
+    triangleKeys(
+      (t, k) =>
+        [0, 1, 2]
+          .map((a) =>
+            Math.round((positions[3 * indices[3 * t + k] + a] - grid.origin[a]) / grid.step)
+          )
+          .join(','),
+      indices.length / 3
+    );
+
+  it("gives the chunks back as one mesh, on Draco's grid, with every triangle and the bounds in µm", () => {
+    const big = onGrid(400, 200);
+    const packed = packMesh(big.positions, big.grid, big.indices).mesh;
+    expect(packed.chunks.length).toBeGreaterThan(1);
+    const mesh = unpackMesh(packed);
+    expect(mesh.grid).toBe(big.grid);
+    expect(mesh.positions).toBeInstanceOf(Uint16Array);
+    expect(mesh.positions.length / 3).toBe(packed.vertices);
+    const zero: Grid = { origin: [0, 0, 0], step: 1 };
+    expect(onto(zero, mesh.positions, mesh.indices)).toEqual(
+      onto(zero, big.positions, big.indices)
+    );
+    for (let k = 0; k < 3; k++) {
+      const values = big.positions.filter((_, i) => i % 3 === k);
+      const um = (v: number) => big.grid.origin[k] + big.grid.step * v;
+      expect(mesh.bounds.min[k]).toBeCloseTo(um(Math.min(...values)), 6);
+      expect(mesh.bounds.max[k]).toBeCloseTo(um(Math.max(...values)), 6);
+    }
+  });
+
+  it('gives them back in µm where the chunks have origins of their own', () => {
+    const small = microns(120, 60);
+    const packed = packMesh(small.positions, null, small.indices, {
+      triangles: 4000,
+      vertices: 2500,
+    }).mesh;
+    expect(packed.chunks.some((c) => c.origin.some((o) => o > 0))).toBe(true);
+    const mesh = unpackMesh(packed);
+    expect(mesh.grid).toBeNull();
+    expect(mesh.positions).toBeInstanceOf(Float32Array);
+    expect(onto(packed.grid, mesh.positions, mesh.indices)).toEqual(
+      onto(packed.grid, small.positions, small.indices)
+    );
   });
 });

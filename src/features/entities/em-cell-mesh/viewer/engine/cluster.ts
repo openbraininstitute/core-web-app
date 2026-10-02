@@ -1,9 +1,15 @@
 /**
- * A mesh on a 16-bit grid made coarse by vertex clustering: the grid cut into cubes of 2^shift steps, every vertex in
- * a cube moved to their mean, and the triangles left with three corners in three cubes kept, once each. It is what
+ * A mesh on a 16-bit grid made coarse by vertex clustering: the grid cut into cubes of any number of steps, every vertex
+ * in a cube moved to their mean, and the triangles left with three corners in three cubes kept, once each. It is what
  * meshoptimizer's sloppy simplifier does, on a grid as fine as asked: the simplifier's has at most 1,024 cells across
  * the mesh, a micron and more on the largest cells.
  */
+
+/**
+ * The triangles clustering leaves for each cube face of the surface's area: 2.2 to 2.6 on the staging meshes, the most
+ * on the coarsest cubes. Cubes sized by the most keep within a target in one pass.
+ */
+export const TRIANGLES_PER_FACE = 2.6;
 
 /** A table of cubes, by their grid position: open addressing, grown as it fills. */
 class Cubes {
@@ -133,13 +139,56 @@ export interface Clustered {
   moved: number;
 }
 
+/**
+ * The mesh clustered on cubes about as fine as keep it within `target` triangles: sized by the surface's area, and
+ * larger where they leave too many.
+ */
+export function clusterWithin(
+  positions: Uint16Array,
+  indices: Uint32Array,
+  target: number
+): Clustered {
+  let cube = Math.max(1, Math.sqrt((TRIANGLES_PER_FACE * gridArea(positions, indices)) / target));
+  for (;;) {
+    const clustered = clusterOnGrid(positions, indices, cube, target);
+    const triangles = clustered.indices.length / 3;
+    if (triangles <= target) return clustered;
+    cube *= 1.05 * Math.sqrt(triangles / target);
+  }
+}
+
+/** The surface's area, in grid steps squared, from every 16th triangle: near enough to size the cubes. */
+function gridArea(p: Uint16Array, indices: Uint32Array): number {
+  const every = 16;
+  let twice = 0;
+  for (let t = 0; t < indices.length; t += 3 * every) {
+    const a = 3 * indices[t],
+      b = 3 * indices[t + 1],
+      c = 3 * indices[t + 2];
+    const ux = p[b] - p[a],
+      uy = p[b + 1] - p[a + 1],
+      uz = p[b + 2] - p[a + 2];
+    const vx = p[c] - p[a],
+      vy = p[c + 1] - p[a + 1],
+      vz = p[c + 2] - p[a + 2];
+    const x = uy * vz - uz * vy,
+      y = uz * vx - ux * vz,
+      z = ux * vy - uy * vx;
+    twice += Math.sqrt(x * x + y * y + z * z);
+  }
+  return (every * twice) / 2;
+}
+
+/** The mesh clustered on cubes of `cube` grid steps, at least one, its tables sized for about `expected` triangles. */
 export function clusterOnGrid(
   positions: Uint16Array,
   indices: Uint32Array,
-  shift: number
+  cube: number,
+  expected = indices.length / 3 / (cube * cube)
 ): Clustered {
   const n = positions.length / 3;
-  const cubes = new Cubes(n >> (2 * shift));
+  const per = 1 / cube;
+  const cubes = new Cubes(Math.ceil(expected / 2));
   const cubeOf = new Uint32Array(n);
   let sums = new Float64Array(3 * 1024);
   let counts = new Uint32Array(1024);
@@ -147,7 +196,7 @@ export function clusterOnGrid(
     const x = positions[3 * v],
       y = positions[3 * v + 1],
       z = positions[3 * v + 2];
-    const c = cubes.id(x >> shift, y >> shift, z >> shift);
+    const c = cubes.id(Math.floor(x * per), Math.floor(y * per), Math.floor(z * per));
     cubeOf[v] = c;
     if (c >= counts.length) {
       const more = new Float64Array(sums.length * 2);
@@ -176,7 +225,7 @@ export function clusterOnGrid(
     if (d > moved) moved = d;
   }
 
-  const triangles = new Triangles((indices.length / 3) >> (2 * shift));
+  const triangles = new Triangles(Math.ceil(expected));
   for (let t = 0; t < indices.length; t += 3) {
     const a = cubeOf[indices[t]],
       b = cubeOf[indices[t + 1]],

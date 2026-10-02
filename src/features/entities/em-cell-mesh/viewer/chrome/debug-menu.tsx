@@ -6,6 +6,7 @@ import {
   RiContrast2Line,
   RiDashboard3Line,
   RiStackLine,
+  RiTriangleLine,
 } from '@remixicon/react';
 import { Fragment, type ReactNode } from 'react';
 
@@ -14,9 +15,11 @@ import {
   SegmentedToggle,
 } from '@/features/scan-config/components/color-by/chrome-menu';
 import { DownloadRow, fmt, Lines, ms } from '@/features/viewer-3d/chrome/debug-rows';
+import { formatCompactNumber } from '@/utils/format';
 
 import { FRAMEBUFFER_BYTES_PER_PIXEL } from '../engine/budget';
 import { MOTION_SCALES, type MotionOptions } from '../engine/motion-quality';
+import { STAND_IN_TRIANGLES } from '../engine/stand-in';
 import { useSaveGlb } from '../save-glb';
 import { HelpRow, ICON, Note, SectionTitle, SliderRow, ToggleRow } from './menu-rows';
 import { useViewStatus } from './use-view-status';
@@ -27,6 +30,9 @@ import type { ForcedMesh, Reason } from '../engine/mesh-choice';
 import type { Timing } from '../engine/types';
 import type { EmMeshLoad, MeshSummary } from '../use-em-mesh';
 import type { EmViewerSettings, UpdateEmSettings } from '../use-em-viewer-settings';
+
+/** The most triangles of the stand-in, to compare: the first was the most before it was sized by them. */
+const STAND_IN_CHOICES = [1_500_000, STAND_IN_TRIANGLES, 5_000_000, 8_000_000];
 
 const REASONS: Record<Reason, string> = {
   whole: 'the stand-in is the whole mesh',
@@ -101,6 +107,22 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
                   { value: 'stand-in', label: 'Always the stand-in', text: 'Stand-in' },
                   { value: 'full', label: 'Always the full mesh', text: 'Full' },
                 ]}
+              />
+            </HelpRow>
+            <HelpRow
+              title="Stand-in"
+              topic="stand-in-size"
+              icon={<RiTriangleLine className={ICON} />}
+              className="flex-wrap"
+            >
+              <SegmentedToggle<string>
+                value={String(settings.standInTriangles)}
+                onChange={(v) => update({ standInTriangles: Number(v) })}
+                options={STAND_IN_CHOICES.map((n) => ({
+                  value: String(n),
+                  label: `A stand-in of at most ${n / 1e6} million triangles`,
+                  text: formatCompactNumber(n),
+                }))}
               />
             </HelpRow>
             <ToggleRow
@@ -264,7 +286,11 @@ function glbSource({ report, meshes }: EmMeshLoad): string {
   if (report?.glbFrom) return report.glbFrom === 'cache' ? 'from the cache' : 'downloaded';
   if (report?.standInFrom === 'cache' && meshes.standIn?.errorUm === 0)
     return 'not needed: the cached stand-in is the whole mesh';
-  if (report?.fullFrom === 'cache') return 'not needed: the meshes came from their caches';
+  if (report?.fullFrom === 'cache') {
+    return report.standInFrom === 'build'
+      ? 'not needed: the stand-in was made from the cached full mesh'
+      : 'not needed: the meshes came from their caches';
+  }
   return 'not loaded';
 }
 

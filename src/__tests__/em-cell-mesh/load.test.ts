@@ -134,8 +134,7 @@ function workers(
         'standIn',
         createStandInApi(
           async () => MeshoptSimplifier,
-          () => 42,
-          2000
+          () => 42
         ),
         kill.standIn
       ),
@@ -158,16 +157,20 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
     stages: [],
   };
   const stored: ArrayBuffer[] = [];
+  const standIns = {
+    read: vi.fn(async () => cached),
+    store: vi.fn(async (_url: string, _triangles: number, encoded: ArrayBuffer) =>
+      stored.push(encoded)
+    ),
+  };
   const promise = loadEmMesh(
     {
       request: { url: URL_A, headers: {}, size: glb.byteLength },
       device: DESKTOP,
       signal: new AbortController().signal,
       workers: workers(),
-      standIns: {
-        read: async () => cached,
-        store: async (_url, encoded) => stored.push(encoded),
-      },
+      standInTriangles: 2000,
+      standIns,
       ...overrides,
     },
     {
@@ -184,15 +187,18 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
       },
     }
   );
-  return { promise, events, stored };
+  return { promise, events, stored, standIns };
 }
 
 describe('loadEmMesh', () => {
   it('decodes, makes the stand-in, then builds the full mesh, one worker after the other', async () => {
     vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
-    const { promise, events, stored } = load();
+    const { promise, events, stored, standIns } = load();
     expect(await promise).toEqual({ kind: 'loaded' });
-    expect(log.filter((e) => !e.endsWith('warmUp'))).toEqual([
+    // The full mesh's cache, asked while the GLB comes in, has nothing.
+    expect(log).toContain('fullCache.has');
+    expect(log).not.toContain('fullCache.restore');
+    expect(log.filter((e) => !e.endsWith('warmUp') && !e.startsWith('fullCache'))).toEqual([
       'decode.download',
       `lock ${DECODE_LOCK}`,
       'decode.decode',
@@ -206,11 +212,16 @@ describe('loadEmMesh', () => {
       'unlock',
     ]);
     expect(events.stages).toEqual(['download', 'decode', 'stand-in', 'full']);
+    // Done with before the lock.
+    expect(log.indexOf('fullCache terminated')).toBeLessThan(log.indexOf(`lock ${DECODE_LOCK}`));
+    // Of the size asked: the mesh, of 14,400 triangles, would be its own stand-in at the default size.
     expect(events.standIn?.triangles).toBeLessThanOrEqual(2000);
     expect(events.standIn?.errorUm).toBeGreaterThan(0);
+    expect(standIns.read).toHaveBeenCalledWith(URL_A, 2000);
     expect(events.full?.triangles).toBe(120 * 60 * 2);
     // Encoded for the cache in the stand-in worker, and stored once shown.
     expect(stored).toHaveLength(1);
+    expect(standIns.store).toHaveBeenCalledWith(URL_A, 2000, stored[0]);
     expect(decodeStandIn(stored[0])).toEqual(events.standIn);
     expect(events.progress.at(-1)).toBe(glb.byteLength);
     const report = events.reports.at(-1);
@@ -271,26 +282,10 @@ describe('loadEmMesh', () => {
 
   it('keeps the full mesh as it goes up, and takes it from its cache the next time, decoding nothing', async () => {
     const standIn = await cachedStandIn();
-    const storage = new FakeCacheStorage();
-    vi.stubGlobal('caches', storage);
-    fullCache = { name: 'test-full', ttlMs: 1e9, maxBytes: 1e9 };
-    vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
-    const first = load();
-    await first.promise;
-    const built = first.events.full as PackedMesh;
-    const triangles = packedTriangleCount(built);
-    const keeper = keepFullMesh(URL_A, built, workers());
-    // As the viewer hands each chunk over once it is up.
-    built.chunks.forEach((chunk, i) => {
-      keeper.keep(chunk, i);
-    });
-    await vi.waitFor(() =>
-      expect(storage.bucket('test-full').entries.has(fullKey(URL_A))).toBe(true)
-    );
+    const { built, triangles } = await keptFull();
     // Its arrays went to the worker.
     expect(built.chunks[0].indices.length).toBe(0);
 
-    log = [];
     const second = load({}, standIn);
     expect(await second.promise).toEqual({ kind: 'loaded' });
     expect(log).not.toContain('decode.decode');
@@ -298,6 +293,87 @@ describe('loadEmMesh', () => {
     expect(second.events.reports.at(-1)?.fullFrom).toBe('cache');
     expect(second.events.full?.triangles).toBe(built.triangles);
     expect(packedTriangleCount(second.events.full as PackedMesh)).toBe(triangles);
+  });
+
+  it('makes a stand-in its cache has none of, of another size say, from the full mesh its own cache gives back', async () => {
+    const { triangles } = await keptFull();
+    const { promise, events, stored } = load();
+    expect(await promise).toEqual({ kind: 'loaded' });
+    // Nothing decoded or built: the full mesh's cache is done with, and the download stopped, before the lock.
+    expect(log.filter((e) => !e.endsWith('warmUp') && e !== 'decode.download')).toEqual([
+      'fullCache.has',
+      'fullCache.restore',
+      'fullCache terminated',
+      'decode terminated',
+      `lock ${DECODE_LOCK}`,
+      'standIn.fromFull',
+      'standIn terminated',
+      'onStandIn',
+      'unlock',
+      'onFull',
+    ]);
+    expect(events.stages).toEqual(['download', 'full', 'stand-in']);
+    expect(events.standIn?.triangles).toBeLessThanOrEqual(2000);
+    expect(events.standIn?.errorUm).toBeGreaterThan(0);
+    expect(decodeStandIn(stored[0])).toEqual(events.standIn);
+    expect(events.reports.at(-1)).toMatchObject({ standInFrom: 'build', fullFrom: 'cache' });
+    expect(packedTriangleCount(events.full as PackedMesh)).toBe(triangles);
+  });
+
+  it('takes the full mesh from its cache though the mesh is refused at its header, or the download fails', async () => {
+    await keptFull();
+    const refused = load({ device: { memoryGB: 1e-6, pixels: 0 } });
+    expect(await refused.promise).toEqual({ kind: 'loaded' });
+    expect(refused.events.reports.at(-1)).toMatchObject({
+      standInFrom: 'build',
+      fullFrom: 'cache',
+    });
+
+    vi.stubGlobal('fetch', async () => {
+      throw new TypeError('Failed to fetch');
+    });
+    const offline = load();
+    expect(await offline.promise).toEqual({ kind: 'loaded' });
+    expect(offline.events.reports.at(-1)).toMatchObject({
+      standInFrom: 'build',
+      fullFrom: 'cache',
+    });
+  });
+
+  it('takes the full mesh from its cache for its own stand-in, whole, where it has no more triangles than one', async () => {
+    await keptFull();
+    const { promise, events, stored } = load({ standInTriangles: 20_000 });
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(events.full).toBe(events.standIn);
+    expect(events.standIn?.errorUm).toBe(0);
+    expect(log).not.toContain('standIn.fromFull');
+    expect(log).not.toContain('decode.decode');
+    // Kept in the full mesh's cache already.
+    expect(stored).toHaveLength(0);
+  });
+
+  it("reads the full mesh's cache in a tab not seen yet, and makes the stand-in from it once it is", async () => {
+    await keptFull();
+    let show: () => void = () => {};
+    const seen = new Promise<void>((resolve) => {
+      show = resolve;
+    });
+    const { promise } = load({ seen });
+    await vi.waitFor(() => expect(log).toContain('decode terminated'));
+    await new Promise((r) => setTimeout(r, 20));
+    expect(log).not.toContain('standIn.fromFull');
+    show();
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(log).toContain('standIn.fromFull');
+  });
+
+  it("decodes and builds the full mesh after all where its cache can't give back the mesh it has", async () => {
+    await keptFull();
+    const { promise, events } = load({ workers: workers({ fullCache: 'restore' }) });
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(log).toContain('decode.decode');
+    expect(log).toContain('standIn.make');
+    expect(events.reports.at(-1)).toMatchObject({ standInFrom: 'build', fullFrom: 'build' });
   });
 
   it('shows a cached stand-in before the download ends, and makes none', async () => {
@@ -405,12 +481,43 @@ describe('loadEmMesh', () => {
     expect(events.standIn).toBeDefined();
     expect(events.full).toBeUndefined();
   });
+
+  it("builds the full mesh where the full mesh's cache dies before it answers", async () => {
+    vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
+    const { promise, events } = load({ workers: workers({ fullCache: 'has' }) });
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(events.reports.at(-1)?.fullFrom).toBe('build');
+  });
 });
 
-/** A stand-in as the cache would give one back, from a load of the same mesh. */
+/**
+ * A load whose full mesh the viewer kept in its cache, handing each chunk over once it is up, as in the browser; the
+ * log starts again after it.
+ */
+async function keptFull(): Promise<{ built: PackedMesh; triangles: number }> {
+  const storage = new FakeCacheStorage();
+  vi.stubGlobal('caches', storage);
+  fullCache = { name: 'test-full', ttlMs: 1e9, maxBytes: 1e9 };
+  vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
+  const first = load();
+  await first.promise;
+  const built = first.events.full as PackedMesh;
+  const triangles = packedTriangleCount(built);
+  const keeper = keepFullMesh(URL_A, built, workers());
+  built.chunks.forEach((chunk, i) => {
+    keeper.keep(chunk, i);
+  });
+  await vi.waitFor(() =>
+    expect(storage.bucket('test-full').entries.has(fullKey(URL_A))).toBe(true)
+  );
+  log = [];
+  return { built, triangles };
+}
+
 const packedTriangleCount = (mesh: PackedMesh) =>
   mesh.chunks.reduce((n, c) => n + c.indices.length / 3, 0);
 
+/** A stand-in as the cache would give one back, from a load of the same mesh. */
 async function cachedStandIn(): Promise<StandIn> {
   const saved = log;
   log = [];

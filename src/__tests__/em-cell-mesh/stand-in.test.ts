@@ -2,6 +2,7 @@
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { beforeAll, describe, expect, it } from 'vitest';
 
+import { packMesh, unpackMesh } from '@/features/entities/em-cell-mesh/viewer/engine/chunks';
 import { makeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in';
 
 import { torus } from './mesh-fixtures';
@@ -29,20 +30,36 @@ function decoded(onGrid: boolean): DecodedMesh {
 }
 
 describe('makeStandIn', () => {
-  it('clusters a mesh on a grid on cubes of about half a micron, its error the farthest a vertex moved', () => {
+  it('clusters a mesh on a grid on cubes as fine as its target allows, its error the farthest a vertex moved', () => {
     const mesh = decoded(true);
-    const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 50_000);
-    expect(standIn.triangles).toBeLessThanOrEqual(50_000);
-    expect(standIn.triangles).toBeGreaterThan(5_000);
+    const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 30_000);
+    expect(standIn.triangles).toBeLessThanOrEqual(30_000);
+    expect(standIn.triangles).toBeGreaterThan(20_000);
     expect(standIn.grid).toBe(mesh.grid);
     const used = standIn.chunks.reduce((n, c) => n + c.indices.length / 3, 0);
     expect(used).toBe(standIn.triangles);
-    // Cubes of 2^8 steps of 1.5 nm, 0.38 µm: no vertex moves past a cube's diagonal.
-    expect(standIn.errorUm).toBeGreaterThan(0.05);
-    expect(standIn.errorUm).toBeLessThan(Math.sqrt(3) * 0.4);
+    // Vertices 0.4 to 0.8 µm apart, a third of them left: about as far as moves them.
+    expect(standIn.errorUm).toBeGreaterThan(0.2);
+    expect(standIn.errorUm).toBeLessThan(2);
   });
 
-  it('clusters on larger cubes until the stand-in is under its target', () => {
+  it('makes about the same stand-in from the full mesh, chunked as its cache gives it back', () => {
+    const mesh = decoded(true);
+    const fromDecoded = makeStandIn(mesh, MeshoptSimplifier, 30_000).standIn;
+    const full = packMesh(mesh.positions, mesh.grid, mesh.indices, {
+      triangles: 4000,
+      vertices: 2500,
+    }).mesh;
+    expect(full.chunks.length).toBeGreaterThan(10);
+    const fromFull = makeStandIn(unpackMesh(full), MeshoptSimplifier, 30_000).standIn;
+    expect(fromFull.grid).toBe(mesh.grid);
+    expect(fromFull.triangles).toBeLessThanOrEqual(30_000);
+    // The vertices on chunk borders, once in each chunk, weigh a little more in their cubes' means.
+    expect(Math.abs(fromFull.triangles / fromDecoded.triangles - 1)).toBeLessThan(0.05);
+    expect(Math.abs(fromFull.errorUm / fromDecoded.errorUm - 1)).toBeLessThan(0.1);
+  });
+
+  it('clusters a smaller stand-in on larger cubes', () => {
     const fine = makeStandIn(decoded(true), MeshoptSimplifier, 50_000).standIn;
     const coarse = makeStandIn(decoded(true), MeshoptSimplifier, 5_000).standIn;
     expect(coarse.triangles).toBeLessThanOrEqual(5_000);

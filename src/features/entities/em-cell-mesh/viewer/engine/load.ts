@@ -6,15 +6,20 @@
  * decode worker decodes and is terminated, the stand-in worker makes the stand-in and hands the mesh back, and the
  * build worker packs the full mesh. Each worker's arrays reach the next through the page, transferred: the peak is
  * Draco's, never two workers' at once.
+ *
+ * Where a visit before kept the full mesh, its cache gives it back instead: nothing is downloaded, decoded or built, and
+ * a stand-in its own cache has none of, of another size say, is made from the full mesh.
  */
 import * as Comlink from 'comlink';
 
 import { type Budget, checkBudget, type Device } from './budget';
+import { packedBuffers } from './chunks';
 import { readStandIn, storeStandIn } from './stand-in-cache';
 import {
   type BuildApi,
   type DecodeApi,
   type FullCacheApi,
+  type MadeStandIn,
   meshBuffers,
   type StandInApi,
 } from './worker-apis';
@@ -103,10 +108,12 @@ export interface LoadOptions {
   seen?: Promise<void>;
   signal: AbortSignal;
   workers?: Workers;
+  /** The most triangles the stand-in has. */
+  standInTriangles: number;
   standIns?: {
-    read(downloadUrl: string): Promise<StandIn | null>;
+    read(downloadUrl: string, triangles: number): Promise<StandIn | null>;
     /** `encoded` is the stand-in as `encodeStandIn` makes it. */
-    store(downloadUrl: string, encoded: ArrayBuffer): Promise<unknown>;
+    store(downloadUrl: string, triangles: number, encoded: ArrayBuffer): Promise<unknown>;
   };
 }
 
@@ -127,7 +134,7 @@ export async function loadEmMesh(
   options: LoadOptions,
   callbacks: LoadCallbacks
 ): Promise<LoadOutcome> {
-  const { request, signal } = options;
+  const { request, signal, standInTriangles: triangles } = options;
   const workers = options.workers ?? browserWorkers;
   const standIns = options.standIns ?? { read: readStandIn, store: storeStandIn };
   const report: LoadReport = {
@@ -149,9 +156,9 @@ export async function loadEmMesh(
     live.add(worker as WorkerHandle<unknown>);
     return worker;
   };
+  // Once only: a second terminate() throws, as Comlink's proxy is released.
   const stop = (worker: WorkerHandle<unknown>) => {
-    worker.terminate();
-    live.delete(worker);
+    if (live.delete(worker)) worker.terminate();
   };
   // Every step's race leaves a reaction on `aborted` holding its result: the listener goes when the load is done, or
   // the signal would keep the full mesh's arrays alive for as long as it lives.
@@ -185,7 +192,7 @@ export async function loadEmMesh(
     decoder.api.warmUp().catch(() => {});
     let standInWorker: WorkerHandle<StandInApi> | null = null;
     const cached = standIns
-      .read(request.url)
+      .read(request.url, triangles)
       .catch(() => null)
       .then((standIn) => {
         if (finished) return null;
@@ -213,14 +220,22 @@ export async function loadEmMesh(
     });
     const downloading = step('download', decoder, decoder.api.download(request, hooks));
     downloading.catch(() => {});
-    // The full mesh, as a visit before kept it, where the stand-in was kept too: a stand-in with no error is the whole
-    // mesh, and otherwise the full mesh's own cache is read. Either way the download can stop, and nothing is decoded
-    // or built. A download that fails first, offline say, leaves it to the caches all the same.
+    // The full mesh, as a visit before kept it: a cached stand-in with no error is the whole mesh, and otherwise the full
+    // mesh's own cache is read, asked while the GLB comes in. Where either has it, the download can stop, and nothing is
+    // decoded or built. A download that fails first, offline say, or a mesh refused at its header leaves it to the
+    // caches all the same.
     const fromCache = cached.then(async (standIn) => {
-      if (!standIn || standIn.errorUm === 0) return standIn;
-      const fullCache = start(workers.fullCache);
-      if (!(await fullCache.api.has(request.url).catch(() => false))) return null;
-      return step('full', fullCache, fullCache.api.restore(request.url)).catch(() => null);
+      if (standIn?.errorUm === 0) return standIn;
+      if (finished) return null;
+      const worker = start(workers.fullCache);
+      const has = await Promise.race([worker.api.has(request.url), worker.died, aborted]).catch(
+        () => false
+      );
+      const full = has
+        ? await step('full', worker, worker.api.restore(request.url)).catch(() => null)
+        : null;
+      stop(worker);
+      return full;
     });
     const quick = await Promise.race([
       fromCache,
@@ -230,26 +245,66 @@ export async function loadEmMesh(
       ),
       aborted,
     ]);
-    const fromCaches = (full: PackedMesh) => {
+
+    /** The stand-in made, shown, and kept for the next visit. */
+    const showMade = (made: MadeStandIn) => {
+      report.standInFrom = 'build';
+      report.meshoptHeapBytes = made.heapBytes;
+      report.timings.push(...made.timings);
+      tell();
+      callbacks.onStandIn(made.standIn, snapshot());
+      standIns.store(request.url, triangles, made.encoded).catch(() => {});
+    };
+    /** A tab opened in the background downloads, or reads its caches, but makes nothing until the view is seen. */
+    const whenSeen = async () => {
+      if (!options.seen) return;
+      const t0 = performance.now();
+      await Promise.race([options.seen, aborted]);
+      report.timings.push({ step: 'unseen', ms: performance.now() - t0 });
+    };
+    /**
+     * The stand-in its cache had none of, made from the full mesh, shown; the full mesh comes back with it. With no more
+     * triangles than a stand-in has, the full mesh is its own stand-in, whole, and kept in its cache already.
+     */
+    const standInFrom = async (full: PackedMesh): Promise<PackedMesh> => {
+      if (full.triangles <= triangles) {
+        const whole: StandIn = { ...full, errorUm: 0 };
+        report.standInFrom = 'cache';
+        callbacks.onStandIn(whole, snapshot());
+        return whole;
+      }
+      await whenSeen();
+      return oneAtATime(signal, async () => {
+        const worker = standInWorker ?? start(workers.standIn);
+        const made = await step(
+          'stand-in',
+          worker,
+          worker.api.fromFull(Comlink.transfer(full, packedBuffers(full)), triangles)
+        );
+        stop(worker);
+        showMade(made);
+        return made.full;
+      });
+    };
+    const fromCaches = async (cachedFull: PackedMesh) => {
+      stop(decoder);
+      const full = (await cached) ? cachedFull : await standInFrom(cachedFull);
       report.fullFrom = 'cache';
       tell();
       callbacks.onFull(full, snapshot());
       return { kind: 'loaded' } as const;
     };
-    if (quick) return fromCaches(quick);
+    // Awaited, or the finally would stop the workers making the stand-in.
+    if (quick) return await fromCaches(quick);
     const downloaded = await downloading;
     if (downloaded.kind === 'done') report.glbFrom = downloaded.fromCache ? 'cache' : 'network';
     const standInFromCache = await cached;
     const full = await Promise.race([fromCache, aborted]);
-    if (full) return fromCaches(full);
+    if (full) return await fromCaches(full);
     if (downloaded.kind === 'stopped' && report.budget)
       return { kind: 'refused', budget: report.budget };
 
-    if (options.seen) {
-      const t0 = performance.now();
-      await Promise.race([options.seen, aborted]);
-      report.timings.push({ step: 'unseen', ms: performance.now() - t0 });
-    }
+    await whenSeen();
     await oneAtATime(signal, async () => {
       const decoded = await step('decode', decoder, decoder.api.decode());
       stop(decoder);
@@ -263,16 +318,11 @@ export async function loadEmMesh(
         const made = await step(
           'stand-in',
           worker,
-          worker.api.make(Comlink.transfer(mesh, meshBuffers(mesh)))
+          worker.api.make(Comlink.transfer(mesh, meshBuffers(mesh)), triangles)
         );
         stop(worker);
         mesh = made.mesh;
-        report.standInFrom = 'build';
-        report.meshoptHeapBytes = made.heapBytes;
-        report.timings.push(...made.timings);
-        tell();
-        callbacks.onStandIn(made.standIn, snapshot());
-        standIns.store(request.url, made.encoded).catch(() => {});
+        showMade(made);
         if (made.standIn.errorUm === 0) {
           callbacks.onFull(made.standIn, snapshot());
           return;
@@ -295,7 +345,7 @@ export async function loadEmMesh(
   } finally {
     finished = true;
     signal.removeEventListener('abort', onAbort);
-    for (const worker of live) worker.terminate();
+    for (const worker of live) stop(worker);
   }
 }
 
@@ -342,7 +392,7 @@ export function keepFullMesh(
 }
 
 /** Run `work` holding the decode lock, where the browser has Web Locks; giving up the wait if the load is aborted. */
-async function oneAtATime(signal: AbortSignal, work: () => Promise<void>): Promise<void> {
+async function oneAtATime<T>(signal: AbortSignal, work: () => Promise<T>): Promise<T> {
   if (typeof navigator === 'undefined' || !navigator.locks) return work();
-  await navigator.locks.request(DECODE_LOCK, { signal }, work);
+  return navigator.locks.request(DECODE_LOCK, { signal }, work);
 }

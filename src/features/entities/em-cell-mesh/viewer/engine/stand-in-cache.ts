@@ -3,12 +3,12 @@
  * An entry is the packed stand-in: a JSON header, then each chunk's arrays, each on a 4-byte boundary.
  */
 import { readEntry, STAND_IN_CACHE, writeEntry } from './asset-cache';
-import { STAND_IN_CUBE_UM, STAND_IN_TRIANGLES } from './stand-in';
+import { TRIANGLES_PER_FACE } from './cluster';
 
 import type { PackedChunk, StandIn } from './types';
 
 /** Changes whenever a stand-in would come out differently: the simplifier, its settings, or the packing. */
-export const STAND_IN_VERSION = `cubes-${STAND_IN_CUBE_UM}-${STAND_IN_TRIANGLES}-sloppy-meshopt-1.2-pack-2`;
+export const STAND_IN_VERSION = `cubes-within-${TRIANGLES_PER_FACE}-sloppy-meshopt-1.2-pack-2`;
 
 interface Header extends Omit<StandIn, 'chunks'> {
   version: string;
@@ -17,10 +17,10 @@ interface Header extends Omit<StandIn, 'chunks'> {
 
 const align = (n: number) => (n + 3) & ~3;
 
-/** The stand-in's entry for the GLB at `downloadUrl`. */
-export function standInKey(downloadUrl: string): string {
+/** The entry for the stand-in of at most `triangles` triangles of the GLB at `downloadUrl`. */
+export function standInKey(downloadUrl: string, triangles: number): string {
   const url = new URL(downloadUrl);
-  url.searchParams.set('stand-in', STAND_IN_VERSION);
+  url.searchParams.set('stand-in', `${STAND_IN_VERSION}-${triangles}`);
   return url.href;
 }
 
@@ -74,8 +74,8 @@ export function decodeStandIn(buffer: ArrayBuffer): StandIn | null {
   };
 }
 
-export async function readStandIn(downloadUrl: string): Promise<StandIn | null> {
-  const buffer = await readEntry(STAND_IN_CACHE, standInKey(downloadUrl));
+export async function readStandIn(downloadUrl: string, triangles: number): Promise<StandIn | null> {
+  const buffer = await readEntry(STAND_IN_CACHE, standInKey(downloadUrl, triangles));
   try {
     return buffer && decodeStandIn(buffer);
   } catch {
@@ -84,6 +84,15 @@ export async function readStandIn(downloadUrl: string): Promise<StandIn | null> 
 }
 
 /** Store a stand-in as `encodeStandIn` made it. */
-export function storeStandIn(downloadUrl: string, encoded: ArrayBuffer): Promise<boolean> {
-  return writeEntry(STAND_IN_CACHE, standInKey(downloadUrl), encoded, encoded.byteLength);
+export function storeStandIn(
+  downloadUrl: string,
+  triangles: number,
+  encoded: ArrayBuffer
+): Promise<boolean> {
+  return writeEntry(
+    STAND_IN_CACHE,
+    standInKey(downloadUrl, triangles),
+    encoded,
+    encoded.byteLength
+  );
 }

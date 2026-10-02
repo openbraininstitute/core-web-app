@@ -1,7 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { clusterOnGrid } from '@/features/entities/em-cell-mesh/viewer/engine/cluster';
+import {
+  clusterOnGrid,
+  clusterWithin,
+} from '@/features/entities/em-cell-mesh/viewer/engine/cluster';
 
 import { torus } from './mesh-fixtures';
 
@@ -20,16 +23,17 @@ function normal(p: Uint16Array, a: number, b: number, c: number): number[] {
   return [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
 }
 
+const mesh = onGrid(300, 150, 0.01);
+
 describe('clusterOnGrid', () => {
-  const mesh = onGrid(300, 150, 0.01);
   // Cubes of 0.64 µm, over vertices about 0.4 µm apart round the tube.
-  const shift = 6;
-  const clustered = clusterOnGrid(mesh.positions, mesh.indices, shift);
+  const cube = 64;
+  const clustered = clusterOnGrid(mesh.positions, mesh.indices, cube);
   const { positions, indices } = clustered;
 
   it('moves no vertex past its cube, and keeps fewer triangles', () => {
     expect(clustered.moved).toBeGreaterThan(0);
-    expect(clustered.moved).toBeLessThanOrEqual(Math.sqrt(3) * 2 ** shift);
+    expect(clustered.moved).toBeLessThanOrEqual(Math.sqrt(3) * cube);
     expect(indices.length).toBeLessThan(mesh.indices.length * 0.8);
     expect(indices.length).toBeGreaterThan(0);
     for (const i of indices) expect(i).toBeLessThan(positions.length / 3);
@@ -68,8 +72,27 @@ describe('clusterOnGrid', () => {
   });
 
   it('merges nothing on cubes of one step where no two vertices share a grid point', () => {
-    const same = clusterOnGrid(mesh.positions, mesh.indices, 0);
+    const same = clusterOnGrid(mesh.positions, mesh.indices, 1);
     expect(same.moved).toBe(0);
     expect(same.indices.length).toBe(mesh.indices.length);
+  });
+
+  it('takes cubes of any size, leaving fewer triangles on larger ones', () => {
+    const [finer, coarser] = [48, 80].map((c) => clusterOnGrid(mesh.positions, mesh.indices, c));
+    expect(finer.indices.length).toBeGreaterThan(indices.length);
+    expect(coarser.indices.length).toBeLessThan(indices.length);
+    expect(coarser.moved).toBeLessThanOrEqual(Math.sqrt(3) * 80);
+  });
+});
+
+describe('clusterWithin', () => {
+  // From 3,000 down, the cubes sized by the area leave too many, and are made larger: each is a fair share of the tube.
+  it.each([
+    20_000, 3_000, 1_000,
+  ])('clusters on cubes about as fine as keep within %i triangles', (target) => {
+    const triangles = clusterWithin(mesh.positions, mesh.indices, target).indices.length / 3;
+    expect(triangles).toBeLessThanOrEqual(target);
+    // Cubes a fifth larger would leave about 0.7 of them.
+    expect(triangles).toBeGreaterThan(0.7 * target);
   });
 });

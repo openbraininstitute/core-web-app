@@ -7,6 +7,7 @@ import { EmCellMeshViewerCard } from '@/features/entities/em-cell-mesh/detail-vi
 import { EmCellMeshViewer } from '@/features/entities/em-cell-mesh/viewer/em-mesh-viewer';
 import { LoadError } from '@/features/entities/em-cell-mesh/viewer/engine/load';
 import { DEFAULT_MOTION } from '@/features/entities/em-cell-mesh/viewer/engine/motion-quality';
+import { STAND_IN_TRIANGLES } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in';
 import { HELP } from '@/features/entities/em-cell-mesh/viewer/help/help-text';
 import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
 import { defaultFlags } from '@/features/feature-flags/config';
@@ -294,6 +295,16 @@ async function openSettings() {
   await screen.findByRole('switch', { name: 'Wireframe' });
 }
 
+/** Sets in the Debug menu the most triangles the stand-in has, in millions. */
+async function chooseStandIn(millions: number) {
+  fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
+  fireEvent.click(
+    await screen.findByRole('button', {
+      name: `A stand-in of at most ${millions} million triangles`,
+    })
+  );
+}
+
 beforeEach(() => {
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
   h.viewers.length = 0;
@@ -512,6 +523,29 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.clear).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the full detail let go of after the graphics reset from loading for another stand-in size, until asked', async () => {
+    const { viewer } = await drawn();
+    act(() => viewer.loseContext(true));
+    const again = await started(2);
+    act(() => again.callbacks.onFull(MESH, report()));
+    act(() => viewer.tell('ready'));
+    await act(async () => again.resolve({ kind: 'loaded' }));
+    act(() => viewer.loseContext(true));
+    await waitFor(() =>
+      expect(pill()).toBe('Full detail was let go of after the graphics resetLoad it')
+    );
+
+    await chooseStandIn(5);
+    await waitFor(() => expect(h.request).toHaveBeenCalledTimes(3));
+    await act(() => new Promise((resolve) => setTimeout(resolve)));
+    expect(h.loads).toHaveLength(2);
+    expect(pill()).toBe('Full detail was let go of after the graphics resetLoad it');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Load it' }));
+    const asked = await started(3);
+    expect(asked.options.standInTriangles).toBe(5_000_000);
+  });
+
   it('says the graphics were reset while they are, and to reload once they have not come back for a while', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
@@ -554,6 +588,7 @@ describe('EmCellMeshViewer', () => {
     expect(mark()).toBe('decode');
     act(() => load.callbacks.onStage?.('full'));
     expect(mark()).toBe('full');
+    act(() => load.callbacks.onFull(MESH, report()));
     act(() => viewer.tell('ready'));
     expect(mark()).toBeNull();
     act(() => load.callbacks.onStage?.('decode'));
@@ -578,6 +613,29 @@ describe('EmCellMeshViewer', () => {
       fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
       await started();
       expect(screen.queryByRole('alert')).toBeNull();
+    } finally {
+      localStorage.clear();
+    }
+  });
+
+  it('keeps a mesh whose load stopped the page last time from loading for another stand-in size, until asked', async () => {
+    localStorage.setItem('em-mesh-load:glb', 'decode');
+    try {
+      await renderViewer();
+      await screen.findByRole('alert');
+      await chooseStandIn(5);
+      await waitFor(() => expect(h.request).toHaveBeenCalledTimes(2));
+      await act(() => new Promise((resolve) => setTimeout(resolve)));
+      expect(h.loads).toHaveLength(0);
+      expect(screen.getByRole('alert')).toHaveTextContent(
+        'Loading this mesh stopped the page last time'
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      const load = await started();
+      expect(load.options.standInTriangles).toBe(5_000_000);
+      // Tried again, its mark goes: the load sets its own.
+      expect(localStorage.getItem('em-mesh-load:glb')).toBeNull();
     } finally {
       localStorage.clear();
     }
@@ -693,6 +751,41 @@ describe('EmCellMeshViewer', () => {
     expect(screen.getByTestId('em-frame-times').textContent).toBe(
       'moving: full mesh · AO · 100% · AA6.2 ms GPU · 118 fpsfull frame: 12.5 ms'
     );
+  });
+
+  it('loads the mesh again for a stand-in of the size set in the Debug menu, keeping what the viewer has', async () => {
+    const { viewer } = await drawn();
+    expect(h.loads[0].options.standInTriangles).toBe(STAND_IN_TRIANGLES);
+    await chooseStandIn(5);
+    const again = await started(2);
+    expect(again.options.standInTriangles).toBe(5_000_000);
+    expect(h.loads[0].options.signal.aborted).toBe(true);
+    expect(viewer.clear).toHaveBeenCalledTimes(1);
+  });
+
+  it("leaves the mark and the pill to the load under way where the last load's full mesh finishes going up after it", async () => {
+    try {
+      const { viewer } = await renderViewer();
+      const first = await started();
+      act(() => first.callbacks.onProgress?.(8e6, 8e6));
+      act(() => first.callbacks.onStandIn(STAND_IN, report()));
+      act(() => first.callbacks.onFull(MESH, report()));
+      await act(async () => first.resolve({ kind: 'loaded' }));
+      // Still going up as another size is set.
+      await chooseStandIn(5);
+      const again = await started(2);
+      act(() => again.callbacks.onStage?.('decode'));
+      act(() => viewer.tell('ready'));
+      expect(localStorage.getItem('em-mesh-load:glb')).toBe('decode');
+      expect(pill()).toBe('Loading full detail…');
+
+      act(() => again.callbacks.onFull(MESH, report()));
+      act(() => viewer.tell('ready'));
+      expect(localStorage.getItem('em-mesh-load:glb')).toBeNull();
+      expect(pill()).toBeNull();
+    } finally {
+      localStorage.clear();
+    }
   });
 
   it('tells in the Debug menu that no GLB was needed where the cached stand-in is the whole mesh', async () => {

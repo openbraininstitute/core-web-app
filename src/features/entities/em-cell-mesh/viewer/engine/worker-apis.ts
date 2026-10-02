@@ -6,11 +6,11 @@
 import * as Comlink from 'comlink';
 
 import { type CacheBounds, hasEntry, readEntry, writeEntry } from './asset-cache';
-import { packedBuffers, packMesh } from './chunks';
+import { packedBuffers, packMesh, unpackMesh } from './chunks';
 import { type DecodeResult, type DracoModule, decodeGlb } from './decode';
 import { type DownloadHooks, type DownloadRequest, downloadGlb } from './download';
 import { decodeFull, type EncodedChunk, encodeChunk, encodeFull, fullKey } from './full-cache';
-import { makeStandIn, STAND_IN_TRIANGLES } from './stand-in';
+import { makeStandIn } from './stand-in';
 import { encodeStandIn } from './stand-in-cache';
 
 import type { MeshoptSimplifier } from 'meshoptimizer';
@@ -58,38 +58,52 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
   };
 }
 
-/** Makes the stand-in, and its copy for the cache, and hands the mesh back for the full build. */
+/** What the stand-in worker hands back: the stand-in, its copy for the cache, and how it was made. */
+export interface MadeStandIn {
+  standIn: StandIn;
+  /** The stand-in as the cache keeps it (`encodeStandIn`), made here rather than on the page. */
+  encoded: ArrayBuffer;
+  timings: Timing[];
+  heapBytes: number | null;
+}
+
+/**
+ * Makes the stand-in, and its copy for the cache, from the decoded mesh, which it hands back for the full build; or from
+ * the full mesh its cache gave back, which it hands back to be drawn.
+ */
 export function createStandInApi(
   loadSimplifier: () => Promise<typeof MeshoptSimplifier>,
-  heapBytes: () => number | null,
-  target = STAND_IN_TRIANGLES
+  heapBytes: () => number | null
 ) {
   let simplifier: Promise<typeof MeshoptSimplifier> | null = null;
   const ready = () => {
     simplifier ??= loadSimplifier();
     return simplifier;
   };
+  const makeFrom = async (mesh: DecodedMesh, triangles: number): Promise<MadeStandIn> => {
+    const { standIn, timings } = makeStandIn(mesh, await ready(), triangles);
+    return { standIn, encoded: encodeStandIn(standIn), timings, heapBytes: heapBytes() };
+  };
+  const madeBuffers = (made: MadeStandIn) => [...packedBuffers(made.standIn), made.encoded];
   return {
     /** Compile meshoptimizer's WASM, while the GLB downloads. */
     async warmUp(): Promise<void> {
       await ready();
     },
 
-    async make(mesh: DecodedMesh): Promise<{
-      standIn: StandIn;
-      /** The stand-in as the cache keeps it (`encodeStandIn`), made here rather than on the page. */
-      encoded: ArrayBuffer;
-      mesh: DecodedMesh;
-      timings: Timing[];
-      heapBytes: number | null;
-    }> {
-      const { standIn, timings } = makeStandIn(mesh, await ready(), target);
-      const encoded = encodeStandIn(standIn);
-      return Comlink.transfer({ standIn, encoded, mesh, timings, heapBytes: heapBytes() }, [
-        ...packedBuffers(standIn),
-        ...meshBuffers(mesh),
-        encoded,
-      ]);
+    /** The stand-in of at most `triangles` triangles. */
+    async make(mesh: DecodedMesh, triangles: number): Promise<MadeStandIn & { mesh: DecodedMesh }> {
+      const made = await makeFrom(mesh, triangles);
+      return Comlink.transfer({ ...made, mesh }, [...madeBuffers(made), ...meshBuffers(mesh)]);
+    },
+
+    /** The stand-in of at most `triangles` triangles, from the full mesh as its cache gave it back. */
+    async fromFull(
+      full: PackedMesh,
+      triangles: number
+    ): Promise<MadeStandIn & { full: PackedMesh }> {
+      const made = await makeFrom(unpackMesh(full), triangles);
+      return Comlink.transfer({ ...made, full }, [...madeBuffers(made), ...packedBuffers(full)]);
     },
   };
 }

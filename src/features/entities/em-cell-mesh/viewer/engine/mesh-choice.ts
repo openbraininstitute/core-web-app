@@ -1,15 +1,16 @@
 /**
- * Which mesh to draw, chosen every frame: the stand-in wherever its error is well under a device pixel, and, on a GPU
+ * Which mesh to draw, chosen every frame: the stand-in wherever its error is far under a device pixel, and, on a GPU
  * too slow for the full mesh, while the view moves.
  */
 
 /**
- * Past this error in device pixels the full mesh comes in, and under the other it goes: no flicker in between. Well
- * under a pixel: a fibre thinner than the stand-in's cubes is lost in it, not moved, and shows dashed where the full
- * mesh draws it whole. On the largest cell at overview zoom on a screen at the CSS resolution, it did at 0.52 px.
+ * Past this error in device pixels the full mesh comes in, and under the other it goes: no flicker in between. Far
+ * under a pixel: what is thinner than the stand-in's cubes, spines and the thinnest axons, is lost in it, not moved. At
+ * a pixel ratio of 1 the dendrites of every stand-in size looked thinner than the full mesh's at overview zoom, 0.12 to
+ * 0.54 px; on the largest cell, the 3M stand-in's still at 0.13 px, and the same at 0.09 px.
  */
-export const FULL_ABOVE_PX = 0.4;
-export const STAND_IN_BELOW_PX = 0.25;
+export const FULL_ABOVE_PX = 0.1;
+export const STAND_IN_BELOW_PX = 0.06;
 /** The full frames measured, the median of which is the frame cost. */
 const SAMPLES = 3;
 /**

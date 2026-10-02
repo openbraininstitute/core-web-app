@@ -85,10 +85,10 @@ describe('MotionQuality', () => {
     expect(q.rung.scale).toBe(MOTION_SCALES[1]);
     frames(q, 2, 6000);
     expect(q.rung).toEqual(NO_AO);
-    // Twice 6 ms would come too close to the budget.
-    frames(q, 6, 6000);
+    // Twice this would come too close to the budget.
+    frames(q, 0.45 * BUDGET, 6000);
     expect(q.rung).toEqual(NO_AO);
-    frames(q, 4, 6000);
+    frames(q, 0.3 * BUDGET, 6000);
     expect(q.rung).toEqual(TOP);
   });
 

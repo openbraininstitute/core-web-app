@@ -102,14 +102,19 @@ function fullscreenPixels(): number {
 }
 
 /**
- * Loads the mesh into the viewer: the stand-in as soon as there is one, then the full mesh. Another mesh, or the
- * viewer going, aborts the load.
+ * Loads the mesh into the viewer: the stand-in of at most `standInTriangles` as soon as there is one, then the full
+ * mesh. Another mesh, another stand-in, or the viewer going, aborts the load.
  *
  * A context lost with the full mesh loads it again, keeping the stand-in, once the page is on show; a second time for
  * the same mesh, only when asked. A load that stopped the page last time (`load-mark.ts`) is not tried again until
- * asked, the cached stand-in shown meanwhile.
+ * asked, the cached stand-in shown meanwhile. Another stand-in size asks for neither: it shows that size's cached
+ * stand-in, if there is one.
  */
-export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
+export function useEmMesh(
+  viewer: EmMeshViewer | null,
+  source: EmMeshSource,
+  standInTriangles: number
+) {
   const [state, setState] = useState(INITIAL);
   /** The mesh the user chose to load over the budget. */
   const [loadAnywayKey, setLoadAnywayKey] = useState<string | null>(null);
@@ -121,7 +126,9 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
   const shown = useRef<string | null>(null);
   /** The mesh loaded again once already after a lost context. */
   const rebuilt = useRef<string | null>(null);
-  const started = useRef(0);
+  /** `fullDropped` as rendered, for the load to read without loading again as it changes. */
+  const dropped = useRef(state.fullDropped);
+  dropped.current = state.fullDropped;
   const sourceRef = useRef(source);
   sourceRef.current = source;
 
@@ -156,18 +163,6 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
       clearTimeout(timer);
     };
   }, [viewer]);
-  useEffect(
-    () =>
-      viewer?.onFullReady(() => {
-        clearLoading(sourceRef.current.asset.id);
-        setState((s) => ({
-          ...s,
-          fullReady: true,
-          times: { ...s.times, ready: performance.now() - started.current },
-        }));
-      }),
-    [viewer]
-  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: a rebuild is asked for by its count
   useEffect(() => {
@@ -175,12 +170,12 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
     if (!viewer) return;
     const again = shown.current === key;
     shown.current = key;
-    if (!again) viewer.clear();
-    setState((s) =>
-      again
-        ? { ...s, refused: null, error: null, stopped: null, fullDropped: false, fullReady: false }
-        : { ...INITIAL, context: s.context, total: src.asset.size }
-    );
+    // Another stand-in size doesn't ask for the full detail let go of: only that size's cached stand-in is shown.
+    const held = again && dropped.current;
+    if (!again) {
+      viewer.clear();
+      setState((s) => ({ ...INITIAL, context: s.context, total: src.asset.size }));
+    } else if (!held) setState((s) => ({ ...s, refused: null, error: null, fullReady: false }));
     const controller = new AbortController();
     const { signal } = controller;
     const assetId = src.asset.id;
@@ -191,11 +186,17 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
     };
     window.addEventListener('pagehide', unmark);
     const t0 = performance.now();
-    started.current = t0;
     const since = () => performance.now() - t0;
     const patch = (p: (s: EmMeshState) => Partial<EmMeshState>) => {
       if (!signal.aborted) setState((s) => ({ ...s, ...p(s) }));
     };
+    // The full mesh the viewer uploads is this load's once handed over: not the last load's, still going up.
+    let handed = false;
+    const offReady = viewer.onFullReady(() => {
+      if (!handed) return;
+      clearLoading(assetId);
+      patch((s) => ({ fullReady: true, times: { ...s.times, ready: since() } }));
+    });
 
     (async () => {
       const request = {
@@ -209,14 +210,14 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
       };
       if (signal.aborted) return;
       patch(() => ({ request }));
-      const stopped = again ? null : await stoppedLoading(assetId);
+      const stopped = await stoppedLoading(assetId);
       if (signal.aborted) return;
-      if (stopped) {
-        patch(() => ({ stopped }));
-        const standIn = await readStandIn(request.url);
+      if (stopped || held) {
+        if (stopped) patch(() => ({ stopped }));
+        const standIn = await readStandIn(request.url, standInTriangles);
         if (!standIn || signal.aborted) return;
         viewer.setStandIn(standIn);
-        patch(() => ({ meshes: { standIn: summary(standIn), full: null } }));
+        patch((s) => ({ meshes: { ...s.meshes, standIn: summary(standIn) } }));
         return;
       }
       const outcome = await loadEmMesh(
@@ -226,6 +227,7 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
           ignoreBudget,
           seen: viewer.seen(),
           signal,
+          standInTriangles,
         },
         {
           onStage: (stage) => {
@@ -249,6 +251,7 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
             // Kept for the next visit as it goes up, unless it came from its cache.
             const keeper = report.fullFrom === 'build' ? keepFullMesh(request.url, mesh) : null;
             if (keeper) signal.addEventListener('abort', keeper.stop, { once: true });
+            handed = true;
             viewer.setFull(mesh, keeper?.keep);
             patch((s) => ({
               report,
@@ -268,15 +271,21 @@ export function useEmMesh(viewer: EmMeshViewer | null, source: EmMeshSource) {
     });
     return () => {
       controller.abort();
+      offReady();
       window.removeEventListener('pagehide', unmark);
       // Stopped by the page, for another mesh or as the card goes: not by the browser.
       unmark();
     };
-  }, [viewer, key, ignoreBudget, rebuilds]);
+  }, [viewer, key, ignoreBudget, rebuilds, standInTriangles]);
 
   const loadAnyway = () => setLoadAnywayKey(key);
   /** Load the mesh again: after it stopped the page last time, or after its full detail was let go of. */
-  const loadAgain = () => setRebuilds((n) => n + 1);
+  const loadAgain = () => {
+    // Tried again: the mark that held it back goes, and the load sets its own.
+    clearLoading(source.asset.id);
+    setState((s) => ({ ...s, stopped: null, fullDropped: false }));
+    setRebuilds((n) => n + 1);
+  };
   return { ...state, loadAnyway, loadAgain };
 }
 

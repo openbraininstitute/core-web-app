@@ -61,14 +61,19 @@ describe('the stand-in cache', () => {
     copy.set(other, 4);
     new DataView(copy.buffer).setUint32(0, other.byteLength, true);
     expect(decodeStandIn(copy.buffer)).toBeNull();
-    expect(standInKey(URL_A)).toContain(encodeURIComponent(STAND_IN_VERSION));
-    expect(standInKey(URL_A)).toContain('asset_path=mesh.glb');
+    expect(standInKey(URL_A, 5000)).toContain(encodeURIComponent(STAND_IN_VERSION));
+    expect(standInKey(URL_A, 5000)).toContain('asset_path=mesh.glb');
   });
 
   it('stores a stand-in in its own bucket, and reads it back', async () => {
-    expect(await readStandIn(URL_A)).toBeNull();
-    expect(await storeStandIn(URL_A, encodeStandIn(standIn))).toBe(true);
+    expect(await readStandIn(URL_A, 5000)).toBeNull();
+    expect(await storeStandIn(URL_A, 5000, encodeStandIn(standIn))).toBe(true);
     expect((caches as unknown as FakeCacheStorage).buckets.has(STAND_IN_CACHE.name)).toBe(true);
-    expect(await readStandIn(URL_A)).toEqual(standIn);
+    expect(await readStandIn(URL_A, 5000)).toEqual(standIn);
+  });
+
+  it('keeps a stand-in of each size apart', async () => {
+    await storeStandIn(URL_A, 5000, encodeStandIn(standIn));
+    expect(await readStandIn(URL_A, 10_000)).toBeNull();
   });
 });
