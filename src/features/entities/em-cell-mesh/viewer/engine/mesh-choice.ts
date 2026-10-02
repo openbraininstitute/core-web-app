@@ -1,11 +1,15 @@
 /**
- * Which mesh to draw, chosen every frame: the stand-in wherever its error is under about a device pixel, and, on a GPU
+ * Which mesh to draw, chosen every frame: the stand-in wherever its error is well under a device pixel, and, on a GPU
  * too slow for the full mesh, while the view moves.
  */
 
-/** Past this error in device pixels the full mesh comes in, and under the other it goes: no flicker in between. */
-export const FULL_ABOVE_PX = 1.2;
-export const STAND_IN_BELOW_PX = 0.8;
+/**
+ * Past this error in device pixels the full mesh comes in, and under the other it goes: no flicker in between. Well
+ * under a pixel: a fibre thinner than the stand-in's cubes is lost in it, not moved, and shows dashed where the full
+ * mesh draws it whole. On the largest cell at overview zoom on a screen at the CSS resolution, it did at 0.52 px.
+ */
+export const FULL_ABOVE_PX = 0.4;
+export const STAND_IN_BELOW_PX = 0.25;
 /** A full frame slower than this, ms, draws the stand-in while the view moves. */
 export const SLOW_FRAME_MS = 20;
 /** The full frames measured, the median of which is the frame cost. */

@@ -47,8 +47,8 @@ export const HELP = {
   },
   'view-status': {
     text:
-      `The stand-in is drawn while its error is under about a device pixel: the full mesh comes in past ` +
-      `${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. Where a full frame takes the GPU more than ` +
+      `The stand-in is drawn while its error is well under a device pixel, as it loses the thinnest fibres: the ` +
+      `full mesh comes in past ${FULL_ABOVE_PX} px, and goes under ${STAND_IN_BELOW_PX} px. Where a full frame takes the GPU more than ` +
       `${SLOW_FRAME_MS} ms, the stand-in is drawn while the view moves.`,
   },
   'ao-depth': {

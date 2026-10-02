@@ -3,12 +3,12 @@
  * An entry is the packed stand-in: a JSON header, then each chunk's arrays, each on a 4-byte boundary.
  */
 import { readEntry, STAND_IN_CACHE, writeEntry } from './asset-cache';
-import { STAND_IN_TRIANGLES } from './stand-in';
+import { STAND_IN_CUBE_UM, STAND_IN_TRIANGLES } from './stand-in';
 
 import type { PackedChunk, StandIn } from './types';
 
 /** Changes whenever a stand-in would come out differently: the simplifier, its settings, or the packing. */
-export const STAND_IN_VERSION = `sloppy-${STAND_IN_TRIANGLES}-meshopt-1.2-pack-1`;
+export const STAND_IN_VERSION = `cubes-${STAND_IN_CUBE_UM}-${STAND_IN_TRIANGLES}-sloppy-meshopt-1.2-pack-2`;
 
 interface Header extends Omit<StandIn, 'chunks'> {
   version: string;

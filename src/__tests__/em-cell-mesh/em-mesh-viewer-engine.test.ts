@@ -354,6 +354,7 @@ describe('EmMeshViewer', () => {
     const status: ViewStatus[] = [];
     viewer.onStatus((s) => status.push(s));
     viewer.resetView();
+    zoom(v, 0.2);
     frame(v);
     expect(status.at(-1)).toMatchObject({ shown: 'stand-in', reason: 'error' });
     const camera = v.controls.object as THREE.OrthographicCamera;

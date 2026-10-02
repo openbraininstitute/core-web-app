@@ -29,23 +29,33 @@ function decoded(onGrid: boolean): DecodedMesh {
 }
 
 describe('makeStandIn', () => {
-  it('simplifies to under its triangle target, with its error in µm, the same on the grid or in floats', () => {
-    const errors = [true, false].map((onGrid) => {
-      const { standIn } = makeStandIn(decoded(onGrid), MeshoptSimplifier, 10_000);
-      expect(standIn.triangles).toBeLessThanOrEqual(10_000);
-      expect(standIn.triangles).toBeGreaterThan(5_000);
-      const used = standIn.chunks.reduce((n, c) => n + c.indices.length / 3, 0);
-      expect(used).toBe(standIn.triangles);
-      return standIn.errorUm;
-    });
+  it('clusters a mesh on a grid on cubes of about half a micron, its error the farthest a vertex moved', () => {
+    const mesh = decoded(true);
+    const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 50_000);
+    expect(standIn.triangles).toBeLessThanOrEqual(50_000);
+    expect(standIn.triangles).toBeGreaterThan(5_000);
+    expect(standIn.grid).toBe(mesh.grid);
+    const used = standIn.chunks.reduce((n, c) => n + c.indices.length / 3, 0);
+    expect(used).toBe(standIn.triangles);
+    // Cubes of 2^8 steps of 1.5 nm, 0.38 µm: no vertex moves past a cube's diagonal.
+    expect(standIn.errorUm).toBeGreaterThan(0.05);
+    expect(standIn.errorUm).toBeLessThan(Math.sqrt(3) * 0.4);
+  });
+
+  it('clusters on larger cubes until the stand-in is under its target', () => {
+    const fine = makeStandIn(decoded(true), MeshoptSimplifier, 50_000).standIn;
+    const coarse = makeStandIn(decoded(true), MeshoptSimplifier, 5_000).standIn;
+    expect(coarse.triangles).toBeLessThanOrEqual(5_000);
+    expect(coarse.errorUm).toBeGreaterThan(fine.errorUm);
+  });
+
+  it('simplifies float positions with meshoptimizer, under its target, with its error in µm', () => {
+    const { standIn } = makeStandIn(decoded(false), MeshoptSimplifier, 10_000);
+    expect(standIn.triangles).toBeLessThanOrEqual(10_000);
+    expect(standIn.triangles).toBeGreaterThan(5_000);
     // A torus 18 µm thick, at a tenth of its triangles: a fraction of a micron.
-    for (const e of errors) {
-      expect(e).toBeGreaterThan(0.01);
-      expect(e).toBeLessThan(2);
-    }
-    // The grid's rounding moves the simplifier's cells a little, not the scale of its error.
-    expect(errors[0] / errors[1]).toBeGreaterThan(0.8);
-    expect(errors[0] / errors[1]).toBeLessThan(1.25);
+    expect(standIn.errorUm).toBeGreaterThan(0.01);
+    expect(standIn.errorUm).toBeLessThan(2);
   });
 
   it("keeps the grid's step, and no error, for a mesh already under the target", () => {
@@ -54,7 +64,7 @@ describe('makeStandIn', () => {
     expect(standIn.errorUm).toBe(0);
     expect(standIn.triangles).toBe(mesh.indices.length / 3);
     expect(standIn.grid).toBe(mesh.grid);
-    // The decoded mesh is left as it was: the stand-in's indices are its own.
+    // The decoded mesh is left as it was.
     expect(mesh.indices[0]).toBe(0);
   });
 });

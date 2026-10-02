@@ -199,7 +199,7 @@ function loadLines(load: EmMeshLoad, name: string): ReactNode[] {
   );
   if (report?.standInFrom === 'build') {
     lines.push(
-      `stand-in ${ms(took(t, 'stand-in'))}: simplify ${ms(took(t, 'simplify'))}, compact ${ms(took(t, 'compact'))}, ` +
+      `stand-in ${ms(took(t, 'stand-in'))}: simplify ${ms(took(t, 'simplify'))}, ` +
         `pack ${ms(took(t, 'stand-in normals', 'stand-in split', 'stand-in pack'))}`
     );
   }

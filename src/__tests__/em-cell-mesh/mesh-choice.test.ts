@@ -34,8 +34,8 @@ describe('MeshChooser', () => {
     return errors.map((errorPx) => chooser.choose({ ...AUTO, ...input, errorPx }).mesh);
   };
 
-  it('brings the full mesh in past 1.2 px and takes it out under 0.8 px, not in between', () => {
-    expect(run([0.5, 1.1, 1.3, 1.1, 0.9, 0.7, 0.9, 1.1, 1.3])).toEqual([
+  it('brings the full mesh in past 0.4 px and takes it out under 0.25 px, not in between', () => {
+    expect(run([0.1, 0.35, 0.45, 0.35, 0.3, 0.2, 0.3, 0.35, 0.45])).toEqual([
       'stand-in',
       'stand-in',
       'full',
