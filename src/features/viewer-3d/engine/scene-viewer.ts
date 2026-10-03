@@ -606,10 +606,10 @@ export class SceneViewer implements ViewControls {
   }
 
   /**
-   * Compile the look's shaders before the content's geometry arrives, for the target its frames are drawn into: tone
-   * mapping and the output colour space differ between the composer's target and the canvas. Then draw one frame with
-   * `placeholder`, a degenerate triangle with the content's vertex attributes: Metal builds its pipelines on the first
-   * draw, and `compileAsync` leaves out the composer's passes.
+   * For a viewer that always composes (`composeAlways`): compile the look's shaders before the content's geometry
+   * arrives, for the composer's target, as tone mapping and the output colour space differ between it and the canvas.
+   * Then draw one frame with `placeholder`, a degenerate triangle with the content's vertex attributes: Metal builds its
+   * pipelines on the first draw, and `compileAsync` leaves out the composer's passes.
    */
   async warmUp(placeholder: THREE.BufferGeometry): Promise<void> {
     const look = this.look;
@@ -621,13 +621,11 @@ export class SceneViewer implements ViewControls {
       outline.frustumCulled = false;
       this.outlines.add(outline);
     }
-    if (this.composing()) this.ensureComposer();
+    this.ensureComposer();
     const previous = this.renderer.getRenderTarget();
     let compiled: Promise<unknown>;
     try {
-      this.renderer.setRenderTarget(
-        this.composing() ? (this.main?.composer.renderTarget2 ?? null) : null
-      );
+      this.renderer.setRenderTarget(this.main?.composer.renderTarget2 ?? null);
       compiled = this.renderer.compileAsync(this.scene, this.camera);
     } finally {
       this.renderer.setRenderTarget(previous);
@@ -656,13 +654,13 @@ export class SceneViewer implements ViewControls {
   };
 
   /**
-   * Draw `objects`, which must be in the scene, once where frames are drawn, writing no pixel: three uploads their
-   * buffers and builds their programs, and the driver does its first-draw work (ANGLE's vertex conversions, its lazily
-   * made storage), ahead of the frame that shows them.
+   * For a viewer that always composes (`composeAlways`): draw `objects`, which must be in the scene, once where frames
+   * are drawn, writing no pixel. three uploads their buffers and builds their programs, and the driver does its
+   * first-draw work (ANGLE's vertex conversions, its lazily made storage), ahead of the frame that shows them.
    *
-   * Through the composer, they are drawn into a target of a pixel, of the formats the scene is drawn into, which is
-   * what the GPU's pipelines are built for: three resolves a multisampled target after each draw, which Direct3D
-   * likely does whole, whatever the scissor.
+   * They are drawn into a target of a pixel, of the formats the scene is drawn into, which is what the GPU's pipelines
+   * are built for: three resolves a multisampled target after each draw, which Direct3D likely does whole, whatever the
+   * scissor.
    */
   protected drawUnseen(objects: THREE.Object3D[]): void {
     const renderer = this.renderer;
@@ -672,12 +670,7 @@ export class SceneViewer implements ViewControls {
     const saved = objects.map((o) => ({ mask: o.layers.mask, culled: o.frustumCulled }));
     const autoClear = renderer.autoClear;
     const previous = renderer.getRenderTarget();
-    if (this.composing()) this.ensureComposer();
-    const target = this.composing() ? this.pixelTarget() : null;
-    // The canvas, where there is no composer, is scissored to a pixel instead.
-    const scissor = target
-      ? null
-      : { box: renderer.getScissor(new THREE.Vector4()), test: renderer.getScissorTest() };
+    this.ensureComposer();
     try {
       for (const o of objects) {
         o.layers.set(UNSEEN_LAYER);
@@ -689,11 +682,7 @@ export class SceneViewer implements ViewControls {
       color.setLocked(true);
       depth.setMask(false);
       depth.setLocked(true);
-      if (scissor) {
-        renderer.setScissor(0, 0, 1, 1);
-        renderer.setScissorTest(true);
-      }
-      renderer.setRenderTarget(target);
+      renderer.setRenderTarget(this.pixelTarget());
       renderer.render(this.scene, camera);
     } finally {
       color.setLocked(false);
@@ -701,10 +690,6 @@ export class SceneViewer implements ViewControls {
       depth.setLocked(false);
       depth.setMask(true);
       renderer.autoClear = autoClear;
-      if (scissor) {
-        renderer.setScissor(scissor.box);
-        renderer.setScissorTest(scissor.test);
-      }
       renderer.setRenderTarget(previous);
       camera.layers.mask = layers;
       objects.forEach((o, i) => {

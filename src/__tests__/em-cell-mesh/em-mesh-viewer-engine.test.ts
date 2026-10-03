@@ -23,7 +23,6 @@ const { FakeRenderer } = vi.hoisted(() => {
     writes: { color: boolean; depth: boolean; locked: boolean };
     autoClear: boolean;
     target: unknown;
-    scissor: number[] | null;
     layers: number;
   }
   const uploaded = new WeakSet<object>();
@@ -31,11 +30,9 @@ const { FakeRenderer } = vi.hoisted(() => {
   /** Draws nothing. A draw uploads what it draws, as three does, calling each attribute's `onUpload`. */
   class FakeRenderer {
     domElement = document.createElement('canvas');
-    toneMapping = -1;
-    toneMappingExposure = 1;
     autoClear = true;
     loop: (() => void) | null = null;
-    target: (THREE.WebGLRenderTarget & { scissor: THREE.Vector4 }) | null = null;
+    target: THREE.WebGLRenderTarget | null = null;
     unseen: Unseen[] = [];
     context: unknown = {
       RENDERBUFFER: 1,
@@ -54,10 +51,6 @@ const { FakeRenderer } = vi.hoisted(() => {
     };
 
     constructor() {
-      Object.defineProperties(this.domElement, {
-        clientWidth: { value: 400 },
-        clientHeight: { value: 300 },
-      });
       this.domElement.width = 400;
       this.domElement.height = 300;
     }
@@ -84,7 +77,6 @@ const { FakeRenderer } = vi.hoisted(() => {
         },
         autoClear: this.autoClear,
         target: this.target,
-        scissor: this.target?.scissorTest ? this.target.scissor.toArray() : null,
         layers: camera.layers.mask,
       });
     };
@@ -130,10 +122,6 @@ const { FakeRenderer } = vi.hoisted(() => {
       this.target = target;
     }
 
-    compileAsync(): Promise<void> {
-      return Promise.resolve();
-    }
-
     setPixelRatio(): void {}
     setClearColor(): void {}
     setSize(): void {}
@@ -158,7 +146,7 @@ interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
   main: { composer: EffectComposer };
   scene: THREE.Scene;
-  controls: { object: THREE.OrthographicCamera | THREE.PerspectiveCamera; update(): boolean };
+  controls: { object: THREE.OrthographicCamera | THREE.PerspectiveCamera };
   wire: THREE.Material;
   cost: { add(ms: number, cold?: boolean): void; measure(): boolean };
   motion: { add(ms: number): void };
@@ -384,7 +372,7 @@ describe('EmMeshViewer', () => {
     expect(standIn.every((m) => m.geometry.index?.array instanceof Uint16Array)).toBe(true);
   });
 
-  it('places each chunk on the grid in µm, frames the view on the stand-in, and culls by its bounds', () => {
+  it('places each chunk on the grid in µm, and culls by its bounds', () => {
     const { v } = loaded();
     zoom(v, 8);
     frame(v);
@@ -401,15 +389,16 @@ describe('EmMeshViewer', () => {
 
   it('chooses by the error in device pixels: the stand-in from afar, the full mesh close up', () => {
     const { viewer, v } = loaded();
+    vi.spyOn(v.renderer, 'getPixelRatio').mockReturnValue(2);
     const status: ViewStatus[] = [];
     viewer.onStatus((s) => status.push(s));
     viewer.resetView();
-    zoom(v, 0.1);
+    zoom(v, 0.05);
     frame(v);
     expect(status.at(-1)).toMatchObject({ shown: 'stand-in', reason: 'error' });
     const camera = v.controls.object as THREE.OrthographicCamera;
     const pixelUm = (camera.top - camera.bottom) / camera.zoom / 300;
-    expect(status.at(-1)?.errorPx).toBeCloseTo(STAND_IN.errorUm / pixelUm, 2);
+    expect(status.at(-1)?.errorPx).toBeCloseTo((2 * STAND_IN.errorUm) / pixelUm, 2);
     zoom(v, 8);
     frame(v);
     expect(status.at(-1)).toMatchObject({ shown: 'full', reason: 'error' });
@@ -445,6 +434,10 @@ describe('EmMeshViewer', () => {
     viewer.setWireframe(false);
     frame(v);
     expect(same(drawn(), full)).toBe(true);
+    // The stand-in out of its wires too.
+    viewer.setForcedMesh('stand-in');
+    frame(v);
+    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
     expect(drawn().every((m) => m.material !== v.wire)).toBe(true);
   });
 
@@ -594,6 +587,8 @@ describe('EmMeshViewer', () => {
     viewer.onStatus((s) => status.push(s));
     zoom(v, 8);
     frame(v);
+    // No timer measured the frames after the upload, which pay for it.
+    while (!v.cost.measure());
     // Zoomed in, full frames are cheap, and moving frames are cut down.
     frameCost(v, 5);
     for (let i = 0; i < 6; i++) v.motion.add(40);
@@ -601,11 +596,12 @@ describe('EmMeshViewer', () => {
       now += 16;
     });
     viewer.setSpin(true);
-    // The first dear frame may be the GPU waking up.
     while (!moving(40));
     expect(drawn()).toHaveLength(meshesOf(FULL));
     expect(composers.at(-1)).toBe(v.movingPipeline?.composer);
+    // The first dear frame may be the GPU waking up: the full mesh still.
     while (!moving(40));
+    expect(drawn()).toHaveLength(meshesOf(FULL));
     now += 16;
     frame(v);
     expect(drawn()).toHaveLength(meshesOf(STAND_IN));

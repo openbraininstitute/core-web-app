@@ -120,7 +120,7 @@ describe('downloadGlb', () => {
     expect(progress.at(-1)).toBe(glb.byteLength);
     expect(storage.bucket(BOUNDS.name).entries.get(URL_A)?.body).toEqual(glb);
 
-    // The second time, from the cache, in one step to the end.
+    // The second time, from the cache, which the fake gives back in one chunk: in one step to the end.
     progress.length = 0;
     const again = await downloadGlb(
       { url: URL_A, headers: {}, size: glb.byteLength },
@@ -140,8 +140,6 @@ describe('downloadGlb', () => {
     // Past the header, which the short entry holds.
     const short = glb.slice(0, glb.byteLength >> 1);
     await writeEntry(bounds, URL_A, short.buffer, glb.byteLength);
-    const entry = storage.bucket(BOUNDS.name).entries.get(URL_A);
-    if (entry) entry.headers.set('Content-Length', String(glb.byteLength));
     const onHeader = vi.fn(() => true);
     const result = await downloadGlb({ url: URL_A, headers: {}, size: glb.byteLength }, bounds, {
       onHeader,

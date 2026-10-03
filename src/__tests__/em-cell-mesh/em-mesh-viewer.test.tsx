@@ -33,20 +33,13 @@ const h = vi.hoisted(() => {
   const DARK = { light: ['#3c3e42', '#2a2b2e'], dark: ['#131416', '#060607'] };
   const LIGHT = { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] };
   const LOOKS = [
-    { id: 'studio', label: 'Studio', hint: 'Three lights.', colors: 'palette', background: LIGHT },
-    {
-      id: 'em',
-      label: 'EM segmentation',
-      hint: 'Waxy grey.',
-      colors: 'tint',
-      ao: true,
-      background: DARK,
-    },
+    { id: 'studio', label: 'Studio', hint: 'Three lights.', background: LIGHT },
+    { id: 'em', label: 'EM segmentation', hint: 'Waxy grey.', ao: true, background: DARK },
   ];
 
   class FakeViewer {
     looks = LOOKS;
-    pixelScale: number | null = 0.5;
+    currentPixelScale = 0.5;
     listeners = {
       scale: new Set<(scale: number | null) => void>(),
       wheel: new Set<() => void>(),
@@ -89,18 +82,11 @@ const h = vi.hoisted(() => {
     showChunkBoxes = vi.fn();
     resetView = vi.fn();
     viewAlong = vi.fn();
-    setProjection = vi.fn((projection: string) => {
-      this.pixelScale = projection === 'orthographic' ? 0.5 : null;
-      for (const listener of this.listeners.scale) listener(this.pixelScale);
-    });
+    setProjection = vi.fn();
 
     constructor() {
       if (state.startError) throw state.startError;
       state.viewers.push(this);
-    }
-
-    get currentPixelScale() {
-      return this.pixelScale;
     }
 
     private on<T>(set: Set<T>, listener: T) {
@@ -298,11 +284,13 @@ async function openSettings() {
 /** Sets in the Debug menu the most triangles the stand-in has, in millions. */
 async function chooseStandIn(millions: number) {
   fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
-  fireEvent.click(
-    await screen.findByRole('button', {
-      name: `A stand-in of at most ${millions} million triangles`,
-    })
-  );
+  const size = await screen.findByRole('button', {
+    name: `A stand-in of at most ${millions} million triangles`,
+  });
+  // The load starts again from an effect, which sets the state once a promise settles.
+  await act(async () => {
+    fireEvent.click(size);
+  });
 }
 
 beforeEach(() => {
@@ -432,10 +420,10 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.clear).toHaveBeenCalledTimes(1);
   });
 
-  it('says why the mesh could not be loaded, and keeps a stand-in that came before the failure', async () => {
+  it('says why the mesh could not be loaded where no stand-in came before the failure', async () => {
     await renderViewer();
-    const first = await started();
-    await act(async () => first.reject(new LoadError('decode', new Error('out of memory'))));
+    const load = await started();
+    await act(async () => load.reject(new LoadError('decode', new Error('out of memory'))));
     expect(await screen.findByRole('alert')).toHaveTextContent('The mesh could not be loaded');
     expect(screen.getByRole('alert')).toHaveTextContent('out of memory');
   });

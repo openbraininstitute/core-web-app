@@ -20,34 +20,10 @@ const { FakeRenderer } = vi.hoisted(() => {
   /** Draws nothing; it keeps what it was made with, the target bound, and the target each compile was for. */
   class FakeRenderer {
     domElement = document.createElement('canvas');
-    toneMapping = -1;
-    toneMappingExposure = 1;
     loop: (() => void) | null = null;
     target: unknown = null;
     compiledFor: unknown[] = [];
-    autoClear = true;
-    scissor = [0, 0, 400, 300];
-    scissorTest = false;
-    writes = { color: true, depth: true };
-    state = {
-      buffers: {
-        color: { setMask: (v: boolean) => this.setWrite('color', v), setLocked() {} },
-        depth: { setMask: (v: boolean) => this.setWrite('depth', v), setLocked() {} },
-      },
-    };
-    /** What each draw wrote to, with what scissor. */
-    drawn: {
-      writes: { color: boolean; depth: boolean };
-      scissor: number[] | null;
-      autoClear: boolean;
-    }[] = [];
-    render = vi.fn(() => {
-      this.drawn.push({
-        writes: { ...this.writes },
-        scissor: this.scissorTest ? [...this.scissor] : null,
-        autoClear: this.autoClear,
-      });
-    });
+    render = vi.fn();
 
     /** Each colour format's sample counts, as WebGL 2 gives them, in descending order; none where it can't be drawn into. */
     static samples: Record<number, number[]> = { 34842: [8, 4, 2], 32856: [8, 4, 2] };
@@ -62,12 +38,7 @@ const { FakeRenderer } = vi.hoisted(() => {
       },
     };
 
-    constructor(readonly parameters: { antialias?: boolean; depth?: boolean }) {
-      Object.defineProperties(this.domElement, {
-        clientWidth: { value: 400 },
-        clientHeight: { value: 300 },
-      });
-    }
+    constructor(readonly parameters: { antialias?: boolean; depth?: boolean }) {}
 
     setAnimationLoop(loop: (() => void) | null): void {
       this.loop = loop;
@@ -92,26 +63,6 @@ const { FakeRenderer } = vi.hoisted(() => {
     compileAsync(): Promise<void> {
       this.compiledFor.push(this.target);
       return Promise.resolve();
-    }
-
-    private setWrite(buffer: 'color' | 'depth', v: boolean): void {
-      this.writes[buffer] = v;
-    }
-
-    getScissor(v: { set(...xywh: number[]): unknown }) {
-      return v.set(...this.scissor);
-    }
-
-    getScissorTest(): boolean {
-      return this.scissorTest;
-    }
-
-    setScissor(x: number | { toArray(): number[] }, y?: number, w?: number, h?: number): void {
-      this.scissor = typeof x === 'number' ? [x, y ?? 0, w ?? 0, h ?? 0] : x.toArray();
-    }
-
-    setScissorTest(on: boolean): void {
-      this.scissorTest = on;
     }
 
     getContext(): unknown {
@@ -162,7 +113,7 @@ function make(options: SceneViewerOptions): Internals {
 /** A degenerate triangle with an EM chunk's attributes. */
 function placeholder(): THREE.BufferGeometry {
   const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(new Uint16Array(12), 4, true));
+  geo.setAttribute('position', new THREE.BufferAttribute(new Uint16Array(12), 4));
   geo.setAttribute('normal', new THREE.BufferAttribute(new Int8Array(12), 4, true));
   geo.setIndex(new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1));
   return geo;
@@ -736,28 +687,5 @@ describe('scene viewer', () => {
       hidden.mockRestore();
       vi.stubGlobal('IntersectionObserver', undefined);
     }
-  });
-
-  it('draws unseen onto the canvas, writing nothing, scissored to a pixel, and puts it all back', () => {
-    const viewer = make({ surface: MORPHOLOGY_SURFACE });
-    const { renderer, chunks } = viewer;
-    const mesh = new THREE.Mesh(placeholder());
-    chunks.add(mesh);
-    (viewer as unknown as { drawUnseen(o: THREE.Object3D[]): void }).drawUnseen([mesh]);
-    expect(renderer.drawn).toEqual([
-      { writes: { color: false, depth: false }, scissor: [0, 0, 1, 1], autoClear: false },
-    ]);
-    expect(renderer.writes).toEqual({ color: true, depth: true });
-    expect(renderer.scissorTest).toBe(false);
-    expect(renderer.autoClear).toBe(true);
-    expect(mesh.layers.mask).toBe(1);
-    expect(mesh.frustumCulled).toBe(true);
-  });
-
-  it('compiles for the canvas when frames go straight to it', async () => {
-    const viewer = make({ surface: MORPHOLOGY_SURFACE });
-    await (viewer as unknown as SceneViewer).warmUp(placeholder());
-    expect(viewer.renderer.compiledFor).toEqual([null]);
-    expect(viewer.renderer.render).toHaveBeenCalledTimes(1);
   });
 });

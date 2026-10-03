@@ -93,9 +93,11 @@ describe('GpuTimer', () => {
     const timer = new GpuTimer(gl, (ms) => results.push(ms));
     expect(timer.kind).toBe('fence');
     timer.begin();
+    // The frame's commands, sent over 4 ms.
+    vi.advanceTimersByTime(4);
     timer.end();
     await vi.advanceTimersByTimeAsync(20);
-    expect(results).toEqual([6]);
+    expect(results).toEqual([10]);
     expect(calls).toEqual(['fenceSync', 'flush', 'deleteSync']);
   });
 

@@ -32,7 +32,11 @@ function decoded(onGrid: boolean): DecodedMesh {
 describe('makeStandIn', () => {
   it('clusters a mesh on a grid on cubes as fine as its target allows, its error the farthest a vertex moved', () => {
     const mesh = decoded(true);
+    const before = { positions: mesh.positions.slice(), indices: mesh.indices.slice() };
     const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 30_000);
+    // The decoded mesh is built into the full mesh after: it is left as it was.
+    expect(mesh.positions.every((v, i) => v === before.positions[i])).toBe(true);
+    expect(mesh.indices.every((v, i) => v === before.indices[i])).toBe(true);
     expect(standIn.triangles).toBeLessThanOrEqual(30_000);
     expect(standIn.triangles).toBeGreaterThan(20_000);
     expect(standIn.grid).toBe(mesh.grid);
@@ -81,7 +85,5 @@ describe('makeStandIn', () => {
     expect(standIn.errorUm).toBe(0);
     expect(standIn.triangles).toBe(mesh.indices.length / 3);
     expect(standIn.grid).toBe(mesh.grid);
-    // The decoded mesh is left as it was.
-    expect(mesh.indices[0]).toBe(0);
   });
 });

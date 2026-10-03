@@ -18,7 +18,8 @@ const ASSUMED_MEMORY_GB = { desktop: 8, mobile: 4 };
 /**
  * Each step's memory, bytes a triangle and a vertex, one worker at a time:
  * - decoding: Draco's memory, which never shrinks, and the indices and positions it hands over;
- * - the stand-in: those, the positions as floats, and meshoptimizer's memory;
+ * - the stand-in: those, the positions as floats, and meshoptimizer's memory, as a plain GLB's takes: clustering on
+ *   Draco's grid needs neither;
  * - the full build: those, the normals, the split's order and keys, and the chunks;
  * - uploading: the chunks, on the page and on the GPU.
  */

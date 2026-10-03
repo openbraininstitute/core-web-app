@@ -59,22 +59,28 @@ function packedTriangles(mesh: PackedMesh): string[] {
 }
 
 describe('splitChunks', () => {
-  it('puts every triangle in exactly one chunk, within both caps, leaving out those marked flat', () => {
+  it('puts every triangle in exactly one chunk, within each cap, leaving out those marked flat', () => {
     const { positions, indices } = microns(120, 60);
     const flat = new Uint8Array(indices.length / 3);
     flat[7] = flat[100] = 1;
-    const { order, starts } = splitChunks(positions, indices, flat, 2000, 1200);
-    expect(starts.length).toBeGreaterThan(8);
-    expect(Array.from(order).sort((a, b) => a - b)).toEqual(
-      Array.from({ length: indices.length / 3 }, (_, i) => i).filter((t) => !flat[t])
-    );
-    for (let c = 0; c + 1 < starts.length; c++) {
-      expect(starts[c + 1] - starts[c]).toBeLessThanOrEqual(2000);
-      const vertices = new Set<number>();
-      for (let i = starts[c]; i < starts[c + 1]; i++) {
-        for (let k = 0; k < 3; k++) vertices.add(indices[3 * order[i] + k]);
+    // One cap at a time: on this torus the tighter cap alone decides the chunks, and the other is never reached.
+    for (const [triangles, vertices] of [
+      [2000, Infinity],
+      [Infinity, 800],
+    ]) {
+      const { order, starts } = splitChunks(positions, indices, flat, triangles, vertices);
+      expect(starts.length).toBeGreaterThan(8);
+      expect(Array.from(order).sort((a, b) => a - b)).toEqual(
+        Array.from({ length: indices.length / 3 }, (_, i) => i).filter((t) => !flat[t])
+      );
+      for (let c = 0; c + 1 < starts.length; c++) {
+        expect(starts[c + 1] - starts[c]).toBeLessThanOrEqual(triangles);
+        const used = new Set<number>();
+        for (let i = starts[c]; i < starts[c + 1]; i++) {
+          for (let k = 0; k < 3; k++) used.add(indices[3 * order[i] + k]);
+        }
+        expect(used.size).toBeLessThanOrEqual(vertices);
       }
-      expect(vertices.size).toBeLessThanOrEqual(1200);
     }
   });
 });
@@ -83,14 +89,20 @@ describe('packMesh', () => {
   const big = onGrid(400, 200);
   const packed = packMesh(big.positions, big.grid, big.indices).mesh;
 
-  it('keeps every chunk under 65,535 vertices, so no index is the primitive restart', () => {
+  it('keeps every chunk to at most 65,535 vertices, so no index is the primitive restart', () => {
+    expect(MAX_CHUNK_VERTICES).toBeLessThanOrEqual(65535);
     expect(big.positions.length / 3).toBeGreaterThan(MAX_CHUNK_VERTICES);
-    expect(packed.chunks.length).toBeGreaterThan(1);
-    for (const chunk of packed.chunks) {
+    // The vertex cap alone: the triangle cap splits this torus first.
+    const { chunks, triangles } = packMesh(big.positions, big.grid, big.indices, {
+      triangles: Infinity,
+      vertices: MAX_CHUNK_VERTICES,
+    }).mesh;
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const chunk of chunks) {
       expect(chunk.positions.length / 4).toBeLessThanOrEqual(MAX_CHUNK_VERTICES);
       expect(chunk.indices.reduce((a, b) => Math.max(a, b), 0)).toBeLessThan(65535);
     }
-    expect(packed.triangles).toBe(big.indices.length / 3);
+    expect(triangles).toBe(big.indices.length / 3);
   });
 
   it("gives back the mesh's triangles, through each chunk's own vertices, on Draco's grid", () => {
@@ -118,7 +130,7 @@ describe('packMesh', () => {
     expect(packed.distinctVertices).toBe(big.positions.length / 3);
   });
 
-  it('packs the area-weighted normals to within half a degree, the same in every chunk', () => {
+  it('packs the normals into 8 bits within half a degree, the same in every chunk', () => {
     const exact = vertexNormals(big.positions, big.indices);
     const byKey = new Map<string, number>();
     for (let v = 0; v < big.positions.length / 3; v++) {
@@ -180,7 +192,7 @@ describe('packMesh', () => {
     const flat = [0, n, 1, 0, 1, 1, 0, n + 1, n + 2];
     const indices = new Uint32Array([...mesh.indices, ...flat]);
     const packed = packMesh(positions, mesh.grid, indices).mesh;
-    const clean = packMesh(mesh.positions, mesh.grid, mesh.indices.slice()).mesh;
+    const clean = packMesh(mesh.positions, mesh.grid, mesh.indices).mesh;
     expect(packed.triangles).toBe(mesh.indices.length / 3);
     expect(packed.vertices).toBe(clean.vertices);
     // The vertices only flat triangles used are not counted.

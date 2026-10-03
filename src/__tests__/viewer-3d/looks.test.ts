@@ -139,10 +139,6 @@ describe('looks', () => {
     const flakes = gold.indexOf('outgoingLight += uGlintColor * glint;');
     expect(flakes).toBeGreaterThan(gold.indexOf('vec3 outgoingLight ='));
     expect(flakes).toBeLessThan(gold.indexOf('#include <opaque_fragment>'));
-    // The flakes are placed by the bumps' hash, which must come first.
-    const hash = gold.indexOf('vec3 latticeRandom(');
-    expect(hash).toBeGreaterThan(-1);
-    expect(gold.indexOf('float glintFlakes(')).toBeGreaterThan(hash);
   });
 
   it('says which looks the neurite colours reach: those whose material reads the vertex colours', () => {
@@ -247,6 +243,7 @@ describe('looks for a surface without colours, types or radii', () => {
         'vGlintPosition = ( modelMatrix * vec4( position, 1.0 ) ).xyz;'
       );
       expect(s.fragmentShader).toContain('mat3( viewMatrix ) * tilt');
+      // The flakes are placed by the bumps' hash, which must come first.
       expect(s.fragmentShader.indexOf('vec3 latticeRandom(')).toBeGreaterThan(-1);
       expect(s.fragmentShader.indexOf('float glintFlakes(')).toBeGreaterThan(
         s.fragmentShader.indexOf('vec3 latticeRandom(')

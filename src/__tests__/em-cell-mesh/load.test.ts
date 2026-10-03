@@ -124,9 +124,7 @@ const decoder = async () => {
 /** The full mesh's cache, where a test stubs Cache Storage. */
 let fullCache: CacheBounds | null = null;
 
-function workers(
-  kill: { decode?: string; standIn?: string; build?: string; fullCache?: string } = {}
-): Workers {
+function workers(kill: { decode?: string; build?: string; fullCache?: string } = {}): Workers {
   return {
     decode: () => inProcess('decode', createDecodeApi(dracoDecoder, null), kill.decode),
     standIn: () =>
@@ -135,8 +133,7 @@ function workers(
         createStandInApi(
           async () => MeshoptSimplifier,
           () => 42
-        ),
-        kill.standIn
+        )
       ),
     build: () => inProcess('build', buildApi, kill.build),
     fullCache: () =>
@@ -257,6 +254,7 @@ describe('loadEmMesh', () => {
     vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
     await load().promise;
     const download = log.indexOf('decode.download');
+    expect(log.indexOf('decode.warmUp')).toBeGreaterThan(-1);
     expect(log.indexOf('decode.warmUp')).toBeLessThan(download);
     expect(log.indexOf('standIn.warmUp')).toBeGreaterThan(-1);
     expect(log.indexOf('standIn.warmUp')).toBeLessThan(log.indexOf('decode.decode'));
@@ -411,8 +409,8 @@ describe('loadEmMesh', () => {
     expect(await promise).toEqual({ kind: 'loaded' });
     release();
     expect(events.full).toBe(whole);
-    expect(log).not.toContain('decode.decode');
-    expect(log).toContain('decode terminated');
+    expect(log.indexOf('decode terminated')).toBeGreaterThan(-1);
+    expect(log.indexOf('decode terminated')).toBeLessThan(log.indexOf('onFull'));
   });
 
   it('takes a cached stand-in without error for the whole mesh though the download fails before it is read', async () => {

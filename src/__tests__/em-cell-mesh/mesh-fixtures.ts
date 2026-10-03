@@ -8,14 +8,16 @@ import draco3d from 'draco3dgltf';
 import type { DracoModule } from '@/features/entities/em-cell-mesh/viewer/engine/decode';
 
 /**
- * A torus in nanometres, like an EM mesh: `rings` around the tube's axis and `sides` around the tube, every vertex
- * shared by six triangles, and twice as many triangles as vertices.
+ * A torus in nanometres, like an EM mesh, 40 µm in radius with a tube of 9: `rings` around the tube's axis and `sides`
+ * around the tube, every vertex shared by six triangles, and twice as many triangles as vertices.
  */
 export function torus(
   rings: number,
   sides: number,
-  { radius = 40_000, tube = 9_000, centre = [512_000, 300_000, 81_000] } = {}
+  { centre = [512_000, 300_000, 81_000] } = {}
 ): { positions: Float32Array; indices: Uint32Array } {
+  const radius = 40_000;
+  const tube = 9_000;
   const positions = new Float32Array(3 * rings * sides);
   for (let i = 0; i < rings; i++) {
     const u = (2 * Math.PI * i) / rings;

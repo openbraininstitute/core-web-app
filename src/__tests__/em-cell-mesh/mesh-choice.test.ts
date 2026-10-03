@@ -68,8 +68,8 @@ describe('MeshChooser', () => {
   it('keeps the side of the threshold while something else chose the mesh', () => {
     const chooser = new MeshChooser();
     chooser.choose({ ...AUTO, errorPx: 5, fullReady: false });
-    // Still past 0.8 px: the full mesh, as soon as it is there.
-    expect(chooser.choose({ ...AUTO, errorPx: 1 }).mesh).toBe('full');
+    // Still past 0.06 px: the full mesh, as soon as it is there.
+    expect(chooser.choose({ ...AUTO, errorPx: 0.08 }).mesh).toBe('full');
   });
 
   it('draws what the Debug menu forces, whatever the error', () => {

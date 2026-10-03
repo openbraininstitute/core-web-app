@@ -1,4 +1,7 @@
-/** Makes the stand-in with meshoptimizer; terminated after, which frees meshoptimizer's memory. */
+/**
+ * Makes the stand-in, clustered on Draco's grid or with meshoptimizer otherwise; terminated after, which frees
+ * meshoptimizer's memory.
+ */
 import * as Comlink from 'comlink';
 
 import { createStandInApi } from './worker-apis';

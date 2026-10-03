@@ -2,7 +2,8 @@
 import { ACESFilmicToneMapping, NoToneMapping } from 'three';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
+import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
+import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import type * as THREE from 'three';
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -48,7 +49,7 @@ vi.mock('three', async (importOriginal) => ({
   WebGLRenderer: FakeRenderer,
 }));
 
-let viewer: Viewer;
+let viewer: SceneViewer;
 let renderer: InstanceType<typeof FakeRenderer>;
 let controls: OrbitControls;
 let camera: THREE.Camera;
@@ -93,7 +94,9 @@ afterAll(() => {
 
 beforeEach(() => {
   // In the page: OrbitControls follows a drag's pointer on the document.
-  viewer = new Viewer(document.body.appendChild(document.createElement('div')));
+  viewer = new SceneViewer(document.body.appendChild(document.createElement('div')), {
+    surface: MORPHOLOGY_SURFACE,
+  });
   const internals = viewer as unknown as {
     renderer: InstanceType<typeof FakeRenderer>;
     controls: OrbitControls;
