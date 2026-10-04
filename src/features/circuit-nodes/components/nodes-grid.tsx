@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
+import DistributionModalDynamic from '@/features/circuit-nodes/components/distribution-modal-dynamic';
 import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
@@ -22,7 +23,12 @@ import type {
   IDatasource,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import type { ColumnMeta } from '@/features/circuit-nodes/types';
+import type {
+  ColumnDistributionRequest,
+  ColumnDistributionResponse,
+  ColumnMeta,
+  FilterModel,
+} from '@/features/circuit-nodes/types';
 
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
@@ -37,6 +43,7 @@ type Props = {
   datasource: IDatasource;
   visibleColumns: Set<string>;
   onVisibleColumnsChange: (next: Set<string>) => void;
+  getColumnDistribution: (req: ColumnDistributionRequest) => Promise<ColumnDistributionResponse>;
 };
 
 type BuildArgs = {
@@ -44,13 +51,20 @@ type BuildArgs = {
   visible: Set<string>;
   onReset: () => void;
   onOpenChooser: () => void;
+  onShowDistribution: (col: ColumnMeta) => void;
 };
 
 const PREFERRED_WIDTH_BY_NAME = new Map(
   PREFERRED_COLUMNS.filter((p) => p.width !== undefined).map((p) => [p.name, p.width as number])
 );
 
-function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: BuildArgs): ColDef[] {
+function buildColumnDefs({
+  orderedColumns,
+  visible,
+  onReset,
+  onOpenChooser,
+  onShowDistribution,
+}: BuildArgs): ColDef[] {
   return orderedColumns.map((c) => {
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
@@ -64,6 +78,7 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
         onReset,
         isNumeric,
         onOpenChooser,
+        onShowDistribution: () => onShowDistribution(c),
       },
       sortable: true,
       resizable: true,
@@ -97,6 +112,7 @@ export function NodesGrid({
   datasource,
   visibleColumns,
   onVisibleColumnsChange,
+  getColumnDistribution,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
   const autoSizedKeyRef = useRef<string>('');
@@ -104,6 +120,15 @@ export function NodesGrid({
   const [orderedNames, setOrderedNames] = useState<string[]>(() => defaultColumnOrder(columns));
   const [chooserOpen, setChooserOpen] = useState(false);
   const openChooser = useCallback(() => setChooserOpen(true), []);
+
+  const [distributionCol, setDistributionCol] = useState<ColumnMeta | null>(null);
+  const [openedFilterModel, setOpenedFilterModel] = useState<FilterModel | undefined>(undefined);
+  const onShowDistribution = useCallback((col: ColumnMeta) => {
+    const raw = gridRef.current?.api.getFilterModel();
+    setOpenedFilterModel(raw && Object.keys(raw).length > 0 ? (raw as FilterModel) : undefined);
+    setDistributionCol(col);
+  }, []);
+  const closeDistribution = useCallback(() => setDistributionCol(null), []);
 
   useEffect(() => {
     setOrderedNames(defaultColumnOrder(columns));
@@ -132,8 +157,9 @@ export function NodesGrid({
         visible: visibleColumns,
         onReset: resetAll,
         onOpenChooser: openChooser,
+        onShowDistribution,
       }),
-    [orderedColumns, visibleColumns, resetAll, openChooser]
+    [orderedColumns, visibleColumns, resetAll, openChooser, onShowDistribution]
   );
 
   const onColumnMoved = (e: ColumnMovedEvent) => {
@@ -239,6 +265,15 @@ export function NodesGrid({
           onOrderedNamesChange={setOrderedNames}
         />
       </Modal>
+      {distributionCol && (
+        <DistributionModalDynamic
+          open
+          column={distributionCol}
+          filterModel={openedFilterModel}
+          getDistribution={getColumnDistribution}
+          onClose={closeDistribution}
+        />
+      )}
     </div>
   );
 }

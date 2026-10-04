@@ -3,6 +3,8 @@ import * as Comlink from 'comlink';
 import { config } from '@/config';
 
 import type {
+  ColumnDistributionRequest,
+  ColumnDistributionResponse,
   ColumnMeta,
   ColumnValues,
   DownloadProgress,
@@ -141,6 +143,15 @@ class NodesWorkerRegistry {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.getColumn(name);
+  }
+
+  getColumnDistribution(
+    key: string,
+    req: ColumnDistributionRequest
+  ): Promise<ColumnDistributionResponse> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.getColumnDistribution(req);
   }
 
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {
