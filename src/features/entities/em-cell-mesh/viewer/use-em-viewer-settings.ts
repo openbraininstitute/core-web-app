@@ -13,7 +13,6 @@ export interface EmViewerSettings {
   dark: boolean;
   look: string;
   ao: boolean;
-  wireframe: boolean;
   spin: boolean;
   projection: Projection;
   /** In the orthographic view: a perspective one has no single scale. */
@@ -36,7 +35,6 @@ const DEFAULT_SETTINGS: EmViewerSettings = {
   dark: false,
   look: 'em',
   ao: true,
-  wireframe: false,
   spin: false,
   projection: 'orthographic',
   scalebar: true,

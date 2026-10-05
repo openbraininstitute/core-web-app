@@ -117,9 +117,7 @@ flowchart TD
   whole -- yes --> standIn(["The stand-in"])
   whole -- no --> uploaded{"Is all of the full<br/>mesh uploaded?"}
   uploaded -- no --> standIn
-  uploaded -- yes --> wireframe{"Wireframe?"}
-  wireframe -- yes --> wires(["The stand-in, in wires"])
-  wireframe -- no --> forced{"A mesh forced in<br/>the Debug menu?"}
+  uploaded -- yes --> forced{"A mesh forced in<br/>the Debug menu?"}
   forced -- yes --> chosen(["That mesh"])
   forced -- no --> slow{"Does the view move, with<br/>the full mesh too slow?"}
   slow -- yes --> standIn
@@ -133,7 +131,6 @@ flowchart TD
 - The stand-in's error is how far its simplification may have moved the surface, in µm. On screen it is counted in device pixels, the canvas's own: in the orthographic view from the scale bar's µm per CSS pixel, and in perspective at the point of the mesh's bounds nearest the camera, where it looks largest.
 - The thresholds are far under a pixel because the stand-in loses what is thinner than its cubes, spines and the thinnest axons, rather than moving it. At overview zoom the full mesh is drawn, on any screen; the stand-in only zoomed far out.
 - Too slow means a full frame costs the GPU more than 28 ms (the median of the last three), or two moving frames of the full mesh in a row did, as zooming out makes them dearer; the second holds until the view stops. The still frame after a move draws the full mesh again.
-- Wireframe draws the stand-in, in wires of its own: once uploaded, the full mesh's index, which three would build the wires from, is let go of.
 
 ## Frames while the view moves
 
@@ -162,7 +159,7 @@ The pill at the top centre ([chrome/load-status.tsx](chrome/load-status.tsx)) sa
 
 ## Settings and the Debug menu
 
-[chrome/settings-menu.tsx](chrome/settings-menu.tsx) holds the look, the ambient occlusion, wireframe, spin, perspective, the scale bar and the background, each with a help card. The viewer opens in the EM segmentation look, which turns the occlusion on. It offers 13 of the 14 shared looks: Fluorescence colours by neurite type, which an EM mesh doesn't have. The looks that draw in the neurite colours draw the mesh in a plain colour of their own, and none has bumps or a width floor (`createLooks` in [looks.ts](../../../viewer-3d/engine/looks.ts)).
+[chrome/settings-menu.tsx](chrome/settings-menu.tsx) holds the look, the ambient occlusion, spin, perspective, the scale bar and the background, each with a help card. The viewer opens in the EM segmentation look, which turns the occlusion on. It offers 13 of the 14 shared looks: Fluorescence colours by neurite type, which an EM mesh doesn't have. The looks that draw in the neurite colours draw the mesh in a plain colour of their own, and none has bumps or a width floor (`createLooks` in [looks.ts](../../../viewer-3d/engine/looks.ts)).
 
 The chrome is laid out as the morphology viewer's ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)): fullscreen, settings and debug at the top left, with re-centre under them; the status at the top centre; the scale bar, in the orthographic view, at the bottom left; the axes gizmo at the bottom right. A double-click toggles fullscreen. Outside it the wheel zooms with Ctrl, and a plain wheel scrolls the page.
 

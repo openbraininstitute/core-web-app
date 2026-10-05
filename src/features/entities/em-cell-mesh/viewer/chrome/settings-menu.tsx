@@ -2,7 +2,6 @@ import {
   RiCameraLensLine,
   RiContrast2Line,
   RiEqualizerLine,
-  RiGridLine,
   RiLoopRightLine,
 } from '@remixicon/react';
 
@@ -55,13 +54,6 @@ export function SettingsMenu({ settings, update, looks, look, onLook }: Settings
       />
 
       <Heading>View</Heading>
-      <ToggleRow
-        title="Wireframe"
-        topic="wireframe"
-        icon={<RiGridLine className={ICON} />}
-        checked={settings.wireframe}
-        onChange={(wireframe) => update({ wireframe })}
-      />
       <ToggleRow
         title="Spin"
         topic="spin"

@@ -14,7 +14,6 @@ const AUTO: ChoiceInput = {
   fullReady: true,
   whole: false,
   forced: 'auto',
-  wireframe: false,
   errorPx: 0.5,
   moving: false,
   slow: false,
@@ -48,15 +47,11 @@ describe('MeshChooser', () => {
     ]);
   });
 
-  it('draws the stand-in, with why, until the full mesh is up, for wires, and where it is whole', () => {
+  it('draws the stand-in, with why, until the full mesh is up, and where it is whole', () => {
     const chooser = new MeshChooser();
     expect(chooser.choose({ ...AUTO, errorPx: 5, fullReady: false })).toEqual({
       mesh: 'stand-in',
       reason: 'loading',
-    });
-    expect(chooser.choose({ ...AUTO, errorPx: 5, wireframe: true })).toEqual({
-      mesh: 'stand-in',
-      reason: 'wireframe',
     });
     expect(chooser.choose({ ...AUTO, errorPx: 5, whole: true, fullReady: false })).toEqual({
       mesh: 'stand-in',

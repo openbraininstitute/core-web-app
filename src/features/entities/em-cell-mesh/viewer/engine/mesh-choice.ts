@@ -27,7 +27,7 @@ export type MeshKind = 'stand-in' | 'full';
 export type ForcedMesh = MeshKind | 'auto';
 
 /** Why the mesh on show is on show. */
-export type Reason = 'whole' | 'loading' | 'wireframe' | 'forced' | 'moving' | 'error';
+export type Reason = 'whole' | 'loading' | 'forced' | 'moving' | 'error';
 
 export interface Choice {
   mesh: MeshKind;
@@ -40,7 +40,6 @@ export interface ChoiceInput {
   /** The stand-in is the whole mesh: it had no more triangles than a stand-in has. */
   whole: boolean;
   forced: ForcedMesh;
-  wireframe: boolean;
   /** The stand-in's error on screen, in device pixels. */
   errorPx: number;
   moving: boolean;
@@ -63,7 +62,6 @@ export class MeshChooser {
       this.byError = 'stand-in';
     if (input.whole) return { mesh: 'stand-in', reason: 'whole' };
     if (!input.fullReady) return { mesh: 'stand-in', reason: 'loading' };
-    if (input.wireframe) return { mesh: 'stand-in', reason: 'wireframe' };
     if (input.forced !== 'auto') return { mesh: input.forced, reason: 'forced' };
     if (input.moving && input.slow) return { mesh: 'stand-in', reason: 'moving' };
     return { mesh: this.byError, reason: 'error' };

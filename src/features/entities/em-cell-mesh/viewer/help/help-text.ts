@@ -20,12 +20,6 @@ export const HELP = {
     ],
     applies: 'view',
   },
-  wireframe: {
-    text:
-      "Draws the triangles' edges of the simplified copy of the mesh shown while the full one loads. The full mesh " +
-      'has too many triangles to draw as wires.',
-    applies: 'view',
-  },
   spin: {
     text: 'Turns the view slowly around the centre of the cell.',
     applies: 'view',

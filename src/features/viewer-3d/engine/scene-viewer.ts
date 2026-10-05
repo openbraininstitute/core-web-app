@@ -253,8 +253,8 @@ export class SceneViewer implements ViewControls {
   private environment: THREE.Texture | null = null;
   protected look: Look;
   protected meshVisible = true;
-  protected wireframe = false;
-  protected dark = false;
+  private wireframe = false;
+  private dark = false;
   private ao = false;
   /** What frames are drawn through: the scene into a multisampled target, then the passes. */
   private main: Pipeline | null = null;

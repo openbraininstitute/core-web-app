@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-import { isDarkBackground } from '@/features/viewer-3d/engine/looks';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { GpuTimer, type TimerKind } from './gpu-timer';
@@ -232,7 +231,6 @@ export class EmMeshViewer extends SceneViewer {
   private movingFps: number | null = null;
   private fpsAt = 0;
   private upload: ViewStatus['upload'] = null;
-  private wire = new THREE.MeshBasicMaterial({ wireframe: true, transparent: true, opacity: 0.6 });
   private statusListeners = new Set<(status: ViewStatus) => void>();
   private readyListeners = new Set<() => void>();
   private rebuildListeners = new Set<() => void>();
@@ -248,13 +246,11 @@ export class EmMeshViewer extends SceneViewer {
     });
     this.chunks.name = 'em mesh';
     this.makeTimer();
-    this.paintWire();
   }
 
   protected override disposeContent(): void {
     this.timer?.dispose();
     this.clear();
-    this.wire.dispose();
     this.statusListeners.clear();
     this.readyListeners.clear();
     this.rebuildListeners.clear();
@@ -458,7 +454,6 @@ export class EmMeshViewer extends SceneViewer {
       fullReady: this.full !== null,
       whole: this.whole,
       forced: this.forced,
-      wireframe: this.wireframe,
       errorPx: this.errorPx,
       moving,
       slow: this.movingStandIn(),
@@ -550,25 +545,6 @@ export class EmMeshViewer extends SceneViewer {
   // ---------------------------------------------------------------------------
   // View options
 
-  protected override applyLook(): void {
-    super.applyLook();
-    this.paintWire();
-    if (this.wireframe && this.standIn) {
-      for (const m of this.standIn.surface.children) (m as THREE.Mesh).material = this.wire;
-    }
-  }
-
-  /** The stand-in in wires of its own, at any zoom: the full mesh's index, which three would build them from, is let go of. */
-  override setWireframe(v: boolean): void {
-    this.wireframe = v;
-    this.applyLook();
-  }
-
-  override setDark(dark: boolean): void {
-    super.setDark(dark);
-    this.paintWire();
-  }
-
   protected override frameChanged(): void {
     this.cost.reset();
     this.motion.reset();
@@ -598,12 +574,6 @@ export class EmMeshViewer extends SceneViewer {
 
   showChunkBoxes(on: boolean): void {
     this.boxesShown = on;
-    this.invalidate();
-  }
-
-  /** Light wires on a dark background, dark ones on a light. */
-  private paintWire(): void {
-    this.wire.color.set(isDarkBackground(this.look, this.dark) ? 0xd8dce3 : 0x30343b);
     this.invalidate();
   }
 

@@ -75,7 +75,6 @@ const h = vi.hoisted(() => {
     setLook = vi.fn();
     setAO = vi.fn();
     setAODepth = vi.fn();
-    setWireframe = vi.fn();
     setSpin = vi.fn();
     setForcedMesh = vi.fn();
     setMotion = vi.fn();
@@ -278,7 +277,7 @@ const pill = () => screen.queryByRole('status')?.textContent ?? null;
 
 async function openSettings() {
   fireEvent.click(screen.getByRole('button', { name: 'Viewer settings' }));
-  await screen.findByRole('switch', { name: 'Wireframe' });
+  await screen.findByRole('switch', { name: 'Spin' });
 }
 
 /** Sets in the Debug menu the most triangles the stand-in has, in millions. */
@@ -642,8 +641,6 @@ describe('EmCellMeshViewer', () => {
   it('drives the viewer from the settings, and puts the occlusion back when leaving the look that brought it', async () => {
     const { viewer } = await renderViewer();
     await openSettings();
-    fireEvent.click(screen.getByRole('switch', { name: 'Wireframe' }));
-    expect(viewer.setWireframe).toHaveBeenLastCalledWith(true);
     fireEvent.click(screen.getByRole('switch', { name: 'Spin' }));
     expect(viewer.setSpin).toHaveBeenLastCalledWith(true);
     fireEvent.click(screen.getByRole('switch', { name: 'Perspective' }));

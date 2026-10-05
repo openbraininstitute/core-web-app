@@ -147,7 +147,6 @@ interface Internals {
   main: { composer: EffectComposer };
   scene: THREE.Scene;
   controls: { object: THREE.OrthographicCamera | THREE.PerspectiveCamera };
-  wire: THREE.Material;
   cost: { add(ms: number, cold?: boolean): void; measure(): boolean };
   motion: { add(ms: number): void };
   timer: unknown;
@@ -418,27 +417,6 @@ describe('EmMeshViewer', () => {
     frame(v);
     const atFace = (2 * 20 * Math.tan(Math.PI / 8)) / 300;
     expect((shown as ViewStatus | null)?.errorPx).toBeCloseTo(STAND_IN.errorUm / atFace, 1);
-  });
-
-  it('draws only the stand-in in wireframe, in wires of its own, and the full mesh again after', () => {
-    const { viewer, v } = loaded();
-    zoom(v, 8);
-    frame(v);
-    const full = drawn();
-    viewer.setWireframe(true);
-    frame(v);
-    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
-    expect(drawn().every((m) => m.material === v.wire)).toBe(true);
-    expect(viewer.looks.some((l) => (l.material as { wireframe?: boolean }).wireframe)).toBe(false);
-
-    viewer.setWireframe(false);
-    frame(v);
-    expect(same(drawn(), full)).toBe(true);
-    // The stand-in out of its wires too.
-    viewer.setForcedMesh('stand-in');
-    frame(v);
-    expect(drawn()).toHaveLength(meshesOf(STAND_IN));
-    expect(drawn().every((m) => m.material !== v.wire)).toBe(true);
   });
 
   it('takes a stand-in given as the full mesh for the whole mesh: nothing to upload', () => {

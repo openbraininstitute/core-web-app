@@ -96,7 +96,6 @@ function useViewerSync(viewer: EmMeshViewer | null, settings: EmViewerSettings) 
   useEffect(() => viewer?.setDark(settings.dark), [viewer, settings.dark]);
   useEffect(() => viewer?.setLook(settings.look), [viewer, settings.look]);
   useEffect(() => viewer?.setAO(settings.ao), [viewer, settings.ao]);
-  useEffect(() => viewer?.setWireframe(settings.wireframe), [viewer, settings.wireframe]);
   useEffect(() => viewer?.setSpin(settings.spin), [viewer, settings.spin]);
   useEffect(() => viewer?.setProjection(settings.projection), [viewer, settings.projection]);
   useEffect(() => viewer?.setAODepth(settings.aoDepth), [viewer, settings.aoDepth]);

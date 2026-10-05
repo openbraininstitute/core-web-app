@@ -37,7 +37,6 @@ const STAND_IN_CHOICES = [1_500_000, STAND_IN_TRIANGLES, 5_000_000, 8_000_000];
 const REASONS: Record<Reason, string> = {
   whole: 'the stand-in is the whole mesh',
   loading: 'the full mesh is not in yet',
-  wireframe: 'wireframe draws the stand-in',
   forced: 'chosen below',
   moving: 'the view moves',
   error: 'by its error on screen',
