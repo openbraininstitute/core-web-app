@@ -971,6 +971,19 @@ export class SceneViewer implements ViewControls {
     if (ao.fragmentShader === unscaled) {
       console.warn('GTAOShader has changed: the AO depth range no longer follows the zoom');
     }
+    // GTAO also takes the way to the eye as -viewPos, which holds for a perspective camera only. For an orthographic
+    // one it is +z from anywhere, and part of the cell can be behind the camera (`orthoClip`): there -viewPos turns
+    // away from the eye, and GTAO finds the surface occluded all round, black.
+    const perspectiveOnly = ao.fragmentShader;
+    ao.fragmentShader = perspectiveOnly.replace(
+      'vec3 viewDir = normalize(-viewPos.xyz);',
+      'vec3 viewDir = PERSPECTIVE_CAMERA == 1 ? normalize(-viewPos.xyz) : vec3(0.0, 0.0, 1.0);'
+    );
+    if (ao.fragmentShader === perspectiveOnly) {
+      console.warn(
+        'GTAOShader has changed: an orthographic view may occlude what lies behind the camera'
+      );
+    }
     // A radius in pixels of the AO target (`fitPipeline`), so the effect follows the zoom: neighbouring fibres shade
     // each other close up, dense regions darken from afar. A sample occludes within a depth as long as the radius is
     // wide.

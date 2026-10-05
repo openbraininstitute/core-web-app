@@ -258,6 +258,17 @@ describe('scene viewer', () => {
     expect(output.uniforms.aoIntensity.value).toBe(0);
   });
 
+  it('occludes towards the eye along the view axis in an orthographic view, which can have the cell behind the camera', () => {
+    const viewer = make(BARE);
+    const { gtao } = viewer.main as Pipeline;
+    expect(gtao.gtaoMaterial.fragmentShader).toContain(
+      'vec3 viewDir = PERSPECTIVE_CAMERA == 1 ? normalize(-viewPos.xyz) : vec3(0.0, 0.0, 1.0);'
+    );
+    expect(gtao.gtaoMaterial.defines.PERSPECTIVE_CAMERA).toBe(0);
+    (viewer as unknown as SceneViewer).setProjection('perspective');
+    expect(gtao.gtaoMaterial.defines.PERSPECTIVE_CAMERA).toBe(1);
+  });
+
   it("keeps the morphology's own occlusion pass, displaced as the surface is drawn", () => {
     const host = document.body.appendChild(document.createElement('div'));
     const viewer = new Viewer(host);
