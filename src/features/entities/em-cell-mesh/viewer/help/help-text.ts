@@ -20,6 +20,13 @@ export const HELP = {
     ],
     applies: 'view',
   },
+  color: {
+    text:
+      "The mesh's colour, in the looks that draw it in one: Cobalt by default, one of the others, or any from " +
+      'Custom, which Flat and Studio draw as picked. Some looks draw it lighter or darker, as their lighting needs. ' +
+      'Kept for the next visit.',
+    applies: 'view',
+  },
   spin: {
     text: 'Turns the view slowly around the centre of the cell.',
     applies: 'view',

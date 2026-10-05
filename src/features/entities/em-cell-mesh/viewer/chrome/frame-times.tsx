@@ -24,7 +24,7 @@ export function FrameTimes({ viewer }: { viewer: EmMeshViewer }) {
   return (
     <div
       data-testid="em-frame-times"
-      className="pointer-events-none absolute top-3 right-3 rounded-md bg-black/60 px-2 py-1 font-mono text-[11px] leading-4 text-white tabular-nums"
+      className="pointer-events-none rounded-md bg-black/60 px-2 py-1 font-mono text-[11px] leading-4 text-white tabular-nums"
     >
       <div>moving: {status.moving ? movingParts(status.moving) : 'none yet'}</div>
       <div>

@@ -159,9 +159,15 @@ The pill at the top centre ([chrome/load-status.tsx](chrome/load-status.tsx)) sa
 
 ## Settings and the Debug menu
 
-[chrome/settings-menu.tsx](chrome/settings-menu.tsx) holds the look, the ambient occlusion, spin, perspective, the scale bar and the background, each with a help card. The viewer opens in the EM segmentation look, which turns the occlusion on. It offers 13 of the 14 shared looks: Fluorescence colours by neurite type, which an EM mesh doesn't have. The looks that draw in the neurite colours draw the mesh in a plain colour of their own, and none has bumps or a width floor (`createLooks` in [looks.ts](../../../viewer-3d/engine/looks.ts)).
+[chrome/settings-menu.tsx](chrome/settings-menu.tsx) holds the look, the ambient occlusion, spin, perspective, the scale bar and the background, each with a help card. The viewer opens in the EM segmentation look, which turns the occlusion on. It offers 13 of the 14 shared looks: Fluorescence colours by neurite type, which an EM mesh doesn't have. The looks that draw in the neurite colours draw the mesh in a plain colour, and none has bumps or a width floor (`createLooks` in [looks.ts](../../../viewer-3d/engine/looks.ts)).
 
-The chrome is laid out as the morphology viewer's ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)): fullscreen, settings and debug at the top left, with re-centre under them; the status at the top centre; the scale bar, in the orthographic view, at the bottom left; the axes gizmo at the bottom right. A double-click toggles fullscreen. Outside it the wheel zooms with Ctrl, and a plain wheel scrolls the page.
+The colour pill at the top right ([chrome/mesh-color-menu.tsx](chrome/mesh-color-menu.tsx)) sets that colour, as the morphology viewer's Colour by pill sets the neurites': Cobalt by default, Slate, Warm grey, Coral, Sage, Teal, Violet, or any from Custom, antd's picker. The choice is kept in `localStorage` (`em-mesh-color`, [mesh-color.ts](mesh-color.ts)) for the next visit. In a look that draws in colours of its own the pill is disabled, and says so.
+
+- Flat and Studio draw the colour as chosen. A look whose own slate is lighter or darker than theirs, as its lighting needs, draws the colour lighter or darker by as much (`plainColor` in [looks.ts](../../../viewer-3d/engine/looks.ts)): darker under Glossy's reflections and Pearl's sheen, lighter under Clay's matcap. Drawn unchanged, a colour would come out at 1.7:1 against Glossy's light background.
+- The presets are as light as Studio allows for a median 4:1 against its light background; slate, as tuned before, has 5:1. Over the dark background each is lighter by as much as slate's grey is. A colour from the picker is drawn as picked over either background.
+- Slate is each look's own colour, as tuned for its lighting (`Look.plain`), which `plainColor` draws for Flat's and Studio's.
+
+The chrome is laid out as the morphology viewer's ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)): fullscreen, settings and debug at the top left, with re-centre under them; the colour at the top right; the status at the top centre; the scale bar, in the orthographic view, at the bottom left; the axes gizmo at the bottom right. A double-click toggles fullscreen. Outside it the wheel zooms with Ctrl, and a plain wheel scrolls the page.
 
 [chrome/debug-menu.tsx](chrome/debug-menu.tsx) holds, in this order:
 
@@ -187,6 +193,7 @@ It shows only where the `em-mesh-debug` flag is on (`emMeshDebugFlag` in `src/fe
 | Chunk sizes, and how a vertex is packed | [engine/chunks.ts](engine/chunks.ts) |
 | How long uploads may take of a frame | `UPLOAD_BUDGET_MS` in [engine/em-mesh-viewer.ts](engine/em-mesh-viewer.ts) |
 | Looks | `createLooks` in [viewer-3d/engine/looks.ts](../../../viewer-3d/engine/looks.ts) |
+| The colours offered, and the default | `MESH_COLORS` and `DEFAULT_MESH_COLOR` in [mesh-color.ts](mesh-color.ts) |
 | Cameras, controls, the composer and its passes | `SceneViewer` in [viewer-3d/engine/scene-viewer.ts](../../../viewer-3d/engine/scene-viewer.ts) |
 | Settings, status, Debug menu | [chrome/](chrome/em-viewer-chrome.tsx) |
 | Help card texts | [help/help-text.ts](help/help-text.ts) |
@@ -199,5 +206,6 @@ It shows only where the `em-mesh-debug` flag is on (`emMeshDebugFlag` in `src/fe
   - the chunks, the clustering, the stand-in, and the caches, on an in-memory Cache Storage (`fake-caches.ts`);
   - the load, with each worker's API in this thread behind a `MessageChannel`, so that arrays are really transferred;
   - the choice of mesh, the moving frames and the GPU timer;
+  - the colour kept in `localStorage`, read back only where it is one;
   - `EmMeshViewer` with the renderer faked, and the React side with the viewer and the load faked.
-- `src/__tests__/viewer-3d/` covers the shared scene: the composer, the occlusion from the main pass's depth, the warm-up, moving frames cut down, and the looks for a surface without colours, types or radii.
+- `src/__tests__/viewer-3d/` covers the shared scene: the composer, the occlusion from the main pass's depth, the warm-up, moving frames cut down, and the looks for a surface without colours, types or radii, in a colour chosen for them too.

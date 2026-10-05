@@ -33,7 +33,13 @@ const h = vi.hoisted(() => {
   const DARK = { light: ['#3c3e42', '#2a2b2e'], dark: ['#131416', '#060607'] };
   const LIGHT = { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] };
   const LOOKS = [
-    { id: 'studio', label: 'Studio', hint: 'Three lights.', background: LIGHT },
+    {
+      id: 'studio',
+      label: 'Studio',
+      hint: 'Three lights.',
+      background: LIGHT,
+      plain: { light: '#5a6a85', dark: '#c4c7cc' },
+    },
     { id: 'em', label: 'EM segmentation', hint: 'Waxy grey.', ao: true, background: DARK },
   ];
 
@@ -75,6 +81,7 @@ const h = vi.hoisted(() => {
     setLook = vi.fn();
     setAO = vi.fn();
     setAODepth = vi.fn();
+    setSurfaceColor = vi.fn();
     setSpin = vi.fn();
     setForcedMesh = vi.fn();
     setMotion = vi.fn();
@@ -275,9 +282,30 @@ async function started(count = 1) {
 
 const pill = () => screen.queryByRole('status')?.textContent ?? null;
 
+const COBALT = { light: '#3f77c9', dark: '#c1d9fc' };
+const SLATE = { light: '#5a6a85', dark: '#c4c7cc' };
+
 async function openSettings() {
   fireEvent.click(screen.getByRole('button', { name: 'Viewer settings' }));
   await screen.findByRole('switch', { name: 'Spin' });
+}
+
+/** Close the open menu, and wait for its trigger to take the focus back, which would close a menu opened before. */
+async function closeMenu(trigger: string) {
+  fireEvent.keyDown(document.body, { key: 'Escape' });
+  await waitFor(() => expect(screen.getByRole('button', { name: trigger })).toHaveFocus());
+}
+
+async function chooseLook(name: string) {
+  await openSettings();
+  fireEvent.click(screen.getByRole('button', { name: /^Look: / }));
+  fireEvent.click(await screen.findByRole('button', { name }));
+  await closeMenu('Viewer settings');
+}
+
+async function openColors(current: string) {
+  fireEvent.click(screen.getByRole('button', { name: `Colour: ${current}` }));
+  await screen.findByRole('button', { name: 'Custom' });
 }
 
 /** Sets in the Debug menu the most triangles the stand-in has, in millions. */
@@ -300,6 +328,7 @@ beforeEach(() => {
   h.request.mockClear();
   h.saveAs.mockClear();
   h.startError = null;
+  localStorage.removeItem('em-mesh-color');
 });
 
 describe('meshAsset', () => {
@@ -658,6 +687,49 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.setAO).toHaveBeenLastCalledWith(true);
   });
 
+  it('draws the mesh in the colour chosen, where the look draws it in a plain one, and keeps it for the next visit', async () => {
+    const first = await renderViewer();
+    expect(first.viewer.setSurfaceColor).toHaveBeenLastCalledWith(COBALT);
+    expect(screen.getByRole('button', { name: 'Colour: Cobalt' })).toBeDisabled();
+    await chooseLook('Studio');
+    await openColors('Cobalt');
+    fireEvent.click(screen.getByRole('button', { name: 'Teal' }));
+    expect(first.viewer.setSurfaceColor).toHaveBeenLastCalledWith({
+      light: '#148282',
+      dark: '#85e3e3',
+    });
+    expect(localStorage.getItem('em-mesh-color')).toBe('teal');
+    await openColors('Teal');
+    fireEvent.click(screen.getByRole('button', { name: 'Slate' }));
+    expect(first.viewer.setSurfaceColor).toHaveBeenLastCalledWith(SLATE);
+    expect(localStorage.getItem('em-mesh-color')).toBe('slate');
+    first.unmount();
+
+    const second = await renderViewer();
+    expect(second.viewer.setSurfaceColor).toHaveBeenLastCalledWith(SLATE);
+    expect(screen.getByRole('button', { name: 'Colour: Slate' })).toBeDisabled();
+  });
+
+  it('draws a colour from the picker as picked over either background, and keeps it', async () => {
+    const { viewer } = await renderViewer();
+    await chooseLook('Studio');
+    await openColors('Cobalt');
+    fireEvent.click(screen.getByRole('button', { name: 'Custom' }));
+    const hex = await waitFor(() => {
+      const input = document.querySelector<HTMLInputElement>('.ant-color-picker-hex-input input');
+      expect(input).not.toBeNull();
+      return input as HTMLInputElement;
+    });
+    // The picker is antd's, outside the menu: pressing in it leaves the menu open.
+    fireEvent.pointerDown(hex);
+    fireEvent.focusIn(hex);
+    fireEvent.change(hex, { target: { value: '2fb6b6' } });
+    expect(viewer.setSurfaceColor).toHaveBeenLastCalledWith({ light: '#2fb6b6', dark: '#2fb6b6' });
+    expect(screen.getByRole('button', { name: 'Custom' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Colour: Custom' })).toBeInTheDocument();
+    expect(localStorage.getItem('em-mesh-color')).toBe('#2fb6b6');
+  });
+
   it('has no Debug menu where its flag is off', async () => {
     await renderViewer({ debug: false });
     expect(screen.queryByRole('button', { name: 'Debug' })).toBeNull();
@@ -802,6 +874,10 @@ describe('EmCellMeshViewer', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Debug' }));
     await screen.findByText('Memory');
+    collect();
+    await closeMenu('Debug');
+    await chooseLook('Studio');
+    await openColors('Cobalt');
     collect();
     expect([...shown].sort()).toEqual(Object.keys(HELP).sort());
   });

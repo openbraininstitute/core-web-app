@@ -3,22 +3,27 @@ import { RiCheckLine } from '@remixicon/react';
 import { mutedStyle } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
+import { ColorDot } from './color-dot';
+
+import type { ComponentPropsWithRef } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
-/** One choice of a list, ticked while chosen. */
+/** One choice of a list, ticked while chosen. Its button takes any other props, so a picker can open from it. */
 export function PillOption({
   label,
   detail,
+  swatch,
   selected,
   theme,
-  onClick,
-}: {
+  className,
+  ...button
+}: ComponentPropsWithRef<'button'> & {
   label: string;
   /** A second, muted line. */
   detail?: string;
+  swatch?: string;
   selected: boolean;
   theme: ViewerTheme;
-  onClick: () => void;
 }) {
   return (
     <li>
@@ -27,15 +32,19 @@ export function PillOption({
         aria-label={label}
         aria-description={detail}
         aria-pressed={selected}
-        onClick={onClick}
+        {...button}
         className={cn(
           'flex w-full items-start justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm transition-colors',
           theme.isDark ? 'hover:bg-white/15' : 'hover:bg-black/6',
-          selected && 'font-semibold'
+          selected && 'font-semibold',
+          className
         )}
       >
         <span className="flex min-w-0 flex-col">
-          <span>{label}</span>
+          <span className="flex items-center gap-2">
+            {swatch && <ColorDot color={swatch} />}
+            {label}
+          </span>
           {detail && (
             <span className="text-xs font-normal leading-snug" style={mutedStyle(theme)}>
               {detail}

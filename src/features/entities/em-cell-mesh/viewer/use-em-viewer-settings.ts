@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { DEFAULT_MOTION, type MotionOptions } from './engine/motion-quality';
 import { STAND_IN_TRIANGLES } from './engine/stand-in';
+import { storedMeshColor, storeMeshColor } from './mesh-color';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { AODepth, Projection } from '@/features/viewer-3d/engine/scene-viewer';
@@ -12,6 +13,8 @@ import type { ForcedMesh } from './engine/mesh-choice';
 export interface EmViewerSettings {
   dark: boolean;
   look: string;
+  /** The mesh's colour where the look draws it in a plain one: an id of `MESH_COLORS`, or `#rrggbb` from the picker. */
+  color: string;
   ao: boolean;
   spin: boolean;
   projection: Projection;
@@ -31,7 +34,7 @@ export interface EmViewerSettings {
   beforeLook: Pick<EmViewerSettings, 'ao'> | null;
 }
 
-const DEFAULT_SETTINGS: EmViewerSettings = {
+const DEFAULT_SETTINGS: Omit<EmViewerSettings, 'color'> = {
   dark: false,
   look: 'em',
   ao: true,
@@ -50,8 +53,15 @@ const DEFAULT_SETTINGS: EmViewerSettings = {
 export type UpdateEmSettings = (patch: Partial<EmViewerSettings>) => void;
 
 export function useEmViewerSettings() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<EmViewerSettings>(() => ({
+    ...DEFAULT_SETTINGS,
+    color: storedMeshColor(),
+  }));
   const update: UpdateEmSettings = (patch) => setSettings((s) => ({ ...s, ...patch }));
+  const chooseColor = (color: string) => {
+    storeMeshColor(color);
+    update({ color });
+  };
   const chooseLook = (look: Look) =>
     setSettings((s) => {
       const before = s.beforeLook ?? { ao: s.ao };
@@ -63,5 +73,5 @@ export function useEmViewerSettings() {
         beforeLook: look.ao ? before : null,
       };
     });
-  return { settings, update, chooseLook };
+  return { settings, update, chooseLook, chooseColor };
 }

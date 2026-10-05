@@ -1,8 +1,16 @@
 // @vitest-environment node
+import chroma from 'chroma-js';
 import * as THREE from 'three';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { createLooks, type Look, withDisplacement } from '@/features/viewer-3d/engine/looks';
+import {
+  createLooks,
+  type Look,
+  PLAIN,
+  plainColor,
+  type ThemeColors,
+  withDisplacement,
+} from '@/features/viewer-3d/engine/looks';
 
 /** The shader lib entry three compiles a built-in material from (WebGLPrograms' `shaderIDs`). */
 const SHADER_IDS: Record<string, string> = {
@@ -204,7 +212,7 @@ describe('looks for a surface without colours, types or radii', () => {
       expect(color.getHexString(), l.id).toBe(l.plain?.light.slice(1));
       for (const dark of [true, false]) {
         const theme = dark ? 'dark' : 'light';
-        l.onTheme?.(dark);
+        l.onTheme?.(dark, PLAIN);
         expect(color.getHexString(), `${l.id}, ${theme}`).toBe(l.plain?.[theme].slice(1));
         const background = new THREE.Color(l.background[theme][0]);
         expect(luminance(color) > luminance(background), `${l.id}, ${theme}`).toBe(dark);
@@ -213,6 +221,30 @@ describe('looks for a surface without colours, types or radii', () => {
     // A surface with its own colours keeps them in either theme.
     for (const l of looks.filter((x) => x.colors === 'palette'))
       expect(l.onTheme, l.id).toBeUndefined();
+  });
+
+  it('draws its own colour where PLAIN is chosen, and another lighter or darker by as much as its own is than PLAIN', () => {
+    const chosen: ThemeColors = { light: '#3f77c9', dark: '#c1d9fc' };
+    const lightness = (hex: string) => chroma(hex).get('oklch.l');
+    const steps: number[] = [];
+    for (const l of bare.filter((x) => x.plain)) {
+      const plain = l.plain as ThemeColors;
+      for (const dark of [false, true]) {
+        const theme = dark ? 'dark' : 'light';
+        expect(plainColor(plain, dark, PLAIN), `${l.id}, ${theme}`).toBe(plain[theme]);
+        const drawn = plainColor(plain, dark, chosen);
+        const step = lightness(plain[theme]) - lightness(PLAIN[theme]);
+        steps.push(step);
+        if (plain[theme] === PLAIN[theme]) expect(drawn, `${l.id}, ${theme}`).toBe(chosen[theme]);
+        expect(
+          Math.abs(lightness(drawn) - lightness(chosen[theme]) - step),
+          `${l.id}, ${theme}`
+        ).toBeLessThan(0.01);
+      }
+    }
+    // Darker under Glossy's reflections and Pearl's sheen, lighter under Clay's matcap.
+    expect(Math.min(...steps)).toBeLessThan(-0.2);
+    expect(Math.max(...steps)).toBeGreaterThan(0.1);
   });
 
   it("neither bumps nor widens the surface, and pushes the toon outline out by pixels at the model's scale", () => {

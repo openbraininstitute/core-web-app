@@ -13,6 +13,7 @@ import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { DebugMenu } from './debug-menu';
 import { FrameTimes } from './frame-times';
 import { LoadStatus } from './load-status';
+import { MeshColorMenu } from './mesh-color-menu';
 import { SettingsMenu } from './settings-menu';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -27,6 +28,7 @@ interface EmViewerChromeProps {
   settings: EmViewerSettings;
   update: UpdateEmSettings;
   chooseLook(look: Look): void;
+  chooseColor(color: string): void;
   load: EmMeshLoad;
   /** The mesh's name, for the Debug menu and the GLB's file. */
   name: string;
@@ -35,8 +37,8 @@ interface EmViewerChromeProps {
 
 /**
  * The control layer over the mesh, laid out as the morphology viewer's: fullscreen, settings and, where its flag is
- * on, debug (top-left), re-centre under them, the load's status (top-centre), the ruler (bottom-left) and the axes
- * (bottom-right).
+ * on, debug (top-left), re-centre under them, the colour (top-right), the load's status (top-centre), the ruler
+ * (bottom-left) and the axes (bottom-right).
  */
 export function EmViewerChrome({
   viewer,
@@ -44,6 +46,7 @@ export function EmViewerChrome({
   settings,
   update,
   chooseLook,
+  chooseColor,
   load,
   name,
   wheelHint,
@@ -83,8 +86,20 @@ export function EmViewerChrome({
         </ChromeButton>
       </div>
 
+      <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+        <div className="pointer-events-auto">
+          <MeshColorMenu
+            value={settings.color}
+            onChange={chooseColor}
+            dark={settings.dark}
+            reason={look.plain ? null : `${look.label} draws in colours of its own.`}
+            theme={theme}
+          />
+        </div>
+        {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
+      </div>
+
       <LoadStatus load={load} name={name} theme={theme} />
-      {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
       {settings.scalebar && settings.projection === 'orthographic' && (
         <Scalebar viewer={viewer} color={theme.foreground} />
       )}

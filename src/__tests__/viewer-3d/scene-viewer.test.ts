@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
 import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass';
-import { MORPHOLOGY_SURFACE } from '@/features/viewer-3d/engine/looks';
+import { MORPHOLOGY_SURFACE, PLAIN } from '@/features/viewer-3d/engine/looks';
 import {
   type MovingFrame,
   SceneViewer,
@@ -169,6 +169,24 @@ describe('scene viewer', () => {
     morphology.renderer.loop?.();
     expect(morphology.renderer.render).toHaveBeenCalledTimes(1);
     expect(composerRender).not.toHaveBeenCalled();
+  });
+
+  it("draws a surface without vertex colours in the colour set, over either background, and in its looks' own for PLAIN", () => {
+    const viewer = make(BARE) as unknown as SceneViewer;
+    const studio = () =>
+      `#${(viewer.looks.find((l) => l.id === 'studio')?.material as THREE.MeshStandardMaterial).color.getHexString()}`;
+    viewer.setSurfaceColor({ light: '#3f77c9', dark: '#c1d9fc' });
+    expect(studio()).toBe('#3f77c9');
+    viewer.setDark(true);
+    expect(studio()).toBe('#c1d9fc');
+    viewer.setSurfaceColor(PLAIN);
+    expect(studio()).toBe('#c4c7cc');
+
+    // A morphology keeps its neurite colours, which its material's white lets through.
+    const morphology = make({ surface: MORPHOLOGY_SURFACE }) as unknown as SceneViewer;
+    morphology.setSurfaceColor({ light: '#3f77c9', dark: '#c1d9fc' });
+    const material = morphology.looks.find((l) => l.id === 'studio')?.material;
+    expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe('ffffff');
   });
 
   it("calls none of a subclass's overrides while it is built, and tells it when what a frame costs changes", () => {

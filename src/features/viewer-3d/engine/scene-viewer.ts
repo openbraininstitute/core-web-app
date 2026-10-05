@@ -23,8 +23,10 @@ import {
   DEFAULT_LOOK,
   type Look,
   makeEnvironment,
+  PLAIN,
   type SurfaceAttribute,
   setDepthRange,
+  type ThemeColors,
   withDisplacement,
 } from './looks';
 import { followScreenUp, glideLeft, stopGlide, turnCamera } from './rotation';
@@ -255,6 +257,7 @@ export class SceneViewer implements ViewControls {
   protected meshVisible = true;
   private wireframe = false;
   private dark = false;
+  private surfaceColor: ThemeColors = PLAIN;
   private ao = false;
   /** What frames are drawn through: the scene into a multisampled target, then the passes. */
   private main: Pipeline | null = null;
@@ -821,7 +824,7 @@ export class SceneViewer implements ViewControls {
     for (const l of this.looks) {
       // Fog fades towards the (flat) background of its look.
       if (l.fog) l.fog.color.set(l.background[this.dark ? 'dark' : 'light'][1]);
-      l.onTheme?.(this.dark);
+      l.onTheme?.(this.dark, this.surfaceColor);
     }
     this.invalidate();
   }
@@ -896,6 +899,12 @@ export class SceneViewer implements ViewControls {
 
   setDark(dark: boolean): void {
     this.dark = dark;
+    this.applyBackground();
+  }
+
+  /** The colour of a surface without vertex colours, which each look draws as `plainColor` says. */
+  setSurfaceColor(color: ThemeColors): void {
+    this.surfaceColor = color;
     this.applyBackground();
   }
 

@@ -47,6 +47,13 @@ export const MORPHOLOGY_SURFACE: readonly SurfaceAttribute[] = ['color', 'radius
 
 /** What most looks draw a surface without vertex colours in over their dark background: they light it alike there. */
 const PLAIN_ON_DARK = '#c4c7cc';
+/** Flat's and Studio's plain colours, which `plainColor` measures the other looks' against. */
+export const PLAIN: ThemeColors = { light: '#5a6a85', dark: PLAIN_ON_DARK };
+
+export interface ThemeColors {
+  light: string;
+  dark: string;
+}
 
 export interface Look {
   id: string;
@@ -68,8 +75,8 @@ export interface Look {
   fog?: THREE.Fog;
   /** Add a bloom pass in the single view (glow for the fluorescence look). */
   bloom?: boolean;
-  /** Called when the theme changes, for looks whose materials depend on it. */
-  onTheme?: (dark: boolean) => void;
+  /** Called when the theme or the surface colour changes, for looks whose materials depend on them. */
+  onTheme?: (dark: boolean, surfaceColor: ThemeColors) => void;
   /** Bumps the page switches on, with these parameters, when the look is chosen; looks without leave the bumps as they are. */
   bumps?: BumpParams;
   /** Whether the page switches the ambient occlusion on when the look is chosen. */
@@ -84,7 +91,7 @@ export interface Look {
    * stands out from both backgrounds. Over the light one, a slate blue as light as the look's lighting allows for about
    * 5:1 against its background.
    */
-  plain?: { light: string; dark: string };
+  plain?: ThemeColors;
   /** The key to the look's own colours, where they mean something. */
   legend?: LookLegend;
   /** Vertex attributes the look can't do without; a surface that lacks one isn't offered it. */
@@ -790,9 +797,32 @@ export function makeEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
 }
 
 /**
+ * What a look draws a surface without vertex colours in: its own colour (`Look.plain`) where `PLAIN` is chosen, and
+ * otherwise the chosen colour lighter or darker by as much as its own is than `PLAIN`, as its lighting needs.
+ */
+export function plainColor(plain: ThemeColors, dark: boolean, chosen: ThemeColors): string {
+  const theme = dark ? 'dark' : 'light';
+  if (chosen[theme] === PLAIN[theme]) return plain[theme];
+  if (plain[theme] === PLAIN[theme]) return chosen[theme];
+  const by = chroma(plain[theme]).get('oklch.l') - chroma(PLAIN[theme]).get('oklch.l');
+  return lighter(chosen[theme], by);
+}
+
+/** `color` lighter by `by` in OKLCH lightness, darker where it is negative, with as much of its chroma as sRGB holds. */
+function lighter(color: string, by: number): string {
+  const [l, c, h] = chroma(color).oklch();
+  const lightness = Math.min(1, Math.max(0, l + by));
+  let chromaticity = c;
+  while (chromaticity > 0 && chroma.oklch(lightness, chromaticity, h).clipped()) {
+    chromaticity -= 0.005;
+  }
+  return chroma.oklch(lightness, Math.max(0, chromaticity), h).hex();
+}
+
+/**
  * The looks for a surface with the vertex attributes `has`: those that draw in the neurite colours draw a surface
- * without them in their plain colour for the theme (`Look.plain`), and a surface without radii has no bumps and no
- * width floor.
+ * without them in a plain colour for the theme and the surface colour (`plainColor`), and a surface without radii has
+ * no bumps and no width floor.
  */
 export function createLooks(
   pixelRatio: number,
@@ -818,7 +848,7 @@ export function createLooks(
         viewLight(0xffffff, 2.2, [0.4, 0.6, 2])
       ),
       background: { light: ['#f4f5f7', '#f4f5f7'], dark: ['#0f1115', '#0f1115'] },
-      plain: { light: '#5a6a85', dark: PLAIN_ON_DARK },
+      plain: PLAIN,
     },
     {
       id: 'studio',
@@ -837,7 +867,7 @@ export function createLooks(
         viewLight(0xffffff, 2.2, [0.35, 0.7, 0])
       ),
       background: { light: ['#ffffff', '#d9dde6'], dark: ['#2b3140', '#0c0e13'] },
-      plain: { light: '#5a6a85', dark: PLAIN_ON_DARK },
+      plain: PLAIN,
     },
     {
       id: 'clay',
@@ -1053,11 +1083,11 @@ export function createLooks(
     const { plain, onTheme } = l;
     if (!colors && plain) {
       const { color } = l.material as THREE.Material & { color: THREE.Color };
-      l.onTheme = (dark) => {
-        onTheme?.(dark);
-        color.set(plain[dark ? 'dark' : 'light']);
+      l.onTheme = (dark, chosen) => {
+        onTheme?.(dark, chosen);
+        color.set(plainColor(plain, dark, chosen));
       };
-      l.onTheme(false);
+      l.onTheme(false, PLAIN);
     }
   }
   return looks.filter((l) => l.needs?.every((a) => has.includes(a)) ?? true);

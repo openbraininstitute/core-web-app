@@ -10,6 +10,7 @@ import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 
 import { EmViewerChrome } from './chrome/em-viewer-chrome';
 import { EmMeshViewer } from './engine/em-mesh-viewer';
+import { surfaceColor } from './mesh-color';
 import { useEmMesh } from './use-em-mesh';
 import { type EmViewerSettings, useEmViewerSettings } from './use-em-viewer-settings';
 
@@ -28,7 +29,7 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const refHost = useRef<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<EmMeshViewer | null>(null);
-  const { settings, update, chooseLook } = useEmViewerSettings();
+  const { settings, update, chooseLook, chooseColor } = useEmViewerSettings();
   const { virtualLabId, projectId } = ctx ?? {};
   const source = useMemo(
     () => ({
@@ -81,6 +82,7 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
             settings={settings}
             update={update}
             chooseLook={chooseLook}
+            chooseColor={chooseColor}
             load={load}
             name={entity.name}
             wheelHint={wheelHint}
@@ -95,6 +97,7 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
 function useViewerSync(viewer: EmMeshViewer | null, settings: EmViewerSettings) {
   useEffect(() => viewer?.setDark(settings.dark), [viewer, settings.dark]);
   useEffect(() => viewer?.setLook(settings.look), [viewer, settings.look]);
+  useEffect(() => viewer?.setSurfaceColor(surfaceColor(settings.color)), [viewer, settings.color]);
   useEffect(() => viewer?.setAO(settings.ao), [viewer, settings.ao]);
   useEffect(() => viewer?.setSpin(settings.spin), [viewer, settings.spin]);
   useEffect(() => viewer?.setProjection(settings.projection), [viewer, settings.projection]);
