@@ -28,14 +28,17 @@ export interface MotionOptions {
   standInMs: number;
 }
 
-/** Moving frames cut down under 55 a second, and the full mesh in them down to 36 frames a second. */
+/**
+ * Moving frames cut down under 45 a second, and the full mesh in them down to 31 frames a second: a turn somewhat slower
+ * than 60 a second is worth the full mesh.
+ */
 export const DEFAULT_MOTION: MotionOptions = {
   mesh: 'auto',
   ao: 'auto',
   scale: 'auto',
   antialias: true,
-  budgetMs: 18,
-  standInMs: 28,
+  budgetMs: 22,
+  standInMs: 32,
 };
 
 /**

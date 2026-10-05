@@ -130,13 +130,14 @@ flowchart TD
 - `MeshChooser` ([engine/mesh-choice.ts](engine/mesh-choice.ts)) chooses, in that order, before every frame.
 - The stand-in's error is how far its simplification may have moved the surface, in µm. On screen it is counted in device pixels, the canvas's own: in the orthographic view from the scale bar's µm per CSS pixel, and in perspective at the point of the mesh's bounds nearest the camera, where it looks largest.
 - The thresholds are far under a pixel because the stand-in loses what is thinner than its cubes, spines and the thinnest axons, rather than moving it. At overview zoom the full mesh is drawn, on any screen; the stand-in only zoomed far out.
-- Too slow means a full frame costs the GPU more than 28 ms (the median of the last three), or two moving frames of the full mesh in a row did, as zooming out makes them dearer; the second holds until the view stops. The still frame after a move draws the full mesh again.
+- Too slow means a full frame costs the GPU more than 32 ms (the median of the last three), or two moving frames of the full mesh in a row did, as zooming out makes them dearer; the second holds until the view stops. The still frame after a move draws the full mesh again.
 
 ## Frames while the view moves
 
 - Frames are timed on the GPU ([engine/gpu-timer.ts](engine/gpu-timer.ts)): with timer queries in Chrome and Edge on desktop, with a fence elsewhere. A moving frame is timed from the third after a pause, and only where the frame before drew the same mesh, cut down the same way: a GPU waking up draws its first frames slowly.
-- One over the budget, 18 ms (55 frames a second), is cut down a step (`MotionQuality` in [engine/motion-quality.ts](engine/motion-quality.ts)): first the ambient occlusion is left out, then half the pixels a step, down to a quarter of the resolution. Frames cut to fewer pixels, or set to draw without antialiasing, go through a second composer, made the first time one is, and are scaled up onto the canvas.
+- One over the budget, 22 ms (45 frames a second), is cut down a step (`MotionQuality` in [engine/motion-quality.ts](engine/motion-quality.ts)): first the ambient occlusion is left out, then half the pixels a step, down to a quarter of the resolution. Frames cut to fewer pixels, or set to draw without antialiasing, go through a second composer, made the first time one is, and are scaled up onto the canvas.
 - They step back up a step at a time where they would keep within 80 % of the budget, and all the way up as soon as the view stops, where a full frame does.
+- The budget and the stand-in's 32 ms let a turn run somewhat slower than 60 frames a second, to keep the full mesh on screen.
 - The still frame, once the view stops, is drawn in full: with the occlusion where it is on, at full resolution, antialiased.
 - The Debug menu sets each of these, to compare on a given machine.
 

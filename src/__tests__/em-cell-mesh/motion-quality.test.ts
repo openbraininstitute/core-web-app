@@ -78,8 +78,8 @@ describe('MotionQuality', () => {
 
   it('steps back up where twice the cost keeps within the budget, but not soon into a step just measured over it', () => {
     const q = new MotionQuality();
-    frames(q, 30, 0);
-    frames(q, 20, 0);
+    frames(q, 2 * BUDGET, 0);
+    frames(q, 1.2 * BUDGET, 0);
     expect(q.rung.scale).toBe(MOTION_SCALES[1]);
     frames(q, 2, 1000);
     expect(q.rung.scale).toBe(MOTION_SCALES[1]);
@@ -94,8 +94,8 @@ describe('MotionQuality', () => {
 
   it('goes back to the top at once where still frames, drawn in full, keep well within the budget', () => {
     const q = new MotionQuality();
-    frames(q, 30);
-    frames(q, 20);
+    frames(q, 2 * BUDGET);
+    frames(q, 1.2 * BUDGET);
     expect(q.rung.scale).toBe(MOTION_SCALES[1]);
     q.still(0.8 * BUDGET);
     expect(q.rung.scale).toBe(MOTION_SCALES[1]);

@@ -669,7 +669,7 @@ describe('EmMeshViewer', () => {
     zoom(v, 8);
     frame(v);
     // A slow median of moving frames, as a hitch makes.
-    for (let i = 0; i < 3; i++) v.motion.add(20);
+    for (let i = 0; i < 3; i++) v.motion.add(2 * DEFAULT_MOTION.budgetMs);
     viewer.setSpin(true);
     for (let i = 0; i < 3; i++, now += 16) frame(v);
     expect(status.at(-1)?.moving).toMatchObject({ mesh: 'full', ao: false });

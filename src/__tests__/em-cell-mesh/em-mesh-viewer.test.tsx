@@ -768,9 +768,9 @@ describe('EmCellMeshViewer', () => {
           moving: { mesh: 'stand-in', ao: false, scale: 0.5, antialias: false },
         });
     });
-    expect(document.body.textContent).toContain('the view moves, and full frames take over 28 ms');
+    expect(document.body.textContent).toContain('the view moves, and full frames take over 32 ms');
     expect(document.body.textContent).toContain(
-      'full frame: 40.0 ms (timer query), slow: over 28 ms'
+      'full frame: 40.0 ms (timer query), slow: over 32 ms'
     );
     expect(document.body.textContent).toContain(
       'moving frames: 9.4 ms, 118 fps: the stand-in, without the occlusion, at 50% of the resolution, not antialiased'
