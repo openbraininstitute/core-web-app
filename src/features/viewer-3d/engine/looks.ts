@@ -800,23 +800,39 @@ export function makeEnvironment(renderer: THREE.WebGLRenderer): THREE.Texture {
  * What a look draws a surface without vertex colours in: its own colour (`Look.plain`) where `PLAIN` is chosen, and
  * otherwise the chosen colour lighter or darker by as much as its own is than `PLAIN`, as its lighting needs.
  */
-export function plainColor(plain: ThemeColors, dark: boolean, chosen: ThemeColors): string {
+export function plainColor(plain: ThemeColors, dark: boolean, chosen: ThemeColors): THREE.Color {
   const theme = dark ? 'dark' : 'light';
-  if (chosen[theme] === PLAIN[theme]) return plain[theme];
-  if (plain[theme] === PLAIN[theme]) return chosen[theme];
+  if (chosen[theme] === PLAIN[theme]) return new THREE.Color(plain[theme]);
+  if (plain[theme] === PLAIN[theme]) return new THREE.Color(chosen[theme]);
   const by = chroma(plain[theme]).get('oklch.l') - chroma(PLAIN[theme]).get('oklch.l');
   return lighter(chosen[theme], by);
 }
 
-/** `color` lighter by `by` in OKLCH lightness, darker where it is negative, with as much of its chroma as sRGB holds. */
-function lighter(color: string, by: number): string {
+/**
+ * `color` lighter by `by` in OKLCH lightness, darker where it is negative. Darker, it keeps as much of its chroma as
+ * sRGB holds. Lighter, it keeps all of it: past the lightest sRGB holds it at, it is brighter than white, for the
+ * look's shading and the tone mapping to bring down.
+ */
+function lighter(color: string, by: number): THREE.Color {
   const [l, c, h] = chroma(color).oklch();
-  const lightness = Math.min(1, Math.max(0, l + by));
+  const lightness = Math.max(0, l + by);
+  if (by > 0) {
+    let fits = l;
+    let over = Math.min(1, lightness);
+    if (!chroma.oklch(over, c, h).clipped()) fits = over;
+    for (let i = 0; i < 20 && fits < over; i++) {
+      const mid = (fits + over) / 2;
+      if (chroma.oklch(mid, c, h).clipped()) over = mid;
+      else fits = mid;
+    }
+    // OKLab's lightness goes as the cube root of the light.
+    return new THREE.Color(chroma.oklch(fits, c, h).hex()).multiplyScalar((lightness / fits) ** 3);
+  }
   let chromaticity = c;
   while (chromaticity > 0 && chroma.oklch(lightness, chromaticity, h).clipped()) {
     chromaticity -= 0.005;
   }
-  return chroma.oklch(lightness, Math.max(0, chromaticity), h).hex();
+  return new THREE.Color(chroma.oklch(lightness, Math.max(0, chromaticity), h).hex());
 }
 
 /**
@@ -907,8 +923,8 @@ export function createLooks(
       ),
       env: true,
       background: { light: ['#eef1f5', '#c4cad6'], dark: ['#1e2330', '#07080b'] },
-      // The room's reflections lighten it.
-      plain: { light: '#26324a', dark: PLAIN_ON_DARK },
+      // The room's reflections lighten it, over either background: darker, to come out as light as Studio's slate.
+      plain: { light: '#26324a', dark: '#7d8085' },
     },
     {
       id: 'pearl',
@@ -930,8 +946,9 @@ export function createLooks(
       ),
       env: true,
       background: { light: ['#f6f4f8', '#d6d2dd'], dark: ['#242030', '#0b0a10'] },
-      // The white sheen and the room light it, whatever its colour: about 4:1 at most over the light background.
-      plain: { light: '#1b2433', dark: PLAIN_ON_DARK },
+      // The white sheen and the room light it, whatever its colour: about 4:1 at most over the light background. Over
+      // the dark one, darker to come out as light as Studio's slate.
+      plain: { light: '#1b2433', dark: '#6f7176' },
     },
     {
       id: 'toon',
@@ -1085,7 +1102,7 @@ export function createLooks(
       const { color } = l.material as THREE.Material & { color: THREE.Color };
       l.onTheme = (dark, chosen) => {
         onTheme?.(dark, chosen);
-        color.set(plainColor(plain, dark, chosen));
+        color.copy(plainColor(plain, dark, chosen));
       };
       l.onTheme(false, PLAIN);
     }

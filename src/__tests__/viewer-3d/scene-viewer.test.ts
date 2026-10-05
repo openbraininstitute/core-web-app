@@ -175,16 +175,16 @@ describe('scene viewer', () => {
     const viewer = make(BARE) as unknown as SceneViewer;
     const studio = () =>
       `#${(viewer.looks.find((l) => l.id === 'studio')?.material as THREE.MeshStandardMaterial).color.getHexString()}`;
-    viewer.setSurfaceColor({ light: '#3f77c9', dark: '#c1d9fc' });
+    viewer.setSurfaceColor({ light: '#3f77c9', dark: '#6ba5fb' });
     expect(studio()).toBe('#3f77c9');
     viewer.setDark(true);
-    expect(studio()).toBe('#c1d9fc');
+    expect(studio()).toBe('#6ba5fb');
     viewer.setSurfaceColor(PLAIN);
     expect(studio()).toBe('#c4c7cc');
 
     // A morphology keeps its neurite colours, which its material's white lets through.
     const morphology = make({ surface: MORPHOLOGY_SURFACE }) as unknown as SceneViewer;
-    morphology.setSurfaceColor({ light: '#3f77c9', dark: '#c1d9fc' });
+    morphology.setSurfaceColor({ light: '#3f77c9', dark: '#6ba5fb' });
     const material = morphology.looks.find((l) => l.id === 'studio')?.material;
     expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe('ffffff');
   });

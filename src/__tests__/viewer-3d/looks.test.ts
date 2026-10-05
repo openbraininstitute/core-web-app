@@ -52,6 +52,14 @@ function redeclared(source: string): string[] {
   return names.filter((n, i) => names.indexOf(n) !== i);
 }
 
+/** OKLCH of a colour, brighter than white too: OKLab goes as the cube root of the light. */
+function oklch(c: THREE.Color): [number, number, number] {
+  const over = Math.max(1, c.r, c.g, c.b);
+  const fitted = c.clone().multiplyScalar(1 / over);
+  const [l, ch, h] = chroma(`#${fitted.getHexString()}`).oklch();
+  return [l * Math.cbrt(over), ch * Math.cbrt(over), h];
+}
+
 let looks: Look[];
 
 beforeAll(() => {
@@ -224,20 +232,23 @@ describe('looks for a surface without colours, types or radii', () => {
   });
 
   it('draws its own colour where PLAIN is chosen, and another lighter or darker by as much as its own is than PLAIN', () => {
-    const chosen: ThemeColors = { light: '#3f77c9', dark: '#c1d9fc' };
+    const chosen: ThemeColors = { light: '#3f77c9', dark: '#6ba5fb' };
     const lightness = (hex: string) => chroma(hex).get('oklch.l');
     const steps: number[] = [];
     for (const l of bare.filter((x) => x.plain)) {
       const plain = l.plain as ThemeColors;
       for (const dark of [false, true]) {
         const theme = dark ? 'dark' : 'light';
-        expect(plainColor(plain, dark, PLAIN), `${l.id}, ${theme}`).toBe(plain[theme]);
+        expect(`#${plainColor(plain, dark, PLAIN).getHexString()}`, `${l.id}, ${theme}`).toBe(
+          plain[theme]
+        );
         const drawn = plainColor(plain, dark, chosen);
         const step = lightness(plain[theme]) - lightness(PLAIN[theme]);
         steps.push(step);
-        if (plain[theme] === PLAIN[theme]) expect(drawn, `${l.id}, ${theme}`).toBe(chosen[theme]);
+        if (plain[theme] === PLAIN[theme])
+          expect(`#${drawn.getHexString()}`, `${l.id}, ${theme}`).toBe(chosen[theme]);
         expect(
-          Math.abs(lightness(drawn) - lightness(chosen[theme]) - step),
+          Math.abs(oklch(drawn)[0] - lightness(chosen[theme]) - step),
           `${l.id}, ${theme}`
         ).toBeLessThan(0.01);
       }
@@ -245,6 +256,18 @@ describe('looks for a surface without colours, types or radii', () => {
     // Darker under Glossy's reflections and Pearl's sheen, lighter under Clay's matcap.
     expect(Math.min(...steps)).toBeLessThan(-0.2);
     expect(Math.max(...steps)).toBeGreaterThan(0.1);
+  });
+
+  it('keeps all of the chroma of a colour it draws lighter, brighter than white past what sRGB holds', () => {
+    const clay = bare.find((l) => l.id === 'clay')?.plain as ThemeColors;
+    for (const hex of ['#f37d65', '#6ba5fb', '#b291ea']) {
+      const [, c, h] = chroma(hex).oklch();
+      const drawn = plainColor(clay, true, { light: hex, dark: hex });
+      const [, drawnC, drawnH] = oklch(drawn);
+      expect(Math.max(drawn.r, drawn.g, drawn.b), hex).toBeGreaterThan(1);
+      expect(drawnC, hex).toBeGreaterThan(c);
+      expect(Math.abs(drawnH - h), hex).toBeLessThan(1);
+    }
   });
 
   it("neither bumps nor widens the surface, and pushes the toon outline out by pixels at the model's scale", () => {

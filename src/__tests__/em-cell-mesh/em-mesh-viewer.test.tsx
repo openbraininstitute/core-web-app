@@ -282,7 +282,7 @@ async function started(count = 1) {
 
 const pill = () => screen.queryByRole('status')?.textContent ?? null;
 
-const COBALT = { light: '#3f77c9', dark: '#c1d9fc' };
+const COBALT = { light: '#3f77c9', dark: '#6ba5fb' };
 const SLATE = { light: '#5a6a85', dark: '#c4c7cc' };
 
 async function openSettings() {
@@ -696,7 +696,7 @@ describe('EmCellMeshViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Teal' }));
     expect(first.viewer.setSurfaceColor).toHaveBeenLastCalledWith({
       light: '#148282',
-      dark: '#85e3e3',
+      dark: '#57b6b6',
     });
     expect(localStorage.getItem('em-mesh-color')).toBe('teal');
     await openColors('Teal');
