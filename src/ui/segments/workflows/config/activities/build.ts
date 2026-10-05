@@ -43,17 +43,23 @@ const emSynapseMappingPrerequisite: TBrowsePrerequisite = {
   },
 };
 
-const SMALL_SCALE_CIRCUIT_BUILD_SCALES: string[] = [
+const SMALL_SCALE_CIRCUIT_BUILD_SCALES: readonly string[] = [
   CircuitScaleDictionary.Single,
   CircuitScaleDictionary.PairNeuron,
   CircuitScaleDictionary.SmallMicrocircuit,
 ];
 
-let smallScaleCircuitGridDefinitionCache: typeof circuitGridDefinition | null = null;
+/** Extracellular recording arrays can also be built on microcircuits. */
+const EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES: readonly string[] = [
+  ...SMALL_SCALE_CIRCUIT_BUILD_SCALES,
+  CircuitScaleDictionary.Microcircuit,
+];
 
-/** Built on demand: this module and the circuit grid schema import each other. */
-function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
-  smallScaleCircuitGridDefinitionCache ??= {
+/** The circuit grid, with its Scale filter offering only `scales`. */
+function scaleRestrictedCircuitGridDefinition(
+  scales: readonly string[]
+): typeof circuitGridDefinition {
+  return {
     ...circuitGridDefinition,
     schema: {
       ...circuitGridDefinition.schema,
@@ -66,7 +72,7 @@ function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
                 options: {
                   kind: FilterOptionsKind.Static,
                   items: Object.values(CircuitScale)
-                    .filter(({ key }) => SMALL_SCALE_CIRCUIT_BUILD_SCALES.includes(key))
+                    .filter(({ key }) => scales.includes(key))
                     .map(({ key, label }) => ({ id: key, label })),
                 },
               },
@@ -75,56 +81,71 @@ function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
       ),
     },
   };
-  return smallScaleCircuitGridDefinitionCache;
 }
 
-/** Keeps selected scales within the supported circuit-build range. */
-function resolveSmallScaleCircuitBuildScales(filters: Record<string, unknown>): string[] {
+/** Keeps selected scales within the ones the workflow supports. */
+function resolveCircuitBuildScales(
+  filters: Record<string, unknown>,
+  scales: readonly string[]
+): string[] {
   const requested = filters.scale__in;
   if (Array.isArray(requested)) {
     const within = requested.filter(
-      (scale): scale is string =>
-        typeof scale === 'string' && SMALL_SCALE_CIRCUIT_BUILD_SCALES.includes(scale)
+      (scale): scale is string => typeof scale === 'string' && scales.includes(scale)
     );
     if (within.length > 0) return within;
   }
-  return SMALL_SCALE_CIRCUIT_BUILD_SCALES;
+  return [...scales];
 }
 
-const smallScaleCircuitBrowseConfig = {
-  [ExtendedEntitiesTypeDict.Circuit]: {
-    get gridDefinitionOverride() {
-      return getSmallScaleCircuitGridDefinition();
-    },
-    loader: {
-      kind: 'custom' as const,
-      build:
-        () =>
-        ({ filters, withFacets, context }) =>
-          getCircuits({
-            context,
-            withFacets,
-            filters: {
-              ...filters,
-              scale__in: resolveSmallScaleCircuitBuildScales(filters),
-            },
-          }),
-      facets: {
+/** Circuit browsing limited to the scales a build workflow supports. */
+function scaleRestrictedCircuitBrowseConfig(scales: readonly string[]) {
+  let gridDefinition: typeof circuitGridDefinition | null = null;
+  return {
+    [ExtendedEntitiesTypeDict.Circuit]: {
+      /** Built on demand: this module and the circuit grid schema import each other. */
+      get gridDefinitionOverride() {
+        gridDefinition ??= scaleRestrictedCircuitGridDefinition(scales);
+        return gridDefinition;
+      },
+      loader: {
+        kind: 'custom' as const,
         build:
           () =>
-          ({ filters, context }) =>
+          ({ filters, withFacets, context }) =>
             getCircuits({
               context,
-              withFacets: true,
+              withFacets,
               filters: {
                 ...filters,
-                scale__in: resolveSmallScaleCircuitBuildScales(filters),
+                scale__in: resolveCircuitBuildScales(filters, scales),
               },
-            }).then((response) => response?.facets),
+            }),
+        facets: {
+          build:
+            () =>
+            ({ filters, context }) =>
+              getCircuits({
+                context,
+                withFacets: true,
+                filters: {
+                  ...filters,
+                  scale__in: resolveCircuitBuildScales(filters, scales),
+                },
+              }).then((response) => response?.facets),
+        },
       },
     },
-  },
-} satisfies TWorkflowBrowseConfig;
+  } satisfies TWorkflowBrowseConfig;
+}
+
+const smallScaleCircuitBrowseConfig = scaleRestrictedCircuitBrowseConfig(
+  SMALL_SCALE_CIRCUIT_BUILD_SCALES
+);
+
+const extracellularRecordingArrayBrowseConfig = scaleRestrictedCircuitBrowseConfig(
+  EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES
+);
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -241,7 +262,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
     requireFilters: true,
-    browseConfig: smallScaleCircuitBrowseConfig,
+    browseConfig: extracellularRecordingArrayBrowseConfig,
     order: 5,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
