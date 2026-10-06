@@ -30,7 +30,11 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
-import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
+import {
+  resolveIonChannelModelingCampaignConfig,
+  toIonChannelFittingForm,
+} from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
@@ -61,6 +65,7 @@ import {
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
+import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
@@ -76,6 +81,7 @@ import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-c
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+import type { TWorkflowTaskTypeBindingsInput } from '@/features/scan-config/workflow/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 /** Build campaigns whose overview is the read-only scan configuration editor. */
@@ -89,6 +95,7 @@ const BuildScanConfigCampaigns: Partial<
         config: { form?: Config } | null;
         sourceEntityId: string | null;
       }>;
+      taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
     }
   >
 > = {
@@ -96,6 +103,12 @@ const BuildScanConfigCampaigns: Partial<
     extendedType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
     resolve: EmSynapseMappingCampaign.api.query.resolve!,
+  },
+  [TaskConfigType.IonChannelModelingCampaign]: {
+    extendedType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    resolve: IonChannelBuildCampaign.api.query.resolve!,
+    taskTypeBindings: buildIonChannelWorkflow.taskTypeBindings,
   },
   [TaskConfigType.CircuitSynapticPhysiologyCampaign]: {
     extendedType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
@@ -292,6 +305,7 @@ export default async function Overview({
           }}
           activity={ScanConfigActivity.Build}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={buildCampaign.taskTypeBindings}
         />
       );
     }
@@ -434,35 +448,33 @@ export default async function Overview({
       })
     );
 
-    // the campaign's own source entity: the recording it was fitted from. A campaign that
-    // scanned several holds one config per recording, and the first is the one the editor
-    // opens against.
+    // built before the scan-config editor: shown in it read-only, with no results to rerun
     const recordingId = data?.campaign?.input_recordings?.[0]?.id;
     const scanConfig = findScanConfigRegistryByTargetType(
-      ExtendedEntitiesTypeDict.IonChannelModelingCampaign
+      ExtendedEntitiesTypeDict.IonChannelBuildCampaign
     );
     if (error || !recordingId || !scanConfig) {
       notFound();
     }
 
     return (
-      <>
-        <ScanConfiguration
-          entityId={recordingId}
-          scanConfig={scanConfig}
-          virtualLabId={context.virtualLabId}
-          projectId={context.projectId}
-          origin={entity.id}
-          initialConfig={data?.config?.form}
-          readOnly={!isWorkflow}
-          defaultTab={{
-            __activity: ScanConfigActivity.Build,
-            id: BuildScanConfigTabs.configuration,
-          }}
-          activity={ScanConfigActivity.Build}
-        />
-        <DownloadPanel />
-      </>
+      <ScanConfiguration
+        entityId={recordingId}
+        scanConfig={scanConfig}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        origin={entity.id}
+        initialConfig={
+          data?.config ? toIonChannelFittingForm(data.config.form ?? data.config) : undefined
+        }
+        readOnly
+        defaultTab={{
+          __activity: ScanConfigActivity.Build,
+          id: BuildScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Build}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+      />
     );
   }
 
