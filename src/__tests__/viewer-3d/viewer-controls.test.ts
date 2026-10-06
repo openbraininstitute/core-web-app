@@ -72,13 +72,6 @@ function pointer(type: string): void {
 }
 
 beforeAll(() => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      observe() {}
-      disconnect() {}
-    }
-  );
   // The matcaps are drawn on a 2D canvas, which jsdom lacks; a stub is enough to build them.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
     createRadialGradient: () => ({ addColorStop() {} }),

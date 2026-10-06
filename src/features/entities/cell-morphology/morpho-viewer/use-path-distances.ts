@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
-
-import { errorMessage } from './engine/protocol';
 
 import type { DistanceData } from './engine/colors';
 import type { MeshPool } from './engine/pool';

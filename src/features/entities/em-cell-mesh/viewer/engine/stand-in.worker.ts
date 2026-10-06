@@ -8,8 +8,8 @@ import { createStandInApi } from './worker-apis';
 
 const memories: WebAssembly.Memory[] = [];
 
-// meshoptimizer instantiates its modules' WASM as it loads, the simplifier's among them. The simplifier's memory never
-// shrinks, so the largest after the simplification is its peak, for the Debug menu.
+// The simplifier instantiates its WASM as it loads, for a mesh that takes it. Its memory never shrinks, so after the
+// simplification it is at its peak, for the Debug menu.
 const instantiate = WebAssembly.instantiate.bind(WebAssembly);
 WebAssembly.instantiate = (async (...args: Parameters<typeof instantiate>) => {
   const result = await instantiate(...args);
@@ -22,7 +22,7 @@ WebAssembly.instantiate = (async (...args: Parameters<typeof instantiate>) => {
 Comlink.expose(
   createStandInApi(
     async () => {
-      const { MeshoptSimplifier } = await import('meshoptimizer');
+      const { MeshoptSimplifier } = await import('meshoptimizer/simplifier');
       await MeshoptSimplifier.ready;
       return MeshoptSimplifier;
     },

@@ -13,9 +13,9 @@ import { decodeFull, type EncodedChunk, encodeChunk, encodeFull, fullKey } from 
 import { makeStandIn } from './stand-in';
 import { encodeStandIn } from './stand-in-cache';
 
-import type { MeshoptSimplifier } from 'meshoptimizer';
 import type { MeshoptDecoder } from 'meshoptimizer/decoder';
 import type { MeshoptEncoder } from 'meshoptimizer/encoder';
+import type { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import type { MeshHeader } from './glb';
 import type { DecodedMesh, PackedChunk, PackedMesh, StandIn, Timing } from './types';
 
@@ -61,40 +61,33 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
 /** What the stand-in worker hands back: the stand-in, its copy for the cache, and how it was made. */
 export interface MadeStandIn {
   standIn: StandIn;
-  /** The stand-in as the cache keeps it (`encodeStandIn`), made here rather than on the page. */
-  encoded: ArrayBuffer;
+  /** The stand-in as the cache keeps it (`encodeStandIn`), made here rather than on the page; null once stored. */
+  encoded: Blob | null;
   timings: Timing[];
   heapBytes: number | null;
 }
 
 /**
  * Makes the stand-in, and its copy for the cache, from the decoded mesh, which it hands back for the full build; or from
- * the full mesh its cache gave back, which it hands back to be drawn.
+ * the full mesh its cache gave back, which it hands back to be drawn. meshoptimizer's simplifier loads only for a mesh
+ * that takes it (`makeStandIn`).
  */
 export function createStandInApi(
   loadSimplifier: () => Promise<typeof MeshoptSimplifier>,
   heapBytes: () => number | null
 ) {
-  let simplifier: Promise<typeof MeshoptSimplifier> | null = null;
-  const ready = () => {
-    simplifier ??= loadSimplifier();
-    return simplifier;
-  };
   const makeFrom = async (mesh: DecodedMesh, triangles: number): Promise<MadeStandIn> => {
-    const { standIn, timings } = makeStandIn(mesh, await ready(), triangles);
+    const { standIn, timings } = await makeStandIn(mesh, loadSimplifier, triangles);
     return { standIn, encoded: encodeStandIn(standIn), timings, heapBytes: heapBytes() };
   };
-  const madeBuffers = (made: MadeStandIn) => [...packedBuffers(made.standIn), made.encoded];
   return {
-    /** Compile meshoptimizer's WASM, while the GLB downloads. */
-    async warmUp(): Promise<void> {
-      await ready();
-    },
-
     /** The stand-in of at most `triangles` triangles. */
     async make(mesh: DecodedMesh, triangles: number): Promise<MadeStandIn & { mesh: DecodedMesh }> {
       const made = await makeFrom(mesh, triangles);
-      return Comlink.transfer({ ...made, mesh }, [...madeBuffers(made), ...meshBuffers(mesh)]);
+      return Comlink.transfer({ ...made, mesh }, [
+        ...packedBuffers(made.standIn),
+        ...meshBuffers(mesh),
+      ]);
     },
 
     /** The stand-in of at most `triangles` triangles, from the full mesh as its cache gave it back. */
@@ -103,7 +96,10 @@ export function createStandInApi(
       triangles: number
     ): Promise<MadeStandIn & { full: PackedMesh }> {
       const made = await makeFrom(unpackMesh(full), triangles);
-      return Comlink.transfer({ ...made, full }, [...madeBuffers(made), ...packedBuffers(full)]);
+      return Comlink.transfer({ ...made, full }, [
+        ...packedBuffers(made.standIn),
+        ...packedBuffers(full),
+      ]);
     },
   };
 }
@@ -134,9 +130,12 @@ export function createFullCacheApi(
     },
 
     async restore(downloadUrl: string): Promise<PackedMesh | null> {
-      const buffer = cache && (await readEntry(cache, fullKey(downloadUrl)));
-      if (!buffer) return null;
-      const mesh = decodeFull(await loadDecoder(), buffer);
+      if (!cache) return null;
+      const [buffer, decoder] = await Promise.all([
+        readEntry(cache, fullKey(downloadUrl)),
+        loadDecoder(),
+      ]);
+      const mesh = buffer && decodeFull(decoder, buffer);
       return mesh && Comlink.transfer(mesh, packedBuffers(mesh));
     },
 
@@ -151,9 +150,9 @@ export function createFullCacheApi(
     async store(downloadUrl: string, mesh: Omit<PackedMesh, 'chunks'>): Promise<boolean> {
       if (!cache) return false;
       await encoding;
-      const buffer = encodeFull(mesh, encoded);
+      const entry = encodeFull(mesh, encoded);
       encoded.length = 0;
-      return writeEntry(cache, fullKey(downloadUrl), buffer, buffer.byteLength);
+      return writeEntry(cache, fullKey(downloadUrl), entry, entry.size);
     },
   };
 }

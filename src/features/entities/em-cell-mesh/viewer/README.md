@@ -56,7 +56,7 @@ sequenceDiagram
 
   Hook->>Load: load the mesh, and a stand-in of 3M triangles
   Load->>Dec: warm up, download
-  Note over Load: no stand-in of that size cached:<br/>the stand-in worker starts and warms up
+  Note over Load: no stand-in of that size cached:<br/>the stand-in worker starts
   Dec-->>Load: the header, from the first few kB
   Note over Load: the budget, checked: a mesh past it stops here
   Dec-->>Load: progress, then done, teed into the GLB's cache
@@ -169,7 +169,7 @@ The colour pill at the top right ([chrome/mesh-color-menu.tsx](chrome/mesh-color
 - The presets are as light as Studio allows for a median 4:1 against its light background; slate, as tuned before, has 5:1. Over the dark background each is as colourful, at an OKLCH lightness of 0.72: about the most at which sRGB holds cobalt's chroma, and a median 6 to 7:1 in Studio. As light as slate's grey, they faded to pastels. A colour from the picker is drawn as picked over either background.
 - Slate is each look's own colour, as tuned for its lighting (`Look.plain`), which `plainColor` draws for Flat's and Studio's.
 
-The chrome is laid out as the morphology viewer's ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)): fullscreen, settings and debug at the top left, with re-centre under them; the colour at the top right; the status at the top centre; the scale bar, in the orthographic view, at the bottom left; the axes gizmo at the bottom right. A double-click toggles fullscreen. Outside it the wheel zooms with Ctrl, and a plain wheel scrolls the page.
+The chrome ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)) is laid out on the frame it shares with the morphology viewer (`ViewerChrome` in [viewer-3d/chrome/viewer-chrome.tsx](../../../viewer-3d/chrome/viewer-chrome.tsx)): fullscreen, settings and debug at the top left, with re-centre under them; the colour at the top right; the status at the top centre; the scale bar, in the orthographic view, at the bottom left; the axes gizmo at the bottom right. A double-click toggles fullscreen. Outside it the wheel zooms with Ctrl, and a plain wheel scrolls the page.
 
 [chrome/debug-menu.tsx](chrome/debug-menu.tsx) holds, in this order:
 
@@ -190,7 +190,7 @@ It shows only where the `em-mesh-debug` flag is on (`emMeshDebugFlag` in `src/fe
 | Where the full mesh comes in and goes | `FULL_ABOVE_PX` and `STAND_IN_BELOW_PX` in [engine/mesh-choice.ts](engine/mesh-choice.ts) |
 | When moving frames are cut down, or draw the stand-in | `DEFAULT_MOTION` in [engine/motion-quality.ts](engine/motion-quality.ts) |
 | The memory budget | [engine/budget.ts](engine/budget.ts) |
-| The caches' names, lifetimes and sizes | `GLB_CACHE` and `STAND_IN_CACHE` in [engine/asset-cache.ts](engine/asset-cache.ts); `FULL_CACHE` in [engine/full-cache.ts](engine/full-cache.ts) |
+| The caches' names, lifetimes and sizes | `GLB_CACHE`, `STAND_IN_CACHE` and `FULL_CACHE` in [engine/asset-cache.ts](engine/asset-cache.ts) |
 | What a cached stand-in or full mesh holds | Change `STAND_IN_VERSION` in [engine/stand-in-cache.ts](engine/stand-in-cache.ts) or `FULL_VERSION` in [engine/full-cache.ts](engine/full-cache.ts) with it, or old entries are read back as new |
 | Chunk sizes, and how a vertex is packed | [engine/chunks.ts](engine/chunks.ts) |
 | How long uploads may take of a frame | `UPLOAD_BUDGET_MS` in [engine/em-mesh-viewer.ts](engine/em-mesh-viewer.ts) |

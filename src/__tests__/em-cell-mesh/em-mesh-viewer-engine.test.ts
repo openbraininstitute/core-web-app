@@ -232,13 +232,6 @@ function timedFrames(v: Internals, tick: () => void): (ms: number) => boolean {
 }
 
 beforeAll(() => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      observe() {}
-      disconnect() {}
-    }
-  );
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
     createRadialGradient: () => ({ addColorStop() {} }),
     fillRect() {},
@@ -275,13 +268,12 @@ describe('EmMeshViewer', () => {
     let now = 0;
     const clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1.5));
     const ready = vi.fn();
-    viewer.onFullReady(ready);
     viewer.setStandIn(STAND_IN);
     zoom(v, 8);
     frame(v);
     const standIn = new Set(drawn());
     expect(standIn.size).toBe(meshesOf(STAND_IN));
-    viewer.setFull(FULL);
+    viewer.setFull(FULL, { ready });
 
     const perFrame: number[] = [];
     let drawnFrames = 0;
@@ -350,8 +342,10 @@ describe('EmMeshViewer', () => {
     const { viewer, v } = make();
     viewer.setStandIn(STAND_IN);
     const kept: [number, number][] = [];
-    viewer.setFull(FULL, (_, index) => {
-      kept.push([index, v.renderer.unseen.length]);
+    viewer.setFull(FULL, {
+      keep: (_, index) => {
+        kept.push([index, v.renderer.unseen.length]);
+      },
     });
     frame(v, 100);
     expect(kept.map(([i]) => i)).toEqual(FULL.chunks.map((_, i) => i));
@@ -419,14 +413,33 @@ describe('EmMeshViewer', () => {
     expect((shown as ViewStatus | null)?.errorPx).toBeCloseTo(STAND_IN.errorUm / atFace, 1);
   });
 
+  it('tells only the last full mesh given that it is up: one replaced on its way up is dropped with what it was to tell', () => {
+    const { viewer, v } = make();
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1.5));
+    viewer.setStandIn(STAND_IN);
+    const first = { ready: vi.fn(), keep: vi.fn() };
+    viewer.setFull(FULL, first);
+    frame(v);
+    const keptBefore = first.keep.mock.calls.length;
+    expect(keptBefore).toBeGreaterThan(0);
+    expect(keptBefore).toBeLessThan(FULL.chunks.length);
+    const second = { ready: vi.fn() };
+    viewer.setFull(FULL, second);
+    frame(v, 100);
+    clock.mockRestore();
+    expect(first.ready).not.toHaveBeenCalled();
+    expect(first.keep).toHaveBeenCalledTimes(keptBefore);
+    expect(second.ready).toHaveBeenCalledTimes(1);
+  });
+
   it('takes a stand-in given as the full mesh for the whole mesh: nothing to upload', () => {
     const { viewer, v } = make();
     const ready = vi.fn();
-    viewer.onFullReady(ready);
     const status: ViewStatus[] = [];
     viewer.onStatus((s) => status.push(s));
     viewer.setStandIn(STAND_IN);
-    viewer.setFull(STAND_IN);
+    viewer.setFull(STAND_IN, { ready });
     expect(ready).toHaveBeenCalledTimes(1);
     zoom(v, 8);
     frame(v, 5);
@@ -786,12 +799,5 @@ async function withFence(body: () => Promise<void>): Promise<void> {
       return this.context;
     };
     vi.unstubAllGlobals();
-    vi.stubGlobal(
-      'ResizeObserver',
-      class {
-        observe() {}
-        disconnect() {}
-      }
-    );
   }
 }

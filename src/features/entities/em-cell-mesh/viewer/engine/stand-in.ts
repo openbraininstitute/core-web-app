@@ -7,7 +7,7 @@
 import { packMesh } from './chunks';
 import { clusterWithin } from './cluster';
 
-import type { MeshoptSimplifier } from 'meshoptimizer';
+import type { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 import type { DecodedMesh, StandIn, Timing } from './types';
 
 /**
@@ -16,11 +16,12 @@ import type { DecodedMesh, StandIn, Timing } from './types';
  */
 export const STAND_IN_TRIANGLES = 3_000_000;
 
-export function makeStandIn(
+/** The stand-in of at most `target` triangles; `simplifier` is loaded only for a mesh off Draco's grid. */
+export async function makeStandIn(
   mesh: DecodedMesh,
-  simplifier: typeof MeshoptSimplifier,
+  simplifier: () => Promise<typeof MeshoptSimplifier>,
   target: number
-): { standIn: StandIn; timings: Timing[] } {
+): Promise<{ standIn: StandIn; timings: Timing[] }> {
   const t0 = performance.now();
   let made: { positions: Uint16Array | Float32Array; indices: Uint32Array; errorUm: number };
   if (mesh.indices.length / 3 <= target) {
@@ -28,7 +29,7 @@ export function makeStandIn(
   } else if (mesh.grid && mesh.positions instanceof Uint16Array) {
     const clustered = clusterWithin(mesh.positions, mesh.indices, target);
     made = { ...clustered, errorUm: clustered.moved * mesh.grid.step };
-  } else made = sloppy(mesh, simplifier, target);
+  } else made = sloppy(mesh, await simplifier(), target);
   const timings: Timing[] = [{ step: 'simplify', ms: performance.now() - t0 }];
 
   const packed = packMesh(made.positions, mesh.grid, made.indices);

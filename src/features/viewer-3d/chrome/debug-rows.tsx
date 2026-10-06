@@ -1,6 +1,48 @@
-import { RiDownload2Line, RiLoader4Line } from '@remixicon/react';
+import { RiBugLine, RiDownload2Line, RiLoader4Line } from '@remixicon/react';
+
+import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
 
 import type { ReactNode } from 'react';
+
+/** A viewer's Debug menu: what it shows and its controls scroll, and the downloads stay in view under them. */
+export function DebugMenuShell({
+  testId,
+  body,
+  footer,
+}: {
+  testId: string;
+  body: ReactNode;
+  /** The downloads, given the way to close the menu. */
+  footer(close: () => void): ReactNode;
+}) {
+  return (
+    <ChromeMenu
+      label="Debug"
+      openLabel="Close debug"
+      testId={testId}
+      icon={<RiBugLine className="size-4 shrink-0" />}
+      contentClassName="w-80 p-0"
+    >
+      {(close) => (
+        <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
+          <div className="min-h-0 overflow-y-auto">{body}</div>
+          <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
+            {footer(close)}
+          </div>
+        </div>
+      )}
+    </ChromeMenu>
+  );
+}
+
+/** Why a download failed. */
+export function FailedNote({ children }: { children: ReactNode }) {
+  return (
+    <p role="alert" className="m-0 px-2 text-xs text-error">
+      {children}
+    </p>
+  );
+}
 
 export function fmt(n: number, digits = 0): string {
   return n.toLocaleString(undefined, {

@@ -1,14 +1,6 @@
-import { RiFocus3Line } from '@remixicon/react';
-
 import { emMeshDebugFlag, useFlag } from '@/features/feature-flags';
-import {
-  ChromeButton,
-  FullscreenButton,
-} from '@/features/scan-config/components/color-by/chrome-button';
-import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
-import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
-import { WheelHint } from '@/features/viewer-3d/chrome/status';
+import { ViewerChrome } from '@/features/viewer-3d/chrome/viewer-chrome';
 
 import { DebugMenu } from './debug-menu';
 import { FrameTimes } from './frame-times';
@@ -36,9 +28,8 @@ interface EmViewerChromeProps {
 }
 
 /**
- * The control layer over the mesh, laid out as the morphology viewer's: fullscreen, settings and, where its flag is
- * on, debug (top-left), re-centre under them, the colour (top-right), the load's status (top-centre), the ruler
- * (bottom-left) and the axes (bottom-right).
+ * The control layer over the mesh: settings and, where its flag is on, debug (top-left), the colour (top-right) and
+ * the load's status (top-centre).
  */
 export function EmViewerChrome({
   viewer,
@@ -56,10 +47,14 @@ export function EmViewerChrome({
   const theme = lookTheme(look, settings.dark);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="pointer-events-auto absolute top-3 left-3 flex flex-col items-start gap-2">
-        <div className="flex items-center gap-2">
-          <FullscreenButton target={root} />
+    <ViewerChrome
+      viewer={viewer}
+      root={root}
+      theme={theme}
+      settings={settings}
+      wheelHint={wheelHint}
+      menus={
+        <>
           <SettingsMenu
             settings={settings}
             update={update}
@@ -76,16 +71,9 @@ export function EmViewerChrome({
               update={update}
             />
           )}
-        </div>
-        <ChromeButton
-          label="Re-centre view"
-          testId="viewer-reset-view"
-          onClick={() => viewer.resetView()}
-        >
-          <RiFocus3Line className="size-4" />
-        </ChromeButton>
-      </div>
-
+        </>
+      }
+    >
       <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
         <div className="pointer-events-auto">
           <MeshColorMenu
@@ -98,13 +86,7 @@ export function EmViewerChrome({
         </div>
         {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
       </div>
-
       <LoadStatus load={load} name={name} theme={theme} />
-      {settings.scalebar && settings.projection === 'orthographic' && (
-        <Scalebar viewer={viewer} color={theme.foreground} />
-      )}
-      <AxesGizmo viewer={viewer} ring={theme.foreground} />
-      <WheelHint visible={wheelHint} theme={theme} />
-    </div>
+    </ViewerChrome>
   );
 }

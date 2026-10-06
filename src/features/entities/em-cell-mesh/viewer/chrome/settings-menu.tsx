@@ -1,20 +1,11 @@
-import {
-  RiCameraLensLine,
-  RiContrast2Line,
-  RiEqualizerLine,
-  RiLoopRightLine,
-} from '@remixicon/react';
+import { RiContrast2Line, RiEqualizerLine } from '@remixicon/react';
 
-import { RulerMeasure } from '@/components/icons/RulerMeasure';
-import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
-import {
-  BackgroundToggle,
-  ChromeMenu,
-} from '@/features/scan-config/components/color-by/chrome-menu';
+import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
 import { LookSelect } from '@/features/viewer-3d/chrome/look-select';
+import { ViewRows } from '@/features/viewer-3d/chrome/view-rows';
 
 import { HELP } from '../help/help-text';
-import { Heading, HelpRow, ICON, ToggleRow } from './menu-rows';
+import { Heading, ICON, ToggleRow } from './menu-rows';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { EmViewerSettings, UpdateEmSettings } from '../use-em-viewer-settings';
@@ -54,31 +45,7 @@ export function SettingsMenu({ settings, update, looks, look, onLook }: Settings
       />
 
       <Heading>View</Heading>
-      <ToggleRow
-        title="Spin"
-        topic="spin"
-        icon={<RiLoopRightLine className={ICON} />}
-        checked={settings.spin}
-        onChange={(spin) => update({ spin })}
-      />
-      <ToggleRow
-        title="Perspective"
-        topic="perspective"
-        icon={<RiCameraLensLine className={ICON} />}
-        checked={settings.projection === 'perspective'}
-        onChange={(on) => update({ projection: on ? 'perspective' : 'orthographic' })}
-      />
-      <ToggleRow
-        title="Scale bar"
-        topic="scale-bar"
-        icon={<RulerMeasure className={ICON} />}
-        checked={settings.scalebar}
-        onChange={(scalebar) => update({ scalebar })}
-        disabled={settings.projection === 'perspective'}
-      />
-      <HelpRow title="Background" topic="dark" icon={<SelectionBackground className={ICON} />}>
-        <BackgroundToggle dark={settings.dark} onChange={(dark) => update({ dark })} />
-      </HelpRow>
+      <ViewRows settings={settings} update={update} help={HELP} />
     </ChromeMenu>
   );
 }

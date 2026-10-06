@@ -2,7 +2,6 @@ import {
   RiAspectRatioLine,
   RiBlurOffLine,
   RiBox3Line,
-  RiBugLine,
   RiContrast2Line,
   RiDashboard3Line,
   RiStackLine,
@@ -10,11 +9,15 @@ import {
 } from '@remixicon/react';
 import { Fragment, type ReactNode } from 'react';
 
+import { SegmentedToggle } from '@/features/scan-config/components/color-by/chrome-menu';
 import {
-  ChromeMenu,
-  SegmentedToggle,
-} from '@/features/scan-config/components/color-by/chrome-menu';
-import { DownloadRow, fmt, Lines, ms } from '@/features/viewer-3d/chrome/debug-rows';
+  DebugMenuShell,
+  DownloadRow,
+  FailedNote,
+  fmt,
+  Lines,
+  ms,
+} from '@/features/viewer-3d/chrome/debug-rows';
 import { formatCompactNumber } from '@/utils/format';
 
 import { FRAMEBUFFER_BYTES_PER_PIXEL } from '../engine/budget';
@@ -56,15 +59,10 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
   const { save, saving, error: failed } = useSaveGlb(load.request, name);
 
   return (
-    <ChromeMenu
-      label="Debug"
-      openLabel="Close debug"
+    <DebugMenuShell
       testId="em-mesh-debug"
-      icon={<RiBugLine className="size-4 shrink-0" />}
-      contentClassName="w-80 p-0"
-    >
-      <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
-        <div className="min-h-0 overflow-y-auto">
+      body={
+        <>
           <div className="flex select-text flex-col gap-3 p-3 text-neutral-700">
             <SectionTitle title="Load" topic="load" />
             <Lines lines={loadLines(load, name)} />
@@ -133,8 +131,10 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
             />
           </div>
           <MotionRows settings={settings} update={update} />
-        </div>
-        <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
+        </>
+      }
+      footer={() => (
+        <>
           <SectionTitle title="Download" topic="download" className="px-1 pb-1" />
           <DownloadRow
             label="GLB"
@@ -144,14 +144,10 @@ export function DebugMenu({ viewer, load, name, settings, update }: DebugMenuPro
             onClick={save}
           />
           {!load.request && <Note>The download is being prepared.</Note>}
-          {failed && (
-            <p role="alert" className="m-0 px-2 text-xs text-error">
-              The download failed: {failed}
-            </p>
-          )}
-        </div>
-      </div>
-    </ChromeMenu>
+          {failed && <FailedNote>The download failed: {failed}</FailedNote>}
+        </>
+      )}
+    />
   );
 }
 

@@ -340,11 +340,12 @@ export function unpackMesh(mesh: PackedMesh): DecodedMesh {
   return { positions, grid: shared ? grid : null, indices, bounds: { min, max }, dracoBits: null };
 }
 
+/** A chunk's arrays: its positions, normals and indices. */
+export function chunkArrays(c: PackedChunk): (Uint16Array | Int8Array)[] {
+  return [c.positions, c.normals, c.indices];
+}
+
 /** A packed mesh's arrays, to hand to another thread. */
 export function packedBuffers(mesh: PackedMesh): ArrayBuffer[] {
-  return mesh.chunks.flatMap((c) => [
-    c.positions.buffer,
-    c.normals.buffer,
-    c.indices.buffer,
-  ]) as ArrayBuffer[];
+  return mesh.chunks.flatMap((c) => chunkArrays(c).map((a) => a.buffer as ArrayBuffer));
 }

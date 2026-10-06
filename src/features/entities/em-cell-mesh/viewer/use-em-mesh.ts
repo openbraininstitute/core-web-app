@@ -4,10 +4,12 @@ import { useEffect, useRef, useState } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-viewer';
+import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
 import { type Budget, deviceOf } from './engine/budget';
-import { keepFullMesh, LoadError, type LoadReport, loadEmMesh, type Stage } from './engine/load';
+import { keepFullMesh, type LoadReport, loadEmMesh, type Stage } from './engine/load';
 import { readStandIn } from './engine/stand-in-cache';
 import { clearLoading, markLoading, stoppedLoading } from './load-mark';
 
@@ -27,7 +29,7 @@ export interface EmMeshSource {
 export interface MeshSummary {
   triangles: number;
   vertices: number;
-  distinctVertices?: number;
+  distinctVertices: number;
   chunks: number;
   grid: Grid;
   /** The stand-in's, µm. */
@@ -47,8 +49,8 @@ export interface EmMeshState {
   fullReady: boolean;
   /** Why the mesh was not loaded: too large for the browser, or for this device until "Load anyway". */
   refused: Budget | null;
-  /** Where loading failed; after the stand-in, the stand-in stays. */
-  error: { stage: Stage; message: string } | null;
+  /** Why loading failed; after the stand-in, the stand-in stays. */
+  error: string | null;
   /** The step at which loading this mesh stopped the page last time, which it isn't loaded again until asked. */
   stopped: Stage | null;
   /** The GPU took the context, with the mesh; and hasn't given it back for a while. */
@@ -98,7 +100,8 @@ function whenVisible(run: () => void): () => void {
 
 /** The device pixels of the screen, which the view takes fullscreen. */
 function fullscreenPixels(): number {
-  return window.screen.width * window.screen.height * Math.min(window.devicePixelRatio, 2) ** 2;
+  const ratio = Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO);
+  return window.screen.width * window.screen.height * ratio ** 2;
 }
 
 /**
@@ -190,13 +193,6 @@ export function useEmMesh(
     const patch = (p: (s: EmMeshState) => Partial<EmMeshState>) => {
       if (!signal.aborted) setState((s) => ({ ...s, ...p(s) }));
     };
-    // The full mesh the viewer uploads is this load's once handed over: not the last load's, still going up.
-    let handed = false;
-    const offReady = viewer.onFullReady(() => {
-      if (!handed) return;
-      clearLoading(assetId);
-      patch((s) => ({ fullReady: true, times: { ...s.times, ready: since() } }));
-    });
 
     (async () => {
       const request = {
@@ -251,8 +247,14 @@ export function useEmMesh(
             // Kept for the next visit as it goes up, unless it came from its cache.
             const keeper = report.fullFrom === 'build' ? keepFullMesh(request.url, mesh) : null;
             if (keeper) signal.addEventListener('abort', keeper.stop, { once: true });
-            handed = true;
-            viewer.setFull(mesh, keeper?.keep);
+            viewer.setFull(mesh, {
+              keep: keeper?.keep,
+              ready: () => {
+                if (signal.aborted) return;
+                clearLoading(assetId);
+                patch((s) => ({ fullReady: true, times: { ...s.times, ready: since() } }));
+              },
+            });
             patch((s) => ({
               report,
               times: { ...s.times, full: since() },
@@ -266,12 +268,10 @@ export function useEmMesh(
       if (signal.aborted) return;
       unmark();
       logError('Could not load the EM cell mesh', e);
-      const stage = e instanceof LoadError ? e.stage : 'download';
-      patch(() => ({ error: { stage, message: e instanceof Error ? e.message : String(e) } }));
+      patch(() => ({ error: errorMessage(e) }));
     });
     return () => {
       controller.abort();
-      offReady();
       window.removeEventListener('pagehide', unmark);
       // Stopped by the page, for another mesh or as the card goes: not by the browser.
       unmark();

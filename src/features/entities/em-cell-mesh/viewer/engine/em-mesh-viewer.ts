@@ -1,7 +1,9 @@
+import { isEqual } from 'es-toolkit';
 import * as THREE from 'three';
 
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
+import { chunkArrays } from './chunks';
 import { GpuTimer, type TimerKind } from './gpu-timer';
 import {
   type Choice,
@@ -62,6 +64,14 @@ export interface ViewStatus {
   pixels: number;
 }
 
+/** What `setFull` tells of the full mesh's upload. */
+export interface FullCallbacks {
+  /** A chunk is up: three is done with its arrays, which `keep` may take. */
+  keep?(chunk: PackedChunk, index: number): void;
+  /** All of it is up, and can be drawn. */
+  ready?(): void;
+}
+
 /** A mesh's chunks as made, before they go in the scene as a layer. */
 interface Parts {
   meshes: THREE.Mesh[];
@@ -116,10 +126,9 @@ function place(mesh: THREE.Object3D, grid: Grid, chunk: PackedChunk): void {
 }
 
 function meshBytes(mesh: PackedMesh): number {
-  return mesh.chunks.reduce(
-    (n, c) => n + c.positions.byteLength + c.normals.byteLength + c.indices.byteLength,
-    0
-  );
+  let bytes = 0;
+  for (const c of mesh.chunks) for (const a of chunkArrays(c)) bytes += a.byteLength;
+  return bytes;
 }
 
 /** The edges of boxes in µm, as line segments. */
@@ -189,14 +198,14 @@ export class EmMeshViewer extends SceneViewer {
    * that its arrays go with three's copy of them.
    */
   private pending:
-    | (Parts & {
-        grid: Grid;
-        chunks: (PackedChunk | null)[];
-        bytes: number;
-        next: number;
-        started: number | null;
-        keep?: (chunk: PackedChunk, index: number) => void;
-      })
+    | (Parts &
+        FullCallbacks & {
+          grid: Grid;
+          chunks: (PackedChunk | null)[];
+          bytes: number;
+          next: number;
+          started: number | null;
+        })
     | null = null;
   /** The stand-in is the whole mesh. */
   private whole = false;
@@ -232,7 +241,6 @@ export class EmMeshViewer extends SceneViewer {
   private fpsAt = 0;
   private upload: ViewStatus['upload'] = null;
   private statusListeners = new Set<(status: ViewStatus) => void>();
-  private readyListeners = new Set<() => void>();
   private rebuildListeners = new Set<() => void>();
   private contextListeners = new Set<(lost: boolean) => void>();
   private heard: ViewStatus | null = null;
@@ -252,7 +260,6 @@ export class EmMeshViewer extends SceneViewer {
     this.timer?.dispose();
     this.clear();
     this.statusListeners.clear();
-    this.readyListeners.clear();
     this.rebuildListeners.clear();
     this.contextListeners.clear();
   }
@@ -280,20 +287,20 @@ export class EmMeshViewer extends SceneViewer {
       this.framed = true;
       this.resetView();
     }
-    this.applyLook();
     this.invalidate();
   }
 
   /**
-   * Upload the full mesh over the next frames, and draw it once all of it is up. The stand-in itself, it is whole. Each
-   * chunk, once up, goes to `keep`, which may take its arrays: three is done with them.
+   * Upload the full mesh over the next frames, and draw it once all of it is up. The stand-in itself, it is whole, and
+   * ready at once. Another mesh, `clear` or a lost context drops it, and what `on` was to be told with it.
    */
-  setFull(mesh: PackedMesh, keep?: (chunk: PackedChunk, index: number) => void): void {
+  setFull(mesh: PackedMesh, on: FullCallbacks = {}): void {
     this.dropFull();
     this.whole = mesh === this.standIn?.data;
-    if (this.whole) this.tellReady();
+    if (this.whole) on.ready?.();
     else {
       this.pending = {
+        ...on,
         grid: mesh.grid,
         chunks: [...mesh.chunks],
         bytes: meshBytes(mesh),
@@ -302,7 +309,6 @@ export class EmMeshViewer extends SceneViewer {
         outlines: [],
         boxes: [],
         started: null,
-        keep,
       };
     }
     this.invalidate();
@@ -421,7 +427,7 @@ export class EmMeshViewer extends SceneViewer {
     for (const b of p.boxes) this.bounds.union(b);
     this.applyLook();
     this.cost.reset();
-    this.tellReady();
+    p.ready?.();
   }
 
   // ---------------------------------------------------------------------------
@@ -554,12 +560,8 @@ export class EmMeshViewer extends SceneViewer {
 
   /** How frames drawn while the view moves are cut down: from the top again, by what they cost, where left to it. */
   setMotion(options: MotionOptions): void {
-    // Moving frames no longer draw through a pipeline of their own, or not that one: it is for the other antialiasing.
-    if (
-      options.antialias !== this.motionOptions.antialias ||
-      (options.antialias && options.scale === 1)
-    )
-      this.dropMovingPipeline();
+    // Made again for the next cut frame, if any.
+    this.dropMovingPipeline();
     this.motionOptions = options;
     this.motion.configure(options);
     this.invalidate();
@@ -580,12 +582,6 @@ export class EmMeshViewer extends SceneViewer {
   // ---------------------------------------------------------------------------
   // Listeners
 
-  /** The full mesh can be drawn, or the stand-in is the whole mesh. */
-  onFullReady(listener: () => void): () => void {
-    this.readyListeners.add(listener);
-    return () => this.readyListeners.delete(listener);
-  }
-
   /** The context was restored without the full mesh, which must be built again. */
   onRebuildNeeded(listener: () => void): () => void {
     this.rebuildListeners.add(listener);
@@ -603,10 +599,6 @@ export class EmMeshViewer extends SceneViewer {
     this.statusListeners.add(listener);
     listener(this.status());
     return () => this.statusListeners.delete(listener);
-  }
-
-  private tellReady(): void {
-    for (const listener of this.readyListeners) listener();
   }
 
   private status(): ViewStatus {
@@ -631,24 +623,10 @@ export class EmMeshViewer extends SceneViewer {
   private tellStatus(): void {
     if (this.statusListeners.size === 0) return;
     const status = this.status();
-    const heard = this.heard;
-    if (
-      heard &&
-      (Object.keys(status) as (keyof ViewStatus)[]).every((k) => alike(heard[k], status[k]))
-    )
-      return;
+    if (isEqual(status, this.heard)) return;
     this.heard = status;
     for (const listener of this.statusListeners) listener(status);
   }
-}
-
-/** The same, or objects of the same fields: the status is made anew with every frame. */
-function alike(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
-  const x = a as Record<string, unknown>;
-  const y = b as Record<string, unknown>;
-  return Object.keys(y).every((k) => x[k] === y[k]);
 }
 
 /** Every so many of the stand-in's vertices, in µm. */

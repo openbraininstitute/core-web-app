@@ -1,23 +1,19 @@
 import {
   RiBubbleChartLine,
-  RiCameraLensLine,
   RiContrast2Line,
   RiDropLine,
   RiEqualizerLine,
   RiGridLine,
-  RiLoopRightLine,
   RiNodeTree,
   RiShapeLine,
 } from '@remixicon/react';
 
-import { RulerMeasure } from '@/components/icons/RulerMeasure';
-import { SelectionBackground } from '@/components/icons/SelectionBackgroundThin';
 import {
-  BackgroundToggle,
   ChromeMenu,
   SegmentedToggle,
 } from '@/features/scan-config/components/color-by/chrome-menu';
 import { LookSelect } from '@/features/viewer-3d/chrome/look-select';
+import { ViewRows } from '@/features/viewer-3d/chrome/view-rows';
 
 import { MIN_WIDTH } from '../constants';
 import { HELP } from '../help/help-text';
@@ -129,31 +125,7 @@ export function SettingsMenu({
         onChange={(minWidth) => update({ minWidth })}
         format={(v) => (v === 0 ? 'off' : `${v.toFixed(1)} px`)}
       />
-      <ToggleRow
-        title="Spin"
-        topic="spin"
-        icon={<RiLoopRightLine className={ICON} />}
-        checked={settings.spin}
-        onChange={(spin) => update({ spin })}
-      />
-      <ToggleRow
-        title="Perspective"
-        topic="perspective"
-        icon={<RiCameraLensLine className={ICON} />}
-        checked={settings.projection === 'perspective'}
-        onChange={(on) => update({ projection: on ? 'perspective' : 'orthographic' })}
-      />
-      <ToggleRow
-        title="Scale bar"
-        topic="scale-bar"
-        icon={<RulerMeasure className={ICON} />}
-        checked={settings.scalebar}
-        onChange={(scalebar) => update({ scalebar })}
-        disabled={settings.projection === 'perspective'}
-      />
-      <HelpRow title="Background" topic="dark" icon={<SelectionBackground className={ICON} />}>
-        <BackgroundToggle dark={settings.dark} onChange={(dark) => update({ dark })} />
-      </HelpRow>
+      <ViewRows settings={settings} update={update} help={HELP} />
     </ChromeMenu>
   );
 }

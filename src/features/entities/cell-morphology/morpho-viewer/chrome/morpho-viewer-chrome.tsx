@@ -1,16 +1,11 @@
-import { RiArrowDownSLine, RiFocus3Line } from '@remixicon/react';
+import { RiArrowDownSLine } from '@remixicon/react';
 import { useState } from 'react';
 
 import { morphologyDebugFlag, useFlag } from '@/features/feature-flags';
-import {
-  ChromeButton,
-  FullscreenButton,
-} from '@/features/scan-config/components/color-by/chrome-button';
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
-import { AxesGizmo, GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
+import { GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
-import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
-import { WheelHint } from '@/features/viewer-3d/chrome/status';
+import { ViewerChrome } from '@/features/viewer-3d/chrome/viewer-chrome';
 import { cn } from '@/utils/css-class';
 
 import { ColorByMenu } from './color-by-menu';
@@ -43,9 +38,8 @@ interface MorphoViewerChromeProps {
 }
 
 /**
- * The control layer over the morphology, laid out as the circuit viewer's: fullscreen, settings and,
- * where its flag is on, debug (top-left), re-centre under them, the colours and their key (top-right),
- * the build's status (top-centre), the ruler (bottom-left) and the axes (bottom-right).
+ * The control layer over the morphology: settings and, where its flag is on, debug (top-left), the colours and their
+ * key (top-right) and the build's status (top-centre).
  */
 export function MorphoViewerChrome({
   viewer,
@@ -67,10 +61,14 @@ export function MorphoViewerChrome({
   const types = new Set(mesh.summary?.types.map((t) => t.type));
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="pointer-events-auto absolute top-3 left-3 flex flex-col items-start gap-2">
-        <div className="flex items-center gap-2">
-          <FullscreenButton target={root} />
+    <ViewerChrome
+      viewer={viewer}
+      root={root}
+      theme={theme}
+      settings={settings}
+      wheelHint={wheelHint}
+      menus={
+        <>
           <SettingsMenu
             settings={settings}
             update={update}
@@ -82,16 +80,9 @@ export function MorphoViewerChrome({
           {debug && (
             <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
           )}
-        </div>
-        <ChromeButton
-          label="Re-centre view"
-          testId="viewer-reset-view"
-          onClick={() => viewer.resetView()}
-        >
-          <RiFocus3Line className="size-4" />
-        </ChromeButton>
-      </div>
-
+        </>
+      }
+    >
       {/* Down to the axes at most: in a short view the key scrolls rather than run under them. */}
       <div
         className="pointer-events-auto absolute top-3 right-3 flex flex-col items-end gap-2"
@@ -137,12 +128,7 @@ export function MorphoViewerChrome({
       </div>
 
       <BuildStatus mesh={mesh} theme={theme} />
-      {settings.scalebar && settings.projection === 'orthographic' && (
-        <Scalebar viewer={viewer} color={theme.foreground} />
-      )}
-      <AxesGizmo viewer={viewer} ring={theme.foreground} />
-      <WheelHint visible={wheelHint} theme={theme} />
-    </div>
+    </ViewerChrome>
   );
 }
 

@@ -12,3 +12,8 @@ export function getErrorMessage(
   if (!errorCode) return defaultMessage;
   return errorRegistry[errorCode] ?? defaultMessage;
 }
+
+/** What went wrong, from anything thrown. */
+export function errorMessage(e: unknown): string {
+  return e instanceof Error ? e.message : String(e);
+}

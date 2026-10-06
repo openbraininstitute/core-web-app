@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { MeshoptSimplifier } from 'meshoptimizer';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { packMesh, unpackMesh } from '@/features/entities/em-cell-mesh/viewer/engine/chunks';
 import { makeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in';
@@ -12,6 +12,8 @@ import type { DecodedMesh } from '@/features/entities/em-cell-mesh/viewer/engine
 beforeAll(async () => {
   await MeshoptSimplifier.ready;
 });
+
+const simplifier = async () => MeshoptSimplifier;
 
 function decoded(onGrid: boolean): DecodedMesh {
   const { positions, indices } = torus(300, 150, { centre: [0, 0, 0] });
@@ -30,10 +32,13 @@ function decoded(onGrid: boolean): DecodedMesh {
 }
 
 describe('makeStandIn', () => {
-  it('clusters a mesh on a grid on cubes as fine as its target allows, its error the farthest a vertex moved', () => {
+  it('clusters a mesh on a grid on cubes as fine as its target allows, its error the farthest a vertex moved', async () => {
     const mesh = decoded(true);
     const before = { positions: mesh.positions.slice(), indices: mesh.indices.slice() };
-    const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 30_000);
+    const load = vi.fn(simplifier);
+    const { standIn } = await makeStandIn(mesh, load, 30_000);
+    // Without meshoptimizer's WASM.
+    expect(load).not.toHaveBeenCalled();
     // The decoded mesh is built into the full mesh after: it is left as it was.
     expect(mesh.positions.every((v, i) => v === before.positions[i])).toBe(true);
     expect(mesh.indices.every((v, i) => v === before.indices[i])).toBe(true);
@@ -47,15 +52,15 @@ describe('makeStandIn', () => {
     expect(standIn.errorUm).toBeLessThan(2);
   });
 
-  it('makes about the same stand-in from the full mesh, chunked as its cache gives it back', () => {
+  it('makes about the same stand-in from the full mesh, chunked as its cache gives it back', async () => {
     const mesh = decoded(true);
-    const fromDecoded = makeStandIn(mesh, MeshoptSimplifier, 30_000).standIn;
+    const fromDecoded = (await makeStandIn(mesh, simplifier, 30_000)).standIn;
     const full = packMesh(mesh.positions, mesh.grid, mesh.indices, {
       triangles: 4000,
       vertices: 2500,
     }).mesh;
     expect(full.chunks.length).toBeGreaterThan(10);
-    const fromFull = makeStandIn(unpackMesh(full), MeshoptSimplifier, 30_000).standIn;
+    const fromFull = (await makeStandIn(unpackMesh(full), simplifier, 30_000)).standIn;
     expect(fromFull.grid).toBe(mesh.grid);
     expect(fromFull.triangles).toBeLessThanOrEqual(30_000);
     // The vertices on chunk borders, once in each chunk, weigh a little more in their cubes' means.
@@ -63,15 +68,17 @@ describe('makeStandIn', () => {
     expect(Math.abs(fromFull.errorUm / fromDecoded.errorUm - 1)).toBeLessThan(0.1);
   });
 
-  it('clusters a smaller stand-in on larger cubes', () => {
-    const fine = makeStandIn(decoded(true), MeshoptSimplifier, 50_000).standIn;
-    const coarse = makeStandIn(decoded(true), MeshoptSimplifier, 5_000).standIn;
+  it('clusters a smaller stand-in on larger cubes', async () => {
+    const fine = (await makeStandIn(decoded(true), simplifier, 50_000)).standIn;
+    const coarse = (await makeStandIn(decoded(true), simplifier, 5_000)).standIn;
     expect(coarse.triangles).toBeLessThanOrEqual(5_000);
     expect(coarse.errorUm).toBeGreaterThan(fine.errorUm);
   });
 
-  it('simplifies float positions with meshoptimizer, under its target, with its error in µm', () => {
-    const { standIn } = makeStandIn(decoded(false), MeshoptSimplifier, 10_000);
+  it('simplifies float positions with meshoptimizer, under its target, with its error in µm', async () => {
+    const load = vi.fn(simplifier);
+    const { standIn } = await makeStandIn(decoded(false), load, 10_000);
+    expect(load).toHaveBeenCalledTimes(1);
     expect(standIn.triangles).toBeLessThanOrEqual(10_000);
     expect(standIn.triangles).toBeGreaterThan(5_000);
     // A torus 18 µm thick, at a tenth of its triangles: a fraction of a micron.
@@ -79,9 +86,9 @@ describe('makeStandIn', () => {
     expect(standIn.errorUm).toBeLessThan(2);
   });
 
-  it("keeps the grid's step, and no error, for a mesh already under the target", () => {
+  it("keeps the grid's step, and no error, for a mesh already under the target", async () => {
     const mesh = decoded(true);
-    const { standIn } = makeStandIn(mesh, MeshoptSimplifier, 1_000_000);
+    const { standIn } = await makeStandIn(mesh, simplifier, 1_000_000);
     expect(standIn.errorUm).toBe(0);
     expect(standIn.triangles).toBe(mesh.indices.length / 3);
     expect(standIn.grid).toBe(mesh.grid);

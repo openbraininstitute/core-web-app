@@ -24,7 +24,7 @@ let standIn: StandIn;
 beforeAll(async () => {
   await MeshoptSimplifier.ready;
   const { positions, indices } = torus(200, 100, { centre: [0, 0, 0] });
-  standIn = makeStandIn(
+  const made = await makeStandIn(
     {
       positions: positions.map((v) => v / 1000),
       grid: null,
@@ -32,9 +32,10 @@ beforeAll(async () => {
       bounds: { min: [-49, -49, -9], max: [49, 49, 9] },
       dracoBits: null,
     },
-    MeshoptSimplifier,
+    async () => MeshoptSimplifier,
     5000
-  ).standIn;
+  );
+  standIn = made.standIn;
 });
 
 beforeEach(() => {
@@ -46,13 +47,13 @@ afterEach(() => {
 });
 
 describe('the stand-in cache', () => {
-  it('gives back the stand-in as it was packed', () => {
-    const back = decodeStandIn(encodeStandIn(standIn));
+  it('gives back the stand-in as it was packed', async () => {
+    const back = decodeStandIn(await encodeStandIn(standIn).arrayBuffer());
     expect(back).toEqual(standIn);
   });
 
-  it('misses a stand-in made by another version of the pipeline', () => {
-    const buffer = encodeStandIn(standIn);
+  it('misses a stand-in made by another version of the pipeline', async () => {
+    const buffer = await encodeStandIn(standIn).arrayBuffer();
     const length = new DataView(buffer).getUint32(0, true);
     const json = new TextDecoder().decode(new Uint8Array(buffer, 4, length));
     const other = new TextEncoder().encode(json.replace(STAND_IN_VERSION, 'older-pipeline'));

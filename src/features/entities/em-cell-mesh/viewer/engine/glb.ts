@@ -141,7 +141,11 @@ export function readPlainPrimitive(
   const index = accessor(json, p.indices);
   const IndexArray = INDEX_ARRAYS[index.componentType as keyof typeof INDEX_ARRAYS];
   if (!IndexArray || index.type !== 'SCALAR') throw new Error('GLB indices of an unknown type');
-  return { positions, indices: Uint32Array.from(read(json, bin, index, IndexArray, 1)) };
+  const indices = read(json, bin, index, IndexArray, 1);
+  return {
+    positions,
+    indices: indices instanceof Uint32Array ? indices : Uint32Array.from(indices),
+  };
 }
 
 type Typed = typeof Float32Array | (typeof INDEX_ARRAYS)[keyof typeof INDEX_ARRAYS];

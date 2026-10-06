@@ -234,7 +234,7 @@ export function clusterOnGrid(
   }
   return {
     positions: out,
-    indices: triangles.out.slice(0, 3 * triangles.count),
+    indices: triangles.out.subarray(0, 3 * triangles.count),
     moved: Math.sqrt(moved),
   };
 }

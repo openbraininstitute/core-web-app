@@ -4,27 +4,18 @@
  * again with no download, no Draco and no build. An entry is a JSON header, then each chunk's encoded arrays, each on
  * a 4-byte boundary.
  */
+import { packEntry, unpackEntry, versionedKey } from './asset-cache';
+
 import type { MeshoptDecoder } from 'meshoptimizer/decoder';
 import type { MeshoptEncoder } from 'meshoptimizer/encoder';
-import type { CacheBounds } from './asset-cache';
 import type { PackedChunk, PackedMesh } from './types';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-
-export const FULL_CACHE: CacheBounds = {
-  name: 'em-cell-mesh-full',
-  ttlMs: 30 * DAY_MS,
-  maxBytes: 500 * 2 ** 20,
-};
 
 /** Changes whenever the full mesh would come out differently: the packing, or the codecs. */
 export const FULL_VERSION = 'pack-2-meshopt-1.2';
 
 /** The full mesh's entry for the GLB at `downloadUrl`. */
 export function fullKey(downloadUrl: string): string {
-  const url = new URL(downloadUrl);
-  url.searchParams.set('full', FULL_VERSION);
-  return url.href;
+  return versionedKey(downloadUrl, 'full', FULL_VERSION);
 }
 
 /** A chunk with its positions, normals and indices encoded. */
@@ -39,7 +30,6 @@ interface Header extends Omit<PackedMesh, 'chunks'> {
   chunks: (Omit<EncodedChunk, 'parts'> & { sizes: number[] })[];
 }
 
-const align = (n: number) => (n + 3) & ~3;
 const bytes = (a: ArrayBufferView) => new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
 
 export function encodeChunk(encoder: typeof MeshoptEncoder, chunk: PackedChunk): EncodedChunk {
@@ -57,7 +47,7 @@ export function encodeChunk(encoder: typeof MeshoptEncoder, chunk: PackedChunk):
   };
 }
 
-export function encodeFull(mesh: Omit<PackedMesh, 'chunks'>, chunks: EncodedChunk[]): ArrayBuffer {
+export function encodeFull(mesh: Omit<PackedMesh, 'chunks'>, chunks: EncodedChunk[]): Blob {
   const header: Header = {
     grid: mesh.grid,
     triangles: mesh.triangles,
@@ -66,32 +56,18 @@ export function encodeFull(mesh: Omit<PackedMesh, 'chunks'>, chunks: EncodedChun
     version: FULL_VERSION,
     chunks: chunks.map(({ parts, ...c }) => ({ ...c, sizes: parts.map((p) => p.byteLength) })),
   };
-  const json = new TextEncoder().encode(JSON.stringify(header));
-  const parts = chunks.flatMap((c) => c.parts);
-  const size = parts.reduce((n, p) => n + align(p.byteLength), align(4 + json.byteLength));
-  const out = new Uint8Array(size);
-  new DataView(out.buffer).setUint32(0, json.byteLength, true);
-  out.set(json, 4);
-  let offset = align(4 + json.byteLength);
-  for (const p of parts) {
-    out.set(p, offset);
-    offset += align(p.byteLength);
-  }
-  return out.buffer;
+  return packEntry(
+    header,
+    chunks.flatMap((c) => c.parts)
+  );
 }
 
 /** The full mesh an entry holds; null where it was made by another version of the pipeline. */
 export function decodeFull(decoder: typeof MeshoptDecoder, buffer: ArrayBuffer): PackedMesh | null {
-  const length = new DataView(buffer).getUint32(0, true);
-  const header: Header = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 4, length)));
-  if (header.version !== FULL_VERSION) return null;
-  let offset = align(4 + length);
-  const take = (size: number) => {
-    const part = new Uint8Array(buffer, offset, size);
-    offset += align(size);
-    return part;
-  };
-  const { chunks, version: _, ...rest } = header;
+  const entry = unpackEntry<Header>(buffer, FULL_VERSION);
+  if (!entry) return null;
+  const take = (size: number) => new Uint8Array(buffer, entry.next(size), size);
+  const { chunks, version: _, ...rest } = entry.header;
   return {
     ...rest,
     chunks: chunks.map((c) => {

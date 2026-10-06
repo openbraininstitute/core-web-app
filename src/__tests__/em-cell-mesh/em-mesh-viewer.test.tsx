@@ -50,7 +50,6 @@ const h = vi.hoisted(() => {
       scale: new Set<(scale: number | null) => void>(),
       wheel: new Set<() => void>(),
       view: new Set<(orientation: Orientation) => void>(),
-      ready: new Set<() => void>(),
       rebuild: new Set<() => void>(),
       status: new Set<(status: unknown) => void>(),
       context: new Set<(lost: boolean) => void>(),
@@ -113,10 +112,6 @@ const h = vi.hoisted(() => {
       return this.on(this.listeners.view, listener);
     }
 
-    onFullReady(listener: () => void) {
-      return this.on(this.listeners.ready, listener);
-    }
-
     onRebuildNeeded(listener: () => void) {
       return this.on(this.listeners.rebuild, listener);
     }
@@ -130,8 +125,9 @@ const h = vi.hoisted(() => {
       return this.on(this.listeners.context, listener);
     }
 
-    tell(kind: 'ready' | 'rebuild') {
-      for (const listener of this.listeners[kind]) listener();
+    /** The last full mesh given is up. */
+    ready() {
+      this.setFull.mock.lastCall?.[1]?.ready?.();
     }
 
     /** The context lost, and given back where `restored`: with the full mesh, which then needs loading again. */
@@ -139,7 +135,7 @@ const h = vi.hoisted(() => {
       for (const listener of this.listeners.context) listener(true);
       if (!restored) return;
       for (const listener of this.listeners.context) listener(false);
-      this.tell('rebuild');
+      for (const listener of this.listeners.rebuild) listener();
     }
   }
 
@@ -389,10 +385,13 @@ describe('EmCellMeshViewer', () => {
     expect(h.keepers[0].url).toBe(
       'https://entitycore.test/em_cell_mesh/cell-a/assets/glb/download'
     );
-    expect(viewer.setFull).toHaveBeenCalledWith(MESH, h.keepers[0].keep);
+    expect(viewer.setFull).toHaveBeenCalledWith(
+      MESH,
+      expect.objectContaining({ keep: h.keepers[0].keep })
+    );
     // Until it is uploaded.
     expect(pill()).toBe('Loading full detail…');
-    act(() => viewer.tell('ready'));
+    act(() => viewer.ready());
     expect(pill()).toBeNull();
   });
 
@@ -496,7 +495,7 @@ describe('EmCellMeshViewer', () => {
     act(() => load.callbacks.onStandIn(STAND_IN, report({ standInFrom: 'cache' })));
     act(() => load.callbacks.onFull(MESH, report({ standInFrom: 'cache', fullFrom: 'cache' })));
     expect(h.keepers).toHaveLength(0);
-    expect(viewer.setFull).toHaveBeenCalledWith(MESH, undefined);
+    expect(viewer.setFull).toHaveBeenCalledWith(MESH, expect.objectContaining({ keep: undefined }));
 
     act(() => viewer.loseContext(true));
     const again = await started(2);
@@ -513,7 +512,7 @@ describe('EmCellMeshViewer', () => {
     act(() => load.callbacks.onProgress?.(8e6, 8e6));
     act(() => load.callbacks.onStandIn(STAND_IN, report()));
     act(() => load.callbacks.onFull(MESH, report()));
-    act(() => view.viewer.tell('ready'));
+    act(() => view.viewer.ready());
     await act(async () => load.resolve({ kind: 'loaded' }));
     expect(pill()).toBeNull();
     return view;
@@ -526,7 +525,7 @@ describe('EmCellMeshViewer', () => {
     expect(viewer.clear).toHaveBeenCalledTimes(1);
     expect(pill()).toBe('Loading full detail…');
     act(() => again.callbacks.onFull(MESH, report()));
-    act(() => viewer.tell('ready'));
+    act(() => viewer.ready());
     await act(async () => again.resolve({ kind: 'loaded' }));
 
     act(() => viewer.loseContext(true));
@@ -544,7 +543,7 @@ describe('EmCellMeshViewer', () => {
     act(() => viewer.loseContext(true));
     const again = await started(2);
     act(() => again.callbacks.onFull(MESH, report()));
-    act(() => viewer.tell('ready'));
+    act(() => viewer.ready());
     await act(async () => again.resolve({ kind: 'loaded' }));
     act(() => viewer.loseContext(true));
     await waitFor(() =>
@@ -605,7 +604,7 @@ describe('EmCellMeshViewer', () => {
     act(() => load.callbacks.onStage?.('full'));
     expect(mark()).toBe('full');
     act(() => load.callbacks.onFull(MESH, report()));
-    act(() => viewer.tell('ready'));
+    act(() => viewer.ready());
     expect(mark()).toBeNull();
     act(() => load.callbacks.onStage?.('decode'));
     unmount();
@@ -832,12 +831,12 @@ describe('EmCellMeshViewer', () => {
       await chooseStandIn(5);
       const again = await started(2);
       act(() => again.callbacks.onStage?.('decode'));
-      act(() => viewer.tell('ready'));
+      act(() => viewer.ready());
       expect(localStorage.getItem('em-mesh-load:glb')).toBe('decode');
       expect(pill()).toBe('Loading full detail…');
 
       act(() => again.callbacks.onFull(MESH, report()));
-      act(() => viewer.tell('ready'));
+      act(() => viewer.ready());
       expect(localStorage.getItem('em-mesh-load:glb')).toBeNull();
       expect(pill()).toBeNull();
     } finally {

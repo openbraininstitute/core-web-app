@@ -2,6 +2,7 @@ import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
 import { fileName } from '@/features/viewer-3d/chrome/debug-rows';
+import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
 import { GLB_CACHE, readEntry } from './engine/asset-cache';
@@ -30,7 +31,7 @@ export function useSaveGlb(request: DownloadRequest | null, name: string) {
     saveGlb(request, name)
       .catch((e: unknown) => {
         logError('Could not download the EM cell mesh', e);
-        setError(e instanceof Error ? e.message : String(e));
+        setError(errorMessage(e));
       })
       .finally(() => setSaving(false));
   };

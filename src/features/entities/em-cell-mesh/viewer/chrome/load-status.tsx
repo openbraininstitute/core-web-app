@@ -71,9 +71,7 @@ export function LoadStatus({
     );
   }
   if (error && !hasStandIn) {
-    return (
-      <StatusAlert title="The mesh could not be loaded" message={error.message} theme={theme} />
-    );
+    return <StatusAlert title="The mesh could not be loaded" message={error} theme={theme} />;
   }
   if (error) return <StatusPill text="Full detail could not be loaded" failed theme={theme} />;
   if (load.fullDropped) {

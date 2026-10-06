@@ -2,11 +2,9 @@
 
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { useSignal } from '@/features/viewer-3d/use-signal';
-import { cn } from '@/utils/css-class';
-import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
+import { useSceneSync, useWheelHint, ViewerFrame } from '@/features/viewer-3d/viewer-frame';
 
 import { EmViewerChrome } from './chrome/em-viewer-chrome';
 import { EmMeshViewer } from './engine/em-mesh-viewer';
@@ -26,21 +24,17 @@ interface EmCellMeshViewerProps {
 
 function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewerProps) {
   const ctx = useParams<WorkspaceContext>();
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const refHost = useRef<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<EmMeshViewer | null>(null);
   const { settings, update, chooseLook, chooseColor } = useEmViewerSettings();
   const { virtualLabId, projectId } = ctx ?? {};
-  const source = useMemo(
-    () => ({
-      entityId: entity.id,
-      asset: { id: asset.id, size: asset.size },
-      ctx: virtualLabId && projectId ? { virtualLabId, projectId } : null,
-    }),
-    [entity.id, asset.id, asset.size, virtualLabId, projectId]
-  );
+  const source = {
+    entityId: entity.id,
+    asset,
+    ctx: virtualLabId && projectId ? { virtualLabId, projectId } : null,
+  };
   const load = useEmMesh(viewer, source, settings.standInTriangles);
-  const [wheelHint, setWheelHint] = useSignal(10000);
+  const wheelHint = useWheelHint(viewer);
 
   useEffect(() => {
     const host = refHost.current;
@@ -53,8 +47,6 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
     };
   }, []);
 
-  useEffect(() => viewer?.onWheelWithoutCtrl(() => setWheelHint(true)), [viewer, setWheelHint]);
-
   useViewerSync(viewer, settings);
 
   // After the look is set: its shaders compile while the mesh downloads.
@@ -63,19 +55,9 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
   }, [viewer]);
 
   return (
-    <div
-      className={cn('relative overflow-hidden', className)}
-      ref={setRoot}
-      data-testid="em-mesh-viewer"
-    >
-      <FullscreenPortalScope root={root}>
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: if you are blind, fullscreen won't give you more information */}
-        <div
-          className="absolute inset-0"
-          ref={refHost}
-          onDoubleClick={() => toggleFullscreen(root)}
-        />
-        {viewer && (
+    <ViewerFrame className={className} testId="em-mesh-viewer" hostRef={refHost}>
+      {(root) =>
+        viewer && (
           <EmViewerChrome
             viewer={viewer}
             root={root}
@@ -87,20 +69,16 @@ function EmCellMeshViewerComponent({ className, entity, asset }: EmCellMeshViewe
             name={entity.name}
             wheelHint={wheelHint}
           />
-        )}
-      </FullscreenPortalScope>
-    </div>
+        )
+      }
+    </ViewerFrame>
   );
 }
 
 /** Apply the settings to the viewer, each as it changes. */
 function useViewerSync(viewer: EmMeshViewer | null, settings: EmViewerSettings) {
-  useEffect(() => viewer?.setDark(settings.dark), [viewer, settings.dark]);
-  useEffect(() => viewer?.setLook(settings.look), [viewer, settings.look]);
+  useSceneSync(viewer, settings);
   useEffect(() => viewer?.setSurfaceColor(surfaceColor(settings.color)), [viewer, settings.color]);
-  useEffect(() => viewer?.setAO(settings.ao), [viewer, settings.ao]);
-  useEffect(() => viewer?.setSpin(settings.spin), [viewer, settings.spin]);
-  useEffect(() => viewer?.setProjection(settings.projection), [viewer, settings.projection]);
   useEffect(() => viewer?.setAODepth(settings.aoDepth), [viewer, settings.aoDepth]);
   useEffect(() => viewer?.setForcedMesh(settings.mesh), [viewer, settings.mesh]);
   useEffect(() => viewer?.showChunkBoxes(settings.chunkBoxes), [viewer, settings.chunkBoxes]);

@@ -1,9 +1,9 @@
 /**
  * Loading an EM mesh, on the page: the stand-in first, then the full detail.
  *
- * The decode worker downloads the GLB, while it and the stand-in worker compile their WASM; a stand-in cached by an
- * earlier visit shows at once. The header decides whether the mesh fits (`checkBudget`). Then, one tab at a time, the
- * decode worker decodes and is terminated, the stand-in worker makes the stand-in and hands the mesh back, and the
+ * The decode worker downloads the GLB, while it compiles Draco's WASM and the stand-in worker starts; a stand-in cached
+ * by an earlier visit shows at once. The header decides whether the mesh fits (`checkBudget`). Then, one tab at a time,
+ * the decode worker decodes and is terminated, the stand-in worker makes the stand-in and hands the mesh back, and the
  * build worker packs the full mesh. Each worker's arrays reach the next through the page, transferred: the peak is
  * Draco's, never two workers' at once.
  *
@@ -12,8 +12,10 @@
  */
 import * as Comlink from 'comlink';
 
+import { errorMessage } from '@/utils/error';
+
 import { type Budget, checkBudget, type Device } from './budget';
-import { packedBuffers } from './chunks';
+import { chunkArrays, packedBuffers } from './chunks';
 import { readStandIn, storeStandIn } from './stand-in-cache';
 import {
   type BuildApi,
@@ -80,7 +82,7 @@ export class LoadError extends Error {
     readonly stage: Stage,
     cause: unknown
   ) {
-    super(cause instanceof Error ? cause.message : String(cause), { cause });
+    super(errorMessage(cause), { cause });
     this.name = 'LoadError';
   }
 }
@@ -113,7 +115,7 @@ export interface LoadOptions {
   standIns?: {
     read(downloadUrl: string, triangles: number): Promise<StandIn | null>;
     /** `encoded` is the stand-in as `encodeStandIn` makes it. */
-    store(downloadUrl: string, triangles: number, encoded: ArrayBuffer): Promise<unknown>;
+    store(downloadUrl: string, triangles: number, encoded: Blob): Promise<unknown>;
   };
 }
 
@@ -190,6 +192,10 @@ export async function loadEmMesh(
   try {
     const decoder = start(workers.decode);
     decoder.api.warmUp().catch(() => {});
+    const fullCache = start(workers.fullCache);
+    const hasFull = Promise.race([fullCache.api.has(request.url), fullCache.died, aborted]).catch(
+      () => false
+    );
     let standInWorker: WorkerHandle<StandInApi> | null = null;
     const cached = standIns
       .read(request.url, triangles)
@@ -199,10 +205,7 @@ export async function loadEmMesh(
         if (standIn) {
           report.standInFrom = 'cache';
           callbacks.onStandIn(standIn, snapshot());
-        } else {
-          standInWorker = start(workers.standIn);
-          standInWorker.api.warmUp().catch(() => {});
-        }
+        } else standInWorker = start(workers.standIn);
         return standIn;
       });
 
@@ -221,20 +224,19 @@ export async function loadEmMesh(
     const downloading = step('download', decoder, decoder.api.download(request, hooks));
     downloading.catch(() => {});
     // The full mesh, as a visit before kept it: a cached stand-in with no error is the whole mesh, and otherwise the full
-    // mesh's own cache is read, asked while the GLB comes in. Where either has it, the download can stop, and nothing is
-    // decoded or built. A download that fails first, offline say, or a mesh refused at its header leaves it to the
-    // caches all the same.
+    // mesh's own cache is read, asked from the start while the GLB comes in. Where either has it, the download can
+    // stop, and nothing is decoded or built. A download that fails first, offline say, or a mesh refused at its header
+    // leaves it to the caches all the same.
     const fromCache = cached.then(async (standIn) => {
-      if (standIn?.errorUm === 0) return standIn;
+      if (standIn?.errorUm === 0) {
+        stop(fullCache);
+        return standIn;
+      }
       if (finished) return null;
-      const worker = start(workers.fullCache);
-      const has = await Promise.race([worker.api.has(request.url), worker.died, aborted]).catch(
-        () => false
-      );
-      const full = has
-        ? await step('full', worker, worker.api.restore(request.url)).catch(() => null)
+      const full = (await hasFull)
+        ? await step('full', fullCache, fullCache.api.restore(request.url)).catch(() => null)
         : null;
-      stop(worker);
+      stop(fullCache);
       return full;
     });
     const quick = await Promise.race([
@@ -253,7 +255,9 @@ export async function loadEmMesh(
       report.timings.push(...made.timings);
       tell();
       callbacks.onStandIn(made.standIn, snapshot());
-      standIns.store(request.url, triangles, made.encoded).catch(() => {});
+      if (made.encoded) standIns.store(request.url, triangles, made.encoded).catch(() => {});
+      // The load holds on to each step's result until it ends: not to this copy.
+      made.encoded = null;
     };
     /** A tab opened in the background downloads, or reads its caches, but makes nothing until the view is seen. */
     const whenSeen = async () => {
@@ -312,6 +316,8 @@ export async function loadEmMesh(
       report.dracoBits = mesh.dracoBits;
       report.dracoHeapBytes = decoded.dracoHeapBytes;
       tell();
+      // Starting up while the stand-in is made; stopped with the rest where that is the whole mesh.
+      const builder = start(workers.build);
 
       if (!standInFromCache) {
         const worker = standInWorker ?? start(workers.standIn);
@@ -329,7 +335,6 @@ export async function loadEmMesh(
         }
       }
 
-      const builder = start(workers.build);
       const built = await step(
         'full',
         builder,
@@ -379,8 +384,8 @@ export function keepFullMesh(
   return {
     keep(chunk, index) {
       if (stopped) return;
-      const buffers = [chunk.positions.buffer, chunk.normals.buffer, chunk.indices.buffer];
-      worker.api.add(index, Comlink.transfer(chunk, buffers as ArrayBuffer[])).catch(stop);
+      const buffers = chunkArrays(chunk).map((a) => a.buffer as ArrayBuffer);
+      worker.api.add(index, Comlink.transfer(chunk, buffers)).catch(stop);
       if (++kept === total)
         worker.api
           .store(downloadUrl, rest)

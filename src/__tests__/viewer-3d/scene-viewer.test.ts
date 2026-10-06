@@ -122,13 +122,6 @@ function placeholder(): THREE.BufferGeometry {
 let composerRender: ReturnType<typeof vi.spyOn>;
 
 beforeAll(() => {
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      observe() {}
-      disconnect() {}
-    }
-  );
   // The matcaps are drawn on a 2D canvas, which jsdom lacks; a stub is enough to build them.
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
     createRadialGradient: () => ({ addColorStop() {} }),
@@ -219,9 +212,11 @@ describe('scene viewer', () => {
     const target = composer?.renderTarget2;
     expect(target?.samples).toBe(4);
     // Off, the depth is neither resolved nor kept past the frame.
+    viewer.renderer.loop?.();
     expect(target?.resolveDepthBuffer).toBe(false);
     expect(target?.storeMultisampledDepthBuffer).toBe(false);
     (viewer as unknown as SceneViewer).setAO(true);
+    viewer.renderer.loop?.();
     expect(target?.resolveDepthBuffer).toBe(true);
     expect(target?.storeMultisampledDepthBuffer).toBe(true);
     expect(target?.depthTexture).toBeInstanceOf(THREE.DepthTexture);
@@ -236,6 +231,7 @@ describe('scene viewer', () => {
     expect(gtao?.gtaoMaterial.defines.NORMAL_VECTOR_TYPE).toBe(1);
     expect(gtao?.pdMaterial.defines.NORMAL_VECTOR_TYPE).toBe(1);
     (viewer as unknown as SceneViewer).setAO(false);
+    viewer.renderer.loop?.();
     expect(normals.enabled).toBe(false);
   });
 
@@ -257,8 +253,10 @@ describe('scene viewer', () => {
   });
 
   it('darkens the scene by the occlusion in the output pass, or in GTAO where bloom comes after it', () => {
-    const viewer = make(BARE);
+    // A morphology's surface, which has a look that blooms.
+    const viewer = make({ ...BARE, surface: MORPHOLOGY_SURFACE });
     (viewer as unknown as SceneViewer).setAO(true);
+    viewer.renderer.loop?.();
     const { gtao, composer } = viewer.main as Pipeline;
     const output = composer?.passes.at(-1) as OutputPass;
     expect(gtao?.output).toBe(GTAOPass.OUTPUT.Off);
@@ -269,8 +267,9 @@ describe('scene viewer', () => {
       'gl_FragColor.rgb *= mix( vec3( 1.0 ), texture2D( tAO, vUv ).rgb, aoIntensity )'
     );
 
-    (viewer.main?.bloom as { enabled: boolean }).enabled = true;
-    (viewer as unknown as SceneViewer).setAO(true);
+    (viewer as unknown as SceneViewer).setLook('fluorescence');
+    viewer.renderer.loop?.();
+    expect(viewer.main?.bloom?.enabled).toBe(true);
     expect(gtao?.output).toBe(GTAOPass.OUTPUT.Default);
     expect(gtao?.needsSwap).toBe(true);
     expect(output.uniforms.aoIntensity.value).toBe(0);
@@ -292,6 +291,7 @@ describe('scene viewer', () => {
     const viewer = new Viewer(host);
     viewers.push(viewer);
     viewer.setAO(true);
+    (viewer as unknown as Internals).renderer.loop?.();
     const { composer, gtao } = (viewer as unknown as Internals).main as Pipeline;
     expect(composer?.renderTarget2.depthTexture).toBeNull();
     expect(composer?.renderTarget2.resolveDepthBuffer).toBe(false);
@@ -631,7 +631,11 @@ describe('scene viewer', () => {
     frame();
     expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: false });
     expect(viewer.moved.at(-1)).toEqual(viewer.cut);
-    expect(main.gtao.enabled).toBe(true);
+    expect(main.output.uniforms.aoIntensity.value).toBe(0);
+    // The next frame with the occlusion draws it again.
+    viewer.cut = null;
+    frame();
+    expect(drawn.at(-1)).toEqual({ composer: main.composer, ao: true });
     expect(main.output.uniforms.aoIntensity.value).toBe(1);
 
     // Fewer pixels, with the occlusion: a pipeline of its own, whose occlusion reaches as far on screen.

@@ -37,10 +37,10 @@ describe('the full mesh cache', () => {
     { triangles: 8000, vertices: 65535 }
   ).mesh;
 
-  it('gives back the packed mesh it was given, smaller', () => {
+  it('gives back the packed mesh it was given, smaller', async () => {
     const { chunks, ...rest } = mesh;
     const encoded = chunks.map((c) => encodeChunk(MeshoptEncoder, c));
-    const buffer = encodeFull(rest, encoded);
+    const buffer = await encodeFull(rest, encoded).arrayBuffer();
     const raw = chunks.reduce(
       (n, c) => n + c.positions.byteLength + c.normals.byteLength + c.indices.byteLength,
       0
@@ -57,12 +57,12 @@ describe('the full mesh cache', () => {
     });
   });
 
-  it('gives back nothing from an entry of another version', () => {
+  it('gives back nothing from an entry of another version', async () => {
     const { chunks, ...rest } = mesh;
-    const buffer = encodeFull(
+    const buffer = await encodeFull(
       rest,
       chunks.map((c) => encodeChunk(MeshoptEncoder, c))
-    );
+    ).arrayBuffer();
     const length = new DataView(buffer).getUint32(0, true);
     const json = new TextDecoder().decode(new Uint8Array(buffer, 4, length));
     const other = new TextEncoder().encode(

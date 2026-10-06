@@ -14,17 +14,15 @@ export interface CacheBounds {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const GLB_CACHE: CacheBounds = {
-  name: 'em-cell-mesh-glb',
+const bucket = (name: string): CacheBounds => ({
+  name,
   ttlMs: 30 * DAY_MS,
   maxBytes: 500 * 2 ** 20,
-};
+});
 
-export const STAND_IN_CACHE: CacheBounds = {
-  name: 'em-cell-mesh-stand-in',
-  ttlMs: 30 * DAY_MS,
-  maxBytes: 500 * 2 ** 20,
-};
+export const GLB_CACHE = bucket('em-cell-mesh-glb');
+export const STAND_IN_CACHE = bucket('em-cell-mesh-stand-in');
+export const FULL_CACHE = bucket('em-cell-mesh-full');
 
 /** When each entry was stored, as `checkCache` in `src/api/cache-storage.ts` reads it. */
 const STORED_AT = 'x-cache-timestamp';
@@ -36,6 +34,55 @@ function available(): boolean {
 }
 
 const normal = (key: string) => new URL(key).href;
+
+/** The key of what is made from the asset at `url`, `param` naming what and `version` how. */
+export function versionedKey(url: string, param: string, version: string): string {
+  const key = new URL(url);
+  key.searchParams.set(param, version);
+  return key.href;
+}
+
+const align = (n: number) => (n + 3) & ~3;
+const PAD = new Uint8Array(3);
+
+/**
+ * An entry of a JSON header and arrays: the header's length in 4 bytes, the header, then each array on a 4-byte
+ * boundary. A Blob, which `writeEntry` stores without another copy.
+ */
+export function packEntry(header: { version: string }, arrays: ArrayBufferView[]): Blob {
+  const json = new TextEncoder().encode(JSON.stringify(header));
+  const length = new Uint8Array(4);
+  new DataView(length.buffer).setUint32(0, json.byteLength, true);
+  const parts: ArrayBufferView[] = [
+    length,
+    json,
+    PAD.subarray(0, align(json.byteLength) - json.byteLength),
+  ];
+  for (const a of arrays) parts.push(a, PAD.subarray(0, align(a.byteLength) - a.byteLength));
+  return new Blob(parts as BlobPart[]);
+}
+
+/**
+ * The header of an entry `packEntry` made, and `next`, the offset of each array in turn, given its bytes; null where
+ * the entry is of another version.
+ */
+export function unpackEntry<H extends { version: string }>(
+  buffer: ArrayBuffer,
+  version: string
+): { header: H; next(bytes: number): number } | null {
+  const length = new DataView(buffer).getUint32(0, true);
+  const header: H = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 4, length)));
+  if (header.version !== version) return null;
+  let offset = align(4 + length);
+  return {
+    header,
+    next(bytes) {
+      const at = offset;
+      offset += align(bytes);
+      return at;
+    },
+  };
+}
 
 /** The entry if it is there and fresh; an expired one is deleted. */
 async function fresh(cache: Cache, bounds: CacheBounds, key: string): Promise<Response | null> {
@@ -58,12 +105,12 @@ export async function readEntry(
     const hit = await fresh(cache, bounds, key);
     if (!hit) return null;
     const expected = size ?? Number(hit.headers.get('Content-Length'));
-    const body = await hit.arrayBuffer();
+    // A short entry is touched too, and forgotten by the next `prune`.
+    const [body] = await Promise.all([hit.arrayBuffer(), touch(cache, normal(key))]);
     if (body.byteLength !== expected) {
       await cache.delete(key);
       return null;
     }
-    await touch(cache, normal(key));
     return body;
   } catch {
     return null;

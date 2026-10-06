@@ -2,7 +2,15 @@
  * Stand-ins kept between visits, so that a mesh seen before shows in well under a second while its full detail loads.
  * An entry is the packed stand-in: a JSON header, then each chunk's arrays, each on a 4-byte boundary.
  */
-import { readEntry, STAND_IN_CACHE, writeEntry } from './asset-cache';
+import {
+  packEntry,
+  readEntry,
+  STAND_IN_CACHE,
+  unpackEntry,
+  versionedKey,
+  writeEntry,
+} from './asset-cache';
+import { chunkArrays } from './chunks';
 import { TRIANGLES_PER_FACE } from './cluster';
 
 import type { PackedChunk, StandIn } from './types';
@@ -15,16 +23,12 @@ interface Header extends Omit<StandIn, 'chunks'> {
   chunks: (Pick<PackedChunk, 'origin' | 'bounds'> & { vertices: number; indices: number })[];
 }
 
-const align = (n: number) => (n + 3) & ~3;
-
 /** The entry for the stand-in of at most `triangles` triangles of the GLB at `downloadUrl`. */
 export function standInKey(downloadUrl: string, triangles: number): string {
-  const url = new URL(downloadUrl);
-  url.searchParams.set('stand-in', `${STAND_IN_VERSION}-${triangles}`);
-  return url.href;
+  return versionedKey(downloadUrl, 'stand-in', `${STAND_IN_VERSION}-${triangles}`);
 }
 
-export function encodeStandIn(standIn: StandIn): ArrayBuffer {
+export function encodeStandIn(standIn: StandIn): Blob {
   const { chunks, ...rest } = standIn;
   const header: Header = {
     ...rest,
@@ -36,40 +40,23 @@ export function encodeStandIn(standIn: StandIn): ArrayBuffer {
       indices: c.indices.length,
     })),
   };
-  const json = new TextEncoder().encode(JSON.stringify(header));
-  const arrays = chunks.flatMap((c) => [c.positions, c.normals, c.indices]);
-  const size = arrays.reduce((n, a) => n + align(a.byteLength), align(4 + json.byteLength));
-  const out = new Uint8Array(size);
-  new DataView(out.buffer).setUint32(0, json.byteLength, true);
-  out.set(json, 4);
-  let offset = align(4 + json.byteLength);
-  for (const a of arrays) {
-    out.set(new Uint8Array(a.buffer, a.byteOffset, a.byteLength), offset);
-    offset += align(a.byteLength);
-  }
-  return out.buffer;
+  return packEntry(header, chunks.flatMap(chunkArrays));
 }
 
 /** The stand-in an entry holds; null where it was made by another version of the pipeline. */
 export function decodeStandIn(buffer: ArrayBuffer): StandIn | null {
-  const length = new DataView(buffer).getUint32(0, true);
-  const header: Header = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, 4, length)));
-  if (header.version !== STAND_IN_VERSION) return null;
-  let offset = align(4 + length);
-  const take = <T>(make: (offset: number) => T, bytes: number): T => {
-    const array = make(offset);
-    offset += align(bytes);
-    return array;
-  };
-  const { chunks, version: _, ...rest } = header;
+  const entry = unpackEntry<Header>(buffer, STAND_IN_VERSION);
+  if (!entry) return null;
+  const { chunks, version: _, ...rest } = entry.header;
+  const { next } = entry;
   return {
     ...rest,
     chunks: chunks.map((c) => ({
       origin: c.origin,
       bounds: c.bounds,
-      positions: take((at) => new Uint16Array(buffer, at, 4 * c.vertices), 8 * c.vertices),
-      normals: take((at) => new Int8Array(buffer, at, 4 * c.vertices), 4 * c.vertices),
-      indices: take((at) => new Uint16Array(buffer, at, c.indices), 2 * c.indices),
+      positions: new Uint16Array(buffer, next(8 * c.vertices), 4 * c.vertices),
+      normals: new Int8Array(buffer, next(4 * c.vertices), 4 * c.vertices),
+      indices: new Uint16Array(buffer, next(2 * c.indices), c.indices),
     })),
   };
 }
@@ -87,12 +74,7 @@ export async function readStandIn(downloadUrl: string, triangles: number): Promi
 export function storeStandIn(
   downloadUrl: string,
   triangles: number,
-  encoded: ArrayBuffer
+  encoded: Blob
 ): Promise<boolean> {
-  return writeEntry(
-    STAND_IN_CACHE,
-    standInKey(downloadUrl, triangles),
-    encoded,
-    encoded.byteLength
-  );
+  return writeEntry(STAND_IN_CACHE, standInKey(downloadUrl, triangles), encoded, encoded.size);
 }

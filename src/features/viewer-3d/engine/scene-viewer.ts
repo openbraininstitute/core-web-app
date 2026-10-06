@@ -44,6 +44,8 @@ const FIT_FILL = 0.92;
 const FOV = 45;
 /** How long the camera takes to turn to an axis the gizmo was clicked on, ms. */
 const TURN_MS = 300;
+/** The most device pixels a CSS pixel is drawn with: a 3× phone draws at 2×. */
+export const MAX_PIXEL_RATIO = 2;
 /** The layer of what `drawUnseen` draws, which the lights are on as well. */
 const UNSEEN_LAYER = 31;
 /**
@@ -194,12 +196,13 @@ function resolveDepth(p: Pipeline, on: boolean): void {
   target.storeMultisampledDepthBuffer = read;
 }
 
-/** The occlusion's passes on or off: as set, or for a frame drawn without them. */
-function passAO(p: Pipeline, on: boolean): void {
-  p.gtao.enabled = on;
-  if (p.depthNormals) p.depthNormals.enabled = on;
-  resolveDepth(p, on);
-  blendAO(p, on);
+/** The passes on or off for a frame: the occlusion's as `ao` says, and bloom where the look blooms. */
+function setPasses(p: Pipeline, ao: boolean, bloom: boolean): void {
+  if (p.bloom) p.bloom.enabled = bloom;
+  p.gtao.enabled = ao;
+  if (p.depthNormals) p.depthNormals.enabled = ao;
+  resolveDepth(p, ao);
+  blendAO(p, ao);
 }
 
 /**
@@ -319,7 +322,7 @@ export class SceneViewer implements ViewControls {
       alpha: true,
       powerPreference: options.powerPreference ?? 'default',
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.toneMappingExposure = 0.95;
     const canvas = this.renderer.domElement;
@@ -540,14 +543,11 @@ export class SceneViewer implements ViewControls {
       return null;
     }
     const cut = moving ? this.motionFrame : null;
-    if (cut && (cut.scale < 1 || !cut.antialias) && !this.look.bloom) return this.drawMotion(cut);
+    const bloom = this.look.bloom === true;
+    if (cut && (cut.scale < 1 || !cut.antialias) && !bloom) return this.drawMotion(cut);
     const ao = this.ao && (cut?.ao ?? true);
-    if (ao !== this.ao) passAO(main, false);
-    try {
-      composeFrame(main);
-    } finally {
-      if (ao !== this.ao) passAO(main, true);
-    }
+    setPasses(main, ao, bloom);
+    composeFrame(main);
     return { ao, scale: 1, antialias: true };
   }
 
@@ -561,7 +561,7 @@ export class SceneViewer implements ViewControls {
       this.fitPipeline(p);
     }
     const ao = this.ao && cut.ao;
-    if (p.gtao.enabled !== ao) passAO(p, ao);
+    setPasses(p, ao, false);
     composeFrame(p);
     return { ...cut, ao };
   }
@@ -624,11 +624,11 @@ export class SceneViewer implements ViewControls {
       outline.frustumCulled = false;
       this.outlines.add(outline);
     }
-    this.ensureComposer();
+    const target = this.ensureComposer().composer.renderTarget2;
     const previous = this.renderer.getRenderTarget();
     let compiled: Promise<unknown>;
     try {
-      this.renderer.setRenderTarget(this.main?.composer.renderTarget2 ?? null);
+      this.renderer.setRenderTarget(target);
       compiled = this.renderer.compileAsync(this.scene, this.camera);
     } finally {
       this.renderer.setRenderTarget(previous);
@@ -673,7 +673,7 @@ export class SceneViewer implements ViewControls {
     const saved = objects.map((o) => ({ mask: o.layers.mask, culled: o.frustumCulled }));
     const autoClear = renderer.autoClear;
     const previous = renderer.getRenderTarget();
-    this.ensureComposer();
+    const target = this.ensureComposer().composer.renderTarget2;
     try {
       for (const o of objects) {
         o.layers.set(UNSEEN_LAYER);
@@ -685,7 +685,7 @@ export class SceneViewer implements ViewControls {
       color.setLocked(true);
       depth.setMask(false);
       depth.setLocked(true);
-      renderer.setRenderTarget(this.pixelTarget());
+      renderer.setRenderTarget(this.pixelTarget(target));
       renderer.render(this.scene, camera);
     } finally {
       color.setLocked(false);
@@ -702,18 +702,14 @@ export class SceneViewer implements ViewControls {
     }
   }
 
-  /** A pixel's target of the formats of the one the scene is drawn into (`drawUnseen`). */
-  private pixelTarget(): THREE.WebGLRenderTarget | null {
-    const scene = this.main?.composer.renderTarget2;
-    if (!scene) return null;
-    if (!this.unseenTarget) {
-      this.unseenTarget = new THREE.WebGLRenderTarget(1, 1, {
-        type: scene.texture.type,
-        samples: scene.samples,
-        depthTexture: scene.depthTexture ? new THREE.DepthTexture(1, 1) : null,
-        resolveDepthBuffer: false,
-      });
-    }
+  /** A pixel's target of the formats of `target`, the one the scene is drawn into (`drawUnseen`). */
+  private pixelTarget(target: THREE.WebGLRenderTarget): THREE.WebGLRenderTarget {
+    this.unseenTarget ??= new THREE.WebGLRenderTarget(1, 1, {
+      type: target.texture.type,
+      samples: target.samples,
+      depthTexture: target.depthTexture ? new THREE.DepthTexture(1, 1) : null,
+      resolveDepthBuffer: false,
+    });
     return this.unseenTarget;
   }
 
@@ -814,8 +810,6 @@ export class SceneViewer implements ViewControls {
     if (look.env) this.environment ??= makeEnvironment(this.renderer);
     this.scene.environment = look.env ? this.environment : null;
     this.scene.fog = look.fog ?? null;
-    if (this.main?.bloom) this.main.bloom.enabled = look.bloom === true;
-    if (this.main) blendAO(this.main, this.ao);
     this.invalidate();
   }
 
@@ -940,18 +934,18 @@ export class SceneViewer implements ViewControls {
   setAO(on: boolean): void {
     this.ao = on;
     if (on) this.ensureComposer();
-    if (this.main) passAO(this.main, on);
     this.invalidate();
     this.frameChanged();
   }
 
-  private ensureComposer(): void {
+  private ensureComposer(): Pipeline {
     this.main ??= this.buildPipeline(null);
+    return this.main;
   }
 
   /**
    * Render pass → GTAO → bloom → output, for still frames, or for moving ones cut down as `cut`: at its fraction of the
-   * resolution, and without bloom. The middle two are toggled per state and look.
+   * resolution, and without bloom. The middle two are set for each frame (`setPasses`).
    */
   private buildPipeline(cut: MovingFrame | null): Pipeline {
     const { scale, antialias } = cut ?? { scale: 1, antialias: true };
@@ -1028,14 +1022,12 @@ export class SceneViewer implements ViewControls {
     let bloom: UnrealBloomPass | null = null;
     if (!cut) {
       bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.65, 0.5, 0.2);
-      bloom.enabled = this.look.bloom === true;
       composer.addPass(bloom);
     }
     const output = aoOutputPass();
     composer.addPass(output);
     const p: Pipeline = { composer, render, gtao, depthNormals, bloom, output, scale, antialias };
     this.fitPipeline(p);
-    passAO(p, this.ao);
     return p;
   }
 

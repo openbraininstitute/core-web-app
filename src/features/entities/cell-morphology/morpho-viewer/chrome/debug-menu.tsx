@@ -1,12 +1,15 @@
-import { RiBugLine } from '@remixicon/react';
 import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
-import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
-import { DownloadRow, fileName } from '@/features/viewer-3d/chrome/debug-rows';
+import {
+  DebugMenuShell,
+  DownloadRow,
+  FailedNote,
+  fileName,
+} from '@/features/viewer-3d/chrome/debug-rows';
+import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
-import { errorMessage } from '../engine/protocol';
 import { currentPalette, type UpdateSettings, type ViewerSettings } from '../use-viewer-settings';
 import { DebugControls } from './debug-controls';
 import { Note, SectionTitle } from './menu-rows';
@@ -99,46 +102,36 @@ export function DebugMenu({ name, state, settings, update, look }: DebugMenuProp
   };
 
   return (
-    <ChromeMenu
-      label="Debug"
-      openLabel="Close debug"
+    <DebugMenuShell
       testId="morphology-debug"
-      icon={<RiBugLine className="size-4 shrink-0" />}
-      contentClassName="w-80 p-0"
-    >
-      {(close) => (
-        // The statistics and the controls scroll, and the downloads stay in view under them.
-        <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
-          <div className="min-h-0 overflow-y-auto">
-            <div className="p-3">
-              <Stats name={name} state={state} palette={palette} />
-            </div>
-            <div className="border-t border-neutral-200 p-1 pb-2">
-              <DebugControls settings={settings} update={update} look={look} gpu={state.gpu} />
-            </div>
+      body={
+        <>
+          <div className="p-3">
+            <Stats name={name} state={state} palette={palette} />
           </div>
-          <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
-            <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
-            {FORMATS.map((f) => (
-              <DownloadRow
-                key={f.format}
-                label={f.label}
-                detail={f.detail}
-                busy={running === f.format ? f.busy : null}
-                disabled={reason !== null || running !== null}
-                onClick={() => save(f, close)}
-              />
-            ))}
-            {reason && <Note>{reason}</Note>}
-            {error && (
-              <p role="alert" className="m-0 px-2 text-xs text-error">
-                The export failed: {error}
-              </p>
-            )}
+          <div className="border-t border-neutral-200 p-1 pb-2">
+            <DebugControls settings={settings} update={update} look={look} gpu={state.gpu} />
           </div>
-        </div>
+        </>
+      }
+      footer={(close) => (
+        <>
+          <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
+          {FORMATS.map((f) => (
+            <DownloadRow
+              key={f.format}
+              label={f.label}
+              detail={f.detail}
+              busy={running === f.format ? f.busy : null}
+              disabled={reason !== null || running !== null}
+              onClick={() => save(f, close)}
+            />
+          ))}
+          {reason && <Note>{reason}</Note>}
+          {error && <FailedNote>The export failed: {error}</FailedNote>}
+        </>
       )}
-    </ChromeMenu>
+    />
   );
 }
 

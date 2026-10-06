@@ -153,12 +153,10 @@ function load(overrides: Partial<LoadOptions> = {}, cached: StandIn | null = nul
     progress: [],
     stages: [],
   };
-  const stored: ArrayBuffer[] = [];
+  const stored: Blob[] = [];
   const standIns = {
     read: vi.fn(async () => cached),
-    store: vi.fn(async (_url: string, _triangles: number, encoded: ArrayBuffer) =>
-      stored.push(encoded)
-    ),
+    store: vi.fn(async (_url: string, _triangles: number, encoded: Blob) => stored.push(encoded)),
   };
   const promise = loadEmMesh(
     {
@@ -219,7 +217,7 @@ describe('loadEmMesh', () => {
     // Encoded for the cache in the stand-in worker, and stored once shown.
     expect(stored).toHaveLength(1);
     expect(standIns.store).toHaveBeenCalledWith(URL_A, 2000, stored[0]);
-    expect(decodeStandIn(stored[0])).toEqual(events.standIn);
+    expect(decodeStandIn(await stored[0].arrayBuffer())).toEqual(events.standIn);
     expect(events.progress.at(-1)).toBe(glb.byteLength);
     const report = events.reports.at(-1);
     expect(report).toMatchObject({
@@ -250,14 +248,19 @@ describe('loadEmMesh', () => {
     expect(listeners(removed)).toEqual(listeners(added));
   });
 
-  it('starts the decode and stand-in workers, which compile their WASM, before the download ends', async () => {
+  it('starts the decode worker, which compiles its WASM, and the stand-in worker before the download ends', async () => {
     vi.stubGlobal('fetch', fakeServer({ [URL_A]: glb }).fetch);
-    await load().promise;
-    const download = log.indexOf('decode.download');
+    const base = workers();
+    let standInAt = -1;
+    const standIn = () => {
+      standInAt = log.length;
+      return base.standIn();
+    };
+    await load({ workers: { ...base, standIn } }).promise;
     expect(log.indexOf('decode.warmUp')).toBeGreaterThan(-1);
-    expect(log.indexOf('decode.warmUp')).toBeLessThan(download);
-    expect(log.indexOf('standIn.warmUp')).toBeGreaterThan(-1);
-    expect(log.indexOf('standIn.warmUp')).toBeLessThan(log.indexOf('decode.decode'));
+    expect(log.indexOf('decode.warmUp')).toBeLessThan(log.indexOf('decode.download'));
+    expect(standInAt).toBeGreaterThan(-1);
+    expect(standInAt).toBeLessThanOrEqual(log.indexOf('decode.decode'));
   });
 
   it('downloads while the view has not been seen, and decodes once it is', async () => {
@@ -313,7 +316,7 @@ describe('loadEmMesh', () => {
     expect(events.stages).toEqual(['download', 'full', 'stand-in']);
     expect(events.standIn?.triangles).toBeLessThanOrEqual(2000);
     expect(events.standIn?.errorUm).toBeGreaterThan(0);
-    expect(decodeStandIn(stored[0])).toEqual(events.standIn);
+    expect(decodeStandIn(await stored[0].arrayBuffer())).toEqual(events.standIn);
     expect(events.reports.at(-1)).toMatchObject({ standInFrom: 'build', fullFrom: 'cache' });
     expect(packedTriangleCount(events.full as PackedMesh)).toBe(triangles);
   });
