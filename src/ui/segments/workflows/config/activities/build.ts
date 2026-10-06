@@ -368,3 +368,21 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     disabled: true,
   },
 ];
+
+/**
+ * past runs also list the ion channel campaigns built before the scan-config editor: they open
+ * read-only and have no workflow to rerun or duplicate them in.
+ */
+export const BuildBrowseWorkflows: readonly IWorkflowDescriptor[] = [
+  ...BuildWorkflows,
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    label: 'Ion channel (legacy)',
+    legacy: true,
+    order: 8,
+    disabled: false,
+  },
+];

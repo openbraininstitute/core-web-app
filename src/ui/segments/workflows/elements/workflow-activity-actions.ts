@@ -16,7 +16,6 @@ import {
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
 import { buildConfigureUrlForEntity } from '@/ui/segments/workflows/config/routes';
-import { makePathParamUrlFromExtendedType } from '@/utils/url-builder';
 
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -182,25 +181,11 @@ function buildConfigureUrlForActivityRow(opts: {
   });
 }
 
-function isIonChannelModelingDuplicateRow(
-  listEntityType: TExtendedEntitiesTypeDict,
-  row: TWorkflowActivityTableRow
-): boolean {
-  return (
-    listEntityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign &&
-    row.type === EntityTypeDict.IonChannelModelingCampaign
-  );
-}
-
 export function canDuplicateWorkflowActivityRow(opts: {
   activity: TActivityValue;
   listEntityType: TExtendedEntitiesTypeDict;
   row: TWorkflowActivityTableRow;
 }): boolean {
-  if (isIonChannelModelingDuplicateRow(opts.listEntityType, opts.row)) {
-    return true;
-  }
-
   return resolveWorkflowActivityConfigureRequest(opts) !== null;
 }
 
@@ -325,8 +310,7 @@ export function buildWorkflowActivityConfigurationHref(opts: {
  * builds the href for duplicating a workflow activity row into a new configure session
  *
  * scan-config campaigns delegate to {@link buildConfigureUrlForActivityRow} (origin +
- * empty session slot), Ion channel modeling uses a static configure route without a
- * workflow session id in the path.
+ * empty session slot).
  *
  * @returns duplicate configure href, or `null` when duplication is not supported for the row
  */
@@ -337,25 +321,6 @@ export function buildWorkflowActivityDuplicateHref(opts: {
   row: TWorkflowActivityTableRow;
   query?: Record<string, string | undefined>;
 }): string | null {
-  if (isIonChannelModelingDuplicateRow(opts.listEntityType, opts.row)) {
-    const { virtualLabId, projectId } = opts.workspace;
-    const configureSegment = makePathParamUrlFromExtendedType({
-      extendedType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
-    }).pathParam;
-    const params = new URLSearchParams();
-
-    for (const [key, value] of Object.entries(opts.query ?? {})) {
-      if (value !== undefined && value !== '') {
-        params.set(key, value);
-      }
-    }
-
-    params.set(ScanConfigOriginSearchParam, opts.row.id);
-    params.set(ScanConfigModeSearchParam, ScanConfigCampaignOriginActionDict.Duplicate);
-
-    return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/build/configure/${configureSegment}?${params}`;
-  }
-
   // flag the duplicate flow so the editor opens editable instead of the read-only view.
   return buildConfigureUrlForActivityRow({
     ...opts,
