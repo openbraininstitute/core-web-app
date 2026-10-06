@@ -70,6 +70,8 @@ export interface FullCallbacks {
   keep?(chunk: PackedChunk, index: number): void;
   /** All of it is up, and can be drawn. */
   ready?(): void;
+  /** Dropped before all of it was up: by another mesh, `clear` or a lost context. */
+  dropped?(): void;
 }
 
 /** A mesh's chunks as made, before they go in the scene as a layer. */
@@ -292,7 +294,7 @@ export class EmMeshViewer extends SceneViewer {
 
   /**
    * Upload the full mesh over the next frames, and draw it once all of it is up. The stand-in itself, it is whole, and
-   * ready at once. Another mesh, `clear` or a lost context drops it, and what `on` was to be told with it.
+   * ready at once. Another mesh, `clear` or a lost context drops it, which `on` is told of while it is going up.
    */
   setFull(mesh: PackedMesh, on: FullCallbacks = {}): void {
     this.dropFull();
@@ -335,6 +337,7 @@ export class EmMeshViewer extends SceneViewer {
   private dropFull(): boolean {
     const had = this.full !== null || this.pending !== null;
     for (const m of this.pending?.meshes ?? []) m.geometry.dispose();
+    this.pending?.dropped?.();
     this.pending = null;
     this.dropLayer(this.full);
     this.full = null;

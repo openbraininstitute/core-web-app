@@ -296,6 +296,25 @@ describe('loadEmMesh', () => {
     expect(packedTriangleCount(second.events.full as PackedMesh)).toBe(triangles);
   });
 
+  it("reads the full mesh's cache as soon as it has the mesh, while the stand-in's is still being read", async () => {
+    const standIn = await cachedStandIn();
+    await keptFull();
+    let release = () => {};
+    const reading = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const from = log.length;
+    const { promise, events } = load({
+      standIns: { read: () => reading.then(() => standIn), store: async () => true },
+    });
+    await vi.waitFor(() => expect(log.slice(from)).toContain('fullCache.restore'));
+    expect(log.slice(from)).not.toContain('onStandIn');
+    release();
+    expect(await promise).toEqual({ kind: 'loaded' });
+    expect(log.slice(from)).not.toContain('decode.decode');
+    expect(events.reports.at(-1)).toMatchObject({ standInFrom: 'cache', fullFrom: 'cache' });
+  });
+
   it('makes a stand-in its cache has none of, of another size say, from the full mesh its own cache gives back', async () => {
     const { triangles } = await keptFull();
     const { promise, events, stored } = load();

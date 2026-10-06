@@ -224,18 +224,21 @@ export async function loadEmMesh(
     const downloading = step('download', decoder, decoder.api.download(request, hooks));
     downloading.catch(() => {});
     // The full mesh, as a visit before kept it: a cached stand-in with no error is the whole mesh, and otherwise the full
-    // mesh's own cache is read, asked from the start while the GLB comes in. Where either has it, the download can
-    // stop, and nothing is decoded or built. A download that fails first, offline say, or a mesh refused at its header
-    // leaves it to the caches all the same.
+    // mesh's own cache is read, as soon as it says it has it, while the stand-in's is read and the GLB comes in. Where
+    // either has it, the download can stop, and nothing is decoded or built. A download that fails first, offline say,
+    // or a mesh refused at its header leaves it to the caches all the same.
+    const restored = hasFull.then((has) =>
+      has && live.has(fullCache)
+        ? step('full', fullCache, fullCache.api.restore(request.url)).catch(() => null)
+        : null
+    );
     const fromCache = cached.then(async (standIn) => {
       if (standIn?.errorUm === 0) {
         stop(fullCache);
         return standIn;
       }
       if (finished) return null;
-      const full = (await hasFull)
-        ? await step('full', fullCache, fullCache.api.restore(request.url)).catch(() => null)
-        : null;
+      const full = await restored;
       stop(fullCache);
       return full;
     });

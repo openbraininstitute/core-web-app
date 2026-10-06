@@ -106,7 +106,7 @@ flowchart TD
 
 - Another mesh clears the view and aborts the load under way, which terminates its workers. So does the card going.
 - Another stand-in size, from the Debug menu, loads the mesh again, keeping what the viewer has until the new load's meshes replace it. Each size has its own cache entry.
-- A load past its download marks the mesh in `localStorage` until its full mesh is drawn ([load-mark.ts](load-mark.ts)). A tab the browser stops mid-load, out of memory say, leaves the mark behind. The next visit then shows the cached stand-in, if there is one, and offers to try again rather than stopping the page again. A mark is not heeded while any tab holds the decode lock, as it may be that tab's load.
+- A load past its download marks the mesh in `localStorage` until its full mesh is drawn ([load-mark.ts](load-mark.ts)). A tab the browser stops mid-load, out of memory say, leaves the mark behind. The next visit then shows the cached stand-in, if there is one, and offers to try again rather than stopping the page again. The tab that sets a mark holds a Web Lock of its name until it clears it, which the browser lets go of with the tab: a mark is not heeded while its lock is held, as it is that tab's load, under way.
 - A context lost with the full mesh loads it again, keeping the stand-in, once the page is on show. After a second loss for the same mesh, it does so only when asked.
 
 ## Which mesh a frame draws

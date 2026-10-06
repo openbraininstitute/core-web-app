@@ -23,10 +23,14 @@ export function meshBuffers(mesh: DecodedMesh): ArrayBuffer[] {
   return [mesh.positions.buffer, mesh.indices.buffer] as ArrayBuffer[];
 }
 
-/** Downloads the GLB, and keeps it, until it decodes it. */
+/**
+ * Downloads the GLB, and keeps it, until it decodes it. The decode returns once the download is in its cache too, as
+ * the worker is terminated after.
+ */
 export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: CacheBounds | null) {
   let bytes: Uint8Array | null = null;
   let header: MeshHeader | null = null;
+  let stored: Promise<boolean> = Promise.resolve(false);
   let draco: Promise<DracoModule> | null = null;
   const dracoModule = () => {
     draco ??= loadDraco();
@@ -46,6 +50,7 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
       header = result.header;
       if (result.kind === 'stopped') return { kind: 'stopped', fromCache: false };
       bytes = result.bytes;
+      stored = result.stored;
       return { kind: 'done', fromCache: result.fromCache };
     },
 
@@ -53,6 +58,7 @@ export function createDecodeApi(loadDraco: () => Promise<DracoModule>, cache: Ca
       if (!bytes || !header) throw new Error('nothing downloaded to decode');
       const result = decodeGlb(bytes, header.draco ? await dracoModule() : null);
       bytes = null;
+      await stored;
       return Comlink.transfer(result, meshBuffers(result.mesh));
     },
   };

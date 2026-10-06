@@ -249,6 +249,7 @@ export function useEmMesh(
             if (keeper) signal.addEventListener('abort', keeper.stop, { once: true });
             viewer.setFull(mesh, {
               keep: keeper?.keep,
+              dropped: keeper?.stop,
               ready: () => {
                 if (signal.aborted) return;
                 clearLoading(assetId);

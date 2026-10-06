@@ -413,24 +413,42 @@ describe('EmMeshViewer', () => {
     expect((shown as ViewStatus | null)?.errorPx).toBeCloseTo(STAND_IN.errorUm / atFace, 1);
   });
 
-  it('tells only the last full mesh given that it is up: one replaced on its way up is dropped with what it was to tell', () => {
+  it('tells only the last full mesh given that it is up: one replaced on its way up is told it was dropped', () => {
     const { viewer, v } = make();
     let now = 0;
     const clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1.5));
     viewer.setStandIn(STAND_IN);
-    const first = { ready: vi.fn(), keep: vi.fn() };
+    const first = { ready: vi.fn(), keep: vi.fn(), dropped: vi.fn() };
     viewer.setFull(FULL, first);
     frame(v);
     const keptBefore = first.keep.mock.calls.length;
     expect(keptBefore).toBeGreaterThan(0);
     expect(keptBefore).toBeLessThan(FULL.chunks.length);
-    const second = { ready: vi.fn() };
+    const second = { ready: vi.fn(), dropped: vi.fn() };
     viewer.setFull(FULL, second);
     frame(v, 100);
     clock.mockRestore();
     expect(first.ready).not.toHaveBeenCalled();
     expect(first.keep).toHaveBeenCalledTimes(keptBefore);
+    expect(first.dropped).toHaveBeenCalledTimes(1);
     expect(second.ready).toHaveBeenCalledTimes(1);
+    // Up whole, it is dropped with nothing left to tell.
+    viewer.clear();
+    expect(second.dropped).not.toHaveBeenCalled();
+  });
+
+  it('tells a full mesh on its way up that a lost context dropped it', () => {
+    const { viewer, v } = make();
+    let now = 0;
+    const clock = vi.spyOn(performance, 'now').mockImplementation(() => (now += 1.5));
+    viewer.setStandIn(STAND_IN);
+    const on = { ready: vi.fn(), dropped: vi.fn() };
+    viewer.setFull(FULL, on);
+    frame(v);
+    clock.mockRestore();
+    v.renderer.domElement.dispatchEvent(new Event('webglcontextlost'));
+    expect(on.dropped).toHaveBeenCalledTimes(1);
+    expect(on.ready).not.toHaveBeenCalled();
   });
 
   it('takes a stand-in given as the full mesh for the whole mesh: nothing to upload', () => {

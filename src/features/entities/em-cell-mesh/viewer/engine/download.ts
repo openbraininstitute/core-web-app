@@ -24,7 +24,14 @@ export interface DownloadHooks {
 }
 
 export type Download =
-  | { kind: 'done'; bytes: Uint8Array; fromCache: boolean; header: MeshHeader }
+  | {
+      kind: 'done';
+      bytes: Uint8Array;
+      fromCache: boolean;
+      header: MeshHeader;
+      /** Settles once the download is in the cache, or isn't to be: the worker must not be terminated before. */
+      stored: Promise<boolean>;
+    }
   | { kind: 'stopped'; header: MeshHeader };
 
 type Read =
@@ -51,7 +58,13 @@ export async function downloadGlb(
     const read = await readBody(entry, request.size, hooks, check).catch(() => null);
     if (read?.kind === 'stopped') return read;
     if (read?.header && read.bytes.byteLength === request.size) {
-      return { kind: 'done', bytes: read.bytes, fromCache: true, header: read.header };
+      return {
+        kind: 'done',
+        bytes: read.bytes,
+        fromCache: true,
+        header: read.header,
+        stored: Promise.resolve(true),
+      };
     }
     // Short or broken, as an interrupted write leaves it: downloaded afresh.
     await deleteEntry(cache, request.url);
@@ -95,9 +108,14 @@ export async function downloadGlb(
     await drop();
     throw new Error('not a GLB file');
   }
-  // Awaited, so that a second viewer of the same mesh finds the entry.
-  await stored;
-  return { kind: 'done', bytes: read.bytes, fromCache: false, header: read.header };
+  // Not awaited: the cache commits the entry while the mesh is decoded.
+  return {
+    kind: 'done',
+    bytes: read.bytes,
+    fromCache: false,
+    header: read.header,
+    stored: stored ?? Promise.resolve(false),
+  };
 }
 
 /**

@@ -118,6 +118,8 @@ describe('downloadGlb', () => {
     });
     expect(result.kind === 'done' && result.bytes).toEqual(glb);
     expect(progress.at(-1)).toBe(glb.byteLength);
+    // Handed on before the cache has it, which it does once `stored` settles.
+    expect(result.kind === 'done' && (await result.stored)).toBe(true);
     expect(storage.bucket(BOUNDS.name).entries.get(URL_A)?.body).toEqual(glb);
 
     // The second time, from the cache, which the fake gives back in one chunk: in one step to the end.
@@ -147,6 +149,7 @@ describe('downloadGlb', () => {
     expect(result).toMatchObject({ kind: 'done', fromCache: false });
     expect(served.requests).toBe(1);
     expect(onHeader).toHaveBeenCalledTimes(1);
+    if (result.kind === 'done') await result.stored;
     expect(storage.bucket(BOUNDS.name).entries.get(URL_A)?.body).toEqual(glb);
   });
 
@@ -156,7 +159,8 @@ describe('downloadGlb', () => {
     vi.stubGlobal('fetch', fetch);
     const request = { url: URL_A, headers: {}, size: glb.byteLength };
     const bounds = { ...BOUNDS, maxBytes: 1e9 };
-    await downloadGlb(request, bounds, always);
+    const first = await downloadGlb(request, bounds, always);
+    if (first.kind === 'done') await first.stored;
     const cache = storage.bucket(BOUNDS.name);
     cache.chunk = 512;
     const result = await downloadGlb(request, bounds, {
