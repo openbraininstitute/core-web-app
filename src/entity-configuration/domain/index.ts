@@ -19,6 +19,7 @@ import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
 import { ExtracellularRecordingArrayCampaign } from '@/entity-configuration/domain/model/extracellular-recording-array-campaign';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
@@ -77,6 +78,7 @@ export const EntityCoreModelConfiguration = {
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
+  IonChannelBuildCampaign,
   EmSynapseMappingCampaign,
   ExtracellularRecordingArray,
   ExtracellularRecordingArrayCampaign,

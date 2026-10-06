@@ -1,16 +1,16 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { runIonChannelBuild } from '@/api/small-scale-simulator/ion-channel/build';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 /**
- * Ion channel build, from obi-one's `IonChannelFittingScanConfig`. Replaced the bespoke RJSF
- * build page, which rendered the same schema itself and submitted to the small-scale
- * simulator rather than to a generate-grid endpoint.
+ * Ion channel build, from obi-one's `IonChannelFittingScanConfig`: obi-one generates the
+ * `ion_channel_modeling__*` task configs, the small-scale simulator fits each one.
  */
 export const buildIonChannelWorkflow = defineScanConfigWorkflow({
   id: 'build-ion-channel',
@@ -21,7 +21,7 @@ export const buildIonChannelWorkflow = defineScanConfigWorkflow({
   campaign: {
     resolve: async ({ id, context }) => {
       // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
-      return await IonChannelModelingCampaign.api.query.resolve!({ id, context });
+      return await IonChannelBuildCampaign.api.query.resolve!({ id, context });
     },
   },
   taskTypeBindings: {
@@ -29,6 +29,8 @@ export const buildIonChannelWorkflow = defineScanConfigWorkflow({
     configGeneration: TaskActivityType.IonChannelModelingConfigGeneration,
     execution: TaskActivityType.IonChannelModelingExecution,
     config: TaskConfigType.IonChannelModelingConfig,
+    // the fit runs on the small-scale simulator, which has ion_channel_builder in its image
+    launch: ({ ctx, config_id }) => runIonChannelBuild({ ctx, config_id }),
   },
   editor: {
     className: 'px-4',

@@ -274,12 +274,6 @@ const cases: TCase[] = [
     href: `${base}/build/configure/em-synapse-mapping-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
-    name: 'ion channel modeling campaign opens its scan-config editor',
-    fixture: { entity: { type: EntityTypeDict.IonChannelModelingCampaign } },
-    covers: { activity: build, targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign },
-    href: `${base}/build/configure/ion-channel-modeling-campaign/{session}?origin=${ENTITY_ID}`,
-  },
-  {
     name: 'legacy single neuron simulation falls back to its detail view',
     fixture: { entity: { type: EntityTypeDict.SingleNeuronSimulation } },
     covers: {
@@ -410,6 +404,19 @@ const cases: TCase[] = [
     href: `${base}/build/configure/build-synaptome-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'ion channel build task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.IonChannelRecording },
+      taskConfigType: TaskConfigType.IonChannelModelingCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    },
+    href: `${base}/build/configure/ion-channel-build-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit synaptic physiology task config → build editor',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
@@ -516,6 +523,21 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
 
   it('returns null when no workflow accepts the entity', async () => {
     applyFixture({ entity: { type: EntityTypeDict.Subject } });
+
+    await expect(
+      resolveWorkflowConfigureHrefForEntity({
+        entityId: ENTITY_ID,
+        workspace,
+        flags: allFlags,
+      })
+    ).resolves.toEqual({
+      outcome: WorkflowConfigureOutcomeDict.NoWorkflow,
+      href: null,
+    });
+  });
+
+  it('leaves pre-scan-config ion channel modeling campaigns out of the workflows', async () => {
+    applyFixture({ entity: { type: EntityTypeDict.IonChannelModelingCampaign } });
 
     await expect(
       resolveWorkflowConfigureHrefForEntity({

@@ -133,7 +133,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfig,
     sourceType: ExtendedEntitiesTypeDict.IonChannelRecording,
-    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    targetType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
     label: 'Ion channel',
     breadcrumb: {
       root: 'Ion channel build',

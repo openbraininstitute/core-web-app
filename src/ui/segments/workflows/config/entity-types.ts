@@ -21,6 +21,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Subcellular,
     label: 'Ion channel modeling campaign',
   },
+  [ExtendedEntitiesTypeDict.IonChannelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    group: EntityGroupDict.Subcellular,
+    label: 'Ion channel',
+  },
   // the build's source type: `resolveWorkflow` groups a workflow by its *source*, so without
   // this the entry falls back to the Cellular default and sits away from the ion channel ones.
   [ExtendedEntitiesTypeDict.IonChannelRecording]: {

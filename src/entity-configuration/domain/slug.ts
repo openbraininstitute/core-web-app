@@ -22,6 +22,7 @@ export const ModelEntitySlug = {
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
+  IonChannelBuildCampaign: 'ion-channel-build-campaign',
   SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
   ExtracellularRecordingArray: 'extracellular-recording-array',

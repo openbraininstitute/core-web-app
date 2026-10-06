@@ -12,6 +12,7 @@ import type {
 } from '@/features/scan-config/types';
 import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
+import type { TTaskLauncher } from '@/features/task-runner/hooks/mutations';
 import type { WorkspaceContext } from '@/types/common';
 import type { TScanConfigRegistryConfig } from '@/ui/segments/workflows/config/scan-config-binding';
 import type { Nullish } from '@/utils/type';
@@ -70,6 +71,8 @@ export type TWorkflowTaskTypeBindings = {
   execution: TTaskActivityType;
   /** entitycore task-config type for the generated configs */
   config: TTaskConfigType;
+  /** launches one config's execution; defaults to obi-one's `/declared/task/launch` */
+  launch?: TTaskLauncher;
 };
 
 /**

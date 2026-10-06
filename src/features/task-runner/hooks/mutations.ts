@@ -43,9 +43,16 @@ export function invalidateTaskExecutionActivities({
   });
 }
 
+export type TTaskLauncher = (params: {
+  ctx: WorkspaceContext;
+  task_type: TObiOneTaskType;
+  config_id: string;
+}) => Promise<unknown>;
+
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
   obiOneTaskType: TObiOneTaskType;
+  launch?: TTaskLauncher;
   executionActivityType: TTaskActivityType;
   notificationKey: string;
   failureMessage: string;
@@ -56,6 +63,7 @@ export type TTaskLaunchMutationOptions = {
 export function useTaskLaunchMutation({
   context,
   obiOneTaskType,
+  launch = runTask,
   executionActivityType,
   notificationKey,
   failureMessage,
@@ -93,7 +101,7 @@ export function useTaskLaunchMutation({
         let launched = false;
         for (const configId of configIds) {
           try {
-            const executionId = await runTask({
+            const executionId = await launch({
               ctx: context,
               task_type: obiOneTaskType,
               config_id: configId,
