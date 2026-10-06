@@ -83,6 +83,8 @@ export function RegionModelDetail({
   const modelName = isPlainObject(model) && typeof model.name === 'string' ? model.name : '';
   const modelDescription =
     isPlainObject(model) && typeof model.description === 'string' ? model.description : '';
+  const nmodlSuffix =
+    isPlainObject(model) && typeof model.nmodl_suffix === 'string' ? model.nmodl_suffix : '';
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
@@ -115,6 +117,7 @@ export function RegionModelDetail({
       ) : (
         <NeuronBlockParameters
           neuronBlock={isPlainObject(model) ? model.neuron_block : undefined}
+          nmodlSuffix={nmodlSuffix}
           choiceName={choiceName}
           modelId={modelId}
           value={value}
@@ -135,6 +138,7 @@ export function RegionModelDetail({
  */
 function NeuronBlockParameters({
   neuronBlock,
+  nmodlSuffix,
   choiceName,
   modelId,
   value,
@@ -143,6 +147,7 @@ function NeuronBlockParameters({
   errors,
 }: {
   neuronBlock: unknown;
+  nmodlSuffix: string;
   choiceName: string;
   modelId: string;
   value: ConfigValue;
@@ -150,7 +155,7 @@ function NeuronBlockParameters({
   disabled?: boolean;
   errors: readonly ErrorObject[];
 }) {
-  const parameters = extractNeuronBlockParameters(neuronBlock);
+  const parameters = extractNeuronBlockParameters(neuronBlock, nmodlSuffix);
 
   // The region entries and the index of this model's entry within them.
   const entries = useMemo(
