@@ -66,7 +66,6 @@ import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
-import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import { cn } from '@/utils/css-class';
 
@@ -428,22 +427,42 @@ export default async function Overview({
     );
   }
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
-    const { data } = await tryCatch(
+    const { data, error } = await tryCatch(
       resolveIonChannelModelingCampaignConfig({
         id: entity.id,
         context,
       })
     );
 
-    const initialConfig = data?.config?.form ?? data?.config ?? null;
+    // the campaign's own source entity: the recording it was fitted from. A campaign that
+    // scanned several holds one config per recording, and the first is the one the editor
+    // opens against.
+    const recordingId = data?.campaign?.input_recordings?.[0]?.id;
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.IonChannelModelingCampaign
+    );
+    if (error || !recordingId || !scanConfig) {
+      notFound();
+    }
 
     return (
-      <IonChannelModelBuilding
-        readonly
-        sessionId={entity.id}
-        originalConfig={initialConfig}
-        originalCampaignId={entity.id}
-      />
+      <>
+        <ScanConfiguration
+          entityId={recordingId}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={entity.id}
+          initialConfig={data?.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Build}
+        />
+        <DownloadPanel />
+      </>
     );
   }
 

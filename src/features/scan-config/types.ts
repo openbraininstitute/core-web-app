@@ -10,6 +10,7 @@ import type {
   ICellMorphology,
   ICircuit,
   IElectricalCellRecording,
+  IIonChannelRecording,
   IMEModel,
   IonChannelModel,
   TEntityTypeDict,
@@ -141,6 +142,7 @@ export const SchemaNameDict = {
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
   BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
   SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
+  IonChannelFittingScanConfig: 'IonChannelFittingScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
   // optimization
@@ -796,7 +798,8 @@ export type TSupportedEntitiesForScanConfiguration =
   | IonChannelModel
   | ICellMorphology
   | IEMCellMesh
-  | IElectricalCellRecording;
+  | IElectricalCellRecording
+  | IIonChannelRecording;
 
 export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.Circuit
@@ -809,4 +812,5 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.ElectricalCellRecording
   | typeof ExtendedEntitiesTypeDict.Emodel
+  | typeof ExtendedEntitiesTypeDict.IonChannelRecording
   | typeof ExtendedEntitiesTypeDict.WholeBrain;
