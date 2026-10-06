@@ -1,6 +1,5 @@
 'use client';
 
-import { MeshViewer } from '@/features/entities/em-cell-mesh/mesh-viewer';
 import { ElectrodeArrayViewer } from '@/features/entities/extracellular-recording-array/detail-view';
 
 import { useTypeChecker } from './hooks';
@@ -20,9 +19,6 @@ export default function Viewer3D({
 }) {
   const isType = useTypeChecker(extendedType);
 
-  if (isType('EMCellMesh')) {
-    return <MeshViewer meshId={entity.id} />;
-  }
   if (isType('SimulatableExtracellularRecordingArray')) {
     return <ElectrodeArrayViewer array={entity as ISimulatableExtracellularRecordingArray} />;
   }

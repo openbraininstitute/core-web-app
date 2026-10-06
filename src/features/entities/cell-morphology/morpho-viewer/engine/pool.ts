@@ -14,12 +14,13 @@
 
 import * as Comlink from 'comlink';
 
+import { errorMessage } from '@/utils/error';
+
 import {
   type Backend,
   batchResultTransfer,
   type DistanceReply,
   type DistanceRequest,
-  errorMessage,
   GPU_BIG_PATCH_BAND_VOXELS,
   GPU_MAX_BAND_VOXELS_PER_SLAB,
   GpuError,

@@ -44,6 +44,8 @@ import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { CircuitDetailViewer } from '@/features/entities/circuit/detail-view';
 import { EmCellMeshMetadata } from '@/features/entities/em-cell-mesh';
+import { EmCellMeshViewerCard } from '@/features/entities/em-cell-mesh/detail-view';
+import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
 import { ElectrodeArrayImage } from '@/features/entities/extracellular-recording-array/array-image';
 import MEModelDetails from '@/features/entities/neuron-simulation/elements/me-model-details';
 import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/synaptome-details';
@@ -69,6 +71,7 @@ import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/conf
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
@@ -495,9 +498,16 @@ export default async function Overview({
       })
     : undefined;
 
+  // Only a mesh with a GLB has a viewer.
+  const meshGlb =
+    extendedType === ExtendedEntitiesTypeDict.EMCellMesh
+      ? meshAsset((entity as IEMCellMesh).assets)
+      : null;
+
   const hasVisualization =
     (circuitTypes.includes(extendedType) && Boolean(circuitVisualizationAsset)) ||
     includes(morphologyTypes, extendedType) ||
+    Boolean(meshGlb) ||
     extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelRecording ||
     extendedType === ExtendedEntitiesTypeDict.IonChannelModel;
@@ -547,6 +557,9 @@ export default async function Overview({
       </div>
       {includes(morphologyTypes, extendedType) && (
         <CellMorphologyViewer entity={entity as ICellMorphology} />
+      )}
+      {meshGlb && (
+        <EmCellMeshViewerCard entity={{ id: entity.id, name: entity.name }} asset={meshGlb} />
       )}
       {extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording && (
         <EphysViewer

@@ -7,13 +7,13 @@ import {
 } from '@remixicon/react';
 
 import { SegmentedToggle } from '@/features/scan-config/components/color-by/chrome-menu';
+import { MAX_BUMP_AMPLITUDE } from '@/features/viewer-3d/engine/looks';
 
 import { type BuildSettings, DEFAULT_BUILD, DEFAULT_BUMPS } from '../constants';
-import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
 import { MIN_RADIUS_VOXELS } from '../engine/mesher';
 import { Heading, HelpRow, ICON, Note, SectionTitle, SliderRow, ToggleRow } from './menu-rows';
 
-import type { Look } from '../engine/looks';
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { AxonRadiusMode } from '../engine/prepare';
 import type { GpuStatus } from '../use-morphology-mesh';
 import type { UpdateSettings, ViewerSettings } from '../use-viewer-settings';

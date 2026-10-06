@@ -18,10 +18,6 @@ export class GpuError extends Error {
   name = 'GpuError';
 }
 
-export function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}
-
 /** Slabs (and hybrid batches) planned per worker. Extra slabs even out uneven work and lower the peak field memory. */
 export const SLABS_PER_WORKER = 4;
 

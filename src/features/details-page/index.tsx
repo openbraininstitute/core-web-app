@@ -1,4 +1,4 @@
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 
 import {
   DetailViewSectionsDict,
@@ -41,12 +41,9 @@ export function detailPageSectionRenderer({
         />
       );
     })
-    .with(
-      { section: P.union(DetailViewSectionsDict.MeshViewer, DetailViewSectionsDict.ThreeDView) },
-      () => {
-        return <Viewer3D entity={entity} extendedType={entityType.extendedType} />;
-      }
-    )
+    .with({ section: DetailViewSectionsDict.ThreeDView }, () => {
+      return <Viewer3D entity={entity} extendedType={entityType.extendedType} />;
+    })
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;
     })
