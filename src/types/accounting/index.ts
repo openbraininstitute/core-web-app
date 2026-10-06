@@ -47,6 +47,7 @@ export enum ServiceSubtype {
   SynaptomeBuild = 'synaptome-build',
   MlRetrieval = 'ml-retrieval',
   MlLlm = 'ml-llm',
+  Mcp = 'mcp',
   MlRag = 'ml-rag',
   Notebook = 'notebook',
   SmallCircuitSim = 'small-circuit-sim',

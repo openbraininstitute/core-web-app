@@ -19,6 +19,7 @@ import type { JobReport } from '@/types/accounting';
 
 const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.Mcp]: 'MCP sandbox',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'Process data',
   [ServiceSubtype.IonChannelBuild]: 'Build',
   [ServiceSubtype.IonChannelSim]: 'Simulate',
@@ -57,6 +58,7 @@ export function categoryRenderFn(subtype: ServiceSubtype) {
 
 const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.Mcp]: 'MCP sandbox',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'EM mesh skeletonization',
   [ServiceSubtype.IonChannelBuild]: 'Ion channel',
   [ServiceSubtype.IonChannelSim]: 'Ion channel',
