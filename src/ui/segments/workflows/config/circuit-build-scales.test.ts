@@ -32,13 +32,13 @@ function circuitBrowse(targetType: TExtendedEntitiesTypeDict) {
   return { gridDefinition: browse.gridDefinitionOverride, loader: browse.loader };
 }
 
-/** The `scale__in` the workflow's circuit table asks entitycore for. */
-async function listedScales(
+/** The filters the workflow's circuit table sends entitycore. */
+async function sentFilters(
   targetType: TExtendedEntitiesTypeDict,
   filters: Record<string, unknown> = {}
 ) {
   await circuitBrowse(targetType).loader.build(null)({ filters, context });
-  return getCircuits.mock.lastCall?.[0].filters.scale__in;
+  return getCircuits.mock.lastCall?.[0].filters;
 }
 
 /** The scales the table's Scale column lets a user filter on. */
@@ -57,33 +57,56 @@ describe('circuit scales offered by build workflows', () => {
     const targetType = ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign;
     const expected = [...SMALL_SCALES, CircuitScaleDictionary.Microcircuit];
 
-    expect(await listedScales(targetType)).toEqual(expected);
+    expect((await sentFilters(targetType))?.scale__in).toEqual(expected);
     expect(scaleFilterOptions(targetType).toSorted()).toEqual(expected.toSorted());
 
     await circuitBrowse(targetType).loader.facets?.build(null)({ filters: {}, context });
     expect(getCircuits.mock.lastCall?.[0]).toMatchObject({
       withFacets: true,
-      filters: { scale__in: expected },
+      filters: { scale__in: expected, number_neurons__lte: 10_000 },
     });
+  });
+
+  it('lists extracellular recording arrays only on circuits of up to 10,000 neurons', async () => {
+    const targetType = ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign;
+
+    expect((await sentFilters(targetType))?.number_neurons__lte).toBe(10_000);
+    expect(
+      (await sentFilters(targetType, { number_neurons__lte: 50_000 }))?.number_neurons__lte
+    ).toBe(10_000);
+    expect(
+      (await sentFilters(targetType, { number_neurons__lte: 5_000 }))?.number_neurons__lte
+    ).toBe(5_000);
   });
 
   it('keeps circuit synaptic physiology to the small scales', async () => {
     const targetType = ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign;
+    const sent = await sentFilters(targetType);
 
-    expect(await listedScales(targetType)).toEqual(SMALL_SCALES);
+    expect(sent?.scale__in).toEqual(SMALL_SCALES);
+    expect(sent).not.toHaveProperty('number_neurons__lte');
     expect(scaleFilterOptions(targetType).toSorted()).toEqual(SMALL_SCALES.toSorted());
   });
 
-  it('narrows to the scales a user filters on, and ignores the ones a workflow does not support', async () => {
+  it('narrows to the supported scales a user filters on', async () => {
     const filters = {
       scale__in: [CircuitScaleDictionary.Microcircuit, CircuitScaleDictionary.Region],
     };
 
     expect(
-      await listedScales(ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign, filters)
+      (await sentFilters(ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign, filters))
+        ?.scale__in
     ).toEqual([CircuitScaleDictionary.Microcircuit]);
-    expect(
-      await listedScales(ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign, filters)
-    ).toEqual(SMALL_SCALES);
+  });
+
+  it('lists nothing when a user filters only on scales the workflow does not support', async () => {
+    const filters = {
+      scale__in: [CircuitScaleDictionary.Microcircuit, CircuitScaleDictionary.Region],
+    };
+    const { loader } = circuitBrowse(ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign);
+
+    expect(await loader.build(null)({ filters, context })).toBeUndefined();
+    expect(await loader.facets?.build(null)({ filters, context })).toBeUndefined();
+    expect(getCircuits).not.toHaveBeenCalled();
   });
 });
