@@ -369,10 +369,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   },
 ];
 
-/**
- * past runs also list the ion channel campaigns built before the scan-config editor: they open
- * read-only and have no workflow to rerun or duplicate them in.
- */
+// past runs also list the ion channel campaigns built before the scan-config editor
 export const BuildBrowseWorkflows: readonly IWorkflowDescriptor[] = [
   ...BuildWorkflows,
   {

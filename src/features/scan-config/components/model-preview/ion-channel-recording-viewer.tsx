@@ -47,7 +47,6 @@ function Traces({
 
 function RecordingTraces({ id }: { id: string }) {
   const context = useWorkspace();
-  // the whole entity, not just the id: useTrace reads `assets` off it to find the NWB file
   const { data: recording, error } = useQuery({
     queryKey: keyBuilder.entity({ id, context, type: EntityTypeDict.IonChannelRecording }),
     queryFn: () => getIonChannelRecording({ id, context }),
@@ -59,7 +58,6 @@ function RecordingTraces({ id }: { id: string }) {
   return <Traces recording={recording} context={context} />;
 }
 
-/** one viewer per recording: several are fitted into a single model, so all of them matter */
 export function IonChannelRecordingPreviewPanel({ config }: { config: Config }) {
   const recordingIds = extractRecordingIds(config, ScanConfigFromIdType.IonChannelRecordingFromID);
 

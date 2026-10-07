@@ -145,8 +145,7 @@ export function resolveRightPreviewMode(options: {
         },
         () => RightPreviewModeDict.EFeatures
       )
-      // likewise the ion channel build: its recording is picked inside the editor, and the
-      // trace being fitted is the thing the form is about, so it stays up throughout
+      // likewise the ion channel build, whose recordings are picked inside the editor
       .with(
         {
           activity: ScanConfigActivity.Build,

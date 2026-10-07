@@ -8,7 +8,6 @@ type TIonChannelBuildLaunch = {
   execution_id: string;
 };
 
-/** fits the ion channel model of one `ion_channel_modeling__config` task config */
 export async function runIonChannelBuild({
   ctx,
   config_id,

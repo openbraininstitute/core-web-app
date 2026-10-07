@@ -121,7 +121,6 @@ export async function resolveIonChannelModelingCampaignConfig({
     throw new Error(`No ion channel modeling campaign with id ${id} found`);
   }
 
-  // built before the scan-config editor: shown in it read-only, from its one recording
   const recordingId = campaign.input_recordings?.[0]?.id ?? null;
   const configAsset = getAssetElement({
     assets: campaign.assets ?? [],
@@ -167,11 +166,6 @@ type TIonChannelFittingFormInput = {
   model_type?: unknown;
 };
 
-/**
- * reshapes a config saved by the pre-scan-config builder (one recording, an equation block per
- * gating variable, a gate exponents block) into obi-one's current `IonChannelFittingScanConfig`,
- * so the scan-config editor can show it read-only
- */
 export function toIonChannelFittingForm(form: TIonChannelFittingFormInput): Config {
   if (form.model_type) return form as Config;
 

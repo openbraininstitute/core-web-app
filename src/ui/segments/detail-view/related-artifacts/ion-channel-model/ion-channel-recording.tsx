@@ -23,7 +23,6 @@ import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/
 import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { WorkspaceContext } from '@/types/common';
 
-/** a legacy campaign's `campaign_generation_config` asset; `recordings` was a scan dimension */
 type TLegacyCampaignGenerationConfig = {
   form: { initialize: { recordings: TFromIdRef | TFromIdRef[] } };
 };
@@ -39,7 +38,6 @@ async function fittedRecordingIds(modelId: string, context: WorkspaceContext) {
   return config.inputs.map((input) => input.id);
 }
 
-/** models fitted before the scan-config editor: execution → config → campaign → saved form */
 async function legacyFittedRecordingIds(modelId: string, context: WorkspaceContext) {
   const executions = await getIonChannelModelingExecutions({
     context,

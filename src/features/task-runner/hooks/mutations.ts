@@ -53,7 +53,6 @@ type TTaskLauncher = (params: {
 
 // a module-level registry rather than a binding field: bindings cross the server/client boundary
 const LaunchersByTaskType: Partial<Record<TObiOneTaskType, TTaskLauncher>> = {
-  // the fit runs on the small-scale simulator, which has ion_channel_builder in its image
   [ObiOneTaskTypeDict.IonChannelFitting]: runIonChannelBuild,
 };
 

@@ -7,10 +7,6 @@ import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
-/**
- * Ion channel build, from obi-one's `IonChannelFittingScanConfig`: obi-one generates the
- * `ion_channel_modeling__*` task configs, the small-scale simulator fits each one.
- */
 export const buildIonChannelWorkflow = defineScanConfigWorkflow({
   id: 'build-ion-channel',
   activity: ScanConfigActivity.Build,
