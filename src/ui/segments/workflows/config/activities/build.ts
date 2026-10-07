@@ -25,6 +25,7 @@ import {
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
 
+import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type {
   TBrowsePrerequisite,
   TWorkflowBrowseConfig,
@@ -43,17 +44,36 @@ const emSynapseMappingPrerequisite: TBrowsePrerequisite = {
   },
 };
 
-const SMALL_SCALE_CIRCUIT_BUILD_SCALES: string[] = [
+/** The scales obi-one's synapse parameterization accepts (its SUPPORTED_CIRCUIT_SCALES). */
+const SMALL_SCALE_CIRCUIT_BUILD_SCALES: readonly TCircuitScaleDictionary[] = [
   CircuitScaleDictionary.Single,
   CircuitScaleDictionary.PairNeuron,
   CircuitScaleDictionary.SmallMicrocircuit,
 ];
 
-let smallScaleCircuitGridDefinitionCache: typeof circuitGridDefinition | null = null;
+/** The scales obi-one calculates recording weights for (its SUPPORTED_CIRCUIT_SCALES). */
+const EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES: readonly TCircuitScaleDictionary[] = [
+  ...SMALL_SCALE_CIRCUIT_BUILD_SCALES,
+  CircuitScaleDictionary.Microcircuit,
+];
 
-/** Built on demand: this module and the circuit grid schema import each other. */
-function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
-  smallScaleCircuitGridDefinitionCache ??= {
+/**
+ * obi-one refuses weights that need more memory than its largest machine has. 10,000 neurons
+ * fit with up to about 40 electrodes; denser arrays lower the limit.
+ */
+const EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS = 10_000;
+
+/** The circuits a build workflow's backend accepts. */
+type TCircuitBuildLimits = {
+  scales: readonly TCircuitScaleDictionary[];
+  maxNeurons?: number;
+};
+
+/** The circuit grid, with its Scale filter offering only `scales`. */
+function scaleRestrictedCircuitGridDefinition(
+  scales: readonly TCircuitScaleDictionary[]
+): typeof circuitGridDefinition {
+  return {
     ...circuitGridDefinition,
     schema: {
       ...circuitGridDefinition.schema,
@@ -66,7 +86,7 @@ function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
                 options: {
                   kind: FilterOptionsKind.Static,
                   items: Object.values(CircuitScale)
-                    .filter(({ key }) => SMALL_SCALE_CIRCUIT_BUILD_SCALES.includes(key))
+                    .filter(({ key }) => scales.includes(key))
                     .map(({ key, label }) => ({ id: key, label })),
                 },
               },
@@ -75,56 +95,80 @@ function getSmallScaleCircuitGridDefinition(): typeof circuitGridDefinition {
       ),
     },
   };
-  return smallScaleCircuitGridDefinitionCache;
 }
 
-/** Keeps selected scales within the supported circuit-build range. */
-function resolveSmallScaleCircuitBuildScales(filters: Record<string, unknown>): string[] {
+/**
+ * The table's filters, kept within the circuits the workflow accepts. Undefined when the user's
+ * Scale filter keeps none of its scales: entitycore reads an empty `scale__in` as no filter.
+ */
+function restrictCircuitFilters(
+  filters: Record<string, unknown>,
+  { scales, maxNeurons }: TCircuitBuildLimits
+): Record<string, unknown> | undefined {
   const requested = filters.scale__in;
-  if (Array.isArray(requested)) {
-    const within = requested.filter(
-      (scale): scale is string =>
-        typeof scale === 'string' && SMALL_SCALE_CIRCUIT_BUILD_SCALES.includes(scale)
-    );
-    if (within.length > 0) return within;
+  const scaleIn =
+    Array.isArray(requested) && requested.length > 0
+      ? scales.filter((scale) => requested.includes(scale))
+      : [...scales];
+  if (scaleIn.length === 0) return undefined;
+
+  const restricted: Record<string, unknown> = { ...filters, scale__in: scaleIn };
+  if (maxNeurons !== undefined) {
+    const requestedMax = Number(filters.number_neurons__lte);
+    restricted.number_neurons__lte =
+      filters.number_neurons__lte != null && Number.isFinite(requestedMax)
+        ? Math.min(requestedMax, maxNeurons)
+        : maxNeurons;
   }
-  return SMALL_SCALE_CIRCUIT_BUILD_SCALES;
+  return restricted;
 }
 
-const smallScaleCircuitBrowseConfig = {
-  [ExtendedEntitiesTypeDict.Circuit]: {
-    get gridDefinitionOverride() {
-      return getSmallScaleCircuitGridDefinition();
-    },
-    loader: {
-      kind: 'custom' as const,
-      build:
-        () =>
-        ({ filters, withFacets, context }) =>
-          getCircuits({
-            context,
-            withFacets,
-            filters: {
-              ...filters,
-              scale__in: resolveSmallScaleCircuitBuildScales(filters),
-            },
-          }),
-      facets: {
+/** Circuit browsing limited to the circuits a build workflow accepts. */
+function circuitBuildBrowseConfig(limits: TCircuitBuildLimits) {
+  let gridDefinition: typeof circuitGridDefinition | null = null;
+  return {
+    [ExtendedEntitiesTypeDict.Circuit]: {
+      /** Built on demand: this module and the circuit grid schema import each other. */
+      get gridDefinitionOverride() {
+        gridDefinition ??= scaleRestrictedCircuitGridDefinition(limits.scales);
+        return gridDefinition;
+      },
+      loader: {
+        kind: 'custom' as const,
         build:
           () =>
-          ({ filters, context }) =>
-            getCircuits({
-              context,
-              withFacets: true,
-              filters: {
-                ...filters,
-                scale__in: resolveSmallScaleCircuitBuildScales(filters),
-              },
-            }).then((response) => response?.facets),
+          async ({ filters, withFacets, context }) => {
+            const restricted = restrictCircuitFilters(filters, limits);
+            if (!restricted) return undefined;
+            return getCircuits({ context, withFacets, filters: restricted });
+          },
+        facets: {
+          build:
+            () =>
+            async ({ filters, context }) => {
+              const restricted = restrictCircuitFilters(filters, limits);
+              if (!restricted) return undefined;
+              const response = await getCircuits({
+                context,
+                withFacets: true,
+                filters: restricted,
+              });
+              return response?.facets;
+            },
+        },
       },
     },
-  },
-} satisfies TWorkflowBrowseConfig;
+  } satisfies TWorkflowBrowseConfig;
+}
+
+const smallScaleCircuitBrowseConfig = circuitBuildBrowseConfig({
+  scales: SMALL_SCALE_CIRCUIT_BUILD_SCALES,
+});
+
+const extracellularRecordingArrayBrowseConfig = circuitBuildBrowseConfig({
+  scales: EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES,
+  maxNeurons: EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS,
+});
 
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
@@ -231,7 +275,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     breadcrumb: {
       root: 'Extracellular recording array build',
       steps: {
-        selection: 'Select a circuit',
+        selection: `Select a circuit with up to ${EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS.toLocaleString('en-US')} neurons`,
       },
     },
     scanConfig: {
@@ -241,7 +285,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.Circuit }],
     requireFilters: true,
-    browseConfig: smallScaleCircuitBrowseConfig,
+    browseConfig: extracellularRecordingArrayBrowseConfig,
     order: 5,
     disabled: false,
     requiredFeatures: [extracellularRecordingArrayBuildFlag.key],
