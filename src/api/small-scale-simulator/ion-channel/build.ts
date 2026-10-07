@@ -3,7 +3,7 @@ import { smallScaleSimulatorApi } from '@/api/small-scale-simulator/utils';
 
 import type { WorkspaceContext } from '@/types/common';
 
-export type TIonChannelBuildLaunch = {
+type TIonChannelBuildLaunch = {
   job_id: string;
   execution_id: string;
 };

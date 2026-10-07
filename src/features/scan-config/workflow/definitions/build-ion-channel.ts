@@ -1,7 +1,6 @@
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
-import { runIonChannelBuild } from '@/api/small-scale-simulator/ion-channel/build';
 import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { BuildScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
@@ -29,8 +28,6 @@ export const buildIonChannelWorkflow = defineScanConfigWorkflow({
     configGeneration: TaskActivityType.IonChannelModelingConfigGeneration,
     execution: TaskActivityType.IonChannelModelingExecution,
     config: TaskConfigType.IonChannelModelingConfig,
-    // the fit runs on the small-scale simulator, which has ion_channel_builder in its image
-    launch: ({ ctx, config_id }) => runIonChannelBuild({ ctx, config_id }),
   },
   editor: {
     className: 'px-4',

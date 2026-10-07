@@ -55,7 +55,6 @@ export function BuildTab({
   const { mutateAsync: runBuild, isPending: runBuildPending } = useTaskLaunchMutation({
     context,
     obiOneTaskType: taskTypeBindings.obiOne,
-    launch: taskTypeBindings.launch,
     executionActivityType: taskTypeBindings.execution,
     notificationKey: 'build-config-error',
     failureMessage: 'We ran into a problem launching your build. Please try again later.',
