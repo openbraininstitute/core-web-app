@@ -75,7 +75,9 @@ describe('IonChannelRecordingRelatedArtifacts', () => {
 
     renderTab();
 
-    await screen.findByTestId('recordings');
+    // no recordings anywhere: an empty state, never the unfiltered recordings listing
+    await screen.findByText('No recordings found for this model');
+    expect(screen.queryByTestId('recordings')).toBeNull();
     expect(queries.getIonChannelModelingExecutions).toHaveBeenCalledWith(
       expect.objectContaining({ filters: { generated__id__in: ['model-id'] } })
     );

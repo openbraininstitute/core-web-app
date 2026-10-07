@@ -23,14 +23,6 @@ import type { IIonChannelModelingConfig } from '@/api/entitycore/types/entities/
 import type { IonChannelFittingGridScanGenerationTask } from '@/api/one/types/ion-channel-fitting-scan-task';
 import type { WorkspaceContext } from '@/types/common';
 
-const browseScopeProps = {
-  allowQuery: false,
-  allowFilter: false,
-  allowSearch: false,
-  requireMiniDetailView: false,
-  requireBrainRegion: false,
-} as const;
-
 /** the recordings a model was fitted to: the inputs of the task config its execution used */
 async function fittedRecordingIds(modelId: string, context: WorkspaceContext) {
   const { data: executions } = await getTaskActivities({
@@ -169,17 +161,7 @@ export function IonChannelRecordingRelatedArtifacts({
   }
 
   if (!data.length) {
-    return (
-      <BrowseEntityScope
-        dataType={ExtendedEntitiesTypeDict.IonChannelRecording}
-        detailVariant={variant}
-        contentOnInsetPanel={variant === ViewVariant.Default}
-        classNames={{
-          container: detailViewGridContainerClass(variant),
-        }}
-        {...browseScopeProps}
-      />
-    );
+    return <Empty description="No recordings found for this model" />;
   }
 
   return (
@@ -192,7 +174,10 @@ export function IonChannelRecordingRelatedArtifacts({
       classNames={{
         container: detailViewGridContainerClass(variant),
       }}
-      {...browseScopeProps}
+      allowFilter={false}
+      allowSearch={false}
+      requireMiniDetailView={false}
+      requireBrainRegion={false}
     />
   );
 }
