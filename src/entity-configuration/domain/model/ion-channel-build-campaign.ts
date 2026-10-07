@@ -13,7 +13,7 @@ import { Task, type TTaskFlowTypes } from '@/entity-configuration/domain/task-fu
 
 import type { ITaskConfig, ITaskConfigFilter } from '@/api/entitycore/types/entities/task-config';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
-import type { AwaitedType, WorkspaceContext } from '@/types/common';
+import type { WorkspaceContext } from '@/types/common';
 
 export type TIonChannelBuildCampaignMeta = {
   scan_parameters?: Record<string, unknown>;
@@ -74,45 +74,30 @@ async function resolve({ id, context }: { id: string; context?: WorkspaceContext
     throw new Error(`No ion channel build campaign with id ${id} found`);
   }
 
-  const taskRows = await Task.one<TIonChannelBuildCampaignMeta>({
-    id,
-    context: resolvedContext,
-    ...TaskFlow,
-  });
-  const firstConfig = taskRows.at(0)?.provenance.config;
-  const assets = campaign.assets ?? [];
-
   const configAsset = getAsset({
-    assets,
+    assets: campaign.assets ?? [],
     label: AssetLabel.task_config,
   }).getOneOrNull();
 
-  const sourceEntityId = firstConfig?.inputs.at(0)?.id ?? null;
-  if (!configAsset) {
-    return {
-      campaign,
-      config: null,
-      sourceEntityId,
-    };
-  }
-
-  const rawConfig = await downloadAsset({
-    entityId: campaign.id,
-    entityType: EntityTypeDict.TaskConfig,
-    id: configAsset.id,
-    ctx: resolvedContext,
-    asRawResponse: true,
-  });
-  const config = await rawConfig.json();
+  const [taskRows, config] = await Promise.all([
+    Task.one<TIonChannelBuildCampaignMeta>({ campaign, id, context: resolvedContext, ...TaskFlow }),
+    configAsset
+      ? downloadAsset({
+          entityId: campaign.id,
+          entityType: EntityTypeDict.TaskConfig,
+          id: configAsset.id,
+          ctx: resolvedContext,
+          asRawResponse: true,
+        }).then((response) => response.json())
+      : null,
+  ]);
 
   return {
     campaign,
     config,
-    sourceEntityId,
+    sourceEntityId: taskRows.at(0)?.provenance.config.inputs.at(0)?.id ?? null,
   };
 }
-
-export type TExtendedIonChannelBuildCampaignsType = AwaitedType<ReturnType<typeof list>>;
 
 export type TResolvedIonChannelBuildByCampaign = Awaited<ReturnType<typeof resolve>>;
 export type TResolvedIonChannelBuildByCampaigns = Awaited<ReturnType<typeof list>>;
