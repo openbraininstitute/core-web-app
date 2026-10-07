@@ -448,8 +448,17 @@ export default async function Overview({
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.IonChannelBuildCampaign
     );
-    if (error || !data.recordingId || !scanConfig) {
+    if (!scanConfig) {
       notFound();
+    }
+    if (error || !data.form) {
+      return (
+        <div className="flex h-full w-full items-center justify-center">
+          {error
+            ? 'The configuration of this campaign could not be loaded'
+            : 'This campaign has no saved configuration'}
+        </div>
+      );
     }
 
     return (
