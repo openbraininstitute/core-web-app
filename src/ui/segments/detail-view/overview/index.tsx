@@ -31,10 +31,7 @@ import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/do
 import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
-import {
-  resolveIonChannelModelingCampaignConfig,
-  toIonChannelFittingForm,
-} from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
@@ -448,25 +445,21 @@ export default async function Overview({
       })
     );
 
-    // built before the scan-config editor: shown in it read-only, with no results to rerun
-    const recordingId = data?.campaign?.input_recordings?.[0]?.id;
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.IonChannelBuildCampaign
     );
-    if (error || !recordingId || !scanConfig) {
+    if (error || !data.recordingId || !scanConfig) {
       notFound();
     }
 
     return (
       <ScanConfiguration
-        entityId={recordingId}
+        entityId={data.recordingId}
         scanConfig={scanConfig}
         virtualLabId={context.virtualLabId}
         projectId={context.projectId}
         origin={entity.id}
-        initialConfig={
-          data?.config ? toIonChannelFittingForm(data.config.form ?? data.config) : undefined
-        }
+        initialConfig={data.form}
         readOnly
         defaultTab={{
           __activity: ScanConfigActivity.Build,

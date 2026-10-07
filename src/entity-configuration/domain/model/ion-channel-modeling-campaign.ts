@@ -1,4 +1,4 @@
-import { flatMap, get, sortBy } from 'es-toolkit/compat';
+import { get, sortBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import {
@@ -104,52 +104,6 @@ async function resolveIonChannelModelingCampaigns({
   };
 }
 
-export async function resolveIonChannelModelingByCampaignId({
-  id,
-  context,
-}: {
-  id: string;
-  context?: WorkspaceContext | null;
-}) {
-  const campaign = await getIonChannelModelingCampaign({ id, context });
-
-  if (!campaign) {
-    throw new Error(`No ion channel modeling campaign with id ${id} found`);
-  }
-
-  // campaign → configs
-  const configs = await getIonChannelModelingConfigs({
-    context,
-    withFacets: false,
-    filters: { ion_channel_modeling_campaign_id: id },
-  });
-
-  // configs → executions
-  const configIDs = configs.data.map((c) => c.id);
-  const executionsResponse =
-    configIDs.length > 0
-      ? await getIonChannelModelingExecutions({
-          context,
-          withFacets: false,
-          filters: { used__id__in: configIDs },
-        })
-      : {
-          data: [] as Awaited<ReturnType<typeof getIonChannelModelingExecutions>>['data'],
-        };
-
-  // extract generated ion channel model IDs from executions
-  const generatedModelIds = flatMap(
-    executionsResponse.data,
-    (exec) => exec.generated?.map((g) => g.id) ?? []
-  );
-
-  return {
-    campaign,
-    configs: configs.data,
-    generatedModelIds,
-  };
-}
-
 export type TExtendedIonChannelModelingCampaignsType = AwaitedType<
   ReturnType<typeof resolveIonChannelModelingCampaigns>
 >;
@@ -167,14 +121,14 @@ export async function resolveIonChannelModelingCampaignConfig({
     throw new Error(`No ion channel modeling campaign with id ${id} found`);
   }
 
-  const assets = campaign.assets ?? [];
+  // built before the scan-config editor: shown in it read-only, from its one recording
+  const recordingId = campaign.input_recordings?.[0]?.id ?? null;
   const configAsset = getAssetElement({
-    assets,
+    assets: campaign.assets ?? [],
     filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
   });
-
   if (!configAsset) {
-    return { campaign, config: null };
+    return { recordingId, form: undefined };
   }
 
   const rawConfig = await downloadAsset({
@@ -186,7 +140,7 @@ export async function resolveIonChannelModelingCampaignConfig({
   });
   const config = await rawConfig.json();
 
-  return { campaign, config };
+  return { recordingId, form: toIonChannelFittingForm(config.form ?? config) };
 }
 
 const LegacyEquationKeys: Record<string, string> = {
@@ -241,9 +195,6 @@ export function toIonChannelFittingForm(form: TIonChannelFittingFormInput): Conf
   } as Config;
 }
 
-type TResolvedIonChannelModelingByCampaign = Awaited<
-  ReturnType<typeof resolveIonChannelModelingByCampaignId>
->;
 type TResolvedIonChannelModelingByCampaigns = Awaited<
   ReturnType<typeof resolveIonChannelModelingCampaigns>
 >;
@@ -271,7 +222,7 @@ export function getStatusCountMap(campaign: TEnrichedIonChannelModelingCampaign)
 
 export const IonChannelModelingCampaign: EntityCoreTypeConfig<
   IIonChannelModelingCampaign,
-  TResolvedIonChannelModelingByCampaign,
+  never,
   TResolvedIonChannelModelingByCampaigns
 > = {
   group: EntityTypeGroup.Models,
@@ -287,7 +238,6 @@ export const IonChannelModelingCampaign: EntityCoreTypeConfig<
     query: {
       list: resolveIonChannelModelingCampaigns,
       one: getIonChannelModelingCampaign,
-      resolve: resolveIonChannelModelingByCampaignId,
     },
   },
   asset: {
