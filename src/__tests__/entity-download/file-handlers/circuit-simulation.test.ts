@@ -123,6 +123,39 @@ describe('getCircuitSimulationFiles', () => {
     expect(metadataJson[0].simulations['run-1']).toBeDefined();
   });
 
+  it('includes every simulation of the campaign, not only the first page', async () => {
+    vi.mocked(getSimulationCampaign).mockResolvedValue(
+      makeEntityBase({
+        id: 'camp1',
+        type: EntityTypeDict.SimulationCampaign,
+        assets: [
+          makeAsset({
+            id: 'cfg1',
+            path: 'campaign.json',
+            label: AssetLabel.campaign_generation_config,
+          }),
+        ],
+      }) as never
+    );
+    const simulations = Array.from({ length: 250 }, (_, i) =>
+      makeEntityBase({ id: `sim${i}`, type: EntityTypeDict.Simulation, name: `Simulation ${i}` })
+    );
+    // like entitycore: 30 items per page unless a page size is asked for
+    vi.mocked(getSimulations).mockImplementation(async ({ filters } = {}) => {
+      const page = filters?.page ?? 1;
+      const pageSize = filters?.page_size ?? 30;
+      return { data: simulations.slice((page - 1) * pageSize, page * pageSize) } as never;
+    });
+    vi.mocked(getSimulationExecutions).mockResolvedValue({ data: [] } as never);
+
+    const entries = await collectFileEntries(getCircuitSimulationFiles(['camp1']));
+    const metadataJson = JSON.parse(
+      await readEntryText(entries[pathsOf(entries).indexOf('metadata.json')])
+    );
+
+    expect(Object.keys(metadataJson[0].simulations)).toHaveLength(250);
+  });
+
   it('skips campaigns that lack a campaign_generation_config asset', async () => {
     vi.mocked(getSimulationCampaign).mockResolvedValue(
       makeEntityBase({

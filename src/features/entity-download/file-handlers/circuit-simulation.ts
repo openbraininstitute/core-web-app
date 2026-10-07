@@ -10,6 +10,7 @@ import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { ASSET_BASE_PATH, OUTPUT_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
 import { getMetadataSimulationCsvEntryBase, tryAssetEntry } from '@/features/entity-download/utils';
+import { fetchChunkedPages } from '@/features/task-runner/query-utils';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -23,6 +24,8 @@ const CONCURRENCY = {
   SIMULATIONS: 5,
   RESULTS: 10,
 } as const;
+
+const SIMULATION_PAGE_SIZE = 100;
 
 type SimulationData = {
   executions: IExecutionActivity[];
@@ -124,14 +127,21 @@ async function fetchCampaignData(
   const configAsset = campaign.assets.find((asset) => asset.label === 'campaign_generation_config');
   if (!configAsset) return null;
 
-  const simulations = await getSimulations({
-    context: ctx,
-    filters: { simulation_campaign_id: campaign.id },
+  // entitycore pages its lists (30 items by default); read every page
+  const simulations = await fetchChunkedPages({
+    values: [campaign.id],
+    chunkSize: 1,
+    pageSize: SIMULATION_PAGE_SIZE,
+    fetchPage: ({ page, pageSize }) =>
+      getSimulations({
+        context: ctx,
+        filters: { simulation_campaign_id: campaign.id, page, page_size: pageSize },
+      }),
   });
 
   return {
     campaign,
-    simulations: simulations.data,
+    simulations,
     idx,
     dataPath: `${ASSET_BASE_PATH}/${idx}`,
   };
