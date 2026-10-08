@@ -33,6 +33,12 @@ export interface DistanceFunctionInputProps {
 
 const VALIDATE_DEBOUNCE_MS = 350;
 
+// Aborts (from effect cleanup / rescheduling) are expected and must be ignored. Any other
+// rejection is a real failure we should surface rather than silently keep the previous error.
+function isAbortError(err: unknown): boolean {
+  return err instanceof DOMException && err.name === 'AbortError';
+}
+
 // Highlighting: color `{placeholder}` tokens and known function names so the user can see at a
 // glance which variables and math calls they referenced.
 const PLACEHOLDER_RE = /\{\w+\}/g;
@@ -196,8 +202,12 @@ export function DistanceFunctionInput({
           const current = viewRef.current;
           if (current) applyResult(current, compartment, setErrorMessage, result);
         })
-        .catch(() => {
-          // Aborted or network error: leave the last state; do not block editing.
+        .catch((err) => {
+          if (isAbortError(err)) return;
+          // Network / 5xx / 401: we don't know if the function is valid. Clear any stale server
+          // error so a just-fixed function isn't left blocked.
+          const current = viewRef.current;
+          if (current) applyResult(current, compartment, setErrorMessage, null);
         });
     }, VALIDATE_DEBOUNCE_MS);
     return () => {

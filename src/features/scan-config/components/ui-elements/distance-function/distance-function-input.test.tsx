@@ -103,6 +103,24 @@ describe('DistanceFunctionInput', () => {
     expect(mockValidate).not.toHaveBeenCalled();
   });
 
+  it('clears a stale error when validation fails (non-abort)', async () => {
+    // Establish a published invalid error first.
+    mockValidate.mockResolvedValue({ valid: false, error: 'bad', from: 0, to: 1 });
+    const { rerender } = render(<DistanceFunctionInput value="a + b" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+
+    // Now a value whose validation request fails: the stale error must clear (not stay blocked).
+    mockValidate.mockReset();
+    mockValidate.mockRejectedValue(new Error('Network down'));
+    rerender(<DistanceFunctionInput value="a + c" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+    expect(screen.getByTestId('scan-config-control').getAttribute('aria-invalid')).toBe('false');
+  });
+
   // The dispatcher keys this component by dictionary entry, so switching entries remounts a fresh
   // editor instead of reusing one instance. A fresh instance has its own undo history, which is
   // what prevents undo in one entry from leaking a previous entry's text into the current one.
