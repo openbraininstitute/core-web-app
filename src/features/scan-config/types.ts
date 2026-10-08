@@ -732,6 +732,8 @@ export type ParamSchema =
 export type TBlock = {
   title: string;
   description: string;
+  /** Initial key the UI suggests when adding this block to a dictionary (obi-one metadata). */
+  default_name?: string;
   properties: Record<string, ParamSchema> & { type: Type };
   required?: string[];
   block_usability_entity_dependent: boolean;
