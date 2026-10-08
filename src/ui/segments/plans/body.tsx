@@ -2,13 +2,68 @@ import { RiCheckboxCircleFill, RiCloseCircleLine } from '@remixicon/react';
 
 import { cn } from '@/utils/css-class';
 
-import type { PlanV2 } from '@/types/pricing/planv2';
+import type { CostNameProps, PlanV2 } from '@/types/virtual-lab/pricing';
 
 function FeatureIcon({ value }: { value: boolean }) {
   return value ? (
     <RiCheckboxCircleFill className="size-4 shrink-0 text-green-600" />
   ) : (
     <RiCloseCircleLine className="size-4 shrink-0 text-neutral-400" />
+  );
+}
+
+function CostFeatureRow({
+  feature,
+  textColor,
+  mutedColor,
+  nameWidth,
+  costWidth,
+}: {
+  feature: CostNameProps;
+  textColor: string;
+  mutedColor: string;
+  nameWidth: string;
+  costWidth: string;
+}) {
+  const subItems = feature.subItems ?? [];
+
+  if (subItems.length === 0) {
+    return (
+      <div className="flex w-full flex-row items-baseline justify-between text-base leading-tight">
+        <div className={cn(nameWidth, 'font-semibold', textColor)}>{feature.name}</div>
+        <div className={cn(costWidth, 'text-right font-normal', mutedColor)}>{feature.cost}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-1">
+      <div className="flex w-full flex-row items-baseline justify-between gap-2 text-base leading-tight">
+        <div className={cn(nameWidth, 'font-semibold', textColor)}>{feature.name}</div>
+        {feature.cost && (
+          <div className={cn(costWidth, 'text-right font-normal', mutedColor)}>{feature.cost}</div>
+        )}
+      </div>
+      <div className="flex flex-col gap-0.5 pl-4">
+        {subItems.map((sub) => {
+          const unavailable = sub.available === false;
+          return (
+            <div
+              key={sub._key}
+              className={cn(
+                'flex w-full flex-row items-baseline justify-between gap-2 text-sm leading-tight',
+                unavailable && 'opacity-40'
+              )}
+            >
+              <div className={cn(nameWidth, 'font-normal', textColor)}>{sub.name}</div>
+              <div className={cn(costWidth, 'text-right font-normal', mutedColor)}>
+                {unavailable ? 'Coming soon' : sub.cost}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -42,17 +97,18 @@ export default function PlanBody({
               <div className={cn('mb-1 text-lg font-semibold tracking-wide uppercase', mutedColor)}>
                 AI Assistant
               </div>
-              {plan.ai_assistant_features.map((feature) => (
-                <div
-                  key={feature.name}
-                  className="flex w-full flex-row items-baseline justify-between text-base leading-tight"
-                >
-                  <div className={cn('w-1/3 font-semibold', textColor)}>{feature.name}</div>
-                  <div className={cn('w-2/3 text-right font-normal', mutedColor)}>
-                    {feature.cost}
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-col gap-2">
+                {plan.ai_assistant_features.map((feature) => (
+                  <CostFeatureRow
+                    key={feature._key}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-1/3"
+                    costWidth="w-2/3"
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}
@@ -65,15 +121,14 @@ export default function PlanBody({
               </div>
               <div className="flex flex-col gap-2">
                 {plan.build_features.map((feature) => (
-                  <div
-                    key={feature.name}
-                    className="flex w-full flex-row items-baseline justify-between text-base leading-tight"
-                  >
-                    <div className={cn('w-1/2 font-semibold', textColor)}>{feature.name}</div>
-                    <div className={cn('w-1/2 text-right font-normal', mutedColor)}>
-                      {feature.cost}
-                    </div>
-                  </div>
+                  <CostFeatureRow
+                    key={feature._key}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-1/2"
+                    costWidth="w-1/2"
+                  />
                 ))}
               </div>
             </div>
@@ -88,15 +143,14 @@ export default function PlanBody({
               </div>
               <div className="flex flex-col gap-2">
                 {plan.simulate_features.map((feature) => (
-                  <div
-                    key={feature.name}
-                    className="flex w-full flex-row items-baseline justify-between text-base leading-tight"
-                  >
-                    <div className={cn('w-2/5 font-semibold', textColor)}>{feature.name}</div>
-                    <div className={cn('w-3/5 text-right font-normal', mutedColor)}>
-                      {feature.cost}
-                    </div>
-                  </div>
+                  <CostFeatureRow
+                    key={feature._key}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-2/5"
+                    costWidth="w-3/5"
+                  />
                 ))}
               </div>
             </div>
@@ -111,15 +165,14 @@ export default function PlanBody({
               </div>
               <div className="flex flex-col gap-2">
                 {plan.notebooks_features.map((feature) => (
-                  <div
-                    key={feature.name}
-                    className="flex w-full flex-row items-baseline justify-between text-base leading-tight"
-                  >
-                    <div className={cn('w-2/5 font-semibold', textColor)}>{feature.name}</div>
-                    <div className={cn('w-3/5 text-right font-normal', mutedColor)}>
-                      {feature.cost}
-                    </div>
-                  </div>
+                  <CostFeatureRow
+                    key={feature._key}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-2/5"
+                    costWidth="w-3/5"
+                  />
                 ))}
               </div>
             </div>
