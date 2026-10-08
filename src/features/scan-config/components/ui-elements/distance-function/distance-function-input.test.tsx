@@ -102,4 +102,26 @@ describe('DistanceFunctionInput', () => {
     await new Promise((r) => setTimeout(r, 500));
     expect(mockValidate).not.toHaveBeenCalled();
   });
+
+  // The dispatcher keys this component by dictionary entry, so switching entries remounts a fresh
+  // editor instead of reusing one instance. A fresh instance has its own undo history, which is
+  // what prevents undo in one entry from leaking a previous entry's text into the current one.
+  it('mounts a fresh editor (no leaked content) when the entry key changes', async () => {
+    mockValidate.mockResolvedValue({ valid: true, error: null, from: 0, to: 0 });
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <DistanceFunctionInput key="mouse_decay" value="math.exp({distance})" onChange={onChange} />
+    );
+    await waitFor(() => {
+      expect(screen.getByText(/math\.exp/)).toBeInTheDocument();
+    });
+
+    rerender(<DistanceFunctionInput key="rat_decay" value="{value}*2" onChange={onChange} />);
+    await waitFor(() => {
+      expect(screen.getByText(/\{value\}/)).toBeInTheDocument();
+    });
+    // The previous entry's function is gone, and the remount did not echo a value back via onChange.
+    expect(screen.queryByText(/math\.exp/)).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
+  });
 });

@@ -127,6 +127,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <DistanceFunctionField
+          key={`${selectedEntry ?? ''}/${k}`}
           paramSchema={paramSchema}
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
@@ -144,6 +145,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <DistanceFunctionNullableField
+          key={`${selectedEntry ?? ''}/${k}`}
           paramSchema={paramSchema}
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
