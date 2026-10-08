@@ -148,6 +148,25 @@ describe('DistanceFunctionInput', () => {
     expect(screen.getByTestId('scan-config-control').getAttribute('aria-invalid')).toBe('false');
   });
 
+  it('keeps the error consistent when toggling disabled (no view recreation)', async () => {
+    mockValidate.mockResolvedValue({ valid: false, error: 'bad', from: 0, to: 1 });
+    const { rerender } = render(<DistanceFunctionInput value="a + b" onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+    // Record the editor's content node; a reconfigure keeps the same node, a recreation replaces it.
+    const contentBefore = document.querySelector('.cm-content');
+    expect(contentBefore).not.toBeNull();
+
+    rerender(<DistanceFunctionInput value="a + b" disabled onChange={() => {}} />);
+    await waitFor(() => {
+      expect(document.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('false');
+    });
+    // Same editor instance (not recreated), and the error message is still shown.
+    expect(document.querySelector('.cm-content')).toBe(contentBefore);
+    expect(screen.getByRole('alert')).toHaveTextContent('bad');
+  });
+
   // The dispatcher keys this component by dictionary entry, so switching entries remounts a fresh
   // editor instead of reusing one instance. A fresh instance has its own undo history, which is
   // what prevents undo in one entry from leaking a previous entry's text into the current one.

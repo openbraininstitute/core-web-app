@@ -131,6 +131,9 @@ export function DistanceFunctionInput({
   const viewRef = useRef<EditorView | null>(null);
   // Compartment lets us swap the linter with the latest server result without recreating the editor.
   const linterCompartment = useRef(new Compartment());
+  // Compartment for readOnly/editable so `disabled` toggles reconfigure the view instead of
+  // recreating it (which would drop cursor position and undo history).
+  const disabledCompartment = useRef(new Compartment());
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -140,8 +143,9 @@ export function DistanceFunctionInput({
   // the warning key. Cleared on unmount by the hook.
   useFieldError(errorPath, errorMessage ?? undefined);
 
-  // Create the editor once. `value` seeds the initial doc; later external changes are synced below.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `value` is the initial doc only.
+  // Create the editor once. `value`/`disabled` seed the initial state; later changes are applied by
+  // reconfiguring compartments or dispatching, never by recreating the view.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: initial-mount values only; updates are handled by other effects.
   useEffect(() => {
     if (!hostRef.current) return;
 
@@ -154,8 +158,10 @@ export function DistanceFunctionInput({
         linterCompartment.current.of(makeServerLinter(null, null)),
         editorTheme,
         EditorView.lineWrapping,
-        EditorState.readOnly.of(disabled),
-        EditorView.editable.of(!disabled),
+        disabledCompartment.current.of([
+          EditorState.readOnly.of(disabled),
+          EditorView.editable.of(!disabled),
+        ]),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString());
@@ -170,6 +176,18 @@ export function DistanceFunctionInput({
       view.destroy();
       viewRef.current = null;
     };
+  }, []);
+
+  // Toggle readOnly/editable without recreating the view, preserving cursor and undo history.
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: disabledCompartment.current.reconfigure([
+        EditorState.readOnly.of(disabled),
+        EditorView.editable.of(!disabled),
+      ]),
+    });
   }, [disabled]);
 
   // Sync external value changes (e.g. loading a saved config) into the editor.
