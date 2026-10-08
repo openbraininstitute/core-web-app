@@ -709,8 +709,6 @@ export function UIElementRender({
           <StringListInput
             value={currentValue}
             disabled={disabled}
-            // a disabled field has no editable controls — show the plain list
-            readOnly={disabled}
             onChange={(newValue) => setState({ ...state, [k]: newValue })}
           />
         );

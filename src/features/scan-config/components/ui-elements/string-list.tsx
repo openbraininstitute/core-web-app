@@ -5,14 +5,16 @@ import { Input } from 'antd';
 import { useState } from 'react';
 
 import { SweepIconButton } from '@/features/scan-config/components/ui-elements/parameter-sweep';
-import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+
+import type { TScanConfigUIElementDict } from '@/features/scan-config/types';
 
 export interface IStringListProps {
   value: string[] | null;
   onChange: (value: string[] | null) => void;
+  /** Disabled fields render as a plain, controls-free list (no add input, no delete buttons). */
   disabled?: boolean;
-  /** render only the list of values, no controls */
-  readOnly?: boolean;
+  /** Which block-element the mounting wrapper represents, for scan-config selectors. */
+  blockElement: TScanConfigUIElementDict;
   /**
    * When true, removing the last entry writes `null` (unset) instead of `[]`, for schemas where
    * the empty list and "not set" are distinct.
@@ -30,7 +32,7 @@ export function StringListBase({
   value,
   onChange,
   disabled = false,
-  readOnly = false,
+  blockElement,
   optional = false,
 }: IStringListProps) {
   const [draft, setDraft] = useState('');
@@ -50,16 +52,12 @@ export function StringListBase({
   };
 
   return (
-    <div
-      className="flex w-full flex-col gap-1"
-      data-scan-config-block-element={ScanConfigUIElementDict.StringListInput}
-    >
-      {!readOnly && (
+    <div className="flex w-full flex-col gap-1" data-scan-config-block-element={blockElement}>
+      {!disabled && (
         <div className="relative">
           <Input
             data-testid="scan-config-control"
             value={draft}
-            disabled={disabled}
             placeholder={optional && value === null ? 'Not set' : 'Add a value'}
             onChange={(e) => setDraft(e.target.value)}
             onPressEnter={(e) => {
@@ -72,7 +70,7 @@ export function StringListBase({
           <SweepIconButton
             label="Add a value"
             testId="scan-config-string-list-add"
-            disabled={disabled || draft.trim() === ''}
+            disabled={draft.trim() === ''}
             className="absolute top-1/2 right-2 -translate-y-1/2"
             onClick={addValue}
           >
@@ -81,7 +79,7 @@ export function StringListBase({
         </div>
       )}
 
-      {readOnly && items.length === 0 && (
+      {disabled && items.length === 0 && (
         <span className="text-sm text-gray-400 italic">No values</span>
       )}
 
@@ -95,11 +93,10 @@ export function StringListBase({
                 className="flex w-full items-center gap-1.5"
               >
                 <span className="text-primary-8 min-w-0 flex-1 truncate text-sm">{item}</span>
-                {!readOnly && (
+                {!disabled && (
                   <SweepIconButton
                     label={`Remove ${item}`}
                     testId="scan-config-string-list-remove"
-                    disabled={disabled}
                     onClick={() => removeAt(index)}
                   >
                     <RiDeleteBinLine className="size-3.5" />
