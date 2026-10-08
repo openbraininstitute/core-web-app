@@ -49,6 +49,33 @@ vi.mock('@/api/entitycore/queries/assets', async (importOriginal) => {
   return { ...actual, downloadAsset: downloadAssetMock };
 });
 
+/** Answers like entitycore: 30 items per page unless a page size is asked for. */
+function paged<T>(items: T[]) {
+  return async ({
+    filters,
+  }: {
+    filters?: { page?: number | null; page_size?: number | null };
+  } = {}) => {
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.page_size ?? 30;
+    return { data: items.slice((page - 1) * pageSize, page * pageSize) } as never;
+  };
+}
+
+function campaignWithConfig(id = 'camp1') {
+  return makeEntityBase({
+    id,
+    type: EntityTypeDict.SimulationCampaign,
+    assets: [
+      makeAsset({
+        id: 'cfg1',
+        path: 'campaign.json',
+        label: AssetLabel.campaign_generation_config,
+      }),
+    ],
+  }) as never;
+}
+
 describe('getCircuitSimulationFiles', () => {
   beforeEach(() => {
     vi.mocked(getSimulationCampaign).mockReset();
@@ -124,28 +151,11 @@ describe('getCircuitSimulationFiles', () => {
   });
 
   it('includes every simulation of the campaign, not only the first page', async () => {
-    vi.mocked(getSimulationCampaign).mockResolvedValue(
-      makeEntityBase({
-        id: 'camp1',
-        type: EntityTypeDict.SimulationCampaign,
-        assets: [
-          makeAsset({
-            id: 'cfg1',
-            path: 'campaign.json',
-            label: AssetLabel.campaign_generation_config,
-          }),
-        ],
-      }) as never
-    );
+    vi.mocked(getSimulationCampaign).mockResolvedValue(campaignWithConfig());
     const simulations = Array.from({ length: 250 }, (_, i) =>
       makeEntityBase({ id: `sim${i}`, type: EntityTypeDict.Simulation, name: `Simulation ${i}` })
     );
-    // like entitycore: 30 items per page unless a page size is asked for
-    vi.mocked(getSimulations).mockImplementation(async ({ filters } = {}) => {
-      const page = filters?.page ?? 1;
-      const pageSize = filters?.page_size ?? 30;
-      return { data: simulations.slice((page - 1) * pageSize, page * pageSize) } as never;
-    });
+    vi.mocked(getSimulations).mockImplementation(paged(simulations));
     vi.mocked(getSimulationExecutions).mockResolvedValue({ data: [] } as never);
 
     const entries = await collectFileEntries(getCircuitSimulationFiles(['camp1']));
@@ -154,6 +164,69 @@ describe('getCircuitSimulationFiles', () => {
     );
 
     expect(Object.keys(metadataJson[0].simulations)).toHaveLength(250);
+  });
+
+  it('includes the results of every execution, not only the first page', async () => {
+    vi.mocked(getSimulationCampaign).mockResolvedValue(campaignWithConfig());
+    vi.mocked(getSimulations).mockResolvedValue({
+      data: [makeEntityBase({ id: 'sim1', type: EntityTypeDict.Simulation, name: 'run-1' })],
+    } as never);
+    const executions = Array.from({ length: 45 }, (_, i) => ({
+      id: `exec${i}`,
+      generated: [{ id: `res${i}` }],
+    }));
+    vi.mocked(getSimulationExecutions).mockImplementation(paged(executions));
+    vi.mocked(getSimulationResult).mockImplementation(
+      async ({ id }) => makeEntityBase({ id, type: 'simulation_result' }) as never
+    );
+
+    const entries = await collectFileEntries(getCircuitSimulationFiles(['camp1']));
+    const metadataJson = JSON.parse(
+      await readEntryText(entries[pathsOf(entries).indexOf('metadata.json')])
+    );
+
+    expect(metadataJson[0].simulations['run-1'].results).toHaveLength(45);
+  });
+
+  it('lists a campaign it cannot read in the failed paths instead of dropping it silently', async () => {
+    vi.mocked(getSimulationCampaign).mockResolvedValue(campaignWithConfig());
+    vi.mocked(getSimulations).mockRejectedValue(new ApiError('unavailable', { status: 503 }));
+
+    const failed: string[] = [];
+    const entries = await collectFileEntries(
+      getCircuitSimulationFiles(['camp1'], undefined, undefined, failed)
+    );
+
+    expect(pathsOf(entries)).toEqual(['metadata.json', 'metadata.csv']);
+    expect(failed).toEqual(['data/0 (simulation campaign camp1)']);
+  });
+
+  it('stops paging once the download is cancelled', async () => {
+    const controller = new AbortController();
+    vi.mocked(getSimulationCampaign).mockResolvedValue(campaignWithConfig());
+    // a full first page, so only the cancellation stops the handler asking for a second
+    vi.mocked(getSimulations).mockImplementation(async ({ filters } = {}) => {
+      controller.abort();
+      const count = filters?.page === 1 ? (filters.page_size ?? 30) : 0;
+      return {
+        data: Array.from({ length: count }, (_, i) =>
+          makeEntityBase({
+            id: `sim${i}`,
+            type: EntityTypeDict.Simulation,
+            name: `Simulation ${i}`,
+          })
+        ),
+      } as never;
+    });
+
+    const failed: string[] = [];
+    const entries = await collectFileEntries(
+      getCircuitSimulationFiles(['camp1'], undefined, controller.signal, failed)
+    );
+
+    expect(getSimulations).toHaveBeenCalledTimes(1);
+    expect(entries).toEqual([]);
+    expect(failed).toEqual([]);
   });
 
   it('skips campaigns that lack a campaign_generation_config asset', async () => {
