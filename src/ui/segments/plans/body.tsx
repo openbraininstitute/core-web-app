@@ -38,7 +38,12 @@ function CostFeatureRow({
 
   return (
     <div className="flex w-full flex-col gap-1">
-      <div className={cn('text-base font-semibold', textColor)}>{feature.name}</div>
+      <div className="flex w-full flex-row items-baseline justify-between gap-2 text-base leading-tight">
+        <div className={cn(nameWidth, 'font-semibold', textColor)}>{feature.name}</div>
+        {feature.cost && (
+          <div className={cn(costWidth, 'text-right font-normal', mutedColor)}>{feature.cost}</div>
+        )}
+      </div>
       <div className="flex flex-col gap-0.5 pl-4">
         {subItems.map((sub) => {
           const unavailable = sub.available === false;
@@ -50,8 +55,8 @@ function CostFeatureRow({
                 unavailable && 'opacity-40'
               )}
             >
-              <div className={cn('flex-1 font-normal', textColor)}>{sub.name}</div>
-              <div className={cn('shrink-0 text-right font-normal whitespace-nowrap', mutedColor)}>
+              <div className={cn(nameWidth, 'font-normal', textColor)}>{sub.name}</div>
+              <div className={cn(costWidth, 'text-right font-normal', mutedColor)}>
                 {unavailable ? 'Coming soon' : sub.cost}
               </div>
             </div>
