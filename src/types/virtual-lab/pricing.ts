@@ -8,9 +8,16 @@ export type GeneralFeaturesProps = {
   value: boolean;
 };
 
+export type CostSubItemProps = {
+  name: string;
+  cost?: string | null;
+  available?: boolean | null;
+};
+
 export type CostNameProps = {
   cost: string;
   name: string;
+  subItems?: CostSubItemProps[] | null;
 };
 
 export type SubscriptionProps = {
