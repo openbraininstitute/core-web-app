@@ -95,7 +95,7 @@ export default function PlanBody({
               <div className="flex flex-col gap-2">
                 {plan.ai_assistant_features.map((feature) => (
                   <CostFeatureRow
-                    key={feature.name}
+                    key={feature._key}
                     feature={feature}
                     textColor={textColor}
                     mutedColor={mutedColor}
@@ -117,7 +117,7 @@ export default function PlanBody({
               <div className="flex flex-col gap-2">
                 {plan.build_features.map((feature) => (
                   <CostFeatureRow
-                    key={feature.name}
+                    key={feature._key}
                     feature={feature}
                     textColor={textColor}
                     mutedColor={mutedColor}
@@ -139,7 +139,7 @@ export default function PlanBody({
               <div className="flex flex-col gap-2">
                 {plan.simulate_features.map((feature) => (
                   <CostFeatureRow
-                    key={feature.name}
+                    key={feature._key}
                     feature={feature}
                     textColor={textColor}
                     mutedColor={mutedColor}
@@ -161,7 +161,7 @@ export default function PlanBody({
               <div className="flex flex-col gap-2">
                 {plan.notebooks_features.map((feature) => (
                   <CostFeatureRow
-                    key={feature.name}
+                    key={feature._key}
                     feature={feature}
                     textColor={textColor}
                     mutedColor={mutedColor}
