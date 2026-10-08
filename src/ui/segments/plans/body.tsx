@@ -92,17 +92,18 @@ export default function PlanBody({
               <div className={cn('mb-1 text-lg font-semibold tracking-wide uppercase', mutedColor)}>
                 AI Assistant
               </div>
-              {plan.ai_assistant_features.map((feature) => (
-                <div
-                  key={feature.name}
-                  className="flex w-full flex-row items-baseline justify-between text-base leading-tight"
-                >
-                  <div className={cn('w-1/3 font-semibold', textColor)}>{feature.name}</div>
-                  <div className={cn('w-2/3 text-right font-normal', mutedColor)}>
-                    {feature.cost}
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-col gap-2">
+                {plan.ai_assistant_features.map((feature) => (
+                  <CostFeatureRow
+                    key={feature.name}
+                    feature={feature}
+                    textColor={textColor}
+                    mutedColor={mutedColor}
+                    nameWidth="w-1/3"
+                    costWidth="w-2/3"
+                  />
+                ))}
+              </div>
             </div>
           </>
         )}

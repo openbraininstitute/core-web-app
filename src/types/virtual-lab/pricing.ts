@@ -15,7 +15,7 @@ export type CostSubItemProps = {
 };
 
 export type CostNameProps = {
-  cost: string;
+  cost?: string | null;
   name: string;
   subItems?: CostSubItemProps[] | null;
 };
