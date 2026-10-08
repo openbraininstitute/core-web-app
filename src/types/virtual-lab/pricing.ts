@@ -9,6 +9,7 @@ export type GeneralFeaturesProps = {
 };
 
 export type CostSubItemProps = {
+  _key: string;
   name: string;
   cost?: string | null;
   available?: boolean | null;

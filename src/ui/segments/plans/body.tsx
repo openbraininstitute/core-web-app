@@ -44,7 +44,7 @@ function CostFeatureRow({
           const unavailable = sub.available === false;
           return (
             <div
-              key={sub.name}
+              key={sub._key}
               className={cn(
                 'flex w-full flex-row items-baseline justify-between gap-2 text-sm leading-tight',
                 unavailable && 'opacity-40'
