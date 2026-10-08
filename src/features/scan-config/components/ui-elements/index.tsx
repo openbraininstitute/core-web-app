@@ -134,7 +134,14 @@ export function UIElementRender({
           declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
           errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
-            setState({ ...state, [k]: next || null });
+            // Non-nullable `str`: clearing omits the key so the schema default applies; `null`
+            // is rejected by both Ajv ("must be string") and the backend (422).
+            if (!next) {
+              const { [k]: _removed, ...rest } = state;
+              setState(rest);
+              return;
+            }
+            setState({ ...state, [k]: next });
           }}
         />
       )
