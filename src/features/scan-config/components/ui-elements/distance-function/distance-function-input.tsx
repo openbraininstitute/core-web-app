@@ -83,11 +83,15 @@ const editorTheme = EditorView.theme({
   '.cm-distance-function': { color: '#08979c' },
 });
 
-/** A linter that reports a single, already-computed server diagnostic (or none). */
-function makeServerLinter(result: TDistanceFunctionValidation | null) {
+/** A linter that reports a single diagnostic: a local length error, else the server result. */
+function makeServerLinter(result: TDistanceFunctionValidation | null, lengthError: string | null) {
   return linter((view): Diagnostic[] => {
     const len = view.state.doc.length;
-    if (!result || result.valid || len === 0) return [];
+    if (len === 0) return [];
+    if (lengthError) {
+      return [{ from: 0, to: len, severity: 'error', message: lengthError }];
+    }
+    if (!result || result.valid) return [];
     return [
       {
         from: Math.min(result.from, len),
@@ -104,10 +108,14 @@ function applyResult(
   view: EditorView,
   compartment: Compartment,
   setErrorMessage: (msg: string | null) => void,
-  result: TDistanceFunctionValidation | null
+  result: TDistanceFunctionValidation | null,
+  lengthError: string | null
 ): void {
-  setErrorMessage(result && !result.valid ? (result.error ?? 'Invalid distance function.') : null);
-  view.dispatch({ effects: compartment.reconfigure(makeServerLinter(result)) });
+  const message =
+    lengthError ??
+    (result && !result.valid ? (result.error ?? 'Invalid distance function.') : null);
+  setErrorMessage(message);
+  view.dispatch({ effects: compartment.reconfigure(makeServerLinter(result, lengthError)) });
   forceLinting(view);
 }
 
@@ -143,15 +151,11 @@ export function DistanceFunctionInput({
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         highlightPlugin,
-        linterCompartment.current.of(makeServerLinter(null)),
+        linterCompartment.current.of(makeServerLinter(null, null)),
         editorTheme,
         EditorView.lineWrapping,
         EditorState.readOnly.of(disabled),
         EditorView.editable.of(!disabled),
-        // Enforce max length: reject changes that would exceed it (schema `maxLength`).
-        EditorState.changeFilter.of((tr) =>
-          maxLength === undefined || tr.newDoc.length <= maxLength ? true : []
-        ),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             onChangeRef.current(update.state.doc.toString());
@@ -166,7 +170,7 @@ export function DistanceFunctionInput({
       view.destroy();
       viewRef.current = null;
     };
-  }, [disabled, maxLength]);
+  }, [disabled]);
 
   // Sync external value changes (e.g. loading a saved config) into the editor.
   useEffect(() => {
@@ -187,8 +191,17 @@ export function DistanceFunctionInput({
     const view = viewRef.current;
     if (!view) return undefined;
     const compartment = linterCompartment.current;
+    const lengthError =
+      maxLength !== undefined && value.length > maxLength
+        ? `Must be at most ${maxLength} characters (currently ${value.length}).`
+        : null;
+    if (lengthError) {
+      // Over the limit: block with a length error and skip the server round-trip.
+      applyResult(view, compartment, setErrorMessage, null, lengthError);
+      return undefined;
+    }
     if (value.trim().length === 0) {
-      applyResult(view, compartment, setErrorMessage, null);
+      applyResult(view, compartment, setErrorMessage, null, null);
       return undefined;
     }
     const controller = new AbortController();
@@ -200,21 +213,21 @@ export function DistanceFunctionInput({
       })
         .then((result) => {
           const current = viewRef.current;
-          if (current) applyResult(current, compartment, setErrorMessage, result);
+          if (current) applyResult(current, compartment, setErrorMessage, result, null);
         })
         .catch((err) => {
           if (isAbortError(err)) return;
           // Network / 5xx / 401: we don't know if the function is valid. Clear any stale server
           // error so a just-fixed function isn't left blocked.
           const current = viewRef.current;
-          if (current) applyResult(current, compartment, setErrorMessage, null);
+          if (current) applyResult(current, compartment, setErrorMessage, null, null);
         });
     }, VALIDATE_DEBOUNCE_MS);
     return () => {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [value, declaredParametersKey]);
+  }, [value, declaredParametersKey, maxLength]);
 
   const hasError = errorMessage !== null;
   return (

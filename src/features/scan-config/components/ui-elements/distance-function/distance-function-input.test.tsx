@@ -103,6 +103,33 @@ describe('DistanceFunctionInput', () => {
     expect(mockValidate).not.toHaveBeenCalled();
   });
 
+  it('shows a length error for an over-limit value without dropping the text', async () => {
+    mockValidate.mockResolvedValue({ valid: true, error: null, from: 0, to: 0 });
+    const long = '{value}+1234567890';
+    render(<DistanceFunctionInput value={long} maxLength={10} onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/at most 10 characters/);
+    });
+    // The full text is still in the editor (not silently kept at the old value).
+    expect(screen.getByText(/1234567890/)).toBeInTheDocument();
+    // Over-length is decided client-side; no server round-trip.
+    expect(mockValidate).not.toHaveBeenCalled();
+  });
+
+  it('clears the length error once the value fits again', async () => {
+    mockValidate.mockResolvedValue({ valid: true, error: null, from: 0, to: 0 });
+    const { rerender } = render(
+      <DistanceFunctionInput value="{value}+123456" maxLength={10} onChange={() => {}} />
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(/at most 10 characters/);
+    });
+    rerender(<DistanceFunctionInput value="{value}" maxLength={10} onChange={() => {}} />);
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).toBeNull();
+    });
+  });
+
   it('clears a stale error when validation fails (non-abort)', async () => {
     // Establish a published invalid error first.
     mockValidate.mockResolvedValue({ valid: false, error: 'bad', from: 0, to: 1 });
