@@ -4,15 +4,18 @@ import { type RefObject, useLayoutEffect, useRef } from 'react';
 
 /** How long a departed atlas box waits for the box that takes its place. */
 const MORPH_WINDOW_MS = 1500;
+const FLIGHT_MS = 380;
 /**
  * Transforms only, so the compositor runs the flight: the page mounting beneath it
- * keeps the main thread busy, and an animation that needs it stutters.
+ * keeps the main thread busy, and an animation that needs it stutters. The easing is
+ * baked into sampled keyframes, so the box and the picture it clips stay in step.
  */
 const FLIGHT: KeyframeAnimationOptions = {
-  duration: 380,
-  easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+  duration: FLIGHT_MS,
+  easing: 'linear',
   fill: 'forwards',
 };
+const FLIGHT_SAMPLES = 30;
 const FADE: KeyframeAnimationOptions = { duration: 160, easing: 'ease-out', fill: 'forwards' };
 /** The picture's brain gliding onto the drawn one as it fades. */
 const SETTLE: KeyframeAnimationOptions = {
@@ -41,10 +44,43 @@ interface IDeparted {
   at: number;
 }
 
+/** Where a view drew the brain, as a share of its box, and that box's size. */
+interface IFraming {
+  width: number;
+  height: number;
+  brain: TBox;
+}
+
 // Read and written only by the plain functions below: inside components and hooks the
 // React Compiler treats a module variable as a constant, and it folded a copy taken
 // before the reset into the reads after it.
 let departed: IDeparted | null = null;
+/** By view (its element id), so a picture can land where that view will draw the brain. */
+const framings = new Map<string, IFraming>();
+/** Kept across reloads too, so even the first flight after one lands true. */
+const FRAMINGS_KEY = 'atlas-morph-framings';
+let framingsLoaded = false;
+
+function loadFramings() {
+  if (framingsLoaded) return;
+  framingsLoaded = true;
+  try {
+    const stored = JSON.parse(localStorage.getItem(FRAMINGS_KEY) ?? '{}');
+    for (const [id, framing] of Object.entries<IFraming>(stored)) {
+      if (!framings.has(id)) framings.set(id, framing);
+    }
+  } catch {
+    // no storage: remembered for this page load only
+  }
+}
+
+function saveFramings() {
+  try {
+    localStorage.setItem(FRAMINGS_KEY, JSON.stringify(Object.fromEntries(framings)));
+  } catch {
+    // as above
+  }
+}
 
 function recordDeparture(record: IDeparted) {
   departed = record;
@@ -62,6 +98,42 @@ function toBox(el: Element): TBox {
   return { left, top, width, height };
 }
 
+function lerpBox(from: TBox, to: TBox, progress: number): TBox {
+  const at = (a: number, b: number) => a + (b - a) * progress;
+  return {
+    left: at(from.left, to.left),
+    top: at(from.top, to.top),
+    width: at(from.width, to.width),
+    height: at(from.height, to.height),
+  };
+}
+
+/** `share` (fractions of a box) inside `box`. */
+function within(box: TBox, share: TBox): TBox {
+  return {
+    left: box.left + share.left * box.width,
+    top: box.top + share.top * box.height,
+    width: share.width * box.width,
+    height: share.height * box.height,
+  };
+}
+
+/** CSS `cubic-bezier(x1, y1, x2, y2)`, as a function of time. */
+function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
+  const curve = (t: number, a: number, b: number) =>
+    3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3;
+  return (x: number) => {
+    let [lo, hi] = [0, 1];
+    for (let i = 0; i < 24; i += 1) {
+      const mid = (lo + hi) / 2;
+      if (curve(mid, x1, x2) < x) lo = mid;
+      else hi = mid;
+    }
+    return curve((lo + hi) / 2, y1, y2);
+  };
+}
+const FLIGHT_EASE = cubicBezier(0.22, 1, 0.36, 1);
+
 function cornersOf(el: Element): TCorners {
   const style = getComputedStyle(el);
   return [
@@ -70,6 +142,13 @@ function cornersOf(el: Element): TCorners {
     style.borderBottomRightRadius,
     style.borderBottomLeftRadius,
   ].map((radius) => Number.parseFloat(radius) || 0);
+}
+
+/** Corner radii for an element scaled by `x` and `y` that look like `corners` on screen. */
+function radii(corners: TCorners, x: number, y: number) {
+  const horizontal = corners.map((c) => `${c / x}px`).join(' ');
+  const vertical = corners.map((c) => `${c / y}px`).join(' ');
+  return `${horizontal} / ${vertical}`;
 }
 
 /** Copies the atlas's last frame, which its viewer keeps for this (`preserveDrawingBuffer`). */
@@ -82,46 +161,6 @@ function pictureOf(el: HTMLElement): IDeparted['picture'] {
   canvas.height = Math.round(source.height * scale);
   canvas.getContext('2d')?.drawImage(source, 0, 0, canvas.width, canvas.height);
   return { canvas, box: toBox(source) };
-}
-
-/** The largest box of `aspect` centred in `box`. */
-function fitInside(aspect: number, box: TBox): TBox {
-  const width = Math.min(box.width, box.height * aspect);
-  const height = width / aspect;
-  return {
-    left: box.left + (box.width - width) / 2,
-    top: box.top + (box.height - height) / 2,
-    width,
-    height,
-  };
-}
-
-/** Puts an element laid out at `at` (scaling from its top left corner) onto `onto`. */
-function moveOnto(onto: TBox, at: TBox) {
-  const x = onto.left - at.left;
-  const y = onto.top - at.top;
-  return `translate(${x}px, ${y}px) scale(${onto.width / at.width}, ${onto.height / at.height})`;
-}
-
-/** Corner radii for an element scaled by `x` and `y` that look like `corners` on screen. */
-function radii(corners: TCorners, x: number, y: number) {
-  const horizontal = corners.map((c) => `${c / x}px`).join(' ');
-  const vertical = corners.map((c) => `${c / y}px`).join(' ');
-  return `${horizontal} / ${vertical}`;
-}
-
-function layer(box: TBox, className: string) {
-  const el = document.createElement('div');
-  el.className = className;
-  el.setAttribute('aria-hidden', 'true');
-  Object.assign(el.style, {
-    left: `${box.left}px`,
-    top: `${box.top}px`,
-    width: `${box.width}px`,
-    height: `${box.height}px`,
-  });
-  document.body.append(el);
-  return el;
 }
 
 /** Where the brain is in an atlas frame, as fractions of its width and height. */
@@ -160,24 +199,67 @@ function brainIn(frame: HTMLCanvasElement): TBox | null {
   };
 }
 
-/** `share` (fractions of a box) inside `box`. */
-function within(box: TBox, share: TBox): TBox {
+/** The drawn brain in `target`'s viewer, on screen. */
+function drawnBrain(target: HTMLElement): TBox | null {
+  const canvas = target.querySelector('canvas');
+  if (!target.querySelector('[data-atlas-drawn]') || !canvas?.width) return null;
+  const share = brainIn(canvas);
+  return share && within(toBox(canvas), share);
+}
+
+function rememberFraming(target: HTMLElement) {
+  const brain = drawnBrain(target);
+  if (!brain || !target.id) return;
+  const box = toBox(target);
+  loadFramings();
+  framings.set(target.id, {
+    width: box.width,
+    height: box.height,
+    brain: {
+      left: (brain.left - box.left) / box.width,
+      top: (brain.top - box.top) / box.height,
+      width: brain.width / box.width,
+      height: brain.height / box.height,
+    },
+  });
+  saveFramings();
+}
+
+/**
+ * Where `target` will draw a brain shaped like `shape` (width over height), if it has
+ * drawn one at this size before; another species or a turned camera would not match.
+ */
+function recallBrain(target: HTMLElement, to: TBox, shape: number): TBox | null {
+  loadFramings();
+  const framing = framings.get(target.id);
+  if (!framing || Math.abs(framing.width - to.width) > 2) return null;
+  if (Math.abs(framing.height - to.height) > 2) return null;
+  const brain = within(to, framing.brain);
+  return Math.abs(brain.width / brain.height / shape - 1) < 0.12 ? brain : null;
+}
+
+/** The box a picture of `aspect` fills when its brain (`share` of it) covers `brain`. */
+function pictureFor(brain: TBox, share: TBox, aspect: number): TBox {
+  const width = Math.sqrt((brain.width / share.width) * (brain.height / share.height) * aspect);
+  const height = width / aspect;
   return {
-    left: box.left + share.left * box.width,
-    top: box.top + share.top * box.height,
-    width: share.width * box.width,
-    height: share.height * box.height,
+    left: brain.left + brain.width / 2 - (share.left + share.width / 2) * width,
+    top: brain.top + brain.height / 2 - (share.top + share.height / 2) * height,
+    width,
+    height,
   };
 }
 
-/** Scales evenly about `origin` (top left) so that `from` comes to rest centred on `onto`. */
-function glideOnto(onto: TBox, from: TBox, origin: Pick<TBox, 'left' | 'top'>) {
-  const scale = Math.sqrt((onto.width / from.width) * (onto.height / from.height));
-  const x =
-    onto.left + onto.width / 2 - origin.left - scale * (from.left + from.width / 2 - origin.left);
-  const y =
-    onto.top + onto.height / 2 - origin.top - scale * (from.top + from.height / 2 - origin.top);
-  return `translate(${x}px, ${y}px) scale(${scale})`;
+/** The largest box of `aspect` centred in `box`. */
+function fitInside(aspect: number, box: TBox): TBox {
+  const width = Math.min(box.width, box.height * aspect);
+  const height = width / aspect;
+  return {
+    left: box.left + (box.width - width) / 2,
+    top: box.top + (box.height - height) / 2,
+    width,
+    height,
+  };
 }
 
 /** Resolves once `target` holds a drawn atlas, or when that has taken too long. */
@@ -197,49 +279,76 @@ function whenDrawn(target: HTMLElement) {
 }
 
 /**
- * Flies the departed box onto `target`, carrying a picture of the brain that stays until
- * the new viewer has drawn its own. It runs to the end by itself, so an unmount (or a
- * Strict Mode effect replay) leaves it be.
+ * Flies the departed box onto `target` with a picture of the departing brain, clipped to
+ * the box, travelling to where the new view will draw its brain. It holds there until
+ * that view has drawn, then fades onto it. It runs to the end by itself, so an unmount
+ * (or a Strict Mode effect replay) leaves it be.
  */
 async function fly(from: IDeparted, target: HTMLElement) {
   const to = toBox(target);
-  const box = layer(to, 'bg-primary-9 pointer-events-none fixed z-40 origin-top-left');
-  const flights = [
-    box.animate([{ transform: moveOnto(from.box, to) }, { transform: 'none' }], FLIGHT),
-    // the stretch would distort the corners; this keeps them round (on the main thread,
-    // so they may lag a busy page, but the box itself does not)
-    box.animate(
-      [
-        {
-          borderRadius: radii(from.corners, from.box.width / to.width, from.box.height / to.height),
-        },
-        { borderRadius: radii(cornersOf(target), 1, 1) },
-      ],
-      FLIGHT
-    ),
-  ];
+  const corners = cornersOf(target);
+  const box = document.createElement('div');
+  box.className = 'bg-primary-9 pointer-events-none fixed z-40 origin-top-left overflow-hidden';
+  box.setAttribute('aria-hidden', 'true');
+  Object.assign(box.style, {
+    left: `${to.left}px`,
+    top: `${to.top}px`,
+    width: `${to.width}px`,
+    height: `${to.height}px`,
+  });
 
-  // a sibling, scaled evenly, so the brain is never stretched; fitted, so it stays in the box
-  const carried = from.picture && {
-    canvas: from.picture.canvas,
-    end: fitInside(from.picture.canvas.width / from.picture.canvas.height, to),
-  };
+  const carried = from.picture && brainIn(from.picture.canvas);
+  const aspect = from.picture ? from.picture.canvas.width / from.picture.canvas.height : 1;
+  const landing =
+    from.picture && carried
+      ? recallBrain(target, to, (carried.width / carried.height) * aspect)
+      : null;
+  // where the picture comes to rest: on the brain the view will draw, else centred
+  const rest =
+    from.picture && carried && landing
+      ? pictureFor(landing, carried, aspect)
+      : fitInside(aspect, to);
+
   let picture: HTMLDivElement | null = null;
-  if (from.picture && carried) {
-    const { box: start } = from.picture;
-    const { canvas, end } = carried;
-    picture = layer(end, 'pointer-events-none fixed z-40 origin-top-left overflow-hidden');
-    picture.style.borderRadius = radii(
-      from.corners,
-      start.width / end.width,
-      start.height / end.height
-    );
-    canvas.className = 'block h-full w-full';
-    picture.append(canvas);
-    flights.push(
-      picture.animate([{ transform: moveOnto(start, end) }, { transform: 'none' }], FLIGHT)
-    );
+  if (from.picture) {
+    picture = document.createElement('div');
+    picture.className = 'pointer-events-none absolute top-0 left-0 origin-top-left';
+    Object.assign(picture.style, { width: `${rest.width}px`, height: `${rest.height}px` });
+    from.picture.canvas.className = 'block h-full w-full';
+    picture.append(from.picture.canvas);
+    box.append(picture);
   }
+  document.body.append(box);
+
+  const boxFrames: Keyframe[] = [];
+  const cornerFrames: Keyframe[] = [];
+  const pictureFrames: Keyframe[] = [];
+  for (let k = 0; k <= FLIGHT_SAMPLES; k += 1) {
+    const offset = k / FLIGHT_SAMPLES;
+    const progress = FLIGHT_EASE(offset);
+    const at = lerpBox(from.box, to, progress);
+    const [sx, sy] = [at.width / to.width, at.height / to.height];
+    const [bx, by] = [at.left - to.left, at.top - to.top];
+    boxFrames.push({ offset, transform: `translate(${bx}px, ${by}px) scale(${sx}, ${sy})` });
+    // the stretch would distort the corners, so they are set against it (on the main
+    // thread, so they may lag a busy page, but the box itself does not)
+    const seen = from.corners.map((c, i) => c + ((corners[i] ?? 0) - c) * progress);
+    cornerFrames.push({ offset, borderRadius: radii(seen, sx, sy) });
+    if (from.picture) {
+      // undoes the box's stretch, so the brain is only ever scaled evenly
+      const shown = lerpBox(from.picture.box, rest, progress);
+      const x = (shown.left - to.left - bx) / sx;
+      const y = (shown.top - to.top - by) / sy;
+      const scaleX = shown.width / (sx * rest.width);
+      const scaleY = shown.height / (sy * rest.height);
+      pictureFrames.push({
+        offset,
+        transform: `translate(${x}px, ${y}px) scale(${scaleX}, ${scaleY})`,
+      });
+    }
+  }
+  const flights = [box.animate(boxFrames, FLIGHT), box.animate(cornerFrames, FLIGHT)];
+  if (picture) flights.push(picture.animate(pictureFrames, FLIGHT));
 
   target.style.opacity = '0';
   try {
@@ -249,34 +358,25 @@ async function fly(from: IDeparted, target: HTMLElement) {
   }
   target.style.opacity = '';
 
-  if (picture && carried) {
+  if (picture && from.picture && carried) {
     await whenDrawn(target);
-    // into the box, which now sits still, so the glide below stays inside it
-    for (const flight of picture.getAnimations()) flight.cancel();
-    picture.className = 'pointer-events-none absolute origin-top-left';
-    Object.assign(picture.style, {
-      left: `${carried.end.left - to.left}px`,
-      top: `${carried.end.top - to.top}px`,
-      borderRadius: '',
-    });
-    box.classList.add('overflow-hidden');
-    box.append(picture);
-    const carriedBrain = brainIn(carried.canvas);
-    const drawn = target.querySelector('canvas');
-    const drawnBrain = drawn?.width ? brainIn(drawn) : null;
-    if (drawn && carriedBrain && drawnBrain) {
-      const onto = within(toBox(drawn), drawnBrain);
-      const glide = glideOnto(onto, within(carried.end, carriedBrain), carried.end);
-      picture.animate([{ transform: 'none' }, { transform: glide }], SETTLE);
+    const drawn = drawnBrain(target);
+    if (drawn && !landing) {
+      // nothing remembered for this view yet: glide the brain onto the drawn one
+      const onto = pictureFor(drawn, carried, aspect);
+      const restAt = `translate(${rest.left - to.left}px, ${rest.top - to.top}px)`;
+      const ontoAt = `translate(${onto.left - to.left}px, ${onto.top - to.top}px) scale(${onto.width / rest.width})`;
+      picture.animate([{ transform: restAt }, { transform: ontoAt }], SETTLE);
     }
+    rememberFraming(target);
   }
   try {
-    await box.animate([{ opacity: 1 }, { opacity: 0 }], picture ? SETTLE : FADE).finished;
+    await box.animate([{ opacity: 1 }, { opacity: 0 }], picture && !landing ? SETTLE : FADE)
+      .finished;
   } catch {
     // as above
   }
   box.remove();
-  picture?.remove();
 }
 
 /**
@@ -302,7 +402,10 @@ export function useAtlasMorphSource(ref: RefObject<HTMLElement | null>, enabled:
   }, [ref, enabled]);
 }
 
-/** Flies the departed atlas box onto `target`, which stays hidden until it lands. */
+/**
+ * Flies the departed atlas box onto `target`, which stays hidden until it lands. A
+ * target arriving without one still learns where its view draws the brain, for later.
+ */
 export function AtlasMorph({ target }: { target: RefObject<HTMLElement | null> }) {
   // set once, so a Strict Mode effect replay neither takes a second box nor drops the one it took
   const tookRef = useRef(false);
@@ -312,8 +415,12 @@ export function AtlasMorph({ target }: { target: RefObject<HTMLElement | null> }
     tookRef.current = true;
     const source = takeDeparture();
     const el = target.current;
+    if (!el) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (!source || !el || reduce || performance.now() - source.at > MORPH_WINDOW_MS) return;
+    if (!source || reduce || performance.now() - source.at > MORPH_WINDOW_MS) {
+      void whenDrawn(el).then(() => rememberFraming(el));
+      return;
+    }
     void fly(source, el);
   }, [target]);
 
