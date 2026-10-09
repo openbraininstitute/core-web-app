@@ -10,6 +10,7 @@ import { AssetLabel, type IAsset } from '@/api/entitycore/types/shared/global';
 import { ASSET_BASE_PATH, OUTPUT_BASE_PATH } from '@/features/entity-download/constants';
 import { Metadata } from '@/features/entity-download/metadata';
 import { getMetadataSimulationCsvEntryBase, tryAssetEntry } from '@/features/entity-download/utils';
+import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
@@ -23,6 +24,8 @@ const CONCURRENCY = {
   SIMULATIONS: 5,
   RESULTS: 10,
 } as const;
+
+const PAGE_SIZE = 100;
 
 type SimulationData = {
   executions: IExecutionActivity[];
@@ -42,21 +45,37 @@ type AssetEntry = {
   path: string;
 };
 
+/** Reads every page of a list (entitycore returns 30 items by default), stopping on cancel. */
+function fetchAllPages<T>(
+  fetchPage: (page: number, pageSize: number) => Promise<{ data: T[] }>,
+  signal?: AbortSignal
+): Promise<T[]> {
+  return fetchAllPaginatedData({
+    fn: async (page, pageSize) => (signal?.aborted ? { data: [] } : fetchPage(page, pageSize)),
+    pageSize: PAGE_SIZE,
+  });
+}
+
 /**
  * fetches all simulation results for a given simulation concurrently.
  */
 async function fetchSimulationResults(
   sim: ISimulation,
   ctx: WorkspaceContext | undefined,
-  resultLimit: ReturnType<typeof pLimit>
+  resultLimit: ReturnType<typeof pLimit>,
+  signal?: AbortSignal
 ): Promise<SimulationData> {
-  const executions = await getSimulationExecutions({
-    context: ctx,
-    withFacets: false,
-    filters: { used__id__in: sim.id },
-  });
+  const executions = await fetchAllPages(
+    (page, pageSize) =>
+      getSimulationExecutions({
+        context: ctx,
+        withFacets: false,
+        filters: { used__id__in: sim.id, page, page_size: pageSize },
+      }),
+    signal
+  );
 
-  const generatedIds = compact(executions.data.flatMap((e) => e.generated?.map((g) => g.id)));
+  const generatedIds = compact(executions.flatMap((e) => e.generated?.map((g) => g.id)));
 
   const results = await pMap(
     generatedIds,
@@ -64,7 +83,7 @@ async function fetchSimulationResults(
     { concurrency: CONCURRENCY.RESULTS }
   );
 
-  return { executions: executions.data, results };
+  return { executions, results };
 }
 
 /**
@@ -74,13 +93,14 @@ async function processSimulation(
   sim: ISimulation,
   dataPath: string,
   ctx: WorkspaceContext | undefined,
-  resultLimit: ReturnType<typeof pLimit>
+  resultLimit: ReturnType<typeof pLimit>,
+  signal?: AbortSignal
 ): Promise<{
   simData: SimulationData;
   assetEntries: AssetEntry[];
 }> {
   const simPath = `${dataPath}/${sim.name}`;
-  const simData = await fetchSimulationResults(sim, ctx, resultLimit);
+  const simData = await fetchSimulationResults(sim, ctx, resultLimit, signal);
 
   const assetEntries: AssetEntry[] = [];
 
@@ -114,7 +134,8 @@ async function processSimulation(
 async function fetchCampaignData(
   entityId: string,
   idx: number,
-  ctx: WorkspaceContext | undefined
+  ctx: WorkspaceContext | undefined,
+  signal?: AbortSignal
 ): Promise<CampaignData | null> {
   const campaign = await getSimulationCampaign({
     id: entityId,
@@ -124,14 +145,18 @@ async function fetchCampaignData(
   const configAsset = campaign.assets.find((asset) => asset.label === 'campaign_generation_config');
   if (!configAsset) return null;
 
-  const simulations = await getSimulations({
-    context: ctx,
-    filters: { simulation_campaign_id: campaign.id },
-  });
+  const simulations = await fetchAllPages(
+    (page, pageSize) =>
+      getSimulations({
+        context: ctx,
+        filters: { simulation_campaign_id: campaign.id, page, page_size: pageSize },
+      }),
+    signal
+  );
 
   return {
     campaign,
-    simulations: simulations.data,
+    simulations,
     idx,
     dataPath: `${ASSET_BASE_PATH}/${idx}`,
   };
@@ -168,17 +193,23 @@ export async function* getCircuitSimulationFiles(
 
   // fetch all campaigns concurrently with limit
   const campaignPromises = entityIds.map((id, idx) =>
-    campaignLimit(() => fetchCampaignData(id, idx, ctx))
+    campaignLimit(() => fetchCampaignData(id, idx, ctx, signal))
   );
   const campaignResults = await Promise.allSettled(campaignPromises);
 
-  const campaigns = campaignResults
-    .filter((r): r is PromiseFulfilledResult<CampaignData | null> => r.status === 'fulfilled')
-    .map((r) => r.value)
-    .filter((c): c is CampaignData => c !== null);
+  const campaigns: CampaignData[] = [];
+  for (const [idx, result] of campaignResults.entries()) {
+    if (result.status === 'fulfilled') {
+      if (result.value) campaigns.push(result.value);
+    } else if (!signal?.aborted) {
+      // its folder and metadata row are missing, so list it with the files that failed
+      failed.push(`${ASSET_BASE_PATH}/${idx} (simulation campaign ${entityIds[idx]})`);
+    }
+  }
 
   // process campaigns
   for (const { campaign, simulations, idx, dataPath } of campaigns) {
+    if (signal?.aborted) return;
     const idxExtra = { idx, data_path: dataPath };
 
     const configAsset = campaign.assets.find(
@@ -193,7 +224,7 @@ export async function* getCircuitSimulationFiles(
     // fetch every simulation's results concurrently; only metadata, no asset bodies
     const simulationResults = await pMap(
       simulations,
-      (sim) => processSimulation(sim, dataPath, ctx, resultLimit),
+      (sim) => processSimulation(sim, dataPath, ctx, resultLimit, signal),
       { concurrency: CONCURRENCY.SIMULATIONS }
     );
 
