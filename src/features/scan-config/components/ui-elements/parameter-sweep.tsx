@@ -58,6 +58,7 @@ export function SweepIconButton({
   testId,
   onClick,
   pressed,
+  disabled,
   className,
   children,
 }: {
@@ -67,6 +68,7 @@ export function SweepIconButton({
   onClick: () => void;
   /** Set for toggles so screen readers announce the active value. */
   pressed?: boolean;
+  disabled?: boolean;
   className?: string;
   children: ReactNode;
 }) {
@@ -76,11 +78,13 @@ export function SweepIconButton({
       data-testid={testId}
       aria-label={label}
       aria-pressed={pressed}
+      disabled={disabled}
       title={label}
       className={cn(
         'inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full',
         'text-primary-8 bg-white ring-1 ring-neutral-200 transition-colors',
         'hover:bg-primary-8 hover:text-white hover:ring-primary-8',
+        'disabled:pointer-events-none disabled:opacity-50',
         className
       )}
       onClick={onClick}

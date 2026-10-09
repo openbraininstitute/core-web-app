@@ -10,7 +10,10 @@
  *     parameters: { "<nmodlVariable>": ParameterSelection }
  *   }
  * and a ParameterSelection is
- *   { type: "ParameterSelection", value: OptimizationValue, distribution: "uniform" }
+ *   { type: "ParameterSelection", value: OptimizationValue, distribution?: "<name>" }
+ * where `distribution` is an optional non-nullable string naming a custom distribution declared
+ * under `distance_dependent_distributions`. The key is omitted when no distribution is chosen, and
+ * the backend applies its default.
  * with
  *   OptimizationValue = { mode: "fixed"|"bounds", value: number|null, bounds: [number, number] | null }
  * where the schema requires a `value` in fixed mode, and increasing `bounds` in bounds mode.
@@ -38,7 +41,13 @@ export const PARAMETERS_KEY = 'parameters';
 export const IonChannelModelFromIdType = 'IonChannelModelFromID';
 export const MechanismRegionSelectionType = 'MechanismRegionSelection';
 export const ParameterSelectionType = 'ParameterSelection';
-export const DEFAULT_DISTRIBUTION = 'uniform';
+export const DISTANCE_DISTRIBUTIONS_KEY = 'distance_dependent_distributions';
+
+/** A distribution the user can pick for a parameter: its declared name and python `function`. */
+export type TDistributionOption = {
+  name: string;
+  function: string;
+};
 
 export const ParameterMode = {
   Fixed: 'fixed',
@@ -85,7 +94,9 @@ export function readRegionEntries(
 ): Array<Record<string, ConfigValue>> {
   const region = readRegions(mechanisms)[choiceName];
   if (!Array.isArray(region)) return [];
-  return region.filter(isPlainObject);
+  // `region` narrows to a union of array types, which breaks `filter`'s type-guard overload, so
+  // widen to a single `ConfigValue[]` before filtering down to the plain-object entries.
+  return (region as ConfigValue[]).filter(isPlainObject);
 }
 
 /** The model id (`id_str`) referenced by a region entry, or undefined when malformed. */
@@ -127,6 +138,28 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
       : null;
 
   return { mode, value, bounds };
+}
+
+/** Reads a stored `ParameterSelection.distribution`; `null` when unset (the default: no distribution). */
+export function readDistribution(parameterSelection: ConfigValue): string | null {
+  const selection = asRecord(parameterSelection);
+  return typeof selection.distribution === 'string' && selection.distribution.length > 0
+    ? selection.distribution
+    : null;
+}
+
+/**
+ * The distributions a parameter may use: the custom distributions declared under the root config's
+ * `distance_dependent_distributions`, each with its name and python `function`. The built-in
+ * distance distributions are not offered here; a parameter with no declared distribution keeps the
+ * schema default (`uniform`).
+ */
+export function availableDistributions(config: Config): TDistributionOption[] {
+  const declared = asRecord(config.distance_dependent_distributions);
+  return Object.entries(declared).map(([name, entry]) => {
+    const fn = asRecord(entry).function;
+    return { name, function: typeof fn === 'string' ? fn : '' };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -229,13 +262,21 @@ export function makeRegionEntry(idStr: string): Record<string, ConfigValue> {
   };
 }
 
-/** Wraps a UI OptimizationValue into a schema `ParameterSelection`. */
-export function makeParameterSelection(optimizationValue: TOptimizationValue): ConfigValue {
-  return {
+/**
+ * Wraps a UI OptimizationValue into a schema `ParameterSelection`. The schema's `distribution` is
+ * an optional non-nullable string (`minLength: 1`, default `uniform`), so a `null` distribution
+ * omits the key entirely rather than writing `null`, letting the backend apply its default.
+ */
+export function makeParameterSelection(
+  optimizationValue: TOptimizationValue,
+  distribution: string | null = null
+): ConfigValue {
+  const selection: Record<string, ConfigValue> = {
     type: ParameterSelectionType,
     value: optimizationValue,
-    distribution: DEFAULT_DISTRIBUTION,
   };
+  if (distribution !== null) selection.distribution = distribution;
+  return selection;
 }
 
 // ---------------------------------------------------------------------------
@@ -277,6 +318,77 @@ export function pruneRegionsToModelIds(
 
   if (!changed) return mechanisms;
   return { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions };
+}
+
+/**
+ * Rewrites every parameter's `distribution` across all emodel optimisation elements when a custom
+ * distribution is renamed or deleted. On rename, references to `oldName` become `newName`; on
+ * delete (`newName` omitted), the `distribution` key is dropped so the backend applies its default
+ * (the schema's `distribution` is non-nullable). Only `mechanism_regions` parameters carry a
+ * distribution (global parameters do not). Returns a new config; unchanged keys are kept.
+ */
+export function remapParameterDistributions(
+  config: Config,
+  schema: ConfigSchema,
+  oldName: string,
+  newName: string | null
+): Config {
+  if (oldName === newName) return config;
+
+  let changed = false;
+  const next = Object.fromEntries(
+    Object.entries(config).map(([key, value]) => {
+      const rootSchema = schema.properties[key];
+      const isEModelValue =
+        rootSchema !== undefined &&
+        !isType(rootSchema) &&
+        rootSchema.ui_element === ScanConfigUIElementDict.EModelOptimisationParameters;
+      if (!isEModelValue) return [key, value];
+
+      const mechanisms = readMechanisms(value);
+      const regions = mechanisms[MECHANISM_REGIONS_KEY];
+      if (!isPlainObject(regions)) return [key, value];
+
+      const nextRegions = Object.fromEntries(
+        Object.entries(regions).map(([choiceName, entries]) => {
+          if (!Array.isArray(entries)) return [choiceName, entries];
+          const nextEntries = entries.map((entry) => {
+            if (!isPlainObject(entry)) return entry;
+            const params = entryParameters(entry);
+            let entryChanged = false;
+            const nextParams = Object.fromEntries(
+              Object.entries(params).map(([paramName, selection]) => {
+                if (isPlainObject(selection) && selection.distribution === oldName) {
+                  entryChanged = true;
+                  changed = true;
+                  if (newName === null) {
+                    // Delete: drop the distribution key so the backend applies its default
+                    // (the schema's `distribution` is non-nullable, so `null` is invalid).
+                    const { distribution: _dropped, ...rest } = selection;
+                    return [paramName, rest];
+                  }
+                  return [paramName, { ...selection, distribution: newName }];
+                }
+                return [paramName, selection];
+              })
+            );
+            return entryChanged ? { ...entry, [PARAMETERS_KEY]: nextParams } : entry;
+          });
+          return [choiceName, nextEntries];
+        })
+      );
+
+      return [
+        key,
+        {
+          ...asRecord(value),
+          [MECHANISMS_KEY]: { ...mechanisms, [MECHANISM_REGIONS_KEY]: nextRegions },
+        },
+      ];
+    })
+  );
+
+  return changed ? next : config;
 }
 
 /**

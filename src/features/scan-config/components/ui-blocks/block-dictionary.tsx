@@ -234,7 +234,7 @@ export default function BlockDictionary({
                         >)
                       : initial;
 
-                  const newEntry = nextEntryName(schema, selectedRootElement, allEntries);
+                  const newEntry = nextEntryName(schema, selectedRootElement, allEntries, o);
 
                   setSelectedEntry(newEntry);
                   allEntries.add(newEntry);
