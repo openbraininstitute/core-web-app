@@ -85,18 +85,15 @@ export function InOutFiles({
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files = (morphologies ?? [])
-      .map((morphology) => {
-        const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
-        if (!swcAsset) return null;
-        return {
+    const files = (morphologies ?? []).map(
+      (morphology) =>
+        ({
           entity: morphology,
           name: morphology.name,
           dataType: morphology.type as TExtendedEntitiesTypeDict,
           renderer: ActivityCustomFileRenderer.MiniDetailView,
-        } as TActivityCustomFile;
-      })
-      .filter((file): file is TActivityCustomFile => file !== null);
+        }) as TActivityCustomFile
+    );
     return prependLogStreamFile({
       file:
         logStreamFiles.output && execution

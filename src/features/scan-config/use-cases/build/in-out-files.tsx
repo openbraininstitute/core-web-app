@@ -98,7 +98,7 @@ function makeAssetOutputFiles(entity: BuiltEntityWithAssets): TActivityCustomFil
 }
 
 function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivityCustomFile[] {
-  if (!entity || !hasAssets(entity) || !entity.assets[0]) return [];
+  if (!entity || !hasAssets(entity)) return [];
 
   if (shouldListAssetsAsOutputs(entity.type)) {
     return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];

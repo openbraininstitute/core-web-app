@@ -27,7 +27,6 @@ import {
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 
 type Props = {
@@ -139,7 +138,7 @@ export function InOutFiles({
         // the draft e-model and me-model rows are told apart by their entity type
         const entityLabel =
           file.renderer === ActivityCustomFileRenderer.MiniDetailView
-            ? getEntityTypeTagLabel(file.entity.type as TExtendedEntitiesTypeDict)
+            ? getEntityTypeTagLabel(file.dataType)
             : null;
         return (
           <TaskIOFileItem
