@@ -86,7 +86,18 @@ export function BrainAtlasViewerGltf({
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions();
 
-  usePainterLoadingListener(painter, onLoading);
+  // the first finished load means a frame with the brain in it, which the atlas morph awaits
+  const [isDrawn, setIsDrawn] = React.useState(false);
+  const sawLoadingRef = React.useRef(false);
+  const handleLoading = React.useCallback(
+    (loading: boolean) => {
+      if (loading) sawLoadingRef.current = true;
+      else if (sawLoadingRef.current) setIsDrawn(true);
+      onLoading(loading);
+    },
+    [onLoading]
+  );
+  usePainterLoadingListener(painter, handleLoading);
 
   React.useEffect(() => {
     const handleCameraChange = () => {
@@ -146,6 +157,7 @@ export function BrainAtlasViewerGltf({
   return (
     <div
       ref={containerRef}
+      data-atlas-drawn={isDrawn || undefined}
       className={classNames(className, styles.brainAtlasViewerGltf, compact && styles.compact)}
     >
       <canvas ref={canvasRef} />

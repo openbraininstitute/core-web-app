@@ -149,6 +149,8 @@ export class Painter {
         depth: true,
         alpha: true,
         premultipliedAlpha: false,
+        // kept, so the atlas morph can copy the last frame when this viewer goes
+        preserveDrawingBuffer: true,
       });
       this.context = context;
       const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID, this.cameraZoom);
