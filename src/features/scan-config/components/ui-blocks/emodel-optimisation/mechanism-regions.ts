@@ -57,7 +57,7 @@ export type TOptimizationValue = {
 };
 
 export function defaultOptimizationValue(): TOptimizationValue {
-  return { mode: ParameterMode.Fixed, value: null, bounds: null };
+  return { mode: ParameterMode.Bounds, value: null, bounds: [null, null] };
 }
 
 // ---------------------------------------------------------------------------

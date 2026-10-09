@@ -178,7 +178,7 @@ function NeuronBlockParameters({
   const toggleParameter = (parameterName: string, checked: boolean) => {
     const next = { ...parametersDict };
     if (checked) {
-      // Check adds the parameter, defaulting to a `fixed` OptimizationValue with empty values.
+      // Check adds the parameter, defaulting to a `bounds` OptimizationValue with empty values.
       next[parameterName] = makeParameterSelection(defaultOptimizationValue());
     } else {
       // Uncheck clears everything for this parameter.
