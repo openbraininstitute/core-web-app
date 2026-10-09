@@ -10,11 +10,11 @@ import { keyBuilder } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type ImageFileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
 };
 

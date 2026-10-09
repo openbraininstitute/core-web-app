@@ -19,7 +19,6 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
@@ -168,9 +167,7 @@ export function ExtractionTab({
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as EntityCoreObjectTypes}
-                  dataType={
-                    selectedFile.dataType ?? (selectedFile.entity.type as TExtendedEntitiesTypeDict)
-                  }
+                  dataType={selectedFile.dataType}
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

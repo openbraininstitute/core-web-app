@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+import { isAssetBackedFile } from '@/features/scan-config/types';
+
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 type Props = {
@@ -10,9 +12,9 @@ type Props = {
   onSelect: (file: TActivityCustomFile) => void;
 };
 
-/** The stable per-row key: every row sets `id`, or an `asset` whose id identifies it. */
+/** The stable per-row key: every row sets `id`, a file row's asset id, else the entity id. */
 function fileKey(file: TActivityCustomFile): string {
-  return file.id ?? file.asset?.id ?? file.entity.id;
+  return file.id ?? (isAssetBackedFile(file) ? file.asset.id : undefined) ?? file.entity.id;
 }
 
 function isSameFile(a: TActivityCustomFile | undefined, b: TActivityCustomFile | undefined) {

@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { Loader } from '@/components/loader';
 import { EphysViewer } from '@/features/ephys-viewer';
+import { isAssetBackedFile } from '@/features/scan-config/types';
 import { SonataViewer } from '@/features/sonata-viewer';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
@@ -18,7 +19,7 @@ import { PdfFileViewer } from './pdf-viewer';
 
 import type { ReactNode } from 'react';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TActivityCustomFile, TAssetBackedFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
 
 type FileViewerProps = {
@@ -42,11 +43,11 @@ const CODE_CONTENT_TYPES = new Set([
   AssetContentType.hoc,
 ]);
 
-function isImageFile(file: TActivityCustomFile): boolean {
+function isImageFile(file: TAssetBackedFile): boolean {
   return IMAGE_CONTENT_TYPES.has(file.asset.content_type);
 }
 
-function isCodeFile(file: TActivityCustomFile): boolean {
+function isCodeFile(file: TAssetBackedFile): boolean {
   return (
     CODE_CONTENT_TYPES.has(file.asset.content_type) ||
     (!!file.enforcedRenderType && CODE_CONTENT_TYPES.has(file.enforcedRenderType))
@@ -60,7 +61,7 @@ function isCodeFile(file: TActivityCustomFile): boolean {
  * through the very same dispatch, instead of duplicating the content-type branching.
  */
 function renderFileContent(
-  file: TActivityCustomFile | undefined,
+  file: TAssetBackedFile | undefined,
   context: WorkspaceContext
 ): ReactNode {
   return match(file)
@@ -105,10 +106,17 @@ function renderFileContent(
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
 }
 
-export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
-  const [displayFile, setDisplayFile] = useState<TActivityCustomFile | undefined>(file);
+/** A row is viewable only if it carries an asset; a mini-detail entity row (e.g. a me-model) has
+ * none and is rendered elsewhere, so it never reaches a viewer. */
+function asAssetBacked(file: TActivityCustomFile | undefined): TAssetBackedFile | undefined {
+  return file && isAssetBackedFile(file) ? file : undefined;
+}
 
-  const isFilePreloading = file && file !== displayFile;
+export function FileViewer({ file, context, loading = false, className = '' }: FileViewerProps) {
+  const viewFile = asAssetBacked(file);
+  const [displayFile, setDisplayFile] = useState<TAssetBackedFile | undefined>(viewFile);
+
+  const isFilePreloading = viewFile && viewFile !== displayFile;
 
   const isCode = !!displayFile && isCodeFile(displayFile);
   const isImage = !!displayFile && isImageFile(displayFile);
@@ -141,7 +149,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
             <Loader className="text-neutral-3" />
           </div>
         )}
-        {isFilePreloading && file && (
+        {isFilePreloading && viewFile && (
           <div className="absolute inset-0 z-10 cursor-progress">
             <Suspense
               fallback={
@@ -150,7 +158,11 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
                 </div>
               }
             >
-              <FilePreloader file={file} context={context} onLoaded={() => setDisplayFile(file)} />
+              <FilePreloader
+                file={viewFile}
+                context={context}
+                onLoaded={() => setDisplayFile(viewFile)}
+              />
             </Suspense>
           </div>
         )}
@@ -160,7 +172,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
 }
 
 type FilePreloaderProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
   onLoaded: () => void;
 };
@@ -200,7 +212,7 @@ function DataPreloader({ file, context, onLoaded }: FilePreloaderProps) {
 }
 
 type NwbFileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
 };
 
@@ -217,7 +229,7 @@ function NwbFileViewer({ file, context }: NwbFileViewerProps) {
 }
 
 type H5FileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
   context: WorkspaceContext;
 };
 
@@ -247,7 +259,7 @@ function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
 }
 
 type PlaceholderFileViewerProps = {
-  file: TActivityCustomFile;
+  file: TAssetBackedFile;
 };
 
 function PlaceholderFileViewer({ file }: PlaceholderFileViewerProps) {

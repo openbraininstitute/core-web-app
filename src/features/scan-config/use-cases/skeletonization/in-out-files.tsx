@@ -10,7 +10,11 @@ import {
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
-import { ActivityCustomFileRenderer, type TActivityCustomFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  type TActivityCustomFile,
+  type TAssetBackedFile,
+} from '@/features/scan-config/types';
 import {
   makeLogStreamFileDescriptors,
   makeTaskConfigurationFile,
@@ -20,6 +24,7 @@ import {
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TSkeletonizationTaskConfigMeta } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 
 type Props = {
@@ -48,8 +53,8 @@ export function InOutFiles({
     [config.id, execution?.execution_id]
   );
 
-  const inputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files: TActivityCustomFile[] = config.assets.map((asset) => ({
+  const inputFiles: TAssetBackedFile[] = useMemo(() => {
+    const files: TAssetBackedFile[] = config.assets.map((asset) => ({
       entity: config,
       asset,
       renderer: ActivityCustomFileRenderer.Default,
@@ -80,18 +85,15 @@ export function InOutFiles({
   });
 
   const outputFiles: TActivityCustomFile[] = useMemo(() => {
-    const files = (morphologies ?? [])
-      .map((morphology) => {
-        const swcAsset = morphology.assets.find((a) => a.content_type === 'application/swc');
-        if (!swcAsset) return null;
-        return {
+    const files = (morphologies ?? []).map(
+      (morphology) =>
+        ({
           entity: morphology,
-          asset: swcAsset,
           name: morphology.name,
+          dataType: morphology.type as TExtendedEntitiesTypeDict,
           renderer: ActivityCustomFileRenderer.MiniDetailView,
-        } as TActivityCustomFile;
-      })
-      .filter((file): file is TActivityCustomFile => file !== null);
+        }) as TActivityCustomFile
+    );
     return prependLogStreamFile({
       file:
         logStreamFiles.output && execution
@@ -117,10 +119,8 @@ export function InOutFiles({
       inputItems={inputFiles.map((file) => (
         <TaskIOFileItem
           id={file.id ?? file.asset.id}
-          selected={
-            file.id ? file.id === selectedFile?.id : file.asset.id === selectedFile?.asset.id
-          }
-          key={file.id ?? file.asset?.id}
+          selected={(file.id ?? file.asset.id) === selectedFile?.id}
+          key={file.id ?? file.asset.id}
           file={file}
           onSelect={onSelect}
           name={file.name}
