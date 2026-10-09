@@ -66,4 +66,28 @@ describe('RegionChoiceCards channel count', () => {
       screen.getByTestId('scan-config-emodel-section-list-somatic-channel-count')
     ).toHaveTextContent('0 channels');
   });
+
+  it('with onlyAssigned, hides regions that have no assigned models', () => {
+    // Only `somatic` has models; `all` is empty.
+    const partial: ConfigValue = {
+      mechanisms: {
+        ion_channel_models: [{ type: 'IonChannelModelFromID', id_str: NA }],
+        mechanism_regions: { somatic: [makeRegionEntry(NA)] },
+      },
+    };
+
+    render(
+      <RegionChoiceCards
+        rootSchema={rootSchema}
+        value={partial}
+        selectedRegionChoice=""
+        setSelectedRegionChoice={vi.fn()}
+        errors={[]}
+        onlyAssigned
+      />
+    );
+
+    expect(screen.getByTestId('scan-config-emodel-section-list-somatic')).toBeInTheDocument();
+    expect(screen.queryByTestId('scan-config-emodel-section-list-all')).not.toBeInTheDocument();
+  });
 });

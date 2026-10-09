@@ -27,6 +27,8 @@ type Props = {
   setSelectedRegionChoice: (choice: string) => void;
   /** ajv errors inside the emodel config value (paths relative to it) that this tab flags */
   errors: readonly ErrorObject[];
+  /** when true, hides choices with no assigned ion channel models (Parameters Selection tab) */
+  onlyAssigned?: boolean;
 };
 
 /**
@@ -38,6 +40,10 @@ type Props = {
  * opens it for that choice, clicking the open one again closes it. Unavailable choices are dimmed
  * and surface their `disabled_reason` in a tooltip. A card whose region has an error in `errors`
  * shows a warning icon; each tab passes only the errors of the keys it writes.
+ *
+ * With `onlyAssigned`, choices with no assigned ion channel models are omitted: the Parameters
+ * Selection tab configures parameters of already-assigned models, so empty regions have nothing
+ * to show there.
  */
 export function RegionChoiceCards({
   rootSchema,
@@ -45,12 +51,13 @@ export function RegionChoiceCards({
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
+  onlyAssigned,
 }: Props) {
-  const choices = [...rootSchema.properties.base_parameters.choices].sort(
-    (a, b) => a.display_order - b.display_order
-  );
-
   const mechanisms = readMechanisms(value);
+
+  const choices = [...rootSchema.properties.base_parameters.choices]
+    .sort((a, b) => a.display_order - b.display_order)
+    .filter((choice) => !onlyAssigned || assignedModelIds(mechanisms, choice.name).length > 0);
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
