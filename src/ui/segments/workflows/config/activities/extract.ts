@@ -42,7 +42,7 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
     targetType: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     breadcrumb: {
-      root: 'Intracellular EFeatures',
+      root: 'Intracellular E-features',
     },
     configureRouting: WorkflowConfigureRoutingDict.Standalone,
     scanConfig: {
@@ -51,7 +51,7 @@ export const ExtractionWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: extractEFeaturesConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.ElectricalCellRecording }],
-    label: 'Intracellular EFeatures',
+    label: 'Intracellular E-features',
     disabled: false,
   },
 ];

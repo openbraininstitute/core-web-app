@@ -88,7 +88,7 @@ describe('intracellular efeatures workflow registration', () => {
     );
 
     expect(workflow).toBeDefined();
-    expect(workflow?.label).toBe('Intracellular EFeatures');
+    expect(workflow?.label).toBe('Intracellular E-features');
     expect(workflow?.disabled).toBe(false);
   });
 

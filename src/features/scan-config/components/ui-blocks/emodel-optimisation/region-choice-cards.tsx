@@ -4,7 +4,9 @@ import { WarningFilled } from '@ant-design/icons';
 import { RiArrowRightSLine } from '@remixicon/react';
 
 import {
+  assignedModelIds,
   hasErrorAt,
+  readMechanisms,
   regionPath,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -12,11 +14,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
-import type { IEModelOptimisationParameters } from '@/features/scan-config/types';
+import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 type Props = {
   /** the `emodel_optimisation_parameters` root element schema (source of the section-list choices) */
   rootSchema: IEModelOptimisationParameters;
+  /** value of the `emodel_optimisation_parameters` config key (source of the per-region channel counts) */
+  value: ConfigValue;
   /** currently selected section-list choice (`name`), or '' when none is selected */
   selectedRegionChoice: string;
   /** selects a section-list choice, opening the adjacent drawer; reselecting the open one closes it */
@@ -37,6 +41,7 @@ type Props = {
  */
 export function RegionChoiceCards({
   rootSchema,
+  value,
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
@@ -45,10 +50,13 @@ export function RegionChoiceCards({
     (a, b) => a.display_order - b.display_order
   );
 
+  const mechanisms = readMechanisms(value);
+
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
       {choices.map((choice) => {
         const isSelected = choice.name === selectedRegionChoice;
+        const channelCount = assignedModelIds(mechanisms, choice.name).length;
 
         return (
           <Tooltip key={choice.name}>
@@ -80,6 +88,15 @@ export function RegionChoiceCards({
                   <MarkdownDescription className={cn('mt-3', isSelected && 'text-primary-1')}>
                     {choice.description}
                   </MarkdownDescription>
+                  <span
+                    data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
+                    className={cn(
+                      'mt-3 block text-sm',
+                      isSelected ? 'text-primary-1' : 'text-gray-500'
+                    )}
+                  >
+                    {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
+                  </span>
                 </div>
                 {hasErrorAt(errors, regionPath(choice.name)) && (
                   <WarningFilled className="text-yellow-400!" />

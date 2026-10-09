@@ -32,6 +32,7 @@ type Props = {
  */
 export function ParametersSelection({
   rootSchema,
+  value,
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
@@ -46,6 +47,7 @@ export function ParametersSelection({
       </div>
       <RegionChoiceCards
         rootSchema={rootSchema}
+        value={value}
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
         errors={parameterErrors(errors)}

@@ -32,6 +32,7 @@ type Props = {
  */
 export function RegionAssignment({
   rootSchema,
+  value,
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
@@ -46,6 +47,7 @@ export function RegionAssignment({
       </div>
       <RegionChoiceCards
         rootSchema={rootSchema}
+        value={value}
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
         errors={nonParameterErrors(errors)}

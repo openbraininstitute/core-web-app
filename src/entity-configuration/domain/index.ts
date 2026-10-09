@@ -37,7 +37,6 @@ import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { EModelOptimizationResult } from '@/entity-configuration/domain/simulation/emodel-optimization-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -98,7 +97,6 @@ const EntityCoreSimulationConfiguration = {
   IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
-  EModelOptimizationResult,
 };
 
 const EntityCoreExtractionConfiguration = {
