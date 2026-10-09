@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { includes } from 'es-toolkit/compat';
+import { compact, includes } from 'es-toolkit/compat';
 import { useEffect } from 'react';
 
 import { hasAssets } from '@/api/entitycore/guards';
@@ -83,8 +83,11 @@ function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCusto
   };
 }
 
-function makeAssetOutputFiles(entity: BuiltEntityWithAssets): TActivityCustomFile[] {
-  return entity.assets.map((asset) => ({
+function makeAssetOutputFiles(
+  entity: BuiltEntityWithAssets,
+  assets = entity.assets
+): TActivityCustomFile[] {
+  return assets.map((asset) => ({
     id: asset.id,
     entity,
     asset,
@@ -100,7 +103,12 @@ function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivity
     return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];
   }
 
-  return [makeEntityMiniDetailFile(entity)];
+  // the model row previews its figures, so of its assets only the mod file needs a row
+  const modFile =
+    entity.type === EntityTypeDict.IonChannelModel
+      ? findAssetByLabel(entity.assets, AssetLabel.neuron_mechanisms)
+      : null;
+  return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity, compact([modFile]))];
 }
 
 function isSingleNeuronCircuit(entity: TActivityCustomFile['entity']): boolean {

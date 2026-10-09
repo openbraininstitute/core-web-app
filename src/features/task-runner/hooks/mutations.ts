@@ -5,6 +5,8 @@ import { useCallback } from 'react';
 
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
+import { runIonChannelBuild } from '@/api/small-scale-simulator/ion-channel/build';
 import { useAppNotification } from '@/components/notification';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
@@ -42,6 +44,17 @@ export function invalidateTaskExecutionActivities({
     },
   });
 }
+
+type TTaskLauncher = (params: {
+  ctx: WorkspaceContext;
+  task_type: TObiOneTaskType;
+  config_id: string;
+}) => Promise<unknown>;
+
+// a module-level registry rather than a binding field: bindings cross the server/client boundary
+const LaunchersByTaskType: Partial<Record<TObiOneTaskType, TTaskLauncher>> = {
+  [ObiOneTaskTypeDict.IonChannelFitting]: runIonChannelBuild,
+};
 
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
@@ -89,11 +102,12 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
+      const launch = LaunchersByTaskType[obiOneTaskType] ?? runTask;
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {
           try {
-            const executionId = await runTask({
+            const executionId = await launch({
               ctx: context,
               task_type: obiOneTaskType,
               config_id: configId,

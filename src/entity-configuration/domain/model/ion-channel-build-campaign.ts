@@ -3,10 +3,10 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { defineTaskConfigCampaign } from '@/entity-configuration/domain/model/task-config-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-export const BuildSynaptomeCampaign = defineTaskConfigCampaign({
-  title: 'Synaptome',
-  extendedType: ExtendedEntitiesTypeDict.BuildSynaptomeCampaign,
-  slug: EntitySlug.BuildSynaptomeCampaign,
-  campaignConfigType: TaskConfigType.BuildSynaptomeCampaign,
-  campaignName: 'build synaptome',
+export const IonChannelBuildCampaign = defineTaskConfigCampaign({
+  title: 'Ion channel',
+  extendedType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+  slug: EntitySlug.IonChannelBuildCampaign,
+  campaignConfigType: TaskConfigType.IonChannelModelingCampaign,
+  campaignName: 'ion channel build',
 });

@@ -33,6 +33,7 @@ const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+  ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
   ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,

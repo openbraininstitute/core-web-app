@@ -35,6 +35,7 @@ export const ScanConfigGeneratedApiPath = {
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
   EModelOptimization: 'e-model-optimization-scan-config-generate-grid',
   SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
+  IonChannelFitting: 'ion-channel-fitting-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -256,6 +257,18 @@ export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
     },
     generatedApiPath: ScanConfigGeneratedApiPath.BuildSynaptome,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.IonChannelRecording,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.IonChannelRecording,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.IonChannelRecording]:
+        ScanConfigFromIdType.IonChannelRecordingFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFitting,
   };
 }
 

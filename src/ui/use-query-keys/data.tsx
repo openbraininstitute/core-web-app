@@ -317,17 +317,6 @@ export const keyBuilder = {
     `${prefix}-asset-preview`,
     { context, params },
   ],
-  singleIonChannelModelingCampaign: ({
-    context,
-    id,
-    ...props
-  }: {
-    context: WorkspaceContext;
-    id: string;
-  } & Record<string, any>) => [
-    `${prefix}-ion-channel-modeling-campaign`,
-    { context, id, ...props },
-  ],
   validationResults: ({
     context,
     id,
