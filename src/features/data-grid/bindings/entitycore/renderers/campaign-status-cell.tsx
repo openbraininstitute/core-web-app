@@ -45,6 +45,12 @@ export interface ICampaignStatusBadgePopoverProps {
   statusCountMap?: Map<ActivityStatus, number>;
   /** Async status fetcher, polled while a member is PENDING/RUNNING (ASYNC sources). */
   fetchStatus?: () => Promise<Map<ActivityStatus, number>>;
+  /**
+   * Seed for the async poll (ASYNC sources): status already resolved by the list query, so the
+   * first render uses it and no fetch runs on mount. Polling still starts on the interval while a
+   * member is PENDING/RUNNING. Ignored when {@link statusCountMap} is set.
+   */
+  initialStatusCountMap?: Map<ActivityStatus, number>;
   /** React-Query key for the status poll (ASYNC sources). */
   statusQueryKey?: ReadonlyArray<unknown>;
   /** Lazily-invoked (on first popover open) scan-rows fetcher; loose card row shape. */
@@ -99,6 +105,7 @@ function SimulationCampaignStatusCell({
 export function CampaignStatusBadgePopover({
   statusCountMap: providedMap,
   fetchStatus,
+  initialStatusCountMap,
   statusQueryKey,
   fetchScanRows,
   scanQueryKey,
@@ -115,6 +122,11 @@ export function CampaignStatusBadgePopover({
     queryFn: () =>
       fetchStatus ? fetchStatus() : Promise.resolve(new Map<ActivityStatus, number>()),
     enabled: isAsync && enabled,
+    // Seeded from the list query: first render uses it and skips the mount fetch. `refetchInterval`
+    // runs independently of staleness, so active rows still start polling; finished rows never poll
+    // and never fetch, so no request is duplicated.
+    initialData: initialStatusCountMap,
+    staleTime: initialStatusCountMap ? TASK_STATUS_POLL_INTERVAL_MS : 0,
     refetchInterval: (query) => {
       const values = Array.from(query.state.data?.keys() ?? []);
       return values.some((value) => ACTIVE_STATUSES.includes(value))
