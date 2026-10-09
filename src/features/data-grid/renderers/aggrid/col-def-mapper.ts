@@ -15,6 +15,9 @@ import type { IExpandColumnConfig } from '@/features/data-grid/react';
 
 export const EXPAND_COL_ID = '__expand';
 
+/** An inset line, so it never fights AG Grid's own cell borders (focus, range). */
+const DIVIDER_CLASS = 'shadow-[inset_-1px_0_0_var(--ag-border-color)]';
+
 export interface IBuildColDefsOptions {
   hidden: Set<string>;
   /** user-resized widths (take precedence over the schema's width spec) */
@@ -23,6 +26,10 @@ export interface IBuildColDefsOptions {
   withExpandColumn?: boolean;
   /** when `columnId` matches a data column the chevron hosts inside that cell instead */
   expandColumn?: IExpandColumnConfig;
+}
+
+function joinClasses(...classes: Array<string | false | undefined>): string | undefined {
+  return classes.filter(Boolean).join(' ') || undefined;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -75,11 +82,14 @@ export function buildColDefs<Row>(
       hide: hidden.has(c.id),
       sortable: false,
       headerComponent: AgHeader,
+      // a keyed header lays itself out, edge to edge
+      headerClass: joinClasses(c.headerRenderer ? 'px-0!' : undefined, c.divider && DIVIDER_CLASS),
       headerComponentParams: {
         columnId: c.id,
         unit: c.unit,
         sortable: !!c.sortable,
         filter: filterParams,
+        headerRenderer: c.headerRenderer,
       },
       width: userWidth ?? c.width?.width,
       minWidth: c.width?.minWidth,
@@ -91,12 +101,14 @@ export function buildColDefs<Row>(
       // frozen against an edge; `lockPosition` keeps a drag from pulling it out
       pinned: c.pinned,
       lockPosition: c.pinned,
-      cellClass:
+      cellClass: joinClasses(
         c.align === Align.Right
           ? 'ag-right-aligned-cell'
           : c.align === Align.Center
             ? 'ag-center-aligned-cell'
             : undefined,
+        c.divider && DIVIDER_CLASS
+      ),
     };
 
     if (getValue) {

@@ -15,7 +15,6 @@ import {
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { userJourneyTracker } from '@/components/explore-section/Literature/user-journey';
 import { config } from '@/config';
-import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
@@ -66,7 +65,6 @@ export function BrowseLinkContent({
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const scope = (searchParams.get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
   const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
 
   const onContribute = () =>
@@ -126,7 +124,7 @@ export function BrowseLinkContent({
             </div>
           </Link>
         </Button>
-        {isUploadable && scope === WorkspaceScope.Project && (
+        {isUploadable && (
           <div
             className={cn(
               'transition-all duration-500 ease-out',
@@ -369,7 +367,6 @@ export function BrowseLink({
         {...{
           extendedType,
           href,
-          scope,
           isLoading,
           isUploadable: entity?.isContributable,
           title: entity?.title,

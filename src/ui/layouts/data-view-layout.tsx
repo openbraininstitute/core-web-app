@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
-import { ViewVariant, WorkspaceScope } from '@/constants';
+import { ViewVariant } from '@/constants';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
@@ -69,8 +69,7 @@ export async function DataViewLayout({
   }
 
   const isPublicEntity = entity.authorized_public;
-  const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}`;
 
   // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
   const opensAsCampaign =
@@ -96,7 +95,6 @@ export async function DataViewLayout({
       title={entityType.title}
       type={type}
       group={entityType.group}
-      scope={scope}
       variant={chromeVariant}
     />
   );

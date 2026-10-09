@@ -28,6 +28,8 @@ interface HeaderParams {
   filter?: {
     targets: ReadonlyArray<IFilterTarget>;
   };
+  /** registry key of a header that replaces all of the above */
+  headerRenderer?: string;
 }
 
 /**
@@ -37,10 +39,15 @@ interface HeaderParams {
  */
 export function AgHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
-  const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
-    HeaderParams;
+  const { columnId, unit, sortable, filter, headerNode, headerRenderer } =
+    props as CustomHeaderProps & HeaderParams;
   const state = useGridState(ctx.controller);
   const [open, setOpen] = useState(false);
+
+  const CustomHeader = headerRenderer ? ctx.cellRenderers.getHeader(headerRenderer) : undefined;
+  if (CustomHeader) {
+    return <CustomHeader columnId={columnId} label={props.displayName ?? ''} ctx={ctx} />;
+  }
 
   const entry = state.sort.find((s) => s.columnId === columnId);
   const rank = entry ? state.sort.findIndex((s) => s.columnId === columnId) : -1;

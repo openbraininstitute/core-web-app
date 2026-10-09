@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { config } from '@/config';
 import {
   DATA_GROUP_QUERY_PARAM,
+  DATA_SECTION_SCOPE,
   SCOPE_QUERY_PARAMS,
   type TViewVariant,
   ViewVariant,
@@ -23,7 +24,6 @@ import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -111,20 +111,18 @@ export function BackToEntityType({
   title,
   onClick,
   group,
-  scope,
   variant = ViewVariant.Light,
 }: WorkspaceContext & {
   type: TExtendedEntitiesTypeDict;
   title: string;
   group: TEntityTypeGroup;
-  scope: TWorkspaceScope;
   onClick: () => void;
   variant?: TViewVariant;
 }) {
   const queryParams = useSearchParams();
   const query = new URLSearchParams(queryParams);
   query.set(DATA_GROUP_QUERY_PARAM, group);
-  query.set(SCOPE_QUERY_PARAMS, scope);
+  query.delete(SCOPE_QUERY_PARAMS);
 
   const linkClass =
     variant === ViewVariant.Default
@@ -151,12 +149,10 @@ export function DataBreadcrumb({
   type,
   title,
   group,
-  scope,
   variant = ViewVariant.Light,
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
-  scope: TWorkspaceScope;
   title: string;
   variant?: TViewVariant;
 }) {
@@ -169,7 +165,7 @@ export function DataBreadcrumb({
     projectId,
     section: WorkspaceSection.Data,
     dataType: type,
-    scope,
+    scope: DATA_SECTION_SCOPE,
   });
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
@@ -193,7 +189,7 @@ export function DataBreadcrumb({
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
       <BackToEntityType
-        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
+        {...{ virtualLabId, projectId, type, title, group, onClick: onLinkClick, variant }}
       />
     </div>
   );

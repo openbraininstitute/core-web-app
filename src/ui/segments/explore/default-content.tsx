@@ -1,5 +1,6 @@
 'use client';
 
+import { DATA_PANEL_MAX_HEIGHT } from '@/constants';
 import { Card } from '@/ui/molecules/card';
 import { EntityLeftMenu } from '@/ui/segments/explore/entity-left-menu';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
@@ -22,7 +23,8 @@ export function DefaultContent({ children, dataKey }: Props) {
         id="explore-left-menu"
         data-testid="explore-left-menu"
         className={cn(
-          'h-full max-h-[calc(100vh-10.8rem)] px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
+          'h-full px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
+          DATA_PANEL_MAX_HEIGHT,
           { hidden: mdv }
         )}
       >

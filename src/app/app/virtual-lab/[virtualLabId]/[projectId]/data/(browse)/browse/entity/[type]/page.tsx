@@ -2,7 +2,12 @@ import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 import { match, P } from 'ts-pattern';
 
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import {
+  DATA_PANEL_MAX_HEIGHT,
+  DATA_SECTION_SCOPE,
+  WorkspaceScope,
+  WorkspaceSection,
+} from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { SelectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
@@ -39,6 +44,8 @@ export default async function Page({
         return (
           <BrowseEntityScope
             section={WorkspaceSection.Data}
+            scope={DATA_SECTION_SCOPE}
+            classNames={{ container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT }}
             dataType={dataType}
             mainTableProps={{
               selectionType: 'checkbox',
@@ -46,6 +53,9 @@ export default async function Page({
             }}
             allowDownload
             allowDelete
+            allowUpload
+            bulkActionsInToolbar
+            framed
           />
         );
       }

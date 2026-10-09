@@ -42,6 +42,12 @@ export const WorkspaceScope = {
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];
 
+/** Data lists public and project records together; each row shows which it is. */
+export const DATA_SECTION_SCOPE = WorkspaceScope.Combined;
+
+/** Data has no header row above its panels, so they are taller than other sections'. */
+export const DATA_PANEL_MAX_HEIGHT = 'max-h-[calc(100vh-7.3rem)]';
+
 export const WorkflowActivityDictValue = {
   build: 'build',
   simulate: 'simulate',

@@ -194,19 +194,29 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
     () =>
       selectionEnabled
         ? {
-            width: selectionSpec?.columnWidth ?? 48,
-            maxWidth: selectionSpec?.columnWidth ?? 48,
+            width: selectionSpec?.columnWidth ?? 36,
+            maxWidth: selectionSpec?.columnWidth ?? 36,
             pinned: 'left' as const,
             resizable: false,
             suppressMovable: true,
             lockPosition: 'left' as const,
-            // DEFAULT_COL_DEF does not reach the selection column, so centre it here
+            // DEFAULT_COL_DEF does not reach the selection column, so centre it here. AG
+            // spaces the checkbox from a value this column never shows, and its empty
+            // header label fills the cell, so both go for the box to sit mid-column.
             cellStyle: {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              paddingLeft: 0,
+              // matches the cell's transparent left border, so the box sits midway between
+              // the card's edge and the visible right one
+              paddingRight: 1,
             },
-            headerClass: 'flex items-center justify-center',
+            cellClass: '[&_.ag-selection-checkbox]:mr-0!',
+            headerClass: [
+              'flex items-center justify-center pr-px! pl-0!',
+              '[&_.ag-header-cell-comp-wrapper]:hidden [&_.ag-header-select-all]:mr-0!',
+            ].join(' '),
           }
         : undefined,
     [selectionEnabled, selectionSpec?.columnWidth]

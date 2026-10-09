@@ -36,7 +36,7 @@ const schema: IGridSchema<Row> = {
 
 const nullRenderer: TGridRenderer = () => null;
 
-function setup() {
+function setup({ bulkActionsInToolbar = false } = {}) {
   const controller = new GridController<Row>({
     schema,
     context: { dataType: 't' },
@@ -63,6 +63,7 @@ function setup() {
         cellRenderers={new CellRendererRegistry()}
         queryKey={['t']}
         showColumnChooser={false}
+        bulkActionsInToolbar={bulkActionsInToolbar}
         renderCount={({ total }) => <span data-testid="results-count">{total} results</span>}
         renderBulkActions={() => <button data-testid="bulk-download" type="button" />}
       />
@@ -100,6 +101,17 @@ describe('DataGrid footer', () => {
 
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
     expect(await screen.findByTestId('bulk-download')).toBeInTheDocument();
+  });
+
+  it('moves only the bulk actions up to the toolbar when asked', async () => {
+    const { controller } = setup({ bulkActionsInToolbar: true });
+    await waitFor(() => expect(screen.getByTestId('results-count')).toBeInTheDocument());
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
+
+    const toolbar = screen.getByTestId('data-grid-toolbar');
+    expect(toolbar.contains(await screen.findByTestId('bulk-download'))).toBe(true);
+    expect(toolbar.contains(screen.getByTestId('data-grid-pagination'))).toBe(false);
+    expect(toolbar.contains(screen.getByText('1 selected'))).toBe(false);
   });
 
   it('keeps the bulk actions out of the toolbar', async () => {

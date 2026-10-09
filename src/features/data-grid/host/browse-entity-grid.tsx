@@ -10,7 +10,7 @@ import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/type
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { isNotAuthorizedError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceScope, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -30,6 +30,7 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // whose body imports THIS host; going through the barrel would form a module-init
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
+import { withScopeColumn } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
   createDefaultOperatorRegistry,
@@ -40,6 +41,7 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
+import { pinnedScope, useListingScope } from '@/features/data-grid/host/listing-scope';
 import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
@@ -49,7 +51,6 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
-import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
@@ -57,6 +58,7 @@ import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download
 import { EntityTypeSelector } from '@/ui/segments/data-table/elements/entity-selector';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { UploadDataButton } from '@/ui/segments/explore/upload-data-button';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
@@ -148,6 +150,9 @@ export function EntityDataGrid({
   allowQuery = true,
   allowDownload,
   allowDelete,
+  allowUpload,
+  bulkActionsInToolbar,
+  framed,
   requireSpeciesSelector,
   requireScopeSelector,
   requireEntityTypeSelector,
@@ -165,7 +170,7 @@ export function EntityDataGrid({
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const scope = useListingScope({ scope: defaultScope, requireScopeSelector });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
@@ -493,7 +498,10 @@ export function EntityDataGrid({
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
           selection={pickerSelection}
+          bulkActionsInToolbar={bulkActionsInToolbar}
+          framed={framed}
           toolbarSlots={{
+            action: allowUpload ? <UploadDataButton compact /> : undefined,
             scope: toolbarScope,
             brainRegion: toolbarBrainRegion,
             entityType: requireEntityTypeSelector?.enabled ? (
@@ -596,12 +604,16 @@ export function EntityDataGrid({
  * selection); workflow surfaces and pickers get the plain shared template.
  */
 export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
-  const { plugin } = props.definition;
-  const isExplore =
-    (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
-    !props.mainTableProps?.selectionType;
-  const Body: FC<IBrowseEntityGridProps> = plugin && isExplore ? plugin.Body : EntityDataGrid;
-  return <Body {...props} />;
+  const isData = (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data;
+  // a Data listing holding both public and project rows marks each one
+  const definition =
+    isData && pinnedScope(props) === WorkspaceScope.Combined
+      ? withScopeColumn(props.definition)
+      : props.definition;
+  const isExplore = isData && !props.mainTableProps?.selectionType;
+  const Body: FC<IBrowseEntityGridProps> =
+    definition.plugin && isExplore ? definition.plugin.Body : EntityDataGrid;
+  return <Body {...props} definition={definition} />;
 }
 
 /** Listing-level error UX, with a dedicated NOT_AUTHORIZED message. */
