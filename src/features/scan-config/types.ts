@@ -769,7 +769,7 @@ export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile;
 
 /** True for a row backed by a file asset; false for an entity mini-detail row. */
 export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {
-  return file.renderer !== ActivityCustomFileRenderer.MiniDetailView;
+  return file.renderer !== ActivityCustomFileRenderer.MiniDetailView && 'asset' in file;
 }
 
 // Re-exported rather than re-declared: a structurally identical enum is still a
