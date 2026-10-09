@@ -51,6 +51,13 @@ export interface ICampaignStatusBadgePopoverProps {
    * member is PENDING/RUNNING. Ignored when {@link statusCountMap} is set.
    */
   initialStatusCountMap?: Map<ActivityStatus, number>;
+  /**
+   * When the seed came from the list query (ASYNC sources), its `dataUpdatedAt`, so React Query
+   * ages the seed by the list's freshness rather than treating it as fetched just now. Omitted (or
+   * with no seed) the seed is treated as stale, so the cell refetches on mount: that keeps a stale
+   * cached listing from pinning the badge to an outdated status until the cell remounts.
+   */
+  initialStatusUpdatedAt?: number;
   /** React-Query key for the status poll (ASYNC sources). */
   statusQueryKey?: ReadonlyArray<unknown>;
   /** Lazily-invoked (on first popover open) scan-rows fetcher; loose card row shape. */
@@ -106,6 +113,7 @@ export function CampaignStatusBadgePopover({
   statusCountMap: providedMap,
   fetchStatus,
   initialStatusCountMap,
+  initialStatusUpdatedAt,
   statusQueryKey,
   fetchScanRows,
   scanQueryKey,
@@ -122,10 +130,13 @@ export function CampaignStatusBadgePopover({
     queryFn: () =>
       fetchStatus ? fetchStatus() : Promise.resolve(new Map<ActivityStatus, number>()),
     enabled: isAsync && enabled,
-    // Seeded from the list query: first render uses it and skips the mount fetch. `refetchInterval`
-    // runs independently of staleness, so active rows still start polling; finished rows never poll
-    // and never fetch, so no request is duplicated.
+    // Seeded from the list query so the first render has a status instead of a skeleton. The seed
+    // is aged by the list's `dataUpdatedAt` (0 when unknown), so a stale cached listing is treated
+    // as stale here too and refetches on mount, instead of pinning the badge to an outdated status
+    // until the cell remounts. `refetchInterval` is independent of staleness, so active rows still
+    // poll; finished rows that are already fresh neither poll nor refetch.
     initialData: initialStatusCountMap,
+    initialDataUpdatedAt: initialStatusCountMap ? (initialStatusUpdatedAt ?? 0) : undefined,
     staleTime: initialStatusCountMap ? TASK_STATUS_POLL_INTERVAL_MS : 0,
     refetchInterval: (query) => {
       const values = Array.from(query.state.data?.keys() ?? []);

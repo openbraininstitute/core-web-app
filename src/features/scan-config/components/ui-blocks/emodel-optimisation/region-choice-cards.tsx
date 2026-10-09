@@ -57,7 +57,8 @@ export function RegionChoiceCards({
 
   const choices = [...rootSchema.properties.base_parameters.choices]
     .sort((a, b) => a.display_order - b.display_order)
-    .filter((choice) => !onlyAssigned || assignedModelIds(mechanisms, choice.name).length > 0);
+    .map((choice) => ({ choice, channelCount: assignedModelIds(mechanisms, choice.name).length }))
+    .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
 
   if (onlyAssigned && choices.length === 0) {
     return (
@@ -70,9 +71,8 @@ export function RegionChoiceCards({
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
-      {choices.map((choice) => {
+      {choices.map(({ choice, channelCount }) => {
         const isSelected = choice.name === selectedRegionChoice;
-        const channelCount = assignedModelIds(mechanisms, choice.name).length;
 
         return (
           <Tooltip key={choice.name}>

@@ -5,10 +5,10 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { ViewVariant, WorkspaceScope } from '@/constants';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';

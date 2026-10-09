@@ -83,7 +83,6 @@ export function EModelOptimisationColumns({ props, state }: Props) {
   const {
     selectedSchema,
     selectedRegionChoice,
-    setSelectedRegionChoice,
     selectedRegionModel,
     setSelectedRegionModel,
     selectedMechanismsTab,
@@ -122,9 +121,19 @@ export function EModelOptimisationColumns({ props, state }: Props) {
 
   // Region Assignment: second column is the ion-channel-models picker (checkboxes).
   const assignmentDrawerOpen = Boolean(rootSchema && selectedChoice && onRegionAssignmentTab);
+  // Parameters Selection hides choices with no assigned models (`onlyAssigned`). The choice is
+  // selected on the shared Region Assignment tab, so a choice selected there but filtered out here
+  // has no card to anchor its drawer. Derive it closed rather than clearing the shared selection,
+  // so visiting the tab doesn't lose the Region Assignment selection and the drawer never flashes.
+  const selectedChoiceFilteredOut =
+    onParametersSelectionTab &&
+    Boolean(selectedChoice) &&
+    regionModelIds(value, selectedChoice?.name ?? '').size === 0;
   // Parameters Selection: second column is the assigned-models list (chevrons); the third is the
   // model detail, shown once a model row is selected.
-  const modelsDrawerOpen = Boolean(rootSchema && selectedChoice && onParametersSelectionTab);
+  const modelsDrawerOpen = Boolean(
+    rootSchema && selectedChoice && onParametersSelectionTab && !selectedChoiceFilteredOut
+  );
 
   // A selected model that has since been removed from the region (e.g. deleted from the master
   // list) must not keep the detail drawer open, so gate it on the model still being assigned.
@@ -140,19 +149,6 @@ export function EModelOptimisationColumns({ props, state }: Props) {
       setSelectedRegionModel('');
     }
   }, [selectedRegionModel, selectedModelStillAssigned, setSelectedRegionModel]);
-
-  // Parameters Selection hides choices with no assigned models (`onlyAssigned`). The choice is
-  // selected on the shared Region Assignment tab, so switching here with such a choice selected
-  // would leave its drawer open next to a card that no longer renders. Drop it so both go away.
-  const selectedChoiceFilteredOut =
-    onParametersSelectionTab &&
-    Boolean(selectedChoice) &&
-    regionModelIds(value, selectedChoice?.name ?? '').size === 0;
-  useEffect(() => {
-    if (selectedChoiceFilteredOut) {
-      setSelectedRegionChoice('');
-    }
-  }, [selectedChoiceFilteredOut, setSelectedRegionChoice]);
 
   return (
     <>

@@ -23,7 +23,6 @@ import {
   getViewDefinitionByExtendedType,
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
@@ -37,6 +36,7 @@ import {
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import {
   resolveSimulationByCampaignId as resolveIonChannelModelSimulationByCampaignId,
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,

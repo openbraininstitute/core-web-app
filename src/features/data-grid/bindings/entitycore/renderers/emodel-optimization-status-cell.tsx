@@ -40,7 +40,7 @@ export function EModelOptimizationCampaignStatusCell({
   return (
     <CampaignStatusBadgePopover
       fetchStatus={(): Promise<Map<ActivityStatus, number>> => Task.status({ campaignId, context })}
-      initialStatusCountMap={getTaskCampaignStatusCountMap(row)}
+      initialStatusCountMap={getTaskCampaignStatusCountMap({ rows: row?.rows ?? [] })}
       statusQueryKey={[TASK_STATUS_QUERY_KEY_HEAD, 'emodel-optimization', { campaignId, context }]}
       enabled={enabled}
     />
