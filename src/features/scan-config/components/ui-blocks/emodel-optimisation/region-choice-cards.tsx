@@ -43,7 +43,7 @@ type Props = {
  *
  * With `onlyAssigned`, choices with no assigned ion channel models are omitted: the Parameters
  * Selection tab configures parameters of already-assigned models, so empty regions have nothing
- * to show there.
+ * to show there. If that leaves no choices at all, a message points the user to Region Assignment.
  */
 export function RegionChoiceCards({
   rootSchema,
@@ -58,6 +58,15 @@ export function RegionChoiceCards({
   const choices = [...rootSchema.properties.base_parameters.choices]
     .sort((a, b) => a.display_order - b.display_order)
     .filter((choice) => !onlyAssigned || assignedModelIds(mechanisms, choice.name).length > 0);
+
+  if (onlyAssigned && choices.length === 0) {
+    return (
+      <div className="p-4 text-sm italic text-gray-500">
+        No section lists have assigned ion channel models yet. Assign models in Region Assignment to
+        configure their parameters here.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">

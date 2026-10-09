@@ -83,6 +83,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
   const {
     selectedSchema,
     selectedRegionChoice,
+    setSelectedRegionChoice,
     selectedRegionModel,
     setSelectedRegionModel,
     selectedMechanismsTab,
@@ -139,6 +140,19 @@ export function EModelOptimisationColumns({ props, state }: Props) {
       setSelectedRegionModel('');
     }
   }, [selectedRegionModel, selectedModelStillAssigned, setSelectedRegionModel]);
+
+  // Parameters Selection hides choices with no assigned models (`onlyAssigned`). The choice is
+  // selected on the shared Region Assignment tab, so switching here with such a choice selected
+  // would leave its drawer open next to a card that no longer renders. Drop it so both go away.
+  const selectedChoiceFilteredOut =
+    onParametersSelectionTab &&
+    Boolean(selectedChoice) &&
+    regionModelIds(value, selectedChoice?.name ?? '').size === 0;
+  useEffect(() => {
+    if (selectedChoiceFilteredOut) {
+      setSelectedRegionChoice('');
+    }
+  }, [selectedChoiceFilteredOut, setSelectedRegionChoice]);
 
   return (
     <>
