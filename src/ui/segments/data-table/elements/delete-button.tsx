@@ -165,6 +165,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       <SelectionCountBadge count={badgeCount} className="text-destructive" />
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
+  const keptCount = selectedRows.length - entityCount;
+  const keptNote =
+    keptCount > 0
+      ? `${keptCount} public ${keptCount === 1 ? 'item' : 'items'} in your selection will be kept.`
+      : null;
 
   const getButtonLabel = (): string => {
     return isSingular ? `Delete entity` : `Delete entities`;
@@ -295,6 +300,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <div className="font-bold text-sm text-primary-8">
             Are you sure you want to delete {label}?
           </div>
+          {keptNote && <div className="text-sm text-primary-8">{keptNote}</div>}
           <small className="font-light text-primary-6">This action cannot be undone.</small>
         </div>
       }
