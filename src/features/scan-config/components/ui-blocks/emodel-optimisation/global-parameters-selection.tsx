@@ -2,7 +2,8 @@
 
 import {
   errorsUnder,
-  readOptimizationValue,
+  ParameterMode,
+  type TBounds,
   type TOptimizationValue,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { ParameterRow } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameter-row';
@@ -42,6 +43,25 @@ export function GlobalParametersSelection({
     ? root.global_parameters
     : rootSchema.properties.global_parameters.default;
 
+  const readGlobal = (key: 'v_init' | 'celsius'): TOptimizationValue => {
+    const stored = isPlainObject(globals[key]) ? globals[key] : {};
+    const opt = isPlainObject(stored.value) ? stored.value : {};
+    const value = typeof opt.value === 'number' ? opt.value : null;
+    const bounds: TBounds | null =
+      Array.isArray(opt.bounds) && opt.bounds.length === 2
+        ? [
+            typeof opt.bounds[0] === 'number' ? opt.bounds[0] : null,
+            typeof opt.bounds[1] === 'number' ? opt.bounds[1] : null,
+          ]
+        : null;
+    // Bounds only when the stored value says so; otherwise a single Fixed value.
+    return {
+      mode: opt.mode === ParameterMode.Bounds ? ParameterMode.Bounds : ParameterMode.Fixed,
+      value,
+      bounds,
+    };
+  };
+
   const setGlobal = (key: 'v_init' | 'celsius', next: TOptimizationValue) =>
     onChange({
       ...root,
@@ -65,7 +85,7 @@ export function GlobalParametersSelection({
           checked
           disabled={disabled}
           errors={errorsUnder(errors, '/global_parameters/v_init/value')}
-          optimizationValue={readOptimizationValue(globals.v_init)}
+          optimizationValue={readGlobal('v_init')}
           onValueChange={(next) => setGlobal('v_init', next)}
         />
         <ParameterRow
@@ -74,7 +94,7 @@ export function GlobalParametersSelection({
           checked
           disabled={disabled}
           errors={errorsUnder(errors, '/global_parameters/celsius/value')}
-          optimizationValue={readOptimizationValue(globals.celsius)}
+          optimizationValue={readGlobal('celsius')}
           onValueChange={(next) => setGlobal('celsius', next)}
         />
       </ul>

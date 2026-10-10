@@ -34,5 +34,5 @@ export const DATA_BROWSE_ALLOWED_ENTITIES = [
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
-  ExtendedEntitiesTypeDict.EModelOptimizationResult,
+  ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
 ] as const;

@@ -4,7 +4,9 @@ import { WarningFilled } from '@ant-design/icons';
 import { RiArrowRightSLine } from '@remixicon/react';
 
 import {
+  assignedModelIds,
   hasErrorAt,
+  readMechanisms,
   regionPath,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -12,17 +14,21 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip'
 import { cn } from '@/utils/css-class';
 
 import type { ErrorObject } from 'ajv';
-import type { IEModelOptimisationParameters } from '@/features/scan-config/types';
+import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 type Props = {
   /** the `emodel_optimisation_parameters` root element schema (source of the section-list choices) */
   rootSchema: IEModelOptimisationParameters;
+  /** value of the `emodel_optimisation_parameters` config key (source of the per-region channel counts) */
+  value: ConfigValue;
   /** currently selected section-list choice (`name`), or '' when none is selected */
   selectedRegionChoice: string;
   /** selects a section-list choice, opening the adjacent drawer; reselecting the open one closes it */
   setSelectedRegionChoice: (choice: string) => void;
   /** ajv errors inside the emodel config value (paths relative to it) that this tab flags */
   errors: readonly ErrorObject[];
+  /** when true, hides choices with no assigned ion channel models (Parameters Selection tab) */
+  onlyAssigned?: boolean;
 };
 
 /**
@@ -34,20 +40,38 @@ type Props = {
  * opens it for that choice, clicking the open one again closes it. Unavailable choices are dimmed
  * and surface their `disabled_reason` in a tooltip. A card whose region has an error in `errors`
  * shows a warning icon; each tab passes only the errors of the keys it writes.
+ *
+ * With `onlyAssigned`, choices with no assigned ion channel models are omitted: the Parameters
+ * Selection tab configures parameters of already-assigned models, so empty regions have nothing
+ * to show there. If that leaves no choices at all, a message points the user to Region Assignment.
  */
 export function RegionChoiceCards({
   rootSchema,
+  value,
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
+  onlyAssigned,
 }: Props) {
-  const choices = [...rootSchema.properties.base_parameters.choices].sort(
-    (a, b) => a.display_order - b.display_order
-  );
+  const mechanisms = readMechanisms(value);
+
+  const choices = [...rootSchema.properties.base_parameters.choices]
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((choice) => ({ choice, channelCount: assignedModelIds(mechanisms, choice.name).length }))
+    .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
+
+  if (onlyAssigned && choices.length === 0) {
+    return (
+      <div className="p-4 text-sm italic text-gray-500">
+        No section lists have assigned ion channel models yet. Assign models in Region Assignment to
+        configure their parameters here.
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
-      {choices.map((choice) => {
+      {choices.map(({ choice, channelCount }) => {
         const isSelected = choice.name === selectedRegionChoice;
 
         return (
@@ -80,6 +104,15 @@ export function RegionChoiceCards({
                   <MarkdownDescription className={cn('mt-3', isSelected && 'text-primary-1')}>
                     {choice.description}
                   </MarkdownDescription>
+                  <span
+                    data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
+                    className={cn(
+                      'mt-3 block text-sm',
+                      isSelected ? 'text-primary-1' : 'text-gray-500'
+                    )}
+                  >
+                    {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
+                  </span>
                 </div>
                 {hasErrorAt(errors, regionPath(choice.name)) && (
                   <WarningFilled className="text-yellow-400!" />

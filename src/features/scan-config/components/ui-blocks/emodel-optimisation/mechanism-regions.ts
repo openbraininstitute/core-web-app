@@ -46,6 +46,9 @@ export const ParameterMode = {
 } as const;
 export type TParameterMode = (typeof ParameterMode)[keyof typeof ParameterMode];
 
+/** Mode assumed for a row with no stored mode. New rows start here and the UI falls back to it. */
+export const DEFAULT_PARAMETER_MODE: TParameterMode = ParameterMode.Bounds;
+
 /** A bounds pair; each end may be `null` until the user fills it in. */
 export type TBounds = [number | null, number | null];
 
@@ -57,7 +60,7 @@ export type TOptimizationValue = {
 };
 
 export function defaultOptimizationValue(): TOptimizationValue {
-  return { mode: ParameterMode.Fixed, value: null, bounds: null };
+  return { mode: DEFAULT_PARAMETER_MODE, value: null, bounds: [null, null] };
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +118,8 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
   const selection = asRecord(parameterSelection);
   const optimizationValue = asRecord(selection.value);
 
+  // A missing or unknown mode falls back to Fixed, matching ObiOne's schema (mode is optional and
+  // defaults to fixed). New optimisation rows start in Bounds via `defaultOptimizationValue`.
   const mode =
     optimizationValue.mode === ParameterMode.Bounds ? ParameterMode.Bounds : ParameterMode.Fixed;
   const value = typeof optimizationValue.value === 'number' ? optimizationValue.value : null;

@@ -1,14 +1,13 @@
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
-import {
-  DataTypeGroup,
-  type ViewDefinitionConfig,
-} from '@/entity-configuration/definitions/view-defs/types';
+import { DataTypeGroup } from '@/entity-configuration/definitions/view-defs/types';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 
-export const viewDefForEModelOptimizationResult: ViewDefinitionConfig = {
-  title: 'Optimization TaskResult',
+import type { ViewDefinitionConfig } from '@/entity-configuration/definitions/view-defs/types';
+
+export const viewDefForEFeatureExtractionResult: ViewDefinitionConfig = {
+  title: 'Intracellular e-feature extraction',
   group: DataTypeGroup.SimulationData,
-  name: EntitySlug.EModelOptimizationResult,
+  name: EntitySlug.EFeatureExtractionResult,
   // A task result has no e-type, brain region or species of its own, so the table shows only
   // what the entity actually carries.
   columns: [EntityCoreFields.Name, EntityCoreFields.Description, EntityCoreFields.RegistrationDate],

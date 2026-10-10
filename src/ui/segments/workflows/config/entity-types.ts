@@ -134,15 +134,15 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign]: {
     value: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     group: EntityGroupDict.Cellular,
-    label: 'Intracellular EFeatures',
-    title: 'Intracellular EFeatures',
+    label: 'Intracellular E-features',
+    title: 'Intracellular E-features',
     description: 'Extract experimental e-features from intracellular electrophysiology recordings.',
   },
   [ExtendedEntitiesTypeDict.EModelOptimizationCampaign]: {
     value: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     group: EntityGroupDict.Cellular,
-    label: 'E-Model optimization',
-    title: 'E-Model optimization',
+    label: 'E-model',
+    title: 'E-model',
     description: 'Optimize E-Model parameters against extracted e-features.',
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {

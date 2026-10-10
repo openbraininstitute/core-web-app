@@ -1,6 +1,5 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
-import { viewDefForEFeatureExtractionResult } from '@/entity-configuration/definitions/view-defs/experimental/efeature-extraction-result';
 import { viewDefForElectricalCellRecording } from '@/entity-configuration/definitions/view-defs/experimental/electrical-cell-recording';
 import { viewDefForEMCellMesh } from '@/entity-configuration/definitions/view-defs/experimental/em-cell-mesh';
 import { viewDefForExperimentalBoutonDensity } from '@/entity-configuration/definitions/view-defs/experimental/experimental-bouton-density';
@@ -15,7 +14,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.CellMorphology]: viewDefForCellMorphology,
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: viewDefForUniversalCellMorphology,
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: viewDefForElectricalCellRecording,
-  [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: viewDefForEFeatureExtractionResult,
   [ExtendedEntitiesTypeDict.IonChannelRecording]: viewDefForIonChannelRecording,
   [ExtendedEntitiesTypeDict.ExperimentalNeuronDensity]: viewDefForExperimentalNeuronDensity,
   [ExtendedEntitiesTypeDict.ExperimentalBoutonDensity]: viewDefForExperimentalBoutonDensity,
