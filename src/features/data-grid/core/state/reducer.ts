@@ -25,8 +25,8 @@ function toggleSort(sort: TSortModel, columnId: string, allowMulti: boolean): TS
  * Pure state transitions. Returns the same reference when nothing changes, so
  * `useSyncExternalStore` consumers don't re-render. Filter/sort/page-size/free-text search
  * changes reset the page to 1. A free-text search does NOT clear the selection — searching
- * is how a user finds the next row to add to the basket. An explicit filter change still
- * does, so a bulk action can never act on rows the active filter hides.
+ * is how a user finds the next row to add to the basket, and neither does a filter set with
+ * `keepSelection`. Any other filter change does, so a bulk action never acts on hidden rows.
  */
 export function reducer(state: IGridState, action: TGridAction): IGridState {
   switch (action.type) {
@@ -38,7 +38,8 @@ export function reducer(state: IGridState, action: TGridAction): IGridState {
       } else {
         next[action.columnId] = action.entry;
       }
-      return { ...state, filters: next, page: 1, selection: [], expanded: [] };
+      const selection = action.keepSelection ? state.selection : [];
+      return { ...state, filters: next, page: 1, selection, expanded: [] };
     }
     case GridActionType.ClearFilters:
       return Object.keys(state.filters).length === 0

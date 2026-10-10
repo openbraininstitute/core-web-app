@@ -69,6 +69,16 @@ export const WorkspaceSection = {
   OptimizeWorkflow: WorkflowActivityDictValue.optimize,
 } as const;
 
+/** Listing props every Data-section browse page shares. */
+export const DATA_LISTING_PROPS = {
+  section: WorkspaceSection.Data,
+  scope: DATA_SECTION_SCOPE,
+  requireScopeSelector: true,
+  allowUpload: true,
+  framed: true,
+  classNames: { container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT },
+} as const;
+
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];
 
 /** Top-level project pages shown in workspace navigation (Data, Workflows, etc.). */

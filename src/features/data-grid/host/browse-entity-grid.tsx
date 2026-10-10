@@ -10,7 +10,7 @@ import { dataBrowseListingUsesBrainRegionHierarchy } from '@/api/entitycore/type
 import { BrainRegionDirection } from '@/api/entitycore/types/shared/request';
 import { isNotAuthorizedError } from '@/api/error';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceScope, WorkspaceSection } from '@/constants';
+import { DEFAULT_PAGE_SIZE, FACETS_ONLY_PAGE, WorkspaceSection } from '@/constants';
 import { mergeOrderByWithOverride } from '@/entity-configuration/definitions/types';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
@@ -41,7 +41,7 @@ import {
 } from '@/features/data-grid/core';
 import { GridSearch } from '@/features/data-grid/host/grid-search';
 import { gridFilteredTotalAtom } from '@/features/data-grid/host/grid-total';
-import { pinnedScope, useListingScope } from '@/features/data-grid/host/listing-scope';
+import { listingScope } from '@/features/data-grid/host/listing-scope';
 import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
@@ -65,7 +65,6 @@ import {
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
@@ -169,7 +168,7 @@ export function EntityDataGrid({
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const scope = useListingScope({ scope: defaultScope, requireScopeSelector });
+  const scope = listingScope({ scope: defaultScope, requireScopeSelector });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
@@ -383,7 +382,7 @@ export function EntityDataGrid({
     return {
       ...brainRegionQuery,
       ...extras,
-      ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+      ...(requireScopeSelector ? {} : getWorkspaceScopeFilters(scope, { virtualLabId, projectId })),
       // Merged last so a plugin can override; these participate in the query key.
       ...extraParams,
     };
@@ -393,6 +392,7 @@ export function EntityDataGrid({
     hasBrainRegion,
     brainRegionId,
     extraQueryParams,
+    requireScopeSelector,
     scope,
     virtualLabId,
     projectId,
@@ -450,12 +450,6 @@ export function EntityDataGrid({
   }, [definition, entity, virtualLabId, projectId]);
   const detail = detailOverride ?? schemaDetail;
 
-  // `compact` is the grid-scoped height opt-in: both pickers are taller than the
-  // h-10 search pill elsewhere, and inside one toolbar row they must agree with it.
-  const toolbarScope = useMemo<ReactNode>(
-    () => (requireScopeSelector ? <WorkflowScopeTabs compact className="max-w-max" /> : undefined),
-    [requireScopeSelector]
-  );
   const toolbarBrainRegion = useMemo<ReactNode>(
     () =>
       requireSpeciesSelector ? (
@@ -500,7 +494,6 @@ export function EntityDataGrid({
           framed={framed}
           toolbarSlots={{
             action: allowUpload ? <UploadDataButton compact entityType={dataType} /> : undefined,
-            scope: toolbarScope,
             brainRegion: toolbarBrainRegion,
             entityType: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
@@ -602,13 +595,12 @@ export function EntityDataGrid({
  * selection); workflow surfaces and pickers get the plain shared template.
  */
 export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
-  const isData = (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data;
-  // a Data listing holding both public and project rows marks each one
-  const definition =
-    isData && pinnedScope(props) === WorkspaceScope.Combined
-      ? withScopeColumn(props.definition)
-      : props.definition;
-  const isExplore = isData && !props.mainTableProps?.selectionType;
+  const definition = props.requireScopeSelector
+    ? withScopeColumn(props.definition)
+    : props.definition;
+  const isExplore =
+    (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
+    !props.mainTableProps?.selectionType;
   const Body: FC<IBrowseEntityGridProps> =
     definition.plugin && isExplore ? definition.plugin.Body : EntityDataGrid;
   return <Body {...props} definition={definition} />;

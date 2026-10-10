@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceScope } from '@/constants';
-import { pinnedScope } from '@/features/data-grid/host/listing-scope';
+import { listingScope } from '@/features/data-grid/host/listing-scope';
 
-describe('pinnedScope', () => {
-  it('pins a scope given to a listing without a selector', () => {
-    expect(pinnedScope({ scope: WorkspaceScope.Combined })).toBe(WorkspaceScope.Combined);
+describe('listingScope', () => {
+  it('fetches both scopes for a listing with a scope selector', () => {
+    expect(listingScope({ requireScopeSelector: true })).toBe(WorkspaceScope.Combined);
   });
 
-  it('leaves a listing with a selector to the URL', () => {
+  it('keeps a given scope as the namespace of a listing with a selector', () => {
     expect(
-      pinnedScope({ scope: WorkspaceScope.Public, requireScopeSelector: true })
-    ).toBeUndefined();
+      listingScope({ scope: WorkspaceScope.BuildIonChannelModel, requireScopeSelector: true })
+    ).toBe(WorkspaceScope.BuildIonChannelModel);
   });
 
-  it('pins nothing when no scope is given', () => {
-    expect(pinnedScope({})).toBeUndefined();
+  it('fetches the given scope, else public, for a listing without one', () => {
+    expect(listingScope({ scope: WorkspaceScope.Combined })).toBe(WorkspaceScope.Combined);
+    expect(listingScope({})).toBe(WorkspaceScope.Public);
   });
 });

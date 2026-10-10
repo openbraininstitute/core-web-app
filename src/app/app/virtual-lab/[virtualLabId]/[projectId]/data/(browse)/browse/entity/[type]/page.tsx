@@ -1,65 +1,41 @@
 import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
-import { match, P } from 'ts-pattern';
 
-import {
-  DATA_PANEL_MAX_HEIGHT,
-  DATA_SECTION_SCOPE,
-  WorkspaceScope,
-  WorkspaceSection,
-} from '@/constants';
+import { DATA_LISTING_PROPS } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { SelectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities } from '@/features/views/listing/data-browse-entities';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { KebabCase } from '@/utils/type';
 
 export default async function Page({
   params,
-  searchParams,
 }: ServerSideComponentProp<
   WorkspaceContext & { type: KebabCase<TExtendedEntitiesTypeDict> },
-  { scope: TWorkspaceScope | null }
+  unknown
 >) {
-  const { scope } = await searchParams;
   const { type } = await params;
 
   const dataType = snakeCase(type) as TExtendedEntitiesTypeDict;
   const entity = getEntityByExtendedType({ type: dataType });
+  const isAllowed = AllowedEntities.includes(
+    entity?.extendedType as unknown as (typeof AllowedEntities)[number]
+  );
+  if (!entity || !isAllowed) notFound();
 
-  const content = match({ scope, entity })
-    .with({ entity: P.nullish }, () => notFound())
-    .with(
-      {
-        scope: P.union(P.nullish, WorkspaceScope.Public, WorkspaceScope.Project),
-        entity: P.when((e) =>
-          AllowedEntities.includes(e?.extendedType as unknown as (typeof AllowedEntities)[number])
-        ),
-      },
-      () => {
-        return (
-          <BrowseEntityScope
-            section={WorkspaceSection.Data}
-            scope={DATA_SECTION_SCOPE}
-            classNames={{ container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT }}
-            dataType={dataType}
-            mainTableProps={{
-              selectionType: 'checkbox',
-              selectionScope: SelectionScope.Shared,
-            }}
-            allowDownload
-            allowDelete
-            allowUpload
-            framed
-          />
-        );
-      }
-    )
-    .otherwise(() => notFound());
-
-  return content;
+  return (
+    <BrowseEntityScope
+      {...DATA_LISTING_PROPS}
+      dataType={dataType}
+      mainTableProps={{
+        selectionType: 'checkbox',
+        selectionScope: SelectionScope.Shared,
+      }}
+      allowDownload
+      allowDelete
+    />
+  );
 }

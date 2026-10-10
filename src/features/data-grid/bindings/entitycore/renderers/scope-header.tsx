@@ -37,6 +37,7 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
     ctx.controller.store.dispatch({
       type: GridActionType.SetFilter,
       columnId,
+      keepSelection: true,
       entry: value
         ? {
             columnId,

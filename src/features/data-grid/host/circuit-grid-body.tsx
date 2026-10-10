@@ -13,7 +13,7 @@ import {
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { Align } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
-import { useListingScope } from '@/features/data-grid/host/listing-scope';
+import { listingScope } from '@/features/data-grid/host/listing-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import {
@@ -57,7 +57,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const view = useAtomValue(circuitRepresentationViewAtom);
-  const scope = useListingScope({
+  const scope = listingScope({
     scope: defaultScope,
     requireScopeSelector: props.requireScopeSelector,
   });

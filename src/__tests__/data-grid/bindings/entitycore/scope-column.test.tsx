@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { WorkspaceSection } from '@/constants';
@@ -20,6 +20,7 @@ import {
 import {
   createDefaultOperatorRegistry,
   FilterValueKind,
+  GridActionType,
   GridController,
   OperatorId,
   resolveColumns,
@@ -105,7 +106,7 @@ describe('scope header', () => {
     const filter = () => controller.store.getSnapshot().filters.scope?.value;
     const pressed = (name: string) =>
       screen.getByTestId(`scope-header-${name}`).getAttribute('aria-pressed');
-    return { filter, pressed };
+    return { controller, filter, pressed };
   }
 
   it('shows both and filters nothing by default', () => {
@@ -124,6 +125,13 @@ describe('scope header', () => {
     fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(filter()).toEqual({ kind: FilterValueKind.Text, text: 'false' });
     expect(pressed('project')).toBe('true');
+  });
+
+  it('keeps the selection while switching, so a picker keeps its picks', () => {
+    const { controller } = renderHeader();
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['r1'] }));
+    fireEvent.click(screen.getByTestId('scope-header-public'));
+    expect(controller.store.getSnapshot().selection).toEqual(['r1']);
   });
 
   it('switching the other back on shows both again', () => {

@@ -78,6 +78,7 @@ export type BrowseEntityScopeProps = {
   allowQuery?: boolean;
   /** whether to display the brain region dropdown */
   requireSpeciesSelector?: boolean;
+  /** lists public and project rows together, with a Scope column whose header toggles filter them */
   requireScopeSelector?: boolean;
   requireEntityTypeSelector?: {
     value: TExtendedEntitiesTypeDict;
