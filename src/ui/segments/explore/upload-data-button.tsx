@@ -7,20 +7,26 @@ import { Button } from '@/ui/molecules/button';
 import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute/event';
 import { cn } from '@/utils/css-class';
 
-/** `compact` sizes it for a grid toolbar, beside the h-10 search pill. */
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+
+/** `compact` sizes it for a grid toolbar; `entityType`, when given, is preselected in the form. */
 export function UploadDataButton({
   className,
   compact,
+  entityType = null,
+  label = 'Upload data',
 }: {
   className?: string;
   compact?: boolean;
+  entityType?: TExtendedEntitiesTypeDict | null;
+  label?: string;
 }) {
   const breakpoint = useDefaultBreakpoint();
 
   const onContribute = () => {
     makeSelectContributionEntityClickEvent({
       display: true,
-      entityType: null,
+      entityType,
       sessionId: crypto.randomUUID(),
     });
   };
@@ -45,7 +51,7 @@ export function UploadDataButton({
         <div
           className={cn('flex w-full items-center', compact ? 'gap-2' : 'justify-between gap-5')}
         >
-          <span>Upload data</span>
+          <span>{label}</span>
           <PlusOutlined className="ml-auto text-sm" />
         </div>
       </Button>
