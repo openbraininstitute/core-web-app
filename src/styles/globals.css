@@ -565,6 +565,20 @@ dialog {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Atlas morph: the full atlas and the mini atlas card are one box changing size */
+::view-transition-group(.atlas-morph) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 1rem;
+  overflow: clip;
+}
+
+::view-transition-old(.atlas-morph),
+::view-transition-new(.atlas-morph) {
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Slide up enter — new content rises into view */
 .vt-slide-up-enter::view-transition-new(*) {
   animation: vt-enter-slide-up 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -638,7 +652,8 @@ dialog {
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(*),
-  ::view-transition-new(*) {
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
     animation-duration: 0ms !important;
   }
 }

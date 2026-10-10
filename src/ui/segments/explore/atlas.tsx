@@ -2,15 +2,17 @@
 
 import { useAtomValue } from 'jotai';
 import dynamic from 'next/dynamic';
-import { useRef } from 'react';
+import { ViewTransition } from 'react';
 
 import { Loader } from '@/components/loader';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
-import { AtlasMorph, useAtlasMorphSource } from '@/ui/segments/explore/atlas-morph';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
+
+/** Shared by the full atlas and the mini atlas, so navigating between them morphs one into the other. */
+export const ATLAS_VIEW_TRANSITION = 'data-atlas';
 
 const AtlasViewer = dynamic(() => import('@/features/brain-atlas-viewer'), {
   ssr: false,
@@ -27,13 +29,10 @@ type Props = {
 
 export function Atlas({ children }: Props) {
   const isAllSpeciesMode = useAtomValue(speciesSelectionModeAtom) === SpeciesSelectionMode.All;
-  const areaRef = useRef<HTMLDivElement>(null);
-  useAtlasMorphSource(areaRef, !isAllSpeciesMode);
 
   return (
-    <>
+    <ViewTransition name={ATLAS_VIEW_TRANSITION} share="atlas-morph" default="none">
       <div
-        ref={areaRef}
         id="three-d-area"
         data-testid="three-d-area"
         className={cn(
@@ -52,8 +51,6 @@ export function Atlas({ children }: Props) {
           <AtlasViewer>{children}</AtlasViewer>
         </div>
       </div>
-      {/* a sibling, so the area's ref is attached before its layout effect runs */}
-      {!isAllSpeciesMode && <AtlasMorph target={areaRef} />}
-    </>
+    </ViewTransition>
   );
 }

@@ -24,7 +24,7 @@ export interface BrainAtlasViewerGltfProps {
   onLoading(loading: boolean): void;
 }
 
-/** Fills the small preview card the way the design does; the full viewer keeps 1. */
+/** Camera zoom that fills the small preview card; the full viewer keeps 1. */
 const COMPACT_CAMERA_ZOOM = 1.7;
 
 const ATLAS_LABELS: Record<string, string> = {
@@ -86,18 +86,7 @@ export function BrainAtlasViewerGltf({
   // const [values, setValues] = useAtlasViewerSettingsValues(painter);
   const { region, regions } = useVisibleRegions();
 
-  // the first finished load means a frame with the brain in it, which the atlas morph awaits
-  const [isDrawn, setIsDrawn] = React.useState(false);
-  const sawLoadingRef = React.useRef(false);
-  const handleLoading = React.useCallback(
-    (loading: boolean) => {
-      if (loading) sawLoadingRef.current = true;
-      else if (sawLoadingRef.current) setIsDrawn(true);
-      onLoading(loading);
-    },
-    [onLoading]
-  );
-  usePainterLoadingListener(painter, handleLoading);
+  usePainterLoadingListener(painter, onLoading);
 
   React.useEffect(() => {
     const handleCameraChange = () => {
@@ -157,7 +146,6 @@ export function BrainAtlasViewerGltf({
   return (
     <div
       ref={containerRef}
-      data-atlas-drawn={isDrawn || undefined}
       className={classNames(className, styles.brainAtlasViewerGltf, compact && styles.compact)}
     >
       <canvas ref={canvasRef} />

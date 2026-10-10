@@ -27,7 +27,6 @@ export function EntityLeftMenu({ dataKey }: Props) {
   const [view, updateView] = useState<TExploreLeftMenuContext>(ExploreLeftMenuContext.DataGroup);
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
-  // the table replaces the big atlas, so a small one stands in for it
   const isTableShowing = !!getEntityTypeFromUrlOnEntityScope(usePathname());
 
   // while in "all species" mode, force the data-group view so the hierarchy tree is never shown
@@ -48,15 +47,10 @@ export function EntityLeftMenu({ dataKey }: Props) {
     <RegionBanner
       view={view}
       onSwitchView={onSwitchView}
-      classNames={
-        inCard
-          ? // the white lower part of the mini atlas card
-            {
-              container: 'ml-0 w-full',
-              selector: 'rounded-none rounded-b-[16px] border-t-0 bg-white',
-            }
-          : { container: 'px-1 w-full pb-1', selector: 'shadow-sm bg-white' }
-      }
+      classNames={{
+        container: 'px-1 w-full pb-1',
+        selector: inCard ? 'rounded-none rounded-b-2xl border-t-0 bg-white' : 'shadow-sm bg-white',
+      }}
     />
   );
 
@@ -66,11 +60,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
       data-testid="data-entity-left-menu"
       id="data-entity-left-menu"
     >
-      {isTableShowing ? (
-        <MiniAtlas className="mx-1 mt-1 mb-1 w-auto">{regionBanner}</MiniAtlas>
-      ) : (
-        regionBanner(false)
-      )}
+      {isTableShowing ? <MiniAtlas>{regionBanner}</MiniAtlas> : regionBanner(false)}
       <div
         data-testid="data-entity-left-menu-content"
         id="data-entity-left-menu-content"
@@ -122,7 +112,6 @@ export function EntityLeftMenu({ dataKey }: Props) {
           aria-hidden={view !== ExploreLeftMenuContext.DataGroup}
         >
           <EntityLinkCount />
-          {/* the table's toolbar carries it while one is showing */}
           {!isTableShowing && <UploadDataButton className="shrink-0 px-1 pt-2 pb-1" />}
         </motion.div>
       </div>
