@@ -112,7 +112,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
           aria-hidden={view !== ExploreLeftMenuContext.DataGroup}
         >
           <EntityLinkCount />
-          {!isTableShowing && <UploadDataButton className="shrink-0 px-1 pt-2 pb-1" />}
+          {!isTableShowing && <UploadDataButton className="shrink-0 px-1 pt-2" />}
         </motion.div>
       </div>
     </div>

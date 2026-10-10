@@ -36,7 +36,7 @@ export function Atlas({ children }: Props) {
         id="three-d-area"
         data-testid="three-d-area"
         className={cn(
-          '3d relative h-full max-h-[calc(100vh-8.3rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          '3d relative h-full min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
           isAllSpeciesMode ? 'bg-transparent rounded-none' : 'bg-primary-9 p-1'
         )}
       >
