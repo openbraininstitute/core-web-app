@@ -127,21 +127,20 @@ export function BrowseLinkContent({
         {isUploadable && (
           <div
             className={cn(
-              'transition-all duration-500 ease-out',
-              'w-0 scale-0 opacity-0',
-              'group-hover:w-auto group-hover:scale-100 group-hover:opacity-100',
-              'flex origin-left items-center'
+              'pointer-events-none flex w-0 origin-left scale-95 items-center opacity-0',
+              'transition-[width,opacity,transform] duration-200 ease-out-expo',
+              'group-focus-within:pointer-events-auto group-focus-within:w-auto group-focus-within:scale-100 group-focus-within:opacity-100',
+              'group-hover:pointer-events-auto group-hover:w-auto group-hover:scale-100 group-hover:opacity-100'
             )}
           >
             <Button
               rounded
               variant="outline"
+              aria-label={`Upload ${title}`}
               className={cn(
-                'border-neutral-2 hover:bg-primary-9 hover:border-primary-9',
-                'h-12 w-12! bg-transparent p-0 hover:text-white',
-                'transition-all duration-900 ease-out',
-                'shadow-md group-hover:ml-2 group-hover:shadow-xl',
-                'group-hover:scale-100',
+                'border-neutral-2 hover:bg-primary-9 hover:border-primary-9 ml-2',
+                'h-12 w-12! bg-transparent p-0 shadow-sm hover:text-white',
+                'transition-[background-color,border-color,color,transform] duration-150 ease-out active:scale-[0.95]',
                 { 'h-10! w-10!': breakpoint === 'l' },
                 { 'h-12! w-12!': breakpoint === 'xl' }
               )}
