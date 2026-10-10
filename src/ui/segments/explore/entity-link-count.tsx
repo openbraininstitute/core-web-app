@@ -1,6 +1,4 @@
 import { useAtomValue } from 'jotai';
-import { motion } from 'motion/react';
-import { useId } from 'react';
 import { match } from 'ts-pattern';
 
 import { useTabs } from '@/components/detail-view-tabs';
@@ -13,8 +11,7 @@ import {
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useFlags } from '@/features/feature-flags';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { SegmentedTabs } from '@/ui/molecules/tabs/segmented-tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
   BrowseExperimentalDataExtendedTypes,
@@ -24,14 +21,17 @@ import {
   SimulationDataExtendedTypes,
   type TExploreDataTypeTabs,
 } from '@/ui/segments/explore/helpers';
-import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export { ExploreDataTypeTabs, type TExploreDataTypeTabs } from '@/ui/segments/explore/helpers';
 
-/** The selected pill slides between groups on the same spring as `MotionTabs`. */
-const TAB_SPRING = { type: 'spring', stiffness: 170, damping: 24, mass: 1.2 } as const;
+const DATA_TYPE_SEGMENTS = DataSectionDataTypeTabsConfig.map((tab) => ({
+  value: tab.key,
+  label: tab.title,
+  id: `data-type-tab-${tab.key}`,
+  testId: `data-type-tab-${tab.key}`,
+}));
 
 type TBrowseLinkListEntity = {
   title: string;
@@ -72,7 +72,6 @@ function BrowseLinkList({
 
 export function EntityLinkCount() {
   const featureFlags = useFlags();
-  const breakpoint = useDefaultBreakpoint();
   const { workspaceHierarchyId } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
@@ -93,7 +92,6 @@ export function EntityLinkCount() {
     shallow: true,
   });
   const selectedTab = activeTab ?? ExploreDataTypeTabs.Experimental;
-  const indicatorId = useId();
 
   const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(
     (config) =>
@@ -132,53 +130,19 @@ export function EntityLinkCount() {
         data-testid="data-type-tabs-container"
         className="w-full shrink-0"
       >
-        <PillTabs
+        <SegmentedTabs
           id="data-type-selector"
-          data-testid="data-type-selector"
+          aria-label="Data type"
           value={selectedTab}
-          defaultValue={selectedTab}
-          className="w-full"
-          activationMode="manual"
-          onValueChange={(value) => {
-            onChangeTab(value as TExploreDataTypeTabs)();
-          }}
-        >
-          <PillTabsList
-            className={cn(
-              'grid h-10 w-full grid-cols-3 gap-1 border border-gray-100 bg-white p-1 shadow-sm',
-              { 'h-12': breakpoint === 'xl' }
-            )}
-          >
-            {DataSectionDataTypeTabsConfig.map((tab) => (
-              <PillTabsTrigger
-                key={tab.key}
-                value={tab.key}
-                id={`data-type-tab-${tab.key}`}
-                data-testid={`data-type-tab-${tab.key}`}
-                className={cn(
-                  'text-primary-8 hover:bg-neutral-1 hover:text-primary-9 relative h-full rounded-full px-2 py-0 text-base transition-colors select-none',
-                  'data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:text-white data-[state=active]:shadow-none',
-                  'focus-visible:ring-primary-6 focus-visible:ring-offset-0'
-                )}
-              >
-                {selectedTab === tab.key && (
-                  <motion.span
-                    layoutId={indicatorId}
-                    transition={TAB_SPRING}
-                    className="bg-primary-9 absolute inset-0 rounded-full shadow-[0_2px_8px_rgba(0,39,102,0.25)]"
-                  />
-                )}
-                <span className="relative">{tab.title}</span>
-              </PillTabsTrigger>
-            ))}
-          </PillTabsList>
-        </PillTabs>
+          onValueChange={(value) => onChangeTab(value as TExploreDataTypeTabs)()}
+          segments={DATA_TYPE_SEGMENTS}
+          segmentClassName="text-base xl:h-10"
+        />
       </div>
-      {/* rtl moves the scrollbar to the left edge; the items themselves stay ltr */}
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="secondary-scrollbar mt-2 flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 [direction:rtl] *:[direction:ltr]"
+        className="secondary-scrollbar mt-2 flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 [scrollbar-gutter:stable]"
       >
         {content}
       </div>
