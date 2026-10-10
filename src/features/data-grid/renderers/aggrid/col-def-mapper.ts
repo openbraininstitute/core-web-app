@@ -8,6 +8,7 @@ import {
 import { AgExpandCell } from '@/features/data-grid/renderers/aggrid/expand-cell';
 import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
 import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
+import { cn } from '@/utils/css-class';
 
 import type { ColDef } from 'ag-grid-community';
 import type { IResolvedColumn } from '@/features/data-grid/core';
@@ -26,10 +27,6 @@ export interface IBuildColDefsOptions {
   withExpandColumn?: boolean;
   /** when `columnId` matches a data column the chevron hosts inside that cell instead */
   expandColumn?: IExpandColumnConfig;
-}
-
-function joinClasses(...classes: Array<string | false | undefined>): string | undefined {
-  return classes.filter(Boolean).join(' ') || undefined;
 }
 
 /** Fixed, non-interactive expander column shown when detail rows are enabled. */
@@ -83,7 +80,7 @@ export function buildColDefs<Row>(
       sortable: false,
       headerComponent: AgHeader,
       // a keyed header lays itself out, edge to edge
-      headerClass: joinClasses(c.headerRenderer ? 'px-0!' : undefined, c.divider && DIVIDER_CLASS),
+      headerClass: cn(c.headerRenderer && 'px-0!', c.divider && DIVIDER_CLASS) || undefined,
       headerComponentParams: {
         columnId: c.id,
         unit: c.unit,
@@ -101,14 +98,12 @@ export function buildColDefs<Row>(
       // frozen against an edge; `lockPosition` keeps a drag from pulling it out
       pinned: c.pinned,
       lockPosition: c.pinned,
-      cellClass: joinClasses(
-        c.align === Align.Right
-          ? 'ag-right-aligned-cell'
-          : c.align === Align.Center
-            ? 'ag-center-aligned-cell'
-            : undefined,
-        c.divider && DIVIDER_CLASS
-      ),
+      cellClass:
+        cn(
+          c.align === Align.Right && 'ag-right-aligned-cell',
+          c.align === Align.Center && 'ag-center-aligned-cell',
+          c.divider && DIVIDER_CLASS
+        ) || undefined,
     };
 
     if (getValue) {
