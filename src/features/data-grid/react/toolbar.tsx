@@ -23,7 +23,7 @@ export interface IDataGridToolbarSlots {
 
 export interface IDataGridToolbarProps {
   slots?: IDataGridToolbarSlots;
-  /** the bulk actions — the exact middle, when the grid puts them up here */
+  /** the selection and its actions — the exact middle, when the grid puts them up here */
   bulkActions?: ReactNode;
   /** the advanced/active filters control — right cluster, after the search */
   filters?: ReactNode;
@@ -35,7 +35,7 @@ export interface IDataGridToolbarProps {
 /**
  * Thin toolbar shell: one row, two clusters — what you are looking at on the left, what
  * you do to it on the right. `flex-wrap` drops the right cluster to its own line when
- * narrow rather than crushing the left pickers. Bulk actions sit between them, centred
+ * narrow rather than crushing the left pickers. The selection sits between them, centred
  * the way the footer centres its pager.
  */
 export function DataGridToolbar({

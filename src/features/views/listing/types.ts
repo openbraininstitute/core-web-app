@@ -64,9 +64,7 @@ export type BrowseEntityScopeProps = {
   allowDelete?: boolean;
   /** whether to display the upload data button */
   allowUpload?: boolean;
-  /** centres the bulk actions above the table instead of below it */
-  bulkActionsInToolbar?: boolean;
-  /** sets the table and its pager apart from the toolbar, as a card */
+  /** draws the table and its pager as a card, with the selection and its actions above */
   framed?: boolean;
   /** whether to display the filter controls */
   allowFilter?: boolean;

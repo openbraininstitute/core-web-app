@@ -36,7 +36,7 @@ const schema: IGridSchema<Row> = {
 
 const nullRenderer: TGridRenderer = () => null;
 
-function setup({ bulkActionsInToolbar = false } = {}) {
+function setup({ framed = false } = {}) {
   const controller = new GridController<Row>({
     schema,
     context: { dataType: 't' },
@@ -63,7 +63,7 @@ function setup({ bulkActionsInToolbar = false } = {}) {
         cellRenderers={new CellRendererRegistry()}
         queryKey={['t']}
         showColumnChooser={false}
-        bulkActionsInToolbar={bulkActionsInToolbar}
+        framed={framed}
         renderCount={({ total }) => <span data-testid="results-count">{total} results</span>}
         renderBulkActions={() => <button data-testid="bulk-download" type="button" />}
       />
@@ -103,15 +103,18 @@ describe('DataGrid footer', () => {
     expect(await screen.findByTestId('bulk-download')).toBeInTheDocument();
   });
 
-  it('moves only the bulk actions up to the toolbar when asked', async () => {
-    const { controller } = setup({ bulkActionsInToolbar: true });
+  it('framed, keeps the selection count and its actions together above the grid', async () => {
+    const { controller } = setup({ framed: true });
     await waitFor(() => expect(screen.getByTestId('results-count')).toBeInTheDocument());
-    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
+    expect(screen.queryByTestId('data-grid-selection-bar')).not.toBeInTheDocument();
 
+    act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
+    const bar = await screen.findByTestId('data-grid-selection-bar');
     const toolbar = screen.getByTestId('data-grid-toolbar');
-    expect(toolbar.contains(await screen.findByTestId('bulk-download'))).toBe(true);
+    expect(toolbar.contains(bar)).toBe(true);
+    expect(bar.contains(screen.getByTestId('bulk-download'))).toBe(true);
+    expect(bar.contains(screen.getByText('1 selected'))).toBe(true);
     expect(toolbar.contains(screen.getByTestId('data-grid-pagination'))).toBe(false);
-    expect(toolbar.contains(screen.getByText('1 selected'))).toBe(false);
   });
 
   it('keeps the bulk actions out of the toolbar', async () => {

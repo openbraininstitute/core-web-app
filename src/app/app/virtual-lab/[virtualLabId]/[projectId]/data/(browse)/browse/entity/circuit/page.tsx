@@ -10,7 +10,6 @@ export default async function Page() {
       classNames={{ container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT }}
       dataType={ExtendedEntitiesTypeDict.Circuit}
       allowUpload
-      bulkActionsInToolbar
       framed
     />
   );

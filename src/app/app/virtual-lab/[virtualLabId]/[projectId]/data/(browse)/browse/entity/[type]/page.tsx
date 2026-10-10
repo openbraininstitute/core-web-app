@@ -54,7 +54,6 @@ export default async function Page({
             allowDownload
             allowDelete
             allowUpload
-            bulkActionsInToolbar
             framed
           />
         );

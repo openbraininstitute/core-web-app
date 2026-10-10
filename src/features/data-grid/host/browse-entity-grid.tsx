@@ -151,7 +151,6 @@ export function EntityDataGrid({
   allowDownload,
   allowDelete,
   allowUpload,
-  bulkActionsInToolbar,
   framed,
   requireSpeciesSelector,
   requireScopeSelector,
@@ -498,7 +497,6 @@ export function EntityDataGrid({
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
           selection={pickerSelection}
-          bulkActionsInToolbar={bulkActionsInToolbar}
           framed={framed}
           toolbarSlots={{
             action: allowUpload ? <UploadDataButton compact /> : undefined,
