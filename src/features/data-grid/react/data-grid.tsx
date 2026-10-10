@@ -84,6 +84,10 @@ export interface IDataGridProps<Row> {
   /** replaces the grid body when the fetch fails (host-owned error UI) */
   renderError?: (error: unknown) => ReactNode;
   showColumnChooser?: boolean;
+  /** centres the bulk actions in the toolbar instead of the footer */
+  bulkActionsInToolbar?: boolean;
+  /** draws the grid and its footer as a white card, set apart from the toolbar */
+  framed?: boolean;
   className?: string;
   gridClassName?: string;
   /** picker selection (single/multi) that propagates chosen rows to a host form. */
@@ -119,6 +123,8 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     onTotalChange,
     renderError,
     showColumnChooser = true,
+    bulkActionsInToolbar = false,
+    framed = false,
     className,
     gridClassName,
     selection,
@@ -254,29 +260,17 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
       </BulkActions>
     ) : undefined;
 
-  return (
-    <div className={cn('flex h-full min-h-0 flex-col', className)}>
-      <DataGridToolbar
-        slots={toolbarSlots}
-        filters={
-          <ActiveFiltersButton
-            controller={controller}
-            state={state}
-            operators={operators}
-            facets={facets ?? externalFacets}
-          />
-        }
-        columnChooser={
-          showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : undefined
-        }
-      />
+  const body = (
+    <>
       <div className={cn('min-h-0 flex-1', gridClassName)}>{renderer(rendererProps)}</div>
       {/*
         Footer: `flex-1 basis-0` on the two side cells centres the pagination exactly,
         `min-w-fit` stops them collapsing, and `flex-wrap` stacks the row when narrow.
       */}
       <div className="flex min-h-13 shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-gray-100 px-3 py-2">
-        <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">{bulkActions}</div>
+        <div className="flex min-w-fit flex-1 basis-0 items-center gap-2">
+          {bulkActionsInToolbar ? null : bulkActions}
+        </div>
         {/* a single-page source honours no page number, so the pager would be inert */}
         {singlePage ? null : (
           <GridPagination
@@ -308,6 +302,35 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
           ) : null}
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className={cn('flex h-full min-h-0 flex-col', className)}>
+      <DataGridToolbar
+        slots={toolbarSlots}
+        bulkActions={bulkActionsInToolbar ? bulkActions : undefined}
+        className={framed ? 'pb-3' : undefined}
+        filters={
+          <ActiveFiltersButton
+            controller={controller}
+            state={state}
+            operators={operators}
+            facets={facets ?? externalFacets}
+          />
+        }
+        columnChooser={
+          showColumnChooser ? <ColumnChooser controller={controller} state={state} /> : undefined
+        }
+      />
+      {framed ? (
+        // AG reads `--ag-*` params from above the grid, so its rows take the card's white
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm [--ag-background-color:var(--color-white)]">
+          {body}
+        </div>
+      ) : (
+        body
+      )}
     </div>
   );
 }

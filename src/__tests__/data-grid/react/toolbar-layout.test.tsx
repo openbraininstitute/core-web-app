@@ -44,6 +44,38 @@ describe('DataGridToolbar', () => {
     ]);
   });
 
+  it('puts a call to action first in the left cluster, ahead of the pickers', () => {
+    render(
+      <DataGridToolbar
+        slots={{
+          action: <div data-testid="action" />,
+          left: <div data-testid="extra-left" />,
+          search: <div data-testid="search" />,
+        }}
+      />
+    );
+
+    expect(order(['action', 'extra-left', 'search'])).toEqual(['action', 'extra-left', 'search']);
+    expect(screen.getByTestId('action').parentElement).toBe(
+      screen.getByTestId('extra-left').parentElement
+    );
+  });
+
+  it('centres the bulk actions between two equal clusters', () => {
+    render(
+      <DataGridToolbar
+        slots={{ action: <div data-testid="action" />, search: <div data-testid="search" /> }}
+        bulkActions={<div data-testid="bulk" />}
+      />
+    );
+
+    expect(order(['action', 'bulk', 'search'])).toEqual(['action', 'bulk', 'search']);
+    const left = screen.getByTestId('action').parentElement;
+    const right = screen.getByTestId('search').parentElement;
+    expect(screen.getByTestId('bulk').parentElement).toBe(left?.parentElement);
+    for (const side of [left, right]) expect(side).toHaveClass('flex-1', 'basis-0');
+  });
+
   it('puts the entity-type selector FIRST in the left cluster, ahead of the scope tabs', () => {
     render(
       <DataGridToolbar

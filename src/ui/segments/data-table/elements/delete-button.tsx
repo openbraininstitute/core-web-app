@@ -9,7 +9,6 @@ import pMap from 'p-map';
 import { type ReactNode, useMemo } from 'react';
 
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 // direct module import: the react barrel would close a module-init cycle via the grid host
@@ -17,7 +16,6 @@ import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
-import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
 import {
   SelectionBadgeAnchor,
@@ -150,7 +148,6 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 }) {
   const notify = useAppNotification();
   const queryClient = useQueryClient();
-  const { scope: currentScope } = useScope();
 
   // Only rows this project owns can be deleted; a cross-scope basket can hold public
   // rows that are not ours to touch.
@@ -179,13 +176,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });
 
-  const permissions = useMemo(() => {
-    const isProjectScope = currentScope === WorkspaceScope.Project;
-    return {
-      delete:
-        !!entityTypeConfig?.isDeletable && isProjectScope && !!entityTypeConfig.api.query.delete,
-    };
-  }, [currentScope, entityTypeConfig]);
+  const permissions = useMemo(
+    () => ({ delete: !!entityTypeConfig?.isDeletable && !!entityTypeConfig.api.query.delete }),
+    [entityTypeConfig]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: async () => {

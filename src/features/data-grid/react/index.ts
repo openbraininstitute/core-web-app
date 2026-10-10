@@ -27,7 +27,12 @@ export { useGridState, useGridStateSlice } from './use-grid-state';
 export type { IActiveFiltersButtonProps } from './active-filters';
 export type { IAdvancedFiltersMenuProps } from './advanced-filters';
 export type { IBulkActionsProps, IBulkActionsRenderArgs } from './bulk-actions';
-export type { ICellRendererProps, TCellRendererComponent } from './cell-renderer-registry';
+export type {
+  ICellRendererProps,
+  IHeaderRendererProps,
+  TCellRendererComponent,
+  THeaderRendererComponent,
+} from './cell-renderer-registry';
 export type { IColumnChooserProps } from './column-chooser';
 export type { IDataGridProps, IDataGridSelection } from './data-grid';
 export type { IDetailRowHostProps } from './detail-row-host';

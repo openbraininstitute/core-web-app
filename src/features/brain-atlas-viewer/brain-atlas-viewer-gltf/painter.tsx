@@ -66,6 +66,9 @@ export class Painter {
 
   public resetCamera: () => void = () => {};
 
+  /** Initial camera zoom, read when a canvas starts. */
+  public cameraZoom = 1;
+
   private cameraController: CameraController | null = null;
 
   private hasFittedCamera = false;
@@ -146,9 +149,11 @@ export class Painter {
         depth: true,
         alpha: true,
         premultipliedAlpha: false,
+        // kept, so the atlas morph can copy the last frame when this viewer goes
+        preserveDrawingBuffer: true,
       });
       this.context = context;
-      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID);
+      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID, this.cameraZoom);
       this.cameraController = camCtrl;
       this.resetCamera = camCtrl.resetCamera;
       this.hasFittedCamera = false;
@@ -342,6 +347,7 @@ export class Painter {
         });
         currentGroup.add(painter);
         this.pointCloudPainter = painter;
+        currentContext.paint();
       }
     } catch (ex) {
       if (

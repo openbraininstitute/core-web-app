@@ -1,9 +1,10 @@
 import { useAtomValue } from 'jotai';
-import { useSearchParams } from 'next/navigation';
+import { motion } from 'motion/react';
+import { useId } from 'react';
 import { match } from 'ts-pattern';
 
 import { useTabs } from '@/components/detail-view-tabs';
-import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { DATA_SECTION_SCOPE, type TWorkspaceScope } from '@/constants';
 import {
   speciesSelectionModeAtom,
   useGetSelectedBrainRegion,
@@ -28,6 +29,9 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export { ExploreDataTypeTabs, type TExploreDataTypeTabs } from '@/ui/segments/explore/helpers';
+
+/** The selected pill slides between groups on the same spring as `MotionTabs`. */
+const TAB_SPRING = { type: 'spring', stiffness: 170, damping: 24, mass: 1.2 } as const;
 
 type TBrowseLinkListEntity = {
   title: string;
@@ -74,8 +78,6 @@ export function EntityLinkCount() {
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  const scope = (useSearchParams().get(SCOPE_QUERY_PARAMS) ??
-    WorkspaceScope.Public) as TWorkspaceScope;
 
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
@@ -90,6 +92,8 @@ export function EntityLinkCount() {
     tabKey: 'group',
     shallow: true,
   });
+  const selectedTab = activeTab ?? ExploreDataTypeTabs.Experimental;
+  const indicatorId = useId();
 
   const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(
     (config) =>
@@ -105,7 +109,7 @@ export function EntityLinkCount() {
   );
 
   const listProps = {
-    scope,
+    scope: DATA_SECTION_SCOPE,
     hierarchyId: effectiveHierarchyId,
     currentBrainRegionId: effectiveCurrentBrainRegionId,
     defaultBrainRegionId: effectiveDefaultBrainRegionId,
@@ -122,14 +126,18 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div className="py-2">
-      <div id="data-type-tabs-container" data-testid="data-type-tabs-container" className="w-full">
+    <div className="border-primary-9/[0.06] bg-primary-9/[0.04] mx-1 mt-2 flex min-h-0 flex-1 flex-col rounded-3xl border p-2">
+      <div
+        id="data-type-tabs-container"
+        data-testid="data-type-tabs-container"
+        className="w-full shrink-0"
+      >
         <PillTabs
           id="data-type-selector"
           data-testid="data-type-selector"
-          value={activeTab ?? ExploreDataTypeTabs.Experimental}
-          defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
-          className="w-full px-1"
+          value={selectedTab}
+          defaultValue={selectedTab}
+          className="w-full"
           activationMode="manual"
           onValueChange={(value) => {
             onChangeTab(value as TExploreDataTypeTabs)();
@@ -137,10 +145,8 @@ export function EntityLinkCount() {
         >
           <PillTabsList
             className={cn(
-              'grid h-10 w-full grid-cols-3 bg-white p-0 shadow-sm border-gray-100 border',
-              {
-                'h-12': breakpoint === 'xl',
-              }
+              'grid h-10 w-full grid-cols-3 gap-1 border border-gray-100 bg-white p-1 shadow-sm',
+              { 'h-12': breakpoint === 'xl' }
             )}
           >
             {DataSectionDataTypeTabsConfig.map((tab) => (
@@ -150,21 +156,29 @@ export function EntityLinkCount() {
                 id={`data-type-tab-${tab.key}`}
                 data-testid={`data-type-tab-${tab.key}`}
                 className={cn(
-                  'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
-                  'data-[state=active]:font-bold data-[state=active]:text-white',
-                  { 'h-12': breakpoint === 'xl' }
+                  'text-primary-8 hover:bg-neutral-1 hover:text-primary-9 relative h-full rounded-full px-2 py-0 text-base transition-colors select-none',
+                  'data-[state=active]:bg-transparent data-[state=active]:font-bold data-[state=active]:text-white data-[state=active]:shadow-none',
+                  'focus-visible:ring-primary-6 focus-visible:ring-offset-0'
                 )}
               >
-                {tab.title}
+                {selectedTab === tab.key && (
+                  <motion.span
+                    layoutId={indicatorId}
+                    transition={TAB_SPRING}
+                    className="bg-primary-9 absolute inset-0 rounded-full shadow-[0_2px_8px_rgba(0,39,102,0.25)]"
+                  />
+                )}
+                <span className="relative">{tab.title}</span>
               </PillTabsTrigger>
             ))}
           </PillTabsList>
         </PillTabs>
       </div>
+      {/* rtl moves the scrollbar to the left edge; the items themselves stay ltr */}
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="mb-4 mt-2 flex w-full flex-col items-center justify-center gap-2 py-2"
+        className="secondary-scrollbar mt-2 flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 [direction:rtl] *:[direction:ltr]"
       >
         {content}
       </div>
