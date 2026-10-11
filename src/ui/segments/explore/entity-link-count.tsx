@@ -21,6 +21,7 @@ import {
   SimulationDataExtendedTypes,
   type TExploreDataTypeTabs,
 } from '@/ui/segments/explore/helpers';
+import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
@@ -124,7 +125,14 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div className="border-primary-9/[0.06] bg-primary-9/[0.04] mx-1 mt-2 flex min-h-0 flex-1 flex-col rounded-3xl border p-2">
+    <div
+      className={cn(
+        'mx-1 mt-2 flex min-h-0 flex-1 flex-col rounded-3xl border border-white/70 p-2',
+        'bg-white/75 ring-1 ring-primary-9/5 backdrop-blur-xl backdrop-saturate-150',
+        'shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]',
+        '[@media(prefers-reduced-transparency:reduce)]:bg-white [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none'
+      )}
+    >
       <div
         id="data-type-tabs-container"
         data-testid="data-type-tabs-container"
@@ -142,7 +150,7 @@ export function EntityLinkCount() {
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="secondary-scrollbar mt-2 flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 [scrollbar-gutter:stable]"
+        className="secondary-scrollbar mt-2 -mr-2 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [scrollbar-gutter:stable]"
       >
         {content}
       </div>

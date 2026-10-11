@@ -23,7 +23,7 @@ export function DefaultContent({ children, dataKey }: Props) {
         id="explore-left-menu"
         data-testid="explore-left-menu"
         className={cn(
-          'h-full px-1 min-h-0 w-full overflow-hidden [grid-area:aside]',
+          '-ml-2 h-full min-h-0 overflow-x-clip px-1 [grid-area:aside]',
           DATA_PANEL_MAX_HEIGHT,
           { hidden: mdv }
         )}

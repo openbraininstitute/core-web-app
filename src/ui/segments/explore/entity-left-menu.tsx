@@ -48,7 +48,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
       view={view}
       onSwitchView={onSwitchView}
       classNames={{
-        container: 'px-1 w-full pb-1',
+        container: 'ml-0 px-1 w-full pb-1',
         selector: inCard ? 'rounded-none rounded-b-2xl border-t-0 bg-white' : 'shadow-sm bg-white',
       }}
     />
@@ -64,7 +64,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
       <div
         data-testid="data-entity-left-menu-content"
         id="data-entity-left-menu-content"
-        className="relative min-h-0 flex-1 overflow-hidden"
+        className="relative min-h-0 flex-1 overflow-x-clip"
       >
         {!isAllMode && (
           <motion.div
