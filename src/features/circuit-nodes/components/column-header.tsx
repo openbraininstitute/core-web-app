@@ -20,6 +20,7 @@ type Props = CustomHeaderProps & {
   onReset?: () => void;
   isNumeric?: boolean;
   onOpenChooser?: () => void;
+  onShowDistribution?: () => void;
 };
 
 export function ColumnHeader(props: Props) {
@@ -34,6 +35,7 @@ export function ColumnHeader(props: Props) {
     onReset,
     isNumeric,
     onOpenChooser,
+    onShowDistribution,
   } = props;
 
   const [sort, setSortState] = useState(column.getSort());
@@ -93,6 +95,13 @@ export function ColumnHeader(props: Props) {
       onClick: () => api.autoSizeColumns([colId]),
     },
     { key: 'autosize-all', label: 'Autosize All Columns', onClick: () => api.autoSizeAllColumns() },
+    { type: 'divider' },
+    {
+      key: 'show-distribution',
+      label: 'Show distribution',
+      onClick: () => onShowDistribution?.(),
+      disabled: !onShowDistribution,
+    },
     { type: 'divider' },
     {
       key: 'choose-columns',
