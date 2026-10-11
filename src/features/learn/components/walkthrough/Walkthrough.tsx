@@ -22,6 +22,9 @@ import CourseFigure from '@/features/learn/components/courses/CourseFigure';
 import { type CourseWidget, isCourseWidget } from '@/features/learn/components/courses/registry';
 import Heuristics from '@/features/learn/components/heuristics/Heuristics';
 import { isStage, type Stage } from '@/features/learn/components/heuristics/shared';
+import NeuronWidget from '@/features/learn/components/NeuronWidget';
+import CalciumPlasticityWidget from '@/features/learn/components/synapse/CalciumPlasticityWidget';
+import TsodyksMarkramWidget from '@/features/learn/components/synapse/TsodyksMarkramWidget';
 import { savedTypewriter, subscribe } from '@/features/learn/lib/settings';
 
 export interface Slide {
@@ -40,7 +43,10 @@ export interface Slide {
     | 'rc'
     | 'morphology'
     | 'excitation'
-    | 'ais';
+    | 'ais'
+    | 'neuron'
+    | 'synapse-short'
+    | 'synapse-long';
   cta?: { href: string; label: string };
 }
 
@@ -195,6 +201,9 @@ export default function Walkthrough({
             {s.widget === 'morphology' && <MorphologyFigure mode="gallery" />}
             {s.widget === 'excitation' && <ExcitationWidget />}
             {s.widget === 'ais' && <MorphologyFigure mode="ais" />}
+            {s.widget === 'neuron' && <NeuronWidget />}
+            {s.widget === 'synapse-short' && <TsodyksMarkramWidget />}
+            {s.widget === 'synapse-long' && <CalciumPlasticityWidget />}
 
             {s.cta && (
               <Link

@@ -74,3 +74,62 @@ export function FeaturesIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function LecturesIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <rect {...LINE} x="1.8" y="3" width="12.4" height="8.4" rx="1.1" />
+      <path {...LINE} strokeLinejoin="round" d="M6.8 5.4v3.6L9.9 7.2 6.8 5.4Z" />
+      <path {...LINE} strokeLinecap="round" d="M5.4 13.4h5.2" />
+    </svg>
+  );
+}
+
+export function LiteratureIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <path
+        {...LINE}
+        strokeLinejoin="round"
+        d="M4 1.9h5.4L12.4 4.9v8.2c0 .55-.45 1-1 1H4c-.55 0-1-.45-1-1V2.9c0-.55.45-1 1-1Z"
+      />
+      <path {...LINE} strokeLinecap="round" d="M9.2 2v3h3M5.4 8h5.2M5.4 10.4h5.2M5.4 5.6h2" />
+    </svg>
+  );
+}
+
+export function ArticlesIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <rect {...LINE} x="1.8" y="2.4" width="12.4" height="11.2" rx="1.1" />
+      <path {...LINE} d="M4.2 5h3.6v3.4H4.2z" />
+      <path {...LINE} strokeLinecap="round" d="M9.6 5.2h2.2M9.6 7.4h2.2M4.2 10.8h7.6" />
+    </svg>
+  );
+}
+
+export function ConferencesIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <rect {...LINE} x="1.8" y="3" width="12.4" height="10.8" rx="1.1" />
+      <path {...LINE} strokeLinecap="round" d="M1.8 6.4h12.4M5.2 1.8v2.4M10.8 1.8v2.4" />
+      <path
+        {...LINE}
+        strokeLinecap="round"
+        d="M4.6 9h1.2M7.4 9h1.2M10.2 9h1.2M4.6 11.4h1.2M7.4 11.4h1.2"
+      />
+    </svg>
+  );
+}
+
+export function ShowcasesIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <path
+        {...LINE}
+        strokeLinejoin="round"
+        d="M8 1.9 9.8 5.6l4.1.6-3 2.9.7 4.1L8 11.3l-3.6 1.9.7-4.1-3-2.9 4.1-.6L8 1.9Z"
+      />
+    </svg>
+  );
+}

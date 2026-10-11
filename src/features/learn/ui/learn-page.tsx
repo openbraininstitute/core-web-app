@@ -2,8 +2,15 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { parseAsBoolean, parseAsInteger, parseAsStringLiteral, useQueryState } from 'nuqs';
-import { type CSSProperties, useTransition } from 'react';
+import {
+  parseAsArrayOf,
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryState,
+} from 'nuqs';
+import { type CSSProperties, useState, useTransition } from 'react';
 
 import {
   type FeatureFlags,
@@ -14,9 +21,19 @@ import {
 } from '@/features/feature-flags';
 import { LEARN_COURSES, type LearnCourse, learnCoursePath } from '@/features/learn/catalogue';
 import { GLOSSARY, glossaryTerm } from '@/features/learn/glossary';
+import { LECTURE_TOPICS, type LectureTopic } from '@/features/learn/lecture-topics';
+import {
+  LITERATURE_SORTS,
+  LITERATURE_TOPICS,
+  type LiteratureSort,
+  type LiteratureTopic,
+  useLiterature,
+} from '@/features/learn/literature';
 import { type CourseProgress, resetCourse, useLearnProgress } from '@/features/learn/progress';
 import { TEACH_TOPICS, teachTopic } from '@/features/learn/teach';
+import { useTransmitter } from '@/features/learn/transmitter';
 import {
+  CATEGORIES,
   CategoryTiles,
   DesignSwitcher,
   LEARN_SECTIONS,
@@ -29,14 +46,17 @@ import {
   TILE_DESIGNS,
 } from '@/features/learn/ui/category-tiles';
 import { CoursePreview } from '@/features/learn/ui/course-preview';
+import { FeedCard, FeedIndex, type FeedSource } from '@/features/learn/ui/feeds';
 import { GlossaryCard, GlossaryIndex } from '@/features/learn/ui/glossary';
 import { MiniCode } from '@/features/learn/ui/mini-code';
 import { type Focus, MiniFigure } from '@/features/learn/ui/mini-figure';
+import { PlayChip } from '@/features/learn/ui/play-chip';
 import { ShareButton, ShareChip } from '@/features/learn/ui/share';
 import { TeachCard, TeachIndex } from '@/features/learn/ui/teach';
 import { TutorialCard, TutorialsIndex } from '@/features/learn/ui/tutorials';
 import { cn } from '@/utils/css-class';
 
+import type { FeedItem } from '@/features/learn/feed-item';
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
 /**
@@ -86,10 +106,19 @@ export function LearnPage({
   courseIds,
   learnPath,
   tutorials,
+  lectures = { recorded: [], upcoming: [] },
+  conferences = [],
+  articles = [],
 }: {
   courseIds: string[];
   learnPath: string;
   tutorials: TTutorial[];
+  /** World Wide Neuro's computational neuroscience talks: recorded, and still to come. */
+  lectures?: { recorded: FeedItem[]; upcoming: FeedItem[] };
+  /** The conferences coming up, World Wide Neuro's and the field's main meetings. */
+  conferences?: FeedItem[];
+  /** The Transmitter's latest articles. */
+  articles?: FeedItem[];
 }) {
   // the rough ones last, so they sit together under their heading
   const courses = LEARN_COURSES.filter((course) => courseIds.includes(course.id)).sort(
@@ -117,18 +146,24 @@ export function LearnPage({
   // and the box round the list of courses, terms or tutorials, or none: the cards on the page itself
   const [listBoxOn, setListBoxOn] = useQueryState('list', parseAsBoolean.withDefault(true));
   // and the courses' cards on the left, small or big: a bigger picture, and what the course covers
-  // and whether Tutorials is there yet, or greyed out like the sections still to come
-  const [tutorialsOn, setTutorialsOn] = useQueryState(
-    'tutorials',
-    parseAsBoolean.withDefault(true)
-  );
-  // and the Teach section, or greyed out like the sections still to come
-  const [teachOn, setTeachOn] = useQueryState('teach', parseAsBoolean.withDefault(true));
+  // and which sections' tiles are there at all (the Sections options): those left out, by key
+  const [hidden, setHidden] = useQueryState('hide', parseAsArrayOf(parseAsString).withDefault([]));
+  const showSection = (key: string, on: boolean) =>
+    setHidden(on ? hidden.filter((k) => k !== key) : [...hidden, key]);
   const [bigCards, setBigCards] = useQueryState('big', parseAsBoolean.withDefault(true));
   // and how the selected card on the left is drawn
-  const [selParam, setSel] = useQueryState('selected', parseAsInteger.withDefault(1));
+  const [selParam, setSel] = useQueryState('selected', parseAsInteger.withDefault(5));
   const sel = Math.min(Math.max(selParam, 0), SELECTED_STYLES.length - 1);
   const panel = PANEL;
+  // the rough courses' heading: folded by default, showing how many; open if the page opens on one of them
+  // the courses in two groups, each under a heading that folds it: In development, open, and
+  // Rough / Misc, folded unless the page opens on one of its courses
+  const groupOf = (c: LearnCourse) => (c.rough ? 'rough' : 'dev');
+  const [openGroups, setOpenGroups] = useState(() => ({
+    dev: true,
+    rough: Boolean(selected?.rough && chosen),
+  }));
+  const groupCount = (g: 'dev' | 'rough') => courses.filter((c) => groupOf(c) === g).length;
   // with every course's flag off, Courses is greyed out and the page opens on the glossary
   const noCourses = courses.length === 0;
   const [sectionParam, setSection] = useQueryState(
@@ -137,13 +172,73 @@ export function LearnPage({
   );
   // a greyed-out section cannot be the one showing: the glossary instead
   const section =
-    (noCourses && sectionParam === 'free') ||
-    (!tutorialsOn && sectionParam === 'tutorials') ||
-    (!teachOn && sectionParam === 'teach')
-      ? 'glossary'
+    (noCourses && sectionParam === 'free') || hidden.includes(sectionParam)
+      ? (LEARN_SECTIONS.find((k) => !hidden.includes(k)) ?? 'glossary')
       : sectionParam;
   const [termId, setTermId] = useQueryState('term');
   const term = glossaryTerm(termId) ?? GLOSSARY[0];
+  // the outside sections: each its chosen entry, and the literature's filters
+  const [lectureId, setLectureId] = useQueryState('lecture');
+  const [talks, setTalks] = useQueryState(
+    'talks',
+    parseAsStringLiteral(['recorded', 'upcoming'] as const).withDefault('recorded')
+  );
+  // and narrowed by words typed, and a topic
+  const [talkWords, setTalkWords] = useState('');
+  const [talkTopic, setTalkTopic] = useQueryState(
+    'talk-topic',
+    parseAsStringLiteral(LECTURE_TOPICS.map((t) => t.id))
+  );
+  const talkList = lectures[talks].filter((t) => {
+    const text = `${t.title} ${t.byline ?? ''} ${t.body ?? ''} ${t.tags?.join(' ') ?? ''}`;
+    const topic = LECTURE_TOPICS.find((x) => x.id === talkTopic);
+    return (
+      (!topic || topic.match.test(`${t.title} ${t.body ?? ''}`)) &&
+      talkWords
+        .toLowerCase()
+        .split(/\s+/)
+        .every((w) => text.toLowerCase().includes(w))
+    );
+  });
+  const [conferenceId, setConferenceId] = useQueryState('conference');
+  const [articleId, setArticleId] = useQueryState('article');
+  const [articleWords, setArticleWords] = useState('');
+  const [paperId, setPaperId] = useQueryState('paper');
+  const [litTopic, setLitTopic] = useQueryState(
+    'lit',
+    parseAsStringLiteral(LITERATURE_TOPICS.map((t) => t.id)).withDefault('all')
+  );
+  const [litSort, setLitSort] = useQueryState(
+    'sort',
+    parseAsStringLiteral(LITERATURE_SORTS.map((t) => t.id)).withDefault('cited')
+  );
+  const [litWords, setLitWords] = useState('');
+  const transmitter = useTransmitter(articles, section === 'articles' ? articleWords : '');
+  const literature = useLiterature(
+    litTopic as LiteratureTopic,
+    section === 'literature' ? litWords : '',
+    litSort as LiteratureSort
+  );
+  const pick = (items: FeedItem[], id: string | null) => items.find((x) => x.id === id) ?? items[0];
+  const feed = {
+    lectures: { items: talkList, selected: pick(talkList, lectureId), onSelect: setLectureId },
+    conferences: {
+      items: conferences,
+      selected: pick(conferences, conferenceId),
+      onSelect: setConferenceId,
+    },
+    articles: {
+      items: transmitter.items,
+      selected: pick(transmitter.items, articleId),
+      onSelect: setArticleId,
+    },
+    literature: {
+      items: literature.items,
+      selected: pick(literature.items, paperId),
+      onSelect: setPaperId,
+    },
+  } as const;
+  const feedSection = section in feed ? (section as keyof typeof feed) : null;
   const [teachId, setTeachId] = useQueryState('topic');
   const teach = teachTopic(teachId) ?? TEACH_TOPICS[0];
   const [tutorialSlug, setTutorialSlug] = useQueryState('tutorial');
@@ -156,19 +251,108 @@ export function LearnPage({
       data-selected={SELECTED_SLUGS[sel]}
     >
       {/* 498px of content, as before: the tiles and the list are drawn to that width */}
-      <aside className="flex min-h-0 w-full shrink-0 flex-col gap-[18px] p-[8px] lg:w-[514px]">
+      {/* up to 514px, but narrower as the page is, as when the AI assistant's panel is open beside
+          it, rather than pushing the card on the right out under that panel */}
+      <aside className="flex min-h-0 w-full min-w-0 shrink-0 flex-col gap-[18px] p-[8px] lg:w-[min(514px,42%)]">
         <CategoryTiles
           design={design}
+          hidden={hidden}
           section={section}
           onSelect={setSection}
-          off={[
-            ...(noCourses ? (['free'] as const) : []),
-            ...(tutorialsOn ? [] : (['tutorials'] as const)),
-            ...(teachOn ? [] : (['teach'] as const)),
-          ]}
+          off={[...(noCourses ? (['free'] as const) : [])]}
         />
 
-        {section === 'teach' ? (
+        {feedSection ? (
+          <FeedIndex
+            key={feedSection}
+            items={feed[feedSection].items}
+            selected={feed[feedSection].selected}
+            onSelect={feed[feedSection].onSelect}
+            empty={FEED_EMPTY[feedSection](literature.state)}
+            filters={
+              feedSection === 'articles' ? (
+                <div className="flex flex-col gap-[6px]">
+                  <input
+                    type="search"
+                    value={articleWords}
+                    onChange={(e) => {
+                      setArticleWords(e.target.value);
+                      setArticleId(null);
+                    }}
+                    placeholder="Search all of The Transmitter"
+                    aria-label="Search The Transmitter's articles"
+                    className="h-[40px] rounded-full border border-[#e8e8e8] bg-white px-[16px] text-[13px] text-[#002766] outline-none placeholder:text-[#bfbfbf] focus:border-[#003a8c]"
+                  />
+                  <span className="px-[4px] text-[11px] text-[#8c8c8c]">
+                    {transmitter.state === 'loading'
+                      ? 'Searching…'
+                      : transmitter.state === 'failed'
+                        ? 'The search could not reach The Transmitter.'
+                        : articleWords.trim()
+                          ? `${transmitter.items.length} articles found`
+                          : `The latest ${transmitter.items.length} articles`}
+                  </span>
+                </div>
+              ) : feedSection === 'lectures' ? (
+                <div className="flex flex-col gap-[10px]">
+                  <input
+                    type="search"
+                    value={talkWords}
+                    onChange={(e) => setTalkWords(e.target.value)}
+                    placeholder="Search talks, speakers, institutions"
+                    aria-label="Search the lectures"
+                    className="h-[40px] rounded-full border border-[#e8e8e8] bg-white px-[16px] text-[13px] text-[#002766] outline-none placeholder:text-[#bfbfbf] focus:border-[#003a8c]"
+                  />
+                  <div className="flex flex-wrap gap-[6px]">
+                    {LECTURE_TOPICS.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        aria-pressed={talkTopic === t.id}
+                        className={lb.chip(talkTopic === t.id)}
+                        onClick={() => {
+                          setTalkTopic(talkTopic === t.id ? null : (t.id as LectureTopic));
+                          setLectureId(null);
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-[6px] text-[11px] text-[#8c8c8c]">
+                    {(['recorded', 'upcoming'] as const).map((k) => (
+                      <button
+                        key={k}
+                        type="button"
+                        aria-pressed={talks === k}
+                        className={lb.chip(talks === k)}
+                        onClick={() => {
+                          setTalks(k);
+                          setLectureId(null);
+                        }}
+                      >
+                        {k === 'recorded' ? 'Recordings' : 'Upcoming'} · {lectures[k].length}
+                      </button>
+                    ))}
+                    <span className="ml-auto">
+                      {talks === 'recorded' ? 'newest first' : 'soonest first'}
+                    </span>
+                  </div>
+                </div>
+              ) : feedSection === 'literature' ? (
+                <LiteratureFilters
+                  topic={litTopic as LiteratureTopic}
+                  onTopic={setLitTopic}
+                  sort={litSort as LiteratureSort}
+                  onSort={setLitSort}
+                  words={litWords}
+                  onWords={setLitWords}
+                  chip={lb.chip}
+                />
+              ) : undefined
+            }
+          />
+        ) : section === 'teach' ? (
           <TeachIndex selected={teach} onSelect={setTeachId} />
         ) : section === 'tutorials' ? (
           <TutorialsIndex tutorials={tutorials} selected={tutorial} onSelect={setTutorialSlug} />
@@ -182,111 +366,135 @@ export function LearnPage({
               {courses.map((course, i) => {
                 const isSelected = course.id === selected?.id;
                 const done = progress[course.id]?.done;
-                // the rough courses after the rest, under a heading of their own
-                const firstRough = course.rough && !courses[i - 1]?.rough;
+                // each group under its heading, its courses shown while it is open
+                const group = groupOf(course);
+                const first = i === 0 || groupOf(courses[i - 1]) !== group;
+                const open = openGroups[group];
+                const hidden = !open;
+                if (hidden && !first) return null;
                 return (
                   <li key={course.id}>
-                    {firstRough && (
-                      <h3 className="px-[4px] pt-[10px] pb-[8px] text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase">
-                        Rough / Misc
-                      </h3>
-                    )}
-                    <button
-                      type="button"
-                      aria-pressed={isSelected}
-                      data-learn="row"
-                      onClick={() => setChosen(course.id)}
-                      className={cn(
-                        'group relative flex w-full items-center rounded-[12px] text-left transition-shadow',
-                        bigCards ? 'gap-[16px] p-[14px]' : 'gap-[12px] p-[10px]',
-                        isSelected
-                          ? 'bg-[#bae7ff] shadow-[inset_0_0_0_1.5px_#003a8c]'
-                          : 'bg-white shadow-[inset_0_0_0_1px_#f0f0f0] hover:shadow-[inset_0_0_0_1px_#d9d9d9]'
-                      )}
-                    >
-                      {course.id === 'python' ? (
-                        // a tiny editor typing out its first line of Python, and running it
-                        <MiniCode
-                          size={bigCards ? 120 : 58}
-                          className={bigCards ? 'rounded-[12px]' : 'rounded-[8px]'}
-                        />
-                      ) : (
-                        // its picture, live: a piece of the figure the card on the right plays
-                        <MiniFigure
-                          widget={course.preview}
-                          focus={MINI_FOCUS[course.id] ?? MINI_FOCUS_DEFAULT}
-                          // the brain turns when dragged, as the big one does; a click still picks the course
-                          interactive={course.id === 'brain-modeling'}
-                          size={bigCards ? 120 : 58}
-                          className={cn(
-                            'shadow-[inset_0_0_0_1px_#f0f0f0]',
-                            bigCards ? 'rounded-[12px]' : 'rounded-[8px]'
-                          )}
-                        />
-                      )}
-                      <span
+                    {first && (
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() => setOpenGroups({ ...openGroups, [group]: !open })}
                         className={cn(
-                          'flex min-w-0 flex-1 flex-col',
-                          bigCards ? 'gap-[8px]' : 'gap-[5px]'
+                          'flex w-full items-center gap-[8px] px-[4px] pb-[8px] text-left',
+                          i > 0 && 'pt-[10px]',
+                          'text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase hover:text-[#002766]'
                         )}
                       >
                         <span
+                          aria-hidden="true"
+                          className={cn('transition-transform', open && 'rotate-90')}
+                        >
+                          ›
+                        </span>
+                        {group === 'dev' ? 'In development' : 'Rough / Misc'}
+                        <span className="rounded-full bg-white px-[7px] py-px text-[10px] tracking-normal text-[#595959] shadow-[inset_0_0_0_1px_#f0f0f0]">
+                          {groupCount(group)}
+                        </span>
+                      </button>
+                    )}
+                    {!hidden && (
+                      <button
+                        type="button"
+                        aria-pressed={isSelected}
+                        data-learn="row"
+                        onClick={() => setChosen(course.id)}
+                        className={cn(
+                          'group relative flex w-full items-center rounded-[12px] text-left transition-shadow',
+                          bigCards ? 'gap-[16px] p-[14px]' : 'gap-[12px] p-[10px]',
+                          isSelected
+                            ? 'bg-[#bae7ff] shadow-[inset_0_0_0_1.5px_#003a8c]'
+                            : 'bg-white shadow-[inset_0_0_0_1px_#f0f0f0] hover:shadow-[inset_0_0_0_1px_#d9d9d9]'
+                        )}
+                      >
+                        {course.id === 'python' ? (
+                          // a tiny editor typing out its first line of Python, and running it
+                          <MiniCode
+                            size={bigCards ? 120 : 58}
+                            className={bigCards ? 'rounded-[12px]' : 'rounded-[8px]'}
+                          />
+                        ) : (
+                          // its picture, live: a piece of the figure the card on the right plays
+                          <MiniFigure
+                            widget={course.preview}
+                            focus={MINI_FOCUS[course.id] ?? MINI_FOCUS_DEFAULT}
+                            // the brain turns when dragged, as the big one does; a click still picks the course
+                            interactive={course.id === 'brain-modeling'}
+                            size={bigCards ? 120 : 58}
+                            className={cn(
+                              'shadow-[inset_0_0_0_1px_#f0f0f0]',
+                              bigCards ? 'rounded-[12px]' : 'rounded-[8px]'
+                            )}
+                          />
+                        )}
+                        <span
                           className={cn(
-                            'font-semibold text-[#002766]',
-                            bigCards
-                              ? 'line-clamp-2 text-[17px] leading-[23px]'
-                              : 'truncate text-[14px] leading-[19px]'
+                            'flex min-w-0 flex-1 flex-col',
+                            bigCards ? 'gap-[8px]' : 'gap-[5px]'
                           )}
                         >
-                          {course.title}
-                        </span>
-                        {bigCards && (
-                          <span className="line-clamp-2 text-[12.5px] leading-[18px] text-[#595959]">
-                            {course.description}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-[8px]">
-                          <span className="rounded-[4px] bg-[#fafafa] px-[7px] py-[2px] text-[10px] leading-[14px] font-semibold tracking-[0.3px] text-[#595959] shadow-[inset_0_0_0_1px_#f0f0f0]">
-                            {course.level}
-                          </span>
-                          <span className="text-[11px] leading-[15px] text-[#8c8c8c]">
-                            {course.slides.length} slides
-                          </span>
-                        </span>
-                        <span className="block h-[4px] w-full rounded-[2px] bg-[#f0f0f0]">
                           <span
                             className={cn(
-                              'block h-full rounded-[2px]',
-                              done ? 'bg-[#389e0d]' : 'bg-[#1890ff]'
+                              'font-semibold text-[#002766]',
+                              bigCards
+                                ? 'line-clamp-2 text-[17px] leading-[23px]'
+                                : 'truncate text-[14px] leading-[19px]'
                             )}
-                            style={{
-                              width: `max(2px, ${share(course, progress[course.id]) * 100}%)`,
-                            }}
-                          />
+                          >
+                            {course.title}
+                          </span>
+                          {bigCards && (
+                            <span className="line-clamp-2 text-[12.5px] leading-[18px] text-[#595959]">
+                              {course.description}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-[8px]">
+                            <span className="rounded-[4px] bg-[#fafafa] px-[7px] py-[2px] text-[10px] leading-[14px] font-semibold tracking-[0.3px] text-[#595959] shadow-[inset_0_0_0_1px_#f0f0f0]">
+                              {course.level}
+                            </span>
+                            <span className="text-[11px] leading-[15px] text-[#8c8c8c]">
+                              {course.slides.length} slides
+                            </span>
+                          </span>
+                          <span className="block h-[4px] w-full rounded-[2px] bg-[#f0f0f0]">
+                            <span
+                              className={cn(
+                                'block h-full rounded-[2px]',
+                                done ? 'bg-[#389e0d]' : 'bg-[#1890ff]'
+                              )}
+                              style={{
+                                width: `max(2px, ${share(course, progress[course.id]) * 100}%)`,
+                              }}
+                            />
+                          </span>
                         </span>
-                      </span>
-                      {/* into the course, top right, just right of sharing: green, as the card's
+                        {/* into the course, top right, just right of sharing: green, as the card's
                           Start button; shown on the selected card, and on the one pointed at */}
-                      <PlayChip
-                        title={course.title}
-                        href={courseHref(course, progress[course.id], learnPath)}
-                        className={cn(
-                          'absolute top-[8px] right-[8px] transition-opacity',
-                          isSelected
-                            ? 'opacity-100'
-                            : 'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100'
-                        )}
-                      />
-                      {/* sharing the course, top right; out of the way until the card is pointed at, but for touch */}
-                      <ShareChip
-                        what={{
-                          title: course.title,
-                          text: course.description,
-                          path: `/app/learn/${course.id}`,
-                        }}
-                        className="absolute top-[8px] right-[42px] opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
-                      />
-                    </button>
+                        <PlayChip
+                          title={course.title}
+                          href={courseHref(course, progress[course.id], learnPath)}
+                          className={cn(
+                            'absolute top-[8px] right-[8px] transition-opacity',
+                            isSelected
+                              ? 'opacity-100'
+                              : 'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100'
+                          )}
+                        />
+                        {/* sharing the course, top right; out of the way until the card is pointed at, but for touch */}
+                        <ShareChip
+                          what={{
+                            title: course.title,
+                            text: course.description,
+                            path: `/app/learn/${course.id}`,
+                          }}
+                          className="absolute top-[8px] right-[42px] opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+                        />
+                      </button>
+                    )}
                   </li>
                 );
               })}
@@ -296,7 +504,19 @@ export function LearnPage({
       </aside>
 
       <div className={PANEL_FRAME}>
-        {section === 'teach' ? (
+        {feedSection ? (
+          <FeedCard
+            key={`${feedSection}-${feed[feedSection].selected?.id}`}
+            item={feed[feedSection].selected}
+            source={
+              feedSection === 'literature' && literature.source === 'openalex'
+                ? OPENALEX
+                : FEED_SOURCES[feedSection]
+            }
+            empty={FEED_EMPTY[feedSection](literature.state)}
+            className={panel}
+          />
+        ) : section === 'teach' ? (
           <TeachCard key={teach.id} topic={teach} onSelect={setTeachId} className={panel} />
         ) : section === 'tutorials' ? (
           <TutorialCard
@@ -346,9 +566,17 @@ export function LearnPage({
                 />
               ))}
             </OptionMenu>
+            <OptionMenu title="Sections">
+              {CATEGORIES.map((c) => (
+                <SettingToggle
+                  key={c.key}
+                  label={c.label}
+                  on={!hidden.includes(c.key)}
+                  onChange={(on) => showSection(c.key, on)}
+                />
+              ))}
+            </OptionMenu>
             <OptionMenu title="Appearance">
-              <SettingToggle label="Teach section" on={teachOn} onChange={setTeachOn} />
-              <SettingToggle label="Tutorials button" on={tutorialsOn} onChange={setTutorialsOn} />
               <SettingToggle label="Outer box" on={outerBox} onChange={setOuterBox} />
               <SettingToggle label="List box" on={listBoxOn} onChange={setListBoxOn} />
               <SettingToggle label="Big courses" on={bigCards} onChange={setBigCards} />
@@ -372,45 +600,116 @@ export function LearnPage({
   );
 }
 
+/** Each outside section's source, credited on its cards. */
+const FEED_SOURCES: Record<'lectures' | 'conferences' | 'articles' | 'literature', FeedSource> = {
+  lectures: {
+    name: 'World Wide Neuro',
+    href: 'https://www.world-wide.org/comp-neuro/seminars?timing=past&hasVideo=true',
+    note: 'Recorded computational neuroscience talks, listed and hosted by World Wide Neuro, the open seminar series for neuroscience. All credit to the speakers and the organisers of each series.',
+  },
+  conferences: {
+    name: 'World Wide Neuro',
+    href: 'https://www.world-wide.org/comp-neuro/conferences',
+    note: 'Upcoming meetings, from World Wide Neuro’s computational neuroscience calendar and the organisers’ own announcements. Check dates with the organisers before booking.',
+  },
+  articles: {
+    name: 'The Transmitter',
+    href: 'https://www.thetransmitter.org/',
+    note: 'The latest from The Transmitter, the neuroscience news and analysis site, from its public feed. All credit to its writers and editors.',
+  },
+  literature: {
+    name: 'Europe PMC',
+    href: 'https://europepmc.org/',
+    note: 'Papers from Europe PMC, the open archive of life-sciences literature, searched as you type: a topic searches titles and abstracts; words typed also find authors.',
+  },
+};
+
+/** The literature's source when Europe PMC cannot be reached. */
+const OPENALEX: FeedSource = {
+  name: 'OpenAlex',
+  href: 'https://openalex.org/',
+  note: 'Papers from OpenAlex, the free and open index of the world’s research, searched as you type (Europe PMC, the usual source, could not be reached).',
+};
+
+/** What an outside section says with nothing in it. */
+const FEED_EMPTY: Record<
+  keyof typeof FEED_SOURCES,
+  (paper: 'loading' | 'done' | 'failed') => string
+> = {
+  lectures: () => 'No talks match.',
+  conferences: () => 'No upcoming conferences or workshops could be loaded.',
+  articles: () => 'No articles to show.',
+  literature: (state) =>
+    state === 'loading'
+      ? 'Searching…'
+      : state === 'failed'
+        ? 'Neither Europe PMC nor OpenAlex could be reached.'
+        : 'No papers match.',
+};
+
+/** The literature's filters: words to search for, a topic, and the order. */
+function LiteratureFilters({
+  topic,
+  onTopic,
+  sort,
+  onSort,
+  words,
+  onWords,
+  chip,
+}: {
+  topic: LiteratureTopic;
+  onTopic: (t: LiteratureTopic) => void;
+  sort: LiteratureSort;
+  onSort: (s: LiteratureSort) => void;
+  words: string;
+  onWords: (w: string) => void;
+  chip: (on: boolean) => string;
+}) {
+  return (
+    <div className="flex flex-col gap-[10px]">
+      <input
+        type="search"
+        value={words}
+        onChange={(e) => onWords(e.target.value)}
+        placeholder="Search titles, abstracts and authors"
+        aria-label="Search the literature"
+        className="h-[40px] rounded-full border border-[#e8e8e8] bg-white px-[16px] text-[13px] text-[#002766] outline-none placeholder:text-[#bfbfbf] focus:border-[#003a8c]"
+      />
+      <div className="flex flex-wrap gap-[6px]">
+        {LITERATURE_TOPICS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={topic === t.id}
+            className={chip(topic === t.id)}
+            onClick={() => onTopic(t.id)}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-[6px] text-[11px] text-[#8c8c8c]">
+        Order:
+        {LITERATURE_SORTS.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            aria-pressed={sort === o.id}
+            className={chip(sort === o.id)}
+            onClick={() => onSort(o.id)}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Where a course's play button and Start button go: on where the learner left off, if they did. */
 function courseHref(course: LearnCourse, progress: CourseProgress | undefined, learnPath: string) {
   const resume = progress && !progress.done ? progress.slide + 1 : undefined;
   return learnCoursePath(course.id, `${learnPath}?course=${course.id}`, resume);
-}
-
-/** A green round play button, inside the card's own button: so a span, not a link or a button. */
-function PlayChip({ title, href, className }: { title: string; href: string; className?: string }) {
-  const router = useRouter();
-  const go = (e: React.SyntheticEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    router.push(href);
-  };
-  return (
-    // biome-ignore lint/a11y/useSemanticElements: a link cannot sit inside the card's own button
-    <span
-      role="link"
-      tabIndex={0}
-      aria-label={`Open ${title}`}
-      title="Open the course"
-      onClick={go}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') go(e);
-        else e.stopPropagation();
-      }}
-      className={cn(
-        'flex size-[28px] items-center justify-center rounded-full bg-[#389e0d] text-white shadow-[0_2px_6px_rgba(56,158,13,0.35)] transition-colors hover:bg-[#237804]',
-        className
-      )}
-    >
-      <svg viewBox="0 0 16 16" aria-hidden="true" className="ml-[2px] size-[12px]">
-        <path
-          fill="currentColor"
-          d="M4 2.5v11a.6.6 0 0 0 .9.5l9-5.5a.6.6 0 0 0 0-1l-9-5.5a.6.6 0 0 0-.9.5Z"
-        />
-      </svg>
-    </span>
-  );
 }
 
 function CourseDetail({

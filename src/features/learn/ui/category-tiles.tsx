@@ -9,20 +9,31 @@ import { useEffect, useRef, useState } from 'react';
  */
 
 import {
+  ArticlesIcon,
+  ConferencesIcon,
   FeaturesIcon,
   FreeCoursesIcon,
   GlossaryIcon,
+  LecturesIcon,
+  LiteratureIcon,
+  ShowcasesIcon,
   TeachIcon,
   TutorialsIcon,
 } from '@/features/learn/ui/icons';
 import { cn } from '@/utils/css-class';
 
-const CATEGORIES = [
+/** Every tile, in order: those with a section, and those still to come. */
+export const CATEGORIES = [
   { key: 'free', label: 'Courses', Icon: FreeCoursesIcon },
-  { key: 'teach', label: 'Teach', Icon: TeachIcon },
   { key: 'glossary', label: 'Glossary', Icon: GlossaryIcon },
+  { key: 'teach', label: 'Teach', Icon: TeachIcon },
   { key: 'tutorials', label: 'Tutorials', Icon: TutorialsIcon },
   { key: 'features', label: 'Features', Icon: FeaturesIcon },
+  { key: 'lectures', label: 'Lectures', Icon: LecturesIcon },
+  { key: 'literature', label: 'Literature', Icon: LiteratureIcon },
+  { key: 'articles', label: 'Articles', Icon: ArticlesIcon },
+  { key: 'conferences', label: 'Conferences & Workshops', Icon: ConferencesIcon },
+  { key: 'showcases', label: 'Showcases', Icon: ShowcasesIcon },
 ];
 
 export const TILE_DESIGNS = [
@@ -179,7 +190,16 @@ function Tile({
 }
 
 /** The sections there is something in so far; the rest are greyed out. */
-export const LEARN_SECTIONS = ['free', 'teach', 'glossary', 'tutorials'] as const;
+export const LEARN_SECTIONS = [
+  'free',
+  'teach',
+  'glossary',
+  'tutorials',
+  'lectures',
+  'literature',
+  'articles',
+  'conferences',
+] as const;
 export type LearnSection = (typeof LEARN_SECTIONS)[number];
 
 export function CategoryTiles({
@@ -187,16 +207,19 @@ export function CategoryTiles({
   section,
   onSelect,
   off = [],
+  hidden = [],
 }: {
   design: number;
   section: LearnSection;
   onSelect: (section: LearnSection) => void;
   /** Sections that have a page but nothing to show, e.g. courses when every course's flag is off. */
   off?: LearnSection[];
+  /** Tiles left out altogether, by key: switched off in the Sections options. */
+  hidden?: string[];
 }) {
   return (
     <div data-learn="tiles" className="grid grid-cols-5 items-start gap-[10px]">
-      {CATEGORIES.map((category) => {
+      {CATEGORIES.filter((c) => !hidden.includes(c.key)).map((category) => {
         const live =
           (LEARN_SECTIONS as readonly string[]).includes(category.key) &&
           !(off as string[]).includes(category.key);
@@ -351,6 +374,18 @@ const GEAR = (
   </svg>
 );
 
+/** Four tiles, on the Sections menu's button. */
+const TILES = (
+  <svg viewBox="0 0 16 16" aria-hidden="true" className="size-[16px]">
+    <g fill="none" stroke="currentColor" strokeWidth="1.2">
+      <rect x="2" y="2" width="5" height="5" rx="1" />
+      <rect x="9" y="2" width="5" height="5" rx="1" />
+      <rect x="2" y="9" width="5" height="5" rx="1" />
+      <rect x="9" y="9" width="5" height="5" rx="1" />
+    </g>
+  </svg>
+);
+
 /** The mortarboard on the Courses menu's button, as on the Courses tile. */
 const CAP = (
   <svg viewBox="0 0 16 16" aria-hidden="true" className="size-[16px]">
@@ -383,7 +418,7 @@ export function OptionMenu({
   title,
   children,
 }: {
-  title: 'Appearance' | 'Courses';
+  title: 'Appearance' | 'Courses' | 'Sections';
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -429,7 +464,7 @@ export function OptionMenu({
           open ? 'border-[#002766] text-[#002766]' : 'border-[#e8e8e8]'
         )}
       >
-        {title === 'Appearance' ? GEAR : CAP}
+        {title === 'Appearance' ? GEAR : title === 'Courses' ? CAP : TILES}
       </button>
     </div>
   );

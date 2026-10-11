@@ -47,6 +47,7 @@ import StepCanvas, { type Frame } from '../ui/StepCanvas';
 export const PHYSICS2_STEPS = [
   'lipids',
   'membrane',
+  'water',
   'charges',
   'barrier',
   'forces',
@@ -65,14 +66,19 @@ export const PHYSICS2_STEPS = [
   'uncharged',
   'charged',
   'imbalance',
+  'moreOut',
+  'moreIn',
   'attract',
   'fieldK',
   'fieldN',
+  'across',
   'sheet',
+  'pushed',
   'enter',
   'balance',
   'voltage',
   'work',
+  'depends',
 ] as const;
 export type Physics2Step = (typeof PHYSICS2_STEPS)[number];
 
@@ -381,8 +387,8 @@ const DRAWN = ALL.reduce(
       : best,
   [-1, Infinity] as [number, number]
 )[0];
-/** Where the one potassium ion that leaves is, `s` ms after it sets off: to the channel, through it, and to rest at the
- * membrane outside, `dx` along from the pore. */
+/** Where the one potassium ion that leaves is, `s` ms after it sets off: to the channel, through it, and to rest by the
+ * membrane outside, `dx` along from the pore — `lift` off it, or, at none, against it. */
 function leaveAt(
   s: number,
   home: [number, number],
@@ -390,7 +396,8 @@ function leaveAt(
   y: number,
   face: number,
   u: number,
-  dx: number
+  dx: number,
+  lift = 0
 ): [number, number] {
   const go = (a: [number, number], b: [number, number], e: number): [number, number] => [
     lerp(a[0], b[0], e),
@@ -399,7 +406,7 @@ function leaveAt(
   const [inner, outer, rest]: [number, number][] = [
     [cx, y + face + 6 * u],
     [cx, y - face - 6 * u],
-    [cx + dx, y - face - 9 * u],
+    [cx + dx, y - face - 9 * u - lift],
   ];
   if (s <= 0) return home;
   if (s < 800) return go(home, inner, smooth(s / 800));
@@ -407,6 +414,98 @@ function leaveAt(
   if (s < 2200) return go(outer, rest, smooth((s - 1200) / 1000));
   return rest;
 }
+
+/** How far off the membrane the potassium ion that left rests, u: close to it, not against it — until the negative ion it
+ * draws to the membrane inside holds the two of them there. */
+const LIFT = 10;
+
+/** The fields' ripples: how long each takes to spread to its widest, ms; how many are on their way at once; and how far
+ * out from the ion they go, u. */
+const RIPPLE_MS = 3000;
+const RIPPLES = 4;
+const RIPPLE_REACH = 260;
+/** On the potassium ion's field's slide, two potassium ions outside that come at it and are pushed back, each in turn:
+ * where from, radians round it (straight up −π/2), and how far into the round each sets off, ms. */
+const VISITORS: [number, number][] = [
+  [-2.85, 0],
+  [-1.95, 2600],
+];
+const VISIT_MS = 5200;
+/** The pair's field, drawn by waves sweeping along its lines: how many lines shape the waves (every other one drawn),
+ * fanning out from straight down by up to how far either side, radians; how many waves are on their way at once; and how
+ * long each takes to sweep from the one ion to the other, ms. */
+const FIELD_LINES = 13;
+const FIELD_SPREAD = 0.95;
+const FIELD_WAVES = 3;
+const WAVE_MS = 3200;
+
+/** A traced field line: its points, and how far along it each is. */
+interface FieldLine {
+  pts: [number, number][];
+  at: number[];
+}
+
+/**
+ * The lines of the field of a positive charge at `a` and an equal negative one at `b`, in the page's pixels: `count` of
+ * them, leaving `a` (radius `ra`) at angles fanning `spread` either side of straight towards `b`, each followed along the
+ * field, in short steps, until it reaches `b` (radius `rb`).
+ */
+function fieldLines(
+  a: [number, number],
+  b: [number, number],
+  ra: number,
+  rb: number,
+  count: number,
+  spread: number
+): FieldLine[] {
+  const field = (x: number, y: number): [number, number] => {
+    let [ex, ey] = [0, 0];
+    for (const [cx, cy, q] of [
+      [a[0], a[1], 1],
+      [b[0], b[1], -1],
+    ]) {
+      const [dx, dy] = [x - cx, y - cy];
+      const r2 = dx * dx + dy * dy;
+      const k = q / (r2 * Math.sqrt(r2));
+      [ex, ey] = [ex + k * dx, ey + k * dy];
+    }
+    const m = Math.hypot(ex, ey) || 1;
+    return [ex / m, ey / m];
+  };
+  const toward = Math.atan2(b[1] - a[1], b[0] - a[0]);
+  const step = Math.max(1.5, Math.hypot(b[0] - a[0], b[1] - a[1]) / 120);
+  return Array.from({ length: count }, (_, i) => {
+    const turn = toward + (count > 1 ? (i / (count - 1) - 0.5) * 2 * spread : 0);
+    let [x, y] = [a[0] + Math.cos(turn) * (ra + 2), a[1] + Math.sin(turn) * (ra + 2)];
+    const pts: [number, number][] = [[x, y]];
+    const at = [0];
+    for (let n = 0; n < 2000; n++) {
+      // a midpoint step along the field
+      const [fx, fy] = field(x, y);
+      const [mx, my] = field(x + (fx * step) / 2, y + (fy * step) / 2);
+      [x, y] = [x + mx * step, y + my * step];
+      pts.push([x, y]);
+      at.push(at[at.length - 1] + step);
+      if (Math.hypot(x - b[0], y - b[1]) < rb + 2) break;
+    }
+    return { pts, at };
+  });
+}
+
+/** And, on the negative ion's field's slide, two potassium ions inside drawn in to that, each in turn, from either side,
+ * along under the membrane — clear of it, and of the words at the foot: where from, radians round it; how far into the
+ * round each sets off, ms; and which way its path bends as it comes. */
+const LURED: [number, number, number][] = [
+  [3.0, 0, 1],
+  [0.14, 2900, -1],
+];
+/** How far the view lowers onto the negative ion on its field's slide, u: so that what it draws in can be seen coming. */
+const LOWER = 22;
+/** How much closer still the view comes, right in on the potassium channel, on the slides about what happens in it. */
+const ON_CHANNEL = 2;
+/** How far left of the potassium channel's middle the pair beside it lines the membrane, u: all but touching the channel. */
+const BESIDE = 28;
+const LURE_MS = 5800;
 
 /** The channels, where the basic course's slide puts its three: sodium's, potassium's in the middle, and chloride's. */
 const CHANNELS: Kind[] = ['Na', 'K', 'Cl'];
@@ -497,6 +596,12 @@ interface Pose {
   recentre: number;
   fieldK: number;
   fieldN: number;
+  /** The view lowered onto the negative ion inside, on its field's slide. */
+  lower: number;
+  /** The pair's field together, across the membrane between them: little waves crossing it, outside to inside. */
+  across: number;
+  /** Right in on the channel, all round it greyed: on the slides about what happens in it. */
+  onChannel: number;
   /** Pairs lining the membrane, many, and the field they make across it; and a potassium ion trying the channel,
    * pushed back. */
   sheet: number;
@@ -511,6 +616,14 @@ interface Pose {
   balance: number;
   /** All the channels open, each in its own colour, passing its own kind of ion and turning away others. */
   selective: number;
+  /** Every ion jostled faster, on the slide about their moving at random only: slowed again after it. */
+  fast: number;
+  /** The negative ion the next slides draw to the membrane, in its own colour among the greyed. */
+  reveal: number;
+  /** The potassium ions inside greyed, all but the one that leaves: on the slides about it and the ion it draws. */
+  quiet: number;
+  /** Water molecules filling both sides, neutral: on their own slide only, fading as the next begins. */
+  water: number;
 }
 
 /** A step's picture, `t` ms into it and `typed` ms after its words typed out. */
@@ -558,6 +671,9 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
     recentre: 0,
     fieldK: 0,
     fieldN: 0,
+    lower: 0,
+    across: 0,
+    onChannel: 0,
     sheet: 0,
     balance: 0,
     enter: 0,
@@ -565,24 +681,33 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
     work: 0,
     attempt: 0,
     selective: 0,
+    water: 0,
+    fast: 0,
+    reveal: 0,
+    quiet: 0,
   };
   switch (step) {
     case 'lipids':
       // the membrane draws in, and is named; once the words have typed, a lens opens over a few lipids
-      Object.assign(P, { sides: 0, ions: 0, key: 0, big: 1, dock: 0 });
+      Object.assign(P, { sides: 0, ions: 0, key: 0, big: 1 });
       P.drawn = phase(t, 0, 1400);
       P.named = phase(t, 900, 600);
       P.lens = phase(typed, 300, 700);
       break;
     case 'membrane':
-      Object.assign(P, { ions: 0, key: 0, big: 1, dock: 0 });
+      Object.assign(P, { ions: 0, key: 0, big: 1 });
       P.sides = phase(typed, 200, 600);
       break;
+    case 'water':
+      // the sides' names shrinking to their places as the slide opens; the water filling them once the
+      // words have typed
+      Object.assign(P, { ions: 0, key: 0, big: 0 });
+      P.water = phase(typed, 200, 1000);
+      break;
     case 'charges':
-      // the key, in the middle, as the words start to type; the ions once they have; then the key to its corner
+      // the key, in its corner from the start, as the words start to type; the ions once they have
       P.key = phase(t, 0, 500);
       P.ions = phase(typed, 200, 900);
-      P.dock = phase(typed, 1300, 700);
       break;
     case 'barrier':
       P.barrier = phase(typed, 200, 600);
@@ -634,6 +759,7 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
       // the channels shut, and every ion jostling, bumping into the others
       Object.assign(P, { focus: 1, crowd: 1, channels: 1, stated: 1 });
       P.random = phase(typed, 200, 600);
+      P.fast = P.random;
       break;
     case 'random':
       // still jostling; potassium's channel opening, then ions through it, out and in, counted
@@ -672,10 +798,31 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
       P.recharge = phase(typed, 1100, 1400);
       break;
     case 'imbalance':
-      // once the words have typed, one potassium ion out through the channel, to rest at the membrane; then the count
+      // the potassium ions inside greying as the words type, but for the one about to leave; once they have, that one out
+      // through the channel, to rest close by the membrane; then the count, and the negative ion the next slides draw
+      // to the membrane in its own colour
       Object.assign(P, { focus: 1, crowd: 1, channels: 1, stated: 1, open: 1, alone: 1 });
+      P.quiet = phase(t, 0, 800);
       P.leaveMs = Number.isFinite(typed) ? typed - 400 : 1e6;
       P.imbalance = phase(typed, 2400, 600);
+      P.reveal = P.imbalance;
+      break;
+    case 'moreOut':
+    case 'moreIn':
+      // the one potassium ion out, at rest, and each side's charges counted, as on the slide before; and the
+      // negative ion the next slides draw to the membrane, in its own colour
+      Object.assign(P, {
+        focus: 1,
+        crowd: 1,
+        channels: 1,
+        stated: 1,
+        open: 1,
+        alone: 1,
+        leaveMs: 1e6,
+        imbalance: 1,
+        reveal: 1,
+        quiet: 1,
+      });
       break;
     case 'attract':
       // close in on the channel as the words type; then a negative ion inside drawn to the membrane opposite the ion
@@ -687,6 +834,8 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         open: 1,
         alone: 1,
         leaveMs: 1e6,
+        reveal: 1,
+        quiet: 1,
       });
       P.zoom = phase(t, 0, 1400);
       P.pull = phase(typed, 400, 1600);
@@ -704,6 +853,7 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         leaveMs: 1e6,
         zoom: 1,
         pull: 1,
+        quiet: 1,
       });
       P.closer = phase(t, 0, 1200);
       P.fieldK = phase(typed, 300, 900);
@@ -720,13 +870,31 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         zoom: 1,
         pull: 1,
         closer: 1,
+        quiet: 1,
+        lower: 1,
       });
       P.fieldN = phase(typed, 300, 900);
       break;
+    case 'across':
+      // the pair, as close in, centred on them again; once the words have typed, their field across the membrane
+      Object.assign(P, {
+        focus: 1,
+        crowd: 1,
+        channels: 1,
+        stated: 1,
+        open: 1,
+        alone: 1,
+        leaveMs: 1e6,
+        zoom: 1,
+        pull: 1,
+        closer: 1,
+        quiet: 1,
+      });
+      P.across = phase(typed, 200, 900);
+      break;
     case 'sheet':
       // as close in as the two fields' slides, which show ions enough: no backing out; once the words have typed,
-      // pairs lining the membrane, one after another, and their field; then a potassium ion trying the channel and
-      // pushed back
+      // pairs lining the membrane, one after another, and their field across it
       Object.assign(P, {
         focus: 1,
         crowd: 1,
@@ -741,7 +909,24 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         recentre: 1,
       });
       P.sheet = phase(typed, 200, 1800);
-      P.attempt = phase(typed, 2000, 600);
+      break;
+    case 'pushed':
+      // the pairs and their field, as left; once the words have typed, a potassium ion trying the channel and pushed back
+      Object.assign(P, {
+        focus: 1,
+        crowd: 1,
+        channels: 1,
+        stated: 1,
+        open: 1,
+        alone: 1,
+        leaveMs: 1e6,
+        zoom: 1,
+        pull: 1,
+        closer: 1,
+        recentre: 1,
+        sheet: 1,
+      });
+      P.attempt = phase(typed, 200, 600);
       break;
     case 'enter':
       // the last slide's picture, without the ion trying to leave; once the words type, one outside drawn in
@@ -776,8 +961,27 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         closer: 1,
         recentre: 1,
         sheet: 1,
+        onChannel: 1,
       });
       P.points = phase(typed, 200, 900);
+      break;
+    case 'depends':
+      // the two points and the voltage between them, as left, backing out from the channel to the lined membrane
+      Object.assign(P, {
+        focus: 1,
+        crowd: 1,
+        channels: 1,
+        stated: 1,
+        open: 1,
+        alone: 1,
+        leaveMs: 1e6,
+        zoom: 1,
+        pull: 1,
+        closer: 1,
+        recentre: 1,
+        sheet: 1,
+      });
+      P.points = 1;
       break;
     case 'work':
       // the two points, as left; then a positive charge carried from the inside one to the outside one, and the work
@@ -795,6 +999,7 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         closer: 1,
         recentre: 1,
         sheet: 1,
+        onChannel: 1,
         points: 1,
       });
       P.work = phase(typed, 200, 600);
@@ -815,13 +1020,27 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
         closer: 1,
         recentre: 1,
         sheet: 1,
+        onChannel: 1,
         attempt: 1,
       });
       P.balance = phase(typed, 300, 1200);
       break;
   }
+  // the ions' key only from the slide that brings the ions to the one that turns to potassium (slides 4
+  // to 9): it fades out as the slide after begins
+  if (!KEYED.includes(step)) P.key = 0;
   return P;
 }
+
+/** The steps that show the ions' key. */
+const KEYED: readonly Physics2Step[] = [
+  'charges',
+  'barrier',
+  'forces',
+  'flow',
+  'neutral',
+  'potassium',
+];
 
 /** Words as the basic course sets them: italic serif, haloed in the page's colour, with `^` raising what follows. */
 const say = (
@@ -1047,18 +1266,20 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
   // — and, on the slides about each ion's field, closer still, centred on the pair a little way along from it
   const pairDx = (narrow ? 44 : 70) * u;
   // twice as close as it was first drawn (2.4, then 1.4 times that): close enough on slides 20 to 23, with ions to spare
-  const zoom = lerp(1, 4.8, P.zoom) * lerp(1, 1.4, P.closer);
+  const zoom = lerp(1, 4.8, P.zoom) * lerp(1, 1.4, P.closer) * lerp(1, ON_CHANNEL, P.onChannel);
   // and on the last of them, the pairs lining the membrane, back over the channel the ion tries
   const zx = w / 2 + P.closer * pairDx * (1 - P.recentre);
+  // and, on the negative ion's field's slide, lowered onto it
+  const zy = y + P.lower * LOWER * u;
   const seen = (px: number, py: number): [number, number] => [
     w / 2 + zoom * (px - zx),
-    y + zoom * (py - y),
+    y + zoom * (py - zy),
   ];
   ctx.save();
   if (zoom > 1.001) {
     ctx.translate(w / 2, y);
     ctx.scale(zoom, zoom);
-    ctx.translate(-zx, -y);
+    ctx.translate(-zx, -zy);
   }
   // where the one potassium ion that leaves and the negative ion it draws are drawn, for the words about them
   let lone: [number, number] = [0, 0];
@@ -1075,6 +1296,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     ctx.globalAlpha = 1;
   }
   const pores = CHANNELS.map((_, i) => w / 2 + (i - 1) * 240 * u);
+  if (P.water > 0.01) drawWater(g, y, x0, x1, face, P.water, narrow);
   if (P.drawn > 0.01) membrane(g, y, x0, lerp(x0, x1, P.drawn), 1, P.channels > 0.01 ? pores : []);
   // the channels, each edged in its ion's colour: opening and closing in turn, on the slide about their two states,
   // each open half the time — and potassium's, on the last slide, open
@@ -1103,11 +1325,11 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
   const jostle = (s: number, t: number) =>
     Math.sin(g.now / 97 + s * 3) + 0.6 * Math.sin(g.now / 41 + t * 5);
   const dense = (c: Each): [number, number] => [
-    along(c.dAlong) + drift(g.now, c.p, c.q, 10 * u) + 5 * u * P.random * jostle(c.p, c.q),
+    along(c.dAlong) + drift(g.now, c.p, c.q, 10 * u) + 5 * u * P.fast * jostle(c.p, c.q),
     y +
       c.side * (36 + 82 * c.dDepth) * u +
       drift(g.now, c.q, c.p, 6 * u) +
-      4 * u * P.random * jostle(c.q, c.p),
+      4 * u * P.fast * jostle(c.q, c.p),
   ];
   const cx = w / 2;
   const walker = WALKER >= 0 && P.walk > 0.01 ? ALL[WALKER] : null;
@@ -1115,7 +1337,9 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
   // the potassium ion that leaves and the negative ion it draws — where each is, so that, on the slides about their
   // fields, the ions round them can be pushed and pulled before they are drawn: by the one, then the other
   const loneHome = dense(ALL[WALKER]);
-  const loneLeft = leaveAt(P.leaveMs, loneHome, cx, y, face, u, pairDx);
+  // close by the membrane outside, not against it — until the negative ion it draws holds it there
+  const offMembrane = LIFT * u * (1 - P.pull);
+  const loneLeft = leaveAt(P.leaveMs, loneHome, cx, y, face, u, pairDx, offMembrane);
   const loneAt: [number, number] = [
     lerp(loneHome[0], loneLeft[0], P.alone),
     lerp(loneHome[1], loneLeft[1], P.alone),
@@ -1180,17 +1404,20 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
           yy = k >= 0 ? lerp(yy, dy, P.crowd) : dy;
         }
         if (c.kind !== 'K') a *= lerp(1, 0.42, P.focus);
+        // and potassium's own inside, on the slides about the one that leaves — all but that one
+        let quiet = c.kind === 'K' && c.side > 0 && n !== WALKER ? P.quiet : 0;
+        if (quiet > 0.001) a *= lerp(1, 0.42, quiet);
         // were potassium uncharged: spreading out through the open channel, to a place of its own outside
         const migrant = MIGRANTS.get(n);
         if (migrant && P.drainMs > 0) {
           const rest: [number, number] = [
             along(migrant.dAlong) +
               drift(g.now, c.p, c.q, 10 * u) +
-              5 * u * P.random * jostle(c.p, c.q),
+              5 * u * P.fast * jostle(c.p, c.q),
             y -
               (36 + 82 * migrant.dDepth) * u +
               drift(g.now, c.q, c.p, 6 * u) +
-              4 * u * P.random * jostle(c.q, c.p),
+              4 * u * P.fast * jostle(c.q, c.p),
           ];
           [x, yy] = migrateAt(
             P.drainMs - migrant.order * MIGRATE_EVERY,
@@ -1210,7 +1437,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
             x,
             along(settled.dAlong) +
               drift(g.now, c.p, c.q, 10 * u) +
-              5 * u * P.random * jostle(c.p, c.q),
+              5 * u * P.fast * jostle(c.p, c.q),
             e
           );
           yy = lerp(
@@ -1218,7 +1445,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
             y +
               (36 + 82 * settled.dDepth) * u +
               drift(g.now, c.q, c.p, 6 * u) +
-              4 * u * P.random * jostle(c.q, c.p),
+              4 * u * P.fast * jostle(c.q, c.p),
             e
           );
         }
@@ -1255,17 +1482,21 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
         }
         // the one that leaves, on the slides about the imbalance it makes: out through the channel, to rest beside it
         if (n === WALKER && P.alone > 0.01) {
-          const [lx, ly] = leaveAt(P.leaveMs, [x, yy], cx, y, face, u, pairDx);
+          const [lx, ly] = leaveAt(P.leaveMs, [x, yy], cx, y, face, u, pairDx, offMembrane);
           [x, yy] = [lerp(x, lx, P.alone), lerp(yy, ly, P.alone)];
           lone = [x, yy];
         }
         // and the negative ion inside that it draws to the membrane opposite, faster the nearer it comes — in its own
         // colour as it does
         let tint = P.focus;
+        if (n === DRAWN && P.reveal > 0.001) {
+          tint = P.focus * (1 - P.reveal);
+          a = lerp(a, 0.9, P.reveal);
+        }
         if (n === DRAWN && P.pull > 0.001) {
           const e = P.pull * P.pull;
           [x, yy] = [lerp(x, cx + pairDx, e), lerp(yy, y + face + drawnR + 1.5 * u, e)];
-          tint = P.focus * (1 - P.pull);
+          tint = Math.min(tint, P.focus * (1 - P.pull));
           a = lerp(a, 0.9, P.pull);
           drawnTo = [x, yy];
         }
@@ -1274,12 +1505,14 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
         // across the membrane, drawn towards it too
         for (const [from, sign, amount] of fields) {
           const source = sign > 0 ? WALKER : DRAWN;
-          if (amount < 0.01 || n === source) continue;
+          // each shown acting on positive ions only: the potassium ion's pushing them away, the negative ion's pulling
+          // them in
+          if (amount < 0.01 || n === source || SIGN[c.kind] < 0) continue;
+          const away = SIGN[c.kind] * sign;
           const [ddx, ddy] = [x - from[0], yy - from[1]];
           const d = Math.hypot(ddx, ddy);
           const reach = 100 * u;
           if (d < 1 || d > reach) continue;
-          const away = SIGN[c.kind] * sign;
           const strength = clamp01((reach - d) / (0.6 * reach));
           const partner = n === WALKER || n === DRAWN;
           const shift = partner ? 0 : 6 * u * strength * amount * away;
@@ -1294,12 +1527,27 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
             a: amount * strength,
           });
           tint = Math.min(tint, P.focus * (1 - amount * strength));
+          quiet = Math.min(quiet, P.quiet * (1 - amount * strength));
           a = lerp(a, 0.9, amount * strength);
         }
         // potassium's sign gone while it is imagined uncharged — and, its charge back, a ring spreading round it
         const sign = c.kind === 'K' && P.bare > 0.5 ? 0 : SIGN[c.kind];
-        disc(g, x, yy, (c.kind === 'A' ? 10.5 : 8) * u, colourOf(c.kind, tint), sign, a);
-        if (c.kind === 'K' && P.recharge > 0.01 && P.recharge < 0.99) {
+        // — and, right in on the channel, every ion round it greyed
+        const colour =
+          c.kind === 'K'
+            ? mix(IONS.K.colour, GREY, 0.85 * Math.max(quiet, P.onChannel))
+            : colourOf(c.kind, Math.max(tint, P.onChannel));
+        disc(
+          g,
+          x,
+          yy,
+          (c.kind === 'A' ? 10.5 : 8) * u,
+          colour,
+          sign,
+          a * lerp(1, 0.6, P.onChannel)
+        );
+        // (as its charge comes back only: not as the next slide, with one ion leaving, blends in)
+        if (c.kind === 'K' && P.recharge > 0.01 && P.recharge < 0.99 && P.alone < 0.01) {
           ctx.globalAlpha = 0.6 * a * (1 - P.recharge);
           ctx.strokeStyle = rgba(IONS.K.colour, 1);
           ctx.lineWidth = 1.5;
@@ -1326,7 +1574,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
   const tryMs = cycle(g.now, 3000) * 3000;
   const tryAt: [number, number] = (() => {
     const [start, mouth, high] = [
-      [cx - 22 * u, y + face + 26 * u],
+      [cx - 18 * u, y + face + 34 * u],
       [cx, y + face + 4 * u],
       [cx, y - 2 * u],
     ] as [number, number][];
@@ -1340,67 +1588,70 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     return go(mouth, [cx + 18 * u, y + face + 26 * u], smooth((tryMs - 2000) / 1000));
   })();
   if (P.sheet > 0.01) {
+    // right of the channel, every `lining` out from the first pair; left of it, every `lining` out from one beside it,
+    // all but touching it — a chloride ion inside that one, the smaller kind, to fit
+    const beside = cx - BESIDE * u;
     const slots: number[] = [];
     for (let k = -14; k <= 14; k++) {
-      const x = cx + pairDx + k * lining;
-      if (k !== 0 && pores.every((px) => Math.abs(px - x) > 26 * u) && x > x0 && x < x1)
-        slots.push(x);
+      const right = cx + pairDx + k * lining;
+      if (
+        k !== 0 &&
+        right > cx + 26 * u &&
+        right < x1 &&
+        pores.every((px) => Math.abs(px - right) > 26 * u)
+      )
+        slots.push(right);
+      const left = beside - Math.abs(k) * lining;
+      if (k <= 0 && left > x0 && pores.every((px) => px === cx || Math.abs(px - left) > 26 * u))
+        slots.push(left);
     }
     slots.sort((a, b) => Math.abs(a - cx - pairDx) - Math.abs(b - cx - pairDx));
     slots.forEach((x, j) => {
       const shown = clamp01(P.sheet * (slots.length + 2) - j);
       if (shown < 0.01) return;
-      disc(g, x, y - face - 9 * u, 8 * u, IONS.K.colour, 1, 0.9 * shown);
-      const kind = j % 3 ? 'A' : 'Cl';
+      // greyed, right in on the channel
+      const faded = 0.9 * shown * lerp(1, 0.6, P.onChannel);
+      disc(g, x, y - face - 9 * u, 8 * u, mix(IONS.K.colour, GREY, 0.85 * P.onChannel), 1, faded);
+      const kind = x === beside || !(j % 3) ? 'Cl' : 'A';
       disc(
         g,
         x,
         y + face + (kind === 'A' ? 12 : 10) * u,
         (kind === 'A' ? 10.5 : 8) * u,
-        colourOf(kind, 0),
+        colourOf(kind, P.onChannel),
         -1,
-        0.9 * shown
+        faded
       );
     });
-    // drawn in the zoomed frame, so thinned as it zooms past the 3.36 it was first drawn at, to keep the blades as
-    // thick on screen as they were
-    const thin = Math.min(1, 3.36 / zoom);
-    for (let k = -14; k <= 14; k++) {
-      const x = cx + pairDx + (k + 0.5) * lining;
-      if (pores.every((px) => Math.abs(px - x) > 20 * u) && x > x0 && x < x1)
-        saber(
-          ctx,
-          L,
-          g.now,
-          x,
-          y - 4.6 * u,
-          x,
-          y + 4.6 * u,
-          FIELD,
-          0.85,
-          P.sheet * 1.4 - Math.abs(k) * 0.02,
-          1.6 * thin,
-          5 * thin,
-          (k * 0.137) % 1,
-          900
-        );
+    // their field: long straight lines right along the membrane — as far as the pairs line it, so all along it once they
+    // all do, through the channel too — sweeping down through it, outside to inside, each a glowing crest with a fainter
+    // one just behind; drawn in the zoomed frame, so as thin there as they are wide on the page
+    const lined = slots.filter((_, j) => clamp01(P.sheet * (slots.length + 2) - j) > 0.5);
+    const xl = Math.max(x0, Math.min(cx + pairDx, ...lined) - lining / 2);
+    const xr = Math.min(x1, Math.max(cx + pairDx, ...lined) + lining / 2);
+    ctx.save();
+    ctx.strokeStyle = rgba(FIELD, 1);
+    ctx.lineCap = 'round';
+    for (let j = 0; j < FIELD_WAVES; j++) {
+      const q = cycle(g.now, WAVE_MS, -(j / FIELD_WAVES) * WAVE_MS);
+      const a = P.sheet * Math.sin(Math.PI * q) ** 0.7;
+      if (a < 0.01) continue;
+      for (const [back, alpha, width, glow] of [
+        [0, 0.9, 2.6, 10],
+        [0.035, 0.35, 1.2, 0],
+      ]) {
+        const at = lerp(y - face - u, y + face + u, Math.max(0, q - back));
+        ctx.globalAlpha = alpha * a;
+        ctx.lineWidth = (width * u) / zoom;
+        ctx.shadowColor = rgba(FIELD, 0.6);
+        ctx.shadowBlur = glow * u;
+        ctx.beginPath();
+        ctx.moveTo(xl, at);
+        ctx.lineTo(xr, at);
+        ctx.stroke();
+      }
     }
-    saber(
-      ctx,
-      L,
-      g.now,
-      cx,
-      y - 9 * u,
-      cx,
-      y + 9 * u,
-      FIELD,
-      0.95,
-      P.sheet,
-      2 * thin,
-      6 * thin,
-      0.5,
-      900
-    );
+    ctx.restore();
   }
   // a potassium ion outside, drawn down to the channel's mouth, through it quickening, and into the cell
   const enterMs = cycle(g.now, 3200) * 3200;
@@ -1409,7 +1660,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
       [cx + 22 * u, y - face - 26 * u],
       [cx, y - face - 4 * u],
       [cx, y + face + 4 * u],
-      [cx - 18 * u, y + face + 26 * u],
+      [cx - 14 * u, y + face + 32 * u],
     ] as [number, number][];
     const go = (a: [number, number], b: [number, number], e: number): [number, number] => [
       lerp(a[0], b[0], e),
@@ -1546,19 +1797,20 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     const drawn = narrow
       ? 'a negative ion, drawn in'
       : 'a negative ion inside, drawn to the membrane';
+    // the labels to the left of the two, clear of the arrows on their right
     mathWords(
       ctx,
       ion,
-      kx + kr + 24 * u,
+      kx - kr - 12 * u,
       ky - 6 * u,
       IONS.K.colour,
       a,
       13 * g.ts,
-      'left',
+      'right',
       L.page,
       'italic 600'
     );
-    say(g, drawn, nx + nr + 24 * u, ny + 6 * u, a, 13);
+    say(g, drawn, nx - nr - 12 * u, ny + 6 * u, a, 13, 'right');
     foot(
       narrow
         ? 'opposite charges attract'
@@ -1566,35 +1818,92 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
       a
     );
   }
-  // each ion's field, on its slide: arrows out from the positive one, in towards the negative one; the push or pull
-  // it gives each ion round it; and what it does
+  // each ion's field, on its slide: ripples round it, pulse after pulse — out from the positive one, in towards the
+  // negative one; potassium ions round it pushed away or drawn in; the push or pull it gives each ion round it; and what
+  // it does
   fields.forEach(([at, sign, amount]) => {
     if (amount < 0.01) return;
     const [sx, sy] = seen(...at);
     const colour = sign > 0 ? IONS.K.colour : colourOf(ALL[DRAWN].kind, 0);
     const near = (sign > 0 ? 8 * u : drawnR) * zoom + 6 * u;
     const far = near + 58 * u;
-    for (let i = 0; i < 12; i++) {
-      const turn = (i / 12) * Math.PI * 2 + 0.26;
-      const [r0, r1] = sign > 0 ? [near, far] : [far, near];
-      const [ca, sa] = [Math.cos(turn), Math.sin(turn)];
-      // each line a blade igniting a little after the last, round the ion, its pulse running with the field
-      saber(
-        ctx,
-        L,
-        g.now,
-        sx + ca * r0,
-        sy + sa * r0,
-        sx + ca * r1,
-        sy + sa * r1,
-        colour,
-        0.8,
-        amount * 1.6 - (i / 12) * 0.6,
-        1.6,
-        7,
-        i / 12,
-        1600
-      );
+    const kr = 8 * u * zoom;
+    // potassium ions outside coming at the potassium ion, slowing as they near its field, and pushed back out — turned
+    // aside a little, as a charge pushed off another is — each with an arrow out as it goes
+    if (sign > 0)
+      for (const [from, offset] of VISITORS) {
+        const s = cycle(g.now, VISIT_MS, -offset);
+        const r = lerp(near + 70 * u, near + 320 * u, (2 * s - 1) ** 2);
+        const turn = from + 0.2 * (2 * s - 1);
+        const [ca, sa] = [Math.cos(turn), Math.sin(turn)];
+        const [vx, vy] = [sx + ca * r, sy + sa * r];
+        disc(g, vx, vy, kr, IONS.K.colour, 1, 0.9 * amount * Math.min(1, s / 0.12, (1 - s) / 0.12));
+        const pushed = s > 0.5 ? Math.sin(clamp01((s - 0.5) / 0.32) * Math.PI) : 0;
+        const [start, len] = [kr + 4 * u, 34 * u];
+        arrow(
+          ctx,
+          vx + ca * start,
+          vy + sa * start,
+          vx + ca * (start + len),
+          vy + sa * (start + len),
+          L.ink,
+          0.85 * amount * pushed,
+          2,
+          8
+        );
+      }
+    // potassium ions inside drawn in to the negative ion — faster the nearer they come, curving in onto it — to rest
+    // against it a while, and go; each with an arrow in, towards it, until it is there
+    else
+      for (const [from, offset, bend] of LURED) {
+        const s = cycle(g.now, LURE_MS, -offset);
+        const e = clamp01(s / 0.6);
+        const r = lerp(near + 300 * u, drawnR * zoom + kr + 2 * u, e * e);
+        const turn = from + 0.12 * bend * (1 - e);
+        const [ca, sa] = [Math.cos(turn), Math.sin(turn)];
+        const [vx, vy] = [sx + ca * r, sy + sa * r];
+        disc(g, vx, vy, kr, IONS.K.colour, 1, 0.9 * amount * Math.min(1, s / 0.1, (1 - s) / 0.12));
+        const drawn = smooth(clamp01(e / 0.2)) * (1 - smooth(clamp01((e - 0.7) / 0.2)));
+        const [start, len] = [kr + 4 * u, 34 * u];
+        arrow(
+          ctx,
+          vx - ca * start,
+          vy - sa * start,
+          vx - ca * (start + len),
+          vy - sa * (start + len),
+          L.ink,
+          0.85 * amount * drawn,
+          2,
+          8
+        );
+      }
+    // each pulse a crest, glowing in the ion's colour, with a fainter trough behind it: out from the positive ion,
+    // widening and fading as it goes; in towards the negative one, faint far out and sharpening as it closes in
+    for (let k = 0; k < RIPPLES; k++) {
+      const p = (((g.now / RIPPLE_MS + k / RIPPLES) % 1) + 1) % 1;
+      const out = sign > 0 ? p : 1 - p;
+      const r = near + out * RIPPLE_REACH * u;
+      const a =
+        sign > 0
+          ? amount * smooth(clamp01(p / 0.1)) * (1 - p) ** 1.5
+          : amount * smooth(clamp01(out / 0.1)) * (1 - out) ** 1.5;
+      if (a < 0.01) continue;
+      ctx.save();
+      ctx.strokeStyle = rgba(colour, 1);
+      ctx.globalAlpha = 0.85 * a;
+      ctx.lineWidth = (2.6 - 1.4 * out) * u;
+      ctx.shadowColor = rgba(colour, 0.7);
+      ctx.shadowBlur = 12 * u;
+      ctx.beginPath();
+      ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.35 * a;
+      ctx.lineWidth = 1.2 * u;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sign > 0 ? Math.max(near, r - 9 * u) : r + 9 * u, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
     const whose =
       sign > 0
@@ -1602,28 +1911,98 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
           ? "K^{+}'s field"
           : "the potassium ion's field"
         : "the negative ion's field";
+    // beside the positive ion; under the negative one, which potassium ions come at from either side
     mathWords(
       ctx,
       whose,
-      sx + far + 10 * u,
-      sy,
+      sign > 0 ? sx + far + 10 * u : sx,
+      sign > 0 ? Math.min(sy, h - 50 * u) : sy + near + 26 * u,
       colour,
       amount,
+      13 * g.ts,
+      sign > 0 ? 'left' : 'center',
+      L.page,
+      'italic 600'
+    );
+    foot(
+      sign > 0
+        ? narrow
+          ? 'positive ions pushed away'
+          : 'round a positive charge the field points out: positive ions are pushed away'
+        : narrow
+          ? 'positive ions pulled in'
+          : 'round a negative charge the field points in: positive ions are pulled in',
+      amount
+    );
+  });
+  // the pair's field together: its lines traced out from the potassium ion to the negative ion — straight down between
+  // them, bowing out to either side, drawn faint — and waves sweeping down along them, outside to inside, each a straight
+  // line right across them, as wide as the field is where it is. And named
+  if (P.across > 0.01) {
+    const [ka, kb] = [seen(...lone), seen(...drawnTo)];
+    const [ra, rb] = [8 * u * zoom, drawnR * zoom];
+    const lines = fieldLines(ka, kb, ra, rb, FIELD_LINES, FIELD_SPREAD);
+    ctx.save();
+    ctx.strokeStyle = rgba(FIELD, 1);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    // every other line, faint: enough to show the shape the waves sweep through
+    ctx.globalAlpha = 0.18 * P.across;
+    ctx.lineWidth = 1.2 * u;
+    lines.forEach(({ pts }, i) => {
+      if (i % 2) return;
+      ctx.beginPath();
+      pts.forEach(([x, y], n) => (n ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+      ctx.stroke();
+    });
+    // a wave: a straight line across the field at the height `q` of the way down from the one ion to the other, as wide
+    // as the field is there — from its leftmost line to its rightmost
+    const [top, bottom] = [ka[1] + ra, kb[1] - rb];
+    const edge = ({ pts }: FieldLine, at: number) => {
+      const i = pts.findIndex(([, py]) => py >= at);
+      if (i <= 0) return pts[Math.max(0, i)][0];
+      const [[x0, y0], [x1, y1]] = [pts[i - 1], pts[i]];
+      return lerp(x0, x1, (at - y0) / (y1 - y0 || 1));
+    };
+    const wave = (q: number) => {
+      const at = lerp(top, bottom, q);
+      const xs = lines.map((line) => edge(line, at));
+      ctx.beginPath();
+      ctx.moveTo(Math.min(...xs), at);
+      ctx.lineTo(Math.max(...xs), at);
+      ctx.stroke();
+    };
+    for (let j = 0; j < FIELD_WAVES; j++) {
+      const q = cycle(g.now, WAVE_MS, -(j / FIELD_WAVES) * WAVE_MS);
+      const a = P.across * Math.sin(Math.PI * q) ** 0.7;
+      if (a < 0.01) continue;
+      // the crest, glowing; and a fainter one just behind it
+      ctx.globalAlpha = 0.9 * a;
+      ctx.lineWidth = 2.6 * u;
+      ctx.shadowColor = rgba(FIELD, 0.6);
+      ctx.shadowBlur = 10 * u;
+      wave(q);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.35 * a;
+      ctx.lineWidth = 1.2 * u;
+      wave(Math.max(0, q - 0.035));
+    }
+    ctx.restore();
+    // beside the widest of its lines, at the membrane
+    const widest = Math.max(...lines.flatMap((line) => line.pts.map(([x]) => x)));
+    mathWords(
+      ctx,
+      narrow ? 'the field' : 'the field across the membrane',
+      widest + 28 * u,
+      seen(cx, y)[1],
+      FIELD,
+      P.across,
       13 * g.ts,
       'left',
       L.page,
       'italic 600'
     );
-    const why =
-      sign > 0
-        ? narrow
-          ? 'positive ions pushed away, negative pulled in'
-          : 'round a positive charge the field points out: positive ions are pushed away, negative ions pulled in'
-        : narrow
-          ? 'negative ions pushed away, positive pulled in'
-          : 'round a negative charge the field points in: negative ions are pushed away, positive ions pulled in';
-    foot(why, amount);
-  });
+  }
   if (P.sheet > 0.01) {
     const field = narrow
       ? 'a field across the membrane'
@@ -2125,7 +2504,9 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     CHANNELS.forEach((kind, i) => {
       const [name, short] = CHANNEL_NAMES[kind];
       const colour = colourOf(kind, own);
-      const a = P.channels * (kind === 'K' ? 1 : lerp(0.6, 1, P.selective)) * (1 - P.zoom);
+      // the others' names gone once a potassium ion has left, which comes to rest where chloride's is written
+      const a =
+        P.channels * (kind === 'K' ? 1 : lerp(0.6, 1, P.selective) * (1 - P.alone)) * (1 - P.zoom);
       const ly = y - face - 16 * u;
       // every way of naming it starts at the same place, so that between slides only its last word changes — beside
       // the channel's marker, or, on a narrow screen, over the channel, kept inside the figure
@@ -2148,6 +2529,72 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
 
 /** The ions' key, the positive ones above the negative, on a plate: in the middle of the figure, a little larger, as
  * the slide that brings the ions opens; in its top right corner once they are there. */
+/** Water's blues: the oxygen deeper, the hydrogens paler. */
+const OXYGEN: RGB = [64, 150, 255];
+const HYDROGEN: RGB = [186, 224, 255];
+
+/**
+ * Water filling both sides of the membrane: many H₂O molecules, each an oxygen with two hydrogens
+ * at its bent angle, tumbling slowly where they are; and one named, neutral.
+ */
+function drawWater(
+  g: G,
+  y: number,
+  x0: number,
+  x1: number,
+  face: number,
+  a: number,
+  narrow: boolean
+) {
+  const { ctx, u, L } = g;
+  const rand = mulberry32(2207);
+  const count = narrow ? 34 : 64;
+  const o = 5.2 * u;
+  const hr = 3.1 * u;
+  const bond = 6.2 * u;
+  // the molecule's two hydrogens, 104.5° apart
+  const half = (104.5 / 2) * (Math.PI / 180);
+  let named: [number, number] | null = null;
+  for (let i = 0; i < count; i++) {
+    const side = i % 2 ? 1 : -1;
+    const along = x0 + 14 * u + rand() * (x1 - x0 - 28 * u);
+    const depth = face + (12 + rand() * 96) * u;
+    const p = rand() * 6.28;
+    const q = rand() * 6.28;
+    const cx = along + drift(g.now, p, q, 8 * u);
+    const cy = y + side * depth + drift(g.now, q, p, 5 * u);
+    const turn = p + g.now / (2600 + 900 * q);
+    // each comes in a moment after the one before, so the water fills in rather than appearing
+    const shown = clamp01(a * 1.6 - (i / count) * 0.6);
+    if (shown < 0.01) continue;
+    ctx.globalAlpha = shown;
+    for (const s of [-1, 1]) {
+      const hx = cx + Math.cos(turn + s * half) * bond;
+      const hy = cy + Math.sin(turn + s * half) * bond;
+      ctx.beginPath();
+      ctx.arc(hx, hy, hr, 0, Math.PI * 2);
+      ctx.fillStyle = rgba(HYDROGEN, 1);
+      ctx.fill();
+      ctx.lineWidth = 0.8 * u;
+      ctx.strokeStyle = rgba(L.ink, 0.35);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(cx, cy, o, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(OXYGEN, 1);
+    ctx.fill();
+    ctx.strokeStyle = rgba(mix(OXYGEN, L.ink, 0.4), 0.8);
+    ctx.stroke();
+    // the first outside one in the left third is the one named
+    if (!named && side < 0 && along < x0 + (x1 - x0) / 3) named = [cx, cy];
+  }
+  ctx.globalAlpha = 1;
+  if (named) {
+    const [nx, ny] = named;
+    say(g, 'H₂O: water, no overall charge', nx + 14 * u, ny - 10 * u, 0.85 * a, 12.5);
+  }
+}
+
 function drawKey(g: G, a: number, narrow: boolean, focus: number, dock: number) {
   const { ctx, w, h, L } = g;
   const scale = lerp(1.2, 1, dock);
@@ -2204,7 +2651,11 @@ function drawKey(g: G, a: number, narrow: boolean, focus: number, dock: number) 
 }
 
 const LABELS: Record<Physics2Step, string> = {
+  water:
+    'The same membrane, with the outside named above and the inside below, both filling with water molecules, each a blue oxygen with two paler blue hydrogens: neutral H₂O, tumbling slowly.',
   voltage:
+    'The field across the membrane, as before. Two points are marked either side of the channel, A outside and B inside, joined by a dashed line, labelled with the voltage between A and B.',
+  depends:
     'The field across the membrane, as before. Two points are marked either side of the channel, A outside and B inside, joined by a dashed line, labelled with the voltage between A and B.',
   work: 'A positive charge is carried from point B inside up to point A outside, against the field, again and again; beside A a bar fills with the work done on it, counted in joules.',
   enter:
@@ -2235,14 +2686,22 @@ const LABELS: Record<Physics2Step, string> = {
     'The three channels opening and closing in turn, each named open or closed as it goes: a channel has an open state and a closed state.',
   moving:
     'Every ion jostling about at random, a ring wherever a potassium ion bumps into another; the channels all closed.',
+  moreOut:
+    'As before: one potassium ion has left the cell. Outside, one more positive charge than negative. One negative ion inside, near the membrane, is now in its own colour.',
+  moreIn:
+    'As before: inside, one more negative charge than positive. One negative ion inside, near the membrane, is in its own colour.',
   imbalance:
-    'One potassium ion leaves through the open channel and rests at the membrane outside: now the inside holds one more negative charge than positive, and the outside one more positive than negative.',
+    'The potassium ions inside grey, all but one, which leaves through the open channel and comes to rest close by the membrane outside, not touching it: now the inside holds one more negative charge than positive, and the outside one more positive than negative. One negative ion inside, near the membrane, is shown in its own colour.',
   fieldK:
-    'Closer in on the pair: arrows point out from the potassium ion all round it, its electric field; nearby positive ions are pushed away from it and negative ions drawn towards it, each with an arrow showing which way.',
+    'Closer in on the pair: ripples spread out from the potassium ion, pulse after pulse, its electric field. Other potassium ions outside come towards it, slow as they near it, and are pushed back out; nearby positive ions are pushed away from it, each with an arrow showing which way.',
+  across:
+    'The same pair, close in, the potassium ion outside and the negative ion inside: between them, faint lines of their field run from the one to the other, straight down through the membrane and bowing out to either side, and straight amber lines sweep down along them from outside to inside, each as wide as the field where it is — their field together, across the membrane.',
   sheet:
-    'Many pairs line the membrane, potassium ions outside and negative ions inside, and arrows point down through the membrane between them and through the channel: their electric field. A potassium ion comes up into the channel from inside, is pushed back, and falls back into the cell.',
+    'Many pairs line the membrane, potassium ions outside and negative ions inside, one after another outwards from the first; and long straight amber lines, their field, sweep down through the membrane from outside to inside, all along it and through the channel too.',
+  pushed:
+    'The pairs and their field, as before: now a potassium ion comes up into the channel from inside, is pushed back by the field, and falls back into the cell.',
   fieldN:
-    'The same pair: now arrows point in towards the negative ion inside, its field; nearby negative ions are pushed away from it and positive ions drawn towards it.',
+    'The same pair, the view lowered onto the negative ion inside: ripples close in on it, pulse after pulse, its field pointing in. Potassium ions inside are drawn in towards it, faster the nearer they come, and rest against it a while; nearby positive ions are pulled towards it, each with an arrow.',
   attract:
     "Close in on the potassium channel and the membrane: the potassium ion that left, just outside, draws a negative ion inside to the membrane's inner surface opposite it — opposite charges attract each other across the membrane.",
   uncharged:

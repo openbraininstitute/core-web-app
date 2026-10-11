@@ -178,6 +178,38 @@ export const learnValidationFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const learnWhyModelFlag = defineFlag<boolean>({
+  key: 'learn-why-model',
+  defaultValue: true,
+  values: [true, false],
+  description: 'Learn course: Why model the brain?',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const learnMembraneBasicsFlag = defineFlag<boolean>({
+  key: 'learn-membrane-basics',
+  defaultValue: true,
+  values: [true, false],
+  description: 'Learn course: Charge, voltage and the membrane potential',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const learnCompartmentalNeuronFlag = defineFlag<boolean>({
+  key: 'learn-compartmental-neuron',
+  defaultValue: true,
+  values: [true, false],
+  description: 'Learn course: Compartmental neuron',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+export const learnSynapsePlasticityFlag = defineFlag<boolean>({
+  key: 'learn-synapse-plasticity',
+  defaultValue: true,
+  values: [true, false],
+  description: 'Learn course: Plasticity at a synapse',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /**
  * Help: its button in the project's top menu and its page. On by default, so nothing changes until
  * it is switched off, e.g. once Learn has taken over what Help holds.
@@ -240,6 +272,10 @@ export const flags = [
   learnPythonFlag,
   learnElectricalPhysicsFlag,
   learnValidationFlag,
+  learnSynapsePlasticityFlag,
+  learnCompartmentalNeuronFlag,
+  learnMembraneBasicsFlag,
+  learnWhyModelFlag,
   learnBasicElectricalPhysicsFlag,
   learnElectricalPhysicsFirstTakeFlag,
   learnNeurotransmittersFlag,

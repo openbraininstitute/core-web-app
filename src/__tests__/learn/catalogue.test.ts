@@ -12,7 +12,18 @@ import { isCourseWidget } from '@/features/learn/components/courses/registry';
 import { isStage } from '@/features/learn/components/heuristics/shared';
 
 /** The basics widgets the walkthrough draws by name. */
-const BASICS = ['charge', 'nernst', 'resting', 'rc', 'morphology', 'excitation', 'ais'];
+const BASICS = [
+  'charge',
+  'nernst',
+  'resting',
+  'rc',
+  'morphology',
+  'excitation',
+  'ais',
+  'neuron',
+  'synapse-short',
+  'synapse-long',
+];
 
 const ROOT = '/app/virtual-lab';
 const LEARN_PAGE = `${ROOT}/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/learn`;

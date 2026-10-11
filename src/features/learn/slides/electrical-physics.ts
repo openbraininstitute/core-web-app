@@ -17,11 +17,15 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:membrane',
   },
   {
-    say: 'Positive and negative ions exist both inside and outside the cell',
+    say: 'The inside and outside of the cell are filled with water: electrically neutral H₂O molecules',
+    widget: 'physics2:water',
+  },
+  {
+    say: 'Positive and negative ions also exist both inside and outside the cell',
     widget: 'physics2:charges',
   },
   {
-    say: 'The cell membrane stops ions passing through',
+    say: 'The cell membrane stops ions and molecules passing through',
     widget: 'physics2:barrier',
   },
   {
@@ -77,28 +81,44 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:uncharged',
   },
   {
-    say: 'As the ions are electrically charged however, something very different happens',
+    say: 'But as ions are electrically charged, something very different happens',
     widget: 'physics2:charged',
   },
   {
-    say: 'When a single potassium ion leaves the cell, this creates a charge imbalance between the inside and outside of the cell',
+    say: 'When a single potassium ion leaves the cell, this creates a charge imbalance both inside and outside of the cell',
     widget: 'physics2:imbalance',
   },
   {
-    say: 'This leads to the charged ion attracting an oppositely charged ion to the surface of the cell',
+    say: 'That is, outside the cell there is one more positive charge than negative',
+    widget: 'physics2:moreOut',
+  },
+  {
+    say: 'And inside, there is one more negative charge than positive',
+    widget: 'physics2:moreIn',
+  },
+  {
+    say: 'These surplus positive and negatively charged ions then attract each other to the membrane of the cell',
     widget: 'physics2:attract',
   },
   {
-    say: 'The positive potassium ion creates an electrical force field repelling positive ions and attracting negative ions',
+    say: 'The positive potassium ion has an electrical force field repelling positive ions',
     widget: 'physics2:fieldK',
   },
   {
-    say: 'The negative ion creates an electrical force field repelling negative ions and attracting positive ions',
+    say: 'The negative ion has an electrical force field attracting positive ions',
     widget: 'physics2:fieldN',
   },
   {
-    say: 'With lots of these pairs close to the membrane, an electric field is created across it, even inside the ion channel. This field pushes potassium ions back into the cell, making it harder for them to pass out through the channel',
+    say: 'Together these create a force field across the membrane, repelling positive charge',
+    widget: 'physics2:across',
+  },
+  {
+    say: 'With lots of these pairs close to the membrane, an electric field is created across it, including inside the ion channel',
     widget: 'physics2:sheet',
+  },
+  {
+    say: 'This field pushes potassium ions back into the cell, making it harder for them to pass out through the channel',
+    widget: 'physics2:pushed',
   },
   {
     say: 'And easier for potassium ions to enter the cell',
@@ -115,5 +135,10 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   {
     say: 'A voltage is defined as the work done (energy measured in joules) needed to move a charge from one point to another',
     widget: 'physics2:work',
+  },
+  {
+    say: 'The number of potassium ions at the membrane and thus the voltage and strength of the electric field depend on the concentrations of potassium ions inside and outside the cell',
+    note: 'As we will see, the brain controls the concentrations of ions inside and outside of cells, such that they stay constant over time.',
+    widget: 'physics2:depends',
   },
 ];

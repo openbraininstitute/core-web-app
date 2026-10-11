@@ -1,29 +1,37 @@
 import {
   learnBasicElectricalPhysicsFlag,
   learnBrainModelingFlag,
+  learnCompartmentalNeuronFlag,
   learnCorticalCellsFlag,
   learnElectricalPhysicsFirstTakeFlag,
   learnElectricalPhysicsFlag,
   learnEntitysdkFlag,
+  learnMembraneBasicsFlag,
   learnMiscFlag,
   learnNeuronJaxleyFlag,
   learnNeurotransmittersFlag,
   learnPlatformFlag,
   learnPythonFlag,
+  learnSynapsePlasticityFlag,
   learnValidationFlag,
+  learnWhyModelFlag,
 } from '@/features/feature-flags';
 import { BASIC_ELECTRICAL_PHYSICS_SLIDES } from '@/features/learn/slides/basic-electrical-physics';
 import { BRAIN_MODELING_SLIDES } from '@/features/learn/slides/brain-modeling';
+import { COMPARTMENTAL_NEURON_SLIDES } from '@/features/learn/slides/compartmental-neuron';
 import { CORTICAL_CELLS_SLIDES } from '@/features/learn/slides/cortical-cells';
 import { ELECTRICAL_PHYSICS_SLIDES } from '@/features/learn/slides/electrical-physics';
 import { ELECTRICAL_PHYSICS_FIRST_TAKE_SLIDES } from '@/features/learn/slides/electrical-physics-first-take';
 import { ENTITYSDK_SLIDES } from '@/features/learn/slides/entitysdk';
+import { MEMBRANE_BASICS_SLIDES } from '@/features/learn/slides/membrane-basics';
 import { MISC_SLIDES } from '@/features/learn/slides/misc';
 import { NEURON_VS_JAXLEY_SLIDES } from '@/features/learn/slides/neuron-vs-jaxley';
 import { NEUROTRANSMITTERS_SLIDES } from '@/features/learn/slides/neurotransmitters';
 import { PLATFORM_SLIDES } from '@/features/learn/slides/platform';
 import { PYTHON_SLIDES } from '@/features/learn/slides/python';
+import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plasticity';
 import { VALIDATION_SLIDES } from '@/features/learn/slides/validation';
+import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
 
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
@@ -76,7 +84,7 @@ export const LEARN_COURSES: LearnCourse[] = [
       'A neuron’s membrane of lipids, the inside it separates from the outside, and the ions on both sides; how charges push and pull; then potassium: its channels, its diffusion out of the cell, and the electric field its leaving builds across the membrane.',
     flag: learnElectricalPhysicsFlag.key,
     slides: ELECTRICAL_PHYSICS_SLIDES,
-    // slide 4's: ions bouncing off the membrane
+    // slide 5's: ions bouncing off the membrane
     preview: 'physics2:barrier',
   },
   {
@@ -178,6 +186,51 @@ export const LEARN_COURSES: LearnCourse[] = [
     flag: learnMiscFlag.key,
     slides: MISC_SLIDES,
     preview: 'morphology',
+  },
+  {
+    id: 'why-model',
+    rough: true,
+    title: 'Why model the brain?',
+    level: 'All levels',
+    description:
+      'The learn app’s opening: why model the brain, why it has been hard, and how the Open Brain Institute sets out to make it possible for everyone.',
+    flag: learnWhyModelFlag.key,
+    slides: WHY_MODEL_SLIDES,
+    // its first slide's: the mouse brain, turning
+    preview: 'brain',
+  },
+  {
+    id: 'membrane-basics',
+    rough: true,
+    title: 'Charge, voltage and the membrane potential',
+    level: 'Beginner',
+    description:
+      'One soma and four ideas, each a widget to play with: voltage as separated charge, equilibrium potentials, the resting potential, and charging the membrane.',
+    flag: learnMembraneBasicsFlag.key,
+    slides: MEMBRANE_BASICS_SLIDES,
+    preview: 'charge',
+  },
+  {
+    id: 'compartmental-neuron',
+    rough: true,
+    title: 'Compartmental neuron',
+    level: 'Intermediate',
+    description:
+      'A 20-compartment neuron with Hodgkin–Huxley channels: inject current, watch it spread through dendrites and axon, and see spikes relayed to other neurons.',
+    flag: learnCompartmentalNeuronFlag.key,
+    slides: COMPARTMENTAL_NEURON_SLIDES,
+    preview: 'neuron',
+  },
+  {
+    id: 'synapse-plasticity',
+    rough: true,
+    title: 'Plasticity at a synapse',
+    level: 'Intermediate',
+    description:
+      'The Tsodyks–Markram model with stochastic release, for depression, facilitation and failures; then calcium-based long-term plasticity, and why timing and extracellular calcium matter.',
+    flag: learnSynapsePlasticityFlag.key,
+    slides: SYNAPSE_PLASTICITY_SLIDES,
+    preview: 'synapse-short',
   },
 ];
 

@@ -1,5 +1,6 @@
 'use client';
 
+import ChargeWidget from '@/features/learn/components/basics/ChargeWidget';
 import MorphologyFigure from '@/features/learn/components/basics/MorphologyFigure';
 import Cortex, { isCortexStep } from '@/features/learn/components/cortex/Cortex';
 import CourseFigure from '@/features/learn/components/courses/CourseFigure';
@@ -7,6 +8,8 @@ import { isCourseWidget } from '@/features/learn/components/courses/registry';
 import { Embedded } from '@/features/learn/components/embedded';
 import Heuristics from '@/features/learn/components/heuristics/Heuristics';
 import { isStage } from '@/features/learn/components/heuristics/shared';
+import NeuronWidget from '@/features/learn/components/NeuronWidget';
+import TsodyksMarkramWidget from '@/features/learn/components/synapse/TsodyksMarkramWidget';
 import { learnFonts } from '@/features/learn/fonts';
 import { cn } from '@/utils/css-class';
 
@@ -30,6 +33,9 @@ export function CourseFigureLive({
         {isCourseWidget(widget) && <CourseFigure widget={widget} />}
         {isCortexStep(widget) && <Cortex step={widget} />}
         {widget === 'morphology' && <MorphologyFigure mode="gallery" />}
+        {widget === 'charge' && <ChargeWidget />}
+        {widget === 'neuron' && <NeuronWidget />}
+        {widget === 'synapse-short' && <TsodyksMarkramWidget />}
       </div>
     </Embedded>
   );
