@@ -402,6 +402,27 @@
   }
 }
 
+/* AG Grid draws its scroll bars in these viewports */
+.ag-body-horizontal-scroll-viewport,
+.ag-body-vertical-scroll-viewport {
+  @apply secondary-scrollbar;
+
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-400) var(--color-gray-200);
+  }
+}
+
+/* the spacers beside them only pad the pinned columns and corner: no track of their own */
+.ag-horizontal-left-spacer,
+.ag-horizontal-right-spacer {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility white-scrollbar {
   @layer utilities {
     &::-webkit-scrollbar {
