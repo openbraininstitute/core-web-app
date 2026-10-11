@@ -24,28 +24,12 @@ const tabsConfigItems: Array<{
   title: string;
 }> = [
   {
-    key: HelpSections.Overview,
-    title: 'Overview',
-  },
-  {
-    key: HelpSections.Tutorials,
-    title: 'Tutorials',
-  },
-  {
-    key: HelpSections.Glossary,
-    title: 'Glossary',
-  },
-  {
     key: HelpSections.Guides,
     title: 'Guides',
   },
   {
     key: HelpSections.Features,
     title: 'Features',
-  },
-  {
-    key: HelpSections.AIChatTools,
-    title: 'AI Chat Tools',
   },
   {
     key: HelpSections.About,
@@ -57,10 +41,9 @@ function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
 
-  // Set default tab based on pathname
-  const defaultTab = pathname?.includes('/tutorials')
-    ? HelpSections.Tutorials
-    : HelpSections.Overview;
+  // Overview, Tutorials, Glossary and AI Chat Tools are no longer tabs (the glossary is in
+  // Learn now), so Help opens on Guides
+  const defaultTab = HelpSections.Guides;
 
   const { activeTab } = useTabs<HelpSectionsKeys>({
     tabsConfig: tabsConfigItems,
@@ -73,8 +56,8 @@ function HelpTabs() {
 
   return (
     <PillTabs
-      value={activeTab ?? 'overview'}
-      defaultValue={activeTab ?? 'overview'}
+      value={activeTab ?? HelpSections.Guides}
+      defaultValue={activeTab ?? HelpSections.Guides}
       className="w-full"
       activationMode="manual"
       onValueChange={(value: string) => {
@@ -83,7 +66,7 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
+        className={cn('grid h-10 w-full grid-cols-3 bg-white p-0 shadow-2xl', {
           'h-12': breakpoint === 'xl',
         })}
       >

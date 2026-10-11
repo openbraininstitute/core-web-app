@@ -81,6 +81,12 @@ describe('buildWorkspaceSwitchUrl / reports', () => {
   });
 });
 
+describe('buildWorkspaceSwitchUrl / learn', () => {
+  it('keeps the course in view, and nothing else', () => {
+    expect(build('/learn', 'course=python&page=2')).toBe(`${targetBase}/learn?course=python`);
+  });
+});
+
 describe('buildWorkspaceSwitchUrl / workflows', () => {
   it('preserves the workflows home with activity/type selection', () => {
     expect(build('/workflows', 'activity=simulate&type=memodel&extra=x')).toBe(

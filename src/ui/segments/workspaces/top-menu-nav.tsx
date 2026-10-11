@@ -15,6 +15,7 @@ import {
   ExploreIcon,
   HelpIcon,
   Home,
+  LearnIcon,
   NotebookIcon,
   ReportsIcon,
   WorkflowIcon,
@@ -22,6 +23,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
+import { helpFlag, learnFlag, useFlag } from '@/features/feature-flags';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -39,6 +41,12 @@ import { getActiveSection } from '@/utils/get-section';
 
 import type React from 'react';
 import type { ReactNode } from 'react';
+
+/** The plain links: no pill, no fill, no shadow; the active one navy, underlined. */
+const PLAIN =
+  '!border-0 !bg-transparent !shadow-none hover:!bg-transparent hover:!shadow-none !rounded-none text-[#595959] hover:text-primary-9';
+const PLAIN_ACTIVE =
+  '!text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-[10px] after:h-[2px] after:rounded-full after:bg-primary-9';
 
 // Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
 const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
@@ -72,6 +80,16 @@ const links: LinkItem[] = [
       if (section) return ['overview', 'team', 'credits'].includes(section);
       return false;
     },
+    hasAction: false,
+  },
+  {
+    id: 'workspace-learn',
+    key: 'learn',
+    title: 'Learn',
+    url: WorkspaceMainPages.Learn,
+    icon: <LearnIcon className="group-hover:text-primary-3 size-[15px]! shrink-0" />,
+    allowText: true,
+    className: 'px-6 gap-2',
     hasAction: false,
   },
   {
@@ -153,7 +171,11 @@ const links: LinkItem[] = [
   },
 ];
 
-export function TopMenuNavigation() {
+/**
+ * `plain`: as the courses' bar draws its few links, words on white with a navy line under the active
+ * one, rather than pills (behind the course-style-toolbar flag).
+ */
+export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   const breakpoint = useDefaultBreakpoint();
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
@@ -172,6 +194,8 @@ export function TopMenuNavigation() {
     staleTime: 1000 * 60 * 5,
   });
 
+  const learn = useFlag(learnFlag.key);
+  const help = useFlag(helpFlag.key);
   const hasCourse = virtualLabData?.course;
   const isVlabAdmin = useMemo(
     () =>
@@ -184,6 +208,8 @@ export function TopMenuNavigation() {
   const filteredLinks = useMemo(
     () =>
       links.filter((link) => {
+        if (link.id === 'workspace-learn') return learn;
+        if (link.id === 'workspace-help') return help;
         if (link.id === 'workspace-course') {
           return (
             hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
@@ -191,7 +217,7 @@ export function TopMenuNavigation() {
         }
         return true;
       }),
-    [hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
@@ -209,7 +235,12 @@ export function TopMenuNavigation() {
       <div className="flex justify-end">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="md" rounded className="text-primary-9 h-10 w-10 p-0">
+            <Button
+              variant="outline"
+              size="md"
+              rounded
+              className="text-primary-9 bg-background hover:bg-background h-10 w-10 p-0 hover:shadow-sm"
+            >
               <MenuOutlined className="text-base" />
             </Button>
           </DropdownMenuTrigger>
@@ -314,8 +345,12 @@ export function TopMenuNavigation() {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center cursor-pointer',
-                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
-                      { 'bg-primary-9 text-white': isActive },
+                      '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                      plain && PLAIN,
+                      {
+                        'bg-primary-9 text-white': isActive && !plain,
+                        [PLAIN_ACTIVE]: isActive && plain,
+                      },
                       'transition-all duration-400 ease-out',
                       clx
                     )}
@@ -352,8 +387,12 @@ export function TopMenuNavigation() {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center',
-                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
-                      { 'bg-primary-9 text-white': isActiveHelp },
+                      '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                      plain && PLAIN,
+                      {
+                        'bg-primary-9 text-white': isActiveHelp && !plain,
+                        [PLAIN_ACTIVE]: isActiveHelp && plain,
+                      },
                       {
                         'group-hover:rounded-r-none': hasAction,
                       },
@@ -398,8 +437,12 @@ export function TopMenuNavigation() {
                       '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
                     'group relative flex items-center justify-center',
-                    '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
-                    { 'bg-primary-9 text-white': isActiveLink },
+                    '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                    plain && PLAIN,
+                    {
+                      'bg-primary-9 text-white': isActiveLink && !plain,
+                      [PLAIN_ACTIVE]: isActiveLink && plain,
+                    },
                     {
                       'group-hover:rounded-r-none': hasAction,
                     },
