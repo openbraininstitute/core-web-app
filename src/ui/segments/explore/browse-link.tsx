@@ -27,6 +27,7 @@ import { makeSelectContributionEntityClickEvent } from '@/ui/segments/contribute
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 import { cn } from '@/utils/css-class';
+import { formatCompactNumber } from '@/utils/format';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
@@ -52,6 +53,11 @@ type BrowseLinkContentProps = {
   href: string;
   legacy?: boolean;
 };
+
+/** A count, shortened from ten thousand up (33198 → 33.2k) so the row keeps room for its title. */
+function formatCount(value: number) {
+  return value < 10_000 ? String(value) : formatCompactNumber(value, 'en-US', 1).toLowerCase();
+}
 
 export function BrowseLinkContent({
   isLoading,
@@ -87,7 +93,7 @@ export function BrowseLinkContent({
           data-testid={`entity-link-counter-${extendedType}`}
           variant="outline"
           size="lg"
-          className="group w-full shrink grow border-none text-base"
+          className="group w-full min-w-0 shrink grow border-none text-base"
           active={entityType === extendedType}
           onClick={onClick}
         >
@@ -96,18 +102,21 @@ export function BrowseLinkContent({
               pathname: href,
               query: searchParams.toString(),
             }}
-            className="flex! w-full items-center justify-between!"
+            className="flex! w-full min-w-0 items-center justify-between! gap-2"
           >
             {/*
               Superseded types drop to normal weight, matching the workflow menus — the count
               keeps its own weight rules, since it is data rather than part of the label.
             */}
-            <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>{title}</div>
             <div
-              className={cn(
-                'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': entityType === extendedType }
-              )}
+              className={cn('min-w-0 truncate text-current', legacy ? 'font-normal' : 'font-bold')}
+            >
+              {title}
+            </div>
+            <div
+              className={cn('text-neutral-4 group-hover:text-label shrink-0 text-sm font-light', {
+                'text-white': entityType === extendedType,
+              })}
             >
               {isLoading ? (
                 <div
@@ -318,36 +327,46 @@ export function BrowseLink({
     loadingCurrent,
     loadingRoot,
   })
-    .with({ isLoading: false, enabled: true, rootCount: P.number, count: P.number }, () => (
-      <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">{count}</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">{root}</span>
-      </span>
-    ))
+    .with(
+      { isLoading: false, enabled: true, rootCount: P.number, count: P.number },
+      ({ count: current, rootCount: total }) => (
+        <span
+          className="flex items-center justify-center gap-1"
+          title={`${current.toLocaleString()} of ${total.toLocaleString()}`}
+        >
+          <span>{formatCount(current)}</span>
+          <span className="opacity-70">of</span>
+          <span>{formatCount(total)}</span>
+        </span>
+      )
+    )
     .with(P.union({ isCurrentError: true }, { isRootError: true }), () => {
       return <WarningOutlined className="text-warning" />;
     })
     .with({ enabled: false }, () => (
       <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">0</span>
-        <span className="font-light">of</span>
-        <span className="font-bold">0</span>
+        <span>0</span>
+        <span className="opacity-70">of</span>
+        <span>0</span>
       </span>
     ))
     .with({ enabled: true }, () => (
       <span className="flex items-center justify-center gap-1">
-        <span className="font-bold">
-          {count ?? (
+        <span>
+          {count != null ? (
+            formatCount(count)
+          ) : (
             <Skeleton
               data-testid={`entity-link-counter-loading-current-${extendedType}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
             />
           )}
         </span>
-        <span className="font-light">of</span>
-        <span className="font-bold">
-          {root ?? (
+        <span className="opacity-70">of</span>
+        <span>
+          {root != null ? (
+            formatCount(root)
+          ) : (
             <Skeleton
               data-testid={`entity-link-counter-loading-root-${extendedType}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
