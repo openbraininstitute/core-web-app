@@ -15,7 +15,7 @@ import type { Mesh, V3 } from './data';
 import type { View } from './space';
 
 /** A surface ready to shade: vertices and their normals, flat (x, y, z) triples, and triangles. */
-export interface Surface {
+interface Surface {
   v: Float32Array;
   n: Float32Array;
   f: Uint32Array;

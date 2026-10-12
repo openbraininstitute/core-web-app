@@ -219,10 +219,6 @@ export function length(um: number) {
   return `${Math.round(um)} µm`;
 }
 
-/** Where the data came from. */
-export const credit = (n: Neuron) =>
-  `${n.source.replace(', NeuroMorpho.Org', '').replace('MouseLight, Janelia', 'Janelia MouseLight')}, via NeuroMorpho.Org · Allen CCFv3`;
-
 /* ------------------------------------------------------------ a neuron, placed */
 
 export interface Placed {

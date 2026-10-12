@@ -8,20 +8,20 @@
  */
 
 /** Gas constant, J/(mol·K). */
-export const R_GAS = 8.314462618;
+const R_GAS = 8.314462618;
 /** Faraday constant, C/mol. */
-export const F_FARADAY = 96485.332;
+const F_FARADAY = 96485.332;
 /** Elementary charge, C. */
-export const E_CHARGE = 1.602176634e-19;
+const E_CHARGE = 1.602176634e-19;
 /** Specific membrane capacitance, F/cm². */
-export const C_SPECIFIC = 1e-6;
+const C_SPECIFIC = 1e-6;
 
-export const kelvin = (tempC: number) => tempC + 273.15;
+const kelvin = (tempC: number) => tempC + 273.15;
 
 /** Thermal voltage RT/F in mV (≈25.7 mV at 37 °C). */
 export const thermalVoltageMv = (tempC: number) => (R_GAS * kelvin(tempC) * 1000) / F_FARADAY;
 
-export interface IonSpec {
+interface IonSpec {
   /** Valence: +1 for K⁺/Na⁺, −1 for Cl⁻, +2 for Ca²⁺. */
   z: number;
   /** Outside concentration, mM. */
@@ -39,7 +39,7 @@ export function nernst(ion: IonSpec, tempC = 37): number {
   return (thermalVoltageMv(tempC) / ion.z) * Math.log(ion.out / ion.in);
 }
 
-export interface Conductance {
+interface Conductance {
   /** Relative conductance (any consistent unit). */
   g: number;
   /** Reversal potential, mV. */
@@ -85,17 +85,6 @@ export const chargeForVoltage = (mv: number, farads: number) => (mv / 1000) * fa
 /** Number of ions dissolved in `volumeL` at `concMM` millimolar. */
 export const ionCount = (concMM: number, volumeL: number) =>
   concMM * 1e-3 * volumeL * 6.02214076e23;
-
-/**
- * Voltage of a passive RC patch during a current step, relative to rest.
- *   V(t) = I·R·(1 − e^(−t/RC))
- * `iNa` in nA, `rMohm` in MΩ, `cPf` in pF, `tMs` in ms; result in mV.
- */
-export function rcStepMv(tMs: number, iNa: number, rMohm: number, cPf: number): number {
-  const tauMs = rMohm * cPf * 1e-3; // MΩ·pF = µs
-  if (tMs <= 0) return 0;
-  return iNa * rMohm * (1 - Math.exp(-tMs / tauMs));
-}
 
 /** Membrane time constant τ = R·C in ms, for R in MΩ and C in pF. */
 export const tauMs = (rMohm: number, cPf: number) => rMohm * cPf * 1e-3;

@@ -109,6 +109,6 @@ export const NEURON_VS_JAXLEY_SLIDES: Slide[] = [
   {
     say: 'Next, a tour of the platform itself',
     widget: 'jaxley:platform',
-    cta: { href: '/walkthrough/platform', label: 'Introduction to the platform' },
+    cta: { course: 'platform', label: 'Introduction to the platform' },
   },
 ];

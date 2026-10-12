@@ -14,7 +14,7 @@ import { SDK_STEPS } from './sdk/Figure';
 import { TRANSMITTER_STEPS } from './transmitters/Figure';
 import { VALIDATION_STEPS } from './validation/Figure';
 
-export const COURSE_STEPS = {
+const COURSE_STEPS = {
   python: PYTHON_STEPS,
   sdk: SDK_STEPS,
   physics: PHYSICS_STEPS,
@@ -26,7 +26,7 @@ export const COURSE_STEPS = {
   validation: VALIDATION_STEPS,
 } as const;
 
-export type CourseId = keyof typeof COURSE_STEPS;
+type CourseId = keyof typeof COURSE_STEPS;
 /** A slide's course figure: its course, and its step there. */
 export type CourseWidget = {
   [K in CourseId]: `${K}:${(typeof COURSE_STEPS)[K][number]}`;

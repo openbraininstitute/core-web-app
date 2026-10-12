@@ -6,7 +6,7 @@
  * Voltages in mV, times in ms.
  */
 
-export interface LifParams {
+interface LifParams {
   /** Membrane time constant. */
   tauMs: number;
   vRest: number;

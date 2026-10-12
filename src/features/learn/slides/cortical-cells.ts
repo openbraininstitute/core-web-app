@@ -120,6 +120,6 @@ export const CORTICAL_CELLS_SLIDES: Slide[] = [
   {
     say: "Next, let's see how these neurons communicate",
     widget: 'circuit',
-    cta: { href: '/walkthrough/brain-modeling', label: 'Introduction to brain modeling' },
+    cta: { course: 'brain-modeling', label: 'Introduction to brain modeling' },
   },
 ];

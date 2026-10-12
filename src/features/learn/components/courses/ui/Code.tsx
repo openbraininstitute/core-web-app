@@ -143,10 +143,10 @@ function nmodlLine(line: string): Token[] {
   return tokens;
 }
 
-export type Lang = 'python' | 'shell' | 'text' | 'nmodl';
+type Lang = 'python' | 'shell' | 'text' | 'nmodl';
 
 /** The code, line by line, as coloured tokens. */
-export function tokenize(code: string, lang: Lang): Token[][] {
+function tokenize(code: string, lang: Lang): Token[][] {
   const lines = code.split('\n');
   if (lang === 'shell') return lines.map(shellLine);
   if (lang === 'text') return lines.map((text) => [{ kind: 'text' as const, text }]);
@@ -309,7 +309,7 @@ export function parseOutput(text: string): { text: string; plots: Plot[] } {
 const LINE_COLOURS = ['#7dd3fc', '#fda4af', '#6ee7b7', '#fcd34d'];
 
 /** A plot drawn as SVG on the panel's dark ground: axes with a few ticks, and its lines. */
-export function PlotView({ plot, height = 170 }: { plot: Plot; height?: number }) {
+function PlotView({ plot, height = 170 }: { plot: Plot; height?: number }) {
   const [w, h] = [560, height];
   const pad = { l: 46, r: 12, t: plot.title ? 22 : 10, b: 30 };
   const xs = plot.x;

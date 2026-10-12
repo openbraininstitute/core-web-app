@@ -300,7 +300,7 @@ function ellipsoid(b: Build, centre: V3, axes: [V3, V3, V3], lat: number, lon: n
 }
 
 /** The mouse in pieces: its body, with its head and ears; each leg, with the joint it swings from; and its tail, with its root. */
-export interface MouseParts {
+interface MouseParts {
   body: Mesh;
   legs: { mesh: Mesh; joint: V3 }[];
   tail: { mesh: Mesh; root: V3 };

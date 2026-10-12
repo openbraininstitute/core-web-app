@@ -176,6 +176,6 @@ export const BASIC_ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   {
     say: 'Next, see these ideas at work in a neuron',
     widget: 'elec:field',
-    cta: { href: '/walkthrough/electrical-physics', label: 'The electrical physics of a neuron' },
+    cta: { course: 'electrical-physics', label: 'The electrical physics of a neuron' },
   },
 ];

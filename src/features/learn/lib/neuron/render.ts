@@ -25,14 +25,14 @@ import { type NeuronSim, SPIKE_THRESHOLD, V_REST } from './sim';
 const FONT = 'ui-sans-serif, -apple-system, Segoe UI, sans-serif';
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 
-export interface Transform {
+interface Transform {
   s: number;
   ox: number;
   oy: number;
   toModel(px: number, py: number): [number, number];
 }
 
-export function makeTransform(cssW: number, cssH: number): Transform {
+function makeTransform(cssW: number, cssH: number): Transform {
   const vw = VIEW.x1 - VIEW.x0;
   const vh = VIEW.y1 - VIEW.y0;
   // Capped so that on very large canvases the diagram (and the text drawn in
@@ -57,7 +57,7 @@ const norm = ([x, y]: [number, number]): [number, number] => {
 };
 
 /** Outer (connector) end of an electrode pipette, in model space. */
-export function electrodeAnchor(idx: number): [number, number] {
+function electrodeAnchor(idx: number): [number, number] {
   const e = ELECTRODES[idx];
   const c = COMPARTMENTS[e.comp];
   const [dx, dy] = norm(e.dir);
@@ -71,7 +71,7 @@ function electrodeTip(idx: number): [number, number] {
   return [c.x + dx * (c.r + 1), c.y + dy * (c.r + 1)];
 }
 
-export type Pick = { kind: 'electrode'; index: number } | { kind: 'comp'; index: number } | null;
+type Pick = { kind: 'electrode'; index: number } | { kind: 'comp'; index: number } | null;
 
 /** What is under the cursor, given CSS pixel coordinates on the canvas. */
 export function pickAt(px: number, py: number, cssW: number, cssH: number): Pick {
@@ -105,7 +105,7 @@ function distToSegment(px: number, py: number, x1: number, y1: number, x2: numbe
   return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
 }
 
-export interface NeuronViewOpts {
+interface NeuronViewOpts {
   sim: NeuronSim;
   /** Amplitude currently dialled in on each electrode, nA. */
   amps: number[];
@@ -543,7 +543,7 @@ function roundRect(
 // Voltage traces
 // ---------------------------------------------------------------------------
 
-export interface TraceViewOpts {
+interface TraceViewOpts {
   sim: NeuronSim;
   comps: number[];
   windowMs: number;

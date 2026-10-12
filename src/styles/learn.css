@@ -1,20 +1,19 @@
 /*
- * Learn's courses (src/features/learn), drawn as the learn app draws them. Everything hangs off the
- * course page's root, `.learn-root`, or off `.learn-figure`, round a course's figure shown on the
+ * Learn's courses (src/features/learn). Everything hangs off the course page's root, `.learn-root`, or off `.learn-figure`, round a course's figure shown on the
  * Learn page, so none of it reaches the rest of the platform.
  */
 
 /* The "quieter notes" setting: quiet-notes:… classes apply while the root has data-notes="quiet". */
 @custom-variant quiet-notes (&:where([data-notes="quiet"] *));
 
-/* The courses are sized in rems of 16px, as in the learn app; the platform's are 14px. */
+/* The courses are sized in rems of 16px; the platform's are 14px. */
 html:has(.learn-root) {
   font-size: 16px;
 }
 
 /*
- * The learn app's original, dark look — and Tailwind's own sans, mono and serif rather than the
- * platform's, for the words the courses set in them.
+ * The courses' dark look — and Tailwind's own sans, mono and serif rather than the platform's, for
+ * the words the courses set in them.
  */
 .learn-root,
 .learn-figure {

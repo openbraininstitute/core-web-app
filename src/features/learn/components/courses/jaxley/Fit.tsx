@@ -16,8 +16,8 @@ import { arrow, type Look, mathWords, type Room, words } from '../ui/canvas';
 import StepCanvas, { type Frame } from '../ui/StepCanvas';
 import { DESCENT, LANDSCAPE, SEARCH, TRUTH } from './landscape';
 
-export const FIT_STEPS = ['search', 'gradient', 'descent'] as const;
-export type FitStep = (typeof FIT_STEPS)[number];
+const FIT_STEPS = ['search', 'gradient', 'descent'] as const;
+type FitStep = (typeof FIT_STEPS)[number];
 export const isFitStep = (s: string): s is FitStep => FIT_STEPS.includes(s as FitStep);
 
 const SEARCHER: RGB = [124, 58, 237];

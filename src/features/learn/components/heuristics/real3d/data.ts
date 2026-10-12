@@ -14,13 +14,6 @@ export interface Mesh {
   f: Uint32Array;
 }
 
-export interface Brain {
-  /** Surface points of the whole brain, flat (AP, DV, ML) triples, µm. */
-  root: Float32Array;
-  regions: Record<string, Float32Array>;
-  names: Record<string, string>;
-}
-
 export interface Neuron {
   id: string;
   cell: string;
@@ -63,29 +56,6 @@ const load = (url: string) => {
     );
   return json.get(url)!;
 };
-
-const brainCache: { value: Brain | null; promise: Promise<Brain> | null } = {
-  value: null,
-  promise: null,
-};
-
-export function loadBrain(): Promise<Brain> {
-  brainCache.promise ??= load('/static/learn/heuristics/brain.json').then((raw) => {
-    const b = raw as {
-      root: number[];
-      regions: Record<string, number[]>;
-      names: Record<string, string>;
-    };
-    const scale = (a: number[]) => Float32Array.from(a, (v) => v * 10);
-    brainCache.value = {
-      root: scale(b.root),
-      regions: Object.fromEntries(Object.entries(b.regions).map(([k, v]) => [k, scale(v)])),
-      names: b.names,
-    };
-    return brainCache.value;
-  });
-  return brainCache.promise;
-}
 
 const meshes = new Map<string, Promise<Mesh>>();
 

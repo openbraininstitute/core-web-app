@@ -178,7 +178,7 @@ async function fromEuropePmc(
   return data.resultList.result.map(fromEpmc);
 }
 
-export type LiteratureSource = 'openalex' | 'europepmc';
+type LiteratureSource = 'openalex' | 'europepmc';
 
 /** The papers for a topic, words and order; fetched again whenever one changes. */
 export function useLiterature(topic: LiteratureTopic, words: string, sort: LiteratureSort) {

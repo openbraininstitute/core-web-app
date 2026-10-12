@@ -123,6 +123,6 @@ export const ELECTRICAL_PHYSICS_FIRST_TAKE_SLIDES: Slide[] = [
   {
     say: 'Next, see how simulators solve it',
     widget: 'physics:equation',
-    cta: { href: '/walkthrough/neuron-vs-jaxley', label: 'NEURON and Jaxley' },
+    cta: { course: 'neuron-vs-jaxley', label: 'NEURON and Jaxley' },
   },
 ];

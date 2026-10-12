@@ -17,7 +17,7 @@
  *                19           axon terminal (output synapse)
  */
 
-export type SectionType = 'soma' | 'apical' | 'basal' | 'axon' | 'terminal';
+type SectionType = 'soma' | 'apical' | 'basal' | 'axon' | 'terminal';
 
 export interface Compartment {
   /** Index into all state arrays. */
@@ -42,7 +42,7 @@ export interface Compartment {
 }
 
 /** Maximal channel conductances in mS/cm^2. */
-export interface ChannelSpec {
+interface ChannelSpec {
   gNa: number;
   gK: number;
   gL: number;
@@ -51,13 +51,13 @@ export interface ChannelSpec {
 const UM_TO_CM = 1e-4;
 
 /** Cytoplasmic resistivity, ohm*cm. */
-export const RA = 150;
+const RA = 150;
 
 /**
  * Global multiplier on all axial conductances. 1 = the value implied by the
  * geometry above; kept as a knob because this is a teaching model, not a fit.
  */
-export const COUPLING_SCALE = 1;
+const COUPLING_SCALE = 1;
 
 interface Raw {
   label: string;
@@ -157,7 +157,7 @@ export function axialConductance(child: Compartment): number {
  * neuron), dendrites are only weakly active so dendritic input must be summed
  * at the soma to fire a spike.
  */
-export const CHANNELS: Record<SectionType, ChannelSpec> = {
+const CHANNELS: Record<SectionType, ChannelSpec> = {
   soma: { gNa: 260, gK: 60, gL: 0.4 },
   apical: { gNa: 10, gK: 8, gL: 0.12 },
   basal: { gNa: 10, gK: 8, gL: 0.12 },
@@ -171,7 +171,7 @@ export const CHANNELS: Record<SectionType, ChannelSpec> = {
  * initiation zone: depolarisation spreading from the soma trips the hillock
  * first and the action potential then travels away from it down the axon.
  */
-export const CHANNEL_OVERRIDES: Record<number, Partial<ChannelSpec>> = {
+const CHANNEL_OVERRIDES: Record<number, Partial<ChannelSpec>> = {
   14: { gNa: 900, gK: 150 },
 };
 
@@ -191,7 +191,7 @@ export const SECTION_COLOR: Record<SectionType, string> = {
   terminal: '#f472b6',
 };
 
-export interface ElectrodeDef {
+interface ElectrodeDef {
   id: string;
   /** Compartment the pipette is sealed onto. */
   comp: number;
@@ -217,7 +217,7 @@ export const AMP_MIN = -0.5;
 export const AMP_MAX = 2;
 
 /** Post-synaptic partners that receive the axonal output spike. */
-export interface TargetDef {
+interface TargetDef {
   id: string;
   x: number;
   y: number;

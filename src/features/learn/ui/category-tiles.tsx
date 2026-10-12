@@ -200,7 +200,7 @@ export const LEARN_SECTIONS = [
   'articles',
   'conferences',
 ] as const;
-export type LearnSection = (typeof LEARN_SECTIONS)[number];
+type LearnSection = (typeof LEARN_SECTIONS)[number];
 
 export function CategoryTiles({
   design,

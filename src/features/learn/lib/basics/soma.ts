@@ -17,7 +17,7 @@ export const ION_COLORS = {
   A: '#a78bfa',
 } as const;
 
-export interface SomaLayout {
+interface SomaLayout {
   cx: number;
   cy: number;
   /** Outer radius of the membrane, px. */
@@ -138,7 +138,7 @@ export function drawSign(
   ctx.restore();
 }
 
-export interface ScaleMark {
+interface ScaleMark {
   v: number;
   label: string;
   color: string;

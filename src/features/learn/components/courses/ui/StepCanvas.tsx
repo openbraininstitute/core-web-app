@@ -15,7 +15,7 @@ import { useCanvasFrame } from '@/features/learn/components/basics/useCanvasFram
 import { useSpillRoot } from '@/features/learn/components/basics/useSpillRoot';
 import { Embedded } from '@/features/learn/components/embedded';
 import { smooth } from '@/features/learn/components/heuristics/shared';
-import { learnRoot, savedSpill, subscribe } from '@/features/learn/lib/settings';
+import { savedSpill, subscribe } from '@/features/learn/lib/settings';
 
 import {
   blend,

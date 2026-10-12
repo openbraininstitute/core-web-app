@@ -36,7 +36,7 @@ import { savedSpill, subscribe } from '@/features/learn/lib/settings';
 import { getTheme } from '@/features/learn/lib/theme';
 
 /** The course's slides, in order: each a picture the figure eases into from the last. */
-export const CORTEX_STEPS = [
+const CORTEX_STEPS = [
   'kinds',
   'families',
   'shape',

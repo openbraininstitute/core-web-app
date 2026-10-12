@@ -1,7 +1,7 @@
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
 /**
- * The learn app's basics page, as slides: one soma, treated as electrically uniform, and four
+ * The basics of the membrane, as slides: one soma, treated as electrically uniform, and four
  * ideas, each with its widget. Charge, the gradients that move it, the channels that weigh them,
  * and the time the membrane takes to charge.
  */

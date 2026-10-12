@@ -32,7 +32,7 @@
  * Units: ms, mM, calcium in the arbitrary units of the threshold (θ_d, θ_p).
  */
 
-export interface CaPlasticityParams {
+interface CaPlasticityParams {
   /** Calcium decay time constant, ms. */
   tauCaMs: number;
   /** Calcium per released vesicle (NMDA), arbitrary units. */
@@ -102,14 +102,14 @@ export function releaseProbability(caMm: number, p: CaPlasticityParams): number 
 }
 
 /** Calcium influx per event, relative to the reference concentration. */
-export function influxScale(caMm: number, p: CaPlasticityParams): number {
+function influxScale(caMm: number, p: CaPlasticityParams): number {
   return caMm / p.caRefMm;
 }
 
 /** Synaptic efficacy (relative to baseline) for a given ρ. */
 export const efficacy = (rho: number, p: CaPlasticityParams) => p.wDep + rho * (p.wPot - p.wDep);
 
-export interface ProtocolCfg {
+interface ProtocolCfg {
   /** t_post − t_pre in ms. Positive = presynaptic spike first. */
   dtPairMs: number;
   nPairings: number;
@@ -124,7 +124,7 @@ export interface ProtocolCfg {
   relaxMs?: number;
 }
 
-export interface ProtocolResult {
+interface ProtocolResult {
   /** Sampled every ms during the protocol. */
   t: Float32Array;
   ca: Float32Array;
@@ -149,7 +149,7 @@ export interface ProtocolResult {
 
 const DT = 0.5; // ms
 
-export function mulberry32(seed: number) {
+function mulberry32(seed: number) {
   let a = seed >>> 0;
   return () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -168,7 +168,7 @@ function rhoRate(rho: number, ca: number, p: CaPlasticityParams): number {
 }
 
 /** Where the bistable dynamics take ρ once the calcium is gone. */
-export const attractorOf = (rho: number) => (rho > 0.5 ? 1 : rho < 0.5 ? 0 : 0.5);
+const attractorOf = (rho: number) => (rho > 0.5 ? 1 : rho < 0.5 ? 0 : 0.5);
 
 /** Run a pre/post pairing protocol and let the synapse consolidate. */
 export function runProtocol(p: CaPlasticityParams, cfg: ProtocolCfg): ProtocolResult {
@@ -273,7 +273,7 @@ export function runProtocol(p: CaPlasticityParams, cfg: ProtocolCfg): ProtocolRe
   };
 }
 
-export interface AveragedResult {
+interface AveragedResult {
   meanDRho: number;
   meanRhoAfter: number;
   /** Fraction of trials that end up potentiated. */
@@ -324,7 +324,7 @@ export function averageProtocol(
   };
 }
 
-export interface StdpPoint {
+interface StdpPoint {
   dtMs: number;
   /** Mean change in ρ produced by the protocol, before consolidation. */
   dRho: number;
@@ -352,7 +352,7 @@ export const defaultDts = (max = 100, step = 10) => {
   return out;
 };
 
-export type Outcome = 'potentiated' | 'depressed' | 'unchanged';
+type Outcome = 'potentiated' | 'depressed' | 'unchanged';
 
 export function outcomeOf(res: ProtocolResult, p: CaPlasticityParams): Outcome {
   const d = res.rhoAfterProtocol - p.rho0;

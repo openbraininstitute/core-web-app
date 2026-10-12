@@ -37,20 +37,17 @@ Two more platform changes Learn tries out are feature flags of their own, off by
 - The figures' data (about 7 MB: the 3D figure's meshes and neurons, and the validation course's
   pictures and films) is in `public/static/learn/`. `fonts.ts` loads the courses' typefaces.
 
-## Copied from the learn app
+## How the courses are drawn
 
-`components/` and `lib/` are the learn app's own (`src/components`, `src/lib`), with `@/` imports
-moved under `@/features/learn/`, Biome's formatting and these changes:
-
-- The settings and the theme live on the course's root (`[data-learn-root]`), not on `<html>`, and
-  OBI's look is the default. `src/styles/learn.css` is the learn app's `globals.css`, scoped to
-  that root.
+- A course's settings and theme live on its root (`[data-learn-root]`), not on `<html>`, and OBI's
+  look is the default. `src/styles/learn.css` styles that root and nothing outside it.
 - The figures' full-page canvases are portalled into the root, which stacks its own layers.
-- A figure shown outside its course, inside `Embedded` (`components/embedded.ts`, the one file
-  added), keeps to its box whatever the spill setting, and leaves the arrow keys to the page.
-  `.learn-figure` styles it in the OBI theme, at the page's own rems.
-- The walkthrough opens on a given slide, reports each slide it shows, and leads back to the Learn
-  page. Its opening and that opening's choices are gone.
-- Only the figures these courses use are registered (`components/courses/registry.ts`).
+- A figure shown outside its course, inside `Embedded` (`components/embedded.ts`), keeps to its box
+  whatever the spill setting, and leaves the arrow keys to the page. `.learn-figure` styles it in
+  the OBI theme, at the page's own rems.
+- The walkthrough (`components/walkthrough/Walkthrough.tsx`) opens on a given slide, reports each
+  slide it shows, and leads back to the Learn page. A course's closing slide can link to another
+  course by its id, or, naming none, to the Learn page.
+- Each course's figure is registered in `components/courses/registry.ts`, and a slide names it as
+  `<course>:<step>`.
 - The Python figure renders its side panels as components, which the React Compiler needs.
-- A few lines are rewritten for Biome's rules, without changing what they do.

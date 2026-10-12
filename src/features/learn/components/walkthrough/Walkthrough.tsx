@@ -3,8 +3,8 @@
 /**
  * Minimalist left-to-right walkthrough: one idea per slide, arrow keys or the
  * edge buttons to move. Only the current slide is mounted, so at most one
- * widget animation loop runs at a time. Copied from the learn app, where each
- * course is a page of slides played through it.
+ * widget animation loop runs at a time. Each Learn course is a deck of slides
+ * played through it.
  */
 
 import Link from 'next/link';
@@ -47,7 +47,8 @@ export interface Slide {
     | 'neuron'
     | 'synapse-short'
     | 'synapse-long';
-  cta?: { href: string; label: string };
+  /** A closing link: to another course, by its id, or, naming none, to the Learn page. */
+  cta?: { label: string; course?: string };
 }
 
 export default function Walkthrough({
@@ -56,6 +57,7 @@ export default function Walkthrough({
   startAt = 0,
   home,
   onSlide,
+  ctaHref,
 }: {
   /** The slides to step through. */
   slides: Slide[];
@@ -70,6 +72,8 @@ export default function Walkthrough({
   home: string;
   /** Told each slide as it is shown, to keep the learner's place. */
   onSlide?: (index: number) => void;
+  /** Where a closing link goes: the course it names, or, naming none, the Learn page. */
+  ctaHref?: (course?: string) => string;
 }) {
   const first = Math.min(Math.max(0, startAt), slides.length - 1);
   const [i, setI] = useState(first);
@@ -207,7 +211,7 @@ export default function Walkthrough({
 
             {s.cta && (
               <Link
-                href={s.cta.href}
+                href={ctaHref ? ctaHref(s.cta.course) : home}
                 className={`w-fit rounded-lg bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950 hover:bg-sky-400 ${
                   wide ? '' : 'self-end'
                 }`}

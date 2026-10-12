@@ -16,10 +16,10 @@
 
 import { axialConductance, COMPARTMENTS, channelsFor, N_COMP, SOMA, TERMINAL } from './morphology';
 
-export const E_NA = 50;
-export const E_K = -77;
-export const E_L = -54.387;
-export const C_M = 1.0;
+const E_NA = 50;
+const E_K = -77;
+const E_L = -54.387;
+const C_M = 1.0;
 export const V_REST = -65;
 
 /** Voltage the widget treats as "the cell fired". */
@@ -40,14 +40,14 @@ const alphaN = (v: number) => {
 };
 const betaN = (v: number) => 0.125 * Math.exp(-(v + 65) / 80);
 
-export type SpikeSource = 'soma' | 'terminal';
+type SpikeSource = 'soma' | 'terminal';
 
-export interface SpikeEvent {
+interface SpikeEvent {
   t: number;
   source: SpikeSource;
 }
 
-export interface StimEvent {
+interface StimEvent {
   t: number;
   comp: number;
   amp: number;

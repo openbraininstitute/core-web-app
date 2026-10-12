@@ -52,6 +52,6 @@ export const MISC_SLIDES: Slide[] = [
   {
     say: 'Then the channels start opening by themselves.',
     note: 'That is the spike — and once the cell has branches, it travels.',
-    cta: { href: '/neuron', label: 'See the spike' },
+    cta: { course: 'compartmental-neuron', label: 'See the spike' },
   },
 ];

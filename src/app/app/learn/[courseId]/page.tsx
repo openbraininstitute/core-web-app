@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: course ? `${course.title} · Learn` : 'Learn' };
 }
 
-/** A Learn course, full screen and drawn as the learn app draws it, outside the project's chrome. */
+/** A Learn course, full screen, outside the project's chrome. */
 export default async function Page({ params, searchParams }: Props) {
   const { courseId } = await params;
   const { from, slide } = await searchParams;

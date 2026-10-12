@@ -10,7 +10,7 @@
 import type { Morphology, SegKind } from '@/features/learn/lib/basics/morphologies';
 
 /** One compartment: its parent (the soma's is −1), where it lies in the drawing, and its size (µm) and membrane area (cm²). */
-export interface Compartment {
+interface Compartment {
   parent: number;
   kind: SegKind | 'soma';
   x0: number;

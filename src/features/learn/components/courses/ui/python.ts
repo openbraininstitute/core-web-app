@@ -16,7 +16,7 @@ const PYODIDE = 'https://cdn.jsdelivr.net/pyodide/v0.29.5/full/';
  * course generator runs the cells with the same stand-in, so the printed
  * outputs shown before anyone presses Run are what Run gives.
  */
-export const PRELUDE = `
+const PRELUDE = `
 import sys as _sys, types as _types, json as _json
 
 class _Pyplot(_types.ModuleType):

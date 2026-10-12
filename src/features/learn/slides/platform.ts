@@ -97,6 +97,6 @@ export const PLATFORM_SLIDES: Slide[] = [
   {
     say: 'Next, write code of your own: start with Python',
     widget: 'platform:journey',
-    cta: { href: '/walkthrough/python', label: 'How to code in Python' },
+    cta: { course: 'python', label: 'How to code in Python' },
   },
 ];

@@ -54,7 +54,7 @@ import { useCanvasFrame } from '@/features/learn/components/basics/useCanvasFram
 import { useSpillRoot } from '@/features/learn/components/basics/useSpillRoot';
 import { Embedded } from '@/features/learn/components/embedded';
 import { mulberry32 } from '@/features/learn/lib/basics/morphologies';
-import { learnRoot, savedSomaZoom, savedSpill, subscribe } from '@/features/learn/lib/settings';
+import { savedSomaZoom, savedSpill, subscribe } from '@/features/learn/lib/settings';
 
 import {
   clamp01,
@@ -6919,6 +6919,5 @@ const variants = (specs: Spec[], kind?: string) =>
     return { name: kind ? `${kind} · ${name}` : name, Figure };
   });
 
-export const WET_3D = variants(SPECS, 'Wet 3D');
 /** The same ten, floating on white. */
 export const FLOAT_3D = variants(FLOATING);

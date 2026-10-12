@@ -235,7 +235,7 @@ export function disc(g: G, x: number, y: number, r: number, colour: RGB, sign: n
 /** A charge: red and positive, blue and negative, or grey with none. */
 const charge = (g: G, x: number, y: number, r: number, sign: number, a: number) =>
   disc(g, x, y, r, sign > 0 ? POS : sign < 0 ? NEG : NEUTRAL, sign, a);
-export const ion = (g: G, x: number, y: number, r: number, kind: IonKind, a: number) =>
+const ion = (g: G, x: number, y: number, r: number, kind: IonKind, a: number) =>
   disc(g, x, y, r, IONS[kind].colour, IONS[kind].sign, a);
 
 /**

@@ -17,7 +17,7 @@ const STOPS: Stop[] = [
   [45, 255, 236, 214],
 ];
 
-export function voltageRGB(v: number): [number, number, number] {
+function voltageRGB(v: number): [number, number, number] {
   const x = Math.max(V_MIN, Math.min(V_MAX, v));
   let i = 0;
   while (i < STOPS.length - 2 && x > STOPS[i + 1][0]) i++;

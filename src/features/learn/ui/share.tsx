@@ -11,7 +11,7 @@ import { cn } from '@/utils/css-class';
  * open, rather than the Learn page of one project.
  */
 
-export type Shared = { title: string; text?: string; path: string };
+type Shared = { title: string; text?: string; path: string };
 
 async function share({ title, text, path }: Shared): Promise<'shared' | 'copied' | 'none'> {
   const url = new URL(path, window.location.origin).toString();

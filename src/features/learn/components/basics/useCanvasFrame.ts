@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-export type FrameDraw = (ctx: CanvasRenderingContext2D, w: number, h: number, now: number) => void;
+type FrameDraw = (ctx: CanvasRenderingContext2D, w: number, h: number, now: number) => void;
 
 /**
  * Attaches a device-pixel-ratio aware requestAnimationFrame loop to a canvas.

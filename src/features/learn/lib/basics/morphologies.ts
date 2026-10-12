@@ -10,7 +10,7 @@
 export type MorphKind = 'pyramidal' | 'interneuron' | 'purkinje';
 export type SegKind = 'apical' | 'basal' | 'axon' | 'ais';
 
-export interface MorphSeg {
+interface MorphSeg {
   x1: number;
   y1: number;
   x2: number;
@@ -222,7 +222,7 @@ export function buildMorphology(kind: MorphKind, seed = 3): Morphology {
   return { kind, ...labels[kind], soma, segs, tips, ais, axon: pts, bbox: { x0, y0, x1, y1 } };
 }
 
-export interface Fit {
+interface Fit {
   s: number;
   ox: number;
   oy: number;
@@ -244,14 +244,14 @@ export function fitMorphology(
   return { s, ox, oy, tx: (x) => ox + x * s, ty: (y) => oy + y * s };
 }
 
-export const SEG_COLORS: Record<SegKind, string> = {
+const SEG_COLORS: Record<SegKind, string> = {
   apical: '#7dd3fc',
   basal: '#c4b5fd',
   axon: '#fbbf24',
   ais: '#fb923c',
 };
 
-export interface DrawMorphOpts {
+interface DrawMorphOpts {
   /** 0 = at rest, 1 = spiking; brightens the soma and axon. */
   activity?: number;
   highlightAis?: boolean;

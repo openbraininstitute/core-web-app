@@ -1,7 +1,7 @@
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
 /**
- * The learn app's neuron explorer, as slides: a 20-compartment neuron with Hodgkin–Huxley
+ * A neuron explorer, as slides: a 20-compartment neuron with Hodgkin–Huxley
  * channels, the same widget on every slide, each slide a thing to try with it.
  */
 export const COMPARTMENTAL_NEURON_SLIDES: Slide[] = [

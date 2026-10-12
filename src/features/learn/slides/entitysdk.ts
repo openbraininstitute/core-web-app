@@ -84,6 +84,6 @@ export const ENTITYSDK_SLIDES: Slide[] = [
   {
     say: 'Next, choose another course',
     widget: 'sdk:gotchas',
-    cta: { href: '/walkthrough/courses', label: 'All the courses' },
+    cta: { label: 'All the courses' },
   },
 ];

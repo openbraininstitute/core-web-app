@@ -1,9 +1,8 @@
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
 /**
- * The learn app's opening walkthrough: why model the brain, and how the Open Brain Institute sets
- * out to make that possible for everyone. Its last slide asked where to start; here, the Learn
- * page's courses are where to go next.
+ * Why model the brain, and how the Open Brain Institute sets out to make that possible for
+ * everyone. The Learn page's courses are where to go next.
  */
 export const WHY_MODEL_SLIDES: Slide[] = [
   {

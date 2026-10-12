@@ -53,6 +53,13 @@ describe('LEARN_COURSES', () => {
     expect(course.slides.map((slide) => slide.widget)).toContain(course.preview);
   });
 
+  it.each(
+    LEARN_COURSES.map((course) => [course.id, course])
+  )("%s's closing links name courses there are", (_, course) => {
+    for (const slide of course.slides)
+      if (slide.cta?.course) expect(getLearnCourse(slide.cta.course)).toBeDefined();
+  });
+
   it('finds a course by id, and nothing for an unknown one', () => {
     expect(getLearnCourse('python')?.title).toBe('How to code in Python');
     expect(getLearnCourse('nope')).toBeUndefined();

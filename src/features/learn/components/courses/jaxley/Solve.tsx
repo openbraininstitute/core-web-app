@@ -17,8 +17,8 @@ import { arrow, type Look, mathWords, type Room, SERIF, words } from '../ui/canv
 import StepCanvas, { type Frame } from '../ui/StepCanvas';
 import { compartmentsOf, stepping, TreeSim } from './neuron';
 
-export const SOLVE_STEPS = ['cell', 'split', 'spread', 'stiff', 'matrix'] as const;
-export type SolveStep = (typeof SOLVE_STEPS)[number];
+const SOLVE_STEPS = ['cell', 'split', 'spread', 'stiff', 'matrix'] as const;
+type SolveStep = (typeof SOLVE_STEPS)[number];
 export const isSolveStep = (s: string): s is SolveStep => SOLVE_STEPS.includes(s as SolveStep);
 
 const MORPH = buildMorphology('pyramidal', 3);

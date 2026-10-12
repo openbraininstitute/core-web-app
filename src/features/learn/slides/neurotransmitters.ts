@@ -141,6 +141,6 @@ export const NEUROTRANSMITTERS_SLIDES: Slide[] = [
   {
     say: 'Next, see how simulators solve these equations',
     widget: 'transmitters:models',
-    cta: { href: '/walkthrough/neuron-vs-jaxley', label: 'NEURON and Jaxley' },
+    cta: { course: 'neuron-vs-jaxley', label: 'NEURON and Jaxley' },
   },
 ];

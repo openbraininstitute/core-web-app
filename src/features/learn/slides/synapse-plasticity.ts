@@ -1,7 +1,7 @@
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
 /**
- * The learn app's synapse explorer, as slides: short-term plasticity in the Tsodyks–Markram
+ * A synapse explorer, as slides: short-term plasticity in the Tsodyks–Markram
  * model with stochastic release, then long-term, calcium-based plasticity.
  */
 export const SYNAPSE_PLASTICITY_SLIDES: Slide[] = [

@@ -17,7 +17,7 @@ export type CourseProgress = {
   at: number;
 };
 
-export type LearnProgress = Record<string, CourseProgress>;
+type LearnProgress = Record<string, CourseProgress>;
 
 const KEY = 'learn/progress/v1';
 

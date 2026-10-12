@@ -17,7 +17,7 @@ import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
 
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
-export type LearnLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All levels';
+type LearnLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All levels';
 
 /** A course in Learn: for now, one deck of slides. */
 export type LearnCourse = {
@@ -27,7 +27,7 @@ export type LearnCourse = {
   level: LearnLevel;
   description: string;
   slides: Slide[];
-  /** Brought over from the learn app as it was: listed apart, under "Rough / Misc". */
+  /** Not yet polished: listed apart, under "Rough / Misc". */
   rough?: boolean;
   /** The figure the Learn page shows of it, live: one of its slides' own. */
   preview: NonNullable<Slide['widget']>;
@@ -161,7 +161,7 @@ export const LEARN_COURSES: LearnCourse[] = [
     title: 'Why model the brain?',
     level: 'All levels',
     description:
-      'The learn app’s opening: why model the brain, why it has been hard, and how the Open Brain Institute sets out to make it possible for everyone.',
+      'Why model the brain, why it has been hard, and how the Open Brain Institute sets out to make it possible for everyone.',
     slides: WHY_MODEL_SLIDES,
     // its first slide's: the mouse brain, turning
     preview: 'brain',
