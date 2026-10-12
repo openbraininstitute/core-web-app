@@ -26,6 +26,7 @@ import {
 import { type CourseProgress, resetCourse, useLearnProgress } from '@/features/learn/progress';
 import { TEACH_TOPICS, teachTopic } from '@/features/learn/teach';
 import { useTransmitter } from '@/features/learn/transmitter';
+import { CALLOUT_STYLES } from '@/features/learn/ui/callout';
 import {
   CATEGORIES,
   CategoryTiles,
@@ -92,7 +93,14 @@ function share(course: LearnCourse, progress?: CourseProgress) {
 }
 
 /** The Dev settings held in the URL: what each is with nothing there — so what the menu marks as its default. */
-const DEV_DEFAULTS = { tiles: 0, outerBox: true, listBox: true, bigCards: true, selected: 5 };
+const DEV_DEFAULTS = {
+  tiles: 0,
+  outerBox: true,
+  listBox: true,
+  bigCards: true,
+  selected: 5,
+  callout: 0,
+};
 
 /**
  * Learn: the free courses, listed on the left with how far through each the learner is, and the
@@ -163,6 +171,12 @@ export function LearnPage({
     parseAsInteger.withDefault(DEV_DEFAULTS.selected)
   );
   const sel = Math.min(Math.max(selParam, 0), SELECTED_STYLES.length - 1);
+  // and how a glossary term's or a teaching topic's one line is set
+  const [calloutParam, setCallout] = useQueryState(
+    'callout',
+    parseAsInteger.withDefault(DEV_DEFAULTS.callout)
+  );
+  const callout = Math.min(Math.max(calloutParam, 0), CALLOUT_STYLES.length - 1);
   const panel = PANEL;
   // the rough courses' heading: folded by default, showing how many; open if the page opens on one of them
   // the courses in two groups, each under a heading that folds it: In development, open, and
@@ -526,7 +540,13 @@ export function LearnPage({
             className={panel}
           />
         ) : section === 'teach' ? (
-          <TeachCard key={teach.id} topic={teach} onSelect={setTeachId} className={panel} />
+          <TeachCard
+            key={teach.id}
+            topic={teach}
+            onSelect={setTeachId}
+            className={panel}
+            callout={callout}
+          />
         ) : section === 'tutorials' ? (
           <TutorialCard
             tutorial={tutorial}
@@ -542,6 +562,7 @@ export function LearnPage({
             onSelect={setTermId}
             project={project}
             className={panel}
+            callout={callout}
           />
         ) : selected ? (
           <CourseDetail
@@ -633,6 +654,13 @@ export function LearnPage({
               value={design}
               defaultValue={DEV_DEFAULTS.tiles}
               onChange={setTiles}
+            />
+            <DesignSwitcher
+              what="Callout"
+              options={CALLOUT_STYLES}
+              value={callout}
+              defaultValue={DEV_DEFAULTS.callout}
+              onChange={setCallout}
             />
           </OptionMenu>
         </OptionMenus>

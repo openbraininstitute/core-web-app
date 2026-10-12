@@ -3,6 +3,7 @@
 import Link from 'next/link';
 
 import { TEACH_TOPICS, type TeachTopic } from '@/features/learn/teach';
+import { Callout } from '@/features/learn/ui/callout';
 import { listBox } from '@/features/learn/ui/category-tiles';
 import { cn } from '@/utils/css-class';
 
@@ -63,10 +64,13 @@ export function TeachCard({
   topic,
   onSelect,
   className,
+  callout,
 }: {
   topic: TeachTopic;
   onSelect: (id: string) => void;
   className?: string;
+  /** How its one line is set (Dev settings' Appearance). */
+  callout?: number;
 }) {
   const index = TEACH_TOPICS.findIndex((t) => t.id === topic.id);
   const next = TEACH_TOPICS[index + 1];
@@ -92,9 +96,7 @@ export function TeachCard({
           </Link>
         </header>
 
-        <p className="rounded-[12px] border-l-[3px] border-[#002766] bg-[#f0f5ff] px-[20px] py-[16px] text-[18px] leading-[28px] font-semibold text-[#002766]">
-          {topic.short}
-        </p>
+        <Callout design={callout}>{topic.short}</Callout>
 
         <div className="flex flex-col gap-[14px]">
           {topic.body.map((para) => (

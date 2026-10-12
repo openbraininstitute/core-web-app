@@ -156,6 +156,26 @@ html:has(.learn-root) {
   outline-offset: 2px;
 }
 
+/* The Shimmer callout's slow sheen across its words (Dev settings' Appearance), still with reduced motion. */
+@keyframes learn-shimmer {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: -200% 50%;
+  }
+}
+
+.learn-shimmer {
+  animation: learn-shimmer 9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-shimmer {
+    animation: none;
+  }
+}
+
 /* Slide transitions, left to right. */
 @keyframes learn-slide-in-right {
   from {

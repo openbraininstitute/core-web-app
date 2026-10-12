@@ -11,6 +11,7 @@ import {
   type GlossaryTerm,
 } from '@/features/learn/glossary';
 import { platformHref } from '@/features/learn/glossary-links';
+import { Callout } from '@/features/learn/ui/callout';
 import { listBox } from '@/features/learn/ui/category-tiles';
 import { cn } from '@/utils/css-class';
 
@@ -186,12 +187,15 @@ export function GlossaryCard({
   onSelect,
   project,
   className,
+  callout,
 }: {
   term: GlossaryTerm;
   onSelect: (id: string) => void;
   /** The project's root, which the "On the platform" links lead into. */
   project: string;
   className?: string;
+  /** How its one-line answer is set (Dev settings' Appearance). */
+  callout?: number;
 }) {
   const index = byName.findIndex((t) => t.id === term.id);
   const prev = byName[(index - 1 + byName.length) % byName.length];
@@ -238,9 +242,7 @@ export function GlossaryCard({
           </div>
         </header>
 
-        <p className="rounded-[12px] border-l-[3px] border-[#002766] bg-[#f0f5ff] px-[20px] py-[16px] text-[18px] leading-[28px] font-semibold text-[#002766]">
-          {term.short}
-        </p>
+        <Callout design={callout}>{term.short}</Callout>
 
         <div className="flex flex-col gap-[14px]">
           {term.body.map((para) => (
