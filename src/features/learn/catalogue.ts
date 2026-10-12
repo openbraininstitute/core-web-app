@@ -202,9 +202,6 @@ export function getLearnCourse(id: string) {
   return LEARN_COURSES.find((course) => course.id === id);
 }
 
-/** A course's thumbnail, on its card. */
-export const learnCourseThumb = (id: string) => `/images/learn/${id}-thumb.webp`;
-
 /** The Learn page of a project, which a course leads back to. */
 export const learnPagePath = (root: string, virtualLabId: string, projectId: string) =>
   `${root}/${virtualLabId}/${projectId}/learn`;

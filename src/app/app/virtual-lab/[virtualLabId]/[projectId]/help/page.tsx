@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getLearnSettings } from '@/features/learn/learn-settings-actions';
+import { getLearnSettings } from '@/features/learn/learn-settings-server';
 import { HelpLayout } from '@/ui/layouts/help-layout';
 import { HelpHeader } from '@/ui/segments/help/header';
 import Sections from '@/ui/segments/help/sections';

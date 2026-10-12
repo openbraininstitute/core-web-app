@@ -1,6 +1,6 @@
 /*
  * The Learn page's Teach section: what the platform offers someone teaching a class on it, one
- * topic at a time. A first draft of the copy, for judging; behind the "Teach section" setting.
+ * topic at a time. A first draft of the copy, for judging; the Dev settings' Sections can leave it off.
  */
 
 export type TeachTopic = {

@@ -3,8 +3,8 @@ import { type ReactNode, Suspense } from 'react';
 import { Providers } from '@/app/app/providers';
 import { auth } from '@/auth';
 import { getAllFlags } from '@/features/feature-flags';
-import { getLearnSettings } from '@/features/learn/learn-settings-actions';
 import { LearnSettingsProvider } from '@/features/learn/learn-settings-provider';
+import { getLearnSettings } from '@/features/learn/learn-settings-server';
 import { AppOnboardingProvider } from '@/ui/segments/app-setup/discover-app';
 
 type RootLayoutProps = {

@@ -1,5 +1,3 @@
-'use server';
-
 import { cookies } from 'next/headers';
 
 import {
@@ -8,7 +6,7 @@ import {
   parseLearnSettings,
 } from '@/features/learn/learn-settings';
 
-/** Learn's settings, from their cookie: what the server renders with. The browser writes it. */
+/** Learn's settings, from their cookie: what the server renders with. The browser writes it (see the provider). */
 export async function getLearnSettings(): Promise<LearnSettings> {
   const cookieStore = await cookies();
   return parseLearnSettings(cookieStore.get(LEARN_SETTINGS_COOKIE)?.value);

@@ -7,7 +7,7 @@ import InlineScript from '@/features/learn/components/ui/InlineScript';
 import Settings from '@/features/learn/components/ui/Settings';
 import SiteBar from '@/features/learn/components/ui/SiteBar';
 import { learnFonts } from '@/features/learn/fonts';
-import { getLearnSettings } from '@/features/learn/learn-settings-actions';
+import { getLearnSettings } from '@/features/learn/learn-settings-server';
 import { SETTINGS_SCRIPT } from '@/features/learn/lib/settings';
 import { CourseDeck } from '@/features/learn/ui/course-deck';
 

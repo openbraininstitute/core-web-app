@@ -34,8 +34,8 @@ Two more platform changes Learn tries out are feature flags of their own, off by
   `slides/` holds each one's slides.
 - `progress.ts` keeps where the learner got to in localStorage (`learn/progress/v1`), until progress
   has a home on the platform.
-- Thumbnails are in `public/images/learn/`, and the figures' data (about 13 MB, mostly the 3D
-  figure's meshes and neurons) is in `public/static/learn/`. `fonts.ts` loads the courses' typefaces.
+- The figures' data (about 7 MB: the 3D figure's meshes and neurons, and the validation course's
+  pictures and films) is in `public/static/learn/`. `fonts.ts` loads the courses' typefaces.
 
 ## Copied from the learn app
 
@@ -50,8 +50,7 @@ moved under `@/features/learn/`, Biome's formatting and these changes:
   added), keeps to its box whatever the spill setting, and leaves the arrow keys to the page.
   `.learn-figure` styles it in the OBI theme, at the page's own rems.
 - The walkthrough opens on a given slide, reports each slide it shows, and leads back to the Learn
-  page. The opening, its choices, and the widgets and cortex figure these courses never show are
-  gone.
+  page. Its opening and that opening's choices are gone.
 - Only the figures these courses use are registered (`components/courses/registry.ts`).
 - The Python figure renders its side panels as components, which the React Compiler needs.
 - A few lines are rewritten for Biome's rules, without changing what they do.

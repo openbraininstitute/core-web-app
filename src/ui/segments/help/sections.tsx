@@ -1,6 +1,6 @@
 import { match } from 'ts-pattern';
 
-import { getLearnSettings } from '@/features/learn/learn-settings-actions';
+import { getLearnSettings } from '@/features/learn/learn-settings-server';
 import AboutSection from '@/ui/segments/help/about';
 import AiChatToolsSection from '@/ui/segments/help/ai-chat-tools';
 import FeaturesSection from '@/ui/segments/help/features';

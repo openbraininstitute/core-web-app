@@ -1174,7 +1174,6 @@ const MEDIA: Partial<Record<ValidationStep, Medium[]>> = {
       name: 'microns',
       caption: 'MICrONS: a cubic millimetre of mouse visual cortex · Nature, 2025',
     },
-    { name: 'em-model', caption: 'A model built from the reconstruction', video: true },
   ],
   difficult: [
     {
