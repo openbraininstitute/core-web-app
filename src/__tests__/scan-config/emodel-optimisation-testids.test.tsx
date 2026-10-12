@@ -54,6 +54,7 @@ describe('e-model optimisation mechanisms test ids', () => {
     render(
       <RegionChoiceCards
         rootSchema={rootSchema}
+        value={value}
         selectedRegionChoice="somatic"
         setSelectedRegionChoice={vi.fn()}
         errors={[]}

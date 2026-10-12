@@ -93,7 +93,7 @@ export const resolveEFeatureExtractionResultCampaign = cache(
 );
 
 export const EFeatureExtractionResult: EntityCoreTypeConfig<TEFeatureExtractionResult> = {
-  group: EntityTypeGroup.Experimental,
+  group: EntityTypeGroup.Simulations,
   title: 'Intracellular e-feature extraction',
   extendedType: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
   type: EntityTypeDict.TaskResult,

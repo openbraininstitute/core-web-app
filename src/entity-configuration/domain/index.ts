@@ -2,7 +2,6 @@ import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-n
 import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
-import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
@@ -37,7 +36,7 @@ import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { EModelOptimizationResult } from '@/entity-configuration/domain/simulation/emodel-optimization-result';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -98,7 +97,6 @@ const EntityCoreSimulationConfiguration = {
   IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
-  EModelOptimizationResult,
 };
 
 const EntityCoreExtractionConfiguration = {
