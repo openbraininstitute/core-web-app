@@ -16,8 +16,6 @@ import { getClient } from '@/services/sanity/client';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
-import type { FeatureFlags } from '@/features/feature-flags';
-
 export default async function Page({
   params,
 }: {
@@ -27,7 +25,6 @@ export default async function Page({
   const flags = await getAllFlags();
   if (!flags[learnFlag.key]) notFound();
 
-  const shown = LEARN_COURSES.filter((course) => flags[course.flag as keyof FeatureFlags]);
   // the home page's tutorials, fetched the same way and under the same key, so they are shared
   // and the outside sections', each cached for an hour, and empty if its source cannot be read
   const [{ data: tutorials }, recordings, upcoming, meetings, articles] = await Promise.all([
@@ -44,7 +41,8 @@ export default async function Page({
   ]);
   return (
     <LearnPage
-      courseIds={shown.map((course) => course.id)}
+      // every course: the page leaves off those Learn's settings hide, as they change
+      courseIds={LEARN_COURSES.map((course) => course.id)}
       learnPath={learnPagePath(config.ROOT_ROUTE, virtualLabId, projectId)}
       tutorials={tutorials ?? []}
       lectures={{ recorded: recordings, upcoming }}

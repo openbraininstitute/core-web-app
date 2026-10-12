@@ -7,11 +7,11 @@ import InlineScript from '@/features/learn/components/ui/InlineScript';
 import Settings from '@/features/learn/components/ui/Settings';
 import SiteBar from '@/features/learn/components/ui/SiteBar';
 import { learnFonts } from '@/features/learn/fonts';
+import { getLearnSettings } from '@/features/learn/learn-settings-actions';
 import { SETTINGS_SCRIPT } from '@/features/learn/lib/settings';
 import { CourseDeck } from '@/features/learn/ui/course-deck';
 
 import type { Metadata } from 'next';
-import type { FeatureFlags } from '@/features/feature-flags';
 
 type Props = {
   params: Promise<{ courseId: string }>;
@@ -29,7 +29,8 @@ export default async function Page({ params, searchParams }: Props) {
   const { from, slide } = await searchParams;
   const course = getLearnCourse(courseId);
   const flags = await getAllFlags();
-  if (!course || !flags[learnFlag.key] || !flags[course.flag as keyof FeatureFlags]) notFound();
+  const { hiddenCourses } = await getLearnSettings();
+  if (!course || !flags[learnFlag.key] || hiddenCourses.includes(course.id)) notFound();
 
   const home = learnHome(config.ROOT_ROUTE, from);
   const startAt = Math.max(0, Math.min(course.slides.length - 1, Number(slide) - 1 || 0));

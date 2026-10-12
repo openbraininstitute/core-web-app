@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { flags } from '@/features/feature-flags';
 import {
   getLearnCourse,
   LEARN_COURSES,
@@ -29,10 +28,9 @@ const ROOT = '/app/virtual-lab';
 const LEARN_PAGE = `${ROOT}/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222/learn`;
 
 describe('LEARN_COURSES', () => {
-  it.each(
-    LEARN_COURSES.map((course) => [course.id, course])
-  )('%s has a registered flag', (_, course) => {
-    expect(flags.map((flag) => flag.key)).toContain(course.flag);
+  it("gives every course its own id, which Learn's settings hide it by", () => {
+    const ids = LEARN_COURSES.map((course) => course.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 
   it.each(

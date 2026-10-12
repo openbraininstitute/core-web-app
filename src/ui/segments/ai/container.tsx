@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import IconPlus from '@/components/icons/Plus';
 import AiAssistant from '@/features/ai-assistant';
-import { aiButtonFlag, useFlag } from '@/features/feature-flags';
+import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
@@ -14,7 +14,7 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
-  const aiButton = useFlag(aiButtonFlag.key);
+  const aiButton = useLearnSetting('aiButton');
 
   const isCollapsed = state === PanelState.Collapsed;
   const isFullscreen = state === PanelState.Fullscreen;

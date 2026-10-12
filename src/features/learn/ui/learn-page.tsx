@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   parseAsArrayOf,
   parseAsBoolean,
@@ -10,17 +9,12 @@ import {
   parseAsStringLiteral,
   useQueryState,
 } from 'nuqs';
-import { type CSSProperties, useState, useTransition } from 'react';
+import { type CSSProperties, useState } from 'react';
 
-import {
-  type FeatureFlags,
-  learnAppearanceFlag,
-  setFlag,
-  useFlag,
-  useFlags,
-} from '@/features/feature-flags';
 import { LEARN_COURSES, type LearnCourse, learnCoursePath } from '@/features/learn/catalogue';
 import { GLOSSARY, glossaryTerm } from '@/features/learn/glossary';
+import { DEFAULT_LEARN_SETTINGS } from '@/features/learn/learn-settings';
+import { useLearnSettings, useSetLearnSetting } from '@/features/learn/learn-settings-provider';
 import { LECTURE_TOPICS, type LectureTopic } from '@/features/learn/lecture-topics';
 import {
   LITERATURE_SORTS,
@@ -97,6 +91,9 @@ function share(course: LearnCourse, progress?: CourseProgress) {
   return progress.done ? 1 : Math.min(1, (progress.furthest + 1) / course.slides.length);
 }
 
+/** The Dev settings held in the URL: what each is with nothing there — so what the menu marks as its default. */
+const DEV_DEFAULTS = { tiles: 0, outerBox: true, listBox: true, bigCards: true, selected: 5 };
+
 /**
  * Learn: the free courses, listed on the left with how far through each the learner is, and the
  * chosen one on the right, with a way in, one of its figures to try, and what it covers. Only Free
@@ -120,39 +117,52 @@ export function LearnPage({
   /** The Transmitter's latest articles. */
   articles?: FeedItem[];
 }) {
+  // Learn's settings, behind the Dev settings: which courses show, and the platform changes being tried
+  // out — changed at once, here and everywhere they are used
+  const settings = useLearnSettings();
+  const setSetting = useSetLearnSetting();
   // the rough ones last, so they sit together under their heading
-  const courses = LEARN_COURSES.filter((course) => courseIds.includes(course.id)).sort(
-    (a, b) => Number(!!a.rough) - Number(!!b.rough)
-  );
+  const courses = LEARN_COURSES.filter(
+    (course) => courseIds.includes(course.id) && !settings.hiddenCourses.includes(course.id)
+  ).sort((a, b) => Number(!!a.rough) - Number(!!b.rough));
   const progress = useLearnProgress();
   const [chosen, setChosen] = useQueryState('course');
   const selected = courses.find((course) => course.id === chosen) ?? courses[0];
   // TEMPORARY, for judging the tile designs: in the URL, so a reload keeps the one being looked at
-  const [tiles, setTiles] = useQueryState('tiles', parseAsInteger.withDefault(0));
+  const [tiles, setTiles] = useQueryState('tiles', parseAsInteger.withDefault(DEV_DEFAULTS.tiles));
   const design = Math.min(Math.max(tiles, 0), TILE_DESIGNS.length - 1);
   const lb = listBox();
+  const showCourse = (id: string, on: boolean) =>
+    setSetting(
+      'hiddenCourses',
+      on
+        ? settings.hiddenCourses.filter((hidden) => hidden !== id)
+        : [...settings.hiddenCourses, id]
+    );
   // TEMPORARY, for judging: the outer grey box, or none (its fill and border; the spacing stays)
-  const appearance = useFlag(learnAppearanceFlag.key);
-  // which courses show: their feature flags, switched from the appearance options too
-  const router = useRouter();
-  const flags = useFlags();
-  const [, startFlagChange] = useTransition();
-  const showCourse = (flag: LearnCourse['flag'], on: boolean) =>
-    startFlagChange(async () => {
-      await setFlag(flag as keyof FeatureFlags, on as never);
-      router.refresh();
-    });
-  const [outerBox, setOuterBox] = useQueryState('box', parseAsBoolean.withDefault(true));
+  const [outerBox, setOuterBox] = useQueryState(
+    'box',
+    parseAsBoolean.withDefault(DEV_DEFAULTS.outerBox)
+  );
   // and the box round the list of courses, terms or tutorials, or none: the cards on the page itself
-  const [listBoxOn, setListBoxOn] = useQueryState('list', parseAsBoolean.withDefault(true));
+  const [listBoxOn, setListBoxOn] = useQueryState(
+    'list',
+    parseAsBoolean.withDefault(DEV_DEFAULTS.listBox)
+  );
   // and the courses' cards on the left, small or big: a bigger picture, and what the course covers
   // and which sections' tiles are there at all (the Sections options): those left out, by key
   const [hidden, setHidden] = useQueryState('hide', parseAsArrayOf(parseAsString).withDefault([]));
   const showSection = (key: string, on: boolean) =>
     setHidden(on ? hidden.filter((k) => k !== key) : [...hidden, key]);
-  const [bigCards, setBigCards] = useQueryState('big', parseAsBoolean.withDefault(true));
+  const [bigCards, setBigCards] = useQueryState(
+    'big',
+    parseAsBoolean.withDefault(DEV_DEFAULTS.bigCards)
+  );
   // and how the selected card on the left is drawn
-  const [selParam, setSel] = useQueryState('selected', parseAsInteger.withDefault(5));
+  const [selParam, setSel] = useQueryState(
+    'selected',
+    parseAsInteger.withDefault(DEV_DEFAULTS.selected)
+  );
   const sel = Math.min(Math.max(selParam, 0), SELECTED_STYLES.length - 1);
   const panel = PANEL;
   // the rough courses' heading: folded by default, showing how many; open if the page opens on one of them
@@ -552,49 +562,87 @@ export function LearnPage({
             No courses to show yet.
           </section>
         )}
-        {/* TEMPORARY, for judging: the page's appearance options, behind a small gear in the card's
-            corner, itself behind a flag */}
-        {appearance && (
-          <OptionMenus>
-            <OptionMenu title="Courses">
-              {LEARN_COURSES.map((c) => (
-                <SettingToggle
-                  key={c.id}
-                  label={c.title}
-                  on={Boolean(flags[c.flag as keyof FeatureFlags])}
-                  onChange={(on) => showCourse(c.flag, on)}
-                />
-              ))}
-            </OptionMenu>
-            <OptionMenu title="Sections">
-              {CATEGORIES.map((c) => (
-                <SettingToggle
-                  key={c.key}
-                  label={c.label}
-                  on={!hidden.includes(c.key)}
-                  onChange={(on) => showSection(c.key, on)}
-                />
-              ))}
-            </OptionMenu>
-            <OptionMenu title="Appearance">
-              <SettingToggle label="Outer box" on={outerBox} onChange={setOuterBox} />
-              <SettingToggle label="List box" on={listBoxOn} onChange={setListBoxOn} />
-              <SettingToggle label="Big courses" on={bigCards} onChange={setBigCards} />
-              <DesignSwitcher
-                what="Selected"
-                options={SELECTED_STYLES}
-                value={sel}
-                onChange={setSel}
+        {/* Dev settings, behind a small gear in the card's corner: which courses show, the platform
+            changes being tried out, and — TEMPORARY, for judging — the page's sections and appearance;
+            each option marked with its default */}
+        <OptionMenus>
+          <OptionMenu title="Courses">
+            {LEARN_COURSES.map((c) => (
+              <SettingToggle
+                key={c.id}
+                label={c.title}
+                on={!settings.hiddenCourses.includes(c.id)}
+                defaultOn
+                onChange={(on) => showCourse(c.id, on)}
               />
-              <DesignSwitcher
-                what="Tiles"
-                options={TILE_DESIGNS}
-                value={design}
-                onChange={setTiles}
+            ))}
+          </OptionMenu>
+          <OptionMenu title="Platform">
+            <SettingToggle
+              label="Help button and page"
+              on={settings.help}
+              defaultOn={DEFAULT_LEARN_SETTINGS.help}
+              onChange={(on) => setSetting('help', on)}
+            />
+            <SettingToggle
+              label="AI assistant: new style"
+              on={settings.aiButton}
+              defaultOn={DEFAULT_LEARN_SETTINGS.aiButton}
+              onChange={(on) => setSetting('aiButton', on)}
+            />
+            <SettingToggle
+              label="Top bar in the courses' style"
+              on={settings.courseToolbar}
+              defaultOn={DEFAULT_LEARN_SETTINGS.courseToolbar}
+              onChange={(on) => setSetting('courseToolbar', on)}
+            />
+          </OptionMenu>
+          <OptionMenu title="Sections">
+            {CATEGORIES.map((c) => (
+              <SettingToggle
+                key={c.key}
+                label={c.label}
+                on={!hidden.includes(c.key)}
+                defaultOn
+                onChange={(on) => showSection(c.key, on)}
               />
-            </OptionMenu>
-          </OptionMenus>
-        )}
+            ))}
+          </OptionMenu>
+          <OptionMenu title="Appearance">
+            <SettingToggle
+              label="Outer box"
+              on={outerBox}
+              defaultOn={DEV_DEFAULTS.outerBox}
+              onChange={setOuterBox}
+            />
+            <SettingToggle
+              label="List box"
+              on={listBoxOn}
+              defaultOn={DEV_DEFAULTS.listBox}
+              onChange={setListBoxOn}
+            />
+            <SettingToggle
+              label="Big courses"
+              on={bigCards}
+              defaultOn={DEV_DEFAULTS.bigCards}
+              onChange={setBigCards}
+            />
+            <DesignSwitcher
+              what="Selected"
+              options={SELECTED_STYLES}
+              value={sel}
+              defaultValue={DEV_DEFAULTS.selected}
+              onChange={setSel}
+            />
+            <DesignSwitcher
+              what="Tiles"
+              options={TILE_DESIGNS}
+              value={design}
+              defaultValue={DEV_DEFAULTS.tiles}
+              onChange={setTiles}
+            />
+          </OptionMenu>
+        </OptionMenus>
       </div>
     </div>
   );

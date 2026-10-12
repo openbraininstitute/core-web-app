@@ -287,16 +287,18 @@ export function listBox() {
   };
 }
 
-/** ‹ 2/6 · Gradient glow › - steps through `options`, wrapping round. */
+/** ‹ 2/6 · Gradient glow › - steps through `options`, wrapping round; and marks `defaultValue`. */
 export function DesignSwitcher({
   what,
   options,
   value,
+  defaultValue,
   onChange,
 }: {
   what: string;
   options: readonly string[];
   value: number;
+  defaultValue?: number;
   onChange: (value: number) => void;
 }) {
   const n = options.length;
@@ -320,18 +322,30 @@ export function DesignSwitcher({
       <button type="button" aria-label={`Next ${what}`} className={arrow} onClick={() => step(1)}>
         ›
       </button>
+      {defaultValue !== undefined && <DefaultMark what={String.fromCharCode(65 + defaultValue)} />}
     </div>
   );
 }
 
-/** A labelled on/off switch, in the same pill as DesignSwitcher. TEMPORARY. */
+/** Beside an option: what its default is - Default on, Default off, or the default design's letter. */
+function DefaultMark({ what }: { what: string }) {
+  return (
+    <span className="shrink-0 rounded-full bg-[#e6f4ff] px-[6px] py-[1px] text-[9.5px] leading-[13px] font-semibold whitespace-nowrap text-[#0050b3]">
+      Default {what}
+    </span>
+  );
+}
+
+/** A labelled on/off switch, in the same pill as DesignSwitcher, with its default marked. TEMPORARY. */
 export function SettingToggle({
   label,
   on,
+  defaultOn,
   onChange,
 }: {
   label: string;
   on: boolean;
+  defaultOn?: boolean;
   onChange: (on: boolean) => void;
 }) {
   return (
@@ -343,9 +357,10 @@ export function SettingToggle({
       className="flex items-center gap-[8px] rounded-full border border-[#d9d9d9] bg-white/95 py-[6px] pr-[6px] pl-[12px] text-[11px] leading-[15px] font-semibold text-[#595959] shadow-[0_4px_14px_rgba(0,39,102,0.12)] backdrop-blur"
     >
       {label}
+      {defaultOn !== undefined && <DefaultMark what={defaultOn ? 'on' : 'off'} />}
       <span
         className={cn(
-          'relative h-[18px] w-[32px] rounded-full transition-colors',
+          'relative h-[18px] w-[32px] shrink-0 rounded-full transition-colors',
           on ? 'bg-[#002766]' : 'bg-[#d9d9d9]'
         )}
       >
@@ -360,7 +375,7 @@ export function SettingToggle({
   );
 }
 
-/** The gear on the Appearance menu's button. */
+/** The gear on the Dev settings' button. */
 const GEAR = (
   <svg viewBox="0 0 16 16" aria-hidden="true" className="size-[16px]">
     <path
@@ -374,53 +389,12 @@ const GEAR = (
   </svg>
 );
 
-/** Four tiles, on the Sections menu's button. */
-const TILES = (
-  <svg viewBox="0 0 16 16" aria-hidden="true" className="size-[16px]">
-    <g fill="none" stroke="currentColor" strokeWidth="1.2">
-      <rect x="2" y="2" width="5" height="5" rx="1" />
-      <rect x="9" y="2" width="5" height="5" rx="1" />
-      <rect x="2" y="9" width="5" height="5" rx="1" />
-      <rect x="9" y="9" width="5" height="5" rx="1" />
-    </g>
-  </svg>
-);
-
-/** The mortarboard on the Courses menu's button, as on the Courses tile. */
-const CAP = (
-  <svg viewBox="0 0 16 16" aria-hidden="true" className="size-[16px]">
-    <path
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinejoin="round"
-      d="M1.5 6 8 3l6.5 3L8 9 1.5 6Zm2.5 1.2v3.3c0 .9 1.8 2 4 2s4-1.1 4-2V7.2M14.5 6v3.5"
-    />
-  </svg>
-);
-
 /**
- * The bottom-right corner of the card, holding the option menus side by side. TEMPORARY.
+ * The bottom-right corner of the card: one gear, Dev settings, opening Learn's settings and — TEMPORARY
+ * — the design options, in their groups: Courses in the first column, the rest beside it. Clicked
+ * again, or anywhere else, or Escape, and they close.
  */
 export function OptionMenus({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="absolute right-[12px] bottom-[12px] z-20 flex items-end gap-[8px]">
-      {children}
-    </div>
-  );
-}
-
-/**
- * A small round button; clicked, its options open above it, in a column; clicked again, or anywhere
- * else, or Escape, and they close. `Appearance` has a gear, `Courses` a mortarboard. TEMPORARY.
- */
-export function OptionMenu({
-  title,
-  children,
-}: {
-  title: 'Appearance' | 'Courses' | 'Sections';
-  children: React.ReactNode;
-}) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -438,34 +412,58 @@ export function OptionMenu({
       document.removeEventListener('keydown', key);
     };
   }, [open]);
-  const what = title.toLowerCase();
   return (
-    <div ref={root} className="relative">
+    <div ref={root} className="absolute right-[12px] bottom-[12px] z-20">
       {open && (
         <div
           role="dialog"
-          aria-label={title}
-          className="absolute right-0 bottom-full mb-[8px] flex max-h-[70vh] w-max flex-col items-end gap-[6px] overflow-y-auto rounded-[16px] border border-[#e8e8e8] bg-white/90 p-[10px] shadow-[0_12px_32px_rgba(0,39,102,0.18)] backdrop-blur"
+          aria-label="Dev settings"
+          className="absolute right-0 bottom-full mb-[8px] flex max-h-[75vh] w-max flex-col gap-[10px] overflow-y-auto rounded-[16px] border border-[#e8e8e8] bg-white/90 p-[12px] shadow-[0_12px_32px_rgba(0,39,102,0.18)] backdrop-blur"
         >
-          <span className="self-start px-[4px] text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase">
-            {title}
-          </span>
-          {children}
+          <div className="flex items-baseline justify-between gap-[16px] px-[4px]">
+            <span className="text-[12px] leading-[16px] font-bold tracking-[0.8px] text-[#002766] uppercase">
+              Dev settings
+            </span>
+            <span className="text-[10.5px] leading-[14px] text-[#8c8c8c]">
+              each option's default marked
+            </span>
+          </div>
+          <div className="grid grid-cols-[auto_auto] items-start gap-x-[16px] gap-y-[14px] [&>section:first-child]:row-span-3">
+            {children}
+          </div>
         </div>
       )}
       <button
         type="button"
-        aria-label={open ? `Close the ${what} options` : `${title} options`}
+        aria-label={open ? 'Close the dev settings' : 'Dev settings'}
         aria-expanded={open}
-        title={`${title} options`}
+        title="Dev settings"
         onClick={() => setOpen(!open)}
         className={cn(
           'flex size-[32px] items-center justify-center rounded-full border bg-white/90 text-[#595959] shadow-[0_2px_8px_rgba(0,39,102,0.12)] backdrop-blur transition-colors hover:text-[#002766]',
           open ? 'border-[#002766] text-[#002766]' : 'border-[#e8e8e8]'
         )}
       >
-        {title === 'Appearance' ? GEAR : title === 'Courses' ? CAP : TILES}
+        {GEAR}
       </button>
     </div>
+  );
+}
+
+/** One group of the Dev settings: its name, then its options in a column. */
+export function OptionMenu({
+  title,
+  children,
+}: {
+  title: 'Appearance' | 'Courses' | 'Platform' | 'Sections';
+  children: React.ReactNode;
+}) {
+  return (
+    <section aria-label={title} className="flex flex-col items-end gap-[6px]">
+      <span className="self-start px-[4px] text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase">
+        {title}
+      </span>
+      {children}
+    </section>
   );
 }

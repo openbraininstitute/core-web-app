@@ -23,7 +23,8 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { helpFlag, learnFlag, useFlag } from '@/features/feature-flags';
+import { learnFlag, useFlag } from '@/features/feature-flags';
+import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -173,7 +174,7 @@ const links: LinkItem[] = [
 
 /**
  * `plain`: as the courses' bar draws its few links, words on white with a navy line under the active
- * one, rather than pills (behind the course-style-toolbar flag).
+ * one, rather than pills (Learn's "top bar in the courses' style" setting).
  */
 export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   const breakpoint = useDefaultBreakpoint();
@@ -195,7 +196,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   });
 
   const learn = useFlag(learnFlag.key);
-  const help = useFlag(helpFlag.key);
+  const help = useLearnSetting('help');
   const hasCourse = virtualLabData?.course;
   const isVlabAdmin = useMemo(
     () =>

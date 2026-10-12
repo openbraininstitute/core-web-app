@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
-import { aiButtonFlag, useFlag } from '@/features/feature-flags';
+import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useSuspenseWorkspaceAccessControl } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { usePanelState } from '@/ui/segments/ai/hooks';
@@ -19,7 +19,7 @@ export function ProjectRootLayout({ children }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   useNextStepOnboarding({ condition: true, tour: projectTour });
   // no rail for the AI assistant while it is closed and the top menu has its button: no column for it
-  const aiButton = useFlag(aiButtonFlag.key);
+  const aiButton = useLearnSetting('aiButton');
   const { isCollapsed } = usePanelState();
   const noRail = aiButton && isCollapsed;
 
