@@ -11,6 +11,7 @@ import {
   wwnUpcoming,
 } from '@/features/learn/feeds';
 import { LearnPage } from '@/features/learn/ui/learn-page';
+import { obiOneWorkflows } from '@/features/learn/workflows';
 import { getQueryClient } from '@/query-provider/server';
 import { getClient } from '@/services/sanity/client';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
@@ -27,18 +28,20 @@ export default async function Page({
 
   // the home page's tutorials, fetched the same way and under the same key, so they are shared
   // and the outside sections', each cached for an hour, and empty if its source cannot be read
-  const [{ data: tutorials }, recordings, upcoming, meetings, articles] = await Promise.all([
-    tryCatch(
-      getQueryClient().fetchQuery({
-        queryKey: keyBuilderExternal.discoverTutorialsList(),
-        queryFn: () => getClient().fetch<Array<TTutorial>>(TutorialQuery),
-      })
-    ),
-    wwnRecordings(),
-    wwnUpcoming(),
-    conferences(),
-    transmitterArticles(),
-  ]);
+  const [{ data: tutorials }, recordings, upcoming, meetings, articles, workflows] =
+    await Promise.all([
+      tryCatch(
+        getQueryClient().fetchQuery({
+          queryKey: keyBuilderExternal.discoverTutorialsList(),
+          queryFn: () => getClient().fetch<Array<TTutorial>>(TutorialQuery),
+        })
+      ),
+      wwnRecordings(),
+      wwnUpcoming(),
+      conferences(),
+      transmitterArticles(),
+      obiOneWorkflows(),
+    ]);
   return (
     <LearnPage
       // every course: the page leaves off those Learn's settings hide, as they change
@@ -48,6 +51,7 @@ export default async function Page({
       lectures={{ recorded: recordings, upcoming }}
       conferences={meetings}
       articles={articles}
+      workflows={workflows}
     />
   );
 }

@@ -620,6 +620,8 @@ interface Pose {
   fast: number;
   /** The negative ion the next slides draw to the membrane, in its own colour among the greyed. */
   reveal: number;
+  /** The field's lines sweeping down through the membrane: from the balance on (slide 30), not drawn. */
+  waves: number;
   /** The potassium ions inside greyed, all but the one that leaves: on the slides about it and the ion it draws. */
   quiet: number;
   /** Water molecules filling both sides, neutral: on their own slide only, fading as the next begins. */
@@ -685,6 +687,7 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
     fast: 0,
     reveal: 0,
     quiet: 0,
+    waves: 1,
   };
   switch (step) {
     case 'lipids':
@@ -1029,8 +1032,13 @@ function poseFor(step: Physics2Step, t: number, typed: number): Pose {
   // the ions' key only from the slide that brings the ions to the one that turns to potassium (slides 4
   // to 9): it fades out as the slide after begins
   if (!KEYED.includes(step)) P.key = 0;
+  // from the balance on, the field without its moving lines: they fade as that slide begins
+  if (STILL_FIELD.includes(step)) P.waves = 0;
   return P;
 }
+
+/** The steps whose field is drawn without its moving lines: slide 30 on. */
+const STILL_FIELD: readonly Physics2Step[] = ['balance', 'voltage', 'work', 'depends'];
 
 /** The steps that show the ions' key. */
 const KEYED: readonly Physics2Step[] = [
@@ -1634,7 +1642,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     ctx.lineCap = 'round';
     for (let j = 0; j < FIELD_WAVES; j++) {
       const q = cycle(g.now, WAVE_MS, -(j / FIELD_WAVES) * WAVE_MS);
-      const a = P.sheet * Math.sin(Math.PI * q) ** 0.7;
+      const a = P.sheet * P.waves * Math.sin(Math.PI * q) ** 0.7;
       if (a < 0.01) continue;
       for (const [back, alpha, width, glow] of [
         [0, 0.9, 2.6, 10],
@@ -1974,7 +1982,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number) {
     };
     for (let j = 0; j < FIELD_WAVES; j++) {
       const q = cycle(g.now, WAVE_MS, -(j / FIELD_WAVES) * WAVE_MS);
-      const a = P.across * Math.sin(Math.PI * q) ** 0.7;
+      const a = P.across * P.waves * Math.sin(Math.PI * q) ** 0.7;
       if (a < 0.01) continue;
       // the crest, glowing; and a fainter one just behind it
       ctx.globalAlpha = 0.9 * a;

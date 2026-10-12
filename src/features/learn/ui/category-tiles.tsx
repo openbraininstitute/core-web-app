@@ -17,6 +17,7 @@ import {
   LecturesIcon,
   LiteratureIcon,
   ShowcasesIcon,
+  StandardIcon,
   TeachIcon,
   TutorialsIcon,
 } from '@/features/learn/ui/icons';
@@ -28,6 +29,7 @@ export const CATEGORIES = [
   { key: 'glossary', label: 'Glossary', Icon: GlossaryIcon },
   { key: 'teach', label: 'Teach', Icon: TeachIcon },
   { key: 'tutorials', label: 'Tutorials', Icon: TutorialsIcon },
+  { key: 'standard', label: 'Data & Workflows Standard', Icon: StandardIcon },
   { key: 'features', label: 'Features', Icon: FeaturesIcon },
   { key: 'lectures', label: 'Lectures', Icon: LecturesIcon },
   { key: 'literature', label: 'Literature', Icon: LiteratureIcon },
@@ -199,6 +201,7 @@ export const LEARN_SECTIONS = [
   'literature',
   'articles',
   'conferences',
+  'standard',
 ] as const;
 type LearnSection = (typeof LEARN_SECTIONS)[number];
 

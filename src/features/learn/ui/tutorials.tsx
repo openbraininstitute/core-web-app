@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { listBox } from '@/features/learn/ui/category-tiles';
@@ -138,14 +137,11 @@ export function TutorialCard({
   tutorial,
   tutorials,
   onSelect,
-  project,
   className,
 }: {
   tutorial?: TTutorial;
   tutorials: TTutorial[];
   onSelect: (slug: string) => void;
-  /** The project's root, for the link to the same video on the home page. */
-  project: string;
   className?: string;
 }) {
   if (!tutorial) {
@@ -167,64 +163,94 @@ export function TutorialCard({
     'flex h-[34px] items-center gap-[6px] rounded-full border border-[#e8e8e8] px-[14px] text-[12px] font-semibold text-[#003a8c] hover:border-[#d9d9d9] hover:bg-[#f5f9ff]';
 
   return (
-    <section className={cn(className, 'pt-0 pr-[44px] pb-[34px] pl-[40px]')}>
-      <div className="flex max-w-[960px] flex-col gap-[20px]">
-        {/* level with the middle of the category tiles, as a course's title is */}
-        <header
-          data-learn="head"
-          className="flex min-h-[84px] items-center justify-between gap-[20px]"
-        >
-          <div className="flex min-w-0 flex-col gap-[7px]">
-            <h1 className="text-[31px] leading-[38px] font-bold text-[#002766]">
-              {sentence(tutorial.title)}
-            </h1>
-            <p className="text-[12.5px] leading-[17px] text-[#8c8c8c]">
-              Video tutorial · {categoryOf(tutorial)} · {index + 1} of {tutorials.length}
-            </p>
+    <TutorialPlayer
+      key={tutorial.slug}
+      tutorial={tutorial}
+      meta={`Video tutorial · ${categoryOf(tutorial)} · ${index + 1} of ${tutorials.length}`}
+      nav={
+        tutorials.length > 1 && (
+          <div className="flex shrink-0 gap-[6px] pt-[2px]">
+            <button
+              type="button"
+              className={step}
+              onClick={() => onSelect(prev.slug)}
+              title={prev.title}
+            >
+              ‹ Previous
+            </button>
+            <button
+              type="button"
+              className={step}
+              onClick={() => onSelect(next.slug)}
+              title={next.title}
+            >
+              Next ›
+            </button>
           </div>
-          {tutorials.length > 1 && (
-            <div className="flex shrink-0 gap-[6px]">
-              <button
-                type="button"
-                className={step}
-                onClick={() => onSelect(prev.slug)}
-                title={prev.title}
-              >
-                ‹ Previous
-              </button>
-              <button
-                type="button"
-                className={step}
-                onClick={() => onSelect(next.slug)}
-                title={next.title}
-              >
-                Next ›
-              </button>
-            </div>
-          )}
-        </header>
+        )
+      }
+    />
+  );
+}
 
-        {/* framed like a course's figure; not autoplaying, since the section opens on one */}
-        <div className="overflow-hidden rounded-[12px] border border-[#d9d9d9] bg-[#002766]">
-          <video
-            key={tutorial.slug}
-            controls
-            playsInline
-            preload="metadata"
-            poster={tutorial.posterImage ?? undefined}
-            src={tutorial.url}
-            className="aspect-video w-full object-contain"
-          >
-            <track kind="captions" srcLang="en" label="English captions" />
-          </video>
-        </div>
-
-        <Link
-          href={`${project}/tutorials/${tutorial.slug}`}
-          className="self-start text-[13px] font-semibold text-[#003a8c] hover:underline"
+/**
+ * No white card: the video across the whole width at the top, its title over it in white until it
+ * plays; then the title fades from there to under the video, where the way on is. Keyed by the
+ * tutorial, so each starts with its title over it.
+ */
+function TutorialPlayer({
+  tutorial,
+  meta,
+  nav,
+}: {
+  tutorial: TTutorial;
+  meta: string;
+  nav: React.ReactNode;
+}) {
+  const [played, setPlayed] = useState(false);
+  const title = sentence(tutorial.title);
+  return (
+    <section className="flex min-h-0 w-full flex-1 flex-col gap-[16px] overflow-y-auto">
+      <div className="relative overflow-hidden rounded-[12px] bg-[#002766]">
+        {/* not autoplaying, since the section opens on one */}
+        <video
+          controls
+          playsInline
+          preload="metadata"
+          poster={tutorial.posterImage ?? undefined}
+          src={tutorial.url}
+          onPlay={() => setPlayed(true)}
+          className="aspect-video w-full object-contain"
         >
-          Open on the home page →
-        </Link>
+          <track kind="captions" srcLang="en" label="English captions" />
+        </video>
+        {/* over the poster, clear of the controls along the bottom */}
+        <div
+          aria-hidden={played}
+          className={cn(
+            'pointer-events-none absolute inset-x-0 top-0 flex flex-col gap-[6px] bg-linear-to-b from-[#001026]/80 via-[#001026]/40 to-transparent px-[28px] pt-[24px] pb-[56px] transition-opacity duration-500',
+            played ? 'opacity-0' : 'opacity-100'
+          )}
+        >
+          <h2 className="text-[30px] leading-[37px] font-bold text-white drop-shadow-sm">
+            {title}
+          </h2>
+          <p className="text-[13px] leading-[18px] text-white/80">{meta}</p>
+        </div>
+      </div>
+      <div className="flex items-start justify-between gap-[20px] px-[4px]">
+        {/* the same title under it once it plays; its room kept, so nothing jumps */}
+        <div
+          className={cn(
+            'flex min-w-0 flex-col gap-[6px] transition-opacity duration-500',
+            played ? 'opacity-100 delay-200' : 'opacity-0'
+          )}
+          aria-hidden={!played}
+        >
+          <h1 className="text-[26px] leading-[33px] font-bold text-[#002766]">{title}</h1>
+          <p className="text-[12.5px] leading-[17px] text-[#8c8c8c]">{meta}</p>
+        </div>
+        {nav}
       </div>
     </section>
   );

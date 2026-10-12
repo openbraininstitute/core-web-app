@@ -133,3 +133,23 @@ export function ShowcasesIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function StandardIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <path {...LINE} strokeLinejoin="round" d="M8 1.9 13.6 5 8 8.1 2.4 5 8 1.9Z" />
+      <path {...LINE} strokeLinejoin="round" d="M2.4 8 8 11.1 13.6 8M2.4 11 8 14.1 13.6 11" />
+    </svg>
+  );
+}
+
+export function WorkflowsIcon(props: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" {...props}>
+      <rect {...LINE} x="1.8" y="2.2" width="4.6" height="3.6" rx="0.9" />
+      <rect {...LINE} x="9.6" y="6.2" width="4.6" height="3.6" rx="0.9" />
+      <rect {...LINE} x="1.8" y="10.2" width="4.6" height="3.6" rx="0.9" />
+      <path {...LINE} strokeLinecap="round" d="M6.4 4h1.6v8H6.4M8 8h1.6" />
+    </svg>
+  );
+}

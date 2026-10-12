@@ -47,11 +47,15 @@ import { MiniCode } from '@/features/learn/ui/mini-code';
 import { type Focus, MiniFigure } from '@/features/learn/ui/mini-figure';
 import { PlayChip } from '@/features/learn/ui/play-chip';
 import { ShareButton, ShareChip } from '@/features/learn/ui/share';
+import { StandardCard, StandardIndex } from '@/features/learn/ui/standard';
 import { TeachCard, TeachIndex } from '@/features/learn/ui/teach';
 import { TutorialCard, TutorialsIndex } from '@/features/learn/ui/tutorials';
+import { WorkflowCard, WorkflowsIndex } from '@/features/learn/ui/workflows';
+import { getStdEntity, stdEntities } from '@/features/obi-standard';
 import { cn } from '@/utils/css-class';
 
 import type { FeedItem } from '@/features/learn/feed-item';
+import type { Workflows } from '@/features/learn/workflows';
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
 /**
@@ -110,10 +114,11 @@ const DEV_DEFAULTS = {
 export function LearnPage({
   courseIds,
   learnPath,
-  tutorials,
+  tutorials: tutorialsAsFetched,
   lectures = { recorded: [], upcoming: [] },
   conferences = [],
   articles = [],
+  workflows = { configs: [], blocks: {} },
 }: {
   courseIds: string[];
   learnPath: string;
@@ -124,6 +129,8 @@ export function LearnPage({
   conferences?: FeedItem[];
   /** The Transmitter's latest articles. */
   articles?: FeedItem[];
+  /** obi-one's ScanConfigs shown in the platform's workflows, with their blocks. */
+  workflows?: Workflows;
 }) {
   // Learn's settings, behind the Dev settings: which courses show, and Help's — changed at once
   const settings = useLearnSettings();
@@ -158,9 +165,17 @@ export function LearnPage({
   );
   // and the courses' cards on the left, small or big: a bigger picture, and what the course covers
   // and which sections' tiles are there at all (the Sections options): those left out, by key
-  const [hidden, setHidden] = useQueryState('hide', parseAsArrayOf(parseAsString).withDefault([]));
-  const showSection = (key: string, on: boolean) =>
-    setHidden(on ? hidden.filter((k) => k !== key) : [...hidden, key]);
+  // Features, with nothing in it yet, left out unless switched on: two rows of five. ("none" in the
+  // address when every tile is shown, as an empty list there would read as the default again)
+  const [hiddenParam, setHidden] = useQueryState(
+    'hide',
+    parseAsArrayOf(parseAsString).withDefault(['features'])
+  );
+  const hidden = hiddenParam.filter((k) => k !== 'none');
+  const showSection = (key: string, on: boolean) => {
+    const next = on ? hidden.filter((k) => k !== key) : [...hidden, key];
+    setHidden(next.length ? next : ['none']);
+  };
   const [bigCards, setBigCards] = useQueryState(
     'big',
     parseAsBoolean.withDefault(DEV_DEFAULTS.bigCards)
@@ -262,9 +277,22 @@ export function LearnPage({
     },
   } as const;
   const feedSection = section in feed ? (section as keyof typeof feed) : null;
+  // the OBI Standard's chosen entity type
+  const [stdSlug, setStdSlug] = useQueryState('entity');
+  // and which half of it: the data's entity types, or the workflows' ScanConfigs
+  const [stdHalf, setStdHalf] = useQueryState(
+    'standard',
+    parseAsStringLiteral(['data', 'workflows'] as const).withDefault('data')
+  );
+  const [workflowId, setWorkflowId] = useQueryState('workflow');
+  const workflow = workflows.configs.find((c) => c.id === workflowId) ?? workflows.configs[0];
+  const stdEntity = (stdSlug ? getStdEntity(stdSlug) : undefined) ?? stdEntities[0];
   const [teachId, setTeachId] = useQueryState('topic');
   const teach = teachTopic(teachId) ?? TEACH_TOPICS[0];
   const [tutorialSlug, setTutorialSlug] = useQueryState('tutorial');
+  // the tutorials in the opposite order to the home page's, but with the third of them first
+  const reversed = [...tutorialsAsFetched].reverse();
+  const tutorials = reversed.length > 2 ? [reversed[2], ...reversed.toSpliced(2, 1)] : reversed;
   const tutorial = tutorials.find((t) => t.slug === tutorialSlug) ?? tutorials[0];
   const project = learnPath.replace(/\/learn$/, '');
 
@@ -375,6 +403,28 @@ export function LearnPage({
               ) : undefined
             }
           />
+        ) : section === 'standard' ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-[10px]">
+            {/* the standard's two halves */}
+            <div className="flex shrink-0 gap-[6px] px-[4px]">
+              {(['data', 'workflows'] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={stdHalf === k}
+                  className={lb.chip(stdHalf === k)}
+                  onClick={() => setStdHalf(k)}
+                >
+                  {k === 'data' ? 'Data' : 'Workflows'}
+                </button>
+              ))}
+            </div>
+            {stdHalf === 'workflows' ? (
+              <WorkflowsIndex workflows={workflows} selected={workflow} onSelect={setWorkflowId} />
+            ) : (
+              <StandardIndex selected={stdEntity} onSelect={setStdSlug} />
+            )}
+          </div>
         ) : section === 'teach' ? (
           <TeachIndex selected={teach} onSelect={setTeachId} />
         ) : section === 'tutorials' ? (
@@ -539,6 +589,20 @@ export function LearnPage({
             empty={FEED_EMPTY[feedSection](literature.state)}
             className={panel}
           />
+        ) : section === 'standard' && stdHalf === 'workflows' ? (
+          <WorkflowCard
+            key={workflow?.id}
+            config={workflow}
+            workflows={workflows}
+            className={panel}
+          />
+        ) : section === 'standard' ? (
+          <StandardCard
+            key={stdEntity?.slug}
+            entity={stdEntity}
+            onSelect={setStdSlug}
+            className={panel}
+          />
         ) : section === 'teach' ? (
           <TeachCard
             key={teach.id}
@@ -552,7 +616,6 @@ export function LearnPage({
             tutorial={tutorial}
             tutorials={tutorials}
             onSelect={setTutorialSlug}
-            project={project}
             className={panel}
           />
         ) : section === 'glossary' ? (
