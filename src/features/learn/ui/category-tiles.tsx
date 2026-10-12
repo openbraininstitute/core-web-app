@@ -354,7 +354,7 @@ export function SettingToggle({
       role="switch"
       aria-checked={on}
       onClick={() => onChange(!on)}
-      className="flex items-center gap-[8px] rounded-full border border-[#d9d9d9] bg-white/95 py-[6px] pr-[6px] pl-[12px] text-[11px] leading-[15px] font-semibold text-[#595959] shadow-[0_4px_14px_rgba(0,39,102,0.12)] backdrop-blur"
+      className="flex items-center gap-[8px] rounded-full border border-[#d9d9d9] bg-white/95 py-[4px] pr-[6px] pl-[12px] text-[11px] leading-[15px] font-semibold text-[#595959] shadow-[0_4px_14px_rgba(0,39,102,0.12)] backdrop-blur"
     >
       {label}
       {defaultOn !== undefined && <DefaultMark what={defaultOn ? 'on' : 'off'} />}
@@ -390,9 +390,10 @@ const GEAR = (
 );
 
 /**
- * The bottom-right corner of the card: one gear, Dev settings, opening Learn's settings and — TEMPORARY
- * — the design options, in their groups: Courses in the first column, Help, Sections and Appearance beside it. Clicked
- * again, or anywhere else, or Escape, and they close.
+ * The bottom-right corner of the card: one gear, Dev settings, opening Learn's settings and —
+ * TEMPORARY — the design options, in their groups: Courses in the first column, Help and Sections
+ * in the second, Appearance in the third, so that all of it fits the window. Clicked again, or
+ * anywhere else, or Escape, and they close.
  */
 export function OptionMenus({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
@@ -418,7 +419,7 @@ export function OptionMenus({ children }: { children: React.ReactNode }) {
         <div
           role="dialog"
           aria-label="Dev settings"
-          className="absolute right-0 bottom-full mb-[8px] flex max-h-[75vh] w-max flex-col gap-[10px] overflow-y-auto rounded-[16px] border border-[#e8e8e8] bg-white/90 p-[12px] shadow-[0_12px_32px_rgba(0,39,102,0.18)] backdrop-blur"
+          className="absolute right-0 bottom-full mb-[8px] flex max-h-[calc(100dvh-90px)] w-max flex-col gap-[10px] overflow-y-auto rounded-[16px] border border-[#e8e8e8] bg-white/90 p-[12px] shadow-[0_12px_32px_rgba(0,39,102,0.18)] backdrop-blur"
         >
           <div className="flex items-baseline justify-between gap-[16px] px-[4px]">
             <span className="text-[12px] leading-[16px] font-bold tracking-[0.8px] text-[#002766] uppercase">
@@ -428,7 +429,7 @@ export function OptionMenus({ children }: { children: React.ReactNode }) {
               each option's default marked
             </span>
           </div>
-          <div className="grid grid-cols-[auto_auto] items-start gap-x-[16px] gap-y-[14px] [&>section:first-child]:row-span-3">
+          <div className="grid grid-flow-col grid-rows-[auto_1fr] items-start gap-x-[16px] gap-y-[14px] [&>section:first-child]:row-span-2 [&>section:last-child]:row-span-2">
             {children}
           </div>
         </div>
@@ -459,7 +460,7 @@ export function OptionMenu({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-label={title} className="flex flex-col items-end gap-[6px]">
+    <section aria-label={title} className="flex flex-col items-end gap-[4px]">
       <span className="self-start px-[4px] text-[11px] leading-[15px] font-bold tracking-[0.8px] text-[#8c8c8c] uppercase">
         {title}
       </span>

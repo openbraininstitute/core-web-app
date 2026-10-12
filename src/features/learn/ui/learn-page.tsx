@@ -99,7 +99,7 @@ const DEV_DEFAULTS = {
   listBox: true,
   bigCards: true,
   selected: 5,
-  callout: 0,
+  callout: 1,
 };
 
 /**

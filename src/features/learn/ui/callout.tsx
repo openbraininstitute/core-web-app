@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 
 /**
  * The ways a glossary term's one-line answer, or a teaching topic's, can be set — TEMPORARY, for
- * judging them, from the Dev settings' Appearance. The first is how it was.
+ * judging them, from the Dev settings' Appearance. The first is how it was; the second, gradient ink, is the
+ * default.
  */
 export const CALLOUT_STYLES = [
   'Panel',
@@ -31,7 +32,7 @@ function Eyebrow({ className }: { className: string }) {
 }
 
 /** A term's or a topic's one line, set in the `design`-th of CALLOUT_STYLES. */
-export function Callout({ design = 0, children }: { design?: number; children: ReactNode }) {
+export function Callout({ design = 1, children }: { design?: number; children: ReactNode }) {
   switch (CALLOUT_STYLES[design]) {
     case 'Gradient ink':
       return (
