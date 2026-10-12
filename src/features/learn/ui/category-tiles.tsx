@@ -391,7 +391,7 @@ const GEAR = (
 
 /**
  * The bottom-right corner of the card: one gear, Dev settings, opening Learn's settings and — TEMPORARY
- * — the design options, in their groups: Courses in the first column, the rest beside it. Clicked
+ * — the design options, in their groups: Courses in the first column, Help, Sections and Appearance beside it. Clicked
  * again, or anywhere else, or Escape, and they close.
  */
 export function OptionMenus({ children }: { children: React.ReactNode }) {
@@ -455,7 +455,7 @@ export function OptionMenu({
   title,
   children,
 }: {
-  title: 'Appearance' | 'Courses' | 'Platform' | 'Sections';
+  title: 'Appearance' | 'Courses' | 'Help' | 'Sections';
   children: React.ReactNode;
 }) {
   return (

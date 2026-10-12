@@ -117,8 +117,7 @@ export function LearnPage({
   /** The Transmitter's latest articles. */
   articles?: FeedItem[];
 }) {
-  // Learn's settings, behind the Dev settings: which courses show, and the platform changes being tried
-  // out — changed at once, here and everywhere they are used
+  // Learn's settings, behind the Dev settings: which courses show, and Help's — changed at once
   const settings = useLearnSettings();
   const setSetting = useSetLearnSetting();
   // the rough ones last, so they sit together under their heading
@@ -562,9 +561,9 @@ export function LearnPage({
             No courses to show yet.
           </section>
         )}
-        {/* Dev settings, behind a small gear in the card's corner: which courses show, the platform
-            changes being tried out, and — TEMPORARY, for judging — the page's sections and appearance;
-            each option marked with its default */}
+        {/* Dev settings, behind a small gear in the card's corner: which courses show, Help made lean or
+            hidden, and — TEMPORARY, for judging — the page's sections and appearance; each option marked
+            with its default. (The AI button and the courses' top bar are feature flags.) */}
         <OptionMenus>
           <OptionMenu title="Courses">
             {LEARN_COURSES.map((c) => (
@@ -577,24 +576,18 @@ export function LearnPage({
               />
             ))}
           </OptionMenu>
-          <OptionMenu title="Platform">
+          <OptionMenu title="Help">
             <SettingToggle
-              label="Help button and page"
-              on={settings.help}
-              defaultOn={DEFAULT_LEARN_SETTINGS.help}
-              onChange={(on) => setSetting('help', on)}
+              label="Remove unneeded features"
+              on={settings.leanHelp}
+              defaultOn={DEFAULT_LEARN_SETTINGS.leanHelp}
+              onChange={(on) => setSetting('leanHelp', on)}
             />
             <SettingToggle
-              label="AI assistant: new style"
-              on={settings.aiButton}
-              defaultOn={DEFAULT_LEARN_SETTINGS.aiButton}
-              onChange={(on) => setSetting('aiButton', on)}
-            />
-            <SettingToggle
-              label="Top bar in the courses' style"
-              on={settings.courseToolbar}
-              defaultOn={DEFAULT_LEARN_SETTINGS.courseToolbar}
-              onChange={(on) => setSetting('courseToolbar', on)}
+              label="Hide Help altogether"
+              on={settings.hideHelp}
+              defaultOn={DEFAULT_LEARN_SETTINGS.hideHelp}
+              onChange={(on) => setSetting('hideHelp', on)}
             />
           </OptionMenu>
           <OptionMenu title="Sections">

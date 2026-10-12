@@ -12,8 +12,8 @@ export default async function Page({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // behind its flag, as Learn is
-  if (!(await getLearnSettings()).help) notFound();
+  // hidden only with Learn's "hide Help altogether" setting on
+  if ((await getLearnSettings()).hideHelp) notFound();
 
   return (
     <HelpLayout>

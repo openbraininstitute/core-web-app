@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { FlagsProvider } from '@/features/feature-flags';
 import { defaultFlags } from '@/features/feature-flags/config';
+import { DEFAULT_LEARN_SETTINGS } from '@/features/learn/learn-settings';
+import { LearnSettingsProvider } from '@/features/learn/learn-settings-provider';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
 
 const VLAB = '11111111-1111-1111-1111-111111111111';
@@ -20,10 +22,12 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
   useQuery: () => ({ data: undefined }),
 }));
 
-function renderMenu(learn: boolean) {
+function renderMenu(learn: boolean, hideHelp = false) {
   render(
     <FlagsProvider flags={{ ...defaultFlags, learn }}>
-      <TopMenuNavigation />
+      <LearnSettingsProvider settings={{ ...DEFAULT_LEARN_SETTINGS, hideHelp }}>
+        <TopMenuNavigation />
+      </LearnSettingsProvider>
     </FlagsProvider>
   );
 }
@@ -42,5 +46,15 @@ describe('TopMenuNavigation / Learn', () => {
     renderMenu(false);
     expect(screen.queryByTestId('workspace-learn')).toBeNull();
     expect(screen.getByTestId('workspace-explore-data')).toBeInTheDocument();
+  });
+
+  it('keeps Help by default, with Learn on or off', () => {
+    renderMenu(false);
+    expect(screen.getByTestId('workspace-help')).toBeInTheDocument();
+  });
+
+  it('hides Help with Learn\'s "hide Help altogether" setting on', () => {
+    renderMenu(true, true);
+    expect(screen.queryByTestId('workspace-help')).toBeNull();
   });
 });

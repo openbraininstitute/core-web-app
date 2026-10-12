@@ -1,7 +1,7 @@
 'use client';
 
+import { aiButtonFlag, courseToolbarFlag, useFlag } from '@/features/feature-flags';
 import ObiLogo from '@/features/learn/components/ui/ObiLogo';
-import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
@@ -42,8 +42,8 @@ function AiButton() {
 }
 
 export function WorkspaceTopMenu({ className }: Props) {
-  const aiButton = useLearnSetting('aiButton');
-  const courseToolbar = useLearnSetting('courseToolbar');
+  const aiButton = useFlag(aiButtonFlag.key);
+  const courseToolbar = useFlag(courseToolbarFlag.key);
   if (courseToolbar)
     return (
       // As the courses' bar: a white strip across the top, a hairline under it, the OBI logo at its

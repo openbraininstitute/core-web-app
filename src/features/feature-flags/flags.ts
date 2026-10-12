@@ -81,6 +81,24 @@ export const learnFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
+export const aiButtonFlag = defineFlag<boolean>({
+  key: 'ai-button',
+  defaultValue: false,
+  values: [true, false],
+  description: 'AI assistant: a round "AI" button in the top menu instead of the side rail',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The project's top bar drawn in the style of the Learn courses' bar. */
+export const courseToolbarFlag = defineFlag<boolean>({
+  key: 'course-toolbar',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top bar drawn in the style of the Learn courses' bar",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -91,6 +109,8 @@ export const flags = [
   morphologyDebugFlag,
   emMeshDebugFlag,
   learnFlag,
+  aiButtonFlag,
+  courseToolbarFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

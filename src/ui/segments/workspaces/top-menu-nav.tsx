@@ -43,11 +43,12 @@ import { getActiveSection } from '@/utils/get-section';
 import type React from 'react';
 import type { ReactNode } from 'react';
 
-/** The plain links: no pill, no fill, no shadow; the active one navy, underlined. */
+/** The plain links: no pill, no fill, no shadow; the active one navy, underlined - just under its word,
+ * inside the bar rather than below it. */
 const PLAIN =
   '!border-0 !bg-transparent !shadow-none hover:!bg-transparent hover:!shadow-none !rounded-none text-[#595959] hover:text-primary-9';
 const PLAIN_ACTIVE =
-  '!text-primary-9 font-semibold after:absolute after:inset-x-3 after:-bottom-[10px] after:h-[2px] after:rounded-full after:bg-primary-9';
+  '!text-primary-9 font-semibold after:absolute after:inset-x-3 after:bottom-[5px] after:h-[2px] after:rounded-full after:bg-primary-9';
 
 // Dynamically import FeedbackModal with SSR disabled to prevent Suspense boundary issues
 const FeedbackModal = dynamic(() => import('@/ui/segments/feedbacks/feedback-modal'), {
@@ -196,7 +197,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   });
 
   const learn = useFlag(learnFlag.key);
-  const help = useLearnSetting('help');
+  const help = !useLearnSetting('hideHelp');
   const hasCourse = virtualLabData?.course;
   const isVlabAdmin = useMemo(
     () =>
