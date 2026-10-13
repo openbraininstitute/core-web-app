@@ -6,12 +6,16 @@ import { EmCellMeshViewer } from './viewer/em-mesh-viewer';
 
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 
-export function EmCellMeshViewerCard(props: {
+export function EmCellMeshViewerCard({
+  className,
+  ...props
+}: {
+  className?: string;
   entity: { id: string; name: string };
   asset: IAsset;
 }) {
   return (
-    <ViewerCard error="Error while loading the mesh viewer">
+    <ViewerCard error="Error while loading the mesh viewer" className={className}>
       <EmCellMeshViewer className="h-full" {...props} />
     </ViewerCard>
   );

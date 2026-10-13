@@ -21,7 +21,7 @@ export const OptimizeWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     targetType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     breadcrumb: {
-      root: 'E-Model optimization',
+      root: 'E-model',
     },
     configureRouting: WorkflowConfigureRoutingDict.Standalone,
     scanConfig: {
@@ -29,7 +29,7 @@ export const OptimizeWorkflows: readonly IWorkflowDescriptor[] = [
       schemaName: SchemaNameDict.EModelOptimizationScanConfig,
       configureBinding: optimizeEModelConfigureBinding(),
     },
-    label: 'E-Model optimization',
+    label: 'E-model',
     disabled: false,
   },
 ];

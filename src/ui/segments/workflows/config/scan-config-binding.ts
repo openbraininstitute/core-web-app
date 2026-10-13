@@ -56,6 +56,11 @@ export type TScanConfigConfigureBinding = {
    * into one neuron set instead of one group per tab.
    */
   mergeBrowseSelectionIntoSingleGroup?: boolean;
+  /**
+   * When `true`, the right column always shows an entity from the config: the first one by
+   * default, and the card has no close button.
+   */
+  pinEntityPreview?: boolean;
 };
 
 export function resolveScanConfigFromIdType(
@@ -201,6 +206,7 @@ export function processEmCellMeshConfigureBinding(): TScanConfigConfigureBinding
       [ExtendedEntitiesTypeDict.EMCellMesh]: ScanConfigFromIdType.EMCellMeshFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.Skeletonization,
+    pinEntityPreview: true,
   };
 }
 

@@ -7,7 +7,7 @@ import { DirectoryFileViewer } from '@/features/scan-config/components/file-view
 
 import type { ReactNode } from 'react';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TAssetBackedFile } from '@/features/scan-config/types';
 
 const listDirectoryOfAssets = vi.hoisted(() => vi.fn());
 
@@ -36,7 +36,7 @@ const file = {
   entity: { id: 'entity-1', type: 'task_result' },
   name: 'figures',
   renderer: 'default',
-} as TActivityCustomFile;
+} as TAssetBackedFile;
 
 const context = { virtualLabId: 'vl-1', projectId: 'proj-1' };
 
@@ -47,7 +47,7 @@ function renderDirectory() {
       <DirectoryFileViewer
         file={file}
         context={context}
-        renderChild={(child: TActivityCustomFile): ReactNode => (
+        renderChild={(child: TAssetBackedFile): ReactNode => (
           <div data-testid="child">{child.assetPath}</div>
         )}
       />

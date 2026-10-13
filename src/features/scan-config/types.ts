@@ -740,18 +740,43 @@ export const ActivityCustomFileRenderer = {
 export type TActivityCustomFileRenderer =
   (typeof ActivityCustomFileRenderer)[keyof typeof ActivityCustomFileRenderer];
 
-export type TActivityCustomFile = {
+/** Fields shared by every input/output row, regardless of how it is rendered. */
+type TActivityCustomFileBase = {
   id?: string;
-  /** Absent for a mini-detail row whose entity carries no top-level asset, e.g. a me-model. */
-  asset?: IAsset;
   entity: IEntity;
-  assetPath?: string;
   name?: string;
-  /** Extended type to render the entity under; refs only carry the entitycore type. */
-  dataType?: TExtendedEntitiesTypeDict;
-  enforcedRenderType?: AssetContentType;
-  renderer: TActivityCustomFileRenderer;
 };
+
+/**
+ * A row backed by a concrete asset: a file opened in a viewer, or a log stream backed by a
+ * synthetic asset. Rendered from the asset.
+ */
+export type TAssetBackedFile = TActivityCustomFileBase & {
+  renderer:
+    | typeof ActivityCustomFileRenderer.Default
+    | typeof ActivityCustomFileRenderer.TaskConfigurationViewer
+    | typeof ActivityCustomFileRenderer.TaskLogsViewer;
+  asset: IAsset;
+  assetPath?: string;
+  enforcedRenderType?: AssetContentType;
+};
+
+/**
+ * A row that stands for an entity, opened in its mini-detail view. It carries no asset: an e-model
+ * or me-model is rendered from the record and its `dataType`, not from a file — refs only carry the
+ * entitycore type, so `dataType` is the extended type to render under.
+ */
+export type TEntityMiniDetailFile = TActivityCustomFileBase & {
+  renderer: typeof ActivityCustomFileRenderer.MiniDetailView;
+  dataType: TExtendedEntitiesTypeDict;
+};
+
+export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile;
+
+/** True for a row backed by a file asset; false for an entity mini-detail row. */
+export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {
+  return file.renderer !== ActivityCustomFileRenderer.MiniDetailView && 'asset' in file;
+}
 
 // Re-exported rather than re-declared: a structurally identical enum is still a
 // *different* enum to TypeScript, so two copies never compare equal.

@@ -3,6 +3,7 @@
 import { Checkbox, Radio } from 'antd';
 
 import {
+  DEFAULT_PARAMETER_MODE,
   hasErrorAt,
   ParameterMode,
   type TBounds,
@@ -48,7 +49,7 @@ export function ParameterRow({
   onToggle?: (next: boolean) => void;
   onValueChange: (next: TOptimizationValue) => void;
 }) {
-  const mode = optimizationValue?.mode ?? ParameterMode.Fixed;
+  const mode = optimizationValue?.mode ?? DEFAULT_PARAMETER_MODE;
   // ObiOne's keyword on `bounds`: the upper bound must be greater than the lower one
   const boundsUnordered = errors.some((error) => error.keyword === 'strictly_increasing');
   const valueInvalid = hasErrorAt(errors, '/value');

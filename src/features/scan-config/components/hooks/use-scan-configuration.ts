@@ -251,10 +251,13 @@ export function useScanConfiguration({
     // Build is deliberately excluded: em_synapse_mapping_config is already in
     // VALID_AI_CONFIG_KEYS but dormant, and admitting Build here would activate it before
     // that path has been verified end to end.
+    // Extract shows the button to pre-fill the chat prompt; the agent has no e-feature
+    // extraction key in its SharedStateSchema, so it won't apply config changes yet.
     const aiEnabled =
       activity === ScanConfigActivity.Simulate ||
       activity === ScanConfigActivity.Process ||
-      activity === ScanConfigActivity.Optimize;
+      activity === ScanConfigActivity.Optimize ||
+      activity === ScanConfigActivity.Extract;
 
     if (!entity && !resolved.usedType) {
       return { isLoading: false, error: null, unresolvedMessage: null, ready: null };

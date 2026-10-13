@@ -44,15 +44,12 @@ function makeMiniDetailFile(
   entity: TOutputEntity,
   dataType: TExtendedEntitiesTypeDict | undefined
 ): TActivityCustomFile[] {
-  // A me-model carries no top-level asset of its own — its content lives in its nested morphology
-  // and e-model — so the row leaves `asset` undefined and stands for the entity as a whole.
-  const [asset] = assetsOf(entity);
-
+  // A mini-detail row stands for the entity and is rendered from the record, not a file, so it
+  // carries no asset — an e-model, circuit or me-model alike.
   return [
     {
       id: entity.id,
       entity,
-      asset,
       name: entity.name,
       dataType: dataType ?? (entity.type as TExtendedEntitiesTypeDict),
       renderer: ActivityCustomFileRenderer.MiniDetailView,

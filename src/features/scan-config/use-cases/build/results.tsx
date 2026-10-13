@@ -168,7 +168,7 @@ export function BuildTab({
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as EntityCoreObjectTypes}
-                  dataType={selectedFile.entity.type}
+                  dataType={selectedFile.dataType}
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

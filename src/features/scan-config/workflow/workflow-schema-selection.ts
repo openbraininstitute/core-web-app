@@ -342,21 +342,29 @@ export function resolvePrimaryEntityIdFromConfigForm(
   schema: ConfigSchema,
   config: Config | undefined
 ): string | undefined {
+  return resolveEntityIdsFromConfigForm(schema, config).at(0);
+}
+
+/** Every entity id stored under the schema's initialize model field, in config order. */
+export function resolveEntityIdsFromConfigForm(
+  schema: ConfigSchema,
+  config: Config | undefined
+): string[] {
   const modelProperty = findInitializeModelProperty(schema);
   if (!modelProperty || !config) {
-    return undefined;
+    return [];
   }
 
   const initialize = config.initialize;
   if (!initialize || typeof initialize !== 'object' || Array.isArray(initialize)) {
-    return undefined;
+    return [];
   }
 
   const modelFieldValue = initialize[modelProperty.key as keyof typeof initialize] as
     | ConfigValue
     | undefined;
 
-  return collectFromIdRefsFromModelFieldValue(modelFieldValue).at(0)?.id_str;
+  return collectFromIdRefsFromModelFieldValue(modelFieldValue).map((ref) => ref.id_str);
 }
 
 /**
