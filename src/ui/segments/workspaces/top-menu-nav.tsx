@@ -23,6 +23,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
+import { learnFlag, useFlag } from '@/features/feature-flags';
 import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -195,6 +196,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const learn = useFlag(learnFlag.key);
   const help = !useLearnSetting('hideHelp');
   const hasCourse = virtualLabData?.course;
   const isVlabAdmin = useMemo(
@@ -208,6 +210,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   const filteredLinks = useMemo(
     () =>
       links.filter((link) => {
+        if (link.id === 'workspace-learn') return learn;
         if (link.id === 'workspace-help') return help;
         if (link.id === 'workspace-course') {
           return (
@@ -216,7 +219,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
         }
         return true;
       }),
-    [help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({

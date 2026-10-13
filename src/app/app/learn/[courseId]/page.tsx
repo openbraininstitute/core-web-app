@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { config } from '@/config';
+import { getAllFlags, learnFlag } from '@/features/feature-flags';
 import { getLearnCourse, learnHome } from '@/features/learn/catalogue';
 import InlineScript from '@/features/learn/components/ui/InlineScript';
 import Settings from '@/features/learn/components/ui/Settings';
@@ -27,8 +28,9 @@ export default async function Page({ params, searchParams }: Props) {
   const { courseId } = await params;
   const { from, slide } = await searchParams;
   const course = getLearnCourse(courseId);
+  const flags = await getAllFlags();
   const { hiddenCourses } = await getLearnSettings();
-  if (!course || hiddenCourses.includes(course.id)) notFound();
+  if (!course || !flags[learnFlag.key] || hiddenCourses.includes(course.id)) notFound();
 
   const home = learnHome(config.ROOT_ROUTE, from);
   const startAt = Math.max(0, Math.min(course.slides.length - 1, Number(slide) - 1 || 0));

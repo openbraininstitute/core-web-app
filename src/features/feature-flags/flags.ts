@@ -72,6 +72,16 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. On
+ * unless switched off. */
+export const learnFlag = defineFlag<boolean>({
+  key: 'learn',
+  defaultValue: true,
+  values: [true, false],
+  description: 'Learn: free courses, each a deck of slides',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
 export const aiButtonFlag = defineFlag<boolean>({
   key: 'ai-button',
@@ -99,6 +109,7 @@ export const flags = [
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
+  learnFlag,
   aiButtonFlag,
   courseToolbarFlag,
 ] as const;
