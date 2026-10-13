@@ -13,6 +13,7 @@ import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
+import { DetailViewBody } from '@/ui/segments/explore/detail-view-body';
 import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
@@ -98,6 +99,7 @@ export async function DataViewLayout({
       type={type}
       group={entityType.group}
       scope={scope}
+      sections={entityType.detailViewSections}
       variant={chromeVariant}
     />
   );
@@ -146,8 +148,6 @@ export async function DataViewLayout({
               <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
             <ActionMenu
-              // TODO: fix entity type
-              // @ts-expect-error this is a temporary fix
               entity={entity}
               type={type}
               ctx={{ virtualLabId, projectId }}
@@ -179,37 +179,33 @@ export async function DataViewLayout({
         {breadcrumbs}
         {closePage}
       </div>
-      <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-3 overflow-hidden pt-2">
-        <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">
-          <div className="flex flex-col gap-1.5">
-            <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
-          </div>
-          <ActionMenu
-            // TODO: fix entity type
-            // @ts-expect-error this is a temporary fix
-            entity={entity}
-            type={type}
-            ctx={{ virtualLabId, projectId }}
-            parentLink={parentLink}
-            isPublicEntity={isPublicEntity}
-            variant={chromeVariant}
+      <DetailViewBody
+        type={type}
+        nameDisplay={
+          <EntityNameDisplay
+            name={entity.name}
+            description={'description' in entity ? entity.description : undefined}
+            variant={contentVariant}
           />
-        </div>
-        <div className="min-h-0 w-4/5 pl-2 pr-3">
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pr-0.5">
-            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
-              <EntityNameDisplay
-                name={entity.name}
-                description={'description' in entity ? entity.description : undefined}
-                variant={contentVariant}
-              />
-              <EntityNameDisplayWrapper variant={contentVariant}>
-                {children}
-              </EntityNameDisplayWrapper>
+        }
+        sidebar={
+          <>
+            <div className="flex flex-col gap-1.5">
+              <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
-          </div>
-        </div>
-      </div>
+            <ActionMenu
+              entity={entity}
+              type={type}
+              ctx={{ virtualLabId, projectId }}
+              parentLink={parentLink}
+              isPublicEntity={isPublicEntity}
+              variant={chromeVariant}
+            />
+          </>
+        }
+      >
+        {children}
+      </DetailViewBody>
       {includes(
         [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
         entityType.extendedType
