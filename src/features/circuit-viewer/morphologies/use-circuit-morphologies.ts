@@ -1,0 +1,126 @@
+'use client';
+
+import { type ComponentType, useEffect, useState } from 'react';
+
+import { buildCircuitMorphologyPackRequest } from '@/api/one/circuit-visualization';
+import { useLatest } from '@/ui/hooks/use-latest';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { logError } from '@/utils/logger';
+
+import { fillSomas } from './load/cells';
+import { loadCircuitMorphologies } from './load/load';
+
+import type { CircuitMorphologiesProps } from './circuit-morphologies';
+import type { Refused } from './load/download';
+import type { CircuitMorphologyData, Population } from './types';
+
+/** The most segments this tier draws, by which OBI-One picks the pack's level. */
+export const MAX_SEGMENTS = 2_000_000;
+
+/** A circuit's cells as the page placed them. Memoise it: another one is another load. */
+export interface MorphologiesSource {
+  circuitId: string;
+  /** In the page's order, which numbers the cells. */
+  populations: Population[];
+  /** Every cell's position, three floats each in the circuit's frame, for the cells the pack has no soma of. */
+  positions: Float32Array;
+  /** The radius of such a soma, µm. */
+  somaRadius: number;
+}
+
+export type MorphologiesLoad =
+  | { status: 'idle' }
+  /** `total` is 0 until the pack's bytes come in: while OBI-One builds it, or reading it from the cache. */
+  | { status: 'loading'; received: number; total: number }
+  /** `View` draws `data`. It is fetched beside the pack, and three.js with it, so that both are in at once. */
+  | {
+      status: 'ready';
+      data: CircuitMorphologyData;
+      View: ComponentType<CircuitMorphologiesProps>;
+    };
+
+/** Why a load ended with nothing to show: OBI-One would not build the pack, or the load failed. */
+export type MorphologiesStop = Refused | { kind: 'failed' };
+
+const IDLE: MorphologiesLoad = { status: 'idle' };
+
+const loadView = () => import('./circuit-morphologies').then((m) => m.CircuitMorphologies);
+
+/**
+ * Loads the morphologies of `source`, and lets go of them when it changes or goes. A circuit OBI-One refuses and a
+ * load that fails both end idle, with `onStopped` called and `stopped` saying why until it is dismissed or the next
+ * load starts.
+ */
+export function useCircuitMorphologies(
+  source: MorphologiesSource | null,
+  onStopped: () => void
+): { load: MorphologiesLoad; stopped: MorphologiesStop | null; dismiss(): void } {
+  const workspace = useWorkspace();
+  const [current, setCurrent] = useState<{
+    source: MorphologiesSource;
+    load: MorphologiesLoad;
+  } | null>(null);
+  const [stopped, setStopped] = useState<MorphologiesStop | null>(null);
+  const told = useLatest(onStopped);
+
+  useEffect(() => {
+    if (!source) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const setLoad = (load: MorphologiesLoad) => setCurrent({ source, load });
+    setLoad({ status: 'loading', received: 0, total: 0 });
+    setStopped(null);
+
+    const stop = (why: MorphologiesStop) => {
+      setCurrent(null);
+      setStopped(why);
+      told.current();
+    };
+    const run = async () => {
+      const request = await buildCircuitMorphologyPackRequest(
+        source.circuitId,
+        MAX_SEGMENTS,
+        workspace
+      );
+      const view = loadView();
+      // Awaited below, unless the circuit is refused first.
+      view.catch(() => {});
+      const loaded = await loadCircuitMorphologies({
+        request,
+        populations: source.populations,
+        signal,
+        onProgress: (received, total) => {
+          if (!signal.aborted) setLoad({ status: 'loading', received, total });
+        },
+      });
+      if (signal.aborted) return;
+      if (loaded.kind === 'refused') {
+        stop(loaded);
+        return;
+      }
+      const View = await view;
+      if (signal.aborted) return;
+      fillSomas(loaded.data, source.positions, source.somaRadius);
+      setLoad({ status: 'ready', data: loaded.data, View });
+    };
+    // Not in the effect itself: in development React runs it twice, and OBI-One goes on building for a request that
+    // is gone while the next one waits behind it.
+    const timer = setTimeout(() => {
+      run().catch((e: unknown) => {
+        if (signal.aborted) return;
+        logError('Could not load the circuit morphologies', e);
+        stop({ kind: 'failed' });
+      });
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+      setCurrent(null);
+    };
+  }, [source, workspace, told]);
+
+  // A source that changed or went leaves its load behind for a render, which is not the next one's.
+  const load = current?.source === source ? current.load : IDLE;
+  return { load, stopped, dismiss: () => setStopped(null) };
+}

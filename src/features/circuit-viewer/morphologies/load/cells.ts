@@ -57,3 +57,30 @@ export function renumberCells(
     segmentTypes: segmentTypes.slice(0, kept),
   };
 }
+
+/**
+ * Gives each cell the pack left without a soma, one of a population it does not hold, the page's own position and
+ * `radius`, as the somas view draws it. `positions` are the page's, three floats a cell in the circuit's frame.
+ * `data`'s somas and bounds are rewritten in place.
+ */
+export function fillSomas(
+  data: CircuitMorphologyData,
+  positions: Float32Array,
+  radius: number
+): void {
+  const { somas, centre, bounds } = data;
+  const cells = Math.min(somas.length / 4, positions.length / 3);
+  for (let cell = 0; cell < cells; cell++) {
+    if (!Number.isNaN(somas[4 * cell])) continue;
+    if (!Number.isFinite(positions[3 * cell] + positions[3 * cell + 1] + positions[3 * cell + 2])) {
+      continue;
+    }
+    for (let axis = 0; axis < 3; axis++) {
+      const at = positions[3 * cell + axis] - centre[axis];
+      somas[4 * cell + axis] = at;
+      bounds.min[axis] = Math.min(bounds.min[axis], at - radius);
+      bounds.max[axis] = Math.max(bounds.max[axis], at + radius);
+    }
+    somas[4 * cell + 3] = radius;
+  }
+}

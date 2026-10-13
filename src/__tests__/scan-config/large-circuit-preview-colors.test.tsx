@@ -50,6 +50,10 @@ vi.mock('@/morpho-viewer', () => ({
   useMorphoViewerDebugMode: () => false,
 }));
 
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ virtualLabId: 'lab', projectId: 'project' }),
+}));
+
 vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
   useCircuitConfig: () => ({
     config: { circuitAssetId: 'asset', nodes: [CORTEX, VPM], edges: [], raw: {} },

@@ -56,12 +56,12 @@ type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
 
 let viewers: CircuitMorphologyViewer[] = [];
 
-function make(): { viewer: CircuitMorphologyViewer; inner: Internals } {
+function make(): { viewer: CircuitMorphologyViewer; inner: Internals; host: HTMLElement } {
   const host = document.body.appendChild(document.createElement('div'));
   Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
   const viewer = new CircuitMorphologyViewer(host);
   viewers.push(viewer);
-  return { viewer, inner: viewer as unknown as Internals };
+  return { viewer, inner: viewer as unknown as Internals, host };
 }
 
 /** Two segments of cells 0 and 2, and three cells, the second with no position. */
@@ -127,6 +127,54 @@ describe('the circuit morphology viewer', () => {
     expect(viewer.looks.map((l) => l.id)).toEqual(['studio']);
     expect(inner.look).toBe(viewer.looks[0]);
     expect(() => viewer.setLook('flat')).toThrow('unknown look "flat"');
+  });
+
+  it("has the circuit viewer's flat background of the theme in place of Studio's gradient", () => {
+    const { viewer, host } = make();
+    const white = 'linear-gradient(rgb(255, 255, 255), rgb(255, 255, 255))';
+    const black = 'linear-gradient(rgb(0, 0, 0), rgb(0, 0, 0))';
+    expect(host.style.background).toBe(white);
+    viewer.setDark(true);
+    expect(host.style.background).toBe(black);
+    viewer.setLook('studio');
+    expect(host.style.background).toBe(black);
+    viewer.setDark(false);
+    expect(host.style.background).toBe(white);
+  });
+
+  it('takes a snapshot of a frame drawn for it, over the background of the theme', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setDark(true);
+    frames(inner);
+    const frame = inner.renderer.domElement;
+    frame.width = 800;
+    frame.height = 600;
+    const steps: string[] = [];
+    const context = {
+      fillStyle: '',
+      fillRect: (...box: number[]) => steps.push(`fill ${context.fillStyle} ${box.join(' ')}`),
+      drawImage: (source: unknown, ...at: number[]) =>
+        steps.push(`copy ${source === frame ? 'frame' : 'other'} ${at.join(' ')}`),
+    };
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValueOnce(
+      context as unknown as CanvasRenderingContext2D
+    );
+    inner.renderer.render.mockImplementation(() => steps.push('draw'));
+
+    const shot = viewer.snapshot();
+
+    expect(shot).toBeInstanceOf(HTMLCanvasElement);
+    expect([shot?.width, shot?.height]).toEqual([800, 600]);
+    expect(steps).toEqual(['fill #000000 0 0 800 600', 'draw', 'copy frame 0 0']);
+  });
+
+  it('has no snapshot where the browser gives no 2D canvas', () => {
+    const { viewer, inner } = make();
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValueOnce(null);
+
+    expect(viewer.snapshot()).toBeNull();
+    expect(inner.renderer.render).not.toHaveBeenCalled();
   });
 
   it("draws a quad a segment in the look's material, from the reader's arrays as they are", () => {

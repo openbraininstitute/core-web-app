@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { renumberCells } from '@/features/circuit-viewer/morphologies/load/cells';
+import { fillSomas, renumberCells } from '@/features/circuit-viewer/morphologies/load/cells';
 
 import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
 
@@ -81,5 +81,39 @@ describe('renumberCells', () => {
     ];
 
     expect(() => renumberCells(data(), page)).toThrow('3 cells in a, where the page has 4');
+  });
+});
+
+describe('fillSomas', () => {
+  /** Three cells, the second and third with no soma, about a centre. */
+  function placed(): CircuitMorphologyData {
+    return {
+      ...data(),
+      somas: Float32Array.from([soma(0), NONE, NONE].flat()),
+      centre: [100, 200, 300],
+      bounds: { min: [-5, 0, 0], max: [4, 14, 24] },
+    };
+  }
+
+  it("gives a cell without a soma the page's position, about the centre, and the radius", () => {
+    const filled = placed();
+    fillSomas(filled, Float32Array.of(0, 0, 0, 101, 202, 303, 90, 250, 310), 6);
+
+    expect([...filled.somas]).toEqual([soma(0), [1, 2, 3, 6], [-10, 50, 10, 6]].flat());
+  });
+
+  it('widens the bounds around the somas it places', () => {
+    const filled = placed();
+    fillSomas(filled, Float32Array.of(0, 0, 0, 101, 202, 303, 90, 250, 310), 6);
+
+    expect(filled.bounds).toEqual({ min: [-16, -4, -3], max: [7, 56, 24] });
+  });
+
+  it('leaves a cell the page has no finite position for without a soma, and the bounds as they were', () => {
+    const filled = placed();
+    fillSomas(filled, Float32Array.of(0, 0, 0, NaN, 202, 303), 6);
+
+    expect([...filled.somas]).toEqual([soma(0), NONE, NONE].flat());
+    expect(filled.bounds).toEqual(placed().bounds);
   });
 });

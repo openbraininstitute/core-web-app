@@ -5,6 +5,9 @@ import React from 'react';
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
+import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
+import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
 import {
   DEFAULT_ELECTRODE_RADIUS,
   DEFAULT_SOMA_SIZE_SCALE,
@@ -25,7 +28,10 @@ import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
-import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type {
+  CircuitRepresentation,
+  NodeColors,
+} from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type {
   MorphoViewerCellColors,
@@ -93,6 +99,17 @@ export interface LargeCircuitPreviewProps {
   neuronOpacity?: number;
   /** Multiplier on the per-species soma radius. */
   somaSizeScale?: number;
+  /**
+   * What each cell is drawn as. The morphologies are loaded first, with the
+   * somas on show until they are in.
+   */
+  representation?: CircuitRepresentation;
+  /**
+   * Called with `somas` when the morphologies asked for cannot be shown, and
+   * with `morphologies` to try them again. Absent where the circuit is not
+   * offered as morphologies.
+   */
+  onRepresentationChange?: (representation: CircuitRepresentation) => void;
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
   /**
@@ -129,11 +146,14 @@ export function LargeCircuitPreview({
   highlightedOverlayId = null,
   neuronOpacity,
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
+  representation = 'somas',
+  onRepresentationChange,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   spikes,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
-  const somaRadius = useSomaRadius(circuit) * somaSizeScale;
+  const speciesRadius = useSomaRadius(circuit);
+  const somaRadius = speciesRadius * somaSizeScale;
   const { config, error: configError } = useCircuitConfig(circuit);
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
@@ -291,6 +311,30 @@ export function LargeCircuitPreview({
   // position.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;
 
+  const wantsMorphologies = representation === 'morphologies';
+  const drawable = placed.length > 0 && !error;
+  // The cells are numbered through `placed`, as `positions` and `cellColors`
+  // are, so a morphology's cell is the soma of the same index.
+  const morphologiesSource = React.useMemo(
+    () =>
+      wantsMorphologies && drawable
+        ? {
+            circuitId: circuit.id,
+            populations: placed.map(({ population: candidate, geometry }) => ({
+              name: candidate.name,
+              cells: geometry.count,
+            })),
+            positions,
+            somaRadius: speciesRadius,
+          }
+        : null,
+    [wantsMorphologies, drawable, circuit.id, placed, positions, speciesRadius]
+  );
+  const morphologies = useCircuitMorphologies(morphologiesSource, () =>
+    onRepresentationChange?.('somas')
+  );
+  const shown = morphologies.load.status === 'ready' ? morphologies.load : null;
+
   const morphoOverlays = React.useMemo(
     () =>
       overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
@@ -315,7 +359,16 @@ export function LargeCircuitPreview({
           <p>{error.message}</p>
         </div>
       )}
-      {placed.length > 0 && !error && (
+      {shown && (
+        <shown.View
+          data={shown.data}
+          cellColors={cellColors}
+          backgroundColor={backgroundColor}
+          showScalebar={showScalebar}
+          signals={signals}
+        />
+      )}
+      {drawable && !shown && (
         <MorphoViewerCircuitMultipleNeuronsSomaOnly
           somaRadius={somaRadius}
           gizmo
@@ -350,6 +403,14 @@ export function LargeCircuitPreview({
           ]}
         />
       )}
+      <MorphologiesStatus
+        load={morphologies.load}
+        // Why they could not be shown is nothing to say where they are no longer offered.
+        stopped={onRepresentationChange ? morphologies.stopped : null}
+        theme={themeFromBackground(backgroundColor)}
+        onRetry={() => onRepresentationChange?.('morphologies')}
+        onDismiss={morphologies.dismiss}
+      />
     </div>
   );
 }

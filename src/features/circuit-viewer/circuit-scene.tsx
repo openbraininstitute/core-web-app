@@ -7,10 +7,12 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import { circuitOffersMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
@@ -254,6 +256,20 @@ export function CircuitScene({
     arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
 
+  const scopedOverlays = useMemo(
+    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
+    [overlays, visibleOverlayIds]
+  );
+  const morphologiesFlag = useFlag(circuitMorphologiesFlag.key);
+  const supportsMorphologies = circuitOffersMorphologies({
+    enabled: !!morphologiesFlag,
+    largeCircuit,
+    spikes: spikes !== undefined,
+    // Shown or hidden by the viewer's own toggle alike: that toggle is in the
+    // config the hook below returns.
+    electrodes: enableElectrodes && scopedOverlays.length > 0,
+  });
+
   const handleOverlayTransform = useCallback(
     (event: MorphoViewerOverlayTransformEvent) => {
       if (!setConfig || !enableElectrodes) return;
@@ -278,6 +294,8 @@ export function CircuitScene({
     signals,
     colorBy,
     onHiddenPopulationsChange,
+    representation,
+    onRepresentationChange,
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
@@ -285,6 +303,7 @@ export function CircuitScene({
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
     supportsSomaSize: largeCircuit,
+    supportsMorphologies,
     defaultNeuronOpacity,
     population,
     subject: memodel,
@@ -348,10 +367,6 @@ export function CircuitScene({
     enableElectrodes && selectedRootElement && selectedEntry
       ? (overlayIdByBlockPath.get(electrodeBlockPath(selectedRootElement, selectedEntry)) ?? null)
       : null;
-  const scopedOverlays = useMemo(
-    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
-    [overlays, visibleOverlayIds]
-  );
   // When the host supplies `visibleIds` it owns visibility outright. Letting the
   // viewer's own show/hide toggle also gate them strands the host control: with
   // the toggle off, ticking an electrode draws nothing and the auto-enable effect
@@ -527,6 +542,8 @@ export function CircuitScene({
             highlightedOverlayId={highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
             somaSizeScale={config.somaSizeScale}
+            representation={representation}
+            onRepresentationChange={onRepresentationChange}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
             spikes={spikes}

@@ -45,5 +45,7 @@ export interface CircuitMorphologyView extends ViewControls {
   setCellColors(colors: CellColors | null): void;
   setDark(dark: boolean): void;
   resetView(): void;
+  /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */
+  snapshot(): HTMLCanvasElement | null;
   dispose(): void;
 }

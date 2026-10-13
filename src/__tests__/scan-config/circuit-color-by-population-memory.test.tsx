@@ -118,4 +118,62 @@ describe('useCircuitColorBy', () => {
     expect(result.current.menu.somaSizeScale).toBe(1.5);
     expect(result.current.config.somaSizeScale).toBe(1.5);
   });
+
+  it('draws somas and offers no switch where morphologies are not offered', () => {
+    const { result } = render(CORTEX);
+
+    expect(result.current.representation).toBe('somas');
+    expect(result.current.menu.showMorphologies).toBeUndefined();
+    expect(result.current.menu.onToggleMorphologies).toBeUndefined();
+    expect(result.current.onRepresentationChange).toBeUndefined();
+    expect(result.current.menu.neuronOpacity).toBe(1);
+  });
+
+  it('takes the morphologies switch, and with it on withdraws what only somas have', () => {
+    const { result } = renderHook(() =>
+      useCircuitColorBy(circuit, {
+        population: CORTEX,
+        supportsSomaSize: true,
+        supportsMorphologies: true,
+      })
+    );
+    expect(result.current.representation).toBe('somas');
+    expect(result.current.menu.showMorphologies).toBe(false);
+    expect(result.current.menu.onSomaSizeScaleChange).toBeDefined();
+    expect(result.current.menu.onNeuronOpacityChange).toBeDefined();
+
+    act(() => result.current.menu.onToggleMorphologies?.(true));
+
+    expect(result.current.representation).toBe('morphologies');
+    expect(result.current.menu.showMorphologies).toBe(true);
+    expect(result.current.menu.somaSizeScale).toBeUndefined();
+    expect(result.current.menu.onSomaSizeScaleChange).toBeUndefined();
+    expect(result.current.menu.neuronOpacity).toBeUndefined();
+    expect(result.current.menu.onNeuronOpacityChange).toBeUndefined();
+
+    act(() => result.current.onRepresentationChange?.('somas'));
+
+    expect(result.current.representation).toBe('somas');
+    expect(result.current.menu.showMorphologies).toBe(false);
+  });
+
+  it('draws somas while morphologies are not offered, and the morphologies chosen once they are again', () => {
+    const { result, rerender } = renderHook(
+      ({ offered }: { offered: boolean }) =>
+        useCircuitColorBy(circuit, {
+          population: CORTEX,
+          supportsSomaSize: true,
+          supportsMorphologies: offered,
+        }),
+      { initialProps: { offered: true } }
+    );
+    act(() => result.current.menu.onToggleMorphologies?.(true));
+
+    rerender({ offered: false });
+    expect(result.current.representation).toBe('somas');
+    expect(result.current.menu.onSomaSizeScaleChange).toBeDefined();
+
+    rerender({ offered: true });
+    expect(result.current.representation).toBe('morphologies');
+  });
 });

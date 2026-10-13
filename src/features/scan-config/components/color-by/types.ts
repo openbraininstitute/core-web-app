@@ -68,8 +68,13 @@ export interface ColorByProperty {
  */
 export type ColorOverrides = Record<string, Record<string, string>>;
 
+/** What each cell of a circuit past the small scales is drawn as. */
+export type CircuitRepresentation = 'somas' | 'morphologies';
+
 /** persisted, per-circuit viewer configuration */
 export interface ViewerConfig {
+  /** Asked for; the scene draws somas wherever morphologies are not offered. */
+  representation: CircuitRepresentation;
   /**
    * Selected colour-by property, by population name; absent or null for the
    * default (blue). Stored per population because the property list is per

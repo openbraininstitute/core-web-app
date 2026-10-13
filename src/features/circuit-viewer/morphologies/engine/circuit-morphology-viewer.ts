@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
 import { PLAIN } from '@/features/viewer-3d/engine/looks';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
@@ -52,6 +53,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private somas: THREE.Mesh | null = null;
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
+  private background = CANVAS_LIGHT;
   /** What a cell with no colour of its own is drawn in. */
   private ownColor = PLAIN.light;
 
@@ -66,15 +68,35 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     // The look's own material draws the segments, as every mesh under `chunks`; the somas have a copy of it.
     this.somaMaterial = impostor(look.material.clone(), 'soma', this.uniforms);
     impostor(look.material, 'segment', this.uniforms);
+    // The circuit viewer's own background, as behind the somas, in place of Studio's gradient.
+    look.background = { light: [CANVAS_LIGHT, CANVAS_LIGHT], dark: [CANVAS_DARK, CANVAS_DARK] };
     look.onTheme = (dark) => {
-      this.ownColor = PLAIN[dark ? 'dark' : 'light'];
+      const theme = dark ? 'dark' : 'light';
+      this.background = look.background[theme][0];
+      this.ownColor = PLAIN[theme];
       this.paint();
     };
+    this.setDark(false);
   }
 
   protected override disposeContent(): void {
     this.clear();
     this.somaMaterial.dispose();
+  }
+
+  snapshot(): HTMLCanvasElement | null {
+    const frame = this.renderer.domElement;
+    const canvas = document.createElement('canvas');
+    canvas.width = frame.width;
+    canvas.height = frame.height;
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+    context.fillStyle = this.background;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    // The canvas holds a frame only in the task that drew it, so it is drawn again here and copied at once.
+    this.renderer.render(this.scene, this.camera);
+    context.drawImage(frame, 0, 0);
+    return canvas;
   }
 
   setData(data: CircuitMorphologyData | null): void {

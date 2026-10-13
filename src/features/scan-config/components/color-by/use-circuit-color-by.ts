@@ -19,7 +19,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
-import type { ColorByProperty, ColorMapping } from './types';
+import type { CircuitRepresentation, ColorByProperty, ColorMapping } from './types';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 interface Options {
@@ -31,6 +31,8 @@ interface Options {
   supportsMorphologyLocations?: boolean;
   /** whether the viewer draws cells as soma points, which the soma size control scales */
   supportsSomaSize?: boolean;
+  /** whether the circuit's cells can be drawn as morphologies in place of the soma points */
+  supportsMorphologies?: boolean;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -96,6 +98,7 @@ export function useCircuitColorBy(
     supportsElectrodes,
     supportsMorphologyLocations,
     supportsSomaSize,
+    supportsMorphologies,
     defaultNeuronOpacity,
     population,
     subject,
@@ -105,6 +108,11 @@ export function useCircuitColorBy(
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
   });
+  // The choice is kept where morphologies stop being offered, and comes back with them.
+  const representation: CircuitRepresentation = supportsMorphologies
+    ? config.representation
+    : 'somas';
+  const morphologies = representation === 'morphologies';
   const populationName = population?.name;
   const property =
     populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
@@ -163,6 +171,11 @@ export function useCircuitColorBy(
     [update]
   );
 
+  const onRepresentationChange = useCallback(
+    (next: CircuitRepresentation) => update({ representation: next }),
+    [update]
+  );
+
   const colorBy: ColorByControls = useMemo(
     () => ({
       selectedProperty: property,
@@ -207,12 +220,18 @@ export function useCircuitColorBy(
         update({ backgroundColor: dark ? CANVAS_DARK : CANVAS_LIGHT }),
       showAxons: supportsAxons ? config.showAxons : undefined,
       onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
-      neuronOpacity: config.neuronOpacity,
-      onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
-      somaSizeScale: supportsSomaSize ? config.somaSizeScale : undefined,
-      onSomaSizeScaleChange: supportsSomaSize
-        ? (value: number) => update({ somaSizeScale: value })
+      showMorphologies: supportsMorphologies ? morphologies : undefined,
+      onToggleMorphologies: supportsMorphologies
+        ? (value) => onRepresentationChange(value ? 'morphologies' : 'somas')
         : undefined,
+      // The morphologies are drawn opaque, at their own size.
+      neuronOpacity: morphologies ? undefined : config.neuronOpacity,
+      onNeuronOpacityChange: morphologies ? undefined : (value) => update({ neuronOpacity: value }),
+      somaSizeScale: supportsSomaSize && !morphologies ? config.somaSizeScale : undefined,
+      onSomaSizeScaleChange:
+        supportsSomaSize && !morphologies
+          ? (value: number) => update({ somaSizeScale: value })
+          : undefined,
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
       onToggleElectrodes: supportsElectrodes
         ? (value) => update({ showElectrodes: value })
@@ -262,6 +281,9 @@ export function useCircuitColorBy(
       supportsElectrodes,
       supportsMorphologyLocations,
       supportsSomaSize,
+      supportsMorphologies,
+      morphologies,
+      onRepresentationChange,
       hasSavedConfig,
       update,
       reset,
@@ -285,6 +307,10 @@ export function useCircuitColorBy(
     colorBy,
     /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
     onHiddenPopulationsChange,
+    /** what the cells are drawn as; see {@link ViewerConfig.representation} */
+    representation,
+    /** absent where morphologies are not offered */
+    onRepresentationChange: supportsMorphologies ? onRepresentationChange : undefined,
     menu,
   };
 }
