@@ -325,7 +325,12 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
 
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
-      <DataActions record={record} dataType={dataType} theme={theme} />
+      <DataActions
+        record={record}
+        dataType={dataType}
+        theme={theme}
+        openDetailsInNewTab={openDetailsInNewTab}
+      />
     ))
     .with({ section: WorkspaceSection.Notebooks }, () => (
       <NotebookActions

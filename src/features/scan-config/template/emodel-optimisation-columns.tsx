@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 
+import { usePreviewRecord } from '@/features/scan-config/bridge/entity-preview';
 import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-models-panel';
 import {
   assignedModelIds,
@@ -12,6 +13,7 @@ import {
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { RegionModelDetail } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-model-detail';
 import { RegionModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-models-panel';
+import { EntityPreviewPane } from '@/features/scan-config/components/ui-columns/right';
 import {
   type ConfigValue,
   EModelOptimisationMechanismsTabs,
@@ -23,6 +25,7 @@ import { cn } from '@/utils/css-class';
 import { LeftColumn, MIDDLE_WRAPPER_BASE, MiddleColumnContent } from './columns';
 
 import type { ReactNode } from 'react';
+import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -51,9 +54,11 @@ const DRAWER_TIER_Z = { 1: 'z-20', 2: 'z-10' } as const;
  */
 function DrawerColumn({
   tier,
+  className,
   children,
 }: {
   tier: keyof typeof DRAWER_TIER_Z;
+  className?: string;
   children: ReactNode;
 }) {
   return (
@@ -62,7 +67,8 @@ function DrawerColumn({
         'sticky top-0 max-h-[calc(100vh-12rem)] min-w-0 shrink-0 grow-0 basis-1/3 self-start overflow-y-auto rounded-lg border border-gray-200 bg-gray-50',
         'transition-[opacity,translate] duration-300 ease-out-expo',
         'starting:-translate-x-full starting:opacity-0 motion-reduce:starting:translate-x-0',
-        DRAWER_TIER_Z[tier]
+        DRAWER_TIER_Z[tier],
+        className
       )}
     >
       {children}
@@ -110,6 +116,13 @@ export function EModelOptimisationColumns({ props, state }: Props) {
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.RegionAssignment;
   const onParametersSelectionTab =
     selectedMechanismsTab === EModelOptimisationMechanismsTabs.ParametersSelection;
+
+  // Mechanism Selection: clicking a selected model card previews it in a drawer. This layout has no
+  // right column, so without it the preview would only be reachable through the (edit-only) picker.
+  const { preview, record: previewRecord } = usePreviewRecord();
+  const previewDrawerOpen =
+    Boolean(rootSchema && preview) &&
+    selectedMechanismsTab === EModelOptimisationMechanismsTabs.MechanismSelection;
 
   const value = config[selectedRootElement];
   const writeValue = (next: typeof value) => setConfig({ ...config, [selectedRootElement]: next });
@@ -162,6 +175,16 @@ export function EModelOptimisationColumns({ props, state }: Props) {
         <div className="relative z-30 min-w-0 shrink-0 grow-0 basis-1/3 bg-gray-50">
           <MiddleColumnContent props={props} state={state} />
         </div>
+
+        {previewDrawerOpen && preview && (
+          // the mini view needs room: take both remaining thirds, at the full visible height
+          <DrawerColumn tier={1} className="grow basis-0 self-stretch overflow-hidden bg-white">
+            <EntityPreviewPane
+              dataType={preview.dataType}
+              record={(previewRecord as EntityCoreObjectTypes | null) ?? null}
+            />
+          </DrawerColumn>
+        )}
 
         {assignmentDrawerOpen && rootSchema && selectedChoice && (
           <DrawerColumn tier={1}>
