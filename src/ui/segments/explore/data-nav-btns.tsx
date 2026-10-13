@@ -155,6 +155,7 @@ export function DataBreadcrumb({
   group,
   scope,
   sections,
+  configurationFullPage = false,
   variant = ViewVariant.Light,
 }: {
   type: TExtendedEntitiesTypeDict;
@@ -162,12 +163,13 @@ export function DataBreadcrumb({
   scope: TWorkspaceScope;
   title: string;
   sections?: TDetailViewSectionDict[];
+  configurationFullPage?: boolean;
   variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
-  const isFullPageSection = useFullPageSection(type);
+  const isFullPageSection = useFullPageSection(configurationFullPage);
 
   const { dataKey } = makeDataKey({
     virtualLabId,

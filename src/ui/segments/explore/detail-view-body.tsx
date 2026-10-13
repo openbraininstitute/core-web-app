@@ -4,21 +4,20 @@ import { useFullPageSection } from '@/ui/segments/explore/detail-menu';
 import { EntityNameDisplayWrapper } from '@/ui/segments/explore/entity-name-display';
 
 import type { ReactNode } from 'react';
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 /** Sidebar + content row of the data detail page; a full-page section drops the sidebar. */
 export function DetailViewBody({
-  type,
+  configurationFullPage,
   sidebar,
   nameDisplay,
   children,
 }: {
-  type: TExtendedEntitiesTypeDict;
+  configurationFullPage: boolean;
   sidebar: ReactNode;
   nameDisplay: ReactNode;
   children: ReactNode;
 }) {
-  if (useFullPageSection(type)) {
+  if (useFullPageSection(configurationFullPage)) {
     return <div className="min-h-0 flex-1 px-5 pb-5">{children}</div>;
   }
 

@@ -1,6 +1,7 @@
 import { isNil } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
+import { getCellMorphology } from '@/api/entitycore/queries';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
@@ -15,6 +16,8 @@ import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
+import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
+import { hasHardcodedMechanisms } from '@/features/entities/e-model/hardcoded-mechanisms';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
@@ -26,6 +29,9 @@ import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-st
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 
 import type {
+  ICellMorphology,
+  ICellMorphologyExpanded,
+  IEModel,
   IMEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
@@ -101,8 +107,30 @@ export default async function Configuration({
   const fieldVariant = detailViewVariantFromGroup(entityType.group);
 
   if (extendedType === 'emodel') {
-    // an e-model's configuration is the scan config of the optimisation campaign that produced
-    // it; render the same read-only editor as the campaign's own detail page when traceable
+    const emodel = entity as IEModel;
+
+    if (await hasHardcodedMechanisms(emodel.name)) {
+      let morphology: ICellMorphologyExpanded | ICellMorphology;
+      try {
+        morphology = await getCellMorphology({
+          id: emodel.exemplar_morphology.id,
+          expand: 'measurement_annotation',
+          context,
+        });
+      } catch {
+        notFound();
+      }
+
+      return (
+        <EModelConfig
+          payload={{ source: emodel, exemplar_morphology: morphology }}
+          variant={fieldVariant}
+        />
+      );
+    }
+
+    // otherwise the configuration is the scan config of the optimisation campaign that produced
+    // the e-model; render the same read-only editor as the campaign's own detail page when traceable
     const { data: optimization } = await tryCatch(
       resolveEModelOptimizationCampaign(entity.id, context.virtualLabId, context.projectId)
     );

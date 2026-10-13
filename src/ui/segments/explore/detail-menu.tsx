@@ -3,7 +3,6 @@
 import { RiArrowDownSLine } from '@remixicon/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
@@ -15,7 +14,6 @@ import {
 } from '@/ui/molecules/dropdown-menu';
 import Tab from '@/ui/molecules/tab';
 
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 
 const SECTION_LABELS: Record<TDetailViewSectionDict, string> = {
@@ -29,12 +27,14 @@ const SECTION_LABELS: Record<TDetailViewSectionDict, string> = {
 };
 
 /**
- * The e-model Configuration section is the optimisation scan config, a full-page UI: it replaces
- * the sidebar, and section switching moves to a dropdown in the breadcrumb row.
+ * Whether the current section renders full-page: an e-model's Configuration section is the
+ * optimisation scan config, which replaces the sidebar and moves section switching to a dropdown
+ * in the breadcrumb row. The server decides `configurationFullPage` per entity (e-models with a
+ * hard-coded mechanisms file keep the classic view).
  */
-export function useFullPageSection(type: TExtendedEntitiesTypeDict) {
+export function useFullPageSection(configurationFullPage: boolean) {
   const page = usePathname().split('/').pop();
-  return type === ExtendedEntitiesTypeDict.Emodel && page === DetailViewSectionsDict.Configuration;
+  return configurationFullPage && page === DetailViewSectionsDict.Configuration;
 }
 
 function useSectionHref() {
