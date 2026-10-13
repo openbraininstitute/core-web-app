@@ -49,6 +49,13 @@ describe('the bounded cache', () => {
     expect(cache.entries.has(key('b'))).toBe(false);
   });
 
+  it('gives back nothing of an entry past its lifetime, and deletes it', async () => {
+    await writeEntry(BOUNDS, key('a'), bytes(10).buffer, 10);
+    now += BOUNDS.ttlMs;
+    expect(await readEntry(BOUNDS, key('a'))).toBeNull();
+    expect(storage.bucket(BOUNDS.name).entries.has(key('a'))).toBe(false);
+  });
+
   it('deletes expired entries on the next write', async () => {
     await writeEntry(BOUNDS, key('a'), bytes(10).buffer, 10);
     now += BOUNDS.ttlMs + 1;

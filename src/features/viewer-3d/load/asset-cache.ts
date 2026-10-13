@@ -14,9 +14,9 @@ export interface CacheBounds {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const bucket = (name: string): CacheBounds => ({
+export const bucket = (name: string, days = 30): CacheBounds => ({
   name,
-  ttlMs: 30 * DAY_MS,
+  ttlMs: days * DAY_MS,
   maxBytes: 500 * 2 ** 20,
 });
 

@@ -1,5 +1,10 @@
 export type Vec3 = [number, number, number];
 
+export interface Population {
+  name: string;
+  cells: number;
+}
+
 /** A circuit's morphologies, in µm in the circuit's frame with `centre` taken off every position. */
 export interface CircuitMorphologyData {
   /** Eight floats a segment: x, y, z and radius of its near end, then of its far end. */
@@ -13,8 +18,7 @@ export interface CircuitMorphologyData {
    * position has NaN for x, y and z.
    */
   somas: Float32Array;
-  /** In the pack's order, which need not be the circuit config's. */
-  populations: { name: string; cells: number }[];
+  populations: Population[];
   centre: Vec3;
   /** Around every segment's ends and every soma that has a position. */
   bounds: { min: Vec3; max: Vec3 };
