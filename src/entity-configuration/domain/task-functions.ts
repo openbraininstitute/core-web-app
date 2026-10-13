@@ -1,6 +1,6 @@
 import { sortBy } from 'es-toolkit/compat';
 
-import { getTaskActivities } from '@/api/entitycore/queries/task/task-activity';
+import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { getTaskConfig, getTaskConfigs } from '@/api/entitycore/queries/task/task-config';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
@@ -127,7 +127,7 @@ export function getTaskCampaignStatusCountMap<T extends TTaskCampaignExecutionRo
 }
 
 /** id of the task config an activity of `type` used to generate entity `id` */
-async function usedTaskConfigId(
+export async function usedTaskConfigId(
   id: string,
   type: TTaskActivityType,
   context: WorkspaceContext | undefined

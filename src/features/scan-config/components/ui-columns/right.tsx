@@ -56,6 +56,14 @@ const IonChannelModelRecordingRender = dynamic(
   { ssr: false }
 );
 
+const IonChannelRecordingPreviewPanel = dynamic(
+  () =>
+    import('@/features/scan-config/components/model-preview/ion-channel-recording-viewer').then(
+      (m) => m.IonChannelRecordingPreviewPanel
+    ),
+  { ssr: false }
+);
+
 const EFeaturesPreviewPanel = dynamic(
   () =>
     import(
@@ -345,6 +353,9 @@ export function Right({
         selectedEntry={selectedEntry}
         config={config}
       />
+    ))
+    .with(RightPreviewModeDict.IonChannelRecording, () => (
+      <IonChannelRecordingPreviewPanel config={config} />
     ))
     .with(RightPreviewModeDict.EFeatures, () => (
       <div
