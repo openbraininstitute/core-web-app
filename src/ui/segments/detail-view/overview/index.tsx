@@ -23,7 +23,6 @@ import {
   getViewDefinitionByExtendedType,
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
@@ -32,11 +31,13 @@ import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import {
   resolveSimulationByCampaignId as resolveIonChannelModelSimulationByCampaignId,
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
@@ -58,12 +59,14 @@ import {
   BuildScanConfigTabs,
   type Config,
   ExtractScanConfigTabs,
+  OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
+import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -221,6 +224,38 @@ export default async function Overview({
           activity={ScanConfigActivity.Extract}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
           taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
+        />
+      );
+    }
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.EModelOptimizationCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    const resolveCampaign = EModelOptimizationCampaign.api.query.resolve!;
+    const { data: optimization } = await tryCatch(resolveCampaign({ id: entity.id, context }));
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EModelOptimizationCampaign
+    );
+
+    if (optimization && scanConfig) {
+      return (
+        <ScanConfiguration
+          // the e-model optimisation scan config has no `model_identifier` (session mode),
+          // so there is no input entity to pass
+          entityId={undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={optimization.campaign.id}
+          initialConfig={optimization.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Optimize,
+            id: OptimizeScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Optimize}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={optimizeEModelWorkflow.taskTypeBindings}
         />
       );
     }

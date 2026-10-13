@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveOutputStrategy } from '@/features/scan-config/outputs/registry';
-import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
+import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
 
 import type { TOutputEntity, TResolvedOutput } from '@/features/scan-config/outputs/types';
 
@@ -89,8 +89,11 @@ describe('workflow output strategies', () => {
     });
 
     expect(files?.map((file) => file.id)).toEqual(['result-id', 'asset-1']);
-    expect(files?.[0].renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
-    expect(files?.[0].dataType).toBe(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
+    const first = files?.[0];
+    expect(first?.renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
+    expect(first && !isAssetBackedFile(first) ? first.dataType : undefined).toBe(
+      ExtendedEntitiesTypeDict.EFeatureExtractionResult
+    );
   });
 
   it('shows an entity output as a single mini-detail row', () => {
@@ -110,9 +113,9 @@ describe('workflow output strategies', () => {
     expect(files?.[0].name).toBe('Extracted circuit');
   });
 
-  it('shows a me-model (which carries no top-level asset) as an assetless mini-detail row', () => {
-    // a me-model's content lives in its nested morphology and e-model, so it has no `assets` of
-    // its own; the row must still appear, keyed on the entity id, with `asset` left undefined
+  it('shows a me-model (which carries no top-level asset) as a mini-detail entity row', () => {
+    // a me-model's content lives in its nested morphology and e-model, so it has no assets of its
+    // own; the row appears as an entity mini-detail row, keyed on the entity id, with no asset
     const strategy = resolveOutputStrategy({ id: 'm', type: EntityTypeDict.Memodel });
 
     const files = strategy?.toFiles(
@@ -123,10 +126,11 @@ describe('workflow output strategies', () => {
     );
 
     expect(files).toHaveLength(1);
-    expect(files?.[0].renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
-    expect(files?.[0].id).toBe('memodel-id');
-    expect(files?.[0].name).toBe('Draft me-model');
-    expect(files?.[0].asset).toBeUndefined();
+    const row = files?.[0];
+    expect(row?.renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
+    expect(row?.id).toBe('memodel-id');
+    expect(row?.name).toBe('Draft me-model');
+    expect(row && isAssetBackedFile(row)).toBe(false);
   });
 
   it('stops polling a circuit once its visualization asset lands', () => {

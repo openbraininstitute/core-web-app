@@ -37,6 +37,7 @@ import { cn } from '@/utils/css-class';
 import { WorkflowBuildActions } from './actions/build';
 import { DataActions } from './actions/data';
 import { WorkflowActions } from './actions/simulate-extract-process';
+import { resolveInteractiveViewer } from './interactive-viewers';
 
 import type {
   EntityCoreObjectTypes,
@@ -126,6 +127,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   workflowTargetType,
   isPrivate = true,
   virtualLabData,
+  interactive,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -138,8 +140,11 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   workflowTargetType?: TExtendedEntitiesTypeDict;
   isPrivate?: boolean;
   virtualLabData?: TVirtualLab;
+  /** The host has room for a live viewer, for entity types that have one. */
+  interactive?: boolean;
 }) {
   if (!record) return null;
+  const InteractiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
   const preview = match({ type: record.type })
@@ -424,6 +429,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
             <div
               className={cn('primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5', {
                 'bg-white text-primary-9 secondary-scrollbar': theme === 'light',
+                'flex flex-col': InteractiveViewer,
               })}
             >
               {record.description && (
@@ -456,12 +462,21 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   )}
                 </ExpandableText>
               )}
-              {preview ?? (
+              {InteractiveViewer ? (
                 <div
-                  className={cn('bg-primary-3 my-4 h-px w-full', {
-                    'bg-gray-400': theme === 'light',
-                  })}
-                />
+                  data-testid="mini-detail-interactive-viewer"
+                  className="mt-5 min-h-[320px] flex-1"
+                >
+                  <InteractiveViewer key={record.id} record={record} />
+                </div>
+              ) : (
+                (preview ?? (
+                  <div
+                    className={cn('bg-primary-3 my-4 h-px w-full', {
+                      'bg-gray-400': theme === 'light',
+                    })}
+                  />
+                ))
               )}
               <div className="mb-5 grid grid-flow-row-dense grid-cols-2 items-start justify-between gap-2 pt-4">
                 {miniConfig?.map((o) => {

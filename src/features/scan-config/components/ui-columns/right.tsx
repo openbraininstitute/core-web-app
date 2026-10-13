@@ -26,8 +26,11 @@ import {
   resolveHostNeuronOpacity,
   resolveRightPreviewMode,
 } from '@/features/scan-config/components/model-preview/helpers';
+import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+
+import { usePinnedEntityPreview } from './use-pinned-entity-preview';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -121,9 +124,11 @@ function useHostNeuronOpacity(): number | undefined {
 function EntityPreviewPane({
   dataType,
   record,
+  pinned,
 }: {
   dataType: TExtendedEntitiesTypeDict;
   record: EntityCoreObjectTypes | null;
+  pinned?: boolean;
 }) {
   const setEntityPreview = useSetScanConfigEntityPreview();
 
@@ -140,7 +145,8 @@ function EntityPreviewPane({
           theme={ViewVariant.Light}
           enableAnimation={false}
           hideUseModelAction
-          onClose={() => setEntityPreview(null)}
+          interactive
+          onClose={pinned ? undefined : () => setEntityPreview(null)}
         />
       ) : (
         <Skeleton className="h-full w-full rounded-lg" />
@@ -290,6 +296,12 @@ export function Right({
   useClearEntityPreviewOnNavigation(entity?.id);
   const defaultNeuronOpacity = useHostNeuronOpacity();
   const workflowField = useScanConfigWorkflowEditorField();
+  const configureBinding = workflowField?.configureBinding;
+  const pinned = !!configureBinding?.pinEntityPreview;
+  usePinnedEntityPreview({
+    dataType: pinned ? configureBinding?.scanConfigEntityType : undefined,
+    ids: pinned ? resolveEntityIdsFromConfigForm(schema, config) : [],
+  });
 
   // Source entity owns the viewer; targetType is workflow intent only.
   const viewerFeatures = resolveViewerFeaturesForEntityType(
@@ -327,6 +339,7 @@ export function Right({
         <EntityPreviewPane
           dataType={entityPreview.dataType}
           record={(previewRecord as EntityCoreObjectTypes | null) ?? null}
+          pinned={pinned}
         />
       ) : (
         <EmptyPreviewPane />

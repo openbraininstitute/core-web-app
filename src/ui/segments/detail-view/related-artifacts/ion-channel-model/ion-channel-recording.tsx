@@ -12,7 +12,7 @@ import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity'
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
-import { usedTaskConfigId } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
+import { usedTaskConfigId } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { detailViewGridContainerClass } from '@/ui/segments/detail-view/variant-styles';
 
