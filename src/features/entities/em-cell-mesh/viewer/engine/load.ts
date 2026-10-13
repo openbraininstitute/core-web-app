@@ -12,6 +12,7 @@
  */
 import * as Comlink from 'comlink';
 
+import { type WorkerHandle, wrapWorker } from '@/features/viewer-3d/load/worker-handle';
 import { errorMessage } from '@/utils/error';
 
 import { type Budget, checkBudget, type Device } from './budget';
@@ -33,13 +34,6 @@ import type { DecodedMesh, PackedChunk, PackedMesh, StandIn, Timing } from './ty
 /** Held from the decode until the full mesh is built, so that two tabs don't reach their peaks together. */
 export const DECODE_LOCK = 'em-mesh-decode';
 
-export interface WorkerHandle<T> {
-  api: Comlink.Remote<T>;
-  /** Rejects when the worker dies, out of memory say: Comlink never settles a call to a dead worker. */
-  died: Promise<never>;
-  terminate(): void;
-}
-
 export interface Workers {
   decode(): WorkerHandle<DecodeApi>;
   standIn(): WorkerHandle<StandInApi>;
@@ -47,31 +41,15 @@ export interface Workers {
   fullCache(): WorkerHandle<FullCacheApi>;
 }
 
-function handle<T>(worker: Worker): WorkerHandle<T> {
-  const api = Comlink.wrap<T>(worker);
-  const died = new Promise<never>((_, reject) =>
-    worker.addEventListener('error', (e) => reject(new Error(e.message || 'the worker failed')))
-  );
-  died.catch(() => {});
-  return {
-    api,
-    died,
-    terminate() {
-      api[Comlink.releaseProxy]();
-      worker.terminate();
-    },
-  };
-}
-
 const browserWorkers: Workers = {
   decode: () =>
-    handle(new Worker(new URL('./decode.worker.ts', import.meta.url), { type: 'module' })),
+    wrapWorker(new Worker(new URL('./decode.worker.ts', import.meta.url), { type: 'module' })),
   standIn: () =>
-    handle(new Worker(new URL('./stand-in.worker.ts', import.meta.url), { type: 'module' })),
+    wrapWorker(new Worker(new URL('./stand-in.worker.ts', import.meta.url), { type: 'module' })),
   build: () =>
-    handle(new Worker(new URL('./build.worker.ts', import.meta.url), { type: 'module' })),
+    wrapWorker(new Worker(new URL('./build.worker.ts', import.meta.url), { type: 'module' })),
   fullCache: () =>
-    handle(new Worker(new URL('./full-cache.worker.ts', import.meta.url), { type: 'module' })),
+    wrapWorker(new Worker(new URL('./full-cache.worker.ts', import.meta.url), { type: 'module' })),
 };
 
 /** Where loading failed: a failure after the stand-in leaves it on show. */

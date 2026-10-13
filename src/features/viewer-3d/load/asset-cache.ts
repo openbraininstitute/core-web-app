@@ -14,15 +14,11 @@ export interface CacheBounds {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const bucket = (name: string): CacheBounds => ({
+export const bucket = (name: string): CacheBounds => ({
   name,
   ttlMs: 30 * DAY_MS,
   maxBytes: 500 * 2 ** 20,
 });
-
-export const GLB_CACHE = bucket('em-cell-mesh-glb');
-export const STAND_IN_CACHE = bucket('em-cell-mesh-stand-in');
-export const FULL_CACHE = bucket('em-cell-mesh-full');
 
 /** When each entry was stored, as `checkCache` in `src/api/cache-storage.ts` reads it. */
 const STORED_AT = 'x-cache-timestamp';

@@ -48,7 +48,7 @@ The meshes also have level-of-detail sets made by Ultraliser (`lod_mesh_block` a
 6. **One worker, one tab at a time.** Each step's worker hands its arrays to the next through the page, transferred rather than copied, and is terminated once done (`load.ts`). The peak is then the decode's, about 2.4 GB measured on the largest mesh, never two workers' at once. The first version ran the stand-in and the full build side by side after the decode, which would have peaked at about 5 GB. The decode, the stand-in and the build hold a Web Lock (`em-mesh-decode`) between them, so that two tabs don't reach their peaks together. A view not seen yet (`SceneViewer.seen`: a tab opened in the background, or the card scrolled past) downloads and reads its caches, but makes nothing until it is.
 
    A worker that dies, out of memory say, fails the step it was on rather than leave it hanging: Comlink never settles a call to a dead worker. Before the stand-in, that is an error; after it, the stand-in stays on show, and the status says that full detail could not be loaded.
-7. **Caches.** Three Cache Storage buckets, each kept for 30 days and to 500 MiB, the least recently opened going first past that (`asset-cache.ts`). The 30 days are safe, as a replaced mesh gets a new asset id. The browser may still drop a bucket (Safari after a week without a visit): it is only a cache.
+7. **Caches.** Three Cache Storage buckets, each kept for 30 days and to 500 MiB, the least recently opened going first past that (`caches.ts`, on `viewer-3d/load/asset-cache.ts`). The 30 days are safe, as a replaced mesh gets a new asset id. The browser may still drop a bucket (Safari after a week without a visit): it is only a cache.
    - `em-cell-mesh-glb` holds the GLB as downloaded (step 1). It saves the download, about 2.5 s on the largest mesh.
    - `em-cell-mesh-stand-in` holds the stand-in as packed, a JSON header then the arrays (`stand-in-cache.ts`): about 11 bytes a triangle, 32 MB for the largest mesh at 3M. The stand-in worker makes the entry, a Blob, which the page stores without another copy. It is read as the load starts, and on a hit the stand-in is drawn at once, and the stand-in worker is never started. Each size has an entry of its own.
    - `em-cell-mesh-full` holds the full mesh as packed, its arrays compressed with meshoptimizer's codecs (`full-cache.ts`): a quarter of the size, 86 MiB for the largest mesh, decoded in a fifth of a second. A built mesh's chunks go to the full-cache worker as they go up to the GPU, once three is done with their arrays. The worker encodes each as it comes, stores them all after the last, and is terminated. The cache is asked as the load starts, and read as soon as it has the mesh, while the stand-in's cache is read and the GLB downloads: on a hit the download stops, and nothing is decoded or built. A stand-in of a size not cached yet is clustered from the full mesh's chunks (`unpackMesh`): on Draco's grid every chunk has the same origin, so the chunks joined are the mesh again, the vertices on their borders once in each. A mesh refused at its header, or whose download fails, offline say, loads from it all the same.
@@ -138,7 +138,7 @@ stand-in.worker.ts    worker entry: the stand-in, and meshoptimizer's memory for
 build.worker.ts       worker entry: the full mesh's normals and chunks, terminated after
 full-cache.worker.ts  worker entry: the full mesh's cache, written as it goes up and read back, terminated after
 download.ts           the GLB from its cache or the network, teed into the cache, its header checked as it arrives
-asset-cache.ts        Cache Storage buckets kept in bounds: lifetime, total size, the least recently opened first
+caches.ts             the three Cache Storage buckets
 budget.ts             whether a mesh fits, from its header: Draco's ceiling, the device's memory
 glb.ts                the GLB container: the JSON chunk and the counts it gives, plain accessors
 decode.ts             a GLB into one mesh around its centre, on Draco's grid where it fits 16 bits
@@ -153,6 +153,8 @@ mesh-choice.ts        which mesh a frame draws: the error on screen, what frames
 motion-quality.ts     how moving frames are cut down: the occlusion, then the resolution
 gpu-timer.ts          what a frame costs the GPU: a timer query, or a fence
 ```
+
+Shared with the circuit viewer's loader, in `src/features/viewer-3d/load/`: `asset-cache.ts`, which keeps a Cache Storage bucket in bounds (lifetime, total size, the least recently opened first), and `worker-handle.ts`, a worker behind Comlink that says when it dies.
 
 The scene is shared with the morphology viewer, in `src/features/viewer-3d/engine/`. Its cameras, controls and looks are described in [the morphology engine's reference](../../../cell-morphology/morpho-viewer/engine/README.md#looks).
 
