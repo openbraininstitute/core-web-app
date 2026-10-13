@@ -81,6 +81,8 @@ export type AODepth = 'own-pass' | 'main-pass';
 export interface SceneViewerOptions {
   /** The vertex attributes of the content's surface, which the looks are built for (`createLooks`). */
   surface: readonly SurfaceAttribute[];
+  /** The ids of the looks the content can be drawn in; by default all that its surface allows. */
+  looks?: readonly string[];
   /**
    * Where the ambient occlusion takes the depth from. Its own pass draws the surfaces a second time, as displaced as
    * they are drawn, into a depth and normal target of its own. The main pass's depth costs no second draw, and the
@@ -347,7 +349,7 @@ export class SceneViewer implements ViewControls {
     container.addEventListener('wheel', this.onWheel, { capture: true });
 
     // Light rigs ride on the camera so every look keeps its lighting while orbiting.
-    this.looks = createLooks(this.renderer.getPixelRatio(), options.surface);
+    this.looks = createLooks(this.renderer.getPixelRatio(), options.surface, options.looks);
     for (const l of this.looks) {
       if (!l.rig) continue;
       this.camera.add(l.rig);
