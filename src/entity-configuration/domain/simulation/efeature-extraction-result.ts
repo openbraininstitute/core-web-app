@@ -42,7 +42,11 @@ async function one(params: { id: string; context?: WorkspaceContext | null }) {
 }
 
 /** id of the task config an activity of `type` used to generate entity `id` */
-async function usedTaskConfigId(id: string, type: TTaskActivityType, context: WorkspaceContext) {
+export async function usedTaskConfigId(
+  id: string,
+  type: TTaskActivityType,
+  context: WorkspaceContext
+) {
   const { data } = await getTaskActivities({
     context,
     filters: { generated__id: id, task_activity_type: type },

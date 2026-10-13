@@ -13,6 +13,7 @@ export const ObiOneTaskTypeDict = {
   BuildSynaptome: 'circuit_single_build',
   EModelOptimization: 'emodel_optimization',
   CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
+  IonChannelFitting: 'ion_channel_fitting',
 } as const;
 
 export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

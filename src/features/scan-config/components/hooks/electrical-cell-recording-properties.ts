@@ -43,7 +43,10 @@ export function parseElectricalCellRecordingProperties(resp: unknown) {
  * selection, so the ids come from the config rather than from the session entity. Refs are
  * matched on their FromID const so renaming the field does not silently return nothing.
  */
-export function extractRecordingIds(config: Config): string[] {
+export function extractRecordingIds(
+  config: Config,
+  fromIdType = ELECTRICAL_CELL_RECORDING_FROM_ID
+): string[] {
   const initialize = config.initialize;
   if (!isPlainObject(initialize)) return [];
 
@@ -51,7 +54,7 @@ export function extractRecordingIds(config: Config): string[] {
   for (const field of Object.values(initialize)) {
     const entries = Array.isArray(field) ? field : [field];
     for (const entry of entries) {
-      if (isFromIdRef(entry) && entry.type === ELECTRICAL_CELL_RECORDING_FROM_ID) {
+      if (isFromIdRef(entry) && entry.type === fromIdType) {
         ids.push(entry.id_str);
       }
     }
