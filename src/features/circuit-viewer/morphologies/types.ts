@@ -1,3 +1,5 @@
+import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
+
 export type Vec3 = [number, number, number];
 
 export interface Population {
@@ -24,4 +26,24 @@ export interface CircuitMorphologyData {
   bounds: { min: Vec3; max: Vec3 };
   /** What the level left out: end branches shorter than `pruneUm`, then points within `toleranceUm` of the path. */
   level: { toleranceUm: number; pruneUm: number };
+}
+
+/**
+ * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, null for the view's
+ * own colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the view's own colour.
+ */
+export interface CellColors {
+  palette: (string | null | false)[];
+  columnByCell: Uint16Array;
+}
+
+/** What the page drives a circuit's morphologies through, whichever engine draws them. */
+export interface CircuitMorphologyView extends ViewControls {
+  /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
+  setData(data: CircuitMorphologyData | null): void;
+  /** Null draws every cell in the view's own colour. */
+  setCellColors(colors: CellColors | null): void;
+  setDark(dark: boolean): void;
+  resetView(): void;
+  dispose(): void;
 }
