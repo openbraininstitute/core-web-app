@@ -8,6 +8,7 @@ import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
+import { COMPACT_CAMERA_ZOOM } from './constants';
 import {
   useAtlasViewerSettingsValues,
   usePainter,
@@ -23,9 +24,6 @@ export interface BrainAtlasViewerGltfProps {
   compact?: boolean;
   onLoading(loading: boolean): void;
 }
-
-/** Camera zoom that fills the small preview card; the full viewer keeps 1. */
-const COMPACT_CAMERA_ZOOM = 1.7;
 
 const ATLAS_LABELS: Record<string, string> = {
   [SPECIES_TAXONOMY_IDS.HOMO_SAPIENS]: 'Julich Human Brain Atlas',

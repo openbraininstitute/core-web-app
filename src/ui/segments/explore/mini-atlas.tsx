@@ -1,7 +1,6 @@
 'use client';
 
 import { useAtomValue } from 'jotai';
-import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -10,6 +9,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { Loader } from '@/components/loader';
 import { config } from '@/config';
+import { useAtlasViewer } from '@/features/brain-atlas-viewer/use-atlas-viewer';
 import {
   speciesSelectionModeAtom,
   useBrainRegionRootHierarchyQuery,
@@ -19,21 +19,15 @@ import { SPECIES_IMAGE_MAP, SpeciesSelectionMode } from '@/features/brain-region
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { ATLAS_VIEW_TRANSITION } from '@/ui/segments/explore/atlas';
+import { ATLAS_ZOOM, morphAtlasOnCompositor } from '@/ui/segments/explore/atlas-morph';
 import { logError } from '@/utils/logger';
 
 import type { ReactNode } from 'react';
 
-const BrainAtlasViewerGltf = dynamic(
-  () =>
-    import('@/features/brain-atlas-viewer/brain-atlas-viewer-gltf').then(
-      (m) => m.BrainAtlasViewerGltf
-    ),
-  { ssr: false }
-);
-
 /** The region's atlas beside the data table; `children` is its lower part, or stands alone. */
 export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
+  const viewer = useAtlasViewer();
   const { virtualLabId, projectId } = useWorkspace();
   const searchParams = useSearchParams();
   const isAllSpeciesMode = useAtomValue(speciesSelectionModeAtom) === SpeciesSelectionMode.All;
@@ -63,7 +57,14 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
 
   return (
     <>
-      <ViewTransition name={ATLAS_VIEW_TRANSITION} share="atlas-morph" default="none">
+      <ViewTransition
+        name={ATLAS_VIEW_TRANSITION}
+        share="atlas-morph"
+        default="none"
+        onShare={(morph) =>
+          morphAtlasOnCompositor(morph, { from: ATLAS_ZOOM.mini, to: ATLAS_ZOOM.full })
+        }
+      >
         <div
           id="mini-atlas"
           data-testid="mini-atlas"
@@ -75,7 +76,13 @@ export function MiniAtlas({ children }: { children?: (inCard: boolean) => ReactN
               onError={(error) => logError('Failed to show the mini 3D brain atlas', error)}
             >
               <div className="absolute inset-0 cursor-grab active:cursor-grabbing">
-                <BrainAtlasViewerGltf compact className="h-full w-full" onLoading={setIsLoading} />
+                {viewer && (
+                  <viewer.BrainAtlasViewerGltf
+                    compact
+                    className="h-full w-full"
+                    onLoading={setIsLoading}
+                  />
+                )}
               </div>
               {isLoading && (
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">

@@ -592,12 +592,19 @@ dialog {
   animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
   border-radius: 1rem;
   overflow: clip;
+  /* atlas-morph.ts scales it from this corner, and the atlas's clear colour fills it */
+  transform-origin: 0 0;
+  background-color: var(--color-primary-9);
 }
 
+/* each view at its own size, centred even when larger than the box: atlas-morph.ts scales it */
 ::view-transition-old(.atlas-morph),
 ::view-transition-new(.atlas-morph) {
-  height: 100%;
-  object-fit: cover;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  translate: -50% -50%;
 }
 
 /* Slide up enter — new content rises into view */
