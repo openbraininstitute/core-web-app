@@ -6,6 +6,8 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
+export const megabytes = (bytes: number) => (bytes / 1e6).toFixed(1);
+
 /** A line of status over the view, top-centre: work under way, or a warning, with what can be done about it. */
 export function StatusPill({
   text,
@@ -67,6 +69,28 @@ export function StatusAlert({
         {children && <div className="mt-2 flex gap-2">{children}</div>}
       </div>
     </div>
+  );
+}
+
+/** What can be done about a status, in its pill or under its alert. */
+export function StatusAction({
+  onClick,
+  disabled,
+  children,
+}: {
+  onClick(): void;
+  disabled?: boolean;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-full border border-current/30 px-3 py-1 text-xs font-medium transition-colors hover:bg-current/10 disabled:opacity-50"
+    >
+      {children}
+    </button>
   );
 }
 

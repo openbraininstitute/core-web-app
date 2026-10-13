@@ -1,4 +1,9 @@
-import { StatusAlert, StatusPill } from '@/features/viewer-3d/chrome/status';
+import {
+  megabytes,
+  StatusAction,
+  StatusAlert,
+  StatusPill,
+} from '@/features/viewer-3d/chrome/status';
 
 import { DRACO_MAX_TRIANGLES } from '../engine/budget';
 import { useSaveGlb } from '../save-glb';
@@ -6,7 +11,6 @@ import { useSaveGlb } from '../save-glb';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { EmMeshLoad } from '../use-em-mesh';
 
-const mb = (bytes: number) => (bytes / 1e6).toFixed(1);
 const gb = (bytes: number) => (bytes / 2 ** 30).toFixed(1);
 const millions = (n: number) => (n / 1e6).toFixed(1);
 
@@ -29,7 +33,7 @@ export function LoadStatus({
         message="The browser has not given them back. Reload the page to view the mesh again."
         theme={theme}
       >
-        <ActionButton onClick={() => window.location.reload()}>Reload the page</ActionButton>
+        <StatusAction onClick={() => window.location.reload()}>Reload the page</StatusAction>
       </StatusAlert>
     );
   }
@@ -43,7 +47,7 @@ export function LoadStatus({
         message={`The browser probably ran out of memory${hasStandIn ? ': this is the coarse copy kept from before' : ''}. Loading it again may stop the page again.`}
         theme={theme}
       >
-        <ActionButton onClick={load.loadAgain}>Try again</ActionButton>
+        <StatusAction onClick={load.loadAgain}>Try again</StatusAction>
         <SaveButton load={load} name={name} />
       </StatusAlert>
     );
@@ -66,7 +70,7 @@ export function LoadStatus({
         message={`Loading it takes about ${gb(refused.peakBytes)} GB of memory at its peak, more than the ${gb(refused.allowedBytes)} GB the viewer allows itself here. The page may stop responding.`}
         theme={theme}
       >
-        <ActionButton onClick={load.loadAnyway}>Load anyway</ActionButton>
+        <StatusAction onClick={load.loadAnyway}>Load anyway</StatusAction>
       </StatusAlert>
     );
   }
@@ -77,7 +81,7 @@ export function LoadStatus({
   if (load.fullDropped) {
     return (
       <StatusPill text="Full detail was let go of after the graphics reset" failed theme={theme}>
-        <ActionButton onClick={load.loadAgain}>Load it</ActionButton>
+        <StatusAction onClick={load.loadAgain}>Load it</StatusAction>
       </StatusPill>
     );
   }
@@ -86,39 +90,21 @@ export function LoadStatus({
   let text: string;
   if (hasStandIn)
     text = downloading
-      ? `Loading full detail… ${mb(received)} / ${mb(total)} MB`
+      ? `Loading full detail… ${megabytes(received)} / ${megabytes(total)} MB`
       : 'Loading full detail…';
-  else text = downloading ? `Downloading ${mb(received)} / ${mb(total)} MB` : 'Decoding…';
+  else
+    text = downloading
+      ? `Downloading ${megabytes(received)} / ${megabytes(total)} MB`
+      : 'Decoding…';
   return <StatusPill text={text} failed={false} theme={theme} />;
-}
-
-function ActionButton({
-  onClick,
-  disabled,
-  children,
-}: {
-  onClick(): void;
-  disabled?: boolean;
-  children: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="rounded-full border border-current/30 px-3 py-1 text-xs font-medium transition-colors hover:bg-current/10 disabled:opacity-50"
-    >
-      {children}
-    </button>
-  );
 }
 
 /** Downloads the GLB, for a viewer elsewhere. */
 function SaveButton({ load, name }: { load: EmMeshLoad; name: string }) {
   const { save, saving, error } = useSaveGlb(load.request, name);
   return (
-    <ActionButton disabled={!load.request || saving} onClick={save}>
+    <StatusAction disabled={!load.request || saving} onClick={save}>
       {saving ? 'Downloading…' : error ? 'Download failed, try again' : 'Download the GLB'}
-    </ActionButton>
+    </StatusAction>
   );
 }
