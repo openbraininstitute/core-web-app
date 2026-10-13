@@ -79,12 +79,17 @@ export function SectionSelector({ sections }: { sections: TDetailViewSectionDict
           {SECTION_LABELS[page]}
           <RiArrowDownSLine className="size-5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          {sections.map((s) => (
-            <DropdownMenuItem key={s} onSelect={() => router.push(sectionHref(s))}>
-              {SECTION_LABELS[s]}
-            </DropdownMenuItem>
-          ))}
+        <DropdownMenuContent
+          align="start"
+          className="z-9999 min-w-40 rounded-xl border-neutral-1 bg-white p-1 shadow-md"
+        >
+          {sections
+            .filter((s) => s !== page)
+            .map((s) => (
+              <DropdownMenuItem key={s} onSelect={() => router.push(sectionHref(s))}>
+                {SECTION_LABELS[s]}
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
