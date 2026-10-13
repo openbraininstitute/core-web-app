@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { makeRegionEntry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
+import { RegionAssignment } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-assignment';
 import { RegionChoiceCards } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-choice-cards';
 
 import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
@@ -84,6 +85,30 @@ describe('RegionChoiceCards channel count', () => {
         setSelectedRegionChoice={vi.fn()}
         errors={[]}
         onlyAssigned
+      />
+    );
+
+    expect(screen.getByTestId('scan-config-emodel-section-list-somatic')).toBeInTheDocument();
+    expect(screen.queryByTestId('scan-config-emodel-section-list-all')).not.toBeInTheDocument();
+  });
+});
+
+describe('RegionAssignment read-only', () => {
+  it('hides section lists that have no assigned models', () => {
+    render(
+      <RegionAssignment
+        rootSchema={rootSchema}
+        value={{
+          mechanisms: {
+            ion_channel_models: [{ type: 'IonChannelModelFromID', id_str: NA }],
+            mechanism_regions: { somatic: [makeRegionEntry(NA)] },
+          },
+        }}
+        onChange={vi.fn()}
+        selectedRegionChoice=""
+        setSelectedRegionChoice={vi.fn()}
+        errors={[]}
+        disabled
       />
     );
 

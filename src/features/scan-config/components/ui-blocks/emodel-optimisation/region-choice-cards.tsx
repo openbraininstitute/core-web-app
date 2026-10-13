@@ -29,6 +29,8 @@ type Props = {
   errors: readonly ErrorObject[];
   /** when true, hides choices with no assigned ion channel models (Parameters Selection tab) */
   onlyAssigned?: boolean;
+  /** shown instead of the cards when `onlyAssigned` leaves none */
+  emptyMessage?: string;
 };
 
 /**
@@ -52,6 +54,7 @@ export function RegionChoiceCards({
   setSelectedRegionChoice,
   errors,
   onlyAssigned,
+  emptyMessage = 'No section lists have assigned ion channel models yet. Assign models in Region Assignment to configure their parameters here.',
 }: Props) {
   const mechanisms = readMechanisms(value);
 
@@ -61,12 +64,7 @@ export function RegionChoiceCards({
     .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
 
   if (onlyAssigned && choices.length === 0) {
-    return (
-      <div className="p-4 text-sm italic text-gray-500">
-        No section lists have assigned ion channel models yet. Assign models in Region Assignment to
-        configure their parameters here.
-      </div>
-    );
+    return <div className="p-4 text-sm italic text-gray-500">{emptyMessage}</div>;
   }
 
   return (
