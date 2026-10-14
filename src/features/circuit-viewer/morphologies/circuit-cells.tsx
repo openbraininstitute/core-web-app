@@ -28,9 +28,12 @@ import type {
   CircuitSomas,
   ElectrodeGroup,
   ElectrodeTransform,
+  LocationMarker,
 } from './types';
+import type { ViewLocations } from './use-location-selection';
 
 const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
+const NO_MARKERS: readonly LocationMarker[] = [];
 
 export interface CircuitCellsProps {
   /** The cells as the page placed them. Memoise it: other somas are another scene, and their crowding worked out again. */
@@ -57,6 +60,8 @@ export interface CircuitCellsProps {
   selectedElectrode?: string | null;
   /** Told where an array was moved or turned to with the pointer; without it the arrays stay put. */
   onElectrodeTransform?: (transform: ElectrodeTransform) => void;
+  /** Morphology locations: their markers, and what the pointer rests on and clicks of them and of the sections. */
+  locations?: ViewLocations;
   /** Spikes to replay over the cells, and the transport driving them, as the somas view takes them and with its defaults. */
   spikes?: ISpikeReplayBinding;
   backgroundColor: string;
@@ -107,6 +112,7 @@ export function CircuitCells({
   electrodeRadius,
   selectedElectrode = null,
   onElectrodeTransform,
+  locations,
   spikes,
   backgroundColor,
   showScalebar,
@@ -204,18 +210,42 @@ export function CircuitCells({
     [electrodeTracker, electrodes, selectedElectrode]
   );
 
+  const markers = locations?.markers ?? NO_MARKERS;
+  const markerRadius = locations?.radius;
+  useEffect(() => viewer?.setLocationMarkers(markers), [viewer, markers]);
+  useEffect(() => {
+    if (markerRadius !== undefined) viewer?.setLocationMarkerRadius(markerRadius);
+  }, [viewer, markerRadius]);
+  const markersOnScreen = useLatest(locations?.onMarkersOnScreen);
+  const labelled = locations?.onMarkersOnScreen !== undefined;
+  useEffect(() => {
+    if (!viewer || !labelled) return;
+    return viewer.onMarkersOnScreen((onScreen) => markersOnScreen.current?.(onScreen));
+  }, [viewer, labelled, markersOnScreen]);
+
   const clicked = useLatest(onCellClick);
   const clickable = onCellClick !== undefined;
+  const located = useLatest(locations);
+  const previewing = locations?.onHover !== undefined;
+  const picking = locations?.onPick !== undefined;
   useEffect(() => {
     const host = hostRef.current;
-    if (!viewer || !host || !(cellHover || clickable)) return;
+    if (!viewer || !host || !(cellHover || clickable || previewing || picking)) return;
     return trackPointer(host, viewer, {
       hover: cellHover,
       onClick: clickable ? (cell) => clicked.current?.(cell) : undefined,
       // An electrode the pointer can take hold of is what it rests on, not the cell behind.
       taken: movable ? (x, y) => viewer.electrodeAt(x, y) !== null : undefined,
+      locations:
+        previewing || picking
+          ? {
+              onHover: previewing ? (hit) => located.current?.onHover?.(hit) : undefined,
+              onPick: picking ? (hit) => located.current?.onPick?.(hit) : undefined,
+              pickable: (spot) => located.current?.pickable(spot) ?? false,
+            }
+          : undefined,
     });
-  }, [viewer, cellHover, clickable, clicked, movable]);
+  }, [viewer, cellHover, clickable, clicked, movable, previewing, picking, located]);
 
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;

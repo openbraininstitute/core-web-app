@@ -1,6 +1,6 @@
 import { sectionTypeLabel } from '../section-type-label';
 
-import type { MorphoViewerMorphologyLocationLabel } from '@/morpho-viewer';
+import type { LocationLabel } from '@/features/circuit-viewer/morphologies/use-location-selection';
 
 /**
  * Persistent `Type[section]` tags pinned to each selected location.
@@ -8,11 +8,7 @@ import type { MorphoViewerMorphologyLocationLabel } from '@/morpho-viewer';
  * Unlike the hover popover, these show the whole selection at once. Positions arrive on every
  * repaint, so tags follow their points as the camera orbits.
  */
-export function MorphologyLocationLabels({
-  labels,
-}: {
-  labels: MorphoViewerMorphologyLocationLabel[];
-}) {
+export function MorphologyLocationLabels({ labels }: { labels: LocationLabel[] }) {
   if (labels.length === 0) return null;
 
   return (

@@ -318,16 +318,23 @@ float glowRim( vec2 edge ) {
 }
 `;
 
-const ID_VERTEX = /* glsl */ `
+/** `id` the number the impostor is drawn in. */
+const idVertex = (id: string) => /* glsl */ `
 flat out vec4 vId;
 
 void main() {
 	vec3 corner;
 	bool on = impostorCorner( position, cellTexel().a, MIN_RADIUS, corner );
 	gl_Position = on ? projectionMatrix * vec4( corner, 1.0 ) : NOWHERE;
-	vId = cellId( aCell );
+	vId = cellId( ${id} );
 }
 `;
+
+/** What the impostors of each kind are numbered by in a pass of the segments: a segment by its own, a soma after them. */
+const SEGMENT_NUMBERS: Record<KindName, string> = {
+  segment: 'uint( gl_InstanceID )',
+  soma: 'uSegments + aCell',
+};
 
 const ID_FRAGMENT = /* glsl */ `
 flat in vec4 vId;
@@ -413,13 +420,24 @@ export function impostor<T extends THREE.Material>(
 
 /**
  * A material that draws the impostors of `kind` in their cells' numbers, where a cell is shown: the same quads, cut to
- * the same outlines and at the same depths as `impostor` draws them.
+ * the same outlines and at the same depths as `impostor` draws them. With `segments`, in the segments' numbers, and
+ * a soma in its cell's after those: `uSegments` + its cell.
  */
-export function idMaterial(kind: KindName, uniforms: ImpostorUniforms): THREE.ShaderMaterial {
+export function idMaterial(
+  kind: KindName,
+  uniforms: ImpostorUniforms,
+  segments?: { uSegments: { value: number } }
+): THREE.ShaderMaterial {
   const { vertex, fragment } = KINDS[kind];
+  const declared = segments && kind === 'soma' ? 'uniform uint uSegments;\n' : '';
   const material = new THREE.ShaderMaterial({
-    uniforms: { uCells: uniforms.uCells, uViewport: uniforms.uViewport, uShift: uniforms.uShift },
-    vertexShader: `${SHARED_VERTEX}\n${vertex}\n${ID_VERTEX}`,
+    uniforms: {
+      uCells: uniforms.uCells,
+      uViewport: uniforms.uViewport,
+      uShift: uniforms.uShift,
+      ...segments,
+    },
+    vertexShader: `${SHARED_VERTEX}\n${declared}${vertex}\n${idVertex(segments ? SEGMENT_NUMBERS[kind] : 'aCell')}`,
     fragmentShader: `${fragment}\n${ID_FRAGMENT}`,
     blending: THREE.NoBlending,
   });

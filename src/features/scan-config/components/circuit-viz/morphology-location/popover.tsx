@@ -5,8 +5,8 @@ import { cn } from '@/utils/css-class';
 
 import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
 
+import type { LocationHover } from '@/features/circuit-viewer/morphologies/use-location-selection';
 import type { TMorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import type { MorphoViewerMorphologyLocationHover } from '@/morpho-viewer';
 
 /** Gap between the point and the popover, so the dot stays visible under it. */
 const OFFSET_PX = 14;
@@ -29,7 +29,7 @@ export function MorphologyLocationPopover({
   hover,
   pickMode,
 }: {
-  hover: MorphoViewerMorphologyLocationHover | null;
+  hover: LocationHover | null;
   pickMode: TMorphologyLocationPickModeDict;
 }) {
   if (!hover) return null;

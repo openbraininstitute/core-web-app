@@ -107,13 +107,7 @@ export function writeElectrodes(
   contacts: Float32Array,
   looks: Float32Array
 ): boolean {
-  let changed = false;
-  const write = (array: Float32Array, at: number, value: number) => {
-    const float = Math.fround(value);
-    if (array[at] === float) return;
-    array[at] = float;
-    changed = true;
-  };
+  const { write, changed } = writer();
   let k = 0;
   for (const group of groups) {
     const lit = group.id === highlighted;
@@ -126,7 +120,42 @@ export function writeElectrodes(
       for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
     }
   }
-  return changed;
+  return changed();
+}
+
+/** As `writeElectrodes`, for morphology location markers, each a point in the circuit's frame in a colour of its own. */
+export function writeMarkers(
+  markers: readonly { point: Vec3; color: string }[],
+  centre: Vec3,
+  contacts: Float32Array,
+  looks: Float32Array
+): boolean {
+  const { write, changed } = writer();
+  markers.forEach(({ point, color }, k) => {
+    const look = [
+      ...chroma(chroma.valid(color) ? color : UNREADABLE)
+        .gl()
+        .slice(0, 3),
+      1,
+    ];
+    for (let c = 0; c < 3; c++) write(contacts, 3 * k + c, point[c] - centre[c]);
+    for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
+  });
+  return changed();
+}
+
+/** Writes floats where they differ from what is there, and tells whether any did. */
+function writer() {
+  let changed = false;
+  return {
+    write(array: Float32Array, at: number, value: number) {
+      const float = Math.fround(value);
+      if (array[at] === float) return;
+      array[at] = float;
+      changed = true;
+    },
+    changed: () => changed,
+  };
 }
 
 export function countContacts(groups: readonly ElectrodeGroup[]): number {

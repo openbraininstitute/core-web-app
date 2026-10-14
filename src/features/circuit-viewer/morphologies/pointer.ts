@@ -1,9 +1,21 @@
-import type { CircuitMorphologyView } from './types';
+import type { CircuitMorphologyView, MarkerOnScreen, SectionSpot } from './types';
 
 /** How far the pointer may go between going down and coming up, in CSS pixels, and still have clicked. */
 const CLICK_REACH = 4;
 /** How long the pointer rests before the cell under it is looked for: a pick sends every segment through the GPU. */
 const REST_MS = 60;
+
+/** A morphology location's marker by its index, or a point of a section where there is none. */
+export type LocationHit = ({ marker: number } & MarkerOnScreen) | { spot: SectionSpot };
+
+export interface LocationOptions {
+  /** Told what the pointer rests on, null for nothing, and of nothing once it moves the view or leaves. */
+  onHover?: (hit: LocationHit | null) => void;
+  /** Told what a click lands on. */
+  onPick?: (hit: LocationHit) => void;
+  /** Whether a click on this point would do anything: the pointer shows a hand over it, and over a marker. */
+  pickable: (spot: SectionSpot) => boolean;
+}
 
 interface PointerOptions {
   /** Highlight the cell the pointer rests on. */
@@ -12,6 +24,7 @@ interface PointerOptions {
   onClick?: (cell: number) => void;
   /** Whether a point of the element, in CSS pixels, is something else's to answer for: no cell is looked for there. */
   taken?: (x: number, y: number) => boolean;
+  locations?: LocationOptions;
 }
 
 export type Point = { x: number; y: number };
@@ -21,13 +34,17 @@ export const clicks = (from: Point, to: Point) =>
   Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
 
 /**
- * Tell `view` which cell the pointer over `element` rests on, and `onClick` which one it clicks, as against drags.
- * Returns what stops it.
+ * Tell `view` which cell the pointer over `element` rests on, and `onClick` which one it clicks, as against drags;
+ * with `locations`, also the morphology location's marker or the point of a section it rests on and clicks. Returns
+ * what stops it.
  */
 export function trackPointer(
   element: HTMLElement,
-  view: Pick<CircuitMorphologyView, 'pick' | 'setHighlight' | 'moving'>,
-  { hover, onClick, taken }: PointerOptions
+  view: Pick<
+    CircuitMorphologyView,
+    'pick' | 'setHighlight' | 'moving' | 'pickSection' | 'markerAt'
+  >,
+  { hover, onClick, taken, locations }: PointerOptions
 ): () => void {
   const off = new AbortController();
   // On the page, as the events have them: the view is measured only for a pick.
@@ -37,20 +54,51 @@ export function trackPointer(
   // Counts what may have changed the cell under the pointer, to tell a pick that is out of date by its answer.
   let changes = 0;
   let picking = false;
+  const resting = hover || locations?.onHover !== undefined;
 
   const at = (e: PointerEvent): Point => ({ x: e.clientX, y: e.clientY });
 
-  // A pick that fails finds nothing.
-  const pickAt = (point: Point): Promise<number | null> => {
+  /** The point in the element, or null where something else answers for it. */
+  const inElement = (point: Point): Point | null => {
     const box = element.getBoundingClientRect();
     const x = point.x - box.left;
     const y = point.y - box.top;
-    if (taken?.(x, y)) return Promise.resolve(null);
+    return taken?.(x, y) ? null : { x, y };
+  };
+
+  // A pick that fails finds nothing.
+  const tried = <T>(pick: () => Promise<T | null>): Promise<T | null> => {
     try {
-      return view.pick(x, y).catch(() => null);
+      return pick().catch(() => null);
     } catch {
       return Promise.resolve(null);
     }
+  };
+
+  const pickAt = (point: Point): Promise<number | null> => {
+    const p = inElement(point);
+    return p ? tried(() => view.pick(p.x, p.y)) : Promise.resolve(null);
+  };
+
+  // A marker before the section under it, which a click would add a location beside.
+  const locate = (point: Point): Promise<LocationHit | null> => {
+    const p = inElement(point);
+    if (!p) return Promise.resolve(null);
+    const marker = view.markerAt(p.x, p.y);
+    if (marker) {
+      const { index, ...onScreen } = marker;
+      return Promise.resolve({ marker: index, ...onScreen });
+    }
+    return tried(() => view.pickSection(p.x, p.y)).then((spot) => spot && { spot });
+  };
+
+  const tell = (hit: LocationHit | null) => {
+    if (!locations?.onHover) return;
+    locations.onHover(hit);
+    // On the canvas: the electrodes' gesture has the element's.
+    const canvas = element.querySelector('canvas');
+    const hand = hit !== null && ('marker' in hit || locations.pickable(hit.spot));
+    if (canvas) canvas.style.cursor = hand ? 'pointer' : '';
   };
 
   const look = () => {
@@ -63,9 +111,14 @@ export function trackPointer(
     }
     picking = true;
     const asked = changes;
-    void pickAt(point).then((cell) => {
+    void Promise.all([
+      hover ? pickAt(point) : null,
+      locations?.onHover ? locate(point) : null,
+    ]).then(([cell, hit]) => {
       picking = false;
-      if (!off.signal.aborted && asked === changes) view.setHighlight(cell);
+      if (off.signal.aborted || asked !== changes) return;
+      if (hover) view.setHighlight(cell);
+      tell(hit);
     });
   };
 
@@ -76,7 +129,7 @@ export function trackPointer(
 
   const lookAfterRest = () => {
     forget();
-    if (hover && last) rest = setTimeout(look, REST_MS);
+    if (resting && last) rest = setTimeout(look, REST_MS);
   };
 
   const onMove = (e: PointerEvent) => {
@@ -86,7 +139,9 @@ export function trackPointer(
       return;
     }
     // A drag moves the view from under the pointer. A press that may yet be a click keeps the highlight.
-    if (hover && !(down && clicks(down, at(e)))) view.setHighlight(null);
+    if (down && clicks(down, at(e))) return;
+    if (hover) view.setHighlight(null);
+    tell(null);
   };
 
   const onDown = (e: PointerEvent) => {
@@ -106,11 +161,22 @@ export function trackPointer(
     // A click left the view where it was: one pick answers for the highlight and the click.
     forget();
     const asked = changes;
-    void pickAt(point).then((cell) => {
-      if (off.signal.aborted) return;
-      if (hover && asked === changes) view.setHighlight(cell);
-      if (cell !== null) onClick?.(cell);
-    });
+    if (hover || onClick) {
+      void pickAt(point).then((cell) => {
+        if (off.signal.aborted) return;
+        if (hover && asked === changes) view.setHighlight(cell);
+        if (cell !== null) onClick?.(cell);
+      });
+    }
+    const onPick = locations?.onPick;
+    if (onPick) {
+      void locate(point).then((hit) => {
+        if (off.signal.aborted || !hit) return;
+        onPick(hit);
+        // What is under the pointer has changed: a location added there is a marker now.
+        lookAfterRest();
+      });
+    }
   };
 
   const onCancel = () => {
@@ -121,6 +187,7 @@ export function trackPointer(
     last = null;
     forget();
     if (hover) view.setHighlight(null);
+    tell(null);
   };
 
   // Only a wheel that zooms is heard here: the viewer keeps the others from its canvas.

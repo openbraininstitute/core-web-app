@@ -8,6 +8,7 @@ import { boxCorners } from '@/features/viewer-3d/engine/framing';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { extentOf, morphologiesExtent } from '../extent';
+import { pointAtOffset, sectionAtSegment, sectionNumbered, somaSectionOf } from '../sections';
 import { CellTable } from './cell-table';
 import {
   countContacts,
@@ -15,6 +16,7 @@ import {
   electrodeMaterial,
   minRadius,
   writeElectrodes,
+  writeMarkers,
 } from './electrodes';
 import {
   cellNearMiddle,
@@ -31,8 +33,10 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 
+import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
+import type { TreeSection } from '../load/tree';
 import type {
   CellColors,
   CircuitMorphologyData,
@@ -40,7 +44,11 @@ import type {
   CircuitSomas,
   ElectrodeGroup,
   ElectrodeHit,
+  LocationMarker,
+  MarkerOnScreen,
   Population,
+  ScreenPoint,
+  SectionSpot,
   Vec3,
 } from '../types';
 
@@ -61,6 +69,11 @@ const PICK_REACH = 4;
  * device pixels on a screen of pixel ratio 2.
  */
 const CONTACT_REACH = 7;
+/** A location marker's radius until told otherwise, in µm, and the least it is drawn with, in CSS pixels: morphoviewer's. */
+const MARKER_RADIUS = 3;
+const MARKER_MIN_RADIUS = 3;
+/** How far from a marker's centre a point is still on it, in CSS pixels: morphoviewer's. */
+const MARKER_REACH = 9;
 const point = new THREE.Vector3();
 
 /** `instances` quads, for the caller to add the attributes a shader places each by. */
@@ -93,6 +106,15 @@ function placedSomas(somas: Float32Array): { spheres: Float32Array; cells: Uint3
     cells[placed++] = cell;
   }
   return { spheres: spheres.subarray(0, 4 * placed), cells: cells.subarray(0, placed) };
+}
+
+/** How far along the line from `a` to `b` the point `p` falls, from 0 to 1, all three in pixels. */
+function along(a: ScreenPoint, b: ScreenPoint, p: ScreenPoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const squared = dx * dx + dy * dy;
+  if (squared === 0) return 0;
+  return Math.min(1, Math.max(0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / squared));
 }
 
 /** Whether neither set of populations takes in the other's: another circuit, or another population in place of one. */
@@ -131,8 +153,23 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
 export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorphologyView {
   private uniforms = impostorUniforms();
   private somaMaterial: THREE.Material;
-  /** The morphologies, their segments' and their somas' quads, and the same quads for the pick. */
-  private layer: { data: CircuitMorphologyData; meshes: Quads[]; ids: Quads[] } | null = null;
+  /**
+   * The morphologies, their segments' and their somas' quads, the same quads for the pick, and for the pick of a section
+   * where the morphologies were read whole.
+   */
+  private layer: {
+    data: CircuitMorphologyData;
+    meshes: Quads[];
+    ids: Quads[];
+    spots: Quads[];
+  } | null = null;
+  /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
+  private spots = new THREE.Scene();
+  private spotUniforms = { uSegments: { value: 0 } };
+  private spotMaterials = {
+    segment: idMaterial('segment', this.uniforms, this.spotUniforms),
+    soma: idMaterial('soma', this.uniforms, this.spotUniforms),
+  };
   private cloudUniforms = somaCloudUniforms();
   private cloudMaterial = somaCloudMaterial(this.uniforms, this.cloudUniforms);
   /**
@@ -168,6 +205,20 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.renderer.getPixelRatio()
   );
   private electrodes: Quads | null = null;
+  private markers: readonly LocationMarker[] = [];
+  /** Each marker's point in the circuit's frame and its section's type; null for one that is not drawn. */
+  private markerPoints: ({ point: Vec3; type: SectionType } | null)[] = [];
+  private markerUniforms = {
+    uViewport: this.uniforms.uViewport,
+    uRadius: { value: MARKER_RADIUS },
+    uMinRadius: { value: MARKER_MIN_RADIUS * this.renderer.getPixelRatio() },
+    uRingColour: this.electrodeUniforms.uRingColour,
+  };
+  private markerMaterial = electrodeMaterial(this.markerUniforms, this.renderer.getPixelRatio());
+  private markerDots: Quads | null = null;
+  private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
+  /** Whether the listeners were last told of no marker at all. */
+  private toldNone = false;
   /** Where the last framing left the camera. */
   private framedAt: {
     position: THREE.Vector3;
@@ -207,11 +258,15 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.somaMaterial.dispose();
     this.cloudMaterial.dispose();
     for (const material of Object.values(this.idMaterials)) material.dispose();
+    for (const material of Object.values(this.spotMaterials)) material.dispose();
     this.idTarget?.dispose();
     this.electrodes?.geometry.dispose();
     this.electrodeMaterial.dispose();
+    this.markerDots?.geometry.dispose();
+    this.markerMaterial.dispose();
     this.spikeTimeListeners.clear();
     this.spikesPlayingListeners.clear();
+    this.markerListeners.clear();
   }
 
   snapshot(): HTMLCanvasElement | null {
@@ -274,7 +329,13 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
     const ids = [quads(segments, this.idMaterials.segment), quads(somas, this.idMaterials.soma)];
     this.ids.add(...ids);
-    this.layer = { data, meshes: [segmentMesh, somaMesh], ids };
+    // Sections and offsets are known only of morphologies read whole.
+    const spots = data.trees
+      ? [quads(segments, this.spotMaterials.segment), quads(somas, this.spotMaterials.soma)]
+      : [];
+    if (spots.length > 0) this.spots.add(...spots);
+    this.spotUniforms.uSegments.value = data.segmentCells.length;
+    this.layer = { data, meshes: [segmentMesh, somaMesh], ids, spots };
     this.compileIds();
 
     if (under) {
@@ -283,6 +344,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       this.centre = data.centre;
       this.drawElectrodes();
     }
+    this.drawMarkers();
     this.bound();
     if (unmoved || framesAgain(under?.somas.populations ?? null, data.populations)) {
       this.resetView();
@@ -448,6 +510,53 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   pick(x: number, y: number): Promise<number | null> {
     const table = this.table;
     if (!table) return Promise.resolve(null);
+    // Other data by now has other cells.
+    return this.numberAround(this.ids, x, y).then((cell) => (this.table === table ? cell : null));
+  }
+
+  pickSection(x: number, y: number): Promise<SectionSpot | null> {
+    const layer = this.layer;
+    if (!layer?.data.trees) return Promise.resolve(null);
+    const { data } = layer;
+    // Where the camera is now, which the pick is drawn from.
+    const onScreen = this.projector();
+    const shift = this.uniforms.uShift.value.toArray() as Vec3;
+    const seen = (p: Vec3) => onScreen([p[0] + shift[0], p[1] + shift[1], p[2] + shift[2]]);
+    return this.numberAround(this.spots, x, y).then((n) => {
+      if (n === null || this.layer !== layer) return null;
+      const segments = data.segmentCells.length;
+      let at: { cell: number; section: TreeSection; offset: number } | null;
+      if (n >= segments) {
+        const section = somaSectionOf(data, n - segments);
+        at = section && { cell: n - segments, section, offset: 0.5 };
+      } else {
+        const end = (k: number) => {
+          const { x: ex, y: ey } = seen(
+            Array.from(data.segments.subarray(8 * n + k, 8 * n + k + 3)) as Vec3
+          );
+          return { x: ex * this.width, y: ey * this.height };
+        };
+        at = sectionAtSegment(data, n, along(end(0), end(4), { x, y }));
+      }
+      if (!at) return null;
+      const { cell, section, offset } = at;
+      const spot = pointAtOffset(data, cell, section, offset);
+      const screen = spot ? seen(spot) : { x: x / this.width, y: y / this.height };
+      return {
+        cell,
+        sonataId: section.sonataId,
+        type: section.type,
+        offset,
+        screen: { x: screen.x, y: screen.y },
+      };
+    });
+  }
+
+  /**
+   * The number drawn by `scene` nearest the pixel asked for, in CSS pixels from the view's top left corner, within
+   * `PICK_REACH`; null where there is none, or where the pixels cannot be read.
+   */
+  private numberAround(scene: THREE.Scene, x: number, y: number): Promise<number | null> {
     const { renderer } = this;
     const ratio = renderer.getPixelRatio();
     const target = this.pickTarget();
@@ -464,14 +573,85 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     // No frame may have been drawn since the camera last moved.
     this.camera.updateMatrixWorld();
     renderer.setRenderTarget(target);
-    renderer.render(this.ids, this.camera);
+    renderer.render(scene, this.camera);
     renderer.setRenderTarget(null);
     const pixels = new Uint8Array(4 * side * side);
     return renderer.readRenderTargetPixelsAsync(target, 0, 0, side, side, pixels).then(
-      // Other data by now has other cells.
-      () => (this.table === table ? cellNearMiddle(pixels, side) : null),
+      () => cellNearMiddle(pixels, side),
       () => null
     );
+  }
+
+  /**
+   * Where the camera now draws a point of the view's frame: as fractions of the view from its top left corner, and
+   * whether it is in front of the eye.
+   */
+  private projector(): (p: Vec3) => ScreenPoint & { visible: boolean } {
+    const { camera } = this;
+    camera.updateMatrixWorld();
+    const matrix = camera.projectionMatrix.clone().multiply(camera.matrixWorldInverse);
+    const perspective = camera instanceof THREE.PerspectiveCamera;
+    const v = new THREE.Vector4();
+    return ([px, py, pz]) => {
+      v.set(px, py, pz, 1).applyMatrix4(matrix);
+      const visible = !perspective || v.w > 0;
+      const w = visible ? v.w : 1;
+      return { x: (v.x / w + 1) / 2, y: (1 - v.y / w) / 2, visible };
+    };
+  }
+
+  setLocationMarkers(markers: readonly LocationMarker[]): void {
+    this.markers = markers;
+    this.drawMarkers();
+  }
+
+  setLocationMarkerRadius(radius: number): void {
+    if (radius === this.markerUniforms.uRadius.value) return;
+    this.markerUniforms.uRadius.value = radius;
+    if (this.markerDots?.visible) this.invalidate();
+  }
+
+  markerAt(x: number, y: number): ({ index: number } & MarkerOnScreen) | null {
+    const onScreen = this.projector();
+    let found: ({ index: number } & MarkerOnScreen) | null = null;
+    let nearest = MARKER_REACH;
+    this.markerPoints.forEach((marker, index) => {
+      if (!marker) return;
+      const screen = onScreen(this.inView(marker.point));
+      if (!screen.visible) return;
+      const away = Math.hypot(screen.x * this.width - x, screen.y * this.height - y);
+      if (away > nearest) return;
+      nearest = away;
+      found = { index, type: marker.type, screen: { x: screen.x, y: screen.y }, visible: true };
+    });
+    return found;
+  }
+
+  onMarkersOnScreen(listener: (markers: readonly (MarkerOnScreen | null)[]) => void): () => void {
+    this.markerListeners.add(listener);
+    this.toldNone = false;
+    this.invalidate();
+    return () => this.markerListeners.delete(listener);
+  }
+
+  /** The markers' listeners told where they are, after each frame; of none, once. */
+  protected override afterDraw(): void {
+    if (this.markerListeners.size === 0) return;
+    const none = this.markerPoints.length === 0;
+    if (none && this.toldNone) return;
+    this.toldNone = none;
+    const onScreen = this.projector();
+    const markers = this.markerPoints.map((marker) => {
+      if (!marker) return null;
+      const { x, y, visible } = onScreen(this.inView(marker.point));
+      return { type: marker.type, screen: { x, y }, visible };
+    });
+    for (const listener of this.markerListeners) listener(markers);
+  }
+
+  /** A point of the circuit's frame in the view's. */
+  private inView(p: Vec3): Vec3 {
+    return [p[0] - this.centre[0], p[1] - this.centre[1], p[2] - this.centre[2]];
   }
 
   setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void {
@@ -602,13 +782,58 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
    * frame only where that changed what is drawn.
    */
   private drawElectrodes(): void {
-    const count = countContacts(this.electrodeGroups);
-    let mesh = this.electrodes;
-    if (count === 0 && !mesh?.visible) return;
+    this.electrodes = this.drawDots(
+      this.electrodes,
+      countContacts(this.electrodeGroups),
+      { material: this.electrodeMaterial, name: 'electrodes', order: 1 },
+      (contacts, looks) =>
+        writeElectrodes(
+          this.electrodeGroups,
+          this.highlightedElectrode,
+          this.centre,
+          contacts,
+          looks
+        )
+    );
+  }
+
+  /** The markers where the morphologies drawn put them, after the electrodes and over them. */
+  private drawMarkers(): void {
+    const data = this.layer?.data;
+    this.markerPoints = this.markers.map(({ cell, sonataId, offset }) => {
+      if (!data) return null;
+      const section = sectionNumbered(data, cell, sonataId);
+      const at = section && pointAtOffset(data, cell, section, offset);
+      if (!section || !at) return null;
+      return { point: at.map((v, k) => v + data.centre[k]) as Vec3, type: section.type };
+    });
+    const drawn = this.markerPoints.flatMap((marker, index) =>
+      marker ? [{ point: marker.point, color: this.markers[index].color }] : []
+    );
+    this.markerDots = this.drawDots(
+      this.markerDots,
+      drawn.length,
+      { material: this.markerMaterial, name: 'location markers', order: 2 },
+      (contacts, looks) => writeMarkers(drawn, this.centre, contacts, looks)
+    );
+  }
+
+  /**
+   * `count` dots in `mesh`, drawn after the cells and over them, a mesh made larger only when they outgrow it; `write`
+   * puts their places and looks in, and says whether that changed a float. A frame only where what is drawn changed.
+   */
+  private drawDots(
+    mesh: Quads | null,
+    count: number,
+    { material, name, order }: { material: THREE.Material; name: string; order: number },
+    write: (contacts: Float32Array, looks: Float32Array) => boolean
+  ): Quads | null {
+    if (count === 0 && !mesh?.visible) return mesh;
     const changed = !mesh || count !== mesh.geometry.instanceCount;
-    if (!mesh || count > mesh.geometry.getAttribute('aContact').count) {
-      mesh?.geometry.dispose();
-      mesh?.removeFromParent();
+    let dots = mesh;
+    if (!dots || count > dots.geometry.getAttribute('aContact').count) {
+      dots?.geometry.dispose();
+      dots?.removeFromParent();
       const geometry = quadGeometry(count);
       geometry
         .setAttribute(
@@ -616,28 +841,22 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
           new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
         )
         .setAttribute('aLook', new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4));
-      mesh = quads(geometry, this.electrodeMaterial);
-      mesh.name = 'electrodes';
-      mesh.renderOrder = 1;
-      this.scene.add(mesh);
-      this.electrodes = mesh;
+      dots = quads(geometry, material);
+      dots.name = name;
+      dots.renderOrder = order;
+      this.scene.add(dots);
     }
-    mesh.geometry.instanceCount = count;
-    mesh.visible = count > 0;
-    const contacts = mesh.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
-    const looks = mesh.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
-    const written = writeElectrodes(
-      this.electrodeGroups,
-      this.highlightedElectrode,
-      this.centre,
-      contacts.array as Float32Array,
-      looks.array as Float32Array
-    );
+    dots.geometry.instanceCount = count;
+    dots.visible = count > 0;
+    const contacts = dots.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
+    const looks = dots.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
+    const written = write(contacts.array as Float32Array, looks.array as Float32Array);
     if (written) {
       contacts.needsUpdate = true;
       looks.needsUpdate = true;
     }
     if (written || changed) this.invalidate();
+    return dots;
   }
 
   /** A cell table for `cells` cells, which the shaders read, painted, and glowing as the replay is. */
@@ -659,6 +878,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     const { renderer } = this;
     renderer.setRenderTarget(this.pickTarget());
     renderer.compile(this.ids, this.camera);
+    if (this.spots.children.length > 0) renderer.compile(this.spots, this.camera);
     renderer.setRenderTarget(null);
   }
 
@@ -690,9 +910,13 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       mesh.geometry.dispose();
       mesh.removeFromParent();
     }
-    for (const mesh of this.layer?.ids ?? []) mesh.removeFromParent();
+    for (const mesh of [...(this.layer?.ids ?? []), ...(this.layer?.spots ?? [])]) {
+      mesh.removeFromParent();
+    }
     this.layer = null;
     this.uniforms.uShift.value.set(0, 0, 0);
+    // They sit on the morphologies.
+    this.drawMarkers();
     this.invalidate();
   }
 

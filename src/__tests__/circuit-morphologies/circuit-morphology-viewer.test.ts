@@ -5,6 +5,9 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
 import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
+import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
@@ -15,6 +18,7 @@ import type {
   CircuitSomas,
   ElectrodeGroup,
 } from '@/features/circuit-viewer/morphologies/types';
+import type { Sections } from '@/features/scan-config/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
 
 const { FakeRenderer } = vi.hoisted(() => {
@@ -87,6 +91,10 @@ interface Internals {
   scene: THREE.Scene;
   electrodeMaterial: THREE.ShaderMaterial;
   electrodes: Quads | null;
+  spots: THREE.Scene;
+  spotUniforms: { uSegments: { value: number } };
+  markerUniforms: { uRadius: { value: number } };
+  markerDots: Quads | null;
 }
 
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
@@ -1257,5 +1265,209 @@ describe("the circuit viewer's zoom", () => {
     expect(heard).toHaveBeenCalledTimes(1);
     viewer.resetView();
     expect(viewer.zoom).toBe(1);
+  });
+});
+
+/** A soma at (0, 0, 10), a basal dendrite out of it 9 µm long in two segments, and a child of it 10 µm long. */
+const NEURON: Sections = [
+  {
+    id: 'soma',
+    sonata_section_id: 0,
+    parent_id: null,
+    type: SectionType.Soma,
+    points: [[0, 0, 10]],
+    radii: [6],
+  },
+  {
+    id: '0',
+    sonata_section_id: 1,
+    parent_id: 'soma',
+    type: SectionType.BasalDendrite,
+    points: [
+      [6, 0, 10],
+      [10, 0, 10],
+      [13, 4, 10],
+    ],
+    radii: [2, 1.5, 1],
+  },
+  {
+    id: '1',
+    sonata_section_id: 2,
+    parent_id: '0',
+    type: SectionType.BasalDendrite,
+    points: [
+      [13, 4, 10],
+      [13, 14, 10],
+    ],
+    radii: [0.8, 0.5],
+  },
+];
+
+/** A cell with no morphology, then that neuron, unturned, 100 µm along x, around the origin. */
+const neuron = () =>
+  placeTrees(
+    {
+      somas: {
+        positions: Float32Array.of(0, 50, 0, 100, 0, 0),
+        populations: [{ name: 'A', cells: 2 }],
+      },
+      orientations: null,
+      placeholderRadius: 8,
+    },
+    [null, treeOf(NEURON, { axons: true })],
+    [0, 0, 0]
+  );
+
+/** Where the view draws a point of its frame, in CSS pixels. */
+function onScreen(inner: Internals, at: [number, number, number]): [number, number] {
+  inner.camera.updateMatrixWorld();
+  const p = new THREE.Vector3(...at).project(inner.camera);
+  return [((p.x + 1) / 2) * 400, ((1 - p.y) / 2) * 300];
+}
+
+/** The pick's pixels with `n` drawn in the middle one of 9 by 9, as the pass draws numbers: n and one. */
+function drawn(inner: Internals, n: number) {
+  inner.renderer.readRenderTargetPixelsAsync.mockImplementation(
+    async (_target, _x, _y, _w, _h, pixels: Uint8Array) => {
+      new DataView(pixels.buffer).setUint32(4 * (4 * 9 + 4), n + 1, true);
+      return pixels;
+    }
+  );
+}
+
+describe('the pick of a section', () => {
+  it('finds the section and the offset under a point, from the segments drawn in their numbers', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(neuron());
+    expect(inner.spots.children).toHaveLength(2);
+    expect(inner.spotUniforms.uSegments.value).toBe(4);
+    const scenes: THREE.Scene[] = [];
+    inner.renderer.render.mockImplementation((scene: THREE.Scene) => scenes.push(scene));
+    drawn(inner, 2);
+    // 0.4 of the way along the dendrite's second segment, 6 µm into its 9.
+    const [x, y] = onScreen(inner, [111.2, 1.6, 10]);
+    const spot = await viewer.pickSection(x, y);
+    expect(scenes).toEqual([inner.spots]);
+    expect(spot).toEqual({
+      cell: 1,
+      sonataId: 1,
+      type: SectionType.BasalDendrite,
+      offset: expect.closeTo(6 / 9, 3),
+      screen: { x: expect.closeTo(x / 400, 3), y: expect.closeTo(y / 300, 3) },
+    });
+  });
+
+  it("finds the soma's section halfway along, on the soma, which the pass numbers after the segments", async () => {
+    const { viewer, inner } = make();
+    viewer.setData(neuron());
+    drawn(inner, 4 + 1);
+    const [x, y] = onScreen(inner, [100, 0, 10]);
+    await expect(viewer.pickSection(x + 3, y)).resolves.toEqual({
+      cell: 1,
+      sonataId: 0,
+      type: SectionType.Soma,
+      offset: 0.5,
+      screen: { x: expect.closeTo(x / 400, 3), y: expect.closeTo(y / 300, 3) },
+    });
+  });
+
+  it('finds none on a cell drawn as its soma alone, nor where nothing is drawn', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(neuron());
+    drawn(inner, 4 + 0);
+    await expect(viewer.pickSection(10, 10)).resolves.toBeNull();
+    drawn(inner, -1);
+    await expect(viewer.pickSection(10, 10)).resolves.toBeNull();
+  });
+
+  it('finds none, drawing nothing, of morphologies not read whole', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    expect(inner.spots.children).toHaveLength(0);
+    inner.renderer.render.mockClear();
+    await expect(viewer.pickSection(10, 10)).resolves.toBeNull();
+    expect(inner.renderer.render).not.toHaveBeenCalled();
+  });
+});
+
+describe('the markers of morphology locations', () => {
+  const MARKER = { cell: 1, sonataId: 1, offset: 6 / 9, color: '#ff0000' };
+
+  it('mark a location where its section puts it, after the electrodes and over them, and are found there', () => {
+    const { viewer, inner } = make();
+    viewer.setData(neuron());
+    viewer.setLocationMarkers([MARKER, { ...MARKER, sonataId: 9 }, { ...MARKER, cell: 0 }]);
+    const dots = inner.markerDots as Quads;
+    expect(dots.renderOrder).toBe(2);
+    expect((dots.material as THREE.ShaderMaterial).depthTest).toBe(false);
+    expect(dots.geometry.instanceCount).toBe(1);
+    expect(rounded(dots.geometry.getAttribute('aContact').array.slice(0, 3))).toEqual([
+      111.2, 1.6, 10,
+    ]);
+    expect(rounded(dots.geometry.getAttribute('aLook').array.slice(0, 4))).toEqual([1, 0, 0, 1]);
+
+    const [x, y] = onScreen(inner, [111.2, 1.6, 10]);
+    expect(viewer.markerAt(x + 6, y)).toEqual({
+      index: 0,
+      type: SectionType.BasalDendrite,
+      screen: { x: expect.closeTo(x / 400, 3), y: expect.closeTo(y / 300, 3) },
+      visible: true,
+    });
+    expect(viewer.markerAt(x + 10, y)).toBeNull();
+  });
+
+  it("wait for their cell's morphology, and tell where they are after every frame", () => {
+    const { viewer, inner } = make();
+    const heard = vi.fn();
+    viewer.onMarkersOnScreen(heard);
+    viewer.setLocationMarkers([MARKER]);
+    expect(frames(inner)).toBe(1);
+    expect(heard).toHaveBeenLastCalledWith([null]);
+
+    viewer.setData(neuron());
+    frames(inner);
+    const [x, y] = onScreen(inner, [111.2, 1.6, 10]);
+    expect(heard).toHaveBeenLastCalledWith([
+      {
+        type: SectionType.BasalDendrite,
+        screen: { x: expect.closeTo(x / 400, 3), y: expect.closeTo(y / 300, 3) },
+        visible: true,
+      },
+    ]);
+    viewer.setData(null);
+    expect(inner.markerDots?.visible).toBe(false);
+  });
+
+  it('tell of no marker once, and of none again till there are some', () => {
+    const { viewer, inner } = make();
+    const heard = vi.fn();
+    viewer.onMarkersOnScreen(heard);
+    frames(inner);
+    expect(heard).toHaveBeenCalledExactlyOnceWith([]);
+    viewer.setData(neuron());
+    frames(inner);
+    expect(heard).toHaveBeenCalledTimes(1);
+    viewer.setLocationMarkers([MARKER]);
+    frames(inner);
+    expect(heard).toHaveBeenCalledTimes(2);
+    viewer.setLocationMarkers([]);
+    frames(inner);
+    expect(heard).toHaveBeenLastCalledWith([]);
+    viewer.setZoom(2);
+    frames(inner);
+    expect(heard).toHaveBeenCalledTimes(3);
+  });
+
+  it('are as large as told, a frame drawn only where one is on show', () => {
+    const { viewer, inner } = make();
+    frames(inner);
+    viewer.setLocationMarkerRadius(5);
+    expect(inner.markerUniforms.uRadius.value).toBe(5);
+    expect(frames(inner)).toBe(0);
+    viewer.setData(neuron());
+    viewer.setLocationMarkers([MARKER]);
+    frames(inner);
+    viewer.setLocationMarkerRadius(4);
+    expect(frames(inner)).toBe(1);
   });
 });

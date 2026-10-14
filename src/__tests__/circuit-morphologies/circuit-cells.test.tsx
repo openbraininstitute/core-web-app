@@ -15,6 +15,7 @@ import type {
 } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => {
+  const SPOT = { cell: 4, sonataId: 12, type: 2, offset: 0.25, screen: { x: 0.5, y: 0.5 } };
   /** Takes what the view hands the engine, and draws nothing. */
   class FakeViewer {
     setSomas = vi.fn();
@@ -48,6 +49,12 @@ const h = vi.hoisted(() => {
         depthOf[2],
       ]
     );
+    setLocationMarkers = vi.fn();
+    setLocationMarkerRadius = vi.fn();
+    markerAt = vi.fn((_x: number, _y: number) => null);
+    /** Every point is a quarter of the way along basal dendrite 12 of cell 4. */
+    pickSection = vi.fn(async (_x: number, _y: number) => SPOT);
+    markersOnScreen = new Set<(markers: readonly unknown[]) => void>();
     setDark = vi.fn();
     resetView = vi.fn();
     dispose = vi.fn();
@@ -81,6 +88,11 @@ const h = vi.hoisted(() => {
       return () => {};
     }
 
+    onMarkersOnScreen(listener: (markers: readonly unknown[]) => void) {
+      this.markersOnScreen.add(listener);
+      return () => this.markersOnScreen.delete(listener);
+    }
+
     onPixelScaleChange(listener: (scale: number | null) => void) {
       this.pixelScaleListeners.add(listener);
       return () => this.pixelScaleListeners.delete(listener);
@@ -92,6 +104,7 @@ const h = vi.hoisted(() => {
     }
   }
   const state = {
+    SPOT,
     viewers: [] as FakeViewer[],
     FakeViewer,
     /** Every crowding asked for, each waiting for the test to answer it. */
@@ -320,6 +333,43 @@ describe('CircuitCells', () => {
     expect(viewer.setCellColors).toHaveBeenCalledTimes(2);
     expect(viewer.setData).toHaveBeenCalledTimes(1);
     expect(h.viewers).toHaveLength(1);
+  });
+
+  it('draws the location markers at their radius, and tells where they are where labels want it', () => {
+    const markers = [{ cell: 4, sonataId: 12, offset: 0.25, color: '#ff0000' }];
+    const onMarkersOnScreen = vi.fn();
+    const { viewer, update } = view({
+      locations: { markers, radius: 4, pickable: () => true },
+    });
+    expect(viewer.setLocationMarkers).toHaveBeenLastCalledWith(markers);
+    expect(viewer.setLocationMarkerRadius).toHaveBeenLastCalledWith(4);
+    expect(viewer.markersOnScreen.size).toBe(0);
+
+    update({ locations: { markers, radius: 4, pickable: () => true, onMarkersOnScreen } });
+    const onScreen = [{ type: 2, screen: { x: 0.1, y: 0.2 }, visible: true }];
+    for (const listener of viewer.markersOnScreen) listener(onScreen);
+    expect(onMarkersOnScreen).toHaveBeenCalledExactlyOnceWith(onScreen);
+    expect(viewer.setLocationMarkers).toHaveBeenCalledTimes(1);
+
+    update({ locations: undefined });
+    expect(viewer.setLocationMarkers).toHaveBeenLastCalledWith([]);
+    expect(viewer.markersOnScreen.size).toBe(0);
+  });
+
+  it('tells of the point of a section clicked, and of where the pointer rests, with no cell clicked', async () => {
+    const onPick = vi.fn();
+    const onHover = vi.fn();
+    const { viewer } = view({
+      locations: { markers: [], radius: 3, pickable: () => true, onPick, onHover },
+    });
+
+    click(viewer.host);
+    await vi.waitFor(() => expect(onPick).toHaveBeenCalledExactlyOnceWith({ spot: h.SPOT }));
+    expect(viewer.pickSection).toHaveBeenCalledWith(30, 20);
+    expect(viewer.pick).not.toHaveBeenCalled();
+
+    fireEvent.pointerMove(viewer.host, { clientX: 31, clientY: 20 });
+    await vi.waitFor(() => expect(onHover).toHaveBeenLastCalledWith({ spot: h.SPOT }));
   });
 
   it('tells of the cell clicked in the view, through whichever listener it has by then', async () => {

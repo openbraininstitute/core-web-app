@@ -2,13 +2,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { trackPointer } from '@/features/circuit-viewer/morphologies/pointer';
+import { SectionType } from '@/features/circuit-viewer/section-type';
+
+import type { MarkerOnScreen, SectionSpot } from '@/features/circuit-viewer/morphologies/types';
 
 /** The view's part: each pick waits to be answered. */
 function fakeView() {
   const answers: ((cell: number | null) => void)[] = [];
+  const spots: ((spot: SectionSpot | null) => void)[] = [];
   return {
     answers,
+    spots,
     pick: vi.fn((_x: number, _y: number) => new Promise<number | null>((r) => answers.push(r))),
+    pickSection: vi.fn(
+      (_x: number, _y: number) => new Promise<SectionSpot | null>((r) => spots.push(r))
+    ),
+    markerAt: vi.fn((_x: number, _y: number): ({ index: number } & MarkerOnScreen) | null => null),
     setHighlight: vi.fn((_cell: number | null) => {}),
     moving: false,
   };
@@ -44,9 +53,13 @@ const rest = () => {
   pointer('pointermove', [150, 90]);
   vi.advanceTimersByTime(60);
 };
+/** The promises a pick's answer goes through, settled. */
+const settle = async () => {
+  for (let i = 0; i < 8; i++) await Promise.resolve();
+};
 const answer = async (view: ReturnType<typeof fakeView>, cell: number | null) => {
   view.answers.shift()?.(cell);
-  await Promise.resolve();
+  await settle();
 };
 
 beforeEach(() => {
@@ -207,7 +220,7 @@ describe('the pointer over the morphologies', () => {
     const taken = vi.fn((x: number, _y: number) => x < 55);
     const view = track({ hover: true, taken });
     rest();
-    await Promise.resolve();
+    await settle();
 
     expect(taken).toHaveBeenCalledExactlyOnceWith(50, 50);
     expect(view.pick).not.toHaveBeenCalled();
@@ -283,7 +296,7 @@ describe('the pointer over the morphologies', () => {
     expect(view.pick).not.toHaveBeenCalled();
   });
 
-  it('hears nothing more once stopped, and leaves no cell highlighted', async () => {
+  it('hears nothing more once stopped, and leaves no cell highlighted, nor a location', async () => {
     const onClick = vi.fn();
     const view = track({ hover: true, onClick });
     rest();
@@ -302,5 +315,137 @@ describe('the pointer over the morphologies', () => {
     expect(view.pick).toHaveBeenCalledTimes(2);
     expect(onClick).not.toHaveBeenCalled();
     expect(view.setHighlight).toHaveBeenCalledTimes(1);
+  });
+});
+
+/** A basal dendrite's point at 50, 50 in the view. */
+const SPOT: SectionSpot = {
+  cell: 3,
+  sonataId: 12,
+  type: SectionType.BasalDendrite,
+  offset: 0.25,
+  screen: { x: 0.5, y: 0.5 },
+};
+const MARKER = {
+  index: 2,
+  type: SectionType.ApicalDendrite,
+  screen: { x: 0.4, y: 0.6 },
+  visible: true,
+};
+
+describe('the pointer over morphology locations', () => {
+  const options = () => ({ onHover: vi.fn(), onPick: vi.fn(), pickable: vi.fn(() => true) });
+  const cursor = () => element.querySelector('canvas')?.style.cursor;
+
+  beforeEach(() => {
+    element.appendChild(document.createElement('canvas'));
+  });
+
+  it('tells of the marker it rests on before the section under it, with a hand', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations });
+    view.markerAt.mockReturnValue(MARKER);
+    rest();
+    await settle();
+
+    expect(view.markerAt).toHaveBeenCalledExactlyOnceWith(50, 50);
+    expect(view.pickSection).not.toHaveBeenCalled();
+    expect(view.pick).not.toHaveBeenCalled();
+    const { index, ...onScreen } = MARKER;
+    expect(locations.onHover).toHaveBeenCalledExactlyOnceWith({ marker: index, ...onScreen });
+    expect(cursor()).toBe('pointer');
+  });
+
+  it('tells of the point of a section it rests on, with a hand only where a click would act', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations });
+    rest();
+    expect(view.pickSection).toHaveBeenCalledExactlyOnceWith(50, 50);
+    view.spots.shift()?.(SPOT);
+    await settle();
+    expect(locations.onHover).toHaveBeenLastCalledWith({ spot: SPOT });
+    expect(locations.pickable).toHaveBeenCalledWith(SPOT);
+    expect(cursor()).toBe('pointer');
+
+    locations.pickable.mockReturnValue(false);
+    pointer('pointermove', [160, 90]);
+    vi.advanceTimersByTime(60);
+    view.spots.shift()?.({ ...SPOT, type: SectionType.Axon });
+    await settle();
+    expect(cursor()).toBe('');
+
+    pointer('pointermove', [170, 90]);
+    vi.advanceTimersByTime(60);
+    view.spots.shift()?.(null);
+    await settle();
+    expect(locations.onHover).toHaveBeenLastCalledWith(null);
+  });
+
+  it('looks for the cell and the location at once, and tells of both', async () => {
+    const locations = options();
+    const view = track({ hover: true, locations });
+    rest();
+    expect(view.pick).toHaveBeenCalledTimes(1);
+    expect(view.pickSection).toHaveBeenCalledTimes(1);
+    view.spots.shift()?.(SPOT);
+    await answer(view, 3);
+    expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(3);
+    expect(locations.onHover).toHaveBeenCalledExactlyOnceWith({ spot: SPOT });
+  });
+
+  it('tells of nothing while the view is dragged, nor once it has left', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations });
+    rest();
+    view.spots.shift()?.(SPOT);
+    await settle();
+
+    press([150, 90]);
+    pointer('pointermove', [250, 190], { buttons: 1 });
+    expect(locations.onHover).toHaveBeenLastCalledWith(null);
+    expect(cursor()).toBe('');
+    locations.onHover.mockClear();
+    pointer('pointerleave', [0, 0]);
+    expect(locations.onHover).toHaveBeenCalledExactlyOnceWith(null);
+  });
+
+  it('picks the marker or the point of a section a click lands on, the cell left alone', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations });
+    click([150, 90]);
+    expect(view.pick).not.toHaveBeenCalled();
+    view.spots.shift()?.(SPOT);
+    await settle();
+    expect(locations.onPick).toHaveBeenCalledExactlyOnceWith({ spot: SPOT });
+
+    view.markerAt.mockReturnValue(MARKER);
+    click([150, 90]);
+    await settle();
+    expect(locations.onPick).toHaveBeenLastCalledWith(expect.objectContaining({ marker: 2 }));
+    expect(view.pickSection).toHaveBeenCalledTimes(1);
+  });
+
+  it('looks again once a click has picked, a location added there being a marker now', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations });
+    click([150, 90]);
+    view.spots.shift()?.(SPOT);
+    await settle();
+    view.markerAt.mockReturnValue(MARKER);
+    vi.advanceTimersByTime(60);
+    await settle();
+    expect(locations.onHover).toHaveBeenLastCalledWith(expect.objectContaining({ marker: 2 }));
+  });
+
+  it('picks nothing where a click finds nothing, nor where the point is taken', async () => {
+    const locations = options();
+    const view = track({ hover: false, locations, taken: (x) => x < 55 });
+    click([150, 90]);
+    await settle();
+    expect(view.markerAt).not.toHaveBeenCalled();
+    click([160, 90]);
+    view.spots.shift()?.(null);
+    await settle();
+    expect(locations.onPick).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,6 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
+import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
 import type { TreeMorphology } from './load/tree';
 
@@ -83,6 +84,39 @@ export interface ElectrodeHit {
   contact: Vec3;
 }
 
+/** Fractions of the view's width and height, from its top left corner. */
+export interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+/** A point of a cell's section, as a morphology location names it. */
+export interface SectionSpot {
+  cell: number;
+  /** The section's SONATA number; null where OBI-One sent none. */
+  sonataId: number | null;
+  type: SectionType;
+  /** How far along the section, from 0 at its start to 1 at its end. */
+  offset: number;
+  /** Where the view draws it. */
+  screen: ScreenPoint;
+}
+
+/** A morphology location to mark on a cell: its section's SONATA number, how far along, and in what colour. */
+export interface LocationMarker {
+  cell: number;
+  sonataId: number;
+  offset: number;
+  color: string;
+}
+
+/** Where a marker is drawn, and on what type of section; `visible` false where it is behind the eye. */
+export interface MarkerOnScreen {
+  type: SectionType;
+  screen: ScreenPoint;
+  visible: boolean;
+}
+
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */
 export interface CircuitMorphologyView extends ViewControls {
   /**
@@ -119,6 +153,19 @@ export interface CircuitMorphologyView extends ViewControls {
   pick(x: number, y: number): Promise<number | null>;
   /** Whether the view is still moving, a gesture's glide included: what is under the pointer is about to change. */
   readonly moving: boolean;
+  /**
+   * The point of a section drawn at a point of the view, in CSS pixels, or the nearest within a few pixels, of a cell
+   * whose morphology was read whole; on its soma, the soma's section halfway. Null where there is none.
+   */
+  pickSection(x: number, y: number): Promise<SectionSpot | null>;
+  /** Mark these locations in front of the cells; a marker whose cell's morphology is not in, or has no such section, waits. */
+  setLocationMarkers(markers: readonly LocationMarker[]): void;
+  /** A marker's radius, in µm. */
+  setLocationMarkerRadius(radius: number): void;
+  /** The marker drawn at a point of the view, in CSS pixels, or the nearest within a few pixels: its index and where it is. */
+  markerAt(x: number, y: number): ({ index: number } & MarkerOnScreen) | null;
+  /** Told where each marker is drawn after every frame, null for one that is not; a frame is drawn for a new listener. */
+  onMarkersOnScreen(listener: (markers: readonly (MarkerOnScreen | null)[]) => void): () => void;
   /** Draw these electrodes in front of the cells, whatever is nearer the eye; the array `highlighted` larger and lighter. */
   setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void;
   /** A contact's radius, in µm. */
