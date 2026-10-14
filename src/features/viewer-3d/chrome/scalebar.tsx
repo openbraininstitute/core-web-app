@@ -88,8 +88,8 @@ export function majorTick(
 }
 
 /**
- * The ruler from the bottom of the canvas to its top, with as many major ticks as fit one apart, spread evenly over
- * it, and four minor ones between two. Lines a device pixel wide, on the device pixels.
+ * The ruler up from the bottom of the canvas, as many major ticks long as fit, each where its value is at the view's
+ * scale, and four minor ones between two. Lines a device pixel wide, on the device pixels.
  */
 function paint(canvas: HTMLCanvasElement, umPerPixel: number | null, color: string): void {
   const context = canvas.getContext('2d');
@@ -120,8 +120,9 @@ function paint(canvas: HTMLCanvasElement, umPerPixel: number | null, color: stri
   const { value, unit, step } = majorTick(span, umPerPixel, 3 * textHeight);
   if (!Number.isFinite(step) || step <= 0) return;
 
-  const count = Math.max(1, Math.round(span / step));
-  const majors = Array.from({ length: count + 1 }, (_, m) => snap(bottom - (m / count) * span));
+  // A tick that falls on the top within rounding is kept.
+  const count = Math.max(1, Math.floor(span / step + 1e-6));
+  const majors = Array.from({ length: count + 1 }, (_, m) => snap(bottom - m * step));
   const tick = (y: number, length: number) => {
     context.beginPath();
     context.moveTo(x, y);
@@ -130,12 +131,13 @@ function paint(canvas: HTMLCanvasElement, umPerPixel: number | null, color: stri
   };
 
   context.beginPath();
-  context.moveTo(x, top);
+  context.moveTo(x, majors[count]);
   context.lineTo(x, bottom);
   context.stroke();
+  const between = step / MINORS_PER_MAJOR;
   for (let m = 0; m < count; m++) {
-    const between = (majors[m] - majors[m + 1]) / MINORS_PER_MAJOR;
-    for (let k = 1; k < MINORS_PER_MAJOR; k++) tick(snap(majors[m] - k * between), MINOR_LENGTH);
+    for (let k = 1; k < MINORS_PER_MAJOR; k++)
+      tick(snap(bottom - m * step - k * between), MINOR_LENGTH);
   }
   context.textAlign = 'left';
   context.textBaseline = 'middle';
