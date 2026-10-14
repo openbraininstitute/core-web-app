@@ -1072,6 +1072,22 @@ export class SceneViewer implements ViewControls {
     return this.pixelScale;
   }
 
+  /** The orthographic view's zoom: 1 as `resetView` frames it, 2 twice as near. */
+  get zoom(): number {
+    return this.orthographic.zoom;
+  }
+
+  /** Zoom the orthographic view about its target, which its pixel scale's listeners hear of. */
+  setZoom(zoom: number): void {
+    const o = this.orthographic;
+    if (zoom === o.zoom) return;
+    this.stopCamera();
+    o.zoom = zoom;
+    o.updateProjectionMatrix();
+    this.invalidate();
+    this.updatePixelScale();
+  }
+
   /**
    * µm per CSS pixel at the point of `box` nearest the camera, or at `nearest` from it if that is farther: the same
    * everywhere in the orthographic view.

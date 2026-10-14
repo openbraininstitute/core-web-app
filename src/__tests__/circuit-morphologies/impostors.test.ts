@@ -206,6 +206,19 @@ describe("the impostors in their cells' numbers", () => {
     expect(redeclared(fragmentShader)).toEqual([]);
   });
 
+  it.each([
+    ['segment', ['aA.xyz + uShift', 'aB.xyz + uShift']],
+    ['soma', ['aSoma.xyz + uShift']],
+  ] as const)('places the %s where the shift puts it, drawn and picked alike', (kind, placed) => {
+    for (const { vertexShader } of [
+      compile(impostor(studio(), kind, uniforms)),
+      idMaterial(kind, uniforms),
+    ]) {
+      expect(vertexShader).toContain('uniform vec3 uShift;');
+      for (const sum of placed) expect(vertexShader).toContain(sum);
+    }
+  });
+
   it("writes a soma's own depth, as where it is shaded", () => {
     expect(idMaterial('soma', uniforms).fragmentShader).toContain('gl_FragDepth =');
     expect(idMaterial('segment', uniforms).fragmentShader).not.toContain('gl_FragDepth');
@@ -220,11 +233,12 @@ describe("the impostors in their cells' numbers", () => {
     expect(material.blending).toBe(NoBlending);
   });
 
-  it("reads the viewer's cell table, and keeps the size of what it is drawn into", () => {
+  it("reads the viewer's cell table and shift, and keeps the size of what it is drawn into", () => {
     const own = impostorUniforms();
     const material = idMaterial('soma', own);
     expect(material.uniforms.uCells).toBe(own.uCells);
     expect(material.uniforms.uViewport).toBe(own.uViewport);
+    expect(material.uniforms.uShift).toBe(own.uShift);
 
     const renderer = { getCurrentViewport: (v: THREE.Vector4) => v.set(-636, -396, 2560, 1600) };
     const draw = material.onBeforeRender as unknown as (renderer: unknown) => void;

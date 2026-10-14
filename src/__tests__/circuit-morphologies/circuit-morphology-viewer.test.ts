@@ -117,7 +117,9 @@ function circuit(): CircuitMorphologyData {
 
 const segmentsOf = (inner: Internals) => inner.chunks.children[0] as Quads;
 const somasOf = (inner: Internals) =>
-  inner.surfaces.children.find((o) => o instanceof THREE.Mesh) as Quads;
+  inner.surfaces.children.find(
+    (o) => o instanceof THREE.Mesh && o.material === inner.somaMaterial
+  ) as Quads;
 const texel = (inner: Internals, cell: number) => {
   const { data } = (inner.uniforms.uCells.value as THREE.DataTexture).image;
   return [...(data as Uint8Array).subarray(4 * cell, 4 * cell + 4)];
@@ -1036,10 +1038,10 @@ describe('the somas, before any morphology is in', () => {
     expect(shade()).toEqual([128, 128, 128]);
   });
 
-  it('lets go of the somas for morphologies, and of morphologies for somas, framing either', () => {
+  it('lets go of the somas for morphologies of other cells, and of morphologies for somas, framing either', () => {
     const { viewer, inner } = make();
     const reset = vi.spyOn(viewer, 'resetView');
-    viewer.setSomas(somas());
+    viewer.setSomas(somas([{ name: 'A', cells: 2 }]));
     const cloud = inner.cloud;
     viewer.setData(circuit());
     expect(cloud?.parent).toBeNull();
@@ -1062,5 +1064,109 @@ describe('the somas, before any morphology is in', () => {
     viewer.seekSpikes(50);
     const glow = (inner.uniforms.uGlow.value as THREE.DataTexture).image.data as Uint8Array;
     expect([...glow.subarray(0, 3)]).toEqual([0, 0, 255]);
+  });
+});
+
+/** `circuit()`'s morphologies, of the cells `somas()` places. */
+const ofTheSomas = (): CircuitMorphologyData => ({
+  ...circuit(),
+  populations: somas().populations,
+});
+
+describe('the morphologies over the somas', () => {
+  it("draw in the somas' place, where the circuit's frame puts them, with the same cells and view", () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    const { cloud, cloudUniforms } = inner;
+    const table = inner.uniforms.uCells.value;
+    viewer.setCellColors(HIDE_B);
+    frames(inner);
+    viewer.setData(ofTheSomas());
+
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(inner.cloud).toBe(cloud);
+    expect(cloud?.visible).toBe(false);
+    expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([false, true, true]);
+    expect(inner.uniforms.uCells.value).toBe(table);
+    expect(texel(inner, 2)[3]).toBe(0);
+    // The data's centre, (100, 200, 300), from the somas' mean.
+    const shift = new THREE.Vector3(100, 200, 300).sub(cloudUniforms.uOffset.value);
+    expect(rounded(inner.uniforms.uShift.value.toArray())).toEqual(rounded(shift.toArray()));
+    const drawn = new THREE.Box3(new THREE.Vector3(-5, -5, -5), new THREE.Vector3(15, 30, 5));
+    expect(inner.bounds.containsBox(drawn.translate(shift))).toBe(true);
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('give the somas their place back when they go, and let go of their own geometries alone', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const table = inner.uniforms.uCells.value;
+    viewer.setData(ofTheSomas());
+    const freed = [segmentsOf(inner).geometry, somasOf(inner).geometry].map((o) =>
+      vi.spyOn(o, 'dispose')
+    );
+    frames(inner);
+    viewer.setData(null);
+    for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
+    expect(inner.cloud?.visible).toBe(true);
+    expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([true]);
+    expect(inner.chunks.children).toHaveLength(0);
+    expect(inner.uniforms.uCells.value).toBe(table);
+    expect(inner.uniforms.uShift.value.toArray()).toEqual([0, 0, 0]);
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('frame the view again where they are of other populations', () => {
+    const { viewer } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    viewer.setData({
+      ...circuit(),
+      populations: [
+        { name: 'A', cells: 2 },
+        { name: 'C', cells: 1 },
+      ],
+    });
+    expect(reset).toHaveBeenCalledTimes(2);
+  });
+
+  it('are framed about their own middle on a reset', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setData(ofTheSomas());
+    viewer.resetView();
+    const middle = new THREE.Vector3(5, 12.5, 0).add(inner.uniforms.uShift.value);
+    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+  });
+
+  it('are gone with the somas when other somas come', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setData(ofTheSomas());
+    viewer.setSomas(somas());
+    expect(inner.chunks.children).toHaveLength(0);
+    expect(inner.cloud?.visible).toBe(true);
+    expect(inner.ids.children).toHaveLength(1);
+  });
+});
+
+describe("the circuit viewer's zoom", () => {
+  it('is the orthographic camera’s, 1 as a reset frames it, and is told to the pixel scale’s listeners', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const scale = viewer.currentPixelScale as number;
+    const heard = vi.fn();
+    viewer.onPixelScaleChange(heard);
+    frames(inner);
+    viewer.setZoom(4);
+    expect(viewer.zoom).toBe(4);
+    expect((inner.camera as THREE.OrthographicCamera).zoom).toBe(4);
+    expect(heard).toHaveBeenCalledExactlyOnceWith(scale / 4);
+    expect(frames(inner)).toBe(1);
+    viewer.setZoom(4);
+    expect(heard).toHaveBeenCalledTimes(1);
+    viewer.resetView();
+    expect(viewer.zoom).toBe(1);
   });
 });

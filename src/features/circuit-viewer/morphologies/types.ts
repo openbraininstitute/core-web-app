@@ -68,7 +68,10 @@ export interface ElectrodeHit {
 
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */
 export interface CircuitMorphologyView extends ViewControls {
-  /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
+  /**
+   * Show these morphologies in place of the somas of the same cells, framing the view only as those would be; without
+   * them, framing it on the morphologies. Null shows none, and the somas again. The arrays are kept, not copied.
+   */
   setData(data: CircuitMorphologyData | null): void;
   /**
    * Show these somas, each a sphere as the somas view drew them; null shows none. The view is framed on them unless the
@@ -123,6 +126,9 @@ export interface CircuitMorphologyView extends ViewControls {
   onSpikesPlaying(listener: (playing: boolean) => void): () => void;
   setDark(dark: boolean): void;
   resetView(): void;
+  /** How near the view is, 1 as `resetView` frames it; the pixel scale's listeners hear when it changes. */
+  readonly zoom: number;
+  setZoom(zoom: number): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */
   snapshot(): HTMLCanvasElement | null;
   dispose(): void;
