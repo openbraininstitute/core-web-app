@@ -32,6 +32,8 @@ export function useMemodelVisualizationSource({
       orientations: null,
       placeholderRadius: PLACEHOLDER_SOMA_RADIUS,
       requests: [{ path: memodelMorphologyPath(memodelId), virtualLabId, projectId }],
+      // The preview offers its dendrogram.
+      charts: true,
     }),
     [memodelId, virtualLabId, projectId]
   );

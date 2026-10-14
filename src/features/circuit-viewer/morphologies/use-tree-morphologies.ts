@@ -19,6 +19,8 @@ import type { CircuitMorphologyData, Vec3 } from './types';
 export interface TreeSource extends TreeCells {
   /** In the cells' numbering; null for a cell drawn as its soma alone. */
   requests: readonly (TSectionsRequest | null)[];
+  /** Chart each morphology's dendrogram too, for the view to morph it into. */
+  charts?: boolean;
 }
 
 /**
@@ -118,7 +120,7 @@ export class TreeLoader {
         if (!request || this.reads[cell]?.axons === axons) continue;
         let tree: TreeMorphology | null = null;
         try {
-          tree = treeOf(await this.read(request), { axons });
+          tree = treeOf(await this.read(request), { axons, chart: this.source.charts });
         } catch (e) {
           // The cell stays a soma.
           logError(`Unable to load the morphology of cell ${cell}:`, e);

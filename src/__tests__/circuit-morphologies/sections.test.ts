@@ -95,6 +95,35 @@ describe('a morphology location', () => {
     expect(rounded(pointAtOffset(placed, 1, section, 3))).toEqual([113, 4, 10]);
   });
 
+  it('is the same share along the same segment, drawn as far morphed into the dendrogram as it is', () => {
+    const tree = treeOf(SECTIONS, { axons: true, chart: true });
+    const placed = placeTrees(
+      {
+        somas: { positions: Float32Array.of(100, 0, 0), populations: [{ name: 'A', cells: 1 }] },
+        orientations: null,
+        placeholderRadius: 8,
+      },
+      [tree],
+      [0, 0, 0]
+    );
+    const section = sectionNumbered(placed, 0, 1);
+    if (!section) throw new Error('no section 1');
+    // 4.5 µm into the 9: a tenth of the way along the second segment, (10, 0, 10) to (13, 4, 10). In the chart, 13 µm
+    // across and 14 up for a tree 25 µm deep, that segment is the column x = 0 from 10 µm along the tree to 15.
+    const y = (distance: number) => distance * (14 / 25) - 0.4 * 14;
+    expect(rounded(pointAtOffset(placed, 0, section, 0.5))).toEqual([110.3, 0.4, 10]);
+    expect(rounded(pointAtOffset(placed, 0, section, 0.5, 1))).toEqual(rounded([100, y(10.5), 0]));
+    expect(rounded(pointAtOffset(placed, 0, section, 0.5, 0.5))).toEqual(
+      rounded([105.15, (0.4 + y(10.5)) / 2, 5])
+    );
+    const soma = somaSectionOf(placed, 0);
+    if (!soma) throw new Error('no soma');
+    const somaChart = placed.chart?.somas ?? new Float32Array(4);
+    expect(rounded(pointAtOffset(placed, 0, soma, 0.5, 1))).toEqual(
+      rounded(Array.from(somaChart.subarray(0, 3)))
+    );
+  });
+
   it("is the soma's centre on the soma", () => {
     const placed = data();
     const soma = somaSectionOf(placed, 1);

@@ -43,19 +43,22 @@ export function somaSectionOf(data: CircuitMorphologyData, cell: number): TreeSe
 
 /**
  * Where `section` of the cell is `offset` of the way along, in the data's frame: on the soma, its centre. Null where
- * there is no such point: a section with no segments of its own other than the soma.
+ * there is no such point: a section with no segments of its own other than the soma. With `mix`, where it is drawn
+ * that far morphed into the dendrogram: the same share along the same segment.
  */
 export function pointAtOffset(
   data: CircuitMorphologyData,
   cell: number,
   section: TreeSection,
-  offset: number
+  offset: number,
+  mix = 0
 ): Vec3 | null {
-  const { segments, somas, trees } = data;
+  const { segments, somas, trees, chart } = data;
+  const shown = (values: Float32Array, charted: Float32Array | undefined, at: number) =>
+    charted && mix > 0 ? values[at] + mix * (charted[at] - values[at]) : values[at];
   if (section.type === SectionType.Soma) {
-    return Number.isNaN(somas[4 * cell])
-      ? null
-      : [somas[4 * cell], somas[4 * cell + 1], somas[4 * cell + 2]];
+    if (Number.isNaN(somas[4 * cell])) return null;
+    return [0, 1, 2].map((k) => shown(somas, chart?.somas, 4 * cell + k)) as Vec3;
   }
   if (!trees || section.count === 0) return null;
   const first = trees.firstSegments[cell] + section.first;
@@ -66,9 +69,10 @@ export function pointAtOffset(
     const last = s === first + section.count - 1;
     if (walked + length >= target || last) {
       const t = length > 0 ? Math.min(1, (target - walked) / length) : 0;
-      return [0, 1, 2].map(
-        (k) => segments[8 * s + k] + t * (segments[8 * s + 4 + k] - segments[8 * s + k])
-      ) as Vec3;
+      return [0, 1, 2].map((k) => {
+        const from = shown(segments, chart?.segments, 8 * s + k);
+        return from + t * (shown(segments, chart?.segments, 8 * s + 4 + k) - from);
+      }) as Vec3;
     }
     walked += length;
   }

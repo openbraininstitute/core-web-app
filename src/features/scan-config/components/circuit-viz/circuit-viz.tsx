@@ -200,6 +200,7 @@ function CircuitVizView({
   features,
   source,
   morphologyLocations,
+  dendrogram = false,
   onZoomChange,
   spikes,
   chromeTopRight = false,
@@ -252,6 +253,7 @@ function CircuitVizView({
           data={morphologies.data}
           follow
           crowding={false}
+          dendrogram={dendrogram}
           cellColors={cellColors}
           defaultColor={defaultColor}
           cellHover={features?.cellHover ?? true}

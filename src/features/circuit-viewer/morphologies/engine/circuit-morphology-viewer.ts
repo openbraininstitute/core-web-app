@@ -82,6 +82,8 @@ const SYNAPSE_MIN_RADIUS = 2;
 /** How long the nudge lasts, ms, and how much nearer it brings the view at its height: morphoviewer's. */
 const NUDGE_MS = 900;
 const NUDGE_GROWTH = 0.06;
+/** How long the morph into the dendrogram and back takes, ms, the whole way: morphoviewer's. */
+const MORPH_MS = 600;
 const point = new THREE.Vector3();
 
 /** `instances` quads, for the caller to add the attributes a shader places each by. */
@@ -103,17 +105,28 @@ function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material
   return mesh;
 }
 
-/** The somas that have a position, four floats each, and the cell of each. */
-function placedSomas(somas: Float32Array): { spheres: Float32Array; cells: Uint32Array } {
+/** The somas that have a position, four floats each, the same in the dendrogram, and the cell of each. */
+function placedSomas(
+  somas: Float32Array,
+  chart = somas
+): { spheres: Float32Array; charts: Float32Array; cells: Uint32Array } {
   const spheres = new Float32Array(somas.length);
+  const charts = chart === somas ? spheres : new Float32Array(somas.length);
   const cells = new Uint32Array(somas.length / 4);
   let placed = 0;
   for (let cell = 0; cell < cells.length; cell++) {
     if (Number.isNaN(somas[4 * cell])) continue;
-    for (let k = 0; k < 4; k++) spheres[4 * placed + k] = somas[4 * cell + k];
+    for (let k = 0; k < 4; k++) {
+      spheres[4 * placed + k] = somas[4 * cell + k];
+      charts[4 * placed + k] = chart[4 * cell + k];
+    }
     cells[placed++] = cell;
   }
-  return { spheres: spheres.subarray(0, 4 * placed), cells: cells.subarray(0, placed) };
+  return {
+    spheres: spheres.subarray(0, 4 * placed),
+    charts: charts.subarray(0, 4 * placed),
+    cells: cells.subarray(0, placed),
+  };
 }
 
 /** How far along the line from `a` to `b` the point `p` falls, from 0 to 1, all three in pixels. */
@@ -239,6 +252,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
   /** Whether the listeners were last told of no marker at all. */
   private toldNone = false;
+  /** The morph into the dendrogram, or out: the mix it goes to, the mix it began at, and when. */
+  private morph = { target: 0, from: 0, start: 0 };
   /** The nudge under way: when it began, the zoom it began at, and the zoom it last set. */
   private nudging: { start: number; rest: number; set: number } | null = null;
   /** Where the last framing left the camera. */
@@ -338,18 +353,25 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
     const segments = quadGeometry(data.segmentCells.length);
     const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
+    // Without a dendrogram the same buffer stands for it, and the morph moves nothing.
+    const charted = data.chart
+      ? new THREE.InstancedInterleavedBuffer(data.chart.segments, 8)
+      : ends;
     segments
       .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
       .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
+      .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(charted, 4, 0))
+      .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(charted, 4, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1))
       .setAttribute('aType', new THREE.InstancedBufferAttribute(data.segmentTypes, 1));
     const segmentMesh = quads(segments, this.look.material);
     this.chunks.add(segmentMesh);
 
-    const { spheres, cells } = placedSomas(data.somas);
+    const { spheres, charts, cells } = placedSomas(data.somas, data.chart?.somas);
     const somas = quadGeometry(cells.length);
     somas
       .setAttribute('aSoma', new THREE.InstancedBufferAttribute(spheres, 4))
+      .setAttribute('aSomaChart', new THREE.InstancedBufferAttribute(charts, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
     const somaMesh = quads(somas, this.somaMaterial);
     // Beside `chunks`, whose meshes all take the look's material.
@@ -548,9 +570,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     const layer = this.layer;
     if (!layer?.data.trees) return Promise.resolve(null);
     const { data } = layer;
-    // Where the camera is now, which the pick is drawn from.
+    // Where the camera is now, and the morph, which the pick is drawn from.
     const onScreen = this.projector();
     const shift = this.uniforms.uShift.value.toArray() as Vec3;
+    const mix = this.uniforms.uMix.value;
     const seen = (p: Vec3) => onScreen([p[0] + shift[0], p[1] + shift[1], p[2] + shift[2]]);
     return this.numberAround(this.spots, x, y).then((n) => {
       if (n === null || this.layer !== layer) return null;
@@ -560,17 +583,20 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
         const section = somaSectionOf(data, n - segments);
         at = section && { cell: n - segments, section, offset: 0.5 };
       } else {
+        const charted = data.chart?.segments ?? data.segments;
         const end = (k: number) => {
-          const { x: ex, y: ey } = seen(
-            Array.from(data.segments.subarray(8 * n + k, 8 * n + k + 3)) as Vec3
-          );
+          const shown = [0, 1, 2].map((c) => {
+            const i = 8 * n + k + c;
+            return data.segments[i] + mix * (charted[i] - data.segments[i]);
+          }) as Vec3;
+          const { x: ex, y: ey } = seen(shown);
           return { x: ex * this.width, y: ey * this.height };
         };
         at = sectionAtSegment(data, n, along(end(0), end(4), { x, y }));
       }
       if (!at) return null;
       const { cell, section, offset } = at;
-      const spot = pointAtOffset(data, cell, section, offset);
+      const spot = pointAtOffset(data, cell, section, offset, mix);
       const screen = spot ? seen(spot) : { x: x / this.width, y: y / this.height };
       return {
         cell,
@@ -790,12 +816,35 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /** The replay's clock moves on by the time the last turn of the loop took, which keeps turning while it plays. */
   protected override work(): boolean {
-    const nudging = this.nudgeFrame();
-    if (!this.spiking.playing) return nudging;
+    const morphing = this.morphFrame();
+    const moving = this.nudgeFrame() || morphing;
+    if (!this.spiking.playing) return moving;
     const ended = this.spiking.advance();
     this.spikeFrame();
     if (ended) this.tellPlaying(false);
-    return !ended || nudging;
+    return !ended || moving;
+  }
+
+  setDendrogram(shown: boolean): void {
+    const target = shown ? 1 : 0;
+    if (target === this.morph.target) return;
+    this.morph = { target, from: this.uniforms.uMix.value, start: performance.now() };
+    // The chart is flat, so it is not turned, and faces the eye.
+    this.controls.enableRotate = !shown;
+    if (shown) this.resetView();
+    this.invalidate();
+  }
+
+  /** The morph's mix for this frame, eased in and out, the markers going with it. Whether it goes on. */
+  private morphFrame(): boolean {
+    const { target, from, start } = this.morph;
+    if (this.uniforms.uMix.value === target) return false;
+    const done = Math.min(1, (performance.now() - start) / (MORPH_MS * Math.abs(target - from)));
+    const eased = done < 0.5 ? 4 * done ** 3 : 1 - (2 - 2 * done) ** 3 / 2;
+    this.uniforms.uMix.value = done < 1 ? from + (target - from) * eased : target;
+    this.drawMarkers();
+    this.invalidate();
+    return done < 1;
   }
 
   nudge(): void {
@@ -876,7 +925,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.markerPoints = this.markers.map(({ cell, sonataId, offset }) => {
       if (!data) return null;
       const section = sectionNumbered(data, cell, sonataId);
-      const at = section && pointAtOffset(data, cell, section, offset);
+      const at = section && pointAtOffset(data, cell, section, offset, this.uniforms.uMix.value);
       if (!section || !at) return null;
       return { point: at.map((v, k) => v + data.centre[k]) as Vec3, type: section.type };
     });

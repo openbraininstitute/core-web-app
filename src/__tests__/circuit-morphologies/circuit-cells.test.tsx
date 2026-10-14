@@ -51,6 +51,7 @@ const h = vi.hoisted(() => {
     );
     setSynapses = vi.fn();
     nudge = vi.fn();
+    setDendrogram = vi.fn();
     setLocationMarkers = vi.fn();
     setLocationMarkerRadius = vi.fn();
     markerAt = vi.fn((_x: number, _y: number) => null);
@@ -353,6 +354,13 @@ describe('CircuitCells', () => {
   it('works out no crowding where the somas are not to be shaded by it', () => {
     view({ crowding: false });
     expect(h.crowdings).toHaveLength(0);
+  });
+
+  it('morphs the morphologies into their dendrograms where told, and back', () => {
+    const { viewer, update } = view();
+    expect(viewer.setDendrogram).toHaveBeenLastCalledWith(false);
+    update({ dendrogram: true });
+    expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
   });
 
   it('nudges the view on the signal', async () => {

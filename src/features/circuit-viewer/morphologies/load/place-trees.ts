@@ -69,6 +69,10 @@ export function placeTrees(
   const segmentTypes = new Uint8Array(total);
   const somaArray = new Float32Array(4 * cells);
   const firstSegments = new Uint32Array(cells);
+  // The dendrograms, where any was charted; a cell with none stands in it as it is.
+  const chart = morphologies.some((tree) => tree?.chart)
+    ? { segments: new Float32Array(8 * total), somas: new Float32Array(4 * cells) }
+    : undefined;
   let first = 0;
   const by: Vec3 = [0, 0, 0];
   for (let cell = 0; cell < cells; cell++) {
@@ -80,22 +84,20 @@ export function placeTrees(
     if (!placed(cell) || (tree && !tree.soma)) {
       somaArray.set(NO_SOMA, soma);
     } else if (tree?.soma) {
-      place(tree.soma, 0, q, by, somaArray, soma);
-      somaArray[soma + 3] = tree.soma[3];
+      placeSphere(tree.soma, q, by, somaArray, soma);
     } else {
       somaArray.set(by, soma);
       somaArray[soma + 3] = placeholderRadius;
     }
+    if (chart) {
+      const ball = tree?.chart?.soma;
+      if (ball && tree?.soma) placeSphere(ball, q, by, chart.somas, soma);
+      else chart.somas.set(somaArray.subarray(soma, soma + 4), soma);
+    }
     if (!tree) continue;
     const count = tree.segmentTypes.length;
-    for (let s = 0; s < count; s++) {
-      const from = 8 * s;
-      const to = 8 * (first + s);
-      place(tree.segments, from, q, by, segments, to);
-      segments[to + 3] = tree.segments[from + 3];
-      place(tree.segments, from + 4, q, by, segments, to + 4);
-      segments[to + 7] = tree.segments[from + 7];
-    }
+    placeSegments(tree.segments, q, by, segments, first);
+    if (chart) placeSegments(tree.chart?.segments ?? tree.segments, q, by, chart.segments, first);
     segmentCells.fill(cell, first, first + count);
     segmentTypes.set(tree.segmentTypes, first);
     first += count;
@@ -111,7 +113,48 @@ export function placeTrees(
     bounds: { min: [0, 0, 0], max: [0, 0, 0] },
     level: { toleranceUm: 0, pruneUm: 0 },
     trees: { morphologies, firstSegments },
+    chart,
   };
-  data.bounds = morphologiesExtent(data) ?? data.bounds;
+  // Round both, which the view goes between.
+  const extents = [
+    morphologiesExtent(data),
+    chart && morphologiesExtent({ ...chart, segmentCells }),
+  ];
+  const found = extents.filter((extent) => extent !== null && extent !== undefined);
+  if (found.length > 0) {
+    const reach = (side: 'min' | 'max', pick: (...values: number[]) => number) =>
+      [0, 1, 2].map((k) => pick(...found.map((extent) => extent[side][k]))) as Vec3;
+    data.bounds = { min: reach('min', Math.min), max: reach('max', Math.max) };
+  }
   return data;
+}
+
+/** A sphere's centre turned and moved, its radius as it is. */
+function placeSphere(
+  sphere: readonly number[],
+  q: number[],
+  by: Vec3,
+  to: Float32Array,
+  at: number
+): void {
+  place(sphere, 0, q, by, to, at);
+  to[at + 3] = sphere[3];
+}
+
+/** Segments, eight floats each, turned and moved into `to` from its segment `first` on, their radii as they are. */
+function placeSegments(
+  from: Float32Array,
+  q: number[],
+  by: Vec3,
+  to: Float32Array,
+  first: number
+): void {
+  for (let s = 0; 8 * s < from.length; s++) {
+    const a = 8 * s;
+    const b = 8 * (first + s);
+    place(from, a, q, by, to, b);
+    to[b + 3] = from[a + 3];
+    place(from, a + 4, q, by, to, b + 4);
+    to[b + 7] = from[a + 7];
+  }
 }

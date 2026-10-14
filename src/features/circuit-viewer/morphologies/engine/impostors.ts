@@ -27,6 +27,8 @@ export interface ImpostorUniforms {
   uViewport: { value: THREE.Vector4 };
   /** Added to every position: where the data's origin is in the view's. */
   uShift: { value: THREE.Vector3 };
+  /** How far the morphologies are morphed into their dendrograms, from 0 to 1. */
+  uMix: { value: number };
   /** The cell that is highlighted, or `NO_CELL`, and the colour it is drawn in. */
   uHighlighted: { value: number };
   uHighlight: { value: THREE.Color };
@@ -52,6 +54,7 @@ export function impostorUniforms(): ImpostorUniforms {
     uGlow: { value: null },
     uViewport: { value: new THREE.Vector4(0, 0, 1, 1) },
     uShift: { value: new THREE.Vector3() },
+    uMix: { value: 0 },
     uHighlighted: { value: NO_CELL },
     uHighlight: { value: new THREE.Color(0x000000) },
     uGlowRim: { value: new THREE.Vector4(GLOW_RIM.r, GLOW_RIM.g, GLOW_RIM.b, 1) },
@@ -99,6 +102,7 @@ const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
 uniform vec4 uViewport;
 uniform vec3 uShift;
+uniform float uMix;
 in uint aCell;
 
 // The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes.
@@ -133,6 +137,8 @@ const SEGMENT: Kind = {
   vertex: /* glsl */ `
 in vec4 aA;
 in vec4 aB;
+in vec4 aChartA;
+in vec4 aChartB;
 in float aType;
 flat out vec2 vSegmentA;
 flat out vec2 vSegmentB;
@@ -152,9 +158,11 @@ float sectionType() {
 // corner.x picks the end, corner.y the side.
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	if ( shown < 0.5 ) return false;
-	vec3 a = ( viewMatrix * vec4( aA.xyz + uShift, 1.0 ) ).xyz;
-	vec3 b = ( viewMatrix * vec4( aB.xyz + uShift, 1.0 ) ).xyz;
-	float ra = aA.w, rb = aB.w;
+	vec4 A = mix( aA, aChartA, uMix );
+	vec4 B = mix( aB, aChartB, uMix );
+	vec3 a = ( viewMatrix * vec4( A.xyz + uShift, 1.0 ) ).xyz;
+	vec3 b = ( viewMatrix * vec4( B.xyz + uShift, 1.0 ) ).xyz;
+	float ra = A.w, rb = B.w;
 	if ( ! isOrthographic ) {
 		// Cut at twice the near plane's depth: nearer the eye an end has no place on screen, and up to there the lifted
 		// quad stays behind the near plane.
@@ -215,6 +223,7 @@ vec3 impostorNormal( out vec2 edge ) {
 const SOMA: Kind = {
   vertex: /* glsl */ `
 in vec4 aSoma;
+in vec4 aSomaChart;
 flat out vec3 vSomaCentre;
 flat out float vSomaRadius;
 flat out float vSomaRadiusPx;
@@ -226,9 +235,10 @@ float sectionType() {
 
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	if ( shown < 0.5 ) return false;
-	vec3 c = ( viewMatrix * vec4( aSoma.xyz + uShift, 1.0 ) ).xyz;
+	vec4 S = mix( aSoma, aSomaChart, uMix );
+	vec3 c = ( viewMatrix * vec4( S.xyz + uShift, 1.0 ) ).xyz;
 	float um = pixelUm( c.z );
-	float r = max( aSoma.w, 1.5 * least * um );
+	float r = max( S.w, 1.5 * least * um );
 	// How far from its centre the sphere reaches on screen, in µm at the centre's depth.
 	float reach = r;
 	if ( ! isOrthographic ) {
@@ -435,6 +445,7 @@ export function idMaterial(
       uCells: uniforms.uCells,
       uViewport: uniforms.uViewport,
       uShift: uniforms.uShift,
+      uMix: uniforms.uMix,
       ...segments,
     },
     vertexShader: `${SHARED_VERTEX}\n${declared}${vertex}\n${idVertex(segments ? SEGMENT_NUMBERS[kind] : 'aCell')}`,

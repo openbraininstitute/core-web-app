@@ -101,12 +101,12 @@ describe('a morphology read from its sections', () => {
   it("tells each section's SONATA number, type, segments and length, its stem left out", () => {
     const { sections } = treeOf(neuron(), { axons: true });
     expect(sections.map(({ length, ...section }) => section)).toEqual([
-      { sonataId: 0, type: SectionType.Soma, first: 0, count: 0 },
-      { sonataId: 1, type: SectionType.BasalDendrite, first: 1, count: 2 },
-      { sonataId: 2, type: SectionType.BasalDendrite, first: 3, count: 1 },
-      { sonataId: 3, type: SectionType.ApicalDendrite, first: 4, count: 1 },
-      { sonataId: 4, type: SectionType.Axon, first: 6, count: 1 },
-      { sonataId: 5, type: SectionType.Axon, first: 7, count: 1 },
+      { sonataId: 0, type: SectionType.Soma, parent: -1, first: 0, count: 0 },
+      { sonataId: 1, type: SectionType.BasalDendrite, parent: -1, first: 1, count: 2 },
+      { sonataId: 2, type: SectionType.BasalDendrite, parent: 1, first: 3, count: 1 },
+      { sonataId: 3, type: SectionType.ApicalDendrite, parent: 1, first: 4, count: 1 },
+      { sonataId: 4, type: SectionType.Axon, parent: -1, first: 6, count: 1 },
+      { sonataId: 5, type: SectionType.Axon, parent: 4, first: 7, count: 1 },
     ]);
     expect(sections.map((section) => section.length)).toEqual([0, 9, 10, 10, 14, 10]);
   });
@@ -137,7 +137,7 @@ describe('a morphology read from its sections', () => {
     );
     expect(tree.soma).toEqual([0, 0, 0, 4]);
     expect(tree.sections).toEqual([
-      { sonataId: null, type: SectionType.Soma, first: 0, count: 0, length: 0 },
+      { sonataId: null, type: SectionType.Soma, parent: -1, first: 0, count: 0, length: 0 },
     ]);
   });
 

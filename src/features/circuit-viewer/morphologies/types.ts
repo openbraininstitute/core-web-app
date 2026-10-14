@@ -35,6 +35,11 @@ export interface CircuitMorphologyData {
    * soma alone, and where its segments start in `segments`, in their order there.
    */
   trees?: { morphologies: readonly (TreeMorphology | null)[]; firstSegments: Uint32Array };
+  /**
+   * Where the morphologies' dendrograms were charted: their segments and somas laid out as those, in the same order
+   * and frame as `segments` and `somas`, a cell with none as it is.
+   */
+  chart?: { segments: Float32Array; somas: Float32Array };
 }
 
 /** A circuit's somas as the page placed them, before any morphology is in. */
@@ -209,6 +214,11 @@ export interface CircuitMorphologyView extends ViewControls {
   resetView(): void;
   /** Zoom in a little and back out once, to point at the view; any move of the user's ends it. */
   nudge(): void;
+  /**
+   * Morph the morphologies whose dendrograms were charted into those, or back, over 0.6 s; the markers and the pick go
+   * with them. The dendrogram faces the eye and is not turned.
+   */
+  setDendrogram(shown: boolean): void;
   /** How near the view is, 1 as `resetView` frames it; the pixel scale's listeners hear when it changes. */
   readonly zoom: number;
   setZoom(zoom: number): void;

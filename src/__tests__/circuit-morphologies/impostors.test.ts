@@ -244,9 +244,9 @@ describe("the impostors in their cells' numbers", () => {
   });
 
   it.each([
-    ['segment', ['aA.xyz + uShift', 'aB.xyz + uShift']],
-    ['soma', ['aSoma.xyz + uShift']],
-  ] as const)('places the %s where the shift puts it, drawn and picked alike', (kind, placed) => {
+    ['segment', ['vec4 A = mix( aA, aChartA, uMix );', 'A.xyz + uShift', 'B.xyz + uShift']],
+    ['soma', ['vec4 S = mix( aSoma, aSomaChart, uMix );', 'S.xyz + uShift']],
+  ] as const)("places the %s where the shift and the dendrogram's mix put it, drawn and picked alike", (kind, placed) => {
     for (const { vertexShader } of [
       compile(impostor(studio(), kind, uniforms)),
       idMaterial(kind, uniforms),

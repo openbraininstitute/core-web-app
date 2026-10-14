@@ -7,6 +7,7 @@ import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/
 import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
+import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
@@ -1328,6 +1329,97 @@ describe("the circuit viewer's nudge", () => {
     });
     turnAt(inner, 400);
     expect(viewer.zoom).toBe(zoom);
+  });
+});
+
+describe("the circuit viewer's dendrogram", () => {
+  let now = 0;
+  beforeEach(() => {
+    now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+  });
+  afterEach(() => vi.mocked(performance.now).mockRestore());
+  const turnAt = (inner: Internals, ms: number) => {
+    now = 1000 + ms;
+    return frames(inner);
+  };
+  /** That neuron, its dendrogram charted, beside a cell drawn as its soma. */
+  const charted = () =>
+    placeTrees(
+      {
+        somas: {
+          positions: Float32Array.of(0, 50, 0, 100, 0, 0),
+          populations: [{ name: 'A', cells: 2 }],
+        },
+        orientations: null,
+        placeholderRadius: 8,
+      },
+      [null, treeOf(NEURON, { axons: true, chart: true })],
+      [0, 0, 0]
+    );
+  const mixOf = (inner: Internals) => inner.uniforms.uMix.value;
+
+  it('draws the dendrogram beside the morphology, and the morphology itself again where none was charted', () => {
+    const { viewer, inner } = make();
+    const data = charted();
+    viewer.setData(data);
+    const { geometry } = segmentsOf(inner);
+    const chartA = geometry.getAttribute('aChartA') as THREE.InterleavedBufferAttribute;
+    expect(chartA.data.array).toBe(data.chart?.segments);
+    expect([
+      chartA.offset,
+      (geometry.getAttribute('aChartB') as THREE.InterleavedBufferAttribute).offset,
+    ]).toEqual([0, 4]);
+    expect(Array.from(somasOf(inner).geometry.getAttribute('aSomaChart').array)).toEqual(
+      Array.from(data.chart?.somas ?? [])
+    );
+
+    viewer.setData(neuron());
+    const plain = segmentsOf(inner).geometry;
+    expect((plain.getAttribute('aChartA') as THREE.InterleavedBufferAttribute).data).toBe(
+      (plain.getAttribute('aA') as THREE.InterleavedBufferAttribute).data
+    );
+  });
+
+  it('morphs into it over 0.6 s, eased in and out, framed facing the eye and turned no more, and back', () => {
+    const { viewer, inner } = make();
+    viewer.setData(charted());
+    const reset = vi.spyOn(viewer, 'resetView');
+    const controls = inner.controls as unknown as { enableRotate: boolean };
+    viewer.setDendrogram(true);
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(controls.enableRotate).toBe(false);
+    turnAt(inner, 150);
+    expect(mixOf(inner)).toBeCloseTo(4 * 0.25 ** 3, 6);
+    turnAt(inner, 300);
+    expect(mixOf(inner)).toBeCloseTo(0.5, 6);
+    turnAt(inner, 600);
+    expect(mixOf(inner)).toBe(1);
+    expect(turnAt(inner, 700)).toBe(0);
+
+    viewer.setDendrogram(false);
+    expect(controls.enableRotate).toBe(true);
+    expect(reset).toHaveBeenCalledTimes(1);
+    turnAt(inner, 1000);
+    expect(mixOf(inner)).toBeCloseTo(0.5, 6);
+    turnAt(inner, 1300);
+    expect(mixOf(inner)).toBe(0);
+  });
+
+  it('takes the markers along, on the same share of the same segment', () => {
+    const { viewer, inner } = make();
+    const data = charted();
+    viewer.setData(data);
+    viewer.setLocationMarkers([{ cell: 1, sonataId: 1, offset: 0.5, color: '#ff0000' }]);
+    const contact = () =>
+      rounded((inner.markerDots as Quads).geometry.getAttribute('aContact').array);
+    expect(contact()).toEqual([110.3, 0.4, 10]);
+    viewer.setDendrogram(true);
+    turnAt(inner, 600);
+    const section = data.trees?.morphologies[1]?.sections[1];
+    if (!section) throw new Error('no section 1');
+    expect(contact()).toEqual(rounded(pointAtOffset(data, 1, section, 0.5, 1) ?? []));
+    expect(contact()).not.toEqual([110.3, 0.4, 10]);
   });
 });
 

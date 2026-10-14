@@ -89,6 +89,27 @@ describe('a small circuit placed', () => {
     ]);
   });
 
+  it('places a dendrogram as its morphology is placed, a cell with none standing in it as it is', () => {
+    const plain = morphology();
+    const charted: TreeMorphology = {
+      ...morphology(),
+      chart: { segments: Float32Array.of(0, 0, 0, 0.5, 0, 100, 0, 0.5), soma: [0, -5, 0, 3] },
+    };
+    const data = placeTrees(cells(), [charted, plain], [0, 0, 0]);
+    expect(rounded(data.chart?.segments ?? [])).toEqual([
+      ...[100, 0, 0, 0.5, 100, 100, 0, 0.5],
+      ...[205, 0, 0, 1, 215, 0, 0, 0.5],
+    ]);
+    expect(rounded(data.chart?.somas.subarray(0, 12) ?? [])).toEqual([
+      ...[100, -5, 0, 3],
+      ...[200, 0, 0, 5],
+      ...[300, 50, 0, 8],
+    ]);
+    // Bounded round both, which the view goes between.
+    expect(data.bounds.max[1]).toBe(100.5);
+    expect(placeTrees(cells(), [plain], [0, 0, 0]).chart).toBeUndefined();
+  });
+
   it("is bounded round every segment and soma drawn, of every point, and of the page's populations", () => {
     const given = cells();
     const data = placeTrees(given, [morphology()], [0, 0, 0]);
