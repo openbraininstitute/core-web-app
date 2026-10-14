@@ -13,10 +13,12 @@ import { followViewport, type ImpostorUniforms, PIXEL_UM } from './impostors';
 import type { ElectrodeGroup, Vec3 } from '../types';
 
 /** How much larger and how much nearer white the highlighted array is drawn, as in the somas view. */
-export const HIGHLIGHT_SCALE = 1.55;
+const HIGHLIGHT_SCALE = 1.55;
 const HIGHLIGHT_LIGHTEN = 0.55;
+/** What a contact is drawn in where the host's colour cannot be read, which its styling passes on as it is. */
+const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
-export const RING_PX = 1;
+const RING_PX = 1;
 
 interface ElectrodeUniforms {
   /** A contact's radius, in µm. */
@@ -30,6 +32,15 @@ interface ElectrodeUniforms {
 /** The least radius in device pixels for contacts `radius` µm wide: the somas view's, which counts it so. */
 export function minRadius(radius: number): number {
   return Math.max(2, Math.round(0.32 * radius)) / 2;
+}
+
+/**
+ * How far from its centre a contact `radius` µm wide is drawn, its ring taken in, as the vertex shader draws it: in CSS
+ * pixels where one spans `um` µm, on a screen of `pixelRatio`.
+ */
+export function drawnRadius(radius: number, lit: boolean, um: number, pixelRatio: number): number {
+  const disc = (radius * (lit ? HIGHLIGHT_SCALE : 1)) / um;
+  return Math.max(disc, minRadius(radius) / pixelRatio) + RING_PX;
 }
 
 const VERTEX = /* glsl */ `
@@ -69,30 +80,25 @@ void main() {
 }
 `;
 
+/** The contacts' material, its ring a CSS pixel wide on a screen of `pixelRatio`. */
 export function electrodeMaterial(
-  uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>
+  uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
+  pixelRatio: number
 ): THREE.ShaderMaterial {
-  // In device pixels, as the drawing buffer has them.
-  const ring = { value: RING_PX };
   const material = new THREE.ShaderMaterial({
-    uniforms: { ...uniforms, uRing: ring },
+    uniforms: { ...uniforms, uRing: { value: RING_PX * pixelRatio } },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     depthTest: false,
     depthWrite: false,
   });
   followViewport(material, uniforms);
-  const before = material.onBeforeRender;
-  material.onBeforeRender = (renderer, ...rest) => {
-    before.call(material, renderer, ...rest);
-    ring.value = RING_PX * renderer.getPixelRatio();
-  };
   return material;
 }
 
 /**
  * Write `groups`' contacts, `centre` taken off, three floats each, into `contacts`, and their looks into `looks`: the
- * colour in sRGB and the scale, four floats each.
+ * colour in sRGB and the scale, four floats each. True where that changed a float.
  */
 export function writeElectrodes(
   groups: readonly ElectrodeGroup[],
@@ -100,23 +106,27 @@ export function writeElectrodes(
   centre: Vec3,
   contacts: Float32Array,
   looks: Float32Array
-): void {
+): boolean {
+  let changed = false;
+  const write = (array: Float32Array, at: number, value: number) => {
+    const float = Math.fround(value);
+    if (array[at] === float) return;
+    array[at] = float;
+    changed = true;
+  };
   let k = 0;
   for (const group of groups) {
     const lit = group.id === highlighted;
-    const colour = lit
-      ? chroma.mix(group.color, '#ffffff', HIGHLIGHT_LIGHTEN, 'rgb')
-      : chroma(group.color);
-    const [r, g, b] = colour.gl();
+    const own = chroma.valid(group.color) ? group.color : UNREADABLE;
+    const colour = lit ? chroma.mix(own, '#ffffff', HIGHLIGHT_LIGHTEN, 'rgb') : chroma(own);
+    const look = [...colour.gl().slice(0, 3), lit ? HIGHLIGHT_SCALE : 1];
     const xyz = group.coordinates;
     for (let i = 0; i + 2 < xyz.length; i += 3, k++) {
-      for (let axis = 0; axis < 3; axis++) contacts[3 * k + axis] = xyz[i + axis] - centre[axis];
-      looks[4 * k] = r;
-      looks[4 * k + 1] = g;
-      looks[4 * k + 2] = b;
-      looks[4 * k + 3] = lit ? HIGHLIGHT_SCALE : 1;
+      for (let c = 0; c < 3; c++) write(contacts, 3 * k + c, xyz[i + c] - centre[c]);
+      for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
     }
   }
+  return changed;
 }
 
 export function countContacts(groups: readonly ElectrodeGroup[]): number {

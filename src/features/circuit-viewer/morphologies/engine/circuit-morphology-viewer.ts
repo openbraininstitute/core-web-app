@@ -8,10 +8,9 @@ import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 import { CellTable } from './cell-table';
 import {
   countContacts,
+  drawnRadius,
   electrodeMaterial,
-  HIGHLIGHT_SCALE,
   minRadius,
-  RING_PX,
   writeElectrodes,
 } from './electrodes';
 import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
@@ -22,6 +21,7 @@ import type {
   CircuitMorphologyData,
   CircuitMorphologyView,
   ElectrodeGroup,
+  ElectrodeHit,
   Vec3,
 } from '../types';
 
@@ -111,7 +111,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     uMinRadius: { value: minRadius(0) },
     uRingColour: { value: new THREE.Vector3() },
   };
-  private electrodeMaterial = electrodeMaterial(this.electrodeUniforms);
+  private electrodeMaterial = electrodeMaterial(
+    this.electrodeUniforms,
+    this.renderer.getPixelRatio()
+  );
   private electrodes: THREE.Mesh<THREE.InstancedBufferGeometry> | null = null;
 
   constructor(container: HTMLElement) {
@@ -260,29 +263,28 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   setElectrodeRadius(radius: number): void {
     this.electrodeUniforms.uRadius.value = radius;
     this.electrodeUniforms.uMinRadius.value = minRadius(radius);
-    this.invalidate();
+    if (this.electrodes?.visible) this.invalidate();
   }
 
-  electrodeAt(x: number, y: number): { id: string; contact: Vec3 } | null {
+  electrodeAt(x: number, y: number): ElectrodeHit | null {
     const { camera, centre, width, height } = this;
     camera.updateMatrixWorld();
     const perspective = camera instanceof THREE.PerspectiveCamera;
     // The µm a CSS pixel spans, at a unit's depth in perspective, as the shaders count it.
     const span = 2 / (camera.projectionMatrix.elements[5] * height);
-    const least = this.electrodeUniforms.uMinRadius.value / this.renderer.getPixelRatio();
-    let found: { id: string; contact: Vec3 } | null = null;
+    const radius = this.electrodeUniforms.uRadius.value;
+    const pixelRatio = this.renderer.getPixelRatio();
+    let found: ElectrodeHit | null = null;
     let nearest = Number.POSITIVE_INFINITY;
     for (const group of this.electrodeGroups) {
-      const radius =
-        this.electrodeUniforms.uRadius.value *
-        (group.id === this.highlightedElectrode ? HIGHLIGHT_SCALE : 1);
+      const lit = group.id === this.highlightedElectrode;
       const xyz = group.coordinates;
       for (let i = 0; i + 2 < xyz.length; i += 3) {
         point.set(xyz[i] - centre[0], xyz[i + 1] - centre[1], xyz[i + 2] - centre[2]);
         point.applyMatrix4(camera.matrixWorldInverse);
         const depth = -point.z;
         if (perspective && depth <= camera.near) continue;
-        const drawn = Math.max(radius / (perspective ? span * depth : span), least) + RING_PX;
+        const drawn = drawnRadius(radius, lit, perspective ? span * depth : span, pixelRatio);
         const reach = Math.max(drawn, CONTACT_REACH);
         point.applyMatrix4(camera.projectionMatrix);
         const away = Math.hypot(((point.x + 1) / 2) * width - x, ((1 - point.y) / 2) * height - y);
@@ -305,11 +307,15 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     return [point.x + centre[0], point.y + centre[1], point.z + centre[2]];
   }
 
-  /** The contacts as they are now, in a mesh drawn after the cells, over them, made larger only when they outgrow it. */
+  /**
+   * The contacts as they are now, in a mesh drawn after the cells, over them, made larger only when they outgrow it. A
+   * frame only where that changed what is drawn.
+   */
   private drawElectrodes(): void {
     const count = countContacts(this.electrodeGroups);
     let mesh = this.electrodes;
     if (count === 0 && !mesh?.visible) return;
+    const changed = !mesh || count !== mesh.geometry.instanceCount;
     if (!mesh || count > mesh.geometry.getAttribute('aContact').count) {
       mesh?.geometry.dispose();
       mesh?.removeFromParent();
@@ -330,16 +336,18 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     mesh.visible = count > 0;
     const contacts = mesh.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
     const looks = mesh.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
-    writeElectrodes(
+    const written = writeElectrodes(
       this.electrodeGroups,
       this.highlightedElectrode,
       this.centre,
       contacts.array as Float32Array,
       looks.array as Float32Array
     );
-    contacts.needsUpdate = true;
-    looks.needsUpdate = true;
-    this.invalidate();
+    if (written) {
+      contacts.needsUpdate = true;
+      looks.needsUpdate = true;
+    }
+    if (written || changed) this.invalidate();
   }
 
   private pickTarget(): THREE.WebGLRenderTarget {

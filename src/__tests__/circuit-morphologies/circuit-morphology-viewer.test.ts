@@ -113,6 +113,8 @@ const texel = (inner: Internals, cell: number) => {
 const rgb = (hex: string) => chroma(hex).rgb();
 const rounded = (values: ArrayLike<number>) =>
   Array.from(values, (value) => Math.round(value * 1000) / 1000);
+/** A colour as the shaders take it as it is, in sRGB from 0 to 1. */
+const sRGB = (hex: string) => rounded(rgb(hex).map((c) => c / 255));
 
 /** Array A's two contacts and array B's one, in the circuit's frame: around the centre of `circuit()`. */
 function arrays(): ElectrodeGroup[] {
@@ -123,12 +125,13 @@ function arrays(): ElectrodeGroup[] {
 }
 const contactsOf = (inner: Internals) => inner.electrodes?.geometry.getAttribute('aContact').array;
 const looksOf = (inner: Internals) => inner.electrodes?.geometry.getAttribute('aLook').array;
+/** A point of the circuit as the view has it, the centre of `circuit()` taken off. */
+const centred = (point: ArrayLike<number>) =>
+  new THREE.Vector3(point[0] - 100, point[1] - 200, point[2] - 300);
 /** Where the view draws a point of the circuit, in CSS pixels of its 400 by 300. */
 function drawnAt(inner: Internals, point: [number, number, number]): [number, number] {
   inner.camera.updateMatrixWorld();
-  const ndc = new THREE.Vector3(point[0] - 100, point[1] - 200, point[2] - 300).project(
-    inner.camera
-  );
+  const ndc = centred(point).project(inner.camera);
   return [((ndc.x + 1) / 2) * 400, ((1 - ndc.y) / 2) * 300];
 }
 /** The frames drawn by letting the loop turn once, if it is on. */
@@ -468,7 +471,6 @@ describe('the circuit morphology viewer', () => {
     expect(mesh.geometry.instanceCount).toBe(3);
     expect(rounded(contactsOf(inner) ?? [])).toEqual([10, 20, 0, 0, 0, 0, -5, -10, 0]);
     // In sRGB as the host has them, which the shader writes as they are.
-    const sRGB = (hex: string) => rounded(rgb(hex).map((c) => c / 255));
     expect(rounded(looksOf(inner) ?? [])).toEqual([
       ...sRGB('#1b6ef3'),
       1,
@@ -485,9 +487,18 @@ describe('the circuit morphology viewer', () => {
     viewer.setElectrodes(arrays(), 'B');
 
     const looks = rounded(looksOf(inner) ?? []);
-    const plain = [...rounded(rgb('#1b6ef3').map((c) => c / 255)), 1];
+    const plain = [...sRGB('#1b6ef3'), 1];
     const lighter = rounded(rgb('#12a150').map((c) => c / 255 + (1 - c / 255) * 0.55));
     expect(looks).toEqual([...plain, ...plain, ...lighter, 1.55]);
+  });
+
+  it('draws a contact in grey where its colour cannot be read', () => {
+    const { viewer, inner } = make();
+    const unreadable = { id: 'A', color: 'no colour', coordinates: Float32Array.of(100, 200, 300) };
+
+    viewer.setElectrodes([unreadable], null);
+
+    expect(rounded(looksOf(inner) ?? [])).toEqual([...sRGB('#808080'), 1]);
   });
 
   it("places electrodes it was given before the data around the data's centre once it comes", () => {
@@ -535,10 +546,14 @@ describe('the circuit morphology viewer', () => {
     const { uRadius, uMinRadius, uViewport } = inner.electrodeMaterial.uniforms;
     expect(uViewport).toBe(inner.uniforms.uViewport);
 
+    frames(inner);
     viewer.setElectrodeRadius(5);
     expect(uRadius.value).toBe(5);
     expect(uMinRadius.value).toBe(1);
+    // None are drawn yet.
+    expect(frames(inner)).toBe(0);
 
+    viewer.setElectrodes(arrays(), null);
     frames(inner);
     viewer.setElectrodeRadius(20);
     expect(uRadius.value).toBe(20);
@@ -554,6 +569,22 @@ describe('the circuit morphology viewer', () => {
     frames(inner);
     viewer.setElectrodes([], 'A');
     expect(frames(inner)).toBe(0);
+  });
+
+  it('draws no frame and uploads nothing for electrodes as they are drawn already', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), 'A');
+    const contacts = inner.electrodes?.geometry.getAttribute('aContact') as THREE.BufferAttribute;
+    const version = contacts.version;
+
+    frames(inner);
+    viewer.setElectrodes(arrays(), 'A');
+    expect(frames(inner)).toBe(0);
+    expect(contacts.version).toBe(version);
+
+    viewer.setElectrodes(arrays().slice(0, 1), 'A');
+    expect(frames(inner)).toBe(1);
   });
 
   it('finds the electrode at a point of the view, or the nearest contact within 7 pixels', () => {
@@ -591,21 +622,14 @@ describe('the circuit morphology viewer', () => {
   });
 
   it("rings each contact in the theme's foreground, a CSS pixel wide on any screen", () => {
+    const ratio = vi.spyOn(FakeRenderer.prototype, 'getPixelRatio').mockReturnValue(2);
     const { viewer, inner } = make();
+    ratio.mockRestore();
     const { uRing, uRingColour } = inner.electrodeMaterial.uniforms;
-    expect(rounded(uRingColour.value.toArray())).toEqual(
-      rounded(rgb('#1a1a1a').map((c) => c / 255))
-    );
+    expect(uRing.value).toBe(2);
+    expect(rounded(uRingColour.value.toArray())).toEqual(sRGB('#1a1a1a'));
     viewer.setDark(true);
     expect(uRingColour.value.toArray()).toEqual([1, 1, 1]);
-
-    const draw = inner.electrodeMaterial.onBeforeRender as unknown as (renderer: unknown) => void;
-    draw.call(inner.electrodeMaterial, {
-      getCurrentViewport: (v: THREE.Vector4) => v.set(0, 0, 800, 600),
-      getPixelRatio: () => 2,
-    });
-    expect(uRing.value).toBe(2);
-    expect(inner.electrodeMaterial.vertexShader).toContain('float outer = r + uRing * um;');
   });
 
   it("turns a point of the view back into the circuit's frame, as deep in the view as a point given", () => {
@@ -619,10 +643,7 @@ describe('the circuit morphology viewer', () => {
     const [mx, my] = drawnAt(inner, moved);
     expect(mx).toBeCloseTo(x + 20);
     expect(my).toBeCloseTo(y - 10);
-    const depth = (p: number[]) =>
-      new THREE.Vector3(p[0] - 100, p[1] - 200, p[2] - 300).applyMatrix4(
-        inner.camera.matrixWorldInverse
-      ).z;
+    const depth = (p: number[]) => centred(p).applyMatrix4(inner.camera.matrixWorldInverse).z;
     expect(depth(moved)).toBeCloseTo(depth(contact));
   });
 

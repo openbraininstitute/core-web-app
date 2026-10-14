@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { trackElectrodes } from '@/features/circuit-viewer/morphologies/electrodes';
+import { electrodeDictionaryToPlaceholderOverlays } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 
 import type {
   ElectrodeGroup,
@@ -45,6 +46,18 @@ function host(): ElectrodeGroup[] {
   ];
 }
 
+/** The host's answer once it has array A where `dropA` drops it, 10 µm along x and 20 along y. */
+const givenA = (groups: ElectrodeGroup[]) =>
+  groups.map((group) =>
+    group.id === 'A'
+      ? {
+          ...group,
+          coordinates: group.coordinates.map((value, i) => value + [10, 20, 0][i % 3]),
+          origin: [20, 40, 30] as Vec3,
+        }
+      : group
+  );
+
 let element: HTMLElement;
 /** Stands for the camera's controls, which listen on the canvas. */
 let canvas: HTMLCanvasElement;
@@ -85,14 +98,15 @@ const dropA = () => {
   pointer('pointerup', [160, 70]);
 };
 
+const rounded = (values: Iterable<number>) =>
+  Array.from(values, (value) => Math.round(value * 100) / 100);
+
 const drawn = (view: ReturnType<typeof fakeView>) => {
   const [groups, highlighted] = view.setElectrodes.mock.lastCall ?? [[], null];
   return {
     highlighted,
     of: (id: string, kind: string) =>
-      [...(groups.find((g) => g.id === id && g.kind === kind)?.coordinates ?? [])].map(
-        (value) => Math.round(value * 100) / 100
-      ),
+      rounded(groups.find((g) => g.id === id && g.kind === kind)?.coordinates ?? []),
     groups,
   };
 };
@@ -164,7 +178,8 @@ describe('the electrodes over the morphologies', () => {
     expect(element.style.cursor).toBe('grabbing');
     // 10 pixels right and 20 up: 10 µm along x and 20 along y.
     pointer('pointermove', [160, 70], { buttons: 1 });
-    expect(view.fromScreen).toHaveBeenLastCalledWith(60, 30, [10, 20, 30]);
+    // As deep as the point taken hold of, the contact's.
+    expect(view.fromScreen).toHaveBeenLastCalledWith(60, 30, [50, -50, 30]);
     expect(drawn(view).of('A', 'electrodes')).toEqual([20, 40, 30, 20, 60, 30]);
     expect(drawn(view).of('A', 'origin')).toEqual([20, 40, 30]);
     expect(drawn(view).of('B', 'electrodes')).toEqual([0, 0, 0]);
@@ -195,9 +210,7 @@ describe('the electrodes over the morphologies', () => {
     pointer('pointermove', [200, 90], { buttons: 1, ...init });
     const turn = (325 * Math.PI) / 180;
     const tip = [10 - 20 * Math.sin(turn), 20 + 20 * Math.cos(turn), 30];
-    expect(drawn(view).of('A', 'electrodes')).toEqual(
-      [10, 20, 30, ...tip].map((value) => Math.round(value * 100) / 100)
-    );
+    expect(drawn(view).of('A', 'electrodes')).toEqual(rounded([10, 20, 30, ...tip]));
     expect(drawn(view).of('A', 'origin')).toEqual([10, 20, 30]);
     pointer('pointerup', [200, 90]);
 
@@ -225,6 +238,35 @@ describe('the electrodes over the morphologies', () => {
     expect(view.setElectrodes).toHaveBeenCalled();
   });
 
+  it("places a turned array where the host's form places it, in OBI-One's ZXY", () => {
+    const { view, tracker } = track(vi.fn());
+    const block = {
+      origin_x: 10,
+      origin_y: 20,
+      origin_z: 30,
+      rotation_y: 40,
+      n_electrodes: 3,
+      spacing: 20,
+    };
+    const contactsAt = (rotation_x: number, rotation_z: number) =>
+      electrodeDictionaryToPlaceholderOverlays({ A: { ...block, rotation_x, rotation_z } }).find(
+        (group) => group.kind === 'electrodes'
+      )?.coordinates ?? [];
+    tracker.show(
+      electrodeDictionaryToPlaceholderOverlays({ A: { ...block, rotation_x: 30, rotation_z: 50 } }),
+      null
+    );
+
+    // 50 pixels right and 20 up: 35° less about z and 14° more about x.
+    pointer('pointerdown', ON_A, { buttons: 1, altKey: true });
+    pointer('pointermove', [200, 70], { buttons: 1, altKey: true });
+
+    const turned = drawn(view).groups.find((g) => g.id === 'A' && g.kind === 'electrodes');
+    expect([...(turned?.coordinates ?? [])]).toEqual(
+      Array.from(contactsAt(44, 15), (value) => expect.closeTo(value, 3))
+    );
+  });
+
   it('keeps a dropped array where it was dropped until the host has it there', () => {
     const { view, tracker } = track(vi.fn());
     dropA();
@@ -233,15 +275,20 @@ describe('the electrodes over the morphologies', () => {
     tracker.show(host(), null);
     expect(drawn(view).of('A', 'electrodes')).toEqual([20, 40, 30, 20, 60, 30]);
 
-    const moved = host().map((group) =>
-      group.id === 'A'
-        ? {
-            ...group,
-            coordinates: group.coordinates.map((value, i) => value + [10, 20, 0][i % 3]),
-            origin: [20, 40, 30] as Vec3,
-          }
-        : group
-    );
+    const moved = givenA(host());
+    tracker.show(moved, null);
+    expect(drawn(view).groups).toBe(moved);
+  });
+
+  it('takes the host to have a dropped array there however it writes the turn', () => {
+    const { view, tracker } = track(vi.fn());
+    const turned = (x: number) =>
+      host().map((group) => (group.id === 'A' ? { ...group, rotation: { x, y: 0, z: 0 } } : group));
+    tracker.show(turned(-30), null);
+    dropA();
+
+    // OBI-One keeps it in [0, 360).
+    const moved = givenA(turned(330));
     tracker.show(moved, null);
     expect(drawn(view).groups).toBe(moved);
   });
@@ -267,6 +314,30 @@ describe('the electrodes over the morphologies', () => {
 
     expect(drawn(view).of('A', 'electrodes')).toEqual([30, 40, 30, 30, 60, 30]);
     expect(onTransform.mock.lastCall?.[0].origin).toEqual({ x: 30, y: 40, z: 30 });
+  });
+
+  it.each([
+    ['let go where it went down', 'pointerup'],
+    ['the browser takes over', 'pointercancel'],
+  ])('keeps a dropped array where it was dropped through a press %s', (_, type) => {
+    const { view } = track(vi.fn());
+    dropA();
+
+    pointer('pointerdown', ON_A, { buttons: 1 });
+    pointer(type, ON_A);
+
+    expect(drawn(view).of('A', 'electrodes')).toEqual([20, 40, 30, 20, 60, 30]);
+    vi.advanceTimersByTime(2000);
+    expect(drawn(view).of('A', 'electrodes')).toEqual([10, 20, 30, 10, 40, 30]);
+  });
+
+  it('leaves a second finger to the camera, for a pinch', () => {
+    track(vi.fn());
+
+    pointer('pointerdown', ON_A, { buttons: 1, isPrimary: false, pointerId: 2 });
+
+    expect(element.setPointerCapture).not.toHaveBeenCalled();
+    expect(heard).toEqual(['cells pointerdown', 'camera pointerdown']);
   });
 
   it('takes a press let go within a few pixels of where it went down for no gesture', () => {

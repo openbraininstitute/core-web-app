@@ -1,7 +1,7 @@
 import type { CircuitMorphologyView } from './types';
 
 /** How far the pointer may go between going down and coming up, in CSS pixels, and still have clicked. */
-export const CLICK_REACH = 4;
+const CLICK_REACH = 4;
 /** How long the pointer rests before the cell under it is looked for: a pick sends every segment through the GPU. */
 const REST_MS = 60;
 
@@ -14,7 +14,11 @@ interface PointerOptions {
   taken?: (x: number, y: number) => boolean;
 }
 
-type Point = { x: number; y: number };
+export type Point = { x: number; y: number };
+
+/** Whether a pointer that went down at `from` and is now at `to`, in CSS pixels, may yet have clicked. */
+export const clicks = (from: Point, to: Point) =>
+  Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
 
 /**
  * Tell `view` which cell the pointer over `element` rests on, and `onClick` which one it clicks, as against drags.
@@ -35,8 +39,6 @@ export function trackPointer(
   let picking = false;
 
   const at = (e: PointerEvent): Point => ({ x: e.clientX, y: e.clientY });
-  const clicks = (from: Point, to: Point) =>
-    Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
 
   // A pick that fails finds nothing.
   const pickAt = (point: Point): Promise<number | null> => {

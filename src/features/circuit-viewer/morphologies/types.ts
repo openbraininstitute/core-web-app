@@ -45,6 +45,12 @@ export type ElectrodeGroup = Omit<ICircuitOverlayGroup, 'name'>;
 /** Where an array was moved to and how it is turned, once the gesture that moved it ends, as the somas view tells it. */
 export type ElectrodeTransform = MorphoViewerOverlayTransformEvent;
 
+/** A contact drawn at a point of the view: its array, and where it is in the circuit's frame. */
+export interface ElectrodeHit {
+  id: string;
+  contact: Vec3;
+}
+
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */
 export interface CircuitMorphologyView extends ViewControls {
   /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
@@ -69,7 +75,7 @@ export interface CircuitMorphologyView extends ViewControls {
    * The electrode drawn at a point of the view, in CSS pixels from its top left corner, or the nearest within a few
    * pixels: its array and the contact's position. Null where there is none.
    */
-  electrodeAt(x: number, y: number): { id: string; contact: Vec3 } | null;
+  electrodeAt(x: number, y: number): ElectrodeHit | null;
   /** The point of the circuit drawn at a point of the view, in CSS pixels, as deep in the view as `depthOf`. */
   fromScreen(x: number, y: number, depthOf: Vec3): Vec3;
   setDark(dark: boolean): void;

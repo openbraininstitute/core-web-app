@@ -91,6 +91,8 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
   );
   const rendered = render(element());
   const viewer = h.viewers.at(-1) as InstanceType<typeof h.FakeViewer>;
+  // jsdom has no pointer capture.
+  viewer.host.setPointerCapture = vi.fn();
   return {
     ...rendered,
     viewer,
@@ -118,7 +120,6 @@ const ARRAY: ElectrodeGroup[] = [
 
 /** Takes hold at 30, 20 and lets go 10 pixels right and up. */
 const drag = (host: HTMLElement) => {
-  host.setPointerCapture = vi.fn();
   const at = { isPrimary: true, pointerId: 1 };
   fireEvent.pointerDown(host, { ...at, button: 0, buttons: 1, clientX: 30, clientY: 20 });
   fireEvent.pointerMove(host, { ...at, buttons: 1, clientX: 40, clientY: 10 });
@@ -263,7 +264,6 @@ describe('CircuitMorphologies', () => {
   it('selects no cell with a click on an electrode the pointer can take hold of', async () => {
     const onCellClick = vi.fn();
     const { viewer } = view({ electrodes: ARRAY, onCellClick, onElectrodeTransform: vi.fn() });
-    viewer.host.setPointerCapture = vi.fn();
 
     click(viewer.host);
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -285,7 +285,6 @@ describe('CircuitMorphologies', () => {
         ? { id: 'A', contact: [xyz[0], xyz[1], xyz[2]] as [number, number, number] }
         : null;
     });
-    viewer.host.setPointerCapture = vi.fn();
     const at = { isPrimary: true, pointerId: 1 };
 
     fireEvent.pointerMove(viewer.host, { ...at, clientX: 30, clientY: 20 });

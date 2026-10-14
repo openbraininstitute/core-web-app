@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { CLICK_REACH } from './pointer';
+import { clicks, type Point } from './pointer';
 
 import type { CircuitMorphologyView, ElectrodeGroup, ElectrodeTransform, Vec3 } from './types';
 
@@ -15,7 +15,6 @@ const { degToRad, euclideanModulo } = THREE.MathUtils;
 const point3 = new THREE.Vector3();
 
 type Rotation = ElectrodeTransform['rotation'];
-type Point = { x: number; y: number };
 
 /** An array out of the host's hands: being moved, or dropped and not given back yet. Its groups are copies. */
 interface Held {
@@ -29,15 +28,17 @@ interface Held {
 interface Drag extends Held {
   pointer: number;
   turn: boolean;
-  /** Where the pointer went down, the contact under it, and the point under it as deep in the view as the contact. */
+  /** Where the pointer went down, and the point under it as deep in the view as the contact it took hold of. */
   from: Point;
-  contact: Vec3;
   grab: Vec3;
   origin: Vec3;
   rotation: Rotation;
   /** The groups' contacts about the origin, unturned. */
   local: Float32Array[];
-  moved: boolean;
+  /** Where it is now, once it has moved. */
+  pose: { origin: Vec3; rotation: Rotation } | null;
+  /** The hold it was taken from, dropped and not given back yet, until it moves. */
+  was?: Held;
 }
 
 export interface ElectrodeTracker {
@@ -65,7 +66,9 @@ function rotationOf(groups: readonly ElectrodeGroup[]): Rotation {
   return { x: rotation?.x ?? 0, y: rotation?.y ?? 0, z: rotation?.z ?? 0 };
 }
 
-/** An array's origin, rotation and first contact, which the host places from the two as the drag did. */
+/**
+ * An array's origin, rotation and first contact, nine numbers, which the host places from the two as the drag did.
+ */
 function poseOf(groups: readonly ElectrodeGroup[]): number[] | null {
   const origin = originOf(groups);
   const placed = groups.filter((group) => group.coordinates.length >= 3);
@@ -82,7 +85,12 @@ function givenBack(own: readonly ElectrodeGroup[], held: Held): boolean {
   return (
     given !== null &&
     dropped !== null &&
-    given.every((value, k) => Math.abs(value - dropped[k]) <= SAME)
+    given.every((value, k) => {
+      // The rotation the short way round: the host keeps it in [0, 360).
+      const turn = k >= 3 && k < 6;
+      const apart = value - dropped[k];
+      return Math.abs(turn ? euclideanModulo(apart + 180, 360) - 180 : apart) <= SAME;
+    })
   );
 }
 
@@ -145,6 +153,20 @@ export function trackElectrodes(
     held.delete(id);
   };
 
+  const hold = (h: Held) => {
+    held.set(h.id, h);
+    h.release = setTimeout(() => {
+      letGo(h.id);
+      draw();
+    }, HOLD_MS);
+  };
+
+  // Given back by the host, or gone from it altogether.
+  const settled = (h: Held) => {
+    const own = groups.filter((group) => group.id === h.id);
+    return own.length === 0 || givenBack(own, h);
+  };
+
   const cursor = () => {
     let style = '';
     if (drag) style = drag.turn ? 'move' : 'grabbing';
@@ -164,7 +186,6 @@ export function trackElectrodes(
   };
 
   const follow = (d: Drag, to: Point) => {
-    d.moved = true;
     let { origin, rotation } = d;
     if (d.turn) {
       // Up turns about x and right about z, as the hand goes; y is kept.
@@ -175,7 +196,7 @@ export function trackElectrodes(
       };
     } else {
       // On the plane facing the eye through the contact taken hold of, so that it stays under the pointer.
-      const [x, y, z] = view.fromScreen(to.x, to.y, d.contact);
+      const [x, y, z] = view.fromScreen(to.x, to.y, d.grab);
       origin = [
         d.origin[0] + x - d.grab[0],
         d.origin[1] + y - d.grab[1],
@@ -183,10 +204,12 @@ export function trackElectrodes(
       ];
     }
     place(d.groups, d.local, origin, rotation);
+    d.pose = { origin, rotation };
   };
 
   const onDown = (e: PointerEvent) => {
-    if (drag || e.button === 1) return;
+    // A second finger is the camera's, for a pinch.
+    if (drag || e.button === 1 || !e.isPrimary) return;
     const turn = e.altKey || e.shiftKey || e.button === 2;
     if (!turn && e.button !== 0) return;
     const point = at(e);
@@ -194,7 +217,8 @@ export function trackElectrodes(
     if (!hit) return;
     e.stopPropagation();
     element.setPointerCapture(e.pointerId);
-    clearTimeout(held.get(hit.id)?.release);
+    const was = held.get(hit.id);
+    clearTimeout(was?.release);
     // As drawn: an array dropped and not given back yet is taken from where it was dropped.
     const own = shown().filter((group) => group.id === hit.id);
     const origin = originOf(own) ?? hit.contact;
@@ -211,12 +235,12 @@ export function trackElectrodes(
       pointer: e.pointerId,
       turn,
       from: point,
-      contact: hit.contact,
       grab: view.fromScreen(point.x, point.y, hit.contact),
       origin,
       rotation,
       local: own.map((group) => unturned(group.coordinates, origin, back)),
-      moved: false,
+      pose: null,
+      was,
     };
     held.set(hit.id, drag);
     hovered = hit.id;
@@ -230,7 +254,7 @@ export function trackElectrodes(
       e.stopPropagation();
       const to = at(e);
       // A press that may yet be a click moves nothing.
-      if (!drag.moved && Math.hypot(to.x - drag.from.x, to.y - drag.from.y) <= CLICK_REACH) return;
+      if (!drag.pose && clicks(drag.from, to)) return;
       follow(drag, to);
       draw();
       return;
@@ -242,36 +266,29 @@ export function trackElectrodes(
     cursor();
   };
 
-  const onUp = (e: PointerEvent) => {
+  // Dropped where the last move drew it, or let go where it went down; or the browser took the pointer over, and it
+  // rests on nothing.
+  const end = (e: PointerEvent, dropped: boolean) => {
     const d = drag;
     if (!d || e.pointerId !== d.pointer) return;
     e.stopPropagation();
     drag = null;
-    // A press let go where it was is no gesture, and the form is left as it is.
-    if (d.moved) {
+    const { was } = d;
+    d.was = undefined;
+    if (dropped && d.pose) {
       onTransform?.({
         id: d.id,
-        origin: vector(originOf(d.groups) ?? d.origin),
-        rotation: rotationOf(d.groups),
+        origin: vector(d.pose.origin),
+        rotation: d.pose.rotation,
         phase: 'end',
       });
-      d.release = setTimeout(() => {
-        held.delete(d.id);
-        draw();
-      }, HOLD_MS);
+      hold(d);
+    } else if (was && !settled(was)) {
+      // A press that moved nothing leaves the form as it is, and an array dropped before where it was dropped.
+      hold(was);
     } else letGo(d.id);
-    cursor();
-    draw();
-  };
-
-  // The browser took the pointer over: what it held goes back, and it rests on nothing.
-  const onCancel = (e: PointerEvent) => {
-    const d = drag;
-    if (!d || e.pointerId !== d.pointer) return;
-    e.stopPropagation();
-    drag = null;
-    hovered = null;
-    letGo(d.id);
+    // Dropped, it rests on the array until the pointer moves: the menu a right button's release brings stays shut.
+    if (!dropped) hovered = null;
     cursor();
     draw();
   };
@@ -297,8 +314,8 @@ export function trackElectrodes(
     const capture = { signal: off.signal, capture: true };
     element.addEventListener('pointerdown', onDown, capture);
     element.addEventListener('pointermove', onMove, capture);
-    element.addEventListener('pointerup', onUp, capture);
-    element.addEventListener('pointercancel', onCancel, capture);
+    element.addEventListener('pointerup', (e) => end(e, true), capture);
+    element.addEventListener('pointercancel', (e) => end(e, false), capture);
     element.addEventListener('contextmenu', onMenu, capture);
     element.addEventListener('pointerleave', onLeave, { signal: off.signal });
     window.addEventListener('keydown', onKey, { signal: off.signal });
@@ -309,12 +326,7 @@ export function trackElectrodes(
     show(next, nextSelected) {
       groups = next;
       selected = nextSelected;
-      for (const h of held.values()) {
-        if (h === drag) continue;
-        // Given back, or gone from the host altogether.
-        const own = next.filter((group) => group.id === h.id);
-        if (own.length === 0 || givenBack(own, h)) letGo(h.id);
-      }
+      for (const h of held.values()) if (h !== drag && settled(h)) letGo(h.id);
       draw();
     },
     stop() {
