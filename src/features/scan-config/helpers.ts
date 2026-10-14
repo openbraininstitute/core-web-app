@@ -14,6 +14,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -132,6 +133,10 @@ export const ScanConfigResultsTab = {
     id: OptimizeScanConfigTabs.optimizations,
     __activity: ScanConfigActivity.Optimize,
   },
+  [ScanConfigActivity.Validate]: {
+    id: ValidateScanConfigTabs.validations,
+    __activity: ScanConfigActivity.Validate,
+  },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 /** each activity's configuration tab — the editor's landing tab. */
@@ -155,6 +160,10 @@ export const ScanConfigConfigurationTab = {
   [ScanConfigActivity.Optimize]: {
     id: OptimizeScanConfigTabs.configuration,
     __activity: ScanConfigActivity.Optimize,
+  },
+  [ScanConfigActivity.Validate]: {
+    id: ValidateScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Validate,
   },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 

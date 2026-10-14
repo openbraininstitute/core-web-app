@@ -5,6 +5,7 @@ import { ExtractionWorkflows } from './extract';
 import { OptimizeWorkflows } from './optimize';
 import { ProcessingWorkflows } from './process';
 import { SimulateWorkflows } from './simulate';
+import { ValidationWorkflows } from './validate';
 
 import type { TActivityEntry, TActivityValue } from '../types';
 
@@ -52,8 +53,8 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     label: 'Validate',
     name: 'Validation',
     order: 6,
-    disabled: true,
-    workflows: [],
+    disabled: false,
+    workflows: ValidationWorkflows,
   },
   [WorkflowActivityDictValue.process]: {
     value: WorkflowActivityDictValue.process,
