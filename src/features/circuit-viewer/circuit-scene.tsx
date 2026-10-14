@@ -158,7 +158,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
  * How electrode sync works here:
  * - {@link useElectrodeOverlays} → coloured overlays from every source
  * - form selection → `highlightedOverlayId` + selection styling
- * - morphoviewer `onOverlayTransform` (phase `end`) →
+ * - the viewer's `onOverlayTransform` (phase `end`) →
  *   {@link applyElectrodeOverlayTransform} → `setConfig`
  *
  * Why: keep 3D↔form bidirectional without pushing config on every pointer move.
@@ -446,7 +446,6 @@ export function CircuitScene({
     () => ({
       showAxons: config.showAxons,
       backgroundColor: config.backgroundColor,
-      scalebarColor: theme?.foreground,
       showScalebar: config.showScalebar,
       signals,
       overlays: styledOverlays,
@@ -484,7 +483,6 @@ export function CircuitScene({
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       enableColorBy,
-      theme?.foreground,
       signals,
       styledOverlays,
       overlaysInteractive,
@@ -645,7 +643,7 @@ function styleOverlaysForSelection(
 }
 
 /**
- * Strip any CSS alpha so morphoviewer palette texels stay fully opaque.
+ * Strip any CSS alpha so electrode markers stay fully opaque.
  *
  * Same `try`/`catch` shape as {@link adaptColorToBackground} and
  * {@link recedeMarkerColor}, the two functions this one sits between: a colour

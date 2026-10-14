@@ -21,12 +21,16 @@ export interface TreeSource extends TreeCells {
   requests: readonly (TSectionsRequest | null)[];
 }
 
-/** How many of the morphologies on show are in, as asked with or without their axons, and of how many. */
+/**
+ * How many of the morphologies on show are in, as asked with or without their axons, and of how many; and how many of
+ * those in could not be read.
+ */
 interface Progress {
   /** Moves on with every morphology that comes in. */
   version: number;
   loaded: number;
   total: number;
+  failed: number;
 }
 
 export interface TreeLoad {
@@ -34,11 +38,12 @@ export interface TreeLoad {
   data: CircuitMorphologyData | null;
   loaded: number;
   total: number;
+  failed: number;
   /** Read again what could not be read. */
   retry(): void;
 }
 
-const NO_PROGRESS: Progress = { version: 0, loaded: 0, total: 0 };
+const NO_PROGRESS: Progress = { version: 0, loaded: 0, total: 0, failed: 0 };
 
 /** A cell's morphology as read, null where it could not be, and whether it was read with its axon. */
 interface Read {
@@ -139,10 +144,15 @@ export class TreeLoader {
   }
 
   private changed(): void {
+    const read = this.wanted.flatMap((cell) => {
+      const done = this.reads[cell];
+      return done?.axons === this.axons ? [done] : [];
+    });
     this.progress = {
       version: this.progress.version + 1,
-      loaded: this.wanted.filter((cell) => this.reads[cell]?.axons === this.axons).length,
+      loaded: read.length,
       total: this.wanted.length,
+      failed: read.filter((done) => done.tree === null).length,
     };
     for (const listener of this.listeners) listener();
   }
@@ -165,12 +175,12 @@ export function useTreeMorphologies(
     loader.load(axons, hidden);
     return () => loader.stop();
   }, [loader, axons, hidden]);
-  const { version, loaded, total } = useSyncExternalStore(
+  const { version, loaded, total, failed } = useSyncExternalStore(
     loader?.subscribe ?? noSubscription,
     loader?.getSnapshot ?? noProgress,
     noProgress
   );
   const data = useMemo(() => loader?.dataAt(version) ?? null, [loader, version]);
   const retry = useCallback(() => loader?.retry(hidden), [loader, hidden]);
-  return { data, loaded, total, retry };
+  return { data, loaded, total, failed, retry };
 }
