@@ -1,6 +1,7 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
 import type { CircuitSpikes } from '../types';
+import type { TreeMorphology } from './load/tree';
 
 export type Vec3 = [number, number, number];
 
@@ -28,6 +29,11 @@ export interface CircuitMorphologyData {
   bounds: { min: Vec3; max: Vec3 };
   /** What the level left out: end branches shorter than `pruneUm`, then points within `toleranceUm` of the path. */
   level: { toleranceUm: number; pruneUm: number };
+  /**
+   * Where each cell's morphology was read whole, as for a small circuit: that morphology, null for a cell drawn as its
+   * soma alone, and where its segments start in `segments`, in their order there.
+   */
+  trees?: { morphologies: readonly (TreeMorphology | null)[]; firstSegments: Uint32Array };
 }
 
 /** A circuit's somas as the page placed them, before any morphology is in. */
@@ -71,9 +77,10 @@ export interface CircuitMorphologyView extends ViewControls {
   /**
    * Show these morphologies in place of the somas of the same cells, framing the view only as those would be; over
    * somas of other cells, none. Without somas, frame the view on the morphologies. Null shows none, and the somas again.
-   * The arrays are kept, not copied.
+   * With `follow`, a view not moved since it was last framed is framed again on these, as morphologies coming in one at
+   * a time want. The arrays are kept, not copied.
    */
-  setData(data: CircuitMorphologyData | null): void;
+  setData(data: CircuitMorphologyData | null, follow?: boolean): void;
   /**
    * Show these somas, each a sphere as the somas view drew them, in `colors` where given; null shows none. The view is
    * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not

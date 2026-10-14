@@ -161,6 +161,13 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.renderer.getPixelRatio()
   );
   private electrodes: Quads | null = null;
+  /** Where the last framing left the camera. */
+  private framedAt: {
+    position: THREE.Vector3;
+    quaternion: THREE.Quaternion;
+    zoom: number;
+    target: THREE.Vector3;
+  } | null = null;
   private spiking = new SpikeClock();
   private spikeTimeListeners = new Set<(timeInMs: number) => void>();
   private spikesPlayingListeners = new Set<(playing: boolean) => void>();
@@ -218,9 +225,11 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   /**
    * Over the somas of the same cells, the morphologies take their place, drawn where the circuit's frame puts them and
    * framed only as the somas would be (`setSomas`); over somas of other cells, they are not drawn; null gives the somas
-   * their place back. Without somas, the morphologies are all there is, about their own centre.
+   * their place back. Without somas, the morphologies are all there is, about their own centre. With `follow`, a view
+   * still as the last framing left it is framed on them.
    */
-  setData(given: CircuitMorphologyData | null): void {
+  setData(given: CircuitMorphologyData | null, follow = false): void {
+    const unmoved = follow && this.unmoved();
     this.clearMorphologies();
     // The somas, which keep the cell table, the origin and the view; morphologies of other cells are not drawn over them.
     const under = this.cloud;
@@ -267,7 +276,23 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       this.drawElectrodes();
     }
     this.bound();
-    if (framesAgain(under?.somas.populations ?? null, data.populations)) this.resetView();
+    if (unmoved || framesAgain(under?.somas.populations ?? null, data.populations)) {
+      this.resetView();
+    }
+  }
+
+  /** Whether the camera is where the last framing left it, give or take what OrbitControls' arithmetic moves it by. */
+  private unmoved(): boolean {
+    const was = this.framedAt;
+    if (!was) return false;
+    const { camera, controls } = this;
+    const near = (a: THREE.Vector3, b: THREE.Vector3) => a.distanceTo(b) <= 1e-6 * (1 + b.length());
+    return (
+      near(camera.position, was.position) &&
+      near(controls.target, was.target) &&
+      1 - Math.abs(camera.quaternion.dot(was.quaternion)) < 1e-9 &&
+      Math.abs(camera.zoom - was.zoom) <= 1e-9 * was.zoom
+    );
   }
 
   setSomas(somas: CircuitSomas | null, colors: CellColors | null = this.colors): void {
@@ -329,6 +354,17 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
    * morphologies, it frames those of the cells drawn about their middle.
    */
   override resetView(): void {
+    this.frameCells();
+    const { camera, controls } = this;
+    this.framedAt = {
+      position: camera.position.clone(),
+      quaternion: camera.quaternion.clone(),
+      zoom: camera.zoom,
+      target: controls.target.clone(),
+    };
+  }
+
+  private frameCells(): void {
     const { cloud, table, layer } = this;
     if (!cloud || !table) {
       super.resetView();

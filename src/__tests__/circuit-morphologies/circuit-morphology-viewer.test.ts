@@ -1170,6 +1170,40 @@ describe('the morphologies over the somas', () => {
     expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
   });
 
+  it('are framed as they come in, told to follow, while the view is as the last framing left it', () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    viewer.setData(ofTheSomas(), true);
+    expect(reset).toHaveBeenCalledTimes(2);
+    const middle = new THREE.Vector3(5, 12.5, 0).add(inner.uniforms.uShift.value);
+    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+    // OrbitControls' arithmetic moves nothing.
+    inner.camera.position.x *= 1 + 1e-9;
+    viewer.setData(ofTheSomas(), true);
+    expect(reset).toHaveBeenCalledTimes(3);
+    viewer.setData(ofTheSomas());
+    expect(reset).toHaveBeenCalledTimes(3);
+  });
+
+  it('keep a view that was moved, till a reset frames it again', () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    for (const move of [
+      () => inner.camera.position.add(new THREE.Vector3(0, 0, 50)),
+      () => inner.controls.target.add(new THREE.Vector3(5, 0, 0)),
+      () => inner.camera.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), 0.3),
+      () => viewer.setZoom(2),
+    ]) {
+      viewer.resetView();
+      move();
+      reset.mockClear();
+      viewer.setData(ofTheSomas(), true);
+      expect(reset).not.toHaveBeenCalled();
+    }
+  });
+
   it('are gone with the somas when other somas come', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());

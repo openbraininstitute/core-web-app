@@ -5,6 +5,7 @@ import { logError } from '@/utils/logger';
 
 import { buildMorphoTree, buildSonataSectionIdIndex } from './build-morpho-tree';
 
+import type { Sections } from '@/features/scan-config/types';
 import type { MorphoViewerSmallCircuitCellData } from '@/morpho-viewer';
 
 /** A loaded cell, plus the SONATA-id index built from the same response. */
@@ -90,6 +91,28 @@ export type TMorphologyRequest = {
   showAxon: boolean;
 };
 
+/** The JSON at `path`, from the cache where it is there. The path doubles as the key: it carries everything that varies. */
+function cachedJson(path: string, virtualLabId: string, projectId: string, label: string) {
+  const promise =
+    morphologiesCache.get(path) ?? loadCellAsync(virtualLabId, projectId, path, label);
+  addToCache(path, promise);
+  return promise;
+}
+
+/** Where one morphology's sections are read: a `/circuit/viz` or `/memodel/viz` path, in a workspace. */
+export type TSectionsRequest = { path: string; virtualLabId: string; projectId: string };
+
+/** A morphology's sections, kept an hour in the cache the loaders below share; rejects where they cannot be read. */
+export async function loadSections({
+  path,
+  virtualLabId,
+  projectId,
+}: TSectionsRequest): Promise<Sections> {
+  const json = await cachedJson(path, virtualLabId, projectId, path);
+  if (json === null) throw new Error(`Morphology "${path}" could not be loaded.`);
+  return SectionsArraySchema.parse(json);
+}
+
 async function actualLoad({
   virtualLabId,
   projectId,
@@ -99,11 +122,12 @@ async function actualLoad({
   file,
   showAxon,
 }: TMorphologyRequest): Promise<TLoadedCell> {
-  // The path doubles as the cache key: it already carries everything that varies.
-  const key = circuitMorphologyPath(circuitId, file, name);
-  const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, key, cellId);
-  addToCache(key, promise);
-  const json = await promise;
+  const json = await cachedJson(
+    circuitMorphologyPath(circuitId, file, name),
+    virtualLabId,
+    projectId,
+    cellId
+  );
   if (json === null) throw new Error(`Morphology "${file}" could not be loaded.`);
 
   const sections = SectionsArraySchema.parse(json);
