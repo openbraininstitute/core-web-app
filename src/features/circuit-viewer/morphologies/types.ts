@@ -1,4 +1,6 @@
+import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
+import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 export type Vec3 = [number, number, number];
 
@@ -37,6 +39,12 @@ export interface CellColors {
   columnByCell: Uint16Array;
 }
 
+/** An electrode array's contacts, or the marker of its origin, in µm in the circuit's frame: the host's overlays. */
+export type ElectrodeGroup = Omit<ICircuitOverlayGroup, 'name'>;
+
+/** Where an array was moved to and how it is turned, once the gesture that moved it ends, as the somas view tells it. */
+export type ElectrodeTransform = MorphoViewerOverlayTransformEvent;
+
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */
 export interface CircuitMorphologyView extends ViewControls {
   /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
@@ -53,6 +61,17 @@ export interface CircuitMorphologyView extends ViewControls {
   pick(x: number, y: number): Promise<number | null>;
   /** Whether the view is still moving, a gesture's glide included: what is under the pointer is about to change. */
   readonly moving: boolean;
+  /** Draw these electrodes in front of the cells, whatever is nearer the eye; the array `highlighted` larger and lighter. */
+  setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void;
+  /** A contact's radius, in µm. */
+  setElectrodeRadius(radius: number): void;
+  /**
+   * The electrode drawn at a point of the view, in CSS pixels from its top left corner, or the nearest within a few
+   * pixels: its array and the contact's position. Null where there is none.
+   */
+  electrodeAt(x: number, y: number): { id: string; contact: Vec3 } | null;
+  /** The point of the circuit drawn at a point of the view, in CSS pixels, as deep in the view as `depthOf`. */
+  fromScreen(x: number, y: number, depthOf: Vec3): Vec3;
   setDark(dark: boolean): void;
   resetView(): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */

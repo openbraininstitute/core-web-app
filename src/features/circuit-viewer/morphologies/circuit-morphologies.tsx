@@ -9,11 +9,19 @@ import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
 
+import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
 import { trackPointer } from './pointer';
 
 import type { MorphoViewerSignals, MorphoViewerSnapshotOptions } from '@/morpho-viewer';
-import type { CellColors, CircuitMorphologyData } from './types';
+import type {
+  CellColors,
+  CircuitMorphologyData,
+  ElectrodeGroup,
+  ElectrodeTransform,
+} from './types';
+
+const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
 
 export interface CircuitMorphologiesProps {
   data: CircuitMorphologyData;
@@ -25,6 +33,14 @@ export interface CircuitMorphologiesProps {
   cellHover?: boolean;
   /** Called with the cell that is clicked. */
   onCellClick?: (cell: number) => void;
+  /** Electrode arrays drawn in front of the cells, in the colours the host gives them. */
+  electrodes?: readonly ElectrodeGroup[];
+  /** A contact's radius, in µm. */
+  electrodeRadius: number;
+  /** The array the form has selected, drawn larger and lighter. */
+  selectedElectrode?: string | null;
+  /** Told where an array was moved or turned to with the pointer; without it the arrays stay put. */
+  onElectrodeTransform?: (transform: ElectrodeTransform) => void;
   backgroundColor: string;
   showScalebar: boolean;
   /** The circuit viewer's bus, on which this view answers the camera reset and the snapshot. */
@@ -60,6 +76,10 @@ export function CircuitMorphologies({
   defaultColor,
   cellHover = false,
   onCellClick,
+  electrodes = NO_ELECTRODES,
+  electrodeRadius,
+  selectedElectrode = null,
+  onElectrodeTransform,
   backgroundColor,
   showScalebar,
   signals,
@@ -84,6 +104,29 @@ export function CircuitMorphologies({
   useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
+  useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
+
+  const [electrodeTracker, setElectrodeTracker] = useState<ElectrodeTracker | null>(null);
+  const transformed = useLatest(onElectrodeTransform);
+  const movable = onElectrodeTransform !== undefined;
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!viewer || !host) return;
+    const tracker = trackElectrodes(
+      host,
+      viewer,
+      movable ? (transform) => transformed.current?.(transform) : undefined
+    );
+    setElectrodeTracker(tracker);
+    return () => {
+      setElectrodeTracker(null);
+      tracker.stop();
+    };
+  }, [viewer, movable, transformed]);
+  useEffect(
+    () => electrodeTracker?.show(electrodes, selectedElectrode),
+    [electrodeTracker, electrodes, selectedElectrode]
+  );
 
   const clicked = useLatest(onCellClick);
   const clickable = onCellClick !== undefined;
@@ -93,8 +136,10 @@ export function CircuitMorphologies({
     return trackPointer(host, viewer, {
       hover: cellHover,
       onClick: clickable ? (cell) => clicked.current?.(cell) : undefined,
+      // An electrode the pointer can take hold of is what it rests on, not the cell behind.
+      taken: movable ? (x, y) => viewer.electrodeAt(x, y) !== null : undefined,
     });
-  }, [viewer, cellHover, clickable, clicked]);
+  }, [viewer, cellHover, clickable, clicked, movable]);
 
   useEffect(() => {
     if (!viewer) return;

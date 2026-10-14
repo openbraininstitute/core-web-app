@@ -8,7 +8,10 @@ import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
-import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CircuitMorphologyData,
+  ElectrodeGroup,
+} from '@/features/circuit-viewer/morphologies/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
 
 const { FakeRenderer } = vi.hoisted(() => {
@@ -69,6 +72,9 @@ interface Internals {
   idMaterials: { segment: THREE.ShaderMaterial; soma: THREE.ShaderMaterial };
   idTarget: THREE.WebGLRenderTarget | null;
   camera: THREE.Camera;
+  scene: THREE.Scene;
+  electrodeMaterial: THREE.ShaderMaterial;
+  electrodes: Quads | null;
 }
 
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
@@ -105,6 +111,26 @@ const texel = (inner: Internals, cell: number) => {
   return [...(data as Uint8Array).subarray(4 * cell, 4 * cell + 4)];
 };
 const rgb = (hex: string) => chroma(hex).rgb();
+const rounded = (values: ArrayLike<number>) =>
+  Array.from(values, (value) => Math.round(value * 1000) / 1000);
+
+/** Array A's two contacts and array B's one, in the circuit's frame: around the centre of `circuit()`. */
+function arrays(): ElectrodeGroup[] {
+  return [
+    { id: 'A', color: '#1b6ef3', coordinates: Float32Array.of(110, 220, 300, 100, 200, 300) },
+    { id: 'B', color: '#12a150', coordinates: Float32Array.of(95, 190, 300) },
+  ];
+}
+const contactsOf = (inner: Internals) => inner.electrodes?.geometry.getAttribute('aContact').array;
+const looksOf = (inner: Internals) => inner.electrodes?.geometry.getAttribute('aLook').array;
+/** Where the view draws a point of the circuit, in CSS pixels of its 400 by 300. */
+function drawnAt(inner: Internals, point: [number, number, number]): [number, number] {
+  inner.camera.updateMatrixWorld();
+  const ndc = new THREE.Vector3(point[0] - 100, point[1] - 200, point[2] - 300).project(
+    inner.camera
+  );
+  return [((ndc.x + 1) / 2) * 400, ((1 - ndc.y) / 2) * 300];
+}
 /** The frames drawn by letting the loop turn once, if it is on. */
 function frames(inner: Internals): number {
   inner.renderer.render.mockClear();
@@ -427,6 +453,179 @@ describe('the circuit morphology viewer', () => {
     await expect(viewer.pick(10, 10)).resolves.toBeNull();
   });
 
+  it('draws electrodes after the cells and over them, centred as the data is, in their colours as given', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), null);
+
+    const mesh = inner.electrodes as Quads;
+    expect(mesh.parent).toBe(inner.scene);
+    expect(mesh.renderOrder).toBe(1);
+    expect(mesh.frustumCulled).toBe(false);
+    expect(mesh.material).toBe(inner.electrodeMaterial);
+    expect(inner.electrodeMaterial.depthTest).toBe(false);
+    expect(inner.electrodeMaterial.depthWrite).toBe(false);
+    expect(mesh.geometry.instanceCount).toBe(3);
+    expect(rounded(contactsOf(inner) ?? [])).toEqual([10, 20, 0, 0, 0, 0, -5, -10, 0]);
+    // In sRGB as the host has them, which the shader writes as they are.
+    const sRGB = (hex: string) => rounded(rgb(hex).map((c) => c / 255));
+    expect(rounded(looksOf(inner) ?? [])).toEqual([
+      ...sRGB('#1b6ef3'),
+      1,
+      ...sRGB('#1b6ef3'),
+      1,
+      ...sRGB('#12a150'),
+      1,
+    ]);
+  });
+
+  it('draws the highlighted array half again as large, and nearer white', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), 'B');
+
+    const looks = rounded(looksOf(inner) ?? []);
+    const plain = [...rounded(rgb('#1b6ef3').map((c) => c / 255)), 1];
+    const lighter = rounded(rgb('#12a150').map((c) => c / 255 + (1 - c / 255) * 0.55));
+    expect(looks).toEqual([...plain, ...plain, ...lighter, 1.55]);
+  });
+
+  it("places electrodes it was given before the data around the data's centre once it comes", () => {
+    const { viewer, inner } = make();
+    viewer.setElectrodes(arrays(), null);
+    expect(rounded(contactsOf(inner) ?? []).slice(0, 3)).toEqual([110, 220, 300]);
+
+    viewer.setData(circuit());
+    expect(rounded(contactsOf(inner) ?? []).slice(0, 3)).toEqual([10, 20, 0]);
+
+    frames(inner);
+    viewer.setElectrodes(arrays(), 'A');
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('keeps its mesh while the contacts fit in it, and makes a larger one when they do not', () => {
+    const { viewer, inner } = make();
+    viewer.setElectrodes(arrays(), null);
+    const first = inner.electrodes as Quads;
+    const dispose = vi.spyOn(first.geometry, 'dispose');
+
+    viewer.setElectrodes(arrays().slice(0, 1), 'A');
+    expect(inner.electrodes).toBe(first);
+    expect(first.geometry.instanceCount).toBe(2);
+
+    viewer.setElectrodes([], null);
+    expect(inner.electrodes).toBe(first);
+    expect(first.visible).toBe(false);
+
+    viewer.setElectrodes(arrays(), null);
+    expect(inner.electrodes).toBe(first);
+    expect(first.visible).toBe(true);
+    expect(first.geometry.instanceCount).toBe(3);
+    expect(dispose).not.toHaveBeenCalled();
+
+    const more = { id: 'C', color: '#d43c3c', coordinates: Float32Array.of(100, 200, 300) };
+    viewer.setElectrodes([...arrays(), more], null);
+    expect(dispose).toHaveBeenCalledTimes(1);
+    expect(first.parent).toBeNull();
+    expect(inner.electrodes?.geometry.instanceCount).toBe(4);
+  });
+
+  it('draws contacts as wide as the radius setting, and a pixel or more across at the least', () => {
+    const { viewer, inner } = make();
+    const { uRadius, uMinRadius, uViewport } = inner.electrodeMaterial.uniforms;
+    expect(uViewport).toBe(inner.uniforms.uViewport);
+
+    viewer.setElectrodeRadius(5);
+    expect(uRadius.value).toBe(5);
+    expect(uMinRadius.value).toBe(1);
+
+    frames(inner);
+    viewer.setElectrodeRadius(20);
+    expect(uRadius.value).toBe(20);
+    expect(uMinRadius.value).toBe(3);
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('draws no frame for a highlight where there are no electrodes', () => {
+    const { viewer, inner } = make();
+    viewer.setElectrodes([], null);
+    expect(inner.electrodes).toBeNull();
+
+    frames(inner);
+    viewer.setElectrodes([], 'A');
+    expect(frames(inner)).toBe(0);
+  });
+
+  it('finds the electrode at a point of the view, or the nearest contact within 7 pixels', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    // Contacts too small to see: the reach is all there is to them.
+    viewer.setElectrodeRadius(0.001);
+    viewer.setElectrodes(arrays(), null);
+    const [x, y] = drawnAt(inner, [95, 190, 300]);
+
+    expect(viewer.electrodeAt(x, y)).toEqual({ id: 'B', contact: [95, 190, 300] });
+    expect(viewer.electrodeAt(x + 6, y)).toEqual({ id: 'B', contact: [95, 190, 300] });
+    expect(viewer.electrodeAt(x + 8, y)).toBeNull();
+    expect(viewer.electrodeAt(...drawnAt(inner, [100, 200, 300]))).toEqual({
+      id: 'A',
+      contact: [100, 200, 300],
+    });
+  });
+
+  it("finds a contact within its drawn radius, the highlighted array's half again as wide", () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodeRadius(3);
+    viewer.setElectrodes(arrays(), null);
+    const [x, y] = drawnAt(inner, [95, 190, 300]);
+    const perUm = drawnAt(inner, [96, 190, 300])[0] - x;
+    // Wider than the reach any contact has.
+    expect(3 * perUm).toBeGreaterThan(7);
+
+    // The disc and the ring's pixel round it.
+    expect(viewer.electrodeAt(x + 3 * perUm + 0.9, y)?.id).toBe('B');
+    expect(viewer.electrodeAt(x + 3 * perUm + 1.1, y)).toBeNull();
+    viewer.setElectrodes(arrays(), 'B');
+    expect(viewer.electrodeAt(x + 4.6 * perUm, y)?.id).toBe('B');
+  });
+
+  it("rings each contact in the theme's foreground, a CSS pixel wide on any screen", () => {
+    const { viewer, inner } = make();
+    const { uRing, uRingColour } = inner.electrodeMaterial.uniforms;
+    expect(rounded(uRingColour.value.toArray())).toEqual(
+      rounded(rgb('#1a1a1a').map((c) => c / 255))
+    );
+    viewer.setDark(true);
+    expect(uRingColour.value.toArray()).toEqual([1, 1, 1]);
+
+    const draw = inner.electrodeMaterial.onBeforeRender as unknown as (renderer: unknown) => void;
+    draw.call(inner.electrodeMaterial, {
+      getCurrentViewport: (v: THREE.Vector4) => v.set(0, 0, 800, 600),
+      getPixelRatio: () => 2,
+    });
+    expect(uRing.value).toBe(2);
+    expect(inner.electrodeMaterial.vertexShader).toContain('float outer = r + uRing * um;');
+  });
+
+  it("turns a point of the view back into the circuit's frame, as deep in the view as a point given", () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const contact: [number, number, number] = [95, 190, 300];
+    const [x, y] = drawnAt(inner, contact);
+
+    expect(rounded(viewer.fromScreen(x, y, contact))).toEqual(contact);
+    const moved = viewer.fromScreen(x + 20, y - 10, contact);
+    const [mx, my] = drawnAt(inner, moved);
+    expect(mx).toBeCloseTo(x + 20);
+    expect(my).toBeCloseTo(y - 10);
+    const depth = (p: number[]) =>
+      new THREE.Vector3(p[0] - 100, p[1] - 200, p[2] - 300).applyMatrix4(
+        inner.camera.matrixWorldInverse
+      ).z;
+    expect(depth(moved)).toBeCloseTo(depth(contact));
+  });
+
   it('draws neither segments nor somas where the data has none', () => {
     const { viewer, inner } = make();
     viewer.setData({
@@ -467,6 +666,7 @@ describe('the circuit morphology viewer', () => {
   it('frees what it holds when it is disposed of', async () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), null);
     await viewer.pick(10, 10);
     const freed = [
       segmentsOf(inner).geometry,
@@ -477,6 +677,8 @@ describe('the circuit morphology viewer', () => {
       inner.idMaterials.segment,
       inner.idMaterials.soma,
       inner.idTarget as THREE.WebGLRenderTarget,
+      (inner.electrodes as Quads).geometry,
+      inner.electrodeMaterial,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
     viewers = [];

@@ -275,8 +275,8 @@ export class SceneViewer implements ViewControls {
   private movingPipeline: Pipeline | null = null;
   private unseenTarget: THREE.WebGLRenderTarget | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
-  private width = 1;
-  private height = 1;
+  protected width = 1;
+  protected height = 1;
   private viewDir = new THREE.Vector3();
   /** Set whenever something other than the camera changed; the loop only renders when needed. */
   private dirty = true;

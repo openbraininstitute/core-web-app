@@ -10,6 +10,7 @@ import {
 import type {
   CellColors,
   CircuitMorphologyData,
+  ElectrodeGroup,
 } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => {
@@ -22,6 +23,23 @@ const h = vi.hoisted(() => {
     /** Every pick finds cell 4. */
     pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
     moving = false;
+    setElectrodes = vi.fn();
+    setElectrodeRadius = vi.fn();
+    /** Every point is on array A's first contact. */
+    electrodeAt = vi.fn(
+      (_x: number, _y: number): { id: string; contact: [number, number, number] } | null => ({
+        id: 'A',
+        contact: [1, 2, 3],
+      })
+    );
+    /** An orthographic view facing down z, at a µm a pixel. */
+    fromScreen = vi.fn(
+      (x: number, y: number, depthOf: [number, number, number]): [number, number, number] => [
+        x,
+        -y,
+        depthOf[2],
+      ]
+    );
     setDark = vi.fn();
     resetView = vi.fn();
     dispose = vi.fn();
@@ -63,6 +81,7 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
       data={DATA}
       cellColors={COLORS}
       defaultColor="#2b5cd9"
+      electrodeRadius={5}
       backgroundColor="#ffffff"
       showScalebar
       {...props}
@@ -83,6 +102,27 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
 const click = (host: HTMLElement) => {
   fireEvent.pointerDown(host, { isPrimary: true, clientX: 30, clientY: 20 });
   fireEvent.pointerUp(host, { isPrimary: true, clientX: 30, clientY: 20 });
+};
+
+/** Array A: two contacts 20 µm apart, from its origin. */
+const ARRAY: ElectrodeGroup[] = [
+  {
+    id: 'A',
+    color: '#1b6ef3',
+    kind: 'electrodes',
+    coordinates: Float32Array.of(1, 2, 3, 1, 22, 3),
+    origin: [1, 2, 3],
+    rotation: { x: 0, y: 0, z: 0 },
+  },
+];
+
+/** Takes hold at 30, 20 and lets go 10 pixels right and up. */
+const drag = (host: HTMLElement) => {
+  host.setPointerCapture = vi.fn();
+  const at = { isPrimary: true, pointerId: 1 };
+  fireEvent.pointerDown(host, { ...at, button: 0, buttons: 1, clientX: 30, clientY: 20 });
+  fireEvent.pointerMove(host, { ...at, buttons: 1, clientX: 40, clientY: 10 });
+  fireEvent.pointerUp(host, { ...at, clientX: 40, clientY: 10 });
 };
 
 afterEach(() => {
@@ -157,6 +197,103 @@ describe('CircuitMorphologies', () => {
 
     expect(viewer.pick).not.toHaveBeenCalled();
     expect(viewer.setHighlight).not.toHaveBeenCalled();
+  });
+
+  it('draws the electrodes at the radius it is given, the array the form has selected highlighted', () => {
+    const { viewer, update } = view({
+      electrodes: ARRAY,
+      selectedElectrode: 'A',
+      electrodeRadius: 8,
+    });
+    expect(viewer.setElectrodes).toHaveBeenLastCalledWith(ARRAY, 'A');
+    expect(viewer.setElectrodeRadius).toHaveBeenLastCalledWith(8);
+
+    update({ selectedElectrode: null, electrodeRadius: 12 });
+    expect(viewer.setElectrodes).toHaveBeenLastCalledWith(ARRAY, null);
+    expect(viewer.setElectrodeRadius).toHaveBeenLastCalledWith(12);
+
+    update({ electrodes: undefined });
+    expect(viewer.setElectrodes).toHaveBeenLastCalledWith([], 'A');
+  });
+
+  it('tells of an array moved with the pointer, through whichever listener it has by then', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { viewer, update } = view({ electrodes: ARRAY, onElectrodeTransform: first });
+
+    drag(viewer.host);
+    expect(first).toHaveBeenCalledExactlyOnceWith({
+      id: 'A',
+      origin: { x: 11, y: 12, z: 3 },
+      rotation: { x: 0, y: 0, z: 0 },
+      phase: 'end',
+    });
+
+    update({ onElectrodeTransform: second });
+    drag(viewer.host);
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(h.viewers).toHaveLength(1);
+  });
+
+  it('holds the electrodes still where the host cannot be told of a move', () => {
+    const { viewer } = view({ electrodes: ARRAY });
+    viewer.setElectrodes.mockClear();
+
+    drag(viewer.host);
+
+    expect(viewer.electrodeAt).not.toHaveBeenCalled();
+    expect(viewer.setElectrodes).not.toHaveBeenCalled();
+  });
+
+  it('highlights the electrode the pointer can take hold of, and not the cell behind it', async () => {
+    const { viewer } = view({
+      cellHover: true,
+      electrodes: ARRAY,
+      onElectrodeTransform: vi.fn(),
+    });
+
+    fireEvent.pointerMove(viewer.host, { clientX: 30, clientY: 20 });
+
+    expect(viewer.setElectrodes).toHaveBeenLastCalledWith(ARRAY, 'A');
+    await vi.waitFor(() => expect(viewer.setHighlight).toHaveBeenCalledExactlyOnceWith(null));
+    expect(viewer.pick).not.toHaveBeenCalled();
+  });
+
+  it('selects no cell with a click on an electrode the pointer can take hold of', async () => {
+    const onCellClick = vi.fn();
+    const { viewer } = view({ electrodes: ARRAY, onCellClick, onElectrodeTransform: vi.fn() });
+    viewer.host.setPointerCapture = vi.fn();
+
+    click(viewer.host);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(viewer.pick).not.toHaveBeenCalled();
+    expect(onCellClick).not.toHaveBeenCalled();
+  });
+
+  it('looks for no cell while an array is moved, though the pointer came to rest on it just before', async () => {
+    const { viewer } = view({
+      cellHover: true,
+      electrodes: [{ ...ARRAY[0], coordinates: Float32Array.of(30, -20, 3) }],
+      onElectrodeTransform: vi.fn(),
+    });
+    // On the contact as it is drawn now, through the fake view's own projection.
+    viewer.electrodeAt.mockImplementation((x: number, y: number) => {
+      const xyz = viewer.setElectrodes.mock.lastCall?.[0][0].coordinates as Float32Array;
+      return Math.hypot(xyz[0] - x, -xyz[1] - y) <= 5
+        ? { id: 'A', contact: [xyz[0], xyz[1], xyz[2]] as [number, number, number] }
+        : null;
+    });
+    viewer.host.setPointerCapture = vi.fn();
+    const at = { isPrimary: true, pointerId: 1 };
+
+    fireEvent.pointerMove(viewer.host, { ...at, clientX: 30, clientY: 20 });
+    fireEvent.pointerDown(viewer.host, { ...at, button: 0, buttons: 1, clientX: 30, clientY: 20 });
+    fireEvent.pointerMove(viewer.host, { ...at, buttons: 1, clientX: 80, clientY: 20 });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(viewer.pick).not.toHaveBeenCalled();
   });
 
   it('draws the ruler where the setting has it, in the colour read against the background, and the axes', () => {

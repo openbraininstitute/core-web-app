@@ -38,6 +38,15 @@ export function impostorUniforms(): ImpostorUniforms {
   };
 }
 
+/** `pixelUm`, for a vertex shader that has `uViewport`. */
+export const PIXEL_UM = /* glsl */ `
+// The µm a device pixel spans at the view depth z.
+float pixelUm( float z ) {
+	float span = 2.0 / ( projectionMatrix[ 1 ][ 1 ] * uViewport.w );
+	return isOrthographic ? span : span * max( - z, 1e-3 );
+}
+`;
+
 const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
 uniform vec4 uViewport;
@@ -49,11 +58,7 @@ const float MIN_RADIUS = 0.75;
 vec4 cellTexel() {
 	return texelFetch( uCells, ivec2( int( aCell & ${(1 << ROW_BITS) - 1}u ), int( aCell >> ${ROW_BITS}u ) ), 0 );
 }
-// The µm a device pixel spans at the view depth z.
-float pixelUm( float z ) {
-	float span = 2.0 / ( projectionMatrix[ 1 ][ 1 ] * uViewport.w );
-	return isOrthographic ? span : span * max( - z, 1e-3 );
-}
+${PIXEL_UM}
 // Where a view point is drawn, as gl_FragCoord counts pixels.
 vec2 toPixels( vec3 p ) {
 	vec4 clip = projectionMatrix * vec4( p, 1.0 );
@@ -237,7 +242,10 @@ const KINDS = { segment: SEGMENT, soma: SOMA };
 type KindName = keyof typeof KINDS;
 
 /** Keep `uniforms.uViewport` at what `material` is drawn into. */
-function followViewport(material: THREE.Material, uniforms: ImpostorUniforms): void {
+export function followViewport(
+  material: THREE.Material,
+  uniforms: Pick<ImpostorUniforms, 'uViewport'>
+): void {
   const before = material.onBeforeRender;
   material.onBeforeRender = (renderer, ...rest) => {
     before.call(material, renderer, ...rest);

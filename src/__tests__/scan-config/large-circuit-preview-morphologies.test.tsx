@@ -258,6 +258,39 @@ describe('LargeCircuitPreview morphologies', () => {
     expect((await shown(props)).onCellClick).toBeUndefined();
   });
 
+  it('draws the electrodes over the morphologies as over the somas, and lets them be moved where the form takes it', async () => {
+    const overlays = [
+      {
+        name: 'probe',
+        id: 'probe',
+        kind: 'electrodes' as const,
+        color: '#1b6ef3',
+        coordinates: Float32Array.of(1, 2, 3),
+      },
+    ];
+    const onOverlayTransform = vi.fn();
+    const view = await shown({
+      overlays,
+      electrodeRadius: 12,
+      highlightedOverlayId: 'probe',
+      overlaysInteractive: true,
+      onOverlayTransform,
+    });
+
+    expect(view).toMatchObject({
+      electrodes: overlays,
+      electrodeRadius: 12,
+      selectedElectrode: 'probe',
+      onElectrodeTransform: onOverlayTransform,
+    });
+  });
+
+  it('holds the electrodes still where the form cannot take a move', async () => {
+    const view = await shown({ overlaysInteractive: false, onOverlayTransform: vi.fn() });
+    expect(view.onElectrodeTransform).toBeUndefined();
+    expect(view.electrodeRadius).toBe(5);
+  });
+
   it('goes back to the somas, and lets go of the morphologies, when switched off', async () => {
     await shown();
 

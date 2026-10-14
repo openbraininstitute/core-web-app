@@ -1,7 +1,7 @@
 import type { CircuitMorphologyView } from './types';
 
 /** How far the pointer may go between going down and coming up, in CSS pixels, and still have clicked. */
-const CLICK_REACH = 4;
+export const CLICK_REACH = 4;
 /** How long the pointer rests before the cell under it is looked for: a pick sends every segment through the GPU. */
 const REST_MS = 60;
 
@@ -10,6 +10,8 @@ interface PointerOptions {
   hover: boolean;
   /** Called with the cell that is clicked. */
   onClick?: (cell: number) => void;
+  /** Whether a point of the element, in CSS pixels, is something else's to answer for: no cell is looked for there. */
+  taken?: (x: number, y: number) => boolean;
 }
 
 type Point = { x: number; y: number };
@@ -21,7 +23,7 @@ type Point = { x: number; y: number };
 export function trackPointer(
   element: HTMLElement,
   view: Pick<CircuitMorphologyView, 'pick' | 'setHighlight' | 'moving'>,
-  { hover, onClick }: PointerOptions
+  { hover, onClick, taken }: PointerOptions
 ): () => void {
   const off = new AbortController();
   // On the page, as the events have them: the view is measured only for a pick.
@@ -39,8 +41,11 @@ export function trackPointer(
   // A pick that fails finds nothing.
   const pickAt = (point: Point): Promise<number | null> => {
     const box = element.getBoundingClientRect();
+    const x = point.x - box.left;
+    const y = point.y - box.top;
+    if (taken?.(x, y)) return Promise.resolve(null);
     try {
-      return view.pick(point.x - box.left, point.y - box.top).catch(() => null);
+      return view.pick(x, y).catch(() => null);
     } catch {
       return Promise.resolve(null);
     }
@@ -120,10 +125,12 @@ export function trackPointer(
   const onWheel = () => lookAfterRest();
 
   const { signal } = off;
-  element.addEventListener('pointermove', onMove, { signal });
-  element.addEventListener('pointerdown', onDown, { signal });
-  element.addEventListener('pointerup', onUp, { signal });
-  element.addEventListener('pointercancel', onCancel, { signal });
+  // In the capture phase: a press the electrodes keep from the canvas is still heard here.
+  const capture = { signal, capture: true };
+  element.addEventListener('pointermove', onMove, capture);
+  element.addEventListener('pointerdown', onDown, capture);
+  element.addEventListener('pointerup', onUp, capture);
+  element.addEventListener('pointercancel', onCancel, capture);
   element.addEventListener('pointerleave', onLeave, { signal });
   element.addEventListener('wheel', onWheel, { signal, passive: true });
 

@@ -91,8 +91,8 @@ export interface LargeCircuitPreviewProps {
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
   signals: MorphoViewerSignals;
   /**
-   * World-coordinate electrode overlays (same pipeline as CircuitViz).
-   * Large circuits draw somas only; overlay interaction is identical.
+   * World-coordinate electrode overlays (same pipeline as CircuitViz), drawn
+   * and moved alike over the somas and over the morphologies.
    */
   overlays?: ICircuitOverlayGroup[];
   /** Enable left-drag / right-drag on electrode overlays when form can write back. */
@@ -377,6 +377,10 @@ export function LargeCircuitPreview({
           defaultColor={defaultColor}
           cellHover={features?.cellHover ?? true}
           onCellClick={canPickPopulation ? handleCellClick : undefined}
+          electrodes={overlays}
+          electrodeRadius={electrodeRadius}
+          selectedElectrode={highlightedOverlayId}
+          onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           signals={signals}

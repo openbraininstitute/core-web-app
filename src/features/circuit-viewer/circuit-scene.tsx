@@ -268,9 +268,6 @@ export function CircuitScene({
     enabled: !!morphologiesFlag,
     largeCircuit,
     spikes: spikes !== undefined,
-    // Shown or hidden by the viewer's own toggle alike: that toggle is in the
-    // config the hook below returns.
-    electrodes: enableElectrodes && scopedOverlays.length > 0,
   });
 
   const handleOverlayTransform = useCallback(

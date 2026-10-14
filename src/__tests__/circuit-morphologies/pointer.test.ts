@@ -17,7 +17,7 @@ function fakeView() {
 let element: HTMLElement;
 let stop: (() => void) | undefined;
 
-function track(options: { hover: boolean; onClick?: (cell: number) => void }) {
+function track(options: Parameters<typeof trackPointer>[2]) {
   const view = fakeView();
   stop = trackPointer(element, view, options);
   return view;
@@ -200,6 +200,21 @@ describe('the pointer over the morphologies', () => {
 
     expect(view.pick).toHaveBeenCalledTimes(3);
     expect(view.setHighlight.mock.calls).toEqual([[null], [null]]);
+  });
+
+  it("looks for no cell where the point is something else's, and highlights none there", async () => {
+    // Left of 55 in the view, say an electrode the pointer can take hold of.
+    const taken = vi.fn((x: number, _y: number) => x < 55);
+    const view = track({ hover: true, taken });
+    rest();
+    await Promise.resolve();
+
+    expect(taken).toHaveBeenCalledExactlyOnceWith(50, 50);
+    expect(view.pick).not.toHaveBeenCalled();
+    expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(null);
+    pointer('pointermove', [160, 90]);
+    vi.advanceTimersByTime(60);
+    expect(view.pick).toHaveBeenCalledExactlyOnceWith(60, 50);
   });
 
   it('highlights none once it has left, whatever is answered after', async () => {
