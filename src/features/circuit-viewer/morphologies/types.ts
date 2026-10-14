@@ -207,6 +207,8 @@ export interface CircuitMorphologyView extends ViewControls {
   onSpikesPlaying(listener: (playing: boolean) => void): () => void;
   setDark(dark: boolean): void;
   resetView(): void;
+  /** Zoom in a little and back out once, to point at the view; any move of the user's ends it. */
+  nudge(): void;
   /** How near the view is, 1 as `resetView` frames it; the pixel scale's listeners hear when it changes. */
   readonly zoom: number;
   setZoom(zoom: number): void;

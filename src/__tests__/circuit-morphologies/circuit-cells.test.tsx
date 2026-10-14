@@ -50,6 +50,7 @@ const h = vi.hoisted(() => {
       ]
     );
     setSynapses = vi.fn();
+    nudge = vi.fn();
     setLocationMarkers = vi.fn();
     setLocationMarkerRadius = vi.fn();
     markerAt = vi.fn((_x: number, _y: number) => null);
@@ -219,7 +220,7 @@ describe('CircuitCells', () => {
     expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS);
     expect(viewer.setSomaRadius).toHaveBeenCalledExactlyOnceWith(15);
     expect(viewer.setSomaOpacity).toHaveBeenCalledExactlyOnceWith(0.2);
-    expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA);
+    expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA, false);
     expect(viewer.setCellColors).toHaveBeenCalledExactlyOnceWith(COLORS);
     expect(viewer.setDefaultColor).toHaveBeenCalledExactlyOnceWith('#2b5cd9');
     expect(viewer.setDark).toHaveBeenCalledExactlyOnceWith(true);
@@ -249,13 +250,16 @@ describe('CircuitCells', () => {
 
   it('takes a radius, an opacity and morphologies without handing the somas over again', () => {
     const { viewer, update } = view({ data: null });
-    expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(null);
+    expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(null, false);
 
     update({ data: null, somaRadius: 30, somaOpacity: 0.5 });
     update({ data: DATA, somaRadius: 30, somaOpacity: 0.5 });
     expect(viewer.setSomaRadius).toHaveBeenLastCalledWith(30);
     expect(viewer.setSomaOpacity).toHaveBeenLastCalledWith(0.5);
-    expect(viewer.setData.mock.calls).toEqual([[null], [DATA]]);
+    expect(viewer.setData.mock.calls).toEqual([
+      [null, false],
+      [DATA, false],
+    ]);
     expect(viewer.setSomas).toHaveBeenCalledTimes(1);
     expect(h.crowdings).toHaveLength(1);
   });
@@ -334,6 +338,27 @@ describe('CircuitCells', () => {
     expect(viewer.setCellColors).toHaveBeenCalledTimes(2);
     expect(viewer.setData).toHaveBeenCalledTimes(1);
     expect(h.viewers).toHaveLength(1);
+  });
+
+  it('frames the view on each new set of morphologies where told to follow them', () => {
+    const { viewer, update } = view();
+    expect(viewer.setData).toHaveBeenLastCalledWith(DATA, false);
+    const next = { somas: new Float32Array(8) } as CircuitMorphologyData;
+    update({ data: next, follow: true });
+    expect(viewer.setData).toHaveBeenLastCalledWith(next, true);
+    update({ data: next, follow: false });
+    expect(viewer.setData).toHaveBeenCalledTimes(2);
+  });
+
+  it('works out no crowding where the somas are not to be shaded by it', () => {
+    view({ crowding: false });
+    expect(h.crowdings).toHaveLength(0);
+  });
+
+  it('nudges the view on the signal', async () => {
+    const { viewer, signals } = view();
+    await signals.nudgeMorphology.dispatch();
+    expect(viewer.nudge).toHaveBeenCalledTimes(1);
   });
 
   it('hands the synapses over, none to begin with, and the same groups once', () => {

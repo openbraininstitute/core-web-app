@@ -79,6 +79,9 @@ const MARKER_REACH = 9;
 /** A synapse's radius in µm, and the least it is drawn with in device pixels: the small-circuit view's. */
 const SYNAPSE_RADIUS = 0.5;
 const SYNAPSE_MIN_RADIUS = 2;
+/** How long the nudge lasts, ms, and how much nearer it brings the view at its height: morphoviewer's. */
+const NUDGE_MS = 900;
+const NUDGE_GROWTH = 0.06;
 const point = new THREE.Vector3();
 
 /** `instances` quads, for the caller to add the attributes a shader places each by. */
@@ -236,6 +239,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
   /** Whether the listeners were last told of no marker at all. */
   private toldNone = false;
+  /** The nudge under way: when it began, the zoom it began at, and the zoom it last set. */
+  private nudging: { start: number; rest: number; set: number } | null = null;
   /** Where the last framing left the camera. */
   private framedAt: {
     position: THREE.Vector3;
@@ -268,6 +273,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
     };
     this.setDark(false);
+    // A gesture takes the view: the nudge's zoom would stop its glide every frame.
+    this.controls.addEventListener('start', () => {
+      this.nudging = null;
+    });
   }
 
   protected override disposeContent(): void {
@@ -781,11 +790,36 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /** The replay's clock moves on by the time the last turn of the loop took, which keeps turning while it plays. */
   protected override work(): boolean {
-    if (!this.spiking.playing) return false;
+    const nudging = this.nudgeFrame();
+    if (!this.spiking.playing) return nudging;
     const ended = this.spiking.advance();
     this.spikeFrame();
     if (ended) this.tellPlaying(false);
-    return !ended;
+    return !ended || nudging;
+  }
+
+  nudge(): void {
+    if (this.nudging) return;
+    this.nudging = { start: performance.now(), rest: this.zoom, set: this.zoom };
+    this.invalidate();
+  }
+
+  /** The nudge's zoom for this frame, as morphoviewer's: a sine's hump. Whether it goes on. */
+  private nudgeFrame(): boolean {
+    const nudging = this.nudging;
+    if (!nudging) return false;
+    // Zoomed meanwhile, by the slider say: the view is the user's.
+    if (this.zoom !== nudging.set) {
+      this.nudging = null;
+      return false;
+    }
+    const done = Math.min(1, (performance.now() - nudging.start) / NUDGE_MS);
+    nudging.set =
+      done < 1 ? nudging.rest * (1 + NUDGE_GROWTH * Math.sin(done * Math.PI)) : nudging.rest;
+    this.setZoom(nudging.set);
+    if (done < 1) return true;
+    this.nudging = null;
+    return false;
   }
 
   /** A frame only where a cell glows otherwise: before the first spike, a playing replay draws nothing. */

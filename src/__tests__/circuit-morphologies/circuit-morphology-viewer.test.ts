@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import chroma from 'chroma-js';
 import * as THREE from 'three';
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
 import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
@@ -1280,6 +1280,54 @@ describe('the morphologies over the somas', () => {
     expect(inner.chunks.children).toHaveLength(0);
     expect(inner.cloud?.mesh.visible).toBe(true);
     expect(inner.ids.children).toHaveLength(1);
+  });
+});
+
+describe("the circuit viewer's nudge", () => {
+  let now = 0;
+  beforeEach(() => {
+    now = 1000;
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+  });
+  afterEach(() => vi.mocked(performance.now).mockRestore());
+  const turnAt = (inner: Internals, ms: number) => {
+    now = 1000 + ms;
+    return frames(inner);
+  };
+
+  it('zooms in by a sine’s hump of 6% over 0.9 s, and ends where it began, a frame a turn', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    frames(inner);
+    viewer.setZoom(2);
+    viewer.nudge();
+    viewer.nudge();
+    expect(turnAt(inner, 450)).toBe(1);
+    expect(viewer.zoom).toBeCloseTo(2 * 1.06, 6);
+    expect(turnAt(inner, 225)).toBe(1);
+    expect(viewer.zoom).toBeCloseTo(2 * (1 + 0.06 * Math.SQRT1_2), 6);
+    turnAt(inner, 900);
+    expect(viewer.zoom).toBe(2);
+    expect(turnAt(inner, 1000)).toBe(0);
+  });
+
+  it('ends at once where the user zooms or takes the view', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.nudge();
+    turnAt(inner, 100);
+    viewer.setZoom(3);
+    turnAt(inner, 200);
+    expect(viewer.zoom).toBe(3);
+
+    viewer.nudge();
+    turnAt(inner, 300);
+    const zoom = viewer.zoom;
+    (inner.controls as unknown as THREE.EventDispatcher<{ start: object }>).dispatchEvent({
+      type: 'start',
+    });
+    turnAt(inner, 400);
+    expect(viewer.zoom).toBe(zoom);
   });
 });
 

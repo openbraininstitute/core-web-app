@@ -46,6 +46,10 @@ export interface CircuitCellsProps {
   somaOpacity?: number;
   /** The cells' morphologies, drawn in the somas' place; null draws the somas. */
   data: CircuitMorphologyData | null;
+  /** Frame the view on every new `data`, as morphologies coming in one at a time want, until the user moves it. */
+  follow?: boolean;
+  /** Shade each soma by how crowded its neighbourhood is, as the somas view did. Off where the somas are never drawn alone. */
+  crowding?: boolean;
   /** As the somas view takes them: a palette and each cell's column of it. */
   cellColors: CellColors;
   /** What a morphology with no colour of its own is drawn in; such a soma runs along the somas view's ramp. */
@@ -70,7 +74,7 @@ export interface CircuitCellsProps {
   spikes?: ISpikeReplayBinding;
   backgroundColor: string;
   showScalebar: boolean;
-  /** The circuit viewer's bus, on which this view answers the camera reset, the snapshot and the zoom. */
+  /** The circuit viewer's bus, on which this view answers the camera reset, the snapshot, the zoom and the nudge. */
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
   onZoomChange?: (zoom: number) => void;
@@ -108,6 +112,8 @@ export function CircuitCells({
   somaRadius,
   somaOpacity = 1,
   data,
+  follow = false,
+  crowding = true,
   cellColors,
   defaultColor,
   cellHover = false,
@@ -148,7 +154,7 @@ export function CircuitCells({
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
   useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || !crowding) return;
     const controller = new AbortController();
     loadCrowding(somas.positions, controller.signal).then(
       (crowding) => {
@@ -160,10 +166,11 @@ export function CircuitCells({
       }
     );
     return () => controller.abort();
-  }, [viewer, somas]);
+  }, [viewer, somas, crowding]);
   useEffect(() => viewer?.setSomas(somas, colors.current), [viewer, somas, colors]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
-  useEffect(() => viewer?.setData(data), [viewer, data]);
+  const following = useLatest(follow);
+  useEffect(() => viewer?.setData(data, following.current), [viewer, data, following]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
   useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
@@ -270,10 +277,12 @@ export function CircuitCells({
       return canvas && imageOf(canvas, options);
     });
     const offZoom = signals.setZoom.register((zoom) => viewer.setZoom(clampZoom(zoom)));
+    const offNudge = signals.nudgeMorphology.register(() => viewer.nudge());
     return () => {
       offReset();
       offSnapshot();
       offZoom();
+      offNudge();
     };
   }, [viewer, signals]);
 
