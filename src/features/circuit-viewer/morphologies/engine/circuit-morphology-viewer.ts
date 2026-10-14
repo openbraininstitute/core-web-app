@@ -15,6 +15,12 @@ import {
   writeElectrodes,
 } from './electrodes';
 import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
+import {
+  GLOW_SWELL,
+  somaCloudIdMaterial,
+  somaCloudMaterial,
+  somaCloudUniforms,
+} from './soma-cloud';
 
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
@@ -22,8 +28,10 @@ import type {
   CellColors,
   CircuitMorphologyData,
   CircuitMorphologyView,
+  CircuitSomas,
   ElectrodeGroup,
   ElectrodeHit,
+  Population,
   Vec3,
 } from '../types';
 
@@ -79,11 +87,49 @@ function placedSomas(somas: Float32Array): { spheres: Float32Array; cells: Uint3
   return { spheres: spheres.subarray(0, 4 * placed), cells: cells.subarray(0, placed) };
 }
 
+/** Whether neither set of populations takes in the other's: another circuit, or another population in place of one. */
+function framesAgain(before: Population[] | null, after: Population[]): boolean {
+  if (!before) return true;
+  const has = (all: Population[], some: Population[]) =>
+    some.every(({ name }) => all.some((population) => population.name === name));
+  return !has(before, after) && !has(after, before);
+}
+
+/**
+ * The somas of `positions` that `drawn` keeps, as the somas view framed them: their mean, and the farthest of them from
+ * it on each axis; null where it keeps none that has a place.
+ */
+function somasBox(
+  positions: Float32Array,
+  drawn: (cell: number) => boolean
+): { mean: Vec3; reach: Vec3 } | null {
+  const min = [Infinity, Infinity, Infinity];
+  const max = [-Infinity, -Infinity, -Infinity];
+  const sum = [0, 0, 0];
+  let count = 0;
+  for (let cell = 0; 3 * cell + 2 < positions.length; cell++) {
+    const i = 3 * cell;
+    if (!drawn(cell) || !Number.isFinite(positions[i] + positions[i + 1] + positions[i + 2])) {
+      continue;
+    }
+    for (let k = 0; k < 3; k++) {
+      min[k] = Math.min(min[k], positions[i + k]);
+      max[k] = Math.max(max[k], positions[i + k]);
+      sum[k] += positions[i + k];
+    }
+    count++;
+  }
+  if (count === 0) return null;
+  const mean = sum.map((s) => s / count) as Vec3;
+  return { mean, reach: mean.map((m, k) => Math.max(max[k] - m, m - min[k])) as Vec3 };
+}
+
 /**
  * A circuit's morphologies on the shared scene, in the Studio look: a quad a segment and a quad a soma (`impostors.ts`),
  * each cell coloured and shown or not by its texel of the cell table, and electrode contacts in front of them
- * (`electrodes.ts`). A spike replay lights the cells as they fire, on a clock (`SpikeClock`) moved on by each turn of
- * the loop.
+ * (`electrodes.ts`). Before a circuit's morphologies are in, or without them, its somas are drawn as the somas view
+ * drew them (`soma-cloud.ts`), from the page's positions. A spike replay lights the cells as they fire, on a clock
+ * (`SpikeClock`) moved on by each turn of the loop.
  *
  * Frames go straight to the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. The arrays
  * are drawn from as the reader made them, and kept: after a lost context three uploads them again.
@@ -93,11 +139,17 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private somaMaterial: THREE.Material;
   private segments: THREE.Mesh | null = null;
   private somas: THREE.Mesh | null = null;
+  private cloudUniforms = somaCloudUniforms();
+  private cloudMaterial = somaCloudMaterial(this.uniforms, this.cloudUniforms);
+  private cloud: THREE.Mesh | null = null;
+  /** The somas the cloud draws, whose populations decide whether the next ones are framed. */
+  private somaSet: CircuitSomas | null = null;
   /** The same quads in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
   private idMaterials = {
     segment: idMaterial('segment', this.uniforms),
     soma: idMaterial('soma', this.uniforms),
+    cloud: somaCloudIdMaterial(this.uniforms, this.cloudUniforms),
   };
   private idTarget: THREE.WebGLRenderTarget | null = null;
   private table: CellTable | null = null;
@@ -149,8 +201,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   protected override disposeContent(): void {
     this.clear();
     this.somaMaterial.dispose();
-    this.idMaterials.segment.dispose();
-    this.idMaterials.soma.dispose();
+    this.cloudMaterial.dispose();
+    for (const material of Object.values(this.idMaterials)) material.dispose();
     this.idTarget?.dispose();
     this.electrodes?.geometry.dispose();
     this.electrodeMaterial.dispose();
@@ -176,12 +228,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   setData(data: CircuitMorphologyData | null): void {
     this.clear();
     if (!data) return;
-    this.table = new CellTable(data.somas.length / 4);
-    this.uniforms.uCells.value = this.table.texture;
-    this.uniforms.uGlow.value = this.table.glowTexture;
-    this.paint();
-    this.spiking.setCellCount(this.table.cells);
-    this.showGlow();
+    this.makeTable(data.somas.length / 4);
 
     const segments = quadGeometry(data.segmentCells.length);
     const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
@@ -202,17 +249,95 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.surfaces.add(this.somas);
 
     this.ids.add(quads(segments, this.idMaterials.segment), quads(somas, this.idMaterials.soma));
-    // Their programs begin to build now, not at the first pick, which would wait for them. Built for the pick's target:
-    // three builds a program for the colour space and tone mapping of where it draws.
-    const { renderer } = this;
-    renderer.setRenderTarget(this.pickTarget());
-    renderer.compile(this.ids, this.camera);
-    renderer.setRenderTarget(null);
+    this.compileIds();
 
     this.bounds.set(new THREE.Vector3(...data.bounds.min), new THREE.Vector3(...data.bounds.max));
     this.centre = data.centre;
     this.drawElectrodes();
     this.resetView();
+  }
+
+  setSomas(somas: CircuitSomas | null): void {
+    const before = this.somaSet?.populations ?? null;
+    this.clear();
+    if (!somas) return;
+    this.somaSet = somas;
+    const cells = Math.floor(somas.positions.length / 3);
+    this.makeTable(cells);
+    const geometry = quadGeometry(cells);
+    geometry.setAttribute('aPosition', new THREE.InstancedBufferAttribute(somas.positions, 3));
+    this.cloud = quads(geometry, this.cloudMaterial);
+    this.cloud.name = 'somas';
+    this.surfaces.add(this.cloud);
+    this.ids.add(quads(geometry, this.idMaterials.cloud));
+    this.compileIds();
+
+    const reframe = framesAgain(before, somas.populations);
+    // Kept otherwise, so that the somas stay where they were drawn.
+    if (reframe) this.centre = somasBox(somas.positions, () => true)?.mean ?? [0, 0, 0];
+    this.cloudUniforms.uOffset.value.fromArray(this.centre);
+    this.boundSomas();
+    this.drawElectrodes();
+    if (reframe) this.resetView();
+  }
+
+  setSomaRadius(radius: number): void {
+    if (radius === this.cloudUniforms.uRadius.value) return;
+    this.cloudUniforms.uRadius.value = radius;
+    this.boundSomas();
+    if (this.cloud?.visible) this.invalidate();
+  }
+
+  setSomaOpacity(opacity: number): void {
+    const clamped = Number.isNaN(opacity) ? 1 : Math.min(1, Math.max(0, opacity));
+    // At 0 a soma is still drawn, so that it can be picked and seen to spike.
+    this.cloudUniforms.uOpacity.value = Math.max(clamped, 1 / 255);
+    const translucent = clamped < 1;
+    if (translucent !== this.cloudMaterial.transparent) {
+      this.cloudMaterial.transparent = translucent;
+      this.cloudMaterial.needsUpdate = true;
+    }
+    if (this.cloud?.visible) this.invalidate();
+  }
+
+  setCrowding(crowding: Uint8Array | null): void {
+    // Worked out for other somas.
+    if (!this.table || (crowding && crowding.length !== this.table.cells)) return;
+    this.table.setCrowding(crowding);
+    if (this.cloud?.visible) this.invalidate();
+  }
+
+  /**
+   * Over the somas, the view frames those drawn as the somas view did: centred on their mean, as far either side as the
+   * farthest of them from it on each axis, and a soma's radius more. Where none is drawn, all of them.
+   */
+  override resetView(): void {
+    const { somaSet, table, cloud } = this;
+    if (!somaSet || !table || !cloud?.visible) {
+      super.resetView();
+      return;
+    }
+    const box =
+      somasBox(somaSet.positions, (cell) => table.shown(cell)) ??
+      somasBox(somaSet.positions, () => true);
+    if (!box) {
+      super.resetView();
+      return;
+    }
+    const reach = box.reach.map((r) => r + this.cloudUniforms.uRadius.value);
+    const points: number[] = [];
+    for (const x of [-reach[0], reach[0]]) {
+      for (const y of [-reach[1], reach[1]])
+        for (const z of [-reach[2], reach[2]]) points.push(x, y, z);
+    }
+    this.fitPoints = Float32Array.from(points);
+    super.resetView();
+    this.fitPoints = null;
+    // Framed around the origin, and moved onto the somas' mean.
+    const middle = new THREE.Vector3(...box.mean).sub(new THREE.Vector3(...this.centre));
+    this.camera.position.add(middle);
+    this.controls.target.copy(middle);
+    this.controls.update();
   }
 
   setCellColors(colors: CellColors | null): void {
@@ -432,6 +557,38 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (written || changed) this.invalidate();
   }
 
+  /** A cell table for `cells` cells, which the shaders read, painted, and glowing as the replay is. */
+  private makeTable(cells: number): void {
+    this.table = new CellTable(cells);
+    this.uniforms.uCells.value = this.table.texture;
+    this.uniforms.uGlow.value = this.table.glowTexture;
+    this.cloudUniforms.uShade.value = this.table.shadeTexture;
+    this.paint();
+    this.spiking.setCellCount(cells);
+    this.showGlow();
+  }
+
+  /**
+   * The pick's programs begin to build now, not at the first pick, which would wait for them. Built for the pick's
+   * target: three builds a program for the colour space and tone mapping of where it draws.
+   */
+  private compileIds(): void {
+    const { renderer } = this;
+    renderer.setRenderTarget(this.pickTarget());
+    renderer.compile(this.ids, this.camera);
+    renderer.setRenderTarget(null);
+  }
+
+  /** `bounds` round every soma of the cloud, drawn or not, and as large as one glowing in full. */
+  private boundSomas(): void {
+    const box = this.somaSet && somasBox(this.somaSet.positions, () => true);
+    if (!box) return;
+    const pad = this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL);
+    const centre = new THREE.Vector3(...box.mean).sub(new THREE.Vector3(...this.centre));
+    const reach = new THREE.Vector3(...box.reach).addScalar(pad);
+    this.bounds.set(centre.clone().sub(reach), centre.add(reach));
+  }
+
   private pickTarget(): THREE.WebGLRenderTarget {
     const side = 2 * Math.ceil(PICK_REACH * this.renderer.getPixelRatio()) + 1;
     this.idTarget ??= new THREE.WebGLRenderTarget(side, side);
@@ -445,16 +602,18 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   }
 
   private clear(): void {
-    for (const mesh of [this.segments, this.somas]) {
+    for (const mesh of [this.segments, this.somas, this.cloud]) {
       mesh?.geometry.dispose();
       mesh?.removeFromParent();
     }
-    this.segments = this.somas = null;
+    this.segments = this.somas = this.cloud = null;
+    this.somaSet = null;
     this.ids.clear();
     this.table?.dispose();
     this.table = null;
     this.uniforms.uCells.value = null;
     this.uniforms.uGlow.value = null;
+    this.cloudUniforms.uShade.value = null;
     this.uniforms.uHighlighted.value = NO_CELL;
     this.invalidate();
   }

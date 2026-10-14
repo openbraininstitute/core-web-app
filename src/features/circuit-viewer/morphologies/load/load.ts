@@ -6,7 +6,7 @@
  */
 import * as Comlink from 'comlink';
 
-import { type WorkerHandle, wrapWorker } from '@/features/viewer-3d/load/worker-handle';
+import { inWorker, type WorkerHandle, wrapWorker } from '@/features/viewer-3d/load/worker-handle';
 
 import type { Population } from '../types';
 import type { OnProgress, PackRequest } from './download';
@@ -29,29 +29,16 @@ const browserWorker = () =>
   wrapWorker<PackApi>(new Worker(new URL('./pack.worker.ts', import.meta.url), { type: 'module' }));
 
 export async function loadCircuitMorphologies(options: LoadOptions): Promise<Loaded> {
-  const { signal } = options;
-  signal.throwIfAborted();
-  const worker = (options.worker ?? browserWorker)();
-  let onAbort = () => {};
-  const aborted = new Promise<never>((_, reject) => {
-    onAbort = () => reject(signal.reason);
-    signal.addEventListener('abort', onAbort, { once: true });
-  });
-  aborted.catch(() => {});
   let ended = false;
+  // A report comes on a channel of its own, and can arrive after the worker is terminated.
+  const onProgress = Comlink.proxy((received: number, total: number) => {
+    if (!ended) options.onProgress?.(received, total);
+  });
   try {
-    // A report comes on a channel of its own, and can arrive after the worker is terminated.
-    const onProgress = Comlink.proxy((received: number, total: number) => {
-      if (!ended) options.onProgress?.(received, total);
-    });
-    return await Promise.race([
-      worker.api.load(options.request, options.populations, onProgress),
-      worker.died,
-      aborted,
-    ]);
+    return await inWorker<PackApi, Loaded>(options.worker ?? browserWorker, options.signal, (api) =>
+      api.load(options.request, options.populations, onProgress)
+    );
   } finally {
     ended = true;
-    signal.removeEventListener('abort', onAbort);
-    worker.terminate();
   }
 }

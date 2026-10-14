@@ -30,6 +30,13 @@ export interface CircuitMorphologyData {
   level: { toleranceUm: number; pruneUm: number };
 }
 
+/** A circuit's somas as the page placed them, before any morphology is in. */
+export interface CircuitSomas {
+  /** Three floats a cell, x, y, z in µm in the circuit's frame, numbered through `populations` in their order. */
+  positions: Float32Array;
+  populations: Population[];
+}
+
 /**
  * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, null for the default
  * colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the default colour.
@@ -63,6 +70,17 @@ export interface ElectrodeHit {
 export interface CircuitMorphologyView extends ViewControls {
   /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
   setData(data: CircuitMorphologyData | null): void;
+  /**
+   * Show these somas, each a sphere as the somas view drew them; null shows none. The view is framed on them unless the
+   * populations on show before, or these, take in the others. The positions are kept, not copied.
+   */
+  setSomas(somas: CircuitSomas | null): void;
+  /** A soma's radius, µm. */
+  setSomaRadius(radius: number): void;
+  /** How opaque the somas are, from 0 to 1; a spiking soma is opaque all the same. */
+  setSomaOpacity(opacity: number): void;
+  /** How crowded each soma's neighbourhood is, a byte a cell (`crowding`); null takes each as half crowded. */
+  setCrowding(crowding: Uint8Array | null): void;
   /** Null draws every cell in the default colour. */
   setCellColors(colors: CellColors | null): void;
   setDefaultColor(color: string): void;

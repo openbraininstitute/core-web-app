@@ -22,3 +22,28 @@ export function wrapWorker<T>(worker: Worker): WorkerHandle<T> {
     },
   };
 }
+
+/**
+ * `call` made on a worker of its own, raced against `signal` and the worker's death. The worker is terminated once the
+ * call ends, however it ends.
+ */
+export async function inWorker<T, R>(
+  make: () => WorkerHandle<T>,
+  signal: AbortSignal,
+  call: (api: Comlink.Remote<T>) => Promise<R>
+): Promise<R> {
+  signal.throwIfAborted();
+  const worker = make();
+  let onAbort = () => {};
+  const aborted = new Promise<never>((_, reject) => {
+    onAbort = () => reject(signal.reason);
+    signal.addEventListener('abort', onAbort, { once: true });
+  });
+  aborted.catch(() => {});
+  try {
+    return await Promise.race([call(worker.api), worker.died, aborted]);
+  } finally {
+    signal.removeEventListener('abort', onAbort);
+    worker.terminate();
+  }
+}

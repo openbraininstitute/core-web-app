@@ -82,12 +82,60 @@ describe('the cell table', () => {
     expect(table.glowTexture.version).toBe(glow + 1);
   });
 
-  it('frees both textures', () => {
+  it('has two bytes of shade a cell, laid out as the colours are, every cell half crowded to begin with', () => {
+    const { image, format, colorSpace, version } = new CellTable(2049).shadeTexture;
+    expect([image.width, image.height]).toEqual([2048, 2]);
+    expect(format).toBe(THREE.RGFormat);
+    expect(colorSpace).toBe(THREE.NoColorSpace);
+    const bytes = image.data as Uint8Array;
+    expect([bytes[0], bytes[2 * 2048]]).toEqual([128, 128]);
+    expect(version).toBeGreaterThan(0);
+  });
+
+  it('marks the cells with no colour of their own, which the somas draw along their ramp', () => {
+    const table = new CellTable(5);
+    table.paint(
+      {
+        palette: ['#ff0000', null, false, 'not a colour'],
+        columnByCell: Uint16Array.of(0, 1, 2, 3),
+      },
+      OWN
+    );
+    const own = (cell: number) => (table.shadeTexture.image.data as Uint8Array)[2 * cell + 1];
+    // The last cell has no column.
+    expect([0, 1, 2, 3, 4].map(own)).toEqual([0, 255, 0, 255, 255]);
+    table.paint(null, OWN);
+    expect(own(0)).toBe(255);
+  });
+
+  it('takes how crowded each cell is, uploads it, and leaves the rest of the shade as it was', () => {
+    const table = new CellTable(2);
+    table.paint({ palette: ['#ff0000', null], columnByCell: Uint16Array.of(0, 1) }, OWN);
+    const version = table.shadeTexture.version;
+    table.setCrowding(Uint8Array.of(10, 250));
+    expect([...(table.shadeTexture.image.data as Uint8Array).subarray(0, 4)]).toEqual([
+      10, 0, 250, 255,
+    ]);
+    expect(table.shadeTexture.version).toBeGreaterThan(version);
+    table.setCrowding(null);
+    expect([...(table.shadeTexture.image.data as Uint8Array).subarray(0, 4)]).toEqual([
+      128, 0, 128, 255,
+    ]);
+  });
+
+  it('tells whether a cell is drawn', () => {
+    const table = new CellTable(2);
+    table.paint({ palette: ['#ff0000', false], columnByCell: Uint16Array.of(0, 1) }, OWN);
+    expect([table.shown(0), table.shown(1)]).toEqual([true, false]);
+  });
+
+  it('frees its three textures', () => {
     const table = new CellTable(1);
     const freed: string[] = [];
     table.texture.addEventListener('dispose', () => freed.push('colours'));
     table.glowTexture.addEventListener('dispose', () => freed.push('glow'));
+    table.shadeTexture.addEventListener('dispose', () => freed.push('shade'));
     table.dispose();
-    expect(freed).toEqual(['colours', 'glow']);
+    expect(freed).toEqual(['colours', 'glow', 'shade']);
   });
 });

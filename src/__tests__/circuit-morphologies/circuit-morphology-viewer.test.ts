@@ -8,8 +8,11 @@ import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import type { SomaCloudUniforms } from '@/features/circuit-viewer/morphologies/engine/soma-cloud';
 import type {
+  CellColors,
   CircuitMorphologyData,
+  CircuitSomas,
   ElectrodeGroup,
 } from '@/features/circuit-viewer/morphologies/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -68,9 +71,18 @@ interface Internals {
   look: Look;
   uniforms: ImpostorUniforms;
   somaMaterial: THREE.Material;
+  cloud: Quads | null;
+  cloudMaterial: THREE.ShaderMaterial;
+  cloudUniforms: SomaCloudUniforms;
   ids: THREE.Scene;
-  idMaterials: { segment: THREE.ShaderMaterial; soma: THREE.ShaderMaterial };
+  idMaterials: {
+    segment: THREE.ShaderMaterial;
+    soma: THREE.ShaderMaterial;
+    cloud: THREE.ShaderMaterial;
+  };
   idTarget: THREE.WebGLRenderTarget | null;
+  controls: { target: THREE.Vector3 };
+  centre: [number, number, number];
   camera: THREE.Camera;
   scene: THREE.Scene;
   electrodeMaterial: THREE.ShaderMaterial;
@@ -699,9 +711,23 @@ describe('the circuit morphology viewer', () => {
       inner.look.material,
       inner.idMaterials.segment,
       inner.idMaterials.soma,
+      inner.idMaterials.cloud,
+      inner.cloudMaterial,
       inner.idTarget as THREE.WebGLRenderTarget,
       (inner.electrodes as Quads).geometry,
       inner.electrodeMaterial,
+    ].map((o) => vi.spyOn(o, 'dispose'));
+    viewer.dispose();
+    viewers = [];
+    for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
+  });
+
+  it('frees the somas and the shade when it is disposed of', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const freed = [
+      (inner.cloud as Quads).geometry,
+      inner.cloudUniforms.uShade.value as THREE.DataTexture,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
     viewers = [];
@@ -867,5 +893,174 @@ describe("the circuit morphology viewer's spike replay", () => {
     viewer.seekSpikes(20);
     viewer.setSpikesPlaying(true);
     expect(told).not.toHaveBeenCalled();
+  });
+});
+
+/** Two cells of population A, 100 µm apart, and one of population B far from them. */
+function somas(
+  populations = [
+    { name: 'A', cells: 2 },
+    { name: 'B', cells: 1 },
+  ]
+): CircuitSomas {
+  const all = [0, 0, 0, 100, 0, 0, 1000, 1000, 1000];
+  const cells = populations.reduce((sum, population) => sum + population.cells, 0);
+  return { positions: Float32Array.from(all.slice(0, 3 * cells)), populations };
+}
+const HIDE_B: CellColors = { palette: [null, false], columnByCell: Uint16Array.of(0, 0, 1) };
+
+describe('the somas, before any morphology is in', () => {
+  it("draws a quad a soma from the page's positions as they are, in a material of its own", () => {
+    const { viewer, inner } = make();
+    const given = somas();
+    viewer.setSomas(given);
+    const cloud = inner.cloud as Quads;
+    expect(cloud.parent).toBe(inner.surfaces);
+    expect(cloud.material).toBe(inner.cloudMaterial);
+    expect(cloud.frustumCulled).toBe(false);
+    expect(cloud.geometry.instanceCount).toBe(3);
+    const positions = cloud.geometry.getAttribute('aPosition') as THREE.InstancedBufferAttribute;
+    expect(positions).toBeInstanceOf(THREE.InstancedBufferAttribute);
+    expect(positions.array).toBe(given.positions);
+    expect(inner.cloudUniforms.uShade.value).toBeInstanceOf(THREE.DataTexture);
+    // The cell table's, which the somas share with the morphologies.
+    expect(texel(inner, 0)).toEqual([...rgb(DEFAULT_NEURON_COLOR), 255]);
+  });
+
+  it('picks with the same quads in their numbers', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const [ids] = inner.ids.children as Quads[];
+    expect(inner.ids.children).toHaveLength(1);
+    expect(ids.geometry).toBe(inner.cloud?.geometry);
+    expect(ids.material).toBe(inner.idMaterials.cloud);
+    expect(inner.renderer.compile).toHaveBeenCalledWith(inner.ids, inner.camera);
+  });
+
+  it('frames the somas, about the mean of them all, and takes it off every position', () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    expect(reset).toHaveBeenCalledTimes(1);
+    expect(rounded(inner.centre)).toEqual([366.667, 333.333, 333.333]);
+    expect(rounded(inner.cloudUniforms.uOffset.value.toArray())).toEqual(rounded(inner.centre));
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('keeps the view where populations are added or taken away, and frames it for others', () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas([{ name: 'A', cells: 2 }]));
+    const centre = inner.centre;
+    viewer.setSomas(somas());
+    viewer.setSomas(somas([{ name: 'B', cells: 1 }]));
+    expect(reset).toHaveBeenCalledTimes(1);
+    // Where the first somas were drawn about.
+    expect(inner.centre).toBe(centre);
+    expect(inner.cloudUniforms.uOffset.value.toArray()).toEqual(centre);
+
+    viewer.setSomas(somas([{ name: 'C', cells: 1 }]));
+    expect(reset).toHaveBeenCalledTimes(2);
+  });
+
+  it("frames the somas drawn on a reset, about their mean, a soma's radius beyond the farthest of them", () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setSomaRadius(10);
+    viewer.setCellColors(HIDE_B);
+    viewer.resetView();
+    const middle = new THREE.Vector3(50, 0, 0).sub(new THREE.Vector3(...inner.centre));
+    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+    const camera = inner.camera as THREE.OrthographicCamera;
+    // 60 µm either side across a view 4/3 as wide as it is high, 92% of the way to its edge.
+    expect(camera.top).toBeCloseTo(45 / 0.92);
+    expect(rounded([camera.position.x, camera.position.y])).toEqual(rounded([middle.x, middle.y]));
+
+    // None drawn, all of them.
+    viewer.setCellColors({ palette: [false], columnByCell: Uint16Array.of(0, 0, 0) });
+    viewer.resetView();
+    expect(rounded(inner.controls.target.toArray())).toEqual([0, 0, 0]);
+  });
+
+  it('takes a radius without framing again, and bounds every soma as large as one glowing in full', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const reset = vi.spyOn(viewer, 'resetView');
+    frames(inner);
+    viewer.setSomaRadius(10);
+    expect(reset).not.toHaveBeenCalled();
+    expect(inner.cloudUniforms.uRadius.value).toBe(10);
+    expect(frames(inner)).toBe(1);
+    // 633.3 µm from the mean to the far soma on x, either way, and 17 µm.
+    expect(inner.bounds.max.x).toBeCloseTo(633.333 + 17, 2);
+    expect(inner.bounds.min.x).toBeCloseTo(-633.333 - 17, 2);
+    viewer.setSomaRadius(10);
+    expect(frames(inner)).toBe(0);
+  });
+
+  it('blends translucent somas, writing their depth still, and keeps one at no opacity drawn', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const material = inner.cloudMaterial;
+    expect([material.transparent, material.depthWrite]).toEqual([false, true]);
+    const version = material.version;
+    viewer.setSomaOpacity(0.2);
+    expect(inner.cloudUniforms.uOpacity.value).toBe(0.2);
+    expect([material.transparent, material.depthWrite]).toEqual([true, true]);
+    expect(material.version).toBe(version + 1);
+    viewer.setSomaOpacity(0);
+    expect(inner.cloudUniforms.uOpacity.value).toBe(1 / 255);
+    expect(material.version).toBe(version + 1);
+    viewer.setSomaOpacity(1);
+    expect([inner.cloudUniforms.uOpacity.value, material.transparent]).toEqual([1, false]);
+  });
+
+  it('takes how crowded each soma is, for these somas only', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    // Every other byte: how crowded each cell is.
+    const shade = () => {
+      const bytes = (inner.cloudUniforms.uShade.value as THREE.DataTexture).image
+        .data as Uint8Array;
+      return [bytes[0], bytes[2], bytes[4]];
+    };
+    expect(shade()).toEqual([128, 128, 128]);
+    frames(inner);
+    viewer.setCrowding(Uint8Array.of(255, 200, 0));
+    expect(shade()).toEqual([255, 200, 0]);
+    expect(frames(inner)).toBe(1);
+    viewer.setCrowding(Uint8Array.of(1, 2));
+    expect(shade()).toEqual([255, 200, 0]);
+    // Other somas begin half crowded again.
+    viewer.setSomas(somas());
+    expect(shade()).toEqual([128, 128, 128]);
+  });
+
+  it('lets go of the somas for morphologies, and of morphologies for somas, framing either', () => {
+    const { viewer, inner } = make();
+    const reset = vi.spyOn(viewer, 'resetView');
+    viewer.setSomas(somas());
+    const cloud = inner.cloud;
+    viewer.setData(circuit());
+    expect(cloud?.parent).toBeNull();
+    expect(inner.cloud).toBeNull();
+    viewer.setSomas(somas());
+    expect(inner.chunks.children).toHaveLength(0);
+    expect(inner.ids.children).toHaveLength(1);
+    expect(reset).toHaveBeenCalledTimes(3);
+  });
+
+  it('glows a soma as it fires, cells numbered as the positions are', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setSpikes({
+      cellIndices: Uint32Array.of(2),
+      times: Float32Array.of(50),
+      timeMinInMs: 0,
+      timeMaxInMs: 100,
+    });
+    viewer.seekSpikes(50);
+    const glow = (inner.uniforms.uGlow.value as THREE.DataTexture).image.data as Uint8Array;
+    expect([...glow.subarray(0, 3)]).toEqual([0, 0, 255]);
   });
 });
