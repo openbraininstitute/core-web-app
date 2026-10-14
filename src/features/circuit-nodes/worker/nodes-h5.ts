@@ -60,7 +60,9 @@ type SyntheticNodeIdHandle = {
 
 type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | SyntheticNodeIdHandle;
 
-type LoadedColumn = Float32Array | Float64Array | Uint32Array | string[];
+type NumericColumn = Float32Array | Float64Array | BigInt64Array | BigUint64Array;
+
+type LoadedColumn = NumericColumn | Uint32Array | string[];
 
 type GenericFilter =
   | TextFilter
@@ -85,8 +87,16 @@ function classifyDtype(dtype: string): ColumnKind {
   return 'string';
 }
 
-function toNumber(v: number | bigint): number {
-  return typeof v === 'bigint' ? Number(v) : v;
+const MAX_SAFE = BigInt(Number.MAX_SAFE_INTEGER);
+
+function isSafe(v: bigint): boolean {
+  return v <= MAX_SAFE && v >= -MAX_SAFE;
+}
+
+/** A cell for the grid: a 64-bit integer past 2^53 as exact decimal text, which a number cannot hold. */
+function toCell(v: number | bigint): number | string {
+  if (typeof v === 'number') return v;
+  return isSafe(v) ? Number(v) : v.toString();
 }
 
 function alphabeticRank(library: string[]): Uint32Array {
@@ -430,14 +440,14 @@ export class NodesSession {
     // is sharing.
     if (!names.every((name) => this.columnIndex.get(name)?.kind === 'numeric')) return null;
 
-    // Numeric handles, so `loadColumn` went through `ensureFloatArray`.
-    const columns = names.map((name) => this.loadColumn(name) as Float32Array | Float64Array);
+    // Numeric handles, so `loadColumn` went through `ensureNumericArray`.
+    const columns = names.map((name) => this.loadColumn(name) as NumericColumn);
 
     const stride = names.length;
     const out = new Float32Array(this.rowCount * stride);
     for (let c = 0; c < stride; c++) {
       const column = columns[c];
-      for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+      for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = Number(column[i]);
     }
     return out;
   }
@@ -460,7 +470,7 @@ export class NodesSession {
     if (handle.kind === 'categorical') {
       loaded = ensureUint32(raw);
     } else if (handle.kind === 'numeric') {
-      loaded = ensureFloatArray(raw);
+      loaded = ensureNumericArray(raw);
     } else {
       loaded = ensureStringArray(raw);
     }
@@ -504,10 +514,10 @@ export class NodesSession {
         out[i] = lib[libIdx] ?? String(libIdx);
       }
     } else if (handle.kind === 'numeric') {
-      const arr = data as Float32Array | Float64Array;
+      const arr = data as NumericColumn;
       for (let i = 0; i < indices.length; i++) {
         const idx = (indices as Uint32Array)[i] ?? (indices as number[])[i];
-        out[i] = arr[idx];
+        out[i] = toCell(arr[idx]);
       }
     } else {
       const arr = data as string[];
@@ -545,9 +555,14 @@ export class NodesSession {
       };
     }
     if (handle.kind === ColumnKindDict.Numeric) {
+      const column = data as NumericColumn;
       return {
         kind: ColumnKindDict.Numeric,
-        values: (data as Float32Array | Float64Array).slice(),
+        // A colour scale needs no more than a number's precision.
+        values:
+          column instanceof BigInt64Array || column instanceof BigUint64Array
+            ? Float64Array.from(column, Number)
+            : column.slice(),
       };
     }
     return { kind: ColumnKindDict.String, values: [...(data as string[])] };
@@ -605,7 +620,8 @@ function ensureUint32(raw: unknown): Uint32Array {
   return new Uint32Array(0);
 }
 
-function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
+/** 64-bit integers stay BigInt when any is past 2^53, so that ids such as FlyWire's stay exact. */
+function ensureNumericArray(raw: unknown): NumericColumn {
   if (raw instanceof Float64Array) return raw;
   if (raw instanceof Float32Array) return raw;
   if (
@@ -617,6 +633,7 @@ function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
     return Float64Array.from(raw as ArrayLike<number>);
   }
   if (raw instanceof BigInt64Array || raw instanceof BigUint64Array) {
+    if (!raw.every(isSafe)) return raw;
     const out = new Float64Array(raw.length);
     for (let i = 0; i < raw.length; i++) out[i] = Number(raw[i]);
     return out;
@@ -638,7 +655,7 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
     return rank[arr[a]] - rank[arr[b]];
   }
   if (handle.kind === 'numeric') {
-    const arr = data as Float32Array | Float64Array;
+    const arr = data as NumericColumn;
     const va = arr[a];
     const vb = arr[b];
     if (va < vb) return -1;
@@ -676,16 +693,16 @@ function matchOne(
     } else if (handle.kind === 'string') {
       value = (data as string[])[row] ?? '';
     } else if (handle.kind === 'numeric') {
-      value = String((data as Float32Array | Float64Array)[row]);
+      value = String((data as NumericColumn)[row]);
     } else {
       value = String(row);
     }
     return matchText(value, filter);
   }
   // number filter
-  let num: number;
+  let num: number | bigint;
   if (handle.kind === 'numeric') {
-    num = (data as Float32Array | Float64Array)[row];
+    num = (data as NumericColumn)[row];
   } else if (handle.kind === 'synthetic-node-id') {
     num = row;
   } else if (handle.kind === 'categorical') {
@@ -708,21 +725,31 @@ function matchText(value: string, f: TextFilter): boolean {
     .exhaustive();
 }
 
-function matchNumber(value: number, f: NumberFilter): boolean {
-  const q = Number(f.filter);
+const INTEGER = /^[+-]?\d+$/;
+
+/** The value and the filter's bounds as one type: BigInts when both can be exact, else numbers. */
+function operands(
+  value: number | bigint,
+  f: NumberFilter
+): [number, number, number] | [bigint, bigint, bigint] {
+  const q = f.filter.trim();
+  const q2 = (f.filterTo ?? f.filter).trim();
+  if (typeof value === 'bigint' && INTEGER.test(q) && INTEGER.test(q2)) {
+    return [value, BigInt(q), BigInt(q2)];
+  }
+  return [Number(value), Number(q), Number(q2)];
+}
+
+function matchNumber(value: number | bigint, f: NumberFilter): boolean {
+  const [v, q, q2] = operands(value, f);
   return match(f.type)
-    .with('equals', () => value === q)
-    .with('notEqual', () => value !== q)
-    .with('lessThan', () => value < q)
-    .with('lessThanOrEqual', () => value <= q)
-    .with('greaterThan', () => value > q)
-    .with('greaterThanOrEqual', () => value >= q)
-    .with('inRange', () => {
-      const q2 = Number(f.filterTo ?? q);
-      const lo = Math.min(q, q2);
-      const hi = Math.max(q, q2);
-      return value >= lo && value <= hi;
-    })
+    .with('equals', () => v === q)
+    .with('notEqual', () => v !== q)
+    .with('lessThan', () => v < q)
+    .with('lessThanOrEqual', () => v <= q)
+    .with('greaterThan', () => v > q)
+    .with('greaterThanOrEqual', () => v >= q)
+    .with('inRange', () => (q <= q2 ? v >= q && v <= q2 : v >= q2 && v <= q))
     .exhaustive();
 }
 
@@ -778,8 +805,8 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
       sliced instanceof Int16Array ||
       sliced instanceof Uint16Array
     ) {
-      const out = new Array<number>(sliced.length);
-      for (let i = 0; i < sliced.length; i++) out[i] = toNumber(sliced[i] as number | bigint);
+      const out = new Array<number | string>(sliced.length);
+      for (let i = 0; i < sliced.length; i++) out[i] = toCell(sliced[i] as number | bigint);
       return out;
     }
     if (Array.isArray(sliced)) return sliced.map((v) => Number(v));

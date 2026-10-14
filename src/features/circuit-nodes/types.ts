@@ -43,8 +43,9 @@ export type NumberFilterOp =
 export type NumberFilter = {
   filterType: 'number';
   type: NumberFilterOp;
-  filter: number;
-  filterTo?: number;
+  /** As typed, since a number would round a 64-bit id. */
+  filter: string;
+  filterTo?: string;
 };
 
 export type SetFilter = {
