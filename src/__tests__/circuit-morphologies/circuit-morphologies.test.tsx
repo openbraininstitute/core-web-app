@@ -86,7 +86,7 @@ vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer
   CircuitMorphologyViewer: h.FakeViewer,
 }));
 
-// morphoviewer's ruler, which draws on a canvas of its own.
+// The ruler draws on a canvas of its own; what is asked of it is its colour.
 vi.mock('@/features/viewer-3d/chrome/scalebar', () => ({
   Scalebar: ({ color }: { color: string }) => <div data-testid="scalebar" data-color={color} />,
 }));
