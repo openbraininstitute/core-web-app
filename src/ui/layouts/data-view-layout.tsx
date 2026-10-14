@@ -106,7 +106,6 @@ export async function DataViewLayout({
       group={entityType.group}
       scope={scope}
       sections={entityType.detailViewSections}
-      entityName={entity.name}
       configurationFullPage={configurationFullPage}
       variant={chromeVariant}
     />

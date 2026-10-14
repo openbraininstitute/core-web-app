@@ -114,7 +114,6 @@ export function BackToEntityType({
   onClick,
   group,
   scope,
-  isLast = true,
   variant = ViewVariant.Light,
 }: WorkspaceContext & {
   type: TExtendedEntitiesTypeDict;
@@ -122,7 +121,6 @@ export function BackToEntityType({
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   onClick: () => void;
-  isLast?: boolean;
   variant?: TViewVariant;
 }) {
   const queryParams = useSearchParams();
@@ -130,20 +128,13 @@ export function BackToEntityType({
   query.set(DATA_GROUP_QUERY_PARAM, group);
   query.set(SCOPE_QUERY_PARAMS, scope);
 
-  const linkClass = isLast
-    ? variant === ViewVariant.Default
+  const linkClass =
+    variant === ViewVariant.Default
       ? 'font-bold text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'font-bold text-primary-9 hover:text-primary-8'
-    : variant === ViewVariant.Default
-      ? 'text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'text-primary-9 hover:text-primary-8';
+      : 'font-bold text-primary-9 hover:text-primary-8';
 
   return (
-    <Breadcrumb
-      showChevron={!isLast}
-      variant={variant}
-      tone={isLast ? ToneDict.Active : ToneDict.Inactive}
-    >
+    <Breadcrumb showChevron={false} variant={variant} tone={ToneDict.Active}>
       <Link
         onClick={onClick}
         href={{
@@ -158,21 +149,12 @@ export function BackToEntityType({
   );
 }
 
-function EntityNameCrumb({ name, variant }: { name: string; variant: TViewVariant }) {
-  return (
-    <Breadcrumb showChevron={false} variant={variant} tone={ToneDict.Active}>
-      {name}
-    </Breadcrumb>
-  );
-}
-
 export function DataBreadcrumb({
   type,
   title,
   group,
   scope,
   sections,
-  entityName,
   configurationFullPage = false,
   variant = ViewVariant.Light,
 }: {
@@ -181,7 +163,6 @@ export function DataBreadcrumb({
   scope: TWorkspaceScope;
   title: string;
   sections?: TDetailViewSectionDict[];
-  entityName?: string;
   configurationFullPage?: boolean;
   variant?: TViewVariant;
 }) {
@@ -214,25 +195,13 @@ export function DataBreadcrumb({
   };
 
   if (section !== WorkspaceSection.Data) return null;
-  const hasEntityName = Boolean(entityName);
   return (
     <div data-testid="data-view-breadcrumb" className="flex flex-nowrap gap-3">
       <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
       <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
       <BackToEntityType
-        {...{
-          virtualLabId,
-          projectId,
-          type,
-          title,
-          group,
-          scope,
-          onClick: onLinkClick,
-          isLast: !hasEntityName,
-          variant,
-        }}
+        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
       />
-      {hasEntityName && <EntityNameCrumb name={entityName as string} variant={variant} />}
       {isFullPageSection && sections && <SectionSelector sections={sections} />}
     </div>
   );
