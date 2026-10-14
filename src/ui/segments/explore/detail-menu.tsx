@@ -61,7 +61,7 @@ export default function DetailMenu({
   ));
 }
 
-/** `> [Configuration ▾]`: the current section as a dropdown that routes to any sibling section. */
+/** `> [Overview ▾]`: the current section as a selector styled like the sidebar tabs. */
 export function SectionSelector({ sections }: { sections: TDetailViewSectionDict[] }) {
   const router = useRouter();
   const page = usePathname().split('/').pop() as TDetailViewSectionDict;
@@ -74,19 +74,23 @@ export function SectionSelector({ sections }: { sections: TDetailViewSectionDict
       <DropdownMenu>
         <DropdownMenuTrigger
           data-testid="detail-section-selector"
-          className="inline-flex items-center gap-1 rounded-md border border-primary-9 px-3 py-1 font-bold text-primary-9 outline-hidden"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-primary-9 bg-primary-9 px-5 py-2 text-base font-bold text-white shadow-xs outline-hidden"
         >
           {SECTION_LABELS[page]}
           <RiArrowDownSLine className="size-5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="z-9999 min-w-40 rounded-xl border-neutral-1 bg-white p-1 shadow-md"
+          className="z-9999 flex min-w-40 flex-col gap-1 rounded-2xl border-neutral-1 bg-white p-2 shadow-md"
         >
           {sections
             .filter((s) => s !== page)
             .map((s) => (
-              <DropdownMenuItem key={s} onSelect={() => router.push(sectionHref(s))}>
+              <DropdownMenuItem
+                key={s}
+                onSelect={() => router.push(sectionHref(s))}
+                className="cursor-pointer justify-center rounded-full border border-gray-100 px-5 py-2 text-base font-bold text-primary-9 shadow-xs focus:bg-primary-8 focus:text-white"
+              >
                 {SECTION_LABELS[s]}
               </DropdownMenuItem>
             ))}
