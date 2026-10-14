@@ -1,16 +1,16 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { Select } from 'antd';
 import { useMemo } from 'react';
 
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { FancyMultiSelect } from '@/ui/molecules/fancy-combobox';
 
 import type { ConfigSchema, ConfigValue } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 const ENDPOINT_ENTITY_PLACEHOLDER = '{circuit_id}';
 
@@ -51,6 +51,7 @@ export function MorphologySectionTypeSelection({
   entityId,
   property,
   propertyGroup,
+  chrome,
 }: {
   value: ConfigValue;
   onChange: (value: number[] | null) => void;
@@ -59,6 +60,7 @@ export function MorphologySectionTypeSelection({
   entityId: string | undefined;
   property: string;
   propertyGroup: string;
+  chrome?: FancyChrome;
 }) {
   const workspace = useWorkspace();
 
@@ -95,33 +97,17 @@ export function MorphologySectionTypeSelection({
   }, [value, options]);
 
   return (
-    <Select<number[]>
+    <FancyMultiSelect
+      {...chrome}
       data-scan-config-block-element={ScanConfigUIElementDict.MorphologySectionTypeSelection}
-      mode="multiple"
-      className="w-full"
+      maxBadges={Number.POSITIVE_INFINITY}
       disabled={disabled || !endpoint}
       loading={isLoading}
-      status={isError ? 'error' : undefined}
-      value={selected}
-      placeholder={
-        isLoading
-          ? 'Loading section types…'
-          : isError
-            ? 'Section types could not be loaded'
-            : 'Select section types…'
-      }
-      optionFilterProp="label"
-      suffixIcon={isLoading ? <LoadingOutlined spin /> : undefined}
-      notFoundContent={
-        isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-2 text-gray-400">
-            <LoadingOutlined spin />
-            <span>Loading section types…</span>
-          </div>
-        ) : undefined
-      }
-      options={options.map((option) => ({ label: option.label, value: option.value }))}
-      onChange={(next) => onChange(next.length > 0 ? next : null)}
+      error={isError ? 'Section types could not be loaded' : chrome?.error}
+      placeholder={isLoading ? 'Loading section types…' : 'Select section types…'}
+      options={options.map((option) => ({ label: option.label, value: String(option.value) }))}
+      values={selected.map(String)}
+      onChange={(next) => onChange(next.length > 0 ? next.map(Number) : null)}
     />
   );
 }

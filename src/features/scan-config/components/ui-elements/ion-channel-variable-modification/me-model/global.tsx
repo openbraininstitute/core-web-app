@@ -7,6 +7,7 @@ import {
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
 
 import type { ConfigValue } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 /** Props for the MEModel full-neuron variable modification UI. */
 export type MeModelGlobalProps = TUseMeModelManipulationDataParams & {
@@ -16,6 +17,8 @@ export type MeModelGlobalProps = TUseMeModelManipulationDataParams & {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 };
 
 /**
@@ -34,6 +37,7 @@ export function Global({
   fieldKey,
   modificationType,
   errorPathPrefix,
+  chrome,
 }: MeModelGlobalProps) {
   const { data, loading, reason } = useMeModelManipulationData({ endpoint, entityId });
 
@@ -48,6 +52,7 @@ export function Global({
       fieldKey={fieldKey}
       modificationType={modificationType}
       errorPathPrefix={errorPathPrefix}
+      chrome={chrome}
     />
   );
 }

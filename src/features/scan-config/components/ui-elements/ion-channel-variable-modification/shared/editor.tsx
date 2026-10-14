@@ -4,8 +4,8 @@ import { isNil } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
+import { FancyInput } from '@/ui/molecules/fancy-input';
 import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
-import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
 
@@ -34,7 +34,10 @@ export function SectionListConfigEditor({
   errorPathPrefix,
 }: SectionListEditorProps) {
   return (
-    <div className="mt-3 space-y-4 p-1" data-scan-config-block-element-item={`${uiElement}_editor`}>
+    <div
+      className="flex flex-col gap-4 border-t border-neutral-2 px-2 pt-4 pb-2"
+      data-scan-config-block-element-item={`${uiElement}_editor`}
+    >
       {sectionLists.map((entry) => (
         <SectionConfigRow
           uiElement={uiElement}
@@ -108,76 +111,39 @@ function SectionConfigRow({
 
   // TODO: re-enable multi-value support when sweep is needed
   // const valuesArray: number[] = Array.isArray(value) ? value : [value];
-  // const [draft, setDraft] = useState('');
-  // const inputRef = useRef<HTMLInputElement>(null);
-  // const [isAdding, setIsAdding] = useState(false);
-  // const commitDraft = () => { ... };
-  // const removeBadge = (index: number) => { ... };
-  // const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => { ... };
-  // const handlePlusClick = () => { ... };
+
+  // the unit belongs in the label, like every other field; only the default sits underneath
+  const unit = entry.units ? renderMathInText(entry.units) : undefined;
+  const hint = !isNil(entry.value) ? `Default: ${entry.value}` : undefined;
 
   return (
     <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
-      <div className="mb-1.5 flex items-center gap-2">
-        <span
-          className={cn(
-            'inline-flex items-center rounded-full border border-gray-300 ',
-            'bg-white px-2.5 py-0.5 text-sm font-semibold text-primary-8'
-          )}
-        >
-          {entry.section_list}
-        </span>
-        <span className="text-sm text-gray-400">
-          {!isNil(entry.value) ? (
-            <>
-              Default: {entry.value}
-              {entry.units ? <> {renderMathInText(entry.units)}</> : null}
-            </>
-          ) : (
-            renderMathInText(entry.units) || ''
-          )}
-        </span>
-      </div>
-
-      <div
-        className={cn(
-          'flex min-h-9 w-full items-center gap-1.5 rounded-md border px-2 py-1.5',
-          'border-gray-300 bg-background transition-shadow focus-within:ring-1 focus-within:ring-primary-9',
-          disabled && 'cursor-not-allowed opacity-50',
-          draftError && 'border-red-400 focus-within:ring-red-400/30'
-        )}
-      >
-        <input
-          data-scan-config-block-element-item={`${uiElement}_editor_item_input`}
-          value={draft}
-          onChange={(e) => {
-            const newDraft = e.target.value;
-            setDraft(newDraft);
-            const num = Number(newDraft);
-            if (newDraft.trim() !== '' && !Number.isNaN(num)) {
-              onChange(num);
-            }
-          }}
-          onBlur={commitValue}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              commitValue();
-            }
-          }}
-          disabled={disabled}
-          min={min}
-          max={max}
-          step="any"
-          placeholder="Enter value…"
-          className={cn(
-            'min-w-15 flex-1 border-none bg-transparent py-0.5 text-base font-bold ',
-            'text-primary-8 outline-none placeholder:text-label placeholder:font-light ',
-            '[&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]'
-          )}
-        />
-      </div>
-      {draftError && <div className="mt-1 text-base text-red-500">{draftError}</div>}
+      <FancyInput
+        label={entry.section_list}
+        unit={unit}
+        helperText={hint}
+        error={draftError}
+        data-scan-config-block-element-item={`${uiElement}_editor_item_input`}
+        inputMode="decimal"
+        value={draft}
+        onChange={(e) => {
+          const newDraft = e.target.value;
+          setDraft(newDraft);
+          const num = Number(newDraft);
+          if (newDraft.trim() !== '' && !Number.isNaN(num)) {
+            onChange(num);
+          }
+        }}
+        onBlur={commitValue}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            commitValue();
+          }
+        }}
+        disabled={disabled}
+        placeholder="Enter value…"
+      />
     </div>
   );
 }

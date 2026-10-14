@@ -122,11 +122,14 @@ export function ModelIdentifierEntityCard({
       }
       className={cn(
         'group/card grid h-auto w-full max-w-full shrink-0 min-w-0 grid-cols-[minmax(0,1fr)_auto]',
-        'items-center gap-2 self-start overflow-hidden border border-gray-200 bg-white',
-        isSelection ? 'rounded-full px-3 py-2.5 shadow-xs' : 'rounded-full px-4 py-2.5',
-        'hover:shadow-xs',
+        'items-center gap-2 self-start overflow-hidden border',
+        // inside a field frame the card is a flat row; only the browse cart keeps the pill
+        isSelection
+          ? 'rounded-full border-gray-200 bg-white px-3 py-2.5 shadow-xs hover:shadow-xs'
+          : 'rounded-lg border-transparent px-3 py-2',
         // don't let the hover border/bg override the selected (blue) state
-        !selected && 'hover:border-gray-300 hover:bg-gray-50',
+        !selected &&
+          (isSelection ? 'hover:border-gray-300 hover:bg-gray-50' : 'hover:bg-neutral-1'),
         // motion: fade+rise on mount, ease state changes (hover/selected), press feedback.
         // transitions (not keyframes) so a card added mid-flight retargets smoothly.
         'transition-[opacity,transform,background-color,border-color,box-shadow] duration-150 ease-[var(--ease-out-expo)]',
@@ -134,7 +137,8 @@ export function ModelIdentifierEntityCard({
         {
           'cursor-pointer active:scale-[0.98] motion-reduce:active:scale-100': isInteractive,
           // border + tint only; no ring (its faint outer band reads as "bg outside the border")
-          'border-primary-8 bg-primary-1/30': selected,
+          'border-primary-8 bg-primary-1/30': selected && isSelection,
+          'bg-primary-0': selected && !isSelection,
         },
         className
       )}

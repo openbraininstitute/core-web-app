@@ -104,34 +104,78 @@ describe('ParameterSweep value selection', () => {
 });
 
 describe('ParameterSweep layout', () => {
-  it('leaves the collapse control to the field title row', () => {
+  it('keeps one input per value inside the same field', () => {
+    renderSweep([4100.223, 1100, 250]);
+    const inputs = screen.getAllByTestId('scan-config-sweep-value');
+    expect(inputs.map((input) => (input as HTMLInputElement).value)).toEqual([
+      '4100.223',
+      '1100',
+      '250',
+    ]);
+    // Every value is the same kind of row, all inside one field frame.
+    const rows = inputs.map((input) => input.closest('fieldset'));
+    const frame = rows[0]?.parentElement?.closest('fieldset');
+    expect(frame).toBeTruthy();
+    for (const row of rows) expect(row?.parentElement?.closest('fieldset')).toBe(frame);
+    expect(rows.map((row) => row?.className)).toEqual(Array(3).fill(rows[0]?.className));
+  });
+
+  it('puts the field-level controls on the border, once', () => {
     renderSweep([4100.223, 1100]);
+    expect(screen.getAllByRole('button', { name: 'Add a value' })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Use a single value' })).toHaveLength(1);
+  });
+
+  it('opens the second input in one click from a single value', () => {
+    const onChange = vi.fn();
+    render(
+      <ParameterSweep
+        k="origin_x"
+        min={undefined}
+        max={undefined}
+        exclusiveMin={undefined}
+        exclusiveMax={undefined}
+        disabled={false}
+        value={4}
+        onChange={onChange}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Scan over several values' }));
+    expect(onChange).toHaveBeenCalledWith([4, null]);
+  });
+
+  it('offers a sweep from a single value without the sweep controls', () => {
+    render(
+      <ParameterSweep
+        k="origin_x"
+        min={undefined}
+        max={undefined}
+        exclusiveMin={undefined}
+        exclusiveMax={undefined}
+        disabled={false}
+        value={4}
+        onChange={vi.fn()}
+      />
+    );
+    expect(screen.getByRole('button', { name: 'Scan over several values' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Use a single value' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Remove this value' })).toBeNull();
   });
 
-  it('gives every row the same add/remove slots so the buttons line up', () => {
-    renderSweep([4100.223, 1100]);
-    const rows = [...document.querySelectorAll('.flex.w-full.items-center')];
-    expect(rows).toHaveLength(2);
-    // Only the last row shows "add", but both rows reserve the slot.
-    for (const row of rows) {
-      expect(row.querySelectorAll(':scope > span.size-6')).toHaveLength(2);
-    }
-    expect(
-      within(rows[0] as HTMLElement).queryByRole('button', { name: 'Add a value' })
-    ).toBeNull();
-    expect(
-      within(rows[1] as HTMLElement).getByRole('button', { name: 'Add a value' })
-    ).toBeTruthy();
+  it('collapses back to the first usable value', () => {
+    const { onChange } = renderSweep([null, 1100]);
+    fireEvent.click(screen.getByRole('button', { name: 'Use a single value' }));
+    expect(onChange).toHaveBeenCalledWith(1100);
   });
 
-  it('orders the row controls eye, delete, then add', () => {
+  it('orders each value row eye, then remove', () => {
     renderSweep([4100.223, 1100], { withScope: true });
-    const lastRow = [...document.querySelectorAll('.flex.w-full.items-center')].at(
-      -1
-    ) as HTMLElement;
-    const labels = [...lastRow.querySelectorAll('button')].map((b) => b.getAttribute('aria-label'));
-    expect(labels).toEqual(['Show value 2 in the preview', 'Remove this value', 'Add a value']);
+    const second = screen.getAllByTestId('scan-config-sweep-value')[1];
+    const row = second.parentElement as HTMLElement;
+    const labels = within(row)
+      .getAllByRole('button')
+      .map((b) => b.getAttribute('aria-label'));
+    expect(labels).toEqual(['Show value 2 in the preview', 'Remove this value']);
   });
 });
 

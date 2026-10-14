@@ -1,9 +1,10 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Select } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
+import { RiDeleteBinLine } from '@remixicon/react';
 
 import { Reference } from '@/features/scan-config/components/ui-elements/reference';
-import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
+import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { FancyCombobox } from '@/ui/molecules/fancy-combobox';
+import { FancyActions, FancyField } from '@/ui/molecules/fancy-input';
 
 import type {
   Config,
@@ -11,6 +12,7 @@ import type {
   NeuronSetCombination as NeuronSetCombinationSchema,
   Reference as ReferenceSchema,
 } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 const MAX_OPERATIONS = 5;
 
@@ -38,6 +40,7 @@ export function NeuronSetCombination({
   config,
   schema,
   selfName,
+  chrome,
 }: {
   paramSchema: NeuronSetCombinationSchema;
   value: NeuronSetCombinationEntry[];
@@ -47,6 +50,7 @@ export function NeuronSetCombination({
   schema: ConfigSchema;
   /** name of this combined set's own entry, excluded from each row's dropdown */
   selfName?: string;
+  chrome?: FancyChrome;
 }) {
   // synthetic reference schema so we can reuse the existing `Reference` picker for each row.
   // `Reference` only reads `reference_types` and `reference_tag`; `anyOf` is an unused placeholder
@@ -64,92 +68,96 @@ export function NeuronSetCombination({
   const canAdd = !disabled && value.length < MAX_OPERATIONS;
 
   return (
-    <>
-      <div className="flex flex-col gap-3">
-        {value.map(([ref, op], i) => {
-          const refName = ref?.block_name ?? null;
-          return (
-            <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: order-stable list edited via index
-              key={i}
-              className={cn(
-                'flex flex-col gap-1 border border-gray-200 p-3 rounded-md',
-                'hover:border-gray-50 hover:bg-white hover:shadow-sm'
-              )}
-            >
-              <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                <div className="text-gray-400 text-lg">Operation {i + 1}</div>
-                {!disabled && (
-                  <Button
-                    rounded
-                    variant="icon"
-                    type="button"
-                    size="md"
-                    className="p-0 hover:bg-gray-50"
-                    onClick={() => onChange(value.toSpliced(i, 1))}
-                  >
-                    <DeleteOutlined className="text-red-500 " />
-                  </Button>
-                )}
-              </div>
+    <div data-scan-config-block-element={ScanConfigUIElementDict.NeuronSetCombination}>
+      <FancyField
+        {...chrome}
+        group
+        disabled={disabled}
+        helperText={disabled ? undefined : `${remaining} of ${MAX_OPERATIONS} operations available`}
+        borderActions={
+          !disabled && (
+            <FancyActions
+              onBorder
+              actions={[
+                {
+                  key: 'add',
+                  label: 'Add operation',
+                  icon: <PlusOutlined />,
+                  disabled: !canAdd,
+                  onClick: () => onChange([...value, [null, 'union']]),
+                },
+              ]}
+            />
+          )
+        }
+      >
+        {value.length === 0 ? (
+          <p className="px-3 py-2 text-sm text-neutral-4">No operations yet. Add one with +.</p>
+        ) : (
+          // Operations are sections of this one field, split by a rule, not boxes inside it.
+          <div className="divide-y divide-neutral-2">
+            {value.map(([ref, op], i) => {
+              const refName = ref?.block_name ?? null;
+              return (
+                <section
+                  // biome-ignore lint/suspicious/noArrayIndexKey: order-stable list edited via index
+                  key={i}
+                  aria-label={`Operation ${i + 1}`}
+                  className="flex flex-col gap-4 p-2.5 first:pt-4"
+                >
+                  <div className="-mb-2 flex items-center justify-between ps-1">
+                    <span className="text-xs font-medium text-neutral-4">Operation {i + 1}</span>
+                    {!disabled && (
+                      <FancyActions
+                        actions={[
+                          {
+                            key: 'remove',
+                            label: `Remove operation ${i + 1}`,
+                            icon: <RiDeleteBinLine className="size-3.5" />,
+                            onClick: () => onChange(value.toSpliced(i, 1)),
+                          },
+                        ]}
+                      />
+                    )}
+                  </div>
 
-              <div className="text-gray-400 text-base mt-2">OPERATOR</div>
-              <Select
-                className="w-full"
-                disabled={disabled}
-                value={op}
-                options={OPERATION_OPTIONS}
-                onChange={(newOp: SetOperation) => onChange(value.with(i, [ref, newOp]))}
-              />
+                  <FancyCombobox
+                    label="Operator"
+                    disabled={disabled}
+                    options={OPERATION_OPTIONS}
+                    values={[op]}
+                    onChange={([newOp]) =>
+                      newOp && onChange(value.with(i, [ref, newOp as SetOperation]))
+                    }
+                  />
 
-              <div className="text-gray-400 text-base mt-2">NEURON SET</div>
-              <Reference
-                config={config}
-                schema={schema}
-                referenceSchema={referenceSchema}
-                value={refName}
-                disabled={disabled}
-                omit={omit}
-                onChange={(block_name: string | null, block_dict_name: string | null) =>
-                  onChange(
-                    value.with(i, [
-                      // serialize exactly like the shared `Reference` field: no `type`, letting
-                      // the backend apply the BlockReference default (the path base_neuron_set uses).
-                      block_name === null
-                        ? null
-                        : { block_name, block_dict_name: block_dict_name ?? '' },
-                      op,
-                    ])
-                  )
-                }
-              />
-            </div>
-          );
-        })}
-      </div>
-
-      {!disabled && (
-        <div className="mt-2 flex flex-col items-end gap-1">
-          <Button
-            rounded
-            type="button"
-            disabled={!canAdd}
-            variant="outline"
-            className={cn(
-              'disabled:bg-gray-200! active:bg-transparent hover:bg-gray-100! pl-4! h-10!'
-              // 'rounded-full border border-gray-200 px-3 py-2 min-w-[150px] text-primary-8',
-              // 'font-bold flex justify-between min-h-[40px] items-center disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-            onClick={() => onChange([...value, [null, 'union']])}
-          >
-            Add operation
-            <PlusOutlined className="text-primary-8!" />
-          </Button>
-          <div className="text-neutral-3 text-xs">
-            {remaining} of {MAX_OPERATIONS} operations available
+                  <Reference
+                    chrome={{ label: 'Neuron set' }}
+                    config={config}
+                    schema={schema}
+                    referenceSchema={referenceSchema}
+                    value={refName}
+                    disabled={disabled}
+                    omit={omit}
+                    onChange={(block_name: string | null, block_dict_name: string | null) =>
+                      onChange(
+                        value.with(i, [
+                          // serialize exactly like the shared `Reference` field: no `type`, letting
+                          // the backend apply the BlockReference default (the path base_neuron_set uses).
+                          block_name === null
+                            ? null
+                            : { block_name, block_dict_name: block_dict_name ?? '' },
+                          op,
+                        ])
+                      )
+                    }
+                  />
+                </section>
+              );
+            })}
           </div>
-        </div>
-      )}
-    </>
+        )}
+      </FancyField>
+    </div>
   );
 }

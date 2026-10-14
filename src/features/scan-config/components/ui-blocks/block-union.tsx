@@ -4,6 +4,8 @@ import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
 import { isType } from '@/features/scan-config/types';
+import { FancyActions } from '@/ui/molecules/fancy-input';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
@@ -69,26 +71,22 @@ export default function BlockUnion({
   if (selectedBlockSchema && isPlainObject(config[selectedRootElement])) {
     return (
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <div className="text-lg text-gray-500 uppercase">{selectedBlockSchema.title}</div>
-          {!campaignId && !loading && (
-            <button
-              type="button"
-              aria-label="Reset block selection"
-              className="cursor-pointer text-neutral-3 transition-colors hover:text-primary-8 px-2 py-1 hover:bg-neutral-3/20 rounded-full"
-              onClick={() => {
-                setConfig({
-                  ...config,
-                  [selectedRootElement]: {},
-                });
-              }}
-            >
-              <CloseOutlined />
-            </button>
-          )}
-        </div>
         <Block
-          hideTitle
+          headerActions={
+            !campaignId &&
+            !loading && (
+              <FancyActions
+                actions={[
+                  {
+                    key: 'reset',
+                    label: 'Reset block selection',
+                    icon: <CloseOutlined />,
+                    onClick: () => setConfig({ ...config, [selectedRootElement]: {} }),
+                  },
+                ]}
+              />
+            )
+          }
           schema={schema}
           key={`${selectedRootElement}_${selectedType}`}
           disabled={!!campaignId || loading || showingDiffs}
@@ -145,7 +143,7 @@ export default function BlockUnion({
             }}
           >
             <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
-            <span className="mt-3 block">{o.description}</span>
+            <MarkdownDescription className="mt-3">{o.description}</MarkdownDescription>
           </button>
         );
       })}

@@ -15,6 +15,7 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { entityTypeForScanConfigFromIdType } from '@/features/scan-config/workflow/workflow-schema-selection';
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -23,6 +24,7 @@ type ModelIdentifierProps = {
   className?: string;
   entity: TSupportedEntitiesForScanConfiguration;
   value?: ConfigValue;
+  chrome?: FancyChrome;
 };
 
 function resolveEntityDataType(
@@ -55,7 +57,7 @@ function resolveTypeLabel(
   return '';
 }
 
-export function ModelIdentifier({ className, entity, value }: ModelIdentifierProps) {
+export function ModelIdentifier({ className, entity, value, chrome }: ModelIdentifierProps) {
   const entityPreview = useScanConfigEntityPreview();
   const setEntityPreview = useSetScanConfigEntityPreview();
   const dataType = resolveEntityDataType(value, entity);
@@ -76,39 +78,41 @@ export function ModelIdentifier({ className, entity, value }: ModelIdentifierPro
     : undefined;
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: summary pill opens mini-detail preview
-    <div
-      id={`model-identifier-entity-${entity.id}`}
-      data-testid="model-identifier-entity"
-      role={handleSelect ? 'button' : undefined}
-      tabIndex={handleSelect ? 0 : undefined}
-      onClick={handleSelect}
-      onKeyDown={
-        handleSelect
-          ? (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                handleSelect();
-              }
-            }
-          : undefined
-      }
-      className={cn(
-        'grid min-h-14 h-auto w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto]',
-        'items-center gap-2 overflow-hidden rounded-full border border-gray-200 bg-white px-4 py-2.5',
-        'hover:border-gray-300 hover:shadow-xs hover:bg-gray-50',
-        {
-          'cursor-pointer': Boolean(handleSelect),
-          'border-primary-8 bg-primary-1/30 ring-1 ring-primary-8/20': isSelected,
-        },
-        className
-      )}
-      data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifier}
-    >
-      <span className="min-w-0 truncate text-sm font-semibold text-primary-9">{entity.name}</span>
-      <span className="shrink-0 rounded-full border border-neutral-2 bg-white px-2.5 py-0.5 text-xs font-semibold tracking-wide text-gray-500 uppercase">
-        {typeLabel}
-      </span>
-    </div>
+    <FancyField {...chrome} active={isSelected} className={className}>
+      <div className="px-1.5 pt-3 pb-1.5">
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: the row opens the mini-detail preview */}
+        <div
+          id={`model-identifier-entity-${entity.id}`}
+          data-testid="model-identifier-entity"
+          role={handleSelect ? 'button' : undefined}
+          tabIndex={handleSelect ? 0 : undefined}
+          onClick={handleSelect}
+          onKeyDown={
+            handleSelect
+              ? (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleSelect();
+                  }
+                }
+              : undefined
+          }
+          className={cn(
+            'grid w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2',
+            'overflow-hidden rounded-lg px-3 py-2 transition-colors',
+            handleSelect && 'cursor-pointer hover:bg-neutral-1',
+            isSelected && 'bg-primary-0 hover:bg-primary-0'
+          )}
+          data-scan-config-block-element={ScanConfigUIElementDict.ModelIdentifier}
+        >
+          <span className="min-w-0 truncate text-sm font-semibold text-primary-9">
+            {entity.name}
+          </span>
+          <span className="shrink-0 rounded-full border border-neutral-2 bg-white px-2.5 py-0.5 text-xs font-semibold tracking-wide text-gray-500 uppercase">
+            {typeLabel}
+          </span>
+        </div>
+      </div>
+    </FancyField>
   );
 }

@@ -1,10 +1,10 @@
-import { Select } from 'antd';
 import { useId } from 'react';
 
 import {
   type Reference as ReferenceSchema,
   ScanConfigUIElementDict,
 } from '@/features/scan-config/types';
+import { FancyCombobox } from '@/ui/molecules/fancy-combobox';
 
 import {
   useAllowedBlockTypesByReferenceType,
@@ -14,6 +14,7 @@ import {
 import { scanConfigHeldTestId } from '../utils';
 
 import type { Config, ConfigSchema } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 const DEFAULT_SENTINEL = '__default_as_null__';
 
@@ -105,6 +106,7 @@ export function Reference({
   referenceSchema,
   config,
   omit = [],
+  chrome,
 }: {
   schema: ConfigSchema;
   referenceSchema: ReferenceSchema;
@@ -114,6 +116,7 @@ export function Reference({
   disabled: boolean;
   /** block names to exclude from the dropdown (e.g. a combined set excluding itself) */
   omit?: string[];
+  chrome?: FancyChrome;
 }) {
   /** Ties this select's options to this select: antd leaves every dropdown it has
    * opened in the page, so an option is otherwise indistinguishable from the same
@@ -201,35 +204,36 @@ export function Reference({
   };
 
   return (
-    <Select
+    <FancyCombobox
+      {...chrome}
       data-testid="scan-config-control"
       data-scan-config-options={dropdownId}
       data-scan-config-block-element={ScanConfigUIElementDict.Reference}
-      className="w-full"
       disabled={disabled}
-      labelRender={({ label, value: chosen }) =>
-        chosen === DEFAULT_SENTINEL ? (
-          label
+      options={options}
+      values={[value ?? DEFAULT_SENTINEL]}
+      onChange={([newV]) => {
+        if (newV === undefined) return;
+        onChange(
+          newV === DEFAULT_SENTINEL ? null : newV,
+          newV === DEFAULT_SENTINEL ? null : findConfigKeyForValue(newV)
+        );
+      }}
+      renderValue={(option) =>
+        option.value === DEFAULT_SENTINEL ? (
+          option.label
         ) : (
-          <span data-testid={scanConfigHeldTestId(String(chosen))}>{label}</span>
+          <span data-testid={scanConfigHeldTestId(option.value)}>{option.label}</span>
         )
       }
-      optionRender={(option) => (
+      renderOption={(option) => (
         <span
-          data-testid={`scan-config-option-${String(option.value)}`}
+          data-testid={`scan-config-option-${option.value}`}
           data-scan-config-option-of={dropdownId}
         >
           {option.label}
         </span>
       )}
-      onChange={(newV: string) =>
-        onChange(
-          newV === DEFAULT_SENTINEL ? null : newV,
-          newV === DEFAULT_SENTINEL ? null : findConfigKeyForValue(newV)
-        )
-      }
-      value={value ?? DEFAULT_SENTINEL}
-      options={options}
     />
   );
 }

@@ -7,6 +7,7 @@ import {
 import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
 
 import type { ConfigValue } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 /** Props for the MEModel section-list variable modification UI. */
 export type MeModelRangeProps = TUseMeModelManipulationDataParams & {
@@ -16,6 +17,8 @@ export type MeModelRangeProps = TUseMeModelManipulationDataParams & {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 };
 
 /**
@@ -34,6 +37,7 @@ export function Range({
   fieldKey,
   modificationType,
   errorPathPrefix,
+  chrome,
 }: MeModelRangeProps) {
   const { data, loading, reason } = useMeModelManipulationData({ endpoint, entityId });
 
@@ -48,6 +52,7 @@ export function Range({
       fieldKey={fieldKey}
       modificationType={modificationType}
       errorPathPrefix={errorPathPrefix}
+      chrome={chrome}
     />
   );
 }

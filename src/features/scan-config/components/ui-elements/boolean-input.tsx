@@ -4,6 +4,7 @@ import { Checkbox } from 'antd';
 import { useCallback, useId } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { type FancyChrome, FancyInfo } from '@/ui/molecules/fancy-input';
 import { cn } from '@/utils/css-class';
 
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
@@ -14,6 +15,7 @@ export interface BooleanInputProps {
   onChange: (value: boolean) => void;
   disabled?: boolean;
   ariaLabel?: string;
+  chrome?: FancyChrome;
 }
 
 /**
@@ -37,6 +39,7 @@ export default function BooleanInput({
   onChange,
   disabled = false,
   ariaLabel,
+  chrome,
 }: BooleanInputProps) {
   const id = useId();
 
@@ -50,23 +53,58 @@ export default function BooleanInput({
     [onChange]
   );
 
+  const label = chrome?.label;
+
   return (
-    <span data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput} className="ml-4">
-      <Checkbox
-        data-testid="scan-config-control"
-        key={id}
-        id={fieldKey}
-        checked={normalizedValue}
-        onChange={handleChange}
-        disabled={disabled}
-        aria-label={ariaLabel}
+    // pulled in by its own padding, so stacked checkboxes sit close while keeping their hover area
+    <div data-scan-config-block-element={ScanConfigUIElementDict.BooleanInput} className="-my-2">
+      {/* A plain full-width row, not a field frame: the title fills the row and is the box's
+          label, so clicking anywhere on it toggles; the info rides on it as a superscript. */}
+      <div
         className={cn(
-          '[&_.ant-checkbox-inner]:w-6 [&_.ant-checkbox-inner]:h-6 [&_.ant-checkbox-inner]:rounded',
-          '[&_.ant-checkbox-inner]:border-gray-300 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8 ',
-          '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8',
-          '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
+          'flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-1.5 transition-colors',
+          !disabled && 'hover:bg-neutral-1',
+          chrome?.classNames?.fieldset
         )}
-      />
-    </span>
+      >
+        {label && (
+          <label
+            htmlFor={fieldKey}
+            className={cn(
+              'min-w-0 flex-1 text-sm font-semibold text-primary-9',
+              disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+            )}
+          >
+            {label}
+            {chrome?.unit && (
+              <span className="ms-1 font-normal text-neutral-4">({chrome.unit})</span>
+            )}
+            {chrome?.labelInfo && (
+              <FancyInfo
+                content={chrome.labelInfo}
+                className="relative -top-1.5 ms-0.5 inline-flex size-4 bg-white align-middle ring-1 ring-neutral-2 hover:bg-primary-8 hover:text-white hover:ring-primary-8 [&_svg]:size-2.5"
+              />
+            )}
+          </label>
+        )}
+        <Checkbox
+          data-testid="scan-config-control"
+          key={id}
+          id={fieldKey}
+          checked={normalizedValue}
+          onChange={handleChange}
+          disabled={disabled}
+          aria-label={ariaLabel ?? label}
+          className={cn(
+            'ms-auto',
+            '[&_.ant-checkbox-inner]:h-5 [&_.ant-checkbox-inner]:w-5 [&_.ant-checkbox-inner]:rounded',
+            '[&_.ant-checkbox-inner]:border-neutral-3 [&_.ant-checkbox-checked_.ant-checkbox-inner]:bg-primary-8',
+            '[&_.ant-checkbox-checked_.ant-checkbox-inner]:border-primary-8',
+            '[&_.ant-checkbox-checked_.ant-checkbox-inner]:after:border-white!'
+          )}
+        />
+      </div>
+      {chrome?.error && <p className="mt-1 px-3 text-xs text-destructive">{chrome.error}</p>}
+    </div>
   );
 }

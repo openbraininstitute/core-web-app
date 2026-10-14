@@ -13,6 +13,7 @@ import {
   type MechanismVariablesRoot,
   type TMechanismVariableType,
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
+import { FancyChevron } from '@/ui/molecules/fancy-input';
 import {
   Select,
   SelectContent,
@@ -82,7 +83,10 @@ export function IonChannelVariableSelector({
 
   return (
     <Select value={value ?? undefined} onValueChange={handleValueChange} disabled={disabled}>
-      <SelectTrigger className="w-full h-auto! whitespace-normal bg-white border-gray-200">
+      <SelectTrigger
+        className="group/select h-auto! w-full whitespace-normal rounded-lg border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0"
+        icon={<FancyChevron className="group-data-[state=open]/select:rotate-180" />}
+      >
         <SelectValue placeholder="Select a variable…">
           {resolved && <SelectedDisplay group={resolved.group} variable={resolved.variable} />}
         </SelectValue>
