@@ -1159,6 +1159,17 @@ describe('the morphologies over the somas', () => {
     expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
   });
 
+  it('frame the cells drawn on a reset, and none hidden', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setData(ofTheSomas());
+    viewer.setCellColors(HIDE_B);
+    viewer.resetView();
+    // Cell 0 alone: its segment, (0, 0, 0) to (10, 0, 0) and 1 µm round, and its soma, 5 µm round the origin.
+    const middle = new THREE.Vector3(3, 0, 0).add(inner.uniforms.uShift.value);
+    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+  });
+
   it('are gone with the somas when other somas come', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
