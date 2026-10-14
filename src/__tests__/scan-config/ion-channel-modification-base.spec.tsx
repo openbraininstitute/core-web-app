@@ -109,7 +109,8 @@ describe('RangeModificationBase', () => {
     // both section lists from the resolved variable become editable rows. `somatic`
     // also appears in the trigger's section-list badge, hence getAllByText.
     expect(screen.getAllByText('somatic').length).toBeGreaterThan(0);
-    expect(screen.getByText('axonal')).toBeInTheDocument();
+    // each row's label carries its unit, like every other field
+    expect(screen.getByRole('textbox', { name: /^axonal \(S\/cm2\)$/ })).toBeInTheDocument();
   });
 
   it('honours the gating reason over the picker', () => {

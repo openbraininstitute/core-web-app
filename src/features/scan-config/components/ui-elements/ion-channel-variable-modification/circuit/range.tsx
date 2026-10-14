@@ -6,11 +6,15 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/use-circuit-manipulation-data';
 import { RangeModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/range-base';
 
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
+
 /** Props for the Circuit section-list variable modification UI. */
 export type CircuitRangeProps = TUseCircuitManipulationDataParams & {
   disabled: boolean;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 };
 
 /**
@@ -31,6 +35,7 @@ export function CircuitRange({
   disabled,
   modificationType,
   errorPathPrefix,
+  chrome,
 }: CircuitRangeProps) {
   const { data, loading, reason } = useCircuitManipulationData({
     config,
@@ -53,6 +58,7 @@ export function CircuitRange({
       fieldKey={fieldKey}
       modificationType={modificationType}
       errorPathPrefix={errorPathPrefix}
+      chrome={chrome}
     />
   );
 }

@@ -29,6 +29,7 @@ import {
 } from '@/features/scan-config/types';
 import { ModelIdentifierFieldStorageMode } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import { cn } from '@/utils/css-class';
 
 import type { TModelIdentifierParsedValue } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/types';
@@ -53,6 +54,8 @@ type Props = {
   maxSelections?: number;
   /** value stamped on the container's `data-scan-config-block-element` (the mapped ui_element) */
   blockElement: TScanConfigUIElementDict;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 };
 
 function updateParsedValue(
@@ -77,6 +80,7 @@ function ModelIdentifierField({
   disabled = false,
   errorPathPrefix,
   className,
+  chrome,
   visibleItemCount,
   addLabel,
   maxSelections,
@@ -344,29 +348,33 @@ function ModelIdentifierField({
 
   return (
     <div
-      className={cn('w-full max-w-full min-w-0 overflow-hidden', className)}
+      className={cn('w-full max-w-full min-w-0', className)}
       data-scan-config-block-element={blockElement}
     >
-      <ModelIdentifierSummaryView
-        parsedValue={parsedValue}
-        fieldSchema={fieldSchema}
-        errorPathPrefix={errorPathPrefix}
-        configurationInputs={workflowField?.configurationInputs}
-        resolvedEntities={resolvedEntities}
-        pendingIds={pendingIds}
-        disabled={disabled}
-        onAddEntities={handleAddEntities}
-        onRemoveEntity={handleRemoveEntity}
-        onAddGroup={
-          parsedValue.storageMode === ModelIdentifierFieldStorageMode.Grouped
-            ? handleAddGroup
-            : undefined
-        }
-        onGroupNameChange={handleGroupNameChange}
-        onRemoveGroup={handleRemoveGroup}
-        visibleItemCount={visibleItemCount}
-        addLabel={addLabel}
-      />
+      <FancyField {...chrome} group disabled={disabled}>
+        <div className="px-1.5 pt-3 pb-1.5">
+          <ModelIdentifierSummaryView
+            parsedValue={parsedValue}
+            fieldSchema={fieldSchema}
+            errorPathPrefix={errorPathPrefix}
+            configurationInputs={workflowField?.configurationInputs}
+            resolvedEntities={resolvedEntities}
+            pendingIds={pendingIds}
+            disabled={disabled}
+            onAddEntities={handleAddEntities}
+            onRemoveEntity={handleRemoveEntity}
+            onAddGroup={
+              parsedValue.storageMode === ModelIdentifierFieldStorageMode.Grouped
+                ? handleAddGroup
+                : undefined
+            }
+            onGroupNameChange={handleGroupNameChange}
+            onRemoveGroup={handleRemoveGroup}
+            visibleItemCount={visibleItemCount}
+            addLabel={addLabel}
+          />
+        </div>
+      </FancyField>
     </div>
   );
 }

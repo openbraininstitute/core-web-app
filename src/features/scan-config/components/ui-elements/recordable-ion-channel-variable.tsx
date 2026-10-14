@@ -11,6 +11,7 @@ import { obioneApi } from '@/api/one/utils';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { FancyChevron, type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import {
   Select,
   SelectContent,
@@ -188,6 +189,7 @@ export function SelectRecordableIonChannelVariable({
   config,
   paramSchema,
   schema,
+  chrome,
 }: {
   value: VariableValue | null | undefined;
   onChange: (v: VariableValue | null) => void;
@@ -195,6 +197,7 @@ export function SelectRecordableIonChannelVariable({
   config: Config;
   paramSchema: SelectRecordableIonChannelVariableSchema;
   schema: ConfigSchema;
+  chrome?: FancyChrome;
 }) {
   const context = useWorkspace();
   const [expandedChannels, setExpandedChannels] = useState<Set<string>>(new Set());
@@ -279,87 +282,95 @@ export function SelectRecordableIonChannelVariable({
 
   return (
     <div
-      className="flex flex-col gap-1 w-full"
+      className="w-full"
       data-scan-config-block-element={ScanConfigUIElementDict.SelectRecordableIonChannelVariable}
     >
-      {hasNoModels && (
-        <span className="text-red-500 text-sm">
-          At least one ion channel model must be added before selecting a recordable variable.
-        </span>
-      )}
-      <Select
-        value={currentEncoded}
-        onValueChange={handleValueChange}
+      <FancyField
+        {...chrome}
         disabled={disabled || hasNoModels}
+        error={
+          hasNoModels
+            ? 'Add at least one ion channel model before selecting a recordable variable.'
+            : chrome?.error
+        }
       >
-        <SelectTrigger className="w-full h-auto! whitespace-normal bg-white border-gray-200">
-          <SelectValue
-            placeholder={
-              isLoading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-gray-400">Fetching</span> <LoadingOutlined />
-                </div>
-              ) : (
-                'Select a variable…'
-              )
-            }
-          >
-            {resolved && <SelectedDisplay group={resolved.group} variable={resolved.variable} />}
-          </SelectValue>
-        </SelectTrigger>
-
-        <SelectContent
-          side="bottom"
-          align="center"
-          position="popper"
-          className="max-h-72 bg-white! border-gray-100"
+        <Select
+          value={currentEncoded}
+          onValueChange={handleValueChange}
+          disabled={disabled || hasNoModels}
         >
-          {isError && (
-            <div className="flex flex-col items-center justify-center">
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                className="[&_.ant-empty-description]:text-red-500"
-                description={
-                  <div>
-                    <div>Data for ion channel variables</div>
-                    <div>could not be loaded.</div>
+          <SelectTrigger
+            className="group/select h-auto! w-full whitespace-normal rounded-lg border-0 bg-transparent px-3 py-2 shadow-none focus-visible:ring-0"
+            icon={<FancyChevron className="group-data-[state=open]/select:rotate-180" />}
+          >
+            <SelectValue
+              placeholder={
+                isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-gray-400">Fetching</span> <LoadingOutlined />
                   </div>
-                }
-              />
-            </div>
-          )}
-          {!isError &&
-            channelGroups.map((group) => (
-              <SelectGroup key={group.key}>
-                <ChannelHeader
-                  group={group}
-                  isExpanded={expandedChannels.has(group.key)}
-                  onToggle={() => toggleChannel(group.key)}
+                ) : (
+                  'Select a variable…'
+                )
+              }
+            >
+              {resolved && <SelectedDisplay group={resolved.group} variable={resolved.variable} />}
+            </SelectValue>
+          </SelectTrigger>
+
+          <SelectContent
+            side="bottom"
+            align="center"
+            position="popper"
+            className="max-h-72 bg-white! border-gray-100"
+          >
+            {isError && (
+              <div className="flex flex-col items-center justify-center">
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  className="[&_.ant-empty-description]:text-red-500"
+                  description={
+                    <div>
+                      <div>Data for ion channel variables</div>
+                      <div>could not be loaded.</div>
+                    </div>
+                  }
                 />
-                {expandedChannels.has(group.key) && (
-                  <div className="ml-2 border-l-2 border-gray-300">
-                    {group.variables.map((variable) => {
-                      const itemValue = encodeValue(group.key, variable.variable_name);
-                      return (
-                        <SelectItem
-                          key={itemValue}
-                          value={itemValue}
-                          className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
-                          checkIconClassName="size-3 text-primary-8"
-                        >
-                          <span>{variable.variable_name}</span>
-                          <span className="ml-1.5 text-xs text-gray-400 font-normal">
-                            ({variable.unit})
-                          </span>
-                        </SelectItem>
-                      );
-                    })}
-                  </div>
-                )}
-              </SelectGroup>
-            ))}
-        </SelectContent>
-      </Select>
+              </div>
+            )}
+            {!isError &&
+              channelGroups.map((group) => (
+                <SelectGroup key={group.key}>
+                  <ChannelHeader
+                    group={group}
+                    isExpanded={expandedChannels.has(group.key)}
+                    onToggle={() => toggleChannel(group.key)}
+                  />
+                  {expandedChannels.has(group.key) && (
+                    <div className="ml-2 border-l-2 border-gray-300">
+                      {group.variables.map((variable) => {
+                        const itemValue = encodeValue(group.key, variable.variable_name);
+                        return (
+                          <SelectItem
+                            key={itemValue}
+                            value={itemValue}
+                            className="pl-4 text-primary-8 hover:text-primary-7! text-base font-semibold cursor-pointer"
+                            checkIconClassName="size-3 text-primary-8"
+                          >
+                            <span>{variable.variable_name}</span>
+                            <span className="ml-1.5 text-xs text-gray-400 font-normal">
+                              ({variable.unit})
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </div>
+                  )}
+                </SelectGroup>
+              ))}
+          </SelectContent>
+        </Select>
+      </FancyField>
     </div>
   );
 }

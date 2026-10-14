@@ -1,129 +1,243 @@
-import { CopyOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
-import { Fragment, useMemo, useRef, useState } from 'react';
+import {
+  CheckOutlined,
+  CloseOutlined,
+  CopyOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from '@ant-design/icons';
+import { useId, useMemo, useRef, useState } from 'react';
 
 import NumberEditor from '@/features/scan-config/components/ui-elements/neuron-ids/number-editor';
 import { isPlainObject } from '@/features/scan-config/components/utils';
-import { cn } from '@/utils/css-class';
+import { FancyActions, FancyField, type FancyInputAction } from '@/ui/molecules/fancy-input';
 
-import type React from 'react';
 import type { ConfigValue } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
+const MAX_INPUT_LENGTH = 1000;
+/** Above this many IDs the tray shows the first ones and a "+N more" chip into the editor. */
+const SHOWN_IDS = 40;
+const SEPARATOR = /[\s,]+/;
+const INTEGER = /^\d+$/;
+
+/**
+ * Neuron IDs as a tray of chips with the typing spot at the end, like a recipients field.
+ * A comma, space or Enter turns what was typed into chips (a pasted list works the same way),
+ * Backspace on an empty input takes the last chip back, and the full editor handles bulk edits.
+ */
 export default function NeuronIds({
   value,
   disabled,
   onAddIds,
+  chrome,
 }: {
   value: ConfigValue;
   disabled: boolean;
   onAddIds: (newElements: number[] | null) => void;
+  chrome?: FancyChrome;
 }) {
+  const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [edit, setEdit] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const allElements = useMemo(() => {
     const namedTupleArray = Array.isArray(value) ? value : [value];
-
-    const elements: number[] = namedTupleArray.flatMap((v) => {
-      if (isPlainObject(v) && Array.isArray(v.elements)) {
-        return v.elements as number[];
-      }
-      return [];
-    });
-
+    const elements: number[] = namedTupleArray.flatMap((v) =>
+      isPlainObject(v) && Array.isArray(v.elements) ? (v.elements as number[]) : []
+    );
     // Remove duplicates and sort
     return [...new Set(elements)].sort((a, b) => a - b);
   }, [value]);
 
-  const [text, setText] = useState(() => allElements.join(', '));
+  /** The full editor's text, seeded from the held IDs each time it opens. */
+  const [text, setText] = useState('');
   const [isTextValid, setIsTextValid] = useState(true);
-
-  const renderedElements = useMemo(() => {
-    const total = allElements.length;
-    const LIMIT = 12;
-
-    if (total <= LIMIT * 2) {
-      return {
-        head: allElements,
-        tail: [],
-      };
-    }
-
-    return {
-      head: allElements.slice(0, LIMIT),
-      tail: allElements.slice(-LIMIT),
-    };
-  }, [allElements]);
-
-  const handleEditClick = () => {
+  const openEditor = () => {
+    setText(allElements.join(', '));
     setEdit(true);
   };
 
-  return (
-    <div className="w-full flex flex-col gap-3">
-      {!edit && (
-        <Ids
-          ids={renderedElements}
-          totalIds={allElements.length}
-          onEditClick={handleEditClick}
-          disabled={disabled}
-          onDeleteItem={(deleteId: number) => {
-            const newAllElements = allElements.filter((id) => id !== deleteId);
-            onAddIds(newAllElements);
-            setText(newAllElements.join(', '));
-          }}
-          onAddIds={onAddIds}
-          setText={setText}
-          text={text}
-        />
-      )}
+  const write = (ids: number[] | null) => onAddIds(ids && ids.length > 0 ? ids : null);
+  const add = (tokens: string[]) =>
+    write([...new Set([...allElements, ...tokens.map(Number)])].sort((a, b) => a - b));
 
-      {!edit && !disabled && (
-        <HighlightedInput
-          maxLength={1000}
-          handleAddIdsClick={(ids) => {
-            const newAllElements = [...new Set([...allElements, ...ids])].sort((a, b) => a - b);
-            onAddIds(newAllElements);
-            setText(newAllElements.join(', '));
-          }}
-        />
-      )}
-      {edit && (
-        <NumberEditor
-          value={text}
-          setIsTextValid={setIsTextValid}
-          setValue={setText}
-          disabled={disabled}
-        />
-      )}
-      {edit && (
-        <div className="flex gap-2 mt-3 justify-end">
-          <Button
-            className="border-none bg-transparent text-primary-8"
-            onClick={() => {
-              setEdit(!edit);
-            }}
-          >
-            Cancel
-          </Button>
-          {
-            <Button
-              className="text-primary-8 rounded-full font-bold"
-              onClick={() => {
-                if (edit && isTextValid) {
-                  const values = parseCsvIntegers(text);
-                  onAddIds(values);
-                  setText(values.join(', '));
-                }
-                setEdit(!edit);
-              }}
+  const draftError = draft.split(SEPARATOR).some((t) => t !== '' && !INTEGER.test(t))
+    ? 'Only whole numbers, separated by commas, spaces or Enter'
+    : undefined;
+
+  /** Commits every finished token; whatever follows the last separator keeps being typed. */
+  const handleDraft = (raw: string) => {
+    const parts = raw.split(SEPARATOR);
+    const rest = parts.pop() ?? '';
+    const done = parts.filter(Boolean);
+    if (done.length > 0 && done.every((t) => INTEGER.test(t))) {
+      add(done);
+      setDraft(rest);
+      return;
+    }
+    setDraft(raw);
+  };
+
+  const commitDraft = () => {
+    const tokens = draft.split(SEPARATOR).filter(Boolean);
+    if (tokens.length === 0 || !tokens.every((t) => INTEGER.test(t))) return;
+    add(tokens);
+    setDraft('');
+  };
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(allElements.join(', '));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // biome-ignore lint/suspicious/noConsole: Error logging required
+      console.error('Clipboard write failed:', err);
+    }
+  };
+
+  const borderActions: Array<FancyInputAction> = [
+    ...(disabled
+      ? []
+      : [
+          ...(allElements.length > 0
+            ? [
+                {
+                  key: 'clear',
+                  label: 'Clear all IDs',
+                  icon: <DeleteOutlined />,
+                  onClick: () => write(null),
+                },
+              ]
+            : []),
+          { key: 'edit', label: 'Edit all IDs', icon: <EditOutlined />, onClick: openEditor },
+        ]),
+    {
+      key: 'copy',
+      label: copied ? 'Copied' : 'Copy IDs',
+      icon: copied ? <CheckOutlined /> : <CopyOutlined />,
+      disabled: allElements.length === 0,
+      onClick: copy,
+    },
+  ];
+
+  if (edit) {
+    return (
+      <FancyField {...chrome} active>
+        <div className="flex flex-col gap-2 px-2 pt-4 pb-2">
+          <NumberEditor
+            value={text}
+            setIsTextValid={setIsTextValid}
+            setValue={setText}
+            disabled={disabled}
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              className="cursor-pointer rounded-full px-3 py-1 text-sm text-primary-8 hover:bg-neutral-1"
+              onClick={() => setEdit(false)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
               disabled={!isTextValid || disabled}
+              className="cursor-pointer rounded-full bg-primary-8 px-4 py-1 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => {
+                write(parseCsvIntegers(text));
+                setEdit(false);
+              }}
             >
               Apply
-            </Button>
-          }
+            </button>
+          </div>
         </div>
-      )}
-    </div>
+      </FancyField>
+    );
+  }
+
+  const shown = allElements.slice(0, SHOWN_IDS);
+  const hidden = allElements.length - shown.length;
+  const count = `${allElements.length} ID${allElements.length === 1 ? '' : 's'}`;
+
+  return (
+    <FancyField
+      {...chrome}
+      htmlFor={inputId}
+      disabled={disabled}
+      error={draftError ?? chrome?.error}
+      helperText={allElements.length > 0 ? count : 'Separate IDs with commas, spaces or Enter'}
+      borderActions={<FancyActions onBorder actions={borderActions} />}
+    >
+      {/* The tray: clicking its empty space puts the caret at the end, like one long input. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: forwards a click to the input */}
+      <div
+        className="flex min-h-11 flex-wrap items-center gap-1.5 px-2.5 pt-3 pb-2"
+        onMouseDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          e.preventDefault();
+          inputRef.current?.focus();
+        }}
+      >
+        {shown.map((id) => (
+          <span
+            key={id}
+            className="inline-flex items-center gap-0.5 rounded-full bg-primary-0 py-0.5 ps-2 pe-0.5 font-mono text-xs font-semibold text-primary-8 tabular-nums transition-[opacity,scale] duration-150 ease-out starting:scale-90 starting:opacity-0 motion-reduce:transition-none"
+          >
+            {id}
+            {!disabled && (
+              <button
+                type="button"
+                aria-label={`Remove ID ${id}`}
+                className="grid size-4 cursor-pointer place-items-center rounded-full text-[9px] text-primary-8/60 transition-colors hover:bg-primary-8 hover:text-white"
+                onClick={() => write(allElements.filter((one) => one !== id))}
+              >
+                <CloseOutlined />
+              </button>
+            )}
+          </span>
+        ))}
+        {hidden > 0 && (
+          <button
+            type="button"
+            className="cursor-pointer rounded-full bg-primary-8 px-2 py-0.5 text-xs font-semibold text-white"
+            onClick={openEditor}
+          >
+            +{hidden} more
+          </button>
+        )}
+        {!disabled && (
+          <input
+            ref={inputRef}
+            id={inputId}
+            value={draft}
+            maxLength={MAX_INPUT_LENGTH}
+            spellCheck={false}
+            autoComplete="off"
+            inputMode="numeric"
+            aria-invalid={!!draftError}
+            placeholder={allElements.length > 0 ? 'Add more…' : 'Type IDs, e.g. 12, 40, 7'}
+            className="min-w-24 flex-1 bg-transparent py-1 font-mono text-sm text-primary-9 outline-none placeholder:font-sans placeholder:text-neutral-3"
+            onChange={(e) => handleDraft(e.target.value)}
+            onBlur={commitDraft}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                commitDraft();
+              } else if (e.key === 'Backspace' && draft === '' && allElements.length > 0) {
+                e.preventDefault();
+                write(allElements.slice(0, -1));
+              }
+            }}
+          />
+        )}
+        {disabled && allElements.length === 0 && (
+          <span className="py-1 text-sm text-neutral-4 italic">No IDs</span>
+        )}
+      </div>
+    </FancyField>
   );
 }
 
@@ -164,247 +278,3 @@ function parseCsvIntegers(data: string): number[] {
 
   return Array.from(result).sort((a, b) => a - b);
 }
-
-const Ids = ({
-  ids,
-  onEditClick,
-  disabled,
-  onDeleteItem,
-  totalIds,
-  onAddIds,
-  setText,
-  text,
-}: {
-  ids: { head: number[]; tail: number[] };
-  totalIds: number;
-  onDeleteItem: (id: number) => void;
-  onEditClick?: () => void;
-  disabled?: boolean;
-  onAddIds: (newElements: number[] | null) => void;
-  setText: (text: string) => void;
-  text: string;
-}) => {
-  const containerClass = 'w-full grid grid-cols-4 gap-1';
-  const elementClass =
-    'border border-gray-200 rounded-full py-1 px-0 text-primary-8 font-bold flex items-center justify-center gap-1 text-xs';
-
-  const getTotalIdsText = () => {
-    if (totalIds === 0) return 'No IDs';
-    if (totalIds === 1) return '1 ID';
-    return `${totalIds} IDs`;
-  };
-
-  return (
-    <div className="border border-gray-200 p-3 rounded-lg w-full ">
-      <div className="flex justify-between items-center mb-3">
-        <div className="text-primary-8">{getTotalIdsText()}</div>
-        <div className="flex gap-2 justify-end">
-          {!disabled && (
-            <>
-              <button
-                type="button"
-                className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
-                onClick={() => {
-                  onAddIds(null);
-                  setText('');
-                }}
-              >
-                Clear <DeleteOutlined className="text-xs" />
-              </button>
-              <button
-                type="button"
-                className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
-                onClick={onEditClick}
-              >
-                Edit <EditOutlined className="text-xs" />
-              </button>
-            </>
-          )}
-          <CopyButton textToCopy={text} />
-        </div>
-      </div>
-      <div className={containerClass}>
-        {ids.head.map((id) => (
-          <div key={id} className={elementClass}>
-            {id}
-            {!disabled && <DeleteOutlined onClick={() => onDeleteItem(id)} />}
-          </div>
-        ))}
-      </div>
-
-      {ids.tail.length > 0 && (
-        <div className="w-full flex justify-center my-3">
-          <button
-            type="button"
-            className="text-gray-500 flex justify-center items-center border border-gray-200 py-2 rounded-full text-primary-9 w-[100px] text-sm"
-            onClick={onEditClick}
-          >
-            {!disabled ? 'View/Edit all IDs' : 'View all IDs'}
-          </button>
-        </div>
-      )}
-
-      {ids.tail.length > 0 && (
-        <div className={containerClass}>
-          {ids.tail.map((id) => (
-            <div key={id} className={elementClass}>
-              {id}
-              {!disabled && <DeleteOutlined onClick={() => onDeleteItem(id)} />}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const CopyButton = ({ textToCopy }: { textToCopy: string }) => {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      // biome-ignore lint/suspicious/noConsole: Error logging required
-      console.error('Clipboard write failed:', err);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      className="text-gray-500 flex justify-center items-center border border-gray-200 px-2 py-1 rounded-full text-primary-9 text-sm gap-2"
-      onClick={handleCopy}
-    >
-      {copied ? 'Copied!' : 'Copy'} <CopyOutlined className="text-xs" />
-    </button>
-  );
-};
-
-const HighlightedInput = ({
-  handleAddIdsClick,
-  maxLength = 1000,
-}: {
-  handleAddIdsClick: (ids: number[]) => void;
-  maxLength: number;
-}) => {
-  const [value, setValue] = useState<string>('');
-  const [error, setError] = useState('');
-  const backdropRef = useRef<HTMLDivElement>(null);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-
-    if (newValue.length > maxLength) return;
-
-    setValue(newValue);
-
-    const segments = newValue.split(',');
-    const hasInvalidSegment = segments.some((segment) => {
-      const isValid = /^\s*\d*\s*$/.test(segment);
-      return !isValid && segment.trim() !== '';
-    });
-
-    if (hasInvalidSegment) {
-      setError('Invalid input: Please enter only numbers and commas.');
-    } else {
-      setError('');
-    }
-  };
-
-  const handleScroll = (e: React.UIEvent<HTMLInputElement>) => {
-    if (backdropRef.current) {
-      backdropRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
-
-  const renderHighlights = () => {
-    const segments = value.split(',');
-
-    return segments.map((segment, index) => {
-      const isLast = index === segments.length - 1;
-      const isValid = /^\s*\d*\s*$/.test(segment);
-
-      return (
-        // biome-ignore lint/suspicious/noArrayIndexKey: intentional
-        <Fragment key={index}>
-          <span
-            className={
-              !isValid ? 'bg-red-100 text-red-600 ring-2 ring-red-100 rounded-sm' : 'text-gray-800'
-            }
-          >
-            {segment}
-          </span>
-          {!isLast && <span className="text-gray-800">,</span>}
-        </Fragment>
-      );
-    });
-  };
-
-  const disabled = !!error || value === '';
-
-  return (
-    <div>
-      <div className="grid w-full grid-cols-10 gap-2">
-        <div className="relative border border-gray-200 rounded-md focus-within:ring-1 focus-within:border-0 focus-within:ring-gray-200 bg-white overflow-hidden flex items-center col-span-7">
-          <div
-            ref={backdropRef}
-            className="absolute inset-0 px-3 py-2 font-mono text-sm whitespace-pre overflow-hidden pointer-events-none z-0"
-            aria-hidden="true"
-          >
-            {renderHighlights()}
-          </div>
-
-          <input
-            type="text"
-            value={value}
-            onChange={handleChange}
-            onScroll={handleScroll}
-            maxLength={maxLength}
-            className="w-full px-3 py-2 font-mono text-sm text-transparent bg-transparent caret-black outline-none block z-10 placeholder:text-xs"
-            spellCheck={false}
-            placeholder="Type comma separated list of IDs"
-            title="Type comma separated list of IDs"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-
-                if (disabled) return;
-                const ids = parseCsvIntegers(value);
-                handleAddIdsClick(ids);
-                setValue('');
-              }
-            }}
-          />
-        </div>
-        <button
-          type="button"
-          className={cn(
-            'col-span-3 border border-gray-200 px-2 rounded-full',
-            disabled ? 'text-gray-200' : 'text-green-600'
-          )}
-          disabled={disabled}
-          onClick={() => {
-            if (disabled) return;
-            const ids = parseCsvIntegers(value);
-            handleAddIdsClick(ids);
-            setValue('');
-          }}
-        >
-          Add IDs
-        </button>
-      </div>
-
-      <div className="flex justify-between">
-        <div className="text-red-500 text-xs">{error}</div>
-        {value.length >= maxLength && (
-          <div className="text-xs  text-red-500">
-            {value.length} / {maxLength} characters
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};

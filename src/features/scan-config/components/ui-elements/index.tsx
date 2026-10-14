@@ -1,4 +1,3 @@
-import { Input } from 'antd';
 import { get } from 'es-toolkit/compat';
 import { match, P } from 'ts-pattern';
 
@@ -57,9 +56,11 @@ import {
   ScanConfigUIElementDict,
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
+import { FancyInput } from '@/ui/molecules/fancy-input';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 import type { Nullish } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -78,6 +79,7 @@ export function UIElementRender({
   schemaMappingConfig,
   errorPathPrefix,
   selectedEntry,
+  chrome,
 }: {
   k: string;
   disabled: boolean;
@@ -91,6 +93,8 @@ export function UIElementRender({
   errorPathPrefix?: string;
   /** name of the dictionary entry being edited; used to exclude self-references */
   selectedEntry?: string;
+  /** Title, info, units and message for the element's field frame. */
+  chrome?: FancyChrome;
 }) {
   const value = state[k];
   return match({ entity, paramSchema })
@@ -99,12 +103,12 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.StringInput },
       },
       () => (
-        <Input
+        <FancyInput
+          {...chrome}
           data-testid="scan-config-control"
           data-scan-config-block-element={ScanConfigUIElementDict.StringInput}
           disabled={disabled}
           value={typeof value === 'string' ? value : ''}
-          className="w-full"
           onChange={(e) => {
             setState({ ...state, [k]: e.currentTarget.value || null });
           }}
@@ -116,7 +120,7 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.ModelIdentifier },
         entity: P.nonNullable,
       },
-      ({ entity }) => <ModelIdentifier entity={entity} value={value} />
+      ({ entity }) => <ModelIdentifier chrome={chrome} entity={entity} value={value} />
     )
     .with(
       {
@@ -124,6 +128,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <ModelIdentifierMultiple
+          chrome={chrome}
           fieldKey={k}
           value={value}
           state={state}
@@ -140,6 +145,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <ModelIdentifierGrouped
+          chrome={chrome}
           fieldKey={k}
           value={value}
           state={state}
@@ -171,6 +177,7 @@ export function UIElementRender({
             // a plain `float` field has no array branch; offering a sweep would build a list the
             // schema rejects
             allowMultiple={bounds.allowMultiple}
+            chrome={chrome}
             disabled={disabled}
             value={value as number | null | number[]}
             onChange={(value) => {
@@ -186,6 +193,7 @@ export function UIElementRender({
         const bounds = numericSchemaBounds(paramSchema);
         return (
           <FloatOptional
+            chrome={chrome}
             min={bounds.min}
             max={bounds.max}
             exclusiveMin={bounds.exclusiveMin}
@@ -203,6 +211,7 @@ export function UIElementRender({
       { paramSchema: { ui_element: ScanConfigUIElementDict.SelectEFeaturesByProtocol } },
       ({ paramSchema }) => (
         <SelectEFeaturesByProtocol
+          chrome={chrome}
           fieldKey={k}
           value={value}
           state={state}
@@ -219,8 +228,10 @@ export function UIElementRender({
             paramSchema: fieldSchema,
             state: fieldState,
             setState: setFieldState,
+            chrome: fieldChrome,
           }) => (
             <UIElementRender
+              chrome={fieldChrome}
               k={fieldKey}
               disabled={disabled}
               paramSchema={fieldSchema}
@@ -241,6 +252,7 @@ export function UIElementRender({
 
       return (
         <Reference
+          chrome={chrome}
           config={config}
           schema={schema}
           referenceSchema={paramSchema}
@@ -269,6 +281,7 @@ export function UIElementRender({
     .with({ paramSchema: { ui_element: ScanConfigUIElementDict.NeuronIds } }, () => {
       return (
         <NeuronIds
+          chrome={chrome}
           value={value}
           disabled={disabled}
           onAddIds={(newElement: number[] | null) => {
@@ -318,6 +331,7 @@ export function UIElementRender({
           return (
             <EntityPropertyDropdown
               multiple
+              chrome={chrome}
               disabled={disabled}
               schemaMappingConfig={schemaMappingConfig}
               value={getValue()}
@@ -333,6 +347,7 @@ export function UIElementRender({
         return (
           <EntityPropertyDropdown
             multiple={false}
+            chrome={chrome}
             disabled={disabled}
             schemaMappingConfig={schemaMappingConfig}
             value={singleValue ?? ''}
@@ -356,6 +371,7 @@ export function UIElementRender({
         const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
         return (
           <BooleanInput
+            chrome={chrome}
             fieldKey={k}
             value={currentValue}
             disabled={disabled}
@@ -375,6 +391,7 @@ export function UIElementRender({
         const currentValue = typeof state[k] === 'boolean' ? state[k] : null;
         return (
           <Stochasticity
+            chrome={chrome}
             fieldKey={k}
             value={currentValue}
             disabled={disabled}
@@ -397,6 +414,7 @@ export function UIElementRender({
         if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
           return (
             <CircuitGlobal
+              chrome={chrome}
               config={config}
               state={state}
               setState={setState}
@@ -419,6 +437,7 @@ export function UIElementRender({
 
         return (
           <Global
+            chrome={chrome}
             endpoint={
               paramSchema.property_group
                 ? schema.property_endpoints?.[paramSchema.property_group]
@@ -452,6 +471,7 @@ export function UIElementRender({
         if (isCircuitNeuronalManipulationType(manipulationVariantType)) {
           return (
             <CircuitRange
+              chrome={chrome}
               config={config}
               state={state}
               setState={setState}
@@ -474,6 +494,7 @@ export function UIElementRender({
 
         return (
           <Range
+            chrome={chrome}
             endpoint={
               paramSchema.property_group
                 ? schema.property_endpoints?.[paramSchema.property_group]
@@ -501,6 +522,7 @@ export function UIElementRender({
         if (q) {
           return (
             <EntitySelectorSingle
+              chrome={chrome}
               entityType={q.type}
               disabled={disabled}
               // resolve dynamic filters (e.g. circuit_id from `value_from`:
@@ -534,6 +556,7 @@ export function UIElementRender({
         }
         return (
           <EntitySelectorSingle
+            chrome={chrome}
             entityType={resolvedType as unknown as TEntityTypeDict}
             resolveAsType={resolvedType}
             disabled={disabled}
@@ -553,6 +576,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <ETypeSelector
+          chrome={chrome}
           disabled={disabled}
           value={value}
           state={state}
@@ -578,6 +602,7 @@ export function UIElementRender({
 
         return (
           <SelectRecordableIonChannelVariable
+            chrome={chrome}
             value={currentValue}
             disabled={disabled}
             config={config}
@@ -607,6 +632,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <StringSelection
+          chrome={chrome}
           value={typeof value === 'string' ? value : null}
           disabled={disabled}
           paramSchema={paramSchema}
@@ -620,6 +646,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <StringSelectionEnhanced
+          chrome={chrome}
           value={typeof value === 'string' ? value : null}
           disabled={disabled}
           paramSchema={paramSchema}
@@ -637,6 +664,7 @@ export function UIElementRender({
           : [];
         return (
           <StringListInput
+            chrome={chrome}
             value={currentValue}
             disabled={disabled}
             // a disabled field has no editable controls — show the plain list
@@ -652,6 +680,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <AxonModifier
+          chrome={chrome}
           value={typeof value === 'string' ? value : null}
           disabled={disabled}
           paramSchema={paramSchema}
@@ -665,6 +694,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <MorphologySectionTypeSelection
+          chrome={chrome}
           schema={schema}
           entityId={entity?.id}
           property={paramSchema.property}
@@ -681,6 +711,7 @@ export function UIElementRender({
       },
       ({ paramSchema }) => (
         <MorphologyLocationSelection
+          chrome={chrome}
           value={value}
           paramSchema={paramSchema}
           disabled={disabled}
@@ -696,6 +727,7 @@ export function UIElementRender({
         const v = (state[k] ?? []) as unknown as VoltageDurationState[];
         return (
           <VoltageDuration
+            chrome={chrome}
             paramSchema={paramSchema}
             state={v}
             onChange={(newValue: VoltageDurationState[]) =>
@@ -733,6 +765,8 @@ export function UIElementRender({
 
         return (
           <NeuronPropertyFilter
+            chrome={chrome}
+            disabled={disabled}
             properties={properties}
             population={selectedPopulation}
             value={getValue() as unknown as INeuronPropertyFilter[]}
@@ -763,6 +797,7 @@ export function UIElementRender({
 
         return (
           <DiscreteProbabilities
+            chrome={chrome}
             values={asNumbers(value)}
             probabilities={asNumbers(state[DISCRETE_PROBABILITIES_FIELD])}
             disabled={disabled}
@@ -787,6 +822,7 @@ export function UIElementRender({
           : []) as unknown as NeuronSetCombinationEntry[];
         return (
           <NeuronSetCombination
+            chrome={chrome}
             paramSchema={paramSchema}
             value={v}
             config={config}

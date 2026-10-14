@@ -38,6 +38,7 @@ import {
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import { Modal } from '@/ui/molecules/modal';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
@@ -74,7 +75,8 @@ export function EntitySelectorSingle({
   valueType,
   paramSchema,
   resolveAsType,
-}: SelectorModalProps) {
+  chrome,
+}: SelectorModalProps & { chrome?: FancyChrome }) {
   const { virtualLabId, projectId } = useWorkspace();
   const workflowField = useScanConfigWorkflowEditorField();
   const overlayHost = useScanConfigMainOverlayOptional();
@@ -210,57 +212,64 @@ export function EntitySelectorSingle({
 
   return (
     <div
-      className="flex w-full max-w-full min-w-0 flex-col gap-2 overflow-hidden"
+      className="flex w-full max-w-full min-w-0 flex-col gap-2"
       data-scan-config-block-element={ScanConfigUIElementDict.ModelSelectorSingle}
     >
-      {isPending ? <Skeleton className="h-11 w-full rounded-full bg-gray-100" /> : null}
+      <FancyField {...chrome} disabled={disabled}>
+        {/* pt-3 so the border controls, which dip into the field, never touch the row */}
+        <div className="flex flex-col gap-2 px-1.5 pt-3 pb-1.5">
+          {isPending ? <Skeleton className="h-10 w-full rounded-lg bg-gray-100" /> : null}
 
-      {!isPending && selectedRef ? (
-        resolvedEntity ? (
-          <ModelIdentifierEntityCard
-            instanceId={selectedRef.id_str}
-            blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-summary`}
-            collapsibleBadge
-            entityName={resolvedEntity.name}
-            typeLabel={typeTitle}
-            disabled={disabled}
-            selected={
-              entityPreview?.id === resolvedEntity.id &&
-              entityPreview.dataType === resolvedEntity.entityType
-            }
-            onSelect={() =>
-              setEntityPreview({
-                dataType: resolvedEntity.entityType,
-                id: resolvedEntity.id,
-                record: {
-                  ...resolvedEntity,
-                  type: resolvedEntity.type ?? resolvedEntity.entityType,
-                },
-              })
-            }
-            onChange={openBrowse}
-            onRemove={handleRemove}
-          />
-        ) : (
-          <div className="rounded-full border border-dashed border-neutral-2 px-4 py-2.5 text-sm text-gray-500">
-            {selectedRef.id_str}
-          </div>
-        )
-      ) : null}
+          {!isPending && selectedRef ? (
+            resolvedEntity ? (
+              <ModelIdentifierEntityCard
+                instanceId={selectedRef.id_str}
+                blockElement={`${ScanConfigUIElementDict.ModelSelectorSingle}-summary`}
+                collapsibleBadge
+                entityName={resolvedEntity.name}
+                typeLabel={typeTitle}
+                disabled={disabled}
+                selected={
+                  entityPreview?.id === resolvedEntity.id &&
+                  entityPreview.dataType === resolvedEntity.entityType
+                }
+                onSelect={() =>
+                  setEntityPreview({
+                    dataType: resolvedEntity.entityType,
+                    id: resolvedEntity.id,
+                    record: {
+                      ...resolvedEntity,
+                      type: resolvedEntity.type ?? resolvedEntity.entityType,
+                    },
+                  })
+                }
+                onChange={openBrowse}
+                onRemove={handleRemove}
+              />
+            ) : (
+              <div className="rounded-full border border-dashed border-neutral-2 px-4 py-2.5 text-sm text-gray-500">
+                {selectedRef.id_str}
+              </div>
+            )
+          ) : null}
 
-      {!selectedRef && !isPending && !disabled ? (
-        <ModelIdentifierAddActionButton
-          label={`Select ${entityLabel}`}
-          disabled={disabled}
-          onClick={openBrowse}
-        />
-      ) : null}
+          {!selectedRef && !isPending && !disabled ? (
+            <ModelIdentifierAddActionButton
+              label={`Select ${entityLabel}`}
+              disabled={disabled}
+              onClick={openBrowse}
+            />
+          ) : null}
 
-      {/* read-only field with no value: keep an explicit empty state (the old
+          {/* read-only field with no value: keep an explicit empty state (the old
           disabled placeholder) instead of rendering nothing */}
-      {disabled && !selectedRef && !isPending ? (
-        <span className="px-1 text-sm text-gray-400 italic">No {entityLabel} selected</span>
-      ) : null}
+          {disabled && !selectedRef && !isPending ? (
+            <span className="px-1.5 py-1 text-sm text-neutral-4 italic">
+              No {entityLabel} selected
+            </span>
+          ) : null}
+        </div>
+      </FancyField>
 
       {overlayHost ? null : (
         <Modal

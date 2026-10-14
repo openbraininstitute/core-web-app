@@ -1,14 +1,10 @@
-import {
-  CloseOutlined,
-  DeleteOutlined,
-  DownOutlined,
-  PlusOutlined,
-  RightOutlined,
-} from '@ant-design/icons';
-import { Button } from 'antd';
-import { useEffect, useRef, useState } from 'react';
+import { CloseOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { useEffect, useRef } from 'react';
 
-import { cn } from '@/utils/css-class';
+import { FancyCombobox, FancyMultiSelect } from '@/ui/molecules/fancy-combobox';
+import { FancyActions, FancyField } from '@/ui/molecules/fancy-input';
+
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 export interface INeuronPropertyFilter {
   filter_dict: Record<string, string[]>;
@@ -19,11 +15,15 @@ export default function NeuronPropertyFilter({
   properties,
   population,
   onChange,
+  disabled = false,
+  chrome,
 }: {
   value: INeuronPropertyFilter[];
   properties: Record<string, string[]>;
   population: string;
   onChange: (newValue: INeuronPropertyFilter[]) => void;
+  disabled?: boolean;
+  chrome?: FancyChrome;
 }) {
   // properties differ between populations; any previously selected filter is
   // invalid once the population changes and must be reset. Tracking the previous
@@ -37,206 +37,121 @@ export default function NeuronPropertyFilter({
     }
   }, [population, onChange]);
 
-  // no properties to filter on: the status line (rendered by the block) already
-  // explains why ("Select a population" / "No properties available"), so render
-  // nothing here to avoid a duplicate, conflicting message.
-  if (Object.keys(properties).length === 0) return null;
+  // Nothing to filter on: say why inside the field instead of leaving an empty frame.
+  if (Object.keys(properties).length === 0) {
+    return (
+      <FancyField {...chrome} disabled={disabled}>
+        <p className="px-3 py-2 text-sm text-neutral-4">
+          {population
+            ? 'This population has no properties to filter on.'
+            : 'Select a population first.'}
+        </p>
+      </FancyField>
+    );
+  }
+
+  const setFilter = (i: number, filter_dict: Record<string, string[]>) =>
+    onChange(value.with(i, { filter_dict }));
 
   return (
-    <div className="flex flex-col gap-3">
-      {value.map((f, i) => {
-        const handleValuesChange = (property: string, selected: string[]) =>
-          onChange(value.with(i, { filter_dict: { ...f.filter_dict, [property]: selected } }));
-
-        return (
-          <div
-            // biome-ignore lint/suspicious/noArrayIndexKey: no stable unique key available
-            key={i}
-            className="border border-gray-300 rounded-md relative p-3 flex flex-col gap-2 pt-2"
-          >
-            {value.length > 1 && (
-              <DeleteOutlined
-                className="absolute top-1 right-1 text-gray-400 cursor-pointer text-sm"
-                onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-              />
-            )}
-            {Object.keys(f.filter_dict).map((p, idx) => (
-              <PropertyValueSelector
-                index={idx + 1}
-                propertyName={p}
-                key={p}
-                values={properties[p] ?? []}
-                selected={f.filter_dict[p]}
-                onValuesChange={(selected) => handleValuesChange(p, selected)}
-                onDelete={() => {
-                  const { [p]: _, ...rest } = f.filter_dict;
-                  onChange(value.with(i, { filter_dict: rest }));
-                }}
-              />
-            ))}
-            <div className="w-full flex flex-col mt-[10px]">
-              <DropdownSelect
-                placeholder="Add new property"
-                options={Object.keys(properties)
-                  .filter((key) => !(key in f.filter_dict))
-                  .map((key) => ({ label: key, value: key }))}
-                onChange={(selectedKey: string) => {
-                  const updated = [...value];
-                  updated[i] = {
-                    filter_dict: { ...updated[i].filter_dict, [selectedKey]: [] },
-                  };
-                  onChange(updated);
-                }}
-              />
-            </div>
-          </div>
-        );
-      })}
-
-      <Button
-        className="p-5 rounded-full text-primary-8 font-semibold bg-transparent self-end"
-        onClick={() => {
-          onChange([...value, { filter_dict: {} }]);
-        }}
-      >
-        Add a filter
-      </Button>
-    </div>
-  );
-}
-
-function DropdownSelect({
-  placeholder,
-  options,
-  onChange,
-}: {
-  placeholder: string;
-  options: { label: string; value: string }[];
-  onChange: (value: string) => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative w-full">
-      <div
-        className={cn('w-full border border-gray-300', isOpen ? 'rounded-[18px]' : 'rounded-full')}
-      >
-        <button
-          type="button"
-          className={cn(
-            'w-full font-semibold px-3 py-[6px] flex justify-between',
-            isOpen ? 'text-gray-300' : 'text-primary-8'
-          )}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          {placeholder}
-          {isOpen ? <CloseOutlined /> : <PlusOutlined />}
-        </button>
-        {isOpen && (
-          <div>
-            {options.length === 0 ? (
-              <div className="px-3 py-2 text-sm text-gray-400">No options available</div>
-            ) : (
-              options.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  className="block w-full px-3 py-2 text-left hover:bg-gray-100 text-primary-8 font-semibold"
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                >
-                  {option.label}
-                </button>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function PropertyValueSelector({
-  index,
-  propertyName,
-  values,
-  selected,
-  onValuesChange,
-  onDelete,
-}: {
-  index: number;
-  propertyName: string;
-  values: string[];
-  selected: string[];
-  onValuesChange: (selected: string[]) => void;
-  onDelete: () => void;
-}) {
-  const [expanded, setExpanded] = useState(true);
-
-  // some populations expose empty-string values (e.g. an unset model_template);
-  // drop them so they don't render as blank, unclickable pills.
-  const displayValues = values.filter((val) => val.trim() !== '');
-
-  const toggle = (val: string) => {
-    if (selected.includes(val)) {
-      onValuesChange(selected.filter((s) => s !== val));
-    } else {
-      onValuesChange([...selected, val]);
-    }
-  };
-
-  return (
-    <div
-      className={cn({
-        'mt-2': index === 1,
-      })}
+    <FancyField
+      {...chrome}
+      group
+      disabled={disabled}
+      borderActions={
+        <FancyActions
+          onBorder
+          disabled={disabled}
+          actions={[
+            {
+              key: 'add-filter',
+              label: 'Add a filter',
+              icon: <PlusOutlined />,
+              onClick: () => onChange([...value, { filter_dict: {} }]),
+            },
+          ]}
+        />
+      }
     >
-      <div className="flex items-center gap-2 w-full">
-        <DeleteOutlined className="text-gray-400 cursor-pointer text-xs" onClick={onDelete} />
-        <button
-          type="button"
-          className="font-semibold cursor-pointer text-primary-8"
-          onClick={() => setExpanded(!expanded)}
-        >
-          <span className="text-gray-300 mr-2">{index}.</span> {propertyName}
-        </button>
-        <div className="flex-1" />
-        {expanded && (
-          <DownOutlined className="relative right-[3px]" onClick={() => setExpanded(!expanded)} />
-        )}
-
-        {!expanded && (
-          <RightOutlined className="relative top-[3px]" onClick={() => setExpanded(!expanded)} />
-        )}
+      {/* Filters are sections of this one field, split by a rule; the heading only appears
+          once there is more than one to tell apart. */}
+      <div className="divide-y divide-neutral-2">
+        {value.map((f, i) => {
+          const unused = Object.keys(properties).filter((key) => !(key in f.filter_dict));
+          return (
+            <section
+              // biome-ignore lint/suspicious/noArrayIndexKey: filters are positional
+              key={i}
+              aria-label={`Filter ${i + 1}`}
+              className="flex flex-col gap-4 p-2.5 first:pt-4"
+            >
+              {value.length > 1 && (
+                <div className="-mb-2 flex items-center justify-between ps-1">
+                  <span className="text-xs font-medium text-neutral-4">Filter {i + 1}</span>
+                  <FancyActions
+                    disabled={disabled}
+                    actions={[
+                      {
+                        key: 'remove-filter',
+                        label: `Remove filter ${i + 1}`,
+                        icon: <DeleteOutlined />,
+                        onClick: () => onChange(value.filter((_, idx) => idx !== i)),
+                      },
+                    ]}
+                  />
+                </div>
+              )}
+              {Object.keys(f.filter_dict).map((p) => {
+                const selected = f.filter_dict[p];
+                return (
+                  <FancyMultiSelect
+                    key={p}
+                    label={p}
+                    disabled={disabled}
+                    searchable
+                    maxBadges={6}
+                    // Some populations expose empty-string values; they'd render as blank rows.
+                    options={(properties[p] ?? [])
+                      .filter((v) => v.trim() !== '')
+                      .map((v) => ({ value: v, label: v }))}
+                    values={selected}
+                    onChange={(next) => setFilter(i, { ...f.filter_dict, [p]: next })}
+                    variant={selected.length === 0 ? 'warning' : 'default'}
+                    helperText={selected.length === 0 ? 'Pick at least one value' : undefined}
+                    emptyLabel="No values available"
+                    borderActions={
+                      <FancyActions
+                        onBorder
+                        disabled={disabled}
+                        actions={[
+                          {
+                            key: 'remove-property',
+                            label: `Remove ${p}`,
+                            icon: <CloseOutlined />,
+                            onClick: () => {
+                              const { [p]: _, ...rest } = f.filter_dict;
+                              setFilter(i, rest);
+                            },
+                          },
+                        ]}
+                      />
+                    }
+                  />
+                );
+              })}
+              {unused.length > 0 && (
+                <FancyCombobox
+                  disabled={disabled}
+                  placeholder="Add a property…"
+                  options={unused.map((key) => ({ value: key, label: key }))}
+                  values={[]}
+                  onChange={([key]) => key && setFilter(i, { ...f.filter_dict, [key]: [] })}
+                />
+              )}
+            </section>
+          );
+        })}
       </div>
-      {expanded && (
-        <div
-          className={cn(
-            'flex flex-wrap gap-2 mt-1 text-sm rounded-md p-3 bg-white',
-            selected.length === 0 ? 'border-2 border-yellow-400' : 'border border-gray-300'
-          )}
-        >
-          {displayValues.length === 0 && <span className="text-gray-400">No values available</span>}
-          {displayValues.map((val) => {
-            const isSelected = selected.includes(val);
-            return (
-              <button
-                key={val}
-                type="button"
-                className={cn(
-                  'rounded-full border px-3 py-1 transition-colors border-gray-200 text-primary-8',
-                  isSelected ? 'bg-gray-300 font-semibold' : 'bg-white hover:bg-gray-200'
-                )}
-                onClick={() => toggle(val)}
-              >
-                {val}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
+    </FancyField>
   );
 }

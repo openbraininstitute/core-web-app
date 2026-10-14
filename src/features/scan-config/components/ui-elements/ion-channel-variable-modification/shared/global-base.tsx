@@ -22,6 +22,8 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/selector';
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
+
 export interface GlobalModificationBaseProps {
   data: MechanismVariablesRoot | null;
   disabled: boolean;
@@ -30,6 +32,8 @@ export interface GlobalModificationBaseProps {
   fieldKey: string;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
   /** Whether mechanism variables are still loading. */
   loading?: boolean;
   /** Status note when the picker is unavailable (error / empty). */
@@ -51,6 +55,7 @@ export function GlobalModificationBase({
   fieldKey,
   modificationType,
   errorPathPrefix,
+  chrome,
   loading = false,
   reason = null,
 }: GlobalModificationBaseProps) {
@@ -152,6 +157,7 @@ export function GlobalModificationBase({
       data={data}
       loading={loading}
       reason={reason}
+      chrome={chrome}
     >
       <IonChannelVariableSelector
         data={data ?? {}}

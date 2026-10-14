@@ -1,9 +1,10 @@
 import { CloseOutlined } from '@ant-design/icons';
-import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
-import { useCallback } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { FancyNumberInput } from '@/ui/molecules/fancy-input';
+
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 const UNSET_PLACEHOLDER = 'Not set';
 
@@ -23,6 +24,7 @@ export function FloatOptional({
   exclusiveMax,
   onChange,
   disabled,
+  chrome,
 }: {
   value: number | null;
   min: number | undefined;
@@ -31,6 +33,7 @@ export function FloatOptional({
   exclusiveMax: number | undefined;
   onChange: (value: number | null) => void;
   disabled: boolean;
+  chrome?: FancyChrome;
 }) {
   const errorMessage = (() => {
     if (isNil(value)) return undefined;
@@ -42,40 +45,30 @@ export function FloatOptional({
       return `Value should be less than ${exclusiveMax}`;
   })();
 
-  const handleClear = useCallback(() => {
-    onChange(null);
-  }, [onChange]);
-
   return (
-    <div
-      className="relative"
-      data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}
-    >
-      <InputNumber
+    <div data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}>
+      <FancyNumberInput
+        {...chrome}
         data-testid="scan-config-optional-value"
-        controls={false}
         disabled={disabled}
-        status={errorMessage ? 'error' : undefined}
         value={value}
         placeholder={UNSET_PLACEHOLDER}
-        onChange={onChange}
-        className="w-full"
+        error={errorMessage ?? chrome?.error}
+        onValueChange={onChange}
+        actions={
+          !disabled && !isNil(value)
+            ? [
+                {
+                  key: 'clear',
+                  'data-testid': 'scan-config-optional-clear',
+                  label: 'Clear value',
+                  icon: <CloseOutlined />,
+                  onClick: () => onChange(null),
+                },
+              ]
+            : undefined
+        }
       />
-
-      {errorMessage && <span className="text-red-500">{errorMessage}</span>}
-
-      {!disabled && !isNil(value) && (
-        <button
-          type="button"
-          data-testid="scan-config-optional-clear"
-          aria-label="Clear value"
-          title="Clear value"
-          className="absolute top-[10px] right-[8px]"
-          onClick={handleClear}
-        >
-          <CloseOutlined className="text-primary-8!" />
-        </button>
-      )}
     </div>
   );
 }

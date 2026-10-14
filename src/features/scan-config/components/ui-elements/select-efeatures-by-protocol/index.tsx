@@ -10,6 +10,7 @@ import {
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
 import {
@@ -84,6 +85,7 @@ export function SelectEFeaturesByProtocol({
   disabled,
   renderField,
   errorPathPrefix,
+  chrome,
 }: {
   fieldKey: string;
   value: ConfigValue;
@@ -95,6 +97,7 @@ export function SelectEFeaturesByProtocol({
   disabled: boolean;
   renderField: TRenderField;
   errorPathPrefix?: string;
+  chrome?: FancyChrome;
 }) {
   const workspace = useWorkspace();
   const [expandedProtocols, setExpandedProtocols] = useState<Set<string>>(new Set());
@@ -209,75 +212,79 @@ export function SelectEFeaturesByProtocol({
   const docUrlFor = (feature: TFeatureDef) => efelDocUrl(schema, feature);
 
   return (
-    <div
-      className="flex flex-col gap-3"
-      data-scan-config-block-element={ScanConfigUIElementDict.SelectEFeaturesByProtocol}
-    >
-      {selectionErrors.map(({ key, message }) => (
-        <FieldErrorRegistrar key={key} path={`${errorPrefix}/${key}`} message={message} />
-      ))}
-
-      <Checkbox
-        disabled={disabled || offeredDefs.length === 0}
-        checked={allSelected}
-        indeterminate={someSelected && !allSelected}
-        onChange={(event) => toggleAll(event.target.checked)}
-      >
-        Automatically fill the features and protocols
-      </Checkbox>
-
-      {isError && (
-        <Alert
-          type="warning"
-          showIcon
-          message="Could not read the protocols for the selected recordings"
-          description="Protocols are discovered from the recordings' NWB files; without them there is nothing to configure here."
-        />
-      )}
-
-      {isLoading && offeredDefs.length === 0 && <ProtocolCardSkeletons />}
-
-      {!isLoading && !isError && offeredDefs.length === 0 && (
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={
-            hasSelectedRecordings
-              ? 'No protocols found in the selected recordings.'
-              : 'Select electrophysiology recordings to discover the protocols they contain.'
-          }
-        />
-      )}
-
-      {offeredDefs.length > 0 && (
-        <ul className="flex flex-col gap-2">
-          {offeredDefs.map((def) => (
-            <li key={def.typeName} id={`protocol-card-list-item-${def.typeName}`}>
-              <ProtocolCard
-                def={def}
-                catalogueDefs={catalogueDefs}
-                value={selectedByType.get(def.typeName)}
-                expanded={expandedProtocols.has(def.typeName)}
-                disabled={disabled}
-                discoveredAmplitudes={amplitudesFor(def)}
-                docUrlFor={docUrlFor}
-                renderField={renderField}
-                onToggleSelected={(selected) => toggleSelected(def, selected)}
-                onToggleExpanded={() =>
-                  setExpandedProtocols((current) => {
-                    const next = new Set(current);
-                    if (!next.delete(def.typeName)) next.add(def.typeName);
-                    return next;
-                  })
-                }
-                onChange={(next) => replaceProtocol(def.typeName, next)}
-                onResetFeatures={() =>
-                  replaceProtocol(def.typeName, makeFilledProtocolValue(def, amplitudesFor(def)))
-                }
-              />
-            </li>
+    <div data-scan-config-block-element={ScanConfigUIElementDict.SelectEFeaturesByProtocol}>
+      <FancyField {...chrome} group disabled={disabled}>
+        <div className="flex flex-col gap-3 px-2 pt-4 pb-2">
+          {selectionErrors.map(({ key, message }) => (
+            <FieldErrorRegistrar key={key} path={`${errorPrefix}/${key}`} message={message} />
           ))}
-        </ul>
-      )}
+
+          <Checkbox
+            disabled={disabled || offeredDefs.length === 0}
+            checked={allSelected}
+            indeterminate={someSelected && !allSelected}
+            onChange={(event) => toggleAll(event.target.checked)}
+          >
+            Automatically fill the features and protocols
+          </Checkbox>
+
+          {isError && (
+            <Alert
+              type="warning"
+              showIcon
+              message="Could not read the protocols for the selected recordings"
+              description="Protocols are discovered from the recordings' NWB files; without them there is nothing to configure here."
+            />
+          )}
+
+          {isLoading && offeredDefs.length === 0 && <ProtocolCardSkeletons />}
+
+          {!isLoading && !isError && offeredDefs.length === 0 && (
+            <Empty
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+              description={
+                hasSelectedRecordings
+                  ? 'No protocols found in the selected recordings.'
+                  : 'Select electrophysiology recordings to discover the protocols they contain.'
+              }
+            />
+          )}
+
+          {offeredDefs.length > 0 && (
+            <ul className="flex flex-col gap-2">
+              {offeredDefs.map((def) => (
+                <li key={def.typeName} id={`protocol-card-list-item-${def.typeName}`}>
+                  <ProtocolCard
+                    def={def}
+                    catalogueDefs={catalogueDefs}
+                    value={selectedByType.get(def.typeName)}
+                    expanded={expandedProtocols.has(def.typeName)}
+                    disabled={disabled}
+                    discoveredAmplitudes={amplitudesFor(def)}
+                    docUrlFor={docUrlFor}
+                    renderField={renderField}
+                    onToggleSelected={(selected) => toggleSelected(def, selected)}
+                    onToggleExpanded={() =>
+                      setExpandedProtocols((current) => {
+                        const next = new Set(current);
+                        if (!next.delete(def.typeName)) next.add(def.typeName);
+                        return next;
+                      })
+                    }
+                    onChange={(next) => replaceProtocol(def.typeName, next)}
+                    onResetFeatures={() =>
+                      replaceProtocol(
+                        def.typeName,
+                        makeFilledProtocolValue(def, amplitudesFor(def))
+                      )
+                    }
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </FancyField>
     </div>
   );
 }

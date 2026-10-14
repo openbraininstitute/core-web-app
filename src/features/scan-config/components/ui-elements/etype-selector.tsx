@@ -18,6 +18,7 @@ import { isFromIdRef } from '@/features/scan-config/helpers';
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { AsyncSelect } from '@/ui/molecules/async-select';
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IEType, IETypeFilter } from '@/api/entitycore/types/shared/global';
@@ -32,7 +33,15 @@ interface Props {
   valueType?: string;
 }
 
-export function ETypeSelector({ disabled, value, state, fieldKey, onChange, valueType }: Props) {
+export function ETypeSelector({
+  disabled,
+  value,
+  state,
+  fieldKey,
+  onChange,
+  valueType,
+  chrome,
+}: Props & { chrome?: FancyChrome }) {
   const { virtualLabId, projectId } = useWorkspace();
 
   const selectedRef = isFromIdRef(value) ? value : null;
@@ -83,29 +92,38 @@ export function ETypeSelector({ disabled, value, state, fieldKey, onChange, valu
       ? (selectedEtype.pref_label ?? selectedEtype.alt_label)
       : selectedId;
     return (
-      <div className="border-neutral-2 rounded-full border px-4 py-2.5 text-sm text-gray-500">
-        {label ?? 'No e-type selected'}
-      </div>
+      <FancyField {...chrome} disabled>
+        <div className="px-3 py-2 text-sm text-primary-9">{label ?? 'No e-type selected'}</div>
+      </FancyField>
     );
   }
 
   return (
-    <AsyncSelect<IETypeFilter, IEType>
-      id="scan-config-etype-selector"
-      dataKey={dataKey}
-      queryFn={queryFn}
-      getOptionLabel={getOptionLabel}
-      getOptionValue={(etype) => etype.id}
-      selectedValue={selectedId}
-      placeholder={
-        selectedEtype ? (selectedEtype.pref_label ?? selectedEtype.alt_label) : 'Select an e-type…'
-      }
-      searchPlaceholder="Search e-type…"
-      searchable
-      searchField="pref_label__ilike"
-      onSelect={handleSelect}
-      clsx={{ trigger: 'rounded-full h-11', content: 'z-[99999]' }}
-    />
+    <FancyField {...chrome}>
+      <AsyncSelect<IETypeFilter, IEType>
+        id="scan-config-etype-selector"
+        dataKey={dataKey}
+        queryFn={queryFn}
+        getOptionLabel={getOptionLabel}
+        getOptionValue={(etype) => etype.id}
+        selectedValue={selectedId}
+        placeholder={
+          selectedEtype
+            ? (selectedEtype.pref_label ?? selectedEtype.alt_label)
+            : 'Select an e-type…'
+        }
+        searchPlaceholder="Search e-type…"
+        searchable
+        searchField="pref_label__ilike"
+        onSelect={handleSelect}
+        // the field frame draws the border; the trigger is just the row inside it
+        clsx={{
+          trigger:
+            'h-10 rounded-lg border-0 pl-3 shadow-none hover:border-0 active:border-0 text-sm',
+          content: 'z-[99999]',
+        }}
+      />
+    </FancyField>
   );
 }
 

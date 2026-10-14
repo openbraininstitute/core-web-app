@@ -1,17 +1,19 @@
 'use client';
 
-import { Select } from 'antd';
 import { useId } from 'react';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { FancyCombobox } from '@/ui/molecules/fancy-combobox';
 
 import type { StringSelection as TStringSelection } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 
 export interface IStringSelectionProps {
   value: string | null;
   onChange: (value: string) => void;
   disabled?: boolean;
   paramSchema: TStringSelection;
+  chrome?: FancyChrome;
 }
 
 /**
@@ -24,28 +26,29 @@ export function StringSelection({
   onChange,
   disabled = false,
   paramSchema,
+  chrome,
 }: IStringSelectionProps) {
   const dropdownId = useId();
   const options = paramSchema.enum.map((key) => ({ label: key, value: key }));
 
   return (
-    <Select
+    <FancyCombobox
+      {...chrome}
       data-testid="scan-config-control"
       data-scan-config-options={dropdownId}
       data-scan-config-block-element={ScanConfigUIElementDict.StringSelection}
-      className="w-full"
       disabled={disabled}
-      optionRender={(option) => (
+      options={options}
+      values={value === null ? [] : [value]}
+      onChange={([next]) => next !== undefined && onChange(next)}
+      renderOption={(option) => (
         <span
-          data-testid={`scan-config-option-${String(option.value)}`}
+          data-testid={`scan-config-option-${option.value}`}
           data-scan-config-option-of={dropdownId}
         >
           {option.label}
         </span>
       )}
-      onChange={(newValue: string) => onChange(newValue)}
-      value={value}
-      options={options}
     />
   );
 }

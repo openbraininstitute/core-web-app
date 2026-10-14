@@ -55,14 +55,14 @@ export function ModelIdentifierAddActionButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'grid h-auto min-h-11 w-full max-w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] px-4 py-2.5 pr-2',
-        'items-center gap-2 overflow-hidden rounded-full border border-gray-200 bg-white text-sm text-primary-9',
-        'transition-colors hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50',
+        'group/add grid h-auto min-h-10 w-full max-w-full min-w-0 cursor-pointer grid-cols-[minmax(0,1fr)_auto]',
+        'items-center gap-2 overflow-hidden rounded-lg px-3 py-2 text-sm text-primary-9',
+        'transition-colors hover:bg-neutral-1 disabled:cursor-not-allowed disabled:opacity-50',
         className
       )}
     >
       <span className="min-w-0 truncate text-left">{label}</span>
-      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-white text-xs text-primary-9">
+      <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full text-xs text-primary-8 transition-colors group-hover/add:bg-primary-8 group-hover/add:text-white">
         <PlusOutlined />
       </span>
     </button>
@@ -179,7 +179,7 @@ export function ModelIdentifierSummaryView({
 
       if (!entity) {
         if (pendingIds.has(ref.id_str)) {
-          return <Skeleton key={ref.id_str} className="h-11 w-full rounded-full" />;
+          return <Skeleton key={ref.id_str} className="h-10 w-full rounded-lg" />;
         }
 
         return (
@@ -229,11 +229,7 @@ export function ModelIdentifierSummaryView({
         key={groupIndex}
         id={`model-identifier-multiple-summary-view-group-${groupIndex}_${instanceId}`}
         data-testid={`model-identifier-multiple-summary-view-group`}
-        className={cn(
-          'flex w-full max-w-full min-w-0 flex-col gap-3 overflow-hidden',
-          'rounded-2xl border border-neutral-2 bg-white p-4',
-          'hover:inset-shadow-sm hover:bg-gray-50'
-        )}
+        className="flex w-full max-w-full min-w-0 flex-col gap-2 overflow-hidden py-3 first:pt-0"
       >
         <div className="flex min-w-0 items-center gap-3 pb-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
@@ -298,7 +294,7 @@ export function ModelIdentifierSummaryView({
 
   if (parsedValue.storageMode === ModelIdentifierFieldStorageMode.Grouped) {
     return (
-      <div className="flex w-full max-w-full min-w-0 flex-col gap-3 overflow-hidden">
+      <div className="flex w-full max-w-full min-w-0 flex-col divide-y divide-neutral-2 overflow-hidden">
         {parsedValue.groups.map((group, groupIndex) => renderGroupCard(group, groupIndex))}
 
         {onAddGroup ? (
@@ -316,15 +312,15 @@ export function ModelIdentifierSummaryView({
     <div
       id={`model-identifier-multiple-summary-view-${parsedValue.storageMode}_${instanceId}`}
       data-testid={`model-identifier-multiple-summary-view`}
-      className={cn(
-        'flex w-full max-w-full min-w-0 flex-col gap-3 overflow-hidden',
-        'rounded-2xl border border-neutral-2 bg-white p-4'
-      )}
+      className="flex w-full max-w-full min-w-0 flex-col gap-1 overflow-hidden"
     >
-      <ScrollableList itemCount={parsedValue.items.length} visibleItemCount={visibleItemCount}>
-        {renderEntityCards(parsedValue.items)}
-      </ScrollableList>
+      {parsedValue.items.length > 0 && (
+        <ScrollableList itemCount={parsedValue.items.length} visibleItemCount={visibleItemCount}>
+          {renderEntityCards(parsedValue.items)}
+        </ScrollableList>
+      )}
       <ModelIdentifierAddActionButton
+        className={cn(parsedValue.items.length > 0 && 'border-t border-neutral-2 rounded-t-none')}
         label={addToScanLabel}
         disabled={disabled}
         onClick={() => onAddEntities()}

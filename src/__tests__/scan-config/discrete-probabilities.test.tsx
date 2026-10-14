@@ -46,7 +46,7 @@ describe('DiscreteProbabilities', () => {
   it('adds a whole row, so the two arrays cannot drift apart', () => {
     const onChange = renderTable([1, 2], [0.5, 0.5]);
 
-    fireEvent.click(screen.getByText('Add value'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add value' }));
 
     const [values, probabilities] = onChange.mock.calls[0];
     expect(values).toHaveLength(probabilities.length);
@@ -92,7 +92,7 @@ describe('DiscreteProbabilities', () => {
   it('adds the new row after the last one when the arrays differ in length', () => {
     const onChange = renderTable([1, 2, 3, 4], [0.5, 0.5]);
 
-    fireEvent.click(screen.getByText('Add value'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add value' }));
 
     expect(onChange).toHaveBeenCalledWith([1, 2, 3, 4, 5], [0.5, 0.5, 0, 0, 0]);
   });
@@ -100,7 +100,7 @@ describe('DiscreteProbabilities', () => {
   it('offers no editing controls when disabled', () => {
     renderTable([1, 2], [0.5, 0.5], { disabled: true });
 
-    expect(screen.queryByText('Add value')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add value' })).toBeNull();
     expect(screen.queryByLabelText('Remove value 1')).toBeNull();
   });
 });

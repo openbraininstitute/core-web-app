@@ -2,6 +2,8 @@
 
 import { LoadingOutlined } from '@ant-design/icons';
 
+import { type FancyChrome, FancyField } from '@/ui/molecules/fancy-input';
+
 import type { MechanismVariablesRoot } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/mapping';
 import type { TScanConfigUIElementDict } from '@/features/scan-config/types';
 
@@ -9,7 +11,7 @@ const LOADING_MESSAGE = 'Loading variables…';
 
 /** inline status note shown in place of the variable picker (loading/gated/empty). */
 function ModificationNote({ children }: { children: React.ReactNode }) {
-  return <div className="px-1 py-2 text-base text-gray-400">{children}</div>;
+  return <div className="px-3 py-2 text-sm text-neutral-4">{children}</div>;
 }
 
 export interface ModificationShellProps {
@@ -19,6 +21,8 @@ export interface ModificationShellProps {
   /** status note shown in place of the picker (error / no variables); null when usable */
   reason: React.ReactNode | null;
   children: React.ReactNode;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 }
 
 /**
@@ -33,20 +37,23 @@ export function ModificationShell({
   loading,
   reason,
   children,
+  chrome,
 }: ModificationShellProps) {
   if (!loading && !reason && !data) return null;
 
   return (
     <div data-scan-config-block-element={uiElement}>
-      {loading ? (
-        <ModificationNote>
-          {LOADING_MESSAGE} <LoadingOutlined className="ml-1" />
-        </ModificationNote>
-      ) : reason ? (
-        <ModificationNote>{reason}</ModificationNote>
-      ) : (
-        children
-      )}
+      <FancyField {...chrome} group>
+        {loading ? (
+          <ModificationNote>
+            {LOADING_MESSAGE} <LoadingOutlined className="ml-1" />
+          </ModificationNote>
+        ) : reason ? (
+          <ModificationNote>{reason}</ModificationNote>
+        ) : (
+          children
+        )}
+      </FancyField>
     </div>
   );
 }

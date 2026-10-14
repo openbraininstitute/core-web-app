@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  CloseOutlined,
-  DeleteOutlined,
-  InfoCircleOutlined,
-  LinkOutlined,
-  ReloadOutlined,
-} from '@ant-design/icons';
+import { CloseOutlined, DeleteOutlined, LinkOutlined, ReloadOutlined } from '@ant-design/icons';
 import {
   RiAddLine,
   RiArrowDownSLine,
@@ -27,6 +21,9 @@ import {
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { renderMathInText } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/render-mathematic-symbol';
+import { FancyActions } from '@/ui/molecules/fancy-input';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { cn } from '@/utils/css-class';
 
 import {
@@ -38,6 +35,7 @@ import {
 } from './helpers';
 
 import type { ConfigValue, ParamSchema } from '@/features/scan-config/types';
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
 import type {
   TExtractionAmplitude,
   TFeatureCategory,
@@ -59,6 +57,8 @@ export type TRenderField = (args: {
   paramSchema: ParamSchema;
   state: Record<string, ConfigValue>;
   setState: (next: Record<string, ConfigValue>) => void;
+  /** Title, info and unit for the field's own frame. */
+  chrome?: FancyChrome;
 }) => React.ReactNode;
 
 /** eFEL keys are what scientists recognise; the humanised class name is only a fallback. */
@@ -97,35 +97,33 @@ function FieldRow({
   const label = title ?? fieldKey;
 
   return (
-    // the label row is scoped to the input's own column so the unit stays pinned to the input's
-    // right edge; keeping them in one row would shift the unit over the clear button whenever
-    // that button appears
-    <div className="flex items-end gap-2">
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            <span className="text-xs tracking-wide text-gray-500 uppercase">{label}</span>
-            {description && (
-              <Tooltip title={description}>
-                <InfoCircleOutlined className="text-xs text-gray-400" />
-              </Tooltip>
-            )}
-          </span>
-          {units && <span className="shrink-0 text-xs text-gray-400">{units}</span>}
-        </div>
-        {renderField({ fieldKey, paramSchema, state, setState })}
+    // the field draws its own label, unit and info; only the reset-to-default sits beside it
+    <div className="flex items-center gap-1">
+      <div className="min-w-0 flex-1">
+        {renderField({
+          fieldKey,
+          paramSchema,
+          state,
+          setState,
+          chrome: {
+            label,
+            unit: units ? renderMathInText(units) : undefined,
+            labelInfo: description ?? undefined,
+          },
+        })}
       </div>
       {onRemove && (
-        <button
-          type="button"
+        <FancyActions
           disabled={disabled}
-          aria-label={`Remove ${label}`}
-          title={`Remove ${label}`}
-          onClick={onRemove}
-          className="shrink-0 pb-2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
-        >
-          <DeleteOutlined />
-        </button>
+          actions={[
+            {
+              key: 'remove',
+              label: `Remove ${label}`,
+              icon: <DeleteOutlined />,
+              onClick: onRemove,
+            },
+          ]}
+        />
       )}
     </div>
   );
@@ -265,7 +263,7 @@ function SettingsForm({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      {description && <p className="text-sm text-gray-500">{description}</p>}
+      <MarkdownDescription className="text-sm text-gray-500">{description}</MarkdownDescription>
       {children}
     </div>
   );
@@ -842,11 +840,11 @@ export function ProtocolCard({
           <h4 className={cn('truncate font-bold', selected ? 'text-white' : 'text-primary-9')}>
             {def.label}
           </h4>
-          {def.description && (
-            <p className={cn('text-xs', selected ? 'text-white/70' : 'line-clamp-2 text-gray-500')}>
-              {def.description}
-            </p>
-          )}
+          <MarkdownDescription
+            className={cn('text-xs', selected ? 'text-white/70' : 'line-clamp-2 text-gray-500')}
+          >
+            {def.description}
+          </MarkdownDescription>
         </button>
 
         {selected && value && (

@@ -7,11 +7,14 @@ import {
   type StringSelectionEnhanced as TStringSelectionEnhanced,
 } from '@/features/scan-config/types';
 
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
+
 export interface IAxonModifierProps {
   value: string | null;
   onChange: (value: string) => void;
   disabled?: boolean;
   paramSchema: TAxonModifier;
+  chrome?: FancyChrome;
 }
 
 /**
@@ -21,7 +24,13 @@ export interface IAxonModifierProps {
  * maps), so this is a thin wrapper that re-tags the schema and delegates to
  * {@link StringSelectionEnhanced} for the actual dropdown.
  */
-export function AxonModifier({ value, onChange, disabled, paramSchema }: IAxonModifierProps) {
+export function AxonModifier({
+  value,
+  onChange,
+  disabled,
+  paramSchema,
+  chrome,
+}: IAxonModifierProps) {
   const stringSelectionSchema: TStringSelectionEnhanced = {
     ...paramSchema,
     ui_element: ScanConfigUIElementDict.StringSelectionEnhanced,
@@ -33,6 +42,7 @@ export function AxonModifier({ value, onChange, disabled, paramSchema }: IAxonMo
       onChange={onChange}
       disabled={disabled}
       paramSchema={stringSelectionSchema}
+      chrome={chrome}
     />
   );
 }

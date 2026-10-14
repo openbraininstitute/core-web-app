@@ -6,11 +6,15 @@ import {
 } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/use-circuit-manipulation-data';
 import { GlobalModificationBase } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/global-base';
 
+import type { FancyChrome } from '@/ui/molecules/fancy-input';
+
 /** Props for the Circuit full-neuron variable modification UI. */
 export type CircuitGlobalProps = TUseCircuitManipulationDataParams & {
   disabled: boolean;
   modificationType: string;
   errorPathPrefix?: string;
+  /** Title, info and message for the field frame. */
+  chrome?: FancyChrome;
 };
 
 /**
@@ -31,6 +35,7 @@ export function CircuitGlobal({
   disabled,
   modificationType,
   errorPathPrefix,
+  chrome,
 }: CircuitGlobalProps) {
   const { data, loading, reason } = useCircuitManipulationData({
     config,
@@ -53,6 +58,7 @@ export function CircuitGlobal({
       fieldKey={fieldKey}
       modificationType={modificationType}
       errorPathPrefix={errorPathPrefix}
+      chrome={chrome}
     />
   );
 }
