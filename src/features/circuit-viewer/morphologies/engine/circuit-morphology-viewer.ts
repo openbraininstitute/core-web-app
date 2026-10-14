@@ -16,7 +16,14 @@ import {
   minRadius,
   writeElectrodes,
 } from './electrodes';
-import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
+import {
+  cellNearMiddle,
+  idMaterial,
+  impostor,
+  impostorUniforms,
+  NO_CELL,
+  setSectionColours,
+} from './impostors';
 import {
   GLOW_SWELL,
   somaCloudIdMaterial,
@@ -251,7 +258,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     segments
       .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
       .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
-      .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1));
+      .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1))
+      .setAttribute('aType', new THREE.InstancedBufferAttribute(data.segmentTypes, 1));
     const segmentMesh = quads(segments, this.look.material);
     this.chunks.add(segmentMesh);
 
@@ -697,6 +705,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private paint(): void {
     if (!this.table) return;
     this.table.paint(this.colors, this.defaultColor);
+    const sections = this.table.sectionColors;
+    if (sections) setSectionColours(this.uniforms, sections);
     this.invalidate();
   }
 

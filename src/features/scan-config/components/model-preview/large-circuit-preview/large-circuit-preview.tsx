@@ -6,6 +6,7 @@ import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
+import { cellColorsOf } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
@@ -26,7 +27,6 @@ import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type {
-  CellColors,
   CircuitSomas,
   ElectrodeTransform,
 } from '@/features/circuit-viewer/morphologies/types';
@@ -42,15 +42,6 @@ import styles from './large-circuit-preview.module.css';
 
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
-
-/**
- * An empty palette: no cell has a colour of its own, so each soma runs along the somas' blue ramp by how crowded it
- * is, and each morphology is in the default colour.
- */
-const VIEWER_DEFAULT_PALETTE: CellColors = {
-  palette: [],
-  columnByCell: new Uint16Array(0),
-};
 
 export interface LargeCircuitPreviewProps {
   className?: string;
@@ -258,50 +249,19 @@ export function LargeCircuitPreview({
   // recede behind, and receding everything would grey the whole circuit out.
   const recede = hasContext && subject ? recededColor : undefined;
 
-  // The mapping already arrives as a palette and a column per soma. This memo
-  // writes the subject's columns at its offset in the scene and appends a
-  // column for everything else, so at region scale a selection change costs one
-  // typed-array copy, small enough to run inside a single frame.
-  const cellColors = React.useMemo(() => {
-    // Nothing to colour by, nothing receding and nothing hidden, so leave the
-    // somas to the viewer's own ramp.
-    if (!nodeColors && !recede && hidden.size === 0) return VIEWER_DEFAULT_PALETTE;
-
-    const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
-    // Three entries are added here beyond the mapping's own colours: the
-    // receded colour; `null`, which leaves a soma to the viewer's own ramp,
-    // rather than a colour of our own, which would flatten an uncoloured cloud
-    // to a single hue; and `false`, which the viewer reads as a cell to skip
-    // entirely, so it is undrawn, unpickable and has no hover of its own. Each
-    // takes a palette column on first use.
-    // Spelt out rather than `??=`, which React Compiler 1.0.0 cannot lower,
-    // leaving this recolour path uncompiled.
-    let ownRampColumn: number | undefined;
-    let recededColumn: number | undefined;
-    let hiddenColumn: number | undefined;
-
-    const columnByCell = new Uint16Array(cells.positions.length / 3);
-    let index = 0;
-    for (const { population: candidate, geometry } of placed) {
-      if (hidden.has(candidate.name)) {
-        if (hiddenColumn === undefined) hiddenColumn = palette.push(false) - 1;
-        columnByCell.fill(hiddenColumn, index, index + geometry.count);
-      } else if (candidate.name === subjectName && nodeColors) {
-        // The mapping's palette sits at the same indices here, so its columns
-        // land as they are.
-        columnByCell.set(nodeColors.columnByNode.subarray(0, geometry.count), index);
-      } else if (candidate.name !== subjectName && recede !== undefined) {
-        // One colour for a whole population: allocate the column once, then fill.
-        if (recededColumn === undefined) recededColumn = palette.push(recede) - 1;
-        columnByCell.fill(recededColumn, index, index + geometry.count);
-      } else {
-        if (ownRampColumn === undefined) ownRampColumn = palette.push(null) - 1;
-        columnByCell.fill(ownRampColumn, index, index + geometry.count);
-      }
-      index += geometry.count;
-    }
-    return { palette, columnByCell };
-  }, [placed, subjectName, cells.positions.length, nodeColors, recede, hidden]);
+  // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
+  // colour of ours would flatten an uncoloured cloud to a single hue.
+  const cellColors = React.useMemo(
+    () =>
+      cellColorsOf({
+        populations: cells.populations,
+        subject: subjectName,
+        nodeColors,
+        receded: recede,
+        hidden,
+      }),
+    [cells.populations, subjectName, nodeColors, recede, hidden]
+  );
 
   const handleCellClick = React.useCallback(
     (index: number) => {

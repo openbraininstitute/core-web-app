@@ -9,11 +9,14 @@
  * The same quads drawn in each cell's number in place of its shading tell which cell is under a pixel (`idMaterial`).
  */
 
+import chroma from 'chroma-js';
 import * as THREE from 'three';
 
 import { addShaderHook } from '@/features/viewer-3d/engine/looks';
 
-import { ROW_BITS } from './cell-table';
+import { BY_SECTION, ROW_BITS } from './cell-table';
+
+import type { SectionColors } from '../types';
 
 /** What the impostors' shaders read, one set a viewer. */
 export interface ImpostorUniforms {
@@ -32,6 +35,8 @@ export interface ImpostorUniforms {
    * read as fading out, and not on a dark one, where the ring would hide a thin one.
    */
   uGlowRim: { value: THREE.Vector4 };
+  /** The colours of a cell drawn in its sections' colours, by SWC's numbers: unknown, soma, axon, basal, apical. */
+  uSectionColours: { value: THREE.Color[] };
 }
 
 /** No cell has this number: the cell table has not that many texels. */
@@ -50,7 +55,16 @@ export function impostorUniforms(): ImpostorUniforms {
     uHighlighted: { value: NO_CELL },
     uHighlight: { value: new THREE.Color(0x000000) },
     uGlowRim: { value: new THREE.Vector4(GLOW_RIM.r, GLOW_RIM.g, GLOW_RIM.b, 1) },
+    uSectionColours: { value: Array.from({ length: 5 }, () => new THREE.Color()) },
   };
+}
+
+/** Set `uniforms` to draw in `colors`. */
+export function setSectionColours(uniforms: ImpostorUniforms, colors: SectionColors): void {
+  const { unknown, soma, axon, basalDendrite, apicalDendrite } = colors;
+  [unknown, soma, axon, basalDendrite, apicalDendrite].forEach((color, type) => {
+    uniforms.uSectionColours.value[type].set(chroma.valid(color) ? color : unknown);
+  });
 }
 
 /** What every shader that draws cells needs of them, the soma cloud's included. */
@@ -119,6 +133,7 @@ const SEGMENT: Kind = {
   vertex: /* glsl */ `
 in vec4 aA;
 in vec4 aB;
+in float aType;
 flat out vec2 vSegmentA;
 flat out vec2 vSegmentB;
 flat out vec2 vSegmentRadii;
@@ -128,6 +143,10 @@ vec3 lifted( vec3 p, float lift ) {
 	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
 	float z = p.z + min( lift, - 0.5 * p.z );
 	return vec3( p.xy * ( z / p.z ), z );
+}
+
+float sectionType() {
+	return aType;
 }
 
 // corner.x picks the end, corner.y the side.
@@ -201,6 +220,10 @@ flat out float vSomaRadius;
 flat out float vSomaRadiusPx;
 out vec3 vSomaPoint;
 
+float sectionType() {
+	return 1.0;
+}
+
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	if ( shown < 0.5 ) return false;
 	vec3 c = ( viewMatrix * vec4( aSoma.xyz + uShift, 1.0 ) ).xyz;
@@ -259,7 +282,18 @@ const LOOK_VERTEX = /* glsl */ `
 uniform uint uHighlighted;
 uniform vec3 uHighlight;
 uniform highp sampler2D uGlow;
+uniform vec3 uSectionColours[ 5 ];
 out float vGlow;
+
+// The kind's.
+float sectionType();
+
+// A cell in its sections' colours is all but opaque in the cell table.
+vec3 ownColour( vec4 cell ) {
+	if ( cell.a > ${(BY_SECTION + 0.5) / 255} ) return cell.rgb;
+	int type = int( sectionType() + 0.5 );
+	return uSectionColours[ type >= 0 && type < 5 ? type : 0 ];
+}
 
 // The highlighted cell keeps the highlight.
 float cellGlow() {
@@ -342,7 +376,7 @@ export function impostor<T extends THREE.Material>(
       .replace(
         '#include <color_vertex>',
         'vec4 cell = cellTexel();\n\tvGlow = cellGlow();' +
-          '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( cell.rgb, vGlow ), 1.0 );\n\t#endif'
+          '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ), vGlow ), 1.0 );\n\t#endif'
       )
       // The vertex normal is never shaded: the fragment shader finds its own. Glowing in full, a cell drawn at the
       // least width is drawn at twice it, to be seen.

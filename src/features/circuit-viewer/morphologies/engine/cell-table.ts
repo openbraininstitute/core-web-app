@@ -1,7 +1,7 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
-import type { CellColors } from '../types';
+import type { CellColors, SectionColors } from '../types';
 
 /** A row holds 2 to this power of cells: 2,048, the widest texture WebGL 2 promises. */
 export const ROW_BITS = 11;
@@ -9,6 +9,8 @@ const ROW = 1 << ROW_BITS;
 
 const HIDDEN = [0, 0, 0, 0];
 const opaque = (color: string) => [...chroma(color).rgb(), 255];
+/** The alpha of a cell drawn in its sections' colours, whose own colour is its soma's. */
+export const BY_SECTION = 254;
 /** How crowded a cell is taken to be until it is known, as the somas view did: halfway. */
 const HALF_CROWDED = 128;
 
@@ -28,6 +30,8 @@ export class CellTable {
   /** The cells that glow in `glowTexels`. */
   private lit: readonly number[] = [];
   private hiding = false;
+  /** What the cells in section colours were last painted in; null where none is. */
+  sectionColors: SectionColors | null = null;
 
   constructor(readonly cells: number) {
     const rows = Math.max(1, Math.ceil(cells / ROW));
@@ -84,12 +88,20 @@ export class CellTable {
     this.shadeTexture.needsUpdate = true;
   }
 
-  /** Each cell in its column's colour, or in `own` where it has no column or its column has no colour of its own. */
+  /**
+   * Each cell in its column's colour, or in `own` where it has no column or its column has no colour of its own. A cell
+   * in section colours is in the soma's, and `sectionColors` are the last of the palette.
+   */
   paint(colors: CellColors | null, own: string): void {
     const ownRgba = opaque(own);
+    const readable = (color: string) => (chroma.valid(color) ? opaque(color) : ownRgba);
+    this.sectionColors = null;
     const columns = (colors?.palette ?? []).map((color) => {
       if (color === false) return HIDDEN;
-      return color !== null && chroma.valid(color) ? opaque(color) : ownRgba;
+      if (color === null) return ownRgba;
+      if (typeof color === 'string') return readable(color);
+      this.sectionColors = color;
+      return [...readable(color.soma).slice(0, 3), BY_SECTION];
     });
     this.hiding = columns.includes(HIDDEN);
     const byCell = colors?.columnByCell;

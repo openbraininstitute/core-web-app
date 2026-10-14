@@ -104,7 +104,9 @@ function lastRender(): CircuitCellsProps {
  * means the viewer's own crowding ramp, `false` a soma the viewer does not
  * draw at all, and `undefined` a column the palette does not reach.
  */
-function paints(props: CircuitCellsProps): (string | null | false | undefined)[] {
+function paints(
+  props: CircuitCellsProps
+): (CircuitCellsProps['cellColors']['palette'][number] | undefined)[] {
   const colors = props.cellColors;
   return [...colors.columnByCell].map((column) => colors.palette[column]);
 }

@@ -43,12 +43,23 @@ export interface CircuitSomas {
   populations: Population[];
 }
 
+/** A CSS colour for each type of section, which a lone cell is drawn in, to tell its dendrites from its axon. */
+export interface SectionColors {
+  soma: string;
+  axon: string;
+  basalDendrite: string;
+  apicalDendrite: string;
+  unknown: string;
+}
+
 /**
- * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, null for the default
- * colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the default colour.
+ * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, section colours, null
+ * for the default colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the
+ * default colour. The view draws in one set of section colours, the last in the palette; a soma alone is in that set's
+ * soma colour.
  */
 export interface CellColors {
-  palette: (string | null | false)[];
+  palette: (string | SectionColors | null | false)[];
   columnByCell: Uint16Array;
 }
 

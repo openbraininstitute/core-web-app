@@ -130,6 +130,14 @@ const rounded = (values: ArrayLike<number>) =>
 /** A colour as the shaders take it as it is, in sRGB from 0 to 1. */
 const sRGB = (hex: string) => rounded(rgb(hex).map((c) => c / 255));
 
+const SECTIONS = {
+  soma: '#aaaaaa',
+  axon: '#3399ff',
+  apicalDendrite: '#bb22ff',
+  basalDendrite: '#ff5555',
+  unknown: '#ff8800',
+};
+
 /** Array A's two contacts and array B's one, in the circuit's frame: around the centre of `circuit()`. */
 function arrays(): ElectrodeGroup[] {
   return [
@@ -259,6 +267,7 @@ describe('the circuit morphology viewer', () => {
     const cell = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
     expect(cell).toBeInstanceOf(THREE.InstancedBufferAttribute);
     expect(cell.array).toBe(data.segmentCells);
+    expect(geometry.getAttribute('aType').array).toBe(data.segmentTypes);
     // Kept once uploaded, for three to upload again after a lost context.
     a.data.onUploadCallback();
     cell.onUploadCallback();
@@ -318,6 +327,22 @@ describe('the circuit morphology viewer', () => {
 
     viewer.setDefaultColor('#8899aa');
     expect(frames(inner)).toBe(0);
+  });
+
+  it('hands the shaders the section colours a cell is painted in, a step short of opaque', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setCellColors({
+      palette: [{ ...SECTIONS, soma: '#ff0000' }],
+      columnByCell: Uint16Array.of(0, 0, 0),
+    });
+    expect(texel(inner, 0)).toEqual([255, 0, 0, 254]);
+    const [unknown, soma, axon] = inner.uniforms.uSectionColours.value;
+    expect([unknown, soma, axon].map((colour) => `#${colour.getHexString()}`)).toEqual([
+      SECTIONS.unknown,
+      '#ff0000',
+      SECTIONS.axon,
+    ]);
   });
 
   it('paints the data that comes after the colours with them', () => {

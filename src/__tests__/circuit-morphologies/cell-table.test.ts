@@ -34,6 +34,27 @@ describe('the cell table', () => {
     expect(texel(table, 2)[3]).toBe(0);
   });
 
+  it("paints a cell in section colours in its soma's, a step short of opaque, and keeps those colours", () => {
+    const table = new CellTable(3);
+    const sections = {
+      soma: '#aaa',
+      axon: '#39F',
+      apicalDendrite: '#b2f',
+      basalDendrite: '#f55',
+      unknown: '#f80',
+    };
+    table.paint({ palette: [sections, '#ff0000'], columnByCell: Uint16Array.of(0, 1, 0) }, OWN);
+    expect(texel(table, 0)).toEqual([170, 170, 170, 254]);
+    expect(texel(table, 2)).toEqual([170, 170, 170, 254]);
+    expect(table.sectionColors).toBe(sections);
+    expect(table.shown(0)).toBe(true);
+    expect(table.hides).toBe(false);
+    // Its soma has a colour of its own, off the somas' ramp.
+    expect((table.shadeTexture.image.data as Uint8Array)[1]).toBe(0);
+    table.paint({ palette: ['#ff0000'], columnByCell: Uint16Array.of(0, 0, 0) }, OWN);
+    expect(table.sectionColors).toBeNull();
+  });
+
   it("paints every cell in the view's own colour without colours", () => {
     const table = new CellTable(2);
     table.paint(null, OWN);

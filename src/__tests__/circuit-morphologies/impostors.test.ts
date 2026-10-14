@@ -9,6 +9,7 @@ import {
   impostor,
   impostorUniforms,
   NO_CELL,
+  setSectionColours,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { createLooks } from '@/features/viewer-3d/engine/looks';
 
@@ -79,7 +80,41 @@ describe('impostors on the Studio look', () => {
     const { vertexShader } = compile(material);
     expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
     expect(vertexShader).toContain('return texelFetch( uCells, cellXY( aCell ), 0 );');
-    expect(vertexShader).toContain('vColor = vec4( cellColour( cell.rgb, vGlow ), 1.0 );');
+    expect(vertexShader).toContain('vColor = vec4( cellColour( ownColour( cell ), vGlow ), 1.0 );');
+  });
+
+  it("draws a cell a step short of opaque in its sections' colours, by each segment's type, the soma in the soma's", () => {
+    const own = impostorUniforms();
+    const segment = compile(impostor(studio(), 'segment', own));
+    expect(segment.uniforms.uSectionColours).toBe(own.uSectionColours);
+    expect(segment.vertexShader).toContain('if ( cell.a > 0.9980392156862745 ) return cell.rgb;');
+    expect(segment.vertexShader).toContain(
+      'return uSectionColours[ type >= 0 && type < 5 ? type : 0 ];'
+    );
+    expect(segment.vertexShader).toContain('in float aType;');
+    expect(segment.vertexShader).toContain('float sectionType() {\n\treturn aType;\n}');
+    const soma = compile(impostor(studio(), 'soma', own)).vertexShader;
+    expect(soma).toContain('float sectionType() {\n\treturn 1.0;\n}');
+    expect(soma).not.toContain('aType');
+  });
+
+  it('takes section colours in the linear space the cell table hands over, by SWC numbers', () => {
+    const own = impostorUniforms();
+    setSectionColours(own, {
+      soma: '#aaa',
+      axon: 'not a colour',
+      apicalDendrite: '#b2f',
+      basalDendrite: '#f55',
+      unknown: '#f80',
+    });
+    expect(own.uSectionColours.value.map((colour) => colour.getHexString())).toEqual([
+      'ff8800',
+      'aaaaaa',
+      'ff8800',
+      'ff5555',
+      'bb22ff',
+    ]);
+    expect(own.uSectionColours.value[1].r).toBeCloseTo(0.402, 3);
   });
 
   it('draws the highlighted cell in the highlight colour, unlit, and no cell so until one is', () => {
