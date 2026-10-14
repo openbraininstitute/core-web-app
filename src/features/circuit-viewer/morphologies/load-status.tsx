@@ -1,6 +1,6 @@
 import { megabytes, StatusAction, StatusPill } from '@/features/viewer-3d/chrome/status';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
@@ -37,22 +37,24 @@ export function MorphologiesStatus({
   load,
   stopped,
   theme,
+  place,
   onRetry,
   onDismiss,
 }: {
   load: MorphologiesLoad;
   stopped: MorphologiesStop | null;
   theme: ViewerTheme;
+  place?: CSSProperties;
   onRetry(): void;
   onDismiss(): void;
 }) {
   let pill: ReactNode = null;
   if (load.status === 'loading') {
-    pill = <StatusPill text={loadingText(load)} failed={false} theme={theme} />;
+    pill = <StatusPill text={loadingText(load)} failed={false} theme={theme} place={place} />;
   } else if (stopped) {
     const { text, retry } = stopNotice(stopped);
     pill = (
-      <StatusPill text={text} failed theme={theme}>
+      <StatusPill text={text} failed theme={theme} place={place}>
         {retry && <StatusAction onClick={onRetry}>Try again</StatusAction>}
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
       </StatusPill>

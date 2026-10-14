@@ -13,7 +13,10 @@ import {
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { circuitOffersMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
-import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import {
+  CircuitViewerChrome,
+  STATUS_PLACE,
+} from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
@@ -545,6 +548,7 @@ export function CircuitScene({
             somaSizeScale={config.somaSizeScale}
             representation={representation}
             onRepresentationChange={onRepresentationChange}
+            statusPlace={STATUS_PLACE}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
             spikes={spikes}

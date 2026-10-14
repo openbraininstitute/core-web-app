@@ -7,12 +7,12 @@ import { LargeCircuitPreview } from '@/features/scan-config/components/model-pre
 import { loadedData, loads, started } from '../circuit-morphologies/pending-loads';
 
 import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewer';
-import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
 import type { CircuitMorphologiesProps } from '@/features/circuit-viewer/morphologies/circuit-morphologies';
 import type { CircuitRepresentation } from '@/features/scan-config/components/color-by/types';
+import type { LargeCircuitPreviewProps } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
 const CORTEX: NodePopulation = { name: 'cortex', type: 'biophysical', file: 'nodes.h5' };
 const VPM: NodePopulation = { name: 'vpm', type: 'virtual', file: 'inputs.h5' };
@@ -98,10 +98,11 @@ const data = () =>
 /** Each representation the preview asked its host for, in order. */
 let asked: CircuitRepresentation[] = [];
 
-type PreviewProps = ComponentProps<typeof LargeCircuitPreview>;
-
 /** The preview with its host's part: the representation is the host's to keep. */
-function Hosted({ start, ...props }: { start: CircuitRepresentation } & Partial<PreviewProps>) {
+function Hosted({
+  start,
+  ...props
+}: { start: CircuitRepresentation } & Partial<LargeCircuitPreviewProps>) {
   const [representation, setRepresentation] = useState(start);
   const [offered, setOffered] = useState(true);
   return (
@@ -212,7 +213,9 @@ describe('LargeCircuitPreview morphologies', () => {
   });
 
   /** The morphologies on show, as the view was last rendered. */
-  async function shown(props: Partial<PreviewProps> = {}): Promise<CircuitMorphologiesProps> {
+  async function shown(
+    props: Partial<LargeCircuitPreviewProps> = {}
+  ): Promise<CircuitMorphologiesProps> {
     render(<Hosted start="morphologies" {...props} />);
     const load = await started();
     await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
@@ -228,7 +231,7 @@ describe('LargeCircuitPreview morphologies', () => {
     expect((await shown({ defaultColor: '#7aa2ff' })).defaultColor).toBe('#7aa2ff');
   });
 
-  it('highlights the morphology under the pointer, unless the host has no cell hover', async () => {
+  it('highlights the morphology under the pointer', async () => {
     expect((await shown()).cellHover).toBe(true);
   });
 
@@ -256,10 +259,7 @@ describe('LargeCircuitPreview morphologies', () => {
   });
 
   it('goes back to the somas, and lets go of the morphologies, when switched off', async () => {
-    render(<Hosted start="morphologies" />);
-    const load = await started();
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
-    await screen.findByTestId('morphologies');
+    await shown();
 
     fireEvent.click(screen.getByText('switch off'));
 
@@ -301,6 +301,16 @@ describe('LargeCircuitPreview morphologies', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(status()).toBeNull();
+  });
+
+  it('puts its status where the host says, loading and refused alike', async () => {
+    const placed = () => screen.getByRole('status').parentElement;
+    render(<Hosted start="morphologies" statusPlace={{ top: 52, left: 52 }} />);
+    const load = await started();
+    expect(placed()).toHaveStyle({ top: '52px', left: '52px' });
+
+    await act(async () => load.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+    expect(placed()).toHaveStyle({ top: '52px', left: '52px' });
   });
 
   it('offers another try when OBI-One is busy with another circuit', async () => {

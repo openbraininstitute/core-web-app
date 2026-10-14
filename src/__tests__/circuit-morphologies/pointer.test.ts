@@ -10,6 +10,7 @@ function fakeView() {
     answers,
     pick: vi.fn((_x: number, _y: number) => new Promise<number | null>((r) => answers.push(r))),
     setHighlight: vi.fn((_cell: number | null) => {}),
+    moving: false,
   };
 }
 
@@ -34,6 +35,15 @@ const pointer = (type: string, at: [number, number], init: PointerEventInit = {}
     })
   );
 const press = (at: [number, number]) => pointer('pointerdown', at, { buttons: 1 });
+const click = (at: [number, number]) => {
+  press(at);
+  pointer('pointerup', at);
+};
+/** The pointer comes to rest at 50, 50 in the view, as long as a pick waits for. */
+const rest = () => {
+  pointer('pointermove', [150, 90]);
+  vi.advanceTimersByTime(60);
+};
 const answer = async (view: ReturnType<typeof fakeView>, cell: number | null) => {
   view.answers.shift()?.(cell);
   await Promise.resolve();
@@ -70,8 +80,7 @@ describe('the pointer over the morphologies', () => {
 
   it('highlights none where it rests on none', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
 
     await answer(view, null);
 
@@ -80,8 +89,7 @@ describe('the pointer over the morphologies', () => {
 
   it('lets go of an answer that comes once it has moved on', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     pointer('pointermove', [160, 90]);
 
     await answer(view, 7);
@@ -93,8 +101,7 @@ describe('the pointer over the morphologies', () => {
 
   it('asks for one pick at a time, and the next once the first is answered', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     pointer('pointermove', [160, 90]);
     vi.advanceTimersByTime(200);
     expect(view.pick).toHaveBeenCalledTimes(1);
@@ -108,10 +115,9 @@ describe('the pointer over the morphologies', () => {
     expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(8);
   });
 
-  it('highlights nothing while the view is dragged, and looks again once it is let go', async () => {
+  it('highlights nothing while the view is dragged, and looks again once it has stopped', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     await answer(view, 7);
 
     press([150, 90]);
@@ -122,31 +128,33 @@ describe('the pointer over the morphologies', () => {
     vi.advanceTimersByTime(1000);
     expect(view.pick).toHaveBeenCalledTimes(1);
 
+    view.moving = true;
     pointer('pointerup', [250, 190]);
-    vi.advanceTimersByTime(249);
+    vi.advanceTimersByTime(1000);
     expect(view.pick).toHaveBeenCalledTimes(1);
-    vi.advanceTimersByTime(1);
+    view.moving = false;
+    vi.advanceTimersByTime(60);
     expect(view.pick).toHaveBeenLastCalledWith(150, 150);
   });
 
-  it('keeps the highlight through a click', async () => {
+  it('keeps the highlight through a click, and takes it from the pick the click makes', async () => {
     const view = track({ hover: true, onClick: vi.fn() });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     await answer(view, 7);
 
     press([150, 90]);
     pointer('pointermove', [151, 90], { buttons: 1 });
     pointer('pointerup', [151, 90]);
-    await answer(view, 7);
+    await answer(view, 8);
+    vi.advanceTimersByTime(1000);
 
-    expect(view.setHighlight.mock.calls).toEqual([[7]]);
+    expect(view.setHighlight.mock.calls).toEqual([[7], [8]]);
+    expect(view.pick).toHaveBeenCalledTimes(2);
   });
 
   it('highlights nothing while the view is dragged by another button', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     await answer(view, 7);
 
     pointer('pointerdown', [150, 90], { button: 2, buttons: 2 });
@@ -162,20 +170,41 @@ describe('the pointer over the morphologies', () => {
     // Where the pointer is has not been heard yet.
     expect(view.pick).not.toHaveBeenCalled();
 
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
     await answer(view, 7);
+    view.moving = true;
     element.dispatchEvent(new WheelEvent('wheel', { bubbles: true }));
-    vi.advanceTimersByTime(250);
+    vi.advanceTimersByTime(1000);
+    expect(view.pick).toHaveBeenCalledTimes(1);
+    view.moving = false;
+    vi.advanceTimersByTime(60);
 
     expect(view.pick).toHaveBeenCalledTimes(2);
     expect(view.pick).toHaveBeenLastCalledWith(50, 50);
   });
 
+  it('goes on looking after a pick that fails', async () => {
+    const view = track({ hover: true });
+    view.pick
+      .mockImplementationOnce(() => {
+        throw new Error('context lost');
+      })
+      .mockImplementationOnce(() => Promise.reject(new Error('context lost')));
+
+    rest();
+    await vi.advanceTimersByTimeAsync(0);
+    pointer('pointermove', [160, 90]);
+    await vi.advanceTimersByTimeAsync(60);
+    pointer('pointermove', [170, 90]);
+    vi.advanceTimersByTime(60);
+
+    expect(view.pick).toHaveBeenCalledTimes(3);
+    expect(view.setHighlight.mock.calls).toEqual([[null], [null]]);
+  });
+
   it('highlights none once it has left, whatever is answered after', async () => {
     const view = track({ hover: true });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
+    rest();
 
     pointer('pointerleave', [0, 0]);
     await answer(view, 7);
@@ -201,8 +230,7 @@ describe('the pointer over the morphologies', () => {
   it('tells of no click where none is drawn', async () => {
     const onClick = vi.fn();
     const view = track({ hover: false, onClick });
-    press([150, 90]);
-    pointer('pointerup', [150, 90]);
+    click([150, 90]);
 
     await answer(view, null);
 
@@ -243,10 +271,8 @@ describe('the pointer over the morphologies', () => {
   it('hears nothing more once stopped, and leaves no cell highlighted', async () => {
     const onClick = vi.fn();
     const view = track({ hover: true, onClick });
-    pointer('pointermove', [150, 90]);
-    vi.advanceTimersByTime(60);
-    press([150, 90]);
-    pointer('pointerup', [150, 90]);
+    rest();
+    click([150, 90]);
     view.setHighlight.mockClear();
 
     stop?.();
@@ -255,8 +281,7 @@ describe('the pointer over the morphologies', () => {
     await answer(view, 7);
     await answer(view, 7);
     pointer('pointermove', [150, 90]);
-    press([150, 90]);
-    pointer('pointerup', [150, 90]);
+    click([150, 90]);
     vi.advanceTimersByTime(1000);
 
     expect(view.pick).toHaveBeenCalledTimes(2);

@@ -116,6 +116,8 @@ export interface LargeCircuitPreviewProps {
    * offered as morphologies.
    */
   onRepresentationChange?: (representation: CircuitRepresentation) => void;
+  /** Where the morphologies' status goes, clear of the host's chrome. Top-centre when omitted. */
+  statusPlace?: React.CSSProperties;
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
   /**
@@ -155,6 +157,7 @@ export function LargeCircuitPreview({
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
   representation = 'somas',
   onRepresentationChange,
+  statusPlace,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   spikes,
@@ -314,9 +317,9 @@ export function LargeCircuitPreview({
     },
     [placed, subjectName, onPopulationClick]
   );
-  // Only offered when there is something to select: the viewer builds its pick
-  // buffer on the first click, which at region scale is a second copy of every
-  // position.
+  // Only offered when there is something to select: the somas viewer builds its
+  // pick buffer on the first click, which at region scale is a second copy of
+  // every position.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;
 
   const wantsMorphologies = representation === 'morphologies';
@@ -419,6 +422,7 @@ export function LargeCircuitPreview({
         // Why they could not be shown is nothing to say where they are no longer offered.
         stopped={onRepresentationChange ? morphologies.stopped : null}
         theme={themeFromBackground(backgroundColor)}
+        place={statusPlace}
         onRetry={() => onRepresentationChange?.('morphologies')}
         onDismiss={morphologies.dismiss}
       />

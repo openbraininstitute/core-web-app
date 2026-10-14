@@ -7,6 +7,7 @@ import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 import { CellTable } from './cell-table';
 import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
 
+import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
 import type { CellColors, CircuitMorphologyData, CircuitMorphologyView } from '../types';
 
 /** A quad's corners, x, y, z after one another, and its two triangles, which face the eye. */
@@ -14,10 +15,10 @@ const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
 const TRIANGLES = [0, 1, 2, 2, 1, 3];
 
 /** What the highlighted cell is drawn in: as far from the background as no colour of a palette is. */
-const HIGHLIGHT = { light: '#1a1a1a', dark: '#ffffff' };
+const HIGHLIGHT: ThemeColors = { light: '#1a1a1a', dark: '#ffffff' };
 
-/** A pick looks in a square of device pixels this wide, around the one asked for. */
-const PICK_SIDE = 9;
+/** How far around the pixel asked for a pick looks, in CSS pixels, as the somas view does. */
+const PICK_REACH = 4;
 
 /** `instances` quads, for the caller to add the attributes a shader places each by. */
 function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
@@ -87,8 +88,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     // The circuit viewer's own background, as behind the somas, in place of Studio's gradient.
     look.background = { light: [CANVAS_LIGHT, CANVAS_LIGHT], dark: [CANVAS_DARK, CANVAS_DARK] };
     look.onTheme = (dark) => {
-      this.background = look.background[dark ? 'dark' : 'light'][0];
-      this.uniforms.uHighlight.value.set(HIGHLIGHT[dark ? 'dark' : 'light']);
+      const theme = dark ? 'dark' : 'light';
+      this.background = look.background[theme][0];
+      this.uniforms.uHighlight.value.set(HIGHLIGHT[theme]);
     };
     this.setDark(false);
   }
@@ -142,8 +144,12 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.surfaces.add(this.somas);
 
     this.ids.add(quads(segments, this.idMaterials.segment), quads(somas, this.idMaterials.soma));
-    // Their programs begin to build now, not at the first pick, which would wait for them.
-    this.renderer.compile(this.ids, this.camera);
+    // Their programs begin to build now, not at the first pick, which would wait for them. Built for the pick's target:
+    // three builds a program for the colour space and tone mapping of where it draws.
+    const { renderer } = this;
+    renderer.setRenderTarget(this.pickTarget());
+    renderer.compile(this.ids, this.camera);
+    renderer.setRenderTarget(null);
 
     this.bounds.set(new THREE.Vector3(...data.bounds.min), new THREE.Vector3(...data.bounds.max));
     this.resetView();
@@ -155,8 +161,13 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   }
 
   setDefaultColor(color: string): void {
+    if (color === this.defaultColor) return;
     this.defaultColor = color;
     this.paint();
+  }
+
+  get moving(): boolean {
+    return this.drawnMoving;
   }
 
   setHighlight(cell: number | null): void {
@@ -171,9 +182,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (!table) return Promise.resolve(null);
     const { renderer } = this;
     const ratio = renderer.getPixelRatio();
-    const middle = (PICK_SIDE - 1) / 2;
-    this.idTarget ??= new THREE.WebGLRenderTarget(PICK_SIDE, PICK_SIDE);
-    const target = this.idTarget;
+    const target = this.pickTarget();
+    const side = target.width;
+    const middle = (side - 1) / 2;
     // The whole view, placed so that the pixel asked for is the target's middle one. A frame buffer's rows count up.
     const { width, height } = renderer.domElement;
     target.viewport.set(
@@ -187,20 +198,18 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     renderer.setRenderTarget(target);
     renderer.render(this.ids, this.camera);
     renderer.setRenderTarget(null);
-    return renderer
-      .readRenderTargetPixelsAsync(
-        target,
-        0,
-        0,
-        PICK_SIDE,
-        PICK_SIDE,
-        new Uint8Array(4 * PICK_SIDE * PICK_SIDE)
-      )
-      .then(
-        // Other data by now has other cells.
-        (pixels) => (this.table === table ? cellNearMiddle(pixels as Uint8Array, PICK_SIDE) : null),
-        () => null
-      );
+    const pixels = new Uint8Array(4 * side * side);
+    return renderer.readRenderTargetPixelsAsync(target, 0, 0, side, side, pixels).then(
+      // Other data by now has other cells.
+      () => (this.table === table ? cellNearMiddle(pixels, side) : null),
+      () => null
+    );
+  }
+
+  private pickTarget(): THREE.WebGLRenderTarget {
+    const side = 2 * Math.ceil(PICK_REACH * this.renderer.getPixelRatio()) + 1;
+    this.idTarget ??= new THREE.WebGLRenderTarget(side, side);
+    return this.idTarget;
   }
 
   private paint(): void {

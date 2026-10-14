@@ -21,6 +21,7 @@ const h = vi.hoisted(() => {
     setHighlight = vi.fn();
     /** Every pick finds cell 4. */
     pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
+    moving = false;
     setDark = vi.fn();
     resetView = vi.fn();
     dispose = vi.fn();
@@ -79,6 +80,11 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
   };
 }
 
+const click = (host: HTMLElement) => {
+  fireEvent.pointerDown(host, { isPrimary: true, clientX: 30, clientY: 20 });
+  fireEvent.pointerUp(host, { isPrimary: true, clientX: 30, clientY: 20 });
+};
+
 afterEach(() => {
   h.viewers = [];
   vi.unstubAllGlobals();
@@ -119,17 +125,13 @@ describe('CircuitMorphologies', () => {
     const first = vi.fn();
     const second = vi.fn();
     const { viewer, update } = view({ onCellClick: first });
-    const press = () => {
-      fireEvent.pointerDown(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
-      fireEvent.pointerUp(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
-    };
 
-    press();
+    click(viewer.host);
     await vi.waitFor(() => expect(first).toHaveBeenCalledExactlyOnceWith(4));
     expect(viewer.pick).toHaveBeenCalledExactlyOnceWith(30, 20);
 
     update({ onCellClick: second });
-    press();
+    click(viewer.host);
     await vi.waitFor(() => expect(second).toHaveBeenCalledExactlyOnceWith(4));
     expect(first).toHaveBeenCalledTimes(1);
     // Asked for by a click alone, no cell is highlighted.
@@ -150,8 +152,7 @@ describe('CircuitMorphologies', () => {
     const { viewer } = view();
 
     fireEvent.pointerMove(viewer.host, { clientX: 30, clientY: 20 });
-    fireEvent.pointerDown(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
-    fireEvent.pointerUp(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
+    click(viewer.host);
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(viewer.pick).not.toHaveBeenCalled();

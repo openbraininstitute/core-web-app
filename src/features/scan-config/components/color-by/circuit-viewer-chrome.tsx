@@ -14,6 +14,7 @@ import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
+import type { CSSProperties } from 'react';
 import type { ViewerTheme } from './contrast';
 import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
@@ -24,6 +25,15 @@ import styles from './chrome-animations.module.css';
 const LEFT_TOP = 12;
 const GAP = 8;
 const LEFT_HEIGHT = 32 + GAP + 32;
+// `top-3`, a button's `size-8` and `gap-2`, in rem as the root font is not 16px.
+const BESIDE_RECENTRE = '3.25rem';
+
+/** A viewer's status beside the re-centre button, clear of the Populations pill, colour key and hidden notice. */
+export const STATUS_PLACE: CSSProperties = {
+  top: BESIDE_RECENTRE,
+  left: BESIDE_RECENTRE,
+  maxWidth: `calc(100% - ${BESIDE_RECENTRE} - 16rem)`,
+};
 
 export interface ICircuitViewerChromeProps {
   /** The view-mode pill. Omit when the host has only one view to offer. */

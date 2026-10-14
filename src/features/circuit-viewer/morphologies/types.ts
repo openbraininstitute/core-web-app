@@ -51,6 +51,8 @@ export interface CircuitMorphologyView extends ViewControls {
    * null where there is none. A cell that is not drawn is not found, and a pick that cannot be made finds none.
    */
   pick(x: number, y: number): Promise<number | null>;
+  /** Whether the view is still moving, a gesture's glide included: what is under the pointer is about to change. */
+  readonly moving: boolean;
   setDark(dark: boolean): void;
   resetView(): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */

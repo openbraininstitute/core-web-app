@@ -272,6 +272,9 @@ describe('the circuit morphology viewer', () => {
     viewer.setDefaultColor('#8899aa');
     for (const cell of [0, 1, 2]) expect(texel(inner, cell)).toEqual([...rgb('#8899aa'), 255]);
     expect(frames(inner)).toBe(1);
+
+    viewer.setDefaultColor('#8899aa');
+    expect(frames(inner)).toBe(0);
   });
 
   it('paints the data that comes after the colours with them', () => {
@@ -317,6 +320,11 @@ describe('the circuit morphology viewer', () => {
 
   it("has the same quads in their cells' numbers, in a scene that no frame draws", () => {
     const { viewer, inner } = make();
+    const steps: string[] = [];
+    inner.renderer.setRenderTarget.mockImplementation((target: THREE.WebGLRenderTarget | null) =>
+      steps.push(target ? `into ${target.width}x${target.height}` : 'back to the canvas')
+    );
+    inner.renderer.compile.mockImplementation(() => steps.push('build'));
     viewer.setData(circuit());
     const [segments, somas] = inner.ids.children as Quads[];
     expect(inner.ids.children).toHaveLength(2);
@@ -327,20 +335,21 @@ describe('the circuit morphology viewer', () => {
     expect(somas.material).toBe(inner.idMaterials.soma);
     for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
     expect(inner.idMaterials.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
-    // Built with the data, ahead of the first pick.
+    // Built with the data, ahead of the first pick, for the target a pick draws into.
     expect(inner.renderer.compile).toHaveBeenCalledExactlyOnceWith(inner.ids, inner.camera);
+    expect(steps).toEqual(['into 9x9', 'build', 'back to the canvas']);
 
     viewer.setData(null);
     expect(inner.ids.children).toHaveLength(0);
   });
 
-  it('picks the cell drawn at a point from the nine device pixels around it, drawn in numbers for it', async () => {
+  it('picks the cell drawn at a point from the device pixels within 4 CSS pixels of it, drawn in numbers for it', async () => {
     const { viewer, inner } = make();
-    viewer.setData(circuit());
     const { renderer } = inner;
     renderer.domElement.width = 800;
     renderer.domElement.height = 600;
     renderer.pixelRatio = 2;
+    viewer.setData(circuit());
     const steps: string[] = [];
     renderer.setRenderTarget.mockImplementation((target: THREE.WebGLRenderTarget | null) =>
       steps.push(
@@ -354,8 +363,8 @@ describe('the circuit morphology viewer', () => {
     );
     renderer.readRenderTargetPixelsAsync.mockImplementation(async (_target, x, y, w, h, pixels) => {
       steps.push(`read ${[x, y, w, h]}`);
-      // Cell 2, in the middle pixel.
-      new DataView(pixels.buffer).setUint32(4 * 40, 3, true);
+      // Cell 2, in the middle pixel of 17 by 17.
+      new DataView(pixels.buffer).setUint32(4 * (8 * 17 + 8), 3, true);
       return pixels;
     });
 
@@ -363,10 +372,10 @@ describe('the circuit morphology viewer', () => {
     await expect(viewer.pick(100.4, 50)).resolves.toBe(2);
 
     expect(steps).toEqual([
-      'into 9x9, the view at -196,-495,800,600',
+      'into 17x17, the view at -192,-491,800,600',
       'draw the numbers',
       'back to the canvas',
-      'read 0,0,9,9',
+      'read 0,0,17,17',
     ]);
   });
 
@@ -399,22 +408,17 @@ describe('the circuit morphology viewer', () => {
   it('finds no cell once other data is shown, nor when the pixels cannot be read', async () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
-    const drawn = (
-      _t: unknown,
-      _x: number,
-      _y: number,
-      _w: number,
-      _h: number,
-      pixels: Uint8Array
-    ) => {
+    const read = inner.renderer.readRenderTargetPixelsAsync;
+    const drawn = async (...args: Parameters<typeof read>) => {
+      const pixels = args[5];
       pixels[4 * 40] = 1;
       return pixels;
     };
-    const read = inner.renderer.readRenderTargetPixelsAsync;
-    read.mockImplementationOnce(async (...args) => drawn(...args));
+    read.mockImplementationOnce(drawn);
     await expect(viewer.pick(10, 10)).resolves.toBe(0);
+    expect(inner.idTarget?.width).toBe(9);
 
-    read.mockImplementationOnce(async (...args) => drawn(...args));
+    read.mockImplementationOnce(drawn);
     const late = viewer.pick(10, 10);
     viewer.setData(circuit());
     await expect(late).resolves.toBeNull();

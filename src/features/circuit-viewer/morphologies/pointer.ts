@@ -4,15 +4,15 @@ import type { CircuitMorphologyView } from './types';
 const CLICK_REACH = 4;
 /** How long the pointer rests before the cell under it is looked for: a pick sends every segment through the GPU. */
 const REST_MS = 60;
-/** The same once the view has been moved, which glides on a little. */
-const SETTLE_MS = 250;
 
-export interface PointerOptions {
+interface PointerOptions {
   /** Highlight the cell the pointer rests on. */
   hover: boolean;
   /** Called with the cell that is clicked. */
   onClick?: (cell: number) => void;
 }
+
+type Point = { x: number; y: number };
 
 /**
  * Tell `view` which cell the pointer over `element` rests on, and `onClick` which one it clicks, as against drags.
@@ -20,71 +20,89 @@ export interface PointerOptions {
  */
 export function trackPointer(
   element: HTMLElement,
-  view: Pick<CircuitMorphologyView, 'pick' | 'setHighlight'>,
+  view: Pick<CircuitMorphologyView, 'pick' | 'setHighlight' | 'moving'>,
   { hover, onClick }: PointerOptions
 ): () => void {
-  let stopped = false;
-  let down: { id: number; x: number; y: number } | null = null;
-  let last: { x: number; y: number } | null = null;
+  const off = new AbortController();
+  // On the page, as the events have them: the view is measured only for a pick.
+  let down: (Point & { id: number }) | null = null;
+  let last: Point | null = null;
   let rest: ReturnType<typeof setTimeout> | undefined;
-  /** Counts what may have changed the cell under the pointer, to tell a pick that is out of date by its answer. */
+  // Counts what may have changed the cell under the pointer, to tell a pick that is out of date by its answer.
   let changes = 0;
   let picking = false;
 
-  const place = (e: PointerEvent) => {
-    const box = element.getBoundingClientRect();
-    return { x: e.clientX - box.left, y: e.clientY - box.top };
-  };
-  const clicks = (from: { x: number; y: number }, to: { x: number; y: number }) =>
+  const at = (e: PointerEvent): Point => ({ x: e.clientX, y: e.clientY });
+  const clicks = (from: Point, to: Point) =>
     Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
 
+  // A pick that fails finds nothing.
+  const pickAt = (point: Point): Promise<number | null> => {
+    const box = element.getBoundingClientRect();
+    try {
+      return view.pick(point.x - box.left, point.y - box.top).catch(() => null);
+    } catch {
+      return Promise.resolve(null);
+    }
+  };
+
   const look = () => {
-    const at = last;
-    if (!at) return;
-    // One pick at a time: a slow GPU would fall behind the pointer.
-    if (picking) {
+    const point = last;
+    if (!point) return;
+    // One pick at a time, as a slow GPU would fall behind the pointer, and none while the view glides under it.
+    if (picking || view.moving) {
       rest = setTimeout(look, REST_MS);
       return;
     }
     picking = true;
     const asked = changes;
-    void view.pick(at.x, at.y).then((cell) => {
+    void pickAt(point).then((cell) => {
       picking = false;
-      if (!stopped && asked === changes) view.setHighlight(cell);
+      if (!off.signal.aborted && asked === changes) view.setHighlight(cell);
     });
   };
 
-  const lookAfter = (ms: number) => {
+  const forget = () => {
     changes++;
     clearTimeout(rest);
-    if (hover && last) rest = setTimeout(look, ms);
+  };
+
+  const lookAfterRest = () => {
+    forget();
+    if (hover && last) rest = setTimeout(look, REST_MS);
   };
 
   const onMove = (e: PointerEvent) => {
     if (e.buttons === 0) {
-      last = place(e);
-      lookAfter(REST_MS);
+      last = at(e);
+      lookAfterRest();
       return;
     }
     // A drag moves the view from under the pointer. A press that may yet be a click keeps the highlight.
-    if (hover && !(down && clicks(down, place(e)))) view.setHighlight(null);
+    if (hover && !(down && clicks(down, at(e)))) view.setHighlight(null);
   };
 
   const onDown = (e: PointerEvent) => {
-    down = e.isPrimary && e.button === 0 ? { id: e.pointerId, ...place(e) } : null;
-    changes++;
-    clearTimeout(rest);
+    down = e.isPrimary && e.button === 0 ? { id: e.pointerId, ...at(e) } : null;
+    forget();
   };
 
   const onUp = (e: PointerEvent) => {
     const from = down?.id === e.pointerId ? down : null;
     down = null;
-    const at = place(e);
-    last = at;
-    lookAfter(SETTLE_MS);
-    if (!from || !onClick || !clicks(from, at)) return;
-    void view.pick(at.x, at.y).then((cell) => {
-      if (!stopped && cell !== null) onClick(cell);
+    const point = at(e);
+    last = point;
+    if (!from || !clicks(from, point)) {
+      lookAfterRest();
+      return;
+    }
+    // A click left the view where it was: one pick answers for the highlight and the click.
+    forget();
+    const asked = changes;
+    void pickAt(point).then((cell) => {
+      if (off.signal.aborted) return;
+      if (hover && asked === changes) view.setHighlight(cell);
+      if (cell !== null) onClick?.(cell);
     });
   };
 
@@ -94,30 +112,23 @@ export function trackPointer(
 
   const onLeave = () => {
     last = null;
-    changes++;
-    clearTimeout(rest);
+    forget();
     if (hover) view.setHighlight(null);
   };
 
   // Only a wheel that zooms is heard here: the viewer keeps the others from its canvas.
-  const onWheel = () => lookAfter(SETTLE_MS);
+  const onWheel = () => lookAfterRest();
 
-  element.addEventListener('pointermove', onMove);
-  element.addEventListener('pointerdown', onDown);
-  element.addEventListener('pointerup', onUp);
-  element.addEventListener('pointercancel', onCancel);
-  element.addEventListener('pointerleave', onLeave);
-  element.addEventListener('wheel', onWheel, { passive: true });
+  const { signal } = off;
+  element.addEventListener('pointermove', onMove, { signal });
+  element.addEventListener('pointerdown', onDown, { signal });
+  element.addEventListener('pointerup', onUp, { signal });
+  element.addEventListener('pointercancel', onCancel, { signal });
+  element.addEventListener('pointerleave', onLeave, { signal });
+  element.addEventListener('wheel', onWheel, { signal, passive: true });
 
   return () => {
-    stopped = true;
-    clearTimeout(rest);
-    element.removeEventListener('pointermove', onMove);
-    element.removeEventListener('pointerdown', onDown);
-    element.removeEventListener('pointerup', onUp);
-    element.removeEventListener('pointercancel', onCancel);
-    element.removeEventListener('pointerleave', onLeave);
-    element.removeEventListener('wheel', onWheel);
-    if (hover) view.setHighlight(null);
+    off.abort();
+    onLeave();
   };
 }

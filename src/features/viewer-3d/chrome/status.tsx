@@ -3,25 +3,33 @@ import { RiAlertLine, RiLoader4Line } from '@remixicon/react';
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
 export const megabytes = (bytes: number) => (bytes / 1e6).toFixed(1);
 
-/** A line of status over the view, top-centre: work under way, or a warning, with what can be done about it. */
+/** Status over the view, top-centre unless placed: work under way, or a warning, with what can be done about it. */
 export function StatusPill({
   text,
   failed,
   theme,
+  place,
   children,
 }: {
   text: string;
   failed: boolean;
   theme: ViewerTheme;
+  place?: CSSProperties;
   children?: ReactNode;
 }) {
   return (
-    <div className="absolute top-3 left-1/2 flex max-w-[calc(100%-24rem)] -translate-x-1/2 justify-center">
+    <div
+      className={cn(
+        'absolute flex',
+        !place && 'top-3 left-1/2 max-w-[calc(100%-24rem)] -translate-x-1/2 justify-center'
+      )}
+      style={place}
+    >
       <div
         role="status"
         className={cn(
