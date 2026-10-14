@@ -18,7 +18,7 @@ import { logError } from '@/utils/logger';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodeGeometry, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
-import type { MorphoViewerTree } from '@/morpho-viewer';
+import type { TreeMorphology } from '@/features/circuit-viewer/morphologies/load/tree';
 import type { TSmallCircuitSynapseGroup } from './types';
 
 /** Legend wording per synapse type. */
@@ -40,7 +40,7 @@ type Options = {
    * One node's morphology, in morphology-local coordinates. Asked for with its
    * axons whatever the viewer is showing — see below.
    */
-  loadTree: (nodeIndex: number) => Promise<MorphoViewerTree | null>;
+  loadTree: (nodeIndex: number) => Promise<TreeMorphology | null>;
 };
 
 /**

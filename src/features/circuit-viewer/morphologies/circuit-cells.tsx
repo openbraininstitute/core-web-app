@@ -29,11 +29,13 @@ import type {
   ElectrodeGroup,
   ElectrodeTransform,
   LocationMarker,
+  SynapseGroup,
 } from './types';
 import type { ViewLocations } from './use-location-selection';
 
 const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
 const NO_MARKERS: readonly LocationMarker[] = [];
+const NO_SYNAPSES: readonly SynapseGroup[] = [];
 
 export interface CircuitCellsProps {
   /** The cells as the page placed them. Memoise it: other somas are another scene, and their crowding worked out again. */
@@ -62,6 +64,8 @@ export interface CircuitCellsProps {
   onElectrodeTransform?: (transform: ElectrodeTransform) => void;
   /** Morphology locations: their markers, and what the pointer rests on and clicks of them and of the sections. */
   locations?: ViewLocations;
+  /** Synapses on the cells, a colour a group. Memoise them: other groups are drawn again. */
+  synapses?: readonly SynapseGroup[];
   /** Spikes to replay over the cells, and the transport driving them, as the somas view takes them and with its defaults. */
   spikes?: ISpikeReplayBinding;
   backgroundColor: string;
@@ -113,6 +117,7 @@ export function CircuitCells({
   selectedElectrode = null,
   onElectrodeTransform,
   locations,
+  synapses = NO_SYNAPSES,
   spikes,
   backgroundColor,
   showScalebar,
@@ -161,6 +166,7 @@ export function CircuitCells({
   useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
+  useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
   const timeChanged = useLatest(spikes?.onTimeChange);

@@ -528,6 +528,41 @@ describe('the circuit morphology viewer', () => {
     ]);
   });
 
+  it('draws synapses after the cells and among them, behind what is nearer, centred as the data is', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const groups = [
+      { color: '#ff0000', coordinates: Float32Array.of(110, 220, 300, 100, 200, 300) },
+      { color: '#0000ff', coordinates: [95, 190, 300] },
+    ];
+    frames(inner);
+    viewer.setSynapses(groups);
+    expect(frames(inner)).toBe(1);
+
+    const mesh = inner.scene.getObjectByName('synapses') as Quads;
+    expect(mesh.renderOrder).toBe(0.5);
+    const material = mesh.material as THREE.ShaderMaterial;
+    expect([material.depthTest, material.depthWrite]).toEqual([true, false]);
+    // No ring, and brought towards the eye by its radius, to sit on its surface.
+    expect([material.uniforms.uRing.value, material.uniforms.uLift.value]).toEqual([0, 1]);
+    expect([material.uniforms.uRadius.value, material.uniforms.uMinRadius.value]).toEqual([0.5, 2]);
+    expect(mesh.geometry.instanceCount).toBe(3);
+    expect(rounded(mesh.geometry.getAttribute('aContact').array)).toEqual([
+      10, 20, 0, 0, 0, 0, -5, -10, 0,
+    ]);
+    expect(rounded(mesh.geometry.getAttribute('aLook').array)).toEqual([
+      ...[1, 0, 0, 1],
+      ...[1, 0, 0, 1],
+      ...[0, 0, 1, 1],
+    ]);
+
+    viewer.setSynapses(groups);
+    expect(frames(inner)).toBe(0);
+    viewer.setSynapses([]);
+    expect(mesh.visible).toBe(false);
+    expect(inner.electrodeMaterial.uniforms.uLift.value).toBe(0);
+  });
+
   it('draws the highlighted array half again as large, and nearer white', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());

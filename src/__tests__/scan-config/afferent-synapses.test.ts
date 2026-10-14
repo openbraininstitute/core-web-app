@@ -1,6 +1,7 @@
 import { File as H5File, ready } from 'h5wasm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   loadAfferentSynapses,
@@ -8,7 +9,8 @@ import {
 } from '@/features/scan-config/components/circuit-viz/synapses';
 
 import type { NodePlacement } from '@/features/circuit-nodes/geometry-utils';
-import type { MorphoViewerTree } from '@/morpho-viewer';
+import type { TreeMorphology } from '@/features/circuit-viewer/morphologies/load/tree';
+import type { Sections } from '@/features/scan-config/types';
 
 /** Soma radius of the one-sphere cell every test here draws. */
 const SOMA_RADIUS = 10;
@@ -81,41 +83,35 @@ function writeEdgesFile(
   return name;
 }
 
-/** A cell drawn as a single sphere: one parentless soma sample, nothing else. */
-function somaOnlyTree(): MorphoViewerTree {
-  return {
-    cellId: 'cell',
-    roots: [
-      {
-        x: 0,
-        y: 0,
-        z: 0,
-        radius: SOMA_RADIUS,
-        type: SectionType.Soma,
-        sectionId: 'soma',
-        segmentId: '0',
-        distanceFromSoma: 0,
-      },
-    ],
-  };
+/** A soma at `at`, one point as wide as `SOMA_RADIUS`. */
+const somaSection = (at: [number, number, number] = [0, 0, 0]): Sections[number] => ({
+  id: 'soma',
+  sonata_section_id: 0,
+  parent_id: null,
+  type: SectionType.Soma,
+  points: [at],
+  radii: [SOMA_RADIUS],
+});
+
+/** A cell drawn as a single sphere, at `at`. */
+function somaOnlyTree(at?: [number, number, number]): TreeMorphology {
+  return treeOf([somaSection(at)], { axons: true });
 }
 
-/** A soma at the origin with one straight dendrite running out along +x. */
-function dendriteTree(): MorphoViewerTree {
-  const sample = (x: number, radius: number, type: SectionType) => ({
-    x,
-    y: 0,
-    z: 0,
-    radius,
-    type,
-    sectionId: type === SectionType.Soma ? 'soma' : 'dend',
-    segmentId: '0',
-    distanceFromSoma: x,
-  });
-  const tip = sample(200, 1, SectionType.Dendrite);
-  const base = { ...sample(100, 1, SectionType.Dendrite), children: [tip] };
-  const soma = { ...sample(0, SOMA_RADIUS, SectionType.Soma), children: [base] };
-  return { cellId: 'cell', roots: [soma] };
+/** A soma at the origin with one straight dendrite running out along +x from 100 to 200. */
+function dendriteTree(): TreeMorphology {
+  const dendrite: Sections[number] = {
+    id: '0',
+    sonata_section_id: 1,
+    parent_id: 'soma',
+    type: SectionType.Dendrite,
+    points: [
+      [100, 0, 0],
+      [200, 0, 0],
+    ],
+    radii: [1, 1],
+  };
+  return treeOf([somaSection(), dendrite], { axons: true });
 }
 
 /** Wire one edges file up to the loader, counting how often it is opened. */
@@ -123,7 +119,7 @@ function harness(
   filename: string,
   overrides: {
     placementOf?: (index: number) => NodePlacement | null;
-    loadTree?: (index: number) => Promise<MorphoViewerTree | null>;
+    loadTree?: (index: number) => Promise<TreeMorphology | null>;
   } = {}
 ) {
   const close = vi.fn(async () => {});
@@ -347,8 +343,7 @@ describe('loadAfferentSynapses', () => {
     const file = writeEdgesFile('edges-offset-morphology.h5', {
       default: [{ position: [720, 650, 840], sectionId: 0, targetNodeId: 0 }],
     });
-    const tree = somaOnlyTree();
-    tree.roots[0] = { ...tree.roots[0], x: 700, y: 650, z: 840 };
+    const tree = somaOnlyTree([700, 650, 840]);
 
     const [group] = await harness(file, { loadTree: async () => tree }).run([
       { file, populations: ['default'] },
@@ -361,8 +356,7 @@ describe('loadAfferentSynapses', () => {
     const file = writeEdgesFile('edges-world-morphology.h5', {
       default: [{ position: [20, 0, 0], sectionId: 0, targetNodeId: 0 }],
     });
-    const tree = somaOnlyTree();
-    tree.roots[0] = { ...tree.roots[0], x: 700, y: 650, z: 840 };
+    const tree = somaOnlyTree([700, 650, 840]);
 
     const [group] = await harness(file, { loadTree: async () => tree }).run([
       { file, populations: ['default'] },

@@ -49,6 +49,7 @@ const h = vi.hoisted(() => {
         depthOf[2],
       ]
     );
+    setSynapses = vi.fn();
     setLocationMarkers = vi.fn();
     setLocationMarkerRadius = vi.fn();
     markerAt = vi.fn((_x: number, _y: number) => null);
@@ -333,6 +334,16 @@ describe('CircuitCells', () => {
     expect(viewer.setCellColors).toHaveBeenCalledTimes(2);
     expect(viewer.setData).toHaveBeenCalledTimes(1);
     expect(h.viewers).toHaveLength(1);
+  });
+
+  it('hands the synapses over, none to begin with, and the same groups once', () => {
+    const { viewer, update } = view();
+    expect(viewer.setSynapses).toHaveBeenLastCalledWith([]);
+    const synapses = [{ color: '#ff0000', coordinates: Float32Array.of(1, 2, 3) }];
+    update({ synapses });
+    update({ synapses, somaRadius: 20 });
+    expect(viewer.setSynapses).toHaveBeenCalledTimes(2);
+    expect(viewer.setSynapses).toHaveBeenLastCalledWith(synapses);
   });
 
   it('draws the location markers at their radius, and tells where they are where labels want it', () => {

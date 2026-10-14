@@ -10,7 +10,7 @@ import * as THREE from 'three';
 
 import { followViewport, type ImpostorUniforms, PIXEL_UM } from './impostors';
 
-import type { ElectrodeGroup, Vec3 } from '../types';
+import type { ElectrodeGroup, SynapseGroup, Vec3 } from '../types';
 
 /** How much larger and how much nearer white the highlighted array is drawn, as in the somas view. */
 const HIGHLIGHT_SCALE = 1.55;
@@ -48,6 +48,7 @@ uniform vec4 uViewport;
 uniform float uRadius;
 uniform float uMinRadius;
 uniform float uRing;
+uniform float uLift;
 in vec3 aContact;
 in vec4 aLook;
 out vec3 vColour;
@@ -62,7 +63,7 @@ void main() {
 	vInner = r / outer;
 	vColour = aLook.rgb;
 	vCorner = position.xy;
-	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z, 1.0 );
+	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
 }
 `;
 
@@ -80,16 +81,25 @@ void main() {
 }
 `;
 
-/** The contacts' material, its ring a CSS pixel wide on a screen of `pixelRatio`. */
+/**
+ * The contacts' material, its ring a CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
+ * synapses are, have no ring and are hidden by what is nearer the eye, brought towards it by their radius to sit on the
+ * surface they are on rather than in it.
+ */
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
-  pixelRatio: number
+  pixelRatio: number,
+  { among = false } = {}
 ): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({
-    uniforms: { ...uniforms, uRing: { value: RING_PX * pixelRatio } },
+    uniforms: {
+      ...uniforms,
+      uRing: { value: among ? 0 : RING_PX * pixelRatio },
+      uLift: { value: among ? 1 : 0 },
+    },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    depthTest: false,
+    depthTest: among,
     depthWrite: false,
   });
   followViewport(material, uniforms);
@@ -117,6 +127,33 @@ export function writeElectrodes(
     const xyz = group.coordinates;
     for (let i = 0; i + 2 < xyz.length; i += 3, k++) {
       for (let c = 0; c < 3; c++) write(contacts, 3 * k + c, xyz[i + c] - centre[c]);
+      for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
+    }
+  }
+  return changed();
+}
+
+/**
+ * As `writeElectrodes`, for synapses: each group's points in its colour, at the scale of 1. `coordinates` are in the
+ * circuit's frame, three floats each.
+ */
+export function writeSynapses(
+  groups: readonly SynapseGroup[],
+  centre: Vec3,
+  contacts: Float32Array,
+  looks: Float32Array
+): boolean {
+  const { write, changed } = writer();
+  let k = 0;
+  for (const { color, coordinates } of groups) {
+    const look = [
+      ...chroma(chroma.valid(color) ? color : UNREADABLE)
+        .gl()
+        .slice(0, 3),
+      1,
+    ];
+    for (let i = 0; i + 2 < coordinates.length; i += 3, k++) {
+      for (let c = 0; c < 3; c++) write(contacts, 3 * k + c, coordinates[i + c] - centre[c]);
       for (let c = 0; c < 4; c++) write(looks, 4 * k + c, look[c]);
     }
   }

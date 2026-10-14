@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
 import {
   centroidOf,
   IDENTITY_QUATERNION,
@@ -8,8 +9,9 @@ import {
 } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import {
-  projectionCellLoader,
+  loadSections,
   SequentialLoaderClearedError,
   sequentialCellLoader,
 } from '@/features/scan-config/components/circuit-viz/sequential-loader';
@@ -347,12 +349,16 @@ export function useSmallCircuitSource({
       const request = synapseTarget ? morphologyRequest(synapseTarget, index, true) : null;
       if (!request) return null;
 
-      // Its own queue: the projection must not be dropped by the axon toggle's
-      // `clear()`, and it shares the response cache either way.
-      const cell = await projectionCellLoader.load(request);
-      return cell?.data ?? null;
+      // Out of the queue, which the axon toggle's `clear()` empties; the response cache is the same either way.
+      const { circuitId: id, file, name } = request;
+      const sections = await loadSections({
+        path: circuitMorphologyPath(id, file, name),
+        virtualLabId,
+        projectId,
+      });
+      return treeOf(sections, { axons: true });
     },
-    [morphologyRequest, synapseTarget]
+    [morphologyRequest, synapseTarget, virtualLabId, projectId]
   );
 
   const synapses = useAfferentSynapses({
@@ -366,11 +372,7 @@ export function useSmallCircuitSource({
 
   const retry = useCallback(() => {
     setSonataSectionIds(EMPTY_SECTION_IDS);
-    // Both queues: a synapse projection runs on its own so the axon toggle
-    // cannot drop it, which also means the cell queue's `clear()` does not reach
-    // it and a failed projection would never be redone.
     sequentialCellLoader.clear();
-    projectionCellLoader.clear();
   }, []);
 
   const anchor = useMemo(() => (subject ? centroidOf(subject.geometry) : null), [subject]);

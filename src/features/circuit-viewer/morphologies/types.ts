@@ -78,6 +78,12 @@ export interface ElectrodeTransform {
   phase: 'end';
 }
 
+/** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */
+export interface SynapseGroup {
+  color: string;
+  coordinates: Float32Array | readonly number[];
+}
+
 /** A contact drawn at a point of the view: its array, and where it is in the circuit's frame. */
 export interface ElectrodeHit {
   id: string;
@@ -170,6 +176,11 @@ export interface CircuitMorphologyView extends ViewControls {
   setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void;
   /** A contact's radius, in µm. */
   setElectrodeRadius(radius: number): void;
+  /**
+   * Draw these synapses on the cells, a dot 0.5 µm round and 2 device pixels at the least each, hidden by what is nearer
+   * the eye. Other groups are drawn again; the same ones, nothing.
+   */
+  setSynapses(groups: readonly SynapseGroup[]): void;
   /**
    * The electrode drawn at a point of the view, in CSS pixels from its top left corner, or the nearest within a few
    * pixels: its array and the contact's position. Null where there is none.

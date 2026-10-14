@@ -17,6 +17,7 @@ import {
   minRadius,
   writeElectrodes,
   writeMarkers,
+  writeSynapses,
 } from './electrodes';
 import {
   cellNearMiddle,
@@ -49,6 +50,7 @@ import type {
   Population,
   ScreenPoint,
   SectionSpot,
+  SynapseGroup,
   Vec3,
 } from '../types';
 
@@ -74,6 +76,9 @@ const MARKER_RADIUS = 3;
 const MARKER_MIN_RADIUS = 3;
 /** How far from a marker's centre a point is still on it, in CSS pixels: morphoviewer's. */
 const MARKER_REACH = 9;
+/** A synapse's radius in µm, and the least it is drawn with in device pixels: the small-circuit view's. */
+const SYNAPSE_RADIUS = 0.5;
+const SYNAPSE_MIN_RADIUS = 2;
 const point = new THREE.Vector3();
 
 /** `instances` quads, for the caller to add the attributes a shader places each by. */
@@ -205,6 +210,18 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.renderer.getPixelRatio()
   );
   private electrodes: Quads | null = null;
+  private synapseGroups: readonly SynapseGroup[] = [];
+  private synapseMaterial = electrodeMaterial(
+    {
+      uViewport: this.uniforms.uViewport,
+      uRadius: { value: SYNAPSE_RADIUS },
+      uMinRadius: { value: SYNAPSE_MIN_RADIUS },
+      uRingColour: this.electrodeUniforms.uRingColour,
+    },
+    this.renderer.getPixelRatio(),
+    { among: true }
+  );
+  private synapseDots: Quads | null = null;
   private markers: readonly LocationMarker[] = [];
   /** Each marker's point in the circuit's frame and its section's type; null for one that is not drawn. */
   private markerPoints: ({ point: Vec3; type: SectionType } | null)[] = [];
@@ -264,6 +281,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.electrodeMaterial.dispose();
     this.markerDots?.geometry.dispose();
     this.markerMaterial.dispose();
+    this.synapseDots?.geometry.dispose();
+    this.synapseMaterial.dispose();
     this.spikeTimeListeners.clear();
     this.spikesPlayingListeners.clear();
     this.markerListeners.clear();
@@ -343,6 +362,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     } else {
       this.centre = data.centre;
       this.drawElectrodes();
+      this.drawSynapses();
     }
     this.drawMarkers();
     this.bound();
@@ -389,6 +409,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.cloudUniforms.uOffset.value.fromArray(this.centre);
     this.bound();
     this.drawElectrodes();
+    this.drawSynapses();
     if (reframe) this.resetView();
   }
 
@@ -660,6 +681,12 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.drawElectrodes();
   }
 
+  setSynapses(groups: readonly SynapseGroup[]): void {
+    if (groups === this.synapseGroups) return;
+    this.synapseGroups = groups;
+    this.drawSynapses();
+  }
+
   setElectrodeRadius(radius: number): void {
     this.electrodeUniforms.uRadius.value = radius;
     this.electrodeUniforms.uMinRadius.value = minRadius(radius);
@@ -794,6 +821,18 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
           contacts,
           looks
         )
+    );
+  }
+
+  /** The synapses where the circuit's frame puts them, after the cells, which hide those behind them. */
+  private drawSynapses(): void {
+    let count = 0;
+    for (const { coordinates } of this.synapseGroups) count += Math.floor(coordinates.length / 3);
+    this.synapseDots = this.drawDots(
+      this.synapseDots,
+      count,
+      { material: this.synapseMaterial, name: 'synapses', order: 0.5 },
+      (contacts, looks) => writeSynapses(this.synapseGroups, this.centre, contacts, looks)
     );
   }
 

@@ -1,10 +1,8 @@
 import { Dataset, type Entity, Group, type File as H5File } from 'h5wasm';
 
 import { isCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   createSurfaceSdf,
-  drawnRadiusFactor,
   isSomaSection,
   projectOntoSurface,
   rescueOffSurface,
@@ -18,8 +16,8 @@ import {
 import { assertArrayNumber } from '@/util/type-guards';
 
 import type { NodePlacement } from '@/features/circuit-nodes/geometry-utils';
+import type { TreeMorphology } from '@/features/circuit-viewer/morphologies/load/tree';
 import type { Vec3 } from '@/features/scan-config/components/drawn-surface';
-import type { MorphoViewerTree } from '@/morpho-viewer';
 import type { Report } from './report';
 
 /** What `syn_type_id` says a synapse is. */
@@ -54,11 +52,8 @@ export type SynapseLoaderInput = {
   openEdgesFile: (file: string) => Promise<{ file: H5File; close: () => Promise<void> }>;
   /** The placement of a node by its index in the drawn population. */
   placementOf: (nodeIndex: number) => NodePlacement | null;
-  /**
-   * The morphology of a node by its index, in morphology-local coordinates —
-   * the same tree the viewer paints.
-   */
-  loadTree: (nodeIndex: number) => Promise<MorphoViewerTree | null>;
+  /** The morphology of a node by its index, in its own frame, as the viewer draws it. */
+  loadTree: (nodeIndex: number) => Promise<TreeMorphology | null>;
 };
 
 /** The signed distance fields one cell needs, built once and shared. */
@@ -71,27 +66,10 @@ type CellSurfaces = {
   somaEnvelope: SomaEnvelope | null;
 };
 
-/**
- * One morphology sample, kept in both spaces: local because that is where the
- * renderer decides how thick to draw a segment, world because that is where the
- * synapses are.
- */
-type Sample = { local: Vec3; point: SurfacePoint };
-
-/**
- * The segment between two samples as the viewer paints it, radii and all.
- *
- * Passing the same sample twice gives the degenerate segment a parentless root
- * is drawn as, which the renderer draws at its true radius.
- *
- * @see drawnRadiusFactor — why the radii are not the ones the morphology states.
- */
-function drawnSegment(from: Sample, to: Sample): SurfaceSegment {
-  const factor = drawnRadiusFactor(from.local, to.local);
-  return {
-    from: { ...from.point, radius: from.point.radius * factor },
-    to: { ...to.point, radius: to.point.radius * factor },
-  };
+/** The point `at` floats into `values` of the morphology, placed in the world, with the radius after it. */
+function placed(values: ArrayLike<number>, at: number, placement: NodePlacement): SurfacePoint {
+  const [x, y, z] = transform(values[at], values[at + 1], values[at + 2], placement);
+  return { x, y, z, radius: values[at + 3] };
 }
 
 /**
@@ -137,11 +115,9 @@ function positionAxes(prefix: (typeof POSITION_PREFIXES)[number]) {
  *
  * Positions come from `afferent_surface_*`, which is already on the neurite
  * surface. Soma synapses are the exception: they are computed against a
- * spherical soma while a morphology stores a stack of cones, so they get
+ * spherical soma of SONATA's own, which need not be the one drawn, so they get
  * projected onto the drawn soma ({@link projectOntoSurface}) or they float free
- * of it. "Drawn" there means the soma on screen, which is thinner than the one
- * the morphology describes — {@link drawnRadiusFactor} explains why, and why we
- * follow the picture rather than the data.
+ * of it.
  *
  * Neurite synapses are left where SONATA put them, with one exception: a few
  * arrive near the soma yet clear of everything drawn, and those get pulled back
@@ -432,7 +408,7 @@ async function buildCellSurfaces(
     return null;
   }
 
-  let tree: MorphoViewerTree | null;
+  let tree: TreeMorphology | null;
   try {
     tree = await loadTree(cellIndex);
   } catch (error) {
@@ -442,33 +418,19 @@ async function buildCellSurfaces(
     report.logFailure(error);
     return null;
   }
+  // As the viewer draws it: a round-capped cone a segment, and the soma a sphere, the degenerate segment.
   const somaSegments: SurfaceSegment[] = [];
-  const wholeSegments: SurfaceSegment[] = [];
-  const stack = (tree?.roots ?? []).map((item) => ({
-    item,
-    parent: null as Sample | null,
-  }));
-  while (stack.length > 0) {
-    const entry = stack.pop();
-    if (!entry) continue;
-
-    const { item, parent } = entry;
-    const [x, y, z] = transform(item.x, item.y, item.z, placement);
-    const sample: Sample = {
-      local: [item.x, item.y, item.z],
-      point: { x, y, z, radius: item.radius },
-    };
-    // Mirror the viewer's own segment construction: a parentless root is drawn
-    // as a degenerate segment (a sphere), every other sample as a cone from
-    // its parent — soma-typed ones by the soma painter, the rest by the
-    // neurite painter. Reconstructing the soma any other way, by chaining
-    // samples in traversal order say, invents surfaces the viewer never draws,
-    // and synapses projected onto those hang off the mesh.
-    const segment = parent ? drawnSegment(parent, sample) : drawnSegment(sample, sample);
-    if (!parent || item.type === SectionType.Soma) somaSegments.push(segment);
-    wholeSegments.push(segment);
-
-    for (const child of item.children ?? []) stack.push({ item: child, parent: sample });
+  if (tree?.soma) {
+    const centre = placed(tree.soma, 0, placement);
+    somaSegments.push({ from: centre, to: centre });
+  }
+  const wholeSegments: SurfaceSegment[] = [...somaSegments];
+  const segments = tree?.segments ?? new Float32Array(0);
+  for (let at = 0; at < segments.length; at += 8) {
+    wholeSegments.push({
+      from: placed(segments, at, placement),
+      to: placed(segments, at + 4, placement),
+    });
   }
   report.logTask(
     `Cell #${cellIndex} draws ${wholeSegments.length} segment(s), ${somaSegments.length} of them soma.`
@@ -493,11 +455,6 @@ async function buildCellSurfaces(
  * neurite surface already, so a median near zero means any floating-looking
  * markers are a drawing artefact (a marker wider than its own branch, or a
  * branch out of frame) rather than misplaced coordinates.
- *
- * Near zero, not zero: neurites keep their SONATA coordinates, so they sit on
- * the branch the morphology describes rather than the slightly thinner one on
- * screen. At a median radius of 0.22µm that gap is measured in hundredths of a
- * micron — see {@link drawnRadiusFactor}.
  */
 function probeNeuriteSynapses(
   report: Report,

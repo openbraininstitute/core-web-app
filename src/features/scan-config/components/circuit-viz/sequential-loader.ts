@@ -168,6 +168,3 @@ function evictFromCache(key: string, promise: Promise<unknown>) {
 }
 
 export const sequentialCellLoader = new SequentialLoader(actualLoad);
-
-/** Synapse projection's own queue: shares the URL cache, unaffected by the axon-toggle clear(). */
-export const projectionCellLoader = new SequentialLoader(actualLoad);
