@@ -681,6 +681,7 @@ describe('the circuit morphology viewer', () => {
     expect(inner.chunks.children).toHaveLength(0);
     expect(somasOf(inner)).toBeUndefined();
     expect(inner.uniforms.uCells.value).toBeNull();
+    expect(inner.uniforms.uGlow.value).toBeNull();
     expect(frames(inner)).toBe(1);
   });
 
@@ -693,6 +694,7 @@ describe('the circuit morphology viewer', () => {
       segmentsOf(inner).geometry,
       somasOf(inner).geometry,
       inner.uniforms.uCells.value as THREE.DataTexture,
+      inner.uniforms.uGlow.value as THREE.DataTexture,
       inner.somaMaterial,
       inner.look.material,
       inner.idMaterials.segment,
@@ -704,5 +706,166 @@ describe('the circuit morphology viewer', () => {
     viewer.dispose();
     viewers = [];
     for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("the circuit morphology viewer's spike replay", () => {
+  /** Cell 0 fires at 10 ms and cell 2 at 50, in a recording of 100 ms; the rest are past any circuit. */
+  const SPIKES = {
+    cellIndices: Uint32Array.of(0, 2, 0xffffffff),
+    times: Float32Array.of(10, 50, 60),
+    timeMinInMs: 0,
+    timeMaxInMs: 100,
+  };
+  const glow = (inner: Internals) => [
+    ...((inner.uniforms.uGlow.value as THREE.DataTexture).image.data as Uint8Array).subarray(0, 3),
+  ];
+  /** A glow as the cell table keeps it. */
+  const shaped = (glow: number) => Math.round(255 * glow ** 0.4);
+  let now = 0;
+
+  beforeAll(() => {
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+  });
+
+  /** A turn of the loop, as long after the last as this. */
+  function turnAfter(inner: Internals, ms: number): number {
+    now += ms;
+    return frames(inner);
+  }
+
+  it("glows each cell by its spikes at the replay's moment, from the cell table's glow beside its colours", () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const glowTexture = inner.uniforms.uGlow.value as THREE.DataTexture;
+    expect(glowTexture.format).toBe(THREE.RedFormat);
+    expect(glowTexture.image.width).toBe(2048);
+    viewer.setSpikes(SPIKES);
+    expect(glow(inner)).toEqual([0, 0, 0]);
+
+    frames(inner);
+    viewer.seekSpikes(10);
+    expect(glow(inner)).toEqual([255, 0, 0]);
+    expect(frames(inner)).toBe(1);
+    // A quarter of a second on screen, at the default 100 ms a second: down to 1/e of it 25 ms on.
+    viewer.seekSpikes(50);
+    expect(glow(inner)).toEqual([shaped(Math.exp(-40 / 25)), 0, 255]);
+
+    viewer.setSpikeSpeed(200);
+    expect(glow(inner)).toEqual([shaped(Math.exp(-40 / 50)), 0, 255]);
+    viewer.setSpikeAfterglow(0.125);
+    expect(glow(inner)).toEqual([shaped(Math.exp(-40 / 25)), 0, 255]);
+    expect(frames(inner)).toBe(1);
+
+    viewer.setSpikes(null);
+    expect(glow(inner)).toEqual([0, 0, 0]);
+    expect(frames(inner)).toBe(1);
+    // No cell glows otherwise: no frame.
+    viewer.setSpikeSpeed(100);
+    expect(frames(inner)).toBe(0);
+  });
+
+  it('rings a glowing cell on a light background, in the somas view’s ring colour, and not on a dark one', () => {
+    const { viewer, inner } = make();
+    const rim = inner.uniforms.uGlowRim.value;
+    expect(rim.w).toBe(1);
+    expect(new THREE.Color(rim.x, rim.y, rim.z).getHexString()).toBe('4d4233');
+    frames(inner);
+    viewer.setDark(true);
+    expect(rim.w).toBe(0);
+    expect(frames(inner)).toBe(1);
+    viewer.setDark(false);
+    expect(rim.w).toBe(1);
+  });
+
+  it('lights the cells of data that comes after the spikes', () => {
+    const { viewer, inner } = make();
+    viewer.setSpikes(SPIKES);
+    viewer.seekSpikes(50);
+    viewer.setData(circuit());
+    expect(glow(inner)[2]).toBe(255);
+  });
+
+  it('tells of the moment whenever it moves, but not where it stays', () => {
+    const { viewer } = make();
+    viewer.setData(circuit());
+    const told = vi.fn();
+    const stop = viewer.onSpikeTime(told);
+    viewer.setSpikes(SPIKES);
+    viewer.seekSpikes(30);
+    viewer.seekSpikes(30);
+    viewer.setSpikeSpeed(50);
+    viewer.setSpikeAfterglow(1);
+    expect(told.mock.calls).toEqual([[0], [30]]);
+
+    stop();
+    viewer.seekSpikes(40);
+    expect(told).toHaveBeenCalledTimes(2);
+  });
+
+  it('moves on a frame at a time while it plays, and stops at the end of the spikes, which it tells of', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setSpikes(SPIKES);
+    const times: number[] = [];
+    const playing = vi.fn();
+    viewer.onSpikeTime((time) => times.push(time));
+    viewer.onSpikesPlaying(playing);
+    frames(inner);
+    frames(inner);
+    expect(inner.renderer.loop).toBeNull();
+
+    viewer.setSpikesPlaying(true);
+    expect(playing.mock.calls).toEqual([[true]]);
+    // 40 ms of the page is 4 ms of the replay: a frame to start the loop, then none while nothing glows.
+    expect(turnAfter(inner, 40)).toBe(1);
+    expect(times.at(-1)).toBeCloseTo(4);
+    expect(turnAfter(inner, 40)).toBe(0);
+    expect(times.at(-1)).toBeCloseTo(8);
+    expect(inner.renderer.loop).not.toBeNull();
+    expect(turnAfter(inner, 30)).toBe(1);
+    expect(times.at(-1)).toBeCloseTo(11);
+    expect(glow(inner)[0]).toBe(shaped(Math.exp(-1 / 25)));
+    // A frame is worth a quarter of a second at the most: a page away for longer takes up where it was.
+    turnAfter(inner, 10_000);
+    expect(times.at(-1)).toBeCloseTo(36);
+
+    for (let turn = 0; turn < 10 && times.at(-1) !== 100; turn++) turnAfter(inner, 250);
+    expect(times.at(-1)).toBe(100);
+    expect(playing.mock.calls).toEqual([[true], [false]]);
+    turnAfter(inner, 16);
+    expect(inner.renderer.loop).toBeNull();
+
+    // Played again at the end, it starts from the beginning.
+    viewer.setSpikesPlaying(true);
+    expect(times.at(-1)).toBe(0);
+  });
+
+  it('stops playing for spikes handed over in the middle, and tells of it', () => {
+    const { viewer } = make();
+    viewer.setData(circuit());
+    viewer.setSpikes(SPIKES);
+    const playing = vi.fn();
+    viewer.onSpikesPlaying(playing);
+    viewer.setSpikesPlaying(true);
+    viewer.setSpikesPlaying(true);
+    viewer.setSpikes({ ...SPIKES });
+    expect(playing.mock.calls).toEqual([[true], [false]]);
+    viewer.setSpikes(SPIKES);
+    expect(playing).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets go of its listeners when it is disposed of', () => {
+    const { viewer } = make();
+    viewer.setData(circuit());
+    viewer.setSpikes(SPIKES);
+    const told = vi.fn();
+    viewer.onSpikeTime(told);
+    viewer.onSpikesPlaying(told);
+    viewer.dispose();
+    viewers = [];
+    viewer.seekSpikes(20);
+    viewer.setSpikesPlaying(true);
+    expect(told).not.toHaveBeenCalled();
   });
 });

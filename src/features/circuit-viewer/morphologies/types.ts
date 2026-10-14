@@ -1,6 +1,6 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
+import type { MorphoViewerOverlayTransformEvent, MorphoViewerSpikes } from '@/morpho-viewer';
 
 export type Vec3 = [number, number, number];
 
@@ -78,6 +78,23 @@ export interface CircuitMorphologyView extends ViewControls {
   electrodeAt(x: number, y: number): ElectrodeHit | null;
   /** The point of the circuit drawn at a point of the view, in CSS pixels, as deep in the view as `depthOf`. */
   fromScreen(x: number, y: number, depthOf: Vec3): Vec3;
+  /**
+   * Replay these spikes over the cells, each glowing as it fires and fading after, from the start and paused; null
+   * replays none. A spike's cell is the cell of that number.
+   */
+  setSpikes(spikes: MorphoViewerSpikes | null): void;
+  /** Move the replay to this moment, in simulated ms. */
+  seekSpikes(timeInMs: number): void;
+  /** Played at the end, the replay starts again from the beginning. */
+  setSpikesPlaying(playing: boolean): void;
+  /** Simulated ms a second of the replay. */
+  setSpikeSpeed(speed: number): void;
+  /** The seconds a spike takes to fade to 1/e. */
+  setSpikeAfterglow(seconds: number): void;
+  /** Told the replay's moment whenever it moves, a frame at a time while it plays. */
+  onSpikeTime(listener: (timeInMs: number) => void): () => void;
+  /** Told when the replay plays or stops, the end of the spikes included. */
+  onSpikesPlaying(listener: (playing: boolean) => void): () => void;
   setDark(dark: boolean): void;
   resetView(): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */

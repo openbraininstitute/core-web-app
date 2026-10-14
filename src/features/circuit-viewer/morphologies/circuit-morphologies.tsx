@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  DEFAULT_SPIKE_SPEED,
+} from '@openbraininstitute/morphoviewer/dist/spikes/spiking-circuit';
 import { useEffect, useRef, useState } from 'react';
 
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
@@ -13,6 +17,7 @@ import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
 import { trackPointer } from './pointer';
 
+import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { MorphoViewerSignals, MorphoViewerSnapshotOptions } from '@/morpho-viewer';
 import type {
   CellColors,
@@ -41,6 +46,8 @@ export interface CircuitMorphologiesProps {
   selectedElectrode?: string | null;
   /** Told where an array was moved or turned to with the pointer; without it the arrays stay put. */
   onElectrodeTransform?: (transform: ElectrodeTransform) => void;
+  /** Spikes to replay over the cells, and the transport driving them, as the somas view takes them and with its defaults. */
+  spikes?: ISpikeReplayBinding;
   backgroundColor: string;
   showScalebar: boolean;
   /** The circuit viewer's bus, on which this view answers the camera reset and the snapshot. */
@@ -80,6 +87,7 @@ export function CircuitMorphologies({
   electrodeRadius,
   selectedElectrode = null,
   onElectrodeTransform,
+  spikes,
   backgroundColor,
   showScalebar,
   signals,
@@ -105,6 +113,32 @@ export function CircuitMorphologies({
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
+
+  // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
+  const timeChanged = useLatest(spikes?.onTimeChange);
+  const playingChanged = useLatest(spikes?.onPlayingChange);
+  useEffect(
+    () => viewer?.onSpikeTime((time) => timeChanged.current?.(time)),
+    [viewer, timeChanged]
+  );
+  useEffect(
+    () => viewer?.onSpikesPlaying((playing) => playingChanged.current?.(playing)),
+    [viewer, playingChanged]
+  );
+  const {
+    data: spikeData,
+    timeInMs,
+    playing = false,
+    speed = DEFAULT_SPIKE_SPEED,
+    afterglowInSeconds = DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  } = spikes ?? {};
+  useEffect(() => viewer?.setSpikes(spikeData ?? null), [viewer, spikeData]);
+  useEffect(() => viewer?.setSpikeSpeed(speed), [viewer, speed]);
+  useEffect(() => viewer?.setSpikeAfterglow(afterglowInSeconds), [viewer, afterglowInSeconds]);
+  useEffect(() => {
+    if (timeInMs !== undefined) viewer?.seekSpikes(timeInMs);
+  }, [viewer, timeInMs]);
+  useEffect(() => viewer?.setSpikesPlaying(playing), [viewer, playing]);
 
   const [electrodeTracker, setElectrodeTracker] = useState<ElectrodeTracker | null>(null);
   const transformed = useLatest(onElectrodeTransform);

@@ -12,11 +12,14 @@ const opaque = (color: string) => [...chroma(color).rgb(), 255];
 
 /**
  * A texel a cell, which the shaders look up by the cell's number: its colour, and in alpha whether it is drawn.
- * Colouring, hiding and receding cells rewrite this texture and nothing else.
+ * Colouring, hiding and receding cells rewrite this texture and nothing else. How brightly each cell glows is a
+ * texture of its own beside it, a byte a cell, which a spike replay rewrites every frame.
  */
 export class CellTable {
   readonly texture: THREE.DataTexture;
+  readonly glowTexture: THREE.DataTexture;
   private texels: Uint8Array;
+  private glowTexels: Uint8Array;
 
   constructor(readonly cells: number) {
     const rows = Math.max(1, Math.ceil(cells / ROW));
@@ -24,6 +27,25 @@ export class CellTable {
     this.texture = new THREE.DataTexture(this.texels, ROW, rows, THREE.RGBAFormat);
     // The GPU hands the shaders linear colours.
     this.texture.colorSpace = THREE.SRGBColorSpace;
+    this.glowTexels = new Uint8Array(ROW * rows);
+    this.glowTexture = new THREE.DataTexture(this.glowTexels, ROW, rows, THREE.RedFormat);
+    this.glowTexture.needsUpdate = true;
+  }
+
+  /**
+   * How brightly each cell glows, from 0 to 1, by its number, kept as the somas view shapes it: held near full, then let
+   * go. True where that changed a cell.
+   */
+  glow(glow: Readonly<Float32Array>): boolean {
+    let changed = false;
+    for (let cell = 0; cell < this.cells; cell++) {
+      const byte = glow[cell] > 0 ? Math.round(255 * glow[cell] ** 0.4) : 0;
+      if (byte === this.glowTexels[cell]) continue;
+      this.glowTexels[cell] = byte;
+      changed = true;
+    }
+    if (changed) this.glowTexture.needsUpdate = true;
+    return changed;
   }
 
   /** Each cell in its column's colour, or in `own` where it has no column or its column has no colour of its own. */
@@ -44,5 +66,6 @@ export class CellTable {
 
   dispose(): void {
     this.texture.dispose();
+    this.glowTexture.dispose();
   }
 }

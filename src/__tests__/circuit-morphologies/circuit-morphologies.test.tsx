@@ -44,9 +44,29 @@ const h = vi.hoisted(() => {
     resetView = vi.fn();
     dispose = vi.fn();
     snapshot = vi.fn((): HTMLCanvasElement | null => null);
+    /** Tells of the replay starting again, as the engine does. */
+    setSpikes = vi.fn(() => {
+      for (const listener of this.spikeTimeListeners) listener(0);
+    });
+    seekSpikes = vi.fn();
+    setSpikesPlaying = vi.fn();
+    setSpikeSpeed = vi.fn();
+    setSpikeAfterglow = vi.fn();
+    spikeTimeListeners = new Set<(timeInMs: number) => void>();
+    spikesPlayingListeners = new Set<(playing: boolean) => void>();
 
     constructor(readonly host: HTMLElement) {
       state.viewers.push(this);
+    }
+
+    onSpikeTime(listener: (timeInMs: number) => void) {
+      this.spikeTimeListeners.add(listener);
+      return () => this.spikeTimeListeners.delete(listener);
+    }
+
+    onSpikesPlaying(listener: (playing: boolean) => void) {
+      this.spikesPlayingListeners.add(listener);
+      return () => this.spikesPlayingListeners.delete(listener);
     }
 
     onWheelWithoutCtrl() {
@@ -293,6 +313,62 @@ describe('CircuitMorphologies', () => {
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(viewer.pick).not.toHaveBeenCalled();
+  });
+
+  it("replays no spikes where it is given none, at the somas view's speed and afterglow", () => {
+    const { viewer } = view();
+    expect(viewer.setSpikes).toHaveBeenCalledExactlyOnceWith(null);
+    expect(viewer.setSpikesPlaying).toHaveBeenCalledExactlyOnceWith(false);
+    expect(viewer.seekSpikes).not.toHaveBeenCalled();
+    expect(viewer.setSpikeSpeed).toHaveBeenCalledExactlyOnceWith(100);
+    expect(viewer.setSpikeAfterglow).toHaveBeenCalledExactlyOnceWith(0.25);
+  });
+
+  it('hands the engine the spikes and the transport, and seeks only to a moment it is given', () => {
+    const data = {
+      cellIndices: Uint32Array.of(1),
+      times: Float32Array.of(5),
+      timeMinInMs: 0,
+      timeMaxInMs: 10,
+    };
+    const transport = { data, playing: false, speed: 50, afterglowInSeconds: 0.5 };
+    const { viewer, update } = view({ spikes: transport });
+    expect(viewer.setSpikes).toHaveBeenCalledExactlyOnceWith(data);
+    expect(viewer.setSpikeSpeed).toHaveBeenCalledExactlyOnceWith(50);
+    expect(viewer.setSpikeAfterglow).toHaveBeenCalledExactlyOnceWith(0.5);
+    expect(viewer.seekSpikes).not.toHaveBeenCalled();
+    // The spikes first, which start the replay again, then where it is to be.
+    expect(viewer.setSpikes.mock.invocationCallOrder[0]).toBeLessThan(
+      viewer.setSpikesPlaying.mock.invocationCallOrder[0]
+    );
+
+    update({ spikes: { ...transport, timeInMs: 7, playing: true } });
+    expect(viewer.seekSpikes).toHaveBeenCalledExactlyOnceWith(7);
+    expect(viewer.setSpikesPlaying).toHaveBeenLastCalledWith(true);
+    expect(viewer.setSpikes).toHaveBeenCalledTimes(1);
+    // Let go of, the seek stays where it went.
+    update({ spikes: { ...transport, playing: true } });
+    expect(viewer.seekSpikes).toHaveBeenCalledTimes(1);
+  });
+
+  it("tells of the replay's moment and of its playing, through whichever listeners it has by then", () => {
+    const told: string[] = [];
+    const spikes = (name: string) => ({
+      onTimeChange: (time: number) => told.push(`${name} at ${time}`),
+      onPlayingChange: (playing: boolean) => told.push(`${name} ${playing ? 'plays' : 'stops'}`),
+    });
+    const { viewer, update, unmount } = view({ spikes: spikes('first') });
+    // Heard before the spikes were handed over: the replay starting with them.
+    expect(told).toEqual(['first at 0']);
+
+    update({ spikes: spikes('second') });
+    for (const listener of viewer.spikeTimeListeners) listener(12);
+    for (const listener of viewer.spikesPlayingListeners) listener(false);
+    expect(told).toEqual(['first at 0', 'second at 12', 'second stops']);
+
+    unmount();
+    expect(viewer.spikeTimeListeners.size).toBe(0);
+    expect(viewer.spikesPlayingListeners.size).toBe(0);
   });
 
   it('draws the ruler where the setting has it, in the colour read against the background, and the axes', () => {

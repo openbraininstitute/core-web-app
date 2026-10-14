@@ -285,6 +285,20 @@ describe('LargeCircuitPreview morphologies', () => {
     });
   });
 
+  it('replays the spikes over the morphologies as over the somas', async () => {
+    const spikes = {
+      data: {
+        cellIndices: Uint32Array.of(1),
+        times: Float32Array.of(5),
+        timeMinInMs: 0,
+        timeMaxInMs: 10,
+      },
+      playing: true,
+      onTimeChange: vi.fn(),
+    };
+    expect((await shown({ spikes })).spikes).toBe(spikes);
+  });
+
   it('holds the electrodes still where the form cannot take a move', async () => {
     const view = await shown({ overlaysInteractive: false, onOverlayTransform: vi.fn() });
     expect(view.onElectrodeTransform).toBeUndefined();

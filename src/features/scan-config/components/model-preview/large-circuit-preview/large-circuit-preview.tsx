@@ -126,11 +126,13 @@ export interface LargeCircuitPreviewProps {
    */
   features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
   /**
-   * Spikes to replay over the somas, and the transport driving them.
+   * Spikes to replay over the cells, somas or morphologies, and the transport
+   * driving them.
    *
    * A soma lights up the same way a morphology does — the viewer takes a
    * brightness per cell either way — so this is the identical binding
-   * {@link CircuitViz} gets, spread across the same props.
+   * {@link CircuitViz} gets, spread across the same props. The view that takes
+   * over from the other replays from the start.
    */
   spikes?: ISpikeReplayBinding;
 }
@@ -381,6 +383,7 @@ export function LargeCircuitPreview({
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}
+          spikes={spikes}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           signals={signals}

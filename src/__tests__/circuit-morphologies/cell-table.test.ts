@@ -57,4 +57,37 @@ describe('the cell table', () => {
     expect(texel(table, 0)).toEqual([0, 128, 255, 255]);
     expect(table.texture.version).toBeGreaterThan(version);
   });
+
+  it('has a byte of glow a cell beside the colours, laid out as they are, none, and uploaded', () => {
+    const { image, format, colorSpace, version } = new CellTable(2049).glowTexture;
+    expect([image.width, image.height]).toEqual([2048, 2]);
+    expect(format).toBe(THREE.RedFormat);
+    expect(colorSpace).toBe(THREE.NoColorSpace);
+    expect((image.data as Uint8Array).every((byte) => byte === 0)).toBe(true);
+    expect(version).toBeGreaterThan(0);
+  });
+
+  it('glows each cell as the somas view shapes it, and uploads that alone, where it changed', () => {
+    const table = new CellTable(3);
+    table.paint(null, OWN);
+    const colours = table.texture.version;
+    const glow = table.glowTexture.version;
+    expect(table.glow(Float32Array.of(0, 0.5, 1))).toBe(true);
+    // 0.5 to the power of 0.4.
+    expect([...(table.glowTexture.image.data as Uint8Array).subarray(0, 3)]).toEqual([0, 193, 255]);
+    expect(table.glowTexture.version).toBe(glow + 1);
+    expect(table.texture.version).toBe(colours);
+
+    expect(table.glow(Float32Array.of(0, 0.5, 1))).toBe(false);
+    expect(table.glowTexture.version).toBe(glow + 1);
+  });
+
+  it('frees both textures', () => {
+    const table = new CellTable(1);
+    const freed: string[] = [];
+    table.texture.addEventListener('dispose', () => freed.push('colours'));
+    table.glowTexture.addEventListener('dispose', () => freed.push('glow'));
+    table.dispose();
+    expect(freed).toEqual(['colours', 'glow']);
+  });
 });

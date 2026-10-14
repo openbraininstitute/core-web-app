@@ -1,3 +1,5 @@
+// Straight from its file: the package's own index brings its WebGL engine along.
+import { SpikingCircuit } from '@openbraininstitute/morphoviewer/dist/spikes/spiking-circuit';
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
@@ -16,6 +18,7 @@ import {
 import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
 
 import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
+import type { MorphoViewerSpikes } from '@/morpho-viewer';
 import type {
   CellColors,
   CircuitMorphologyData,
@@ -80,7 +83,8 @@ function placedSomas(somas: Float32Array): { spheres: Float32Array; cells: Uint3
 /**
  * A circuit's morphologies on the shared scene, in the Studio look: a quad a segment and a quad a soma (`impostors.ts`),
  * each cell coloured and shown or not by its texel of the cell table, and electrode contacts in front of them
- * (`electrodes.ts`).
+ * (`electrodes.ts`). A spike replay lights the cells as they fire, on a clock the somas view's (`SpikingCircuit`), moved
+ * on by each turn of the loop.
  *
  * Frames go straight to the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. The arrays
  * are drawn from as the reader made them, and kept: after a lost context three uploads them again.
@@ -116,6 +120,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.renderer.getPixelRatio()
   );
   private electrodes: THREE.Mesh<THREE.InstancedBufferGeometry> | null = null;
+  private spiking = new SpikingCircuit();
+  private spikeTimeListeners = new Set<(timeInMs: number) => void>();
+  private spikesPlayingListeners = new Set<(playing: boolean) => void>();
 
   constructor(container: HTMLElement) {
     super(container, {
@@ -134,6 +141,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       const theme = dark ? 'dark' : 'light';
       this.background = look.background[theme][0];
       this.uniforms.uHighlight.value.set(FOREGROUND[theme]);
+      this.uniforms.uGlowRim.value.w = dark ? 0 : 1;
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
     };
     this.setDark(false);
@@ -147,6 +155,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.idTarget?.dispose();
     this.electrodes?.geometry.dispose();
     this.electrodeMaterial.dispose();
+    this.spikeTimeListeners.clear();
+    this.spikesPlayingListeners.clear();
   }
 
   snapshot(): HTMLCanvasElement | null {
@@ -169,7 +179,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (!data) return;
     this.table = new CellTable(data.somas.length / 4);
     this.uniforms.uCells.value = this.table.texture;
+    this.uniforms.uGlow.value = this.table.glowTexture;
     this.paint();
+    this.spiking.setCellCount(this.table.cells);
+    this.showGlow();
 
     const segments = quadGeometry(data.segmentCells.length);
     const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
@@ -307,6 +320,76 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     return [point.x + centre[0], point.y + centre[1], point.z + centre[2]];
   }
 
+  setSpikes(spikes: MorphoViewerSpikes | null): void {
+    const wasPlaying = this.spiking.playing;
+    this.spiking.setSpikes(spikes, this.table?.cells ?? 0);
+    this.spikeFrame();
+    if (wasPlaying) this.tellPlaying(false);
+  }
+
+  seekSpikes(timeInMs: number): void {
+    if (timeInMs === this.spiking.timeInMs) return;
+    this.spiking.timeInMs = timeInMs;
+    this.spikeFrame();
+  }
+
+  setSpikesPlaying(playing: boolean): void {
+    if (playing === this.spiking.playing) return;
+    // Played at the end, the clock starts again from the beginning.
+    this.spiking.playing = playing;
+    this.spikeFrame();
+    // The loop turns for `work` once it is going.
+    if (playing) this.invalidate();
+    this.tellPlaying(playing);
+  }
+
+  setSpikeSpeed(speed: number): void {
+    if (speed === this.spiking.speed) return;
+    this.spiking.speed = speed;
+    this.showGlow();
+  }
+
+  setSpikeAfterglow(seconds: number): void {
+    if (seconds === this.spiking.afterglowInSeconds) return;
+    this.spiking.afterglowInSeconds = seconds;
+    this.showGlow();
+  }
+
+  onSpikeTime(listener: (timeInMs: number) => void): () => void {
+    this.spikeTimeListeners.add(listener);
+    return () => this.spikeTimeListeners.delete(listener);
+  }
+
+  onSpikesPlaying(listener: (playing: boolean) => void): () => void {
+    this.spikesPlayingListeners.add(listener);
+    return () => this.spikesPlayingListeners.delete(listener);
+  }
+
+  /** The replay's clock moves on by the time the last turn of the loop took, which keeps turning while it plays. */
+  protected override work(): boolean {
+    if (!this.spiking.playing) return false;
+    const ended = this.spiking.advance();
+    this.spikeFrame();
+    if (ended) this.tellPlaying(false);
+    return !ended;
+  }
+
+  /** A frame only where a cell glows otherwise: before the first spike, a playing replay draws nothing. */
+  private showGlow(): void {
+    if (this.table?.glow(this.spiking.glow)) this.invalidate();
+  }
+
+  /** The glow at the replay's moment, which the listeners are told of. */
+  private spikeFrame(): void {
+    this.showGlow();
+    const { timeInMs } = this.spiking;
+    for (const listener of this.spikeTimeListeners) listener(timeInMs);
+  }
+
+  private tellPlaying(playing: boolean): void {
+    for (const listener of this.spikesPlayingListeners) listener(playing);
+  }
+
   /**
    * The contacts as they are now, in a mesh drawn after the cells, over them, made larger only when they outgrow it. A
    * frame only where that changed what is drawn.
@@ -372,6 +455,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.table?.dispose();
     this.table = null;
     this.uniforms.uCells.value = null;
+    this.uniforms.uGlow.value = null;
     this.uniforms.uHighlighted.value = NO_CELL;
     this.invalidate();
   }

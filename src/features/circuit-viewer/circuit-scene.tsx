@@ -12,7 +12,6 @@ import {
   CircuitVisualization,
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
-import { circuitOffersMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import {
   CircuitViewerChrome,
   STATUS_PLACE,
@@ -264,11 +263,9 @@ export function CircuitScene({
     [overlays, visibleOverlayIds]
   );
   const morphologiesFlag = useFlag(circuitMorphologiesFlag.key);
-  const supportsMorphologies = circuitOffersMorphologies({
-    enabled: !!morphologiesFlag,
-    largeCircuit,
-    spikes: spikes !== undefined,
-  });
+  // Drawn as somas, the cells can be switched to their morphologies; whether OBI-One will build
+  // the pack is known only once it is asked for.
+  const supportsMorphologies = !!morphologiesFlag && largeCircuit;
 
   const handleOverlayTransform = useCallback(
     (event: MorphoViewerOverlayTransformEvent) => {

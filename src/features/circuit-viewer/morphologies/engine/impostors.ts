@@ -17,24 +17,35 @@ import { ROW_BITS } from './cell-table';
 
 /** What the impostors' shaders read, one set a viewer. */
 export interface ImpostorUniforms {
-  /** The cell table's texture. */
+  /** The cell table's texture, and its glow beside it. */
   uCells: { value: THREE.Texture | null };
+  uGlow: { value: THREE.Texture | null };
   /** The viewport that is drawn into, in device pixels: where it starts, x and y, then its width and height. */
   uViewport: { value: THREE.Vector4 };
   /** The cell that is highlighted, or `NO_CELL`, and the colour it is drawn in. */
   uHighlighted: { value: number };
   uHighlight: { value: THREE.Color };
+  /**
+   * The colour a glowing cell is ringed in, and in w how much: on a light background, where a cell lit near white would
+   * read as fading out, and not on a dark one, where the ring would hide a thin one.
+   */
+  uGlowRim: { value: THREE.Vector4 };
 }
 
 /** No cell has this number: the cell table has not that many texels. */
 export const NO_CELL = 0xffffffff;
 
+/** The somas view's ring round a spiking soma. */
+const GLOW_RIM = new THREE.Color('#4d4233');
+
 export function impostorUniforms(): ImpostorUniforms {
   return {
     uCells: { value: null },
+    uGlow: { value: null },
     uViewport: { value: new THREE.Vector4(0, 0, 1, 1) },
     uHighlighted: { value: NO_CELL },
     uHighlight: { value: new THREE.Color(0x000000) },
+    uGlowRim: { value: new THREE.Vector4(GLOW_RIM.r, GLOW_RIM.g, GLOW_RIM.b, 1) },
   };
 }
 
@@ -55,8 +66,11 @@ in uint aCell;
 // The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes.
 const float MIN_RADIUS = 0.75;
 
+ivec2 cellXY() {
+	return ivec2( int( aCell & ${(1 << ROW_BITS) - 1}u ), int( aCell >> ${ROW_BITS}u ) );
+}
 vec4 cellTexel() {
-	return texelFetch( uCells, ivec2( int( aCell & ${(1 << ROW_BITS) - 1}u ), int( aCell >> ${ROW_BITS}u ) ), 0 );
+	return texelFetch( uCells, cellXY(), 0 );
 }
 ${PIXEL_UM}
 // Where a view point is drawn, as gl_FragCoord counts pixels.
@@ -71,7 +85,8 @@ vec3 viewToWorld( vec3 v ) {
 
 /**
  * What a kind adds to each shader: `impostorCorner`, a corner of its quad in view space, false where it is not drawn,
- * and `impostorNormal`, the normal under the pixel in view space.
+ * no thinner than `least` device pixels, and `impostorNormal`, the normal under the pixel in view space, and in `edge`
+ * how far the pixel is from the impostor's edge and its radius, both in device pixels.
  */
 interface Kind {
   vertex: string;
@@ -94,7 +109,7 @@ vec3 lifted( vec3 p, float lift ) {
 }
 
 // corner.x picks the end, corner.y the side.
-bool impostorCorner( vec3 corner, float shown, out vec3 P ) {
+bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	if ( shown < 0.5 ) return false;
 	vec3 a = ( viewMatrix * vec4( aA.xyz, 1.0 ) ).xyz;
 	vec3 b = ( viewMatrix * vec4( aB.xyz, 1.0 ) ).xyz;
@@ -115,8 +130,8 @@ bool impostorCorner( vec3 corner, float shown, out vec3 P ) {
 		}
 	}
 	float umA = pixelUm( a.z ), umB = pixelUm( b.z );
-	ra = max( ra, MIN_RADIUS * umA );
-	rb = max( rb, MIN_RADIUS * umB );
+	ra = max( ra, least * umA );
+	rb = max( rb, least * umB );
 	vSegmentA = toPixels( a );
 	vSegmentB = toPixels( b );
 	vSegmentRadii = vec2( ra / umA, rb / umB );
@@ -139,8 +154,9 @@ flat in vec2 vSegmentA;
 flat in vec2 vSegmentB;
 flat in vec2 vSegmentRadii;
 
-// Round across the tube's width, and across only, so that a round end carries on into the next segment without a seam.
-vec3 impostorNormal() {
+// Round across the tube's width, and across only, as far from its edge, so that a round end carries on into the next
+// segment without a seam.
+vec3 impostorNormal( out vec2 edge ) {
 	vec2 q = gl_FragCoord.xy;
 	vec2 ab = vSegmentB - vSegmentA;
 	float l2 = dot( ab, ab );
@@ -149,6 +165,7 @@ vec3 impostorNormal() {
 	if ( length( q - vSegmentA - ab * t ) > r ) discard;
 	vec2 across = l2 > 0.0 ? normalize( vec2( - ab.y, ab.x ) ) : vec2( 0.0, 1.0 );
 	float s = clamp( dot( q - vSegmentA, across ) / max( r, 1e-3 ), - 1.0, 1.0 );
+	edge = vec2( r * ( 1.0 - abs( s ) ), r );
 	return vec3( across * s, sqrt( max( 1.0 - s * s, 0.0 ) ) );
 }
 `,
@@ -159,12 +176,14 @@ const SOMA: Kind = {
 in vec4 aSoma;
 flat out vec3 vSomaCentre;
 flat out float vSomaRadius;
+flat out float vSomaRadiusPx;
 out vec3 vSomaPoint;
 
-bool impostorCorner( vec3 corner, float shown, out vec3 P ) {
+bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	if ( shown < 0.5 ) return false;
 	vec3 c = ( viewMatrix * vec4( aSoma.xyz, 1.0 ) ).xyz;
-	float r = max( aSoma.w, 1.5 * MIN_RADIUS * pixelUm( c.z ) );
+	float um = pixelUm( c.z );
+	float r = max( aSoma.w, 1.5 * least * um );
 	// How far from its centre the sphere reaches on screen, in µm at the centre's depth.
 	float reach = r;
 	if ( ! isOrthographic ) {
@@ -180,6 +199,7 @@ bool impostorCorner( vec3 corner, float shown, out vec3 P ) {
 	P = vec3( c.xy + corner.xy * ( 1.2 * reach ), c.z );
 	vSomaCentre = c;
 	vSomaRadius = r;
+	vSomaRadiusPx = r / um;
 	vSomaPoint = P;
 	return true;
 }
@@ -188,10 +208,11 @@ bool impostorCorner( vec3 corner, float shown, out vec3 P ) {
 uniform mat4 projectionMatrix;
 flat in vec3 vSomaCentre;
 flat in float vSomaRadius;
+flat in float vSomaRadiusPx;
 in vec3 vSomaPoint;
 
 // The sphere's own depth is written with it.
-vec3 impostorNormal() {
+vec3 impostorNormal( out vec2 edge ) {
 	vec3 ray = isOrthographic ? vec3( 0.0, 0.0, - 1.0 ) : normalize( vSomaPoint );
 	vec3 from = isOrthographic ? vec3( vSomaPoint.xy, vSomaCentre.z + 2.0 * vSomaRadius ) : vec3( 0.0 );
 	vec3 oc = from - vSomaCentre;
@@ -201,17 +222,46 @@ vec3 impostorNormal() {
 	vec3 p = from + ray * ( - b - sqrt( h ) );
 	vec4 clip = projectionMatrix * vec4( p, 1.0 );
 	gl_FragDepth = clip.z / clip.w * 0.5 + 0.5;
-	return normalize( p - vSomaCentre );
+	vec3 n = normalize( p - vSomaCentre );
+	// Seen at an angle off the normal, a point of the sphere is drawn its sine of the radius from the centre.
+	float facing = dot( n, - ray );
+	edge = vec2( vSomaRadiusPx * ( 1.0 - sqrt( max( 1.0 - facing * facing, 0.0 ) ) ), vSomaRadiusPx );
+	return n;
 }
 `,
 };
 
-const HIGHLIGHT_VERTEX = /* glsl */ `
+// A spike lights a cell as it does a soma of the somas view: brighter, nearer a warm white, shining, and ringed on a
+// light background.
+const LOOK_VERTEX = /* glsl */ `
 uniform uint uHighlighted;
 uniform vec3 uHighlight;
+uniform highp sampler2D uGlow;
+out float vGlow;
 
-vec3 cellColour( vec3 own ) {
-	return aCell == uHighlighted ? uHighlight : own;
+// The highlighted cell keeps the highlight.
+float cellGlow() {
+	return aCell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY(), 0 ).r;
+}
+
+// Brightened and taken a third of the way to the white in sRGB, as the somas view's.
+vec3 cellColour( vec3 own, float glow ) {
+	if ( aCell == uHighlighted ) return uHighlight;
+	if ( glow == 0.0 ) return own;
+	vec3 base = pow( own, vec3( 1.0 / 2.2 ) );
+	vec3 hot = mix( min( base * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 );
+	return pow( mix( base, hot, glow ), vec3( 2.2 ) );
+}
+`;
+
+const LOOK_FRAGMENT = /* glsl */ `
+uniform vec4 uGlowRim;
+in float vGlow;
+
+// A tenth of the radius in from the edge, a pixel at the least, as the somas view rings a soma.
+float glowRim( vec2 edge ) {
+	float width = max( 0.1 * edge.y, 1.0 );
+	return vGlow * uGlowRim.a * ( 1.0 - smoothstep( width - 0.5, width + 0.5, edge.x ) );
 }
 `;
 
@@ -221,7 +271,7 @@ flat out vec4 vId;
 
 void main() {
 	vec3 corner;
-	bool on = impostorCorner( position, cellTexel().a, corner );
+	bool on = impostorCorner( position, cellTexel().a, MIN_RADIUS, corner );
 	// Not drawn, its four corners are one point outside the view.
 	gl_Position = on ? projectionMatrix * vec4( corner, 1.0 ) : vec4( 2.0, 2.0, 2.0, 1.0 );
 	uint id = aCell + 1u;
@@ -233,7 +283,8 @@ const ID_FRAGMENT = /* glsl */ `
 flat in vec4 vId;
 
 void main() {
-	impostorNormal();
+	vec2 edge;
+	impostorNormal( edge );
 	gl_FragColor = vId;
 }
 `;
@@ -255,7 +306,8 @@ export function followViewport(
 
 /**
  * Draw `material`, one of three's own lit materials with `vertexColors`, as impostors of `kind`. It reads the cell's
- * colour from the cell table where the vertex colour would go, and keeps `uniforms.uViewport` at what it is drawn into.
+ * colour from the cell table where the vertex colour would go, lit by its glow, and keeps `uniforms.uViewport` at what
+ * it is drawn into.
  */
 export function impostor<T extends THREE.Material>(
   material: T,
@@ -269,16 +321,19 @@ export function impostor<T extends THREE.Material>(
     shader.vertexShader = shader.vertexShader
       .replace(
         '#include <common>',
-        `#include <common>\n${SHARED_VERTEX}\n${HIGHLIGHT_VERTEX}\n${vertex}`
+        `#include <common>\n${SHARED_VERTEX}\n${LOOK_VERTEX}\n${vertex}`
       )
       .replace(
         '#include <color_vertex>',
-        'vec4 cell = cellTexel();\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( cell.rgb ), 1.0 );\n\t#endif'
+        'vec4 cell = cellTexel();\n\tvGlow = cellGlow();' +
+          '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( cell.rgb, vGlow ), 1.0 );\n\t#endif'
       )
-      // The vertex normal is never shaded: the fragment shader finds its own.
+      // The vertex normal is never shaded: the fragment shader finds its own. Glowing in full, a cell drawn at the
+      // least width is drawn at twice it, to be seen.
       .replace(
         '#include <beginnormal_vertex>',
-        'vec3 cornerView;\n\tbool cornerOn = impostorCorner( position, cell.a, cornerView );' +
+        'vec3 cornerView;' +
+          '\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + vGlow ), cornerView );' +
           '\n\tvec3 objectNormal = vec3( 0.0, 0.0, 1.0 );'
       )
       // Not drawn, its four corners are one point.
@@ -287,10 +342,21 @@ export function impostor<T extends THREE.Material>(
         'vec3 transformed = cornerOn ? viewToWorld( cornerView ) : vec3( 0.0 );'
       );
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${fragment}`)
+      .replace('#include <common>', `#include <common>\n${fragment}\n${LOOK_FRAGMENT}`)
       .replace(
         '#include <normal_fragment_begin>',
-        '#include <normal_fragment_begin>\n\tnormal = impostorNormal();\n\tnonPerturbedNormal = normal;'
+        '#include <normal_fragment_begin>\n\tvec2 impostorEdge;' +
+          '\n\tnormal = impostorNormal( impostorEdge );\n\tnonPerturbedNormal = normal;'
+      )
+      // Lit where the lights do not reach as well.
+      .replace(
+        '#include <emissivemap_fragment>',
+        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += 0.2 * vGlow * diffuseColor.rgb;'
+      )
+      .replace(
+        '#include <opaque_fragment>',
+        'outgoingLight = mix( outgoingLight, uGlowRim.rgb, glowRim( impostorEdge ) );' +
+          '\n\t#include <opaque_fragment>'
       );
   });
 }

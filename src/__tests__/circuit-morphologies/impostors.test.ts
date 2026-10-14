@@ -40,9 +40,12 @@ describe('impostors on the Studio look', () => {
   it.each(KINDS)("places the $kind's quad where the vertex would go", ({ kind, attribute }) => {
     const { vertexShader } = compile(impostor(studio(), kind, uniforms));
     expect(vertexShader).toContain(attribute);
-    expect(vertexShader).toContain('bool impostorCorner( vec3 corner, float shown, out vec3 P )');
     expect(vertexShader).toContain(
-      'bool cornerOn = impostorCorner( position, cell.a, cornerView );'
+      'bool impostorCorner( vec3 corner, float shown, float least, out vec3 P )'
+    );
+    // Glowing in full, at twice the least width.
+    expect(vertexShader).toContain(
+      'bool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + vGlow ), cornerView );'
     );
     expect(vertexShader).toContain(
       'vec3 transformed = cornerOn ? viewToWorld( cornerView ) : vec3( 0.0 );'
@@ -50,8 +53,11 @@ describe('impostors on the Studio look', () => {
     for (const chunk of ['color_vertex', 'beginnormal_vertex', 'begin_vertex']) {
       expect(vertexShader, chunk).not.toContain(`#include <${chunk}>`);
     }
-    // The texel is read before the corner that is hidden by it.
+    // The texel and the glow are read before the corner that is hidden and widened by them.
     expect(vertexShader.indexOf('vec4 cell = cellTexel();')).toBeLessThan(
+      vertexShader.indexOf('bool cornerOn')
+    );
+    expect(vertexShader.indexOf('vGlow = cellGlow();')).toBeLessThan(
       vertexShader.indexOf('bool cornerOn')
     );
     expect(redeclared(vertexShader)).toEqual([]);
@@ -59,9 +65,10 @@ describe('impostors on the Studio look', () => {
 
   it.each(KINDS)('shades the $kind by the normal under the pixel', ({ kind }) => {
     const { fragmentShader } = compile(impostor(studio(), kind, uniforms));
-    expect(fragmentShader).toContain('vec3 impostorNormal() {');
+    expect(fragmentShader).toContain('vec3 impostorNormal( out vec2 edge ) {');
     expect(fragmentShader).toContain(
-      '#include <normal_fragment_begin>\n\tnormal = impostorNormal();\n\tnonPerturbedNormal = normal;'
+      '#include <normal_fragment_begin>\n\tvec2 impostorEdge;' +
+        '\n\tnormal = impostorNormal( impostorEdge );\n\tnonPerturbedNormal = normal;'
     );
     expect(redeclared(fragmentShader)).toEqual([]);
   });
@@ -71,16 +78,60 @@ describe('impostors on the Studio look', () => {
     expect((material as THREE.MeshStandardMaterial).vertexColors).toBe(true);
     const { vertexShader } = compile(material);
     expect(vertexShader).toContain('ivec2( int( aCell & 2047u ), int( aCell >> 11u ) )');
-    expect(vertexShader).toContain('vColor = vec4( cellColour( cell.rgb ), 1.0 );');
+    expect(vertexShader).toContain('return texelFetch( uCells, cellXY(), 0 );');
+    expect(vertexShader).toContain('vColor = vec4( cellColour( cell.rgb, vGlow ), 1.0 );');
   });
 
-  it('draws the highlighted cell in the highlight colour, and no cell so until one is', () => {
+  it('draws the highlighted cell in the highlight colour, unlit, and no cell so until one is', () => {
     const own = impostorUniforms();
     expect(own.uHighlighted.value).toBe(NO_CELL);
     const shader = compile(impostor(studio(), 'soma', own));
-    expect(shader.vertexShader).toContain('return aCell == uHighlighted ? uHighlight : own;');
+    expect(shader.vertexShader).toContain('if ( aCell == uHighlighted ) return uHighlight;');
+    expect(shader.vertexShader).toContain('return aCell == uHighlighted ? 0.0 :');
     expect(shader.uniforms.uHighlighted).toBe(own.uHighlighted);
     expect(shader.uniforms.uHighlight).toBe(own.uHighlight);
+  });
+
+  it.each(KINDS)("lights the $kind by its cell's glow, shaped and from its own texel", ({
+    kind,
+  }) => {
+    const own = impostorUniforms();
+    expect(own.uGlow.value).toBeNull();
+    const { vertexShader, fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
+    expect(read.uGlow).toBe(own.uGlow);
+    // Shaped already, by the cell table.
+    expect(vertexShader).toContain('texelFetch( uGlow, cellXY(), 0 ).r;');
+    // Brightened, and a third of the way to a warm white, in sRGB; as it is where it does not glow.
+    expect(vertexShader).toContain('if ( glow == 0.0 ) return own;');
+    expect(vertexShader).toContain(
+      'mix( min( base * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 )'
+    );
+    expect(vertexShader).toContain('return pow( mix( base, hot, glow ), vec3( 2.2 ) );');
+    expect(fragmentShader).toContain('in float vGlow;');
+    expect(fragmentShader).toContain(
+      '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += 0.2 * vGlow * diffuseColor.rgb;'
+    );
+  });
+
+  it.each(KINDS)('rings the glowing $kind after the lights, as far in as its edge is found', ({
+    kind,
+  }) => {
+    const own = impostorUniforms();
+    const { fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
+    expect(read.uGlowRim).toBe(own.uGlowRim);
+    expect(own.uGlowRim.value.w).toBe(1);
+    expect(fragmentShader).toContain('edge = vec2( ');
+    expect(fragmentShader).toContain('float width = max( 0.1 * edge.y, 1.0 );');
+    expect(fragmentShader).toContain(
+      'outgoingLight = mix( outgoingLight, uGlowRim.rgb, glowRim( impostorEdge ) );' +
+        '\n\t#include <opaque_fragment>'
+    );
+    expect(redeclared(fragmentShader)).toEqual([]);
+  });
+
+  it("measures a segment's edge across it alone, so that the rings of two meet without a seam", () => {
+    const { fragmentShader } = compile(impostor(studio(), 'segment', uniforms));
+    expect(fragmentShader).toContain('edge = vec2( r * ( 1.0 - abs( s ) ), r );');
   });
 
   it('writes a depth of its own for a soma alone: a segment keeps the depth of its quad', () => {
@@ -140,10 +191,15 @@ describe("the impostors in their cells' numbers", () => {
   it.each(KINDS)('cuts the $kind to the outline it is drawn with', ({ kind, attribute }) => {
     const { vertexShader, fragmentShader } = idMaterial(kind, uniforms);
     expect(vertexShader).toContain(attribute);
-    expect(vertexShader).toContain('bool on = impostorCorner( position, cellTexel().a, corner );');
+    // At its size unlit: a cell that glows is found within the size it has at rest.
+    expect(vertexShader).toContain(
+      'bool on = impostorCorner( position, cellTexel().a, MIN_RADIUS, corner );'
+    );
+    expect(vertexShader).not.toContain('uGlow');
+    expect(fragmentShader).not.toContain('uGlowRim');
     expect(vertexShader).toContain('on ? projectionMatrix * vec4( corner, 1.0 )');
-    expect(fragmentShader).toContain('vec3 impostorNormal() {');
-    expect(fragmentShader.indexOf('impostorNormal();')).toBeLessThan(
+    expect(fragmentShader).toContain('vec3 impostorNormal( out vec2 edge ) {');
+    expect(fragmentShader.indexOf('impostorNormal( edge );')).toBeLessThan(
       fragmentShader.indexOf('gl_FragColor = vId;')
     );
     expect(redeclared(vertexShader)).toEqual([]);
