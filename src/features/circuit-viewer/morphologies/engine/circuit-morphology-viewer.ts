@@ -4,8 +4,10 @@ import * as THREE from 'three';
 import { SpikeClock } from '@/features/circuit-viewer/spike-clock';
 import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import { boxCorners } from '@/features/viewer-3d/engine/framing';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
+import { extentOf } from '../extent';
 import { CellTable } from './cell-table';
 import {
   countContacts,
@@ -94,32 +96,17 @@ function framesAgain(before: Population[] | null, after: Population[]): boolean 
   return !has(before, after) && !has(after, before);
 }
 
-/**
- * The somas of `positions` that `drawn` keeps, as the somas view framed them: their mean, and the farthest of them from
- * it on each axis; null where it keeps none that has a place.
- */
-function somasBox(
-  positions: Float32Array,
-  drawn: (cell: number) => boolean
-): { mean: Vec3; reach: Vec3 } | null {
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  const sum = [0, 0, 0];
-  let count = 0;
-  for (let cell = 0; 3 * cell + 2 < positions.length; cell++) {
-    const i = 3 * cell;
-    if (!drawn(cell) || !Number.isFinite(positions[i] + positions[i + 1] + positions[i + 2])) {
-      continue;
-    }
-    for (let k = 0; k < 3; k++) {
-      min[k] = Math.min(min[k], positions[i + k]);
-      max[k] = Math.max(max[k], positions[i + k]);
-      sum[k] += positions[i + k];
-    }
-    count++;
-  }
-  if (count === 0) return null;
-  const mean = sum.map((s) => s / count) as Vec3;
+/** Where somas lie, as the somas view framed them: their mean, and the farthest of them from it on each axis. */
+interface SomasBox {
+  mean: Vec3;
+  reach: Vec3;
+}
+
+/** The box of the somas of `positions` that `keep` keeps; null where it keeps none that has a place. */
+function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): SomasBox | null {
+  const extent = extentOf(positions, keep);
+  if (!extent) return null;
+  const { min, max, mean } = extent;
   return { mean, reach: mean.map((m, k) => Math.max(max[k] - m, m - min[k])) as Vec3 };
 }
 
@@ -137,19 +124,18 @@ function somasBox(
 export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorphologyView {
   private uniforms = impostorUniforms();
   private somaMaterial: THREE.Material;
-  private segments: THREE.Mesh | null = null;
-  private somas: THREE.Mesh | null = null;
-  /** The morphologies the segments and their somas draw. */
-  private data: CircuitMorphologyData | null = null;
+  /** The morphologies, their segments' and their somas' quads, and the same quads for the pick. */
+  private layer: { data: CircuitMorphologyData; meshes: Quads[]; ids: Quads[] } | null = null;
   private cloudUniforms = somaCloudUniforms();
   private cloudMaterial = somaCloudMaterial(this.uniforms, this.cloudUniforms);
-  private cloud: Quads | null = null;
-  /** The somas the cloud draws, whose populations decide whether the next ones are framed. */
-  private somaSet: CircuitSomas | null = null;
-  /** The same quads in their cells' numbers, drawn for a pick alone: the cloud's, and the morphologies'. */
+  /**
+   * The somas the cloud draws, whose populations decide whether the next ones are framed, the box round all of them,
+   * and their quads, and the same quads for the pick.
+   */
+  private cloud: { somas: CircuitSomas; box: SomasBox | null; mesh: Quads; ids: Quads } | null =
+    null;
+  /** The quads of the cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
-  private cloudIds: Quads | null = null;
-  private morphologyIds: THREE.Mesh[] = [];
   private idMaterials = {
     segment: idMaterial('segment', this.uniforms),
     soma: idMaterial('soma', this.uniforms),
@@ -236,20 +222,19 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
    */
   setData(data: CircuitMorphologyData | null): void {
     this.clearMorphologies();
-    const over =
-      data !== null && this.somaSet !== null && this.table?.cells === data.somas.length / 4;
-    if (data && !over) {
+    // The somas of the same cells, which keep the cell table, the origin and the view.
+    const under = data && this.table?.cells === data.somas.length / 4 ? this.cloud : null;
+    if (data && !under) {
       this.clear();
       this.makeTable(data.somas.length / 4);
     }
     this.showCloud(data === null);
     if (!data) {
       // Without the somas, the morphologies were all there was.
-      if (this.somaSet) this.bound();
+      if (this.cloud) this.bound();
       else this.clear();
       return;
     }
-    this.data = data;
 
     const segments = quadGeometry(data.segmentCells.length);
     const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
@@ -257,58 +242,53 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
       .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1));
-    this.segments = quads(segments, this.look.material);
-    this.chunks.add(this.segments);
+    const segmentMesh = quads(segments, this.look.material);
+    this.chunks.add(segmentMesh);
 
     const { spheres, cells } = placedSomas(data.somas);
     const somas = quadGeometry(cells.length);
     somas
       .setAttribute('aSoma', new THREE.InstancedBufferAttribute(spheres, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
-    this.somas = quads(somas, this.somaMaterial);
+    const somaMesh = quads(somas, this.somaMaterial);
     // Beside `chunks`, whose meshes all take the look's material.
-    this.surfaces.add(this.somas);
+    this.surfaces.add(somaMesh);
 
-    this.morphologyIds = [
-      quads(segments, this.idMaterials.segment),
-      quads(somas, this.idMaterials.soma),
-    ];
-    this.ids.add(...this.morphologyIds);
+    const ids = [quads(segments, this.idMaterials.segment), quads(somas, this.idMaterials.soma)];
+    this.ids.add(...ids);
+    this.layer = { data, meshes: [segmentMesh, somaMesh], ids };
     this.compileIds();
 
-    const { somaSet } = this;
-    if (over && somaSet) {
+    if (under) {
       this.uniforms.uShift.value.fromArray(data.centre).sub(new THREE.Vector3(...this.centre));
-      this.bound();
-      this.invalidate();
-      if (framesAgain(somaSet.populations, data.populations)) this.resetView();
-      return;
+    } else {
+      this.centre = data.centre;
+      this.drawElectrodes();
     }
-    this.centre = data.centre;
     this.bound();
-    this.drawElectrodes();
-    this.resetView();
+    if (framesAgain(under?.somas.populations ?? null, data.populations)) this.resetView();
   }
 
   setSomas(somas: CircuitSomas | null): void {
-    const before = this.somaSet?.populations ?? null;
+    const before = this.cloud?.somas.populations ?? null;
     this.clear();
     if (!somas) return;
-    this.somaSet = somas;
     const cells = Math.floor(somas.positions.length / 3);
     this.makeTable(cells);
     const geometry = quadGeometry(cells);
     geometry.setAttribute('aPosition', new THREE.InstancedBufferAttribute(somas.positions, 3));
-    this.cloud = quads(geometry, this.cloudMaterial);
-    this.cloud.name = 'somas';
-    this.surfaces.add(this.cloud);
-    this.cloudIds = quads(geometry, this.idMaterials.cloud);
-    this.ids.add(this.cloudIds);
+    const mesh = quads(geometry, this.cloudMaterial);
+    mesh.name = 'somas';
+    this.surfaces.add(mesh);
+    const ids = quads(geometry, this.idMaterials.cloud);
+    this.ids.add(ids);
+    const box = somasBox(somas.positions);
+    this.cloud = { somas, box, mesh, ids };
     this.compileIds();
 
     const reframe = framesAgain(before, somas.populations);
     // Kept otherwise, so that the somas stay where they were drawn.
-    if (reframe) this.centre = somasBox(somas.positions, () => true)?.mean ?? [0, 0, 0];
+    if (reframe) this.centre = box?.mean ?? [0, 0, 0];
     this.cloudUniforms.uOffset.value.fromArray(this.centre);
     this.bound();
     this.drawElectrodes();
@@ -319,7 +299,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (radius === this.cloudUniforms.uRadius.value) return;
     this.cloudUniforms.uRadius.value = radius;
     this.bound();
-    if (this.cloud?.visible) this.invalidate();
+    if (this.cloud?.mesh.visible) this.invalidate();
   }
 
   setSomaOpacity(opacity: number): void {
@@ -331,14 +311,14 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       this.cloudMaterial.transparent = translucent;
       this.cloudMaterial.needsUpdate = true;
     }
-    if (this.cloud?.visible) this.invalidate();
+    if (this.cloud?.mesh.visible) this.invalidate();
   }
 
   setCrowding(crowding: Uint8Array | null): void {
     // Worked out for other somas.
     if (!this.table || (crowding && crowding.length !== this.table.cells)) return;
     this.table.setCrowding(crowding);
-    if (this.cloud?.visible) this.invalidate();
+    if (this.cloud?.mesh.visible) this.invalidate();
   }
 
   /**
@@ -347,43 +327,40 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
    * morphologies, it frames the morphologies' bounds about their middle.
    */
   override resetView(): void {
-    const { somaSet, table, data } = this;
-    if (!somaSet || !table) {
+    const { cloud, table, layer } = this;
+    if (!cloud || !table) {
       super.resetView();
       return;
     }
-    if (data) {
-      this.frameBox(this.shifted(data.bounds));
+    if (layer) {
+      this.frameBox(this.shifted(layer.data.bounds));
       return;
     }
-    const drawn =
-      somasBox(somaSet.positions, (cell) => table.shown(cell)) ??
-      somasBox(somaSet.positions, () => true);
+    const shown = table.hides ? somasBox(cloud.somas.positions, (cell) => table.shown(cell)) : null;
+    const drawn = shown ?? cloud.box;
     if (!drawn) {
       super.resetView();
       return;
     }
-    const middle = new THREE.Vector3(...drawn.mean).sub(new THREE.Vector3(...this.centre));
-    const reach = new THREE.Vector3(...drawn.reach).addScalar(this.cloudUniforms.uRadius.value);
-    this.frameBox(new THREE.Box3(middle.clone().sub(reach), middle.add(reach)));
+    this.frameBox(this.somaBox(drawn, this.cloudUniforms.uRadius.value));
   }
 
   /** The view framed on `box`, about its middle, as `resetView` frames anything about the origin. */
   private frameBox(box: THREE.Box3): void {
     const middle = box.getCenter(new THREE.Vector3());
-    const points: number[] = [];
-    for (const x of [box.min.x, box.max.x]) {
-      for (const y of [box.min.y, box.max.y]) {
-        for (const z of [box.min.z, box.max.z])
-          points.push(x - middle.x, y - middle.y, z - middle.z);
-      }
-    }
-    this.fitPoints = Float32Array.from(points);
+    this.fitPoints = Float32Array.from(boxCorners(box, middle));
     super.resetView();
     this.fitPoints = null;
     this.camera.position.add(middle);
     this.controls.target.copy(middle);
     this.controls.update();
+  }
+
+  /** The somas of `box`, `pad` more each way, where the view draws them. */
+  private somaBox({ mean, reach }: SomasBox, pad: number): THREE.Box3 {
+    const middle = new THREE.Vector3(...mean).sub(new THREE.Vector3(...this.centre));
+    const half = new THREE.Vector3(...reach).addScalar(pad);
+    return new THREE.Box3(middle.clone().sub(half), middle.add(half));
   }
 
   /** A box of the morphologies' frame, where the view draws it. */
@@ -501,7 +478,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   setSpikes(spikes: CircuitSpikes | null): void {
     const wasPlaying = this.spiking.playing;
-    this.spiking.setSpikes(spikes, this.table?.cells ?? 0);
+    this.spiking.setSpikes(spikes);
     this.spikeFrame();
     if (wasPlaying) this.tellPlaying(false);
   }
@@ -555,7 +532,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /** A frame only where a cell glows otherwise: before the first spike, a playing replay draws nothing. */
   private showGlow(): void {
-    if (this.table?.glow(this.spiking.glow)) this.invalidate();
+    if (this.table?.glow(this.spiking.glow, this.spiking.lit)) this.invalidate();
   }
 
   /** The glow at the replay's moment, which the listeners are told of. */
@@ -640,34 +617,30 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
    */
   private bound(): void {
     const all = new THREE.Box3();
-    const somas = this.somaSet && somasBox(this.somaSet.positions, () => true);
-    if (somas) {
-      const pad = this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL);
-      const middle = new THREE.Vector3(...somas.mean).sub(new THREE.Vector3(...this.centre));
-      const reach = new THREE.Vector3(...somas.reach).addScalar(pad);
-      all.set(middle.clone().sub(reach), middle.add(reach));
-    }
-    if (this.data) all.union(this.shifted(this.data.bounds));
+    const box = this.cloud?.box;
+    if (box) all.copy(this.somaBox(box, this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL)));
+    if (this.layer) all.union(this.shifted(this.layer.data.bounds));
     if (!all.isEmpty()) this.bounds.copy(all);
   }
 
   /** The cloud and its pick shown, or not while the morphologies take their place. */
   private showCloud(shown: boolean): void {
-    for (const mesh of [this.cloud, this.cloudIds]) {
-      if (mesh) mesh.visible = shown && mesh.geometry.instanceCount > 0;
+    if (this.cloud) {
+      for (const mesh of [this.cloud.mesh, this.cloud.ids]) {
+        mesh.visible = shown && mesh.geometry.instanceCount > 0;
+      }
     }
     this.invalidate();
   }
 
   /** Let go of the morphologies, and of nothing else. */
   private clearMorphologies(): void {
-    for (const mesh of [this.segments, this.somas]) {
-      mesh?.geometry.dispose();
-      mesh?.removeFromParent();
+    for (const mesh of this.layer?.meshes ?? []) {
+      mesh.geometry.dispose();
+      mesh.removeFromParent();
     }
-    for (const mesh of this.morphologyIds) mesh.removeFromParent();
-    this.segments = this.somas = this.data = null;
-    this.morphologyIds = [];
+    for (const mesh of this.layer?.ids ?? []) mesh.removeFromParent();
+    this.layer = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     this.invalidate();
   }
@@ -686,11 +659,11 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   private clear(): void {
     this.clearMorphologies();
-    this.cloud?.geometry.dispose();
-    this.cloud?.removeFromParent();
-    this.cloudIds?.removeFromParent();
-    this.cloud = this.cloudIds = null;
-    this.somaSet = null;
+    const { cloud } = this;
+    cloud?.mesh.geometry.dispose();
+    cloud?.mesh.removeFromParent();
+    cloud?.ids.removeFromParent();
+    this.cloud = null;
     this.table?.dispose();
     this.table = null;
     this.uniforms.uCells.value = null;

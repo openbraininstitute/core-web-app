@@ -247,7 +247,6 @@ export function LargeCircuitPreview({
     }
     return { positions: all, populations };
   }, [placed]);
-  const { positions } = cells;
 
   // Only where something recedes: this colour follows the background, and a
   // single-population scene should not repaint when the background changes.
@@ -281,7 +280,7 @@ export function LargeCircuitPreview({
     let recededColumn: number | undefined;
     let hiddenColumn: number | undefined;
 
-    const columnByCell = new Uint16Array(positions.length / 3);
+    const columnByCell = new Uint16Array(cells.positions.length / 3);
     let index = 0;
     for (const { population: candidate, geometry } of placed) {
       if (hidden.has(candidate.name)) {
@@ -302,7 +301,7 @@ export function LargeCircuitPreview({
       index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, positions.length, nodeColors, recede, hidden]);
+  }, [placed, subjectName, cells.positions.length, nodeColors, recede, hidden]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
@@ -327,12 +326,7 @@ export function LargeCircuitPreview({
   const morphologiesSource = React.useMemo(
     () =>
       wantsMorphologies && drawable
-        ? {
-            circuitId: circuit.id,
-            populations: cells.populations,
-            positions: cells.positions,
-            somaRadius: speciesRadius,
-          }
+        ? { circuitId: circuit.id, ...cells, somaRadius: speciesRadius }
         : null,
     [wantsMorphologies, drawable, circuit.id, cells, speciesRadius]
   );

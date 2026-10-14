@@ -1,3 +1,5 @@
+import { extentOf } from '../extent';
+
 /** How far around a soma its neighbours crowd it, µm: the somas view's reach. */
 export const CROWDING_REACH = 150;
 /** The grid's step, a share of the reach, and the most grid cells it may take before its step grows. */
@@ -20,16 +22,9 @@ export function crowding(
   reach = CROWDING_REACH
 ): Uint8Array | null {
   const cells = Math.floor(positions.length / 3);
-  const min = [Infinity, Infinity, Infinity];
-  const max = [-Infinity, -Infinity, -Infinity];
-  for (let i = 0; i < 3 * cells; i += 3) {
-    if (!placed(positions, i)) continue;
-    for (let k = 0; k < 3; k++) {
-      min[k] = Math.min(min[k], positions[i + k]);
-      max[k] = Math.max(max[k], positions[i + k]);
-    }
-  }
-  if (!(min[0] <= max[0])) return null;
+  const extent = extentOf(positions);
+  if (!extent) return null;
+  const { min, max } = extent;
 
   let step = reach / STEPS_IN_REACH;
   // Room around the somas' cells for the reach, so that no neighbour is looked for outside the grid.

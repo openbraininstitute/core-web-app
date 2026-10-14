@@ -37,8 +37,9 @@ export interface ImpostorUniforms {
 /** No cell has this number: the cell table has not that many texels. */
 export const NO_CELL = 0xffffffff;
 
-/** The somas view's ring round a spiking soma. */
-const GLOW_RIM = new THREE.Color('#4d4233');
+/** The somas view's ring round a spiking soma, in sRGB. */
+export const GLOW_RIM_COLOR = '#4d4233';
+const GLOW_RIM = new THREE.Color(GLOW_RIM_COLOR);
 
 export function impostorUniforms(): ImpostorUniforms {
   return {
@@ -51,6 +52,25 @@ export function impostorUniforms(): ImpostorUniforms {
     uGlowRim: { value: new THREE.Vector4(GLOW_RIM.r, GLOW_RIM.g, GLOW_RIM.b, 1) },
   };
 }
+
+/** What every shader that draws cells needs of them, the soma cloud's included. */
+export const CELL_GLSL = /* glsl */ `
+ivec2 cellXY( uint cell ) {
+	return ivec2( int( cell & ${(1 << ROW_BITS) - 1}u ), int( cell >> ${ROW_BITS}u ) );
+}
+// A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's.
+vec4 cellId( uint cell ) {
+	uint id = cell + 1u;
+	return vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0;
+}
+// Brightened and taken a third of the way to a warm white, in sRGB, as the somas view lights a spiking soma.
+vec3 glowing( vec3 colour, float glow ) {
+	vec3 hot = mix( min( colour * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 );
+	return mix( colour, hot, glow );
+}
+// Where the corners of a cell that is not drawn go: one point outside the view.
+const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
+`;
 
 /** `pixelUm`, for a vertex shader that has `uViewport`. */
 export const PIXEL_UM = /* glsl */ `
@@ -70,11 +90,9 @@ in uint aCell;
 // The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes.
 const float MIN_RADIUS = 0.75;
 
-ivec2 cellXY() {
-	return ivec2( int( aCell & ${(1 << ROW_BITS) - 1}u ), int( aCell >> ${ROW_BITS}u ) );
-}
+${CELL_GLSL}
 vec4 cellTexel() {
-	return texelFetch( uCells, cellXY(), 0 );
+	return texelFetch( uCells, cellXY( aCell ), 0 );
 }
 ${PIXEL_UM}
 // Where a view point is drawn, as gl_FragCoord counts pixels.
@@ -245,16 +263,13 @@ out float vGlow;
 
 // The highlighted cell keeps the highlight.
 float cellGlow() {
-	return aCell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY(), 0 ).r;
+	return aCell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY( aCell ), 0 ).r;
 }
 
-// Brightened and taken a third of the way to the white in sRGB, as the somas view's.
 vec3 cellColour( vec3 own, float glow ) {
 	if ( aCell == uHighlighted ) return uHighlight;
 	if ( glow == 0.0 ) return own;
-	vec3 base = pow( own, vec3( 1.0 / 2.2 ) );
-	vec3 hot = mix( min( base * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 );
-	return pow( mix( base, hot, glow ), vec3( 2.2 ) );
+	return pow( glowing( pow( own, vec3( 1.0 / 2.2 ) ), glow ), vec3( 2.2 ) );
 }
 `;
 
@@ -269,17 +284,14 @@ float glowRim( vec2 edge ) {
 }
 `;
 
-// A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's.
 const ID_VERTEX = /* glsl */ `
 flat out vec4 vId;
 
 void main() {
 	vec3 corner;
 	bool on = impostorCorner( position, cellTexel().a, MIN_RADIUS, corner );
-	// Not drawn, its four corners are one point outside the view.
-	gl_Position = on ? projectionMatrix * vec4( corner, 1.0 ) : vec4( 2.0, 2.0, 2.0, 1.0 );
-	uint id = aCell + 1u;
-	vId = vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0;
+	gl_Position = on ? projectionMatrix * vec4( corner, 1.0 ) : NOWHERE;
+	vId = cellId( aCell );
 }
 `;
 

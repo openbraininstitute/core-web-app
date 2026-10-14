@@ -1,7 +1,7 @@
 import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
 
-/** Scalebar defaults for circuit viewers, in morphoviewer's words: right pins + labels always visible. */
-export const VERTICAL_SCALEBAR = {
+/** Scalebar defaults for the small-circuit viewer, in morphoviewer's words: right pins + labels always visible. */
+const VERTICAL_SCALEBAR = {
   orientation: 'vertical',
   hiDPI: true,
   margin: { x: 0, y: 10 },
@@ -11,12 +11,7 @@ export const VERTICAL_SCALEBAR = {
 
 type ScalebarConfig = typeof VERTICAL_SCALEBAR & { color?: string };
 
-/**
- * The scalebar config for a circuit viewer, or `false` to leave it out.
- *
- * Shared because both viewers resolve it the same way, and a scalebar that differed
- * between the small and large circuit views would read as a bug.
- */
+/** The scalebar config for the small-circuit viewer, or `false` to leave it out. */
 export function resolveScalebar(show: boolean, color?: string): ScalebarConfig | false {
   if (!show) return false;
   return color ? { ...VERTICAL_SCALEBAR, color } : VERTICAL_SCALEBAR;

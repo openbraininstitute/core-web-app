@@ -77,8 +77,8 @@ describe('impostors on the Studio look', () => {
     const material = impostor(studio(), 'segment', uniforms);
     expect((material as THREE.MeshStandardMaterial).vertexColors).toBe(true);
     const { vertexShader } = compile(material);
-    expect(vertexShader).toContain('ivec2( int( aCell & 2047u ), int( aCell >> 11u ) )');
-    expect(vertexShader).toContain('return texelFetch( uCells, cellXY(), 0 );');
+    expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
+    expect(vertexShader).toContain('return texelFetch( uCells, cellXY( aCell ), 0 );');
     expect(vertexShader).toContain('vColor = vec4( cellColour( cell.rgb, vGlow ), 1.0 );');
   });
 
@@ -100,13 +100,15 @@ describe('impostors on the Studio look', () => {
     const { vertexShader, fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
     expect(read.uGlow).toBe(own.uGlow);
     // Shaped already, by the cell table.
-    expect(vertexShader).toContain('texelFetch( uGlow, cellXY(), 0 ).r;');
+    expect(vertexShader).toContain('texelFetch( uGlow, cellXY( aCell ), 0 ).r;');
     // Brightened, and a third of the way to a warm white, in sRGB; as it is where it does not glow.
     expect(vertexShader).toContain('if ( glow == 0.0 ) return own;');
     expect(vertexShader).toContain(
-      'mix( min( base * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 )'
+      'mix( min( colour * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 )'
     );
-    expect(vertexShader).toContain('return pow( mix( base, hot, glow ), vec3( 2.2 ) );');
+    expect(vertexShader).toContain(
+      'return pow( glowing( pow( own, vec3( 1.0 / 2.2 ) ), glow ), vec3( 2.2 ) );'
+    );
     expect(fragmentShader).toContain('in float vGlow;');
     expect(fragmentShader).toContain(
       '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += 0.2 * vGlow * diffuseColor.rgb;'
@@ -226,7 +228,8 @@ describe("the impostors in their cells' numbers", () => {
 
   it("writes the cell's number and one as it is, over what is there", () => {
     const material = idMaterial('segment', uniforms);
-    expect(material.vertexShader).toContain('uint id = aCell + 1u;');
+    expect(material.vertexShader).toContain('vId = cellId( aCell );');
+    expect(material.vertexShader).toContain('uint id = cell + 1u;');
     expect(material.vertexShader).toContain(
       'vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0'
     );

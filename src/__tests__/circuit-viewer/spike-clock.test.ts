@@ -25,7 +25,7 @@ describe('the spike clock', () => {
 
   it('keeps a seek within the spikes, and takes no number for their start', () => {
     const clock = new SpikeClock();
-    clock.setSpikes(SPIKES, 2);
+    clock.setSpikes(SPIKES);
     clock.timeInMs = 250;
     expect(clock.timeInMs).toBe(100);
     clock.timeInMs = -5;
@@ -37,7 +37,8 @@ describe('the spike clock', () => {
 
   it('moves on no further in a slow frame than a glow lasts, so that it skips no spike', () => {
     const clock = new SpikeClock();
-    clock.setSpikes(SPIKES, 2);
+    clock.setCellCount(2);
+    clock.setSpikes(SPIKES);
     // A spike glows for five times 0.01 s at 100 ms a second: 5 ms, where a 100 ms frame would move on by 10.
     clock.afterglowInSeconds = 0.01;
     clock.timeInMs = 6;
@@ -51,9 +52,25 @@ describe('the spike clock', () => {
   it('warns once of spikes out of order', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const clock = new SpikeClock();
-    clock.setSpikes({ ...SPIKES, times: Float32Array.of(50, 10, 5) }, 2);
+    clock.setSpikes({ ...SPIKES, times: Float32Array.of(50, 10, 5) });
     expect(warn).toHaveBeenCalledTimes(1);
-    clock.setSpikes(SPIKES, 2);
+    clock.setSpikes(SPIKES);
     expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('says which cells glow, in an array of its own each time, and darkens the rest', () => {
+    const clock = new SpikeClock();
+    clock.setCellCount(2);
+    clock.setSpikes(SPIKES);
+    // A spike glows for 5 ms.
+    clock.afterglowInSeconds = 0.01;
+    clock.timeInMs = 12;
+    const first = clock.lit;
+    expect(first).toEqual([0]);
+    clock.timeInMs = 51;
+    expect(clock.lit).toEqual([1]);
+    expect(first).toEqual([0]);
+    expect(clock.glow[0]).toBe(0);
+    expect(clock.glow[1]).toBeGreaterThan(0);
   });
 });

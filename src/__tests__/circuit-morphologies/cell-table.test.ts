@@ -72,14 +72,23 @@ describe('the cell table', () => {
     table.paint(null, OWN);
     const colours = table.texture.version;
     const glow = table.glowTexture.version;
-    expect(table.glow(Float32Array.of(0, 0.5, 1))).toBe(true);
+    expect(table.glow(Float32Array.of(0, 0.5, 1), [1, 2])).toBe(true);
     // 0.5 to the power of 0.4.
     expect([...(table.glowTexture.image.data as Uint8Array).subarray(0, 3)]).toEqual([0, 193, 255]);
     expect(table.glowTexture.version).toBe(glow + 1);
     expect(table.texture.version).toBe(colours);
 
-    expect(table.glow(Float32Array.of(0, 0.5, 1))).toBe(false);
+    expect(table.glow(Float32Array.of(0, 0.5, 1), [1, 2])).toBe(false);
     expect(table.glowTexture.version).toBe(glow + 1);
+  });
+
+  it('darkens the cells that glowed and glow no longer, and looks at no other', () => {
+    const table = new CellTable(3);
+    table.glow(Float32Array.of(1, 0.5, 0), [0, 1]);
+    expect(table.glow(Float32Array.of(0, 0, 1), [2])).toBe(true);
+    expect([...(table.glowTexture.image.data as Uint8Array).subarray(0, 3)]).toEqual([0, 0, 255]);
+    // A cell that is not said to glow is taken for dark, whatever its number.
+    expect(table.glow(Float32Array.of(1, 1, 1), [2])).toBe(false);
   });
 
   it('has two bytes of shade a cell, laid out as the colours are, every cell half crowded to begin with', () => {
@@ -108,6 +117,16 @@ describe('the cell table', () => {
     expect(own(0)).toBe(255);
   });
 
+  it('uploads the shade again on a painting only where a cell gained or lost a colour of its own', () => {
+    const table = new CellTable(2);
+    table.paint({ palette: ['#ff0000', null], columnByCell: Uint16Array.of(0, 1) }, OWN);
+    const version = table.shadeTexture.version;
+    table.paint({ palette: ['#00ff00', null], columnByCell: Uint16Array.of(0, 1) }, OWN);
+    expect(table.shadeTexture.version).toBe(version);
+    table.paint(null, OWN);
+    expect(table.shadeTexture.version).toBeGreaterThan(version);
+  });
+
   it('takes how crowded each cell is, uploads it, and leaves the rest of the shade as it was', () => {
     const table = new CellTable(2);
     table.paint({ palette: ['#ff0000', null], columnByCell: Uint16Array.of(0, 1) }, OWN);
@@ -123,10 +142,14 @@ describe('the cell table', () => {
     ]);
   });
 
-  it('tells whether a cell is drawn', () => {
+  it('tells whether a cell is drawn, and whether a painting may have hidden any', () => {
     const table = new CellTable(2);
+    expect(table.hides).toBe(false);
     table.paint({ palette: ['#ff0000', false], columnByCell: Uint16Array.of(0, 1) }, OWN);
     expect([table.shown(0), table.shown(1)]).toEqual([true, false]);
+    expect(table.hides).toBe(true);
+    table.paint(null, OWN);
+    expect(table.hides).toBe(false);
   });
 
   it('frees its three textures', () => {

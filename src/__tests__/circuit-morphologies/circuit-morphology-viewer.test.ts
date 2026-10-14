@@ -71,7 +71,7 @@ interface Internals {
   look: Look;
   uniforms: ImpostorUniforms;
   somaMaterial: THREE.Material;
-  cloud: Quads | null;
+  cloud: { mesh: Quads; ids: Quads } | null;
   cloudMaterial: THREE.ShaderMaterial;
   cloudUniforms: SomaCloudUniforms;
   ids: THREE.Scene;
@@ -728,7 +728,7 @@ describe('the circuit morphology viewer', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
     const freed = [
-      (inner.cloud as Quads).geometry,
+      (inner.cloud?.mesh as Quads).geometry,
       inner.cloudUniforms.uShade.value as THREE.DataTexture,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
@@ -916,7 +916,7 @@ describe('the somas, before any morphology is in', () => {
     const { viewer, inner } = make();
     const given = somas();
     viewer.setSomas(given);
-    const cloud = inner.cloud as Quads;
+    const cloud = inner.cloud?.mesh as Quads;
     expect(cloud.parent).toBe(inner.surfaces);
     expect(cloud.material).toBe(inner.cloudMaterial);
     expect(cloud.frustumCulled).toBe(false);
@@ -934,7 +934,8 @@ describe('the somas, before any morphology is in', () => {
     viewer.setSomas(somas());
     const [ids] = inner.ids.children as Quads[];
     expect(inner.ids.children).toHaveLength(1);
-    expect(ids.geometry).toBe(inner.cloud?.geometry);
+    expect(ids).toBe(inner.cloud?.ids);
+    expect(ids.geometry).toBe(inner.cloud?.mesh.geometry);
     expect(ids.material).toBe(inner.idMaterials.cloud);
     expect(inner.renderer.compile).toHaveBeenCalledWith(inner.ids, inner.camera);
   });
@@ -1042,7 +1043,7 @@ describe('the somas, before any morphology is in', () => {
     const { viewer, inner } = make();
     const reset = vi.spyOn(viewer, 'resetView');
     viewer.setSomas(somas([{ name: 'A', cells: 2 }]));
-    const cloud = inner.cloud;
+    const cloud = inner.cloud?.mesh;
     viewer.setData(circuit());
     expect(cloud?.parent).toBeNull();
     expect(inner.cloud).toBeNull();
@@ -1086,7 +1087,7 @@ describe('the morphologies over the somas', () => {
 
     expect(reset).toHaveBeenCalledTimes(1);
     expect(inner.cloud).toBe(cloud);
-    expect(cloud?.visible).toBe(false);
+    expect(cloud?.mesh.visible).toBe(false);
     expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([false, true, true]);
     expect(inner.uniforms.uCells.value).toBe(table);
     expect(texel(inner, 2)[3]).toBe(0);
@@ -1109,7 +1110,7 @@ describe('the morphologies over the somas', () => {
     frames(inner);
     viewer.setData(null);
     for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
-    expect(inner.cloud?.visible).toBe(true);
+    expect(inner.cloud?.mesh.visible).toBe(true);
     expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([true]);
     expect(inner.chunks.children).toHaveLength(0);
     expect(inner.uniforms.uCells.value).toBe(table);
@@ -1146,7 +1147,7 @@ describe('the morphologies over the somas', () => {
     viewer.setData(ofTheSomas());
     viewer.setSomas(somas());
     expect(inner.chunks.children).toHaveLength(0);
-    expect(inner.cloud?.visible).toBe(true);
+    expect(inner.cloud?.mesh.visible).toBe(true);
     expect(inner.ids.children).toHaveLength(1);
   });
 });

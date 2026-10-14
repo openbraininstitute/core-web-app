@@ -18,6 +18,7 @@ const NOMINAL_FRAME_IN_MS = 1000 / 60;
 export class SpikeClock {
   private spikes: CircuitSpikes | null = null;
   private _glow = new Float32Array(0);
+  private _lit: number[] = [];
   private _timeInMs = 0;
   private _playing = false;
   private _speed = DEFAULT_SPIKE_SPEED;
@@ -28,11 +29,16 @@ export class SpikeClock {
     return this._glow;
   }
 
-  get timeMinInMs(): number {
+  /** The cells that glow at the moment, an array of its own each time it changes. */
+  get lit(): readonly number[] {
+    return this._lit;
+  }
+
+  private get timeMinInMs(): number {
     return this.spikes?.timeMinInMs ?? 0;
   }
 
-  get timeMaxInMs(): number {
+  private get timeMaxInMs(): number {
     return this.spikes?.timeMaxInMs ?? 0;
   }
 
@@ -83,10 +89,9 @@ export class SpikeClock {
   }
 
   /** New spikes start from the beginning, paused. */
-  setSpikes(spikes: CircuitSpikes | null, cellCount: number): void {
+  setSpikes(spikes: CircuitSpikes | null): void {
     if (spikes) warnIfUnsorted(spikes.times);
     this.spikes = spikes;
-    if (this._glow.length !== cellCount) this._glow = new Float32Array(cellCount);
     this._timeInMs = this.timeMinInMs;
     this._playing = false;
     this.computeGlow();
@@ -95,6 +100,7 @@ export class SpikeClock {
   setCellCount(cellCount: number): void {
     if (this._glow.length === cellCount) return;
     this._glow = new Float32Array(cellCount);
+    this._lit = [];
     this.computeGlow();
   }
 
@@ -134,7 +140,9 @@ export class SpikeClock {
   /** Each cell's brightest spike in the window before the moment, walked back from it. */
   private computeGlow(): void {
     const glow = this._glow;
-    glow.fill(0);
+    for (const cell of this._lit) glow[cell] = 0;
+    const lit: number[] = [];
+    this._lit = lit;
     const { spikes } = this;
     if (!spikes || glow.length === 0) return;
     const { cellIndices, times } = spikes;
@@ -147,7 +155,9 @@ export class SpikeClock {
       const cellIndex = cellIndices[i];
       if (cellIndex >= glow.length) continue;
       const intensity = Math.exp((spikeTime - t) / tauInMs);
-      if (intensity > glow[cellIndex]) glow[cellIndex] = intensity;
+      if (intensity <= glow[cellIndex]) continue;
+      if (glow[cellIndex] === 0) lit.push(cellIndex);
+      glow[cellIndex] = intensity;
     }
   }
 }

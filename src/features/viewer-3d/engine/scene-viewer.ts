@@ -15,7 +15,7 @@ import {
   orthoPixelScale,
 } from './camera';
 import { DepthNormalsPass } from './depth-normals-pass';
-import { clipRange, depthSpan, fitDistance, orbitRadius } from './framing';
+import { boxCorners, clipRange, depthSpan, fitDistance, orbitRadius } from './framing';
 import { type Axis, axisView, type Sign } from './gizmo';
 import {
   backgroundCss,
@@ -1144,13 +1144,7 @@ export class SceneViewer implements ViewControls {
     // reaches farthest on screen comes to within a margin of the edge.
     const aspect = this.width / this.height;
     const tanY = Math.tan((FOV * Math.PI) / 360);
-    const box = this.bounds,
-      corners: number[] = [];
-    for (const x of [box.min.x, box.max.x]) {
-      for (const y of [box.min.y, box.max.y])
-        for (const z of [box.min.z, box.max.z]) corners.push(x, y, z);
-    }
-    const points = this.fitPoints ?? corners;
+    const points = this.fitPoints ?? boxCorners(this.bounds);
     const r = orbitRadius(this.bounds) || 50;
     const camera = this.camera;
     if (this.projection === 'perspective') {

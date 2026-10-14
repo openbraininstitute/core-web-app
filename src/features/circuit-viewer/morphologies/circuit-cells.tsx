@@ -130,12 +130,11 @@ export function CircuitCells({
   }, []);
 
   // In this order: the colours and the radius before the somas, so that these are painted and bounded once; the
-  // crowding after the somas, which start half crowded; the morphologies over them.
+  // crowding's worker set going before the somas are drawn, half crowded until it is done; the morphologies over them.
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
   useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
-  useEffect(() => viewer?.setSomas(somas), [viewer, somas]);
   useEffect(() => {
     if (!viewer) return;
     const controller = new AbortController();
@@ -150,6 +149,7 @@ export function CircuitCells({
     );
     return () => controller.abort();
   }, [viewer, somas]);
+  useEffect(() => viewer?.setSomas(somas), [viewer, somas]);
   useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);

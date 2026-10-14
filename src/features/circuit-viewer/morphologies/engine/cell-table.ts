@@ -25,6 +25,9 @@ export class CellTable {
   private texels: Uint8Array;
   private glowTexels: Uint8Array;
   private shadeTexels: Uint8Array;
+  /** The cells that glow in `glowTexels`. */
+  private lit: readonly number[] = [];
+  private hiding = false;
 
   constructor(readonly cells: number) {
     const rows = Math.max(1, Math.ceil(cells / ROW));
@@ -45,18 +48,30 @@ export class CellTable {
     return this.texels[4 * cell + 3] > 0;
   }
 
+  /** Whether the last paint may have hidden cells. */
+  get hides(): boolean {
+    return this.hiding;
+  }
+
   /**
    * How brightly each cell glows, from 0 to 1, by its number, kept as the somas view shapes it: held near full, then let
-   * go. True where that changed a cell.
+   * go. Only the cells of `lit` glow, so only they and those that glowed before are looked at. True where that changed
+   * a cell.
    */
-  glow(glow: Readonly<Float32Array>): boolean {
+  glow(glow: Readonly<Float32Array>, lit: readonly number[]): boolean {
     let changed = false;
-    for (let cell = 0; cell < this.cells; cell++) {
-      const byte = glow[cell] > 0 ? Math.round(255 * glow[cell] ** 0.4) : 0;
+    for (const cell of this.lit) {
+      if (glow[cell] > 0 || this.glowTexels[cell] === 0) continue;
+      this.glowTexels[cell] = 0;
+      changed = true;
+    }
+    for (const cell of lit) {
+      const byte = Math.round(255 * glow[cell] ** 0.4);
       if (byte === this.glowTexels[cell]) continue;
       this.glowTexels[cell] = byte;
       changed = true;
     }
+    this.lit = lit;
     if (changed) this.glowTexture.needsUpdate = true;
     return changed;
   }
@@ -76,15 +91,20 @@ export class CellTable {
       if (color === false) return HIDDEN;
       return color !== null && chroma.valid(color) ? opaque(color) : ownRgba;
     });
+    this.hiding = columns.includes(HIDDEN);
     const byCell = colors?.columnByCell;
+    let ownChanged = false;
     for (let cell = 0; cell < this.cells; cell++) {
       // Past the end of either, there is no column.
       const rgba = (byCell && columns[byCell[cell]]) ?? ownRgba;
       for (let k = 0; k < 4; k++) this.texels[4 * cell + k] = rgba[k];
-      this.shadeTexels[2 * cell + 1] = rgba === ownRgba ? 255 : 0;
+      const own = rgba === ownRgba ? 255 : 0;
+      if (own === this.shadeTexels[2 * cell + 1]) continue;
+      this.shadeTexels[2 * cell + 1] = own;
+      ownChanged = true;
     }
     this.texture.needsUpdate = true;
-    this.shadeTexture.needsUpdate = true;
+    if (ownChanged) this.shadeTexture.needsUpdate = true;
   }
 
   dispose(): void {

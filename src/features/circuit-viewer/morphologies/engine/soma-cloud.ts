@@ -1,7 +1,8 @@
 /**
- * The somas of a circuit drawn as the somas view drew them: a quad a cell, facing the eye at the soma's centre and as
- * wide as its sphere, shaded as one by a fixed light, with no depth of its own. The colours are worked in sRGB, as the
- * view mixed them, and drawn as they come out, with no tone mapping.
+ * The somas of a circuit drawn as the somas view, morphoviewer's `MorphoViewerCircuitMultipleNeuronsSomaOnly` that this
+ * replaces, drew them: a quad a cell, facing the eye at the soma's centre and as wide as its sphere, shaded as one by a
+ * fixed light, with no depth of its own. The colours are worked in sRGB, as the view mixed them, and drawn as they come
+ * out, with no tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
  * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white and rings
@@ -13,7 +14,7 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
-import { ROW_BITS } from './cell-table';
+import { CELL_GLSL, GLOW_RIM_COLOR } from './impostors';
 
 import type { ImpostorUniforms } from './impostors';
 
@@ -50,18 +51,15 @@ uniform vec3 uOffset;
 uniform float uRadius;
 in vec3 aPosition;
 
+${CELL_GLSL}
 uint cellOf() {
 	return uint( gl_InstanceID );
 }
-ivec2 cellXY( uint cell ) {
-	return ivec2( int( cell & ${(1 << ROW_BITS) - 1}u ), int( cell >> ${ROW_BITS}u ) );
-}
-// The quad's corner, out of view where the cell is not drawn.
+// The quad's corner.
 vec4 cornerAt( float radius ) {
 	vec4 centre = modelViewMatrix * vec4( aPosition - uOffset, 1.0 );
 	return projectionMatrix * vec4( centre.xy + position.xy * radius, centre.z, 1.0 );
 }
-const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
 `;
 
 const VERTEX = /* glsl */ `
@@ -100,9 +98,7 @@ void main() {
 	bool lit = cell == uHighlighted;
 	float glow = lit ? 0.0 : texelFetch( uGlow, xy, 0 ).r;
 	vec3 colour = lit ? toSRGB( uHighlight ) : crowded( toSRGB( texel.rgb ), texelFetch( uShade, xy, 0 ).rg );
-	// Brightened and taken a third of the way to a warm white, before it is shaded.
-	vec3 hot = mix( min( colour * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 );
-	vColour = mix( colour, hot, glow );
+	vColour = glowing( colour, glow );
 	vGlow = glow;
 	vAlpha = lit ? 1.0 : mix( uOpacity, 1.0, glow );
 	vCoord = position.xy;
@@ -124,7 +120,7 @@ void main() {
 	// Light of its own while it glows, and a ring at its edge.
 	vec3 hot = shaded + 0.2 * vGlow * vColour;
 	float rim = vGlow * smoothstep( 0.9, 1.0, length( vCoord ) );
-	gl_FragColor = vec4( mix( hot, vec3( 0.3, 0.26, 0.2 ), rim ), vAlpha );
+	gl_FragColor = vec4( mix( hot, ${srgb(GLOW_RIM_COLOR)}, rim ), vAlpha );
 }
 `;
 
@@ -133,15 +129,13 @@ ${SHARED_VERTEX}
 flat out vec4 vId;
 out vec2 vCoord;
 
-// A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's.
 void main() {
 	uint cell = cellOf();
 	if ( texelFetch( uCells, cellXY( cell ), 0 ).a == 0.0 ) {
 		gl_Position = NOWHERE;
 		return;
 	}
-	uint id = cell + 1u;
-	vId = vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0;
+	vId = cellId( cell );
 	vCoord = position.xy;
 	gl_Position = cornerAt( uRadius );
 }
