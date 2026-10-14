@@ -8,6 +8,10 @@ import type { ViewControls } from '../engine/scene-viewer';
 const UNITS = ['m', 'mm', 'μm', 'nm', 'pm', 'fm'];
 /** What a major tick may stand for, in its unit. */
 const VALUES = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 300, 400, 500, 600, 700, 800, 900];
+/** Every value in every unit, and how many µm it is, shortest first. */
+const TICKS = UNITS.flatMap((unit, u) =>
+  VALUES.map((value) => ({ value, unit, um: value * 10 ** (6 - 3 * u) }))
+).sort((a, b) => a.um - b.um);
 const MAJOR_LENGTH = 10;
 const MINOR_LENGTH = 5;
 const MINORS_PER_MAJOR = 5;
@@ -39,14 +43,30 @@ export function Scalebar({ viewer, color }: { viewer: ViewControls; color: strin
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
-    const observer = new ResizeObserver(() => {
+    const resize = () => {
       const ratio = pixelRatio();
       canvas.width = Math.max(1, Math.round(canvas.clientWidth * ratio));
       canvas.height = Math.max(1, Math.round(canvas.clientHeight * ratio));
       paint(canvas, latest.current.scale, latest.current.color);
-    });
+    };
+    const observer = new ResizeObserver(resize);
     observer.observe(canvas);
-    return () => observer.disconnect();
+    // The window taken to a screen of another pixel ratio, or the page zoomed, leaves the CSS size as it was.
+    let ratioQuery: MediaQueryList | null = null;
+    const onRatio = () => {
+      resize();
+      watchRatio();
+    };
+    const watchRatio = () => {
+      ratioQuery?.removeEventListener('change', onRatio);
+      ratioQuery = matchMedia(`(resolution: ${pixelRatio()}dppx)`);
+      ratioQuery.addEventListener('change', onRatio);
+    };
+    watchRatio();
+    return () => {
+      observer.disconnect();
+      ratioQuery?.removeEventListener('change', onRatio);
+    };
   }, [latest]);
 
   return (
@@ -63,28 +83,19 @@ function pixelRatio(): number {
   return Math.max(1, globalThis.devicePixelRatio || 1);
 }
 
-/** What a major tick stands for, in a unit of `UNITS`, and how far apart two are in CSS pixels. */
+/**
+ * What a major tick stands for, in a unit of `UNITS`, and how far apart two are in CSS pixels: the least value at
+ * least `minStep` apart, or, where none of those fits the ruler, the largest that does.
+ */
 export function majorTick(
   rulerHeight: number,
   umPerPixel: number,
   minStep: number
 ): { value: number; unit: string; step: number } {
-  const steps = Math.max(1, Math.floor(rulerHeight / minStep));
-  let factor = 1e-6;
-  let stepValue = (rulerHeight / steps) * umPerPixel * factor;
-  let unit = '?';
-  for (const candidate of UNITS) {
-    unit = candidate;
-    if (stepValue >= 1) break;
-    stepValue *= 1e3;
-    factor *= 1e3;
-  }
-  let value = 1;
-  for (const candidate of VALUES) {
-    if (candidate > stepValue) break;
-    value = candidate;
-  }
-  return { value, unit, step: value / (umPerPixel * factor) };
+  const fitting = TICKS.filter(({ um }) => um / umPerPixel <= rulerHeight);
+  const { value, unit, um } =
+    fitting.find((tick) => tick.um / umPerPixel >= minStep) ?? fitting.at(-1) ?? TICKS[0];
+  return { value, unit, step: um / umPerPixel };
 }
 
 /**

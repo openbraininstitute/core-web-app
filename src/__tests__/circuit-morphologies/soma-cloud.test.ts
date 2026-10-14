@@ -17,8 +17,8 @@ const cloud = somaCloudMaterial(shared, own);
 const ids = somaCloudIdMaterial(shared, own);
 
 describe('the somas drawn as the somas view drew them', () => {
-  it('shares the cell table, the glow and the highlight with the impostors', () => {
-    for (const name of ['uCells', 'uGlow', 'uHighlighted', 'uHighlight'] as const) {
+  it('shares the cell table, the glow, the highlight and the ring with the impostors', () => {
+    for (const name of ['uCells', 'uGlow', 'uHighlighted', 'uHighlight', 'uGlowRim'] as const) {
       expect(cloud.uniforms[name]).toBe(shared[name]);
     }
     expect(cloud.uniforms.uShade).toBe(own.uShade);
@@ -70,6 +70,13 @@ describe('the somas drawn as the somas view drew them', () => {
     expect(cloud.vertexShader).toContain('cornerAt( uRadius * ( 1.0 + 0.700000 * glow ) )');
     expect(cloud.vertexShader).toContain('vAlpha = lit ? 1.0 : mix( uOpacity, 1.0, glow );');
     expect(cloud.vertexShader).toContain('bool lit = cell == uHighlighted;');
+  });
+
+  // On a dark background the impostors have none, so a spike looks the same on the somas and on the morphologies.
+  it('rings a spiking soma only as far as the impostors ring their cells', () => {
+    expect(cloud.fragmentShader).toContain(
+      'float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( vCoord ) );'
+    );
   });
 
   it('picks with the same quads in their cells’ numbers, round as they are drawn, unblended', () => {

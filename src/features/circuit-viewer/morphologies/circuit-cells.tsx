@@ -129,10 +129,11 @@ export function CircuitCells({
     };
   }, []);
 
-  // In this order: the colours and the radius before the somas, so that these are painted and bounded once; the
-  // crowding's worker set going before the somas are drawn, half crowded until it is done; the morphologies over them.
+  // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
+  // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
+  // they come with, painted once where both change; the morphologies over them.
+  const colors = useLatest(cellColors);
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
-  useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
   useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
   useEffect(() => {
@@ -140,7 +141,7 @@ export function CircuitCells({
     const controller = new AbortController();
     loadCrowding(somas.positions, controller.signal).then(
       (crowding) => {
-        if (!controller.signal.aborted) viewer.setCrowding(crowding);
+        if (!controller.signal.aborted) viewer.setCrowding(somas, crowding);
       },
       (e: unknown) => {
         // The somas stay half crowded.
@@ -149,7 +150,8 @@ export function CircuitCells({
     );
     return () => controller.abort();
   }, [viewer, somas]);
-  useEffect(() => viewer?.setSomas(somas), [viewer, somas]);
+  useEffect(() => viewer?.setSomas(somas, colors.current), [viewer, somas, colors]);
+  useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
@@ -216,10 +218,13 @@ export function CircuitCells({
   }, [viewer, cellHover, clickable, clicked, movable]);
 
   const zoomChanged = useLatest(onZoomChange);
-  useEffect(
-    () => viewer?.onPixelScaleChange(() => zoomChanged.current?.(viewer.zoom)),
-    [viewer, zoomChanged]
-  );
+  const zoomHeard = onZoomChange !== undefined;
+  useEffect(() => {
+    if (!viewer || !zoomHeard) return;
+    // At once too: the view may have been zoomed while nothing listened.
+    zoomChanged.current?.(viewer.zoom);
+    return viewer.onPixelScaleChange(() => zoomChanged.current?.(viewer.zoom));
+  }, [viewer, zoomChanged, zoomHeard]);
 
   useEffect(() => {
     if (!viewer) return;

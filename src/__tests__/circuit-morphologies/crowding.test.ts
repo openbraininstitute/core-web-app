@@ -1,7 +1,12 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { CROWDING_REACH, crowding } from '@/features/circuit-viewer/morphologies/load/crowding';
+import {
+  CROWDING_REACH,
+  crowding,
+  gridFor,
+  MAX_GRID_CELLS,
+} from '@/features/circuit-viewer/morphologies/load/crowding';
 import { loadCrowding } from '@/features/circuit-viewer/morphologies/load/load-crowding';
 
 import type { CrowdingApi } from '@/features/circuit-viewer/morphologies/load/crowding.worker';
@@ -94,6 +99,24 @@ describe('how crowded each soma is', () => {
     }
     expect(worst).toBeLessThanOrEqual(8);
     expect(total / grid.length).toBeLessThan(2.5);
+  });
+});
+
+describe("the crowding's grid", () => {
+  const cells = (sizes: number[]) => sizes[0] * sizes[1] * sizes[2];
+
+  it('is a third of the reach a step where it fits', () => {
+    const { step, sizes } = gridFor({ min: [0, 0, 0], max: [1000, 1000, 1000] }, CROWDING_REACH);
+    expect(step).toBe(50);
+    expect(cells(sizes)).toBeLessThanOrEqual(MAX_GRID_CELLS);
+  });
+
+  // A flat circuit's thin side keeps its padding however long the step: a step grown once, as for a cube, leaves the
+  // grid over four times too large.
+  it('grows its step till it fits, a flat circuit too', () => {
+    const { step, sizes } = gridFor({ min: [0, 0, 0], max: [1e6, 1e6, 0] }, CROWDING_REACH);
+    expect(cells(sizes)).toBeLessThanOrEqual(MAX_GRID_CELLS);
+    expect(step).toBeGreaterThan(50);
   });
 });
 

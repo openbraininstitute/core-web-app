@@ -1020,7 +1020,8 @@ describe('the somas, before any morphology is in', () => {
 
   it('takes how crowded each soma is, for these somas only', () => {
     const { viewer, inner } = make();
-    viewer.setSomas(somas());
+    const given = somas();
+    viewer.setSomas(given);
     // Every other byte: how crowded each cell is.
     const shade = () => {
       const bytes = (inner.cloudUniforms.uShade.value as THREE.DataTexture).image
@@ -1029,28 +1030,45 @@ describe('the somas, before any morphology is in', () => {
     };
     expect(shade()).toEqual([128, 128, 128]);
     frames(inner);
-    viewer.setCrowding(Uint8Array.of(255, 200, 0));
+    viewer.setCrowding(given, Uint8Array.of(255, 200, 0));
     expect(shade()).toEqual([255, 200, 0]);
     expect(frames(inner)).toBe(1);
-    viewer.setCrowding(Uint8Array.of(1, 2));
+    // Other somas of as many cells.
+    viewer.setCrowding(somas(), Uint8Array.of(1, 2, 3));
     expect(shade()).toEqual([255, 200, 0]);
     // Other somas begin half crowded again.
     viewer.setSomas(somas());
     expect(shade()).toEqual([128, 128, 128]);
   });
 
-  it('lets go of the somas for morphologies of other cells, and of morphologies for somas, framing either', () => {
+  it('keeps the somas over morphologies of other cells, and has them back after morphologies alone', () => {
     const { viewer, inner } = make();
     const reset = vi.spyOn(viewer, 'resetView');
     viewer.setSomas(somas([{ name: 'A', cells: 2 }]));
-    const cloud = inner.cloud?.mesh;
+    const { cloud } = inner;
     viewer.setData(circuit());
-    expect(cloud?.parent).toBeNull();
-    expect(inner.cloud).toBeNull();
+    expect(inner.cloud).toBe(cloud);
+    expect(cloud?.mesh.visible).toBe(true);
+    expect(inner.chunks.children).toHaveLength(0);
+    viewer.setData(null);
+    expect(cloud?.mesh.visible).toBe(true);
+
+    viewer.setSomas(null);
+    viewer.setData(circuit());
+    expect(inner.chunks.children).toHaveLength(1);
     viewer.setSomas(somas());
     expect(inner.chunks.children).toHaveLength(0);
     expect(inner.ids.children).toHaveLength(1);
     expect(reset).toHaveBeenCalledTimes(3);
+  });
+
+  it('paints the somas once in the colours they come with, and not again for the same colours', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas(), HIDE_B);
+    const version = (inner.uniforms.uCells.value as THREE.DataTexture).version;
+    expect(texel(inner, 2)[3]).toBe(0);
+    viewer.setCellColors(HIDE_B);
+    expect((inner.uniforms.uCells.value as THREE.DataTexture).version).toBe(version);
   });
 
   it('glows a soma as it fires, cells numbered as the positions are', () => {

@@ -69,21 +69,26 @@ export interface ElectrodeHit {
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */
 export interface CircuitMorphologyView extends ViewControls {
   /**
-   * Show these morphologies in place of the somas of the same cells, framing the view only as those would be; without
-   * them, framing it on the morphologies. Null shows none, and the somas again. The arrays are kept, not copied.
+   * Show these morphologies in place of the somas of the same cells, framing the view only as those would be; over
+   * somas of other cells, none. Without somas, frame the view on the morphologies. Null shows none, and the somas again.
+   * The arrays are kept, not copied.
    */
   setData(data: CircuitMorphologyData | null): void;
   /**
-   * Show these somas, each a sphere as the somas view drew them; null shows none. The view is framed on them unless the
-   * populations on show before, or these, take in the others. The positions are kept, not copied.
+   * Show these somas, each a sphere as the somas view drew them, in `colors` where given; null shows none. The view is
+   * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not
+   * copied.
    */
-  setSomas(somas: CircuitSomas | null): void;
+  setSomas(somas: CircuitSomas | null, colors?: CellColors | null): void;
   /** A soma's radius, µm. */
   setSomaRadius(radius: number): void;
   /** How opaque the somas are, from 0 to 1; a spiking soma is opaque all the same. */
   setSomaOpacity(opacity: number): void;
-  /** How crowded each soma's neighbourhood is, a byte a cell (`crowding`); null takes each as half crowded. */
-  setCrowding(crowding: Uint8Array | null): void;
+  /**
+   * How crowded each of `somas`' neighbourhoods is, a byte a cell (`crowding`); null takes each as half crowded. Taken
+   * only while those somas are the ones shown.
+   */
+  setCrowding(somas: CircuitSomas, crowding: Uint8Array | null): void;
   /** Null draws every cell in the default colour. */
   setCellColors(colors: CellColors | null): void;
   setDefaultColor(color: string): void;

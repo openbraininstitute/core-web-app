@@ -202,7 +202,7 @@ describe('CircuitCells', () => {
 
     expect(h.viewers).toHaveLength(1);
     expect(viewer.host.parentElement).toBe(screen.getByTestId('circuit-cells'));
-    expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS);
+    expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS);
     expect(viewer.setSomaRadius).toHaveBeenCalledExactlyOnceWith(15);
     expect(viewer.setSomaOpacity).toHaveBeenCalledExactlyOnceWith(0.2);
     expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA);
@@ -211,12 +211,26 @@ describe('CircuitCells', () => {
     expect(viewer.setDark).toHaveBeenCalledExactlyOnceWith(true);
   });
 
-  it('paints and sizes the somas before it hands them over, and the morphologies after', () => {
+  it('sizes the somas before it hands them over with their colours, and the morphologies after', () => {
     const { viewer } = view();
 
-    expect(calledAt(viewer.setCellColors)).toBeLessThan(calledAt(viewer.setSomas));
+    expect(calledAt(viewer.setDefaultColor)).toBeLessThan(calledAt(viewer.setSomas));
     expect(calledAt(viewer.setSomaRadius)).toBeLessThan(calledAt(viewer.setSomas));
+    // The same colours again, which the engine has.
+    expect(calledAt(viewer.setSomas)).toBeLessThan(calledAt(viewer.setCellColors));
     expect(calledAt(viewer.setSomas)).toBeLessThan(calledAt(viewer.setData));
+  });
+
+  // Other cells come with colours for them: those that come with them paint the new somas once, and the old ones not
+  // at all.
+  it('hands other somas over with the colours that come with them', () => {
+    const { viewer, update } = view();
+    const others = { ...SOMAS };
+    const theirs: CellColors = { palette: ['#00ff00'], columnByCell: Uint16Array.of(0, 0) };
+
+    update({ somas: others, cellColors: theirs });
+    expect(viewer.setSomas).toHaveBeenLastCalledWith(others, theirs);
+    expect(calledAt(viewer.setSomas, 1)).toBeLessThan(calledAt(viewer.setCellColors, 1));
   });
 
   it('takes a radius, an opacity and morphologies without handing the somas over again', () => {
@@ -246,7 +260,9 @@ describe('CircuitCells', () => {
     const bytes = Uint8Array.of(255, 0);
     second.resolve(bytes);
 
-    await vi.waitFor(() => expect(viewer.setCrowding).toHaveBeenCalledExactlyOnceWith(bytes));
+    await vi.waitFor(() =>
+      expect(viewer.setCrowding).toHaveBeenCalledExactlyOnceWith(others, bytes)
+    );
     expect(calledAt(viewer.setSomas, 1)).toBeLessThan(calledAt(viewer.setCrowding));
   });
 
@@ -266,11 +282,26 @@ describe('CircuitCells', () => {
     const { viewer, signals } = view({ onZoomChange });
     viewer.zoom = 2.5;
     for (const listener of viewer.pixelScaleListeners) listener(0.4);
-    expect(onZoomChange).toHaveBeenCalledExactlyOnceWith(2.5);
+    expect(onZoomChange.mock.calls).toEqual([[1], [2.5]]);
 
     await signals.setZoom.dispatch(4);
     await signals.setZoom.dispatch(1000);
     expect(viewer.setZoom.mock.calls).toEqual([[4], [100]]);
+  });
+
+  // The slider turned on after a wheel zoomed the view.
+  it('tells a listener that comes later of the zoom as it is, and listens for nothing without one', () => {
+    const { viewer, update } = view();
+    expect(viewer.pixelScaleListeners.size).toBe(0);
+    viewer.zoom = 3;
+
+    const onZoomChange = vi.fn();
+    update({ onZoomChange });
+    expect(onZoomChange).toHaveBeenCalledExactlyOnceWith(3);
+    expect(viewer.pixelScaleListeners.size).toBe(1);
+
+    update({ onZoomChange: undefined });
+    expect(viewer.pixelScaleListeners.size).toBe(0);
   });
 
   it('hands on only what changes, keeping the engine and the view it frames', () => {

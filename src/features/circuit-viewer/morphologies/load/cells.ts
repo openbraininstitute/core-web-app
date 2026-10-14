@@ -1,3 +1,5 @@
+import { morphologiesExtent } from '../extent';
+
 import type { CircuitMorphologyData, Population } from '../types';
 
 const NONE = 0xffffffff;
@@ -5,8 +7,8 @@ const NONE = 0xffffffff;
 /**
  * The data with its cells numbered through `populations`, the page's in the page's order, where the pack numbers them
  * through the populations it holds, sorted by name. `data`'s arrays are rewritten in place. A cell of a population the
- * pack has none of gets a soma with no position. The segments of a population the page has none of are left out, as
- * the page draws nothing of a population it could not place; `bounds` stay the pack's.
+ * pack has none of gets a soma with no position. The segments and somas of a population the page has none of are left
+ * out, as the page draws nothing of a population it could not place, and `bounds` then go round what is left.
  */
 export function renumberCells(
   data: CircuitMorphologyData,
@@ -23,8 +25,10 @@ export function renumberCells(
   for (let i = 3; i < somas.length; i += 4) somas[i] = 0;
   const pageCell = new Uint32Array(data.somas.length / 4).fill(NONE);
   let first = 0;
+  let leftOut = false;
   for (const { name, cells: count } of data.populations) {
     const place = places.get(name);
+    leftOut ||= !place;
     if (place) {
       if (place.cells !== count) {
         throw new Error(
@@ -48,14 +52,19 @@ export function renumberCells(
     }
     segmentCells[kept++] = cell;
   }
-  const renumbered = { ...data, somas, populations };
-  if (kept === segmentCells.length) return renumbered;
-  return {
-    ...renumbered,
-    segments: segments.slice(0, 8 * kept),
-    segmentCells: segmentCells.slice(0, kept),
-    segmentTypes: segmentTypes.slice(0, kept),
-  };
+  const renumbered =
+    kept === segmentCells.length
+      ? { ...data, somas, populations }
+      : {
+          ...data,
+          somas,
+          populations,
+          segments: segments.slice(0, 8 * kept),
+          segmentCells: segmentCells.slice(0, kept),
+          segmentTypes: segmentTypes.slice(0, kept),
+        };
+  if (!leftOut) return renumbered;
+  return { ...renumbered, bounds: morphologiesExtent(renumbered) ?? data.bounds };
 }
 
 /**

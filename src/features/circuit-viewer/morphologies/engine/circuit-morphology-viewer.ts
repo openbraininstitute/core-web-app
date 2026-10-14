@@ -7,7 +7,7 @@ import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by
 import { boxCorners } from '@/features/viewer-3d/engine/framing';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
-import { extentOf } from '../extent';
+import { extentOf, morphologiesExtent } from '../extent';
 import { CellTable } from './cell-table';
 import {
   countContacts,
@@ -217,13 +217,14 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /**
    * Over the somas of the same cells, the morphologies take their place, drawn where the circuit's frame puts them and
-   * framed only as the somas would be (`setSomas`); null gives the somas their place back. Without them, the
-   * morphologies are all there is, about their own centre.
+   * framed only as the somas would be (`setSomas`); over somas of other cells, they are not drawn; null gives the somas
+   * their place back. Without somas, the morphologies are all there is, about their own centre.
    */
-  setData(data: CircuitMorphologyData | null): void {
+  setData(given: CircuitMorphologyData | null): void {
     this.clearMorphologies();
-    // The somas of the same cells, which keep the cell table, the origin and the view.
-    const under = data && this.table?.cells === data.somas.length / 4 ? this.cloud : null;
+    // The somas, which keep the cell table, the origin and the view; morphologies of other cells are not drawn over them.
+    const under = this.cloud;
+    const data = given && (!under || this.table?.cells === given.somas.length / 4) ? given : null;
     if (data && !under) {
       this.clear();
       this.makeTable(data.somas.length / 4);
@@ -231,7 +232,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.showCloud(data === null);
     if (!data) {
       // Without the somas, the morphologies were all there was.
-      if (this.cloud) this.bound();
+      if (under) this.bound();
       else this.clear();
       return;
     }
@@ -269,8 +270,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (framesAgain(under?.somas.populations ?? null, data.populations)) this.resetView();
   }
 
-  setSomas(somas: CircuitSomas | null): void {
+  setSomas(somas: CircuitSomas | null, colors: CellColors | null = this.colors): void {
     const before = this.cloud?.somas.populations ?? null;
+    this.colors = colors;
     this.clear();
     if (!somas) return;
     const cells = Math.floor(somas.positions.length / 3);
@@ -314,9 +316,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     if (this.cloud?.mesh.visible) this.invalidate();
   }
 
-  setCrowding(crowding: Uint8Array | null): void {
+  setCrowding(somas: CircuitSomas, crowding: Uint8Array | null): void {
     // Worked out for other somas.
-    if (!this.table || (crowding && crowding.length !== this.table.cells)) return;
+    if (!this.table || this.cloud?.somas !== somas) return;
     this.table.setCrowding(crowding);
     if (this.cloud?.mesh.visible) this.invalidate();
   }
@@ -324,7 +326,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   /**
    * Over the somas, the view frames those drawn as the somas view did: centred on their mean, as far either side as the
    * farthest of them from it on each axis, and a soma's radius more; where none is drawn, all of them. Over their
-   * morphologies, it frames the morphologies' bounds about their middle.
+   * morphologies, it frames those of the cells drawn about their middle.
    */
   override resetView(): void {
     const { cloud, table, layer } = this;
@@ -333,7 +335,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       return;
     }
     if (layer) {
-      this.frameBox(this.shifted(layer.data.bounds));
+      const shown = table.hides
+        ? morphologiesExtent(layer.data, (cell) => table.shown(cell))
+        : null;
+      this.frameBox(this.shifted(shown ?? layer.data.bounds));
       return;
     }
     const shown = table.hides ? somasBox(cloud.somas.positions, (cell) => table.shown(cell)) : null;
@@ -373,6 +378,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   }
 
   setCellColors(colors: CellColors | null): void {
+    // The somas may have come with them.
+    if (colors === this.colors) return;
     this.colors = colors;
     this.paint();
   }

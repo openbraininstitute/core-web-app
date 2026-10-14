@@ -5,8 +5,8 @@
  * out, with no tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
- * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white and rings
- * it, and makes it opaque however translucent the rest are.
+ * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white, rings it
+ * where the morphologies are ringed, on a light background, and makes it opaque however translucent the rest are.
  *
  * The same quads drawn in each cell's number tell which cell is under a pixel (`somaCloudIdMaterial`).
  */
@@ -107,6 +107,7 @@ void main() {
 `;
 
 const FRAGMENT = /* glsl */ `
+uniform vec4 uGlowRim;
 in vec3 vColour;
 in vec2 vCoord;
 in float vGlow;
@@ -117,9 +118,9 @@ void main() {
 	if ( z2 < 0.0 ) discard;
 	float facing = 0.5 * ( 1.0 + dot( vec3( vCoord, sqrt( z2 ) ), ${glsl(LIGHT)} ) );
 	vec3 shaded = vColour * ( 0.5 + 0.5 * smoothstep( 0.0, 1.0, facing ) ) + 0.33 * pow( facing, 50.0 );
-	// Light of its own while it glows, and a ring at its edge.
+	// Light of its own while it glows, and a ring at its edge where the morphologies have one.
 	vec3 hot = shaded + 0.2 * vGlow * vColour;
-	float rim = vGlow * smoothstep( 0.9, 1.0, length( vCoord ) );
+	float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( vCoord ) );
 	gl_FragColor = vec4( mix( hot, ${srgb(GLOW_RIM_COLOR)}, rim ), vAlpha );
 }
 `;
@@ -151,7 +152,10 @@ void main() {
 }
 `;
 
-type Shared = Pick<ImpostorUniforms, 'uCells' | 'uGlow' | 'uHighlighted' | 'uHighlight'>;
+type Shared = Pick<
+  ImpostorUniforms,
+  'uCells' | 'uGlow' | 'uHighlighted' | 'uHighlight' | 'uGlowRim'
+>;
 
 /** The cloud's material. Translucent below an opacity of 1, it blends, and still writes its depth, unsorted. */
 export function somaCloudMaterial(shared: Shared, own: SomaCloudUniforms): THREE.ShaderMaterial {

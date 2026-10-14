@@ -4,7 +4,7 @@ import { extentOf } from '../extent';
 export const CROWDING_REACH = 150;
 /** The grid's step, a share of the reach, and the most grid cells it may take before its step grows. */
 const STEPS_IN_REACH = 3;
-const MAX_GRID_CELLS = 8_000_000;
+export const MAX_GRID_CELLS = 8_000_000;
 
 /**
  * How crowded each soma's neighbourhood is, a byte a cell, 255 for the most crowded: the sum of reach² − d² over the
@@ -24,18 +24,9 @@ export function crowding(
   const cells = Math.floor(positions.length / 3);
   const extent = extentOf(positions);
   if (!extent) return null;
-  const { min, max } = extent;
-
-  let step = reach / STEPS_IN_REACH;
-  // Room around the somas' cells for the reach, so that no neighbour is looked for outside the grid.
-  const pad = () => Math.ceil(reach / step) + 1;
-  const sizes = () => min.map((m, k) => Math.floor((max[k] - m) / step) + 2 + 2 * pad());
-  let [nx, ny, nz] = sizes();
-  if (nx * ny * nz > MAX_GRID_CELLS) {
-    step *= 1.01 * Math.cbrt((nx * ny * nz) / MAX_GRID_CELLS);
-    [nx, ny, nz] = sizes();
-  }
-  const margin = pad();
+  const { min } = extent;
+  const { step, sizes, margin } = gridFor(extent, reach);
+  const [nx, ny, nz] = sizes;
   const origin = min.map((m) => m - margin * step);
   const at = (x: number, y: number, z: number) => (x * ny + y) * nz + z;
   // The corner `k` of a grid cell, from the cell: bit 0 the next x, bit 1 the next y, bit 2 the next z.
@@ -90,6 +81,27 @@ export function crowding(
   const bytes = new Uint8Array(cells);
   for (let cell = 0; cell < cells; cell++) bytes[cell] = Math.round((255 * totals[cell]) / most);
   return bytes;
+}
+
+/**
+ * The grid the somas between `min` and `max` are shared out on: its step, its cells along each axis, and the cells
+ * left round the somas' for the reach, so that no neighbour is looked for outside it. No more than `MAX_GRID_CELLS`.
+ */
+export function gridFor(
+  { min, max }: { min: number[]; max: number[] },
+  reach: number
+): { step: number; sizes: number[]; margin: number } {
+  let step = reach / STEPS_IN_REACH;
+  const pad = () => Math.ceil(reach / step) + 1;
+  const sizes = () => min.map((m, k) => Math.floor((max[k] - m) / step) + 2 + 2 * pad());
+  let grid = sizes();
+  const count = () => grid[0] * grid[1] * grid[2];
+  // Again till it fits: a flat circuit's thin side, padded, hardly shrinks with a longer step.
+  while (count() > MAX_GRID_CELLS) {
+    step *= 1.01 * Math.cbrt(count() / MAX_GRID_CELLS);
+    grid = sizes();
+  }
+  return { step, sizes: grid, margin: pad() };
 }
 
 const placed = (positions: Readonly<Float32Array>, i: number) =>

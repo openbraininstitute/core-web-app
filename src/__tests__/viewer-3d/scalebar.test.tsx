@@ -59,6 +59,7 @@ describe('the scale bar', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   // jsdom's canvas is 150 pixels high: 140 between the labels' pads, a major tick at least 24 apart.
@@ -84,6 +85,38 @@ describe('the scale bar', () => {
     expect(viewer.listeners.size).toBe(0);
   });
 
+  // Taken to another screen, the window keeps its CSS size, which is all a resize is heard by.
+  it('draws again at another pixel ratio, and listens for the next, letting go when it goes', () => {
+    const queries: { media: string; listeners: Set<() => void> }[] = [];
+    vi.spyOn(window, 'matchMedia').mockImplementation((media: string) => {
+      const listeners = new Set<() => void>();
+      queries.push({ media, listeners });
+      return {
+        media,
+        addEventListener: (_: string, listener: () => void) => listeners.add(listener),
+        removeEventListener: (_: string, listener: () => void) => listeners.delete(listener),
+      } as unknown as MediaQueryList;
+    });
+    vi.stubGlobal('devicePixelRatio', 2);
+    const { unmount } = render(<Scalebar viewer={fakeViewer(1)} color="#fff" />);
+    expect(queries.map(({ media }) => media)).toEqual(['(resolution: 2dppx)']);
+
+    vi.stubGlobal('devicePixelRatio', 1);
+    context.clearRect.mockClear();
+    act(() => {
+      for (const listener of queries[0].listeners) listener();
+    });
+    expect(context.clearRect).toHaveBeenCalled();
+    expect(queries.map(({ media }) => media)).toEqual([
+      '(resolution: 2dppx)',
+      '(resolution: 1dppx)',
+    ]);
+    expect(queries[0].listeners.size).toBe(0);
+
+    unmount();
+    expect(queries[1].listeners.size).toBe(0);
+  });
+
   it('draws nothing without a scale, in perspective', () => {
     const viewer = fakeViewer(null);
     render(<Scalebar viewer={viewer} color="#fff" />);
@@ -96,7 +129,7 @@ describe('the scale bar', () => {
 });
 
 describe('a major tick', () => {
-  it('stands for the largest round number that fits the space a tick may take, in the unit that keeps it whole', () => {
+  it('stands for the least round number at least the space a tick needs, in the unit that keeps it whole', () => {
     const micrometres = majorTick(140, 1, 24);
     expect(micrometres).toMatchObject({ value: 25, unit: 'μm' });
     expect(micrometres.step).toBeCloseTo(25);
@@ -104,5 +137,18 @@ describe('a major tick', () => {
     expect(millimetres).toMatchObject({ value: 25, unit: 'mm' });
     expect(millimetres.step).toBeCloseTo(25);
     expect(majorTick(140, 0.001, 24)).toMatchObject({ value: 25, unit: 'nm' });
+  });
+
+  // Rounded down instead, 4.4 µm would be 2 µm: ticks 10 pixels apart, closer than the labels.
+  it('is never closer than the space a tick needs where a farther one fits', () => {
+    const tick = majorTick(140, 0.2, 22);
+    expect(tick).toMatchObject({ value: 5, unit: 'μm' });
+    expect(tick.step).toBeCloseTo(25);
+  });
+
+  it('is the largest that fits a ruler too short for the space a tick needs', () => {
+    const tick = majorTick(20, 1, 24);
+    expect(tick).toMatchObject({ value: 20, unit: 'μm' });
+    expect(tick.step).toBeCloseTo(20);
   });
 });

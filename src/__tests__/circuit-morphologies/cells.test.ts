@@ -55,7 +55,7 @@ describe('renumberCells', () => {
     );
   });
 
-  it('leaves out the segments of a population the page has none of', () => {
+  it('leaves out the segments of a population the page has none of, and bounds what is left', () => {
     const renumbered = renumberCells(data(), [{ name: 'a', cells: 3 }]);
 
     expect([...renumbered.segmentCells]).toEqual([0, 1, 2]);
@@ -63,7 +63,9 @@ describe('renumberCells', () => {
     expect([...renumbered.segmentTypes]).toEqual([3, 2, 3]);
     expect(renumbered.segments.buffer.byteLength).toBe(4 * 8 * 3);
     expect([...renumbered.somas]).toEqual([soma(0), soma(1), soma(2)].flat());
-    expect(renumbered.bounds).toEqual(data().bounds);
+    // Round the segments' ends and the somas left, each as wide as its radius: segment 4's far end, (36, 37, 38) and
+    // 39 wide, is the farthest out.
+    expect(renumbered.bounds).toEqual({ min: [-3, -2, -1], max: [75, 76, 77] });
   });
 
   it('leaves out every segment where the page has none of the populations of the pack', () => {
