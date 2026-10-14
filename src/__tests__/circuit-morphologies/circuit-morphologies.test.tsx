@@ -1,5 +1,5 @@
 import { MorphoViewerSignals } from '@openbraininstitute/morphoviewer/dist/components/signals';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -17,6 +17,10 @@ const h = vi.hoisted(() => {
   class FakeViewer {
     setData = vi.fn();
     setCellColors = vi.fn();
+    setDefaultColor = vi.fn();
+    setHighlight = vi.fn();
+    /** Every pick finds cell 4. */
+    pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
     setDark = vi.fn();
     resetView = vi.fn();
     dispose = vi.fn();
@@ -57,6 +61,7 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
     <CircuitMorphologies
       data={DATA}
       cellColors={COLORS}
+      defaultColor="#2b5cd9"
       backgroundColor="#ffffff"
       showScalebar
       {...props}
@@ -88,6 +93,7 @@ describe('CircuitMorphologies', () => {
     expect(viewer.host.parentElement).toBe(screen.getByTestId('circuit-morphologies'));
     expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA);
     expect(viewer.setCellColors).toHaveBeenCalledExactlyOnceWith(COLORS);
+    expect(viewer.setDefaultColor).toHaveBeenCalledExactlyOnceWith('#2b5cd9');
     expect(viewer.setDark).toHaveBeenCalledExactlyOnceWith(true);
   });
 
@@ -101,8 +107,55 @@ describe('CircuitMorphologies', () => {
 
     update({ cellColors: recoloured, backgroundColor: '#000000' });
     expect(viewer.setDark.mock.calls).toEqual([[false], [true]]);
+
+    update({ cellColors: recoloured, backgroundColor: '#000000', defaultColor: '#7aa2ff' });
+    expect(viewer.setDefaultColor.mock.calls).toEqual([['#2b5cd9'], ['#7aa2ff']]);
+    expect(viewer.setCellColors).toHaveBeenCalledTimes(2);
     expect(viewer.setData).toHaveBeenCalledTimes(1);
     expect(h.viewers).toHaveLength(1);
+  });
+
+  it('tells of the cell clicked in the view, through whichever listener it has by then', async () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { viewer, update } = view({ onCellClick: first });
+    const press = () => {
+      fireEvent.pointerDown(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
+      fireEvent.pointerUp(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
+    };
+
+    press();
+    await vi.waitFor(() => expect(first).toHaveBeenCalledExactlyOnceWith(4));
+    expect(viewer.pick).toHaveBeenCalledExactlyOnceWith(30, 20);
+
+    update({ onCellClick: second });
+    press();
+    await vi.waitFor(() => expect(second).toHaveBeenCalledExactlyOnceWith(4));
+    expect(first).toHaveBeenCalledTimes(1);
+    // Asked for by a click alone, no cell is highlighted.
+    expect(viewer.setHighlight).not.toHaveBeenCalled();
+  });
+
+  it('highlights the cell the pointer rests on where it is asked to', async () => {
+    const { viewer, update } = view({ cellHover: true });
+
+    fireEvent.pointerMove(viewer.host, { clientX: 30, clientY: 20 });
+    await vi.waitFor(() => expect(viewer.setHighlight).toHaveBeenCalledExactlyOnceWith(4));
+
+    update({ cellHover: false });
+    expect(viewer.setHighlight).toHaveBeenLastCalledWith(null);
+  });
+
+  it('leaves the pointer alone where it has neither to highlight nor to tell of a click', async () => {
+    const { viewer } = view();
+
+    fireEvent.pointerMove(viewer.host, { clientX: 30, clientY: 20 });
+    fireEvent.pointerDown(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
+    fireEvent.pointerUp(viewer.host, { isPrimary: true, clientX: 30, clientY: 20 });
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(viewer.pick).not.toHaveBeenCalled();
+    expect(viewer.setHighlight).not.toHaveBeenCalled();
   });
 
   it('draws the ruler where the setting has it, in the colour read against the background, and the axes', () => {

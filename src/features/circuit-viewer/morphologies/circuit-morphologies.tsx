@@ -7,8 +7,10 @@ import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
 import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
+import { useLatest } from '@/ui/hooks/use-latest';
 
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
+import { trackPointer } from './pointer';
 
 import type { MorphoViewerSignals, MorphoViewerSnapshotOptions } from '@/morpho-viewer';
 import type { CellColors, CircuitMorphologyData } from './types';
@@ -17,6 +19,12 @@ export interface CircuitMorphologiesProps {
   data: CircuitMorphologyData;
   /** As the somas view takes them: a palette and each cell's column of it. */
   cellColors: CellColors;
+  /** What a cell with no colour of its own is drawn in. */
+  defaultColor: string;
+  /** Highlight the cell the pointer rests on. */
+  cellHover?: boolean;
+  /** Called with the cell that is clicked. */
+  onCellClick?: (cell: number) => void;
   backgroundColor: string;
   showScalebar: boolean;
   /** The circuit viewer's bus, on which this view answers the camera reset and the snapshot. */
@@ -49,6 +57,9 @@ function imageOf(
 export function CircuitMorphologies({
   data,
   cellColors,
+  defaultColor,
+  cellHover = false,
+  onCellClick,
   backgroundColor,
   showScalebar,
   signals,
@@ -72,6 +83,18 @@ export function CircuitMorphologies({
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
   useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
+  useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
+
+  const clicked = useLatest(onCellClick);
+  const clickable = onCellClick !== undefined;
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!viewer || !host || !(cellHover || clickable)) return;
+    return trackPointer(host, viewer, {
+      hover: cellHover,
+      onClick: clickable ? (cell) => clicked.current?.(cell) : undefined,
+    });
+  }, [viewer, cellHover, clickable, clicked]);
 
   useEffect(() => {
     if (!viewer) return;

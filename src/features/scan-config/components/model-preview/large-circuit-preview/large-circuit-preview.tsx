@@ -8,6 +8,7 @@ import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-popu
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import {
   DEFAULT_ELECTRODE_RADIUS,
   DEFAULT_SOMA_SIZE_SCALE,
@@ -73,9 +74,14 @@ export interface LargeCircuitPreviewProps {
   hiddenPopulations?: readonly string[];
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
-  /** Colour for the somas of the populations that are not on show. */
+  /**
+   * Colour for a morphology with none of its own. The somas have the viewer's
+   * depth-shaded blue instead.
+   */
+  defaultColor?: string;
+  /** Colour for the cells of the populations that are not on show. */
   recededColor?: string;
-  /** Called with the population name when one of those somas is clicked. */
+  /** Called with the population name when one of those cells is clicked. */
   onPopulationClick?: (populationName: string) => void;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
@@ -113,8 +119,8 @@ export interface LargeCircuitPreviewProps {
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
   /**
-   * Viewer feature flags from domain `viewer` (via host).
-   * Reserved for parity with {@link CircuitViz}; soma-only path has no cell hover.
+   * Viewer feature flags from domain `viewer` (via host). With `cellHover`
+   * the morphology under the pointer is highlighted; the somas have no hover.
    */
   features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
   /**
@@ -134,6 +140,7 @@ export function LargeCircuitPreview({
   populations,
   hiddenPopulations,
   nodeColors,
+  defaultColor = DEFAULT_NEURON_COLOR,
   recededColor,
   onPopulationClick,
   backgroundColor,
@@ -149,6 +156,7 @@ export function LargeCircuitPreview({
   representation = 'somas',
   onRepresentationChange,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
+  features,
   spikes,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
@@ -363,6 +371,9 @@ export function LargeCircuitPreview({
         <shown.View
           data={shown.data}
           cellColors={cellColors}
+          defaultColor={defaultColor}
+          cellHover={features?.cellHover ?? true}
+          onCellClick={canPickPopulation ? handleCellClick : undefined}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           signals={signals}

@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
-import { PLAIN } from '@/features/viewer-3d/engine/looks';
+import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
@@ -15,7 +16,21 @@ const { FakeRenderer } = vi.hoisted(() => {
   class FakeRenderer {
     domElement = document.createElement('canvas');
     loop: (() => void) | null = null;
+    pixelRatio = 1;
     render = vi.fn();
+    compile = vi.fn();
+    setRenderTarget = vi.fn();
+    /** Answers with the pixels it was given to fill, all zeros unless a test draws in them. */
+    readRenderTargetPixelsAsync = vi.fn(
+      async (
+        _target: unknown,
+        _x: number,
+        _y: number,
+        _w: number,
+        _h: number,
+        pixels: Uint8Array
+      ) => pixels
+    );
 
     constructor(readonly parameters: WebGLContextAttributes) {}
 
@@ -24,7 +39,7 @@ const { FakeRenderer } = vi.hoisted(() => {
     }
 
     getPixelRatio(): number {
-      return 1;
+      return this.pixelRatio;
     }
 
     setPixelRatio(): void {}
@@ -50,6 +65,10 @@ interface Internals {
   look: Look;
   uniforms: ImpostorUniforms;
   somaMaterial: THREE.Material;
+  ids: THREE.Scene;
+  idMaterials: { segment: THREE.ShaderMaterial; soma: THREE.ShaderMaterial };
+  idTarget: THREE.WebGLRenderTarget | null;
+  camera: THREE.Camera;
 }
 
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
@@ -234,11 +253,13 @@ describe('the circuit morphology viewer', () => {
     expect(frames(inner)).toBe(1);
   });
 
-  it("hands the shaders a texel a cell, in the theme's own colour until the cells are coloured", () => {
+  it('hands the shaders a texel a cell, in the default colour until the cells are coloured', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
     expect((inner.uniforms.uCells.value as THREE.DataTexture).image.width).toBe(2048);
-    for (const cell of [0, 1, 2]) expect(texel(inner, cell)).toEqual([...rgb(PLAIN.light), 255]);
+    for (const cell of [0, 1, 2]) {
+      expect(texel(inner, cell)).toEqual([...rgb(DEFAULT_NEURON_COLOR), 255]);
+    }
 
     frames(inner);
     viewer.setCellColors({ palette: ['#ff0000', false], columnByCell: Uint16Array.of(0, 1, 1) });
@@ -247,18 +268,159 @@ describe('the circuit morphology viewer', () => {
     expect(frames(inner)).toBe(1);
 
     viewer.setCellColors(null);
-    viewer.setDark(true);
-    for (const cell of [0, 1, 2]) expect(texel(inner, cell)).toEqual([...rgb(PLAIN.dark), 255]);
+    frames(inner);
+    viewer.setDefaultColor('#8899aa');
+    for (const cell of [0, 1, 2]) expect(texel(inner, cell)).toEqual([...rgb('#8899aa'), 255]);
     expect(frames(inner)).toBe(1);
   });
 
-  it('paints the data that comes after the colours and the theme with them', () => {
+  it('paints the data that comes after the colours with them', () => {
     const { viewer, inner } = make();
-    viewer.setDark(true);
+    viewer.setDefaultColor('#8899aa');
     viewer.setCellColors({ palette: [null, '#00ff00'], columnByCell: Uint16Array.of(0, 1, 1) });
     viewer.setData(circuit());
-    expect(texel(inner, 0)).toEqual([...rgb(PLAIN.dark), 255]);
+    expect(texel(inner, 0)).toEqual([...rgb('#8899aa'), 255]);
     expect(texel(inner, 1)).toEqual([0, 255, 0, 255]);
+  });
+
+  it('draws one cell highlighted, in a colour as far from the background as no palette goes', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const { uHighlighted, uHighlight } = inner.uniforms;
+    expect(uHighlighted.value).toBe(NO_CELL);
+    expect(uHighlight.value.getHexString()).toBe('1a1a1a');
+
+    frames(inner);
+    viewer.setHighlight(2);
+    expect(uHighlighted.value).toBe(2);
+    expect(frames(inner)).toBe(1);
+    // Told of the same cell again, as a pointer that rests on it does, it draws nothing.
+    viewer.setHighlight(2);
+    expect(frames(inner)).toBe(0);
+
+    viewer.setDark(true);
+    expect(uHighlight.value.getHexString()).toBe('ffffff');
+    expect(frames(inner)).toBe(1);
+
+    viewer.setHighlight(null);
+    expect(uHighlighted.value).toBe(NO_CELL);
+    expect(frames(inner)).toBe(1);
+  });
+
+  it('highlights no cell of the data that comes next, whose cells are others', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setHighlight(2);
+    viewer.setData(circuit());
+    expect(inner.uniforms.uHighlighted.value).toBe(NO_CELL);
+  });
+
+  it("has the same quads in their cells' numbers, in a scene that no frame draws", () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const [segments, somas] = inner.ids.children as Quads[];
+    expect(inner.ids.children).toHaveLength(2);
+    expect(inner.ids.parent).toBeNull();
+    expect(segments.geometry).toBe(segmentsOf(inner).geometry);
+    expect(segments.material).toBe(inner.idMaterials.segment);
+    expect(somas.geometry).toBe(somasOf(inner).geometry);
+    expect(somas.material).toBe(inner.idMaterials.soma);
+    for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
+    expect(inner.idMaterials.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
+    // Built with the data, ahead of the first pick.
+    expect(inner.renderer.compile).toHaveBeenCalledExactlyOnceWith(inner.ids, inner.camera);
+
+    viewer.setData(null);
+    expect(inner.ids.children).toHaveLength(0);
+  });
+
+  it('picks the cell drawn at a point from the nine device pixels around it, drawn in numbers for it', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const { renderer } = inner;
+    renderer.domElement.width = 800;
+    renderer.domElement.height = 600;
+    renderer.pixelRatio = 2;
+    const steps: string[] = [];
+    renderer.setRenderTarget.mockImplementation((target: THREE.WebGLRenderTarget | null) =>
+      steps.push(
+        target
+          ? `into ${target.width}x${target.height}, the view at ${target.viewport.toArray()}`
+          : 'back to the canvas'
+      )
+    );
+    renderer.render.mockImplementation((scene: THREE.Scene) =>
+      steps.push(scene === inner.ids ? 'draw the numbers' : 'draw the scene')
+    );
+    renderer.readRenderTargetPixelsAsync.mockImplementation(async (_target, x, y, w, h, pixels) => {
+      steps.push(`read ${[x, y, w, h]}`);
+      // Cell 2, in the middle pixel.
+      new DataView(pixels.buffer).setUint32(4 * 40, 3, true);
+      return pixels;
+    });
+
+    // 100.4 CSS pixels across is device pixel 200, and 50 down is 100: row 499 from the bottom of 600.
+    await expect(viewer.pick(100.4, 50)).resolves.toBe(2);
+
+    expect(steps).toEqual([
+      'into 9x9, the view at -196,-495,800,600',
+      'draw the numbers',
+      'back to the canvas',
+      'read 0,0,9,9',
+    ]);
+  });
+
+  it('picks with the camera where it is, drawn there yet or not', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    frames(inner);
+    inner.camera.position.x += 7;
+    expect(inner.camera.matrixWorld.elements[12]).not.toBe(inner.camera.position.x);
+    let drawnWith = Number.NaN;
+    inner.renderer.render.mockImplementation((_scene: unknown, camera: THREE.Camera) => {
+      drawnWith = camera.matrixWorld.elements[12];
+    });
+
+    await viewer.pick(10, 10);
+
+    expect(drawnWith).toBe(inner.camera.position.x);
+  });
+
+  it('finds no cell where none is drawn, nor without data, which it draws nothing for', async () => {
+    const { viewer, inner } = make();
+    await expect(viewer.pick(10, 10)).resolves.toBeNull();
+    expect(inner.renderer.render).not.toHaveBeenCalled();
+
+    viewer.setData(circuit());
+    await expect(viewer.pick(10, 10)).resolves.toBeNull();
+    expect(inner.renderer.readRenderTargetPixelsAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it('finds no cell once other data is shown, nor when the pixels cannot be read', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const drawn = (
+      _t: unknown,
+      _x: number,
+      _y: number,
+      _w: number,
+      _h: number,
+      pixels: Uint8Array
+    ) => {
+      pixels[4 * 40] = 1;
+      return pixels;
+    };
+    const read = inner.renderer.readRenderTargetPixelsAsync;
+    read.mockImplementationOnce(async (...args) => drawn(...args));
+    await expect(viewer.pick(10, 10)).resolves.toBe(0);
+
+    read.mockImplementationOnce(async (...args) => drawn(...args));
+    const late = viewer.pick(10, 10);
+    viewer.setData(circuit());
+    await expect(late).resolves.toBeNull();
+
+    read.mockRejectedValueOnce(new Error('context lost'));
+    await expect(viewer.pick(10, 10)).resolves.toBeNull();
   });
 
   it('draws neither segments nor somas where the data has none', () => {
@@ -298,15 +460,19 @@ describe('the circuit morphology viewer', () => {
     expect(frames(inner)).toBe(1);
   });
 
-  it('frees what it holds when it is disposed of', () => {
+  it('frees what it holds when it is disposed of', async () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
+    await viewer.pick(10, 10);
     const freed = [
       segmentsOf(inner).geometry,
       somasOf(inner).geometry,
       inner.uniforms.uCells.value as THREE.DataTexture,
       inner.somaMaterial,
       inner.look.material,
+      inner.idMaterials.segment,
+      inner.idMaterials.soma,
+      inner.idTarget as THREE.WebGLRenderTarget,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
     viewers = [];

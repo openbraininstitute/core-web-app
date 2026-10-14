@@ -29,8 +29,8 @@ export interface CircuitMorphologyData {
 }
 
 /**
- * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, null for the view's
- * own colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the view's own colour.
+ * Each cell's column of a palette, as the somas view takes its colours. A column is a CSS colour, null for the default
+ * colour, or false for a cell that is not drawn. A cell past the end of `columnByCell` is in the default colour.
  */
 export interface CellColors {
   palette: (string | null | false)[];
@@ -41,8 +41,16 @@ export interface CellColors {
 export interface CircuitMorphologyView extends ViewControls {
   /** Show these morphologies, framing the view on them; null shows none. The arrays are kept, not copied. */
   setData(data: CircuitMorphologyData | null): void;
-  /** Null draws every cell in the view's own colour. */
+  /** Null draws every cell in the default colour. */
   setCellColors(colors: CellColors | null): void;
+  setDefaultColor(color: string): void;
+  /** Draw this cell apart from the rest; null draws none so. */
+  setHighlight(cell: number | null): void;
+  /**
+   * The cell drawn at a point of the view, in CSS pixels from its top left corner, or the nearest within a few pixels;
+   * null where there is none. A cell that is not drawn is not found, and a pick that cannot be made finds none.
+   */
+  pick(x: number, y: number): Promise<number | null>;
   setDark(dark: boolean): void;
   resetView(): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */

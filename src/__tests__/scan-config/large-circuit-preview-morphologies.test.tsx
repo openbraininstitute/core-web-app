@@ -7,6 +7,7 @@ import { LargeCircuitPreview } from '@/features/scan-config/components/model-pre
 import { loadedData, loads, started } from '../circuit-morphologies/pending-loads';
 
 import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewer';
+import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
@@ -97,8 +98,10 @@ const data = () =>
 /** Each representation the preview asked its host for, in order. */
 let asked: CircuitRepresentation[] = [];
 
+type PreviewProps = ComponentProps<typeof LargeCircuitPreview>;
+
 /** The preview with its host's part: the representation is the host's to keep. */
-function Hosted({ start }: { start: CircuitRepresentation }) {
+function Hosted({ start, ...props }: { start: CircuitRepresentation } & Partial<PreviewProps>) {
   const [representation, setRepresentation] = useState(start);
   const [offered, setOffered] = useState(true);
   return (
@@ -128,6 +131,7 @@ function Hosted({ start }: { start: CircuitRepresentation }) {
               }
             : undefined
         }
+        {...props}
       />
     </>
   );
@@ -205,6 +209,50 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(colors?.palette[colors.columnByCell[2]]).toBe(false);
     // The cell the pack had no soma of is where the page has it, at the species' radius.
     expect([...loaded.somas.subarray(8)]).toEqual([9, 9, 9, 12]);
+  });
+
+  /** The morphologies on show, as the view was last rendered. */
+  async function shown(props: Partial<PreviewProps> = {}): Promise<CircuitMorphologiesProps> {
+    render(<Hosted start="morphologies" {...props} />);
+    const load = await started();
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await screen.findByTestId('morphologies');
+    return h.morphologies as CircuitMorphologiesProps;
+  }
+
+  it("draws a morphology with no colour of its own in the circuit viewer's default colour", async () => {
+    expect((await shown()).defaultColor).toBe('#2b5cd9');
+  });
+
+  it('draws it in the colour its host has for that', async () => {
+    expect((await shown({ defaultColor: '#7aa2ff' })).defaultColor).toBe('#7aa2ff');
+  });
+
+  it('highlights the morphology under the pointer, unless the host has no cell hover', async () => {
+    expect((await shown()).cellHover).toBe(true);
+  });
+
+  it('highlights none where the host has no cell hover', async () => {
+    expect((await shown({ features: { cellHover: false } })).cellHover).toBe(false);
+  });
+
+  it('puts the population of a clicked morphology on show, as of a clicked soma', async () => {
+    const onPopulationClick = vi.fn();
+    const view = await shown({ hiddenPopulations: [], onPopulationClick });
+
+    // The cells are numbered through the populations placed: two of the cortex, then the input's.
+    view.onCellClick?.(2);
+    expect(onPopulationClick).toHaveBeenCalledExactlyOnceWith('vpm');
+
+    view.onCellClick?.(1);
+    expect(onPopulationClick).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['no other population is on show', { hiddenPopulations: ['vpm'], onPopulationClick: vi.fn() }],
+    ['the host has the population pinned', { hiddenPopulations: [] }],
+  ])('takes no click on a morphology where %s', async (_, props) => {
+    expect((await shown(props)).onCellClick).toBeUndefined();
   });
 
   it('goes back to the somas, and lets go of the morphologies, when switched off', async () => {

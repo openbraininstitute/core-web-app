@@ -5,6 +5,8 @@
  *
  * A segment's quad is flat: shaded as a cylinder across its width, at one depth, the tube's nearest. A soma's is a
  * sphere found per pixel, with its own depth.
+ *
+ * The same quads drawn in each cell's number in place of its shading tell which cell is under a pixel (`idMaterial`).
  */
 
 import * as THREE from 'three';
@@ -19,10 +21,21 @@ export interface ImpostorUniforms {
   uCells: { value: THREE.Texture | null };
   /** The viewport that is drawn into, in device pixels: where it starts, x and y, then its width and height. */
   uViewport: { value: THREE.Vector4 };
+  /** The cell that is highlighted, or `NO_CELL`, and the colour it is drawn in. */
+  uHighlighted: { value: number };
+  uHighlight: { value: THREE.Color };
 }
 
+/** No cell has this number: the cell table has not that many texels. */
+export const NO_CELL = 0xffffffff;
+
 export function impostorUniforms(): ImpostorUniforms {
-  return { uCells: { value: null }, uViewport: { value: new THREE.Vector4(0, 0, 1, 1) } };
+  return {
+    uCells: { value: null },
+    uViewport: { value: new THREE.Vector4(0, 0, 1, 1) },
+    uHighlighted: { value: NO_CELL },
+    uHighlight: { value: new THREE.Color(0x000000) },
+  };
 }
 
 const SHARED_VERTEX = /* glsl */ `
@@ -188,7 +201,49 @@ vec3 impostorNormal() {
 `,
 };
 
+const HIGHLIGHT_VERTEX = /* glsl */ `
+uniform uint uHighlighted;
+uniform vec3 uHighlight;
+
+vec3 cellColour( vec3 own ) {
+	return aCell == uHighlighted ? uHighlight : own;
+}
+`;
+
+// A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's.
+const ID_VERTEX = /* glsl */ `
+flat out vec4 vId;
+
+void main() {
+	vec3 corner;
+	bool on = impostorCorner( position, cellTexel().a, corner );
+	// Not drawn, its four corners are one point outside the view.
+	gl_Position = on ? projectionMatrix * vec4( corner, 1.0 ) : vec4( 2.0, 2.0, 2.0, 1.0 );
+	uint id = aCell + 1u;
+	vId = vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0;
+}
+`;
+
+const ID_FRAGMENT = /* glsl */ `
+flat in vec4 vId;
+
+void main() {
+	impostorNormal();
+	gl_FragColor = vId;
+}
+`;
+
 const KINDS = { segment: SEGMENT, soma: SOMA };
+type KindName = keyof typeof KINDS;
+
+/** Keep `uniforms.uViewport` at what `material` is drawn into. */
+function followViewport(material: THREE.Material, uniforms: ImpostorUniforms): void {
+  const before = material.onBeforeRender;
+  material.onBeforeRender = (renderer, ...rest) => {
+    before.call(material, renderer, ...rest);
+    renderer.getCurrentViewport(uniforms.uViewport.value);
+  };
+}
 
 /**
  * Draw `material`, one of three's own lit materials with `vertexColors`, as impostors of `kind`. It reads the cell's
@@ -196,22 +251,21 @@ const KINDS = { segment: SEGMENT, soma: SOMA };
  */
 export function impostor<T extends THREE.Material>(
   material: T,
-  kind: keyof typeof KINDS,
+  kind: KindName,
   uniforms: ImpostorUniforms
 ): T {
   const { vertex, fragment } = KINDS[kind];
-  const before = material.onBeforeRender;
-  material.onBeforeRender = (renderer, ...rest) => {
-    before.call(material, renderer, ...rest);
-    renderer.getCurrentViewport(uniforms.uViewport.value);
-  };
+  followViewport(material, uniforms);
   return addShaderHook(material, `impostor-${kind}`, (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', `#include <common>\n${SHARED_VERTEX}\n${vertex}`)
+      .replace(
+        '#include <common>',
+        `#include <common>\n${SHARED_VERTEX}\n${HIGHLIGHT_VERTEX}\n${vertex}`
+      )
       .replace(
         '#include <color_vertex>',
-        'vec4 cell = cellTexel();\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cell.rgb, 1.0 );\n\t#endif'
+        'vec4 cell = cellTexel();\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( cell.rgb ), 1.0 );\n\t#endif'
       )
       // The vertex normal is never shaded: the fragment shader finds its own.
       .replace(
@@ -231,4 +285,45 @@ export function impostor<T extends THREE.Material>(
         '#include <normal_fragment_begin>\n\tnormal = impostorNormal();\n\tnonPerturbedNormal = normal;'
       );
   });
+}
+
+/**
+ * A material that draws the impostors of `kind` in their cells' numbers, where a cell is shown: the same quads, cut to
+ * the same outlines and at the same depths as `impostor` draws them.
+ */
+export function idMaterial(kind: KindName, uniforms: ImpostorUniforms): THREE.ShaderMaterial {
+  const { vertex, fragment } = KINDS[kind];
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uCells: uniforms.uCells, uViewport: uniforms.uViewport },
+    vertexShader: `${SHARED_VERTEX}\n${vertex}\n${ID_VERTEX}`,
+    fragmentShader: `${fragment}\n${ID_FRAGMENT}`,
+    blending: THREE.NoBlending,
+  });
+  followViewport(material, uniforms);
+  return material;
+}
+
+/**
+ * The cell drawn nearest the middle of a square of pixels `side` wide, drawn by `idMaterial` and read as RGBA bytes;
+ * null where none is drawn in it.
+ */
+export function cellNearMiddle(pixels: Uint8Array, side: number): number | null {
+  const middle = (side - 1) / 2;
+  let cell: number | null = null;
+  let least = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < side * side; i++) {
+    const id =
+      (pixels[4 * i] |
+        (pixels[4 * i + 1] << 8) |
+        (pixels[4 * i + 2] << 16) |
+        (pixels[4 * i + 3] << 24)) >>>
+      0;
+    if (id === 0) continue;
+    const away = Math.hypot((i % side) - middle, Math.floor(i / side) - middle);
+    if (away < least) {
+      least = away;
+      cell = id - 1;
+    }
+  }
+  return cell;
 }

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
 import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
-import { PLAIN } from '@/features/viewer-3d/engine/looks';
+import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { CellTable } from './cell-table';
-import { impostor, impostorUniforms } from './impostors';
+import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
 
 import type { CellColors, CircuitMorphologyData, CircuitMorphologyView } from '../types';
 
@@ -13,16 +13,26 @@ import type { CellColors, CircuitMorphologyData, CircuitMorphologyView } from '.
 const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
 const TRIANGLES = [0, 1, 2, 2, 1, 3];
 
-/** A mesh of `instances` quads, for the caller to add the attributes `material`'s shader places each by. */
-function quads(instances: number, material: THREE.Material): THREE.Mesh {
+/** What the highlighted cell is drawn in: as far from the background as no colour of a palette is. */
+const HIGHLIGHT = { light: '#1a1a1a', dark: '#ffffff' };
+
+/** A pick looks in a square of device pixels this wide, around the one asked for. */
+const PICK_SIDE = 9;
+
+/** `instances` quads, for the caller to add the attributes a shader places each by. */
+function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
   const geometry = new THREE.InstancedBufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(CORNERS, 3));
   geometry.setIndex(TRIANGLES);
   geometry.instanceCount = instances;
+  return geometry;
+}
+
+function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material): THREE.Mesh {
   const mesh = new THREE.Mesh(geometry, material);
   // The geometry's own four corners say nothing of where the quads are.
   mesh.frustumCulled = false;
-  mesh.visible = instances > 0;
+  mesh.visible = geometry.instanceCount > 0;
   return mesh;
 }
 
@@ -51,11 +61,17 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   private somaMaterial: THREE.Material;
   private segments: THREE.Mesh | null = null;
   private somas: THREE.Mesh | null = null;
+  /** The same quads in their cells' numbers, drawn for a pick alone. */
+  private ids = new THREE.Scene();
+  private idMaterials = {
+    segment: idMaterial('segment', this.uniforms),
+    soma: idMaterial('soma', this.uniforms),
+  };
+  private idTarget: THREE.WebGLRenderTarget | null = null;
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
+  private defaultColor = DEFAULT_NEURON_COLOR;
   private background = CANVAS_LIGHT;
-  /** What a cell with no colour of its own is drawn in. */
-  private ownColor = PLAIN.light;
 
   constructor(container: HTMLElement) {
     super(container, {
@@ -71,10 +87,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     // The circuit viewer's own background, as behind the somas, in place of Studio's gradient.
     look.background = { light: [CANVAS_LIGHT, CANVAS_LIGHT], dark: [CANVAS_DARK, CANVAS_DARK] };
     look.onTheme = (dark) => {
-      const theme = dark ? 'dark' : 'light';
-      this.background = look.background[theme][0];
-      this.ownColor = PLAIN[theme];
-      this.paint();
+      this.background = look.background[dark ? 'dark' : 'light'][0];
+      this.uniforms.uHighlight.value.set(HIGHLIGHT[dark ? 'dark' : 'light']);
     };
     this.setDark(false);
   }
@@ -82,6 +96,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   protected override disposeContent(): void {
     this.clear();
     this.somaMaterial.dispose();
+    this.idMaterials.segment.dispose();
+    this.idMaterials.soma.dispose();
+    this.idTarget?.dispose();
   }
 
   snapshot(): HTMLCanvasElement | null {
@@ -106,21 +123,27 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.uniforms.uCells.value = this.table.texture;
     this.paint();
 
-    this.segments = quads(data.segmentCells.length, this.look.material);
+    const segments = quadGeometry(data.segmentCells.length);
     const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
-    this.segments.geometry
+    segments
       .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
       .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1));
+    this.segments = quads(segments, this.look.material);
     this.chunks.add(this.segments);
 
     const { spheres, cells } = placedSomas(data.somas);
-    this.somas = quads(cells.length, this.somaMaterial);
-    this.somas.geometry
+    const somas = quadGeometry(cells.length);
+    somas
       .setAttribute('aSoma', new THREE.InstancedBufferAttribute(spheres, 4))
       .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
+    this.somas = quads(somas, this.somaMaterial);
     // Beside `chunks`, whose meshes all take the look's material.
     this.surfaces.add(this.somas);
+
+    this.ids.add(quads(segments, this.idMaterials.segment), quads(somas, this.idMaterials.soma));
+    // Their programs begin to build now, not at the first pick, which would wait for them.
+    this.renderer.compile(this.ids, this.camera);
 
     this.bounds.set(new THREE.Vector3(...data.bounds.min), new THREE.Vector3(...data.bounds.max));
     this.resetView();
@@ -131,9 +154,58 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.paint();
   }
 
+  setDefaultColor(color: string): void {
+    this.defaultColor = color;
+    this.paint();
+  }
+
+  setHighlight(cell: number | null): void {
+    const highlighted = cell ?? NO_CELL;
+    if (highlighted === this.uniforms.uHighlighted.value) return;
+    this.uniforms.uHighlighted.value = highlighted;
+    this.invalidate();
+  }
+
+  pick(x: number, y: number): Promise<number | null> {
+    const table = this.table;
+    if (!table) return Promise.resolve(null);
+    const { renderer } = this;
+    const ratio = renderer.getPixelRatio();
+    const middle = (PICK_SIDE - 1) / 2;
+    this.idTarget ??= new THREE.WebGLRenderTarget(PICK_SIDE, PICK_SIDE);
+    const target = this.idTarget;
+    // The whole view, placed so that the pixel asked for is the target's middle one. A frame buffer's rows count up.
+    const { width, height } = renderer.domElement;
+    target.viewport.set(
+      middle - Math.floor(x * ratio),
+      middle - (height - 1 - Math.floor(y * ratio)),
+      width,
+      height
+    );
+    // No frame may have been drawn since the camera last moved.
+    this.camera.updateMatrixWorld();
+    renderer.setRenderTarget(target);
+    renderer.render(this.ids, this.camera);
+    renderer.setRenderTarget(null);
+    return renderer
+      .readRenderTargetPixelsAsync(
+        target,
+        0,
+        0,
+        PICK_SIDE,
+        PICK_SIDE,
+        new Uint8Array(4 * PICK_SIDE * PICK_SIDE)
+      )
+      .then(
+        // Other data by now has other cells.
+        (pixels) => (this.table === table ? cellNearMiddle(pixels as Uint8Array, PICK_SIDE) : null),
+        () => null
+      );
+  }
+
   private paint(): void {
     if (!this.table) return;
-    this.table.paint(this.colors, this.ownColor);
+    this.table.paint(this.colors, this.defaultColor);
     this.invalidate();
   }
 
@@ -143,9 +215,11 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       mesh?.removeFromParent();
     }
     this.segments = this.somas = null;
+    this.ids.clear();
     this.table?.dispose();
     this.table = null;
     this.uniforms.uCells.value = null;
+    this.uniforms.uHighlighted.value = NO_CELL;
     this.invalidate();
   }
 }
