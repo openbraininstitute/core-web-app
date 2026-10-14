@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 
 import { fetchCircuitViz, memodelMorphologyPath } from '@/api/one/circuit-visualization';
 import { IDENTITY_QUATERNION } from '@/features/circuit-nodes/geometry-utils';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   buildMorphoTree,
   buildSonataSectionIdIndex,
@@ -11,7 +12,7 @@ import { STATIC_RESOURCE_QUERY_OPTIONS } from '@/features/scan-config/components
 import { makeVizCellId } from '@/features/scan-config/components/circuit-viz/sources/node-key';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
-import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
+import { SectionsArraySchema } from '@/features/scan-config/types';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
 import type { TSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/types';
@@ -38,8 +39,7 @@ export function useMemodelVisualizationSource({
   const { data: allSections, error, isLoading, refetch } = useMemodelMorphology(memodelId);
   // The simulation replaces the axon, so it is hidden by default.
   const sections = useMemo(
-    () =>
-      allSections?.filter((section) => showAxons || section.type !== MorphoViewerTreeItemType.Axon),
+    () => allSections?.filter((section) => showAxons || section.type !== SectionType.Axon),
     [allSections, showAxons]
   );
 

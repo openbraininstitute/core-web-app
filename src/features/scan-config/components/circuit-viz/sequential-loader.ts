@@ -1,5 +1,6 @@
 import { circuitMorphologyPath, fetchCircuitViz } from '@/api/one/circuit-visualization';
-import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
+import { SectionType } from '@/features/circuit-viewer/section-type';
+import { SectionsArraySchema } from '@/features/scan-config/types';
 import { logError } from '@/utils/logger';
 
 import { buildMorphoTree, buildSonataSectionIdIndex } from './build-morpho-tree';
@@ -106,9 +107,7 @@ async function actualLoad({
   if (json === null) throw new Error(`Morphology "${file}" could not be loaded.`);
 
   const sections = SectionsArraySchema.parse(json);
-  const filtered_sections = sections.filter(
-    (s) => showAxon || s.type !== MorphoViewerTreeItemType.Axon
-  );
+  const filtered_sections = sections.filter((s) => showAxon || s.type !== SectionType.Axon);
   return {
     ...buildMorphoTree(filtered_sections, cellId),
     sonataSectionIds: buildSonataSectionIdIndex(filtered_sections),

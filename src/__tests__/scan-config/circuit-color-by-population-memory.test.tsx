@@ -8,12 +8,6 @@ import { DEFAULT_SOMA_SIZE_SCALE } from '@/features/scan-config/components/color
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
-// The viewer barrel pulls in tgd, which touches `document` at module scope.
-vi.mock('@/morpho-viewer', () => {
-  const signals = {};
-  return { useMorphoViewerSignals: () => signals };
-});
-
 vi.mock('@/features/scan-config/components/shared/3d-viewer', () => ({
   downloadCircuitImage: () => {},
 }));

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 
+import { useCircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
-import { useMorphoViewerSignals } from '@/morpho-viewer';
 
 import {
   BACKGROUND_ADAPTIVE,
@@ -145,7 +145,7 @@ export function useCircuitColorBy(
   const containerRef = useRef<HTMLDivElement>(null);
   // one signal bus per viewer instance: dispatch to trigger camera reset /
   // snapshot, and let the viewer components listen for the captured image.
-  const signals = useMorphoViewerSignals();
+  const signals = useCircuitViewerSignals();
   const captureImage = useCallback(async () => {
     const image = await signals.snapshot.dispatch(undefined).catch(() => null);
     if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);

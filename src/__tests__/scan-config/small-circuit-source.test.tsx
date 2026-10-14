@@ -83,7 +83,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
 
 /** Soma plus one dendrite, whose morphio ids and SONATA ids are not one apart. */
 vi.mock('@/api/one/circuit-visualization', async () => {
-  const { MorphoViewerTreeItemType } = await import('@/features/scan-config/types');
+  const { SectionType } = await import('@/features/circuit-viewer/section-type');
   return {
     circuitMorphologyPath: (circuitId: string, file: string, name: string) =>
       `${circuitId}/${file}/${name}`,
@@ -92,7 +92,7 @@ vi.mock('@/api/one/circuit-visualization', async () => {
         id: 'soma',
         sonata_section_id: 0,
         parent_id: null,
-        type: MorphoViewerTreeItemType.Soma,
+        type: SectionType.Soma,
         points: [[0, 0, 0]],
         radii: [8],
       },
@@ -100,7 +100,7 @@ vi.mock('@/api/one/circuit-visualization', async () => {
         id: '0',
         sonata_section_id: 3,
         parent_id: 'soma',
-        type: MorphoViewerTreeItemType.BasalDendrite,
+        type: SectionType.BasalDendrite,
         points: [
           [8, 0, 0],
           [58, 0, 0],

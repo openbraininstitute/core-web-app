@@ -40,7 +40,6 @@ vi.mock('@/morpho-viewer', () => ({
     h.somas = props;
     return <div data-testid="somas" />;
   },
-  useMorphoViewerDebugMode: () => false,
 }));
 
 vi.mock('@/features/circuit-viewer/morphologies/circuit-morphologies', () => ({

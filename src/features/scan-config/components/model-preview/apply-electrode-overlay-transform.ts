@@ -3,8 +3,8 @@ import {
   hasElectrodeLocationsDictionary,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { Config, ConfigValue } from '@/features/scan-config/types';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const COORD_DECIMALS = 3;
 const ANGLE_DECIMALS = 2;
@@ -55,10 +55,7 @@ function nextScalar(current: unknown, next: number): ConfigValue {
  * @example
  * setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
  */
-export function applyElectrodeOverlayTransform(
-  config: Config,
-  event: MorphoViewerOverlayTransformEvent
-): Config {
+export function applyElectrodeOverlayTransform(config: Config, event: ElectrodeTransform): Config {
   const dictionary = config[ELECTRODE_LOCATIONS_CONFIG_KEY];
   if (!hasElectrodeLocationsDictionary(dictionary)) return config;
 

@@ -1,21 +1,15 @@
-import {
-  ScalebarOrientation,
-  ScalebarSide,
-  ScalebarWhen,
-} from '@openbraininstitute/morphoviewer/dist/components/types';
-
 import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
 
-import type { ScalebarConfig } from '@openbraininstitute/morphoviewer/dist/components/types';
-
-/** Scalebar defaults for circuit viewers: right pins + labels always visible. */
-export const VERTICAL_SCALEBAR: ScalebarConfig = {
-  orientation: ScalebarOrientation.Vertical,
+/** Scalebar defaults for circuit viewers, in morphoviewer's words: right pins + labels always visible. */
+export const VERTICAL_SCALEBAR = {
+  orientation: 'vertical',
   hiDPI: true,
   margin: { x: 0, y: 10 },
-  pins: { left: ScalebarWhen.Never, right: ScalebarWhen.Always },
-  labels: { show: ScalebarWhen.Always, side: ScalebarSide.Right },
+  pins: { left: 'never', right: 'always' },
+  labels: { show: 'always', side: 'right' },
 } as const;
+
+type ScalebarConfig = typeof VERTICAL_SCALEBAR & { color?: string };
 
 /**
  * The scalebar config for a circuit viewer, or `false` to leave it out.

@@ -18,10 +18,8 @@ const fixtures = vi.hoisted(() => ({
   pickMode: null as string | null,
 }));
 
-// A WebGL surface, and the thing whose absence this file is about. The section
-// types come along because the location labels read them at module scope.
-vi.mock('@/morpho-viewer', async () => ({
-  ...(await vi.importActual<object>('@/morpho-viewer/tree-item-type')),
+// A WebGL surface, and the thing whose absence this file is about.
+vi.mock('@/morpho-viewer', () => ({
   MorphoViewerCircuitMultipleNeurons: (props: unknown) => {
     fixtures.mounted.push(props);
     return null;

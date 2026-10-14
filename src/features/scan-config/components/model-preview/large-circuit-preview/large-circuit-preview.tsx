@@ -5,6 +5,7 @@ import React from 'react';
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
@@ -16,10 +17,7 @@ import {
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import {
-  MorphoViewerCircuitMultipleNeuronsSomaOnly,
-  useMorphoViewerDebugMode,
-} from '@/morpho-viewer';
+import { MorphoViewerCircuitMultipleNeuronsSomaOnly } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -28,17 +26,15 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { CellColors, ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
   CircuitRepresentation,
   NodeColors,
 } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type {
-  MorphoViewerCellColors,
-  MorphoViewerOverlayTransformEvent,
-  MorphoViewerSignals,
-} from '@/morpho-viewer';
+import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
@@ -46,7 +42,7 @@ import styles from './large-circuit-preview.module.css';
 const DOWNLOAD_CHUNK = 65_536;
 
 /** An empty palette: the viewer falls back to its own depth-shaded blue. */
-const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
+const VIEWER_DEFAULT_PALETTE: CellColors = {
   palette: [],
   columnByCell: new Uint16Array(0),
 };
@@ -89,7 +85,7 @@ export interface LargeCircuitPreviewProps {
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
-  signals: MorphoViewerSignals;
+  signals: CircuitViewerSignals;
   /**
    * World-coordinate electrode overlays (same pipeline as CircuitViz), drawn
    * and moved alike over the somas and over the morphologies.
@@ -98,7 +94,7 @@ export interface LargeCircuitPreviewProps {
   /** Enable left-drag / right-drag on electrode overlays when form can write back. */
   overlaysInteractive?: boolean;
   /** Gesture-end transform → host `applyElectrodeOverlayTransform`. */
-  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
+  onOverlayTransform?: (event: ElectrodeTransform) => void;
   /** Form-selected electrode block name → highlight in the 3D view. */
   highlightedOverlayId?: string | null;
   /** Soma paint opacity (0–1); electrodes stay fully opaque independently. */
@@ -164,7 +160,7 @@ export function LargeCircuitPreview({
   features,
   spikes,
 }: LargeCircuitPreviewProps) {
-  const debugMode = useMorphoViewerDebugMode();
+  const debugMode = useCircuitViewerDebugMode();
   const speciesRadius = useSomaRadius(circuit);
   const somaRadius = speciesRadius * somaSizeScale;
   const { config, error: configError } = useCircuitConfig(circuit);
@@ -397,7 +393,8 @@ export function LargeCircuitPreview({
           positions={positions}
           cellColors={cellColors}
           backgroundColor={backgroundColor}
-          signals={signals}
+          // The same signals, but morphoviewer types its bus as its own class, whose private members no other matches.
+          signals={signals as unknown as MorphoViewerSignals}
           overlays={morphoOverlays}
           overlaysRadius={electrodeRadius}
           overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}

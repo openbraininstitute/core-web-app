@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { clampZoom } from './scale';
 
-import type { MorphoViewerSignals } from '@/morpho-viewer';
+import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 
 /**
  * The camera zoom, as a value to show and a way to set it.
@@ -11,7 +11,7 @@ import type { MorphoViewerSignals } from '@/morpho-viewer';
  * on the canvas moves the control too, and `setZoom` asks the viewer to move the camera.
  * Holding the value here instead would let the two disagree the moment a user scrolls.
  */
-export function useViewerZoom(signals: MorphoViewerSignals) {
+export function useViewerZoom(signals: CircuitViewerSignals) {
   const [value, setValue] = useState(1);
 
   const setZoom = useCallback(

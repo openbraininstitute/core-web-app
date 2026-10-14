@@ -47,7 +47,6 @@ vi.mock('@/morpho-viewer', () => ({
     fixtures.rendered.push(props);
     return null;
   },
-  useMorphoViewerDebugMode: () => false,
 }));
 
 vi.mock('next/navigation', () => ({

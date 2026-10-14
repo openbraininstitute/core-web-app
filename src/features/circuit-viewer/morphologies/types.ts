@@ -1,6 +1,6 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
-import type { MorphoViewerOverlayTransformEvent, MorphoViewerSpikes } from '@/morpho-viewer';
+import type { CircuitSpikes } from '../types';
 
 export type Vec3 = [number, number, number];
 
@@ -42,8 +42,16 @@ export interface CellColors {
 /** An electrode array's contacts, or the marker of its origin, in µm in the circuit's frame: the host's overlays. */
 export type ElectrodeGroup = Omit<ICircuitOverlayGroup, 'name'>;
 
-/** Where an array was moved to and how it is turned, once the gesture that moved it ends, as the somas view tells it. */
-export type ElectrodeTransform = MorphoViewerOverlayTransformEvent;
+/**
+ * Where an array was moved to and how it is turned, once the gesture that moved it ends: its origin in µm in the
+ * circuit's frame, and its rotation about x, y and z in degrees.
+ */
+export interface ElectrodeTransform {
+  id: string;
+  origin: { x: number; y: number; z: number };
+  rotation: { x: number; y: number; z: number };
+  phase: 'end';
+}
 
 /** A contact drawn at a point of the view: its array, and where it is in the circuit's frame. */
 export interface ElectrodeHit {
@@ -82,7 +90,7 @@ export interface CircuitMorphologyView extends ViewControls {
    * Replay these spikes over the cells, each glowing as it fires and fading after, from the start and paused; null
    * replays none. A spike's cell is the cell of that number.
    */
-  setSpikes(spikes: MorphoViewerSpikes | null): void;
+  setSpikes(spikes: CircuitSpikes | null): void;
   /** Move the replay to this moment, in simulated ms. */
   seekSpikes(timeInMs: number): void;
   /** Played at the end, the replay starts again from the beginning. */

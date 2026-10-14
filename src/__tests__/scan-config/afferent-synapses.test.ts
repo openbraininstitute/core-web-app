@@ -1,11 +1,11 @@
 import { File as H5File, ready } from 'h5wasm';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   loadAfferentSynapses,
   Report,
 } from '@/features/scan-config/components/circuit-viz/synapses';
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
 
 import type { NodePlacement } from '@/features/circuit-nodes/geometry-utils';
 import type { MorphoViewerTree } from '@/morpho-viewer';
@@ -91,7 +91,7 @@ function somaOnlyTree(): MorphoViewerTree {
         y: 0,
         z: 0,
         radius: SOMA_RADIUS,
-        type: MorphoViewerTreeItemType.Soma,
+        type: SectionType.Soma,
         sectionId: 'soma',
         segmentId: '0',
         distanceFromSoma: 0,
@@ -102,19 +102,19 @@ function somaOnlyTree(): MorphoViewerTree {
 
 /** A soma at the origin with one straight dendrite running out along +x. */
 function dendriteTree(): MorphoViewerTree {
-  const sample = (x: number, radius: number, type: MorphoViewerTreeItemType) => ({
+  const sample = (x: number, radius: number, type: SectionType) => ({
     x,
     y: 0,
     z: 0,
     radius,
     type,
-    sectionId: type === MorphoViewerTreeItemType.Soma ? 'soma' : 'dend',
+    sectionId: type === SectionType.Soma ? 'soma' : 'dend',
     segmentId: '0',
     distanceFromSoma: x,
   });
-  const tip = sample(200, 1, MorphoViewerTreeItemType.Dendrite);
-  const base = { ...sample(100, 1, MorphoViewerTreeItemType.Dendrite), children: [tip] };
-  const soma = { ...sample(0, SOMA_RADIUS, MorphoViewerTreeItemType.Soma), children: [base] };
+  const tip = sample(200, 1, SectionType.Dendrite);
+  const base = { ...sample(100, 1, SectionType.Dendrite), children: [tip] };
+  const soma = { ...sample(0, SOMA_RADIUS, SectionType.Soma), children: [base] };
   return { cellId: 'cell', roots: [soma] };
 }
 

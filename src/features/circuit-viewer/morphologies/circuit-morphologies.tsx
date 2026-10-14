@@ -1,11 +1,11 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
+
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
   DEFAULT_SPIKE_SPEED,
-} from '@openbraininstitute/morphoviewer/dist/spikes/spiking-circuit';
-import { useEffect, useRef, useState } from 'react';
-
+} from '@/features/circuit-viewer/spike-clock';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
 import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
@@ -17,8 +17,8 @@ import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
 import { trackPointer } from './pointer';
 
+import type { CircuitViewerSignals, SnapshotOptions } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
-import type { MorphoViewerSignals, MorphoViewerSnapshotOptions } from '@/morpho-viewer';
 import type {
   CellColors,
   CircuitMorphologyData,
@@ -51,13 +51,13 @@ export interface CircuitMorphologiesProps {
   backgroundColor: string;
   showScalebar: boolean;
   /** The circuit viewer's bus, on which this view answers the camera reset and the snapshot. */
-  signals: MorphoViewerSignals;
+  signals: CircuitViewerSignals;
 }
 
 /** The canvas as an image whose `src` is an object URL, which is what the snapshot signal hands on. */
 function imageOf(
   canvas: HTMLCanvasElement,
-  options?: MorphoViewerSnapshotOptions
+  options?: SnapshotOptions
 ): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     canvas.toBlob(

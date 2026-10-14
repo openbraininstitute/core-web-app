@@ -1,8 +1,7 @@
-// Straight from its file: the package's own index brings its WebGL engine along.
-import { SpikingCircuit } from '@openbraininstitute/morphoviewer/dist/spikes/spiking-circuit';
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
+import { SpikeClock } from '@/features/circuit-viewer/spike-clock';
 import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
@@ -17,8 +16,8 @@ import {
 } from './electrodes';
 import { cellNearMiddle, idMaterial, impostor, impostorUniforms, NO_CELL } from './impostors';
 
+import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
-import type { MorphoViewerSpikes } from '@/morpho-viewer';
 import type {
   CellColors,
   CircuitMorphologyData,
@@ -83,8 +82,8 @@ function placedSomas(somas: Float32Array): { spheres: Float32Array; cells: Uint3
 /**
  * A circuit's morphologies on the shared scene, in the Studio look: a quad a segment and a quad a soma (`impostors.ts`),
  * each cell coloured and shown or not by its texel of the cell table, and electrode contacts in front of them
- * (`electrodes.ts`). A spike replay lights the cells as they fire, on a clock the somas view's (`SpikingCircuit`), moved
- * on by each turn of the loop.
+ * (`electrodes.ts`). A spike replay lights the cells as they fire, on a clock (`SpikeClock`) moved on by each turn of
+ * the loop.
  *
  * Frames go straight to the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. The arrays
  * are drawn from as the reader made them, and kept: after a lost context three uploads them again.
@@ -120,7 +119,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     this.renderer.getPixelRatio()
   );
   private electrodes: THREE.Mesh<THREE.InstancedBufferGeometry> | null = null;
-  private spiking = new SpikingCircuit();
+  private spiking = new SpikeClock();
   private spikeTimeListeners = new Set<(timeInMs: number) => void>();
   private spikesPlayingListeners = new Set<(playing: boolean) => void>();
 
@@ -320,7 +319,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     return [point.x + centre[0], point.y + centre[1], point.z + centre[2]];
   }
 
-  setSpikes(spikes: MorphoViewerSpikes | null): void {
+  setSpikes(spikes: CircuitSpikes | null): void {
     const wasPlaying = this.spiking.playing;
     this.spiking.setSpikes(spikes, this.table?.cells ?? 0);
     this.spikeFrame();

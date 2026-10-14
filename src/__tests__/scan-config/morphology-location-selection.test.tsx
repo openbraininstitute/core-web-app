@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   buildMorphoTree,
   buildSonataSectionIdIndex,
@@ -17,7 +18,6 @@ import {
   readLocations,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import { MorphoViewerTreeItemType } from '@/features/scan-config/types';
 
 import type { Config, Sections } from '@/features/scan-config/types';
 import type {
@@ -25,11 +25,6 @@ import type {
   MorphoViewerMorphologyLocationPick,
   MorphoViewerSmallCircuitCell,
 } from '@/morpho-viewer';
-
-// The viewer barrel pulls in tgd, which touches `document` at module scope.
-vi.mock('@/morpho-viewer', async () => ({
-  MorphoViewerTreeItemType: (await import('@/features/scan-config/types')).MorphoViewerTreeItemType,
-}));
 
 const infos: string[] = [];
 vi.mock('@/components/notification', () => ({
@@ -69,7 +64,7 @@ const SECTIONS: Sections = [
     id: 'soma',
     sonata_section_id: 0,
     parent_id: null,
-    type: MorphoViewerTreeItemType.Soma,
+    type: SectionType.Soma,
     points: [[0, 0, 0]],
     radii: [8],
   },
@@ -77,7 +72,7 @@ const SECTIONS: Sections = [
     id: '0',
     sonata_section_id: 3,
     parent_id: 'soma',
-    type: MorphoViewerTreeItemType.BasalDendrite,
+    type: SectionType.BasalDendrite,
     points: [
       [8, 0, 0],
       [58, 0, 0],
@@ -88,7 +83,7 @@ const SECTIONS: Sections = [
     id: '1',
     sonata_section_id: 1,
     parent_id: 'soma',
-    type: MorphoViewerTreeItemType.Axon,
+    type: SectionType.Axon,
     points: [
       [0, 8, 0],
       [0, 58, 0],
@@ -124,7 +119,7 @@ function pick(overrides: Partial<MorphoViewerMorphologyLocationPick> = {}) {
     cell: CELLS[0],
     sectionName: '0',
     sonataSectionId: 3,
-    sectionType: MorphoViewerTreeItemType.BasalDendrite,
+    sectionType: SectionType.BasalDendrite,
     offset: 0.25,
     ...overrides,
   } as MorphoViewerMorphologyLocationPick;
@@ -389,7 +384,7 @@ describe('useMorphologyLocationSelection hover', () => {
     cellId: CELL_ID,
     sectionName: '0',
     sonataSectionId: 3,
-    sectionType: MorphoViewerTreeItemType.BasalDendrite,
+    sectionType: SectionType.BasalDendrite,
     offset: 0.25,
     screen: { x: 0.5, y: 0.5 },
   };

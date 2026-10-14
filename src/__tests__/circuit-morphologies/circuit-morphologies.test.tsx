@@ -1,4 +1,3 @@
-import { MorphoViewerSignals } from '@openbraininstitute/morphoviewer/dist/components/signals';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,6 +5,7 @@ import {
   CircuitMorphologies,
   type CircuitMorphologiesProps,
 } from '@/features/circuit-viewer/morphologies/circuit-morphologies';
+import { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 
 import type {
   CellColors,
@@ -95,7 +95,7 @@ const DATA = { somas: new Float32Array(8) } as CircuitMorphologyData;
 const COLORS: CellColors = { palette: ['#ff0000'], columnByCell: Uint16Array.of(0, 0) };
 
 function view(props: Partial<CircuitMorphologiesProps> = {}) {
-  const signals = props.signals ?? new MorphoViewerSignals();
+  const signals = props.signals ?? new CircuitViewerSignals();
   const element = (patch: Partial<CircuitMorphologiesProps> = {}) => (
     <CircuitMorphologies
       data={DATA}

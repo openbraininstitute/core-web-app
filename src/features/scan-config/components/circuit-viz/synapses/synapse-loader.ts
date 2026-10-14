@@ -1,5 +1,7 @@
 import { Dataset, type Entity, Group, type File as H5File } from 'h5wasm';
 
+import { isCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import {
   createSurfaceSdf,
   drawnRadiusFactor,
@@ -13,8 +15,6 @@ import {
   somaEnvelopeOf,
   transform,
 } from '@/features/scan-config/components/drawn-surface';
-import { isMorphoViewerDebugMode } from '@/morpho-viewer/debug-mode';
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
 import { assertArrayNumber } from '@/util/type-guards';
 
 import type { NodePlacement } from '@/features/circuit-nodes/geometry-utils';
@@ -278,7 +278,7 @@ async function readPopulation(
   // Diagnostic only, and up to `NEURITE_PROBE_LIMIT` SDF queries that each walk
   // every segment of their cell — so it runs for whoever is asking the question,
   // not for everyone.
-  if (isMorphoViewerDebugMode()) {
+  if (isCircuitViewerDebugMode()) {
     probeNeuriteSynapses(report, populationName, coordinates, arrSectionId, arrTarget, surfaces);
   }
   const typePath = `edges/${populationName}/0/syn_type_id`;
@@ -465,7 +465,7 @@ async function buildCellSurfaces(
     // samples in traversal order say, invents surfaces the viewer never draws,
     // and synapses projected onto those hang off the mesh.
     const segment = parent ? drawnSegment(parent, sample) : drawnSegment(sample, sample);
-    if (!parent || item.type === MorphoViewerTreeItemType.Soma) somaSegments.push(segment);
+    if (!parent || item.type === SectionType.Soma) somaSegments.push(segment);
     wholeSegments.push(segment);
 
     for (const child of item.children ?? []) stack.push({ item: child, parent: sample });

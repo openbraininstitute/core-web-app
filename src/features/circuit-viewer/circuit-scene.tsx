@@ -45,11 +45,11 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const NOTHING_HIDDEN: readonly string[] = [];
 const MIN_TABLE_HEIGHT = 280;
@@ -268,7 +268,7 @@ export function CircuitScene({
   const supportsMorphologies = !!morphologiesFlag && largeCircuit;
 
   const handleOverlayTransform = useCallback(
-    (event: MorphoViewerOverlayTransformEvent) => {
+    (event: ElectrodeTransform) => {
       if (!setConfig || !enableElectrodes) return;
       // Overlays the form does not own (arrays a simulation only references)
       // have nowhere to write back to.

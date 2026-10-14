@@ -22,16 +22,14 @@ import { SynapseLegend } from './synapse-legend';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
-import type {
-  MorphoViewerOverlayTransformEvent,
-  MorphoViewerSignals,
-  MorphoViewerSmallCircuitCell,
-} from '@/morpho-viewer';
+import type { MorphoViewerSignals, MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 import type { SmallCircuitSource } from './sources';
 
 import styles from './circuit-viz.module.css';
@@ -83,7 +81,7 @@ interface CircuitVizProps {
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
   /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
-  signals: MorphoViewerSignals;
+  signals: CircuitViewerSignals;
   /**
    * World-coordinate electrode overlays from {@link usePlacedElectrodeOverlays}.
    * Passed through to morphoviewer as point clouds (not Three.js helpers).
@@ -98,7 +96,7 @@ interface CircuitVizProps {
    * Fired by morphoviewer on gesture end with absolute origin + rotation.
    * Host applies via {@link applyElectrodeOverlayTransform}.
    */
-  onOverlayTransform?: (event: MorphoViewerOverlayTransformEvent) => void;
+  onOverlayTransform?: (event: ElectrodeTransform) => void;
   /** Form-selected electrode block name → highlight in the 3D view. */
   highlightedOverlayId?: string | null;
   /**
@@ -371,7 +369,8 @@ function CircuitVizView({
           onZoomChange={onZoomChange}
           scalebar={scalebar}
           backgroundColor={backgroundColor}
-          signals={signals}
+          // The same signals, but morphoviewer types its bus as its own class, whose private members no other matches.
+          signals={signals as unknown as MorphoViewerSignals}
           circuit={cells}
           onCellHover={enableCellHover ? handleCellHover : undefined}
           // Not while a location is being placed: morphoviewer dispatches the
