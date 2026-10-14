@@ -6,6 +6,7 @@ import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
+import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
@@ -15,9 +16,7 @@ import {
   DEFAULT_SOMA_SIZE_SCALE,
 } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
-import { resolveScalebar } from '@/features/scan-config/components/shared/3d-viewer';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import { MorphoViewerCircuitMultipleNeuronsSomaOnly } from '@/morpho-viewer';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -26,7 +25,11 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { CellColors, ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CellColors,
+  CircuitSomas,
+  ElectrodeTransform,
+} from '@/features/circuit-viewer/morphologies/types';
 import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
@@ -34,14 +37,16 @@ import type {
   NodeColors,
 } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { MorphoViewerSignals } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
 
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
-/** An empty palette: the viewer falls back to its own depth-shaded blue. */
+/**
+ * An empty palette: no cell has a colour of its own, so each soma runs along the somas' blue ramp by how crowded it
+ * is, and each morphology is in the default colour.
+ */
 const VIEWER_DEFAULT_PALETTE: CellColors = {
   palette: [],
   columnByCell: new Uint16Array(0),
@@ -80,12 +85,12 @@ export interface LargeCircuitPreviewProps {
   /** Called with the population name when one of those cells is clicked. */
   onPopulationClick?: (populationName: string) => void;
   backgroundColor: string;
-  /** scalebar pin/label color (adaptive mode); undefined → package default  */
-  scalebarColor?: string;
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
-  /** signal bus: dispatch camera reset / snapshot; `snapshotReady` returns the image */
+  /** The viewer's bus: camera reset, snapshot and zoom. */
   signals: CircuitViewerSignals;
+  /** Told the view's zoom whenever it changes, the user's own scrolling included. */
+  onZoomChange?: (zoom: number) => void;
   /**
    * World-coordinate electrode overlays (same pipeline as CircuitViz), drawn
    * and moved alike over the somas and over the morphologies.
@@ -118,17 +123,13 @@ export interface LargeCircuitPreviewProps {
   electrodeRadius?: number;
   /**
    * Viewer feature flags from domain `viewer` (via host). With `cellHover`
-   * the morphology under the pointer is highlighted; the somas have no hover.
+   * the soma or morphology under the pointer is highlighted.
    */
   features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
   /**
    * Spikes to replay over the cells, somas or morphologies, and the transport
-   * driving them.
-   *
-   * A soma lights up the same way a morphology does — the viewer takes a
-   * brightness per cell either way — so this is the identical binding
-   * {@link CircuitViz} gets, spread across the same props. The view that takes
-   * over from the other replays from the start.
+   * driving them. One viewer draws both, so a switch between the two keeps the
+   * replay's moment and whether it plays.
    */
   spikes?: ISpikeReplayBinding;
 }
@@ -144,9 +145,9 @@ export function LargeCircuitPreview({
   recededColor,
   onPopulationClick,
   backgroundColor,
-  scalebarColor,
   showScalebar = true,
   signals,
+  onZoomChange,
   overlays,
   overlaysInteractive = false,
   onOverlayTransform,
@@ -203,10 +204,6 @@ export function LargeCircuitPreview({
     const anchor = subject && centroidOf(subject);
     if (anchor) setCircuitSceneAnchor(anchor);
   }, [subject, setCircuitSceneAnchor]);
-  const scalebar = React.useMemo(
-    () => resolveScalebar(showScalebar, scalebarColor),
-    [scalebarColor, showScalebar]
-  );
   const handleDownload = () => {
     if (!subject) return;
     const { count, positions: coords } = subject;
@@ -227,15 +224,19 @@ export function LargeCircuitPreview({
 
   // In declared order, with the population on show in its own place, so a soma
   // keeps its index and position whichever population is selected. Built once,
-  // from the placement alone: the viewer treats a new `positions` array as a
-  // new scene and resets the camera, so this must not change when the selection
-  // does. Colours are passed separately, below. These are straight typed-array
-  // copies, since the geometries already hold the flat triples the viewer
-  // reads.
-  const positions = React.useMemo(() => {
+  // from the placement alone: other somas are another scene to the viewer, whose
+  // crowding it works out again, so this must not change when the selection
+  // does. Colours are passed separately, below. The positions are straight
+  // typed-array copies, since the geometries already hold the flat triples the
+  // viewer reads.
+  const cells = React.useMemo((): CircuitSomas => {
+    const populations = placed.map(({ population: candidate, geometry }) => ({
+      name: candidate.name,
+      cells: geometry.count,
+    }));
     // With a single population, reuse the placement's own array: the hook
     // keeps it alive anyway, so copying would double region-scale residency.
-    if (placed.length === 1) return placed[0].geometry.positions;
+    if (placed.length === 1) return { positions: placed[0].geometry.positions, populations };
     let length = 0;
     for (const { geometry } of placed) length += geometry.positions.length;
     const all = new Float32Array(length);
@@ -244,8 +245,9 @@ export function LargeCircuitPreview({
       all.set(geometry.positions, offset);
       offset += geometry.positions.length;
     }
-    return all;
+    return { positions: all, populations };
   }, [placed]);
+  const { positions } = cells;
 
   // Only where something recedes: this colour follows the background, and a
   // single-population scene should not repaint when the background changes.
@@ -263,14 +265,14 @@ export function LargeCircuitPreview({
   // typed-array copy, small enough to run inside a single frame.
   const cellColors = React.useMemo(() => {
     // Nothing to colour by, nothing receding and nothing hidden, so leave the
-    // viewer to its own depth-shaded blue, as it draws today.
+    // somas to the viewer's own ramp.
     if (!nodeColors && !recede && hidden.size === 0) return VIEWER_DEFAULT_PALETTE;
 
     const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
     // Three entries are added here beyond the mapping's own colours: the
     // receded colour; `null`, which leaves a soma to the viewer's own ramp,
     // rather than a colour of our own, which would flatten an uncoloured cloud
-    // to a single hue; and `false`, which the viewer reads as a soma to skip
+    // to a single hue; and `false`, which the viewer reads as a cell to skip
     // entirely, so it is undrawn, unpickable and has no hover of its own. Each
     // takes a palette column on first use.
     // Spelt out rather than `??=`, which React Compiler 1.0.0 cannot lower,
@@ -315,9 +317,7 @@ export function LargeCircuitPreview({
     },
     [placed, subjectName, onPopulationClick]
   );
-  // Only offered when there is something to select: the somas viewer builds its
-  // pick buffer on the first click, which at region scale is a second copy of
-  // every position.
+  // Only offered when there is something to select.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;
 
   const wantsMorphologies = representation === 'morphologies';
@@ -329,33 +329,17 @@ export function LargeCircuitPreview({
       wantsMorphologies && drawable
         ? {
             circuitId: circuit.id,
-            populations: placed.map(({ population: candidate, geometry }) => ({
-              name: candidate.name,
-              cells: geometry.count,
-            })),
-            positions,
+            populations: cells.populations,
+            positions: cells.positions,
             somaRadius: speciesRadius,
           }
         : null,
-    [wantsMorphologies, drawable, circuit.id, placed, positions, speciesRadius]
+    [wantsMorphologies, drawable, circuit.id, cells, speciesRadius]
   );
   const morphologies = useCircuitMorphologies(morphologiesSource, () =>
     onRepresentationChange?.('somas')
   );
-  const shown = morphologies.load.status === 'ready' ? morphologies.load : null;
-
-  const morphoOverlays = React.useMemo(
-    () =>
-      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
-        color,
-        coordinates,
-        id,
-        kind,
-        origin,
-        rotation,
-      })),
-    [overlays]
-  );
+  const shown = morphologies.load.status === 'ready' ? morphologies.load.data : null;
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
@@ -368,9 +352,12 @@ export function LargeCircuitPreview({
           <p>{error.message}</p>
         </div>
       )}
-      {shown && (
-        <shown.View
-          data={shown.data}
+      {drawable && (
+        <LazyCircuitCells
+          somas={cells}
+          somaRadius={somaRadius}
+          somaOpacity={neuronOpacity}
+          data={shown}
           cellColors={cellColors}
           defaultColor={defaultColor}
           cellHover={features?.cellHover ?? true}
@@ -383,43 +370,15 @@ export function LargeCircuitPreview({
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           signals={signals}
+          onZoomChange={onZoomChange}
         />
       )}
-      {drawable && !shown && (
-        <MorphoViewerCircuitMultipleNeuronsSomaOnly
-          somaRadius={somaRadius}
-          gizmo
-          scalebar={scalebar}
-          positions={positions}
-          cellColors={cellColors}
-          backgroundColor={backgroundColor}
-          // The same signals, but morphoviewer types its bus as its own class, whose private members no other matches.
-          signals={signals as unknown as MorphoViewerSignals}
-          overlays={morphoOverlays}
-          overlaysRadius={electrodeRadius}
-          overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
-          overlaysInteractive={overlaysInteractive}
-          onOverlayTransform={onOverlayTransform}
-          highlightedOverlayId={highlightedOverlayId}
-          neuronOpacity={neuronOpacity}
-          onCellClick={canPickPopulation ? handleCellClick : undefined}
-          spikes={spikes?.data}
-          spikeTime={spikes?.timeInMs}
-          onSpikeTimeChange={spikes?.onTimeChange}
-          spikePlaying={spikes?.playing}
-          onSpikePlayingChange={spikes?.onPlayingChange}
-          spikeSpeed={spikes?.speed}
-          spikeAfterglowInSeconds={spikes?.afterglowInSeconds}
-          controls={[
-            debugMode && subject
-              ? [
-                  <Button key="download" onClick={handleDownload} className={styles.downloadButton}>
-                    Download {subject.count} nodes
-                  </Button>,
-                ]
-              : [],
-          ]}
-        />
+      {drawable && debugMode && subject && (
+        <div className="absolute left-0 top-0 z-3">
+          <Button onClick={handleDownload} className={styles.downloadButton}>
+            Download {subject.count} nodes
+          </Button>
+        </div>
       )}
       <MorphologiesStatus
         load={morphologies.load}

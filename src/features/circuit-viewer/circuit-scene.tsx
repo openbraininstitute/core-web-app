@@ -531,9 +531,9 @@ export function CircuitScene({
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
-            scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
             signals={signals}
+            onZoomChange={config.showZoomSlider ? zoom.onZoomChange : undefined}
             overlays={styledOverlays}
             overlaysInteractive={overlaysInteractive}
             onOverlayTransform={handleOverlayTransform}
@@ -585,9 +585,8 @@ export function CircuitScene({
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
-          // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
-          // props, and with the setting off there is nothing to drive.
-          zoom: largeCircuit || !config.showZoomSlider ? undefined : zoom,
+          // Omitted rather than hidden downstream: with the setting off there is nothing to drive.
+          zoom: config.showZoomSlider ? zoom : undefined,
         }}
       />
 

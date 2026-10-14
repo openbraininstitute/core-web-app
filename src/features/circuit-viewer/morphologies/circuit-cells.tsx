@@ -7,14 +7,17 @@ import {
   DEFAULT_SPIKE_SPEED,
 } from '@/features/circuit-viewer/spike-clock';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
+import { clampZoom } from '@/features/scan-config/components/zoom-slider/scale';
 import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
 import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
+import { logError } from '@/utils/logger';
 
 import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
+import { loadCrowding } from './load/load-crowding';
 import { trackPointer } from './pointer';
 
 import type { CircuitViewerSignals, SnapshotOptions } from '@/features/circuit-viewer/signals';
@@ -22,17 +25,25 @@ import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
   CellColors,
   CircuitMorphologyData,
+  CircuitSomas,
   ElectrodeGroup,
   ElectrodeTransform,
 } from './types';
 
 const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
 
-export interface CircuitMorphologiesProps {
-  data: CircuitMorphologyData;
+export interface CircuitCellsProps {
+  /** The cells as the page placed them. Memoise it: other somas are another scene, and their crowding worked out again. */
+  somas: CircuitSomas;
+  /** A soma's radius, µm. */
+  somaRadius: number;
+  /** How opaque the somas are, from 0 to 1. */
+  somaOpacity?: number;
+  /** The cells' morphologies, drawn in the somas' place; null draws the somas. */
+  data: CircuitMorphologyData | null;
   /** As the somas view takes them: a palette and each cell's column of it. */
   cellColors: CellColors;
-  /** What a cell with no colour of its own is drawn in. */
+  /** What a morphology with no colour of its own is drawn in; such a soma runs along the somas view's ramp. */
   defaultColor: string;
   /** Highlight the cell the pointer rests on. */
   cellHover?: boolean;
@@ -50,8 +61,10 @@ export interface CircuitMorphologiesProps {
   spikes?: ISpikeReplayBinding;
   backgroundColor: string;
   showScalebar: boolean;
-  /** The circuit viewer's bus, on which this view answers the camera reset and the snapshot. */
+  /** The circuit viewer's bus, on which this view answers the camera reset, the snapshot and the zoom. */
   signals: CircuitViewerSignals;
+  /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
+  onZoomChange?: (zoom: number) => void;
 }
 
 /** The canvas as an image whose `src` is an object URL, which is what the snapshot signal hands on. */
@@ -77,7 +90,14 @@ function imageOf(
   });
 }
 
-export function CircuitMorphologies({
+/**
+ * A circuit's cells in one three.js view: the somas as the page placed them, and their morphologies in their place
+ * once they are in, the camera, the colours and the replay kept from one to the other.
+ */
+export function CircuitCells({
+  somas,
+  somaRadius,
+  somaOpacity = 1,
   data,
   cellColors,
   defaultColor,
@@ -91,7 +111,8 @@ export function CircuitMorphologies({
   backgroundColor,
   showScalebar,
   signals,
-}: CircuitMorphologiesProps) {
+  onZoomChange,
+}: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<CircuitMorphologyViewer | null>(null);
   const theme = themeFromBackground(backgroundColor);
@@ -108,10 +129,29 @@ export function CircuitMorphologies({
     };
   }, []);
 
+  // In this order: the colours and the radius before the somas, so that these are painted and bounded once; the
+  // crowding after the somas, which start half crowded; the morphologies over them.
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
-  useEffect(() => viewer?.setData(data), [viewer, data]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
+  useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
+  useEffect(() => viewer?.setSomas(somas), [viewer, somas]);
+  useEffect(() => {
+    if (!viewer) return;
+    const controller = new AbortController();
+    loadCrowding(somas.positions, controller.signal).then(
+      (crowding) => {
+        if (!controller.signal.aborted) viewer.setCrowding(crowding);
+      },
+      (e: unknown) => {
+        // The somas stay half crowded.
+        if (!controller.signal.aborted) logError('Could not work out how crowded the somas are', e);
+      }
+    );
+    return () => controller.abort();
+  }, [viewer, somas]);
+  useEffect(() => viewer?.setData(data), [viewer, data]);
+  useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
@@ -175,6 +215,12 @@ export function CircuitMorphologies({
     });
   }, [viewer, cellHover, clickable, clicked, movable]);
 
+  const zoomChanged = useLatest(onZoomChange);
+  useEffect(
+    () => viewer?.onPixelScaleChange(() => zoomChanged.current?.(viewer.zoom)),
+    [viewer, zoomChanged]
+  );
+
   useEffect(() => {
     if (!viewer) return;
     const offReset = signals.cameraReset.register(() => viewer.resetView());
@@ -182,14 +228,16 @@ export function CircuitMorphologies({
       const canvas = viewer.snapshot();
       return canvas && imageOf(canvas, options);
     });
+    const offZoom = signals.setZoom.register((zoom) => viewer.setZoom(clampZoom(zoom)));
     return () => {
       offReset();
       offSnapshot();
+      offZoom();
     };
   }, [viewer, signals]);
 
   return (
-    <div className="absolute inset-0" data-testid="circuit-morphologies">
+    <div className="absolute inset-0" data-testid="circuit-cells">
       <div className="absolute inset-0" ref={hostRef} />
       {viewer && (
         <div className="pointer-events-none absolute inset-0">

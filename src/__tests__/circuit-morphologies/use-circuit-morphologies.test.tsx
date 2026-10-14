@@ -16,18 +16,9 @@ const h = vi.hoisted(() => ({
     headers: { Authorization: 'Bearer token' },
   })),
   logError: vi.fn(),
-  View: () => null,
-  viewFails: false,
 }));
 
 vi.mock('@/features/circuit-viewer/morphologies/load/load', () => import('./pending-loads'));
-
-vi.mock('@/features/circuit-viewer/morphologies/circuit-morphologies', () => ({
-  get CircuitMorphologies() {
-    if (h.viewFails) throw new Error('Loading chunk failed');
-    return h.View;
-  },
-}));
 
 vi.mock('@/api/one/circuit-visualization', () => ({
   buildCircuitMorphologyPackRequest: h.request,
@@ -74,7 +65,6 @@ const ready = (result: { current: ReturnType<typeof useCircuitMorphologies> }) =
 
 afterEach(() => {
   loads.length = 0;
-  h.viewFails = false;
   vi.clearAllMocks();
 });
 
@@ -111,7 +101,7 @@ describe('useCircuitMorphologies', () => {
     const loaded = data();
     await act(async () => load.resolve({ kind: 'loaded', data: loaded, fromCache: false }));
     await ready(result);
-    expect(result.current.load).toEqual({ status: 'ready', data: loaded, View: h.View });
+    expect(result.current.load).toEqual({ status: 'ready', data: loaded });
     expect([...loaded.somas]).toEqual([0, 0, 0, 5, 30, 0, 0, 4]);
     expect(loaded.bounds.max).toEqual([34, 5, 5]);
     expect(result.current.stopped).toBeNull();
@@ -144,18 +134,6 @@ describe('useCircuitMorphologies', () => {
     expect(result.current.stopped).toEqual({ kind: 'failed' });
     expect(onStopped).toHaveBeenCalledTimes(1);
     expect(h.logError).toHaveBeenCalledWith('Could not load the circuit morphologies', error);
-  });
-
-  it('fails where the view that draws the morphologies cannot be fetched', async () => {
-    h.viewFails = true;
-    const { result, onStopped } = render();
-    const load = await started();
-
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
-
-    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'failed' }));
-    expect(result.current.load).toEqual({ status: 'idle' });
-    expect(onStopped).toHaveBeenCalledTimes(1);
   });
 
   it('keeps why the last load stopped while its source is gone, and forgets it when the next starts', async () => {

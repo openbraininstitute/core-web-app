@@ -35,8 +35,3 @@ export const MorphoViewerCircuitMultipleNeurons = dynamic(
   () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSmallCircuit),
   { ssr: false }
 );
-
-export const MorphoViewerCircuitMultipleNeuronsSomaOnly = dynamic(
-  () => import('@openbraininstitute/morphoviewer').then((m) => m.MorphoViewerSomasOnly),
-  { ssr: false }
-);

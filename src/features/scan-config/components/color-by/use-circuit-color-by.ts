@@ -254,12 +254,8 @@ export function useCircuitColorBy(
       onToggleMorphologyLocationLabels: supportsMorphologyLocations
         ? (value: boolean) => update({ showMorphologyLocationLabels: value })
         : undefined,
-      // Offered only where a zoom slider can actually appear — the large-circuit viewer
-      // has none, and a switch that does nothing is worse than no switch.
-      showZoomSlider: supportsAxons ? config.showZoomSlider : undefined,
-      onToggleZoomSlider: supportsAxons
-        ? (value: boolean) => update({ showZoomSlider: value })
-        : undefined,
+      showZoomSlider: config.showZoomSlider,
+      onToggleZoomSlider: (value: boolean) => update({ showZoomSlider: value }),
       showScalebar: config.showScalebar,
       onToggleScalebar: (value: boolean) => update({ showScalebar: value }),
       hasSavedConfig,

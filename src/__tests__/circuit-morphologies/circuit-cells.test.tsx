@@ -2,23 +2,31 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  CircuitMorphologies,
-  type CircuitMorphologiesProps,
-} from '@/features/circuit-viewer/morphologies/circuit-morphologies';
+  CircuitCells,
+  type CircuitCellsProps,
+} from '@/features/circuit-viewer/morphologies/circuit-cells';
 import { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 
 import type {
   CellColors,
   CircuitMorphologyData,
+  CircuitSomas,
   ElectrodeGroup,
 } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => {
   /** Takes what the view hands the engine, and draws nothing. */
   class FakeViewer {
+    setSomas = vi.fn();
+    setSomaRadius = vi.fn();
+    setSomaOpacity = vi.fn();
+    setCrowding = vi.fn();
     setData = vi.fn();
     setCellColors = vi.fn();
     setDefaultColor = vi.fn();
+    zoom = 1;
+    setZoom = vi.fn();
+    pixelScaleListeners = new Set<(scale: number | null) => void>();
     setHighlight = vi.fn();
     /** Every pick finds cell 4. */
     pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
@@ -73,12 +81,28 @@ const h = vi.hoisted(() => {
       return () => {};
     }
 
+    onPixelScaleChange(listener: (scale: number | null) => void) {
+      this.pixelScaleListeners.add(listener);
+      return () => this.pixelScaleListeners.delete(listener);
+    }
+
     onViewChange(listener: (orientation: { x: number; y: number; z: number; w: number }) => void) {
       listener({ x: 0, y: 0, z: 0, w: 1 });
       return () => {};
     }
   }
-  const state = { viewers: [] as FakeViewer[], FakeViewer };
+  const state = {
+    viewers: [] as FakeViewer[],
+    FakeViewer,
+    /** Every crowding asked for, each waiting for the test to answer it. */
+    crowdings: [] as {
+      positions: Float32Array;
+      signal: AbortSignal;
+      resolve(bytes: Uint8Array | null): void;
+      reject(e: unknown): void;
+    }[],
+    logError: vi.fn(),
+  };
   return state;
 });
 
@@ -86,18 +110,32 @@ vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer
   CircuitMorphologyViewer: h.FakeViewer,
 }));
 
+// jsdom has no Worker.
+vi.mock('@/features/circuit-viewer/morphologies/load/load-crowding', () => ({
+  loadCrowding: (positions: Float32Array, signal: AbortSignal) =>
+    new Promise((resolve, reject) => h.crowdings.push({ positions, signal, resolve, reject })),
+}));
+
+vi.mock('@/utils/logger', () => ({ logError: h.logError }));
+
 // The ruler draws on a canvas of its own; what is asked of it is its colour.
 vi.mock('@/features/viewer-3d/chrome/scalebar', () => ({
   Scalebar: ({ color }: { color: string }) => <div data-testid="scalebar" data-color={color} />,
 }));
 
+const SOMAS: CircuitSomas = {
+  positions: Float32Array.of(0, 0, 0, 10, 0, 0),
+  populations: [{ name: 'cortex', cells: 2 }],
+};
 const DATA = { somas: new Float32Array(8) } as CircuitMorphologyData;
 const COLORS: CellColors = { palette: ['#ff0000'], columnByCell: Uint16Array.of(0, 0) };
 
-function view(props: Partial<CircuitMorphologiesProps> = {}) {
+function view(props: Partial<CircuitCellsProps> = {}) {
   const signals = props.signals ?? new CircuitViewerSignals();
-  const element = (patch: Partial<CircuitMorphologiesProps> = {}) => (
-    <CircuitMorphologies
+  const element = (patch: Partial<CircuitCellsProps> = {}) => (
+    <CircuitCells
+      somas={SOMAS}
+      somaRadius={15}
       data={DATA}
       cellColors={COLORS}
       defaultColor="#2b5cd9"
@@ -117,9 +155,13 @@ function view(props: Partial<CircuitMorphologiesProps> = {}) {
     ...rendered,
     viewer,
     signals,
-    update: (patch: Partial<CircuitMorphologiesProps>) => rendered.rerender(element(patch)),
+    update: (patch: Partial<CircuitCellsProps>) => rendered.rerender(element(patch)),
   };
 }
+
+/** Where the `nth` call of a mock falls among every mock's calls. */
+const calledAt = (mock: { mock: { invocationCallOrder: number[] } }, nth = 0) =>
+  mock.mock.invocationCallOrder[nth];
 
 const click = (host: HTMLElement) => {
   fireEvent.pointerDown(host, { isPrimary: true, clientX: 30, clientY: 20 });
@@ -148,20 +190,87 @@ const drag = (host: HTMLElement) => {
 
 afterEach(() => {
   h.viewers = [];
+  h.crowdings = [];
+  h.logError.mockClear();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
-describe('CircuitMorphologies', () => {
-  it('hands the engine its host, the morphologies, the colours and the theme of the background', () => {
-    const { viewer } = view({ backgroundColor: '#000000' });
+describe('CircuitCells', () => {
+  it('hands the engine its host, the somas, the morphologies, the colours and the theme of the background', () => {
+    const { viewer } = view({ backgroundColor: '#000000', somaOpacity: 0.2 });
 
     expect(h.viewers).toHaveLength(1);
-    expect(viewer.host.parentElement).toBe(screen.getByTestId('circuit-morphologies'));
+    expect(viewer.host.parentElement).toBe(screen.getByTestId('circuit-cells'));
+    expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS);
+    expect(viewer.setSomaRadius).toHaveBeenCalledExactlyOnceWith(15);
+    expect(viewer.setSomaOpacity).toHaveBeenCalledExactlyOnceWith(0.2);
     expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA);
     expect(viewer.setCellColors).toHaveBeenCalledExactlyOnceWith(COLORS);
     expect(viewer.setDefaultColor).toHaveBeenCalledExactlyOnceWith('#2b5cd9');
     expect(viewer.setDark).toHaveBeenCalledExactlyOnceWith(true);
+  });
+
+  it('paints and sizes the somas before it hands them over, and the morphologies after', () => {
+    const { viewer } = view();
+
+    expect(calledAt(viewer.setCellColors)).toBeLessThan(calledAt(viewer.setSomas));
+    expect(calledAt(viewer.setSomaRadius)).toBeLessThan(calledAt(viewer.setSomas));
+    expect(calledAt(viewer.setSomas)).toBeLessThan(calledAt(viewer.setData));
+  });
+
+  it('takes a radius, an opacity and morphologies without handing the somas over again', () => {
+    const { viewer, update } = view({ data: null });
+    expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(null);
+
+    update({ data: null, somaRadius: 30, somaOpacity: 0.5 });
+    update({ data: DATA, somaRadius: 30, somaOpacity: 0.5 });
+    expect(viewer.setSomaRadius).toHaveBeenLastCalledWith(30);
+    expect(viewer.setSomaOpacity).toHaveBeenLastCalledWith(0.5);
+    expect(viewer.setData.mock.calls).toEqual([[null], [DATA]]);
+    expect(viewer.setSomas).toHaveBeenCalledTimes(1);
+    expect(h.crowdings).toHaveLength(1);
+  });
+
+  it('works out how crowded the somas are, and hands that over for these somas alone', async () => {
+    const { viewer, update } = view();
+    const [first] = h.crowdings;
+    expect(first.positions).toBe(SOMAS.positions);
+
+    const others = { ...SOMAS };
+    update({ somas: others });
+    expect(first.signal.aborted).toBe(true);
+    first.resolve(Uint8Array.of(1, 2));
+    const second = h.crowdings[1];
+    expect(second.positions).toBe(others.positions);
+    const bytes = Uint8Array.of(255, 0);
+    second.resolve(bytes);
+
+    await vi.waitFor(() => expect(viewer.setCrowding).toHaveBeenCalledExactlyOnceWith(bytes));
+    expect(calledAt(viewer.setSomas, 1)).toBeLessThan(calledAt(viewer.setCrowding));
+  });
+
+  it('leaves the somas half crowded, and says so, where that cannot be worked out', async () => {
+    const { viewer } = view();
+    const error = new Error('the worker failed');
+    h.crowdings[0].reject(error);
+
+    await vi.waitFor(() =>
+      expect(h.logError).toHaveBeenCalledWith('Could not work out how crowded the somas are', error)
+    );
+    expect(viewer.setCrowding).not.toHaveBeenCalled();
+  });
+
+  it('tells of the zoom whenever the scale changes, and zooms on the signal, within the slider’s range', async () => {
+    const onZoomChange = vi.fn();
+    const { viewer, signals } = view({ onZoomChange });
+    viewer.zoom = 2.5;
+    for (const listener of viewer.pixelScaleListeners) listener(0.4);
+    expect(onZoomChange).toHaveBeenCalledExactlyOnceWith(2.5);
+
+    await signals.setZoom.dispatch(4);
+    await signals.setZoom.dispatch(1000);
+    expect(viewer.setZoom.mock.calls).toEqual([[4], [100]]);
   });
 
   it('hands on only what changes, keeping the engine and the view it frames', () => {
@@ -434,5 +543,6 @@ describe('CircuitMorphologies', () => {
     expect(viewer.dispose).toHaveBeenCalledTimes(1);
     await expect(signals.cameraReset.dispatch(undefined)).rejects.toThrow('no handler');
     await expect(signals.snapshot.dispatch(undefined)).rejects.toThrow('no handler');
+    await expect(signals.setZoom.dispatch(2)).rejects.toThrow('no handler');
   });
 });

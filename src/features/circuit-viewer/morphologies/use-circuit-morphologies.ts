@@ -1,6 +1,6 @@
 'use client';
 
-import { type ComponentType, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { buildCircuitMorphologyPackRequest } from '@/api/one/circuit-visualization';
 import { useLatest } from '@/ui/hooks/use-latest';
@@ -10,7 +10,6 @@ import { logError } from '@/utils/logger';
 import { fillSomas } from './load/cells';
 import { loadCircuitMorphologies } from './load/load';
 
-import type { CircuitMorphologiesProps } from './circuit-morphologies';
 import type { Refused } from './load/download';
 import type { CircuitMorphologyData, Population } from './types';
 
@@ -32,19 +31,12 @@ export type MorphologiesLoad =
   | { status: 'idle' }
   /** `total` is 0 until the pack's bytes come in: while OBI-One builds it, or reading it from the cache. */
   | { status: 'loading'; received: number; total: number }
-  /** `View` draws `data`. It is fetched beside the pack, and three.js with it, so that both are in at once. */
-  | {
-      status: 'ready';
-      data: CircuitMorphologyData;
-      View: ComponentType<CircuitMorphologiesProps>;
-    };
+  | { status: 'ready'; data: CircuitMorphologyData };
 
 /** Why a load ended with nothing to show: OBI-One would not build the pack, or the load failed. */
 export type MorphologiesStop = Refused | { kind: 'failed' };
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
-
-const loadView = () => import('./circuit-morphologies').then((m) => m.CircuitMorphologies);
 
 /**
  * Loads the morphologies of `source`, and lets go of them when it changes or goes. A circuit OBI-One refuses and a
@@ -82,9 +74,6 @@ export function useCircuitMorphologies(
         MAX_SEGMENTS,
         workspace
       );
-      const view = loadView();
-      // Awaited below, unless the circuit is refused first.
-      view.catch(() => {});
       const loaded = await loadCircuitMorphologies({
         request,
         populations: source.populations,
@@ -98,10 +87,8 @@ export function useCircuitMorphologies(
         stop(loaded);
         return;
       }
-      const View = await view;
-      if (signal.aborted) return;
       fillSomas(loaded.data, source.positions, source.somaRadius);
-      setLoad({ status: 'ready', data: loaded.data, View });
+      setLoad({ status: 'ready', data: loaded.data });
     };
     // Not in the effect itself: in development React runs it twice, and OBI-One goes on building for a request that
     // is gone while the next one waits behind it.

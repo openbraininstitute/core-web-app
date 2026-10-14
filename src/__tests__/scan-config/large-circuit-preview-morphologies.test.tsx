@@ -1,16 +1,15 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
 import { loadedData, loads, started } from '../circuit-morphologies/pending-loads';
 
-import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewer';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
-import type { CircuitMorphologiesProps } from '@/features/circuit-viewer/morphologies/circuit-morphologies';
+import type { CircuitCellsProps } from '@/features/circuit-viewer/morphologies/circuit-cells';
 import type { CircuitRepresentation } from '@/features/scan-config/components/color-by/types';
 import type { LargeCircuitPreviewProps } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
@@ -30,22 +29,19 @@ const h = vi.hoisted(() => ({
   placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
     typeof usePopulationsPlacement
   >,
-  /** What each view was last rendered with. */
-  somas: null as MorphoViewerSomasOnlyProps | null,
-  morphologies: null as CircuitMorphologiesProps | null,
+  /** What the viewer was last rendered with, and how many times it was mounted. */
+  cells: null as CircuitCellsProps | null,
+  mounts: 0,
 }));
 
-vi.mock('@/morpho-viewer', () => ({
-  MorphoViewerCircuitMultipleNeuronsSomaOnly: (props: MorphoViewerSomasOnlyProps) => {
-    h.somas = props;
-    return <div data-testid="somas" />;
-  },
-}));
-
-vi.mock('@/features/circuit-viewer/morphologies/circuit-morphologies', () => ({
-  CircuitMorphologies: (props: CircuitMorphologiesProps) => {
-    h.morphologies = props;
-    return <div data-testid="morphologies" />;
+// Named for what it draws: the somas, or the morphologies in their place.
+vi.mock('@/features/circuit-viewer/morphologies/lazy-circuit-cells', () => ({
+  LazyCircuitCells: (props: CircuitCellsProps) => {
+    h.cells = props;
+    useEffect(() => {
+      h.mounts++;
+    }, []);
+    return <div data-testid={props.data ? 'morphologies' : 'somas'} />;
   },
 }));
 
@@ -143,6 +139,8 @@ describe('LargeCircuitPreview morphologies', () => {
   beforeEach(() => {
     asked = [];
     loads.length = 0;
+    h.cells = null;
+    h.mounts = 0;
     h.placement = {
       placed: [
         { population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) },
@@ -191,7 +189,8 @@ describe('LargeCircuitPreview morphologies', () => {
   it("draws the morphologies in the somas' place once they are in, in the somas' colours", async () => {
     render(<Hosted start="morphologies" />);
     const load = await started();
-    const colors = h.somas?.cellColors;
+    const colors = h.cells?.cellColors;
+    const somas = h.cells?.somas;
     const loaded = data();
 
     await act(async () => load.resolve({ kind: 'loaded', data: loaded, fromCache: false }));
@@ -199,12 +198,13 @@ describe('LargeCircuitPreview morphologies', () => {
 
     expect(screen.queryByTestId('somas')).toBeNull();
     expect(status()).toBeNull();
-    expect(h.morphologies).toMatchObject({
+    expect(h.cells).toMatchObject({
       data: loaded,
       backgroundColor: '#000000',
       showScalebar: true,
     });
-    expect(h.morphologies?.cellColors).toBe(colors);
+    expect(h.cells?.cellColors).toBe(colors);
+    expect(h.cells?.somas).toBe(somas);
     // The input's cell is hidden, as among the somas.
     expect(colors?.palette[colors.columnByCell[2]]).toBe(false);
     // The cell the pack had no soma of is where the page has it, at the species' radius.
@@ -212,14 +212,12 @@ describe('LargeCircuitPreview morphologies', () => {
   });
 
   /** The morphologies on show, as the view was last rendered. */
-  async function shown(
-    props: Partial<LargeCircuitPreviewProps> = {}
-  ): Promise<CircuitMorphologiesProps> {
+  async function shown(props: Partial<LargeCircuitPreviewProps> = {}): Promise<CircuitCellsProps> {
     render(<Hosted start="morphologies" {...props} />);
     const load = await started();
     await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
     await screen.findByTestId('morphologies');
-    return h.morphologies as CircuitMorphologiesProps;
+    return h.cells as CircuitCellsProps;
   }
 
   it("draws a morphology with no colour of its own in the circuit viewer's default colour", async () => {
@@ -315,6 +313,22 @@ describe('LargeCircuitPreview morphologies', () => {
     fireEvent.click(screen.getByText('switch on'));
     await started(2);
     expect(screen.getByTestId('somas')).toBeInTheDocument();
+  });
+
+  it('keeps one viewer, with the same somas and replay, through the switch both ways', async () => {
+    const spikes = { playing: true, timeInMs: 40 };
+    await shown({ spikes });
+    const { somas } = h.cells as CircuitCellsProps;
+
+    fireEvent.click(screen.getByText('switch off'));
+    fireEvent.click(screen.getByText('switch on'));
+    const load = await started(2);
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: true }));
+    await screen.findByTestId('morphologies');
+
+    expect(h.mounts).toBe(1);
+    expect(h.cells?.somas).toBe(somas);
+    expect(h.cells?.spikes).toBe(spikes);
   });
 
   it('stops a load when switched off before it ends', async () => {
