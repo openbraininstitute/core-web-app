@@ -1,6 +1,7 @@
 import { isNil } from 'es-toolkit/compat';
 
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
+import { renderMathInText } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/render-mathematic-symbol';
 import { isReferenceFieldVisible } from '@/features/scan-config/components/ui-elements/reference';
 import { useBlockDiff } from '@/features/scan-config/hooks/use-block-diff';
 import {
@@ -13,7 +14,6 @@ import {
   type TSupportedEntitiesForScanConfiguration,
 } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
-import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 
 import type { ReactNode } from 'react';
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';

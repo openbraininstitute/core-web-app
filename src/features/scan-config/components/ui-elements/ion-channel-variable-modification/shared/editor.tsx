@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { FancyInput } from '@/ui/molecules/fancy-input';
-import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
+
+import { renderMathInText } from './render-mathematic-symbol';
 
 import 'katex/dist/katex.min.css';
 

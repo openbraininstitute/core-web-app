@@ -21,9 +21,9 @@ import {
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { renderMathInText } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/shared/render-mathematic-symbol';
 import { FancyActions } from '@/ui/molecules/fancy-input';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
-import { renderMathInText } from '@/ui/segments/workflows/build/ion-channel-build/rjsf/helpers';
 import { cn } from '@/utils/css-class';
 
 import {

@@ -50,6 +50,7 @@ const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.EModelValidation]: 'Build',
   [ServiceSubtype.SynapseParameterizationSmall]: 'Build',
   [ServiceSubtype.SynapseParameterizationLarge]: 'Build',
+  [ServiceSubtype.ExtracellularRecordingArrayBuild]: 'Build',
 };
 
 export function categoryRenderFn(subtype: ServiceSubtype) {
@@ -94,6 +95,7 @@ const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.EModelValidation]: 'E-model validation',
   [ServiceSubtype.SynapseParameterizationSmall]: 'Circuit synaptic physiology',
   [ServiceSubtype.SynapseParameterizationLarge]: 'Circuit synaptic physiology',
+  [ServiceSubtype.ExtracellularRecordingArrayBuild]: 'Extracellular recording array',
 };
 
 export function typeRenderFn(subtype: ServiceSubtype) {

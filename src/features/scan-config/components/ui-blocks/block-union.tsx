@@ -1,5 +1,9 @@
 import { CloseOutlined } from '@ant-design/icons';
 
+import {
+  type TSchemaMappingConfiguration,
+  unionVariantDefaults,
+} from '@/features/scan-config/components/hooks/schema';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -7,11 +11,9 @@ import { isType } from '@/features/scan-config/types';
 import { FancyActions } from '@/ui/molecules/fancy-input';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 
-import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
 import type {
   Config,
   ConfigSchema,
-  ConfigValue,
   IRootBlockUnion,
   TBlock,
   TSupportedEntitiesForScanConfiguration,
@@ -125,20 +127,9 @@ export default function BlockUnion({
             type="button"
             className="min-h-25 w-full cursor-pointer rounded-xl border border-gray-200 p-5 text-left hover:bg-white"
             onClick={() => {
-              const initial: Record<string, ConfigValue> = {};
-              if (o.properties) {
-                Object.entries(o.properties).forEach(([subkey, subValue]) => {
-                  if (isType(subValue)) {
-                    initial[subkey] = subValue.const ?? subValue.default ?? null;
-                  } else {
-                    initial[subkey] = subValue.default ?? null;
-                  }
-                });
-              }
-
               setConfig({
                 ...config,
-                [selectedRootElement]: initial,
+                [selectedRootElement]: unionVariantDefaults(o),
               });
             }}
           >

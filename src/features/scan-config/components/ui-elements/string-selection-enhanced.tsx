@@ -44,7 +44,7 @@ function OptionContent({
   testId?: string;
 }) {
   return (
-    // min-w-0 so long links and formulas wrap inside the field instead of pushing it wider
+    // min-w-0 lets a wide formula scroll inside the card and long links wrap instead of spilling past it
     <div className="flex min-w-0 flex-1 flex-col gap-2" data-testid={testId}>
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
       <MarkdownDescription className="text-sm text-gray-700">
