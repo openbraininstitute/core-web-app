@@ -17,7 +17,7 @@ const SECTION_TYPE_LABELS: Partial<Record<SectionType, string>> = {
 };
 
 /** Section types a morphology location may sit on today. */
-export const TARGETABLE_SECTION_TYPES: readonly SectionType[] = [
+const TARGETABLE_SECTION_TYPES: readonly SectionType[] = [
   SectionType.BasalDendrite,
   SectionType.ApicalDendrite,
   SectionType.Dendrite,

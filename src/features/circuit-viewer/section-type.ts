@@ -1,7 +1,4 @@
-/**
- * What part of a cell a morphology's section is, in the numbers OBI-One's sections carry them in, which are
- * morphoviewer's `MorphoViewerTreeItemType`'s.
- */
+/** What part of a cell a morphology's section is, in the numbers OBI-One's sections carry them in. */
 export const SectionType = {
   Soma: 0,
   Dendrite: 1,

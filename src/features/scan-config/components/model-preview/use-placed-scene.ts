@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
 
+import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { PlacedPopulation } from '@/features/circuit-nodes/hooks/use-populations-placement';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
 import type { CircuitSomas } from '@/features/circuit-viewer/morphologies/types';
 
 const NOTHING_HIDDEN: readonly string[] = [];
@@ -20,7 +20,7 @@ interface Options {
   hiddenPopulations?: readonly string[];
   /** Colour for the cells of the populations that are not on show. */
   recededColor?: string;
-  /** Read each node's morphology and orientation too, to draw its morphology. */
+  /** Read each node's morphology and orientation too, to draw its morphology; `orientations` is null without. */
   withMorphologies?: boolean;
 }
 
@@ -48,10 +48,11 @@ export function usePlacedScene({
 
   const subjectName = population?.name;
   const subject = useMemo(
-    (): PlacedPopulation | null =>
-      placed.find((entry) => entry.population.name === subjectName) ?? null,
+    (): NodeGeometry | null =>
+      placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null,
     [placed, subjectName]
   );
+  const anchor = useMemo(() => (subject ? centroidOf(subject) : null), [subject]);
   const hidden = useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
   // Context is what is on screen beside the subject, so a hidden population is not it: there is nothing to recede
   // behind the subject and nothing a click could land on.
@@ -93,11 +94,39 @@ export function usePlacedScene({
     return { positions, populations: named };
   }, [placed]);
 
+  // Four floats a cell, in the somas' order, the identity where a population carries none.
+  const orientations = useMemo(() => {
+    if (!withMorphologies) return null;
+    const cells = placed.reduce((sum, { geometry }) => sum + geometry.count, 0);
+    const all = new Float32Array(4 * cells);
+    let first = 0;
+    for (const { geometry } of placed) {
+      const { count, orientations: turns } = geometry;
+      if (turns) all.set(turns.subarray(0, 4 * count), 4 * first);
+      else for (let i = 0; i < count; i++) all[4 * (first + i) + 3] = 1;
+      first += count;
+    }
+    return all;
+  }, [withMorphologies, placed]);
+
   // Only where something recedes: this colour follows the background, and a single-population scene should not
   // repaint when the background changes. Hiding the population on show is not the exception it looks like: nothing on
   // screen is the selection then either. With the population on show unplaceable there is no selection on screen to
   // recede behind, and receding everything would grey the whole circuit out.
   const receded = hasContext && subject ? recededColor : undefined;
 
-  return { config, placed, settled, download, subject, hidden, hasContext, error, somas, receded };
+  return {
+    config,
+    placed,
+    settled,
+    download,
+    subject,
+    anchor,
+    hidden,
+    hasContext,
+    error,
+    somas,
+    orientations,
+    receded,
+  };
 }

@@ -43,6 +43,31 @@ describe("a morphology's sections", () => {
     });
   });
 
+  it('are read once for every cell asking while the read is under way', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    const [first, second] = await Promise.all([
+      loadSections(request('shared')),
+      loadSections(request('shared')),
+    ]);
+
+    expect(second).toBe(first);
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(1);
+  });
+
+  it('are read again in another workspace', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    await loadSections(request('workspaces'));
+    await loadSections({ ...request('workspaces'), projectId: 'another' });
+
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
+    expect(h.fetchCircuitViz).toHaveBeenLastCalledWith('workspaces', {
+      virtualLabId: 'lab',
+      projectId: 'another',
+    });
+  });
+
   it.each([
     ['could not be read', () => Promise.reject(new Error('502'))],
     ['did not parse', () => Promise.resolve([{ ...SOMA, type: 'soma' }])],

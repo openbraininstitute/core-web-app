@@ -2,7 +2,6 @@ import { saveAs } from 'file-saver';
 import { useSetAtom } from 'jotai';
 import React from 'react';
 
-import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import { cellColorsOf, populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
@@ -154,24 +153,14 @@ export function LargeCircuitPreview({
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  const {
-    placed,
-    download,
-    subject: placedSubject,
-    hidden,
-    hasContext,
-    error,
-    somas,
-    receded,
-  } = usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
+  const { placed, download, subject, anchor, hidden, hasContext, error, somas, receded } =
+    usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
   const subjectName = population?.name;
-  const subject = placedSubject?.geometry ?? null;
 
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
-    const anchor = subject && centroidOf(subject);
     if (anchor) setCircuitSceneAnchor(anchor);
-  }, [subject, setCircuitSceneAnchor]);
+  }, [anchor, setCircuitSceneAnchor]);
   const handleDownload = () => {
     if (!subject) return;
     const { count, positions: coords } = subject;

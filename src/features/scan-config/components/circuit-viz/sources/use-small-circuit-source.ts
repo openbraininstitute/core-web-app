@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
-import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
@@ -71,15 +70,26 @@ export function useSmallCircuitSource({
 
   // Everything the scene is built from, for every population at once: where the cells sit, the morphology each one
   // names, and the rotation that puts that morphology in the world.
-  const { config, placed, settled, download, subject, hidden, error, somas, receded } =
-    usePlacedScene({
-      circuit,
-      population,
-      populations,
-      hiddenPopulations,
-      recededColor,
-      withMorphologies: true,
-    });
+  const {
+    config,
+    placed,
+    settled,
+    download,
+    subject,
+    anchor,
+    hidden,
+    error,
+    somas,
+    orientations,
+    receded,
+  } = usePlacedScene({
+    circuit,
+    population,
+    populations,
+    hiddenPopulations,
+    recededColor,
+    withMorphologies: true,
+  });
 
   // Resolved once per population rather than per cell: every node of a population draws from the same directory or
   // container.
@@ -114,18 +124,12 @@ export function useSmallCircuitSource({
   // reads every morphology again and frames it anew, so it must not change with the selection.
   const built = useMemo((): TreeSource | null => {
     if (!hasPopulation || !settled || placed.length === 0) return null;
-    const orientations = new Float32Array((4 * somas.positions.length) / 3);
     const requests: (SectionsRequest | null)[] = [];
-    let first = 0;
     for (const entry of placed) {
-      const { count, orientations: turns } = entry.geometry;
-      if (turns) orientations.set(turns.subarray(0, 4 * count), 4 * first);
-      else for (let i = 0; i < count; i++) orientations[4 * (first + i) + 3] = 1;
-      for (let i = 0; i < count; i++) requests.push(sectionsRequest(entry, i));
-      first += count;
+      for (let i = 0; i < entry.geometry.count; i++) requests.push(sectionsRequest(entry, i));
     }
     return { somas, orientations, requests };
-  }, [hasPopulation, settled, placed, somas, sectionsRequest]);
+  }, [hasPopulation, settled, placed, somas, orientations, sectionsRequest]);
 
   // Keep what is on screen until the next scene can be drawn: a population joining or leaving the list takes a moment
   // to read. Not after a failure, which the error panel covers.
@@ -142,7 +146,7 @@ export function useSmallCircuitSource({
         nodeColors,
         // Colour-by wins where it has an opinion; failing that a lone cell reads by section type, because telling its
         // dendrites from its axon is the whole point of drawing one. A crowd keeps a flat colour per cell instead.
-        own: subject?.geometry.count === 1 ? SECTION_TYPE_COLORS : null,
+        own: subject?.count === 1 ? SECTION_TYPE_COLORS : null,
         receded,
         hidden,
       }),
@@ -184,8 +188,6 @@ export function useSmallCircuitSource({
     geometry: synapseTarget?.geometry ?? null,
     loadTree,
   });
-
-  const anchor = useMemo(() => (subject ? centroidOf(subject.geometry) : null), [subject]);
 
   return {
     tree,
