@@ -166,29 +166,19 @@ type TIonChannelFittingFormInput = {
   model_type?: unknown;
 };
 
-// configs from before model_properties name the channel at the top level of initialize
-function withModelProperties(initialize: Record<string, unknown>) {
-  const { ion_channel_name, ...rest } = initialize;
-  if (ion_channel_name === undefined) return initialize;
-  const properties = (rest.model_properties ?? {}) as Record<string, unknown>;
-  return { ...rest, model_properties: { ion_channel_name, ...properties } };
-}
-
 export function toIonChannelFittingForm(form: TIonChannelFittingFormInput): Config {
-  if (form.model_type) {
-    if (form.initialize?.ion_channel_name === undefined) return form as Config;
-    return { ...form, initialize: withModelProperties(form.initialize) } as Config;
-  }
+  if (form.model_type) return form as Config;
 
   const equationKey = (block?: TLegacyEquationBlock) =>
     block?.type ? (LegacyEquationKeys[block.type] ?? block.type) : undefined;
-  const { recordings, ...initialize } = form.initialize ?? {};
+  const { recordings, ion_channel_name, ...initialize } = form.initialize ?? {};
 
   return {
     type: form.type,
     info: form.info,
     initialize: {
-      ...withModelProperties(initialize),
+      ...initialize,
+      model_properties: { ion_channel_name },
       recordings: [recordings].flat().filter(Boolean),
     },
     model_type: {
