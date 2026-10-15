@@ -299,7 +299,7 @@ export function CircuitScene({
     supportsAxons,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
-    supportsSomaSize: largeCircuit,
+    drawsSomas: largeCircuit,
     supportsMorphologies,
     defaultNeuronOpacity,
     population,

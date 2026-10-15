@@ -94,16 +94,18 @@ describe('useCircuitColorBy', () => {
     expect(result.current.colorBy.selectedProperty).toBeNull();
   });
 
-  it('offers the soma size control only to viewers that draw soma points', () => {
+  it('offers the soma size and opacity controls only to viewers that draw soma points', () => {
     const { result } = render(CORTEX);
 
     expect(result.current.menu.somaSizeScale).toBeUndefined();
     expect(result.current.menu.onSomaSizeScaleChange).toBeUndefined();
+    expect(result.current.menu.neuronOpacity).toBeUndefined();
+    expect(result.current.menu.onNeuronOpacityChange).toBeUndefined();
   });
 
   it('starts the soma size at the default scale and takes a new one', () => {
     const { result } = renderHook(() =>
-      useCircuitColorBy(circuit, { population: CORTEX, supportsSomaSize: true })
+      useCircuitColorBy(circuit, { population: CORTEX, drawsSomas: true })
     );
     expect(result.current.menu.somaSizeScale).toBe(DEFAULT_SOMA_SIZE_SCALE);
 
@@ -114,7 +116,9 @@ describe('useCircuitColorBy', () => {
   });
 
   it('draws somas and offers no switch where morphologies are not offered', () => {
-    const { result } = render(CORTEX);
+    const { result } = renderHook(() =>
+      useCircuitColorBy(circuit, { population: CORTEX, drawsSomas: true })
+    );
 
     expect(result.current.representation).toBe('somas');
     expect(result.current.menu.showMorphologies).toBeUndefined();
@@ -127,7 +131,7 @@ describe('useCircuitColorBy', () => {
     const { result } = renderHook(() =>
       useCircuitColorBy(circuit, {
         population: CORTEX,
-        supportsSomaSize: true,
+        drawsSomas: true,
         supportsMorphologies: true,
       })
     );
@@ -156,7 +160,7 @@ describe('useCircuitColorBy', () => {
       ({ offered }: { offered: boolean }) =>
         useCircuitColorBy(circuit, {
           population: CORTEX,
-          supportsSomaSize: true,
+          drawsSomas: true,
           supportsMorphologies: offered,
         }),
       { initialProps: { offered: true } }

@@ -29,8 +29,8 @@ interface Options {
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
   supportsMorphologyLocations?: boolean;
-  /** whether the viewer draws cells as soma points, which the soma size control scales */
-  supportsSomaSize?: boolean;
+  /** whether the viewer draws cells as soma points, which the soma size and opacity controls act on */
+  drawsSomas?: boolean;
   /** whether the circuit's cells can be drawn as morphologies in place of the soma points */
   supportsMorphologies?: boolean;
   /**
@@ -97,7 +97,7 @@ export function useCircuitColorBy(
     supportsAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
-    supportsSomaSize,
+    drawsSomas,
     supportsMorphologies,
     defaultNeuronOpacity,
     population,
@@ -113,6 +113,8 @@ export function useCircuitColorBy(
     ? config.representation
     : 'somas';
   const morphologies = representation === 'morphologies';
+  // The morphologies are drawn opaque, at their own size.
+  const somas = !!drawsSomas && !morphologies;
   const populationName = population?.name;
   const property =
     populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
@@ -224,14 +226,12 @@ export function useCircuitColorBy(
       onToggleMorphologies: supportsMorphologies
         ? (value) => onRepresentationChange(value ? 'morphologies' : 'somas')
         : undefined,
-      // The morphologies are drawn opaque, at their own size.
-      neuronOpacity: morphologies ? undefined : config.neuronOpacity,
-      onNeuronOpacityChange: morphologies ? undefined : (value) => update({ neuronOpacity: value }),
-      somaSizeScale: supportsSomaSize && !morphologies ? config.somaSizeScale : undefined,
-      onSomaSizeScaleChange:
-        supportsSomaSize && !morphologies
-          ? (value: number) => update({ somaSizeScale: value })
-          : undefined,
+      neuronOpacity: somas ? config.neuronOpacity : undefined,
+      onNeuronOpacityChange: somas ? (value) => update({ neuronOpacity: value }) : undefined,
+      somaSizeScale: somas ? config.somaSizeScale : undefined,
+      onSomaSizeScaleChange: somas
+        ? (value: number) => update({ somaSizeScale: value })
+        : undefined,
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
       onToggleElectrodes: supportsElectrodes
         ? (value) => update({ showElectrodes: value })
@@ -276,9 +276,9 @@ export function useCircuitColorBy(
       supportsAxons,
       supportsElectrodes,
       supportsMorphologyLocations,
-      supportsSomaSize,
       supportsMorphologies,
       morphologies,
+      somas,
       onRepresentationChange,
       hasSavedConfig,
       update,
