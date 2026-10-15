@@ -28,15 +28,8 @@ const neuronBlockSchema = z.object({
  * flattens a list of single-key `{ name: unit }` entries into `{ name, unit }` records, suffixing
  * each bare NMODL name with the model's `nmodl_suffix` (e.g. `gkv_6_2bar` -> `gkv_6_2bar_kv_6_2`).
  *
- * `neuron_block.range` holds the variable's bare name as it appears inside the mod file itself —
- * no suffix needed there, since the file only ever describes its own mechanism. Everywhere else
- * (BluePyEModel's optimisation output, `obione-emodeloptimizationvariables-getall`) the same
- * variable is addressed by its qualified NEURON name, suffix included: see ObiOne's
- * `_create_mechanism_variable_from_ion_channel` (`obi_one/scientific/library/emodel_parameters.py`),
- * which builds `f"{var_name}_{suffix}"` from the same two inputs. `MechanismRegionSelection.parameters`
- * is a bare `dict[str, ...]` with no key-format check, so writing the bare name here instead of the
- * qualified one doesn't fail validation — it just never matches what the AI agent (or anything else
- * going through the qualified name) writes, leaving the checkbox silently unchecked.
+ * obi-one expects parameter keys as `paramName_nmodlSuffix`, not the bare name `neuron_block.range`
+ * gives us.
  */
 function flattenEntries(
   entries: Array<Record<string, string | null>>,
