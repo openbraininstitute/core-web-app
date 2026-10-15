@@ -102,6 +102,7 @@ export function DetailReadout({
           >
             <option value="auto">Auto</option>
             <option value="webgl">WebGL 2</option>
+            <option value="webgpu">WebGPU (incomplete)</option>
           </select>
         </label>
       </div>

@@ -139,7 +139,8 @@ export function CircuitCells({
   onLeftOut,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const [choice, setChoice] = useState<TierChoice>('auto');
+  /** What the view is made for: a new one, made again on WebGL 2, once the GPU device is lost. */
+  const [making, setMaking] = useState<{ choice: TierChoice }>({ choice: 'auto' });
   const [created, setCreated] = useState<CreatedView | null>(null);
   const viewer = created?.view ?? null;
   const theme = themeFromBackground(backgroundColor);
@@ -159,16 +160,18 @@ export function CircuitCells({
       made = view;
       setCreated(view);
     };
-    const making = createCircuitView(host, choice);
-    if (making instanceof Promise) {
-      making.then(take, (e: unknown) => logError('Could not make the circuit view', e));
-    } else take(making);
+    const view = createCircuitView(host, making.choice, () => {
+      if (!gone) setMaking((was) => ({ ...was }));
+    });
+    if (view instanceof Promise) {
+      view.then(take, (e: unknown) => logError('Could not make the circuit view', e));
+    } else take(view);
     return () => {
       gone = true;
       setCreated(null);
       made?.view.dispose();
     };
-  }, [choice]);
+  }, [making]);
 
   // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
   // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
@@ -329,7 +332,11 @@ export function CircuitCells({
             <DetailReadout
               viewer={viewer}
               theme={theme}
-              renderer={{ ...created, choice, onChoice: setChoice }}
+              renderer={{
+                ...created,
+                choice: making.choice,
+                onChoice: (choice) => setMaking({ choice }),
+              }}
             />
           )}
         </div>

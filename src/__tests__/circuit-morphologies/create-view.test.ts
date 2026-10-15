@@ -7,12 +7,29 @@ const h = vi.hoisted(() => {
   class FakeViewer {
     constructor(readonly host: HTMLElement) {}
   }
-  return { FakeViewer };
+  /** The WebGPU engine: made on the device, or failing to start where the test says. */
+  const gpu = {
+    fails: false,
+    made: [] as { host: HTMLElement; device: unknown; onLost: () => void }[],
+    create: async (host: HTMLElement, device: unknown, onLost: () => void) => {
+      if (gpu.fails) throw new Error('no pipeline');
+      const view = { host, device, onLost };
+      gpu.made.push(view);
+      return view;
+    },
+  };
+  return { FakeViewer, gpu, logError: vi.fn() };
 });
 
 vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer', () => ({
   CircuitMorphologyViewer: h.FakeViewer,
 }));
+
+vi.mock('@/features/circuit-viewer/morphologies/engine/webgpu/circuit-morphology-gpu', () => ({
+  CircuitMorphologyGPU: { create: h.gpu.create },
+}));
+
+vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
 const GIB = 2 ** 30;
 
@@ -45,24 +62,28 @@ function withGPU(requestAdapter: () => Promise<unknown>) {
 }
 
 const host = () => document.createElement('div');
+const unheard = () => {};
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  h.gpu.fails = false;
+  h.gpu.made = [];
+  h.logError.mockClear();
 });
 
 describe('createCircuitView', () => {
   it('draws with WebGL 2 at once in a browser without WebGPU', () => {
     vi.stubGlobal('navigator', {});
     const into = host();
-    const made = createCircuitView(into, 'auto');
+    const made = createCircuitView(into, 'auto', unheard);
     expect(made).not.toBeInstanceOf(Promise);
     expect(made).toMatchObject({ tier: 'webgl', reason: 'no WebGPU in this browser' });
-    expect((made as { view: InstanceType<typeof h.FakeViewer> }).view.host).toBe(into);
+    expect((made as unknown as { view: InstanceType<typeof h.FakeViewer> }).view.host).toBe(into);
   });
 
   it('draws with WebGL 2 at once where the debug tools ask for it, asking nothing of WebGPU', () => {
     const gpu = withGPU(async () => adapterOf().adapter);
-    expect(createCircuitView(host(), 'webgl')).toMatchObject({
+    expect(createCircuitView(host(), 'webgl', unheard)).toMatchObject({
       tier: 'webgl',
       reason: 'chosen in the debug tools',
     });
@@ -101,7 +122,7 @@ describe('createCircuitView', () => {
     ],
   ])('falls back to WebGL 2 on %s, saying why', async (_case, requestAdapter, reason) => {
     withGPU(requestAdapter);
-    await expect(createCircuitView(host(), 'auto')).resolves.toMatchObject({
+    await expect(createCircuitView(host(), 'webgpu', unheard)).resolves.toMatchObject({
       tier: 'webgl',
       reason,
     });
@@ -110,8 +131,9 @@ describe('createCircuitView', () => {
   it('asks the high-performance adapter for a device with all its features and its buffers up to 2 GiB', async () => {
     const { adapter, device } = adapterOf({ binding: 4 * GIB, buffer: 1.5 * GIB });
     const gpu = withGPU(async () => adapter);
+    const into = host();
 
-    const made = await createCircuitView(host(), 'auto');
+    const made = await createCircuitView(into, 'webgpu', unheard);
 
     expect(gpu.requestAdapter).toHaveBeenCalledExactlyOnceWith({
       powerPreference: 'high-performance',
@@ -120,8 +142,49 @@ describe('createCircuitView', () => {
       requiredFeatures: ['timestamp-query', 'float32-filterable'],
       requiredLimits: { maxStorageBufferBindingSize: 2 * GIB, maxBufferSize: 1.5 * GIB },
     });
-    // Nothing draws on it yet: let go of, and WebGL 2 draws.
+    expect(made).toMatchObject({ tier: 'webgpu', reason: null });
+    expect(h.gpu.made).toHaveLength(1);
+    expect(h.gpu.made[0]).toMatchObject({ host: into, device });
+    expect(device.destroy).not.toHaveBeenCalled();
+  });
+
+  it('keeps to WebGL 2 by itself while the WebGPU engine is incomplete, letting the device go', async () => {
+    const { adapter, device } = adapterOf();
+    withGPU(async () => adapter);
+    await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
+      tier: 'webgl',
+      reason: 'the WebGPU engine is not complete yet',
+    });
     expect(device.destroy).toHaveBeenCalledTimes(1);
-    expect(made).toMatchObject({ tier: 'webgl', reason: 'the WebGPU engine is not built yet' });
+    expect(h.gpu.made).toHaveLength(0);
+  });
+
+  it('falls back to WebGL 2 where the WebGPU engine cannot start, letting the device go', async () => {
+    const { adapter, device } = adapterOf();
+    withGPU(async () => adapter);
+    h.gpu.fails = true;
+    await expect(createCircuitView(host(), 'webgpu', unheard)).resolves.toMatchObject({
+      tier: 'webgl',
+      reason: 'WebGPU could not start',
+    });
+    expect(device.destroy).toHaveBeenCalledTimes(1);
+    expect(h.logError).toHaveBeenCalledTimes(1);
+  });
+
+  // Last: the page draws with WebGL 2 from then on.
+  it('tells of a lost device, and draws every view after it with WebGL 2', async () => {
+    const { adapter } = adapterOf();
+    const gpu = withGPU(async () => adapter);
+    const onLost = vi.fn();
+    await createCircuitView(host(), 'webgpu', onLost);
+
+    h.gpu.made[0].onLost();
+
+    expect(onLost).toHaveBeenCalledTimes(1);
+    expect(createCircuitView(host(), 'webgpu', unheard)).toMatchObject({
+      tier: 'webgl',
+      reason: 'the graphics were reset',
+    });
+    expect(gpu.requestAdapter).toHaveBeenCalledTimes(1);
   });
 });
