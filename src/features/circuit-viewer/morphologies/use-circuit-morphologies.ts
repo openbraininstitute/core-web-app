@@ -90,6 +90,8 @@ export function useCircuitMorphologies(
         if (signal.aborted) return;
         logError('Could not load the circuit morphologies', e);
         stop({ kind: 'failed' });
+        // A pack loaded but not shown lets go of its worker.
+        controller.abort();
       });
     }, 0);
 

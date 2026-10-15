@@ -66,8 +66,8 @@ export function createPackApi(cache: CacheBounds) {
         if (download.kind === 'refused') return download;
         const { bytes } = download;
         pack = await openPack(bytes);
-        // Not awaited: the worker stays for the reads, and a write that fails leaves no entry.
-        void writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
+        // Before the answer: once it has the pack, the page may let go of the worker at any time.
+        await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
       }
       const numbers = pageCells(pack.data.populations, populations);
       opened = { readBox: pack.readBox, numbers };

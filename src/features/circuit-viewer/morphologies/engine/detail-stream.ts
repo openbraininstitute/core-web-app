@@ -52,7 +52,9 @@ export class DetailStream {
   private ready = new Map<number, { level: number; segments: MorphologySegments }>();
   private reading = false;
   private stopped = false;
-  private failed = false;
+  /** The boxes of a batch that could not be read, which are read no more, and whether that was told. */
+  private unread = new Set<number>();
+  private told = false;
 
   /** `onRead` is told when boxes came in, to be placed. */
   constructor(chunks: MorphologyChunks, arena: SegmentArena, onRead: () => void) {
@@ -166,16 +168,17 @@ export class DetailStream {
     return level < 0 ? 0 : this.chunks.levels[level].segments[box];
   }
 
-  /** The boxes wanted and neither drawn nor in, a batch of them, unless a batch is being read. */
+  /** The boxes wanted and neither drawn, in nor unreadable, a batch of them, unless a batch is being read. */
   private read(): void {
     const { detail, drawn } = this;
-    if (!detail || this.stopped || this.failed || this.reading) return;
+    if (!detail || this.stopped || this.reading) return;
     const batch: BoxRead[] = [];
     let size = 0;
     for (const box of detail.order) {
       const level = detail.levels[box];
       const segments = this.segmentsAt(box, level);
       if (segments === 0 || level === drawn[box] || this.ready.get(box)?.level === level) continue;
+      if (this.unread.has(box)) continue;
       if (!this.still && drawn[box] >= 0 && level < drawn[box]) continue;
       batch.push({ level, box });
       size += segments;
@@ -196,9 +199,11 @@ export class DetailStream {
       (e: unknown) => {
         this.reading = false;
         if (this.stopped || isAbort(e)) return;
-        // What is drawn stays; nothing more is read.
-        this.failed = true;
-        logError('Could not read the circuit morphologies', e);
+        // What is drawn of them stays, and the others are read on.
+        for (const { box } of batch) this.unread.add(box);
+        if (!this.told) logError('Could not read the circuit morphologies', e);
+        this.told = true;
+        this.read();
       }
     );
   }

@@ -140,9 +140,6 @@ async function readLevel(data: CircuitMorphologyData, level = 0): Promise<Morpho
   return joined(await chunks.read(boxes));
 }
 
-/** The pack in the cache, once its write, which the load does not wait for, is done. */
-const cachedSoon = () => vi.waitFor(() => expect(cached()?.body).toEqual(small()));
-
 const serve = (bytes: Uint8Array, options?: { length: boolean }) => {
   const server = fakeServer({ [URL_A]: bytes }, options);
   const fetch = vi.fn(server.fetch);
@@ -174,7 +171,7 @@ describe('loadCircuitMorphologies', () => {
     const [worker] = workers;
     expect(worker.terminated).toBe(false);
     expect(worker.handedOver.map((buffer) => buffer.byteLength)).toEqual([0]);
-    await cachedSoon();
+    expect(cached()?.body).toEqual(small());
   });
 
   it("reads the pack's boxes from the worker, every level, and hands their arrays over", async () => {
@@ -238,7 +235,7 @@ describe('loadCircuitMorphologies', () => {
   it('opens the pack from the cache on a later visit', async () => {
     const { served } = serve(small());
     await loaded();
-    await cachedSoon();
+    expect(cached()?.body).toEqual(small());
     const onProgress = vi.fn();
     const second = await load({ onProgress });
 
@@ -261,14 +258,14 @@ describe('loadCircuitMorphologies', () => {
   it('drops a cached pack that does not open, and fetches it again', async () => {
     const { served } = serve(small());
     await loaded();
-    await cachedSoon();
+    expect(cached()?.body).toEqual(small());
     replaceCached(broken());
     const again = await loaded();
 
     expect(again.fromCache).toBe(false);
     expect(again.data).toEqual(await opened(small()));
     expect(served.requests).toBe(2);
-    await cachedSoon();
+    expect(cached()?.body).toEqual(small());
   });
 
   it('fails on a pack that does not open, does not keep it, and terminates the worker', async () => {

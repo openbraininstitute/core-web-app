@@ -45,7 +45,8 @@ export function renumberSomas(
   const somas = new Float32Array(4 * cells).fill(NaN);
   for (let i = 3; i < somas.length; i += 4) somas[i] = 0;
   numbers.forEach((page, cell) => {
-    if (page !== NONE) somas.set(data.somas.subarray(4 * cell, 4 * cell + 4), 4 * page);
+    if (page === NONE) return;
+    for (let k = 0; k < 4; k++) somas[4 * page + k] = data.somas[4 * cell + k];
   });
   return { ...data, somas, populations };
 }

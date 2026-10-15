@@ -316,10 +316,8 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
       segmentCells: new Uint32Array(n),
       segmentTypes: new Uint8Array(n),
     };
-    streams[level] ??= Array.from(
-      { length: STREAMS },
-      () => new Int32Array(Math.max(0, ...chunks.segments))
-    );
+    const largest = chunks.segments.reduce((most, n) => Math.max(most, n), 0);
+    streams[level] ??= Array.from({ length: STREAMS }, () => new Int32Array(largest));
     const target: Target = {
       out,
       centre,

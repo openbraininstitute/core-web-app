@@ -205,10 +205,7 @@ export interface CircuitMorphologyView extends ViewControls {
    * a time want. The arrays are kept, not copied.
    */
   setData(data: CircuitMorphologyData | null, follow?: boolean): void;
-  /**
-   * How much is drawn of morphologies read a box at a time (`CircuitMorphologyData.chunks`). A budget is held to the
-   * most the view can draw.
-   */
+  /** How much is drawn of morphologies read a box at a time (`CircuitMorphologyData.chunks`). */
   setDetailRules(rules: Partial<DetailRules>): void;
   /** Told what is drawn of morphologies read a box at a time whenever it changes, and null where there are none. */
   onDetail(listener: (detail: DetailStats | null) => void): () => void;

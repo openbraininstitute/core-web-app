@@ -24,16 +24,26 @@ export function wrapWorker<T>(worker: Worker): WorkerHandle<T> {
 }
 
 export interface KeptWorker<T> {
-  /** `call` made on the worker, raced against the signal and the worker's death. */
+  /** `call` made on the worker, ended by the signal's abort or the worker's death. */
   call<R>(call: (api: Comlink.Remote<T>) => Promise<R>): Promise<R>;
   terminate(): void;
 }
 
-/** A worker of its own, kept until `signal` aborts or it is terminated. */
+/**
+ * A worker of its own, kept until `signal` aborts or it is terminated. The calls under way are ended when it dies or
+ * the signal aborts, each one alone: a race against a promise that never settles would hold every answer.
+ */
 export function keepWorker<T>(make: () => WorkerHandle<T>, signal: AbortSignal): KeptWorker<T> {
   signal.throwIfAborted();
   const worker = make();
-  let onAbort = () => {};
+  const pending = new Set<(reason: unknown) => void>();
+  let ended: { reason: unknown } | null = null;
+  const end = (reason: unknown) => {
+    if (ended) return;
+    ended = { reason };
+    for (const reject of pending) reject(reason);
+    pending.clear();
+  };
   let terminated = false;
   const terminate = () => {
     if (terminated) return;
@@ -41,15 +51,24 @@ export function keepWorker<T>(make: () => WorkerHandle<T>, signal: AbortSignal):
     signal.removeEventListener('abort', onAbort);
     worker.terminate();
   };
-  const aborted = new Promise<never>((_, reject) => {
-    onAbort = () => {
-      terminate();
-      reject(signal.reason);
-    };
-    signal.addEventListener('abort', onAbort, { once: true });
-  });
-  aborted.catch(() => {});
-  return { call: (call) => Promise.race([call(worker.api), worker.died, aborted]), terminate };
+  const onAbort = () => {
+    terminate();
+    end(signal.reason);
+  };
+  signal.addEventListener('abort', onAbort, { once: true });
+  worker.died.catch(end);
+  return {
+    call<R>(call: (api: Comlink.Remote<T>) => Promise<R>): Promise<R> {
+      if (ended) return Promise.reject(ended.reason);
+      return new Promise<R>((resolve, reject) => {
+        pending.add(reject);
+        call(worker.api)
+          .then(resolve, reject)
+          .finally(() => pending.delete(reject));
+      });
+    },
+    terminate,
+  };
 }
 
 /**

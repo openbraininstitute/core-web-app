@@ -180,7 +180,25 @@ describe('DetailStream', () => {
     expect(stream.stats(RULES).wanted).toBe(120);
   });
 
-  it('reads no more after a read fails, which it logs, keeping what is drawn', async () => {
+  it('reads the other boxes on after a batch fails, and no more of those, logging it once', async () => {
+    const { stream, arena, reads } = make();
+    // The budget takes the box nearest the focus alone.
+    stream.update(viewOf(500), { ...RULES, budget: COUNTS[2] }, true);
+    expect(reads[0].wanted).toEqual([{ level: 2, box: 0 }]);
+    reads[0].reject(new Error('morphology pack chunk cut short'));
+    await settled();
+
+    stream.update(viewOf(500), RULES, true);
+    expect(reads[1].wanted.map(({ box }) => box)).toEqual([1, 2, 3]);
+    reads[1].resolve();
+    await settled();
+    stream.apply();
+    expect(arena.sizeOf(0)).toBeUndefined();
+    expect(arena.segments).toBe(3 * COUNTS[2]);
+    expect(h.logError).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps what is drawn of the boxes of a batch that fails', async () => {
     const { stream, arena, reads } = await drawnAt(500);
     stream.update(viewOf(20), RULES, true);
     reads[0].reject(new Error('the worker ran out of memory'));
