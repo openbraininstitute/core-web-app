@@ -1,0 +1,72 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
+import { SectionType } from '@/features/circuit-viewer/section-type';
+
+const h = vi.hoisted(() => ({ fetchCircuitViz: vi.fn() }));
+
+vi.mock('@/api/one/circuit-visualization', () => ({ fetchCircuitViz: h.fetchCircuitViz }));
+
+const SOMA = {
+  id: 'soma',
+  sonata_section_id: 0,
+  parent_id: null,
+  type: SectionType.Soma,
+  points: [[0, 0, 0]],
+  radii: [6],
+};
+
+const MINUTE = 60 * 1000;
+
+// The sections are kept between tests, so each test reads a path of its own.
+const request = (path: string) => ({ path, virtualLabId: 'lab', projectId: 'project' });
+
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  h.fetchCircuitViz.mockReset();
+});
+
+describe("a morphology's sections", () => {
+  it('are read once and parsed once, then served as they were', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    const first = await loadSections(request('once'));
+    const second = await loadSections(request('once'));
+
+    expect(first).toEqual([SOMA]);
+    expect(second).toBe(first);
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(1);
+    expect(h.fetchCircuitViz).toHaveBeenCalledWith('once', {
+      virtualLabId: 'lab',
+      projectId: 'project',
+    });
+  });
+
+  it.each([
+    ['could not be read', () => Promise.reject(new Error('502'))],
+    ['did not parse', () => Promise.resolve([{ ...SOMA, type: 'soma' }])],
+  ])('are read again where they %s', async (what, failure) => {
+    h.fetchCircuitViz.mockImplementationOnce(failure).mockResolvedValue([SOMA]);
+    const path = `again: ${what}`;
+
+    await expect(loadSections(request(path))).rejects.toThrow();
+    await expect(loadSections(request(path))).resolves.toEqual([SOMA]);
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
+  });
+
+  it('are kept an hour from the last time they were asked for', async () => {
+    h.fetchCircuitViz.mockResolvedValue([SOMA]);
+
+    await loadSections(request('kept'));
+    vi.advanceTimersByTime(50 * MINUTE);
+    await loadSections(request('kept'));
+    vi.advanceTimersByTime(50 * MINUTE);
+    await loadSections(request('kept'));
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(60 * MINUTE);
+    await loadSections(request('kept'));
+    expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
+  });
+});

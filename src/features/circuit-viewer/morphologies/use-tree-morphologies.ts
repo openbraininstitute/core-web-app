@@ -2,15 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 
-import {
-  loadSections,
-  type TSectionsRequest,
-} from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import { logError } from '@/utils/logger';
 
 import { populationRanges } from './cell-colors';
 import { extentOf } from './extent';
 import { placeTrees, type TreeCells } from './load/place-trees';
+import { loadSections, type SectionsRequest } from './load/read-sections';
 import { type TreeMorphology, treeOf } from './load/tree';
 
 import type { Sections } from '@/features/scan-config/types';
@@ -19,7 +16,7 @@ import type { CircuitMorphologyData, Vec3 } from './types';
 /** A small circuit's cells, and where each one's morphology is read. Memoise it: another is another scene. */
 export interface TreeSource extends TreeCells {
   /** In the cells' numbering; null for a cell drawn as its soma alone. */
-  requests: readonly (TSectionsRequest | null)[];
+  requests: readonly (SectionsRequest | null)[];
   /** Chart each morphology's dendrogram too, for the view to morph it into. */
   charts?: boolean;
 }
@@ -71,7 +68,7 @@ export class TreeLoader {
 
   constructor(
     private readonly source: TreeSource,
-    private readonly read: (request: TSectionsRequest) => Promise<Sections> = loadSections
+    private readonly read: (request: SectionsRequest) => Promise<Sections> = loadSections
   ) {
     // As the view centres the somas it frames.
     this.centre = extentOf(source.somas.positions)?.mean ?? [0, 0, 0];

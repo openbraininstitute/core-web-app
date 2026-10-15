@@ -8,13 +8,13 @@ import {
 } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
-import type { TSectionsRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
+import type { SectionsRequest } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import type { Sections } from '@/features/scan-config/types';
 
 const h = vi.hoisted(() => ({ logError: vi.fn(), loadSections: vi.fn() }));
 
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
-vi.mock('@/features/scan-config/components/circuit-viz/sequential-loader', () => ({
+vi.mock('@/features/circuit-viewer/morphologies/load/read-sections', () => ({
   loadSections: h.loadSections,
 }));
 
@@ -52,7 +52,7 @@ const SECTIONS: Sections = [
   },
 ];
 
-const request = (path: string): TSectionsRequest => ({
+const request = (path: string): SectionsRequest => ({
   path,
   virtualLabId: 'lab',
   projectId: 'project',
@@ -78,7 +78,7 @@ function source(): TreeSource {
 function reads() {
   const pending: { path: string; resolve(sections: Sections): void; reject(e: Error): void }[] = [];
   const read = vi.fn(
-    ({ path }: TSectionsRequest) =>
+    ({ path }: SectionsRequest) =>
       new Promise<Sections>((resolve, reject) => {
         pending.push({ path, resolve, reject });
       })

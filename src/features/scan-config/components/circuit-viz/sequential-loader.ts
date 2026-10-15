@@ -5,7 +5,6 @@ import { logError } from '@/utils/logger';
 
 import { buildMorphoTree, buildSonataSectionIdIndex } from './build-morpho-tree';
 
-import type { Sections } from '@/features/scan-config/types';
 import type { MorphoViewerSmallCircuitCellData } from '@/morpho-viewer';
 
 /** A loaded cell, plus the SONATA-id index built from the same response. */
@@ -97,20 +96,6 @@ function cachedJson(path: string, virtualLabId: string, projectId: string, label
     morphologiesCache.get(path) ?? loadCellAsync(virtualLabId, projectId, path, label);
   addToCache(path, promise);
   return promise;
-}
-
-/** Where one morphology's sections are read: a `/circuit/viz` or `/memodel/viz` path, in a workspace. */
-export type TSectionsRequest = { path: string; virtualLabId: string; projectId: string };
-
-/** A morphology's sections, kept an hour in the cache the loaders below share; rejects where they cannot be read. */
-export async function loadSections({
-  path,
-  virtualLabId,
-  projectId,
-}: TSectionsRequest): Promise<Sections> {
-  const json = await cachedJson(path, virtualLabId, projectId, path);
-  if (json === null) throw new Error(`Morphology "${path}" could not be loaded.`);
-  return SectionsArraySchema.parse(json);
 }
 
 async function actualLoad({

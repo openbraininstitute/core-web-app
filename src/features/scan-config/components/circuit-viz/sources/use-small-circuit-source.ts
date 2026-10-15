@@ -5,8 +5,8 @@ import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
-import { loadSections } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
@@ -16,8 +16,8 @@ import { useAfferentSynapses } from './use-afferent-synapses';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { PlacedPopulation } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { SectionsRequest } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import type { TreeSource } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
-import type { TSectionsRequest } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { MorphologyLocation } from './resolve-morphology-path';
 import type { TSmallCircuitSource } from './types';
@@ -123,7 +123,7 @@ export function useSmallCircuitSource({
     for (const { geometry } of placed) cells += geometry.count;
     const positions = new Float32Array(3 * cells);
     const orientations = new Float32Array(4 * cells);
-    const requests: (TSectionsRequest | null)[] = [];
+    const requests: (SectionsRequest | null)[] = [];
     let first = 0;
     for (const entry of placed) {
       const { count, positions: at, orientations: turns } = entry.geometry;
