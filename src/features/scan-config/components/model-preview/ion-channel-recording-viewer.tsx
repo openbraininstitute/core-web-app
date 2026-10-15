@@ -8,14 +8,12 @@ import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/io
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { TraceDetailsView } from '@/features/ion-channel-recording-viewer/components/trace-details-view/trace-details-view';
 import useTrace from '@/features/ion-channel-recording-viewer/hooks/use-nwb-trace';
-import { extractRecordingIds } from '@/features/scan-config/components/hooks/electrical-cell-recording-properties';
-import { ScanConfigFromIdType } from '@/features/scan-config/workflow/scan-config-from-id-type';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
-import type { Config } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
+import type { InteractiveViewerProps } from '@/ui/segments/mini-detail-view/interactive-viewers';
 
 function Placeholder({ description }: { description: string }) {
   return (
@@ -45,31 +43,20 @@ function Traces({
   return <TraceDetailsView trace={trace} cls={{ plots: 'flex-col! w-full!' }} />;
 }
 
-function RecordingTraces({ id }: { id: string }) {
+// listing rows lack what the NWB reader needs, so the recording is fetched by id
+export function IonChannelRecordingPreviewViewer({ record }: InteractiveViewerProps) {
   const context = useWorkspace();
   const { data: recording, error } = useQuery({
-    queryKey: keyBuilder.entity({ id, context, type: EntityTypeDict.IonChannelRecording }),
-    queryFn: () => getIonChannelRecording({ id, context }),
+    queryKey: keyBuilder.entity({
+      id: record.id,
+      context,
+      type: EntityTypeDict.IonChannelRecording,
+    }),
+    queryFn: () => getIonChannelRecording({ id: record.id, context }),
     refetchOnWindowFocus: false,
   });
 
   if (error) return <Placeholder description="There was a problem loading the recording" />;
   if (!recording) return spinner;
   return <Traces recording={recording} context={context} />;
-}
-
-export function IonChannelRecordingPreviewPanel({ config }: { config: Config }) {
-  const recordingIds = extractRecordingIds(config, ScanConfigFromIdType.IonChannelRecordingFromID);
-
-  if (!recordingIds.length) {
-    return <Placeholder description="Select an ion channel recording to see its traces" />;
-  }
-
-  return (
-    <div className="secondary-scrollbar h-full min-h-0 overflow-y-auto rounded-xl bg-white px-0.5">
-      {recordingIds.map((id) => (
-        <RecordingTraces key={id} id={id} />
-      ))}
-    </div>
-  );
 }

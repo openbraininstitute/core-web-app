@@ -23,6 +23,7 @@ type TTaskConfigCampaignMeta = {
 export function defineTaskConfigCampaign({
   campaignConfigType,
   campaignName,
+  toForm,
   ...entity
 }: Pick<
   EntityCoreTypeConfig<ITaskConfig<TTaskConfigCampaignMeta>>,
@@ -30,6 +31,8 @@ export function defineTaskConfigCampaign({
 > & {
   campaignConfigType: TTaskConfigType;
   campaignName: string;
+  /** brings a config saved by an older schema to the current one */
+  toForm?: (config: Record<string, unknown>) => unknown;
 }) {
   async function list({
     withFacets,
@@ -81,7 +84,7 @@ export function defineTaskConfigCampaign({
 
     return {
       campaign,
-      config,
+      config: config?.form && toForm ? { ...config, form: toForm(config.form) } : config,
       sourceEntityId: taskRows.at(0)?.provenance.config.inputs.at(0)?.id ?? null,
     };
   }

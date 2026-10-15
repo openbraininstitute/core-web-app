@@ -78,7 +78,6 @@ export const RightPreviewModeDict = {
   Settings: 'settings',
   EntityPreview: 'entity-preview',
   IonChannel: 'ion-channel',
-  IonChannelRecording: 'ion-channel-recording',
   EFeatures: 'efeatures',
   CircuitModel: 'circuit-model',
   Empty: 'empty',
@@ -94,10 +93,7 @@ export type TRightPreviewMode = (typeof RightPreviewModeDict)[keyof typeof Right
  * selection opens elsewhere. A click on an entity still wins; only the selection side effect is
  * ignored.
  */
-const WorkflowOwnedPreviews = new Set<TRightPreviewMode>([
-  RightPreviewModeDict.EFeatures,
-  RightPreviewModeDict.IonChannelRecording,
-]);
+const WorkflowOwnedPreviews = new Set<TRightPreviewMode>([RightPreviewModeDict.EFeatures]);
 
 /**
  * Resolve which exclusive preview the right column should show.
@@ -144,14 +140,6 @@ export function resolveRightPreviewMode(options: {
           entityType: ExtendedEntitiesTypeDict.ElectricalCellRecording,
         },
         () => RightPreviewModeDict.EFeatures
-      )
-      // likewise the ion channel build, whose recordings are picked inside the editor
-      .with(
-        {
-          activity: ScanConfigActivity.Build,
-          entityType: ExtendedEntitiesTypeDict.IonChannelRecording,
-        },
-        () => RightPreviewModeDict.IonChannelRecording
       )
       .when(
         (state) => shouldShowCircuitModelPreview(state),

@@ -7,6 +7,7 @@ import type {
   EntityCoreType,
   IBrainLocation,
   ILicense,
+  NestedSubject,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -85,4 +86,6 @@ export interface IIonChannelRecording
   license?: ILicense | null;
   brain_region: BrainRegionHierarchyBase;
   ion_channel: IonChannel;
+  subject: NestedSubject;
+  temperature: number | null;
 }
