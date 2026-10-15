@@ -288,5 +288,7 @@ describe('useSmallCircuitSource', () => {
     placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
     const { result } = render([DEFAULT, INPUTS], DEFAULT, ['default']);
     expect(colorsOf(result.current.cellColors)).toEqual([false, '#cccccc']);
+    // Its locations go with it: nothing is drawn to mark them on.
+    expect(result.current.locationCells).toEqual([]);
   });
 });

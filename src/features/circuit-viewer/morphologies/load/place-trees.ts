@@ -1,3 +1,5 @@
+import { IDENTITY_QUATERNION, unitQuaternion } from '@/features/circuit-nodes/geometry-utils';
+
 import { morphologiesExtent } from '../extent';
 
 import type { CircuitMorphologyData, CircuitSomas, Vec3 } from '../types';
@@ -16,16 +18,12 @@ export interface TreeCells {
   orientations: Float32Array | null;
 }
 
-const IDENTITY = [0, 0, 0, 1];
 const NO_SOMA = [NaN, NaN, NaN, 0];
 
-/** The cell's rotation, made of unit length; none where it has no length to make. */
-function rotationOf(orientations: Float32Array | null, cell: number): number[] {
-  if (!orientations) return IDENTITY;
-  const q = Array.from(orientations.subarray(4 * cell, 4 * cell + 4));
-  const length = Math.hypot(...q);
-  return length > 0 && Number.isFinite(length) ? q.map((v) => v / length) : IDENTITY;
-}
+const rotationOf = (orientations: Float32Array | null, cell: number): number[] =>
+  orientations
+    ? unitQuaternion(orientations.subarray(4 * cell, 4 * cell + 4))
+    : IDENTITY_QUATERNION;
 
 /** `from`'s three floats at `i`, turned by `q` and moved by `by`, into `to` at `j`. */
 function place(
@@ -83,7 +81,7 @@ export function placeTrees(
     firstSegments[cell] = first;
     const tree = morphologies[cell];
     for (let k = 0; k < 3; k++) by[k] = positions[3 * cell + k] - centre[k];
-    const q = tree ? rotationOf(orientations, cell) : IDENTITY;
+    const q = tree ? rotationOf(orientations, cell) : IDENTITY_QUATERNION;
     const soma = 4 * cell;
     if (!placed(cell) || (tree && !tree.soma)) {
       somaArray.set(NO_SOMA, soma);

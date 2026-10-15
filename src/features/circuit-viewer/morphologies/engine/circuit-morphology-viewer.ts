@@ -211,6 +211,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
   private spots = new THREE.Scene();
   private spotUniforms = { uSegments: { value: 0 } };
+  /** The read of `spots` at a point asked for in this task, which the pick of its cell and of its section share. */
+  private spotRead: { x: number; y: number; read: Promise<number | null> } | null = null;
   private spotMaterials = {
     segment: idMaterial('segment', this.uniforms, this.spotUniforms),
     soma: idMaterial('soma', this.uniforms, this.spotUniforms),
@@ -584,10 +586,31 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
   }
 
   pick(x: number, y: number): Promise<number | null> {
-    const table = this.table;
+    const { table, layer } = this;
     if (!table) return Promise.resolve(null);
+    // Where the morphologies were read whole, the pick of a section tells the cell too, and the two share one read.
+    const read = layer?.data.trees
+      ? this.spotAt(x, y).then((n) => {
+          const { segmentCells } = layer.data;
+          if (n === null || this.layer !== layer) return null;
+          return n < segmentCells.length ? segmentCells[n] : n - segmentCells.length;
+        })
+      : this.numberAround(this.ids, x, y);
     // Other data by now has other cells.
-    return this.numberAround(this.ids, x, y).then((cell) => (this.table === table ? cell : null));
+    return read.then((cell) => (this.table === table ? cell : null));
+  }
+
+  /** The segment or soma drawn nearest a point of the view, as `spots` numbers them; one read for a point at a time. */
+  private spotAt(x: number, y: number): Promise<number | null> {
+    const last = this.spotRead;
+    if (last?.x === x && last.y === y) return last.read;
+    const read = this.numberAround(this.spots, x, y);
+    this.spotRead = { x, y, read };
+    // Asked again later, the view may have moved.
+    queueMicrotask(() => {
+      if (this.spotRead?.read === read) this.spotRead = null;
+    });
+    return read;
   }
 
   pickSection(x: number, y: number): Promise<SectionSpot | null> {
@@ -599,7 +622,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     const shift = this.uniforms.uShift.value.toArray() as Vec3;
     const mix = this.uniforms.uMix.value;
     const seen = (p: Vec3) => onScreen([p[0] + shift[0], p[1] + shift[1], p[2] + shift[2]]);
-    return this.numberAround(this.spots, x, y).then((n) => {
+    return this.spotAt(x, y).then((n) => {
       if (n === null || this.layer !== layer) return null;
       const segments = data.segmentCells.length;
       let at: { cell: number; section: TreeSection; offset: number } | null;

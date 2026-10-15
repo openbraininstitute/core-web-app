@@ -1553,6 +1553,23 @@ describe('the pick of a section', () => {
     await expect(viewer.pickSection(10, 10)).resolves.toBeNull();
   });
 
+  it('tells the cell from the same read, a soma alone too, where the morphologies were read whole', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(neuron());
+    const scenes: THREE.Scene[] = [];
+    inner.renderer.render.mockImplementation((scene: THREE.Scene) => scenes.push(scene));
+    drawn(inner, 2);
+    const [x, y] = onScreen(inner, [111.2, 1.6, 10]);
+    const [cell, spot] = await Promise.all([viewer.pick(x, y), viewer.pickSection(x, y)]);
+    expect([cell, spot?.cell]).toEqual([1, 1]);
+    expect(scenes).toEqual([inner.spots]);
+    expect(inner.renderer.readRenderTargetPixelsAsync).toHaveBeenCalledTimes(1);
+    // Asked again, it reads again: the view may have moved since.
+    drawn(inner, 4 + 0);
+    await expect(viewer.pick(x, y)).resolves.toBe(0);
+    expect(inner.renderer.readRenderTargetPixelsAsync).toHaveBeenCalledTimes(2);
+  });
+
   it('finds none, drawing nothing, of morphologies not read whole', async () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());

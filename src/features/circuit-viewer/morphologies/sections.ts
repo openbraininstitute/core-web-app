@@ -86,14 +86,19 @@ export function pointAtOffset(
   return null;
 }
 
-/** The cell's section that SONATA numbers `sonataId`; null where its morphology was not read whole or has none. */
+/**
+ * The cell's section that SONATA numbers `sonataId`; null where its morphology was not read whole or has none. SONATA
+ * numbers the soma 0, which OBI-One may send unnumbered.
+ */
 export function sectionNumbered(
   data: CircuitMorphologyData,
   cell: number,
   sonataId: number
 ): TreeSection | null {
+  const sections = data.trees?.morphologies[cell]?.sections;
   return (
-    data.trees?.morphologies[cell]?.sections.find((section) => section.sonataId === sonataId) ??
+    sections?.find((section) => section.sonataId === sonataId) ??
+    (sonataId === 0 ? sections?.find((section) => section.type === SectionType.Soma) : null) ??
     null
   );
 }

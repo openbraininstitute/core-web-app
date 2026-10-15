@@ -58,7 +58,7 @@ export interface LocationLabel {
   visible: boolean;
 }
 
-/** Pointer rest time before the hover popover appears. The hand cursor is never delayed. */
+/** Pointer rest time before the hover popover appears. The hand cursor waits only on the pick under the pointer. */
 const HOVER_REST_DELAY_IN_MS = 300;
 
 /** A marker's location, and the block and row it came from. */

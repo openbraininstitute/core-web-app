@@ -184,16 +184,16 @@ export function useSmallCircuitSource({
   );
 
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
-  // sections number the same way.
+  // sections number the same way. None while it is hidden, whose cells are not drawn.
   const locationCells = useMemo(() => {
     const range = tree
       ? populationRanges(tree.somas.populations).find(({ name }) => name === populationName)
       : undefined;
-    if (!tree || !range) return [];
+    if (!tree || !range || hidden.has(range.name)) return [];
     return Array.from({ length: range.end - range.first }, (_, i) => range.first + i).filter(
       (cell) => tree.requests[cell] !== null
     );
-  }, [tree, populationName]);
+  }, [tree, populationName, hidden]);
 
   /** Population the afferent synapses target: the first one with morphologies, whatever is on show. */
   const synapseTarget = useMemo(

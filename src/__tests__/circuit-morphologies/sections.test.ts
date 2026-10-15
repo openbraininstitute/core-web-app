@@ -130,6 +130,23 @@ describe('a morphology location', () => {
     expect(rounded(pointAtOffset(placed, 1, soma, 0.5))).toEqual([100, 0, 10]);
   });
 
+  it('is on the soma at section 0 where OBI-One sent the soma unnumbered', () => {
+    const unnumbered = SECTIONS.map((section) =>
+      section.type === SectionType.Soma ? { ...section, sonata_section_id: undefined } : section
+    );
+    const placed = placeTrees(
+      {
+        somas: { positions: Float32Array.of(100, 0, 0), populations: [{ name: 'A', cells: 1 }] },
+        orientations: null,
+      },
+      [treeOf(unnumbered, { axons: true })],
+      [0, 0, 0]
+    );
+    expect(sectionNumbered(placed, 0, 0)).toEqual(
+      expect.objectContaining({ sonataId: null, type: SectionType.Soma })
+    );
+  });
+
   it('is nowhere on a cell whose morphology was not read whole, nor on a section it has not', () => {
     const placed = data();
     expect(sectionNumbered(placed, 1, 9)).toBeNull();
