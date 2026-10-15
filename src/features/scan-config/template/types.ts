@@ -22,6 +22,7 @@ export type ScanConfigTemplateProps = {
   defaultTab?: TScanConfigTabs;
   readOnly?: boolean;
   className?: string;
+  hideTabs?: boolean;
   activity: TScanConfigActivity;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   schemaMappingConfig: TSchemaMappingConfiguration | undefined;

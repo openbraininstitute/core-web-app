@@ -58,6 +58,7 @@ export function useScanConfigTemplate({
   workflowSessionSelection,
   resolveSessionFromIdType,
   seed,
+  hideTabs,
 }: ScanConfigTemplateProps) {
   const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
@@ -182,7 +183,8 @@ export function useScanConfigTemplate({
     setSelectedRegionModel('');
   }, []);
 
-  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId));
+  // without the tab strip only the configuration can be shown, whatever `?tab=` says
+  const tab = resolveScanConfigTab(urlTab, activity, Boolean(campaignId) && !hideTabs);
   const isConfigurationTab = tab.id === ScanConfigTabs[activity].configuration;
 
   // a mini detail view belongs to the tab it was opened from; switching any tab closes it, except

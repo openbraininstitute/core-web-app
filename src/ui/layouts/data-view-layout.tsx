@@ -9,7 +9,6 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
-import { hasHardcodedMechanisms } from '@/features/entities/e-model/hardcoded-mechanisms';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
@@ -94,10 +93,8 @@ export async function DataViewLayout({
    * Section content is the only part that uses the blue panel variant.
    */
   const chromeVariant = ViewVariant.Light;
-  // an e-model's Configuration is the full-page optimisation scan config, unless it is one of the
-  // older e-models with a hard-coded mechanisms file, which keep the classic view
-  const configurationFullPage =
-    type === ExtendedEntitiesTypeDict.Emodel && !(await hasHardcodedMechanisms(entity.name));
+  // an e-model's Configuration is the full-page optimisation scan config
+  const configurationFullPage = type === ExtendedEntitiesTypeDict.Emodel;
 
   const breadcrumbs = (
     <DataBreadcrumb
