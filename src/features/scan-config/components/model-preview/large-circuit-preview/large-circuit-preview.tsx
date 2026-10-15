@@ -3,8 +3,6 @@ import { useSetAtom } from 'jotai';
 import React from 'react';
 
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
-import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import { cellColorsOf, populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
@@ -17,6 +15,7 @@ import {
   DEFAULT_SOMA_SIZE_SCALE,
 } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
@@ -26,10 +25,7 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type {
-  CircuitSomas,
-  ElectrodeTransform,
-} from '@/features/circuit-viewer/morphologies/types';
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
@@ -155,40 +151,21 @@ export function LargeCircuitPreview({
   const debugMode = useCircuitViewerDebugMode();
   const speciesRadius = useSomaRadius(circuit);
   const somaRadius = speciesRadius * somaSizeScale;
-  const { config, error: configError } = useCircuitConfig(circuit);
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  // Nothing is reported placed until everything is, so anything placed at all
-  // means the whole scene can be built.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
-    circuit,
-    populations,
-  });
+  const {
+    placed,
+    download,
+    subject: placedSubject,
+    hidden,
+    hasContext,
+    error,
+    somas,
+    receded,
+  } = usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
   const subjectName = population?.name;
-  const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
-  const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
-  // Context is what is on screen beside the subject, so a hidden population is
-  // not it: there is nothing to recede behind the subject and nothing a click
-  // could land on.
-  const hasContext = placed.some(
-    (entry) => entry.population.name !== subjectName && !hidden.has(entry.population.name)
-  );
-
-  // A config that loads but names no node population would otherwise leave the
-  // viewer on its spinner for good: nothing is asked for, so nothing ever fails.
-  const noPopulation =
-    config && !population
-      ? new Error('This circuit’s circuit_config.json declares no node populations')
-      : null;
-  // A population that could not be placed is context that goes undrawn, the one
-  // on show included: an input population carries no positions, and picking it
-  // out of the checklist should not take the circuit off the screen. Only a
-  // scene with nothing in it at all is worth covering the canvas for, and then
-  // the reason is whichever population failed.
-  const noPlacement =
-    !settled || placed.length > 0 ? null : (failures.values().next().value ?? null);
-  const error = configError ?? noPopulation ?? noPlacement;
+  const subject = placedSubject?.geometry ?? null;
 
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
@@ -213,62 +190,26 @@ export function LargeCircuitPreview({
     saveAs(new Blob(parts, { type: 'application/json' }), `${circuit.id}.json`);
   };
 
-  // In declared order, with the population on show in its own place, so a soma
-  // keeps its index and position whichever population is selected. Built once,
-  // from the placement alone: other somas are another scene to the viewer, whose
-  // crowding it works out again, so this must not change when the selection
-  // does. Colours are passed separately, below. The positions are straight
-  // typed-array copies, since the geometries already hold the flat triples the
-  // viewer reads.
-  const cells = React.useMemo((): CircuitSomas => {
-    const populations = placed.map(({ population: candidate, geometry }) => ({
-      name: candidate.name,
-      cells: geometry.count,
-    }));
-    // With a single population, reuse the placement's own array: the hook
-    // keeps it alive anyway, so copying would double region-scale residency.
-    if (placed.length === 1) return { positions: placed[0].geometry.positions, populations };
-    let length = 0;
-    for (const { geometry } of placed) length += geometry.positions.length;
-    const all = new Float32Array(length);
-    let offset = 0;
-    for (const { geometry } of placed) {
-      all.set(geometry.positions, offset);
-      offset += geometry.positions.length;
-    }
-    return { positions: all, populations };
-  }, [placed]);
-
-  // Only where something recedes: this colour follows the background, and a
-  // single-population scene should not repaint when the background changes.
-  // Hiding the population on show is not that exception it looks like:
-  // nothing on screen is the selection then either, and the viewer's own ramp
-  // would say the opposite, lighting the whole rest of the circuit up the
-  // moment the user takes the selection out of it.
-  // With the population on show unplaceable there is no selection on screen to
-  // recede behind, and receding everything would grey the whole circuit out.
-  const recede = hasContext && subject ? recededColor : undefined;
-
   // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
   // colour of ours would flatten an uncoloured cloud to a single hue.
   const cellColors = React.useMemo(
     () =>
       cellColorsOf({
-        populations: cells.populations,
+        populations: somas.populations,
         subject: subjectName,
         nodeColors,
-        receded: recede,
+        receded,
         hidden,
       }),
-    [cells.populations, subjectName, nodeColors, recede, hidden]
+    [somas.populations, subjectName, nodeColors, receded, hidden]
   );
 
   const handleCellClick = React.useCallback(
     (index: number) => {
-      const name = populationAt(cells.populations, index);
+      const name = populationAt(somas.populations, index);
       if (name !== undefined && name !== subjectName) onPopulationClick?.(name);
     },
-    [cells.populations, subjectName, onPopulationClick]
+    [somas.populations, subjectName, onPopulationClick]
   );
   // Only offered when there is something to select.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;
@@ -280,9 +221,9 @@ export function LargeCircuitPreview({
   const morphologiesSource = React.useMemo(
     () =>
       wantsMorphologies && drawable
-        ? { circuitId: circuit.id, ...cells, somaRadius: speciesRadius }
+        ? { circuitId: circuit.id, ...somas, somaRadius: speciesRadius }
         : null,
-    [wantsMorphologies, drawable, circuit.id, cells, speciesRadius]
+    [wantsMorphologies, drawable, circuit.id, somas, speciesRadius]
   );
   const morphologies = useCircuitMorphologies(morphologiesSource, () =>
     onRepresentationChange?.('somas')
@@ -302,7 +243,7 @@ export function LargeCircuitPreview({
       )}
       {drawable && (
         <LazyCircuitCells
-          somas={cells}
+          somas={somas}
           somaRadius={somaRadius}
           somaOpacity={neuronOpacity}
           data={shown}

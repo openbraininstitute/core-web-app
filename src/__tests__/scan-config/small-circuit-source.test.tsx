@@ -91,6 +91,7 @@ type TProps = {
   population: NodePopulation;
   populations?: NodePopulation[];
   hiddenPopulations?: string[];
+  recededColor?: string;
 };
 
 function render(
@@ -105,7 +106,7 @@ function render(
         circuit,
         ...props,
         populations: props.populations ?? [props.population],
-        recededColor: '#cccccc',
+        recededColor: props.recededColor ?? '#cccccc',
       }),
     { initialProps }
   );
@@ -275,6 +276,22 @@ describe('useSmallCircuitSource', () => {
     rerender({ population: DEFAULT, populations: [DEFAULT, INPUTS] });
     expect(result.current.tree).toBe(tree);
     expect(colorsOf(result.current.cellColors)).toEqual([SECTION_TYPE_COLORS, '#cccccc']);
+  });
+
+  // The receded colour follows the background: with nothing on screen to recede, another background repaints nothing.
+  it('recedes only where another population is on screen beside the one on show', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const hidden = ['inputs'];
+    const { result, rerender } = render([DEFAULT, INPUTS], DEFAULT, hidden);
+    const { cellColors } = result.current;
+
+    rerender({
+      population: DEFAULT,
+      populations: [DEFAULT, INPUTS],
+      hiddenPopulations: hidden,
+      recededColor: '#333333',
+    });
+    expect(result.current.cellColors).toBe(cellColors);
   });
 
   it('keeps the scene once every population has been hidden', () => {

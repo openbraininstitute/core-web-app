@@ -2,12 +2,11 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
-import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
+import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
 import { morphologyFileOf, resolveMorphologyLocation } from './resolve-morphology-path';
@@ -70,21 +69,17 @@ export function useSmallCircuitSource({
   const populationName = population?.name;
   const hasPopulation = population !== undefined;
 
-  const { config, error: configError } = useCircuitConfig(circuit);
-
   // Everything the scene is built from, for every population at once: where the cells sit, the morphology each one
   // names, and the rotation that puts that morphology in the world.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
-    circuit,
-    populations,
-    withMorphologies: true,
-    withOrientations: true,
-  });
-
-  const subject = useMemo(
-    () => placed.find((entry) => entry.population.name === populationName) ?? null,
-    [placed, populationName]
-  );
+  const { config, placed, settled, download, subject, hidden, error, somas, receded } =
+    usePlacedScene({
+      circuit,
+      population,
+      populations,
+      hiddenPopulations,
+      recededColor,
+      withMorphologies: true,
+    });
 
   // Resolved once per population rather than per cell: every node of a population draws from the same directory or
   // container.
@@ -119,44 +114,18 @@ export function useSmallCircuitSource({
   // reads every morphology again and frames it anew, so it must not change with the selection.
   const built = useMemo((): TreeSource | null => {
     if (!hasPopulation || !settled || placed.length === 0) return null;
-    let cells = 0;
-    for (const { geometry } of placed) cells += geometry.count;
-    const positions = new Float32Array(3 * cells);
-    const orientations = new Float32Array(4 * cells);
+    const orientations = new Float32Array((4 * somas.positions.length) / 3);
     const requests: (SectionsRequest | null)[] = [];
     let first = 0;
     for (const entry of placed) {
-      const { count, positions: at, orientations: turns } = entry.geometry;
-      positions.set(at.subarray(0, 3 * count), 3 * first);
+      const { count, orientations: turns } = entry.geometry;
       if (turns) orientations.set(turns.subarray(0, 4 * count), 4 * first);
       else for (let i = 0; i < count; i++) orientations[4 * (first + i) + 3] = 1;
       for (let i = 0; i < count; i++) requests.push(sectionsRequest(entry, i));
       first += count;
     }
-    return {
-      somas: {
-        positions,
-        populations: placed.map((entry) => ({
-          name: entry.population.name,
-          cells: entry.geometry.count,
-        })),
-      },
-      orientations,
-      requests,
-    };
-  }, [hasPopulation, settled, placed, sectionsRequest]);
-
-  // A config that loads but names no node population would otherwise leave the viewer on its spinner for good.
-  const noPopulation =
-    config && !population
-      ? new Error('This circuit’s circuit_config.json declares no node populations')
-      : null;
-  // A population that could not be placed is context that goes undrawn: an input population carrying no positions is
-  // the ordinary case, and the scene stands without it. Only a scene with nothing in it at all is worth covering the
-  // canvas for, and then the reason is whichever population failed.
-  const noPlacement =
-    !settled || placed.length > 0 ? null : (failures.values().next().value ?? null);
-  const error = configError ?? noPopulation ?? noPlacement;
+    return { somas, orientations, requests };
+  }, [hasPopulation, settled, placed, somas, sectionsRequest]);
 
   // Keep what is on screen until the next scene can be drawn: a population joining or leaving the list takes a moment
   // to read. Not after a failure, which the error panel covers.
@@ -165,7 +134,6 @@ export function useSmallCircuitSource({
   const tree = built ?? (error ? null : shown);
   if (tree !== shown) setShown(tree);
 
-  const hidden = useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
   const cellColors = useMemo(
     () =>
       cellColorsOf({
@@ -175,12 +143,10 @@ export function useSmallCircuitSource({
         // Colour-by wins where it has an opinion; failing that a lone cell reads by section type, because telling its
         // dendrites from its axon is the whole point of drawing one. A crowd keeps a flat colour per cell instead.
         own: subject?.geometry.count === 1 ? SECTION_TYPE_COLORS : null,
-        // The rest recede behind the population on show, unless that one could not be placed: there is then nothing on
-        // screen to recede behind.
-        receded: subject ? recededColor : undefined,
+        receded,
         hidden,
       }),
-    [tree, populationName, nodeColors, subject, recededColor, hidden]
+    [tree, populationName, nodeColors, subject, receded, hidden]
   );
 
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
