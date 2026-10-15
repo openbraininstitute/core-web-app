@@ -9,6 +9,10 @@ import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elem
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
+import {
+  IonChannelModelProperties,
+  type TIonChannelModelProperties,
+} from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
@@ -198,6 +202,23 @@ export function UIElementRender({
           />
         );
       }
+    )
+    .with(
+      { paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelModelProperties } },
+      () => (
+        <IonChannelModelProperties
+          value={(isPlainObject(value) ? value : {}) as TIonChannelModelProperties}
+          // the sibling model_identifier_multiple holds the recordings the model is fitted to
+          recordingIds={(Array.isArray(state.recordings) ? state.recordings : []).flatMap(
+            (recording) =>
+              isPlainObject(recording) && typeof recording.id_str === 'string'
+                ? [recording.id_str]
+                : []
+          )}
+          disabled={disabled}
+          onChange={(next) => setState({ ...state, [k]: next as unknown as ConfigValue })}
+        />
+      )
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.SelectEFeaturesByProtocol } },

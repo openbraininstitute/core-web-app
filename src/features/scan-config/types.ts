@@ -196,6 +196,7 @@ export const ScanConfigUIElementDict = {
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
   AxonModifier: 'axon_modifier',
+  IonChannelModelProperties: 'ion_channel_model_properties',
 } as const;
 
 export type TScanConfigUIElementDict =
@@ -312,6 +313,11 @@ export interface TSelectEFeaturesByProtocol extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.SelectEFeaturesByProtocol;
   type: 'object';
   property_endpoints?: string;
+}
+
+/** The properties an ion channel model is registered with; one widget renders the object. */
+export interface TIonChannelModelProperties extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IonChannelModelProperties;
 }
 
 export interface Reference extends TBlockElement {
@@ -656,6 +662,7 @@ export type ParamSchema =
   | IntParameterSweep
   | FloatOptional
   | TSelectEFeaturesByProtocol
+  | TIonChannelModelProperties
   | Reference
   | NeuronIds
   | EntityPropertyDropdown
