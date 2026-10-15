@@ -4,10 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppMessage } from '@/components/notification';
 import {
-  isTargetableSectionType,
-  sectionTypeLabel,
-} from '@/features/scan-config/components/circuit-viz/section-type-label';
-import {
   morphologyLocationsColor,
   recedeMarkerColor,
 } from '@/features/scan-config/components/color-by/palette';
@@ -26,10 +22,17 @@ import {
   type TMorphologyLocationPickModeDict,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
+import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
+
+import type { LocationHit, LocationOptions } from '@/features/circuit-viewer/morphologies/pointer';
+import type {
+  LocationMarker,
+  MarkerOnScreen,
+  ScreenPoint,
+  ViewLocations,
+} from '@/features/circuit-viewer/morphologies/types';
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { Config } from '@/features/scan-config/types';
-import type { LocationHit, LocationOptions } from './pointer';
-import type { LocationMarker, MarkerOnScreen, ScreenPoint, ViewLocations } from './types';
 
 interface Options extends IFormBindingOptions {
   /** The cells a location applies to: those of the population on show that have a morphology. */

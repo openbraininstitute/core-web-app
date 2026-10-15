@@ -1,6 +1,6 @@
 import { sectionTypeLabel } from '../section-type-label';
 
-import type { LocationLabel } from '@/features/circuit-viewer/morphologies/use-location-selection';
+import type { LocationLabel } from './use-location-selection';
 
 /**
  * Persistent `Type[section]` tags pinned to each selected location.

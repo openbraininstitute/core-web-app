@@ -5,8 +5,8 @@ import { cn } from '@/utils/css-class';
 
 import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
 
-import type { LocationHover } from '@/features/circuit-viewer/morphologies/use-location-selection';
 import type { TMorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import type { LocationHover } from './use-location-selection';
 
 /** Gap between the point and the popover, so the dot stays visible under it. */
 const OFFSET_PX = 14;

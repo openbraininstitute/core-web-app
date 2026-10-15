@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
-import { useLocationSelection } from '@/features/circuit-viewer/morphologies/use-location-selection';
 import { useTreeMorphologies } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
@@ -13,6 +12,7 @@ import { VisualizationLoadingIndicator } from '@/features/scan-config/components
 
 import { MorphologyLocationLabels } from './morphology-location/labels';
 import { MorphologyLocationPopover } from './morphology-location/popover';
+import { useLocationSelection } from './morphology-location/use-location-selection';
 import {
   circuitDrawsSynapses,
   useMemodelVisualizationSource,

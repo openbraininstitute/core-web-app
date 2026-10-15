@@ -1,8 +1,8 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { useLocationSelection } from '@/features/circuit-viewer/morphologies/use-location-selection';
 import { SectionType } from '@/features/circuit-viewer/section-type';
+import { useLocationSelection } from '@/features/scan-config/components/circuit-viz/morphology-location/use-location-selection';
 import {
   morphologyLocationsColor,
   recedeMarkerColor,

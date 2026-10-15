@@ -39,14 +39,17 @@ vi.mock('@/features/circuit-viewer/morphologies/use-tree-morphologies', () => ({
 }));
 
 // Reads the form and raises antd messages; none of that is what these turn on.
-vi.mock('@/features/circuit-viewer/morphologies/use-location-selection', () => ({
-  useLocationSelection: () => ({
-    locations: undefined,
-    hover: null,
-    labels: [],
-    pickMode: fixtures.pickMode,
-  }),
-}));
+vi.mock(
+  '@/features/scan-config/components/circuit-viz/morphology-location/use-location-selection',
+  () => ({
+    useLocationSelection: () => ({
+      locations: undefined,
+      hover: null,
+      labels: [],
+      pickMode: fixtures.pickMode,
+    }),
+  })
+);
 
 /** Two cells, one of each population. */
 const TREE: TreeSource = {
