@@ -3,13 +3,17 @@ import { morphologiesExtent } from '../extent';
 import type { CircuitMorphologyData, CircuitSomas, Vec3 } from '../types';
 import type { TreeMorphology } from './tree';
 
+/**
+ * Soma radius drawn for a cell until its morphology arrives, and for a cell with none, µm. It also bounds what the view
+ * frames until then, so it wants to be the order of magnitude of the cells on screen.
+ */
+export const PLACEHOLDER_SOMA_RADIUS = 8;
+
 /** A small circuit's cells as the page placed them, by which their morphologies are drawn. */
 export interface TreeCells {
   somas: CircuitSomas;
   /** Four floats a cell, x, y, z and w of the rotation that turns its morphology into the circuit; null for none. */
   orientations: Float32Array | null;
-  /** The radius of a cell's soma until its morphology is in, or where it has none, µm. */
-  placeholderRadius: number;
 }
 
 const IDENTITY = [0, 0, 0, 1];
@@ -47,11 +51,11 @@ function place(
 
 /**
  * The cells drawn as their morphologies where `trees` has one, each turned and moved to its cell's place, and as a
- * soma `placeholderRadius` wide at its position where it has none, or none yet; less `centre` throughout. A cell
+ * soma `PLACEHOLDER_SOMA_RADIUS` wide at its position where it has none, or none yet; less `centre` throughout. A cell
  * without a position has nothing drawn. The morphologies are kept, not copied.
  */
 export function placeTrees(
-  { somas: { positions, populations }, orientations, placeholderRadius }: TreeCells,
+  { somas: { positions, populations }, orientations }: TreeCells,
   trees: readonly (TreeMorphology | null | undefined)[],
   centre: Vec3
 ): CircuitMorphologyData {
@@ -87,7 +91,7 @@ export function placeTrees(
       placeSphere(tree.soma, q, by, somaArray, soma);
     } else {
       somaArray.set(by, soma);
-      somaArray[soma + 3] = placeholderRadius;
+      somaArray[soma + 3] = PLACEHOLDER_SOMA_RADIUS;
     }
     if (chart) {
       const ball = tree?.chart?.soma;

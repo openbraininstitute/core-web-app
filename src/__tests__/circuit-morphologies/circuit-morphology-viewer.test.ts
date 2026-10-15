@@ -1352,7 +1352,6 @@ describe("the circuit viewer's dendrogram", () => {
           populations: [{ name: 'A', cells: 2 }],
         },
         orientations: null,
-        placeholderRadius: 8,
       },
       [null, treeOf(NEURON, { axons: true, chart: true })],
       [0, 0, 0]
@@ -1487,7 +1486,6 @@ const neuron = () =>
         populations: [{ name: 'A', cells: 2 }],
       },
       orientations: null,
-      placeholderRadius: 8,
     },
     [null, treeOf(NEURON, { axons: true })],
     [0, 0, 0]
@@ -1613,7 +1611,7 @@ describe('the markers of morphology locations', () => {
     expect(inner.markerDots?.visible).toBe(false);
   });
 
-  it('tell of no marker once, and of none again till there are some', () => {
+  it('tell where they are only where that changed, of none once till there are some', () => {
     const { viewer, inner } = make();
     const heard = vi.fn();
     viewer.onMarkersOnScreen(heard);
@@ -1624,6 +1622,10 @@ describe('the markers of morphology locations', () => {
     expect(heard).toHaveBeenCalledTimes(1);
     viewer.setLocationMarkers([MARKER]);
     frames(inner);
+    expect(heard).toHaveBeenCalledTimes(2);
+    // A frame that moved nothing.
+    viewer.setHighlight(0);
+    expect(frames(inner)).toBe(1);
     expect(heard).toHaveBeenCalledTimes(2);
     viewer.setLocationMarkers([]);
     frames(inner);

@@ -11,6 +11,7 @@ import {
   morphologyLocationsColor,
   recedeMarkerColor,
 } from '@/features/scan-config/components/color-by/palette';
+import { DEFAULT_MORPHOLOGY_LOCATION_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import {
   collectLocations,
   EXPLICIT_BLOCK_TYPE,
@@ -28,7 +29,7 @@ import {
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { Config } from '@/features/scan-config/types';
 import type { LocationHit, LocationOptions } from './pointer';
-import type { LocationMarker, MarkerOnScreen, ScreenPoint } from './types';
+import type { LocationMarker, MarkerOnScreen, ScreenPoint, ViewLocations } from './types';
 
 interface Options extends IFormBindingOptions {
   /** The cells a location applies to: those of the population on show that have a morphology. */
@@ -57,17 +58,8 @@ export interface LocationLabel {
   visible: boolean;
 }
 
-/** What the view draws and what the pointer does there: `CircuitCells`' `locations`. */
-export interface ViewLocations extends LocationOptions {
-  markers: readonly LocationMarker[];
-  radius: number;
-  onMarkersOnScreen?: (markers: readonly (MarkerOnScreen | null)[]) => void;
-}
-
 /** Pointer rest time before the hover popover appears. The hand cursor is never delayed. */
 const HOVER_REST_DELAY_IN_MS = 300;
-/** Morphoviewer's marker radius, µm, where the settings give none. */
-const MARKER_RADIUS = 3;
 
 /** A marker's location, and the block and row it came from. */
 interface Stored {
@@ -101,7 +93,7 @@ export function useLocationSelection({
   supportsExplicitLocations,
   cells,
   backgroundColor,
-  markerRadius = MARKER_RADIUS,
+  markerRadius = DEFAULT_MORPHOLOGY_LOCATION_RADIUS,
   showLabels = false,
 }: Options): {
   locations: ViewLocations | undefined;

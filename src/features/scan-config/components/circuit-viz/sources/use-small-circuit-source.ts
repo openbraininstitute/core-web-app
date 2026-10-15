@@ -4,7 +4,7 @@ import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
-import { cellColorsOf } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { loadSections } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
@@ -21,12 +21,6 @@ import type { TSectionsRequest } from '@/features/scan-config/components/circuit
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { MorphologyLocation } from './resolve-morphology-path';
 import type { TSmallCircuitSource } from './types';
-
-/**
- * Soma radius drawn for a cell until its morphology arrives, and for a cell with none. It also bounds what the view
- * frames until then, so it wants to be the order of magnitude of the cells on screen.
- */
-export const PLACEHOLDER_SOMA_RADIUS = 8;
 
 const NOTHING_HIDDEN: readonly string[] = [];
 
@@ -148,7 +142,6 @@ export function useSmallCircuitSource({
         })),
       },
       orientations,
-      placeholderRadius: PLACEHOLDER_SOMA_RADIUS,
       requests,
     };
   }, [hasPopulation, settled, placed, sectionsRequest]);
@@ -193,17 +186,13 @@ export function useSmallCircuitSource({
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
   // sections number the same way.
   const locationCells = useMemo(() => {
-    if (!tree) return [];
-    let first = 0;
-    for (const { name, cells } of tree.somas.populations) {
-      if (name === populationName) {
-        return Array.from({ length: cells }, (_, i) => first + i).filter(
-          (cell) => tree.requests[cell] !== null
-        );
-      }
-      first += cells;
-    }
-    return [];
+    const range = tree
+      ? populationRanges(tree.somas.populations).find(({ name }) => name === populationName)
+      : undefined;
+    if (!tree || !range) return [];
+    return Array.from({ length: range.end - range.first }, (_, i) => range.first + i).filter(
+      (cell) => tree.requests[cell] !== null
+    );
   }, [tree, populationName]);
 
   /** Population the afferent synapses target: the first one with morphologies, whatever is on show. */
@@ -237,7 +226,6 @@ export function useSmallCircuitSource({
     cellColors,
     hidden: hiddenPopulations,
     locationCells,
-    isLoading: !error && tree === null,
     download,
     error,
     synapses,

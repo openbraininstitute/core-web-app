@@ -7,12 +7,21 @@ import { SectionType } from '../section-type';
 import type { TreeSection } from './load/tree';
 import type { CircuitMorphologyData, Vec3 } from './types';
 
-const lengthOf = (segments: Float32Array, s: number) =>
+/** The length of segment `s` of `segments`, eight floats a segment. */
+export const segmentLength = (segments: Float32Array, s: number) =>
   Math.hypot(
     segments[8 * s + 4] - segments[8 * s],
     segments[8 * s + 5] - segments[8 * s + 1],
     segments[8 * s + 6] - segments[8 * s + 2]
   );
+
+/** The float at `at` of `values` as drawn `mix` of the way into the dendrogram, `charted`, where there is one. */
+export const morphed = (
+  values: Float32Array,
+  charted: Float32Array | undefined,
+  at: number,
+  mix: number
+) => (charted && mix > 0 ? values[at] + mix * (charted[at] - values[at]) : values[at]);
 
 /**
  * The section of the data's segment `segment`, and the offset of the point `t` of the way along that segment; null
@@ -30,8 +39,8 @@ export function sectionAtSegment(
   const section = tree.sections[tree.segmentSections[local]];
   if (!section) return null;
   if (local < section.first || section.length <= 0) return { cell, section, offset: 0 };
-  let along = t * lengthOf(tree.segments, local);
-  for (let s = section.first; s < local; s++) along += lengthOf(tree.segments, s);
+  let along = t * segmentLength(tree.segments, local);
+  for (let s = section.first; s < local; s++) along += segmentLength(tree.segments, s);
   return { cell, section, offset: Math.min(1, along / section.length) };
 }
 
@@ -54,24 +63,22 @@ export function pointAtOffset(
   mix = 0
 ): Vec3 | null {
   const { segments, somas, trees, chart } = data;
-  const shown = (values: Float32Array, charted: Float32Array | undefined, at: number) =>
-    charted && mix > 0 ? values[at] + mix * (charted[at] - values[at]) : values[at];
   if (section.type === SectionType.Soma) {
     if (Number.isNaN(somas[4 * cell])) return null;
-    return [0, 1, 2].map((k) => shown(somas, chart?.somas, 4 * cell + k)) as Vec3;
+    return [0, 1, 2].map((k) => morphed(somas, chart?.somas, 4 * cell + k, mix)) as Vec3;
   }
   if (!trees || section.count === 0) return null;
   const first = trees.firstSegments[cell] + section.first;
   const target = Math.min(Math.max(offset, 0), 1) * section.length;
   let walked = 0;
   for (let s = first; s < first + section.count; s++) {
-    const length = lengthOf(segments, s);
+    const length = segmentLength(segments, s);
     const last = s === first + section.count - 1;
     if (walked + length >= target || last) {
       const t = length > 0 ? Math.min(1, (target - walked) / length) : 0;
       return [0, 1, 2].map((k) => {
-        const from = shown(segments, chart?.segments, 8 * s + k);
-        return from + t * (shown(segments, chart?.segments, 8 * s + 4 + k) - from);
+        const from = morphed(segments, chart?.segments, 8 * s + k, mix);
+        return from + t * (morphed(segments, chart?.segments, 8 * s + 4 + k, mix) - from);
       }) as Vec3;
     }
     walked += length;

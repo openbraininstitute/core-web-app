@@ -27,7 +27,6 @@ function cells(orientations: Float32Array | null = null): TreeCells {
       ],
     },
     orientations,
-    placeholderRadius: 8,
   };
 }
 

@@ -139,7 +139,6 @@ describe('useSmallCircuitSource', () => {
         projectId: 'project',
       },
     ]);
-    expect(result.current.tree?.placeholderRadius).toBe(8);
   });
 
   it('stands a population with no morphologies as receded somas that read nothing', () => {
@@ -212,7 +211,7 @@ describe('useSmallCircuitSource', () => {
     fixtures.placement = { placed: [], failures: new Map(), settled: false, download: null };
     const { result } = render([DEFAULT, INPUTS]);
     expect(result.current.tree).toBeNull();
-    expect(result.current.isLoading).toBe(true);
+    expect(result.current.error).toBeNull();
   });
 
   /**
@@ -278,10 +277,10 @@ describe('useSmallCircuitSource', () => {
     expect(colorsOf(result.current.cellColors)).toEqual([SECTION_TYPE_COLORS, '#cccccc']);
   });
 
-  it('is not loading once every population has been hidden', () => {
+  it('keeps the scene once every population has been hidden', () => {
     placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
     const { result } = render([DEFAULT, INPUTS], DEFAULT, ['default', 'inputs']);
-    expect(result.current.isLoading).toBe(false);
+    expect(result.current.tree).not.toBeNull();
     expect(colorsOf(result.current.cellColors)).toEqual([false, false]);
   });
 

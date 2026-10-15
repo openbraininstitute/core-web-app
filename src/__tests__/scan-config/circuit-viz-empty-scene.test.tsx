@@ -58,7 +58,6 @@ const TREE: TreeSource = {
     ],
   },
   orientations: null,
-  placeholderRadius: 8,
   requests: [null, null],
 };
 
@@ -69,7 +68,6 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
     cellColors: { palette: [], columnByCell: new Uint16Array(0) },
     hidden: [],
     locationCells: [],
-    isLoading: false,
     error: null,
     anchor: null,
     ...overrides,
@@ -123,16 +121,16 @@ describe('CircuitVisualization on an empty scene', () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
+  // Every population hidden: the user emptied the scene on purpose, and nothing is left to read.
   it('reads a finished, empty scene as finished', () => {
-    draw({ tree: null, isLoading: false });
+    draw({ tree: TREE, hidden: ['default', 'other'] });
     waitOutTheQuietPeriod();
 
     expect(screen.queryByRole('status')).toBeNull();
-    expect(fixtures.mounted).toHaveLength(0);
   });
 
-  it('still covers an empty scene that has not arrived yet', () => {
-    draw({ tree: null, isLoading: true });
+  it('still covers a scene that has not arrived yet', () => {
+    draw({ tree: null });
     waitOutTheQuietPeriod();
 
     expect(screen.getByLabelText(LOADING)).toBeInTheDocument();

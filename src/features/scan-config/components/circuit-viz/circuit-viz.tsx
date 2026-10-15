@@ -1,7 +1,9 @@
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
+import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { useLocationSelection } from '@/features/circuit-viewer/morphologies/use-location-selection';
 import { useTreeMorphologies } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
@@ -16,7 +18,6 @@ import {
   useMemodelVisualizationSource,
   useSmallCircuitSource,
 } from './sources';
-import { PLACEHOLDER_SOMA_RADIUS } from './sources/use-small-circuit-source';
 import { SynapseLegend } from './synapse-legend';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -133,7 +134,6 @@ export function CircuitVisualization({
   recededColor,
   onPopulationClick,
   nodeColors,
-  defaultColor,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -149,14 +149,8 @@ export function CircuitVisualization({
   const counted = source.tree?.somas.populations;
   const handleCellClick = useCallback(
     (cell: number) => {
-      let end = 0;
-      for (const { name, cells } of counted ?? []) {
-        end += cells;
-        if (cell < end) {
-          if (name !== subjectName) onPopulationClick?.(name);
-          return;
-        }
-      }
+      const name = populationAt(counted ?? [], cell);
+      if (name !== undefined && name !== subjectName) onPopulationClick?.(name);
     },
     [counted, subjectName, onPopulationClick]
   );
@@ -164,7 +158,6 @@ export function CircuitVisualization({
     <CircuitVizView
       {...props}
       source={source}
-      defaultColor={defaultColor}
       onCellClick={onPopulationClick ? handleCellClick : undefined}
     />
   );
@@ -207,8 +200,7 @@ function CircuitVizView({
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
 }: TCircuitVizViewProps) {
-  const { tree, cellColors, hidden, locationCells, isLoading, error, synapses, anchor, download } =
-    source;
+  const { tree, cellColors, hidden, locationCells, error, synapses, anchor, download } = source;
   const morphologies = useTreeMorphologies(tree, { axons: showAxons, hidden });
   const { locations, hover, labels, pickMode } = useLocationSelection({
     ...morphologyLocations,
@@ -241,7 +233,7 @@ function CircuitVizView({
 
   // A morphology that cannot be read leaves its cell a soma; only a scene where none could be read is worth covering.
   const unread = morphologies.total > 0 && morphologies.failed === morphologies.total;
-  const loading = !error && (isLoading || morphologies.loaded < morphologies.total);
+  const loading = !error && (!tree || morphologies.loaded < morphologies.total);
 
   return (
     <div className="h-full w-full relative">

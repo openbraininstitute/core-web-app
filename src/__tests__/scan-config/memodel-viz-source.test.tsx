@@ -14,7 +14,7 @@ describe('useMemodelVisualizationSource', () => {
     const { result, rerender } = renderHook(() =>
       useMemodelVisualizationSource({ memodelId: 'me-1' })
     );
-    const { tree, cellColors, locationCells, anchor, isLoading, error } = result.current;
+    const { tree, cellColors, locationCells, anchor, error } = result.current;
 
     expect(Array.from(tree?.somas.positions ?? [])).toEqual([0, 0, 0]);
     expect(tree?.somas.populations).toEqual([{ name: 'memodel', cells: 1 }]);
@@ -26,7 +26,7 @@ describe('useMemodelVisualizationSource', () => {
     expect(tree?.charts).toBe(true);
     expect(cellColors.palette).toEqual([SECTION_TYPE_COLORS]);
     expect(locationCells).toEqual([0]);
-    expect([anchor, isLoading, error]).toEqual([[0, 0, 0], false, null]);
+    expect([anchor, error]).toEqual([[0, 0, 0], null]);
 
     // The same scene, render after render: another would be read again.
     rerender();

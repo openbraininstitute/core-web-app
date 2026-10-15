@@ -70,7 +70,6 @@ function source(): TreeSource {
       ],
     },
     orientations: null,
-    placeholderRadius: 8,
     requests: [request('a0'), request('a1'), request('b0'), null, null],
   };
 }
@@ -207,6 +206,27 @@ describe("a small circuit's morphologies, read one at a time", () => {
     const { version } = loader.getSnapshot();
     expect(version).toBeGreaterThan(before);
     expect(loader.dataAt(version)).toBe(loader.dataAt(version));
+  });
+
+  it('keeps the cells as placed where a load reads nothing new', async () => {
+    const { read, settle } = reads();
+    const loader = new TreeLoader(source(), read);
+    loader.load(false, []);
+    for (let i = 0; i < 3; i++) await settle();
+    const placed = loader.dataAt(loader.getSnapshot().version);
+    loader.load(false, ['B']);
+    expect(loader.getSnapshot()).toMatchObject({ loaded: 2, total: 2 });
+    expect(loader.dataAt(loader.getSnapshot().version)).toBe(placed);
+  });
+
+  it('tells its listeners once for a run of morphologies that come in together', async () => {
+    const loader = new TreeLoader(source(), () => Promise.resolve(SECTIONS));
+    const heard = vi.fn();
+    loader.subscribe(heard);
+    loader.load(false, []);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(loader.getSnapshot()).toMatchObject({ loaded: 3, total: 3 });
+    expect(heard).toHaveBeenCalledTimes(1);
   });
 
   it('centres the cells on their mean, as the view centres the somas it frames', () => {

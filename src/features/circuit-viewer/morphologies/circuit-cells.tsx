@@ -30,8 +30,8 @@ import type {
   ElectrodeTransform,
   LocationMarker,
   SynapseGroup,
+  ViewLocations,
 } from './types';
-import type { ViewLocations } from './use-location-selection';
 
 const NO_ELECTRODES: readonly ElectrodeGroup[] = [];
 const NO_MARKERS: readonly LocationMarker[] = [];

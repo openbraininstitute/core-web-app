@@ -57,7 +57,6 @@ function data() {
         populations: [{ name: 'A', cells: 2 }],
       },
       orientations: null,
-      placeholderRadius: 8,
     },
     [null, tree],
     [0, 0, 0]
@@ -101,7 +100,6 @@ describe('a morphology location', () => {
       {
         somas: { positions: Float32Array.of(100, 0, 0), populations: [{ name: 'A', cells: 1 }] },
         orientations: null,
-        placeholderRadius: 8,
       },
       [tree],
       [0, 0, 0]

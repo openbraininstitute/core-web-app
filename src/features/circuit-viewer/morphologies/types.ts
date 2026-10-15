@@ -3,6 +3,7 @@ import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
 import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
 import type { TreeMorphology } from './load/tree';
+import type { LocationOptions } from './pointer';
 
 export type Vec3 = [number, number, number];
 
@@ -126,6 +127,14 @@ export interface MarkerOnScreen {
   type: SectionType;
   screen: ScreenPoint;
   visible: boolean;
+}
+
+/** Morphology locations: the markers the view draws, and what the pointer does over them and the sections. */
+export interface ViewLocations extends LocationOptions {
+  markers: readonly LocationMarker[];
+  /** A marker's radius, µm. */
+  radius: number;
+  onMarkersOnScreen?: (markers: readonly (MarkerOnScreen | null)[]) => void;
 }
 
 /** What the page drives a circuit's morphologies through, whichever engine draws them. */

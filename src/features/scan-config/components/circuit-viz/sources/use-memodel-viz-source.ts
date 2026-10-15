@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 
 import { memodelMorphologyPath } from '@/api/one/circuit-visualization';
-import { PLACEHOLDER_SOMA_RADIUS } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
@@ -30,7 +29,6 @@ export function useMemodelVisualizationSource({
     (): TreeSource => ({
       somas: { positions: Float32Array.of(0, 0, 0), populations: [{ name: 'memodel', cells: 1 }] },
       orientations: null,
-      placeholderRadius: PLACEHOLDER_SOMA_RADIUS,
       requests: [{ path: memodelMorphologyPath(memodelId), virtualLabId, projectId }],
       // The preview offers its dendrogram.
       charts: true,
@@ -42,7 +40,6 @@ export function useMemodelVisualizationSource({
     cellColors: BY_SECTION,
     hidden: NOTHING_HIDDEN,
     locationCells: THE_CELL,
-    isLoading: false,
     error: null,
     anchor: ORIGIN,
   };

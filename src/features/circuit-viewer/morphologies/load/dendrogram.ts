@@ -6,6 +6,8 @@
  */
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
+import { segmentLength } from '../sections';
+
 import type { TreeMorphology } from './tree';
 
 /** What a segment is to its section: one of its own, the stem from the soma, or its joint to its parent's column. */
@@ -15,13 +17,6 @@ export const SegmentKind = { Own: 0, Stem: 1, Joint: 2 } as const;
 const BELOW = 0.4;
 /** The radii sampled, at most, for the strokes' range. */
 const SAMPLES = 2048;
-
-const lengthOf = (segments: Float32Array, s: number) =>
-  Math.hypot(
-    segments[8 * s + 4] - segments[8 * s],
-    segments[8 * s + 5] - segments[8 * s + 1],
-    segments[8 * s + 6] - segments[8 * s + 2]
-  );
 
 /**
  * The strokes' widths, µm, the chart's own: its y is path distance, so a radius is styling there, not measure. A
@@ -69,7 +64,7 @@ export function dendrogramOf(
   const stem = new Float64Array(sections.length);
   const own: number[] = [];
   for (let s = 0; s < count; s++) {
-    if (kinds[s] === SegmentKind.Stem) stem[segmentSections[s]] = lengthOf(segments, s);
+    if (kinds[s] === SegmentKind.Stem) stem[segmentSections[s]] = segmentLength(segments, s);
     if (kinds[s] === SegmentKind.Own) own.push(s);
   }
   // Path distance where each section starts and ends: parents come before their children.
@@ -140,8 +135,9 @@ export function dendrogramOf(
       write(s, x(i), start[i], x(i), start[i] + stem[i], width.of(segments[8 * s + 7]));
     } else {
       const from = start[i] + stem[i] + walked[i];
-      walked[i] += lengthOf(segments, s);
-      write(s, x(i), from, x(i), from + lengthOf(segments, s), width.of(segments[8 * s + 7]));
+      const length = segmentLength(segments, s);
+      walked[i] += length;
+      write(s, x(i), from, x(i), from + length, width.of(segments[8 * s + 7]));
     }
   }
   return { segments: chart, soma: soma && [0, y(0), 0, width.soma] };

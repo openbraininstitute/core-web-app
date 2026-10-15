@@ -6,7 +6,7 @@ import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-import { cellColorsOf } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellColorsOf, populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
@@ -265,16 +265,10 @@ export function LargeCircuitPreview({
 
   const handleCellClick = React.useCallback(
     (index: number) => {
-      let end = 0;
-      for (const { population: candidate, geometry } of placed) {
-        end += geometry.count;
-        if (index < end) {
-          if (candidate.name !== subjectName) onPopulationClick?.(candidate.name);
-          return;
-        }
-      }
+      const name = populationAt(cells.populations, index);
+      if (name !== undefined && name !== subjectName) onPopulationClick?.(name);
     },
-    [placed, subjectName, onPopulationClick]
+    [cells.populations, subjectName, onPopulationClick]
   );
   // Only offered when there is something to select.
   const canPickPopulation = onPopulationClick !== undefined && hasContext;

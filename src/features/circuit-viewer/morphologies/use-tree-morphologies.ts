@@ -8,6 +8,7 @@ import {
 } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import { logError } from '@/utils/logger';
 
+import { populationRanges } from './cell-colors';
 import { extentOf } from './extent';
 import { placeTrees, type TreeCells } from './load/place-trees';
 import { type TreeMorphology, treeOf } from './load/tree';
@@ -64,6 +65,7 @@ export class TreeLoader {
   private wanted: number[] = [];
   private stopRun: (() => void) | null = null;
   private progress: Progress = NO_PROGRESS;
+  private telling: ReturnType<typeof setTimeout> | undefined;
   private placed: { version: number; data: CircuitMorphologyData } | null = null;
   private readonly centre: Vec3;
 
@@ -99,14 +101,11 @@ export class TreeLoader {
     this.stop();
     this.axons = axons;
     this.wanted = [];
-    let first = 0;
-    for (const { name, cells } of this.source.somas.populations) {
-      if (!hidden.includes(name)) {
-        for (let cell = first; cell < first + cells; cell++) {
-          if (this.source.requests[cell]) this.wanted.push(cell);
-        }
+    for (const { name, first, end } of populationRanges(this.source.somas.populations)) {
+      if (hidden.includes(name)) continue;
+      for (let cell = first; cell < end; cell++) {
+        if (this.source.requests[cell]) this.wanted.push(cell);
       }
-      first += cells;
     }
     this.changed();
     let stopped = false;
@@ -128,7 +127,7 @@ export class TreeLoader {
         // Stopped, it does not undo what the run after it read.
         if (stopped && this.reads[cell]?.axons === this.axons) return;
         this.reads[cell] = { tree, axons };
-        this.changed();
+        this.changed(true);
       }
     };
     run().catch((e: unknown) => logError('Could not load the morphologies', e));
@@ -145,18 +144,23 @@ export class TreeLoader {
     this.stopRun = null;
   }
 
-  private changed(): void {
-    const read = this.wanted.flatMap((cell) => {
-      const done = this.reads[cell];
-      return done?.axons === this.axons ? [done] : [];
+  /** The progress counted again, and with `read`, a morphology in; told on the next task, once for a run of them. */
+  private changed(read = false): void {
+    const done = this.wanted.flatMap((cell) => {
+      const reading = this.reads[cell];
+      return reading?.axons === this.axons ? [reading] : [];
     });
     this.progress = {
-      version: this.progress.version + 1,
-      loaded: read.length,
+      version: this.progress.version + (read ? 1 : 0),
+      loaded: done.length,
       total: this.wanted.length,
-      failed: read.filter((done) => done.tree === null).length,
+      failed: done.filter((reading) => reading.tree === null).length,
     };
-    for (const listener of this.listeners) listener();
+    if (this.telling !== undefined) return;
+    this.telling = setTimeout(() => {
+      this.telling = undefined;
+      for (const listener of this.listeners) listener();
+    }, 0);
   }
 }
 
@@ -182,7 +186,7 @@ export function useTreeMorphologies(
     loader?.getSnapshot ?? noProgress,
     noProgress
   );
-  const data = useMemo(() => loader?.dataAt(version) ?? null, [loader, version]);
+  const data = loader?.dataAt(version) ?? null;
   const retry = useCallback(() => loader?.retry(hidden), [loader, hidden]);
   return { data, loaded, total, failed, retry };
 }

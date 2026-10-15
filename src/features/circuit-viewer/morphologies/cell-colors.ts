@@ -4,6 +4,23 @@ import type { CellColors, Population, SectionColors } from './types';
 /** No cell has a colour of its own: each is in the view's own colour. */
 export const NO_CELL_COLORS: CellColors = { palette: [], columnByCell: new Uint16Array(0) };
 
+/** Each population's cells in the page's numbering, from its first to the one after its last. */
+export function populationRanges(
+  populations: readonly Population[]
+): { name: string; first: number; end: number }[] {
+  let first = 0;
+  return populations.map(({ name, cells }) => {
+    const range = { name, first, end: first + cells };
+    first = range.end;
+    return range;
+  });
+}
+
+/** The population the cell numbered `cell` is of; undefined past the last. */
+export function populationAt(populations: readonly Population[], cell: number): string | undefined {
+  return populationRanges(populations).find(({ end }) => cell < end)?.name;
+}
+
 export interface CellColorsOptions {
   /** In the page's order, which numbers the cells. */
   populations: readonly Population[];
@@ -44,22 +61,18 @@ export function cellColorsOf({
     }
     return column;
   };
-  let cells = 0;
-  for (const population of populations) cells += population.cells;
-  const columnByCell = new Uint16Array(cells);
-  let first = 0;
-  for (const { name, cells: count } of populations) {
-    const end = first + count;
+  const ranges = populationRanges(populations);
+  const columnByCell = new Uint16Array(ranges.at(-1)?.end ?? 0);
+  for (const { name, first, end } of ranges) {
     if (hidden.has(name)) {
       columnByCell.fill(columnOf(false), first, end);
     } else if (name === subject) {
-      const mapped = Math.min(count, nodeColors?.columnByNode.length ?? 0);
+      const mapped = Math.min(end - first, nodeColors?.columnByNode.length ?? 0);
       if (nodeColors) columnByCell.set(nodeColors.columnByNode.subarray(0, mapped), first);
-      if (mapped < count) columnByCell.fill(columnOf(own), first + mapped, end);
+      if (first + mapped < end) columnByCell.fill(columnOf(own), first + mapped, end);
     } else {
       columnByCell.fill(columnOf(receded ?? null), first, end);
     }
-    first = end;
   }
   return { palette, columnByCell };
 }
