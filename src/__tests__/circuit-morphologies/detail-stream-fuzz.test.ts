@@ -3,7 +3,11 @@ import * as THREE from 'three';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DetailStream } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
-import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import {
+  CELL_MASK,
+  HOLE,
+  TYPE_SHIFT,
+} from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
@@ -71,13 +75,13 @@ describe('DetailStream, over a long run of views', () => {
       for (let turn = 0; turn < 3; turn++) stream.apply(1 + Math.floor(random() * 3000));
 
       // Every segment drawn is of one level of its box, and each box drawn is whole.
-      const cells = geometry.getAttribute('aCell').array as Uint32Array;
-      const types = geometry.getAttribute('aType').array as Uint8Array;
+      const words = geometry.getAttribute('aCell').array as Uint32Array;
       const drawn = new Map<number, { level: number; n: number }>();
       for (let i = 0; i < geometry.instanceCount; i++) {
-        if (types[i] === HOLE) continue;
-        const box = Math.floor(cells[i] / 10);
-        const level = cells[i] % 10;
+        if (words[i] >>> TYPE_SHIFT === HOLE) continue;
+        const cell = words[i] & CELL_MASK;
+        const box = Math.floor(cell / 10);
+        const level = cell % 10;
         const was = drawn.get(box);
         if (was) expect(was.level).toBe(level);
         drawn.set(box, { level, n: (was?.n ?? 0) + 1 });

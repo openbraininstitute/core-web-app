@@ -79,7 +79,7 @@ describe('impostors on the Studio look', () => {
     expect((material as THREE.MeshStandardMaterial).vertexColors).toBe(true);
     const { vertexShader } = compile(material);
     expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
-    expect(vertexShader).toContain('return texelFetch( uCells, cellXY( aCell ), 0 );');
+    expect(vertexShader).toContain('return texelFetch( uCells, cellXY( impostorCell() ), 0 );');
     expect(vertexShader).toContain('vColor = vec4( cellColour( ownColour( cell ), vGlow ), 1.0 );');
   });
 
@@ -91,11 +91,14 @@ describe('impostors on the Studio look', () => {
     expect(segment.vertexShader).toContain(
       'return uSectionColours[ type >= 0 && type < 5 ? type : 0 ];'
     );
-    expect(segment.vertexShader).toContain('in float aType;');
-    expect(segment.vertexShader).toContain('float sectionType() {\n\treturn aType;\n}');
+    // The type in the top byte of the segment's word, and its cell below.
+    expect(segment.vertexShader).toContain(
+      'float sectionType() {\n\treturn float( aCell >> 24u );\n}'
+    );
+    expect(segment.vertexShader).toContain('return aCell & 16777215u;');
     const soma = compile(impostor(studio(), 'soma', own)).vertexShader;
     expect(soma).toContain('float sectionType() {\n\treturn 1.0;\n}');
-    expect(soma).not.toContain('aType');
+    expect(soma).not.toContain('aCell >> 24u');
   });
 
   it('takes section colours in the linear space the cell table hands over, by SWC numbers', () => {
@@ -121,8 +124,10 @@ describe('impostors on the Studio look', () => {
     const own = impostorUniforms();
     expect(own.uHighlighted.value).toBe(NO_CELL);
     const shader = compile(impostor(studio(), 'soma', own));
-    expect(shader.vertexShader).toContain('if ( aCell == uHighlighted ) return uHighlight;');
-    expect(shader.vertexShader).toContain('return aCell == uHighlighted ? 0.0 :');
+    expect(shader.vertexShader).toContain(
+      'if ( impostorCell() == uHighlighted ) return uHighlight;'
+    );
+    expect(shader.vertexShader).toContain('return cell == uHighlighted ? 0.0 :');
     expect(shader.uniforms.uHighlighted).toBe(own.uHighlighted);
     expect(shader.uniforms.uHighlight).toBe(own.uHighlight);
   });
@@ -135,7 +140,7 @@ describe('impostors on the Studio look', () => {
     const { vertexShader, fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
     expect(read.uGlow).toBe(own.uGlow);
     // Shaped already, by the cell table.
-    expect(vertexShader).toContain('texelFetch( uGlow, cellXY( aCell ), 0 ).r;');
+    expect(vertexShader).toContain('texelFetch( uGlow, cellXY( cell ), 0 ).r;');
     // Brightened, and a third of the way to a warm white, in sRGB; as it is where it does not glow.
     expect(vertexShader).toContain('if ( glow == 0.0 ) return own;');
     expect(vertexShader).toContain(
@@ -263,7 +268,7 @@ describe("the impostors in their cells' numbers", () => {
 
   it("writes the cell's number and one as it is, over what is there", () => {
     const material = idMaterial('segment', uniforms);
-    expect(material.vertexShader).toContain('vId = cellId( aCell );');
+    expect(material.vertexShader).toContain('vId = cellId( impostorCell() );');
     expect(material.vertexShader).toContain('uint id = cell + 1u;');
     expect(material.vertexShader).toContain(
       'vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0'

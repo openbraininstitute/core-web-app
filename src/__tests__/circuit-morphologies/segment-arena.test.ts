@@ -2,7 +2,11 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 
-import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import {
+  CELL_MASK,
+  HOLE,
+  TYPE_SHIFT,
+} from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
@@ -26,27 +30,29 @@ const arenaOf = (capacity: number) =>
 function attributes(arena: SegmentArena) {
   const { geometry } = arena;
   const ends = (geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
-  const cells = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
-  const types = geometry.getAttribute('aType') as THREE.InstancedBufferAttribute;
-  return { ends, cells, types };
+  const words = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
+  return { ends, words };
 }
+
+const cellAt = (words: THREE.InstancedBufferAttribute, i: number) => words.array[i] & CELL_MASK;
+const typeAt = (words: THREE.InstancedBufferAttribute, i: number) => words.array[i] >>> TYPE_SHIFT;
 
 /** What is drawn is the segments of `drawn`, each whole and unchanged and together, holes aside, and nothing else. */
 function expectDrawn(arena: SegmentArena, drawn: Map<number, number>) {
-  const { ends, cells, types } = attributes(arena);
+  const { ends, words } = attributes(arena);
   const seen: number[] = [];
   let holes = 0;
   for (let i = 0; i < arena.geometry.instanceCount; i++) {
-    if (types.array[i] === HOLE) {
+    if (typeAt(words, i) === HOLE) {
       holes++;
       continue;
     }
-    const cell = cells.array[i];
+    const cell = cellAt(words, i);
     seen.push(cell);
-    expect(types.array[i]).toBe(cell % 251);
+    expect(typeAt(words, i)).toBe(cell % 251);
     for (let k = 0; k < 8; k++) expect(ends.array[8 * i + k]).toBe(cell + k);
     // The next segment of the same box comes next.
-    if (cell % 1000 > 0) expect(cells.array[i - 1]).toBe(cell - 1);
+    if (cell % 1000 > 0) expect(cellAt(words, i - 1)).toBe(cell - 1);
   }
   const want = [...drawn].flatMap(([box, n]) => Array.from(segmentsOf(box, n).segmentCells));
   expect(seen.sort((a, b) => a - b)).toEqual(want.sort((a, b) => a - b));
@@ -55,12 +61,12 @@ function expectDrawn(arena: SegmentArena, drawn: Map<number, number>) {
   for (const [box, n] of drawn) expect(arena.sizeOf(box)).toBe(n);
 }
 
-/** The segments that differ between two copies of the types, each within a range marked for upload. */
-function expectUploaded(arena: SegmentArena, before: Uint8Array) {
-  const { types } = attributes(arena);
+/** The segments that differ between two copies of the words, each within a range marked for upload. */
+function expectUploaded(arena: SegmentArena, before: Uint32Array) {
+  const { words } = attributes(arena);
   for (let i = 0; i < arena.geometry.instanceCount; i++) {
-    if (types.array[i] === before[i]) continue;
-    expect(types.updateRanges.some(({ start, count }) => start <= i && i < start + count)).toBe(
+    if (words.array[i] === before[i]) continue;
+    expect(words.updateRanges.some(({ start, count }) => start <= i && i < start + count)).toBe(
       true
     );
   }
@@ -86,17 +92,18 @@ describe('SegmentArena', () => {
     expect(arena.free).toBe(3);
   });
 
-  it('leaves a hole where a box is let go of, uploading its types alone', () => {
+  it('leaves a hole where a box is let go of, uploading its words alone', () => {
     const arena = arenaOf(20);
     arena.put(1, segmentsOf(1, 5));
     arena.put(2, segmentsOf(2, 6));
     clearRanges(arena);
     expect(arena.remove(1)).toBe(1);
 
-    const { ends, cells, types } = attributes(arena);
-    expect(Array.from(types.array.subarray(0, 5))).toEqual([HOLE, HOLE, HOLE, HOLE, HOLE]);
-    expect(types.updateRanges).toEqual([{ start: 0, count: 5 }]);
-    expect(cells.updateRanges).toEqual([]);
+    const { ends, words } = attributes(arena);
+    expect([0, 1, 2, 3, 4].map((i) => typeAt(words, i))).toEqual([HOLE, HOLE, HOLE, HOLE, HOLE]);
+    // The cells stay.
+    expect([0, 1, 2, 3, 4].map((i) => cellAt(words, i))).toEqual([1000, 1001, 1002, 1003, 1004]);
+    expect(words.updateRanges).toEqual([{ start: 0, count: 5 }]);
     expect(ends.updateRanges).toEqual([]);
     expect(arena.geometry.instanceCount).toBe(11);
     expectDrawn(arena, new Map([[2, 6]]));
@@ -119,9 +126,9 @@ describe('SegmentArena', () => {
     arena.put(6, segmentsOf(6, 2));
 
     // Into the hole of 3 at 7, not the one of 6 at 0.
-    expect(attributes(arena).cells.updateRanges).toEqual([{ start: 7, count: 2 }]);
+    expect(attributes(arena).words.updateRanges).toEqual([{ start: 7, count: 2 }]);
     arena.put(7, segmentsOf(7, 7));
-    expect(attributes(arena).cells.updateRanges.at(-1)).toEqual({ start: 15, count: 7 });
+    expect(attributes(arena).words.updateRanges.at(-1)).toEqual({ start: 15, count: 7 });
     expect(arena.geometry.instanceCount).toBe(22);
   });
 
@@ -135,7 +142,7 @@ describe('SegmentArena', () => {
     arena.remove(3);
     expect(arena.geometry.instanceCount).toBe(3);
     arena.put(4, segmentsOf(4, 2));
-    expect(attributes(arena).cells.updateRanges.at(-1)).toEqual({ start: 3, count: 2 });
+    expect(attributes(arena).words.updateRanges.at(-1)).toEqual({ start: 3, count: 2 });
   });
 
   it('closes the holes where a box fits neither in one nor after the last, uploading every box', () => {
@@ -185,7 +192,7 @@ describe('SegmentArena', () => {
     };
     for (let step = 0; step < 1500; step++) {
       const box = Math.floor(random() * 60);
-      const before = attributes(arena).types.array.slice() as Uint8Array;
+      const before = attributes(arena).words.array.slice() as Uint32Array;
       clearRanges(arena);
       if (drawn.has(box)) {
         arena.remove(box);

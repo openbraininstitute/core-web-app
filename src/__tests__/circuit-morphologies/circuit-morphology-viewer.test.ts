@@ -281,13 +281,15 @@ describe('the circuit morphology viewer', () => {
     expect([a.data.stride, a.itemSize, a.offset, b.itemSize, b.offset]).toEqual([8, 4, 0, 4, 4]);
     const cell = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
     expect(cell).toBeInstanceOf(THREE.InstancedBufferAttribute);
-    expect(cell.array).toBe(data.segmentCells);
-    expect(geometry.getAttribute('aType').array).toBe(data.segmentTypes);
+    // Each segment's cell, and its type in the top byte.
+    expect(Array.from(cell.array)).toEqual([0 + 3 * 2 ** 24, 2 + 2 * 2 ** 24]);
+    expect(geometry.getAttribute('aType')).toBeUndefined();
     // Kept once uploaded, for three to upload again after a lost context.
+    const words = cell.array;
     a.data.onUploadCallback();
     cell.onUploadCallback();
     expect(a.data.array).toBe(data.segments);
-    expect(cell.array).toBe(data.segmentCells);
+    expect(cell.array).toBe(words);
   });
 
   it("draws a quad a soma that has a position, in a copy of the look's material", () => {
@@ -1348,8 +1350,12 @@ describe('the morphologies read a box at a time', () => {
     expect(segments.geometry.instanceCount).toBe(
       wanted.reduce((sum, { level }) => sum + COUNTS[level], 0)
     );
-    const cells = segments.geometry.getAttribute('aCell').array;
-    expect(new Set(cells.subarray(0, segments.geometry.instanceCount))).toEqual(new Set([0, 2]));
+    const words = segments.geometry.getAttribute('aCell').array;
+    const cells = Array.from(
+      words.subarray(0, segments.geometry.instanceCount),
+      (w) => w & 0xffffff
+    );
+    expect(new Set(cells)).toEqual(new Set([0, 2]));
   });
 
   it('picks with the same quads', async () => {

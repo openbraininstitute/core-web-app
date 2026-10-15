@@ -45,6 +45,21 @@ export interface ImpostorUniforms {
 export const NO_CELL = 0xffffffff;
 /** The section type of a segment that is not drawn: a place in a buffer that no box holds. */
 export const HOLE = 255;
+/** A segment's cell and section type share a word: the type in its top byte, the cell below, under 2^24. */
+export const TYPE_SHIFT = 24;
+export const CELL_MASK = (1 << TYPE_SHIFT) - 1;
+
+/** Each segment's cell and type in one word (`TYPE_SHIFT`), written into `words` from `at`. */
+export function packCellTypes(
+  cells: ArrayLike<number>,
+  types: ArrayLike<number>,
+  words: Uint32Array = new Uint32Array(cells.length),
+  at = 0
+): Uint32Array {
+  for (let i = 0; i < cells.length; i++)
+    words[at + i] = (cells[i] | (types[i] << TYPE_SHIFT)) >>> 0;
+  return words;
+}
 
 /** The somas view's ring round a spiking soma, in sRGB. */
 export const GLOW_RIM_COLOR = '#4d4233';
@@ -93,22 +108,21 @@ const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
 
 /**
  * `geometry` given what the segments' quads are placed by: both ends of each segment as x, y, z and radius, eight floats
- * a segment, the same in the dendrogram (`charted`, the ends again where none was charted), and its cell and type.
+ * a segment, the same in the dendrogram (`charted`, the ends again where none was charted), and its cell and type in a
+ * word (`packCellTypes`).
  */
 export function segmentAttributes(
   geometry: THREE.InstancedBufferGeometry,
   ends: THREE.InstancedInterleavedBuffer,
   charted: THREE.InstancedInterleavedBuffer,
-  cells: THREE.InstancedBufferAttribute,
-  types: THREE.InstancedBufferAttribute
+  cellTypes: THREE.InstancedBufferAttribute
 ): THREE.InstancedBufferGeometry {
   return geometry
     .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
     .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
     .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(charted, 4, 0))
     .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(charted, 4, 4))
-    .setAttribute('aCell', cells)
-    .setAttribute('aType', types);
+    .setAttribute('aCell', cellTypes);
 }
 
 /** `pixelUm`, for a vertex shader that has `uViewport`. */
@@ -131,8 +145,12 @@ in uint aCell;
 const float MIN_RADIUS = 0.75;
 
 ${CELL_GLSL}
+// A segment's word has its type in the top byte.
+uint impostorCell() {
+	return aCell & ${CELL_MASK}u;
+}
 vec4 cellTexel() {
-	return texelFetch( uCells, cellXY( aCell ), 0 );
+	return texelFetch( uCells, cellXY( impostorCell() ), 0 );
 }
 ${PIXEL_UM}
 // Where a view point is drawn, as gl_FragCoord counts pixels.
@@ -161,7 +179,6 @@ in vec4 aA;
 in vec4 aB;
 in vec4 aChartA;
 in vec4 aChartB;
-in float aType;
 flat out vec2 vSegmentA;
 flat out vec2 vSegmentB;
 flat out vec2 vSegmentRadii;
@@ -174,12 +191,12 @@ vec3 lifted( vec3 p, float lift ) {
 }
 
 float sectionType() {
-	return aType;
+	return float( aCell >> ${TYPE_SHIFT}u );
 }
 
 // corner.x picks the end, corner.y the side.
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
-	if ( shown < 0.5 || aType > ${HOLE - 0.5} ) return false;
+	if ( shown < 0.5 || ( aCell >> ${TYPE_SHIFT}u ) == ${HOLE}u ) return false;
 	vec4 A = mix( aA, aChartA, uMix );
 	vec4 B = mix( aB, aChartB, uMix );
 	vec3 a = ( viewMatrix * vec4( A.xyz + uShift, 1.0 ) ).xyz;
@@ -329,11 +346,12 @@ vec3 ownColour( vec4 cell ) {
 
 // The highlighted cell keeps the highlight.
 float cellGlow() {
-	return aCell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY( aCell ), 0 ).r;
+	uint cell = impostorCell();
+	return cell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY( cell ), 0 ).r;
 }
 
 vec3 cellColour( vec3 own, float glow ) {
-	if ( aCell == uHighlighted ) return uHighlight;
+	if ( impostorCell() == uHighlighted ) return uHighlight;
 	if ( glow == 0.0 ) return own;
 	return pow( glowing( pow( own, vec3( 1.0 / 2.2 ) ), glow ), vec3( 2.2 ) );
 }
@@ -365,7 +383,7 @@ void main() {
 /** What the impostors of each kind are numbered by in a pass of the segments: a segment by its own, a soma after them. */
 const SEGMENT_NUMBERS: Record<KindName, string> = {
   segment: 'uint( gl_InstanceID )',
-  soma: 'uSegments + aCell',
+  soma: 'uSegments + impostorCell()',
 };
 
 const ID_FRAGMENT = /* glsl */ `
@@ -470,7 +488,7 @@ export function idMaterial(
       uMix: uniforms.uMix,
       ...segments,
     },
-    vertexShader: `${SHARED_VERTEX}\n${declared}${vertex}\n${idVertex(segments ? SEGMENT_NUMBERS[kind] : 'aCell')}`,
+    vertexShader: `${SHARED_VERTEX}\n${declared}${vertex}\n${idVertex(segments ? SEGMENT_NUMBERS[kind] : 'impostorCell()')}`,
     fragmentShader: `${fragment}\n${ID_FRAGMENT}`,
     blending: THREE.NoBlending,
   });

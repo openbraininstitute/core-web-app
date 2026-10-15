@@ -21,7 +21,13 @@ import { CellTable } from './cell-table';
 import { DETAIL_PIXELS, pixelSpan, SEGMENT_BUDGET } from './detail';
 import { DetailStream } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
-import { impostorUniforms, NO_CELL, segmentAttributes, setSectionColours } from './impostors';
+import {
+  impostorUniforms,
+  NO_CELL,
+  packCellTypes,
+  segmentAttributes,
+  setSectionColours,
+} from './impostors';
 import { GLOW_SWELL, somaCloudUniforms } from './soma-cloud';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
@@ -106,8 +112,7 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
     quadGeometry(data.segmentCells.length),
     ends,
     charted,
-    new THREE.InstancedBufferAttribute(data.segmentCells, 1),
-    new THREE.InstancedBufferAttribute(data.segmentTypes, 1)
+    new THREE.InstancedBufferAttribute(packCellTypes(data.segmentCells, data.segmentTypes), 1)
   );
 }
 

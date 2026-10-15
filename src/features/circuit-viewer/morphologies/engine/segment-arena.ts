@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 
-import { HOLE, segmentAttributes } from './impostors';
+import { CELL_MASK, HOLE, packCellTypes, segmentAttributes, TYPE_SHIFT } from './impostors';
 
 import type { MorphologySegments } from '../types';
 
-/** The bytes a segment takes on the GPU: its two ends, its cell and its type. */
-export const SEGMENT_BYTES = 8 * 4 + 4 + 1;
+/** The bytes a segment takes on the GPU: its two ends, and its cell and type in a word. */
+export const SEGMENT_BYTES = 8 * 4 + 4;
 
 interface Place {
   start: number;
@@ -14,7 +14,7 @@ interface Place {
 
 /**
  * The segments of the boxes drawn, as the segments' quads take them, in one geometry of a fixed number of segments
- * drawn up to the last box. A box's segments lie together. A box let go of leaves a hole, its segments marked `HOLE`,
+ * drawn up to the last box. A box's segments lie together. A box let go of leaves a hole, its segments' type `HOLE`,
  * which the shaders draw nothing of; the smallest hole a box fits in takes it, or else the end, and where neither has
  * room every box is moved down to close the holes. Only what changed is uploaded.
  */
@@ -22,8 +22,7 @@ export class SegmentArena {
   readonly geometry: THREE.InstancedBufferGeometry;
   readonly capacity: number;
   private ends: THREE.InstancedInterleavedBuffer;
-  private cells: THREE.InstancedBufferAttribute;
-  private types: THREE.InstancedBufferAttribute;
+  private cellTypes: THREE.InstancedBufferAttribute;
   private places = new Map<number, Place>();
   /** By where they start, none touching another or the end. */
   private holes: Place[] = [];
@@ -36,10 +35,9 @@ export class SegmentArena {
     this.geometry = geometry;
     this.capacity = capacity;
     this.ends = new THREE.InstancedInterleavedBuffer(new Float32Array(8 * capacity), 8);
-    this.cells = new THREE.InstancedBufferAttribute(new Uint32Array(capacity), 1);
-    this.types = new THREE.InstancedBufferAttribute(new Uint8Array(capacity), 1);
+    this.cellTypes = new THREE.InstancedBufferAttribute(new Uint32Array(capacity), 1);
     // No dendrogram: the ends stand for it, and the morph moves nothing.
-    segmentAttributes(geometry, this.ends, this.ends, this.cells, this.types).instanceCount = 0;
+    segmentAttributes(geometry, this.ends, this.ends, this.cellTypes).instanceCount = 0;
   }
 
   /** The segments of the boxes drawn, holes left out. */
@@ -72,27 +70,29 @@ export class SegmentArena {
       this.end += n;
     }
     (this.ends.array as Float32Array).set(segments, 8 * start);
-    this.cells.array.set(segmentCells, start);
-    this.types.array.set(segmentTypes, start);
+    packCellTypes(segmentCells, segmentTypes, this.cellTypes.array as Uint32Array, start);
     this.places.set(box, { start, count: n });
     this.live += n;
     this.upload(start, n);
     return uploaded;
   }
 
-  /** `box`'s segments no longer drawn, a hole in their place. What was uploaded, in segments: their types alone. */
+  /** `box`'s segments no longer drawn, a hole in their place. What was uploaded, in segments: their words alone. */
   remove(box: number): number {
     const place = this.places.get(box);
     if (!place) return 0;
     this.places.delete(box);
     this.live -= place.count;
     if (place.count === 0) return 0;
-    this.types.array.fill(HOLE, place.start, place.start + place.count);
-    this.types.addUpdateRange(place.start, place.count);
-    this.types.needsUpdate = true;
+    const words = this.cellTypes.array as Uint32Array;
+    for (let i = place.start; i < place.start + place.count; i++) {
+      words[i] = ((words[i] & CELL_MASK) | (HOLE << TYPE_SHIFT)) >>> 0;
+    }
+    this.cellTypes.addUpdateRange(place.start, place.count);
+    this.cellTypes.needsUpdate = true;
     this.leave(place);
     this.geometry.instanceCount = this.end;
-    return Math.ceil(place.count / SEGMENT_BYTES);
+    return Math.ceil((4 * place.count) / SEGMENT_BYTES);
   }
 
   dispose(): void {
@@ -142,13 +142,13 @@ export class SegmentArena {
   /** Every box moved down in the order they lie, the holes closed. The segments uploaded: those from the first hole on. */
   private compact(): number {
     const ends = this.ends.array as Float32Array;
+    const words = this.cellTypes.array as Uint32Array;
     const from = this.holes[0]?.start ?? this.end;
     let at = 0;
     for (const place of [...this.places.values()].sort((a, b) => a.start - b.start)) {
       if (place.start !== at) {
         ends.copyWithin(8 * at, 8 * place.start, 8 * (place.start + place.count));
-        this.cells.array.copyWithin(at, place.start, place.start + place.count);
-        this.types.array.copyWithin(at, place.start, place.start + place.count);
+        words.copyWithin(at, place.start, place.start + place.count);
         place.start = at;
       }
       at += place.count;
@@ -164,9 +164,7 @@ export class SegmentArena {
     if (count === 0) return;
     this.ends.addUpdateRange(8 * start, 8 * count);
     this.ends.needsUpdate = true;
-    for (const attribute of [this.cells, this.types]) {
-      attribute.addUpdateRange(start, count);
-      attribute.needsUpdate = true;
-    }
+    this.cellTypes.addUpdateRange(start, count);
+    this.cellTypes.needsUpdate = true;
   }
 }
