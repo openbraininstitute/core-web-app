@@ -125,6 +125,9 @@ export const MAX_BUMP_AMPLITUDE = 0.2;
 
 export const DEFAULT_LOOK = 'studio';
 
+/** What the looks' tone mapping multiplies by. */
+export const EXPOSURE = 0.95;
+
 /**
  * One set of uniform objects shared by every material, so that a change reaches all of them, the compare tiles and
  * the ambient-occlusion pass included.

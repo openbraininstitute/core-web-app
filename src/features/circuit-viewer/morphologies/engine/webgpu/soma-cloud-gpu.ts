@@ -1,9 +1,6 @@
 import {
   attribute,
   cameraProjectionMatrix,
-  Discard,
-  Fn,
-  If,
   instanceIndex,
   modelViewMatrix,
   positionGeometry,
@@ -13,31 +10,21 @@ import {
 import * as THREE from 'three/webgpu';
 
 import { GLOW_RIM_COLOR } from '../impostors';
-import { GLOW_SWELL } from '../soma-cloud';
-import { CELLS, flat, NOWHERE, srgbWGSL, typed } from './cells-wgsl';
+import { BLUE_RAMP, GLOW_SWELL, LIGHT } from '../soma-cloud';
+import { CELLS, cellGlow, cellId, cellXY, flat, keptUnless, srgbWGSL, typed } from './cells-wgsl';
 
 import type { GpuUniforms } from './gpu-uniforms';
 
-const LIGHT = new THREE.Vector3(-0.4, 0.5, 0.666).normalize().toArray();
-
-/** How much a soma glows, none for the highlighted cell, which keeps the highlight. */
-const GLOW = /* wgsl */ `
-fn cloudGlow(cell: u32, highlighted: u32, glowTexel: vec4f) -> f32 {
-  return select(glowTexel.r, 0.0, cell == highlighted);
-}`;
-
-/** The quad's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners nowhere. */
+/** The quad's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view. */
 const cloudCorner = wgslFn(
   /* wgsl */ `
 fn cloudCorner(centre: vec3f, corner: vec2f, offset: vec3f, radius: f32, modelView: mat4x4f, projection: mat4x4f,
                texel: vec4f, swell: f32) -> vec4f {
-  if (texel.a == 0.0) { return ${NOWHERE}; }
+  if (texel.a == 0.0) { return vec4f(2.0, 2.0, 2.0, 1.0); }
   let c = modelView * vec4f(centre - offset, 1.0);
   return projection * vec4f(c.xy + corner * radius * (1.0 + ${GLOW_SWELL.toFixed(6)} * swell), c.z, 1.0);
 }`
 );
-
-const cloudGlow = wgslFn(GLOW);
 
 /** The cell's colour in sRGB and its glow, as `soma-cloud.ts` takes them. */
 const cloudLook = wgslFn(
@@ -50,9 +37,9 @@ fn cloudLook(cell: u32, highlighted: u32, texel: vec4f, glow: f32, shade: vec4f,
     // How crowded the cell is darkens it by up to 55%; with no colour of its own it runs along the blue ramp.
     colour = colour * (1.0 - 0.55 * shade.r);
   } else if (shade.r < 0.5) {
-    colour = mix(${srgbWGSL('hsl(200, 100%, 80%)')}, ${srgbWGSL('hsl(200, 100%, 50%)')}, 2.0 * shade.r);
+    colour = mix(${srgbWGSL(BLUE_RAMP[0])}, ${srgbWGSL(BLUE_RAMP[1])}, 2.0 * shade.r);
   } else {
-    colour = mix(${srgbWGSL('hsl(200, 100%, 50%)')}, ${srgbWGSL('hsl(220, 100%, 30%)')}, 2.0 * shade.r - 1.0);
+    colour = mix(${srgbWGSL(BLUE_RAMP[1])}, ${srgbWGSL(BLUE_RAMP[2])}, 2.0 * shade.r - 1.0);
   }
   return vec4f(glowing(colour, glow), glow);
 }`,
@@ -75,31 +62,6 @@ fn cloudColour(coord: vec2f, look: vec4f, alpha: f32, rimOn: f32) -> vec4f {
   return vec4f(mix(hot, ${srgbWGSL(GLOW_RIM_COLOR)}, rim), alpha);
 }`);
 
-const cellIdOf = wgslFn(
-  /* wgsl */ `
-fn cellIdOf(cell: u32) -> vec4f {
-  return cellId(cell);
-}`,
-  [CELLS]
-);
-
-const xyOf = wgslFn(
-  /* wgsl */ `
-fn xyOf(cell: u32) -> vec2i {
-  return cellXY(cell);
-}`,
-  [CELLS]
-);
-
-/** Outside the quad's circle, nothing; inside, `colour`. */
-const inCircle = (coord: THREE.Node<'vec2'>, colour: THREE.Node<'vec4'>) =>
-  Fn(() => {
-    If(coord.dot(coord).greaterThan(1), () => {
-      Discard();
-    });
-    return colour;
-  })();
-
 /**
  * The somas of `soma-cloud.ts` on WebGPU: a quad a cell at its position, shaded as a sphere and drawn as it comes out,
  * as on WebGL 2; and the same quads in their cells' numbers.
@@ -109,10 +71,10 @@ export function somaCloudMaterials(u: GpuUniforms): {
   id: THREE.MeshBasicNodeMaterial;
 } {
   const cell = instanceIndex;
-  const xy = xyOf({ cell });
+  const xy = cellXY({ cell });
   const texel = u.cells.load(xy);
   const glow = typed<'float'>(
-    cloudGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) })
+    cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) })
   );
   const place = {
     centre: attribute('aPosition', 'vec3'),
@@ -124,6 +86,7 @@ export function somaCloudMaterials(u: GpuUniforms): {
     texel,
   };
   const coord = varying(positionGeometry.xy);
+  const outside = coord.dot(coord).greaterThan(1);
 
   const cloud = new THREE.MeshBasicNodeMaterial();
   cloud.vertexNode = cloudCorner({ ...place, swell: glow });
@@ -136,8 +99,8 @@ export function somaCloudMaterials(u: GpuUniforms): {
     highlight: u.highlight,
   });
   const alpha = cloudAlpha({ cell, highlighted: u.highlighted, glow, opacity: u.opacity });
-  cloud.fragmentNode = inCircle(
-    coord,
+  cloud.fragmentNode = keptUnless(
+    outside,
     typed<'vec4'>(
       cloudColour({
         coord,
@@ -150,7 +113,7 @@ export function somaCloudMaterials(u: GpuUniforms): {
 
   const id = new THREE.MeshBasicNodeMaterial();
   id.vertexNode = cloudCorner({ ...place, swell: 0 });
-  id.fragmentNode = inCircle(coord, flat(typed<'vec4'>(cellIdOf({ cell }))));
+  id.fragmentNode = keptUnless(outside, flat(typed<'vec4'>(cellId({ cell }))));
   id.blending = THREE.NoBlending;
   return { cloud, id };
 }

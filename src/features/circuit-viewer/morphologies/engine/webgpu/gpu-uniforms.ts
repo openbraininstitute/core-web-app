@@ -32,7 +32,7 @@ export class DotUniforms {
   }
 }
 
-/** What `CircuitView` holds that the WebGPU tier's nodes read besides the cells', impostors' and cloud's. */
+/** The uniforms `CircuitView` holds that the WebGPU tier's nodes read. */
 export interface HeldUniforms {
   impostors: ImpostorUniforms;
   cloud: SomaCloudUniforms;

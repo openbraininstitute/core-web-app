@@ -704,9 +704,7 @@ describe('the circuit morphology viewer', () => {
   });
 
   it("rings each contact in the theme's foreground, a CSS pixel wide on any screen", () => {
-    const ratio = vi.spyOn(FakeRenderer.prototype, 'getPixelRatio').mockReturnValue(2);
-    const { viewer, inner } = make();
-    ratio.mockRestore();
+    const { viewer, inner } = make(2);
     const { uRing, uRingColour } = inner.materials.electrode.uniforms;
     expect(uRing.value).toBe(2);
     expect(rounded(uRingColour.value.toArray())).toEqual(sRGB('#1a1a1a'));

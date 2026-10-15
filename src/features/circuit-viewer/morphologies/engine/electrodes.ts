@@ -18,7 +18,7 @@ const HIGHLIGHT_LIGHTEN = 0.55;
 /** What a contact is drawn in where the host's colour cannot be read, which its styling passes on as it is. */
 const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
-const RING_PX = 1;
+export const RING_PX = 1;
 
 export interface ElectrodeUniforms {
   /** A contact's radius, in µm. */

@@ -1,6 +1,6 @@
 import { median } from './mesh-choice';
 
-import type { MovingFrame } from '@/features/viewer-3d/engine/scene-view';
+import type { MovingFrame } from '@/features/viewer-3d/engine/scene-viewer';
 import type { ForcedMesh } from './mesh-choice';
 
 /** The fractions of the resolution frames drawn while the view moves can be cut to: each halves the pixels. */

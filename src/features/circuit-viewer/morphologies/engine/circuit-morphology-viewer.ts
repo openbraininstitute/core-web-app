@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 
+import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
-import { type CircuitMaterials, CircuitView, PICK_REACH } from './circuit-view';
+import { type CircuitMaterials, CircuitView } from './circuit-view';
 import { electrodeMaterial } from './electrodes';
-import { cellNearMiddle, idMaterial, impostor } from './impostors';
+import { idMaterial, impostor } from './impostors';
 import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
 
 /**
@@ -14,6 +15,7 @@ import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
  */
 export class CircuitMorphologyViewer extends CircuitView {
   protected materials: CircuitMaterials;
+  protected readonly rowsUp = true;
   private renderer: THREE.WebGLRenderer;
   private idTarget: THREE.WebGLRenderTarget | null = null;
 
@@ -28,7 +30,7 @@ export class CircuitMorphologyViewer extends CircuitView {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.95;
+    renderer.toneMappingExposure = EXPOSURE;
     super(container, renderer.domElement, renderer.getPixelRatio());
     this.renderer = renderer;
     renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
@@ -70,41 +72,23 @@ export class CircuitMorphologyViewer extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
-  protected override draw(): null {
+  protected override draw(): void {
     this.renderer.render(this.scene, this.camera);
-    return null;
   }
 
   private onContextRestored = (): void => this.invalidate();
 
-  protected override numberAround(
-    scene: THREE.Scene,
-    x: number,
-    y: number
-  ): Promise<number | null> {
+  protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
     const { renderer } = this;
-    const ratio = this.pixelRatio;
     const target = this.pickTarget();
     const side = target.width;
-    const middle = (side - 1) / 2;
-    // The whole view, placed so that the pixel asked for is the target's middle one. A frame buffer's rows count up.
-    const { width, height } = renderer.domElement;
-    target.viewport.set(
-      middle - Math.floor(x * ratio),
-      middle - (height - 1 - Math.floor(y * ratio)),
-      width,
-      height
-    );
-    // No frame may have been drawn since the camera last moved.
-    this.camera.updateMatrixWorld();
     renderer.setRenderTarget(target);
     renderer.render(scene, this.camera);
     renderer.setRenderTarget(null);
     const pixels = new Uint8Array(4 * side * side);
-    return renderer.readRenderTargetPixelsAsync(target, 0, 0, side, side, pixels).then(
-      () => cellNearMiddle(pixels, side),
-      () => null
-    );
+    return renderer
+      .readRenderTargetPixelsAsync(target, 0, 0, side, side, pixels)
+      .then(() => pixels);
   }
 
   /** Built for the pick's target: three builds a program for the colour space and tone mapping of where it draws. */
@@ -115,9 +99,8 @@ export class CircuitMorphologyViewer extends CircuitView {
     renderer.setRenderTarget(null);
   }
 
-  private pickTarget(): THREE.WebGLRenderTarget {
-    const side = 2 * Math.ceil(PICK_REACH * this.pixelRatio) + 1;
-    this.idTarget ??= new THREE.WebGLRenderTarget(side, side);
+  protected override pickTarget(): THREE.WebGLRenderTarget {
+    this.idTarget ??= new THREE.WebGLRenderTarget(this.pickSide, this.pickSide);
     return this.idTarget;
   }
 }

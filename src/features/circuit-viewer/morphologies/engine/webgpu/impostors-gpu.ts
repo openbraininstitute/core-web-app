@@ -4,10 +4,7 @@ import {
   cameraProjectionMatrix,
   cameraViewMatrix,
   cameraWorldMatrix,
-  Discard,
-  Fn,
   float,
-  If,
   instanceIndex,
   mix,
   output,
@@ -24,34 +21,23 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
+import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
+
 import { BY_SECTION } from '../cell-table';
-import { CELL_MASK, HOLE, TYPE_SHIFT } from '../impostors';
-import { CELLS, flat, typed } from './cells-wgsl';
+import { CELL_MASK, HOLE, MIN_RADIUS, TYPE_SHIFT } from '../impostors';
+import { CELLS, cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 
 import type { Node } from 'three/webgpu';
 import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { GpuUniforms } from './gpu-uniforms';
-
-/** What Studio's tone mapping multiplies by, as the WebGL 2 tier sets it. */
-const EXPOSURE = 0.95;
 
 /**
  * As `impostors.ts` draws a segment and a soma, in WGSL. Pixels: the fragment's position counts them from the top left
  * of the target, y down, where WebGL's counts y up; geometry is worked in pixels y up, as view space has it, and the
  * ends handed to the fragments are turned over.
  */
-const IMPOSTORS = wgsl(/* wgsl */ `
-// The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes.
-const MIN_RADIUS: f32 = 0.75;
-
-fn isOrthographic(projection: mat4x4f) -> bool {
-  return projection[3][3] > 0.5;
-}
-// The µm a device pixel spans at the view depth z.
-fn pixelUm(z: f32, projection: mat4x4f, vp: vec4f) -> f32 {
-  let span = 2.0 / (projection[1][1] * vp.w);
-  return select(span * max(-z, 1e-3), span, isOrthographic(projection));
-}
+const IMPOSTORS = wgsl(
+  /* wgsl */ `
 // A view point in device pixels from the viewport's bottom left, y up.
 fn pixelsUp(p: vec3f, projection: mat4x4f, vp: vec4f) -> vec2f {
   let clip = projection * vec4f(p, 1.0);
@@ -67,9 +53,27 @@ fn lifted(p: vec3f, lift: f32, orthographic: bool) -> vec3f {
   let z = p.z + min(lift, -0.5 * p.z);
   return vec3f(p.xy * (z / p.z), z);
 }
+// A cell in its sections' colours is all but opaque in the cell table.
+fn ownColour(texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f, axon: vec3f, basal: vec3f, apical: vec3f) -> vec3f {
+  if (texel.a > ${(BY_SECTION + 0.5) / 255}) { return texel.rgb; }
+  switch type_ {
+    case 1u: { return soma; }
+    case 2u: { return axon; }
+    case 3u: { return basal; }
+    case 4u: { return apical; }
+    default: { return unknown; }
+  }
+}
+`,
+  [VIEW]
+);
 
-// A segment's quad: the corner in the world, w 1 where it is drawn; its ends in the fragment's pixels; its radii in
-// pixels. corner.x picks the end, corner.y the side. Not drawn, its four corners are one point.
+/**
+ * A segment's quad: the corner in the world, w 1 where it is drawn; its ends in the fragment's pixels; its radii in
+ * pixels. corner.x picks the end, corner.y the side. Not drawn, its four corners are one point.
+ */
+const segmentQuad = wgslFn(
+  /* wgsl */ `
 fn segmentQuad(corner: vec3f, word: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f,
                chartB: vec4f, morph: f32, shift: vec3f, view: mat4x4f, world: mat4x4f, projection: mat4x4f,
                vp: vec4f, near: f32) -> mat4x4f {
@@ -117,11 +121,16 @@ fn segmentQuad(corner: vec3f, word: u32, shown: f32, least: f32, endA: vec4f, en
   let p = lifted(vec3f(end.xy + outward * wide, end.z), select(ra, rb, atB), orthographic);
   return mat4x4f(world * vec4f(p, 1.0), vec4f(toFragment(pa, vp), toFragment(pb, vp)), vec4f(radii, 0.0, 0.0),
                  vec4f(0.0));
-}
+}`,
+  [IMPOSTORS]
+);
 
-// Under pixel q, the normal of a segment's tube in view space, round across its width and across only, as far from
-// its edge, so that a round end carries on into the next segment without a seam; w 1 where the pixel is on it. And in
-// the second column how far the pixel is from the edge and the radius, in pixels.
+/**
+ * Under pixel q, the normal of a segment's tube in view space, round across its width and across only, as far from its
+ * edge, so that a round end carries on into the next segment without a seam; w 1 where the pixel is on it. And in the
+ * second column how far the pixel is from the edge and the radius, in pixels.
+ */
+const segmentSurface = wgslFn(/* wgsl */ `
 fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f) -> mat4x4f {
   let a = ends.xy;
   let ab = ends.zw - a;
@@ -134,10 +143,14 @@ fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f) -> mat4x4f {
   // The fragment's y runs down, view space's up.
   let n = vec3f(across.x * s, -across.y * s, sqrt(max(1.0 - s * s, 0.0)));
   return mat4x4f(vec4f(n, select(0.0, 1.0, on)), vec4f(r * (1.0 - abs(s)), r, 0.0, 0.0), vec4f(0.0), vec4f(0.0));
-}
+}`);
 
-// A soma's quad: the corner in the world, w 1 where it is drawn; the centre in view space and the radius; the radius
-// in pixels and the corner in view space.
+/**
+ * A soma's quad: the corner in the world, w 1 where it is drawn; the centre in view space and the radius; the radius in
+ * pixels and the corner in view space.
+ */
+const somaQuad = wgslFn(
+  /* wgsl */ `
 fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, morph: f32, shift: vec3f,
             view: mat4x4f, world: mat4x4f, projection: mat4x4f, vp: vec4f) -> mat4x4f {
   let none = mat4x4f(vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
@@ -160,10 +173,16 @@ fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, 
   // A little wider than the sphere. Its depth is the fragment's to write.
   let p = vec3f(c.xy + corner.xy * (1.2 * reach), c.z);
   return mat4x4f(world * vec4f(p, 1.0), vec4f(c, r), vec4f(r / um, 0.0, 0.0, 0.0), vec4f(p, 0.0));
-}
+}`,
+  [VIEW]
+);
 
-// Under the corner's point p, the sphere's normal in view space, w 1 where the pixel is on it; how far the pixel is
-// from its edge and its radius, in pixels, and its depth as the depth buffer takes it.
+/**
+ * Under the corner's point p, the sphere's normal in view space, w 1 where the pixel is on it; how far the pixel is
+ * from its edge and its radius, in pixels, and its depth as the depth buffer takes it.
+ */
+const somaSurface = wgslFn(
+  /* wgsl */ `
 fn somaSurface(p: vec3f, sphere: vec4f, radiusPx: f32, projection: mat4x4f) -> mat4x4f {
   let orthographic = isOrthographic(projection);
   let centre = sphere.xyz;
@@ -180,86 +199,9 @@ fn somaSurface(p: vec3f, sphere: vec4f, radiusPx: f32, projection: mat4x4f) -> m
   let edge = radiusPx * (1.0 - sqrt(max(1.0 - facing * facing, 0.0)));
   return mat4x4f(vec4f(n, select(0.0, 1.0, h >= 0.0)), vec4f(edge, radiusPx, clip.z / clip.w, 0.0), vec4f(0.0),
                  vec4f(0.0));
-}
-
-// A cell in its sections' colours is all but opaque in the cell table.
-fn ownColour(texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f, axon: vec3f, basal: vec3f, apical: vec3f) -> vec3f {
-  if (texel.a > ${(BY_SECTION + 0.5) / 255}) { return texel.rgb; }
-  switch type_ {
-    case 1u: { return soma; }
-    case 2u: { return axon; }
-    case 3u: { return basal; }
-    case 4u: { return apical; }
-    default: { return unknown; }
-  }
-}
-`);
-
-const column = (k: number) =>
-  wgslFn(/* wgsl */ `
-fn column${k}(m: mat4x4f) -> vec4f {
-  return m[${k}];
-}`);
-const COLUMNS = [0, 1, 2, 3].map(column);
-const col = (m: Node<'mat4'>, k: number) => typed<'vec4'>(COLUMNS[k]({ m }));
-
-const segmentQuad = wgslFn(
-  /* wgsl */ `
-fn segmentQuadOf(corner: vec3f, word: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f,
-                 chartB: vec4f, morph: f32, shift: vec3f, view: mat4x4f, world: mat4x4f, projection: mat4x4f,
-                 vp: vec4f, near: f32) -> mat4x4f {
-  return segmentQuad(corner, word, shown, least, endA, endB, chartA, chartB, morph, shift, view, world, projection, vp, near);
 }`,
-  [IMPOSTORS]
+  [VIEW]
 );
-
-const segmentSurface = wgslFn(
-  /* wgsl */ `
-fn segmentSurfaceOf(q: vec2f, ends: vec4f, radii: vec4f) -> mat4x4f {
-  return segmentSurface(q, ends, radii);
-}`,
-  [IMPOSTORS]
-);
-
-const somaQuad = wgslFn(
-  /* wgsl */ `
-fn somaQuadOf(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, morph: f32, shift: vec3f,
-              view: mat4x4f, world: mat4x4f, projection: mat4x4f, vp: vec4f) -> mat4x4f {
-  return somaQuad(corner, shown, least, sphere, chart, morph, shift, view, world, projection, vp);
-}`,
-  [IMPOSTORS]
-);
-
-const somaSurface = wgslFn(
-  /* wgsl */ `
-fn somaSurfaceOf(p: vec3f, sphere: vec4f, radiusPx: f32, projection: mat4x4f) -> mat4x4f {
-  return somaSurface(p, sphere, radiusPx, projection);
-}`,
-  [IMPOSTORS]
-);
-
-const cellOf = wgslFn(/* wgsl */ `
-fn cellOf(word: u32) -> u32 {
-  return word & ${CELL_MASK}u;
-}`);
-
-const typeOf = wgslFn(/* wgsl */ `
-fn typeOf(word: u32) -> u32 {
-  return word >> ${TYPE_SHIFT}u;
-}`);
-
-const xyOf = wgslFn(
-  /* wgsl */ `
-fn cellXYOf(cell: u32) -> vec2i {
-  return cellXY(cell);
-}`,
-  [CELLS]
-);
-
-const glowOf = wgslFn(/* wgsl */ `
-fn glowOf(cell: u32, highlighted: u32, glowTexel: vec4f) -> f32 {
-  return select(glowTexel.r, 0.0, cell == highlighted);
-}`);
 
 /** The cell's colour, linear, as the look lights it: the highlight, or its own lit by its glow. */
 const colourOf = wgslFn(
@@ -292,14 +234,6 @@ fn rimOf(edge: vec4f, glow: f32, rimOn: f32) -> f32 {
   return glow * rimOn * (1.0 - smoothstep(width - 0.5, width + 0.5, edge.x));
 }`);
 
-const cellIdOf = wgslFn(
-  /* wgsl */ `
-fn cellIdOf(n: u32) -> vec4f {
-  return cellId(n);
-}`,
-  [CELLS]
-);
-
 type Kind = 'segment' | 'soma';
 
 /**
@@ -310,13 +244,13 @@ type Kind = 'segment' | 'soma';
  */
 function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
   const word = attribute('aCell', 'uint');
-  const cell = typed<'uint'>(cellOf({ word }));
-  const xy = xyOf({ cell });
+  const cell = word.bitAnd(uint(CELL_MASK));
+  const xy = cellXY({ cell });
   const texel = u.cells.load(xy);
   const glow = glowing
-    ? typed<'float'>(glowOf({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
+    ? typed<'float'>(cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
     : float(0);
-  const least = float(0.75).mul(glow.add(1));
+  const least = float(MIN_RADIUS).mul(glow.add(1));
   const view = {
     view: cameraViewMatrix,
     world: cameraWorldMatrix,
@@ -372,15 +306,6 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
   return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth: col(surface, 1).z };
 }
 
-/** Nothing where the pixel is off the impostor; `colour` where it is on. */
-const onIt = (surface: Node<'mat4'>, colour: Node<'vec4'>) =>
-  Fn(() => {
-    If(col(surface, 0).w.lessThan(0.5), () => {
-      Discard();
-    });
-    return colour;
-  })();
-
 /**
  * An impostor of `kind` in the look's material, three's standard one under the look's lights: the cell's colour from
  * the cell table where the vertex colour would go, lit by its glow, ringed as it glows on a light background, tone
@@ -409,7 +334,7 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
         highlighted: u.highlighted,
         highlight: u.highlight,
         texel,
-        type_: kind === 'segment' ? typed<'uint'>(typeOf({ word })) : uint(1),
+        type_: kind === 'segment' ? word.shiftRight(uint(TYPE_SHIFT)) : uint(1),
         glow,
         unknown,
         soma,
@@ -448,7 +373,10 @@ function idMaterial(kind: Kind, u: GpuUniforms, segments = false): THREE.MeshBas
   if (segments) n = kind === 'segment' ? instanceIndex : u.segments.add(cell);
   material.positionNode = position;
   if (sphereDepth) material.depthNode = sphereDepth;
-  material.fragmentNode = onIt(surface, flat(typed<'vec4'>(cellIdOf({ n }))));
+  material.fragmentNode = keptUnless(
+    col(surface, 0).w.lessThan(0.5),
+    flat(typed<'vec4'>(cellId({ cell: n })))
+  );
   material.blending = THREE.NoBlending;
   return material;
 }

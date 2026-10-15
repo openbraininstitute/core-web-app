@@ -40,9 +40,13 @@ export function somaCloudUniforms(): SomaCloudUniforms {
 /** How much wider a soma glowing in full is drawn, a share of its radius. */
 export const GLOW_SWELL = 0.7;
 
+/** Where the somas are lit from, in view space. */
+export const LIGHT = new THREE.Vector3(-0.4, 0.5, 0.666).normalize().toArray();
+/** What a cell with no colour of its own runs along as it is less and more crowded. */
+export const BLUE_RAMP = ['hsl(200, 100%, 80%)', 'hsl(200, 100%, 50%)', 'hsl(220, 100%, 30%)'];
+
 const glsl = (values: number[]) => `vec3( ${values.map((v) => v.toFixed(6)).join(', ')} )`;
 const srgb = (color: string) => glsl(chroma(color).gl().slice(0, 3));
-const LIGHT = new THREE.Vector3(-0.4, 0.5, 0.666).normalize().toArray();
 
 const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
@@ -81,8 +85,8 @@ vec3 toSRGB( vec3 linear ) {
 vec3 crowded( vec3 colour, vec2 shade ) {
 	if ( shade.g < 0.5 ) return colour * ( 1.0 - 0.55 * shade.r );
 	return shade.r < 0.5
-		? mix( ${srgb('hsl(200, 100%, 80%)')}, ${srgb('hsl(200, 100%, 50%)')}, 2.0 * shade.r )
-		: mix( ${srgb('hsl(200, 100%, 50%)')}, ${srgb('hsl(220, 100%, 30%)')}, 2.0 * shade.r - 1.0 );
+		? mix( ${srgb(BLUE_RAMP[0])}, ${srgb(BLUE_RAMP[1])}, 2.0 * shade.r )
+		: mix( ${srgb(BLUE_RAMP[1])}, ${srgb(BLUE_RAMP[2])}, 2.0 * shade.r - 1.0 );
 }
 
 void main() {

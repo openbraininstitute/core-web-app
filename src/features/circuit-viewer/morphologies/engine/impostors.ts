@@ -61,6 +61,9 @@ export function packCellTypes(
   return words;
 }
 
+/** The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes. */
+export const MIN_RADIUS = 0.75;
+
 /** The somas view's ring round a spiking soma, in sRGB. */
 export const GLOW_RIM_COLOR = '#4d4233';
 const GLOW_RIM = new THREE.Color(GLOW_RIM_COLOR);
@@ -141,8 +144,7 @@ uniform vec3 uShift;
 uniform float uMix;
 in uint aCell;
 
-// The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes.
-const float MIN_RADIUS = 0.75;
+const float MIN_RADIUS = ${MIN_RADIUS.toFixed(6)};
 
 ${CELL_GLSL}
 // A segment's word has its type in the top byte.

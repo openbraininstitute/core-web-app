@@ -16,7 +16,7 @@ const PIXELS = [1, DETAIL_PIXELS, 4, 8];
 const TIERS: Record<Tier, string> = { webgpu: 'WebGPU', webgl: 'WebGL 2' };
 
 /** What draws the view and why, and what the debug tools ask for. */
-export interface RendererState {
+interface RendererState {
   tier: Tier;
   reason: string | null;
   choice: TierChoice;

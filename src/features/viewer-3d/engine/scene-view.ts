@@ -42,16 +42,6 @@ export interface ViewControls {
   viewAlong(axis: Axis, sign: Sign): void;
 }
 
-/** How a frame drawn while the camera moves is cut down, or was drawn. */
-export interface MovingFrame {
-  /** With the ambient occlusion, where it is on. */
-  ao: boolean;
-  /** At this fraction of the resolution, scaled up onto the canvas. */
-  scale: number;
-  /** Multisampled, as still frames are. */
-  antialias: boolean;
-}
-
 /**
  * A view of a scene on a canvas, whatever draws it: both cameras, OrbitControls, the render-on-demand loop, and the
  * framing. The content sits around the origin, which the camera orbits, and frames the view with `bounds` and
@@ -176,8 +166,8 @@ export abstract class SceneView implements ViewControls {
   // ---------------------------------------------------------------------------
   // Rendering
 
-  /** A frame: how it was cut down while the camera moves, through the composer, or null. */
-  protected abstract draw(moving: boolean): MovingFrame | null;
+  /** A frame, with whether the camera is moving. */
+  protected abstract draw(moving: boolean): void;
 
   /** Call `loop` on every frame the display draws, or none with null. */
   protected abstract animate(loop: (() => void) | null): void;
@@ -218,9 +208,9 @@ export abstract class SceneView implements ViewControls {
     this.dirty = false;
     this.updateCameraTied();
     this.beforeDraw(moving);
-    const drawn = this.draw(moving);
+    this.draw(moving);
     this.drawnMoving = moving;
-    this.afterDraw(moving ? drawn : null);
+    this.afterDraw(moving);
     this.framesDrawn++;
     const orientation = this.camera.quaternion;
     if (!orientation.equals(this.heardOrientation)) {
@@ -288,8 +278,8 @@ export abstract class SceneView implements ViewControls {
   /** Before a frame is drawn, with whether the camera is moving: what the content draws may depend on it. */
   protected beforeDraw(_moving: boolean): void {}
 
-  /** After a frame is drawn: how, through the composer, where the camera moved; null where it was still. */
-  protected afterDraw(_moved: MovingFrame | null): void {}
+  /** After a frame is drawn, with whether the camera was moving. */
+  protected afterDraw(_moving: boolean): void {}
 
   /** After what a frame costs changed: the view's size, the look, or the passes. */
   protected frameChanged(): void {}

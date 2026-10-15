@@ -333,7 +333,8 @@ export function CircuitCells({
               viewer={viewer}
               theme={theme}
               renderer={{
-                ...created,
+                tier: created.tier,
+                reason: created.reason,
                 choice: making.choice,
                 onChoice: (choice) => setMaking({ choice }),
               }}

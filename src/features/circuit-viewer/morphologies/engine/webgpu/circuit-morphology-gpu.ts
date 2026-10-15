@@ -2,8 +2,7 @@ import * as THREE from 'three/webgpu';
 
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
-import { type CircuitMaterials, CircuitView, PICK_REACH } from '../circuit-view';
-import { cellNearMiddle } from '../impostors';
+import { type CircuitMaterials, CircuitView } from '../circuit-view';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import { impostorMaterials } from './impostors-gpu';
@@ -19,6 +18,7 @@ const ROW_ALIGNMENT = 256;
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
+  protected readonly rowsUp = false;
   private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private gpu: GpuUniforms;
@@ -44,7 +44,6 @@ export class CircuitMorphologyGPU extends CircuitView {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.NoToneMapping;
-    renderer.toneMappingExposure = 0.95;
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
     super(host, renderer.domElement, renderer.getPixelRatio());
     this.renderer = renderer;
@@ -79,7 +78,16 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.device.destroy();
   }
 
+  /**
+   * three turns a loop of its own on every refresh of the display from `init` to `dispose`, with a loop set or not;
+   * here it turns only while the view's does. Its first turn is at once, so the view's loop is set after it.
+   */
   protected override animate(loop: (() => void) | null): void {
+    const turns = threeLoop(this.renderer);
+    void this.renderer.setAnimationLoop(null);
+    turns.stop();
+    if (!loop) return;
+    turns.start();
     void this.renderer.setAnimationLoop(loop);
   }
 
@@ -87,40 +95,22 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
-  protected override draw(): null {
+  protected override draw(): void {
     this.gpu.sync();
     this.renderer.render(this.scene, this.camera);
-    return null;
   }
 
-  protected override numberAround(
-    scene: THREE.Scene,
-    x: number,
-    y: number
-  ): Promise<number | null> {
+  protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
     const { renderer } = this;
-    const ratio = this.pixelRatio;
     const target = this.pickTarget();
     const side = target.width;
-    const middle = (side - 1) / 2;
-    // The whole view, placed so that the pixel asked for is the target's middle one. WebGPU counts rows down.
-    const { width, height } = this.canvas;
-    target.viewport.set(
-      middle - Math.floor(x * ratio),
-      middle - Math.floor(y * ratio),
-      width,
-      height
-    );
-    // No frame may have been drawn since the camera last moved.
-    this.camera.updateMatrixWorld();
     this.gpu.sync();
     renderer.setRenderTarget(target);
     renderer.render(scene, this.camera);
     renderer.setRenderTarget(null);
-    return renderer.readRenderTargetPixelsAsync(target, 0, 0, side, side).then(
-      (read) => cellNearMiddle(packed(read as Uint8Array, side), side),
-      () => null
-    );
+    return renderer
+      .readRenderTargetPixelsAsync(target, 0, 0, side, side)
+      .then((read) => packed(read as Uint8Array, side));
   }
 
   /** Built for the pick's target, whose format the pipelines are made for. */
@@ -131,11 +121,14 @@ export class CircuitMorphologyGPU extends CircuitView {
     renderer.setRenderTarget(null);
   }
 
-  private pickTarget(): THREE.RenderTarget {
-    const side = 2 * Math.ceil(PICK_REACH * this.pixelRatio) + 1;
-    this.idTarget ??= new THREE.RenderTarget(side, side);
+  protected override pickTarget(): THREE.RenderTarget {
+    this.idTarget ??= new THREE.RenderTarget(this.pickSide, this.pickSide);
     return this.idTarget;
   }
+}
+
+function threeLoop(renderer: THREE.WebGPURenderer): { start(): void; stop(): void } {
+  return (renderer as unknown as { _animation: { start(): void; stop(): void } })._animation;
 }
 
 /** A square of RGBA bytes `side` wide, from WebGPU's copy with each row padded to `ROW_ALIGNMENT` bytes. */

@@ -12,6 +12,7 @@ import {
   backgroundCss,
   createLooks,
   DEFAULT_LOOK,
+  EXPOSURE,
   type Look,
   makeEnvironment,
   PLAIN,
@@ -20,7 +21,7 @@ import {
   type ThemeColors,
   withDisplacement,
 } from './looks';
-import { MAX_PIXEL_RATIO, type MovingFrame, SceneView } from './scene-view';
+import { MAX_PIXEL_RATIO, SceneView } from './scene-view';
 
 /**
  * Ambient occlusion is computed at this fraction of the device resolution.
@@ -81,6 +82,16 @@ function makeComposer(renderer: THREE.WebGLRenderer, antialias: boolean): Effect
   composer.renderTarget2.samples = antialias ? samples : 0;
   composer.renderTarget1.depthBuffer = false;
   return composer;
+}
+
+/** How a frame drawn while the camera moves is cut down, or was drawn. */
+export interface MovingFrame {
+  /** With the ambient occlusion, where it is on. */
+  ao: boolean;
+  /** At this fraction of the resolution, scaled up onto the canvas. */
+  scale: number;
+  /** Multisampled, as still frames are. */
+  antialias: boolean;
 }
 
 /** A composer and its passes: render → normals from depth → GTAO → bloom → output, drawing at `scale` of the resolution. */
@@ -205,6 +216,8 @@ export class SceneViewer extends SceneView {
    * them as still ones. It applies only through the composer, and where the look blooms only to the occlusion.
    */
   protected motionFrame: MovingFrame | null = null;
+  /** How the last frame was drawn through the composer, or null without it. */
+  protected drawnCut: MovingFrame | null = null;
   /** What moving frames are drawn through under full resolution or without antialiasing, made the first time one is. */
   private movingPipeline: Pipeline | null = null;
   private unseenTarget: THREE.WebGLRenderTarget | null = null;
@@ -224,7 +237,7 @@ export class SceneViewer extends SceneView {
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setClearColor(0x000000, 0);
-    renderer.toneMappingExposure = 0.95;
+    renderer.toneMappingExposure = EXPOSURE;
     super(container, renderer.domElement);
     this.renderer = renderer;
     renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
@@ -280,8 +293,12 @@ export class SceneViewer extends SceneView {
     return this.options.composeAlways === true || this.ao || this.look.bloom === true;
   }
 
+  protected override draw(moving = false): void {
+    this.drawnCut = this.compose(moving);
+  }
+
   /** A frame, cut down as `motionFrame` says where the camera moves: how it was drawn, or null without the composer. */
-  protected override draw(moving = false): MovingFrame | null {
+  private compose(moving: boolean): MovingFrame | null {
     const main = this.main;
     if (!main || !this.composing()) {
       this.renderer.render(this.scene, this.camera);

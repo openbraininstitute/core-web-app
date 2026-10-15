@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { CELL_MASK, HOLE, packCellTypes, segmentAttributes, TYPE_SHIFT } from './impostors';
+import { HOLE, packCellTypes, segmentAttributes, TYPE_SHIFT } from './impostors';
 
 import type { MorphologySegments } from '../types';
 
@@ -84,10 +84,11 @@ export class SegmentArena {
     this.places.delete(box);
     this.live -= place.count;
     if (place.count === 0) return 0;
-    const words = this.cellTypes.array as Uint32Array;
-    for (let i = place.start; i < place.start + place.count; i++) {
-      words[i] = ((words[i] & CELL_MASK) | (HOLE << TYPE_SHIFT)) >>> 0;
-    }
+    (this.cellTypes.array as Uint32Array).fill(
+      (HOLE << TYPE_SHIFT) >>> 0,
+      place.start,
+      place.start + place.count
+    );
     this.cellTypes.addUpdateRange(place.start, place.count);
     this.cellTypes.needsUpdate = true;
     this.leave(place);

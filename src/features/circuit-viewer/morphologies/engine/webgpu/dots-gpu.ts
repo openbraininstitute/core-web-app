@@ -1,9 +1,6 @@
 import {
   attribute,
   cameraProjectionMatrix,
-  Discard,
-  Fn,
-  If,
   modelViewMatrix,
   positionGeometry,
   varying,
@@ -12,34 +9,28 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { typed } from './cells-wgsl';
+import { RING_PX } from '../electrodes';
+import { col, keptUnless, typed, VIEW } from './cells-wgsl';
 
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
-/** The ring's width, in CSS pixels, outside the disc: as `electrodes.ts` has it. */
-const RING_PX = 1;
-
-/** A dot's corner, as `electrodes.ts` places it, and in w how far in its ring starts, of the whole. */
-const dotCorner = wgslFn(/* wgsl */ `
-fn dotCorner(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-             radius: f32, minRadius: f32, ring: f32, lift: f32) -> vec4f {
+/**
+ * A dot's corner in clip space, as `electrodes.ts` places it; and in the second column, where its ring starts, a share
+ * of the whole.
+ */
+const dotQuad = wgslFn(
+  /* wgsl */ `
+fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
+           radius: f32, minRadius: f32, ring: f32, lift: f32) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
-  let span = 2.0 / (projection[1][1] * vp.w);
-  let um = select(span * max(-c.z, 1e-3), span, projection[3][3] > 0.5);
+  let um = pixelUm(c.z, projection, vp);
   let r = max(radius * look.a, minRadius * um);
   let outer = r + ring * um;
-  return projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
-}`);
-
-const dotInner = wgslFn(/* wgsl */ `
-fn dotInner(contact: vec3f, look: vec4f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f, radius: f32,
-            minRadius: f32, ring: f32) -> f32 {
-  let c = (modelView * vec4f(contact, 1.0)).xyz;
-  let span = 2.0 / (projection[1][1] * vp.w);
-  let um = select(span * max(-c.z, 1e-3), span, projection[3][3] > 0.5);
-  let r = max(radius * look.a, minRadius * um);
-  return r / (r + ring * um);
-}`);
+  return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, 0.0, 0.0, 0.0),
+                 vec4f(0.0), vec4f(0.0));
+}`,
+  [VIEW]
+);
 
 const dotColour = wgslFn(/* wgsl */ `
 fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f) -> vec4f {
@@ -57,35 +48,35 @@ function dotMaterial(
   pixelRatio: number,
   among = false
 ): THREE.MeshBasicNodeMaterial {
-  const contact = attribute('aContact', 'vec3');
   const look = attribute('aLook', 'vec4');
-  const sizes = {
-    contact,
-    look,
-    modelView: modelViewMatrix,
-    projection: cameraProjectionMatrix,
-    vp: viewport,
-    radius: dots.radius,
-    minRadius: dots.minRadius,
-    ring: among ? 0 : RING_PX * pixelRatio,
-  };
+  const quad = typed<'mat4'>(
+    dotQuad({
+      contact: attribute('aContact', 'vec3'),
+      look,
+      corner: positionGeometry.xy,
+      modelView: modelViewMatrix,
+      projection: cameraProjectionMatrix,
+      vp: viewport,
+      radius: dots.radius,
+      minRadius: dots.minRadius,
+      ring: among ? 0 : RING_PX * pixelRatio,
+      lift: among ? 1 : 0,
+    })
+  ).toVar();
   const corner = varying(positionGeometry.xy);
   const material = new THREE.MeshBasicNodeMaterial();
-  material.vertexNode = dotCorner({ ...sizes, corner: positionGeometry.xy, lift: among ? 1 : 0 });
-  const colour = typed<'vec4'>(
-    dotColour({
-      corner,
-      inner: varying(typed<'float'>(dotInner(sizes))),
-      colour: varying(look.xyz),
-      ringColour: u.ringColour,
-    })
+  material.vertexNode = col(quad, 0);
+  material.fragmentNode = keptUnless(
+    corner.length().greaterThan(1),
+    typed<'vec4'>(
+      dotColour({
+        corner,
+        inner: varying(col(quad, 1).x),
+        colour: varying(look.xyz),
+        ringColour: u.ringColour,
+      })
+    )
   );
-  material.fragmentNode = Fn(() => {
-    If(corner.length().greaterThan(1), () => {
-      Discard();
-    });
-    return colour;
-  })();
   material.depthTest = among;
   material.depthWrite = false;
   return material;

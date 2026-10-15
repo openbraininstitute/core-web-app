@@ -101,8 +101,6 @@ describe('SegmentArena', () => {
 
     const { ends, words } = attributes(arena);
     expect([0, 1, 2, 3, 4].map((i) => typeAt(words, i))).toEqual([HOLE, HOLE, HOLE, HOLE, HOLE]);
-    // The cells stay.
-    expect([0, 1, 2, 3, 4].map((i) => cellAt(words, i))).toEqual([1000, 1001, 1002, 1003, 1004]);
     expect(words.updateRanges).toEqual([{ start: 0, count: 5 }]);
     expect(ends.updateRanges).toEqual([]);
     expect(arena.geometry.instanceCount).toBe(11);

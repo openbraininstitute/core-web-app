@@ -37,11 +37,14 @@ export function createCircuitView(
   if (lost) return onWebGL(host, 'the graphics were reset');
   const gpu = globalThis.navigator?.gpu;
   if (!gpu) return onWebGL(host, 'no WebGPU in this browser');
+  // Fetched while the device is asked for.
+  const engine = import('./webgpu/circuit-morphology-gpu');
+  engine.catch(() => {});
   return probeWebGPU(gpu).then(async (probed) => {
     if ('reason' in probed) return onWebGL(host, probed.reason);
     const { device } = probed;
     try {
-      const { CircuitMorphologyGPU } = await import('./webgpu/circuit-morphology-gpu');
+      const { CircuitMorphologyGPU } = await engine;
       const view = await CircuitMorphologyGPU.create(host, device, () => {
         lost = true;
         onLost();

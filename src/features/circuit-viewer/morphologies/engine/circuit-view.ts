@@ -22,6 +22,7 @@ import { DETAIL_PIXELS, pixelSpan, SEGMENT_BUDGET } from './detail';
 import { DetailStream } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
 import {
+  cellNearMiddle,
   impostorUniforms,
   NO_CELL,
   packCellTypes,
@@ -63,7 +64,7 @@ const TRIANGLES = [0, 1, 2, 2, 1, 3];
 const FOREGROUND: ThemeColors = { light: '#1a1a1a', dark: '#ffffff' };
 
 /** How far around the pixel asked for a pick looks, in CSS pixels, as the somas view does. */
-export const PICK_REACH = 4;
+const PICK_REACH = 4;
 /**
  * How far from a contact's centre a point is still on it, in CSS pixels, however small it is drawn: the somas view's 14
  * device pixels on a screen of pixel ratio 2.
@@ -230,23 +231,27 @@ export interface CircuitMaterials {
  * (`SpikeClock`) moved on by each turn of the loop.
  *
  * The tier makes the renderer on the canvas, its materials (`materials`) on the uniforms here, and then calls `start`;
- * it draws, reads a few pixels for a pick (`numberAround`) and builds the pick's programs (`compile`). The arrays are
- * drawn from as the reader made them, and kept, to be uploaded again.
+ * it draws, draws a scene for a pick into its target and reads it (`readPick`), and builds the pick's programs
+ * (`compile`). The arrays are drawn from as the reader made them, and kept, to be uploaded again.
  */
 export abstract class CircuitView extends SceneView implements CircuitMorphologyView {
   /** The look, of which the tier takes the material's shading and the lights, which ride on the camera. */
   protected look: Look;
   protected abstract materials: CircuitMaterials;
+  /** Whether the tier's targets count their rows up, as WebGL's do, or down, as WebGPU's do. */
+  protected abstract readonly rowsUp: boolean;
+  /** The pick's target's side, in device pixels. */
+  protected readonly pickSide: number;
   /** The segments' quads. */
-  protected chunks = new THREE.Group();
+  private chunks = new THREE.Group();
   /** The segments, the morphologies' somas and the cloud: what the cells are. */
-  protected surfaces = new THREE.Group();
+  private surfaces = new THREE.Group();
   protected uniforms = impostorUniforms();
   /**
    * The morphologies, their segments' and their somas' quads, the same quads for the pick, and for the pick of a section
    * where the morphologies were read whole; where they are read a box at a time, what reads them.
    */
-  protected layer: {
+  private layer: {
     data: CircuitMorphologyData;
     meshes: Quads[];
     ids: Quads[];
@@ -258,7 +263,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
-  protected spots = new THREE.Scene();
+  private spots = new THREE.Scene();
   protected spotUniforms = { uSegments: { value: 0 } };
   /** The read of `spots` at a point asked for in this task, which the pick of its cell and of its section share. */
   private spotRead: { x: number; y: number; read: Promise<number | null> } | null = null;
@@ -267,20 +272,20 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * The somas the cloud draws, whose populations decide whether the next ones are framed, the box round all of them,
    * and their quads, and the same quads for the pick.
    */
-  protected cloud: {
+  private cloud: {
     somas: CircuitSomas;
     box: SomasBox | null;
     mesh: Quads;
     ids: Quads;
   } | null = null;
   /** The quads of the cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
-  protected ids = new THREE.Scene();
-  protected table: CellTable | null = null;
+  private ids = new THREE.Scene();
+  private table: CellTable | null = null;
   private colors: CellColors | null = null;
   private defaultColor = DEFAULT_NEURON_COLOR;
-  protected background = CANVAS_LIGHT;
+  private background = CANVAS_LIGHT;
   /** What the data's positions have taken off: the electrodes come in the circuit's own frame. */
-  protected centre: Vec3 = [0, 0, 0];
+  private centre: Vec3 = [0, 0, 0];
   private electrodeGroups: readonly ElectrodeGroup[] = [];
   private highlightedElectrode: string | null = null;
   protected electrodeUniforms = {
@@ -289,7 +294,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: minRadius(0) },
     uRingColour: { value: new THREE.Vector3() },
   };
-  protected electrodes: Quads | null = null;
+  private electrodes: Quads | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
     uViewport: this.uniforms.uViewport,
@@ -307,7 +312,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: MARKER_MIN_RADIUS },
     uRingColour: this.electrodeUniforms.uRingColour,
   };
-  protected markerDots: Quads | null = null;
+  private markerDots: Quads | null = null;
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
   /** Where the listeners were last told the markers are; null to tell them again. */
   private told: readonly (MarkerOnScreen | null)[] | null = null;
@@ -333,6 +338,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     protected readonly pixelRatio: number
   ) {
     super(container, canvas);
+    this.pickSide = 2 * Math.ceil(PICK_REACH * pixelRatio) + 1;
     this.markerUniforms.uMinRadius.value = MARKER_MIN_RADIUS * pixelRatio;
     const [look] = createLooks(pixelRatio, ['color'], ['studio']);
     this.look = look;
@@ -363,14 +369,39 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
+  /** The target a pick is drawn into, `pickSide` square. */
+  protected abstract pickTarget(): THREE.RenderTarget;
+
+  /** Draw `scene` into the pick's target, as its viewport places it, and read the target's pixels, a row after another. */
+  protected abstract readPick(scene: THREE.Scene): Promise<Uint8Array>;
+
+  /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
+  protected abstract compile(scene: THREE.Scene): void;
+
   /**
    * The number drawn by `scene` nearest the pixel asked for, in CSS pixels from the view's top left corner, within
    * `PICK_REACH`; null where there is none, or where the pixels cannot be read.
    */
-  protected abstract numberAround(scene: THREE.Scene, x: number, y: number): Promise<number | null>;
-
-  /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
-  protected abstract compile(scene: THREE.Scene): void;
+  private numberAround(scene: THREE.Scene, x: number, y: number): Promise<number | null> {
+    const side = this.pickSide;
+    const middle = (side - 1) / 2;
+    const ratio = this.pixelRatio;
+    const row = Math.floor(y * ratio);
+    // The whole view, placed so that the pixel asked for is the target's middle one.
+    const { width, height } = this.canvas;
+    this.pickTarget().viewport.set(
+      middle - Math.floor(x * ratio),
+      middle - (this.rowsUp ? height - 1 - row : row),
+      width,
+      height
+    );
+    // No frame may have been drawn since the camera last moved.
+    this.camera.updateMatrixWorld();
+    return this.readPick(scene).then(
+      (pixels) => cellNearMiddle(pixels, side),
+      () => null
+    );
+  }
 
   protected override disposeContent(): void {
     this.clear();
