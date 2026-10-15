@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
   DEFAULT_SPIKE_SPEED,
@@ -15,6 +16,7 @@ import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { logError } from '@/utils/logger';
 
+import { DetailReadout } from './detail-readout';
 import { type ElectrodeTracker, trackElectrodes } from './electrodes';
 import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
 import { loadCrowding } from './load/load-crowding';
@@ -80,6 +82,8 @@ export interface CircuitCellsProps {
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
   onZoomChange?: (zoom: number) => void;
+  /** Told whether morphologies in view are left out for the budget, their somas alone drawn, whenever that changes. */
+  onLeftOut?: (leftOut: boolean) => void;
 }
 
 /** The canvas as an image whose `src` is an object URL, which is what the snapshot signal hands on. */
@@ -132,11 +136,13 @@ export function CircuitCells({
   showScalebar,
   signals,
   onZoomChange,
+  onLeftOut,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [viewer, setViewer] = useState<CircuitMorphologyViewer | null>(null);
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
+  const debugMode = useCircuitViewerDebugMode();
 
   useEffect(() => {
     const host = hostRef.current;
@@ -264,6 +270,11 @@ export function CircuitCells({
     });
   }, [viewer, cellHover, clickable, clicked, movable, previewing, picking, located]);
 
+  const [leftOut, setLeftOut] = useState(false);
+  useEffect(() => viewer?.onDetail((detail) => setLeftOut((detail?.leftOut ?? 0) > 0)), [viewer]);
+  const leftOutChanged = useLatest(onLeftOut);
+  useEffect(() => leftOutChanged.current?.(leftOut), [leftOut, leftOutChanged]);
+
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;
   useEffect(() => {
@@ -298,6 +309,7 @@ export function CircuitCells({
           {showScalebar && <Scalebar viewer={viewer} color={theme.foreground} />}
           <AxesGizmo viewer={viewer} ring={theme.foreground} />
           <WheelHint visible={wheelHint} theme={theme} />
+          {debugMode && <DetailReadout viewer={viewer} theme={theme} />}
         </div>
       )}
     </div>

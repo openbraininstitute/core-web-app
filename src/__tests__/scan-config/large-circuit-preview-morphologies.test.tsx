@@ -211,6 +211,18 @@ describe('LargeCircuitPreview morphologies', () => {
     expect([...loaded.somas.subarray(8)]).toEqual([9, 9, 9, 12]);
   });
 
+  it('says so while morphologies in view are left out for the budget', async () => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await screen.findByTestId('morphologies');
+
+    act(() => h.cells?.onLeftOut?.(true));
+    expect(status()).toBe('Only the morphologies nearest the middle fit: zoom in to see more');
+    act(() => h.cells?.onLeftOut?.(false));
+    expect(status()).toBeNull();
+  });
+
   /** The morphologies on show, as the view was last rendered. */
   async function shown(props: Partial<LargeCircuitPreviewProps> = {}): Promise<CircuitCellsProps> {
     render(<Hosted start="morphologies" {...props} />);

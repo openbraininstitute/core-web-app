@@ -5,6 +5,7 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
 const TOO_LARGE = 'This circuit is too large to show as morphologies';
+const LEFT_OUT = 'Only the morphologies nearest the middle fit: zoom in to see more';
 /** By OBI-One's word for why it built no pack. */
 const REFUSALS: Record<string, string> = {
   too_many_neurons: TOO_LARGE,
@@ -32,10 +33,14 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
   };
 }
 
-/** Over the cells: how far the pack has come, or why the circuit stayed somas. */
+/**
+ * Over the cells: how far the pack has come, why the circuit stayed somas, or that some morphologies in view are left
+ * out for the budget.
+ */
 export function MorphologiesStatus({
   load,
   stopped,
+  leftOut = false,
   theme,
   place,
   onRetry,
@@ -43,6 +48,8 @@ export function MorphologiesStatus({
 }: {
   load: MorphologiesLoad;
   stopped: MorphologiesStop | null;
+  /** Whether morphologies in view are left out, their somas alone drawn. */
+  leftOut?: boolean;
   theme: ViewerTheme;
   place?: CSSProperties;
   onRetry(): void;
@@ -51,6 +58,8 @@ export function MorphologiesStatus({
   let pill: ReactNode = null;
   if (load.status === 'loading') {
     pill = <StatusPill text={loadingText(load)} failed={false} theme={theme} place={place} />;
+  } else if (load.status === 'ready' && leftOut) {
+    pill = <StatusPill text={LEFT_OUT} failed theme={theme} place={place} />;
   } else if (stopped) {
     const { text, retry } = stopNotice(stopped);
     pill = (

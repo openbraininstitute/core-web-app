@@ -218,6 +218,7 @@ export function LargeCircuitPreview({
     onRepresentationChange?.('somas')
   );
   const shown = morphologies.load.status === 'ready' ? morphologies.load.data : null;
+  const [leftOut, setLeftOut] = React.useState(false);
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
@@ -249,6 +250,7 @@ export function LargeCircuitPreview({
           showScalebar={showScalebar}
           signals={signals}
           onZoomChange={onZoomChange}
+          onLeftOut={setLeftOut}
         />
       )}
       {drawable && debugMode && subject && (
@@ -262,6 +264,7 @@ export function LargeCircuitPreview({
         load={morphologies.load}
         // Why they could not be shown is nothing to say where they are no longer offered.
         stopped={onRepresentationChange ? morphologies.stopped : null}
+        leftOut={leftOut}
         theme={themeFromBackground(backgroundColor)}
         place={statusPlace}
         onRetry={() => onRepresentationChange?.('morphologies')}

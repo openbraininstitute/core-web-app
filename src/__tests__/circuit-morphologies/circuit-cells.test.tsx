@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -11,6 +11,7 @@ import type {
   CellColors,
   CircuitMorphologyData,
   CircuitSomas,
+  DetailStats,
   ElectrodeGroup,
 } from '@/features/circuit-viewer/morphologies/types';
 
@@ -72,9 +73,17 @@ const h = vi.hoisted(() => {
     setSpikeAfterglow = vi.fn();
     spikeTimeListeners = new Set<(timeInMs: number) => void>();
     spikesPlayingListeners = new Set<(playing: boolean) => void>();
+    setDetailRules = vi.fn();
+    detailListeners = new Set<(detail: DetailStats | null) => void>();
 
     constructor(readonly host: HTMLElement) {
       state.viewers.push(this);
+    }
+
+    onDetail(listener: (detail: DetailStats | null) => void) {
+      this.detailListeners.add(listener);
+      listener(null);
+      return () => this.detailListeners.delete(listener);
     }
 
     onSpikeTime(listener: (timeInMs: number) => void) {
@@ -145,6 +154,18 @@ const SOMAS: CircuitSomas = {
 };
 const DATA = { somas: new Float32Array(8) } as CircuitMorphologyData;
 const COLORS: CellColors = { palette: ['#ff0000'], columnByCell: Uint16Array.of(0, 0) };
+const DETAIL: DetailStats = {
+  budget: 2_000_000,
+  pixels: 2,
+  drawn: 1200,
+  wanted: 1500,
+  levels: [
+    { toleranceUm: 0.125, boxes: 3 },
+    { toleranceUm: 0.25, boxes: 4 },
+    { toleranceUm: 1, boxes: 5 },
+  ],
+  leftOut: 0,
+};
 
 function view(props: Partial<CircuitCellsProps> = {}) {
   const signals = props.signals ?? new CircuitViewerSignals();
@@ -361,6 +382,51 @@ describe('CircuitCells', () => {
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(false);
     update({ dendrogram: true });
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
+  });
+
+  it('tells whether morphologies in view are left out, whenever that changes', () => {
+    const onLeftOut = vi.fn();
+    const { viewer } = view({ onLeftOut });
+    const tell = (detail: DetailStats | null) =>
+      act(() => {
+        for (const listener of viewer.detailListeners) listener(detail);
+      });
+    expect(onLeftOut.mock.calls).toEqual([[false]]);
+
+    tell({ ...DETAIL, leftOut: 3 });
+    tell({ ...DETAIL, leftOut: 5 });
+    tell(null);
+    expect(onLeftOut.mock.calls).toEqual([[false], [true], [false]]);
+  });
+
+  it('shows what the engine draws in the debug tools alone, with its budget and tolerance to lower', async () => {
+    const { viewer, unmount } = view();
+    const tell = () =>
+      act(() => {
+        for (const listener of viewer.detailListeners) listener({ ...DETAIL, leftOut: 2 });
+      });
+    tell();
+    expect(screen.queryByTestId('detail-readout')).toBeNull();
+    unmount();
+
+    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
+    try {
+      const { viewer: debugged } = view();
+      act(() => {
+        for (const listener of debugged.detailListeners) listener({ ...DETAIL, leftOut: 2 });
+      });
+      const readout = await waitFor(() => screen.getByTestId('detail-readout'));
+      expect(readout.textContent).toContain(
+        '1,200 segments drawn of 1,500 wanted, 2 boxes left out'
+      );
+      expect(readout.textContent).toContain('0.125 µm × 3, 0.25 µm × 4, 1 µm × 5');
+      const [budget, pixels] = screen.getAllByRole('combobox');
+      fireEvent.change(budget, { target: { value: '200000' } });
+      fireEvent.change(pixels, { target: { value: '4' } });
+      expect(debugged.setDetailRules.mock.calls).toEqual([[{ budget: 200_000 }], [{ pixels: 4 }]]);
+    } finally {
+      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
+    }
   });
 
   it('nudges the view on the signal', async () => {
