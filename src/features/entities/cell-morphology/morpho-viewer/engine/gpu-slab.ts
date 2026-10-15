@@ -48,6 +48,8 @@
  * falls back to the field-only path, which works in batches.
  */
 
+import { errorMessage } from '@/utils/error';
+
 import { bandHalfWidth, SOMA_FADE } from './field';
 import {
   B,
@@ -80,7 +82,7 @@ import {
   XEDGE,
   XROOT,
 } from './mesher';
-import { errorMessage, GpuError } from './protocol';
+import { GpuError } from './protocol';
 import {
   MAX_RADIUS_FRACTION,
   MAX_SAMPLE_DIVISIONS,

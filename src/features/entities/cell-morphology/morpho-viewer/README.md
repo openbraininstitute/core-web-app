@@ -37,7 +37,7 @@ flowchart TB
 - [morpho-viewer.tsx](morpho-viewer.tsx) creates one `Viewer` and one `MeshPool` per mounted viewer, and disposes of both when it unmounts, which terminates the workers and releases the WebGL context. It keeps what the user chose in [use-viewer-settings.ts](use-viewer-settings.ts) and applies each setting to the `Viewer` as it changes.
 - `MeshPool` ([engine/pool.ts](engine/pool.ts)) talks to the workers through Comlink. Worker 0 holds the parsed morphology: it parses, plans and merges. Every worker a build uses, worker 0 included, meshes the pieces of it. A worker starts the first time it is needed and is kept for the next builds. A build uses at least 4 workers and one more per 2 mm of the cable it meshes, up to the pool's size (`workersFor`), so a small cell does not start a dozen. A worker that dies fails its calls instead of leaving them hanging.
 - Each worker runs [engine/mesher-api.ts](engine/mesher-api.ts), which takes one call at a time.
-- `Viewer` ([engine/viewer.ts](engine/viewer.ts)) knows nothing of React. The hooks call it (`setMesh`, `setSkeleton`, `setColors`, `setLook` and so on), and it only renders a frame when the camera moves or something changed.
+- `Viewer` ([engine/viewer.ts](engine/viewer.ts)) knows nothing of React. The hooks call it (`setMesh`, `setSkeleton`, `setColors`, `setLook` and so on), and it only renders a frame when the camera moves or something changed. It adds the morphology to `SceneViewer` ([scene-viewer.ts](../../../viewer-3d/engine/scene-viewer.ts)), the scene, cameras, looks and passes it shares with the EM cell mesh viewer.
 
 ## Load, build and rebuild
 
@@ -164,7 +164,7 @@ flowchart TD
 ## Colours and path distances
 
 - The mesh carries an 8-bit colour per vertex. `Viewer.setColors` writes into it from the SWC type of each vertex ([colors.ts](engine/colors.ts)), and does the same for each skeleton segment. No rebuild is needed.
-- Looks declare what the neurite colours do in them (`Look.colors` in [looks.ts](engine/looks.ts)): colour the cell, tint it while Type tint is on, or nothing. The chrome disables the colour controls where they have no effect, and says why.
+- Looks declare what the neurite colours do in them (`Look.colors` in [looks.ts](../../../viewer-3d/engine/looks.ts)): colour the cell, tint it while Type tint is on, or nothing. The chrome disables the colour controls where they have no effect, and says why.
 - Colour by Distance asks worker 0 for the path distance to the soma ([distances.ts](engine/distances.ts)), once per layer: the mesh, and each skeleton. Distances run along the tree, with the soma at 0. A mesh vertex takes the distance at the closest point of the nearest segment of its own type, so that where an axon crosses a dendrite each keeps its own.
 - [use-path-distances.ts](use-path-distances.ts) keys the answers by the layer object they were measured for, so that a late answer cannot colour a newer mesh.
 
@@ -195,9 +195,9 @@ The file holds the mesh on show, in µm around the soma, with the current neurit
 | Default palettes, bumps and min. width | [constants.ts](constants.ts) |
 | Number of workers | `defaultPoolSize`, and per build `workersFor`, in [engine/pool.ts](engine/pool.ts) |
 | Rebuild delay, GPU and CPU policy | [use-morphology-mesh.ts](use-morphology-mesh.ts) |
-| Looks | `createLooks` in [engine/looks.ts](engine/looks.ts) |
+| Looks | `createLooks` in [viewer-3d/engine/looks.ts](../../../viewer-3d/engine/looks.ts) |
 | Settings, key, Debug menu (statistics, controls and export) | [chrome/](chrome/morpho-viewer-chrome.tsx) |
-| Axes gizmo | [chrome/axes-gizmo.tsx](chrome/axes-gizmo.tsx); the turn to an axis in [engine/gizmo.ts](engine/gizmo.ts) and [engine/rotation.ts](engine/rotation.ts) |
+| Axes gizmo | [viewer-3d/chrome/axes-gizmo.tsx](../../../viewer-3d/chrome/axes-gizmo.tsx); the turn to an axis in [gizmo.ts](../../../viewer-3d/engine/gizmo.ts) and [rotation.ts](../../../viewer-3d/engine/rotation.ts) |
 | Help card texts | [help/help-text.ts](help/help-text.ts) |
 | Menu shell shared with the circuit viewer | `src/features/scan-config/components/color-by/chrome-menu.tsx` |
 

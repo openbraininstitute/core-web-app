@@ -2,7 +2,6 @@
 
 import { readFileSync } from 'node:fs';
 
-import * as THREE from 'three';
 import { expect } from 'vitest';
 
 import { SWC_BASAL } from '@/features/entities/cell-morphology/morpho-viewer/engine/swc';
@@ -286,11 +285,4 @@ export function cell(
     id += n + 1;
   });
   return lines.join('\n');
-}
-
-export const screenUp = (orientation: THREE.Quaternion): THREE.Vector3 =>
-  new THREE.Vector3(0, 1, 0).applyQuaternion(orientation);
-
-export function expectClose(a: THREE.Vector3, b: THREE.Vector3): void {
-  expect(a.distanceTo(b)).toBeLessThan(1e-6);
 }

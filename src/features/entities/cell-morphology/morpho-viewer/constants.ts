@@ -2,8 +2,8 @@ import { DEFAULT_TUBE_ASPECT, type HybridParams } from './engine/hybrid';
 import { MIN_RADIUS_VOXELS } from './engine/mesher';
 import { UNTANGLE_VOXELS } from './engine/untangle';
 
+import type { BumpParams } from '@/features/viewer-3d/engine/looks';
 import type { Palette } from './engine/colors';
-import type { BumpParams } from './engine/looks';
 import type { AxonRadiusMode } from './engine/prepare';
 
 // Six-digit hex: a colour input takes no other form.

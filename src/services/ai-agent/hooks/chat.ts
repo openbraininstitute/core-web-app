@@ -15,7 +15,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { showRestoreAtom } from '@/features/ai-assistant/message-item/collapsible-message/collapsible-message';
 import { presignedUrlCache } from '@/features/ai-assistant/message-item/storage-image-part';
 import { atomRateLimit } from '@/features/ai-assistant/state';
-import { useDefaultConfig } from '@/features/scan-config/components/hooks/schema';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { findConfigKeyInState } from '@/features/scan-config/helpers';
 import { useAccessToken } from '@/hooks/useAccessToken';
@@ -87,6 +86,12 @@ export function useServiceAiAgentChat(threadId: string) {
 
   const chat = useChat({
     id: threadId,
+    // Without this, every stream chunk notifies React subscribers synchronously
+    // (`chat.react` Set.forEach → forceStoreRerender) and heavy assistant UIs
+    // (Optimize + markdown + tool parts) hit "Maximum update depth exceeded".
+    // See https://ai-sdk.dev/docs/troubleshooting/react-maximum-update-depth-exceeded
+    // and prod-ai#121.
+    experimental_throttle: 50,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     transport: new DefaultChatTransport({
       api: serviceAiAgentUrl(['qa/chat_streamed', threadId]),
@@ -385,19 +390,17 @@ export function useServiceAiAgentChat(threadId: string) {
 export const configStateAtom = atom<Config>({});
 export const isChatReadyAtom = atom(true);
 
-export function useAgentState(key: string, config?: Config) {
+export function useAgentState(key: string | null, config?: Config) {
   const [, setAIAgentState] = useAtom(agentStateAtom);
   const setLastConfigUpdate = useSetAtom(lastConfigUpdateAtom);
-  const defaultConfig = useDefaultConfig('CircuitSimulationScanConfig');
 
   useEffect(() => {
-    const stateConfig = config ?? defaultConfig;
-    if (!stateConfig) return;
+    if (!config) return;
 
     setAIAgentState(
       key
         ? {
-            [key]: stateConfig,
+            [key]: config,
           }
         : {}
     );
@@ -405,7 +408,7 @@ export function useAgentState(key: string, config?: Config) {
     return () => {
       setAIAgentState({});
     };
-  }, [defaultConfig, config, key, setAIAgentState]);
+  }, [config, key, setAIAgentState]);
 
   // Clear stale flash state on unmount so the next page doesn't flash
   useEffect(() => {

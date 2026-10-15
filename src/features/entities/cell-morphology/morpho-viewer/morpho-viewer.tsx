@@ -3,15 +3,13 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
 
-import { cn } from '@/utils/css-class';
-import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
+import { useSceneSync, useWheelHint, ViewerFrame } from '@/features/viewer-3d/viewer-frame';
 
 import { MorphoViewerChrome } from './chrome/morpho-viewer-chrome';
 import { defaultPoolSize, MeshPool } from './engine/pool';
 import { Viewer } from './engine/viewer';
 import { type Engine, useMorphologyMesh } from './use-morphology-mesh';
 import { usePathDistances } from './use-path-distances';
-import { useSignal } from './use-signal';
 import { currentPalette, useViewerSettings, type ViewerSettings } from './use-viewer-settings';
 
 import type { DistanceData } from './engine/colors';
@@ -27,7 +25,6 @@ interface MorphoViewerProps {
 }
 
 function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const refHost = useRef<HTMLDivElement | null>(null);
   const [engine, setEngine] = useState<Engine | null>(null);
   const { settings, ...actions } = useViewerSettings();
@@ -37,8 +34,8 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
     mesh.layers,
     settings.colorBy === 'distance'
   );
-  const [wheelHint, setWheelHint] = useSignal(10000);
   const viewer = engine?.viewer ?? null;
+  const wheelHint = useWheelHint(viewer);
 
   useEffect(() => {
     const host = refHost.current;
@@ -52,24 +49,12 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
     };
   }, []);
 
-  useEffect(() => viewer?.onWheelWithoutCtrl(() => setWheelHint(true)), [viewer, setWheelHint]);
-
   useViewerSync(viewer, settings, distances);
 
   return (
-    <div
-      className={cn('relative overflow-hidden', className)}
-      ref={setRoot}
-      data-testid="morpho-viewer"
-    >
-      <FullscreenPortalScope root={root}>
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: if you are blind, fullscreen won't give you more information */}
-        <div
-          className="absolute inset-0"
-          ref={refHost}
-          onDoubleClick={() => toggleFullscreen(root)}
-        />
-        {viewer && (
+    <ViewerFrame className={className} testId="morpho-viewer" hostRef={refHost}>
+      {(root) =>
+        viewer && (
           <MorphoViewerChrome
             viewer={viewer}
             root={root}
@@ -81,9 +66,9 @@ function MorphoViewerComponent({ className, swc, name }: MorphoViewerProps) {
             maxDistance={distances?.max ?? null}
             distanceError={distanceError}
           />
-        )}
-      </FullscreenPortalScope>
-    </div>
+        )
+      }
+    </ViewerFrame>
   );
 }
 
@@ -93,6 +78,7 @@ function useViewerSync(
   settings: ViewerSettings,
   distances: DistanceData | null
 ) {
+  useSceneSync(viewer, settings);
   const palette = currentPalette(settings);
   useEffect(() => {
     if (!viewer) return;
@@ -100,11 +86,8 @@ function useViewerSync(
     const frame = requestAnimationFrame(() => viewer.setColors(palette, distances));
     return () => cancelAnimationFrame(frame);
   }, [viewer, palette, distances]);
-  useEffect(() => viewer?.setDark(settings.dark), [viewer, settings.dark]);
   useEffect(() => viewer?.setHiddenTypes(settings.hiddenTypes), [viewer, settings.hiddenTypes]);
-  useEffect(() => viewer?.setLook(settings.look), [viewer, settings.look]);
   useEffect(() => viewer?.setTypeTint(settings.typeTint), [viewer, settings.typeTint]);
-  useEffect(() => viewer?.setAO(settings.ao), [viewer, settings.ao]);
   useEffect(
     () =>
       viewer?.setBumps({
@@ -117,8 +100,6 @@ function useViewerSync(
   useEffect(() => viewer?.showMesh(settings.showMesh), [viewer, settings.showMesh]);
   useEffect(() => viewer?.setWireframe(settings.wireframe), [viewer, settings.wireframe]);
   useEffect(() => viewer?.showSkeleton(settings.skeleton), [viewer, settings.skeleton]);
-  useEffect(() => viewer?.setSpin(settings.spin), [viewer, settings.spin]);
-  useEffect(() => viewer?.setProjection(settings.projection), [viewer, settings.projection]);
 }
 
 const MorphoViewer = dynamic(() => Promise.resolve(MorphoViewerComponent), {

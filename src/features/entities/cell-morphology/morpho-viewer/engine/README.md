@@ -220,15 +220,21 @@ protocol.ts       types and transfer lists shared by the pool and the workers
 mesher-api.ts     what a worker exposes over Comlink: parse / plan / slab / merge, one call at a time
 mesher.worker.ts  worker entry: exposes the mesher API
 pool.ts           worker pool: workers started when first needed and sized to the cell, task queue, cancellation of superseded builds, failed workers
-viewer.ts         three.js scene: chunked mesh upload, looks, skeleton overlays, both cameras, AO and bloom passes
-looks.ts          shading styles: materials, light rigs, procedural matcap / environment, bumps and width floor
+viewer.ts         the morphology on the shared scene: chunked mesh upload, skeleton overlays, colours
 colors.ts         neurite and distance colours written into the 8-bit vertex colours
+```
+
+The scene itself is shared with the EM cell mesh viewer, in `src/features/viewer-3d/engine/`:
+
+```
+scene-viewer.ts   renderer, both cameras, OrbitControls, render-on-demand loop, looks, AO and bloom passes, shader warm-up
+looks.ts          shading styles: materials, light rigs, procedural matcap / environment, bumps and width floor
 camera.ts         orthographic / perspective equivalence, orthographic framing and pixel scale
 rotation.ts       free rotation: OrbitControls' turntable kept on the screen's vertical, its easing stopped on a reset, turns to an axis
 gizmo.ts          the axes gizmo: the six half-axes as the camera sees them, the orientation that views the cell from one
-framing.ts        camera framing around the soma, clip ranges, depth-coded range
+framing.ts        camera framing around the origin, clip ranges, depth-coded range
 ```
 
 The viewer around the engine (hooks, chrome, help cards, export) is described in [../README.md](../README.md).
 
-Tests: `src/__tests__/cell-morphology/mesher/` (node environment), with the sample cell in `src/__tests__/cell-morphology/fixtures/`.
+Tests: `src/__tests__/cell-morphology/mesher/` (node environment), with the sample cell in `src/__tests__/cell-morphology/fixtures/`; the shared scene's in `src/__tests__/viewer-3d/`.

@@ -10,7 +10,6 @@ import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/
 
 const SECTION_LABELS: Record<TDetailViewSectionDict, string> = {
   [DetailViewSectionsDict.Overview]: 'Overview',
-  [DetailViewSectionsDict.MeshViewer]: 'Mesh viewer',
   [DetailViewSectionsDict.ThreeDView]: '3D view',
   [DetailViewSectionsDict.Results]: 'Results',
   [DetailViewSectionsDict.Analysis]: 'Analysis',

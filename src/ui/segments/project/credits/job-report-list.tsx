@@ -19,6 +19,7 @@ import type { JobReport } from '@/types/accounting';
 
 const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.Mcp]: 'MCP sandbox',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'Process data',
   [ServiceSubtype.IonChannelBuild]: 'Build',
   [ServiceSubtype.IonChannelSim]: 'Simulate',
@@ -49,6 +50,7 @@ const categoryLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.EModelValidation]: 'Build',
   [ServiceSubtype.SynapseParameterizationSmall]: 'Build',
   [ServiceSubtype.SynapseParameterizationLarge]: 'Build',
+  [ServiceSubtype.ExtracellularRecordingArrayBuild]: 'Build',
 };
 
 export function categoryRenderFn(subtype: ServiceSubtype) {
@@ -57,6 +59,7 @@ export function categoryRenderFn(subtype: ServiceSubtype) {
 
 const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.Notebook]: 'Notebook',
+  [ServiceSubtype.Mcp]: 'MCP sandbox',
   [ServiceSubtype.NeuronMeshSkeletonization]: 'EM mesh skeletonization',
   [ServiceSubtype.IonChannelBuild]: 'Ion channel',
   [ServiceSubtype.IonChannelSim]: 'Ion channel',
@@ -92,6 +95,7 @@ const typeLabel: Record<ServiceSubtype, string> = {
   [ServiceSubtype.EModelValidation]: 'E-model validation',
   [ServiceSubtype.SynapseParameterizationSmall]: 'Circuit synaptic physiology',
   [ServiceSubtype.SynapseParameterizationLarge]: 'Circuit synaptic physiology',
+  [ServiceSubtype.ExtracellularRecordingArrayBuild]: 'Extracellular recording array',
 };
 
 export function typeRenderFn(subtype: ServiceSubtype) {

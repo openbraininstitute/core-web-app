@@ -1,7 +1,6 @@
-import { flatMap, get, sortBy } from 'es-toolkit/compat';
+import { get, sortBy } from 'es-toolkit/compat';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
-import { getIonChannelModel } from '@/api/entitycore/queries/model/ion-channel-model';
 import {
   getIonChannelModelingCampaign,
   getIonChannelModelingCampaigns,
@@ -23,6 +22,7 @@ import type {
   IonChannelModelingCampaignFilter,
 } from '@/api/entitycore/types/entities/ion-channel-modeling-campaign';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
+import type { Config } from '@/features/scan-config/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 async function resolveIonChannelModelingCampaigns({
@@ -104,52 +104,6 @@ async function resolveIonChannelModelingCampaigns({
   };
 }
 
-export async function resolveIonChannelModelingByCampaignId({
-  id,
-  context,
-}: {
-  id: string;
-  context?: WorkspaceContext | null;
-}) {
-  const campaign = await getIonChannelModelingCampaign({ id, context });
-
-  if (!campaign) {
-    throw new Error(`No ion channel modeling campaign with id ${id} found`);
-  }
-
-  // campaign → configs
-  const configs = await getIonChannelModelingConfigs({
-    context,
-    withFacets: false,
-    filters: { ion_channel_modeling_campaign_id: id },
-  });
-
-  // configs → executions
-  const configIDs = configs.data.map((c) => c.id);
-  const executionsResponse =
-    configIDs.length > 0
-      ? await getIonChannelModelingExecutions({
-          context,
-          withFacets: false,
-          filters: { used__id__in: configIDs },
-        })
-      : {
-          data: [] as Awaited<ReturnType<typeof getIonChannelModelingExecutions>>['data'],
-        };
-
-  // extract generated ion channel model IDs from executions
-  const generatedModelIds = flatMap(
-    executionsResponse.data,
-    (exec) => exec.generated?.map((g) => g.id) ?? []
-  );
-
-  return {
-    campaign,
-    configs: configs.data,
-    generatedModelIds,
-  };
-}
-
 export type TExtendedIonChannelModelingCampaignsType = AwaitedType<
   ReturnType<typeof resolveIonChannelModelingCampaigns>
 >;
@@ -167,14 +121,13 @@ export async function resolveIonChannelModelingCampaignConfig({
     throw new Error(`No ion channel modeling campaign with id ${id} found`);
   }
 
-  const assets = campaign.assets ?? [];
+  const recordingId = campaign.input_recordings?.[0]?.id ?? null;
   const configAsset = getAssetElement({
-    assets,
+    assets: campaign.assets ?? [],
     filter: (asset) => asset.label === AssetLabel.campaign_generation_config,
   });
-
   if (!configAsset) {
-    return { campaign, config: null };
+    return { recordingId, form: undefined };
   }
 
   const rawConfig = await downloadAsset({
@@ -186,65 +139,56 @@ export async function resolveIonChannelModelingCampaignConfig({
   });
   const config = await rawConfig.json();
 
-  return { campaign, config };
+  return { recordingId, form: toIonChannelFittingForm(config.form ?? config) };
 }
 
-/**
- * resolves the full build output for a campaign in readonly mode
- * fetches configs → executions → generated models (with assets) so the output
- * component can display input/output files without triggering a new build.
- */
-export async function resolveIonChannelModelingCampaignBuilds({
-  id,
-  context,
-}: {
-  id: string;
-  context?: WorkspaceContext | null;
-}) {
-  const { campaign, configs, generatedModelIds } = await resolveIonChannelModelingByCampaignId({
-    id,
-    context,
-  });
+const LegacyEquationKeys: Record<string, string> = {
+  SigFitMInf: 'sig_fit_minf',
+  SigFitMTau: 'sig_fit_mtau',
+  ThermoFitMTau: 'thermo_fit_mtau',
+  ThermoFitMTauV2: 'thermo_fit_mtau_v2',
+  BellFitMTau: 'bell_fit_mtau',
+  SigFitHInf: 'sig_fit_hinf',
+  SigFitHTau: 'sig_fit_htau',
+};
 
-  const configIDs = configs.map((c) => c.id);
-  const executionsResponse =
-    configIDs.length > 0
-      ? await getIonChannelModelingExecutions({
-          context,
-          withFacets: false,
-          filters: { used__id__in: configIDs },
-        })
-      : {
-          data: [] as Awaited<ReturnType<typeof getIonChannelModelingExecutions>>['data'],
-        };
+type TLegacyEquationBlock = { type?: string };
 
-  const models = await Promise.all(
-    generatedModelIds.map((modelId) => getIonChannelModel({ id: modelId, context }))
-  );
-  const modelsById = new Map(models.map((m) => [m.id, m]));
-  const configsById = new Map(configs.map((c) => [c.id, c]));
+type TIonChannelFittingFormInput = {
+  type?: string;
+  info?: unknown;
+  initialize?: Record<string, unknown> & { recordings?: unknown };
+  minf_eq?: TLegacyEquationBlock;
+  mtau_eq?: TLegacyEquationBlock;
+  hinf_eq?: TLegacyEquationBlock;
+  htau_eq?: TLegacyEquationBlock;
+  gate_exponents?: { m_power?: number; h_power?: number };
+  model_type?: unknown;
+};
 
-  const builds = executionsResponse.data.map((execution) => {
-    const configId = execution.used.at(0)?.id;
-    const config = configId ? configsById.get(configId) : undefined;
-    const modelRef = execution.generated?.at(0);
-    const model = modelRef ? modelsById.get(modelRef.id) : undefined;
+export function toIonChannelFittingForm(form: TIonChannelFittingFormInput): Config {
+  if (form.model_type) return form as Config;
 
-    return {
-      executionId: execution.id,
-      status: execution.status,
-      executionStatus: execution.status,
-      config: config,
-      entity: model,
-    };
-  });
+  const equationKey = (block?: TLegacyEquationBlock) =>
+    block?.type ? (LegacyEquationKeys[block.type] ?? block.type) : undefined;
+  const { recordings, ...initialize } = form.initialize ?? {};
 
-  return { campaign, builds };
+  return {
+    type: form.type,
+    info: form.info,
+    initialize: { ...initialize, recordings: [recordings].flat().filter(Boolean) },
+    model_type: {
+      type: 'HodgkinHuxleyIonChannelModel',
+      minf_eq: equationKey(form.minf_eq),
+      mtau_eq: equationKey(form.mtau_eq),
+      hinf_eq: equationKey(form.hinf_eq),
+      htau_eq: equationKey(form.htau_eq),
+      m_power: form.gate_exponents?.m_power,
+      h_power: form.gate_exponents?.h_power,
+    },
+  } as Config;
 }
 
-type TResolvedIonChannelModelingByCampaign = Awaited<
-  ReturnType<typeof resolveIonChannelModelingByCampaignId>
->;
 type TResolvedIonChannelModelingByCampaigns = Awaited<
   ReturnType<typeof resolveIonChannelModelingCampaigns>
 >;
@@ -272,7 +216,7 @@ export function getStatusCountMap(campaign: TEnrichedIonChannelModelingCampaign)
 
 export const IonChannelModelingCampaign: EntityCoreTypeConfig<
   IIonChannelModelingCampaign,
-  TResolvedIonChannelModelingByCampaign,
+  never,
   TResolvedIonChannelModelingByCampaigns
 > = {
   group: EntityTypeGroup.Models,
@@ -288,7 +232,6 @@ export const IonChannelModelingCampaign: EntityCoreTypeConfig<
     query: {
       list: resolveIonChannelModelingCampaigns,
       one: getIonChannelModelingCampaign,
-      resolve: resolveIonChannelModelingByCampaignId,
     },
   },
   asset: {

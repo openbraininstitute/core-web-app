@@ -47,6 +47,7 @@ export enum ServiceSubtype {
   SynaptomeBuild = 'synaptome-build',
   MlRetrieval = 'ml-retrieval',
   MlLlm = 'ml-llm',
+  Mcp = 'mcp',
   MlRag = 'ml-rag',
   Notebook = 'notebook',
   SmallCircuitSim = 'small-circuit-sim',
@@ -68,6 +69,7 @@ export enum ServiceSubtype {
   EModelValidation = 'emodel-validation',
   SynapseParameterizationSmall = 'synapse-parameterization-small',
   SynapseParameterizationLarge = 'synapse-parameterization-large',
+  ExtracellularRecordingArrayBuild = 'extracellular-recording-array-build',
 }
 
 export type JobReport = {

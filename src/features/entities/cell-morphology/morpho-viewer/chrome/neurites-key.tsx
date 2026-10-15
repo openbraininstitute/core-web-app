@@ -4,16 +4,17 @@ import { useState } from 'react';
 
 import { useChromeDismiss } from '@/features/scan-config/components/color-by/chrome-menu';
 import { mutedStyle, panelStyle } from '@/features/scan-config/components/color-by/contrast';
+import { ColorDot } from '@/features/viewer-3d/chrome/color-dot';
 import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import { DISTANCE_RAMP, PALETTE_KEYS } from '../engine/colors';
 import { SWC_APICAL, SWC_AXON, SWC_BASAL, SWC_SOMA } from '../engine/swc';
-import { HelpButton } from '../help/help-button';
 import { currentPalette, type ViewerSettings } from '../use-viewer-settings';
+import { HelpButton } from './menu-rows';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
-import type { Look, LookLegend } from '../engine/looks';
+import type { Look, LookLegend } from '@/features/viewer-3d/engine/looks';
 import type { ViewerActions } from '../use-viewer-settings';
 
 const ROWS = [
@@ -241,11 +242,7 @@ function LookKey({
         <ul className="flex flex-col gap-0.5">
           {legend.items.map((item) => (
             <li key={item.label} className="flex min-h-6 items-center gap-2">
-              <span
-                aria-hidden
-                className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
-                style={{ backgroundColor: item.color }}
-              />
+              <ColorDot color={item.color} />
               <span className="font-medium">{item.label}</span>
             </li>
           ))}

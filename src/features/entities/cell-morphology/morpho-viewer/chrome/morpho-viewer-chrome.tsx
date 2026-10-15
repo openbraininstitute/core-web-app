@@ -1,24 +1,20 @@
-import { RiArrowDownSLine, RiFocus3Line } from '@remixicon/react';
-import chroma from 'chroma-js';
+import { RiArrowDownSLine } from '@remixicon/react';
 import { useState } from 'react';
 
 import { morphologyDebugFlag, useFlag } from '@/features/feature-flags';
-import {
-  ChromeButton,
-  FullscreenButton,
-} from '@/features/scan-config/components/color-by/chrome-button';
-import { panelStyle, viewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
+import { GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
+import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
+import { ViewerChrome } from '@/features/viewer-3d/chrome/viewer-chrome';
 import { cn } from '@/utils/css-class';
 
-import { AxesGizmo, GIZMO_SIZE } from './axes-gizmo';
 import { ColorByMenu } from './color-by-menu';
 import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
-import { Scalebar } from './scalebar';
 import { SettingsMenu } from './settings-menu';
-import { BuildStatus, WheelHint } from './status';
+import { BuildStatus } from './status';
 
-import type { Look } from '../engine/looks';
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { Viewer } from '../engine/viewer';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
 import type { ViewerActions, ViewerSettings } from '../use-viewer-settings';
@@ -42,9 +38,8 @@ interface MorphoViewerChromeProps {
 }
 
 /**
- * The control layer over the morphology, laid out as the circuit viewer's: fullscreen, settings and,
- * where its flag is on, debug (top-left), re-centre under them, the colours and their key (top-right),
- * the build's status (top-centre), the ruler (bottom-left) and the axes (bottom-right).
+ * The control layer over the morphology: settings and, where its flag is on, debug (top-left), the colours and their
+ * key (top-right) and the build's status (top-centre).
  */
 export function MorphoViewerChrome({
   viewer,
@@ -61,42 +56,33 @@ export function MorphoViewerChrome({
   const debug = useFlag(morphologyDebugFlag.key);
   const { update } = actions;
   const look = viewer.looks.find((l) => l.id === settings.look) ?? viewer.looks[0];
-  // The chrome reads against the look's background, not the Background switch: SEM is black in either.
-  const theme = viewerTheme(isDarkBackground(look.background[settings.dark ? 'dark' : 'light']));
+  const theme = lookTheme(look, settings.dark);
   const reason = colorsReason(look, settings.typeTint);
   const types = new Set(mesh.summary?.types.map((t) => t.type));
 
-  const chooseLook = (id: string) => {
-    const next = viewer.looks.find((l) => l.id === id);
-    if (next) actions.chooseLook(next);
-  };
-
   return (
-    <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="pointer-events-auto absolute top-3 left-3 flex flex-col items-start gap-2">
-        <div className="flex items-center gap-2">
-          <FullscreenButton target={root} />
+    <ViewerChrome
+      viewer={viewer}
+      root={root}
+      theme={theme}
+      settings={settings}
+      wheelHint={wheelHint}
+      menus={
+        <>
           <SettingsMenu
             settings={settings}
             update={update}
             looks={viewer.looks}
             look={look}
-            onLook={chooseLook}
+            onLook={actions.chooseLook}
             hasMesh={mesh.layers.mesh !== null}
           />
           {debug && (
             <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
           )}
-        </div>
-        <ChromeButton
-          label="Re-centre view"
-          testId="viewer-reset-view"
-          onClick={() => viewer.resetView()}
-        >
-          <RiFocus3Line className="size-4" />
-        </ChromeButton>
-      </div>
-
+        </>
+      }
+    >
       {/* Down to the axes at most: in a short view the key scrolls rather than run under them. */}
       <div
         className="pointer-events-auto absolute top-3 right-3 flex flex-col items-end gap-2"
@@ -142,12 +128,7 @@ export function MorphoViewerChrome({
       </div>
 
       <BuildStatus mesh={mesh} theme={theme} />
-      {settings.scalebar && settings.projection === 'orthographic' && (
-        <Scalebar viewer={viewer} color={theme.foreground} />
-      )}
-      <AxesGizmo viewer={viewer} ring={theme.foreground} />
-      <WheelHint visible={wheelHint} theme={theme} />
-    </div>
+    </ViewerChrome>
   );
 }
 
@@ -157,10 +138,4 @@ function colorsReason(look: Look, typeTint: boolean): string | null {
     return 'Turn on Type tint in the settings to use the neurite colours.';
   }
   return null;
-}
-
-/** Whether light text reads better than dark over a background gradient, top to bottom. */
-function isDarkBackground([top, bottom]: [string, string]): boolean {
-  const middle = chroma.mix(top, bottom, 0.5, 'rgb');
-  return chroma.contrast(middle, '#fff') > chroma.contrast(middle, '#000');
 }

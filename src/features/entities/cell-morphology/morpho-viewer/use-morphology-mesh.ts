@@ -2,16 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 
+import { errorMessage } from '@/utils/error';
 import { logError, logWarn } from '@/utils/logger';
 
 import { type BuildSettings, buildParams } from './constants';
 import { workersFor } from './engine/pool';
-import {
-  errorMessage,
-  GpuError,
-  type MorphologySummary,
-  type SkeletonData,
-} from './engine/protocol';
+import { GpuError, type MorphologySummary, type SkeletonData } from './engine/protocol';
 import { SWC_SOMA } from './engine/swc';
 
 import type { HybridParams } from './engine/hybrid';

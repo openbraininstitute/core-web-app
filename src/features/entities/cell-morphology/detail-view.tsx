@@ -3,9 +3,8 @@
 import { LoadingOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { useParams } from 'next/navigation';
-import { ErrorBoundary } from 'react-error-boundary';
 
-import { withErrorConfig } from '@/components/GenericErrorFallback';
+import { ViewerCard } from '@/features/viewer-3d/viewer-card';
 
 import { MorphoViewer } from './morpho-viewer/morpho-viewer';
 import { useCellMorphologySwc } from './morpho-viewer/use-cell-morphology-swc';
@@ -17,20 +16,9 @@ export function CellMorphologyViewer({ entity }: { entity: ICellMorphology }) {
   if (!entity) return null;
 
   return (
-    // As tall as the circuit viewer: its chrome and menus need the room.
-    <div className="h-[min(740px,80vh)] min-h-90 w-full overflow-hidden rounded-2xl border border-white/20 text-primary-9">
-      <div className="h-full bg-white">
-        <ErrorBoundary
-          FallbackComponent={withErrorConfig({
-            cls: { container: 'bg-white' },
-            showButtons: false,
-            customError: 'Error while loading morphology viewer',
-          })}
-        >
-          <MorphoViewerLoader morphology={entity} />
-        </ErrorBoundary>
-      </div>
-    </div>
+    <ViewerCard error="Error while loading morphology viewer">
+      <MorphoViewerLoader morphology={entity} />
+    </ViewerCard>
   );
 }
 

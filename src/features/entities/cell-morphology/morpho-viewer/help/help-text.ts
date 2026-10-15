@@ -1,18 +1,15 @@
+import { MAX_BUMP_AMPLITUDE } from '@/features/viewer-3d/engine/looks';
+import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
+
 import { MAX_REFINE } from '../engine/hybrid';
-import { MAX_BUMP_AMPLITUDE } from '../engine/looks';
 import { MIN_RADIUS_VOXELS } from '../engine/mesher';
 import { HEAVY_AXON_FACTOR } from '../engine/prepare';
 import { BASE_RADIUS_FRACTION, SOMA_MIN_RADIUS, STEM_MIN_DISTANCE } from '../engine/soma';
 import { MAX_SHIFT } from '../engine/untangle';
 
-/** What the help card of a control says. engine/README.md has the long form. */
-export interface HelpText {
-  text: string;
-  /** What a change does, each under a short key: "Higher" and "Lower", "On" and "Off", or a menu's options. */
-  effects?: [string, string][];
-  /** A change shows at once in the view only, or rebuilds the mesh: the card says so. Not for a section's card. */
-  applies?: 'view' | 'build';
-}
+import type { HelpText } from '@/features/viewer-3d/help/help-button';
+
+/** The help cards of the morphology viewer's controls. engine/README.md has the long form. */
 
 export const HELP = {
   dark: {
@@ -146,26 +143,7 @@ export const HELP = {
     text: 'Turns the view slowly around the soma.',
     applies: 'view',
   },
-  perspective: {
-    text: 'How the cell is projected onto the screen.',
-    effects: [
-      [
-        'On',
-        'Perspective: nearer parts look larger, and depth reads naturally. There is no scale bar, as no one scale holds.',
-      ],
-      [
-        'Off',
-        'Orthographic: a micron is as long on screen at any depth, so the scale bar holds for the whole cell.',
-      ],
-    ],
-    applies: 'view',
-  },
-  'scale-bar': {
-    text:
-      'A ruler down the left of the view, in microns. Only in the orthographic view: in perspective nearer parts ' +
-      'look larger, and no one scale holds.',
-    applies: 'view',
-  },
+  ...VIEW_HELP,
   export: {
     text:
       'Downloads the mesh on show, in microns, with the soma centre at the origin as in the view. The hidden types ' +

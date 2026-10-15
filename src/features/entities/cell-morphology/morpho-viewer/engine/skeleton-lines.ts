@@ -1,6 +1,6 @@
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
-import { addShaderHook } from './looks';
+import { addShaderHook } from '@/features/viewer-3d/engine/looks';
 
 import type { SkeletonKind } from './viewer';
 

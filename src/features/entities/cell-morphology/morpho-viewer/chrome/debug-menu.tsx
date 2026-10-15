@@ -1,18 +1,22 @@
-import { RiBugLine, RiDownload2Line, RiLoader4Line } from '@remixicon/react';
 import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
-import { ChromeMenu } from '@/features/scan-config/components/color-by/chrome-menu';
+import {
+  DebugMenuShell,
+  DownloadRow,
+  FailedNote,
+  fileName,
+} from '@/features/viewer-3d/chrome/debug-rows';
+import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
-import { errorMessage } from '../engine/protocol';
 import { currentPalette, type UpdateSettings, type ViewerSettings } from '../use-viewer-settings';
 import { DebugControls } from './debug-controls';
 import { Note, SectionTitle } from './menu-rows';
 import { Stats } from './stats';
 
+import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { Palette } from '../engine/colors';
-import type { Look } from '../engine/looks';
 import type { MeshResult } from '../engine/mesher';
 import type { ExportFormat } from '../export';
 import type { MorphologyMeshState } from '../use-morphology-mesh';
@@ -98,67 +102,44 @@ export function DebugMenu({ name, state, settings, update, look }: DebugMenuProp
   };
 
   return (
-    <ChromeMenu
-      label="Debug"
-      openLabel="Close debug"
+    <DebugMenuShell
       testId="morphology-debug"
-      icon={<RiBugLine className="size-4 shrink-0" />}
-      contentClassName="w-80 p-0"
-    >
-      {(close) => (
-        // The statistics and the controls scroll, and the downloads stay in view under them.
-        <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
-          <div className="min-h-0 overflow-y-auto">
-            <div className="p-3">
-              <Stats name={name} state={state} palette={palette} />
-            </div>
-            <div className="border-t border-neutral-200 p-1 pb-2">
-              <DebugControls settings={settings} update={update} look={look} gpu={state.gpu} />
-            </div>
+      body={
+        <>
+          <div className="p-3">
+            <Stats name={name} state={state} palette={palette} />
           </div>
-          <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
-            <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
-            {FORMATS.map((f) => (
-              <button
-                key={f.format}
-                type="button"
-                aria-label={f.label}
-                aria-description={f.detail}
-                disabled={reason !== null || running !== null}
-                onClick={() => save(f, close)}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 disabled:hover:bg-transparent"
-              >
-                {running === f.format ? (
-                  <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-                ) : (
-                  <RiDownload2Line aria-hidden className="size-4 shrink-0" />
-                )}
-                <span className="flex flex-col">
-                  <span className="text-sm">{running === f.format ? f.busy : f.label}</span>
-                  <span className="text-xs text-neutral-500">{f.detail}</span>
-                </span>
-              </button>
-            ))}
-            {reason && <Note>{reason}</Note>}
-            {error && (
-              <p role="alert" className="m-0 px-2 text-xs text-error">
-                The export failed: {error}
-              </p>
-            )}
+          <div className="border-t border-neutral-200 p-1 pb-2">
+            <DebugControls settings={settings} update={update} look={look} gpu={state.gpu} />
           </div>
-        </div>
+        </>
+      }
+      footer={(close) => (
+        <>
+          <SectionTitle title="Export mesh" topic="export" className="px-1 pb-1" />
+          {FORMATS.map((f) => (
+            <DownloadRow
+              key={f.format}
+              label={f.label}
+              detail={f.detail}
+              busy={running === f.format ? f.busy : null}
+              disabled={reason !== null || running !== null}
+              onClick={() => save(f, close)}
+            />
+          ))}
+          {reason && <Note>{reason}</Note>}
+          {error && <FailedNote>The export failed: {error}</FailedNote>}
+        </>
       )}
-    </ChromeMenu>
+    />
   );
 }
 
 /** The mesh as a file of the format, saved under the morphology's name. */
 async function saveMesh(format: Format, mesh: MeshResult, palette: Palette, name: string) {
   const { exportMesh } = await import('../export');
-  saveAs(await exportMesh(format.format, mesh, palette), `${fileName(name)}${format.extension}`);
-}
-
-/** The morphology's name, without what a file name cannot hold. */
-function fileName(name: string): string {
-  return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || 'morphology';
+  saveAs(
+    await exportMesh(format.format, mesh, palette),
+    `${fileName(name, 'morphology')}${format.extension}`
+  );
 }

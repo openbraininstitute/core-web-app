@@ -63,6 +63,15 @@ export const morphologyDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The EM cell mesh viewer's Debug menu: the load's timings and memory, and how the mesh on show is chosen. */
+export const emMeshDebugFlag = defineFlag<boolean>({
+  key: 'em-mesh-debug',
+  defaultValue: false,
+  values: [true, false],
+  description: 'EM cell mesh viewer debug menu (load timings, memory and mesh choice)',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -71,6 +80,7 @@ export const flags = [
   smallScalesViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   morphologyDebugFlag,
+  emMeshDebugFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

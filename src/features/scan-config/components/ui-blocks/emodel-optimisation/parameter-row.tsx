@@ -5,6 +5,7 @@ import { Checkbox, Radio } from 'antd';
 import { Fragment, useState } from 'react';
 
 import {
+  DEFAULT_PARAMETER_MODE,
   hasErrorAt,
   ParameterMode,
   type TBounds,
@@ -231,7 +232,7 @@ export function ParameterRow({
   onValueChange: (next: TOptimizationValue) => void;
   onDistributionChange?: (next: string | null) => void;
 }) {
-  const mode = optimizationValue?.mode ?? ParameterMode.Fixed;
+  const mode = optimizationValue?.mode ?? DEFAULT_PARAMETER_MODE;
   // ObiOne's keyword on `bounds`: the upper bound must be greater than the lower one
   const boundsUnordered = errors.some((error) => error.keyword === 'strictly_increasing');
   const valueInvalid = hasErrorAt(errors, '/value');

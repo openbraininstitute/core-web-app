@@ -70,6 +70,8 @@
 
 import { MeshoptSimplifier } from 'meshoptimizer/simplifier';
 
+import { vertexNormals } from '@/features/viewer-3d/engine/normals';
+
 import { layoutKinship } from './classify';
 import { bandHalfWidth, FieldSampler, kernel, smoothMin, somaRounding } from './field';
 import { GrowableFloat32, GrowableUint8, GrowableUint32 } from './growable';
@@ -1453,7 +1455,7 @@ function startCompletion(job: SlabJob, surface: SlabSurface, timings: SlabTiming
   // Either the backend projected the vertices and left the field normals, or they start as the faces' and the
   // projection below replaces them.
   const given = job.project ? surface.normals : undefined;
-  const normals = given ?? faceNormalSums(positions, indices);
+  const normals = given ?? vertexNormals(positions, indices);
   const h = job.grid.h;
   const sampler =
     indices.length > 0 && (job.project || job.simplify > 0) ? new FieldSampler(job) : null;
@@ -1940,35 +1942,6 @@ export function addGpuStats(into: GpuFieldStats | undefined, add: GpuFieldStats)
   return g;
 }
 
-/** Area-weighted face normals summed per vertex. */
-function faceNormalSums(P: Float32Array, idx: Uint32Array): Float32Array {
-  const N = new Float32Array(P.length);
-  for (let t = 0; t < idx.length; t += 3) {
-    const a = 3 * idx[t],
-      b = 3 * idx[t + 1],
-      c = 3 * idx[t + 2];
-    const ux = P[b] - P[a],
-      uy = P[b + 1] - P[a + 1],
-      uz = P[b + 2] - P[a + 2];
-    const vx = P[c] - P[a],
-      vy = P[c + 1] - P[a + 1],
-      vz = P[c + 2] - P[a + 2];
-    const nx = uy * vz - uz * vy,
-      ny = uz * vx - ux * vz,
-      nz = ux * vy - uy * vx;
-    N[a] += nx;
-    N[a + 1] += ny;
-    N[a + 2] += nz;
-    N[b] += nx;
-    N[b + 1] += ny;
-    N[b + 2] += nz;
-    N[c] += nx;
-    N[c + 1] += ny;
-    N[c + 2] += nz;
-  }
-  return N;
-}
-
 /**
  * Give the vertices a projecting backend left without a normal (the gradient vanished there, and it writes zero) the
  * sum of their faces' normals, which is what `projectVertices` leaves them with. It happens for no vertex of a
@@ -1984,7 +1957,7 @@ function fillBlankNormals(
     blank = normals[v] === 0 && normals[v + 1] === 0 && normals[v + 2] === 0;
   }
   if (!blank) return;
-  const faces = faceNormalSums(positions, indices);
+  const faces = vertexNormals(positions, indices);
   for (let v = 0; v < normals.length; v += 3) {
     if (normals[v] !== 0 || normals[v + 1] !== 0 || normals[v + 2] !== 0) continue;
     normals[v] = faces[v];

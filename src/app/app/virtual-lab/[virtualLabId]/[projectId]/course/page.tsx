@@ -13,6 +13,7 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { AssignSeatsModal } from '@/ui/segments/project/course-assign-seats-modal';
 import { DropSeatButton } from '@/ui/segments/project/drop-seat-button';
+import { RemainingCredit } from '@/ui/segments/project/remaining-credit';
 import { SeatRecoverability } from '@/ui/segments/project/seat-recoverability';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
@@ -434,6 +435,9 @@ export default function CoursePage() {
                     onSort={handleSort}
                   />
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                    Remaining credit
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                     Seat recoverable (reason)
                   </th>
                   <th className="w-32 px-4 py-3" />
@@ -484,6 +488,9 @@ export default function CoursePage() {
                       >
                         {enrolment.seat?.id ? 'Yes' : 'No'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      <RemainingCredit enrolment={enrolment} />
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {course && <SeatRecoverability course={course} enrolment={enrolment} />}

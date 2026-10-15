@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { DEFAULT_LOOK } from '@/features/viewer-3d/engine/looks';
+
 import {
   type BuildSettings,
   DARK_PALETTE,
@@ -10,11 +12,11 @@ import {
   LIGHT_PALETTE,
   MIN_WIDTH,
 } from './constants';
-import { DEFAULT_LOOK } from './engine/looks';
 
+import type { BumpParams, Look } from '@/features/viewer-3d/engine/looks';
+import type { Projection } from '@/features/viewer-3d/engine/scene-viewer';
 import type { Palette } from './engine/colors';
-import type { BumpParams, Look } from './engine/looks';
-import type { Projection, SkeletonKind } from './engine/viewer';
+import type { SkeletonKind } from './engine/viewer';
 
 export type ColorBy = 'section' | 'distance';
 

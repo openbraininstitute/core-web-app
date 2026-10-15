@@ -16,3 +16,8 @@ declare module 'draco3dgltf/draco_encoder_gltf_nodejs.js' {
   const createEncoderModule: (options?: DracoModuleOptions) => Promise<unknown>;
   export default createEncoderModule;
 }
+
+declare module 'draco3dgltf/draco_decoder_gltf_nodejs.js' {
+  const createDecoderModule: (options?: DracoModuleOptions) => Promise<unknown>;
+  export default createDecoderModule;
+}
