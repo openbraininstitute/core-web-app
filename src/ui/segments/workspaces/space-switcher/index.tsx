@@ -13,6 +13,7 @@ import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/querie
 import { UserFilled } from '@/components/icons/buttons';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
+import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
@@ -292,6 +293,39 @@ export function SpaceSwitcher({ className }: Props) {
       collapsePanel();
     }
   }, [pathname, collapsePanel]);
+
+  // Auto-collapse the panel when the user clicks outside of it. This mirrors
+  // the submenu behavior but only applies while the panel is open and no
+  // workspace manager modal is active — modals render in a portal outside the
+  // switcher and must never collapse the panel (see the modal decoupling note
+  // above). Clicks inside the portal'd modal are explicitly ignored.
+  const ignoreOutsideClick = useCallback(
+    (event: Event) => {
+      if (boardModalOpen) return true;
+      const target = event.target as HTMLElement | null;
+      return Boolean(target?.closest('#workspace-manager-modal'));
+    },
+    [boardModalOpen]
+  );
+  useOnClickOutside(
+    dropdownRef,
+    () => {
+      if (isExpanded) collapsePanel();
+    },
+    undefined,
+    ignoreOutsideClick
+  );
+
+  // Auto-collapse the panel on Escape, matching the outside-click behavior.
+  // While a modal is open the modal owns Escape, so we leave the panel alone.
+  useEffect(() => {
+    if (!isExpanded || boardModalOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') collapsePanel();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isExpanded, boardModalOpen, collapsePanel]);
 
   return (
     <div
