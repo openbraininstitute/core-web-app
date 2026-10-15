@@ -25,8 +25,6 @@ export interface DistanceFunctionInputProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
-  /** Extra placeholder names the function may use, beyond {value}/{distance}. */
-  declaredParameters?: readonly string[];
   maxLength?: number;
   errorPath?: string;
 }
@@ -123,7 +121,6 @@ export function DistanceFunctionInput({
   value,
   onChange,
   disabled = false,
-  declaredParameters = [],
   maxLength,
   errorPath,
 }: DistanceFunctionInputProps) {
@@ -200,11 +197,8 @@ export function DistanceFunctionInput({
     }
   }, [value]);
 
-  // Debounced server validation, re-run when the value or declared parameters change.
-  // `declaredParameters` is often a fresh array on each parent render, so depend on its joined
-  // contents instead of its identity to avoid aborting and rescheduling the request every render.
-  const declaredParametersKey = declaredParameters.join(',');
-  // biome-ignore lint/correctness/useExhaustiveDependencies: declaredParametersKey tracks declaredParameters by value.
+  // Debounced server validation, re-run when the value changes. The function is the single source
+  // of truth for its parameters, so only the function text is sent; the endpoint checks safety.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return undefined;
@@ -226,7 +220,6 @@ export function DistanceFunctionInput({
     const timer = window.setTimeout(() => {
       validateDistanceFunction({
         function: value,
-        parameters: declaredParameters,
         signal: controller.signal,
       })
         .then((result) => {
@@ -245,7 +238,7 @@ export function DistanceFunctionInput({
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [value, declaredParametersKey, maxLength]);
+  }, [value, maxLength]);
 
   const hasError = errorMessage !== null;
   return (

@@ -11,26 +11,27 @@ export type TDistanceFunctionValidation = {
 
 type TValidateDistanceFunctionParams = {
   function: string;
-  /** Declared parameter names beyond {value}/{distance} the function may reference. */
-  parameters?: readonly string[];
   signal?: AbortSignal;
 };
 
 /**
  * Validate a distance function server-side (obi-one owns the authoritative safe-AST check).
  *
+ * The function is the single source of truth for its parameters, so only the function string is
+ * sent: any placeholder other than `{value}`, `{distance}`, `{step_begin}` and `{step_end}` is a
+ * parameter the frontend reads straight from the text. The endpoint checks safety only.
+ *
  * Returns whether it is valid plus an error message and the character span of the first problem,
  * for inline editor highlighting.
  */
 export async function validateDistanceFunction({
   function: fn,
-  parameters = [],
   signal,
 }: TValidateDistanceFunctionParams): Promise<TDistanceFunctionValidation> {
   const api = await obioneApi();
   return api.post<TDistanceFunctionValidation>('/declared/distance-function/validate', {
     headers: { accept: 'application/json', 'Content-Type': 'application/json' },
-    body: { function: fn, parameters },
+    body: { function: fn },
     signal,
   });
 }

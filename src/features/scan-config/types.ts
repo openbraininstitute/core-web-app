@@ -198,6 +198,7 @@ export const ScanConfigUIElementDict = {
   EtypeSelector: 'etype_selector',
   EModelOptimisationParameters: 'emodel_optimisation_parameters',
   AxonModifier: 'axon_modifier',
+  DistributionParameterList: 'distribution_parameter_list',
   Object: 'object',
 } as const;
 
@@ -249,6 +250,17 @@ export interface DistanceFunctionInputNullableField extends TBlockElement {
 
 export interface ModelIdentifier extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.ModelIdentifier;
+}
+
+/**
+ * The parameter list of a custom distance-dependent distribution. One row per extra `{placeholder}`
+ * in the sibling `function` field (anything other than `{value}`, `{distance}`, `{step_begin}` and
+ * `{step_end}`), together with the fixed value / bounds the optimisation uses for it. The function
+ * is the single source of truth: the editor reads the names from it, the user only fills in values.
+ * The value is an array of `{ name, value }` where `value` is an `OptimizationValue`.
+ */
+export interface DistributionParameterListField extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.DistributionParameterList;
 }
 
 export interface TModelIdentifierMultiple extends TBlockElement {
@@ -697,6 +709,7 @@ export type ParamSchema =
   | StringInput
   | DistanceFunctionInputField
   | DistanceFunctionInputNullableField
+  | DistributionParameterListField
   | ModelIdentifier
   | TModelIdentifierMultiple
   | TModelIdentifierGrouped

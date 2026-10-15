@@ -30,23 +30,18 @@ describe('DistanceFunctionInput', () => {
     });
   });
 
-  it('calls the endpoint (debounced) with the function and declared parameters', async () => {
+  it('calls the endpoint (debounced) with the function text only', async () => {
     mockValidate.mockResolvedValue({ valid: true, error: null, from: 0, to: 0 });
-    render(
-      <DistanceFunctionInput
-        value="math.exp({distance}*{c})*{value}"
-        declaredParameters={['c']}
-        onChange={() => {}}
-      />
-    );
+    render(<DistanceFunctionInput value="math.exp({distance}*{c})*{value}" onChange={() => {}} />);
     await waitFor(() => {
       expect(mockValidate).toHaveBeenCalledWith(
         expect.objectContaining({
           function: 'math.exp({distance}*{c})*{value}',
-          parameters: ['c'],
         })
       );
     });
+    // The function is the single source of truth: no parameter list is sent.
+    expect(mockValidate.mock.calls[0][0]).not.toHaveProperty('parameters');
   });
 
   it('outlines the input in red and shows the endpoint error when invalid', async () => {

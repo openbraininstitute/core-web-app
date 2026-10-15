@@ -10,6 +10,12 @@ import {
   DistanceFunctionField,
   DistanceFunctionNullableField,
 } from '@/features/scan-config/components/ui-elements/distance-function/distance-function-field';
+import {
+  DistributionParameterList,
+  distributionParameterRows,
+  readParameterRows,
+  type TDistributionParameter,
+} from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
@@ -131,7 +137,6 @@ export function UIElementRender({
           paramSchema={paramSchema}
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
-          declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
           errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
             // Non-nullable `str`: clearing omits the key so the schema default applies; `null`
@@ -156,13 +161,34 @@ export function UIElementRender({
           paramSchema={paramSchema}
           value={typeof value === 'string' ? value : ''}
           disabled={disabled}
-          declaredParameters={isStringArray(state.parameters) ? state.parameters : []}
           errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
           onChange={(next) => {
             setState({ ...state, [k]: next || null });
           }}
         />
       )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistributionParameterList },
+      },
+      () => {
+        const functionText = typeof state.function === 'string' ? state.function : '';
+        const stored = readParameterRows(value);
+        const rows = distributionParameterRows(functionText, stored);
+        return (
+          <DistributionParameterList
+            key={`${selectedEntry ?? ''}/${k}`}
+            rows={rows}
+            stored={stored}
+            disabled={disabled}
+            errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+            onChange={(rows: TDistributionParameter[]) => {
+              setState({ ...state, [k]: rows as unknown as ConfigValue });
+            }}
+          />
+        );
+      }
     )
     .with(
       {
