@@ -99,8 +99,8 @@ export function ModelPreview({
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
-      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit, all served
-      // by OBI-One `/circuit/viz`.
+      // Single / pair / small share CircuitPreview, their morphologies served by
+      // OBI-One `/circuit/viz`.
       .with(
         {
           type: EntityTypeDict.Circuit,

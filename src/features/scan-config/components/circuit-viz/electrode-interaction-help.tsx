@@ -2,7 +2,7 @@
 
 import { ViewerHelpRow, ViewerHelpTooltip } from './viewer-help-tooltip';
 
-/** Top-left chrome help for electrode overlay gestures (MorphoViewer overlaysInteractive). */
+/** Top-left chrome help for electrode overlay gestures. */
 export function ElectrodeInteractionHelp() {
   return (
     <ViewerHelpTooltip label="Electrode controls" title="Electrode controls">

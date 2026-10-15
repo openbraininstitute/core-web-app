@@ -1,8 +1,7 @@
 /**
- * The somas of a circuit drawn as the somas view, morphoviewer's `MorphoViewerCircuitMultipleNeuronsSomaOnly` that this
- * replaces, drew them: a quad a cell, facing the eye at the soma's centre and as wide as its sphere, shaded as one by a
- * fixed light, with no depth of its own. The colours are worked in sRGB, as the view mixed them, and drawn as they come
- * out, with no tone mapping.
+ * The somas of a circuit drawn as morphoviewer's somas view drew them: a quad a cell, facing the eye at the soma's
+ * centre and as wide as its sphere, shaded as one by a fixed light, with no depth of its own. The colours are worked in
+ * sRGB, as the view mixed them, and drawn as they come out, with no tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
  * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white, rings it

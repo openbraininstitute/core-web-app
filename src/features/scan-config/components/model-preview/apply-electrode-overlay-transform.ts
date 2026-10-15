@@ -40,7 +40,7 @@ function nextScalar(current: unknown, next: number): ConfigValue {
 }
 
 /**
- * Apply a morphoviewer overlay drag/rotate back into scan-config.
+ * Apply the viewer's electrode drag/rotate back into scan-config.
  *
  * How: called from `CircuitPreview` only on `event.phase === 'end'` so mid-drag
  * React updates do not fight the live WebGL buffers. Only updates `origin_*` /
@@ -49,7 +49,7 @@ function nextScalar(current: unknown, next: number): ConfigValue {
  * invent fields the schema did not declare.
  *
  * @param config - Full scan-config root
- * @param event - Overlay transform from morphoviewer (`id`, origin, rotation)
+ * @param event - Electrode transform from the viewer (`id`, origin, rotation)
  * @returns New config object, or the same reference when nothing applies
  *
  * @example

@@ -72,8 +72,7 @@ interface Stored {
 const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(spot.type);
 
 /**
- * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` block, as `useMorphologyLocationSelection`
- * binds it for morphoviewer.
+ * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` block.
  *
  * Clicking a neurite adds a location to the open block, and the block's rows come back as markers. The config is the
  * only source of truth, so the list and the 3D view cannot drift apart. With no block open, a click creates one.

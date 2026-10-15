@@ -108,7 +108,7 @@ export interface ViewerConfig {
   /** Show electrode location overlays when present. Default on. */
   showElectrodes: boolean;
   /**
-   * World-space electrode marker radius (morphoviewer overlaysRadius).
+   * World-space electrode marker radius.
    * Defaults to {@link DEFAULT_ELECTRODE_RADIUS}.
    */
   electrodeRadius: number;

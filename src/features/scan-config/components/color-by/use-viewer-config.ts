@@ -34,12 +34,7 @@ export const DEFAULT_SOMA_SIZE_SCALE = 1;
  */
 export const DEFAULT_ELECTRODE_RADIUS = 5;
 
-/**
- * Default radius of a morphology-location marker, in world units.
- *
- * Restates morphoviewer's `DEFAULT_LOCATION_MARKER_RADIUS`; importing it would pull
- * `@tolokoban/tgd` — which touches `document` at module scope — into server renders.
- */
+/** Default radius of a morphology-location marker, in world units. */
 export const DEFAULT_MORPHOLOGY_LOCATION_RADIUS = 3;
 
 /** Baseline viewer defaults (full neuron opacity, electrode size 5). */

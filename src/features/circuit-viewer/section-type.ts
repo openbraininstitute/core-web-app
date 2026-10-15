@@ -1,7 +1,6 @@
 /**
  * What part of a cell a morphology's section is, in the numbers OBI-One's sections carry them in, which are
- * morphoviewer's `MorphoViewerTreeItemType`'s. A plain object and a union of numbers rather than an enum, so that
- * morphoviewer's enum and this pass for one another while both are in use.
+ * morphoviewer's `MorphoViewerTreeItemType`'s.
  */
 export const SectionType = {
   Soma: 0,

@@ -269,6 +269,12 @@ describe('the locations with no block open', () => {
     expect(result.current.pickMode).toBe(null);
     expect(result.current.locations).toBeUndefined();
   });
+
+  it('offer no picking where the workflow has no morphology locations', () => {
+    const { result } = render({ ...elsewhere, config: {} as Config, onCreateEntry: vi.fn() });
+
+    expect(result.current.pickMode).toBe(null);
+  });
 });
 
 describe('the location under the pointer', () => {

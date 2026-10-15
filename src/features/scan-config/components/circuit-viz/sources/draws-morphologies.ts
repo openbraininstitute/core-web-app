@@ -6,7 +6,7 @@ import {
 /**
  * Whether a circuit is drawn as neurites, or as a cloud of soma spheres.
  *
- * The cutoff is cost: `MorphoViewerSmallCircuit` fetches and tessellates one
+ * The cutoff is cost: the small-circuit path reads every point of one
  * morphology per cell, which a microcircuit and everything above it has far too
  * many of. Those go to `LargeCircuitPreview`, which draws each cell as a point.
  *

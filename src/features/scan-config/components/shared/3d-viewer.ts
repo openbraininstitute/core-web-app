@@ -1,22 +1,5 @@
 import { backgroundIsDark } from '@/features/scan-config/components/color-by/contrast';
 
-/** Scalebar defaults for the small-circuit viewer, in morphoviewer's words: right pins + labels always visible. */
-const VERTICAL_SCALEBAR = {
-  orientation: 'vertical',
-  hiDPI: true,
-  margin: { x: 0, y: 10 },
-  pins: { left: 'never', right: 'always' },
-  labels: { show: 'always', side: 'right' },
-} as const;
-
-type ScalebarConfig = typeof VERTICAL_SCALEBAR & { color?: string };
-
-/** The scalebar config for the small-circuit viewer, or `false` to leave it out. */
-export function resolveScalebar(show: boolean, color?: string): ScalebarConfig | false {
-  if (!show) return false;
-  return color ? { ...VERTICAL_SCALEBAR, color } : VERTICAL_SCALEBAR;
-}
-
 const WATERMARK_TITLE = 'Open Brain Institute';
 const WATERMARK_URL = 'www.openbraininstitute.org';
 /** primary-8 on light canvas backgrounds */
