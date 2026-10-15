@@ -6,11 +6,8 @@ import { probeWebGPU } from './probe';
 import type { CircuitMorphologyView } from '../types';
 
 export type Tier = 'webgpu' | 'webgl';
-/**
- * What the debug tools ask for: the tier the browser allows, WebGL 2 whatever it allows, or WebGPU while it does not
- * draw everything yet.
- */
-export type TierChoice = 'auto' | 'webgl' | 'webgpu';
+/** What the debug tools ask for: WebGPU where the browser has it, or WebGL 2 whatever it has. */
+export type TierChoice = 'auto' | 'webgl';
 
 export interface CreatedView {
   view: CircuitMorphologyView;
@@ -43,11 +40,6 @@ export function createCircuitView(
   return probeWebGPU(gpu).then(async (probed) => {
     if ('reason' in probed) return onWebGL(host, probed.reason);
     const { device } = probed;
-    // Until the WebGPU engine draws everything, it is asked for in the debug tools alone.
-    if (choice !== 'webgpu') {
-      device.destroy();
-      return onWebGL(host, 'the WebGPU engine is not complete yet');
-    }
     try {
       const { CircuitMorphologyGPU } = await import('./webgpu/circuit-morphology-gpu');
       const view = await CircuitMorphologyGPU.create(host, device, () => {

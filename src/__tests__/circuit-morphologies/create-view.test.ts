@@ -122,7 +122,7 @@ describe('createCircuitView', () => {
     ],
   ])('falls back to WebGL 2 on %s, saying why', async (_case, requestAdapter, reason) => {
     withGPU(requestAdapter);
-    await expect(createCircuitView(host(), 'webgpu', unheard)).resolves.toMatchObject({
+    await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
       tier: 'webgl',
       reason,
     });
@@ -133,7 +133,7 @@ describe('createCircuitView', () => {
     const gpu = withGPU(async () => adapter);
     const into = host();
 
-    const made = await createCircuitView(into, 'webgpu', unheard);
+    const made = await createCircuitView(into, 'auto', unheard);
 
     expect(gpu.requestAdapter).toHaveBeenCalledExactlyOnceWith({
       powerPreference: 'high-performance',
@@ -148,22 +148,11 @@ describe('createCircuitView', () => {
     expect(device.destroy).not.toHaveBeenCalled();
   });
 
-  it('keeps to WebGL 2 by itself while the WebGPU engine is incomplete, letting the device go', async () => {
-    const { adapter, device } = adapterOf();
-    withGPU(async () => adapter);
-    await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
-      tier: 'webgl',
-      reason: 'the WebGPU engine is not complete yet',
-    });
-    expect(device.destroy).toHaveBeenCalledTimes(1);
-    expect(h.gpu.made).toHaveLength(0);
-  });
-
   it('falls back to WebGL 2 where the WebGPU engine cannot start, letting the device go', async () => {
     const { adapter, device } = adapterOf();
     withGPU(async () => adapter);
     h.gpu.fails = true;
-    await expect(createCircuitView(host(), 'webgpu', unheard)).resolves.toMatchObject({
+    await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
       tier: 'webgl',
       reason: 'WebGPU could not start',
     });
@@ -176,12 +165,12 @@ describe('createCircuitView', () => {
     const { adapter } = adapterOf();
     const gpu = withGPU(async () => adapter);
     const onLost = vi.fn();
-    await createCircuitView(host(), 'webgpu', onLost);
+    await createCircuitView(host(), 'auto', onLost);
 
     h.gpu.made[0].onLost();
 
     expect(onLost).toHaveBeenCalledTimes(1);
-    expect(createCircuitView(host(), 'webgpu', unheard)).toMatchObject({
+    expect(createCircuitView(host(), 'auto', unheard)).toMatchObject({
       tier: 'webgl',
       reason: 'the graphics were reset',
     });

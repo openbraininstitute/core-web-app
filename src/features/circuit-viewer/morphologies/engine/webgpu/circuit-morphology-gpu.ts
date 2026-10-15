@@ -1,23 +1,16 @@
-import { vec4 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
 import { type CircuitMaterials, CircuitView, PICK_REACH } from '../circuit-view';
 import { cellNearMiddle } from '../impostors';
+import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
+import { impostorMaterials } from './impostors-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
-
-/** A material that draws nothing, for what the WebGPU tier does not draw yet. */
-function nothing(): THREE.MeshBasicNodeMaterial {
-  const material = new THREE.MeshBasicNodeMaterial();
-  material.vertexNode = vec4(2, 2, 2, 1);
-  material.fragmentNode = vec4(0);
-  return material;
-}
 
 /**
  * The circuit's morphologies on WebGPU (`CircuitView`), on a device of the page's own (`probeWebGPU`), which goes
@@ -59,17 +52,23 @@ export class CircuitMorphologyGPU extends CircuitView {
     device.lost.then((info) => {
       if (info.reason !== 'destroyed' && !this.disposed) onLost();
     });
-    this.gpu = new GpuUniforms(this.uniforms, this.cloudUniforms);
+    this.gpu = new GpuUniforms({
+      impostors: this.uniforms,
+      cloud: this.cloudUniforms,
+      segments: this.spotUniforms,
+      electrodes: this.electrodeUniforms,
+      synapses: this.synapseUniforms,
+      markers: this.markerUniforms,
+    });
     const cloud = somaCloudMaterials(this.gpu);
+    const impostors = impostorMaterials(this.gpu, this.look);
     this.materials = {
-      segment: nothing(),
-      soma: nothing(),
+      segment: impostors.segment,
+      soma: impostors.soma,
       cloud: cloud.cloud,
-      ids: { segment: nothing(), soma: nothing(), cloud: cloud.id },
-      spots: { segment: nothing(), soma: nothing() },
-      electrode: nothing(),
-      synapse: nothing(),
-      marker: nothing(),
+      ids: { ...impostors.ids, cloud: cloud.id },
+      spots: impostors.spots,
+      ...dotMaterials(this.gpu, this.pixelRatio),
     };
     this.start();
   }
