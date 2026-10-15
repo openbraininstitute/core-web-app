@@ -92,7 +92,7 @@ function Row({
   label: string;
   overridden: boolean;
   differ: boolean;
-  derivedNote: string;
+  derivedNote?: string;
   warning?: string;
   disabled: boolean;
   onReset: () => void;
@@ -100,16 +100,9 @@ function Row({
 }) {
   const note = (() => {
     // differing recordings have no value to go back to
-    if (differ)
-      return overridden ? (
-        'The recordings differ - set for this model'
-      ) : (
-        <span className="text-red-600">The recordings differ - set a value</span>
-      );
+    if (differ) return overridden ? null : <span className="text-red-500">Required</span>;
     if (overridden)
-      return disabled ? (
-        'Set for this model'
-      ) : (
+      return disabled ? null : (
         <button type="button" className="text-primary-7 underline" onClick={onReset}>
           Use the recordings&apos; value
         </button>
@@ -137,7 +130,7 @@ function Row({
         )}
       </span>
       {children}
-      <span className="text-xs text-neutral-500">{note}</span>
+      {note && <span className="text-xs text-neutral-500">{note}</span>}
     </div>
   );
 }
@@ -185,9 +178,6 @@ function useModelProperties(value: TIonChannelModelPropertiesValue, recordingIds
     value: t,
     names: recordings.filter((r) => r.temperature === t).map((r) => r.name),
   }));
-  const withoutTemperature = recordings
-    .filter((recording) => recording.temperature == null)
-    .map((recording) => recording.name);
   const species = shared(recordings.map((recording) => recording.subject.species.id));
   const speciesId = value.species?.id_str ?? derived(species);
   const strainsOfSpecies = recordings
@@ -267,9 +257,9 @@ function useModelProperties(value: TIonChannelModelPropertiesValue, recordingIds
     nameInvalid,
     sharedTemperature: derived(temperature),
     temperatureOptions,
-    withoutTemperature,
     firstHasTemperature: recordings[0]?.temperature != null,
     regionsDiffer,
+    regionRootId: regionTree?.id,
     regionLoading: !!hierarchyId && !regionTree,
     regionOptions,
     regionValue,
@@ -299,10 +289,20 @@ function readProperties(config: Config, root: string, propertyKey: string) {
   return { block, value: value as TIonChannelModelPropertiesValue };
 }
 
+function withProperties(
+  config: Config,
+  root: string,
+  propertyKey: string,
+  patch: TIonChannelModelPropertiesValue
+) {
+  const { block, value } = readProperties(config, root, propertyKey);
+  return { ...config, [root]: { ...block, [propertyKey]: { ...value, ...patch } } } as Config;
+}
+
 /**
- * Preselects the first recording's temperature when the recordings differ, and publishes what is
- * still to be set, so the root element's tick and the Generate button agree with the form even
- * while the block is closed.
+ * Preselects the first recording's temperature when the recordings differ, and the root region
+ * when their regions have no common parent; publishes what is still to be set, so the root
+ * element's tick and the Generate button agree with the form even while the block is closed.
  */
 function ModelPropertiesCheck({
   root,
@@ -319,28 +319,19 @@ function ModelPropertiesCheck({
 }) {
   const path = `${root}.${propertyKey}`;
   const { block, value } = readProperties(config, root, propertyKey);
-  const { loaded, failed, missing, differ, temperatureOptions } = useModelProperties(
+  const { loaded, failed, missing, differ, temperatureOptions, regionRootId } = useModelProperties(
     value,
     recordingIdsOf(block)
   );
   const [preselected, setPreselected] = usePreselectedTemperature();
   const untouched = value.temperature == null || value.temperature === preselected;
   const target = differ.temperature ? (temperatureOptions[0]?.value ?? null) : null;
+  const rootRegion = differ.brain_region && !value.brain_region ? regionRootId : undefined;
 
   useEffect(() => {
     if (locked || !loaded || !untouched || value.temperature === target) return;
     setPreselected(target);
-    setConfig((previous) => {
-      const { block: previousBlock, value: previousValue } = readProperties(
-        previous,
-        root,
-        propertyKey
-      );
-      return {
-        ...previous,
-        [root]: { ...previousBlock, [propertyKey]: { ...previousValue, temperature: target } },
-      } as Config;
-    });
+    setConfig((previous) => withProperties(previous, root, propertyKey, { temperature: target }));
   }, [
     locked,
     loaded,
@@ -352,6 +343,15 @@ function ModelPropertiesCheck({
     setPreselected,
     setConfig,
   ]);
+
+  useEffect(() => {
+    if (locked || !rootRegion) return;
+    setConfig((previous) =>
+      withProperties(previous, root, propertyKey, {
+        brain_region: { type: 'BrainRegionFromID', id_str: rootRegion },
+      })
+    );
+  }, [locked, rootRegion, root, propertyKey, setConfig]);
 
   useFieldError(
     path,
@@ -411,7 +411,6 @@ export function IonChannelModelProperties({
     nameInvalid,
     sharedTemperature,
     temperatureOptions,
-    withoutTemperature,
     firstHasTemperature,
     regionsDiffer,
     regionLoading,
@@ -451,10 +450,6 @@ export function IonChannelModelProperties({
   const temperaturePreselected =
     currentTemperature != null &&
     (value.temperature == null || value.temperature === preselectedTemperature);
-  const temperatureList = [
-    ...temperatureOptions.map((option) => `${option.value} °C`),
-    ...(withoutTemperature.length > 0 ? [`none for ${withoutTemperature.join(', ')}`] : []),
-  ].join(', ');
   const pickTemperature = (next: number | null) => {
     setPreselectedTemperature(null);
     // the recordings' shared value is the default, not an override
@@ -497,13 +492,7 @@ export function IonChannelModelProperties({
         label="Temperature (°C)"
         overridden={!differ.temperature && value.temperature != null}
         differ={differ.temperature && currentTemperature == null}
-        derivedNote={
-          differ.temperature
-            ? `The recordings were measured at ${temperatureList}`
-            : sharedTemperature === null
-              ? 'The recordings have none'
-              : 'From the recordings'
-        }
+        derivedNote={sharedTemperature == null ? undefined : 'From the recordings'}
         warning={(() => {
           if (!differ.temperature) return undefined;
           const warning =
@@ -583,9 +572,7 @@ export function IonChannelModelProperties({
         label="Strain"
         overridden={!!value.strain}
         differ={differ.strain}
-        derivedNote={
-          sharedStrain === null ? 'None of the recordings has one' : 'From the recordings'
-        }
+        derivedNote={sharedStrain == null ? undefined : 'From the recordings'}
         disabled={disabled}
         onReset={() => set('strain', null)}
       >
