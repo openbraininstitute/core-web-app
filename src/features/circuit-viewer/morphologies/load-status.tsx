@@ -57,13 +57,13 @@ export function MorphologiesStatus({
 }) {
   let pill: ReactNode = null;
   if (load.status === 'loading') {
-    pill = <StatusPill text={loadingText(load)} failed={false} theme={theme} place={place} />;
+    pill = <StatusPill text={loadingText(load)} kind="busy" theme={theme} place={place} />;
   } else if (load.status === 'ready' && leftOut) {
-    pill = <StatusPill text={LEFT_OUT} failed theme={theme} place={place} />;
+    pill = <StatusPill text={LEFT_OUT} kind="info" theme={theme} place={place} />;
   } else if (stopped) {
     const { text, retry } = stopNotice(stopped);
     pill = (
-      <StatusPill text={text} failed theme={theme} place={place}>
+      <StatusPill text={text} kind="warning" theme={theme} place={place}>
         {retry && <StatusAction onClick={onRetry}>Try again</StatusAction>}
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
       </StatusPill>

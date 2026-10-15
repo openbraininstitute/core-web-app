@@ -1,4 +1,4 @@
-import { RiAlertLine, RiLoader4Line } from '@remixicon/react';
+import { RiAlertLine, RiInformationLine, RiLoader4Line } from '@remixicon/react';
 
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
@@ -8,16 +8,25 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
 
 export const megabytes = (bytes: number) => (bytes / 1e6).toFixed(1);
 
-/** Status over the view, top-centre unless placed: work under way, or a warning, with what can be done about it. */
+const ICONS = {
+  busy: <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />,
+  warning: <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />,
+  info: <RiInformationLine aria-hidden className="size-4 shrink-0 opacity-70" />,
+};
+
+/**
+ * Status over the view, top-centre unless placed: work under way, a warning or a note, with what can be done about
+ * it.
+ */
 export function StatusPill({
   text,
-  failed,
+  kind,
   theme,
   place,
   children,
 }: {
   text: string;
-  failed: boolean;
+  kind: keyof typeof ICONS;
   theme: ViewerTheme;
   place?: CSSProperties;
   children?: ReactNode;
@@ -38,14 +47,10 @@ export function StatusPill({
         )}
         style={{
           ...panelStyle(theme),
-          ...(failed && { boxShadow: '0 0 0 1px var(--color-warning)' }),
+          ...(kind === 'warning' && { boxShadow: '0 0 0 1px var(--color-warning)' }),
         }}
       >
-        {failed ? (
-          <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />
-        ) : (
-          <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-        )}
+        {ICONS[kind]}
         <span className="truncate">{text}</span>
         {children}
       </div>

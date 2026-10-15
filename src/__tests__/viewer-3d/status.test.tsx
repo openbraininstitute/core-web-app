@@ -9,14 +9,23 @@ const box = () => screen.getByRole('status').parentElement as HTMLElement;
 
 describe('StatusPill', () => {
   it('is top-centre unless it is given a place', () => {
-    const { rerender } = render(<StatusPill text="Loading…" failed={false} theme={theme} />);
+    const { rerender } = render(<StatusPill text="Loading…" kind="busy" theme={theme} />);
     expect(box()).toHaveClass('top-3', 'left-1/2');
     expect(box().style.top).toBe('');
 
     rerender(
-      <StatusPill text="Loading…" failed={false} theme={theme} place={{ top: 52, left: 52 }} />
+      <StatusPill text="Loading…" kind="busy" theme={theme} place={{ top: 52, left: 52 }} />
     );
     expect(box()).not.toHaveClass('left-1/2');
     expect(box()).toHaveStyle({ top: '52px', left: '52px' });
+  });
+
+  it('rings a warning alone', () => {
+    const ring = () => screen.getByRole('status').style.boxShadow;
+    const { rerender } = render(<StatusPill text="Stopped" kind="warning" theme={theme} />);
+    expect(ring()).toContain('--color-warning');
+
+    rerender(<StatusPill text="Some left out" kind="info" theme={theme} />);
+    expect(ring()).not.toContain('--color-warning');
   });
 });

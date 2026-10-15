@@ -38,7 +38,7 @@ export function LoadStatus({
     );
   }
   if (context === 'lost') {
-    return <StatusPill text="The graphics were reset, restoring…" failed={false} theme={theme} />;
+    return <StatusPill text="The graphics were reset, restoring…" kind="busy" theme={theme} />;
   }
   if (stopped) {
     return (
@@ -77,10 +77,15 @@ export function LoadStatus({
   if (error && !hasStandIn) {
     return <StatusAlert title="The mesh could not be loaded" message={error} theme={theme} />;
   }
-  if (error) return <StatusPill text="Full detail could not be loaded" failed theme={theme} />;
+  if (error)
+    return <StatusPill text="Full detail could not be loaded" kind="warning" theme={theme} />;
   if (load.fullDropped) {
     return (
-      <StatusPill text="Full detail was let go of after the graphics reset" failed theme={theme}>
+      <StatusPill
+        text="Full detail was let go of after the graphics reset"
+        kind="warning"
+        theme={theme}
+      >
         <StatusAction onClick={load.loadAgain}>Load it</StatusAction>
       </StatusPill>
     );
@@ -96,7 +101,7 @@ export function LoadStatus({
     text = downloading
       ? `Downloading ${megabytes(received)} / ${megabytes(total)} MB`
       : 'Decoding…';
-  return <StatusPill text={text} failed={false} theme={theme} />;
+  return <StatusPill text={text} kind="busy" theme={theme} />;
 }
 
 /** Downloads the GLB, for a viewer elsewhere. */
