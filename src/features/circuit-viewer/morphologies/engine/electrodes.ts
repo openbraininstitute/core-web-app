@@ -20,7 +20,7 @@ const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
 const RING_PX = 1;
 
-interface ElectrodeUniforms {
+export interface ElectrodeUniforms {
   /** A contact's radius, in µm. */
   uRadius: { value: number };
   /** The least radius a contact is drawn with, in device pixels. */

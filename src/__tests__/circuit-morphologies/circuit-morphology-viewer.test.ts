@@ -26,9 +26,11 @@ import type { Look } from '@/features/viewer-3d/engine/looks';
 const { FakeRenderer } = vi.hoisted(() => {
   /** Draws nothing; it keeps what it was made with and counts the frames asked of it. */
   class FakeRenderer {
+    /** The pixel ratio the next renderer is made with. */
+    static devicePixelRatio = 1;
     domElement = document.createElement('canvas');
     loop: (() => void) | null = null;
-    pixelRatio = 1;
+    pixelRatio = FakeRenderer.devicePixelRatio;
     render = vi.fn();
     compile = vi.fn();
     setRenderTarget = vi.fn();
@@ -70,28 +72,30 @@ vi.mock('three', async (importOriginal) => ({
 
 interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
-  main: unknown;
   chunks: THREE.Group;
-  surfaces: THREE.Scene;
+  surfaces: THREE.Group;
   bounds: THREE.Box3;
   look: Look;
   uniforms: ImpostorUniforms;
-  somaMaterial: THREE.Material;
+  materials: {
+    segment: THREE.Material;
+    soma: THREE.Material;
+    cloud: THREE.ShaderMaterial;
+    ids: {
+      segment: THREE.ShaderMaterial;
+      soma: THREE.ShaderMaterial;
+      cloud: THREE.ShaderMaterial;
+    };
+    electrode: THREE.ShaderMaterial;
+  };
   cloud: { mesh: Quads; ids: Quads } | null;
-  cloudMaterial: THREE.ShaderMaterial;
   cloudUniforms: SomaCloudUniforms;
   ids: THREE.Scene;
-  idMaterials: {
-    segment: THREE.ShaderMaterial;
-    soma: THREE.ShaderMaterial;
-    cloud: THREE.ShaderMaterial;
-  };
   idTarget: THREE.WebGLRenderTarget | null;
   controls: { target: THREE.Vector3 };
   centre: [number, number, number];
   camera: THREE.Camera;
   scene: THREE.Scene;
-  electrodeMaterial: THREE.ShaderMaterial;
   electrodes: Quads | null;
   spots: THREE.Scene;
   spotUniforms: { uSegments: { value: number } };
@@ -103,9 +107,15 @@ type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
 
 let viewers: CircuitMorphologyViewer[] = [];
 
-function make(): { viewer: CircuitMorphologyViewer; inner: Internals; host: HTMLElement } {
+/** A viewer on a screen of `pixelRatio`. */
+function make(pixelRatio = 1): {
+  viewer: CircuitMorphologyViewer;
+  inner: Internals;
+  host: HTMLElement;
+} {
   const host = document.body.appendChild(document.createElement('div'));
   Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+  FakeRenderer.devicePixelRatio = pixelRatio;
   const viewer = new CircuitMorphologyViewer(host);
   viewers.push(viewer);
   return { viewer, inner: viewer as unknown as Internals, host };
@@ -128,7 +138,7 @@ function circuit(): CircuitMorphologyData {
 const segmentsOf = (inner: Internals) => inner.chunks.children[0] as Quads;
 const somasOf = (inner: Internals) =>
   inner.surfaces.children.find(
-    (o) => o instanceof THREE.Mesh && o.material === inner.somaMaterial
+    (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma
   ) as Quads;
 const texel = (inner: Internals, cell: number) => {
   const { data } = (inner.uniforms.uCells.value as THREE.DataTexture).image;
@@ -199,14 +209,11 @@ describe('the circuit morphology viewer', () => {
       depth: true,
       powerPreference: 'high-performance',
     });
-    expect(inner.main).toBeNull();
   });
 
-  it('has the Studio look and no other', () => {
-    const { viewer, inner } = make();
-    expect(viewer.looks.map((l) => l.id)).toEqual(['studio']);
-    expect(inner.look).toBe(viewer.looks[0]);
-    expect(() => viewer.setLook('flat')).toThrow('unknown look "flat"');
+  it('draws in the Studio look', () => {
+    const { inner } = make();
+    expect(inner.look.id).toBe('studio');
   });
 
   it("has the circuit viewer's flat background of the theme in place of Studio's gradient", () => {
@@ -215,8 +222,6 @@ describe('the circuit morphology viewer', () => {
     const black = 'linear-gradient(rgb(0, 0, 0), rgb(0, 0, 0))';
     expect(host.style.background).toBe(white);
     viewer.setDark(true);
-    expect(host.style.background).toBe(black);
-    viewer.setLook('studio');
     expect(host.style.background).toBe(black);
     viewer.setDark(false);
     expect(host.style.background).toBe(white);
@@ -289,20 +294,12 @@ describe('the circuit morphology viewer', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());
     const somas = somasOf(inner);
-    expect(somas.material).toBe(inner.somaMaterial);
+    expect(somas.material).toBe(inner.materials.soma);
     expect(somas.material).not.toBe(inner.look.material);
-    expect(inner.somaMaterial.customProgramCacheKey()).toContain('impostor-soma');
+    expect(inner.materials.soma.customProgramCacheKey()).toContain('impostor-soma');
     expect(somas.geometry.instanceCount).toBe(2);
     expect([...somas.geometry.getAttribute('aSoma').array]).toEqual([0, 0, 0, 5, 10, 20, 0, 4]);
     expect([...somas.geometry.getAttribute('aCell').array]).toEqual([0, 2]);
-  });
-
-  it('keeps the somas their own material when the look is applied again', () => {
-    const { viewer, inner } = make();
-    viewer.setData(circuit());
-    viewer.setLook('studio');
-    expect(somasOf(inner).material).toBe(inner.somaMaterial);
-    expect(segmentsOf(inner).material).toBe(inner.look.material);
   });
 
   it("frames the view on the data's bounds", () => {
@@ -408,11 +405,11 @@ describe('the circuit morphology viewer', () => {
     expect(inner.ids.children).toHaveLength(2);
     expect(inner.ids.parent).toBeNull();
     expect(segments.geometry).toBe(segmentsOf(inner).geometry);
-    expect(segments.material).toBe(inner.idMaterials.segment);
+    expect(segments.material).toBe(inner.materials.ids.segment);
     expect(somas.geometry).toBe(somasOf(inner).geometry);
-    expect(somas.material).toBe(inner.idMaterials.soma);
+    expect(somas.material).toBe(inner.materials.ids.soma);
     for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
-    expect(inner.idMaterials.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
+    expect(inner.materials.ids.soma.uniforms.uCells).toBe(inner.uniforms.uCells);
     // Built with the data, ahead of the first pick, for the target a pick draws into.
     expect(inner.renderer.compile).toHaveBeenCalledExactlyOnceWith(inner.ids, inner.camera);
     expect(steps).toEqual(['into 9x9', 'build', 'back to the canvas']);
@@ -422,11 +419,10 @@ describe('the circuit morphology viewer', () => {
   });
 
   it('picks the cell drawn at a point from the device pixels within 4 CSS pixels of it, drawn in numbers for it', async () => {
-    const { viewer, inner } = make();
+    const { viewer, inner } = make(2);
     const { renderer } = inner;
     renderer.domElement.width = 800;
     renderer.domElement.height = 600;
-    renderer.pixelRatio = 2;
     viewer.setData(circuit());
     const steps: string[] = [];
     renderer.setRenderTarget.mockImplementation((target: THREE.WebGLRenderTarget | null) =>
@@ -514,9 +510,9 @@ describe('the circuit morphology viewer', () => {
     expect(mesh.parent).toBe(inner.scene);
     expect(mesh.renderOrder).toBe(1);
     expect(mesh.frustumCulled).toBe(false);
-    expect(mesh.material).toBe(inner.electrodeMaterial);
-    expect(inner.electrodeMaterial.depthTest).toBe(false);
-    expect(inner.electrodeMaterial.depthWrite).toBe(false);
+    expect(mesh.material).toBe(inner.materials.electrode);
+    expect(inner.materials.electrode.depthTest).toBe(false);
+    expect(inner.materials.electrode.depthWrite).toBe(false);
     expect(mesh.geometry.instanceCount).toBe(3);
     expect(rounded(contactsOf(inner) ?? [])).toEqual([10, 20, 0, 0, 0, 0, -5, -10, 0]);
     // In sRGB as the host has them, which the shader writes as they are.
@@ -562,7 +558,7 @@ describe('the circuit morphology viewer', () => {
     expect(frames(inner)).toBe(0);
     viewer.setSynapses([]);
     expect(mesh.visible).toBe(false);
-    expect(inner.electrodeMaterial.uniforms.uLift.value).toBe(0);
+    expect(inner.materials.electrode.uniforms.uLift.value).toBe(0);
   });
 
   it('draws the highlighted array half again as large, and nearer white', () => {
@@ -627,7 +623,7 @@ describe('the circuit morphology viewer', () => {
 
   it('draws contacts as wide as the radius setting, and a pixel or more across at the least', () => {
     const { viewer, inner } = make();
-    const { uRadius, uMinRadius, uViewport } = inner.electrodeMaterial.uniforms;
+    const { uRadius, uMinRadius, uViewport } = inner.materials.electrode.uniforms;
     expect(uViewport).toBe(inner.uniforms.uViewport);
 
     frames(inner);
@@ -709,7 +705,7 @@ describe('the circuit morphology viewer', () => {
     const ratio = vi.spyOn(FakeRenderer.prototype, 'getPixelRatio').mockReturnValue(2);
     const { viewer, inner } = make();
     ratio.mockRestore();
-    const { uRing, uRingColour } = inner.electrodeMaterial.uniforms;
+    const { uRing, uRingColour } = inner.materials.electrode.uniforms;
     expect(uRing.value).toBe(2);
     expect(rounded(uRingColour.value.toArray())).toEqual(sRGB('#1a1a1a'));
     viewer.setDark(true);
@@ -779,15 +775,15 @@ describe('the circuit morphology viewer', () => {
       somasOf(inner).geometry,
       inner.uniforms.uCells.value as THREE.DataTexture,
       inner.uniforms.uGlow.value as THREE.DataTexture,
-      inner.somaMaterial,
+      inner.materials.soma,
       inner.look.material,
-      inner.idMaterials.segment,
-      inner.idMaterials.soma,
-      inner.idMaterials.cloud,
-      inner.cloudMaterial,
+      inner.materials.ids.segment,
+      inner.materials.ids.soma,
+      inner.materials.ids.cloud,
+      inner.materials.cloud,
       inner.idTarget as THREE.WebGLRenderTarget,
       (inner.electrodes as Quads).geometry,
-      inner.electrodeMaterial,
+      inner.materials.electrode,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
     viewers = [];
@@ -988,7 +984,7 @@ describe('the somas, before any morphology is in', () => {
     viewer.setSomas(given);
     const cloud = inner.cloud?.mesh as Quads;
     expect(cloud.parent).toBe(inner.surfaces);
-    expect(cloud.material).toBe(inner.cloudMaterial);
+    expect(cloud.material).toBe(inner.materials.cloud);
     expect(cloud.frustumCulled).toBe(false);
     expect(cloud.geometry.instanceCount).toBe(3);
     const positions = cloud.geometry.getAttribute('aPosition') as THREE.InstancedBufferAttribute;
@@ -1006,7 +1002,7 @@ describe('the somas, before any morphology is in', () => {
     expect(inner.ids.children).toHaveLength(1);
     expect(ids).toBe(inner.cloud?.ids);
     expect(ids.geometry).toBe(inner.cloud?.mesh.geometry);
-    expect(ids.material).toBe(inner.idMaterials.cloud);
+    expect(ids.material).toBe(inner.materials.ids.cloud);
     expect(inner.renderer.compile).toHaveBeenCalledWith(inner.ids, inner.camera);
   });
 
@@ -1074,7 +1070,7 @@ describe('the somas, before any morphology is in', () => {
   it('blends translucent somas, writing their depth still, and keeps one at no opacity drawn', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
-    const material = inner.cloudMaterial;
+    const material = inner.materials.cloud;
     expect([material.transparent, material.depthWrite]).toEqual([false, true]);
     const version = material.version;
     viewer.setSomaOpacity(0.2);
