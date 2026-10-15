@@ -2,25 +2,34 @@
 import * as Comlink from 'comlink';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { renumberCells } from '@/features/circuit-viewer/morphologies/load/cells';
+import {
+  pageCells,
+  renumberSegments,
+  renumberSomas,
+} from '@/features/circuit-viewer/morphologies/load/cells';
 import {
   type LoadOptions,
   loadCircuitMorphologies,
 } from '@/features/circuit-viewer/morphologies/load/load';
-import { readPack } from '@/features/circuit-viewer/morphologies/load/pack';
+import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 import {
   createPackApi,
   type PackApi,
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
-import { pack, withIndex } from './packs';
+import { pack, readPack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
+import type {
+  CircuitMorphologyData,
+  MorphologySegments,
+  Population,
+} from '@/features/circuit-viewer/morphologies/types';
 import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
 import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
 
-const URL_A = 'https://obi-one.test/circuit/viz/a/morphology-pack?max_segments=2000000';
+const URL_A = 'https://obi-one.test/circuit/viz/a/morphology-pack?all_levels=true';
 const BOUNDS: CacheBounds = { name: 'test-pack', ttlMs: 60_000, maxBytes: 2 ** 20 };
 /** The pack's own, in its order: a page with these numbers its cells as the pack does. */
 const POPULATIONS = [
@@ -72,13 +81,15 @@ function inProcess(): TestWorker {
   const api = createPackApi(BOUNDS);
   const handedOver: ArrayBufferLike[] = [];
   const exposed: PackApi = {
-    async load(...args) {
-      const loaded = await api.load(...args);
-      if (loaded.kind === 'loaded') {
-        const { segments, segmentCells, segmentTypes, somas } = loaded.data;
-        handedOver.push(segments.buffer, segmentCells.buffer, segmentTypes.buffer, somas.buffer);
-      }
-      return loaded;
+    async open(...args) {
+      const opened = await api.open(...args);
+      if (opened.kind === 'opened') handedOver.push(opened.data.somas.buffer);
+      return opened;
+    },
+    async read(wanted) {
+      const read = await api.read(wanted);
+      for (const { segments } of read) handedOver.push(segments.buffer);
+      return read;
     },
   };
   Comlink.expose(exposed, port1);
@@ -114,6 +125,29 @@ async function loaded(overrides?: Partial<LoadOptions>) {
   return outcome;
 }
 
+/** What a load of `bytes` hands over for a page of `populations`: the pack opened, its somas numbered the page's way. */
+async function opened(bytes: Uint8Array, populations: Population[] = POPULATIONS) {
+  const { data, boxes, levels } = await openPack(bytes);
+  const page = renumberSomas(data, pageCells(data.populations, populations), populations);
+  return { ...page, chunks: { boxes, levels, read: expect.any(Function) } };
+}
+
+/** Every box of a level, read through the load's data. */
+async function readLevel(data: CircuitMorphologyData, level = 0): Promise<MorphologySegments> {
+  const chunks = data.chunks;
+  if (!chunks) throw new Error('no chunks');
+  const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
+  const read = await chunks.read(boxes);
+  const join = <T extends Float32Array | Uint32Array | Uint8Array>(
+    pick: (s: MorphologySegments) => T
+  ) => read.flatMap((s) => Array.from(pick(s)));
+  return {
+    segments: Float32Array.from(join((s) => s.segments)),
+    segmentCells: Uint32Array.from(join((s) => s.segmentCells)),
+    segmentTypes: Uint8Array.from(join((s) => s.segmentTypes)),
+  };
+}
+
 const serve = (bytes: Uint8Array, options?: { length: boolean }) => {
   const server = fakeServer({ [URL_A]: bytes }, options);
   const fetch = vi.fn(server.fetch);
@@ -134,18 +168,41 @@ function replaceCached(body: Uint8Array) {
 }
 
 describe('loadCircuitMorphologies', () => {
-  it('fetches the pack, reads it, hands its arrays over and keeps it in the cache', async () => {
+  it('fetches the pack, opens it, hands its somas over and keeps it in the cache, the worker kept', async () => {
     const { fetch } = serve(small());
     const outcome = await load();
 
-    expect(outcome).toEqual({ kind: 'loaded', fromCache: false, data: await readPack(small()) });
+    expect(outcome).toEqual({ kind: 'loaded', fromCache: false, data: await opened(small()) });
     expect(fetch).toHaveBeenCalledExactlyOnceWith(URL_A, {
       headers: { Authorization: 'Bearer token' },
     });
     const [worker] = workers;
-    expect(worker.terminated).toBe(true);
-    expect(worker.handedOver.map((buffer) => buffer.byteLength)).toEqual([0, 0, 0, 0]);
+    expect(worker.terminated).toBe(false);
+    expect(worker.handedOver.map((buffer) => buffer.byteLength)).toEqual([0]);
     expect(cached()?.body).toEqual(small());
+  });
+
+  it("reads the pack's boxes from the worker, every level, and hands their arrays over", async () => {
+    serve(small());
+    const { data } = await loaded();
+
+    for (const level of [0, 1, 2]) {
+      expect(await readLevel(data, level)).toEqual(
+        (({ segments, segmentCells, segmentTypes }) => ({ segments, segmentCells, segmentTypes }))(
+          await readPack(small(), level)
+        )
+      );
+    }
+    expect(workers[0].handedOver.slice(1).every((buffer) => buffer.byteLength === 0)).toBe(true);
+  });
+
+  it('fails a read of a box that does not read, and reads the others', async () => {
+    serve(small());
+    const { data } = await loaded();
+    const read = data.chunks?.read;
+
+    await expect(read?.([{ level: 0, box: 1e6 }])).rejects.toThrow('without a box');
+    await expect(read?.([{ level: 0, box: 0 }])).resolves.toHaveLength(1);
   });
 
   it('reports progress at most every 100 ms, and at the end', async () => {
@@ -170,7 +227,7 @@ describe('loadCircuitMorphologies', () => {
   it('reports nothing once the load has ended', async () => {
     let report: OnProgress = () => {};
     const api = {
-      load(_request: unknown, _populations: unknown, onProgress: OnProgress) {
+      open(_request: unknown, _populations: unknown, onProgress: OnProgress) {
         report = onProgress;
         return new Promise<never>(() => {});
       },
@@ -186,57 +243,41 @@ describe('loadCircuitMorphologies', () => {
     expect(progress).toEqual([[1, 2]]);
   });
 
-  it('reads the pack from the cache on a later visit', async () => {
+  it('opens the pack from the cache on a later visit', async () => {
     const { served } = serve(small());
-    const first = await loaded();
+    await loaded();
     const onProgress = vi.fn();
     const second = await load({ onProgress });
 
-    expect(second).toEqual({ ...first, fromCache: true });
+    expect(second).toEqual({ kind: 'loaded', fromCache: true, data: await opened(small()) });
     expect(served.requests).toBe(1);
     expect(onProgress).not.toHaveBeenCalled();
-    expect(workers.map((worker) => worker.terminated)).toEqual([true, true]);
   });
 
-  it('keeps a pack for each number of segments asked for', async () => {
-    const coarser = URL_A.replace('2000000', '1000000');
-    const server = fakeServer({ [URL_A]: small(), [coarser]: small() });
+  it('keeps a pack for each URL', async () => {
+    const other = URL_A.replace('/a/', '/b/');
+    const server = fakeServer({ [URL_A]: small(), [other]: small() });
     vi.stubGlobal('fetch', server.fetch);
     await loaded();
-    const other = await loaded({ request: { url: coarser, headers: {} } });
+    const second = await loaded({ request: { url: other, headers: {} } });
 
-    expect(other.fromCache).toBe(false);
+    expect(second.fromCache).toBe(false);
     expect(server.served.requests).toBe(2);
   });
 
-  it('drops a cached pack that does not read, and fetches it again', async () => {
+  it('drops a cached pack that does not open, and fetches it again', async () => {
     const { served } = serve(small());
     await loaded();
     replaceCached(broken());
     const again = await loaded();
 
     expect(again.fromCache).toBe(false);
-    expect(again.data).toEqual(await readPack(small()));
+    expect(again.data).toEqual(await opened(small()));
     expect(served.requests).toBe(2);
     expect(cached()?.body).toEqual(small());
   });
 
-  it('keeps a cached pack that is whole, and too much for where it is read', async () => {
-    const { served } = serve(small());
-    await loaded();
-    // More segments than an array holds.
-    const vast = withIndex(small(), ({ levels: [level] }) => {
-      level.segments += 2 ** 51;
-      level.chunks.segments[0] += 2 ** 51;
-    });
-    replaceCached(new Uint8Array(vast));
-
-    await expect(load()).rejects.toMatchObject({ name: 'RangeError' });
-    expect(cached()?.body).toEqual(new Uint8Array(vast));
-    expect(served.requests).toBe(1);
-  });
-
-  it('fails on a pack that does not read, and does not keep it', async () => {
+  it('fails on a pack that does not open, does not keep it, and terminates the worker', async () => {
     serve(broken());
 
     await expect(load()).rejects.toMatchObject({
@@ -290,9 +331,12 @@ describe('loadCircuitMorphologies', () => {
   ])('numbers the cells as the page does, %s', async (_, page) => {
     serve(small());
     const { data } = await loaded({ populations: page });
+    const whole = await readPack(small());
 
-    expect(data).toEqual(renumberCells(await readPack(small()), page));
-    expect(data.segmentCells.length).toBeGreaterThan(0);
+    expect(data).toEqual(await opened(small(), page));
+    const read = await readLevel(data);
+    expect(read).toEqual(renumberSegments(whole, pageCells(whole.populations, page)));
+    expect(read.segmentCells.length).toBeGreaterThan(0);
   });
 
   it('fails where the page has another number of cells in a population than the pack', async () => {
@@ -312,6 +356,18 @@ describe('loadCircuitMorphologies', () => {
 
     await expect(promise).rejects.toMatchObject({ name: 'AbortError' });
     expect(workers[0].terminated).toBe(true);
+  });
+
+  it('terminates the worker when aborted once the pack is open, and reads no more', async () => {
+    serve(small());
+    const abort = new AbortController();
+    const { data } = await loaded({ signal: abort.signal });
+    abort.abort();
+
+    expect(workers[0].terminated).toBe(true);
+    await expect(data.chunks?.read([{ level: 0, box: 0 }])).rejects.toMatchObject({
+      name: 'AbortError',
+    });
   });
 
   it('starts no worker for a load aborted already', async () => {
@@ -334,11 +390,10 @@ describe('loadCircuitMorphologies', () => {
   it('fetches the pack every time where the browser has no Cache Storage', async () => {
     vi.stubGlobal('caches', undefined);
     const { served } = serve(small());
-    const first = await loaded();
+    await loaded();
     const second = await loaded();
 
-    expect(second).toEqual(first);
-    expect(second.fromCache).toBe(false);
+    expect(second).toEqual({ kind: 'loaded', fromCache: false, data: await opened(small()) });
     expect(served.requests).toBe(2);
   });
 });

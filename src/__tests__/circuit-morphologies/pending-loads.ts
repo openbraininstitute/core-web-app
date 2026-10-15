@@ -1,8 +1,7 @@
 import { waitFor } from '@testing-library/react';
 import { expect } from 'vitest';
 
-import type { LoadOptions } from '@/features/circuit-viewer/morphologies/load/load';
-import type { Loaded } from '@/features/circuit-viewer/morphologies/load/worker-api';
+import type { Loaded, LoadOptions } from '@/features/circuit-viewer/morphologies/load/load';
 import type {
   CircuitMorphologyData,
   Population,

@@ -4,11 +4,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   chooseDetail,
-  type DetailRules,
   type DetailView,
 } from '@/features/circuit-viewer/morphologies/engine/detail';
 
-import type { PackBoxes } from '@/features/circuit-viewer/morphologies/types';
+import type { DetailRules, PackBoxes } from '@/features/circuit-viewer/morphologies/types';
 
 const HEIGHT = 1000;
 const TOLERANCES = [0.125, 0.25, 1];

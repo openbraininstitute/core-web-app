@@ -41,6 +41,11 @@ export interface CircuitMorphologyData {
    * and frame as `segments` and `somas`, a cell with none as it is.
    */
   chart?: { segments: Float32Array; somas: Float32Array };
+  /**
+   * Where the segments are read from a box at a time, at the level the view wants of each, in place of `segments`,
+   * which are then none. `level` is the finest's.
+   */
+  chunks?: MorphologyChunks;
 }
 
 /** Some of a circuit's segments, in the arrays `CircuitMorphologyData` has them in. */
@@ -64,6 +69,37 @@ export interface PackLevel {
 export interface PackBoxes {
   boxes: Float32Array;
   levels: PackLevel[];
+}
+
+/** A box of a pack at one of its levels. */
+export interface BoxRead {
+  level: number;
+  box: number;
+}
+
+/** A pack's segments, read a box at a time as the view wants them. */
+export interface MorphologyChunks extends PackBoxes {
+  /** The segments of each box asked for, at its level, in that order, their cells numbered as the data's. */
+  read(wanted: BoxRead[]): Promise<MorphologySegments[]>;
+}
+
+/** How much of a pack read a box at a time is drawn. */
+export interface DetailRules {
+  /** The most segments drawn at once. */
+  budget: number;
+  /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
+  pixels: number;
+}
+
+/** What a view draws of morphologies read a box at a time. */
+export interface DetailStats extends DetailRules {
+  /** The segments drawn, and what the levels the view wants come to. */
+  drawn: number;
+  wanted: number;
+  /** Each level's tolerance, µm, and the boxes drawn at it, the finest first. */
+  levels: { toleranceUm: number; boxes: number }[];
+  /** The boxes in view left out for the budget, which only their somas stand for. */
+  leftOut: number;
 }
 
 /** A circuit's somas as the page placed them, before any morphology is in. */
@@ -169,6 +205,13 @@ export interface CircuitMorphologyView extends ViewControls {
    * a time want. The arrays are kept, not copied.
    */
   setData(data: CircuitMorphologyData | null, follow?: boolean): void;
+  /**
+   * How much is drawn of morphologies read a box at a time (`CircuitMorphologyData.chunks`). A budget is held to the
+   * most the view can draw.
+   */
+  setDetailRules(rules: Partial<DetailRules>): void;
+  /** Told what is drawn of morphologies read a box at a time whenever it changes, and null where there are none. */
+  onDetail(listener: (detail: DetailStats | null) => void): () => void;
   /**
    * Show these somas, each a sphere as the somas view drew them, in `colors` where given; null shows none. The view is
    * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not

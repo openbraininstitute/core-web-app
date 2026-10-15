@@ -3,9 +3,18 @@ import { deflateSync, inflateSync } from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
-import { openPack, PackError, readPack } from '@/features/circuit-viewer/morphologies/load/pack';
+import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
 
-import { expected, HEADER_BYTES, type Index, indexEnd, indexOf, pack, withIndex } from './packs';
+import {
+  expected,
+  HEADER_BYTES,
+  type Index,
+  indexEnd,
+  indexOf,
+  pack,
+  readPack,
+  withIndex,
+} from './packs';
 
 import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
 
@@ -85,7 +94,7 @@ function expectSomas(
   }
 }
 
-describe('readPack', () => {
+describe('a level read box by box', () => {
   it("reads every segment of every level as OBI-One's reader does", async () => {
     const want = expected('small');
     const { centre } = await readPack(pack('small'));
@@ -263,7 +272,7 @@ describe('openPack', () => {
   });
 });
 
-describe('readPack, of what is not a pack it reads', () => {
+describe('openPack and readBox, of what is not a pack they read', () => {
   it('refuses another file', async () => {
     const text = new TextEncoder().encode('{"detail": "the circuit has too many neurons"}');
     await expect(readPack(text)).rejects.toThrow('not a morphology pack');

@@ -22,18 +22,17 @@ export function memodelMorphologyPath(memodelId: string): string {
 }
 
 /**
- * The URL and headers of a circuit's morphology pack, for a worker to fetch: every morphology at the finest level of
- * at most `maxSegments` segments, which OBI-One builds while the request waits.
+ * The URL and headers of a circuit's morphology pack, for a worker to fetch: every morphology at every level, which
+ * OBI-One builds while the request waits.
  */
 export async function buildCircuitMorphologyPackRequest(
   circuitId: string,
-  maxSegments: number,
   ctx: WorkspaceContext | null
 ): Promise<{ url: string; headers: Record<string, string> }> {
   const session = await getSession();
   const headers: Record<string, string> = { ...getEntityCoreContext(ctx).headers };
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
-  const url = `${config.OBI_ONE_URL}/circuit/viz/${circuitId}/morphology-pack?max_segments=${maxSegments}`;
+  const url = `${config.OBI_ONE_URL}/circuit/viz/${circuitId}/morphology-pack?all_levels=true`;
   return { url, headers };
 }
 

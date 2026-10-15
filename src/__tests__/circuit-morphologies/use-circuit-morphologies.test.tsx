@@ -3,7 +3,6 @@ import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  MAX_SEGMENTS,
   type MorphologiesSource,
   useCircuitMorphologies,
 } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
@@ -11,7 +10,7 @@ import {
 import { loadedData, loads, started } from './pending-loads';
 
 const h = vi.hoisted(() => ({
-  request: vi.fn(async (circuitId: string, _maxSegments: number, _ctx: unknown) => ({
+  request: vi.fn(async (circuitId: string, _ctx: unknown) => ({
     url: `https://obi-one.test/circuit/viz/${circuitId}/morphology-pack`,
     headers: { Authorization: 'Bearer token' },
   })),
@@ -78,12 +77,12 @@ describe('useCircuitMorphologies', () => {
     expect(loads).toHaveLength(0);
   });
 
-  it("asks OBI-One for the circuit's pack within the tier's budget, in the route's workspace", async () => {
+  it("asks OBI-One for the circuit's pack, in the route's workspace", async () => {
     const { result } = render();
     expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 0 });
 
     const load = await started();
-    expect(h.request).toHaveBeenCalledWith('circuit-id', MAX_SEGMENTS, {
+    expect(h.request).toHaveBeenCalledWith('circuit-id', {
       virtualLabId: 'lab',
       projectId: 'project',
     });

@@ -18,14 +18,14 @@ afterEach(() => {
 });
 
 describe('buildCircuitMorphologyPackRequest', () => {
-  it("asks OBI-One for the circuit's pack of at most so many segments, as the user in the workspace", async () => {
-    const request = await buildCircuitMorphologyPackRequest('circuit-id', 2_000_000, {
+  it("asks OBI-One for the circuit's pack with every level, as the user in the workspace", async () => {
+    const request = await buildCircuitMorphologyPackRequest('circuit-id', {
       virtualLabId: 'lab',
       projectId: 'project',
     });
 
     expect(request).toEqual({
-      url: 'https://obi-one.test/api/circuit/viz/circuit-id/morphology-pack?max_segments=2000000',
+      url: 'https://obi-one.test/api/circuit/viz/circuit-id/morphology-pack?all_levels=true',
       headers: {
         Authorization: 'Bearer token',
         'virtual-lab-id': 'lab',
@@ -37,7 +37,7 @@ describe('buildCircuitMorphologyPackRequest', () => {
   it('sends neither a workspace nor a token it does not have', async () => {
     h.getSession.mockResolvedValueOnce(null);
 
-    const request = await buildCircuitMorphologyPackRequest('circuit-id', 1000, null);
+    const request = await buildCircuitMorphologyPackRequest('circuit-id', null);
 
     expect(request.headers).toEqual({});
   });

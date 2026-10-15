@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 
-import type { PackBoxes } from '../types';
+import type { DetailRules, PackBoxes } from '../types';
 
 /** The segments drawn at once until told otherwise. */
 export const SEGMENT_BUDGET = 2_000_000;
@@ -28,13 +28,6 @@ export interface DetailView {
   focus: THREE.Vector3;
   /** Where the data's origin is in the view's frame. */
   shift: THREE.Vector3;
-}
-
-export interface DetailRules {
-  /** The most segments drawn at once. */
-  budget: number;
-  /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
-  pixels: number;
 }
 
 export interface Detail {

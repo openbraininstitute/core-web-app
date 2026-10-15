@@ -343,27 +343,3 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
   };
   return { data, boxes, levels, readBox };
 }
-
-/** One level of a pack, whole. The first is the finest. */
-export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<CircuitMorphologyData> {
-  const pack = await openPack(bytes);
-  const level = pack.levels[levelNumber];
-  if (!level) throw new RangeError(`morphology pack without a level ${levelNumber}`);
-  const total = sum(level.segments);
-  const data: CircuitMorphologyData = {
-    ...pack.data,
-    segments: new Float32Array(8 * total),
-    segmentCells: new Uint32Array(total),
-    segmentTypes: new Uint8Array(total),
-    level: { toleranceUm: level.toleranceUm, pruneUm: level.pruneUm },
-  };
-  let first = 0;
-  for (let box = 0; box < level.segments.length; box++) {
-    const read = await pack.readBox(levelNumber, box);
-    data.segments.set(read.segments, 8 * first);
-    data.segmentCells.set(read.segmentCells, first);
-    data.segmentTypes.set(read.segmentTypes, first);
-    first += read.segmentCells.length;
-  }
-  return data;
-}

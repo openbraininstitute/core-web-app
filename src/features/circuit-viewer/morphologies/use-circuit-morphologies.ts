@@ -13,9 +13,6 @@ import { loadCircuitMorphologies } from './load/load';
 import type { Refused } from './load/download';
 import type { CircuitMorphologyData, Population } from './types';
 
-/** The most segments this tier draws, by which OBI-One picks the pack's level. */
-export const MAX_SEGMENTS = 2_000_000;
-
 /** A circuit's cells as the page placed them. Memoise it: another one is another load. */
 export interface MorphologiesSource {
   circuitId: string;
@@ -39,9 +36,9 @@ export type MorphologiesStop = Refused | { kind: 'failed' };
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
 /**
- * Loads the morphologies of `source`, and lets go of them when it changes or goes. A circuit OBI-One refuses and a
- * load that fails both end idle, with `onStopped` called and `stopped` saying why until it is dismissed or the next
- * load starts.
+ * Loads the morphologies of `source`, whose boxes the view reads as it wants them, until `source` changes or goes and
+ * they are let go of. A circuit OBI-One refuses and a load that fails both end idle, with `onStopped` called and
+ * `stopped` saying why until it is dismissed or the next load starts.
  */
 export function useCircuitMorphologies(
   source: MorphologiesSource | null,
@@ -69,11 +66,7 @@ export function useCircuitMorphologies(
       told.current();
     };
     const run = async () => {
-      const request = await buildCircuitMorphologyPackRequest(
-        source.circuitId,
-        MAX_SEGMENTS,
-        workspace
-      );
+      const request = await buildCircuitMorphologyPackRequest(source.circuitId, workspace);
       const loaded = await loadCircuitMorphologies({
         request,
         populations: source.populations,

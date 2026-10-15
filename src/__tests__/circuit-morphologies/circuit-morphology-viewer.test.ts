@@ -14,6 +14,7 @@ import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import type { SomaCloudUniforms } from '@/features/circuit-viewer/morphologies/engine/soma-cloud';
 import type {
+  BoxRead,
   CellColors,
   CircuitMorphologyData,
   CircuitSomas,
@@ -1281,6 +1282,139 @@ describe('the morphologies over the somas', () => {
     expect(inner.chunks.children).toHaveLength(0);
     expect(inner.cloud?.mesh.visible).toBe(true);
     expect(inner.ids.children).toHaveLength(1);
+  });
+});
+
+describe('the morphologies read a box at a time', () => {
+  /** The reads asked for, each waiting for the test to end it. */
+  let reads: { wanted: BoxRead[]; resolve(): void }[] = [];
+  /** A box's segments at each level, the finest first: cell 0's at the first box, cell 2's at the second. */
+  const COUNTS = [40, 20, 4];
+
+  /** `circuit()`'s somas and frame, its segments in two boxes either side of its middle. */
+  function chunked(): CircuitMorphologyData {
+    const none = { segments: new Float32Array(0), segmentCells: new Uint32Array(0) };
+    return {
+      ...circuit(),
+      ...none,
+      segmentTypes: new Uint8Array(0),
+      chunks: {
+        boxes: Float32Array.of(-5, -5, -5, 5, 5, 5, 5, 5, -5, 15, 30, 5),
+        levels: [0.125, 0.25, 1].map((toleranceUm, level) => ({
+          toleranceUm,
+          pruneUm: 0,
+          segments: Uint32Array.of(COUNTS[level], COUNTS[level]),
+        })),
+        read: (wanted) =>
+          new Promise((resolve) => {
+            reads.push({
+              wanted,
+              resolve: () =>
+                resolve(
+                  wanted.map(({ level, box }) => ({
+                    segments: new Float32Array(8 * COUNTS[level]).fill(1),
+                    segmentCells: new Uint32Array(COUNTS[level]).fill(2 * box),
+                    segmentTypes: new Uint8Array(COUNTS[level]).fill(3),
+                  }))
+                ),
+            });
+          }),
+      },
+    };
+  }
+
+  /** The reads asked for so far ended, and what they read placed. */
+  async function readAll(inner: Internals) {
+    for (const read of reads.splice(0)) read.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    frames(inner);
+  }
+
+  beforeEach(() => {
+    reads = [];
+  });
+
+  it('reads the boxes in view as the first frame wants them, and draws them in one mesh as they come', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    const segments = segmentsOf(inner);
+    expect(segments.visible).toBe(true);
+    expect(segments.geometry.instanceCount).toBe(0);
+    expect(reads).toHaveLength(0);
+
+    frames(inner);
+    expect(reads).toHaveLength(1);
+    const { wanted } = reads[0];
+    expect(wanted.map(({ box }) => box).sort()).toEqual([0, 1]);
+    await readAll(inner);
+
+    expect(segmentsOf(inner)).toBe(segments);
+    expect(segments.geometry.instanceCount).toBe(
+      wanted.reduce((sum, { level }) => sum + COUNTS[level], 0)
+    );
+    const cells = segments.geometry.getAttribute('aCell').array;
+    expect(new Set(cells.subarray(0, segments.geometry.instanceCount))).toEqual(new Set([0, 2]));
+  });
+
+  it('picks with the same quads', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+
+    const picked = inner.ids.children.find(
+      (mesh) => mesh instanceof THREE.Mesh && mesh.geometry === segmentsOf(inner).geometry
+    );
+    expect(picked?.visible).toBe(true);
+  });
+
+  it('tells what it draws, the rules included, and null once the morphologies go', async () => {
+    const { viewer, inner } = make();
+    const told = vi.fn();
+    viewer.onDetail(told);
+    expect(told).toHaveBeenLastCalledWith(null);
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+
+    const detail = told.mock.lastCall?.[0];
+    expect(detail).toMatchObject({ budget: 2_000_000, pixels: 2, leftOut: 0 });
+    expect(detail.drawn).toBe(segmentsOf(inner).geometry.instanceCount);
+    expect(
+      detail.levels
+        .map(({ boxes }: { boxes: number }) => boxes)
+        .reduce((a: number, b: number) => a + b)
+    ).toBe(2);
+    viewer.setData(null);
+    expect(told).toHaveBeenLastCalledWith(null);
+  });
+
+  it('holds the budget it is told, and leaves out the box farthest from the focus', async () => {
+    const { viewer, inner } = make();
+    const told = vi.fn();
+    viewer.onDetail(told);
+    viewer.setData(chunked());
+    viewer.setDetailRules({ budget: COUNTS[2] });
+    frames(inner);
+    await readAll(inner);
+
+    expect(told.mock.lastCall?.[0]).toMatchObject({
+      budget: COUNTS[2],
+      drawn: COUNTS[2],
+      leftOut: 1,
+    });
+    expect(segmentsOf(inner).geometry.instanceCount).toBe(COUNTS[2]);
+  });
+
+  it('places nothing of a read that ends after the morphologies are gone', async () => {
+    const { viewer, inner } = make();
+    viewer.setData(chunked());
+    frames(inner);
+    const segments = segmentsOf(inner);
+    viewer.setData(null);
+    await readAll(inner);
+
+    expect(segments.geometry.instanceCount).toBe(0);
   });
 });
 

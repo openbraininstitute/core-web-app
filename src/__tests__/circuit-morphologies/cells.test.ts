@@ -1,9 +1,17 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest';
 
-import { fillSomas, renumberCells } from '@/features/circuit-viewer/morphologies/load/cells';
+import {
+  fillSomas,
+  pageCells,
+  renumberSegments,
+  renumberSomas,
+} from '@/features/circuit-viewer/morphologies/load/cells';
 
-import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CircuitMorphologyData,
+  Population,
+} from '@/features/circuit-viewer/morphologies/types';
 
 const PACKED = [
   { name: 'a', cells: 3 },
@@ -29,60 +37,64 @@ function data(): CircuitMorphologyData {
   };
 }
 
-describe('renumberCells', () => {
-  it('changes no number where the page has the populations of the pack, in its order', () => {
-    const packed = data();
-    const renumbered = renumberCells(packed, PACKED);
+/** `data`'s, renumbered through `page`. */
+function renumbered(page: Population[]) {
+  const numbers = pageCells(PACKED, page);
+  const { somas, populations } = renumberSomas(data(), numbers, page);
+  return { somas, populations, ...renumberSegments(data(), numbers) };
+}
 
-    expect(renumbered).toEqual(data());
-    expect(renumbered.segmentCells).toBe(packed.segmentCells);
-    expect(renumbered.segments).toBe(packed.segments);
+describe('pageCells, renumberSomas and renumberSegments', () => {
+  it('change no number where the page has the populations of the pack, in its order', () => {
+    const packed = data();
+    const segments = renumberSegments(packed, pageCells(PACKED, PACKED));
+
+    const { somas, segmentCells } = renumbered(PACKED);
+    expect(somas).toEqual(data().somas);
+    expect(segmentCells).toEqual(data().segmentCells);
+    expect(segments.segmentCells).toBe(packed.segmentCells);
+    expect(segments.segments).toBe(packed.segments);
   });
 
-  it('numbers the cells through the populations of the page', () => {
+  it('number the cells through the populations of the page', () => {
     const page = [
       { name: 'b', cells: 2 },
       { name: 'input', cells: 2 },
       { name: 'a', cells: 3 },
     ];
-    const renumbered = renumberCells(data(), page);
+    const { populations, segmentCells, segments, somas } = renumbered(page);
 
-    expect(renumbered.populations).toBe(page);
-    expect([...renumbered.segmentCells]).toEqual([1, 4, 0, 5, 6]);
-    expect(renumbered.segments).toEqual(data().segments);
-    expect([...renumbered.somas]).toEqual(
-      [soma(3), soma(4), NONE, NONE, soma(0), soma(1), soma(2)].flat()
-    );
+    expect(populations).toBe(page);
+    expect([...segmentCells]).toEqual([1, 4, 0, 5, 6]);
+    expect(segments).toEqual(data().segments);
+    expect([...somas]).toEqual([soma(3), soma(4), NONE, NONE, soma(0), soma(1), soma(2)].flat());
   });
 
-  it('leaves out the segments of a population the page has none of, and bounds what is left', () => {
-    const renumbered = renumberCells(data(), [{ name: 'a', cells: 3 }]);
+  it('leave out the segments and somas of a population the page has none of', () => {
+    const { segmentCells, segments, segmentTypes, somas } = renumbered([{ name: 'a', cells: 3 }]);
 
-    expect([...renumbered.segmentCells]).toEqual([0, 1, 2]);
-    expect([...renumbered.segments]).toEqual([1, 3, 4].flatMap(segment));
-    expect([...renumbered.segmentTypes]).toEqual([3, 2, 3]);
-    expect(renumbered.segments.buffer.byteLength).toBe(4 * 8 * 3);
-    expect([...renumbered.somas]).toEqual([soma(0), soma(1), soma(2)].flat());
-    // Round the segments' ends and the somas left, each as wide as its radius: segment 4's far end, (36, 37, 38) and
-    // 39 wide, is the farthest out.
-    expect(renumbered.bounds).toEqual({ min: [-3, -2, -1], max: [75, 76, 77] });
+    expect([...segmentCells]).toEqual([0, 1, 2]);
+    expect([...segments]).toEqual([1, 3, 4].flatMap(segment));
+    expect([...segmentTypes]).toEqual([3, 2, 3]);
+    expect(segments.buffer.byteLength).toBe(4 * 8 * 3);
+    expect([...somas]).toEqual([soma(0), soma(1), soma(2)].flat());
   });
 
-  it('leaves out every segment where the page has none of the populations of the pack', () => {
-    const renumbered = renumberCells(data(), [{ name: 'input', cells: 1 }]);
+  it('leave out every segment where the page has none of the populations of the pack', () => {
+    const { segmentCells, segments, somas } = renumbered([{ name: 'input', cells: 1 }]);
 
-    expect(renumbered.segmentCells.length).toBe(0);
-    expect(renumbered.segments.length).toBe(0);
-    expect([...renumbered.somas]).toEqual(NONE);
+    expect(segmentCells.length).toBe(0);
+    expect(segments.length).toBe(0);
+    expect([...somas]).toEqual(NONE);
   });
 
-  it('refuses a pack with a population the page has with another number of cells', () => {
+  it('refuse a pack with a population the page has with another number of cells', () => {
     const page = [
       { name: 'a', cells: 4 },
       { name: 'b', cells: 2 },
     ];
 
-    expect(() => renumberCells(data(), page)).toThrow('3 cells in a, where the page has 4');
+    expect(() => pageCells(PACKED, page)).toThrow('3 cells in a, where the page has 4');
   });
 });
 

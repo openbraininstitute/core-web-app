@@ -1,6 +1,7 @@
 /**
- * What the pack worker exposes over Comlink: a circuit's morphologies from the pack a visit before left in the cache,
- * or from the one OBI-One builds, which goes into the cache once it has been read.
+ * What the pack worker exposes over Comlink: a circuit's pack opened, from the cache a visit before left it in, or from
+ * OBI-One, which builds it and whose pack goes into the cache once it has been opened; then its boxes read as the view
+ * asks for them, with the cells numbered as the page numbers them.
  */
 import * as Comlink from 'comlink';
 
@@ -12,22 +13,31 @@ import {
   writeEntry,
 } from '@/features/viewer-3d/load/asset-cache';
 
-import { renumberCells } from './cells';
+import { pageCells, renumberSegments, renumberSomas } from './cells';
 import { downloadPack, type OnProgress, type PackRequest, type Refused } from './download';
-import { PackError, readPack } from './pack';
+import { openPack, type Pack, PackError } from './pack';
 
-import type { CircuitMorphologyData, Population } from '../types';
+import type {
+  BoxRead,
+  CircuitMorphologyData,
+  MorphologySegments,
+  PackBoxes,
+  Population,
+} from '../types';
 
 /** Kept a day, not an asset's 30: OBI-One builds the pack on request, so what is behind its URL can change. */
 export const PACK_CACHE = bucket('circuit-morphology-pack', 1);
 
-export type Loaded = { kind: 'loaded'; data: CircuitMorphologyData; fromCache: boolean } | Refused;
+/** The pack opened: its somas and frame, with no segments, and where its segments lie. */
+export type Opened =
+  | ({ kind: 'opened'; data: CircuitMorphologyData; fromCache: boolean } & PackBoxes)
+  | Refused;
 
-async function readCached(cache: CacheBounds, key: string): Promise<CircuitMorphologyData | null> {
+async function openCached(cache: CacheBounds, key: string): Promise<Pack | null> {
   const bytes = await readEntry(cache, key);
   if (!bytes) return null;
   try {
-    return await readPack(new Uint8Array(bytes));
+    return await openPack(new Uint8Array(bytes));
   } catch (e) {
     if (!(e instanceof PackError)) throw e;
     await deleteEntry(cache, key);
@@ -35,30 +45,48 @@ async function readCached(cache: CacheBounds, key: string): Promise<CircuitMorph
   }
 }
 
+const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments) => [
+  segments.buffer,
+  segmentCells.buffer,
+  segmentTypes.buffer,
+];
+
 export function createPackApi(cache: CacheBounds) {
+  let opened: { pack: Pack; numbers: Uint32Array } | null = null;
   return {
-    async load(
+    async open(
       request: PackRequest,
       populations: Population[],
       onProgress: OnProgress
-    ): Promise<Loaded> {
-      let data = await readCached(cache, request.url);
-      const fromCache = data !== null;
-      if (!data) {
+    ): Promise<Opened> {
+      let pack = await openCached(cache, request.url);
+      const fromCache = pack !== null;
+      if (!pack) {
         const download = await downloadPack(request, onProgress);
         if (download.kind === 'refused') return download;
         const { bytes } = download;
-        data = await readPack(bytes);
-        // Awaited: the worker is terminated once it has answered.
+        pack = await openPack(bytes);
         await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
       }
-      data = renumberCells(data, populations);
-      return Comlink.transfer({ kind: 'loaded', data, fromCache }, [
-        data.segments.buffer,
-        data.segmentCells.buffer,
-        data.segmentTypes.buffer,
-        data.somas.buffer,
-      ] as ArrayBuffer[]);
+      const numbers = pageCells(pack.data.populations, populations);
+      opened = { pack, numbers };
+      const data = renumberSomas(pack.data, numbers, populations);
+      // The boxes and the levels are copied, not handed over: the pack reads by them.
+      return Comlink.transfer(
+        { kind: 'opened', data, boxes: pack.boxes, levels: pack.levels, fromCache },
+        [data.somas.buffer as ArrayBuffer]
+      );
+    },
+
+    async read(wanted: BoxRead[]): Promise<MorphologySegments[]> {
+      if (!opened) throw new Error('no morphology pack is open');
+      const { pack, numbers } = opened;
+      const read = await Promise.all(
+        wanted.map(async ({ level, box }) =>
+          renumberSegments(await pack.readBox(level, box), numbers)
+        )
+      );
+      return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);
     },
   };
 }

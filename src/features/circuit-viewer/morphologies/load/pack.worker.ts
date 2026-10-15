@@ -1,4 +1,4 @@
-/** Fetches a circuit's morphology pack into its cache and reads it; terminated after. */
+/** Opens a circuit's morphology pack, from its cache or from OBI-One, and reads its boxes as asked, until terminated. */
 import * as Comlink from 'comlink';
 
 import { createPackApi, PACK_CACHE } from './worker-api';
