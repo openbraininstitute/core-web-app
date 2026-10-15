@@ -1,8 +1,9 @@
 import { logError } from '@/utils/logger';
 
-import { chooseDetail, type Detail, type DetailView } from './detail';
-import { SEGMENT_BYTES } from './segment-arena';
+import { chooseDetail, type Detail, type DetailView, SEGMENT_BUDGET } from './detail';
+import { SEGMENT_BYTES, SegmentArena } from './segment-arena';
 
+import type * as THREE from 'three';
 import type {
   BoxRead,
   DetailRules,
@@ -10,15 +11,26 @@ import type {
   MorphologyChunks,
   MorphologySegments,
 } from '../types';
-import type { SegmentArena } from './segment-arena';
 
 /** The most segments asked of the pack's worker at once: a batch is read in some milliseconds. */
 const BATCH_SEGMENTS = 250_000;
 /** The segments placed in a turn of the loop, 4 MB of upload, unless one box alone is more. */
-export const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
+const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
 
 function isAbort(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
+}
+
+/**
+ * The segments an arena of a pack's boxes holds: the most they can come to drawn at once, each at its largest level,
+ * within the budget, and a quarter more, so that its holes seldom have to be closed.
+ */
+function capacityOf({ levels, boxes }: MorphologyChunks): number {
+  let most = 0;
+  for (let box = 0; box < boxes.length / 6; box++) {
+    most += Math.max(...levels.map((level) => level.segments[box]));
+  }
+  return Math.ceil(1.25 * Math.min(most, SEGMENT_BUDGET));
 }
 
 /**
@@ -31,15 +43,14 @@ export class DetailStream {
   private chunks: MorphologyChunks;
   private arena: SegmentArena;
   private onRead: () => void;
-  /** The levels wanted of each box, and those drawn, -1 for none. */
-  private wanted: Int8Array;
+  /** The levels drawn of each box, -1 for none. */
   private drawn: Int8Array;
+  /** What the view wants, as last chosen. */
   private detail: Detail | null = null;
   private still = false;
   /** What came in and is not placed yet, by box. */
   private ready = new Map<number, { level: number; segments: MorphologySegments }>();
-  /** What is being read, by box. */
-  private reading = new Map<number, number>();
+  private reading = false;
   private stopped = false;
   private failed = false;
 
@@ -48,9 +59,21 @@ export class DetailStream {
     this.chunks = chunks;
     this.arena = arena;
     this.onRead = onRead;
-    const boxes = chunks.boxes.length / 6;
-    this.wanted = new Int8Array(boxes).fill(-1);
-    this.drawn = new Int8Array(boxes).fill(-1);
+    this.drawn = new Int8Array(chunks.boxes.length / 6).fill(-1);
+  }
+
+  /** A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need. */
+  static of(
+    chunks: MorphologyChunks,
+    geometry: THREE.InstancedBufferGeometry,
+    onRead: () => void
+  ): DetailStream {
+    return new DetailStream(chunks, new SegmentArena(geometry, capacityOf(chunks)), onRead);
+  }
+
+  /** The arena's quads, which draw what is placed. */
+  get geometry(): THREE.InstancedBufferGeometry {
+    return this.arena.geometry;
   }
 
   /** What is drawn under `rules`. */
@@ -76,14 +99,15 @@ export class DetailStream {
   update(view: DetailView, rules: DetailRules, still: boolean): boolean {
     if (this.stopped) return false;
     const budget = Math.min(rules.budget, this.arena.capacity);
-    this.detail = chooseDetail(this.chunks, view, { ...rules, budget });
-    this.wanted = this.detail.levels;
+    const detail = chooseDetail(this.chunks, view, { ...rules, budget });
+    this.detail = detail;
     this.still = still;
     this.read();
-    if (this.ready.size > 0) return true;
-    return this.wanted.some(
-      (level, box) =>
-        level !== this.drawn[box] && (level < 0 || this.chunks.levels[level].segments[box] === 0)
+    return (
+      this.ready.size > 0 ||
+      detail.levels.some(
+        (level, box) => level !== this.drawn[box] && this.segmentsAt(box, level) === 0
+      )
     );
   }
 
@@ -92,15 +116,16 @@ export class DetailStream {
    * are uploaded, one at the least. Whether what is drawn changed, and whether more is to be placed at once.
    */
   apply(cap = PLACED_SEGMENTS): { changed: boolean; more: boolean } {
-    const { arena, wanted, drawn } = this;
+    const { arena, detail, drawn } = this;
+    if (!detail) return { changed: false, more: false };
+    const wanted = detail.levels;
     let uploaded = 0;
     let changed = false;
     const full = () => uploaded >= cap;
     for (let box = 0; box < wanted.length && !full(); box++) {
       const level = wanted[box];
-      if (level === drawn[box]) continue;
       // No read for these: let go of, or nothing at their level.
-      if (level < 0 || this.chunks.levels[level].segments[box] === 0) {
+      if (level !== drawn[box] && this.segmentsAt(box, level) === 0) {
         uploaded += arena.remove(box);
         drawn[box] = level;
         changed = true;
@@ -136,15 +161,20 @@ export class DetailStream {
     this.ready.clear();
   }
 
-  /** The boxes wanted and neither drawn, in, nor being read, a batch of them, unless one is being read. */
+  /** The segments `box` has at `level`, none at -1. */
+  private segmentsAt(box: number, level: number): number {
+    return level < 0 ? 0 : this.chunks.levels[level].segments[box];
+  }
+
+  /** The boxes wanted and neither drawn nor in, a batch of them, unless a batch is being read. */
   private read(): void {
-    const { detail, wanted, drawn } = this;
-    if (!detail || this.stopped || this.failed || this.reading.size > 0) return;
+    const { detail, drawn } = this;
+    if (!detail || this.stopped || this.failed || this.reading) return;
     const batch: BoxRead[] = [];
     let size = 0;
     for (const box of detail.order) {
-      const level = wanted[box];
-      const segments = level < 0 ? 0 : this.chunks.levels[level].segments[box];
+      const level = detail.levels[box];
+      const segments = this.segmentsAt(box, level);
       if (segments === 0 || level === drawn[box] || this.ready.get(box)?.level === level) continue;
       if (!this.still && drawn[box] >= 0 && level < drawn[box]) continue;
       batch.push({ level, box });
@@ -152,10 +182,10 @@ export class DetailStream {
       if (size >= BATCH_SEGMENTS) break;
     }
     if (batch.length === 0) return;
-    for (const { level, box } of batch) this.reading.set(box, level);
+    this.reading = true;
     this.chunks.read(batch).then(
       (read) => {
-        this.reading.clear();
+        this.reading = false;
         if (this.stopped) return;
         batch.forEach(({ level, box }, i) => {
           this.ready.set(box, { level, segments: read[i] });
@@ -164,7 +194,7 @@ export class DetailStream {
         this.read();
       },
       (e: unknown) => {
-        this.reading.clear();
+        this.reading = false;
         if (this.stopped || isAbort(e)) return;
         // What is drawn stays; nothing more is read.
         this.failed = true;

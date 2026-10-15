@@ -41,6 +41,14 @@ export interface Detail {
   leftOut: number;
 }
 
+/**
+ * The µm a pixel spans as the shaders' `pixelUm` counts it, for a view `pixels` high: at a unit's depth in perspective,
+ * and anywhere in an orthographic view.
+ */
+export function pixelSpan(projection: THREE.Matrix4, pixels: number): number {
+  return 2 / (projection.elements[5] * pixels);
+}
+
 const box = new THREE.Box3();
 const frustum = new THREE.Frustum();
 const projected = new THREE.Matrix4();
@@ -56,8 +64,7 @@ export function chooseDetail(
   const away = new Float64Array(count);
   const inView: number[] = [];
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
-  // The µm a device pixel spans, at a unit's depth in perspective, as the shaders count it.
-  const span = 2 / (view.projection.elements[5] * view.height);
+  const span = pixelSpan(view.projection, view.height);
   // The view matrix's row that gives a point's depth.
   const [, , zx, , , , zy, , , , zz, , , , zw] = view.view.elements;
   const coarsest = levels.length - 1;

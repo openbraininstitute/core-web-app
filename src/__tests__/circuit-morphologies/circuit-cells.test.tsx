@@ -196,6 +196,12 @@ function view(props: Partial<CircuitCellsProps> = {}) {
   };
 }
 
+/** The engine telling what it draws of morphologies read a box at a time. */
+const tellDetail = (viewer: InstanceType<typeof h.FakeViewer>, detail: DetailStats | null) =>
+  act(() => {
+    for (const listener of viewer.detailListeners) listener(detail);
+  });
+
 /** Where the `nth` call of a mock falls among every mock's calls. */
 const calledAt = (mock: { mock: { invocationCallOrder: number[] } }, nth = 0) =>
   mock.mock.invocationCallOrder[nth];
@@ -384,37 +390,27 @@ describe('CircuitCells', () => {
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
   });
 
-  it('tells whether morphologies in view are left out, whenever that changes', () => {
+  it('tells whether morphologies in view are left out, whenever the engine tells what it draws', () => {
     const onLeftOut = vi.fn();
     const { viewer } = view({ onLeftOut });
-    const tell = (detail: DetailStats | null) =>
-      act(() => {
-        for (const listener of viewer.detailListeners) listener(detail);
-      });
     expect(onLeftOut.mock.calls).toEqual([[false]]);
 
-    tell({ ...DETAIL, leftOut: 3 });
-    tell({ ...DETAIL, leftOut: 5 });
-    tell(null);
-    expect(onLeftOut.mock.calls).toEqual([[false], [true], [false]]);
+    tellDetail(viewer, { ...DETAIL, leftOut: 3 });
+    tellDetail(viewer, { ...DETAIL, leftOut: 0 });
+    tellDetail(viewer, null);
+    expect(onLeftOut.mock.calls).toEqual([[false], [true], [false], [false]]);
   });
 
   it('shows what the engine draws in the debug tools alone, with its budget and tolerance to lower', async () => {
     const { viewer, unmount } = view();
-    const tell = () =>
-      act(() => {
-        for (const listener of viewer.detailListeners) listener({ ...DETAIL, leftOut: 2 });
-      });
-    tell();
+    tellDetail(viewer, { ...DETAIL, leftOut: 2 });
     expect(screen.queryByTestId('detail-readout')).toBeNull();
     unmount();
 
     localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
     try {
       const { viewer: debugged } = view();
-      act(() => {
-        for (const listener of debugged.detailListeners) listener({ ...DETAIL, leftOut: 2 });
-      });
+      tellDetail(debugged, { ...DETAIL, leftOut: 2 });
       const readout = await waitFor(() => screen.getByTestId('detail-readout'));
       expect(readout.textContent).toContain(
         '1,200 segments drawn of 1,500 wanted, 2 boxes left out'

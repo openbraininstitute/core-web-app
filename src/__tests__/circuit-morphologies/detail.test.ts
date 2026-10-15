@@ -7,24 +7,12 @@ import {
   type DetailView,
 } from '@/features/circuit-viewer/morphologies/engine/detail';
 
-import type { DetailRules, PackBoxes } from '@/features/circuit-viewer/morphologies/types';
+import { boxesAt } from './boxes';
+
+import type { DetailRules } from '@/features/circuit-viewer/morphologies/types';
 
 const HEIGHT = 1000;
-const TOLERANCES = [0.125, 0.25, 1];
 const RULES: DetailRules = { budget: Infinity, pixels: 2 };
-
-/** Boxes 10 µm wide along -z, their middles at `depths`, each with `counts[level]` segments at a level. */
-function boxesAt(depths: number[], counts = [100, 50, 10]): PackBoxes {
-  const boxes = new Float32Array(depths.flatMap((d) => [-5, -5, -d - 5, 5, 5, -d + 5]));
-  return {
-    boxes,
-    levels: TOLERANCES.map((toleranceUm, level) => ({
-      toleranceUm,
-      pruneUm: 0,
-      segments: new Uint32Array(depths.length).fill(counts[level]),
-    })),
-  };
-}
 
 /** A camera at the origin looking down -z, a 1000 device pixels high view. */
 function viewOf(

@@ -82,7 +82,7 @@ export interface CircuitCellsProps {
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
   onZoomChange?: (zoom: number) => void;
-  /** Told whether morphologies in view are left out for the budget, their somas alone drawn, whenever that changes. */
+  /** Told whether morphologies in view are left out for the budget, their somas alone drawn, whenever the view changes. */
   onLeftOut?: (leftOut: boolean) => void;
 }
 
@@ -270,10 +270,11 @@ export function CircuitCells({
     });
   }, [viewer, cellHover, clickable, clicked, movable, previewing, picking, located]);
 
-  const [leftOut, setLeftOut] = useState(false);
-  useEffect(() => viewer?.onDetail((detail) => setLeftOut((detail?.leftOut ?? 0) > 0)), [viewer]);
   const leftOutChanged = useLatest(onLeftOut);
-  useEffect(() => leftOutChanged.current?.(leftOut), [leftOut, leftOutChanged]);
+  useEffect(
+    () => viewer?.onDetail((detail) => leftOutChanged.current?.((detail?.leftOut ?? 0) > 0)),
+    [viewer, leftOutChanged]
+  );
 
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;

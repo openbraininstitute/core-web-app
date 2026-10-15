@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DetailStream } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
 import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
+import { boxesAt } from './boxes';
+
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
 import type {
   BoxRead,
@@ -31,12 +33,7 @@ const segmentsOf = (count: number): MorphologySegments => ({
 function chunksOf() {
   const reads: { wanted: BoxRead[]; resolve(): void; reject(e: unknown): void }[] = [];
   const chunks: MorphologyChunks = {
-    boxes: new Float32Array(DEPTHS.flatMap((d) => [-5, -5, -d - 5, 5, 5, -d + 5])),
-    levels: [0.125, 0.25, 1].map((toleranceUm, level) => ({
-      toleranceUm,
-      pruneUm: 0,
-      segments: new Uint32Array(DEPTHS.length).fill(COUNTS[level]),
-    })),
+    ...boxesAt(DEPTHS, COUNTS),
     read: (wanted) =>
       new Promise((resolve, reject) => {
         reads.push({

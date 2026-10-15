@@ -94,11 +94,7 @@ function blockAt(blocks: Uint8Array, offset: number, bytes: number): Uint8Array 
   return blocks.subarray(offset, offset + bytes);
 }
 
-function sum(numbers: Iterable<number>): number {
-  let total = 0;
-  for (const n of numbers) total += n;
-  return total;
-}
+const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0);
 
 /** A stream's `count` numbers into `out`, and where the next stream starts. */
 function readStream(
@@ -274,7 +270,7 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     const placed = hasPosition(somas, i);
     for (let k = 0; k < 3; k++) somas[i + k] = placed ? somas[i + k] - centre[k] : NaN;
   }
-  const finest = index.levels[0];
+  const { toleranceUm, pruneUm } = index.levels[0];
   const data: CircuitMorphologyData = {
     segments: new Float32Array(0),
     segmentCells: new Uint32Array(0),
@@ -283,7 +279,7 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     populations: index.populations,
     centre,
     bounds: { min: around(box.min), max: around(box.max) },
-    level: { toleranceUm: finest.toleranceUm, pruneUm: finest.pruneUm },
+    level: { toleranceUm, pruneUm },
   };
 
   const { corners, inBox } = gatherBoxes(index);

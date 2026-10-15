@@ -43,7 +43,7 @@ export interface CircuitMorphologyData {
   chart?: { segments: Float32Array; somas: Float32Array };
   /**
    * Where the segments are read from a box at a time, at the level the view wants of each, in place of `segments`,
-   * which are then none. `level` is the finest's.
+   * which are then none.
    */
   chunks?: MorphologyChunks;
 }

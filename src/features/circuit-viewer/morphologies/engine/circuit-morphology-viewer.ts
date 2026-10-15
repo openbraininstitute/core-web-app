@@ -1,4 +1,5 @@
 import chroma from 'chroma-js';
+import { isEqual } from 'es-toolkit';
 import * as THREE from 'three';
 
 import { SpikeClock } from '@/features/circuit-viewer/spike-clock';
@@ -16,7 +17,7 @@ import {
   somaSectionOf,
 } from '../sections';
 import { CellTable } from './cell-table';
-import { DETAIL_PIXELS, SEGMENT_BUDGET } from './detail';
+import { DETAIL_PIXELS, pixelSpan, SEGMENT_BUDGET } from './detail';
 import { DetailStream } from './detail-stream';
 import {
   countDots,
@@ -32,9 +33,9 @@ import {
   impostor,
   impostorUniforms,
   NO_CELL,
+  segmentAttributes,
   setSectionColours,
 } from './impostors';
-import { SegmentArena } from './segment-arena';
 import {
   GLOW_SWELL,
   somaCloudIdMaterial,
@@ -57,7 +58,6 @@ import type {
   ElectrodeHit,
   LocationMarker,
   MarkerOnScreen,
-  MorphologyChunks,
   Population,
   ScreenPoint,
   SectionSpot,
@@ -116,25 +116,33 @@ function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material
   return mesh;
 }
 
-/**
- * The segments the arena of a pack's boxes holds: the most they can come to drawn at once, each at its largest level,
- * within the budget, and a quarter more, so that its holes seldom have to be closed.
- */
-function capacityOf({ levels, boxes }: MorphologyChunks): number {
-  let most = 0;
-  for (let box = 0; box < boxes.length / 6; box++) {
-    most += Math.max(...levels.map((level) => level.segments[box]));
-  }
-  return Math.ceil(1.25 * Math.min(most, SEGMENT_BUDGET));
+/** The segments' quads of morphologies read whole. */
+function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeometry {
+  const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
+  // Without a dendrogram the same buffer stands for it, and the morph moves nothing.
+  const charted = data.chart ? new THREE.InstancedInterleavedBuffer(data.chart.segments, 8) : ends;
+  return segmentAttributes(
+    quadGeometry(data.segmentCells.length),
+    ends,
+    charted,
+    new THREE.InstancedBufferAttribute(data.segmentCells, 1),
+    new THREE.InstancedBufferAttribute(data.segmentTypes, 1)
+  );
 }
 
-/** The camera, the view's height and the rules the levels were last chosen for, and whether the view was still. */
-interface ChosenFor {
-  projection: THREE.Matrix4;
-  view: THREE.Matrix4;
-  height: number;
-  rules: DetailRules;
-  still: boolean;
+/**
+ * Morphologies read a box at a time: what reads and places them, and the camera, the view's height and the rules their
+ * levels were last chosen for, and whether the view was still.
+ */
+interface Detailed {
+  stream: DetailStream;
+  chosenFor: {
+    projection: THREE.Matrix4;
+    view: THREE.Matrix4;
+    height: number;
+    rules: DetailRules;
+    still: boolean;
+  } | null;
 }
 
 /** The somas that have a position, four floats each, the same in the dendrogram, and the cell of each. */
@@ -234,10 +242,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     meshes: Quads[];
     ids: Quads[];
     spots: Quads[];
-    stream: DetailStream | null;
+    detailed: Detailed | null;
   } | null = null;
   private detailRules: DetailRules = { budget: SEGMENT_BUDGET, pixels: DETAIL_PIXELS };
-  private chosenFor: ChosenFor | null = null;
   private detailListeners = new Set<(detail: DetailStats | null) => void>();
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
@@ -411,15 +418,9 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       return;
     }
 
-    let segments: THREE.InstancedBufferGeometry;
-    let stream: DetailStream | null = null;
-    if (data.chunks) {
-      const arena = new SegmentArena(quadGeometry(0), capacityOf(data.chunks));
-      stream = new DetailStream(data.chunks, arena, () => this.invalidate());
-      segments = arena.geometry;
-    } else {
-      segments = this.segmentGeometry(data);
-    }
+    const stream =
+      data.chunks && DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate());
+    const segments = stream ? stream.geometry : segmentGeometry(data);
     const segmentMesh = quads(segments, this.look.material);
     this.chunks.add(segmentMesh);
 
@@ -443,7 +444,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
-    this.layer = { data, meshes: [segmentMesh, somaMesh], ids, spots, stream };
+    const detailed = stream ? { stream, chosenFor: null } : null;
+    this.layer = { data, meshes: [segmentMesh, somaMesh], ids, spots, detailed };
     this.compileIds();
 
     if (under) {
@@ -459,23 +461,6 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       this.resetView();
     }
     this.tellDetail();
-  }
-
-  /** The segments' quads of morphologies read whole. */
-  private segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeometry {
-    const segments = quadGeometry(data.segmentCells.length);
-    const ends = new THREE.InstancedInterleavedBuffer(data.segments, 8);
-    // Without a dendrogram the same buffer stands for it, and the morph moves nothing.
-    const charted = data.chart
-      ? new THREE.InstancedInterleavedBuffer(data.chart.segments, 8)
-      : ends;
-    return segments
-      .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
-      .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
-      .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(charted, 4, 0))
-      .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(charted, 4, 4))
-      .setAttribute('aCell', new THREE.InstancedBufferAttribute(data.segmentCells, 1))
-      .setAttribute('aType', new THREE.InstancedBufferAttribute(data.segmentTypes, 1));
   }
 
   setDetailRules(rules: Partial<DetailRules>): void {
@@ -494,24 +479,24 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /** The listeners told what is drawn of morphologies read a box at a time, where that changed. */
   private tellDetail(): void {
-    const detail = this.layer?.stream?.stats(this.detailRules) ?? null;
-    const was = this.toldDetail;
-    if (detail === was || (detail && was && JSON.stringify(detail) === JSON.stringify(was))) return;
+    const detail = this.layer?.detailed?.stream.stats(this.detailRules) ?? null;
+    if (isEqual(detail, this.toldDetail)) return;
     this.toldDetail = detail;
     for (const listener of this.detailListeners) listener(detail);
   }
 
   /**
    * The levels chosen again where the camera, the view's height, the rules or whether the view is still changed since
-   * they were last, and a frame asked for where that lets go of boxes or places some at once.
+   * they were last, and a frame asked for where that lets go of boxes or places some at once. Here, not in `work`: the
+   * camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
-    const stream = this.layer?.stream;
-    if (!stream) return;
+    const detailed = this.layer?.detailed;
+    if (!detailed) return;
     const { camera } = this;
     camera.updateMatrixWorld();
     const height = this.height * this.renderer.getPixelRatio();
-    const was = this.chosenFor;
+    const was = detailed.chosenFor;
     const still = !moving;
     if (
       was?.still === still &&
@@ -522,13 +507,10 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     ) {
       return;
     }
-    this.chosenFor = {
-      projection: camera.projectionMatrix.clone(),
-      view: camera.matrixWorldInverse.clone(),
-      height,
-      rules: this.detailRules,
-      still,
-    };
+    const chosenFor = was ?? { projection: new THREE.Matrix4(), view: new THREE.Matrix4() };
+    chosenFor.projection.copy(camera.projectionMatrix);
+    chosenFor.view.copy(camera.matrixWorldInverse);
+    detailed.chosenFor = { ...chosenFor, height, rules: this.detailRules, still };
     const view = {
       projection: camera.projectionMatrix,
       view: camera.matrixWorldInverse,
@@ -537,7 +519,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
       focus: this.controls.target,
       shift: this.uniforms.uShift.value,
     };
-    if (stream.update(view, this.detailRules, still)) this.invalidate();
+    if (detailed.stream.update(view, this.detailRules, still)) this.invalidate();
     this.tellDetail();
   }
 
@@ -894,7 +876,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     camera.updateMatrixWorld();
     const perspective = camera instanceof THREE.PerspectiveCamera;
     // The µm a CSS pixel spans, at a unit's depth in perspective, as the shaders count it.
-    const span = 2 / (camera.projectionMatrix.elements[5] * height);
+    const span = pixelSpan(camera.projectionMatrix, height);
     const radius = this.electrodeUniforms.uRadius.value;
     const pixelRatio = this.renderer.getPixelRatio();
     let found: ElectrodeHit | null = null;
@@ -992,7 +974,7 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
 
   /** What came in of the boxes placed, and those no longer wanted let go of. Whether more is left to place. */
   private placeBoxes(): boolean {
-    const stream = this.layer?.stream;
+    const stream = this.layer?.detailed?.stream;
     if (!stream) return false;
     const { changed, more } = stream.apply();
     if (changed) {
@@ -1212,9 +1194,8 @@ export class CircuitMorphologyViewer extends SceneViewer implements CircuitMorph
     for (const mesh of [...(this.layer?.ids ?? []), ...(this.layer?.spots ?? [])]) {
       mesh.removeFromParent();
     }
-    this.layer?.stream?.stop();
+    this.layer?.detailed?.stream.stop();
     this.layer = null;
-    this.chosenFor = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     // They sit on the morphologies.
     this.drawMarkers();

@@ -14,7 +14,10 @@ import { deflateSync, inflateSync } from 'node:zlib';
 
 import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 
-import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CircuitMorphologyData,
+  MorphologySegments,
+} from '@/features/circuit-viewer/morphologies/types';
 
 export const HEADER_BYTES = 12;
 const file = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
@@ -39,28 +42,35 @@ export interface Index {
 export const indexOf = (bytes: Uint8Array): Index =>
   JSON.parse(inflateSync(bytes.subarray(HEADER_BYTES, indexEnd(bytes))).toString());
 
+/** Boxes' segments one after another. */
+export function joined(parts: MorphologySegments[]): MorphologySegments {
+  const total = parts.reduce((sum, part) => sum + part.segmentCells.length, 0);
+  const all: MorphologySegments = {
+    segments: new Float32Array(8 * total),
+    segmentCells: new Uint32Array(total),
+    segmentTypes: new Uint8Array(total),
+  };
+  let first = 0;
+  for (const { segments, segmentCells, segmentTypes } of parts) {
+    all.segments.set(segments, 8 * first);
+    all.segmentCells.set(segmentCells, first);
+    all.segmentTypes.set(segmentTypes, first);
+    first += segmentCells.length;
+  }
+  return all;
+}
+
 /** One level of a pack, whole, its boxes one after another. The first is the finest. */
 export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<CircuitMorphologyData> {
   const pack = await openPack(bytes);
   const level = pack.levels[levelNumber];
   if (!level) throw new RangeError(`morphology pack without a level ${levelNumber}`);
-  const total = level.segments.reduce((sum, n) => sum + n, 0);
-  const data: CircuitMorphologyData = {
-    ...pack.data,
-    segments: new Float32Array(8 * total),
-    segmentCells: new Uint32Array(total),
-    segmentTypes: new Uint8Array(total),
-    level: { toleranceUm: level.toleranceUm, pruneUm: level.pruneUm },
-  };
-  let first = 0;
+  const parts: MorphologySegments[] = [];
   for (let box = 0; box < level.segments.length; box++) {
-    const read = await pack.readBox(levelNumber, box);
-    data.segments.set(read.segments, 8 * first);
-    data.segmentCells.set(read.segmentCells, first);
-    data.segmentTypes.set(read.segmentTypes, first);
-    first += read.segmentCells.length;
+    parts.push(await pack.readBox(levelNumber, box));
   }
-  return data;
+  const { toleranceUm, pruneUm } = level;
+  return { ...pack.data, ...joined(parts), level: { toleranceUm, pruneUm } };
 }
 
 export function withIndex(bytes: Uint8Array, change: (index: Index) => void): Uint8Array {

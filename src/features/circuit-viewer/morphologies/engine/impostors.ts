@@ -91,6 +91,26 @@ vec3 glowing( vec3 colour, float glow ) {
 const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
 `;
 
+/**
+ * `geometry` given what the segments' quads are placed by: both ends of each segment as x, y, z and radius, eight floats
+ * a segment, the same in the dendrogram (`charted`, the ends again where none was charted), and its cell and type.
+ */
+export function segmentAttributes(
+  geometry: THREE.InstancedBufferGeometry,
+  ends: THREE.InstancedInterleavedBuffer,
+  charted: THREE.InstancedInterleavedBuffer,
+  cells: THREE.InstancedBufferAttribute,
+  types: THREE.InstancedBufferAttribute
+): THREE.InstancedBufferGeometry {
+  return geometry
+    .setAttribute('aA', new THREE.InterleavedBufferAttribute(ends, 4, 0))
+    .setAttribute('aB', new THREE.InterleavedBufferAttribute(ends, 4, 4))
+    .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(charted, 4, 0))
+    .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(charted, 4, 4))
+    .setAttribute('aCell', cells)
+    .setAttribute('aType', types);
+}
+
 /** `pixelUm`, for a vertex shader that has `uViewport`. */
 export const PIXEL_UM = /* glsl */ `
 // The µm a device pixel spans at the view depth z.

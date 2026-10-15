@@ -52,7 +52,7 @@ const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments)
 ];
 
 export function createPackApi(cache: CacheBounds) {
-  let opened: { pack: Pack; numbers: Uint32Array } | null = null;
+  let opened: { readBox: Pack['readBox']; numbers: Uint32Array } | null = null;
   return {
     async open(
       request: PackRequest,
@@ -66,10 +66,11 @@ export function createPackApi(cache: CacheBounds) {
         if (download.kind === 'refused') return download;
         const { bytes } = download;
         pack = await openPack(bytes);
-        await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
+        // Not awaited: the worker stays for the reads, and a write that fails leaves no entry.
+        void writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
       }
       const numbers = pageCells(pack.data.populations, populations);
-      opened = { pack, numbers };
+      opened = { readBox: pack.readBox, numbers };
       const data = renumberSomas(pack.data, numbers, populations);
       // The boxes and the levels are copied, not handed over: the pack reads by them.
       return Comlink.transfer(
@@ -80,11 +81,9 @@ export function createPackApi(cache: CacheBounds) {
 
     async read(wanted: BoxRead[]): Promise<MorphologySegments[]> {
       if (!opened) throw new Error('no morphology pack is open');
-      const { pack, numbers } = opened;
+      const { readBox, numbers } = opened;
       const read = await Promise.all(
-        wanted.map(async ({ level, box }) =>
-          renumberSegments(await pack.readBox(level, box), numbers)
-        )
+        wanted.map(async ({ level, box }) => renumberSegments(await readBox(level, box), numbers))
       );
       return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);
     },

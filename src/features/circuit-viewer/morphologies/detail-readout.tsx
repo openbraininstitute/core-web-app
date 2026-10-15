@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
+import { fmt as count } from '@/features/viewer-3d/chrome/debug-rows';
 
 import { DETAIL_PIXELS, SEGMENT_BUDGET } from './engine/detail';
 
@@ -11,8 +12,6 @@ import type { CircuitMorphologyView, DetailStats } from './types';
 
 const BUDGETS = [SEGMENT_BUDGET, 1_000_000, 500_000, 200_000, 100_000];
 const PIXELS = [1, DETAIL_PIXELS, 4, 8];
-
-const count = (n: number) => n.toLocaleString('en-US');
 
 /**
  * For the debug tools: what the view draws of morphologies read a box at a time, and the budget and the pixels a
@@ -31,7 +30,8 @@ export function DetailReadout({
   const { budget, pixels, drawn, wanted, levels, leftOut } = detail;
   return (
     <div
-      className="pointer-events-auto absolute bottom-3 left-1/2 flex -translate-x-1/2 flex-col gap-1 rounded-md px-3 py-2 text-xs tabular-nums"
+      // Above the wheel's hint, which takes the bottom middle.
+      className="pointer-events-auto absolute bottom-12 left-1/2 flex -translate-x-1/2 flex-col gap-1 rounded-md px-3 py-2 text-xs tabular-nums"
       style={panelStyle(theme)}
       data-testid="detail-readout"
     >

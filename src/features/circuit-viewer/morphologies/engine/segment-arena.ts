@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { HOLE } from './impostors';
+import { HOLE, segmentAttributes } from './impostors';
 
 import type { MorphologySegments } from '../types';
 
@@ -39,14 +39,7 @@ export class SegmentArena {
     this.cells = new THREE.InstancedBufferAttribute(new Uint32Array(capacity), 1);
     this.types = new THREE.InstancedBufferAttribute(new Uint8Array(capacity), 1);
     // No dendrogram: the ends stand for it, and the morph moves nothing.
-    geometry
-      .setAttribute('aA', new THREE.InterleavedBufferAttribute(this.ends, 4, 0))
-      .setAttribute('aB', new THREE.InterleavedBufferAttribute(this.ends, 4, 4))
-      .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(this.ends, 4, 0))
-      .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(this.ends, 4, 4))
-      .setAttribute('aCell', this.cells)
-      .setAttribute('aType', this.types);
-    geometry.instanceCount = 0;
+    segmentAttributes(geometry, this.ends, this.ends, this.cells, this.types).instanceCount = 0;
   }
 
   /** The segments of the boxes drawn, holes left out. */
@@ -146,9 +139,10 @@ export class SegmentArena {
     else this.holes.splice(at, 0, hole);
   }
 
-  /** Every box moved down in the order they lie, the holes closed. The segments uploaded: all of them. */
+  /** Every box moved down in the order they lie, the holes closed. The segments uploaded: those from the first hole on. */
   private compact(): number {
     const ends = this.ends.array as Float32Array;
+    const from = this.holes[0]?.start ?? this.end;
     let at = 0;
     for (const place of [...this.places.values()].sort((a, b) => a.start - b.start)) {
       if (place.start !== at) {
@@ -161,8 +155,8 @@ export class SegmentArena {
     }
     this.holes = [];
     this.end = at;
-    this.upload(0, at);
-    return at;
+    this.upload(from, at - from);
+    return at - from;
   }
 
   private upload(start: number, count: number): void {

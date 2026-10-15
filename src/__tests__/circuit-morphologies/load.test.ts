@@ -18,7 +18,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
-import { pack, readPack } from './packs';
+import { joined, pack, readPack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
 import type {
@@ -137,16 +137,11 @@ async function readLevel(data: CircuitMorphologyData, level = 0): Promise<Morpho
   const chunks = data.chunks;
   if (!chunks) throw new Error('no chunks');
   const boxes = Array.from({ length: chunks.boxes.length / 6 }, (_, box) => ({ level, box }));
-  const read = await chunks.read(boxes);
-  const join = <T extends Float32Array | Uint32Array | Uint8Array>(
-    pick: (s: MorphologySegments) => T
-  ) => read.flatMap((s) => Array.from(pick(s)));
-  return {
-    segments: Float32Array.from(join((s) => s.segments)),
-    segmentCells: Uint32Array.from(join((s) => s.segmentCells)),
-    segmentTypes: Uint8Array.from(join((s) => s.segmentTypes)),
-  };
+  return joined(await chunks.read(boxes));
 }
+
+/** The pack in the cache, once its write, which the load does not wait for, is done. */
+const cachedSoon = () => vi.waitFor(() => expect(cached()?.body).toEqual(small()));
 
 const serve = (bytes: Uint8Array, options?: { length: boolean }) => {
   const server = fakeServer({ [URL_A]: bytes }, options);
@@ -179,7 +174,7 @@ describe('loadCircuitMorphologies', () => {
     const [worker] = workers;
     expect(worker.terminated).toBe(false);
     expect(worker.handedOver.map((buffer) => buffer.byteLength)).toEqual([0]);
-    expect(cached()?.body).toEqual(small());
+    await cachedSoon();
   });
 
   it("reads the pack's boxes from the worker, every level, and hands their arrays over", async () => {
@@ -187,11 +182,8 @@ describe('loadCircuitMorphologies', () => {
     const { data } = await loaded();
 
     for (const level of [0, 1, 2]) {
-      expect(await readLevel(data, level)).toEqual(
-        (({ segments, segmentCells, segmentTypes }) => ({ segments, segmentCells, segmentTypes }))(
-          await readPack(small(), level)
-        )
-      );
+      const { segments, segmentCells, segmentTypes } = await readPack(small(), level);
+      expect(await readLevel(data, level)).toEqual({ segments, segmentCells, segmentTypes });
     }
     expect(workers[0].handedOver.slice(1).every((buffer) => buffer.byteLength === 0)).toBe(true);
   });
@@ -246,6 +238,7 @@ describe('loadCircuitMorphologies', () => {
   it('opens the pack from the cache on a later visit', async () => {
     const { served } = serve(small());
     await loaded();
+    await cachedSoon();
     const onProgress = vi.fn();
     const second = await load({ onProgress });
 
@@ -268,13 +261,14 @@ describe('loadCircuitMorphologies', () => {
   it('drops a cached pack that does not open, and fetches it again', async () => {
     const { served } = serve(small());
     await loaded();
+    await cachedSoon();
     replaceCached(broken());
     const again = await loaded();
 
     expect(again.fromCache).toBe(false);
     expect(again.data).toEqual(await opened(small()));
     expect(served.requests).toBe(2);
-    expect(cached()?.body).toEqual(small());
+    await cachedSoon();
   });
 
   it('fails on a pack that does not open, does not keep it, and terminates the worker', async () => {
