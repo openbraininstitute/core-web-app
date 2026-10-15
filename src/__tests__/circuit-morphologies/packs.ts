@@ -24,7 +24,12 @@ export interface Index {
   layout: string;
   populations: { cells: number }[];
   somas: { offset: number; bytes: number };
-  levels: { segments: number; offset: number; chunks: { bytes: number[]; segments: number[] } }[];
+  levels: {
+    segments: number;
+    offset: number;
+    chunkSteps: number;
+    chunks: { box: number[]; bytes: number[]; segments: number[] };
+  }[];
 }
 
 export const indexOf = (bytes: Uint8Array): Index =>

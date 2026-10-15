@@ -1,11 +1,12 @@
 /**
  * Reads a morphology pack: the binary file OBI-One writes of a circuit's morphologies, simplified, placed in the circuit
- * and cut into chunks of space. The format is specified in OBI-One's `docs/internal/circuit-morphology-pack.md`.
+ * and cut into chunks of space. The format is specified in OBI-One's `docs/internal/circuit-morphology-pack.md`. The
+ * index and the somas are read when the pack is opened, and the chunks a box of space at a time.
  */
 // The whole of zod comes with `z` imported by name, and the reader runs in a worker of its own.
 import * as z from 'zod';
 
-import type { CircuitMorphologyData, Vec3 } from '../types';
+import type { CircuitMorphologyData, MorphologySegments, PackBoxes, Vec3 } from '../types';
 
 const MAGIC = 0x4b43504d;
 const VERSION = 1;
@@ -68,7 +69,7 @@ async function inflate(deflated: Uint8Array): Promise<Uint8Array> {
 }
 
 /** The index, and the bytes its offsets count in. */
-async function openPack(bytes: Uint8Array): Promise<{ index: PackIndex; blocks: Uint8Array }> {
+async function openIndex(bytes: Uint8Array): Promise<{ index: PackIndex; blocks: Uint8Array }> {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   if (bytes.byteLength < HEADER_BYTES || view.getUint32(0, true) !== MAGIC) {
     throw new PackError('not a morphology pack');
@@ -93,7 +94,11 @@ function blockAt(blocks: Uint8Array, offset: number, bytes: number): Uint8Array 
   return blocks.subarray(offset, offset + bytes);
 }
 
-const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0);
+function sum(numbers: Iterable<number>): number {
+  let total = 0;
+  for (const n of numbers) total += n;
+  return total;
+}
 
 /** A stream's `count` numbers into `out`, and where the next stream starts. */
 function readStream(
@@ -116,7 +121,8 @@ function readStream(
 }
 
 interface Target {
-  data: CircuitMorphologyData;
+  out: MorphologySegments;
+  centre: Vec3;
   gridUm: number;
   radiusSteps: number;
   cells: number;
@@ -130,7 +136,7 @@ function writeChunk(
   corner: Vec3,
   first: number,
   count: number,
-  { data, gridUm, radiusSteps, cells, streams }: Target
+  { out, centre, gridUm, radiusSteps, cells, streams }: Target
 ) {
   if (inflated.length < COUNTS_BYTES) throw new PackError(CUT_SHORT);
   const counts = new DataView(inflated.buffer, inflated.byteOffset, COUNTS_BYTES);
@@ -148,8 +154,8 @@ function writeChunk(
   }
   if (at !== inflated.length) throw new PackError('morphology pack chunk with bytes left over');
   const [cellSteps, types, lengths, startX, startY, startZ, startR, dx, dy, dz, dr] = streams;
-  const { segments, segmentCells, segmentTypes } = data;
-  const [cx, cy, cz] = data.centre;
+  const { segments, segmentCells, segmentTypes } = out;
+  const [cx, cy, cz] = centre;
   const radius = (steps: number) => 2 ** (steps / radiusSteps);
 
   let cell = 0;
@@ -204,18 +210,57 @@ function boxOf(index: PackIndex, somas: Float32Array) {
   return min[0] <= max[0] ? { min, max } : null;
 }
 
-/** One level of a pack. The first is the finest. */
-export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<CircuitMorphologyData> {
-  const { index, blocks } = await openPack(bytes);
-  const level = index.levels[levelNumber];
-  if (!level) throw new RangeError(`morphology pack without a level ${levelNumber}`);
-  const { chunks } = level;
-  if (
-    chunks.box.length !== 3 * chunks.bytes.length ||
-    chunks.segments.length !== chunks.bytes.length ||
-    sum(chunks.segments) !== level.segments
-  ) {
-    throw new PackError(AT_ODDS);
+/**
+ * Every level's chunks gathered in boxes of the pack's coarsest grid, which a level's chunks lie in as its steps double
+ * from one level to the next: each box's least and greatest corner, in grid steps, and the chunks in it, by level.
+ */
+function gatherBoxes(index: PackIndex): { corners: number[]; inBox: number[][][] } {
+  const steps = Math.max(1, ...index.levels.map((level) => level.chunkSteps));
+  const numbers = new Map<string, number>();
+  const corners: number[] = [];
+  const inBox: number[][][] = [];
+  index.levels.forEach(({ chunks, chunkSteps }, level) => {
+    for (let chunk = 0; 3 * chunk < chunks.box.length; chunk++) {
+      const least = [0, 1, 2].map((k) => chunks.box[3 * chunk + k] * chunkSteps);
+      const key = least.map((at) => Math.floor(at / steps)).join();
+      let box = numbers.get(key);
+      if (box === undefined) {
+        box = numbers.size;
+        numbers.set(key, box);
+        corners.push(...least, ...least.map((at) => at + chunkSteps));
+        inBox.push(index.levels.map(() => []));
+      } else {
+        for (let k = 0; k < 3; k++) {
+          corners[6 * box + k] = Math.min(corners[6 * box + k], least[k]);
+          corners[6 * box + 3 + k] = Math.max(corners[6 * box + 3 + k], least[k] + chunkSteps);
+        }
+      }
+      inBox[box][level].push(chunk);
+    }
+  });
+  return { corners, inBox };
+}
+
+/** A pack opened: its somas and frame, where its segments lie, and each box's read when asked for. */
+export interface Pack extends PackBoxes {
+  /** The somas, the populations, the frame and the bounds, with no segments; the level is the finest. */
+  data: CircuitMorphologyData;
+  /** The segments level `level` has in box `box`, their cells numbered as the pack numbers them. */
+  readBox(level: number, box: number): Promise<MorphologySegments>;
+}
+
+/** The index and the somas of a pack, read now; its chunks are read a box at a time (`readBox`). */
+export async function openPack(bytes: Uint8Array): Promise<Pack> {
+  const { index, blocks } = await openIndex(bytes);
+  for (const { chunks, chunkSteps, segments } of index.levels) {
+    if (
+      chunks.box.length !== 3 * chunks.bytes.length ||
+      chunks.segments.length !== chunks.bytes.length ||
+      sum(chunks.segments) !== segments ||
+      (chunkSteps === 0 && chunks.bytes.length > 0)
+    ) {
+      throw new PackError(AT_ODDS);
+    }
   }
   const cells = sum(index.populations.map((p) => p.cells));
   const somaBytes = await inflate(blockAt(blocks, index.somas.offset, index.somas.bytes));
@@ -229,33 +274,96 @@ export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<Circ
     const placed = hasPosition(somas, i);
     for (let k = 0; k < 3; k++) somas[i + k] = placed ? somas[i + k] - centre[k] : NaN;
   }
-
+  const finest = index.levels[0];
   const data: CircuitMorphologyData = {
-    segments: new Float32Array(8 * level.segments),
-    segmentCells: new Uint32Array(level.segments),
-    segmentTypes: new Uint8Array(level.segments),
+    segments: new Float32Array(0),
+    segmentCells: new Uint32Array(0),
+    segmentTypes: new Uint8Array(0),
     somas,
     populations: index.populations,
     centre,
     bounds: { min: around(box.min), max: around(box.max) },
+    level: { toleranceUm: finest.toleranceUm, pruneUm: finest.pruneUm },
+  };
+
+  const { corners, inBox } = gatherBoxes(index);
+  const count = corners.length / 6;
+  const boxes = Float32Array.from(corners, (steps, i) => steps * index.gridUm - centre[i % 3]);
+  const levels = index.levels.map(({ toleranceUm, pruneUm, chunks }, level) => ({
+    toleranceUm,
+    pruneUm,
+    segments: Uint32Array.from({ length: count }, (_, b) =>
+      sum(inBox[b][level].map((chunk) => chunks.segments[chunk]))
+    ),
+  }));
+  const offsets = index.levels.map(({ offset, chunks }) => {
+    const starts: number[] = [];
+    let at = offset;
+    for (const bytes of chunks.bytes) {
+      starts.push(at);
+      at += bytes;
+    }
+    return starts;
+  });
+  // A level's, as long as its largest chunk, made at its first read.
+  const streams: Int32Array[][] = [];
+
+  const readBox = async (level: number, b: number): Promise<MorphologySegments> => {
+    const at = index.levels[level];
+    if (!at || !(b >= 0 && b < count)) {
+      throw new RangeError(`morphology pack without a box ${b} at level ${level}`);
+    }
+    const { chunks, chunkSteps } = at;
+    const n = levels[level].segments[b];
+    const out: MorphologySegments = {
+      segments: new Float32Array(8 * n),
+      segmentCells: new Uint32Array(n),
+      segmentTypes: new Uint8Array(n),
+    };
+    streams[level] ??= Array.from(
+      { length: STREAMS },
+      () => new Int32Array(Math.max(0, ...chunks.segments))
+    );
+    const target: Target = {
+      out,
+      centre,
+      gridUm: index.gridUm,
+      radiusSteps: index.radiusSteps,
+      cells,
+      streams: streams[level],
+    };
+    let first = 0;
+    for (const chunk of inBox[b][level]) {
+      const inflated = await inflate(blockAt(blocks, offsets[level][chunk], chunks.bytes[chunk]));
+      const corner = [0, 1, 2].map((k) => chunks.box[3 * chunk + k] * chunkSteps) as Vec3;
+      writeChunk(inflated, corner, first, chunks.segments[chunk], target);
+      first += chunks.segments[chunk];
+    }
+    return out;
+  };
+  return { data, boxes, levels, readBox };
+}
+
+/** One level of a pack, whole. The first is the finest. */
+export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<CircuitMorphologyData> {
+  const pack = await openPack(bytes);
+  const level = pack.levels[levelNumber];
+  if (!level) throw new RangeError(`morphology pack without a level ${levelNumber}`);
+  const total = sum(level.segments);
+  const data: CircuitMorphologyData = {
+    ...pack.data,
+    segments: new Float32Array(8 * total),
+    segmentCells: new Uint32Array(total),
+    segmentTypes: new Uint8Array(total),
     level: { toleranceUm: level.toleranceUm, pruneUm: level.pruneUm },
   };
-  const largest = chunks.segments.reduce((most, n) => Math.max(most, n), 0);
-  const target: Target = {
-    data,
-    gridUm: index.gridUm,
-    radiusSteps: index.radiusSteps,
-    cells,
-    streams: Array.from({ length: STREAMS }, () => new Int32Array(largest)),
-  };
-  let offset = level.offset;
   let first = 0;
-  for (let chunk = 0; chunk < chunks.bytes.length; chunk++) {
-    const inflated = await inflate(blockAt(blocks, offset, chunks.bytes[chunk]));
-    const corner = [0, 1, 2].map((k) => chunks.box[3 * chunk + k] * level.chunkSteps) as Vec3;
-    writeChunk(inflated, corner, first, chunks.segments[chunk], target);
-    offset += chunks.bytes[chunk];
-    first += chunks.segments[chunk];
+  for (let box = 0; box < level.segments.length; box++) {
+    const read = await pack.readBox(levelNumber, box);
+    data.segments.set(read.segments, 8 * first);
+    data.segmentCells.set(read.segmentCells, first);
+    data.segmentTypes.set(read.segmentTypes, first);
+    first += read.segmentCells.length;
   }
   return data;
 }

@@ -43,6 +43,29 @@ export interface CircuitMorphologyData {
   chart?: { segments: Float32Array; somas: Float32Array };
 }
 
+/** Some of a circuit's segments, in the arrays `CircuitMorphologyData` has them in. */
+export type MorphologySegments = Pick<
+  CircuitMorphologyData,
+  'segments' | 'segmentCells' | 'segmentTypes'
+>;
+
+/** A level of a pack: what it left out, as `CircuitMorphologyData.level` says, and its segments in each box. */
+export interface PackLevel {
+  toleranceUm: number;
+  pruneUm: number;
+  segments: Uint32Array;
+}
+
+/**
+ * Where a pack's segments lie: boxes of space, six floats a box, its least x, y and z then its greatest, in µm in the
+ * data's frame, and the pack's levels, the finest first. A box holds a segment whose far end it holds: the near end
+ * may lie outside it.
+ */
+export interface PackBoxes {
+  boxes: Float32Array;
+  levels: PackLevel[];
+}
+
 /** A circuit's somas as the page placed them, before any morphology is in. */
 export interface CircuitSomas {
   /** Three floats a cell, x, y, z in µm in the circuit's frame, numbered through `populations` in their order. */

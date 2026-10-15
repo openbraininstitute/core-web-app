@@ -3,7 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
-import { PackError, readPack } from '@/features/circuit-viewer/morphologies/load/pack';
+import { openPack, PackError, readPack } from '@/features/circuit-viewer/morphologies/load/pack';
 
 import { expected, HEADER_BYTES, type Index, indexEnd, indexOf, pack, withIndex } from './packs';
 
@@ -200,6 +200,66 @@ describe('readPack', () => {
     const data = await readPack(withSomas(pack('somas-only'), () => nowhere));
     expect(data.centre).toEqual([0, 0, 0]);
     expect(data.bounds).toEqual({ min: [0, 0, 0], max: [0, 0, 0] });
+  });
+});
+
+describe('openPack', () => {
+  it('reads nothing of the segments, and the somas and frame as a whole level has them', async () => {
+    const opened = await openPack(pack('small'));
+    const whole = await readPack(pack('small'));
+    expect(opened.data.segmentCells).toHaveLength(0);
+    expect(opened.data.somas).toEqual(whole.somas);
+    expect(opened.data.centre).toEqual(whole.centre);
+    expect(opened.data.bounds).toEqual(whole.bounds);
+    const levelOf = ({ toleranceUm, pruneUm }: CircuitMorphologyData['level']) => ({
+      toleranceUm,
+      pruneUm,
+    });
+    expect(opened.levels.map(levelOf)).toEqual(expected('small').levels.map(levelOf));
+  });
+
+  it("puts each segment's far end in its box, and counts each box's segments", async () => {
+    const opened = await openPack(pack('small'));
+    const { boxes } = opened;
+    expect(boxes.length % 6).toBe(0);
+    for (const [number, level] of opened.levels.entries()) {
+      expect(level.segments).toHaveLength(boxes.length / 6);
+      let total = 0;
+      for (let box = 0; box < level.segments.length; box++) {
+        const read = await opened.readBox(number, box);
+        expect(read.segmentCells).toHaveLength(level.segments[box]);
+        for (let i = 0; i < read.segmentCells.length; i++) {
+          for (let k = 0; k < 3; k++) {
+            const far = read.segments[8 * i + 4 + k];
+            expect(far).toBeGreaterThanOrEqual(boxes[6 * box + k] - 1e-3);
+            expect(far).toBeLessThanOrEqual(boxes[6 * box + 3 + k] + 1e-3);
+          }
+        }
+        total += level.segments[box];
+      }
+      expect(total).toBe(expected('small').levels[number].segments.length);
+    }
+  });
+
+  it('gathers a level cut finer in the boxes of the coarsest', async () => {
+    const want = expected('small');
+    // The second level on a grid of half the steps: its chunks and segments stay where they were.
+    const halved = withIndex(pack('small'), (index) => {
+      const level = index.levels[1];
+      level.chunkSteps /= 2;
+      level.chunks.box = level.chunks.box.map((at) => 2 * at);
+    });
+    const opened = await openPack(halved);
+    expect(opened.boxes).toEqual((await openPack(pack('small'))).boxes);
+    const sorted = (rows: number[][]) => rows.map((row) => row.join()).sort();
+    const data = await readPack(halved, 1);
+    expect(sorted(everySegment(data, want))).toEqual(sorted(want.levels[1].segments));
+  });
+
+  it('reads only the boxes there are', async () => {
+    const opened = await openPack(pack('small'));
+    await expect(opened.readBox(0, opened.boxes.length / 6)).rejects.toThrow(RangeError);
+    await expect(opened.readBox(3, 0)).rejects.toThrow('at level 3');
   });
 });
 
