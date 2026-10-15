@@ -1,8 +1,10 @@
 'use client';
 
+import { WarningFilled } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { Input, InputNumber, Select } from 'antd';
-import { useMemo } from 'react';
+import { useAtom } from 'jotai';
+import { useEffect, useMemo, useState } from 'react';
 
 import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/ion-channel-recording';
 import {
@@ -11,15 +13,27 @@ import {
 } from '@/api/entitycore/queries/general/brain-region';
 import { getSpecies } from '@/api/entitycore/queries/general/species';
 import { getStrains } from '@/api/entitycore/queries/general/strain';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { flattenTreeAsObject } from '@/components/tree/elements/helpers';
+import {
+  useFieldError,
+  useFieldErrorsSessionKey,
+} from '@/features/scan-config/components/hooks/field-errors';
+import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { IBrainRegionHierarchy } from '@/api/entitycore/types/entities/brain-region';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
+import type { Config, ConfigSchema, ParamSchema } from '@/features/scan-config/types';
 
 type TFromID = { type?: string; id_str: string };
 
-export type TIonChannelModelProperties = {
+export type TIonChannelModelPropertiesValue = {
   type?: string;
   ion_channel_name?: string | null;
   temperature?: number | null;
@@ -65,21 +79,12 @@ export function commonParentRegion(root: IBrainRegionHierarchy, regionIds: strin
   return first.find((id) => others.every((path) => path.includes(id))) ?? null;
 }
 
-function flattenRegions(root: IBrainRegionHierarchy) {
-  const options: Array<{ value: string; label: string }> = [];
-  const visit = (node: IBrainRegionHierarchy) => {
-    options.push({ value: node.id, label: node.name });
-    for (const child of node.children) visit(child);
-  };
-  visit(root);
-  return options;
-}
-
 function Row({
   label,
   overridden,
   differ,
   derivedNote,
+  warning,
   disabled,
   onReset,
   children,
@@ -88,11 +93,19 @@ function Row({
   overridden: boolean;
   differ: boolean;
   derivedNote: string;
+  warning?: string;
   disabled: boolean;
   onReset: () => void;
   children: React.ReactNode;
 }) {
   const note = (() => {
+    // differing recordings have no value to go back to
+    if (differ)
+      return overridden ? (
+        'The recordings differ - set for this model'
+      ) : (
+        <span className="text-red-600">The recordings differ - set a value</span>
+      );
     if (overridden)
       return disabled ? (
         'Set for this model'
@@ -101,18 +114,284 @@ function Row({
           Use the recordings&apos; value
         </button>
       );
-    if (differ) return <span className="text-red-600">The recordings differ - set a value</span>;
     return derivedNote;
   })();
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-primary-9 text-sm font-semibold">{label}</span>
+      <span className="text-primary-9 flex items-center gap-2 text-sm font-semibold">
+        {label}
+        {warning && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <WarningFilled aria-label={warning} className="text-yellow-400!" />
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="bg-primary-8 shadow-bnb max-w-2xs rounded-md px-4 py-2 text-sm text-wrap text-white"
+              arrowClassName="bg-primary-8"
+            >
+              {warning}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </span>
       {children}
       <span className="text-xs text-neutral-500">{note}</span>
     </div>
   );
 }
+
+/** The recordings the model is fitted to, held by the block's sibling `recordings` element. */
+export function recordingIdsOf(block: unknown) {
+  const recordings = isPlainObject(block) ? block.recordings : undefined;
+  return (Array.isArray(recordings) ? recordings : []).flatMap((recording) =>
+    isPlainObject(recording) && typeof recording.id_str === 'string' ? [recording.id_str] : []
+  );
+}
+
+function useModelProperties(value: TIonChannelModelPropertiesValue, recordingIds: string[]) {
+  const context = useWorkspace();
+
+  const recordingQueries = useQueries({
+    queries: recordingIds.map((id) => ({
+      queryKey: keyBuilder.entity({ id, context, type: EntityTypeDict.IonChannelRecording }),
+      queryFn: () => getIonChannelRecording({ id, context }),
+      refetchOnWindowFocus: false,
+    })),
+  });
+  const recordings = recordingQueries
+    .map((query) => query.data)
+    .filter((recording): recording is IIonChannelRecording => !!recording);
+  const loaded = recordings.length > 0 && recordings.length === recordingIds.length;
+  const failed = recordingQueries.some((query) => query.isError);
+
+  const { data: hierarchies } = useQuery({
+    queryKey: keyBuilderHierarchy.hierarchies(),
+    queryFn: getBrainRegionHierarchiesWithSpecies,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
+  const derived = <T,>(resolved: TResolved<T>) =>
+    loaded && !resolved.differ ? resolved.value : undefined;
+  const differs = (resolved: TResolved<unknown>) => loaded && resolved.differ;
+
+  const channel = shared(recordings.map((recording) => recording.ion_channel.name));
+  const temperature = shared(recordings.map((recording) => recording.temperature ?? null));
+  const temperatureOptions = [
+    ...new Set(recordings.flatMap(({ temperature: t }) => (t == null ? [] : [t]))),
+  ].map((t) => ({
+    value: t,
+    names: recordings.filter((r) => r.temperature === t).map((r) => r.name),
+  }));
+  const withoutTemperature = recordings
+    .filter((recording) => recording.temperature == null)
+    .map((recording) => recording.name);
+  const species = shared(recordings.map((recording) => recording.subject.species.id));
+  const speciesId = value.species?.id_str ?? derived(species);
+  const strainsOfSpecies = recordings
+    .filter((recording) => recording.subject.species.id === speciesId)
+    .map((recording) => recording.subject.strain?.id ?? null);
+  const strain = shared(strainsOfSpecies.length > 0 ? strainsOfSpecies : [null]);
+
+  // regions of different hierarchies (one per species) have no common parent; the picker offers
+  // the regions of the model's species
+  const recordingsHierarchyId = derived(
+    shared(recordings.map((recording) => recording.brain_region.hierarchy_id))
+  );
+  const speciesHierarchyId = hierarchies?.data.find((item) => item.species.id === speciesId)?.id;
+  const hierarchyId = (!value.species && recordingsHierarchyId) || speciesHierarchyId;
+  const hierarchyQuery = (id: string | undefined, enabled: boolean) => ({
+    queryKey: keyBuilderHierarchy.hierarchy({ id: id ?? '' }),
+    queryFn: () => getBrainRegionHierarchy({ id }),
+    enabled: enabled && !!id,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+  const { data: regionTree } = useQuery(hierarchyQuery(hierarchyId, true));
+  const regionIds = recordings.map((recording) => recording.brain_region.id);
+  const regionKey = regionIds.join(',');
+  const regionsDiffer = new Set(regionIds).size > 1;
+  // obi-one takes the common parent in the recordings' own hierarchy, whatever the model's species
+  const { data: recordingsTree } = useQuery(hierarchyQuery(recordingsHierarchyId, regionsDiffer));
+  const commonParent = useMemo(() => {
+    if (!regionsDiffer || !recordingsTree) return undefined;
+    const id = commonParentRegion(recordingsTree, regionKey.split(','));
+    return flattenTreeAsObject(recordingsTree).find((region) => region.id === id);
+  }, [regionsDiffer, recordingsTree, regionKey]);
+  const commonRegion = regionsDiffer ? commonParent : recordings[0]?.brain_region;
+  const treeRegionOptions = useMemo(
+    () =>
+      regionTree
+        ? flattenTreeAsObject(regionTree).map((region) => ({
+            value: region.id,
+            label: region.name,
+          }))
+        : [],
+    [regionTree]
+  );
+  // the recordings' region outside the model species' hierarchy still shows by name
+  const regionValue = value.brain_region?.id_str ?? (loaded ? commonRegion?.id : undefined);
+  const regionOptions =
+    commonRegion &&
+    regionValue === commonRegion.id &&
+    !treeRegionOptions.some((option) => option.value === regionValue)
+      ? [{ value: commonRegion.id, label: commonRegion.name }, ...treeRegionOptions]
+      : treeRegionOptions;
+
+  const derivedName = derived(channel);
+  const nameValue = value.ion_channel_name ?? (derivedName ? neuronSafeName(derivedName) : '');
+  const nameInvalid = !!value.ion_channel_name && !NEURON_NAME.test(value.ion_channel_name);
+
+  const differ = {
+    ion_channel_name: differs(channel),
+    temperature: differs(temperature),
+    species: differs(species),
+    strain: differs(strain),
+    // still loading the hierarchy the common parent comes from
+    brain_region:
+      loaded && regionsDiffer && !commonParent && !(recordingsHierarchyId && !recordingsTree),
+  };
+  const missing = (Object.keys(differ) as Array<keyof typeof differ>).filter(
+    (key) => differ[key] && value[key] == null
+  );
+
+  return {
+    loaded,
+    failed,
+    differ,
+    missing,
+    derivedName,
+    nameValue,
+    nameInvalid,
+    sharedTemperature: derived(temperature),
+    temperatureOptions,
+    withoutTemperature,
+    firstHasTemperature: recordings[0]?.temperature != null,
+    regionsDiffer,
+    regionLoading: !!hierarchyId && !regionTree,
+    regionOptions,
+    regionValue,
+    speciesId,
+    sharedStrain: derived(strain),
+  };
+}
+
+const PROPERTY_LABEL: Record<keyof ReturnType<typeof useModelProperties>['differ'], string> = {
+  ion_channel_name: 'ion channel name',
+  temperature: 'temperature',
+  species: 'species',
+  strain: 'strain',
+  brain_region: 'brain region',
+};
+
+/** The temperature written for the user when the recordings differ, until they pick one. */
+const preselectedTemperatureAtomFamily = makeSessionAtomWithDefault<number | null>(null);
+
+function usePreselectedTemperature() {
+  return useAtom(preselectedTemperatureAtomFamily(useFieldErrorsSessionKey()));
+}
+
+function readProperties(config: Config, root: string, propertyKey: string) {
+  const block = isPlainObject(config[root]) ? config[root] : {};
+  const value = isPlainObject(block[propertyKey]) ? block[propertyKey] : {};
+  return { block, value: value as TIonChannelModelPropertiesValue };
+}
+
+/**
+ * Preselects the first recording's temperature when the recordings differ, and publishes what is
+ * still to be set, so the root element's tick and the Generate button agree with the form even
+ * while the block is closed.
+ */
+function ModelPropertiesCheck({
+  root,
+  propertyKey,
+  config,
+  setConfig,
+  locked,
+}: {
+  root: string;
+  propertyKey: string;
+  config: Config;
+  setConfig: (update: (previous: Config) => Config) => void;
+  locked: boolean;
+}) {
+  const path = `${root}.${propertyKey}`;
+  const { block, value } = readProperties(config, root, propertyKey);
+  const { loaded, failed, missing, differ, temperatureOptions } = useModelProperties(
+    value,
+    recordingIdsOf(block)
+  );
+  const [preselected, setPreselected] = usePreselectedTemperature();
+  const untouched = value.temperature == null || value.temperature === preselected;
+  const target = differ.temperature ? (temperatureOptions[0]?.value ?? null) : null;
+
+  useEffect(() => {
+    if (locked || !loaded || !untouched || value.temperature === target) return;
+    setPreselected(target);
+    setConfig((previous) => {
+      const { block: previousBlock, value: previousValue } = readProperties(
+        previous,
+        root,
+        propertyKey
+      );
+      return {
+        ...previous,
+        [root]: { ...previousBlock, [propertyKey]: { ...previousValue, temperature: target } },
+      } as Config;
+    });
+  }, [
+    locked,
+    loaded,
+    untouched,
+    value.temperature,
+    target,
+    root,
+    propertyKey,
+    setPreselected,
+    setConfig,
+  ]);
+
+  useFieldError(
+    path,
+    failed
+      ? "The recordings could not be loaded, so the model's properties cannot be checked"
+      : missing.length > 0
+        ? `The recordings differ - set the model's ${missing.map((item) => PROPERTY_LABEL[item]).join(', ')}`
+        : undefined
+  );
+  return null;
+}
+
+export function IonChannelModelPropertiesChecks({
+  schema,
+  config,
+  setConfig,
+  locked,
+}: {
+  schema: ConfigSchema;
+  config: Config;
+  setConfig: (update: (previous: Config) => Config) => void;
+  locked: boolean;
+}) {
+  return Object.entries(schema.properties).flatMap(([root, rootSchema]) =>
+    Object.entries((rootSchema as { properties?: Record<string, ParamSchema> }).properties ?? {})
+      .filter(([, param]) => param.ui_element === ScanConfigUIElementDict.IonChannelModelProperties)
+      .map(([key]) => (
+        <ModelPropertiesCheck
+          key={`${root}.${key}`}
+          root={root}
+          propertyKey={key}
+          config={config}
+          setConfig={setConfig}
+          locked={locked}
+        />
+      ))
+  );
+}
+
+const CUSTOM_TEMPERATURE = 'custom';
 
 export function IonChannelModelProperties({
   value,
@@ -120,23 +399,30 @@ export function IonChannelModelProperties({
   disabled,
   onChange,
 }: {
-  value: TIonChannelModelProperties;
+  value: TIonChannelModelPropertiesValue;
   recordingIds: string[];
   disabled: boolean;
-  onChange: (value: TIonChannelModelProperties) => void;
+  onChange: (value: TIonChannelModelPropertiesValue) => void;
 }) {
-  const context = useWorkspace();
-
-  const recordingQueries = useQueries({
-    queries: recordingIds.map((id) => ({
-      queryKey: ['ion-channel-model-properties', 'recording', id, context],
-      queryFn: () => getIonChannelRecording({ id, context }),
-    })),
-  });
-  const recordings = recordingQueries
-    .map((query) => query.data)
-    .filter((recording): recording is IIonChannelRecording => !!recording);
-  const loaded = recordings.length > 0 && recordings.length === recordingIds.length;
+  const {
+    differ,
+    derivedName,
+    nameValue,
+    nameInvalid,
+    sharedTemperature,
+    temperatureOptions,
+    withoutTemperature,
+    firstHasTemperature,
+    regionsDiffer,
+    regionLoading,
+    regionOptions,
+    regionValue,
+    speciesId,
+    sharedStrain,
+  } = useModelProperties(value, recordingIds);
+  const [preselectedTemperature, setPreselectedTemperature] = usePreselectedTemperature();
+  const [customTemperature, setCustomTemperature] = useState(false);
+  const [nameCleared, setNameCleared] = useState(false);
 
   const { data: speciesList } = useQuery({
     queryKey: ['ion-channel-model-properties', 'species'],
@@ -146,71 +432,6 @@ export function IonChannelModelProperties({
     queryKey: ['ion-channel-model-properties', 'strains'],
     queryFn: () => getStrains({ filters: { page_size: 100 } }),
   });
-
-  const { data: hierarchies } = useQuery({
-    queryKey: ['ion-channel-model-properties', 'hierarchies'],
-    queryFn: getBrainRegionHierarchiesWithSpecies,
-    staleTime: Infinity,
-  });
-
-  const set = (key: keyof TIonChannelModelProperties, next: unknown) =>
-    onChange({ ...value, [key]: next ?? null });
-
-  const derived = <T,>(resolved: TResolved<T>) =>
-    loaded && !resolved.differ ? resolved.value : undefined;
-  const differs = (resolved: TResolved<unknown>) => loaded && resolved.differ;
-
-  const channel = shared(recordings.map((recording) => recording.ion_channel.name));
-  const temperature = shared(recordings.map((recording) => recording.temperature ?? null));
-  const species = shared(recordings.map((recording) => recording.subject.species.id));
-  const speciesId = value.species?.id_str ?? derived(species);
-  const strainsOfSpecies = recordings
-    .filter((recording) => recording.subject.species.id === speciesId)
-    .map((recording) => recording.subject.strain?.id ?? null);
-  const strain: TResolved<string | null> =
-    strainsOfSpecies.length > 0 ? shared(strainsOfSpecies) : { differ: false, value: null };
-
-  // regions of different hierarchies (one per species) have no common parent; the picker offers
-  // the regions of the model's species
-  const recordingsHierarchyId = derived(
-    shared(recordings.map((recording) => recording.brain_region.hierarchy_id))
-  );
-  const speciesHierarchyId = hierarchies?.data.find((item) => item.species.id === speciesId)?.id;
-  const hierarchyId = value.species
-    ? speciesHierarchyId
-    : (recordingsHierarchyId ?? speciesHierarchyId);
-  const { data: regionTree } = useQuery({
-    queryKey: ['ion-channel-model-properties', 'hierarchy', hierarchyId],
-    queryFn: () => getBrainRegionHierarchy({ id: hierarchyId }),
-    enabled: !!hierarchyId,
-    staleTime: Infinity,
-  });
-  const treeRegionOptions = useMemo(
-    () => (regionTree ? flattenRegions(regionTree) : []),
-    [regionTree]
-  );
-  const regionIds = recordings.map((recording) => recording.brain_region.id);
-  const regionsDiffer = new Set(regionIds).size > 1;
-  const commonParent = (() => {
-    if (!loaded) return undefined;
-    if (!regionsDiffer) return regionIds[0];
-    if (!regionTree || !recordingsHierarchyId || hierarchyId !== recordingsHierarchyId) return;
-    return commonParentRegion(regionTree, regionIds) ?? undefined;
-  })();
-  // a recordings' region outside the model species' hierarchy still shows by name
-  const regionValue = value.brain_region?.id_str ?? commonParent;
-  const recordingRegion = recordings.find((recording) => recording.brain_region.id === regionValue);
-  const regionOptions =
-    recordingRegion && !treeRegionOptions.some((option) => option.value === regionValue)
-      ? [
-          { value: recordingRegion.brain_region.id, label: recordingRegion.brain_region.name },
-        ].concat(treeRegionOptions)
-      : treeRegionOptions;
-
-  const derivedName = derived(channel);
-  const nameValue = value.ion_channel_name ?? (derivedName ? neuronSafeName(derivedName) : '');
-  const nameInvalid = !!value.ion_channel_name && !NEURON_NAME.test(value.ion_channel_name);
-
   const speciesOptions = (speciesList?.data ?? []).map((item) => ({
     value: item.id,
     label: item.name,
@@ -218,6 +439,27 @@ export function IonChannelModelProperties({
   const strainOptions = (strainList?.data ?? [])
     .filter((item) => String(item.species_id) === speciesId)
     .map((item) => ({ value: item.id, label: item.name }));
+
+  const set = (key: keyof TIonChannelModelPropertiesValue, next: unknown) =>
+    onChange({ ...value, [key]: next ?? null });
+
+  const currentTemperature = value.temperature ?? sharedTemperature ?? null;
+  const showCustomTemperature =
+    customTemperature ||
+    (currentTemperature != null &&
+      !temperatureOptions.some((option) => option.value === currentTemperature));
+  const temperaturePreselected =
+    currentTemperature != null &&
+    (value.temperature == null || value.temperature === preselectedTemperature);
+  const temperatureList = [
+    ...temperatureOptions.map((option) => `${option.value} °C`),
+    ...(withoutTemperature.length > 0 ? [`none for ${withoutTemperature.join(', ')}`] : []),
+  ].join(', ');
+  const pickTemperature = (next: number | null) => {
+    setPreselectedTemperature(null);
+    // the recordings' shared value is the default, not an override
+    set('temperature', !differ.temperature && next === sharedTemperature ? null : next);
+  };
 
   return (
     <div
@@ -227,17 +469,22 @@ export function IonChannelModelProperties({
       <Row
         label="Ion channel name"
         overridden={!!value.ion_channel_name}
-        differ={differs(channel)}
+        differ={differ.ion_channel_name}
         derivedNote={derivedName ? `From the recordings' channel, ${derivedName}` : ''}
         disabled={disabled}
         onReset={() => set('ion_channel_name', null)}
       >
         <Input
           disabled={disabled}
-          value={nameValue}
+          // a cleared field stays empty while typing; the recordings' name comes back on blur
+          value={nameCleared ? '' : nameValue}
           status={nameInvalid ? 'error' : undefined}
           placeholder="The mod file SUFFIX, e.g. Kv6_2"
-          onChange={(e) => set('ion_channel_name', e.currentTarget.value || null)}
+          onChange={(e) => {
+            setNameCleared(e.currentTarget.value === '');
+            set('ion_channel_name', e.currentTarget.value || null);
+          }}
+          onBlur={() => setNameCleared(false)}
         />
         {nameInvalid && (
           <span className="text-xs text-red-600">
@@ -248,30 +495,72 @@ export function IonChannelModelProperties({
 
       <Row
         label="Temperature (°C)"
-        overridden={value.temperature != null}
-        differ={differs(temperature)}
+        overridden={!differ.temperature && value.temperature != null}
+        differ={differ.temperature && currentTemperature == null}
         derivedNote={
-          derived(temperature) === null ? 'The recordings have none' : 'From the recordings'
+          differ.temperature
+            ? `The recordings were measured at ${temperatureList}`
+            : sharedTemperature === null
+              ? 'The recordings have none'
+              : 'From the recordings'
         }
+        warning={(() => {
+          if (!differ.temperature) return undefined;
+          const warning =
+            "The selected recordings were measured at different temperatures - check the model's temperature.";
+          if (disabled || !temperaturePreselected) return warning;
+          return `${warning} ${
+            firstHasTemperature
+              ? `The first recording's ${currentTemperature} °C is preselected.`
+              : `${currentTemperature} °C, from the first recording that has one, is preselected.`
+          }`;
+        })()}
         disabled={disabled}
-        onReset={() => set('temperature', null)}
+        onReset={() => {
+          setCustomTemperature(false);
+          set('temperature', null);
+        }}
       >
-        <InputNumber
-          className="w-full"
-          controls={false}
+        <Select
           disabled={disabled}
-          value={value.temperature ?? derived(temperature) ?? null}
-          onChange={(next) => set('temperature', next)}
+          placeholder="None"
+          options={[
+            ...temperatureOptions.map((option) => ({
+              value: option.value,
+              label: differ.temperature
+                ? `${option.value} °C - ${option.names.join(', ')}`
+                : `${option.value} °C`,
+            })),
+            { value: CUSTOM_TEMPERATURE, label: 'Custom value' },
+          ]}
+          value={showCustomTemperature ? CUSTOM_TEMPERATURE : currentTemperature}
+          onChange={(next: number | typeof CUSTOM_TEMPERATURE) => {
+            setCustomTemperature(next === CUSTOM_TEMPERATURE);
+            if (next !== CUSTOM_TEMPERATURE) pickTemperature(next);
+          }}
         />
+        {showCustomTemperature && (
+          <InputNumber
+            className="w-full"
+            controls={false}
+            disabled={disabled}
+            placeholder="Temperature in °C"
+            value={currentTemperature}
+            // differing recordings need a temperature, so clearing the box keeps the last one
+            onChange={(next) => {
+              if (next != null || !differ.temperature) pickTemperature(next);
+            }}
+          />
+        )}
       </Row>
 
       <Row
         label="Species"
         overridden={!!value.species}
-        differ={differs(species)}
+        differ={differ.species}
         derivedNote="From the recordings"
         disabled={disabled}
-        onReset={() => onChange({ ...value, species: null, strain: null })}
+        onReset={() => onChange({ ...value, species: null, strain: null, brain_region: null })}
       >
         <Select
           disabled={disabled}
@@ -280,7 +569,12 @@ export function IonChannelModelProperties({
           options={speciesOptions}
           value={speciesId ?? null}
           onChange={(id: string) =>
-            onChange({ ...value, species: { type: 'SpeciesFromID', id_str: id }, strain: null })
+            onChange({
+              ...value,
+              species: { type: 'SpeciesFromID', id_str: id },
+              strain: null,
+              brain_region: null,
+            })
           }
         />
       </Row>
@@ -288,9 +582,9 @@ export function IonChannelModelProperties({
       <Row
         label="Strain"
         overridden={!!value.strain}
-        differ={differs(strain)}
+        differ={differ.strain}
         derivedNote={
-          derived(strain) === null ? 'None of the recordings has one' : 'From the recordings'
+          sharedStrain === null ? 'None of the recordings has one' : 'From the recordings'
         }
         disabled={disabled}
         onReset={() => set('strain', null)}
@@ -301,7 +595,7 @@ export function IonChannelModelProperties({
           optionFilterProp="label"
           options={strainOptions}
           placeholder="None"
-          value={value.strain?.id_str ?? derived(strain) ?? null}
+          value={value.strain?.id_str ?? sharedStrain ?? null}
           onChange={(id: string) => set('strain', { type: 'StrainFromID', id_str: id })}
         />
       </Row>
@@ -309,8 +603,7 @@ export function IonChannelModelProperties({
       <Row
         label="Brain region"
         overridden={!!value.brain_region}
-        // still loading the hierarchy the common parent comes from
-        differ={loaded && regionsDiffer && !commonParent && !(recordingsHierarchyId && !regionTree)}
+        differ={differ.brain_region}
         derivedNote={
           regionsDiffer ? "The common parent of the recordings' regions" : 'From the recordings'
         }
@@ -322,7 +615,7 @@ export function IonChannelModelProperties({
           showSearch
           optionFilterProp="label"
           options={regionOptions}
-          loading={!!hierarchyId && !regionTree}
+          loading={regionLoading}
           value={regionValue ?? null}
           onChange={(id: string) => set('brain_region', { type: 'BrainRegionFromID', id_str: id })}
         />

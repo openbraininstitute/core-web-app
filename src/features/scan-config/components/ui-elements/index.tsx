@@ -11,7 +11,8 @@ import { ETypeSelector } from '@/features/scan-config/components/ui-elements/ety
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
 import {
   IonChannelModelProperties,
-  type TIonChannelModelProperties,
+  recordingIdsOf,
+  type TIonChannelModelPropertiesValue,
 } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
@@ -207,14 +208,8 @@ export function UIElementRender({
       { paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelModelProperties } },
       () => (
         <IonChannelModelProperties
-          value={(isPlainObject(value) ? value : {}) as TIonChannelModelProperties}
-          // the sibling model_identifier_multiple holds the recordings the model is fitted to
-          recordingIds={(Array.isArray(state.recordings) ? state.recordings : []).flatMap(
-            (recording) =>
-              isPlainObject(recording) && typeof recording.id_str === 'string'
-                ? [recording.id_str]
-                : []
-          )}
+          value={(isPlainObject(value) ? value : {}) as TIonChannelModelPropertiesValue}
+          recordingIds={recordingIdsOf(state)}
           disabled={disabled}
           onChange={(next) => setState({ ...state, [k]: next as unknown as ConfigValue })}
         />
