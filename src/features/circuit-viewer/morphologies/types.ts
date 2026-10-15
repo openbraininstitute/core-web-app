@@ -1,5 +1,5 @@
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
-import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
+import type { ViewControls } from '@/features/viewer-3d/engine/scene-view';
 import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
 import type { TreeMorphology } from './load/tree';

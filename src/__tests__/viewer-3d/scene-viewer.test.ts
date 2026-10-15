@@ -7,14 +7,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { Viewer } from '@/features/entities/cell-morphology/morpho-viewer/engine/viewer';
 import { DepthNormalsPass } from '@/features/viewer-3d/engine/depth-normals-pass';
 import { MORPHOLOGY_SURFACE, PLAIN } from '@/features/viewer-3d/engine/looks';
-import {
-  type MovingFrame,
-  SceneViewer,
-  type SceneViewerOptions,
-} from '@/features/viewer-3d/engine/scene-viewer';
+import { SceneViewer, type SceneViewerOptions } from '@/features/viewer-3d/engine/scene-viewer';
 
 import type { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import type { MovingFrame } from '@/features/viewer-3d/engine/scene-view';
 
 const { FakeRenderer } = vi.hoisted(() => {
   /** Draws nothing; it keeps what it was made with, the target bound, and the target each compile was for. */

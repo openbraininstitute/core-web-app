@@ -19,7 +19,7 @@ import {
 } from './mesh-choice';
 import { DEFAULT_MOTION, type MotionOptions, MotionQuality } from './motion-quality';
 
-import type { MovingFrame } from '@/features/viewer-3d/engine/scene-viewer';
+import type { MovingFrame } from '@/features/viewer-3d/engine/scene-view';
 import type { Grid, PackedChunk, PackedMesh, StandIn } from './types';
 
 /**

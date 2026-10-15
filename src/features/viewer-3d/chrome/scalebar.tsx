@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useLatest } from '@/ui/hooks/use-latest';
 
-import type { ViewControls } from '../engine/scene-viewer';
+import type { ViewControls } from '../engine/scene-view';
 
 /** A label's units, each a thousandth of the one before. */
 const UNITS = ['m', 'mm', 'μm', 'nm', 'pm', 'fm'];

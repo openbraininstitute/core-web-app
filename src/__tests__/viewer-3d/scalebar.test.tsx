@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { majorTick, Scalebar } from '@/features/viewer-3d/chrome/scalebar';
 
-import type { ViewControls } from '@/features/viewer-3d/engine/scene-viewer';
+import type { ViewControls } from '@/features/viewer-3d/engine/scene-view';
 
 /** A 2D context that keeps the labels it is asked to write, and how high each is. */
 function fakeContext() {

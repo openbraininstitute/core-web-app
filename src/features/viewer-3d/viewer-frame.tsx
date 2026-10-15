@@ -6,7 +6,8 @@ import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 import { useSignal } from './use-signal';
 
 import type { ReactNode, RefObject } from 'react';
-import type { Projection, SceneViewer } from './engine/scene-viewer';
+import type { Projection } from './engine/scene-view';
+import type { SceneViewer } from './engine/scene-viewer';
 
 /** A viewer's element, which double-clicking takes fullscreen: the host of its canvas, and its chrome over it. */
 export function ViewerFrame({
