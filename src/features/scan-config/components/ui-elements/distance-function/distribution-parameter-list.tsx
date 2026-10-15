@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import {
-  defaultOptimizationValue,
   ParameterMode,
   type TBounds,
   type TOptimizationValue,
@@ -78,7 +77,7 @@ export function distributionParameterRows(
   const byName = new Map(stored.map((row) => [row.name, row.value]));
   return functionParameterNames(functionText).map((name) => ({
     name,
-    value: byName.get(name) ?? defaultOptimizationValue(),
+    value: byName.get(name) ?? { mode: ParameterMode.Fixed, value: null, bounds: null },
   }));
 }
 

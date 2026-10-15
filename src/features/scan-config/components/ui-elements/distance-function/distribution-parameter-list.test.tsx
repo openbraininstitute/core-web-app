@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
-import { defaultOptimizationValue } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   DistributionParameterList,
   distributionParameterRows,
@@ -53,7 +52,7 @@ describe('distributionParameterRows', () => {
     ];
     expect(distributionParameterRows('{value}*{a}+{b}', stored)).toEqual([
       { name: 'a', value: { mode: 'fixed', value: 2, bounds: null } },
-      { name: 'b', value: defaultOptimizationValue() },
+      { name: 'b', value: { mode: 'fixed', value: null, bounds: null } },
     ]);
   });
 
