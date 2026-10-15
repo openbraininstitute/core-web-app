@@ -294,38 +294,43 @@ export function SpaceSwitcher({ className }: Props) {
     }
   }, [pathname, collapsePanel]);
 
-  // Auto-collapse the panel when the user clicks outside of it. This mirrors
-  // the submenu behavior but only applies while the panel is open and no
-  // workspace manager modal is active — modals render in a portal outside the
-  // switcher and must never collapse the panel (see the modal decoupling note
-  // above). Clicks inside the portal'd modal are explicitly ignored.
-  const ignoreOutsideClick = useCallback(
-    (event: Event) => {
-      if (boardModalOpen) return true;
-      const target = event.target as HTMLElement | null;
-      return Boolean(target?.closest('#workspace-manager-modal'));
-    },
-    [boardModalOpen]
-  );
+  // Close the workspace manager modal (if open) and collapse the panel in a
+  // single action. Closing the modal is done through the same event the modal's
+  // own close button fires, so the panel's modal listener resets activeModal.
+  const closeAll = useCallback(() => {
+    if (boardModalOpen) {
+      makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
+    }
+    collapsePanel();
+  }, [boardModalOpen, collapsePanel]);
+
+  // Auto-collapse the panel when the user clicks outside of it. When a content
+  // modal is open, a single outside click closes both the modal and the panel.
+  // Clicks inside the modal *dialog* (#modal-dialog) are ignored so the user can
+  // interact with it, but clicks on the dimmed mask (#modal-overlay) count as
+  // "outside" and dismiss both surfaces at once.
+  const ignoreOutsideClick = useCallback((event: Event) => {
+    const target = event.target as HTMLElement | null;
+    return Boolean(target?.closest('#modal-dialog'));
+  }, []);
   useOnClickOutside(
     dropdownRef,
     () => {
-      if (isExpanded) collapsePanel();
+      if (isExpanded || boardModalOpen) closeAll();
     },
     undefined,
     ignoreOutsideClick
   );
 
-  // Auto-collapse the panel on Escape, matching the outside-click behavior.
-  // While a modal is open the modal owns Escape, so we leave the panel alone.
+  // Escape closes both the open content modal and the panel in one press.
   useEffect(() => {
-    if (!isExpanded || boardModalOpen) return;
+    if (!isExpanded && !boardModalOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') collapsePanel();
+      if (event.key === 'Escape') closeAll();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isExpanded, boardModalOpen, collapsePanel]);
+  }, [isExpanded, boardModalOpen, closeAll]);
 
   return (
     <div
