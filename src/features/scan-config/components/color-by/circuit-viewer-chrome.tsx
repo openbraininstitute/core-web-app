@@ -185,13 +185,15 @@ export function CircuitViewerChrome({
         </div>
       )}
       {/* What the scene is made of: which populations are in it, the table
-          listing the one on show, and how it is drawn. */}
+          listing the one on show, and how it is drawn. Only the rows take the
+          pointer: the column is as wide as its widest row, and the status
+          beside the re-centre button sits inside that box. */}
       <div
         ref={leftRef}
         data-testid="viewer-chrome-left"
-        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+        className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-2"
       >
-        <div className="flex items-center gap-2">
+        <div className="pointer-events-auto flex items-center gap-2">
           {modeToggle && <ModeToggle options={modeToggle} />}
           {table && (
             <ChromeButton
@@ -237,7 +239,7 @@ export function CircuitViewerChrome({
         </div>
         {viz && (
           <div
-            className={cn(!showVizChrome && 'invisible pointer-events-none')}
+            className={cn('pointer-events-auto', !showVizChrome && 'invisible pointer-events-none')}
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
