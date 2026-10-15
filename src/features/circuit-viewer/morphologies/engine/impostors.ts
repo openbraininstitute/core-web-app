@@ -43,6 +43,8 @@ export interface ImpostorUniforms {
 
 /** No cell has this number: the cell table has not that many texels. */
 export const NO_CELL = 0xffffffff;
+/** The section type of a segment that is not drawn: a place in a buffer that no box holds. */
+export const HOLE = 255;
 
 /** The somas view's ring round a spiking soma, in sRGB. */
 export const GLOW_RIM_COLOR = '#4d4233';
@@ -157,7 +159,7 @@ float sectionType() {
 
 // corner.x picks the end, corner.y the side.
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
-	if ( shown < 0.5 ) return false;
+	if ( shown < 0.5 || aType > ${HOLE - 0.5} ) return false;
 	vec4 A = mix( aA, aChartA, uMix );
 	vec4 B = mix( aB, aChartB, uMix );
 	vec3 a = ( viewMatrix * vec4( A.xyz + uShift, 1.0 ) ).xyz;

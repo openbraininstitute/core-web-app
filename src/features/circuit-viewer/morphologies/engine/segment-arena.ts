@@ -1,14 +1,22 @@
 import * as THREE from 'three';
 
+import { HOLE } from './impostors';
+
 import type { MorphologySegments } from '../types';
 
 /** The bytes a segment takes on the GPU: its two ends, its cell and its type. */
 export const SEGMENT_BYTES = 8 * 4 + 4 + 1;
 
+interface Place {
+  start: number;
+  count: number;
+}
+
 /**
  * The segments of the boxes drawn, as the segments' quads take them, in one geometry of a fixed number of segments
- * that is drawn whole: a box's segments go after the last, and where a box's are let go of, the last segments drawn
- * take their place. A box's segments may so come to lie in several runs. Only what changed is uploaded.
+ * drawn up to the last box. A box's segments lie together. A box let go of leaves a hole, its segments marked `HOLE`,
+ * which the shaders draw nothing of; the smallest hole a box fits in takes it, or else the end, and where neither has
+ * room every box is moved down to close the holes. Only what changed is uploaded.
  */
 export class SegmentArena {
   readonly geometry: THREE.InstancedBufferGeometry;
@@ -16,12 +24,12 @@ export class SegmentArena {
   private ends: THREE.InstancedInterleavedBuffer;
   private cells: THREE.InstancedBufferAttribute;
   private types: THREE.InstancedBufferAttribute;
-  /** Each segment's box. */
-  private owners: Int32Array;
-  /** Each box's runs, where each starts and how long it is, one after another. */
-  private runs = new Map<number, number[]>();
-  private sizes = new Map<number, number>();
-  private used = 0;
+  private places = new Map<number, Place>();
+  /** By where they start, none touching another or the end. */
+  private holes: Place[] = [];
+  /** Where the last box ends: what is drawn. */
+  private end = 0;
+  private live = 0;
 
   /** `geometry` is the segments' quad, which takes the arena's attributes. */
   constructor(geometry: THREE.InstancedBufferGeometry, capacity: number) {
@@ -30,7 +38,6 @@ export class SegmentArena {
     this.ends = new THREE.InstancedInterleavedBuffer(new Float32Array(8 * capacity), 8);
     this.cells = new THREE.InstancedBufferAttribute(new Uint32Array(capacity), 1);
     this.types = new THREE.InstancedBufferAttribute(new Uint8Array(capacity), 1);
-    this.owners = new Int32Array(capacity);
     // No dendrogram: the ends stand for it, and the morph moves nothing.
     geometry
       .setAttribute('aA', new THREE.InterleavedBufferAttribute(this.ends, 4, 0))
@@ -42,91 +49,124 @@ export class SegmentArena {
     geometry.instanceCount = 0;
   }
 
-  /** The segments drawn. */
+  /** The segments of the boxes drawn, holes left out. */
   get segments(): number {
-    return this.used;
+    return this.live;
   }
 
   get free(): number {
-    return this.capacity - this.used;
+    return this.capacity - this.live;
   }
 
   /** The segments of `box` drawn; undefined where it is not. */
   sizeOf(box: number): number | undefined {
-    return this.sizes.get(box);
+    return this.places.get(box)?.count;
   }
 
-  /** `box`'s segments drawn, after the last; it must not be drawn already, and they must fit. The segments uploaded. */
+  /**
+   * `box`'s segments drawn; it must not be drawn already, and they must fit. What was uploaded, in segments: theirs,
+   * and every box's where the holes had to be closed.
+   */
   put(box: number, { segments, segmentCells, segmentTypes }: MorphologySegments): number {
     const n = segmentCells.length;
-    if (this.sizes.has(box)) throw new Error(`box ${box} is drawn already`);
+    if (this.places.has(box)) throw new Error(`box ${box} is drawn already`);
     if (n > this.free) throw new RangeError(`${n} segments, where ${this.free} are free`);
-    const start = this.used;
+    let start = this.take(n);
+    let uploaded = n;
+    if (start === null) {
+      uploaded += this.compact();
+      start = this.end;
+      this.end += n;
+    }
     (this.ends.array as Float32Array).set(segments, 8 * start);
     this.cells.array.set(segmentCells, start);
     this.types.array.set(segmentTypes, start);
-    this.owners.fill(box, start, start + n);
-    this.runs.set(box, n > 0 ? [start, n] : []);
-    this.sizes.set(box, n);
-    this.used += n;
+    this.places.set(box, { start, count: n });
+    this.live += n;
     this.upload(start, n);
-    return n;
+    return uploaded;
   }
 
-  /** `box`'s segments no longer drawn, the last segments in their place. The segments uploaded. */
+  /** `box`'s segments no longer drawn, a hole in their place. What was uploaded, in segments: their types alone. */
   remove(box: number): number {
-    const runs = this.runs.get(box);
-    if (!runs) return 0;
-    this.runs.delete(box);
-    this.sizes.delete(box);
-    const starts: number[] = [];
-    for (let i = 0; i < runs.length; i += 2) starts.push(i);
-    // From the last run back: the segments after a run are then all of other boxes.
-    starts.sort((a, b) => runs[b] - runs[a]);
-    let moved = 0;
-    for (const i of starts) moved += this.fill(runs[i], runs[i + 1]);
-    this.geometry.instanceCount = this.used;
-    return moved;
+    const place = this.places.get(box);
+    if (!place) return 0;
+    this.places.delete(box);
+    this.live -= place.count;
+    if (place.count === 0) return 0;
+    this.types.array.fill(HOLE, place.start, place.start + place.count);
+    this.types.addUpdateRange(place.start, place.count);
+    this.types.needsUpdate = true;
+    this.leave(place);
+    this.geometry.instanceCount = this.end;
+    return Math.ceil(place.count / SEGMENT_BYTES);
   }
 
   dispose(): void {
     this.geometry.dispose();
   }
 
-  /** The `count` segments from `start` on, of a box let go of, given to the last ones. The segments moved. */
-  private fill(start: number, count: number): number {
-    const moved = Math.min(count, this.used - start - count);
-    if (moved > 0) this.move(this.used - moved, start, moved);
-    this.used -= count;
-    return moved;
+  /** Where `count` segments go with no box moved: the smallest hole they fit in, else the end; null where neither. */
+  private take(count: number): number | null {
+    let best = -1;
+    for (let i = 0; i < this.holes.length; i++) {
+      const { count: room } = this.holes[i];
+      if (room >= count && (best < 0 || room < this.holes[best].count)) best = i;
+    }
+    if (best >= 0 && count > 0) {
+      const hole = this.holes[best];
+      const start = hole.start;
+      hole.start += count;
+      hole.count -= count;
+      if (hole.count === 0) this.holes.splice(best, 1);
+      return start;
+    }
+    if (this.end + count > this.capacity) return null;
+    this.end += count;
+    return this.end - count;
   }
 
-  /** The last `count` segments drawn, from `from` on, moved to `to`, before them; their boxes' runs moved with them. */
-  private move(from: number, to: number, count: number): void {
-    for (let i = from; i < from + count; ) {
-      const runs = this.runs.get(this.owners[i]);
-      if (!runs) throw new Error(`segment ${i} of a box not drawn`);
-      let r = 0;
-      while (!(runs[r] <= i && i < runs[r] + runs[r + 1])) r += 2;
-      const [start, length] = [runs[r], runs[r + 1]];
-      // A run goes on to the last segment, as the segments moved do: only the first can begin before them.
-      if (start < from) {
-        runs[r + 1] = from - start;
-        runs.push(to, start + length - from);
-      } else {
-        runs[r] = start - from + to;
-      }
-      i = start + length;
+  /** `place` a hole, joined to the holes it touches, or the end brought back to it where it was the last. */
+  private leave({ start, count }: Place): void {
+    let at = this.holes.findIndex((hole) => hole.start > start);
+    if (at < 0) at = this.holes.length;
+    const hole = { start, count };
+    const before = this.holes[at - 1];
+    if (before && before.start + before.count === hole.start) {
+      hole.start = before.start;
+      hole.count += before.count;
+      this.holes.splice(--at, 1);
     }
-    (this.ends.array as Float32Array).copyWithin(8 * to, 8 * from, 8 * (from + count));
-    this.cells.array.copyWithin(to, from, from + count);
-    this.types.array.copyWithin(to, from, from + count);
-    this.owners.copyWithin(to, from, from + count);
-    this.upload(to, count);
+    const after = this.holes[at];
+    if (after && hole.start + hole.count === after.start) {
+      hole.count += after.count;
+      this.holes.splice(at, 1);
+    }
+    if (hole.start + hole.count === this.end) this.end = hole.start;
+    else this.holes.splice(at, 0, hole);
+  }
+
+  /** Every box moved down in the order they lie, the holes closed. The segments uploaded: all of them. */
+  private compact(): number {
+    const ends = this.ends.array as Float32Array;
+    let at = 0;
+    for (const place of [...this.places.values()].sort((a, b) => a.start - b.start)) {
+      if (place.start !== at) {
+        ends.copyWithin(8 * at, 8 * place.start, 8 * (place.start + place.count));
+        this.cells.array.copyWithin(at, place.start, place.start + place.count);
+        this.types.array.copyWithin(at, place.start, place.start + place.count);
+        place.start = at;
+      }
+      at += place.count;
+    }
+    this.holes = [];
+    this.end = at;
+    this.upload(0, at);
+    return at;
   }
 
   private upload(start: number, count: number): void {
-    this.geometry.instanceCount = this.used;
+    this.geometry.instanceCount = this.end;
     if (count === 0) return;
     this.ends.addUpdateRange(8 * start, 8 * count);
     this.ends.needsUpdate = true;

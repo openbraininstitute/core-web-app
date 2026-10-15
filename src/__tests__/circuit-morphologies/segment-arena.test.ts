@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 
+import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
@@ -30,32 +31,44 @@ function attributes(arena: SegmentArena) {
   return { ends, cells, types };
 }
 
-/** What is drawn is the segments of `drawn`, each whole and unchanged, and nothing else. */
+/** What is drawn is the segments of `drawn`, each whole and unchanged and together, holes aside, and nothing else. */
 function expectDrawn(arena: SegmentArena, drawn: Map<number, number>) {
   const { ends, cells, types } = attributes(arena);
-  const count = arena.segments;
-  expect(arena.geometry.instanceCount).toBe(count);
   const seen: number[] = [];
-  for (let i = 0; i < count; i++) {
+  let holes = 0;
+  for (let i = 0; i < arena.geometry.instanceCount; i++) {
+    if (types.array[i] === HOLE) {
+      holes++;
+      continue;
+    }
     const cell = cells.array[i];
     seen.push(cell);
     expect(types.array[i]).toBe(cell % 251);
     for (let k = 0; k < 8; k++) expect(ends.array[8 * i + k]).toBe(cell + k);
+    // The next segment of the same box comes next.
+    if (cell % 1000 > 0) expect(cells.array[i - 1]).toBe(cell - 1);
   }
   const want = [...drawn].flatMap(([box, n]) => Array.from(segmentsOf(box, n).segmentCells));
   expect(seen.sort((a, b) => a - b)).toEqual(want.sort((a, b) => a - b));
+  expect(arena.segments).toBe(want.length);
+  expect(holes).toBe(arena.geometry.instanceCount - want.length);
   for (const [box, n] of drawn) expect(arena.sizeOf(box)).toBe(n);
 }
 
-/** The segments that differ between two copies of the cells, each within a range marked for upload. */
-function expectUploaded(arena: SegmentArena, before: Uint32Array) {
-  const { cells } = attributes(arena);
-  const ranges = cells.updateRanges;
-  for (let i = 0; i < arena.segments; i++) {
-    if (cells.array[i] === before[i]) continue;
-    expect(ranges.some(({ start, count }) => start <= i && i < start + count)).toBe(true);
+/** The segments that differ between two copies of the types, each within a range marked for upload. */
+function expectUploaded(arena: SegmentArena, before: Uint8Array) {
+  const { types } = attributes(arena);
+  for (let i = 0; i < arena.geometry.instanceCount; i++) {
+    if (types.array[i] === before[i]) continue;
+    expect(types.updateRanges.some(({ start, count }) => start <= i && i < start + count)).toBe(
+      true
+    );
   }
 }
+
+const clearRanges = (arena: SegmentArena) => {
+  for (const attribute of Object.values(attributes(arena))) attribute.clearUpdateRanges();
+};
 
 describe('SegmentArena', () => {
   it('draws the boxes put in it one after another', () => {
@@ -69,44 +82,90 @@ describe('SegmentArena', () => {
         [2, 4],
       ])
     );
+    expect(arena.geometry.instanceCount).toBe(7);
     expect(arena.free).toBe(3);
   });
 
-  it('fills the place of a box let go of with the last segments, and uploads only those', () => {
+  it('leaves a hole where a box is let go of, uploading its types alone', () => {
     const arena = arenaOf(20);
     arena.put(1, segmentsOf(1, 5));
     arena.put(2, segmentsOf(2, 6));
-    arena.put(3, segmentsOf(3, 2));
-    const { cells } = attributes(arena);
-    cells.clearUpdateRanges();
-    const before = cells.array.slice() as Uint32Array;
-    expect(arena.remove(1)).toBe(5);
-    expectDrawn(
-      arena,
-      new Map([
-        [2, 6],
-        [3, 2],
-      ])
-    );
-    expectUploaded(arena, before);
-    expect(cells.updateRanges).toEqual([{ start: 0, count: 5 }]);
+    clearRanges(arena);
+    expect(arena.remove(1)).toBe(1);
+
+    const { ends, cells, types } = attributes(arena);
+    expect(Array.from(types.array.subarray(0, 5))).toEqual([HOLE, HOLE, HOLE, HOLE, HOLE]);
+    expect(types.updateRanges).toEqual([{ start: 0, count: 5 }]);
+    expect(cells.updateRanges).toEqual([]);
+    expect(ends.updateRanges).toEqual([]);
+    expect(arena.geometry.instanceCount).toBe(11);
+    expectDrawn(arena, new Map([[2, 6]]));
   });
 
-  it('moves nothing for the last box let go of', () => {
+  it('puts a box in the smallest hole it fits in, else after the last', () => {
+    const arena = arenaOf(40);
+    for (const [box, n] of [
+      [1, 6],
+      [2, 1],
+      [3, 3],
+      [4, 1],
+      [5, 4],
+    ]) {
+      arena.put(box, segmentsOf(box, n));
+    }
+    arena.remove(1);
+    arena.remove(3);
+    clearRanges(arena);
+    arena.put(6, segmentsOf(6, 2));
+
+    // Into the hole of 3 at 7, not the one of 6 at 0.
+    expect(attributes(arena).cells.updateRanges).toEqual([{ start: 7, count: 2 }]);
+    arena.put(7, segmentsOf(7, 7));
+    expect(attributes(arena).cells.updateRanges.at(-1)).toEqual({ start: 15, count: 7 });
+    expect(arena.geometry.instanceCount).toBe(22);
+  });
+
+  it('draws only up to the last box, and less once it goes, the holes before it with it', () => {
+    const arena = arenaOf(20);
+    arena.put(1, segmentsOf(1, 3));
+    arena.put(2, segmentsOf(2, 3));
+    arena.put(3, segmentsOf(3, 3));
+    arena.remove(2);
+    expect(arena.geometry.instanceCount).toBe(9);
+    arena.remove(3);
+    expect(arena.geometry.instanceCount).toBe(3);
+    arena.put(4, segmentsOf(4, 2));
+    expect(attributes(arena).cells.updateRanges.at(-1)).toEqual({ start: 3, count: 2 });
+  });
+
+  it('closes the holes where a box fits neither in one nor after the last, uploading every box', () => {
     const arena = arenaOf(10);
     arena.put(1, segmentsOf(1, 3));
     arena.put(2, segmentsOf(2, 3));
-    expect(arena.remove(2)).toBe(0);
-    expect(arena.remove(9)).toBe(0);
-    expectDrawn(arena, new Map([[1, 3]]));
+    arena.put(3, segmentsOf(3, 3));
+    arena.remove(1);
+    arena.remove(3);
+    expect(arena.geometry.instanceCount).toBe(6);
+
+    expect(arena.put(4, segmentsOf(4, 6))).toBe(6 + 3);
+    expect(arena.geometry.instanceCount).toBe(9);
+    expectDrawn(
+      arena,
+      new Map([
+        [2, 3],
+        [4, 6],
+      ])
+    );
   });
 
-  it('takes a box with no segments', () => {
+  it('moves nothing for a box not drawn, nor one with no segments', () => {
     const arena = arenaOf(4);
+    expect(arena.remove(9)).toBe(0);
     arena.put(1, segmentsOf(1, 0));
     expect(arena.sizeOf(1)).toBe(0);
     expect(arena.remove(1)).toBe(0);
     expect(arena.sizeOf(1)).toBeUndefined();
+    expect(arena.geometry.instanceCount).toBe(0);
   });
 
   it('refuses a box drawn already, or one that does not fit', () => {
@@ -116,7 +175,7 @@ describe('SegmentArena', () => {
     expect(() => arena.put(2, segmentsOf(2, 2))).toThrow(RangeError);
   });
 
-  it('stays whole and dense over a long run of boxes put and let go of', () => {
+  it('stays whole over a long run of boxes put and let go of', () => {
     const arena = arenaOf(5000);
     const drawn = new Map<number, number>();
     let seed = 7;
@@ -124,22 +183,21 @@ describe('SegmentArena', () => {
       seed = (seed * 16807) % 2147483647;
       return seed / 2147483647;
     };
-    for (let step = 0; step < 600; step++) {
+    for (let step = 0; step < 1500; step++) {
       const box = Math.floor(random() * 60);
-      const { cells } = attributes(arena);
-      cells.clearUpdateRanges();
-      const before = cells.array.slice() as Uint32Array;
+      const before = attributes(arena).types.array.slice() as Uint8Array;
+      clearRanges(arena);
       if (drawn.has(box)) {
-        const moved = arena.remove(box);
-        expect(moved).toBeLessThanOrEqual(drawn.get(box) ?? 0);
+        arena.remove(box);
         drawn.delete(box);
       } else {
-        const n = Math.floor(random() * 200);
+        const n = Math.floor(random() * 300);
         if (n > arena.free) continue;
         arena.put(box, segmentsOf(box, n));
         drawn.set(box, n);
       }
       expectUploaded(arena, before);
+      expect(arena.geometry.instanceCount).toBeLessThanOrEqual(arena.capacity);
       if (step % 50 === 0) expectDrawn(arena, drawn);
     }
     expectDrawn(arena, drawn);

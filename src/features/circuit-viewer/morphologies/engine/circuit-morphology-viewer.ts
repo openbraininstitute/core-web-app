@@ -116,13 +116,16 @@ function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material
   return mesh;
 }
 
-/** The most segments a pack's boxes can come to drawn at once: each at its largest level, within the budget. */
+/**
+ * The segments the arena of a pack's boxes holds: the most they can come to drawn at once, each at its largest level,
+ * within the budget, and a quarter more, so that its holes seldom have to be closed.
+ */
 function capacityOf({ levels, boxes }: MorphologyChunks): number {
   let most = 0;
   for (let box = 0; box < boxes.length / 6; box++) {
     most += Math.max(...levels.map((level) => level.segments[box]));
   }
-  return Math.min(most, SEGMENT_BUDGET);
+  return Math.ceil(1.25 * Math.min(most, SEGMENT_BUDGET));
 }
 
 /** The camera, the view's height and the rules the levels were last chosen for, and whether the view was still. */
