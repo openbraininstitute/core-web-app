@@ -150,7 +150,7 @@ export default function Block({
 
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span>
+                      <span className="block w-full">
                         <div
                           className={cn(
                             'w-full min-w-0 max-w-full border',
