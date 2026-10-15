@@ -18,7 +18,7 @@ import { logError } from '@/utils/logger';
 
 import { DetailReadout } from './detail-readout';
 import { type ElectrodeTracker, trackElectrodes } from './electrodes';
-import { CircuitMorphologyViewer } from './engine/circuit-morphology-viewer';
+import { type CreatedView, createCircuitView, type TierChoice } from './engine/create-view';
 import { loadCrowding } from './load/load-crowding';
 import { trackPointer } from './pointer';
 
@@ -139,7 +139,9 @@ export function CircuitCells({
   onLeftOut,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const [viewer, setViewer] = useState<CircuitMorphologyViewer | null>(null);
+  const [choice, setChoice] = useState<TierChoice>('auto');
+  const [created, setCreated] = useState<CreatedView | null>(null);
+  const viewer = created?.view ?? null;
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
   const debugMode = useCircuitViewerDebugMode();
@@ -147,13 +149,26 @@ export function CircuitCells({
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    const created = new CircuitMorphologyViewer(host);
-    setViewer(created);
-    return () => {
-      setViewer(null);
-      created.dispose();
+    let made: CreatedView | null = null;
+    let gone = false;
+    const take = (view: CreatedView) => {
+      if (gone) {
+        view.view.dispose();
+        return;
+      }
+      made = view;
+      setCreated(view);
     };
-  }, []);
+    const making = createCircuitView(host, choice);
+    if (making instanceof Promise) {
+      making.then(take, (e: unknown) => logError('Could not make the circuit view', e));
+    } else take(making);
+    return () => {
+      gone = true;
+      setCreated(null);
+      made?.view.dispose();
+    };
+  }, [choice]);
 
   // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
   // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
@@ -310,7 +325,13 @@ export function CircuitCells({
           {showScalebar && <Scalebar viewer={viewer} color={theme.foreground} />}
           <AxesGizmo viewer={viewer} ring={theme.foreground} />
           <WheelHint visible={wheelHint} theme={theme} />
-          {debugMode && <DetailReadout viewer={viewer} theme={theme} />}
+          {debugMode && created && (
+            <DetailReadout
+              viewer={viewer}
+              theme={theme}
+              renderer={{ ...created, choice, onChoice: setChoice }}
+            />
+          )}
         </div>
       )}
     </div>

@@ -425,6 +425,28 @@ describe('CircuitCells', () => {
     }
   });
 
+  it('says in the debug tools what draws the view, and makes it again with WebGL 2 when asked', async () => {
+    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
+    try {
+      const { viewer } = view();
+      const told = await waitFor(() => screen.getByTestId('renderer'));
+      expect(told.textContent).toBe('Drawn with WebGL 2: no WebGPU in this browser');
+
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'webgl' } });
+
+      expect(viewer.dispose).toHaveBeenCalledTimes(1);
+      const again = h.viewers.at(-1) as InstanceType<typeof h.FakeViewer>;
+      expect(again).not.toBe(viewer);
+      expect(again.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS);
+      expect(again.setData).toHaveBeenCalledExactlyOnceWith(DATA, false);
+      expect(screen.getByTestId('renderer').textContent).toBe(
+        'Drawn with WebGL 2: chosen in the debug tools'
+      );
+    } finally {
+      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
+    }
+  });
+
   it('nudges the view on the signal', async () => {
     const { viewer, signals } = view();
     await signals.nudgeMorphology.dispatch();

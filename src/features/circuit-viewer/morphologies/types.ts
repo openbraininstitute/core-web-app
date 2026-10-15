@@ -296,5 +296,7 @@ export interface CircuitMorphologyView extends ViewControls {
   setZoom(zoom: number): void;
   /** The view as it is on show, over its background, a pixel a device pixel; null where the browser has no 2D canvas. */
   snapshot(): HTMLCanvasElement | null;
+  /** Told when a wheel turned outside fullscreen without Ctrl, which scrolls the page instead of zooming. */
+  onWheelWithoutCtrl(listener: () => void): () => void;
   dispose(): void;
 }
