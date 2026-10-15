@@ -26,12 +26,14 @@ function onWebGL(host: HTMLElement, reason: string): CreatedView {
 /**
  * A view of a circuit in `host`, drawn with WebGPU where the browser grants a device fit for it, else with WebGL 2: at
  * once where WebGPU is out of the question, once the device is asked for where it is not. Should the device be lost,
- * `onLost` is told, and every view made after draws with WebGL 2.
+ * `onLost` is told, and every view made after draws with WebGL 2. Aborted (`signal`) while the device is asked for, no
+ * view is made, and the promise rejects with the signal's reason.
  */
 export function createCircuitView(
   host: HTMLElement,
   choice: TierChoice,
-  onLost: () => void
+  onLost: () => void,
+  signal?: AbortSignal
 ): CreatedView | Promise<CreatedView> {
   if (choice === 'webgl') return onWebGL(host, 'chosen in the debug tools');
   if (lost) return onWebGL(host, 'the graphics were reset');
@@ -41,18 +43,28 @@ export function createCircuitView(
   const engine = import('./webgpu/circuit-morphology-gpu');
   engine.catch(() => {});
   return probeWebGPU(gpu).then(async (probed) => {
+    if (signal?.aborted) {
+      if ('device' in probed) probed.device.destroy();
+      throw signal.reason;
+    }
     if ('reason' in probed) return onWebGL(host, probed.reason);
     const { device } = probed;
     try {
       const { CircuitMorphologyGPU } = await engine;
-      const view = await CircuitMorphologyGPU.create(host, device, () => {
-        lost = true;
-        onLost();
-      });
+      const view = await CircuitMorphologyGPU.create(
+        host,
+        device,
+        () => {
+          lost = true;
+          onLost();
+        },
+        signal
+      );
       return { view, tier: 'webgpu', reason: null };
     } catch (e) {
-      logError('Could not start the WebGPU circuit view', e);
       device.destroy();
+      if (signal?.aborted) throw signal.reason;
+      logError('Could not start the WebGPU circuit view', e);
       return onWebGL(host, 'WebGPU could not start');
     }
   });

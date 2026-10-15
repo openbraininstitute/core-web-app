@@ -8,6 +8,7 @@ import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by
 import { boxCorners } from '@/features/viewer-3d/engine/framing';
 import { backgroundCss, createLooks, PLAIN } from '@/features/viewer-3d/engine/looks';
 import { SceneView } from '@/features/viewer-3d/engine/scene-view';
+import { logError } from '@/utils/logger';
 
 import { extentOf, morphologiesExtent } from '../extent';
 import {
@@ -22,6 +23,7 @@ import { DETAIL_PIXELS, pixelSpan, SEGMENT_BUDGET } from './detail';
 import { DetailStream } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
 import {
+  CELL_MASK,
   cellNearMiddle,
   impostorUniforms,
   NO_CELL,
@@ -404,6 +406,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   protected override disposeContent(): void {
+    // A tier that failed before it made its materials drew nothing.
+    if (!this.materials) {
+      this.look.material.dispose();
+      return;
+    }
     this.clear();
     const { ids, spots, ...drawn } = this.materials;
     const materials = new Set([
@@ -454,10 +461,14 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.clearMorphologies();
     // The somas, which keep the cell table, the origin and the view; morphologies of other cells are not drawn over them.
     const under = this.cloud;
-    const data = given && (!under || this.table?.cells === given.somas.length / 4) ? given : null;
+    const count = given ? given.somas.length / 4 : 0;
+    // A segment's word has room for its cell in the bits below its type.
+    const named = count <= CELL_MASK + 1;
+    if (!named) logError(`${count} cells, too many for their morphologies to be drawn`);
+    const data = given && named && (!under || this.table?.cells === count) ? given : null;
     if (data && !under) {
       this.clear();
-      this.makeTable(data.somas.length / 4);
+      this.makeTable(count);
     }
     this.showCloud(data === null);
     if (!data) {

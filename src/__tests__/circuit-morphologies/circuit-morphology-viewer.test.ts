@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
-import { NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { CELL_MASK, NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
@@ -738,6 +738,18 @@ describe('the circuit morphology viewer', () => {
     });
     expect(segmentsOf(inner).visible).toBe(false);
     expect(somasOf(inner).visible).toBe(false);
+  });
+
+  it("draws no morphologies of more cells than a segment's word has room for, saying so", () => {
+    const { viewer, inner } = make();
+    const said = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Only the count is read of the somas, before anything is drawn.
+    const somas = { length: 4 * (CELL_MASK + 2) } as unknown as Float32Array;
+    viewer.setData({ ...circuit(), somas });
+    expect(said).toHaveBeenCalledTimes(1);
+    said.mockRestore();
+    expect(inner.chunks.children).toHaveLength(0);
+    expect(inner.uniforms.uCells.value).toBeNull();
   });
 
   it('frees the geometries and the cell table of the data it had, for other data and for none', () => {

@@ -24,14 +24,22 @@ export class CircuitMorphologyGPU extends CircuitView {
   private gpu: GpuUniforms;
   private idTarget: THREE.RenderTarget | null = null;
 
-  /** A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. */
+  /**
+   * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
+   * (`signal`) before the renderer is ready, none is made.
+   */
   static async create(
     host: HTMLElement,
     device: GPUDevice,
-    onLost: () => void
+    onLost: () => void,
+    signal?: AbortSignal
   ): Promise<CircuitMorphologyGPU> {
     const renderer = new THREE.WebGPURenderer({ device, antialias: true, alpha: true });
     await renderer.init();
+    if (signal?.aborted) {
+      renderer.dispose();
+      throw signal.reason;
+    }
     return new CircuitMorphologyGPU(host, renderer, device, onLost);
   }
 
@@ -51,25 +59,31 @@ export class CircuitMorphologyGPU extends CircuitView {
     device.lost.then((info) => {
       if (info.reason !== 'destroyed' && !this.disposed) onLost();
     });
-    this.gpu = new GpuUniforms({
-      impostors: this.uniforms,
-      cloud: this.cloudUniforms,
-      segments: this.spotUniforms,
-      electrodes: this.electrodeUniforms,
-      synapses: this.synapseUniforms,
-      markers: this.markerUniforms,
-    });
-    const cloud = somaCloudMaterials(this.gpu);
-    const impostors = impostorMaterials(this.gpu, this.look);
-    this.materials = {
-      segment: impostors.segment,
-      soma: impostors.soma,
-      cloud: cloud.cloud,
-      ids: { ...impostors.ids, cloud: cloud.id },
-      spots: impostors.spots,
-      ...dotMaterials(this.gpu, this.pixelRatio),
-    };
-    this.start();
+    try {
+      this.gpu = new GpuUniforms({
+        impostors: this.uniforms,
+        cloud: this.cloudUniforms,
+        segments: this.spotUniforms,
+        electrodes: this.electrodeUniforms,
+        synapses: this.synapseUniforms,
+        markers: this.markerUniforms,
+      });
+      const cloud = somaCloudMaterials(this.gpu);
+      const impostors = impostorMaterials(this.gpu, this.look);
+      this.materials = {
+        segment: impostors.segment,
+        soma: impostors.soma,
+        cloud: cloud.cloud,
+        ids: { ...impostors.ids, cloud: cloud.id },
+        spots: impostors.spots,
+        ...dotMaterials(this.gpu, this.pixelRatio),
+      };
+      this.start();
+    } catch (e) {
+      // Nothing of it stays in the host, where WebGL 2 takes its place.
+      this.dispose();
+      throw e;
+    }
   }
 
   protected override disposeStage(): void {
@@ -85,9 +99,9 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override animate(loop: (() => void) | null): void {
     const turns = threeLoop(this.renderer);
     void this.renderer.setAnimationLoop(null);
-    turns.stop();
+    turns?.stop();
     if (!loop) return;
-    turns.start();
+    turns?.start();
     void this.renderer.setAnimationLoop(loop);
   }
 
@@ -127,8 +141,17 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 }
 
-function threeLoop(renderer: THREE.WebGPURenderer): { start(): void; stop(): void } {
-  return (renderer as unknown as { _animation: { start(): void; stop(): void } })._animation;
+interface Turns {
+  start(): void;
+  stop(): void;
+}
+
+/** three's own loop, a private part of the renderer: null where a release of three changed it, which leaves it turning. */
+function threeLoop(renderer: THREE.WebGPURenderer): Turns | null {
+  const turns = (renderer as unknown as { _animation?: Partial<Turns> | null })._animation;
+  return typeof turns?.start === 'function' && typeof turns.stop === 'function'
+    ? (turns as Turns)
+    : null;
 }
 
 /** A square of RGBA bytes `side` wide, from WebGPU's copy with each row padded to `ROW_ALIGNMENT` bytes. */

@@ -151,23 +151,31 @@ export function CircuitCells({
     const host = hostRef.current;
     if (!host) return;
     let made: CreatedView | null = null;
-    let gone = false;
+    // Let go of while the device is asked for, no view is made in the host, which the next one has.
+    const gone = new AbortController();
     const take = (view: CreatedView) => {
-      if (gone) {
+      if (gone.signal.aborted) {
         view.view.dispose();
         return;
       }
       made = view;
       setCreated(view);
     };
-    const view = createCircuitView(host, making.choice, () => {
-      if (!gone) setMaking((was) => ({ ...was }));
-    });
+    const view = createCircuitView(
+      host,
+      making.choice,
+      () => {
+        if (!gone.signal.aborted) setMaking((was) => ({ ...was }));
+      },
+      gone.signal
+    );
     if (view instanceof Promise) {
-      view.then(take, (e: unknown) => logError('Could not make the circuit view', e));
+      view.then(take, (e: unknown) => {
+        if (!gone.signal.aborted) logError('Could not make the circuit view', e);
+      });
     } else take(view);
     return () => {
-      gone = true;
+      gone.abort();
       setCreated(null);
       made?.view.dispose();
     };

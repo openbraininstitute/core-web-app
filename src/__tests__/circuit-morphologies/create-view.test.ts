@@ -160,6 +160,23 @@ describe('createCircuitView', () => {
     expect(h.logError).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ['a device it is granted', () => adapterOf(), 1],
+    ['a device on a software adapter', () => adapterOf({ fallback: true }), 0],
+  ])('makes no view where it is let go of while asking for %s', async (_case, given, destroyed) => {
+    const { adapter, device } = given();
+    withGPU(async () => adapter);
+    const gone = new AbortController();
+
+    const made = createCircuitView(host(), 'auto', unheard, gone.signal);
+    gone.abort();
+
+    await expect(made).rejects.toBe(gone.signal.reason);
+    expect(h.gpu.made).toHaveLength(0);
+    expect(device.destroy).toHaveBeenCalledTimes(destroyed);
+    expect(h.logError).not.toHaveBeenCalled();
+  });
+
   // Last: the page draws with WebGL 2 from then on.
   it('tells of a lost device, and draws every view after it with WebGL 2', async () => {
     const { adapter } = adapterOf();
