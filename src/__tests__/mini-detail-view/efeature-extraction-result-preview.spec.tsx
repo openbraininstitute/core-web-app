@@ -2,8 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
-import { resolveEFeatureExtractionCampaignId } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EFeatureExtractionResultPreview } from '@/ui/segments/mini-detail-view/previews/efeature-extraction-result-preview';
 
 import type { ITaskResult } from '@/api/entitycore/types/entities/task-result';
@@ -12,11 +12,15 @@ vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl-1', projectId: 'proj-1' }),
 }));
 
-vi.mock('@/entity-configuration/domain/simulation/efeature-extraction-result', () => ({
-  resolveEFeatureExtractionCampaignId: vi.fn(),
+vi.mock('@/api/entitycore/queries/assets', () => ({
+  downloadAsset: vi.fn(),
 }));
 
-const record = { id: 'result-1', name: 'Result' } as unknown as ITaskResult;
+const record = {
+  id: 'result-1',
+  name: 'Result',
+  assets: [{ id: 'asset-1', label: AssetLabel.efeature_extraction_features }],
+} as unknown as ITaskResult;
 
 function renderPreview() {
   return render(
@@ -29,48 +33,52 @@ function renderPreview() {
 describe('EFeatureExtractionResultPreview', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('lists the protocols, amplitudes and features the extraction selected', async () => {
-    vi.mocked(resolveEFeatureExtractionCampaignId).mockResolvedValue('campaign-1');
-    vi.spyOn(EFeatureExtractionCampaign.api.query, 'resolve').mockResolvedValue({
-      config: {
-        form: {
-          // nested the way a scan-config block holds it
-          initialize: {
-            efeatures: {
-              type: 'SelectEFeaturesByProtocol',
-              protocols: [
-                {
-                  type: 'IDRestProtocol',
-                  extraction_amplitudes: [
-                    [0.2, false],
-                    [0.3, true],
-                  ],
-                  features: [{ type: 'VoltageBaseFeature' }],
-                },
-              ],
-              extra_features_by_protocol: { IDRestProtocol: [{ type: 'ISICVFeature' }] },
-            },
+  it('lists the protocols and features from the result asset', async () => {
+    vi.mocked(downloadAsset).mockResolvedValue({
+      json: async () => ({
+        efeatures: [
+          {
+            efel_feature_name: 'voltage_base',
+            protocol_name: 'Step_140',
+            recording_name: 'soma.v',
+            mean: -85.6522,
+            original_std: 1.8532,
           },
-        },
-      },
+          {
+            efel_feature_name: 'ohmic_input_resistance_vb_ssse',
+            protocol_name: 'RinProtocol',
+            recording_name: 'soma.v',
+            mean: 110.4961,
+            original_std: 60.9419,
+          },
+        ],
+        protocols: [
+          { name: 'Step_140', validation: false, stimuli: [{ thresh_perc: 140.6698 }] },
+          { name: 'RinProtocol', validation: true, stimuli: [{ amp: -0.02 }] },
+        ],
+      }),
     } as never);
 
     renderPreview();
 
-    expect(await screen.findByText('IDRest')).toBeInTheDocument();
-    expect(screen.getByText('Voltage base')).toBeInTheDocument();
-    expect(screen.getByText('ISICV')).toBeInTheDocument();
-    expect(screen.getByText('0.2')).toBeInTheDocument();
+    expect(await screen.findByText('Step_140')).toBeInTheDocument();
+    expect(screen.getByText('voltage_base')).toBeInTheDocument();
+    expect(screen.getByText('ohmic_input_resistance_vb_ssse')).toBeInTheDocument();
+    // the target value and its spread are rendered
+    expect(screen.getByText('-85.65')).toBeInTheDocument();
+    expect(screen.getByText('1.853')).toBeInTheDocument();
+    expect(screen.getByText('110.5')).toBeInTheDocument();
     expect(screen.getByText(/validation/)).toBeInTheDocument();
   });
 
-  it('says so when the result cannot be traced to a campaign', async () => {
-    vi.mocked(resolveEFeatureExtractionCampaignId).mockResolvedValue(null);
+  it('says so when the result has no extracted-features asset', async () => {
+    const bare = { id: 'result-2', name: 'Result', assets: [] } as unknown as ITaskResult;
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <EFeatureExtractionResultPreview record={bare} />
+      </QueryClientProvider>
+    );
 
-    renderPreview();
-
-    expect(
-      await screen.findByText('No e-feature selection found for this result.')
-    ).toBeInTheDocument();
+    expect(await screen.findByText('No e-features found for this result.')).toBeInTheDocument();
   });
 });
