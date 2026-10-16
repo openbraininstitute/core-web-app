@@ -5,7 +5,7 @@ import { logError } from '@/utils/logger';
 
 import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
 import { pixelSpan } from '../detail';
-import { arenaOnGpu, arenaStorage } from './arena-gpu';
+import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import { arenaMaterials, impostorMaterials } from './impostors-gpu';
@@ -33,6 +33,12 @@ export class CircuitMorphologyGPU extends CircuitView {
   private occlusion: Occlusion | null = null;
   /** False where the occlusion could not be made, which is not tried again. */
   private occluding = true;
+  /** Made at the first pack and kept, its programs with it: each pack's arena only binds its buffers to `storage`. */
+  private arena: {
+    storage: ArenaStorage;
+    segment: THREE.Material[];
+    ids: THREE.Material[];
+  } | null = null;
 
   /**
    * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
@@ -102,6 +108,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override disposeStage(): void {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
+    const { segment = [], ids = [] } = this.arena ?? {};
+    for (const material of [...segment, ...ids]) material.dispose();
     this.renderer.dispose();
     this.device.destroy();
   }
@@ -148,18 +156,18 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.dropOcclusion();
   }
 
-  /** In buffers of the page's, which the segments' materials of this arena read as storage. */
+  /** In buffers of the page's, which the segments' materials read as storage. */
   protected override arenaDrawing(): ArenaDrawing {
-    const storage = arenaStorage();
-    const { segment, ids } = arenaMaterials(this.gpu, this.look, storage);
+    if (!this.arena) {
+      const storage = arenaStorage();
+      this.arena = { storage, ...arenaMaterials(this.gpu, this.look, storage) };
+    }
+    const { storage, segment, ids } = this.arena;
     return {
       uploadsOf: (_geometry, ends, words) =>
         arenaOnGpu(this.renderer, this.device, storage, ends, words),
       segment,
       ids,
-      dispose() {
-        for (const material of [...segment, ...ids]) material.dispose();
-      },
     };
   }
 

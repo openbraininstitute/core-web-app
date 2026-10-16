@@ -6,6 +6,11 @@ const MOST_BUFFER = 2 * 2 ** 30;
 /** A WebGPU device the circuit engine can draw on, or why there is none. */
 export type Probed = { device: GPUDevice } | { reason: string };
 
+/** The engine unfit for the device it was given, its message why: drawn with WebGL 2. */
+export class Unfit extends Error {
+  override name = 'Unfit';
+}
+
 /**
  * A device on the high-performance adapter, with every feature it has and its buffers up to `MOST_BUFFER`; none on a
  * software adapter, or one whose buffers hold under `LEAST_BUFFER`.

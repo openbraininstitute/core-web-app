@@ -4,15 +4,9 @@
  * one, and three's own loop. `checkHooks` is called once the renderer is ready; where a release of three changed one the
  * engine cannot do without, the view is drawn with WebGL 2.
  */
-import type * as THREE from 'three/webgpu';
+import { Unfit } from '../probe';
 
-/** A part of three the WebGPU tier cannot do without, missing from the release in use. */
-export class MissingHook extends Error {
-  constructor(readonly hook: string) {
-    super(`three's ${hook} is missing`);
-    this.name = 'MissingHook';
-  }
-}
+import type * as THREE from 'three/webgpu';
 
 interface Backend {
   get(object: object): { buffer?: GPUBuffer };
@@ -22,9 +16,11 @@ function backendOf(renderer: THREE.WebGPURenderer): Partial<Backend> | undefined
   return (renderer as unknown as { backend?: Partial<Backend> }).backend;
 }
 
-/** Throws `MissingHook` where `renderer` lacks a part the tier takes. */
+/** Throws `Unfit` where `renderer` lacks a part the tier takes. */
 export function checkHooks(renderer: THREE.WebGPURenderer): void {
-  if (typeof backendOf(renderer)?.get !== 'function') throw new MissingHook('backend.get');
+  if (typeof backendOf(renderer)?.get !== 'function') {
+    throw new Unfit("three's backend.get is missing");
+  }
 }
 
 /** `attribute` bound as `buffer`, of the page's: three makes no buffer of its own for an attribute that has one. */

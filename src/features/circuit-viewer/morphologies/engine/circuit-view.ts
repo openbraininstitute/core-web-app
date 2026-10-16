@@ -121,24 +121,21 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 }
 
 /**
- * How a tier draws a pack's segments, read a box at a time: where the arena's arrays go (three's attributes on its quads
- * where `uploadsOf` is not given), and the materials of the segments in the look and in their cells' numbers.
+ * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
+ * go, and the materials of the segments in the look and in their cells' numbers.
  */
 export interface ArenaDrawing {
-  uploadsOf?: UploadsOf;
+  uploadsOf: UploadsOf;
   segment: THREE.Material[];
   ids: THREE.Material[];
-  /** What was made for this arena alone let go of. */
-  dispose(): void;
 }
 
 /**
- * Morphologies read a box at a time: what reads and places them, how they are drawn, and the camera, the view's height
- * and the rules their levels were last chosen for, and whether the view was still.
+ * Morphologies read a box at a time: what reads and places them, and the camera, the view's height and the rules their
+ * levels were last chosen for, and whether the view was still.
  */
 interface Detailed {
   stream: DetailStream;
-  drawing: ArenaDrawing;
   chosenFor: {
     projection: THREE.Matrix4;
     view: THREE.Matrix4;
@@ -400,9 +397,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
   protected abstract compile(scene: THREE.Scene): void;
 
-  /** How a pack's arena is drawn: on three's attributes, by the materials of morphologies read whole. */
-  protected arenaDrawing(): ArenaDrawing {
-    return { segment: this.materials.segment, ids: this.materials.ids.segment, dispose() {} };
+  /** How a pack's arena is drawn; null on three's attributes, by the materials of morphologies read whole. */
+  protected arenaDrawing(): ArenaDrawing | null {
+    return null;
   }
 
   /**
@@ -535,7 +532,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
-    const detailed = stream && drawing ? { stream, drawing, chosenFor: null } : null;
+    const detailed = stream ? { stream, chosenFor: null } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
     this.compileIds();
 
@@ -1249,7 +1246,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       mesh.removeFromParent();
     }
     this.layer?.detailed?.stream.stop();
-    this.layer?.detailed?.drawing.dispose();
     this.layer = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     // They sit on the morphologies.

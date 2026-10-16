@@ -374,10 +374,11 @@ function fromArena({ ends, words }: ArenaStorage): SegmentInputs {
  * What every material of a kind shares: the cell, its texel and its glow where `glowing`, where its quad's corner is,
  * what the fragments take of it, and whether a pixel is on the tube or the sphere, with its normal, how far it is from
  * the edge, and its depth: as the depth buffer takes it, which a segment drawn flat does not write, and in view space.
- * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen. A segment is read from `inputs`.
+ * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen. Its word, and a segment, are read
+ * from `inputs`.
  */
 function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: SegmentInputs) {
-  const word = kind === 'soma' ? attribute('aCell', 'uint') : inputs.word;
+  const { word } = inputs;
   const cell = word.bitAnd(uint(CELL_MASK));
   const xy = cellXY({ cell });
   const texel = u.cells.load(xy);

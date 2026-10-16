@@ -21,7 +21,7 @@ export type UploadsOf = (
 ) => ArenaUploads;
 
 /** three's attributes on the quads, which three uploads where they changed. */
-export const attributesOf: UploadsOf = (geometry, ends, words) => {
+const attributesOf: UploadsOf = (geometry, ends, words) => {
   const endsBuffer = new THREE.InstancedInterleavedBuffer(ends, 8);
   const cellTypes = new THREE.InstancedBufferAttribute(words, 1);
   // No dendrogram: the ends stand for it, and the morph moves nothing.
