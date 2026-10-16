@@ -1,7 +1,7 @@
 /**
  * What the pack worker exposes over Comlink: a circuit's pack opened, from the cache a visit before left it in, or from
  * OBI-One, which builds it and whose pack goes into the cache once it has been opened; then its boxes read as the view
- * asks for them, with the cells numbered as the page numbers them.
+ * asks for them, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
  */
 import * as Comlink from 'comlink';
 
@@ -15,6 +15,7 @@ import {
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
 import { downloadPack, type OnProgress, type PackRequest, type Refused } from './download';
+import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
 
 import type {
@@ -83,7 +84,9 @@ export function createPackApi(cache: CacheBounds) {
       if (!opened) throw new Error('no morphology pack is open');
       const { readBox, numbers } = opened;
       const read = await Promise.all(
-        wanted.map(async ({ level, box }) => renumberSegments(await readBox(level, box), numbers))
+        wanted.map(async ({ level, box }) =>
+          mortonOrder(renumberSegments(await readBox(level, box), numbers))
+        )
       );
       return Comlink.transfer(read, read.flatMap(buffersOf) as ArrayBuffer[]);
     },

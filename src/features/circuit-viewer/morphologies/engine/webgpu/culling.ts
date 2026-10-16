@@ -211,11 +211,7 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
-    const read = this.readNow();
-    this.unread = read === null;
-    if (read) this.copyCounts(encoder, read);
-    device.queue.submit([encoder.finish()]);
-    if (read) this.mapCounts(read);
+    this.submit(encoder);
     return true;
   }
 
@@ -384,23 +380,19 @@ export class Culling {
     return read ?? null;
   }
 
-  private copyCounts(encoder: GPUCommandEncoder, read: GPUBuffer): void {
-    encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
-    encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
-  }
-
-  /** The counts the last tests left, read back once a buffer is free, where none was when they ran. */
-  private readCounts(): void {
+  /**
+   * `encoder` submitted with the counts the tests left copied out at its end and read back; where no buffer is free, the
+   * last tested once one is.
+   */
+  private submit(encoder: GPUCommandEncoder): void {
     const read = this.readNow();
     this.unread = read === null;
-    if (!read) return;
-    const encoder = this.device.createCommandEncoder({ label: 'cull counts' });
-    this.copyCounts(encoder, read);
+    if (read) {
+      encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
+      encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
+    }
     this.device.queue.submit([encoder.finish()]);
-    this.mapCounts(read);
-  }
-
-  private mapCounts(read: GPUBuffer): void {
+    if (!read) return;
     const { generation } = this;
     read.mapAsync(READ).then(
       () => {
@@ -416,7 +408,7 @@ export class Culling {
         read.unmap();
         this.free.push(read);
         if (generation === this.generation) this.counted(counts);
-        if (this.unread) this.readCounts();
+        if (this.unread) this.submit(this.device.createCommandEncoder({ label: 'cull counts' }));
       },
       // Destroyed with the view.
       () => undefined

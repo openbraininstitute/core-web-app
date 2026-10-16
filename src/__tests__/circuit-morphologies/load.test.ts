@@ -11,6 +11,7 @@ import {
   type LoadOptions,
   loadCircuitMorphologies,
 } from '@/features/circuit-viewer/morphologies/load/load';
+import { mortonOrder } from '@/features/circuit-viewer/morphologies/load/morton';
 import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 import {
   createPackApi,
@@ -18,7 +19,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
-import { joined, pack, readPack } from './packs';
+import { joined, pack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
 import type {
@@ -132,6 +133,16 @@ async function opened(bytes: Uint8Array, populations: Population[] = POPULATIONS
   return { ...page, chunks: { boxes, levels, read: expect.any(Function) } };
 }
 
+/** Every box of a level of `bytes` as the worker reads it: the cells numbered the page's way, each box in Morton order. */
+async function asRead(bytes: Uint8Array, level = 0, populations = POPULATIONS) {
+  const own = await openPack(bytes);
+  const numbers = pageCells(own.data.populations, populations);
+  const boxes = Array.from(own.levels[level].segments, (_, box) =>
+    own.readBox(level, box).then((read) => mortonOrder(renumberSegments(read, numbers)))
+  );
+  return joined(await Promise.all(boxes));
+}
+
 /** Every box of a level, read through the load's data. */
 async function readLevel(data: CircuitMorphologyData, level = 0): Promise<MorphologySegments> {
   const chunks = data.chunks;
@@ -179,8 +190,7 @@ describe('loadCircuitMorphologies', () => {
     const { data } = await loaded();
 
     for (const level of [0, 1, 2]) {
-      const { segments, segmentCells, segmentTypes } = await readPack(small(), level);
-      expect(await readLevel(data, level)).toEqual({ segments, segmentCells, segmentTypes });
+      expect(await readLevel(data, level)).toEqual(await asRead(small(), level));
     }
     expect(workers[0].handedOver.slice(1).every((buffer) => buffer.byteLength === 0)).toBe(true);
   });
@@ -322,11 +332,10 @@ describe('loadCircuitMorphologies', () => {
   ])('numbers the cells as the page does, %s', async (_, page) => {
     serve(small());
     const { data } = await loaded({ populations: page });
-    const whole = await readPack(small());
 
     expect(data).toEqual(await opened(small(), page));
     const read = await readLevel(data);
-    expect(read).toEqual(renumberSegments(whole, pageCells(whole.populations, page)));
+    expect(read).toEqual(await asRead(small(), 0, page));
     expect(read.segmentCells.length).toBeGreaterThan(0);
   });
 

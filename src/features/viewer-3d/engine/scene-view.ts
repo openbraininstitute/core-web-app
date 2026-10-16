@@ -206,7 +206,7 @@ export abstract class SceneView implements ViewControls {
     }
     // Before the hooks, which may ask for another frame.
     this.dirty = false;
-    this.updateCameraTied();
+    this.readyCamera();
     this.beforeDraw(moving);
     this.draw(moving);
     this.drawnMoving = moving;
@@ -368,6 +368,15 @@ export abstract class SceneView implements ViewControls {
     if (this.projection === 'perspective') return distance;
     const o = this.orthographic;
     return distanceFor(o.top / o.zoom, FOV);
+  }
+
+  /**
+   * The camera as a frame draws with it, for a draw outside the loop too: its clip range and what else follows it
+   * (`updateCameraTied`), and its matrices, which three brings up to date only in a draw of the scene it is in.
+   */
+  protected readyCamera(): void {
+    this.updateCameraTied();
+    this.camera.updateMatrixWorld();
   }
 
   /** Per-frame state that follows the camera: the clip range tied to the orbit distance, and `cameraTied`. */

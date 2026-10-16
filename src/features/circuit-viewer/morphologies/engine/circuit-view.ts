@@ -420,7 +420,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       height
     );
     // No frame may have been drawn since the camera last moved.
-    this.camera.updateMatrixWorld();
+    this.readyCamera();
     return this.readPick(scene).then(
       (pixels) => cellNearMiddle(pixels, side),
       () => null
@@ -467,6 +467,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     context.fillStyle = this.background;
     context.fillRect(0, 0, canvas.width, canvas.height);
     // The canvas holds a frame only in the task that drew it, so it is drawn again here and copied at once.
+    this.readyCamera();
     this.draw(false);
     context.drawImage(frame, 0, 0);
     return canvas;
@@ -630,7 +631,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const detailed = this.layer?.detailed;
     if (!detailed) return;
     const { camera } = this;
-    camera.updateMatrixWorld();
     const height = this.height * this.pixelRatio;
     const was = detailed.chosenFor;
     const still = !moving;
