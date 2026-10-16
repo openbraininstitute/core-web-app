@@ -1,3 +1,9 @@
+overrides:
+  # CodeMirror requires a single @codemirror/state instance across all packages.
+  # Transitive deps pulled in both 6.6.0 and 6.7.x, which broke EditorState.create
+  # with "Unrecognized extension value". Force one copy.
+  "@codemirror/state": "6.7.6"
+
 allowBuilds:
   "@parcel/watcher": true
   "@sentry/cli": true

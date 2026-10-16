@@ -92,6 +92,7 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
+
   const allEntries = useEntries({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
