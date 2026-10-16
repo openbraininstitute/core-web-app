@@ -16,6 +16,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
@@ -43,7 +44,8 @@ export default function TabsSelector({
         id === ExtractScanConfigTabs.extractions ||
         id === ProcessScanConfigTabs.skeletonizations ||
         id === BuildScanConfigTabs.results ||
-        id === OptimizeScanConfigTabs.optimizations) &&
+        id === OptimizeScanConfigTabs.optimizations ||
+        id === ValidateScanConfigTabs.validations) &&
       disableResultsTab
     );
     const disableConfiguration = disableConfigurationTab && id === BaseScanConfigTabs.configuration;
@@ -89,6 +91,11 @@ export default function TabsSelector({
           setTab({
             __activity: ScanConfigActivity.Optimize,
             id: id as keyof typeof OptimizeScanConfigTabs,
+          });
+        } else if (activity === ScanConfigActivity.Validate) {
+          setTab({
+            __activity: ScanConfigActivity.Validate,
+            id: id as keyof typeof ValidateScanConfigTabs,
           });
         }
       },

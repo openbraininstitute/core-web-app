@@ -157,6 +157,13 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     title: 'E-model',
     description: 'Optimize E-Model parameters against extracted e-features.',
   },
+  [ExtendedEntitiesTypeDict.EModelValidationCampaign]: {
+    value: ExtendedEntitiesTypeDict.EModelValidationCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'E-model',
+    title: 'E-model',
+    description: 'Validate an optimized E-Model against e-features.',
+  },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     group: EntityGroupDict.Circuit,

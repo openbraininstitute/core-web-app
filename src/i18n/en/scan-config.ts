@@ -54,4 +54,15 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
       "You don't have enough credits to launch this optimization. Please contact your administrator",
     GenericFailed: 'We are having trouble running the optimization, please try again later',
   },
+  [ScanConfigActivity.Validate]: {
+    CoordinateCountFailed: 'An error occurred generating the validation campaign coordinates',
+    ScanConfigGenerateGridFailed: 'An error occurred generating the validation campaign',
+    ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the validation',
+    Generate: 'Generate validation(s)',
+    New: 'New validation campaign',
+    CopyCampaignId: 'Copy validation campaign ID',
+    InsufficientCreditsNonAdmin:
+      "You don't have enough credits to launch this validation. Please contact your administrator",
+    GenericFailed: 'We are having trouble running the validation, please try again later',
+  },
 };

@@ -2,7 +2,7 @@
 
 import { get } from 'es-toolkit/compat';
 import { Activity, Suspense } from 'react';
-import { match } from 'ts-pattern';
+import { match, P } from 'ts-pattern';
 
 import {
   ScanConfigMainOverlayProvider,
@@ -13,7 +13,10 @@ import { IonChannelModelPropertiesChecks } from '@/features/scan-config/componen
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
-import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
+import {
+  OptimizationTab,
+  type TTaskNoun,
+} from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { messages } from '@/i18n/en/scan-config';
@@ -28,6 +31,12 @@ import {
 import { type ScanConfigTemplateState, useScanConfigTemplate } from './use-scan-config-template';
 
 import type { ScanConfigTemplateProps } from './types';
+
+/** Optimize and Validate share one results tab; this is the only thing that differs. */
+const TASK_NOUN = {
+  [ScanConfigActivity.Optimize]: { singular: 'optimization', plural: 'optimizations' },
+  [ScanConfigActivity.Validate]: { singular: 'validation', plural: 'validations' },
+} as const satisfies Record<string, TTaskNoun>;
 
 export function ScanConfigTemplate(props: ScanConfigTemplateProps) {
   return (
@@ -182,7 +191,7 @@ function ScanConfigResults({
         </Suspense>
       ) : null
     )
-    .with(ScanConfigActivity.Optimize, () =>
+    .with(P.union(ScanConfigActivity.Optimize, ScanConfigActivity.Validate), (activity) =>
       props.taskTypeBindings ? (
         <Suspense>
           <OptimizationTab
@@ -190,6 +199,7 @@ function ScanConfigResults({
             campaignOriginAction={props.campaignOriginAction}
             campaignId={state.campaignId}
             taskTypeBindings={props.taskTypeBindings}
+            noun={TASK_NOUN[activity]}
           />
         </Suspense>
       ) : null

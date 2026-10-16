@@ -38,6 +38,7 @@ import {
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { resolveEModelValidationResultCampaign } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import {
   resolveSimulationByCampaignId as resolveIonChannelModelSimulationByCampaignId,
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
@@ -63,10 +64,12 @@ import {
   ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
+import { validateEModelWorkflow } from '@/features/scan-config/workflow/definitions/validate-emodel';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -256,6 +259,38 @@ export default async function Overview({
           activity={ScanConfigActivity.Optimize}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
           taskTypeBindings={optimizeEModelWorkflow.taskTypeBindings}
+        />
+      );
+    }
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.EModelValidationResult) {
+    const { data: validation } = await tryCatch(
+      resolveEModelValidationResultCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EModelValidationCampaign
+    );
+
+    if (validation && scanConfig) {
+      return (
+        <ScanConfiguration
+          // the e-model validation scan config has no `model_identifier` (session mode),
+          // so there is no input entity to pass
+          entityId={undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={validation.campaign.id}
+          initialConfig={validation.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Validate,
+            id: ValidateScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Validate}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={validateEModelWorkflow.taskTypeBindings}
         />
       );
     }

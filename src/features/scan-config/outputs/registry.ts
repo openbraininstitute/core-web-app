@@ -4,7 +4,7 @@ import { getTaskResult } from '@/api/entitycore/queries/task';
 import { TaskResultType } from '@/api/entitycore/types/entities/task-result';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
@@ -30,6 +30,17 @@ import type { WorkspaceContext } from '@/types/common';
  */
 const TASK_RESULT_EXTENDED_TYPE: Partial<Record<TTaskResultType, TExtendedEntitiesTypeDict>> = {
   [TaskResultType.EFeatureExtractionResult]: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
+  [TaskResultType.OptimizedEModelAnalysisValidationResult]:
+    ExtendedEntitiesTypeDict.EModelValidationResult,
+};
+
+/**
+ * Assets stored under a generic content type whose content the code viewer can show. The viewer
+ * keeps `text/plain` on its placeholder, since that also marks files of unknown format; a
+ * validation summary is JSON written to a `.txt` file, so it is named here.
+ */
+const ENFORCED_RENDER_TYPE_BY_LABEL: Partial<Record<string, AssetContentType>> = {
+  [AssetLabel.validation_result_details]: AssetContentType.json,
 };
 
 /**
@@ -85,6 +96,7 @@ const taskResultStrategy: TOutputStrategy = {
       asset,
       name: asset.path,
       renderer: ActivityCustomFileRenderer.Default,
+      enforcedRenderType: ENFORCED_RENDER_TYPE_BY_LABEL[asset.label],
     })),
   ],
 };
@@ -138,9 +150,22 @@ const registeredEntityStrategy: TOutputStrategy = {
   toFiles: ({ entity, extendedType }) => makeMiniDetailFile(entity, extendedType),
 };
 
+/**
+ * A validation result of an e-model. A validation run registers one overall result and one per
+ * protocol next to its task result, but they have no entity configuration to open in, and the
+ * task result's summary already lists their scores, so they get no row of their own.
+ */
+const validationResultStrategy: TOutputStrategy = {
+  id: 'validation-result',
+  matches: (ref) => ref.type === EntityTypeDict.ValidationResult,
+  resolve: async () => null,
+  toFiles: () => [],
+};
+
 /** First match wins, so the specific strategies come before the catch-all. */
 export const OUTPUT_STRATEGIES: readonly TOutputStrategy[] = [
   taskResultStrategy,
+  validationResultStrategy,
   circuitStrategy,
   registeredEntityStrategy,
 ];

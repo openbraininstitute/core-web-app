@@ -27,6 +27,32 @@ describe('workflow output strategies', () => {
     ).toBe('registered-entity');
   });
 
+  it('gives the validation results of a run no row, since the task result summarises them', async () => {
+    const strategy = resolveOutputStrategy({ id: 'v', type: EntityTypeDict.ValidationResult });
+
+    expect(strategy?.id).toBe('validation-result');
+    // resolving must not reach for an entity configuration that does not exist
+    await expect(
+      strategy?.resolve({
+        ref: { id: 'v', type: EntityTypeDict.ValidationResult },
+        context: {} as never,
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('shows a validation summary in the code viewer even though it is stored as plain text', () => {
+    const strategy = resolveOutputStrategy({ id: 't', type: EntityTypeDict.TaskResult });
+    const summary = { id: 'a-1', label: 'validation_result_details', path: 'summary.txt' };
+    const figure = { id: 'a-2', label: 'validation_result_figure', path: 'scores.png' };
+    const entity = { id: 'result', type: EntityTypeDict.TaskResult, assets: [summary, figure] };
+
+    const files = strategy?.toFiles(makeResolved(entity as never, 'task-result')) ?? [];
+
+    expect(files.map((file) => (isAssetBackedFile(file) ? file.enforcedRenderType : null))).toEqual(
+      ['application/json', undefined]
+    );
+  });
+
   it('has no strategy for a ref with no type, rather than guessing one', () => {
     // the typeless case is handled by resolveStrategyForRef, which looks the type up first
     expect(resolveOutputStrategy({ id: 'd' })).toBeNull();

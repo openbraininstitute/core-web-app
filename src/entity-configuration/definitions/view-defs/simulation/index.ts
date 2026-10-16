@@ -2,6 +2,7 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 
 import { viewDefForEFeatureExtractionResult } from './efeature-extraction-result';
 import { viewDefForEModelOptimizationCampaign } from './emodel-optimization-campaign';
+import { viewDefForEModelValidationResult } from './emodel-validation-result';
 import { viewDefForIonChannelModelSimulation } from './ion-channel-model-simulation';
 import { viewDefForMEModelCircuitSimulation } from './memodel-circuit-simulation';
 import { viewDefForMicrocircuitSimulation } from './microcircuit-simulation';
@@ -30,5 +31,6 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.RegionCircuitSimulation]: viewDefForRegionCircuitSimulation,
   [ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation]: viewDefForWholeBrainCircuitSimulation,
   [ExtendedEntitiesTypeDict.EModelOptimizationCampaign]: viewDefForEModelOptimizationCampaign,
+  [ExtendedEntitiesTypeDict.EModelValidationResult]: viewDefForEModelValidationResult,
   [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: viewDefForEFeatureExtractionResult,
 };
