@@ -67,7 +67,7 @@ export function DetailReadout({
           {detail.culled && (
             <div data-testid="culled">
               Culled: {count(detail.culled.tested)} tested, {count(detail.culled.kept)} kept,{' '}
-              {count(detail.culled.drawn)} drawn
+              {count(detail.culled.drawn)} drawn; {count(detail.culled.boxes)} boxes seen
             </div>
           )}
         </>

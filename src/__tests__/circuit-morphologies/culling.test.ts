@@ -11,14 +11,20 @@ import type { CullCounts } from '@/features/circuit-viewer/morphologies/types';
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
-/** The words a read of the counts finds: the counters, then the draws' arguments. */
-function wordsOf({ tested, kept, drawn }: CullCounts): Uint32Array {
-  const words = new Uint32Array(4 + 20);
+type Counts = Omit<CullCounts, 'boxes'>;
+
+/** The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. */
+function wordsOf({ tested, kept, drawn }: Counts, marked = [0, 0]): Uint32Array {
+  const words = new Uint32Array(4 + 20 + marked.length);
   words[1] = tested;
   words[4 + DRAWS.keptFlat / 4 + 1] = kept;
   words[4 + DRAWS.seenTubes / 4 + 1] = drawn;
+  words.set(marked, 24);
   return words;
 }
+
+/** What the culling hands on of a read of `counts`, no block marked. */
+const read = (counts: Counts, marked = [0, 0]) => ({ ...counts, marked: Uint32Array.from(marked) });
 
 /**
  * A device whose reads are mapped when the test says (`map`), finding `found`; `textures` false where three made no
@@ -27,8 +33,9 @@ function wordsOf({ tested, kept, drawn }: CullCounts): Uint32Array {
 function fakeGpu({ textures = true, refused = null as object | null } = {}) {
   const maps: (() => void)[] = [];
   const gpu = { found: wordsOf({ tested: 0, kept: 0, drawn: 0 }), maps };
-  const buffer = () => {
+  const buffer = ({ size }: { size: number }) => {
     const b = {
+      size,
       mapState: 'unmapped',
       destroy: () => {
         b.mapState = 'unmapped';
@@ -41,7 +48,11 @@ function fakeGpu({ textures = true, refused = null as object | null } = {}) {
             resolve();
           });
         }),
-      getMappedRange: () => gpu.found.slice().buffer,
+      getMappedRange: () => {
+        const range = new Uint32Array(size / 4);
+        range.set(gpu.found.subarray(0, range.length));
+        return range.buffer;
+      },
       unmap: () => {
         b.mapState = 'unmapped';
       },
@@ -83,7 +94,8 @@ function fakeGpu({ textures = true, refused = null as object | null } = {}) {
   };
 }
 
-const ARENA = {} as ArenaBuffers;
+/** An arena of 64 blocks: two words of them marked. */
+const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
 const camera = new THREE.OrthographicCamera();
 const shift = new THREE.Vector3();
 
@@ -94,9 +106,9 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
   const run = () => culling.run(camera, shift, 12, 100);
-  /** The next read mapped, finding `counts`. */
-  const map = async (counts: CullCounts) => {
-    gpu.found = wordsOf(counts);
+  /** The next read mapped, finding `counts` and the blocks `marked`. */
+  const map = async (counts: Counts, marked?: number[]) => {
+    gpu.found = wordsOf(counts, marked);
     gpu.maps.shift()?.();
     await Promise.resolve();
   };
@@ -113,7 +125,7 @@ describe("the culling's counts and its failures", () => {
     const { culling, counted, run, map } = cullingOn();
     expect(run()).toBe(true);
     await map(A);
-    expect(counted).toHaveBeenLastCalledWith(A);
+    expect(counted).toHaveBeenLastCalledWith(read(A));
 
     run();
     culling.setArena(null);
@@ -127,12 +139,12 @@ describe("the culling's counts and its failures", () => {
     expect(maps).toHaveLength(8);
 
     await map(A);
-    expect(counted).toHaveBeenLastCalledWith(A);
+    expect(counted).toHaveBeenLastCalledWith(read(A));
     // The ninth frame's, read once the first's buffer was free.
     expect(maps).toHaveLength(8);
     for (let k = 0; k < 7; k++) await map(A);
     await map(B);
-    expect(counted).toHaveBeenLastCalledWith(B);
+    expect(counted).toHaveBeenLastCalledWith(read(B));
   });
 
   it.each([
@@ -144,6 +156,23 @@ describe("the culling's counts and its failures", () => {
     draw(culling);
     await map(A);
     expect(maps).toHaveLength(7);
+  });
+
+  it('hands on the blocks a frame marked with its counts', async () => {
+    const { counted, run, map } = cullingOn();
+    run();
+    await map(A, [0b101, 0x80000000]);
+    expect(counted).toHaveBeenLastCalledWith(read(A, [0b101, 0x80000000]));
+  });
+
+  it("reads all of a larger arena's marks, in a buffer made again for them", async () => {
+    const { culling, counted, run, map } = cullingOn();
+    run();
+    await map(A);
+    culling.setArena({ marked: { size: 16 } } as unknown as ArenaBuffers);
+    run();
+    await map(B, [1, 2, 3, 4]);
+    expect(counted).toHaveBeenLastCalledWith(read(B, [1, 2, 3, 4]));
   });
 
   it('tells nothing of a read whose buffer was destroyed with the view', async () => {

@@ -96,6 +96,8 @@ describe("an arena on the page's GPU buffers", () => {
       'arena blocks': (32 * capacity) / BLOCK,
       'arena lists': 8 * capacity,
       'arena blocks passed': (4 * capacity) / BLOCK,
+      // A word a 32 blocks, and 32 bytes at least.
+      'arena blocks marked': 32,
     });
 
     arena.dispose();

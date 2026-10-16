@@ -282,6 +282,25 @@ describe('SegmentArena', () => {
     expectBlocks(made);
   });
 
+  it('tells the boxes drawn with a block marked, a bit a block', () => {
+    const { arena } = arenaOf(40 * BLOCK);
+    // Blocks 0 and 1, block 2, none, and blocks 3 to 32.
+    arena.put(1, segmentsOf(1, BLOCK + 6));
+    arena.put(2, segmentsOf(2, 10));
+    arena.put(3, segmentsOf(3, 0));
+    arena.put(4, segmentsOf(4, 30 * BLOCK));
+    const marked = (...blocks: number[]) => {
+      const words = new Uint32Array(2);
+      for (const block of blocks) words[block >> 5] |= 1 << (block & 31);
+      return words;
+    };
+    expect(arena.boxesMarked(marked())).toEqual([]);
+    expect(arena.boxesMarked(marked(1, 32))).toEqual([1, 4]);
+    expect(arena.boxesMarked(marked(2, 3, 4))).toEqual([2, 4]);
+    arena.remove(2);
+    expect(arena.boxesMarked(marked(2))).toEqual([]);
+  });
+
   it('moves nothing for a box not drawn, nor one with no segments', () => {
     const { arena, told } = arenaOf(BLOCK);
     expect(arena.remove(9)).toBe(0);

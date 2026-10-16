@@ -18,7 +18,7 @@ const DETAIL: DetailStats = {
   wanted: 1200,
   levels: [{ toleranceUm: 0.25, boxes: 4 }],
   leftOut: 0,
-  culled: { tested: 9571, kept: 8908, drawn: 8894 },
+  culled: { tested: 9571, kept: 8908, drawn: 8894, boxes: 12 },
 };
 
 function readout(tier: Tier, detail: DetailStats = DETAIL) {
@@ -46,7 +46,7 @@ describe('the detail readout', () => {
   it('on WebGPU, says what the culling counted and switches it off', () => {
     const viewer = readout('webgpu');
     expect(screen.getByTestId('culled').textContent).toBe(
-      'Culled: 9,571 tested, 8,908 kept, 8,894 drawn'
+      'Culled: 9,571 tested, 8,908 kept, 8,894 drawn; 12 boxes seen'
     );
     const culling = screen.getByRole('combobox', { name: 'Culling' });
     expect((culling as HTMLSelectElement).value).toBe('on');

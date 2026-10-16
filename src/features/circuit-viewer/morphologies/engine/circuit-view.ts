@@ -44,6 +44,7 @@ import type {
   CircuitMorphologyView,
   CircuitSomas,
   CullCounts,
+  CullRead,
   DetailRules,
   DetailStats,
   ElectrodeGroup,
@@ -603,9 +604,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * What the tier's culling counted, for the listeners: with what they were told last, which it alone changes; null
    * where it no longer culls.
    */
-  protected tellCulled(counts: CullCounts | null): void {
+  protected tellCulled(read: CullRead | null): void {
+    const detailed = this.layer?.detailed;
     // Read back after the culling was switched off, or the pack let go of.
-    if (!this.culls || !this.layer?.detailed) return;
+    if (!this.culls || !detailed) return;
+    let counts: CullCounts | null = null;
+    if (read) {
+      const { marked, ...counted } = read;
+      counts = { ...counted, boxes: detailed.stream.boxesMarked(marked).length };
+    }
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }

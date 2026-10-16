@@ -172,6 +172,7 @@ export const ARGS = /* wgsl */ `
  * kept list, which the next frame draws to depth before its tests: when the view moves, what was seen parts in thin
  * cracks, and with nothing behind them every block would show through one. A segment as wide on screen as a tube
  * (\`GpuUniforms.tubeFrom\`) goes on the lists' tubes. The lists are as long as the arena, which no frame can overfill.
+ * A block with a segment kept is marked, a bit a block (\`marked\`), for the boxes seen to be read back.
  */
 export const SEGMENTS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}
@@ -186,6 +187,7 @@ struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args 
 @group(0) @binding(7) var<storage, read> words: array<u32>;
 @group(0) @binding(8) var<storage, read_write> lists: array<u32>;
 @group(0) @binding(9) var<storage, read_write> draws: Draws;
+@group(0) @binding(10) var<storage, read_write> marked: array<atomic<u32>>;
 
 // 0 out of view, 1 hidden as a whole, 2 hidden texel by texel, 3 seen, 4 hidden by little enough to be kept. a, b:
 // its ends on screen, px; r: how far it reaches from the line between them, px; near: its nearest, µm from the eye.
@@ -259,22 +261,18 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
   return select(2u, 4u, kept);
 }
 
-@compute @workgroup_size(64) fn main(@builtin(workgroup_id) wid: vec3u, @builtin(local_invocation_index) lid: u32) {
-  let g = wid.y * 512u + wid.x;
-  if (g >= counters[0]) { return; }
-  let bl = blocks[passed[g]];
-  if (lid >= bl.count) { return; }
-  let i = bl.first + lid;
+// Segment \`i\` onto the lists it goes on; whether it is kept.
+fn listed(i: u32) -> bool {
   let A = ends[2u * i];
   let B = ends[2u * i + 1u];
   let e = segmentEnds(words[i], 1.0, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view, view.projection,
                       view.vp, view.shift.w);
   // A hole, or behind the eye.
-  if (e[3].w < 0.5) { return; }
+  if (e[3].w < 0.5) { return false; }
   let radii = e[2].xy;
   let near = nearer(min(-e[0].z - e[0].w, -e[1].z - e[1].w));
   let v = seen(texelOf(e[0].xyz), texelOf(e[1].xyz), ${QUAD_REACH} * max(radii.x, radii.y), near);
-  if (v < 3u) { return; }
+  if (v < 3u) { return false; }
   let tube = max(radii.x, radii.y) >= view.more.y;
   let cap = view.counts.z;
   if (tube) {
@@ -282,11 +280,27 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
   } else {
     lists[atomicAdd(&draws.keptFlat.instances, 1u)] = i;
   }
-  if (v != 3u) { return; }
+  if (v != 3u) { return true; }
   if (tube) {
     lists[2u * cap - 1u - atomicAdd(&draws.seenTubes.instances, 1u)] = i;
   } else {
     lists[cap + atomicAdd(&draws.seenFlat.instances, 1u)] = i;
   }
+  return true;
+}
+
+var<workgroup> keeps: atomic<u32>;
+
+// A workgroup a block: its segments tested, and the block marked once where one is kept.
+@compute @workgroup_size(64) fn main(@builtin(workgroup_id) wid: vec3u, @builtin(local_invocation_index) lid: u32) {
+  let g = wid.y * 512u + wid.x;
+  var c = 0u;
+  if (g < counters[0]) {
+    c = passed[g];
+    let bl = blocks[c];
+    if (lid < bl.count && listed(bl.first + lid)) { atomicStore(&keeps, 1u); }
+  }
+  workgroupBarrier();
+  if (lid == 0u && atomicLoad(&keeps) != 0u) { atomicOr(&marked[c >> 5u], 1u << (c & 31u)); }
 }
 `;

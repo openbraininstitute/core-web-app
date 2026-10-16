@@ -103,6 +103,11 @@ export class DetailStream {
     return this.arena.geometry;
   }
 
+  /** The boxes placed with a block of the arena marked in `marked`, a bit a block. */
+  boxesMarked(marked: Uint32Array): number[] {
+    return this.arena.boxesMarked(marked);
+  }
+
   /** What is drawn under `rules`. */
   stats(rules: DetailRules): Omit<DetailStats, 'culled'> {
     const boxes = this.chunks.levels.map(() => 0);

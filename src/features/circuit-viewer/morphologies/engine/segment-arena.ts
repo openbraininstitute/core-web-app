@@ -126,6 +126,21 @@ export class SegmentArena {
     return this.places.get(box)?.count;
   }
 
+  /** The boxes drawn with a block marked in `marked`, a bit a block. */
+  boxesMarked(marked: Uint32Array): number[] {
+    const boxes: number[] = [];
+    for (const [box, { start, count }] of this.places) {
+      const last = (start + roomFor(count)) / BLOCK;
+      for (let block = start / BLOCK; block < last; block++) {
+        if ((marked[block >>> 5] & (1 << (block & 31))) !== 0) {
+          boxes.push(box);
+          break;
+        }
+      }
+    }
+    return boxes;
+  }
+
   /** The room `box` takes more with `segments` drawn in place of what it has. */
   growthOf(box: number, segments: number): number {
     return roomFor(segments) - roomFor(this.sizeOf(box) ?? 0);

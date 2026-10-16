@@ -20,7 +20,7 @@ import {
   UNIFORM,
 } from './usage';
 
-import type { CullCounts } from '../../types';
+import type { CullRead } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
 
 /** The samples a pixel of the depth drawn before the tests has, as the picture's. */
@@ -34,6 +34,8 @@ const LEAST_PX = 2 * MIN_RADIUS;
 const READS = 8;
 /** The view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts, in bytes. */
 const VIEW_BYTES = 192;
+/** The passes' counters: the blocks handed on, the segments in them, and two words of padding. */
+const COUNTS_BYTES = 16;
 
 /** Where in the draws' arguments each list's are, bytes: five words each, the kept first. */
 export const DRAWS = { keptFlat: 0, keptTubes: 20, seenFlat: 40, seenTubes: 60 } as const;
@@ -72,15 +74,15 @@ interface Targets {
  * segments kept the frame before are drawn to depth (`target`, by three), and then the passes here, on `device`'s
  * queue before three draws the frame: that depth at each pixel the farthest of its samples, its pyramid, the blocks'
  * test, the segments' test into the lists, flat and tubes, of those kept and those seen, and the draws' arguments,
- * which three's quads are drawn by (`quads`). What the tests count is read back each frame and handed to `counted`,
- * and null once the culling failed.
+ * which three's quads are drawn by (`quads`). What the tests count, and the blocks they mark, are read back each frame
+ * and handed to `counted`, and null once the culling failed.
  */
 export class Culling {
   readonly draws: THREE.IndirectStorageBufferAttribute;
   private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private storage: ArenaStorage;
-  private counted: (counts: CullCounts | null) => void;
+  private counted: (read: CullRead | null) => void;
   private drawsBuffer: GPUBuffer;
   private viewBuffer: GPUBuffer;
   private counters: GPUBuffer;
@@ -108,7 +110,7 @@ export class Culling {
     renderer: THREE.WebGPURenderer,
     device: GPUDevice,
     storage: ArenaStorage,
-    counted: (counts: CullCounts | null) => void
+    counted: (read: CullRead | null) => void
   ) {
     this.renderer = renderer;
     this.device = device;
@@ -118,7 +120,7 @@ export class Culling {
       device.createBuffer({ size, usage, label });
     this.drawsBuffer = buffer(DRAWS_BYTES, STORAGE | INDIRECT | COPY_DST | COPY_SRC, 'cull draws');
     this.viewBuffer = buffer(VIEW_BYTES, UNIFORM | COPY_DST, 'cull view');
-    this.counters = buffer(16, STORAGE | COPY_DST | COPY_SRC, 'cull counters');
+    this.counters = buffer(COUNTS_BYTES, STORAGE | COPY_DST | COPY_SRC, 'cull counters');
     this.dispatch = buffer(16, STORAGE | INDIRECT, 'cull dispatch');
     this.draws = new THREE.IndirectStorageBufferAttribute(new Uint32Array(DRAWS_BYTES / 4), 1);
     shareBuffer(renderer, this.draws, this.drawsBuffer);
@@ -189,6 +191,7 @@ export class Culling {
 
     const encoder = device.createCommandEncoder({ label: 'cull' });
     encoder.clearBuffer(this.counters);
+    encoder.clearBuffer(arena.marked);
     const pass = encoder.beginComputePass();
     const run = (pipeline: GPUComputePipeline, group: GPUBindGroup, x: number, y = 1) => {
       pass.setPipeline(pipeline);
@@ -210,7 +213,7 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
-    this.submit(encoder);
+    this.submit(encoder, arena.marked);
     return true;
   }
 
@@ -367,6 +370,7 @@ export class Culling {
           buffer(arena.words),
           buffer(arena.lists),
           buffer(this.drawsBuffer),
+          buffer(arena.marked),
         ],
         'cull segments'
       ),
@@ -374,45 +378,62 @@ export class Culling {
     return this.bound;
   }
 
-  /** A buffer to read the counts back into; none where the GPU is `READS` frames behind. */
-  private readNow(): GPUBuffer | null {
+  /**
+   * A buffer of at least `bytes` to read the counts back into, one too small made again; none where the GPU is `READS`
+   * frames behind.
+   */
+  private readNow(bytes: number): GPUBuffer | null {
     let read = this.free.pop();
+    if (read && read.size < bytes) {
+      read.destroy();
+      this.reads.splice(this.reads.indexOf(read), 1);
+      read = undefined;
+    }
     if (!read && this.reads.length < READS) {
-      read = this.device.createBuffer({ size: 16 + DRAWS_BYTES, usage: MAP_READ | COPY_DST });
+      read = this.device.createBuffer({ size: bytes, usage: MAP_READ | COPY_DST });
       this.reads.push(read);
     }
     return read ?? null;
   }
 
   /**
-   * `encoder` submitted with the counts the tests left copied out at its end and read back; where no buffer is free, the
-   * last tested once one is.
+   * `encoder` submitted with what the tests left copied out at its end and read back: the counts, and the blocks marked
+   * (`marked`, the arena's); where no buffer is free, the last tested once one is.
    */
-  private submit(encoder: GPUCommandEncoder): void {
-    const read = this.readNow();
+  private submit(encoder: GPUCommandEncoder, marked: GPUBuffer): void {
+    const blocksAt = COUNTS_BYTES + DRAWS_BYTES;
+    const read = this.readNow(blocksAt + marked.size);
     this.unread = read === null;
     if (read) {
-      encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
-      encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
+      encoder.copyBufferToBuffer(this.counters, 0, read, 0, COUNTS_BYTES);
+      encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, COUNTS_BYTES, DRAWS_BYTES);
+      encoder.copyBufferToBuffer(marked, 0, read, blocksAt, marked.size);
     }
     this.device.queue.submit([encoder.finish()]);
     if (!read) return;
     const { generation } = this;
+    const markedWords = marked.size / 4;
     read.mapAsync(READ).then(
       () => {
         // Destroyed with the view since.
         if (read.mapState !== 'mapped') return;
         const words = new Uint32Array(read.getMappedRange());
-        const at = (offset: number) => words[4 + offset / 4 + INSTANCES];
+        const at = (offset: number) => words[(COUNTS_BYTES + offset) / 4 + INSTANCES];
         const counts = {
           tested: words[1],
           kept: at(DRAWS.keptFlat) + at(DRAWS.keptTubes),
           drawn: at(DRAWS.seenFlat) + at(DRAWS.seenTubes),
+          marked: words.slice(blocksAt / 4, blocksAt / 4 + markedWords),
         };
         read.unmap();
         this.free.push(read);
         if (generation === this.generation) this.counted(counts);
-        if (this.unread) this.submit(this.device.createCommandEncoder({ label: 'cull counts' }));
+        if (this.unread && this.arena) {
+          this.submit(
+            this.device.createCommandEncoder({ label: 'cull counts' }),
+            this.arena.marked
+          );
+        }
       },
       // Destroyed with the view.
       () => undefined

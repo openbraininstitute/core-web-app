@@ -93,11 +93,20 @@ export interface DetailRules {
   culling: boolean;
 }
 
-/** What the culling's tests last counted: the segments of the blocks tested, those kept to hide others, and those drawn. */
+/**
+ * What the culling's tests last counted: the segments of the blocks tested, those kept to hide others, and those drawn;
+ * and the boxes with a segment kept.
+ */
 export interface CullCounts {
   tested: number;
   kept: number;
   drawn: number;
+  boxes: number;
+}
+
+/** What the culling's tests left, read back: their counts, and a bit a block of the arena with a segment kept. */
+export interface CullRead extends Omit<CullCounts, 'boxes'> {
+  marked: Uint32Array;
 }
 
 /** What a view draws of morphologies read a box at a time. */

@@ -3,7 +3,7 @@ import * as THREE from 'three/webgpu';
 
 import { BLOCK } from '../segment-arena';
 import { shareBuffer } from './three-hooks';
-import { COPY_DST, STORAGE } from './usage';
+import { COPY_DST, COPY_SRC, STORAGE } from './usage';
 
 import type { ArenaUploads } from '../segment-arena';
 
@@ -45,6 +45,8 @@ export interface ArenaBuffers {
   lists: GPUBuffer;
   /** The blocks that pass their test. */
   passed: GPUBuffer;
+  /** A bit a block, set where a segment of it is kept. */
+  marked: GPUBuffer;
 }
 
 /**
@@ -70,6 +72,11 @@ export function arenaOnGpu(
     blocks: bufferOf(blocks.byteLength, 'arena blocks'),
     lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
     passed: bufferOf((4 * capacity) / BLOCK, 'arena blocks passed', STORAGE),
+    marked: bufferOf(
+      4 * Math.ceil(capacity / BLOCK / 32),
+      'arena blocks marked',
+      STORAGE | COPY_DST | COPY_SRC
+    ),
   };
   shareBuffer(renderer, storage.ends, buffers.ends);
   shareBuffer(renderer, storage.words, buffers.words);
