@@ -85,7 +85,7 @@ export interface MorphologyChunks extends PackBoxes {
 
 /** How much of a pack read a box at a time is drawn. */
 export interface DetailRules {
-  /** The most segments drawn at once. */
+  /** The most segments drawn at once, each box's counted to a whole number of the arena's blocks. */
   budget: number;
   /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
   pixels: number;

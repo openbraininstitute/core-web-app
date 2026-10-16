@@ -7,7 +7,7 @@ import {
   HOLE,
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
-import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
 
@@ -24,23 +24,38 @@ function segmentsOf(box: number, count: number): MorphologySegments {
   };
 }
 
-const arenaOf = (capacity: number) =>
-  new SegmentArena(new THREE.InstancedBufferGeometry(), capacity);
-
-function attributes(arena: SegmentArena) {
-  const { geometry } = arena;
-  const ends = (geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
-  const words = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
-  return { ends, words };
+/** An arena of `capacity` segments, its arrays and what it told its uploads. */
+function arenaOf(capacity: number) {
+  const told: [number, number, boolean][] = [];
+  const dispose = vi.fn();
+  let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
+    ends: new Float32Array(),
+    words: new Uint32Array(),
+    blocks: new Float32Array(),
+  };
+  const arena = new SegmentArena(
+    new THREE.InstancedBufferGeometry(),
+    capacity,
+    (ends, words, blocks) => {
+      arrays = { ends, words, blocks };
+      return { upload: (...range) => told.push(range), dispose };
+    }
+  );
+  return { arena, ...arrays, blockWords: new Uint32Array(arrays.blocks.buffer), told, dispose };
 }
 
-const cellAt = (words: THREE.InstancedBufferAttribute, i: number) => words.array[i] & CELL_MASK;
-const typeAt = (words: THREE.InstancedBufferAttribute, i: number) => words.array[i] >>> TYPE_SHIFT;
+type Made = ReturnType<typeof arenaOf>;
 
-/** What is drawn is the segments of `drawn`, each whole and unchanged and together, holes aside, and nothing else. */
-function expectDrawn(arena: SegmentArena, drawn: Map<number, number>) {
-  const { ends, words } = attributes(arena);
+const cellAt = (words: Uint32Array, i: number) => words[i] & CELL_MASK;
+const typeAt = (words: Uint32Array, i: number) => words[i] >>> TYPE_SHIFT;
+
+/**
+ * What is drawn is the segments of `drawn`, each box whole and unchanged and together from the start of a block, holes
+ * aside, and nothing else.
+ */
+function expectDrawn({ arena, ends, words }: Made, drawn: Map<number, number>) {
   const seen: number[] = [];
+  const wrong: number[] = [];
   let holes = 0;
   for (let i = 0; i < arena.geometry.instanceCount; i++) {
     if (typeAt(words, i) === HOLE) {
@@ -49,172 +64,278 @@ function expectDrawn(arena: SegmentArena, drawn: Map<number, number>) {
     }
     const cell = cellAt(words, i);
     seen.push(cell);
-    expect(typeAt(words, i)).toBe(cell % 251);
-    for (let k = 0; k < 8; k++) expect(ends.array[8 * i + k]).toBe(cell + k);
-    // The next segment of the same box comes next.
-    if (cell % 1000 > 0) expect(cellAt(words, i - 1)).toBe(cell - 1);
+    let right = typeAt(words, i) === cell % 251;
+    for (let k = 0; k < 8; k++) right &&= ends[8 * i + k] === cell + k;
+    // A box's first segment starts a block, and the next segment of the same box comes next.
+    right &&= cell % 1000 === 0 ? i % BLOCK === 0 : cellAt(words, i - 1) === cell - 1;
+    if (!right) wrong.push(i);
   }
+  expect(wrong).toEqual([]);
   const want = [...drawn].flatMap(([box, n]) => Array.from(segmentsOf(box, n).segmentCells));
   expect(seen.sort((a, b) => a - b)).toEqual(want.sort((a, b) => a - b));
   expect(arena.segments).toBe(want.length);
   expect(holes).toBe(arena.geometry.instanceCount - want.length);
+  expect(arena.geometry.instanceCount % BLOCK).toBe(0);
   for (const [box, n] of drawn) expect(arena.sizeOf(box)).toBe(n);
 }
 
-/** The segments that differ between two copies of the words, each within a range marked for upload. */
-function expectUploaded(arena: SegmentArena, before: Uint32Array) {
-  const { words } = attributes(arena);
-  for (let i = 0; i < arena.geometry.instanceCount; i++) {
-    if (words.array[i] === before[i]) continue;
-    expect(words.updateRanges.some(({ start, count }) => start <= i && i < start + count)).toBe(
-      true
-    );
+/**
+ * Each block's box over its segments drawn, those its first, every end 1.15 of its radius out; a block with none all
+ * zeros.
+ */
+function expectBlocks({ arena, ends, words, blocks, blockWords }: Made) {
+  for (let b = 0; b < arena.capacity / BLOCK; b++) {
+    const row = Array.from(blocks.subarray(8 * b, 8 * b + 8));
+    const lo = [Infinity, Infinity, Infinity];
+    const hi = [-Infinity, -Infinity, -Infinity];
+    let count = 0;
+    let last = BLOCK * b - 1;
+    for (let i = BLOCK * b; i < BLOCK * (b + 1) && i < arena.geometry.instanceCount; i++) {
+      if (typeAt(words, i) === HOLE) continue;
+      count++;
+      last = i;
+      for (const k of [8 * i, 8 * i + 4]) {
+        for (let a = 0; a < 3; a++) {
+          lo[a] = Math.min(lo[a], ends[k + a] - 1.15 * ends[k + 3]);
+          hi[a] = Math.max(hi[a], ends[k + a] + 1.15 * ends[k + 3]);
+        }
+      }
+    }
+    if (count === 0) {
+      expect(Array.from(blockWords.subarray(8 * b, 8 * b + 8))).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
+      continue;
+    }
+    // Its segments are its first.
+    expect(last).toBe(BLOCK * b + count - 1);
+    expect([row[0], row[1], row[2]]).toEqual(lo.map(Math.fround));
+    expect([row[4], row[5], row[6]]).toEqual(hi.map(Math.fround));
+    expect(blockWords[8 * b + 3]).toBe(BLOCK * b);
+    expect(blockWords[8 * b + 7]).toBe(count);
   }
 }
 
-const clearRanges = (arena: SegmentArena) => {
-  for (const attribute of Object.values(attributes(arena))) attribute.clearUpdateRanges();
-};
+/** The segments and blocks that differ from `before`, each within a range told, or past the end. */
+function expectUploaded({ arena, ends, words, blocks, told }: Made, before: Made) {
+  const end = arena.geometry.instanceCount;
+  const toldOf = (i: number, ofEnds: boolean) =>
+    told.some(
+      ([start, count, wordsOnly]) => start <= i && i < start + count && !(ofEnds && wordsOnly)
+    );
+  const untold: string[] = [];
+  for (let i = 0; i < end; i++) {
+    if (words[i] !== before.words[i] && !toldOf(i, false)) untold.push(`word ${i}`);
+    if (typeAt(words, i) === HOLE) continue;
+    const moved = ends.subarray(8 * i, 8 * i + 8).some((v, k) => v !== before.ends[8 * i + k]);
+    if (moved && !toldOf(i, true)) untold.push(`ends ${i}`);
+  }
+  for (let b = 0; b < end / BLOCK; b++) {
+    const changed = blocks
+      .subarray(8 * b, 8 * b + 8)
+      .some((v, k) => v !== before.blocks[8 * b + k]);
+    if (
+      changed &&
+      !told.some(([start, count]) => start < BLOCK * (b + 1) && BLOCK * b < start + count)
+    ) {
+      untold.push(`block ${b}`);
+    }
+  }
+  expect(untold).toEqual([]);
+}
+
+const copyOf = (made: Made): Made => ({
+  ...made,
+  ends: made.ends.slice(),
+  words: made.words.slice(),
+  blocks: made.blocks.slice(),
+});
 
 describe('SegmentArena', () => {
-  it('draws the boxes put in it one after another', () => {
-    const arena = arenaOf(10);
-    expect(arena.put(1, segmentsOf(1, 3))).toBe(3);
-    expect(arena.put(2, segmentsOf(2, 4))).toBe(4);
+  it('puts each box at the start of a block, its last block filled out with holes', () => {
+    const made = arenaOf(4 * BLOCK);
+    const { arena, words, told } = made;
+    expect(arena.put(1, segmentsOf(1, 3))).toBe(BLOCK);
+    expect(arena.put(2, segmentsOf(2, 70))).toBe(2 * BLOCK);
+
+    expect(told).toEqual([
+      [0, BLOCK, false],
+      [BLOCK, 2 * BLOCK, false],
+    ]);
+    expect(typeAt(words, 3)).toBe(HOLE);
+    expect(typeAt(words, 3 * BLOCK - 1)).toBe(HOLE);
+    expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
+    expect(arena.free).toBe(BLOCK);
     expectDrawn(
-      arena,
+      made,
       new Map([
         [1, 3],
-        [2, 4],
+        [2, 70],
       ])
     );
-    expect(arena.geometry.instanceCount).toBe(7);
-    expect(arena.free).toBe(3);
+    expectBlocks(made);
   });
 
-  it('leaves a hole where a box is let go of, uploading its words alone', () => {
-    const arena = arenaOf(20);
+  it('keeps with each block the box its segments are drawn in, and how many', () => {
+    const made = arenaOf(4 * BLOCK);
+    const { arena, blocks, blockWords } = made;
+    // Every segment a point at the origin but the first, whose ends are the first block's least and greatest.
+    const segments = { ...segmentsOf(2, 70), segments: new Float32Array(8 * 70) };
+    segments.segments.set([-10, -20, -30, 2, 500, 600, 700, 4]);
+    arena.put(2, segments);
+
+    const near = [-10, -20, -30].map((v) => Math.fround(v - 1.15 * 2));
+    const far = [500, 600, 700].map((v) => Math.fround(v + 1.15 * 4));
+    expect(Array.from(blocks.subarray(0, 3))).toEqual(near);
+    expect(Array.from(blocks.subarray(4, 7))).toEqual(far);
+    expect([blockWords[3], blockWords[7]]).toEqual([0, BLOCK]);
+    expect([blockWords[8 + 3], blockWords[8 + 7]]).toEqual([BLOCK, 6]);
+    expectBlocks(made);
+
+    arena.remove(2);
+    expect(blockWords.every((word) => word === 0)).toBe(true);
+  });
+
+  it('leaves a hole where a box is let go of, uploading its words alone, its blocks emptied', () => {
+    const made = arenaOf(4 * BLOCK);
+    const { arena, words, told } = made;
     arena.put(1, segmentsOf(1, 5));
     arena.put(2, segmentsOf(2, 6));
-    clearRanges(arena);
+    told.length = 0;
     expect(arena.remove(1)).toBe(1);
 
-    const { ends, words } = attributes(arena);
     expect([0, 1, 2, 3, 4].map((i) => typeAt(words, i))).toEqual([HOLE, HOLE, HOLE, HOLE, HOLE]);
-    expect(words.updateRanges).toEqual([{ start: 0, count: 5 }]);
-    expect(ends.updateRanges).toEqual([]);
-    expect(arena.geometry.instanceCount).toBe(11);
-    expectDrawn(arena, new Map([[2, 6]]));
+    expect(told).toEqual([[0, 5, true]]);
+    expect(arena.geometry.instanceCount).toBe(2 * BLOCK);
+    expect(arena.free).toBe(3 * BLOCK);
+    expectDrawn(made, new Map([[2, 6]]));
+    expectBlocks(made);
   });
 
   it('puts a box in the smallest hole it fits in, else after the last', () => {
-    const arena = arenaOf(40);
+    const { arena, told } = arenaOf(30 * BLOCK);
+    // Of 5, 1, 3, 1 and 4 blocks.
     for (const [box, n] of [
-      [1, 6],
-      [2, 1],
-      [3, 3],
-      [4, 1],
-      [5, 4],
+      [1, 300],
+      [2, 10],
+      [3, 150],
+      [4, 10],
+      [5, 200],
     ]) {
       arena.put(box, segmentsOf(box, n));
     }
     arena.remove(1);
     arena.remove(3);
-    clearRanges(arena);
-    arena.put(6, segmentsOf(6, 2));
+    told.length = 0;
+    arena.put(6, segmentsOf(6, 100));
 
-    // Into the hole of 3 at 7, not the one of 6 at 0.
-    expect(attributes(arena).words.updateRanges).toEqual([{ start: 7, count: 2 }]);
-    arena.put(7, segmentsOf(7, 7));
-    expect(attributes(arena).words.updateRanges.at(-1)).toEqual({ start: 15, count: 7 });
-    expect(arena.geometry.instanceCount).toBe(22);
+    // Into the hole of 3 blocks at the sixth, not the one of 5 at the first.
+    expect(told).toEqual([[6 * BLOCK, 2 * BLOCK, false]]);
+    arena.put(7, segmentsOf(7, 400));
+    expect(told.at(-1)).toEqual([14 * BLOCK, 7 * BLOCK, false]);
+    expect(arena.geometry.instanceCount).toBe(21 * BLOCK);
   });
 
   it('draws only up to the last box, and less once it goes, the holes before it with it, uploading nothing past it', () => {
-    const arena = arenaOf(20);
+    const made = arenaOf(4 * BLOCK);
+    const { arena, told } = made;
     arena.put(1, segmentsOf(1, 3));
     arena.put(2, segmentsOf(2, 3));
     arena.put(3, segmentsOf(3, 3));
     arena.remove(2);
-    expect(arena.geometry.instanceCount).toBe(9);
-    clearRanges(arena);
+    expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
+    told.length = 0;
     expect(arena.remove(3)).toBe(0);
-    expect(arena.geometry.instanceCount).toBe(3);
-    expect(attributes(arena).words.updateRanges).toEqual([]);
+    expect(arena.geometry.instanceCount).toBe(BLOCK);
+    expect(told).toEqual([]);
+    expectBlocks(made);
     arena.put(4, segmentsOf(4, 2));
-    expect(attributes(arena).words.updateRanges.at(-1)).toEqual({ start: 3, count: 2 });
+    expect(told).toEqual([[BLOCK, BLOCK, false]]);
   });
 
-  it('closes the holes where a box fits neither in one nor after the last, uploading every box', () => {
-    const arena = arenaOf(10);
+  it('closes the holes where a box fits neither in one nor after the last, uploading every box, its blocks with it', () => {
+    const made = arenaOf(3 * BLOCK);
+    const { arena, blocks, told } = made;
     arena.put(1, segmentsOf(1, 3));
     arena.put(2, segmentsOf(2, 3));
     arena.put(3, segmentsOf(3, 3));
     arena.remove(1);
     arena.remove(3);
-    expect(arena.geometry.instanceCount).toBe(6);
+    const second = blocks.slice(8, 16);
+    expect(arena.geometry.instanceCount).toBe(2 * BLOCK);
+    told.length = 0;
 
-    expect(arena.put(4, segmentsOf(4, 6))).toBe(6 + 3);
-    expect(arena.geometry.instanceCount).toBe(9);
+    expect(arena.put(4, segmentsOf(4, 70))).toBe(2 * BLOCK + BLOCK);
+    expect(told).toEqual([
+      [0, BLOCK, false],
+      [BLOCK, 2 * BLOCK, false],
+    ]);
+    expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
+    // Box 2's block moved down to the first, its first segment with it.
+    expect(Array.from(blocks.subarray(0, 3))).toEqual(Array.from(second.subarray(0, 3)));
+    expect(Array.from(blocks.subarray(4, 8))).toEqual(Array.from(second.subarray(4, 8)));
     expectDrawn(
-      arena,
+      made,
       new Map([
         [2, 3],
-        [4, 6],
+        [4, 70],
       ])
     );
+    expectBlocks(made);
   });
 
   it('moves nothing for a box not drawn, nor one with no segments', () => {
-    const arena = arenaOf(4);
+    const { arena, told } = arenaOf(BLOCK);
     expect(arena.remove(9)).toBe(0);
-    arena.put(1, segmentsOf(1, 0));
+    expect(arena.put(1, segmentsOf(1, 0))).toBe(0);
     expect(arena.sizeOf(1)).toBe(0);
+    expect(arena.free).toBe(BLOCK);
     expect(arena.remove(1)).toBe(0);
     expect(arena.sizeOf(1)).toBeUndefined();
     expect(arena.geometry.instanceCount).toBe(0);
+    expect(told).toEqual([]);
   });
 
-  it('tells uploads of its own what changed, in place of three, and lets them go when let go of', () => {
-    const told: [number, number, boolean][] = [];
-    const dispose = vi.fn();
-    const geometry = new THREE.InstancedBufferGeometry();
-    const arrays: { ends?: Float32Array; words?: Uint32Array } = {};
-    const arena = new SegmentArena(geometry, 10, (ends, words) => {
-      Object.assign(arrays, { ends, words });
-      return { upload: (...range) => told.push(range), dispose };
-    });
-    expect(geometry.getAttribute('aCell')).toBeUndefined();
-    expect(arrays).toMatchObject({ ends: { length: 80 }, words: { length: 10 } });
-
-    arena.put(1, segmentsOf(1, 3));
-    arena.put(2, segmentsOf(2, 3));
-    arena.remove(1);
-    // Fits neither in the hole nor after the last: box 2 is moved down.
-    arena.put(3, segmentsOf(3, 5));
-    expect(told).toEqual([
-      [0, 3, false],
-      [3, 3, false],
-      [0, 3, true],
-      [0, 3, false],
-      [3, 5, false],
-    ]);
-    expect(arrays.ends?.[0]).toBe(2000);
-    expect(geometry.instanceCount).toBe(8);
+  it('holds a whole number of blocks, and hands its uploads its arrays, letting them go when let go of', () => {
+    const { arena, ends, words, blocks, dispose } = arenaOf(100);
+    expect(arena.capacity).toBe(2 * BLOCK);
+    expect([ends.length, words.length, blocks.length]).toEqual([16 * BLOCK, 2 * BLOCK, 16]);
+    expect(arena.geometry.getAttribute('aCell')).toBeUndefined();
 
     arena.dispose();
     expect(dispose).toHaveBeenCalledTimes(1);
   });
 
+  it("uploads to three's attributes where it is given no uploads", () => {
+    const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 4 * BLOCK);
+    const { geometry } = arena;
+    const ends = (geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
+    const words = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
+    arena.put(1, segmentsOf(1, 3));
+    arena.put(2, segmentsOf(2, 3));
+    arena.remove(1);
+
+    expect(ends.updateRanges).toEqual([
+      { start: 0, count: 8 * BLOCK },
+      { start: 8 * BLOCK, count: 8 * BLOCK },
+    ]);
+    expect(words.updateRanges).toEqual([
+      { start: 0, count: BLOCK },
+      { start: BLOCK, count: BLOCK },
+      { start: 0, count: 3 },
+    ]);
+    expect(ends.array[8 * BLOCK]).toBe(2000);
+    expect(words.array[BLOCK] & CELL_MASK).toBe(2000);
+  });
+
   it('refuses a box drawn already, or one that does not fit', () => {
-    const arena = arenaOf(4);
+    const { arena } = arenaOf(BLOCK);
     arena.put(1, segmentsOf(1, 3));
     expect(() => arena.put(1, segmentsOf(1, 1))).toThrow('drawn already');
     expect(() => arena.put(2, segmentsOf(2, 2))).toThrow(RangeError);
   });
 
   it('stays whole over a long run of boxes put and let go of', () => {
-    const arena = arenaOf(5000);
+    const made = arenaOf(5000);
+    const { arena, told } = made;
     const drawn = new Map<number, number>();
     let seed = 7;
     const random = () => {
@@ -223,21 +344,25 @@ describe('SegmentArena', () => {
     };
     for (let step = 0; step < 1500; step++) {
       const box = Math.floor(random() * 60);
-      const before = attributes(arena).words.array.slice() as Uint32Array;
-      clearRanges(arena);
+      const before = copyOf(made);
+      told.length = 0;
       if (drawn.has(box)) {
         arena.remove(box);
         drawn.delete(box);
       } else {
         const n = Math.floor(random() * 300);
-        if (n > arena.free) continue;
+        if (Math.ceil(n / BLOCK) * BLOCK > arena.free) continue;
         arena.put(box, segmentsOf(box, n));
         drawn.set(box, n);
       }
-      expectUploaded(arena, before);
+      expectUploaded(made, before);
       expect(arena.geometry.instanceCount).toBeLessThanOrEqual(arena.capacity);
-      if (step % 50 === 0) expectDrawn(arena, drawn);
+      if (step % 50 === 0) {
+        expectDrawn(made, drawn);
+        expectBlocks(made);
+      }
     }
-    expectDrawn(arena, drawn);
+    expectDrawn(made, drawn);
+    expectBlocks(made);
   });
 });

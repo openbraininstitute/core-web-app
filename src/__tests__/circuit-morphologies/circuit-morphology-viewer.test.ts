@@ -4,7 +4,13 @@ import * as THREE from 'three';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
-import { CELL_MASK, NO_CELL } from '@/features/circuit-viewer/morphologies/engine/impostors';
+import {
+  CELL_MASK,
+  HOLE,
+  NO_CELL,
+  TYPE_SHIFT,
+} from '@/features/circuit-viewer/morphologies/engine/impostors';
+import { BLOCK, roomFor } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
@@ -1376,14 +1382,13 @@ describe('the morphologies read a box at a time', () => {
 
     expect(segmentsOf(inner)).toBe(segments);
     expect(segments.geometry.instanceCount).toBe(
-      wanted.reduce((sum, { level }) => sum + COUNTS[level], 0)
+      wanted.reduce((sum, { level }) => sum + roomFor(COUNTS[level]), 0)
     );
-    const words = segments.geometry.getAttribute('aCell').array;
-    const cells = Array.from(
-      words.subarray(0, segments.geometry.instanceCount),
-      (w) => w & 0xffffff
-    );
-    expect(new Set(cells)).toEqual(new Set([0, 2]));
+    const words = Array.from(
+      segments.geometry.getAttribute('aCell').array.subarray(0, segments.geometry.instanceCount)
+    ).filter((w) => w >>> TYPE_SHIFT !== HOLE);
+    expect(words).toHaveLength(wanted.reduce((sum, { level }) => sum + COUNTS[level], 0));
+    expect(new Set(words.map((w) => w & CELL_MASK))).toEqual(new Set([0, 2]));
   });
 
   it('picks with the same quads', async () => {
@@ -1409,7 +1414,8 @@ describe('the morphologies read a box at a time', () => {
 
     const detail = told.mock.lastCall?.[0];
     expect(detail).toMatchObject({ budget: 2_000_000, pixels: 2, leftOut: 0 });
-    expect(detail.drawn).toBe(segmentsOf(inner).geometry.instanceCount);
+    expect(detail.drawn).toBeGreaterThan(0);
+    expect(detail.drawn).toBe(detail.wanted);
     expect(
       detail.levels
         .map(({ boxes }: { boxes: number }) => boxes)
@@ -1424,23 +1430,27 @@ describe('the morphologies read a box at a time', () => {
     const told = vi.fn();
     viewer.onDetail(told);
     viewer.setData(chunked());
-    viewer.setDetailRules({ budget: 2 * COUNTS[2] - 1 });
+    // Each box takes a block of room at every level.
+    viewer.setDetailRules({ budget: 2 * BLOCK - 1 });
     frames(inner);
     await readAll(inner);
 
     expect(told.mock.lastCall?.[0]).toMatchObject({
-      budget: 2 * COUNTS[2] - 1,
+      budget: 2 * BLOCK - 1,
       drawn: 0,
       wanted: 2 * COUNTS[2],
       leftOut: 2,
     });
     expect(segmentsOf(inner).geometry.instanceCount).toBe(0);
 
-    viewer.setDetailRules({ budget: 2 * COUNTS[2] });
+    viewer.setDetailRules({ budget: 2 * BLOCK });
     frames(inner);
     await readAll(inner);
-    expect(told.mock.lastCall?.[0]).toMatchObject({ drawn: 2 * COUNTS[2], leftOut: 0 });
-    expect(segmentsOf(inner).geometry.instanceCount).toBe(2 * COUNTS[2]);
+    const detail = told.mock.lastCall?.[0];
+    expect(detail).toMatchObject({ leftOut: 0 });
+    expect(detail.drawn).toBeGreaterThan(0);
+    expect(detail.drawn).toBe(detail.wanted);
+    expect(segmentsOf(inner).geometry.instanceCount).toBe(2 * BLOCK);
   });
 
   it('places nothing of a read that ends after the morphologies are gone', async () => {

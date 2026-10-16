@@ -8,7 +8,7 @@ import {
   HOLE,
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
-import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
 import type { MorphologyChunks } from '@/features/circuit-viewer/morphologies/types';
@@ -16,7 +16,7 @@ import type { MorphologyChunks } from '@/features/circuit-viewer/morphologies/ty
 vi.mock('@/utils/logger', () => ({ logError: vi.fn() }));
 
 describe('DetailStream, over a long run of views', () => {
-  it('keeps the arena whole: each box drawn at one level, its segments all there', async () => {
+  it('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there', async () => {
     let seed = 11;
     const random = () => {
       seed = (seed * 16807) % 2147483647;
@@ -84,6 +84,7 @@ describe('DetailStream, over a long run of views', () => {
         const level = cell % 10;
         const was = drawn.get(box);
         if (was) expect(was.level).toBe(level);
+        else expect(i % BLOCK).toBe(0);
         drawn.set(box, { level, n: (was?.n ?? 0) + 1 });
       }
       for (const [box, { level, n }] of drawn) {

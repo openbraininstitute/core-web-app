@@ -54,10 +54,12 @@ const frustum = new THREE.Frustum();
 const projected = new THREE.Matrix4();
 const middle = new THREE.Vector3();
 
+/** `roomFor` gives what a box's segments take of the budget. */
 export function chooseDetail(
   { boxes, levels }: PackBoxes,
   view: DetailView,
-  { budget, pixels }: DetailRules
+  { budget, pixels }: DetailRules,
+  roomFor: (segments: number) => number = (segments) => segments
 ): Detail {
   const count = boxes.length / 6;
   const chosen = new Int8Array(count).fill(-1);
@@ -90,21 +92,26 @@ export function chooseDetail(
   const order = Uint32Array.from(inView).sort((a, b) => away[a] - away[b]);
   const segmentsOf = (b: number) => levels[chosen[b]].segments[b];
   let segments = 0;
-  for (const b of order) segments += segmentsOf(b);
+  let room = 0;
+  const tally = (b: number, sign: number) => {
+    segments += sign * segmentsOf(b);
+    room += sign * roomFor(segmentsOf(b));
+  };
+  for (const b of order) tally(b, 1);
   // Coarser, a level at a time, the boxes farthest from the focus first.
-  for (let coarser = true; segments > budget && coarser; ) {
+  for (let coarser = true; room > budget && coarser; ) {
     coarser = false;
-    for (let i = order.length - 1; i >= 0 && segments > budget; i--) {
+    for (let i = order.length - 1; i >= 0 && room > budget; i--) {
       const b = order[i];
       if (chosen[b] === coarsest) continue;
-      segments -= segmentsOf(b);
+      tally(b, -1);
       chosen[b]++;
-      segments += segmentsOf(b);
+      tally(b, 1);
       coarser = true;
     }
   }
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
-  if (segments <= budget) return { levels: chosen, order, segments, leftOut: 0 };
+  if (room <= budget) return { levels: chosen, order, segments, leftOut: 0 };
   for (const b of order) chosen[b] = -1;
   return { levels: chosen, order, segments, leftOut: order.length };
 }

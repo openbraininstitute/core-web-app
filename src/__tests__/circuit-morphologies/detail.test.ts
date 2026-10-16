@@ -145,5 +145,19 @@ describe('chooseDetail', () => {
       expect(Array.from(levels)).toEqual([-1, -1, -1, -1, -1]);
       expect(leftOut).toBe(4);
     });
+
+    it('counts the room each box takes against it, and tells its segments', () => {
+      const blocks = (segments: number) => Math.ceil(segments / 64) * 64;
+      // 128 of room at the finest, 64 at the others.
+      const { levels, segments, leftOut } = chooseDetail(
+        boxesAt(depths),
+        view(),
+        { ...RULES, budget: 320 },
+        blocks
+      );
+      expect(Array.from(levels)).toEqual([0, 1, 1, 1]);
+      expect(segments).toBe(100 + 3 * 50);
+      expect(leftOut).toBe(0);
+    });
   });
 });

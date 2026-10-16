@@ -1,7 +1,7 @@
 import { logError } from '@/utils/logger';
 
 import { chooseDetail, type Detail, type DetailView, SEGMENT_BUDGET } from './detail';
-import { SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
+import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
 
 import type * as THREE from 'three';
 import type {
@@ -22,13 +22,13 @@ function isAbort(e: unknown): boolean {
 }
 
 /**
- * The segments an arena of a pack's boxes holds: the most they can come to drawn at once, each at its largest level,
+ * The segments an arena of a pack's boxes holds: the most room they can take drawn at once, each at its largest level,
  * within the budget, and a quarter more, so that its holes seldom have to be closed.
  */
 function capacityOf({ levels, boxes }: MorphologyChunks): number {
   let most = 0;
   for (let box = 0; box < boxes.length / 6; box++) {
-    most += Math.max(...levels.map((level) => level.segments[box]));
+    most += roomFor(Math.max(...levels.map((level) => level.segments[box])));
   }
   return Math.ceil(1.25 * Math.min(most, SEGMENT_BUDGET));
 }
@@ -106,7 +106,7 @@ export class DetailStream {
   update(view: DetailView, rules: DetailRules, still: boolean): boolean {
     if (this.stopped) return false;
     const budget = Math.min(rules.budget, this.arena.capacity);
-    const detail = chooseDetail(this.chunks, view, { ...rules, budget });
+    const detail = chooseDetail(this.chunks, view, { ...rules, budget }, roomFor);
     this.detail = detail;
     this.still = still;
     this.read();
@@ -144,13 +144,13 @@ export class DetailStream {
       return false;
     });
     const growth = ([box, { segments }]: (typeof arrived)[number]) =>
-      segments.segmentCells.length - (arena.sizeOf(box) ?? 0);
+      roomFor(segments.segmentCells.length) - roomFor(arena.sizeOf(box) ?? 0);
     arrived.sort((a, b) => growth(a) - growth(b));
     let more = full();
     for (const entry of arrived) {
       const [box, { level, segments }] = entry;
       if (growth(entry) > arena.free) continue;
-      if (uploaded > 0 && uploaded + segments.segmentCells.length > cap) {
+      if (uploaded > 0 && uploaded + roomFor(segments.segmentCells.length) > cap) {
         more = true;
         break;
       }

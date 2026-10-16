@@ -148,11 +148,12 @@ describe('DetailStream', () => {
     reads[0].resolve();
     await settled();
 
-    expect(stream.apply(250)).toEqual({ changed: true, more: true });
+    // A box of the finest level takes two blocks of room, 128 segments.
+    expect(stream.apply(300)).toEqual({ changed: true, more: true });
     expect(arena.segments).toBe(200);
     expect(stream.apply(50)).toEqual({ changed: true, more: true });
     expect(arena.segments).toBe(300);
-    expect(stream.apply(250)).toEqual({ changed: true, more: false });
+    expect(stream.apply(300)).toEqual({ changed: true, more: false });
     expect(arena.segments).toBe(400);
   });
 
@@ -172,12 +173,13 @@ describe('DetailStream', () => {
     ]);
   });
 
-  it('holds the budget to what the arena holds', () => {
-    const { stream, reads } = make(150);
+  it('holds the budget to the room the arena holds, a box taking whole blocks', () => {
+    // Room for five blocks of 64: a box of the finest level takes two, of the others one.
+    const { stream, reads } = make(5 * 64);
     stream.update(viewOf(20), RULES, true);
 
-    expect(reads[0].wanted.map(({ level }) => level)).toEqual([1, 1, 2, 2]);
-    expect(stream.stats(RULES).wanted).toBe(120);
+    expect(reads[0].wanted.map(({ level }) => level)).toEqual([0, 1, 1, 1]);
+    expect(stream.stats(RULES).wanted).toBe(250);
   });
 
   it('reads the other boxes on after a batch fails, and no more of those, logging it once', async () => {
