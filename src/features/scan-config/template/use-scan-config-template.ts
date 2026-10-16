@@ -168,7 +168,12 @@ export function useScanConfigTemplate({
 
   useAgentState(
     aiEnabled
-      ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined)
+      ? getConfigKeyForEntity(
+          entityType,
+          activity,
+          entity as { scale?: string } | undefined,
+          schemaName
+        )
       : null,
     config
   );

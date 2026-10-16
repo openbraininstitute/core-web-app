@@ -269,6 +269,7 @@ export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
         ScanConfigFromIdType.IonChannelRecordingFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFitting,
+    pinEntityPreview: true,
   };
 }
 

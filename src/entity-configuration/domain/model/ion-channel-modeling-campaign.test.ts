@@ -22,8 +22,8 @@ describe('toIonChannelFittingForm', () => {
       type: 'IonChannelFittingScanConfig',
       info: { campaign_name: 'Kv1.1', campaign_description: 'fit' },
       initialize: {
+        model_properties: { ion_channel_name: 'Kv1_1' },
         recordings: [{ type: 'IonChannelRecordingFromID', id_str: 'recording-id' }],
-        ion_channel_name: 'Kv1_1',
       },
       model_type: {
         type: 'HodgkinHuxleyIonChannelModel',
