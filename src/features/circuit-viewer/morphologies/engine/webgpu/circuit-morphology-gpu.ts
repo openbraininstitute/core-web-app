@@ -1,11 +1,14 @@
 import * as THREE from 'three/webgpu';
 
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
+import { logError } from '@/utils/logger';
 
 import { type CircuitMaterials, CircuitView } from '../circuit-view';
+import { pixelSpan } from '../detail';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import { impostorMaterials } from './impostors-gpu';
+import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
@@ -14,7 +17,8 @@ const ROW_ALIGNMENT = 256;
 /**
  * The circuit's morphologies on WebGPU (`CircuitView`), on a device of the page's own (`probeWebGPU`), which goes
  * with the view. Each material writes the colour shown, as the WebGL 2 tier's do: Studio's tone maps its own, and the
- * somas are drawn as they come out, so the renderer converts nothing and draws straight to the canvas.
+ * somas are drawn as they come out, so the renderer converts nothing and draws straight to the canvas; a still frame of
+ * morphologies goes through the ambient occlusion first (`Occlusion`).
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
@@ -23,6 +27,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   private device: GPUDevice;
   private gpu: GpuUniforms;
   private idTarget: THREE.RenderTarget | null = null;
+  private occlusions = new Map<THREE.Camera, Occlusion | null>();
 
   /**
    * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
@@ -88,6 +93,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   protected override disposeStage(): void {
     this.idTarget?.dispose();
+    for (const occlusion of this.occlusions.values()) occlusion?.dispose();
     this.renderer.dispose();
     this.device.destroy();
   }
@@ -109,9 +115,44 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
-  protected override draw(): void {
+  /** Still, morphologies are drawn with ambient occlusion; moving, and the somas always, without. */
+  protected override draw(moving: boolean): void {
     this.gpu.sync();
-    this.renderer.render(this.scene, this.camera);
+    const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionFor(this.camera);
+    if (occlusion) occlusion.render(this.occlusionReach());
+    else this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * The occlusion for `camera`, made at its first still frame, the other camera's let go of, as its targets are the
+   * size of the canvas; null where it could not be made.
+   */
+  private occlusionFor(camera: THREE.Camera): Occlusion | null {
+    if (!this.occlusions.has(camera)) {
+      for (const [other, occlusion] of this.occlusions) {
+        if (!occlusion) continue;
+        occlusion.dispose();
+        this.occlusions.delete(other);
+      }
+      let made: Occlusion | null = null;
+      try {
+        made = new Occlusion(this.renderer, this.scene, camera);
+      } catch (e) {
+        logError('Drawn without ambient occlusion', e);
+      }
+      this.occlusions.set(camera, made);
+    }
+    return this.occlusions.get(camera) ?? null;
+  }
+
+  /** How far the occlusion reaches, µm: `AO_RADIUS_CSS` on screen, at the orbit's target in perspective. */
+  private occlusionReach(): number {
+    const { camera } = this;
+    const away =
+      camera instanceof THREE.PerspectiveCamera
+        ? camera.position.distanceTo(this.controls.target)
+        : 1;
+    return AO_RADIUS_CSS * pixelSpan(camera.projectionMatrix, this.height) * away;
   }
 
   protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {

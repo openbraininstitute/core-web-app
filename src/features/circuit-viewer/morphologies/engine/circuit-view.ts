@@ -372,6 +372,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
+  /** Whether morphologies are drawn, in place of the somas. */
+  protected get drawsMorphologies(): boolean {
+    return this.layer !== null;
+  }
+
   /** The target a pick is drawn into, `pickSide` square. */
   protected abstract pickTarget(): THREE.RenderTarget;
 

@@ -26,6 +26,7 @@ import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { BY_SECTION } from '../cell-table';
 import { CELL_MASK, HOLE, MIN_RADIUS, TYPE_SHIFT } from '../impostors';
 import { CELLS, cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
+import { surfaceOf } from './occlusion-gpu';
 
 import type { Node } from 'three/webgpu';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -166,6 +167,19 @@ fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f) -> mat4x4f {
   // The fragment's y runs down, view space's up.
   let n = vec3f(across.x * s, -across.y * s, sqrt(max(1.0 - s * s, 0.0)));
   return mat4x4f(vec4f(n, select(0.0, 1.0, on)), vec4f(r * (1.0 - abs(s)), r, 0.0, 0.0), vec4f(0.0), vec4f(0.0));
+}`);
+
+/**
+ * Under pixel q of a flat segment, the depth of its tube's surface as the depth buffer takes it, its normal n; the quad
+ * itself stands at the tube's nearest all across it. a and b: its ends in view space, each with its radius.
+ */
+const flatDepth = wgslFn(/* wgsl */ `
+fn flatDepth(q: vec2f, ends: vec4f, a: vec4f, b: vec4f, n: vec3f, projection: mat4x4f) -> f32 {
+  let ab = ends.zw - ends.xy;
+  let l2 = dot(ab, ab);
+  let t = select(0.0, clamp(dot(q - ends.xy, ab) / l2, 0.0, 1.0), l2 > 0.0);
+  let clip = projection * vec4f(0.0, 0.0, mix(a.z, b.z, t) + mix(a.w, b.w, t) * n.z, 1.0);
+  return clip.z / clip.w;
 }`);
 
 /**
@@ -400,24 +414,24 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
           projection: cameraProjectionMatrix,
         })
       ).toVar();
-      return {
-        word,
-        cell,
-        texel,
-        glow,
-        position: col(quad, 0).xyz,
-        surface,
-        depth: col(surface, 1).z,
-      };
+      const depth = col(surface, 1).z;
+      return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth, round: depth };
     }
+    const endsPx = flat(col(quad, 1));
     const surface = typed<'mat4'>(
-      segmentSurface({
-        q: screenCoordinate.xy,
-        ends: flat(col(quad, 1)),
-        radii: flat(col(quad, 2)),
-      })
+      segmentSurface({ q: screenCoordinate.xy, ends: endsPx, radii: flat(col(quad, 2)) })
     ).toVar();
-    return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth: null };
+    const round = typed<'float'>(
+      flatDepth({
+        q: screenCoordinate.xy,
+        ends: endsPx,
+        a: flat(col(ends, 0)),
+        b: flat(col(ends, 1)),
+        n: col(surface, 0).xyz,
+        projection: cameraProjectionMatrix,
+      })
+    );
+    return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth: null, round };
   }
   const quad = typed<'mat4'>(
     somaQuad({
@@ -439,13 +453,14 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
       projection: cameraProjectionMatrix,
     })
   ).toVar();
-  return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth: col(surface, 1).z };
+  const depth = col(surface, 1).z;
+  return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth, round: depth };
 }
 
 /**
  * An impostor of `kind` in the look's material, three's standard one under the look's lights: the cell's colour from
  * the cell table where the vertex colour would go, lit by its glow, ringed as it glows on a light background, tone
- * mapped as Studio is on WebGL 2 and written as shown.
+ * mapped as Studio is on WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`).
  */
 function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandardNodeMaterial {
   const studio = look.material as THREE.MeshStandardMaterial;
@@ -453,7 +468,7 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
     roughness: studio.roughness,
     metalness: studio.metalness,
   });
-  const { word, cell, texel, glow, position, surface, depth } = impostorOf(kind, u, true);
+  const { word, cell, texel, glow, position, surface, depth, round } = impostorOf(kind, u, true);
   const [unknown, soma, axon, basal, apical] = u.sectionColours;
   const colour = flat(
     typed<'vec3'>(
@@ -487,6 +502,7 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
   const lit = mix(output.rgb, u.glowRim.xyz, rim);
   const mapped = typed<'vec3'>(toneMapping(THREE.ACESFilmicToneMapping, float(EXPOSURE), lit));
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(mapped)), output.a);
+  material.mrtNode = surfaceOf(col(surface, 0).xyz, round);
   return material;
 }
 
