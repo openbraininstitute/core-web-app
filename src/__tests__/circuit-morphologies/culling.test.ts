@@ -135,6 +135,17 @@ describe("the culling's counts and its failures", () => {
     expect(counted).toHaveBeenLastCalledWith(B);
   });
 
+  it.each([
+    ['none drawn', (culling: Culling) => culling.drawNone()],
+    ['every segment drawn', (culling: Culling) => culling.drawAll(100)],
+  ])('reads nothing left unread once the draws are %s', async (_, draw) => {
+    const { culling, run, map, maps } = cullingOn();
+    for (let frame = 0; frame < 9; frame++) run();
+    draw(culling);
+    await map(A);
+    expect(maps).toHaveLength(7);
+  });
+
   it('tells nothing of a read whose buffer was destroyed with the view', async () => {
     const { culling, counted, run, maps } = cullingOn();
     run();

@@ -371,12 +371,12 @@ export abstract class SceneView implements ViewControls {
   }
 
   /**
-   * The camera as a frame draws with it, for a draw outside the loop too: its clip range and what else follows it
-   * (`updateCameraTied`), and its matrices, which three brings up to date only in a draw of the scene it is in.
+   * The camera as a frame draws with it, for a draw outside the loop too: its matrices, which three brings up to date
+   * only in a draw of the scene it is in, then its clip range and what else follows it (`updateCameraTied`).
    */
   protected readyCamera(): void {
-    this.updateCameraTied();
     this.camera.updateMatrixWorld();
+    this.updateCameraTied();
   }
 
   /** Per-frame state that follows the camera: the clip range tied to the orbit distance, and `cameraTied`. */

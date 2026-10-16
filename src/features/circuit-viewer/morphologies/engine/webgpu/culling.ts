@@ -138,7 +138,6 @@ export class Culling {
   setArena(arena: ArenaBuffers | null): void {
     this.arena = arena;
     this.bound = null;
-    this.unread = false;
     this.generation++;
     this.drawNone();
   }
@@ -215,8 +214,12 @@ export class Culling {
     return true;
   }
 
-  /** Not culled: every segment up to `end` drawn by the seen lists' draws, each of its own kind. */
+  /**
+   * Not culled: every segment up to `end` drawn by the seen lists' draws, each of its own kind. As with `drawNone`, the
+   * last tests left unread are not read: the draws they counted are gone.
+   */
   drawAll(end: number): void {
+    this.unread = false;
     this.allDraws[INSTANCES] = end;
     this.allDraws[(DRAWS.seenTubes - DRAWS.seenFlat) / 4 + INSTANCES] = end;
     this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.seenFlat, this.allDraws);
@@ -224,6 +227,7 @@ export class Culling {
 
   /** None drawn, kept or seen. */
   drawNone(): void {
+    this.unread = false;
     this.device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
   }
 
