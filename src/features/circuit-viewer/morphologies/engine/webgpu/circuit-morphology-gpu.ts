@@ -223,6 +223,9 @@ export class CircuitMorphologyGPU extends CircuitView {
     }
     if (this.culls && !culling.failed) {
       const { renderer } = this;
+      // The camera is the scene's, which the draw of the kept segments alone does not bring up to date; a snapshot or a
+      // pick may cull with no frame since it moved.
+      this.camera.updateMatrixWorld();
       const size = renderer.getDrawingBufferSize(this.drawingSize);
       renderer.setRenderTarget(culling.targetOf(size.x, size.y));
       renderer.render(this.keptQuads, this.camera);
