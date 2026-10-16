@@ -3,12 +3,9 @@ import * as THREE from 'three/webgpu';
 
 import { BLOCK } from '../segment-arena';
 import { shareBuffer } from './three-hooks';
+import { COPY_DST, STORAGE } from './usage';
 
 import type { ArenaUploads } from '../segment-arena';
-
-// GPUBufferUsage's bits. TypeScript's DOM library types WebGPU but leaves the object out.
-const COPY_DST = 0x0008;
-const STORAGE = 0x0080;
 
 /** A texel of no depth drawn, until the culling has drawn its own. */
 const NOTHING_DRAWN = new THREE.DataTexture(
@@ -39,7 +36,7 @@ export function arenaStorage() {
 
 export type ArenaStorage = ReturnType<typeof arenaStorage>;
 
-/** An arena's buffers on the GPU, as the culling reads and fills them; `capacity` the segments it holds. */
+/** An arena's buffers on the GPU, as the culling reads and fills them. */
 export interface ArenaBuffers {
   ends: GPUBuffer;
   words: GPUBuffer;
@@ -48,7 +45,6 @@ export interface ArenaBuffers {
   lists: GPUBuffer;
   /** The blocks that pass their test. */
   passed: GPUBuffer;
-  capacity: number;
 }
 
 /**
@@ -74,7 +70,6 @@ export function arenaOnGpu(
     blocks: bufferOf(blocks.byteLength, 'arena blocks'),
     lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
     passed: bufferOf((4 * capacity) / BLOCK, 'arena blocks passed', STORAGE),
-    capacity,
   };
   shareBuffer(renderer, storage.ends, buffers.ends);
   shareBuffer(renderer, storage.words, buffers.words);
@@ -92,15 +87,7 @@ export function arenaOnGpu(
     },
     dispose() {
       told(null);
-      for (const buffer of [
-        buffers.ends,
-        buffers.words,
-        buffers.blocks,
-        buffers.lists,
-        buffers.passed,
-      ]) {
-        buffer.destroy();
-      }
+      for (const buffer of Object.values(buffers)) buffer.destroy();
     },
   };
 }

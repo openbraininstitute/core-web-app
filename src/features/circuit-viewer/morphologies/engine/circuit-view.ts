@@ -28,6 +28,7 @@ import {
   impostorUniforms,
   NO_CELL,
   packCellTypes,
+  quadGeometry,
   segmentAttributes,
   setSectionColours,
 } from './impostors';
@@ -57,10 +58,6 @@ import type {
 } from '../types';
 import type { UploadsOf } from './segment-arena';
 
-/** A quad's corners, x, y, z after one another, and its two triangles, which face the eye. */
-const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
-const TRIANGLES = [0, 1, 2, 2, 1, 3];
-
 /**
  * What the highlighted cell and the ring round each contact are drawn in: as far from the background as no colour of a
  * palette is.
@@ -89,15 +86,6 @@ const NUDGE_GROWTH = 0.06;
 const MORPH_MS = 600;
 const point = new THREE.Vector3();
 
-/** `instances` quads, for the caller to add the attributes a shader places each by. */
-function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(CORNERS, 3));
-  geometry.setIndex(TRIANGLES);
-  geometry.instanceCount = instances;
-  return geometry;
-}
-
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
 
 function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material): Quads {
@@ -124,13 +112,13 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 /**
  * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
  * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on,
- * by their order, where not on the arena's own.
+ * by their order.
  */
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
   segment: THREE.Material[];
   ids: THREE.Material[];
-  quads?: THREE.InstancedBufferGeometry[];
+  quads: THREE.InstancedBufferGeometry[];
 }
 
 /**
@@ -518,7 +506,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate(), drawing?.uploadsOf);
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
-      drawn.map((material, k) => quads(drawing?.quads?.[k] ?? segments, material));
+      drawn.map((material, k) => quads(drawing?.quads[k] ?? segments, material));
     const segmentMeshes = onSegments(drawing?.segment ?? materials.segment);
     this.chunks.add(...segmentMeshes);
 
@@ -587,16 +575,19 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return this.layer?.detailed?.stream.geometry.instanceCount ?? 0;
   }
 
-  /** What the tier's culling counted, for the listeners. */
+  /** What the tier's culling counted, for the listeners: with what they were told last, which it alone changes. */
   protected tellCulled(counts: CullCounts): void {
     this.culled = counts;
-    this.tellDetail();
+    if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }
 
   /** The listeners told what is drawn of morphologies read a box at a time, where that changed. */
   private tellDetail(): void {
     const stats = this.layer?.detailed?.stream.stats(this.detailRules);
-    const detail = stats ? { ...stats, culled: this.culled } : null;
+    this.tell(stats ? { ...stats, culled: this.culled } : null);
+  }
+
+  private tell(detail: DetailStats | null): void {
     if (isEqual(detail, this.toldDetail)) return;
     this.toldDetail = detail;
     for (const listener of this.detailListeners) listener(detail);
@@ -1271,7 +1262,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * a mesh until it is disposed, and three lets go of a material's programs with its last mesh, which the quads that
    * take their place would build again.
    */
-  private letGo(...meshes: Quads[]): void {
+  protected letGo(...meshes: Quads[]): void {
     for (const mesh of meshes) {
       mesh.removeFromParent();
       const material = mesh.material as THREE.Material;

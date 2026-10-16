@@ -1,25 +1,25 @@
 import * as THREE from 'three/webgpu';
 
-import { MIN_RADIUS } from '../impostors';
+import { MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
 import { VIEW_WGSL } from './cells-wgsl';
 import { ARGS, BLOCKS, PYRAMID, RESOLVE, SEGMENTS } from './culling-wgsl';
 import { IMPOSTORS_WGSL, SEGMENT_ENDS_WGSL } from './impostors-gpu';
 import { gpuTexture, shareBuffer } from './three-hooks';
+import {
+  COPY_DST,
+  COPY_SRC,
+  INDIRECT,
+  MAP_READ,
+  READ,
+  STORAGE,
+  STORAGE_BINDING,
+  TEXTURE_BINDING,
+  UNIFORM,
+} from './usage';
 
 import type { CullCounts } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
-
-// WebGPU's bits, which TypeScript's DOM library leaves out.
-const MAP_READ = 0x0001;
-const COPY_SRC = 0x0004;
-const COPY_DST = 0x0008;
-const UNIFORM = 0x0040;
-const STORAGE = 0x0080;
-const INDIRECT = 0x0100;
-const TEXTURE_BINDING = 0x04;
-const STORAGE_BINDING = 0x08;
-const READ = 0x0001;
 
 /** The samples a pixel of the depth drawn before the tests has, as the picture's. */
 const SAMPLES = 4;
@@ -36,15 +36,16 @@ const VIEW_BYTES = 192;
 /** Where in the draws' arguments each list's are, bytes: five words each, the kept first. */
 export const DRAWS = { keptFlat: 0, keptTubes: 20, seenFlat: 40, seenTubes: 60 } as const;
 const DRAWS_BYTES = 80;
-/** A draw of none of the quads, six indices each. */
-const NO_DRAW = [6, 0, 0, 0, 0];
+/** Draws of none of the quads, six indices each. */
+const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
 const LIBRARY = [VIEW_WGSL, IMPOSTORS_WGSL, SEGMENT_ENDS_WGSL].join('\n');
+
+type Pipelines = Record<'resolve' | 'pyramid' | 'blocks' | 'args' | 'segments', GPUComputePipeline>;
 
 /** What the passes bind, made again where the depth drawn before them, the targets or the arena change. */
 interface Bound {
   depth: GPUTexture;
-  arena: ArenaBuffers;
   resolve: GPUBindGroup;
   pyramid: GPUBindGroup[];
   blocks: GPUBindGroup;
@@ -62,31 +63,28 @@ interface Targets {
   sizes: [number, number][];
 }
 
-/** A quad's corners, as `quadGeometry` in `circuit-view.ts` has them, and its two triangles. */
-const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
-const TRIANGLES = [0, 1, 2, 2, 1, 3];
-
 /**
  * The culling of an arena's segments on the GPU, the bench's on blocks of 64 (`culling-wgsl.ts`): each frame, the
  * segments kept the frame before are drawn to depth (`target`, by three), and then the passes here, on `device`'s
  * queue before three draws the frame: that depth at each pixel the farthest of its samples, its pyramid, the blocks'
  * test, the segments' test into the lists, flat and tubes, of those kept and those seen, and the draws' arguments,
- * which three's quads are drawn by (`quads`). What the tests count is read back each frame.
+ * which three's quads are drawn by (`quads`). What the tests count is read back each frame and handed to `counted`.
  */
 export class Culling {
   readonly draws: THREE.IndirectStorageBufferAttribute;
   private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private storage: ArenaStorage;
+  private counted: (counts: CullCounts) => void;
   private drawsBuffer: GPUBuffer;
   private viewBuffer: GPUBuffer;
   private counters: GPUBuffer;
   private dispatch: GPUBuffer;
   private view = new ArrayBuffer(VIEW_BYTES);
-  private pipelines: Record<
-    'resolve' | 'pyramid' | 'blocks' | 'args' | 'segments',
-    GPUComputePipeline
-  > | null = null;
+  private viewFloats = new Float32Array(this.view);
+  private viewWords = new Uint32Array(this.view);
+  private allDraws = NO_DRAWS.slice(DRAWS.seenFlat / 4);
+  private pipelines: Pipelines | null = null;
   private arena: ArenaBuffers | null = null;
   private target: THREE.RenderTarget | null = null;
   private targets: Targets | null = null;
@@ -95,10 +93,16 @@ export class Culling {
   private reads: GPUBuffer[] = [];
   private free: GPUBuffer[] = [];
 
-  constructor(renderer: THREE.WebGPURenderer, device: GPUDevice, storage: ArenaStorage) {
+  constructor(
+    renderer: THREE.WebGPURenderer,
+    device: GPUDevice,
+    storage: ArenaStorage,
+    counted: (counts: CullCounts) => void
+  ) {
     this.renderer = renderer;
     this.device = device;
     this.storage = storage;
+    this.counted = counted;
     const buffer = (size: number, usage: number, label: string) =>
       device.createBuffer({ size, usage, label });
     this.drawsBuffer = buffer(DRAWS_BYTES, STORAGE | INDIRECT | COPY_DST | COPY_SRC, 'cull draws');
@@ -107,23 +111,23 @@ export class Culling {
     this.dispatch = buffer(16, STORAGE | INDIRECT, 'cull dispatch');
     this.draws = new THREE.IndirectStorageBufferAttribute(new Uint32Array(DRAWS_BYTES / 4), 1);
     shareBuffer(renderer, this.draws, this.drawsBuffer);
-    this.clearDraws();
+  }
+
+  /** Whether there is an arena to test. */
+  get placed(): boolean {
+    return this.arena !== null;
   }
 
   /** The arena whose segments are tested, or none; its lists hold nothing kept yet. */
   setArena(arena: ArenaBuffers | null): void {
     this.arena = arena;
     this.bound = null;
-    this.clearDraws();
+    this.drawNone();
   }
 
   /** Quads drawn by the draw at `offset` (`DRAWS`). */
   quads(offset: number): THREE.InstancedBufferGeometry {
-    const geometry = new THREE.InstancedBufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(CORNERS, 3));
-    geometry.setIndex(TRIANGLES);
-    geometry.setIndirect(this.draws, offset);
-    return geometry;
+    return quadGeometry(Infinity).setIndirect(this.draws, offset);
   }
 
   /** What the kept segments are drawn into before the tests, `width` by `height` device pixels. */
@@ -133,6 +137,7 @@ export class Culling {
         samples: SAMPLES,
         depthTexture: new THREE.DepthTexture(width, height, THREE.FloatType),
         format: THREE.RedFormat,
+        resolveColorBuffer: false,
         storeMultisampledColorBuffer: false,
       });
     }
@@ -143,30 +148,28 @@ export class Culling {
   /**
    * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
    * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `end`: where the arena's segments end. `counted` is handed what the tests counted, a frame or two on.
+   * pixels of a tube; `end`: where the arena's segments end.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
-    end: number,
-    counted: (counts: CullCounts) => void
+    end: number
   ): void {
     const { device, arena, target } = this;
     const depth = target?.depthTexture && gpuTexture(this.renderer, target.depthTexture);
     if (!arena || !target || !depth) return;
-    const targets = this.targetsOf(target.width, target.height);
-    const bound = this.bindings(depth, arena, targets);
-    const blocks = Math.ceil(end / BLOCK);
-    this.writeView(camera, shift, tubeFrom, targets, blocks, arena.capacity);
-    device.queue.writeBuffer(this.counters, 0, new Uint32Array(4));
-    this.clearDraws();
-
     const pipelines = this.pipelinesNow();
+    const targets = this.targetsOf(target.width, target.height);
+    const bound = this.bindings(pipelines, depth, arena, targets);
+    const blocks = Math.ceil(end / BLOCK);
+    this.writeView(camera, shift, tubeFrom, targets, blocks);
+    this.drawNone();
+
     const encoder = device.createCommandEncoder({ label: 'cull' });
+    encoder.clearBuffer(this.counters);
     const pass = encoder.beginComputePass();
     const run = (pipeline: GPUComputePipeline, group: GPUBindGroup, x: number, y = 1) => {
-      if (x === 0) return;
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, group);
       pass.dispatchWorkgroups(x, y);
@@ -192,17 +195,19 @@ export class Culling {
       encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
     }
     device.queue.submit([encoder.finish()]);
-    if (read) this.counts(read, counted);
+    if (read) this.counts(read);
   }
 
   /** Not culled: every segment up to `end` drawn by the seen lists' draws, each of its own kind. */
   drawAll(end: number): void {
-    const all = [6, end, 0, 0, 0];
-    this.device.queue.writeBuffer(
-      this.drawsBuffer,
-      DRAWS.seenFlat,
-      new Uint32Array([...all, ...all])
-    );
+    this.allDraws[1] = end;
+    this.allDraws[6] = end;
+    this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.seenFlat, this.allDraws);
+  }
+
+  /** None drawn, kept or seen. */
+  drawNone(): void {
+    this.device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
   }
 
   dispose(): void {
@@ -214,32 +219,23 @@ export class Culling {
     this.dropTargets();
   }
 
-  private clearDraws(): void {
-    this.device.queue.writeBuffer(
-      this.drawsBuffer,
-      0,
-      new Uint32Array([...NO_DRAW, ...NO_DRAW, ...NO_DRAW, ...NO_DRAW])
-    );
-  }
-
   private writeView(
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
     { width, height, sizes }: Targets,
-    blocks: number,
-    capacity: number
+    blocks: number
   ): void {
-    const f = new Float32Array(this.view);
+    const f = this.viewFloats;
     f.set(camera.matrixWorldInverse.elements, 0);
     f.set(camera.projectionMatrix.elements, 16);
     f.set([0, 0, width, height, shift.x, shift.y, shift.z, camera.near], 32);
     f.set([camera.far, tubeFrom, LEAST_PX, 0], 40);
-    new Uint32Array(this.view).set([sizes.length, blocks, capacity, 0], 44);
+    this.viewWords.set([sizes.length, blocks, this.storage.capacity.value, 0], 44);
     this.device.queue.writeBuffer(this.viewBuffer, 0, this.view);
   }
 
-  private pipelinesNow(): NonNullable<Culling['pipelines']> {
+  private pipelinesNow(): Pipelines {
     if (!this.pipelines) {
       const pipeline = (code: string, label: string) =>
         this.device.createComputePipeline({
@@ -284,7 +280,6 @@ export class Culling {
     });
     this.targets = { width, height, full, hiz, sizes };
     this.storage.farthest.value = full;
-    this.bound = null;
     return this.targets;
   }
 
@@ -295,12 +290,15 @@ export class Culling {
     this.bound = null;
   }
 
-  private bindings(depth: GPUTexture, arena: ArenaBuffers, targets: Targets): Bound {
-    const was = this.bound;
-    if (was?.depth === depth && was.arena === arena) return was;
+  private bindings(
+    pipelines: Pipelines,
+    depth: GPUTexture,
+    arena: ArenaBuffers,
+    targets: Targets
+  ): Bound {
+    if (this.bound?.depth === depth) return this.bound;
     const full = gpuTexture(this.renderer, targets.full);
     if (!full) throw new Error('the culling target has no texture');
-    const pipelines = this.pipelinesNow();
     const group = (pipeline: GPUComputePipeline, resources: GPUBindingResource[], label: string) =>
       this.device.createBindGroup({
         label,
@@ -315,7 +313,6 @@ export class Culling {
     const tested = [view, buffer(arena.blocks), fullView, hizView, buffer(arena.passed)];
     this.bound = {
       depth,
-      arena,
       resolve: group(pipelines.resolve, [view, depth.createView(), fullView], 'cull resolve'),
       pyramid: targets.sizes.map((_, k) =>
         group(pipelines.pyramid, [k ? level(k - 1) : fullView, level(k)], `cull pyramid ${k}`)
@@ -348,12 +345,12 @@ export class Culling {
     return read ?? null;
   }
 
-  private counts(read: GPUBuffer, counted: (counts: CullCounts) => void): void {
+  private counts(read: GPUBuffer): void {
     read.mapAsync(READ).then(
       () => {
         const words = new Uint32Array(read.getMappedRange());
         const at = (offset: number) => words[4 + offset / 4 + 1];
-        counted({
+        this.counted({
           tested: words[1],
           kept: at(DRAWS.keptFlat) + at(DRAWS.keptTubes),
           drawn: at(DRAWS.seenFlat) + at(DRAWS.seenTubes),

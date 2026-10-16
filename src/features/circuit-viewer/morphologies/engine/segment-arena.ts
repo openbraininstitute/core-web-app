@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { HOLE_WORD, packCellTypes, segmentAttributes } from './impostors';
+import { HOLE_WORD, packCellTypes, QUAD_REACH, segmentAttributes } from './impostors';
 
 import type { MorphologySegments } from '../types';
 
@@ -8,8 +8,6 @@ import type { MorphologySegments } from '../types';
 export const SEGMENT_BYTES = 8 * 4 + 4;
 /** The segments the culling tests together, whose box it tests first. */
 export const BLOCK = 64;
-/** How far a block's box reaches past its segments' ends, in their radii: a little past their tubes, as the bench's. */
-const BLOCK_REACH = 1.15;
 
 /** The room `segments` take in an arena: a whole number of blocks. */
 export const roomFor = (segments: number) => Math.ceil(segments / BLOCK) * BLOCK;
@@ -177,7 +175,7 @@ export class SegmentArena {
   }
 
   /**
-   * The boxes of the blocks from the one `start` starts on, over `segments`: each end's reach (`BLOCK_REACH`) in each
+   * The boxes of the blocks from the one `start` starts on, over `segments`: each end's reach (`QUAD_REACH`) in each
    * axis. A block's first segment is kept with its box's least corner, and its segments with its greatest.
    */
   private bound(segments: Float32Array, start: number): void {
@@ -192,7 +190,7 @@ export class SegmentArena {
       let y1 = -Infinity;
       let z1 = -Infinity;
       for (let k = 8 * s; k < 8 * last; k += 4) {
-        const reach = BLOCK_REACH * segments[k + 3];
+        const reach = QUAD_REACH * segments[k + 3];
         x0 = Math.min(x0, segments[k] - reach);
         y0 = Math.min(y0, segments[k + 1] - reach);
         z0 = Math.min(z0, segments[k + 2] - reach);

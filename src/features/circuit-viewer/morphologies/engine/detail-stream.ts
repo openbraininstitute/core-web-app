@@ -84,7 +84,7 @@ export class DetailStream {
   }
 
   /** What is drawn under `rules`. */
-  stats(rules: DetailRules): DetailStats {
+  stats(rules: DetailRules): Omit<DetailStats, 'culled'> {
     const boxes = this.chunks.levels.map(() => 0);
     for (const level of this.drawn) if (level >= 0) boxes[level]++;
     return {
@@ -96,7 +96,6 @@ export class DetailStream {
         boxes: boxes[level],
       })),
       leftOut: this.detail?.leftOut ?? 0,
-      culled: null,
     };
   }
 

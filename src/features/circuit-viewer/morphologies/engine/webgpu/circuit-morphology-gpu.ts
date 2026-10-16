@@ -21,8 +21,6 @@ const ROW_ALIGNMENT = 256;
 interface GpuArena extends ReturnType<typeof arenaMaterials> {
   storage: ArenaStorage;
   culling: Culling;
-  /** Whether a pack's arena is on the GPU now. */
-  placed: boolean;
 }
 
 /**
@@ -48,8 +46,6 @@ export class CircuitMorphologyGPU extends CircuitView {
   private arena: GpuArena | null = null;
   /** The kept segments' quads, drawn to depth before the culling's tests. */
   private keptQuads = new THREE.Scene();
-  /** Of each material of `keptQuads`, the quads last let go of: three keeps its programs while they are kept. */
-  private keptLetGo = new Map<THREE.Material, THREE.Mesh>();
   private drawingSize = new THREE.Vector2();
 
   /**
@@ -180,22 +176,21 @@ export class CircuitMorphologyGPU extends CircuitView {
       this.arena = {
         storage,
         ...arenaMaterials(this.gpu, this.look, storage),
-        culling: new Culling(this.renderer, this.device, storage),
-        placed: false,
+        culling: new Culling(this.renderer, this.device, storage, (counts) =>
+          this.tellCulled(counts)
+        ),
       };
     }
-    const arena = this.arena;
-    const { storage, segment, ids, kept, culling } = arena;
+    const { storage, segment, ids, kept, culling } = this.arena;
     this.keep([
       new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
     ]);
     return {
       uploadsOf: (ends, words, blocks) =>
-        arenaOnGpu(this.renderer, this.device, storage, { ends, words, blocks }, (buffers) => {
-          arena.placed = buffers !== null;
-          culling.setArena(buffers);
-        }),
+        arenaOnGpu(this.renderer, this.device, storage, { ends, words, blocks }, (buffers) =>
+          culling.setArena(buffers)
+        ),
       segment,
       ids,
       quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],
@@ -203,14 +198,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /** `meshes` in place of the kept segments' quads, which are let go of. */
-  private keep(meshes: THREE.Mesh[]): void {
-    for (const mesh of [...this.keptQuads.children] as THREE.Mesh[]) {
-      mesh.removeFromParent();
-      mesh.geometry.dispose();
-      const material = mesh.material as THREE.Material;
-      this.keptLetGo.get(material)?.dispose();
-      this.keptLetGo.set(material, mesh);
-    }
+  private keep(meshes: THREE.Mesh<THREE.InstancedBufferGeometry>[]): void {
+    const was = [...this.keptQuads.children] as THREE.Mesh<THREE.InstancedBufferGeometry>[];
+    for (const mesh of was) mesh.geometry.dispose();
+    this.letGo(...was);
     for (const mesh of meshes) mesh.frustumCulled = false;
     this.keptQuads.add(...meshes);
   }
@@ -221,7 +212,7 @@ export class CircuitMorphologyGPU extends CircuitView {
    */
   private cull(): void {
     const arena = this.arena;
-    if (!arena?.placed) return;
+    if (!arena?.culling.placed) return;
     const { storage, culling } = arena;
     const end = this.arenaEnd;
     storage.end.value = end;
@@ -230,14 +221,16 @@ export class CircuitMorphologyGPU extends CircuitView {
       culling.drawAll(end);
       return;
     }
+    if (end === 0) {
+      culling.drawNone();
+      return;
+    }
     const { renderer } = this;
     const size = renderer.getDrawingBufferSize(this.drawingSize);
     renderer.setRenderTarget(culling.targetOf(size.x, size.y));
     renderer.render(this.keptQuads, this.camera);
     renderer.setRenderTarget(null);
-    culling.run(this.camera, this.uniforms.uShift.value, this.gpu.tubeFrom.value, end, (counts) =>
-      this.tellCulled(counts)
-    );
+    culling.run(this.camera, this.uniforms.uShift.value, this.gpu.tubeFrom.value, end);
   }
 
   private occlusionNow(): Occlusion | null {

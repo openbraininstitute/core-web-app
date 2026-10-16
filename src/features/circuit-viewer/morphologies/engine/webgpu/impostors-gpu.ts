@@ -27,7 +27,7 @@ import * as THREE from 'three/webgpu';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION } from '../cell-table';
-import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, TYPE_SHIFT } from '../impostors';
+import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, QUAD_REACH, TYPE_SHIFT } from '../impostors';
 import { CELLS, cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
 import { surfaceOf } from './occlusion-gpu';
@@ -153,7 +153,7 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
   let end = select(a, b, atB);
   // As wide on screen as the wider end all along, and a little more: narrowing with the tube, the quad's side would
   // cut into the wider end.
-  let wide = 1.15 * max(radii.x, radii.y) * select(umA, umB, atB);
+  let wide = ${QUAD_REACH} * max(radii.x, radii.y) * select(umA, umB, atB);
   let outward = select(-along, along, atB) + across * corner.y;
   let p = lifted(vec3f(end.xy + outward * wide, end.z), select(ra, rb, atB), orthographic);
   return mat4x4f(world * vec4f(p, 1.0), vec4f(toFragment(pa, vp), toFragment(pb, vp)), vec4f(p, 0.0), vec4f(0.0));

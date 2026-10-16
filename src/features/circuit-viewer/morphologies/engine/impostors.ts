@@ -65,6 +65,8 @@ export function packCellTypes(
 
 /** The least radius a fibre is drawn with, in device pixels, so that a thin one far away is not left in dashes. */
 export const MIN_RADIUS = 0.75;
+/** How far a segment's quad reaches from its line, in the wider end's radii on screen: a little past the tube. */
+export const QUAD_REACH = 1.15;
 
 /** The somas view's ring round a spiking soma, in sRGB. */
 export const GLOW_RIM_COLOR = '#4d4233';
@@ -128,6 +130,19 @@ export function segmentAttributes(
     .setAttribute('aChartA', new THREE.InterleavedBufferAttribute(charted, 4, 0))
     .setAttribute('aChartB', new THREE.InterleavedBufferAttribute(charted, 4, 4))
     .setAttribute('aCell', cellTypes);
+}
+
+/** A quad's corners, x, y, z after one another, and its two triangles, which face the eye. */
+const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
+const TRIANGLES = [0, 1, 2, 2, 1, 3];
+
+/** `instances` quads, for the caller to add the attributes a shader places each by. */
+export function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
+  const geometry = new THREE.InstancedBufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(CORNERS, 3));
+  geometry.setIndex(TRIANGLES);
+  geometry.instanceCount = instances;
+  return geometry;
 }
 
 /** `pixelUm`, for a vertex shader that has `uViewport`. */
@@ -235,7 +250,7 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	vec3 end = atB ? b : a;
 	// As wide on screen as the wider end all along, and a little more: narrowing with the tube, the quad's side would
 	// cut into the wider end.
-	float wide = 1.15 * max( vSegmentRadii.x, vSegmentRadii.y ) * ( atB ? umB : umA );
+	float wide = ${QUAD_REACH} * max( vSegmentRadii.x, vSegmentRadii.y ) * ( atB ? umB : umA );
 	vec2 outward = ( atB ? along : - along ) + across * corner.y;
 	P = lifted( vec3( end.xy + outward * wide, end.z ), atB ? rb : ra );
 	return true;

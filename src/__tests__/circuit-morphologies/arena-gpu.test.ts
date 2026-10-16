@@ -48,14 +48,7 @@ function fakeDevice() {
 }
 
 /** A renderer whose backend holds something of each object, as three r186's does. */
-function fakeRenderer() {
-  const data = new WeakMap<object, object>();
-  const get = (object: object) => {
-    if (!data.has(object)) data.set(object, {});
-    return data.get(object);
-  };
-  return { backend: { get } } as unknown as GPU.WebGPURenderer;
-}
+const fakeRenderer = () => ({ backend: { get: () => ({}) } }) as unknown as GPU.WebGPURenderer;
 
 function segmentsOf(box: number, count: number): MorphologySegments {
   return {

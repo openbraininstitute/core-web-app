@@ -4,6 +4,8 @@
  * (`culling.ts`), whose `segmentEnds` places a segment as its draw does.
  */
 
+import { QUAD_REACH } from '../impostors';
+
 /** How much nearer a segment is taken to be than it is, µm and a share of its distance: the arithmetic's rounding. */
 export const NEAR_UM = 0.02;
 export const NEAR_SHARE = 1e-6;
@@ -33,8 +35,7 @@ struct View {
 
 // A view point in device pixels from the top left, y down, as the fragment's position counts them.
 fn texelOf(p: vec3f) -> vec2f {
-  let q = pixelsUp(p, view.projection, view.vp);
-  return vec2f(q.x, view.vp.w - q.y);
+  return toFragment(pixelsUp(p, view.projection, view.vp), view.vp);
 }
 fn nearer(away: f32) -> f32 { return away - away * ${NEAR_SHARE} - ${NEAR_UM}; }
 `;
@@ -123,7 +124,7 @@ fn shows(bl: Block) -> bool {
     hi = max(hi, q);
     away = min(away, -p.z);
   }
-  let least = 1.15 * view.more.z;
+  let least = ${QUAD_REACH} * view.more.z;
   lo -= least + 1.0;
   hi += least + 1.0;
   if (hi.x < 0.0 || hi.y < 0.0 || lo.x >= view.vp.z || lo.y >= view.vp.w) { return false; }
@@ -272,7 +273,7 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
   if (e[3].w < 0.5) { return; }
   let radii = e[2].xy;
   let near = nearer(min(-e[0].z - e[0].w, -e[1].z - e[1].w));
-  let v = seen(texelOf(e[0].xyz), texelOf(e[1].xyz), 1.15 * max(radii.x, radii.y), near);
+  let v = seen(texelOf(e[0].xyz), texelOf(e[1].xyz), ${QUAD_REACH} * max(radii.x, radii.y), near);
   if (v < 3u) { return; }
   let tube = max(radii.x, radii.y) >= view.more.y;
   let cap = view.counts.z;
