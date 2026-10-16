@@ -25,8 +25,11 @@ const READ = 0x0001;
 const SAMPLES = 4;
 /** The least radius a segment is tested at, px: a cell glowing in full is drawn at twice the least. */
 const LEAST_PX = 2 * MIN_RADIUS;
-/** How often what the tests counted is read back, ms. */
-const COUNTED_MS = 250;
+/**
+ * The frames whose counts may be on their way back at once: each frame's are read, so that the last before the view
+ * rests is.
+ */
+const READS = 8;
 /** The view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts, in bytes. */
 const VIEW_BYTES = 192;
 
@@ -68,7 +71,7 @@ const TRIANGLES = [0, 1, 2, 2, 1, 3];
  * segments kept the frame before are drawn to depth (`target`, by three), and then the passes here, on `device`'s
  * queue before three draws the frame: that depth at each pixel the farthest of its samples, its pyramid, the blocks'
  * test, the segments' test into the lists, flat and tubes, of those kept and those seen, and the draws' arguments,
- * which three's quads are drawn by (`quads`). What the tests count is read back now and then.
+ * which three's quads are drawn by (`quads`). What the tests count is read back each frame.
  */
 export class Culling {
   readonly draws: THREE.IndirectStorageBufferAttribute;
@@ -91,7 +94,6 @@ export class Culling {
   /** Buffers to read the counts back into, and those of them free. */
   private reads: GPUBuffer[] = [];
   private free: GPUBuffer[] = [];
-  private countedAt = -Infinity;
 
   constructor(renderer: THREE.WebGPURenderer, device: GPUDevice, storage: ArenaStorage) {
     this.renderer = renderer;
@@ -141,7 +143,7 @@ export class Culling {
   /**
    * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
    * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `end`: where the arena's segments end. `counted` is handed what the tests counted, now and then.
+   * pixels of a tube; `end`: where the arena's segments end. `counted` is handed what the tests counted, a frame or two on.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
@@ -336,18 +338,14 @@ export class Culling {
     return this.bound;
   }
 
-  /** A buffer to read the counts back into, where it is time to and one is free. */
+  /** A buffer to read the counts back into; none where the GPU is `READS` frames behind. */
   private readNow(): GPUBuffer | null {
-    const now = performance.now();
-    if (now - this.countedAt < COUNTED_MS) return null;
     let read = this.free.pop();
-    if (!read && this.reads.length < 3) {
+    if (!read && this.reads.length < READS) {
       read = this.device.createBuffer({ size: 16 + DRAWS_BYTES, usage: MAP_READ | COPY_DST });
       this.reads.push(read);
     }
-    if (!read) return null;
-    this.countedAt = now;
-    return read;
+    return read ?? null;
   }
 
   private counts(read: GPUBuffer, counted: (counts: CullCounts) => void): void {
