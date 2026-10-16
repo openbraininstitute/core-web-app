@@ -395,6 +395,24 @@ describe('the circuit morphology viewer', () => {
     expect(inner.uniforms.uHighlighted.value).toBe(NO_CELL);
   });
 
+  it('disposes the quads let go of once the next of their material go, which keep the programs till then', () => {
+    const { viewer, inner } = make();
+    const watched = () =>
+      [segmentsOf(inner), somasOf(inner), ...(inner.ids.children as Quads[])].map((quads) => {
+        const disposed = vi.fn();
+        quads.addEventListener('dispose', disposed);
+        return disposed;
+      });
+    viewer.setData(circuit());
+    const first = watched();
+    viewer.setData(circuit());
+    const second = watched();
+    for (const disposed of [...first, ...second]) expect(disposed).not.toHaveBeenCalled();
+    viewer.setData(null);
+    for (const disposed of first) expect(disposed).toHaveBeenCalledTimes(1);
+    for (const disposed of second) expect(disposed).not.toHaveBeenCalled();
+  });
+
   it("has the same quads in their cells' numbers, in a scene that no frame draws", () => {
     const { viewer, inner } = make();
     const steps: string[] = [];
