@@ -266,13 +266,6 @@ export function SpaceSwitcher({ className }: Props) {
   const projectSegmentActive =
     activeModal?.type === WorkspaceActions.ProjectPreview && activeModal.projectId === projectId;
 
-  // Tracks whether a content modal is currently open so collapsePanel can
-  // always close it without depending on (and being recreated by) activeModal.
-  const boardModalOpenRef = useRef(boardModalOpen);
-  useEffect(() => {
-    boardModalOpenRef.current = boardModalOpen;
-  }, [boardModalOpen]);
-
   // Collapsing the panel is the single reset path: it collapses every lab card
   // (the active lab re-expands on its own since empty sets => visibleExpandedLabs
   // auto-includes virtualLabId) *and* closes any open content modal. Resetting
@@ -280,10 +273,14 @@ export function SpaceSwitcher({ className }: Props) {
   // regardless of how it was closed (toggle, outside click, Esc, navigation).
   // The modal is closed through the same event its own close button fires, so
   // both this panel's activeModal and the modal container's state reset.
+  //
+  // The close event is always dispatched (not gated on current modal state):
+  // it is idempotent when no modal is open, and gating on a React-synced ref
+  // introduced a race where a modal opened in the same tick as the collapse
+  // (e.g. a banner click that also triggers navigation) was left visible
+  // because the ref had not yet caught up.
   const collapsePanel = useCallback(() => {
-    if (boardModalOpenRef.current) {
-      makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
-    }
+    makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
     setExpandedLabs(new Set());
     setTryingToExpand(new Set());
     setCollapsedLabs(new Set());
