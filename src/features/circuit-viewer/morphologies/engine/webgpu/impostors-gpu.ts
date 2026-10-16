@@ -162,13 +162,12 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
 /**
  * Under pixel q, the normal of a segment's tube in view space, round across its width and across only, as far from its
  * edge, so that a round end carries on into the next segment without a seam; w 1 where the pixel is on it. And in the
- * second column how far the pixel is from the edge and the radius, in pixels, and the depth of the tube's surface as
- * the depth buffer takes it, which the quad does not write: it stands at the tube's nearest all across. `depths`: each
- * end's depth in view space and radius.
+ * second column how far the pixel is from the edge and the radius, in pixels, and in w the depth in view space of the
+ * tube's surface, which the quad does not write: it stands at the tube's nearest all across. `depths`: each end's
+ * depth in view space and radius.
  */
-const segmentSurface = wgslFn(
-  /* wgsl */ `
-fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f, depths: vec4f, projection: mat4x4f) -> mat4x4f {
+const segmentSurface = wgslFn(/* wgsl */ `
+fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f, depths: vec4f) -> mat4x4f {
   let a = ends.xy;
   let ab = ends.zw - a;
   let l2 = dot(ab, ab);
@@ -179,17 +178,15 @@ fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f, depths: vec4f, projection
   let s = clamp(dot(q - a, across) / max(r, 1e-3), -1.0, 1.0);
   // The fragment's y runs down, view space's up.
   let n = vec3f(across.x * s, -across.y * s, sqrt(max(1.0 - s * s, 0.0)));
-  let depth = depthOf(vec3f(0.0, 0.0, mix(depths.x, depths.z, t) + mix(depths.y, depths.w, t) * n.z), projection);
-  return mat4x4f(vec4f(n, select(0.0, 1.0, on)), vec4f(r * (1.0 - abs(s)), r, depth, 0.0), vec4f(0.0), vec4f(0.0));
-}`,
-  [IMPOSTORS]
-);
+  let z = mix(depths.x, depths.z, t) + mix(depths.y, depths.w, t) * n.z;
+  return mat4x4f(vec4f(n, select(0.0, 1.0, on)), vec4f(r * (1.0 - abs(s)), r, 0.0, z), vec4f(0.0), vec4f(0.0));
+}`);
 
 /**
  * Under the corner's point p, a segment drawn as the tube itself: a ball at each end of radius a.w and b.w, and the cone
  * between them (Inigo Quilez's rounded cone), met by the ray through the pixel. As `somaSurface` has it: the normal in
- * view space, w 1 where the pixel is on the tube; how far the pixel is from its edge and its radius, in pixels, and its
- * depth as the depth buffer takes it.
+ * view space, w 1 where the pixel is on the tube; how far the pixel is from its edge and its radius, in pixels, its
+ * depth as the depth buffer takes it and in view space.
  */
 const tubeSurface = wgslFn(
   /* wgsl */ `
@@ -247,7 +244,7 @@ fn tubeSurface(p: vec3f, a: vec4f, b: vec4f, radii: vec4f, projection: mat4x4f) 
   let on = hit.w < 1e29;
   let at = origin + ray * select(0.0, hit.w, on);
   let r = mix(radii.x, radii.y, clamp(dot(at - a.xyz, ba) / max(m0, 1e-12), 0.0, 1.0));
-  return mat4x4f(vec4f(hit.xyz, select(0.0, 1.0, on)), vec4f(edgeOf(hit.xyz, ray, r), r, depthOf(at, projection), 0.0),
+  return mat4x4f(vec4f(hit.xyz, select(0.0, 1.0, on)), vec4f(edgeOf(hit.xyz, ray, r), r, depthOf(at, projection), at.z),
                  vec4f(0.0), vec4f(0.0));
 }`,
   [IMPOSTORS]
@@ -287,7 +284,7 @@ fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, 
 
 /**
  * Under the corner's point p, the sphere's normal in view space, w 1 where the pixel is on it; how far the pixel is
- * from its edge and its radius, in pixels, and its depth as the depth buffer takes it.
+ * from its edge and its radius, in pixels, its depth as the depth buffer takes it and in view space.
  */
 const somaSurface = wgslFn(
   /* wgsl */ `
@@ -302,7 +299,7 @@ fn somaSurface(p: vec3f, sphere: vec4f, radiusPx: f32, projection: mat4x4f) -> m
   let at = origin + ray * (-b - sqrt(max(h, 0.0)));
   let n = normalize(at - centre);
   return mat4x4f(vec4f(n, select(0.0, 1.0, h >= 0.0)),
-                 vec4f(edgeOf(n, ray, radiusPx), radiusPx, depthOf(at, projection), 0.0), vec4f(0.0), vec4f(0.0));
+                 vec4f(edgeOf(n, ray, radiusPx), radiusPx, depthOf(at, projection), at.z), vec4f(0.0), vec4f(0.0));
 }`,
   [IMPOSTORS]
 );
@@ -344,8 +341,8 @@ type Kind = 'segment' | 'tube' | 'soma';
 /**
  * What every material of a kind shares: the cell, its texel and its glow where `glowing`, where its quad's corner is,
  * what the fragments take of it, and whether a pixel is on the tube or the sphere, with its normal, how far it is from
- * the edge, and its depth, which a segment drawn flat does not write. Glowing in full, a cell drawn at the least width
- * is drawn at twice it, to be seen.
+ * the edge, and its depth: as the depth buffer takes it, which a segment drawn flat does not write, and in view space.
+ * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen.
  */
 function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
   const word = attribute('aCell', 'uint');
@@ -424,11 +421,11 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
             ends: flat(col(quad, 1)),
             radii,
             depths: flat(vec4(col(ends, 0).zw, col(ends, 1).zw)),
-            projection: cameraProjectionMatrix,
           });
   }
   const surface = typed<'mat4'>(shape).toVar();
-  return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth: col(surface, 1).z };
+  const { z: depth, w: viewZ } = col(surface, 1);
+  return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth, viewZ };
 }
 
 /**
@@ -442,7 +439,7 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
     roughness: studio.roughness,
     metalness: studio.metalness,
   });
-  const { word, cell, texel, glow, position, surface, depth } = impostorOf(kind, u, true);
+  const { word, cell, texel, glow, position, surface, depth, viewZ } = impostorOf(kind, u, true);
   const [unknown, soma, axon, basal, apical] = u.sectionColours;
   const colour = flat(
     typed<'vec3'>(
@@ -476,7 +473,7 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
   const lit = mix(output.rgb, u.glowRim.xyz, rim);
   const mapped = typed<'vec3'>(toneMapping(THREE.ACESFilmicToneMapping, float(EXPOSURE), lit));
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(mapped)), output.a);
-  material.mrtNode = surfaceOf(col(surface, 0).xyz, depth);
+  material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ);
   return material;
 }
 

@@ -3,6 +3,9 @@ import GTAONode from 'three/addons/tsl/display/GTAONode.js';
 import {
   abs,
   acos,
+  cameraFar,
+  cameraNear,
+  cameraProjectionMatrix,
   clamp,
   context,
   cos,
@@ -53,11 +56,14 @@ const AO_SAMPLES = 16;
 const AO_COVER = 0.5;
 
 /**
- * What a surface writes for the occlusion, besides its colour: its normal's x and y in view space, and its depth in two
- * halves, 256 steps and what is left, each of which stays exact in 16 bits when the samples of a pixel are summed.
+ * What a surface writes for the occlusion, besides its colour: its normal's x and y in view space, and how far it is
+ * from the near plane towards the far (`viewZ`, its depth in view space) in two halves, 256 steps and what is left,
+ * each of which stays exact in 16 bits when the samples of a pixel are summed. Linear, not as the depth buffer takes
+ * it: in perspective that steps by the square of the distance, about 2 µm a millimetre away, which banded a far sphere.
  */
-export function surfaceOf(normal: Node<'vec3'>, depth: Node<'float'>) {
-  const steps = depth.clamp(0, 0.99998).mul(256);
+export function surfaceOf(normal: Node<'vec3'>, viewZ: Node<'float'>) {
+  const across = viewZ.negate().sub(cameraNear).div(cameraFar.sub(cameraNear));
+  const steps = across.clamp(0, 0.99998).mul(256);
   return mrt({ surface: vec4(normal.xy, floor(steps).div(256), fract(steps)) });
 }
 
@@ -243,14 +249,15 @@ export class Occlusion {
       storeMultisampledColorBuffer: false,
       storeMultisampledDepthBuffer: false,
     });
-    // What writes no surface of its own (`surfaceOf`), the dots over the cells, stands at the far plane, where the
-    // occlusion counts nothing.
+    // What writes no surface of its own (`surfaceOf`), the dots over the cells, stands all the way to the far plane,
+    // where the occlusion counts nothing.
     scenePass.setMRT(
       mrt({ output, surface: vec4(0, 0, 1, 0) }).setClearColor('surface', 0x000000, 0)
     );
     const surface = scenePass.getTextureNode('surface');
     const picture = scenePass.getTextureNode('output');
-    // xy the normal's, z the depth, w how much of the pixel is covered: what the resolve summed is divided by that again.
+    // xy the normal's, z the depth as the depth buffer takes it (1 all the way to the far plane), w how much of the
+    // pixel is covered: what the resolve summed is divided by that again.
     const picked = Fn(() => {
       const first = ivec2(screenCoordinate.xy).mul(2).toConst();
       const sum = vec4(0).toVar();
@@ -269,7 +276,11 @@ export class Occlusion {
         });
       }
       const s = sum.div(max(cover, 0.25)).toConst();
-      return vec4(s.xy, s.z.add(s.w.div(256)), cover);
+      const across = s.z.add(s.w.div(256)).toConst();
+      const viewZ = cameraNear.add(across.mul(cameraFar.sub(cameraNear))).negate();
+      const clip = cameraProjectionMatrix.mul(vec4(0, 0, viewZ, 1)).toConst();
+      const depth = across.greaterThanEqual(1).select(float(1), clip.z.div(clip.w));
+      return vec4(s.xy, depth, cover);
     })();
     const quad = new THREE.MeshBasicNodeMaterial();
     quad.vertexNode = vec4(positionGeometry.xy, 0, 1);
