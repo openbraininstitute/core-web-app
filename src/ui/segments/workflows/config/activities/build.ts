@@ -205,8 +205,7 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
     ...WorkflowStagePresets.ScanConfigInEditorSelection,
-    // the morphology and the e-model are picked in the editor, so there is no input entity type;
-    // the source mirrors the target like the other in-editor workflows
+    // no input entity type: the source mirrors the target
     sourceType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
     targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
     label: 'Single neuron',

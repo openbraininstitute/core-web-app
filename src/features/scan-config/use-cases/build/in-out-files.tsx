@@ -101,9 +101,8 @@ function makeAssetOutputFiles(
 }
 
 function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivityCustomFile[] {
-  // an ME-model has no assets of its own: its row is the entity alone
-  if (entity?.type === EntityTypeDict.Memodel) return [makeEntityMiniDetailFile(entity)];
-  if (!entity || !hasAssets(entity)) return [];
+  if (!entity) return [];
+  if (!hasAssets(entity)) return [makeEntityMiniDetailFile(entity)];
 
   if (shouldListAssetsAsOutputs(entity.type)) {
     return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];
@@ -122,15 +121,16 @@ function isSingleNeuronCircuit(entity: TActivityCustomFile['entity']): boolean {
   return (entity as ICircuit).scale === CircuitScaleDictionary.Single;
 }
 
+function getOutputEntityType(entity: TActivityCustomFile['entity']): TExtendedEntitiesTypeDict {
+  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome
+  return isSingleNeuronCircuit(entity)
+    ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+    : (entity.type as TExtendedEntitiesTypeDict);
+}
+
 function getOutputEntityLabel(file: TActivityCustomFile): string | null {
   if (file.renderer !== ActivityCustomFileRenderer.MiniDetailView) return null;
-
-  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome
-  const entityType = isSingleNeuronCircuit(file.entity)
-    ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
-    : (file.entity.type as TExtendedEntitiesTypeDict);
-
-  return getEntityTypeTagLabel(entityType);
+  return getEntityTypeTagLabel(getOutputEntityType(file.entity));
 }
 
 function shouldPollForCircuitVisualization(query: {
@@ -247,16 +247,11 @@ export function InOutFiles({
     files: builtOutputFiles,
   });
 
+  const builtListingType = builtEntity ? getOutputEntityType(builtEntity) : undefined;
   useEffect(() => {
-    if (!outputAvailable || !builtEntity) return;
-
-    if (isCircuitBuild) {
-      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.SingleNeuronCircuit);
-    }
-    if (builtEntity.type === EntityTypeDict.Memodel) {
-      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.Memodel);
-    }
-  }, [outputAvailable, builtEntity, isCircuitBuild, queryClient]);
+    if (outputAvailable && builtListingType)
+      invalidateEntityListings(queryClient, builtListingType);
+  }, [outputAvailable, builtListingType, queryClient]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,

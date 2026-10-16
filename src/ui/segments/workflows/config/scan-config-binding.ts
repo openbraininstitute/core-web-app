@@ -278,8 +278,6 @@ export function buildMEModelConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.Memodel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
-    // the morphology and the e-model are picked in the editor, so there is no browse selection
-    // to write under `initialize`
     fromIdTypeByBrowseType: {},
     generatedApiPath: ScanConfigGeneratedApiPath.MEModelBuild,
   };

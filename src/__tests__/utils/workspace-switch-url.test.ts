@@ -95,9 +95,9 @@ describe('buildWorkspaceSwitchUrl / workflows', () => {
   });
 
   it('remaps a session-based configure page to its /new page', () => {
-    expect(build('/workflows/build/configure/memodel/wf_abc1234567', 'scope=public')).toBe(
-      `${targetBase}/workflows/build/new/memodel?scope=public`
-    );
+    expect(
+      build('/workflows/build/configure/memodel-build-campaign/wf_abc1234567', 'scope=public')
+    ).toBe(`${targetBase}/workflows/build/new/memodel-build-campaign?scope=public`);
   });
 
   it('remaps a legacy entity-id configure page to its /new page dropping the session param', () => {
