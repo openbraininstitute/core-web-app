@@ -1,5 +1,7 @@
 import * as THREE from 'three/webgpu';
 
+import { logError } from '@/utils/logger';
+
 import { MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
 import { VIEW_WGSL } from './cells-wgsl';
@@ -26,8 +28,8 @@ const SAMPLES = 4;
 /** The least radius a segment is tested at, px: a cell glowing in full is drawn at twice the least. */
 const LEAST_PX = 2 * MIN_RADIUS;
 /**
- * The frames whose counts may be on their way back at once: each frame's are read, so that the last before the view
- * rests is.
+ * The frames whose counts may be on their way back at once. Each frame's are read, and past these, the last tested once
+ * a buffer is free, so that the last before the view rests always is.
  */
 const READS = 8;
 /** The view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts, in bytes. */
@@ -36,6 +38,8 @@ const VIEW_BYTES = 192;
 /** Where in the draws' arguments each list's are, bytes: five words each, the kept first. */
 export const DRAWS = { keptFlat: 0, keptTubes: 20, seenFlat: 40, seenTubes: 60 } as const;
 const DRAWS_BYTES = 80;
+/** Where a draw's instances are in its arguments, words. */
+const INSTANCES = 1;
 /** Draws of none of the quads, six indices each. */
 const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
@@ -68,14 +72,15 @@ interface Targets {
  * segments kept the frame before are drawn to depth (`target`, by three), and then the passes here, on `device`'s
  * queue before three draws the frame: that depth at each pixel the farthest of its samples, its pyramid, the blocks'
  * test, the segments' test into the lists, flat and tubes, of those kept and those seen, and the draws' arguments,
- * which three's quads are drawn by (`quads`). What the tests count is read back each frame and handed to `counted`.
+ * which three's quads are drawn by (`quads`). What the tests count is read back each frame and handed to `counted`,
+ * and null once the culling failed.
  */
 export class Culling {
   readonly draws: THREE.IndirectStorageBufferAttribute;
   private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private storage: ArenaStorage;
-  private counted: (counts: CullCounts) => void;
+  private counted: (counts: CullCounts | null) => void;
   private drawsBuffer: GPUBuffer;
   private viewBuffer: GPUBuffer;
   private counters: GPUBuffer;
@@ -92,12 +97,18 @@ export class Culling {
   /** Buffers to read the counts back into, and those of them free. */
   private reads: GPUBuffer[] = [];
   private free: GPUBuffer[] = [];
+  /** Whether the last tested were left unread, no buffer free. */
+  private unread = false;
+  /** Of the arena tested: counts read back of another are dropped. */
+  private generation = 0;
+  /** True once the culling could not be made or bound, which is not tried again. */
+  private broken = false;
 
   constructor(
     renderer: THREE.WebGPURenderer,
     device: GPUDevice,
     storage: ArenaStorage,
-    counted: (counts: CullCounts) => void
+    counted: (counts: CullCounts | null) => void
   ) {
     this.renderer = renderer;
     this.device = device;
@@ -118,10 +129,17 @@ export class Culling {
     return this.arena !== null;
   }
 
+  /** Whether the culling could not be made or bound, for good: every segment is to be drawn. */
+  get failed(): boolean {
+    return this.broken;
+  }
+
   /** The arena whose segments are tested, or none; its lists hold nothing kept yet. */
   setArena(arena: ArenaBuffers | null): void {
     this.arena = arena;
     this.bound = null;
+    this.unread = false;
+    this.generation++;
     this.drawNone();
   }
 
@@ -148,20 +166,24 @@ export class Culling {
   /**
    * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
    * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `end`: where the arena's segments end.
+   * pixels of a tube; `end`: where the arena's segments end. False where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
     end: number
-  ): void {
+  ): boolean {
     const { device, arena, target } = this;
-    const depth = target?.depthTexture && gpuTexture(this.renderer, target.depthTexture);
-    if (!arena || !target || !depth) return;
+    if (!arena || !target || this.broken) return false;
     const pipelines = this.pipelinesNow();
     const targets = this.targetsOf(target.width, target.height);
-    const bound = this.bindings(pipelines, depth, arena, targets);
+    const depth = target.depthTexture && gpuTexture(this.renderer, target.depthTexture);
+    const bound = depth && this.bindings(pipelines, depth, arena, targets);
+    if (!bound) {
+      this.fail(new Error('three made no texture of the depth the culling reads'));
+      return false;
+    }
     const blocks = Math.ceil(end / BLOCK);
     this.writeView(camera, shift, tubeFrom, targets, blocks);
     this.drawNone();
@@ -189,19 +211,15 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
-    const read = this.readNow();
-    if (read) {
-      encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
-      encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
-    }
     device.queue.submit([encoder.finish()]);
-    if (read) this.counts(read);
+    this.readCounts();
+    return true;
   }
 
   /** Not culled: every segment up to `end` drawn by the seen lists' draws, each of its own kind. */
   drawAll(end: number): void {
-    this.allDraws[1] = end;
-    this.allDraws[6] = end;
+    this.allDraws[INSTANCES] = end;
+    this.allDraws[(DRAWS.seenTubes - DRAWS.seenFlat) / 4 + INSTANCES] = end;
     this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.seenFlat, this.allDraws);
   }
 
@@ -235,14 +253,17 @@ export class Culling {
     this.device.queue.writeBuffer(this.viewBuffer, 0, this.view);
   }
 
+  /** The passes' programs; where the device refuses one, the culling fails once it has said so. */
   private pipelinesNow(): Pipelines {
     if (!this.pipelines) {
+      const { device } = this;
       const pipeline = (code: string, label: string) =>
-        this.device.createComputePipeline({
+        device.createComputePipeline({
           label,
           layout: 'auto',
-          compute: { module: this.device.createShaderModule({ code, label }), entryPoint: 'main' },
+          compute: { module: device.createShaderModule({ code, label }), entryPoint: 'main' },
         });
+      device.pushErrorScope('validation');
       this.pipelines = {
         resolve: pipeline(`${LIBRARY}\n${RESOLVE}`, 'cull resolve'),
         pyramid: pipeline(PYRAMID, 'cull pyramid'),
@@ -250,8 +271,22 @@ export class Culling {
         args: pipeline(ARGS, 'cull args'),
         segments: pipeline(`${LIBRARY}\n${SEGMENTS}`, 'cull segments'),
       };
+      device.popErrorScope().then(
+        (error) => {
+          if (error) this.fail(error);
+        },
+        () => undefined
+      );
     }
     return this.pipelines;
+  }
+
+  private fail(e: unknown): void {
+    if (this.broken) return;
+    this.broken = true;
+    this.generation++;
+    logError('Drawn without culling', e);
+    this.counted(null);
   }
 
   /** The targets at the picture's size, made again where it changed; the materials told of the new farthest. */
@@ -295,10 +330,10 @@ export class Culling {
     depth: GPUTexture,
     arena: ArenaBuffers,
     targets: Targets
-  ): Bound {
+  ): Bound | null {
     if (this.bound?.depth === depth) return this.bound;
     const full = gpuTexture(this.renderer, targets.full);
-    if (!full) throw new Error('the culling target has no texture');
+    if (!full) return null;
     const group = (pipeline: GPUComputePipeline, resources: GPUBindingResource[], label: string) =>
       this.device.createBindGroup({
         label,
@@ -345,18 +380,31 @@ export class Culling {
     return read ?? null;
   }
 
-  private counts(read: GPUBuffer): void {
+  /** The counts the last tests left, read back; where no buffer is free, once one is. */
+  private readCounts(): void {
+    const read = this.readNow();
+    this.unread = read === null;
+    if (!read) return;
+    const encoder = this.device.createCommandEncoder({ label: 'cull counts' });
+    encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
+    encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
+    this.device.queue.submit([encoder.finish()]);
+    const { generation } = this;
     read.mapAsync(READ).then(
       () => {
+        // Destroyed with the view since.
+        if (read.mapState !== 'mapped') return;
         const words = new Uint32Array(read.getMappedRange());
-        const at = (offset: number) => words[4 + offset / 4 + 1];
-        this.counted({
+        const at = (offset: number) => words[4 + offset / 4 + INSTANCES];
+        const counts = {
           tested: words[1],
           kept: at(DRAWS.keptFlat) + at(DRAWS.keptTubes),
           drawn: at(DRAWS.seenFlat) + at(DRAWS.seenTubes),
-        });
+        };
         read.unmap();
         this.free.push(read);
+        if (generation === this.generation) this.counted(counts);
+        if (this.unread) this.readCounts();
       },
       // Destroyed with the view.
       () => undefined

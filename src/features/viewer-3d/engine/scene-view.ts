@@ -290,6 +290,11 @@ export abstract class SceneView implements ViewControls {
   /** After the camera in use changed (`setProjection`). */
   protected projectionChanged(): void {}
 
+  /** Whether a frame was asked for (`invalidate`) that is not drawn yet. */
+  protected get framePending(): boolean {
+    return this.dirty;
+  }
+
   protected invalidate(): void {
     this.dirty = true;
     if (this.looping || this.disposed || !this.onScreen) return;

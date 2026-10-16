@@ -575,8 +575,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return this.layer?.detailed?.stream.geometry.instanceCount ?? 0;
   }
 
-  /** What the tier's culling counted, for the listeners: with what they were told last, which it alone changes. */
-  protected tellCulled(counts: CullCounts): void {
+  /**
+   * What the tier's culling counted, for the listeners: with what they were told last, which it alone changes; null
+   * where it no longer culls.
+   */
+  protected tellCulled(counts: CullCounts | null): void {
+    // Read back after the culling was switched off, or the pack let go of.
+    if (!this.culls || !this.layer?.detailed) return;
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }

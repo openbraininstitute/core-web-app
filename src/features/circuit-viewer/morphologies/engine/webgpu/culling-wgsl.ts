@@ -153,12 +153,12 @@ fn shows(bl: Block) -> bool {
 }
 `;
 
-/** The blocks handed on as the size of the next pass: 512 workgroups a row. */
+/** The blocks handed on as the size of the next pass: up to 512 workgroups a row. */
 export const ARGS = /* wgsl */ `
 @group(0) @binding(0) var<storage, read> counters: array<u32>;
 @group(0) @binding(1) var<storage, read_write> dispatch: array<u32>;
 @compute @workgroup_size(1) fn main() {
-  dispatch[0] = 512u;
+  dispatch[0] = min(counters[0], 512u);
   dispatch[1] = (counters[0] + 511u) / 512u;
   dispatch[2] = 1u;
 }

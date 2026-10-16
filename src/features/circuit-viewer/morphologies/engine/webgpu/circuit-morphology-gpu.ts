@@ -208,7 +208,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /**
    * A pack's segments, where there is one: culled, the kept segments drawn to depth and the culling's tests run before
-   * the frame is drawn; not, where the culling is off, every one of them drawn.
+   * the frame is drawn; not, where the culling is off or failed, every one of them drawn.
    */
   private cull(): void {
     const arena = this.arena;
@@ -216,21 +216,22 @@ export class CircuitMorphologyGPU extends CircuitView {
     const { storage, culling } = arena;
     const end = this.arenaEnd;
     storage.end.value = end;
-    storage.listed.value = this.culls ? 1 : 0;
-    if (!this.culls) {
-      culling.drawAll(end);
-      return;
-    }
+    storage.listed.value = 1;
     if (end === 0) {
       culling.drawNone();
       return;
     }
-    const { renderer } = this;
-    const size = renderer.getDrawingBufferSize(this.drawingSize);
-    renderer.setRenderTarget(culling.targetOf(size.x, size.y));
-    renderer.render(this.keptQuads, this.camera);
-    renderer.setRenderTarget(null);
-    culling.run(this.camera, this.uniforms.uShift.value, this.gpu.tubeFrom.value, end);
+    if (this.culls && !culling.failed) {
+      const { renderer } = this;
+      const size = renderer.getDrawingBufferSize(this.drawingSize);
+      renderer.setRenderTarget(culling.targetOf(size.x, size.y));
+      renderer.render(this.keptQuads, this.camera);
+      renderer.setRenderTarget(null);
+      const { uShift } = this.uniforms;
+      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, end)) return;
+    }
+    storage.listed.value = 0;
+    culling.drawAll(end);
   }
 
   private occlusionNow(): Occlusion | null {
@@ -270,6 +271,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     const target = this.pickTarget();
     const side = target.width;
     this.gpu.sync();
+    // The segments seen were culled for the frame last drawn, which the view may have moved from.
+    if (this.framePending) this.cull();
     renderer.setRenderTarget(target);
     renderer.render(scene, this.camera);
     renderer.setRenderTarget(null);
