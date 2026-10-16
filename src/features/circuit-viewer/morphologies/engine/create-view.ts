@@ -2,6 +2,7 @@ import { logError } from '@/utils/logger';
 
 import { CircuitMorphologyViewer } from './circuit-morphology-viewer';
 import { probeWebGPU } from './probe';
+import { MissingHook } from './webgpu/three-hooks';
 
 import type { CircuitMorphologyView } from '../types';
 
@@ -65,7 +66,7 @@ export function createCircuitView(
       device.destroy();
       if (signal?.aborted) throw signal.reason;
       logError('Could not start the WebGPU circuit view', e);
-      return onWebGL(host, 'WebGPU could not start');
+      return onWebGL(host, e instanceof MissingHook ? e.message : 'WebGPU could not start');
     }
   });
 }

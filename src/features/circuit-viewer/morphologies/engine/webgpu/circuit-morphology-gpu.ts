@@ -3,13 +3,15 @@ import * as THREE from 'three/webgpu';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 import { logError } from '@/utils/logger';
 
-import { type CircuitMaterials, CircuitView } from '../circuit-view';
+import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
 import { pixelSpan } from '../detail';
+import { arenaOnGpu, arenaStorage } from './arena-gpu';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
-import { impostorMaterials } from './impostors-gpu';
+import { arenaMaterials, impostorMaterials } from './impostors-gpu';
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
+import { checkHooks, threeLoop } from './three-hooks';
 
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
@@ -44,9 +46,12 @@ export class CircuitMorphologyGPU extends CircuitView {
   ): Promise<CircuitMorphologyGPU> {
     const renderer = new THREE.WebGPURenderer({ device, antialias: true, alpha: true });
     await renderer.init();
-    if (signal?.aborted) {
+    try {
+      if (signal?.aborted) throw signal.reason;
+      checkHooks(renderer);
+    } catch (e) {
       renderer.dispose();
-      throw signal.reason;
+      throw e;
     }
     return new CircuitMorphologyGPU(host, renderer, device, onLost);
   }
@@ -143,6 +148,21 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.dropOcclusion();
   }
 
+  /** In buffers of the page's, which the segments' materials of this arena read as storage. */
+  protected override arenaDrawing(): ArenaDrawing {
+    const storage = arenaStorage();
+    const { segment, ids } = arenaMaterials(this.gpu, this.look, storage);
+    return {
+      uploadsOf: (_geometry, ends, words) =>
+        arenaOnGpu(this.renderer, this.device, storage, ends, words),
+      segment,
+      ids,
+      dispose() {
+        for (const material of [...segment, ...ids]) material.dispose();
+      },
+    };
+  }
+
   private occlusionNow(): Occlusion | null {
     if (!this.occlusion && this.occluding) {
       try {
@@ -200,19 +220,6 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.idTarget ??= new THREE.RenderTarget(this.pickSide, this.pickSide);
     return this.idTarget;
   }
-}
-
-interface Turns {
-  start(): void;
-  stop(): void;
-}
-
-/** three's own loop, a private part of the renderer: null where a release of three changed it, which leaves it turning. */
-function threeLoop(renderer: THREE.WebGPURenderer): Turns | null {
-  const turns = (renderer as unknown as { _animation?: Partial<Turns> | null })._animation;
-  return typeof turns?.start === 'function' && typeof turns.stop === 'function'
-    ? (turns as Turns)
-    : null;
 }
 
 /** A square of RGBA bytes `side` wide, from WebGPU's copy with each row padded to `ROW_ALIGNMENT` bytes. */

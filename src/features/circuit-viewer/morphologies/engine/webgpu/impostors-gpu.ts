@@ -11,6 +11,7 @@ import {
   positionGeometry,
   screenCoordinate,
   sRGBTransferOETF,
+  storage,
   toneMapping,
   uint,
   varying,
@@ -30,6 +31,7 @@ import { surfaceOf } from './occlusion-gpu';
 
 import type { Node } from 'three/webgpu';
 import type { Look } from '@/features/viewer-3d/engine/looks';
+import type { ArenaStorage } from './arena-gpu';
 import type { GpuUniforms } from './gpu-uniforms';
 
 /**
@@ -338,14 +340,44 @@ fn rimOf(edge: vec4f, glow: f32, rimOn: f32) -> f32 {
 /** A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`), or a soma. */
 type Kind = 'segment' | 'tube' | 'soma';
 
+/** What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram. */
+interface SegmentInputs {
+  word: Node<'uint'>;
+  endA: Node<'vec4'>;
+  endB: Node<'vec4'>;
+  chartA: Node<'vec4'>;
+  chartB: Node<'vec4'>;
+}
+
+/** A segment as its quads' attributes have it. */
+const fromAttributes = (): SegmentInputs => ({
+  word: attribute('aCell', 'uint'),
+  endA: attribute('aA', 'vec4'),
+  endB: attribute('aB', 'vec4'),
+  chartA: attribute('aChartA', 'vec4'),
+  chartB: attribute('aChartB', 'vec4'),
+});
+
+/** An arena's segment, the instance's: with no dendrogram, its ends stand for it. */
+function fromArena({ ends, words }: ArenaStorage): SegmentInputs {
+  const at = instanceIndex.mul(uint(2));
+  const endsOf = storage(ends, 'vec4', ends.count).toReadOnly();
+  const endA = typed<'vec4'>(endsOf.element(at));
+  const endB = typed<'vec4'>(endsOf.element(at.add(uint(1))));
+  const word = typed<'uint'>(
+    storage(words, 'uint', words.count).toReadOnly().element(instanceIndex)
+  );
+  return { word, endA, endB, chartA: endA, chartB: endB };
+}
+
 /**
  * What every material of a kind shares: the cell, its texel and its glow where `glowing`, where its quad's corner is,
  * what the fragments take of it, and whether a pixel is on the tube or the sphere, with its normal, how far it is from
  * the edge, and its depth: as the depth buffer takes it, which a segment drawn flat does not write, and in view space.
- * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen.
+ * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen. A segment is read from `inputs`.
  */
-function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
-  const word = attribute('aCell', 'uint');
+function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: SegmentInputs) {
+  const word = kind === 'soma' ? attribute('aCell', 'uint') : inputs.word;
   const cell = word.bitAnd(uint(CELL_MASK));
   const xy = cellXY({ cell });
   const texel = u.cells.load(xy);
@@ -383,10 +415,10 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
         word,
         shown: texel.a,
         least,
-        endA: attribute('aA', 'vec4'),
-        endB: attribute('aB', 'vec4'),
-        chartA: attribute('aChartA', 'vec4'),
-        chartB: attribute('aChartB', 'vec4'),
+        endA: inputs.endA,
+        endB: inputs.endB,
+        chartA: inputs.chartA,
+        chartB: inputs.chartB,
         morph: u.mix,
         shift: u.shift,
         view: cameraViewMatrix,
@@ -433,13 +465,23 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean) {
  * the cell table where the vertex colour would go, lit by its glow, ringed as it glows on a light background, tone
  * mapped as Studio is on WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`).
  */
-function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandardNodeMaterial {
+function lookMaterial(
+  kind: Kind,
+  u: GpuUniforms,
+  look: Look,
+  inputs = fromAttributes()
+): THREE.MeshStandardNodeMaterial {
   const studio = look.material as THREE.MeshStandardMaterial;
   const material = new THREE.MeshStandardNodeMaterial({
     roughness: studio.roughness,
     metalness: studio.metalness,
   });
-  const { word, cell, texel, glow, position, surface, depth, viewZ } = impostorOf(kind, u, true);
+  const { word, cell, texel, glow, position, surface, depth, viewZ } = impostorOf(
+    kind,
+    u,
+    true,
+    inputs
+  );
   const [unknown, soma, axon, basal, apical] = u.sectionColours;
   const colour = flat(
     typed<'vec3'>(
@@ -481,9 +523,14 @@ function lookMaterial(kind: Kind, u: GpuUniforms, look: Look): THREE.MeshStandar
  * An impostor of `kind` drawn in a number in place of its shading, as `idMaterial` draws it: its cell's, or with
  * `segments`, its own, a soma's after the segments'.
  */
-function idMaterial(kind: Kind, u: GpuUniforms, segments = false): THREE.MeshBasicNodeMaterial {
+function idMaterial(
+  kind: Kind,
+  u: GpuUniforms,
+  segments = false,
+  inputs = fromAttributes()
+): THREE.MeshBasicNodeMaterial {
   const material = new THREE.MeshBasicNodeMaterial();
-  const { cell, position, surface, depth } = impostorOf(kind, u, false);
+  const { cell, position, surface, depth } = impostorOf(kind, u, false, inputs);
   let n: Node<'uint'> = cell;
   if (segments) n = kind === 'soma' ? u.segments.add(cell) : instanceIndex;
   material.positionNode = position;
@@ -496,12 +543,17 @@ function idMaterial(kind: Kind, u: GpuUniforms, segments = false): THREE.MeshBas
   return material;
 }
 
+/** A segment's materials, the two draws: the flat ones and the tubes. */
+const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M) => [
+  of('segment'),
+  of('tube'),
+];
+
 /**
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, and in their segments' numbers, the
  * segments in two draws, the flat ones and the tubes.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
-  const segments = <M extends THREE.Material>(of: (kind: Kind) => M) => [of('segment'), of('tube')];
   return {
     segment: segments((kind) => lookMaterial(kind, u, look)),
     soma: lookMaterial('soma', u, look),
@@ -510,5 +562,14 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
       segment: segments((kind) => idMaterial(kind, u, true)),
       soma: idMaterial('soma', u, true),
     },
+  };
+}
+
+/** The segments' materials, in the look and in their cells' numbers, of an arena whose buffers `storage` binds. */
+export function arenaMaterials(u: GpuUniforms, look: Look, storage: ArenaStorage) {
+  const inputs = fromArena(storage);
+  return {
+    segment: segments((kind) => lookMaterial(kind, u, look, inputs)),
+    ids: segments((kind) => idMaterial(kind, u, false, inputs)),
   };
 }

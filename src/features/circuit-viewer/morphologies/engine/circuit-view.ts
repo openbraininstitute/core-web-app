@@ -54,6 +54,7 @@ import type {
   SynapseGroup,
   Vec3,
 } from '../types';
+import type { UploadsOf } from './segment-arena';
 
 /** A quad's corners, x, y, z after one another, and its two triangles, which face the eye. */
 const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
@@ -120,11 +121,24 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 }
 
 /**
- * Morphologies read a box at a time: what reads and places them, and the camera, the view's height and the rules their
- * levels were last chosen for, and whether the view was still.
+ * How a tier draws a pack's segments, read a box at a time: where the arena's arrays go (three's attributes on its quads
+ * where `uploadsOf` is not given), and the materials of the segments in the look and in their cells' numbers.
+ */
+export interface ArenaDrawing {
+  uploadsOf?: UploadsOf;
+  segment: THREE.Material[];
+  ids: THREE.Material[];
+  /** What was made for this arena alone let go of. */
+  dispose(): void;
+}
+
+/**
+ * Morphologies read a box at a time: what reads and places them, how they are drawn, and the camera, the view's height
+ * and the rules their levels were last chosen for, and whether the view was still.
  */
 interface Detailed {
   stream: DetailStream;
+  drawing: ArenaDrawing;
   chosenFor: {
     projection: THREE.Matrix4;
     view: THREE.Matrix4;
@@ -386,6 +400,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
   protected abstract compile(scene: THREE.Scene): void;
 
+  /** How a pack's arena is drawn: on three's attributes, by the materials of morphologies read whole. */
+  protected arenaDrawing(): ArenaDrawing {
+    return { segment: this.materials.segment, ids: this.materials.ids.segment, dispose() {} };
+  }
+
   /**
    * The number drawn by `scene` nearest the pixel asked for, in CSS pixels from the view's top left corner, within
    * `PICK_REACH`; null where there is none, or where the pixels cannot be read.
@@ -485,12 +504,14 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     }
 
     const { materials } = this;
+    const drawing = data.chunks ? this.arenaDrawing() : null;
     const stream =
-      data.chunks && DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate());
+      data.chunks &&
+      DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate(), drawing?.uploadsOf);
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
       drawn.map((material) => quads(segments, material));
-    const segmentMeshes = onSegments(materials.segment);
+    const segmentMeshes = onSegments(drawing?.segment ?? materials.segment);
     this.chunks.add(...segmentMeshes);
 
     const { spheres, charts, cells } = placedSomas(data.somas, data.chart?.somas);
@@ -503,7 +524,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     // Beside `chunks`, which holds the segments.
     this.surfaces.add(somaMesh);
 
-    const segmentIds = onSegments(materials.ids.segment);
+    const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
     const ids = [...segmentIds, quads(somas, materials.ids.soma)];
     this.ids.add(...ids);
     // Drawn as the boxes come in.
@@ -514,7 +535,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
-    const detailed = stream ? { stream, chosenFor: null } : null;
+    const detailed = stream && drawing ? { stream, drawing, chosenFor: null } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
     this.compileIds();
 
@@ -1228,6 +1249,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       mesh.removeFromParent();
     }
     this.layer?.detailed?.stream.stop();
+    this.layer?.detailed?.drawing.dispose();
     this.layer = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     // They sit on the morphologies.

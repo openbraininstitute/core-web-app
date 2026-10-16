@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createCircuitView } from '@/features/circuit-viewer/morphologies/engine/create-view';
+import { MissingHook } from '@/features/circuit-viewer/morphologies/engine/webgpu/three-hooks';
 
 const h = vi.hoisted(() => {
   /** The WebGL 2 engine, made with its host. */
@@ -9,10 +10,11 @@ const h = vi.hoisted(() => {
   }
   /** The WebGPU engine: made on the device, or failing to start where the test says. */
   const gpu = {
-    fails: false,
+    /** What it fails with, or true for a pipeline it cannot make. */
+    fails: false as boolean | Error,
     made: [] as { host: HTMLElement; device: unknown; onLost: () => void }[],
     create: async (host: HTMLElement, device: unknown, onLost: () => void) => {
-      if (gpu.fails) throw new Error('no pipeline');
+      if (gpu.fails) throw gpu.fails === true ? new Error('no pipeline') : gpu.fails;
       const view = { host, device, onLost };
       gpu.made.push(view);
       return view;
@@ -158,6 +160,17 @@ describe('createCircuitView', () => {
     });
     expect(device.destroy).toHaveBeenCalledTimes(1);
     expect(h.logError).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to WebGL 2 where three lacks a part the WebGPU engine takes, naming it', async () => {
+    const { adapter, device } = adapterOf();
+    withGPU(async () => adapter);
+    h.gpu.fails = new MissingHook('backend.get');
+    await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
+      tier: 'webgl',
+      reason: "three's backend.get is missing",
+    });
+    expect(device.destroy).toHaveBeenCalledTimes(1);
   });
 
   it.each([

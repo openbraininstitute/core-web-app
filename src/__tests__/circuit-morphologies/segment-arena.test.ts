@@ -1,6 +1,6 @@
 // @vitest-environment node
 import * as THREE from 'three';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   CELL_MASK,
@@ -171,6 +171,37 @@ describe('SegmentArena', () => {
     expect(arena.remove(1)).toBe(0);
     expect(arena.sizeOf(1)).toBeUndefined();
     expect(arena.geometry.instanceCount).toBe(0);
+  });
+
+  it('tells uploads of its own what changed, in place of three, and lets them go when let go of', () => {
+    const told: [number, number, boolean][] = [];
+    const dispose = vi.fn();
+    const geometry = new THREE.InstancedBufferGeometry();
+    const arrays: { ends?: Float32Array; words?: Uint32Array } = {};
+    const arena = new SegmentArena(geometry, 10, (_quads, ends, words) => {
+      Object.assign(arrays, { ends, words });
+      return { upload: (...range) => told.push(range), dispose };
+    });
+    expect(geometry.getAttribute('aCell')).toBeUndefined();
+    expect(arrays).toMatchObject({ ends: { length: 80 }, words: { length: 10 } });
+
+    arena.put(1, segmentsOf(1, 3));
+    arena.put(2, segmentsOf(2, 3));
+    arena.remove(1);
+    // Fits neither in the hole nor after the last: box 2 is moved down.
+    arena.put(3, segmentsOf(3, 5));
+    expect(told).toEqual([
+      [0, 3, false],
+      [3, 3, false],
+      [0, 3, true],
+      [0, 3, false],
+      [3, 5, false],
+    ]);
+    expect(arrays.ends?.[0]).toBe(2000);
+    expect(geometry.instanceCount).toBe(8);
+
+    arena.dispose();
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
 
   it('refuses a box drawn already, or one that does not fit', () => {

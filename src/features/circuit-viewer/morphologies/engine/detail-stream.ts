@@ -1,7 +1,7 @@
 import { logError } from '@/utils/logger';
 
 import { chooseDetail, type Detail, type DetailView, SEGMENT_BUDGET } from './detail';
-import { SEGMENT_BYTES, SegmentArena } from './segment-arena';
+import { SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
 
 import type * as THREE from 'three';
 import type {
@@ -64,13 +64,18 @@ export class DetailStream {
     this.drawn = new Int8Array(chunks.boxes.length / 6).fill(-1);
   }
 
-  /** A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need. */
+  /**
+   * A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need, uploaded as
+   * `uploadsOf` has it.
+   */
   static of(
     chunks: MorphologyChunks,
     geometry: THREE.InstancedBufferGeometry,
-    onRead: () => void
+    onRead: () => void,
+    uploadsOf?: UploadsOf
   ): DetailStream {
-    return new DetailStream(chunks, new SegmentArena(geometry, capacityOf(chunks)), onRead);
+    const arena = new SegmentArena(geometry, capacityOf(chunks), uploadsOf);
+    return new DetailStream(chunks, arena, onRead);
   }
 
   /** The arena's quads, which draw what is placed. */
@@ -157,10 +162,11 @@ export class DetailStream {
     return { changed, more };
   }
 
-  /** Nothing more is read or placed. */
+  /** Nothing more is read or placed, and what the arena uploads to is let go of. */
   stop(): void {
     this.stopped = true;
     this.ready.clear();
+    this.arena.dispose();
   }
 
   /** The segments `box` has at `level`, none at -1. */
