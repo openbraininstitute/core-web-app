@@ -294,6 +294,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   } | null = null;
   /** The quads of the cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
+  /** Of each material, the quads last let go of (`letGo`). */
+  private kept = new Map<THREE.Material, Quads>();
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
   private defaultColor = DEFAULT_NEURON_COLOR;
@@ -1166,7 +1168,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     let dots = mesh;
     if (!dots || count > dots.geometry.getAttribute('aContact').count) {
       dots?.geometry.dispose();
-      dots?.removeFromParent();
+      if (dots) this.letGo(dots);
       const geometry = quadGeometry(count);
       geometry
         .setAttribute(
@@ -1237,14 +1239,25 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
+  /**
+   * `meshes` out of the view, each disposed once the next of its material is let go of: WebGPU keeps what three holds of
+   * a mesh until it is disposed, and three lets go of a material's programs with its last mesh, which the quads that
+   * take their place would build again.
+   */
+  private letGo(...meshes: Quads[]): void {
+    for (const mesh of meshes) {
+      mesh.removeFromParent();
+      const material = mesh.material as THREE.Material;
+      this.kept.get(material)?.dispose();
+      this.kept.set(material, mesh);
+    }
+  }
+
   /** Let go of the morphologies, and of nothing else. */
   private clearMorphologies(): void {
     const meshes = this.layer?.meshes ?? [];
     for (const geometry of new Set(meshes.map((mesh) => mesh.geometry))) geometry.dispose();
-    for (const mesh of meshes) mesh.removeFromParent();
-    for (const mesh of [...(this.layer?.ids ?? []), ...(this.layer?.spots ?? [])]) {
-      mesh.removeFromParent();
-    }
+    this.letGo(...meshes, ...(this.layer?.ids ?? []), ...(this.layer?.spots ?? []));
     this.layer?.detailed?.stream.stop();
     this.layer = null;
     this.uniforms.uShift.value.set(0, 0, 0);
@@ -1266,8 +1279,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.clearMorphologies();
     const { cloud } = this;
     cloud?.mesh.geometry.dispose();
-    cloud?.mesh.removeFromParent();
-    cloud?.ids.removeFromParent();
+    if (cloud) this.letGo(cloud.mesh, cloud.ids);
     this.cloud = null;
     this.table?.dispose();
     this.table = null;

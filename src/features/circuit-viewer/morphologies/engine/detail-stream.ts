@@ -124,7 +124,7 @@ export class DetailStream {
    */
   apply(cap = PLACED_SEGMENTS): { changed: boolean; more: boolean } {
     const { arena, detail, drawn } = this;
-    if (!detail) return { changed: false, more: false };
+    if (this.stopped || !detail) return { changed: false, more: false };
     const wanted = detail.levels;
     let uploaded = 0;
     let changed = false;

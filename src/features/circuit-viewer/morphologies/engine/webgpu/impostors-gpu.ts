@@ -361,12 +361,11 @@ const fromAttributes = (): SegmentInputs => ({
 /** An arena's segment, the instance's: with no dendrogram, its ends stand for it. */
 function fromArena({ ends, words }: ArenaStorage): SegmentInputs {
   const at = instanceIndex.mul(uint(2));
-  const endsOf = storage(ends, 'vec4', ends.count).toReadOnly();
+  // Of any length: the arena's buffers are bound in place of the attributes'.
+  const endsOf = storage(ends, 'vec4', 0).toReadOnly();
   const endA = typed<'vec4'>(endsOf.element(at));
   const endB = typed<'vec4'>(endsOf.element(at.add(uint(1))));
-  const word = typed<'uint'>(
-    storage(words, 'uint', words.count).toReadOnly().element(instanceIndex)
-  );
+  const word = typed<'uint'>(storage(words, 'uint', 0).toReadOnly().element(instanceIndex));
   return { word, endA, endB, chartA: endA, chartB: endB };
 }
 

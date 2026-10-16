@@ -34,11 +34,7 @@ export class CircuitMorphologyGPU extends CircuitView {
   /** False where the occlusion could not be made, which is not tried again. */
   private occluding = true;
   /** Made at the first pack and kept, its programs with it: each pack's arena only binds its buffers to `storage`. */
-  private arena: {
-    storage: ArenaStorage;
-    segment: THREE.Material[];
-    ids: THREE.Material[];
-  } | null = null;
+  private arena: (ReturnType<typeof arenaMaterials> & { storage: ArenaStorage }) | null = null;
 
   /**
    * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
@@ -164,8 +160,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     }
     const { storage, segment, ids } = this.arena;
     return {
-      uploadsOf: (_geometry, ends, words) =>
-        arenaOnGpu(this.renderer, this.device, storage, ends, words),
+      uploadsOf: (ends, words) => arenaOnGpu(this.renderer, this.device, storage, ends, words),
       segment,
       ids,
     };

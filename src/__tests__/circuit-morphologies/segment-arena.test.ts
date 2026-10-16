@@ -130,15 +130,17 @@ describe('SegmentArena', () => {
     expect(arena.geometry.instanceCount).toBe(22);
   });
 
-  it('draws only up to the last box, and less once it goes, the holes before it with it', () => {
+  it('draws only up to the last box, and less once it goes, the holes before it with it, uploading nothing past it', () => {
     const arena = arenaOf(20);
     arena.put(1, segmentsOf(1, 3));
     arena.put(2, segmentsOf(2, 3));
     arena.put(3, segmentsOf(3, 3));
     arena.remove(2);
     expect(arena.geometry.instanceCount).toBe(9);
-    arena.remove(3);
+    clearRanges(arena);
+    expect(arena.remove(3)).toBe(0);
     expect(arena.geometry.instanceCount).toBe(3);
+    expect(attributes(arena).words.updateRanges).toEqual([]);
     arena.put(4, segmentsOf(4, 2));
     expect(attributes(arena).words.updateRanges.at(-1)).toEqual({ start: 3, count: 2 });
   });
@@ -178,7 +180,7 @@ describe('SegmentArena', () => {
     const dispose = vi.fn();
     const geometry = new THREE.InstancedBufferGeometry();
     const arrays: { ends?: Float32Array; words?: Uint32Array } = {};
-    const arena = new SegmentArena(geometry, 10, (_quads, ends, words) => {
+    const arena = new SegmentArena(geometry, 10, (ends, words) => {
       Object.assign(arrays, { ends, words });
       return { upload: (...range) => told.push(range), dispose };
     });

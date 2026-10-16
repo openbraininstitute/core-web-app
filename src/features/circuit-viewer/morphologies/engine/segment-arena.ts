@@ -13,21 +13,21 @@ export interface ArenaUploads {
   dispose(): void;
 }
 
-/** An arena's uploads for its quads `geometry`, its segments' ends (8 floats each) and their cell-and-type words. */
-export type UploadsOf = (
+/** An arena's uploads for its segments' ends (8 floats each) and their cell-and-type words. */
+export type UploadsOf = (ends: Float32Array, words: Uint32Array) => ArenaUploads;
+
+/** three's attributes on the quads `geometry`, which three uploads where they changed. */
+function attributesOf(
   geometry: THREE.InstancedBufferGeometry,
   ends: Float32Array,
   words: Uint32Array
-) => ArenaUploads;
-
-/** three's attributes on the quads, which three uploads where they changed. */
-const attributesOf: UploadsOf = (geometry, ends, words) => {
+): ArenaUploads {
   const endsBuffer = new THREE.InstancedInterleavedBuffer(ends, 8);
   const cellTypes = new THREE.InstancedBufferAttribute(words, 1);
   // No dendrogram: the ends stand for it, and the morph moves nothing.
   segmentAttributes(geometry, endsBuffer, endsBuffer, cellTypes);
   return {
-    upload(start, count, wordsOnly) {
+    upload(start: number, count: number, wordsOnly: boolean) {
       if (!wordsOnly) {
         endsBuffer.addUpdateRange(8 * start, 8 * count);
         endsBuffer.needsUpdate = true;
@@ -37,7 +37,7 @@ const attributesOf: UploadsOf = (geometry, ends, words) => {
     },
     dispose() {},
   };
-};
+}
 
 interface Place {
   start: number;
@@ -67,13 +67,13 @@ export class SegmentArena {
   constructor(
     geometry: THREE.InstancedBufferGeometry,
     capacity: number,
-    uploadsOf: UploadsOf = attributesOf
+    uploadsOf: UploadsOf = (ends, words) => attributesOf(geometry, ends, words)
   ) {
     this.geometry = geometry;
     this.capacity = capacity;
     this.ends = new Float32Array(8 * capacity);
     this.words = new Uint32Array(capacity);
-    this.uploads = uploadsOf(geometry, this.ends, this.words);
+    this.uploads = uploadsOf(this.ends, this.words);
     geometry.instanceCount = 0;
   }
 
@@ -123,8 +123,10 @@ export class SegmentArena {
     if (place.count === 0) return 0;
     this.words.fill((HOLE << TYPE_SHIFT) >>> 0, place.start, place.start + place.count);
     this.leave(place);
-    this.upload(place.start, place.count, true);
-    return Math.ceil((4 * place.count) / SEGMENT_BYTES);
+    // The last box's words are past the end once it goes, where nothing is drawn.
+    const count = place.start < this.end ? place.count : 0;
+    this.upload(place.start, count, true);
+    return Math.ceil((4 * count) / SEGMENT_BYTES);
   }
 
   /** What it uploads to let go of; its quads are the caller's. */
