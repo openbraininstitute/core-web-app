@@ -23,9 +23,11 @@ import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-vi
 export function usePainter({
   atlasId,
   loading,
+  cameraZoom = 1,
 }: {
   atlasId?: string;
   loading: boolean;
+  cameraZoom?: number;
 }): Painter | null {
   const notifier = useAppNotification();
   const queryClient = useQueryClient();
@@ -51,6 +53,7 @@ export function usePainter({
       });
     });
     refPainter.current.uniforms = getAtlasViewerDefaultSettings();
+    refPainter.current.cameraZoom = cameraZoom;
   }
 
   return refPainter.current;

@@ -121,6 +121,13 @@ export interface IColumnModel<Row = unknown> {
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
+  /**
+   * header renderer key, resolved by the same registry, that replaces the default label,
+   * sort and filter controls with the column's own header
+   */
+  headerRenderer?: string;
+  /** full-height rule along the column's right edge, setting it apart from the next */
+  divider?: boolean;
   /** whether the column exists at all here (default: true); `false` drops it, chooser included */
   available?: TContextualValue<boolean>;
   /** position weight, ascending; ties keep declaration order */

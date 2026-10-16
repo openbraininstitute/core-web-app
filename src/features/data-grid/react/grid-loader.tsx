@@ -14,13 +14,13 @@ export interface IGridLoaderProps {
  * The grid's loading indicator: an antd {@link LoadingOutlined} spinner ABOVE a
  * `loading {label}` line. Deliberately ISOLATED and dependency-light so it can be
  * swapped out anywhere without touching the grids. The container carries NO shadow
- * and the grid background (`bg-background`) so it blends into the table area.
+ * and no background, so it shows the surface the grid sits on.
  */
 export function GridLoader({ label = 'entities', className }: IGridLoaderProps) {
   return (
     <div
       className={cn(
-        'bg-background flex h-full w-full flex-col items-center justify-center gap-2 p-6 shadow-none',
+        'flex h-full w-full flex-col items-center justify-center gap-2 bg-transparent p-6 shadow-none',
         className
       )}
     >

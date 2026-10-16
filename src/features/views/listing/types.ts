@@ -62,6 +62,10 @@ export type BrowseEntityScopeProps = {
   allowDownload?: boolean;
   /** whether to display the delete button */
   allowDelete?: boolean;
+  /** whether to display the upload data button */
+  allowUpload?: boolean;
+  /** draws the table and its pager as a card, with the selection and its actions above */
+  framed?: boolean;
   /** whether to display the filter controls */
   allowFilter?: boolean;
   /** whether to display the search input */
@@ -74,6 +78,7 @@ export type BrowseEntityScopeProps = {
   allowQuery?: boolean;
   /** whether to display the brain region dropdown */
   requireSpeciesSelector?: boolean;
+  /** lists public and project rows together, with a Scope column whose header toggles filter them */
   requireScopeSelector?: boolean;
   requireEntityTypeSelector?: {
     value: TExtendedEntitiesTypeDict;

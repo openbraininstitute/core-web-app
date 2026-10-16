@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { use } from 'react';
 
-import { SCOPE_QUERY_PARAMS, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useNextStepOnboarding, workflowTour } from '@/ui/segments/app-setup/discover-app';
 import {
@@ -62,10 +61,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
       targetType: value,
     });
 
-    const query: Record<string, string | undefined> = {
-      [SCOPE_QUERY_PARAMS]: WorkspaceScope.Public,
-    };
-
     navigate(
       buildWorkflowStartingPageUrl({
         activity,
@@ -74,7 +69,6 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
         stage,
         workflow,
         schemaSelection,
-        query,
       })
     );
   };

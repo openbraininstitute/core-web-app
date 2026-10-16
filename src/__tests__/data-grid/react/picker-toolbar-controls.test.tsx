@@ -15,9 +15,6 @@ import type { ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: WorkspaceScope.Public, isPending: false, changeScope: () => {} }),
-}));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl', projectId: 'pr' }),
 }));

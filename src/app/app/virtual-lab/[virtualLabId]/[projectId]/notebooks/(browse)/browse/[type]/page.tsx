@@ -58,6 +58,7 @@ export default async function NotebooksBrowsePage({
       dataType={entity.extendedType}
       requireBrainRegion={false}
       requireMiniDetailView
+      requireScopeSelector
     />
   );
 }

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { WorkspaceSection } from '@/constants';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
 
@@ -15,9 +15,6 @@ import type { IGridRendererProps } from '@/features/data-grid/react/renderer';
 
 let lastRendererProps: IGridRendererProps<EntityCoreIdentifiableNamed> | undefined;
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: WorkspaceScope.Public, isPending: false, changeScope: () => {} }),
-}));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl', projectId: 'pr' }),
 }));

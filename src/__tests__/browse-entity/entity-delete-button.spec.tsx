@@ -12,9 +12,6 @@ import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-but
 
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: 'project' }),
-}));
 vi.mock('@/components/notification', () => ({
   useAppNotification: () => ({
     destroy: vi.fn(),

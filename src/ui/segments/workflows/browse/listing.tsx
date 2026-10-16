@@ -551,7 +551,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireMiniDetailView
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
-        requireScopeSelector={workflow.requireScope}
+        requireScopeSelector
         allowFilter={workflow.requireFilters}
         section={section}
         classNames={{

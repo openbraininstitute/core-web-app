@@ -72,6 +72,16 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The Data table's mark for a project's own records: two people, or one. */
+export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
+  key: 'project-scope-icon',
+  defaultValue: 'two',
+  values: ['two', 'one'],
+  labels: ['Two people', 'One person'],
+  description: 'Project icon in the Data table',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -81,6 +91,7 @@ export const flags = [
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
+  projectScopeIconFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

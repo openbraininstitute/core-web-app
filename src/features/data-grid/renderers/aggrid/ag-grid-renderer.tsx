@@ -205,8 +205,12 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              paddingLeft: 0,
+              paddingRight: 1,
             },
-            headerClass: 'flex items-center justify-center',
+            cellClass: '[&_.ag-selection-checkbox]:mr-0!',
+            headerClass:
+              'flex items-center justify-center pr-px! pl-0! [&_.ag-header-cell-comp-wrapper]:hidden [&_.ag-header-select-all]:mr-0!',
           }
         : undefined,
     [selectionEnabled, selectionSpec?.columnWidth]
@@ -394,6 +398,8 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         // context change is appended after every other column (off-screen, i.e. "gone")
         // until reload. It would equally defeat `movable: false`.
         animateRows={false}
+        // the thin scroll bars globals.css gives AG's scroll viewports
+        scrollbarWidth={8}
         headerHeight={48}
         getRowHeight={getRowHeight}
         isFullWidthRow={(p) => isDetailRow(p.rowNode.data)}

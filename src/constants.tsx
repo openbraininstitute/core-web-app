@@ -42,6 +42,12 @@ export const WorkspaceScope = {
 
 export type TWorkspaceScope = (typeof WorkspaceScope)[keyof typeof WorkspaceScope];
 
+/** Data lists public and project records together; each row shows which it is. */
+export const DATA_SECTION_SCOPE = WorkspaceScope.Combined;
+
+/** Data panels fill their grid row, which the inner layout sizes, instead of a viewport cap. */
+export const DATA_PANEL_MAX_HEIGHT = 'max-h-full';
+
 export const WorkflowActivityDictValue = {
   build: 'build',
   simulate: 'simulate',
@@ -61,6 +67,16 @@ export const WorkspaceSection = {
   ExtractWorkflow: WorkflowActivityDictValue.extract,
   ProcessWorkflow: WorkflowActivityDictValue.process,
   OptimizeWorkflow: WorkflowActivityDictValue.optimize,
+} as const;
+
+/** Listing props every Data-section browse page shares. */
+export const DATA_LISTING_PROPS = {
+  section: WorkspaceSection.Data,
+  scope: DATA_SECTION_SCOPE,
+  requireScopeSelector: true,
+  allowUpload: true,
+  framed: true,
+  classNames: { container: DATA_PANEL_MAX_HEIGHT, miniView: DATA_PANEL_MAX_HEIGHT },
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

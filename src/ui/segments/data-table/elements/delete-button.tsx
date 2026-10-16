@@ -9,7 +9,6 @@ import pMap from 'p-map';
 import { type ReactNode, useMemo } from 'react';
 
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 // direct module import: the react barrel would close a module-init cycle via the grid host
@@ -17,7 +16,6 @@ import {
   EXPANDING_PILL_BASE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
-import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
 import {
   SelectionBadgeAnchor,
@@ -150,7 +148,6 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 }) {
   const notify = useAppNotification();
   const queryClient = useQueryClient();
-  const { scope: currentScope } = useScope();
 
   // Only rows this project owns can be deleted; a cross-scope basket can hold public
   // rows that are not ours to touch.
@@ -168,6 +165,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       <SelectionCountBadge count={badgeCount} className="text-destructive" />
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
+  const keptCount = selectedRows.length - entityCount;
+  const keptNote =
+    keptCount > 0
+      ? `${keptCount} public ${keptCount === 1 ? 'item' : 'items'} in your selection will be kept.`
+      : null;
 
   const getButtonLabel = (): string => {
     return isSingular ? `Delete entity` : `Delete entities`;
@@ -179,13 +181,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });
 
-  const permissions = useMemo(() => {
-    const isProjectScope = currentScope === WorkspaceScope.Project;
-    return {
-      delete:
-        !!entityTypeConfig?.isDeletable && isProjectScope && !!entityTypeConfig.api.query.delete,
-    };
-  }, [currentScope, entityTypeConfig]);
+  const permissions = useMemo(
+    () => ({ delete: !!entityTypeConfig?.isDeletable && !!entityTypeConfig.api.query.delete }),
+    [entityTypeConfig]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -301,6 +300,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <div className="font-bold text-sm text-primary-8">
             Are you sure you want to delete {label}?
           </div>
+          {keptNote && <div className="text-sm text-primary-8">{keptNote}</div>}
           <small className="font-light text-primary-6">This action cannot be undone.</small>
         </div>
       }
