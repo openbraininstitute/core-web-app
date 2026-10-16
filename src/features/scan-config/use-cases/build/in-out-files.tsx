@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { compact, includes } from 'es-toolkit/compat';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
@@ -177,7 +177,11 @@ export function InOutFiles({
   const shouldPollVisualization =
     isCircuitBuild && campaignOrigin !== ScanConfigCampaignOriginActionDict.View;
 
-  const { data: builtEntity, isLoading } = useQuery({
+  const {
+    data: builtEntity,
+    isLoading,
+    refetch: refetchBuiltEntity,
+  } = useQuery({
     queryKey: keyBuilder.entity({
       id: generatedId ?? '',
       context,
@@ -246,6 +250,25 @@ export function InOutFiles({
         : null,
     files: builtOutputFiles,
   });
+
+  // an ME-model is linked before it is calibrated and validated, so fetch it again once the run ends
+  const wasRunning = useRef(false);
+  useEffect(() => {
+    if (!execStatus) return;
+    if (!outputAvailable) {
+      wasRunning.current = true;
+      return;
+    }
+    if (!wasRunning.current || !generatedId || !generatedType) return;
+    wasRunning.current = false;
+    refetchBuiltEntity();
+  }, [execStatus, outputAvailable, generatedId, generatedType, refetchBuiltEntity]);
+
+  useEffect(() => {
+    if (builtEntity && selectedFile?.id === builtEntity.id && selectedFile.entity !== builtEntity) {
+      onSelect(makeEntityMiniDetailFile(builtEntity));
+    }
+  }, [builtEntity, selectedFile, onSelect]);
 
   const builtListingType = builtEntity ? getOutputEntityType(builtEntity) : undefined;
   useEffect(() => {
