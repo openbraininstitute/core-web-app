@@ -211,8 +211,11 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
+    const read = this.readNow();
+    this.unread = read === null;
+    if (read) this.copyCounts(encoder, read);
     device.queue.submit([encoder.finish()]);
-    this.readCounts();
+    if (read) this.mapCounts(read);
     return true;
   }
 
@@ -381,15 +384,23 @@ export class Culling {
     return read ?? null;
   }
 
-  /** The counts the last tests left, read back; where no buffer is free, once one is. */
+  private copyCounts(encoder: GPUCommandEncoder, read: GPUBuffer): void {
+    encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
+    encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
+  }
+
+  /** The counts the last tests left, read back once a buffer is free, where none was when they ran. */
   private readCounts(): void {
     const read = this.readNow();
     this.unread = read === null;
     if (!read) return;
     const encoder = this.device.createCommandEncoder({ label: 'cull counts' });
-    encoder.copyBufferToBuffer(this.counters, 0, read, 0, 16);
-    encoder.copyBufferToBuffer(this.drawsBuffer, 0, read, 16, DRAWS_BYTES);
+    this.copyCounts(encoder, read);
     this.device.queue.submit([encoder.finish()]);
+    this.mapCounts(read);
+  }
+
+  private mapCounts(read: GPUBuffer): void {
     const { generation } = this;
     read.mapAsync(READ).then(
       () => {
