@@ -35,8 +35,8 @@ import {
   rtt,
   screenCoordinate,
   sin,
-  sqrt,
   textureSize,
+  unpackNormal,
   uv,
   vec2,
   vec3,
@@ -61,9 +61,6 @@ export function surfaceOf(normal: Node<'vec3'>, depth: Node<'float'>) {
   const steps = depth.clamp(0, 0.99998).mul(256);
   return mrt({ surface: vec4(normal.xy, floor(steps).div(256), fract(steps)) });
 }
-
-/** What is drawn over the cells writes for the occlusion: the far plane, where it counts nothing. */
-export const NO_SURFACE = () => mrt({ surface: vec4(0, 0, 1, 0) });
 
 /** The parts of three's `GTAONode` (r186) its setup reads, which are its own, not its interface. */
 interface GTAOParts {
@@ -231,8 +228,17 @@ export class Occlusion {
   private passes: { dispose(): void }[];
 
   constructor(renderer: THREE.WebGPURenderer, scene: THREE.Scene, camera: THREE.Camera) {
-    const scenePass = pass(scene, camera, { samples: 4 });
-    scenePass.setMRT(mrt({ output, surface: vec4(0) }).setClearColor('surface', 0x000000, 0));
+    // Only the resolved pictures are read.
+    const scenePass = pass(scene, camera, {
+      samples: 4,
+      storeMultisampledColorBuffer: false,
+      storeMultisampledDepthBuffer: false,
+    });
+    // What writes no surface of its own (`surfaceOf`), the dots over the cells, stands at the far plane, where the
+    // occlusion counts nothing.
+    scenePass.setMRT(
+      mrt({ output, surface: vec4(0, 0, 1, 0) }).setClearColor('surface', 0x000000, 0)
+    );
     const surface = scenePass.getTextureNode('surface');
     const picture = scenePass.getTextureNode('output');
     // xy the normal's, z the depth, w how much of the pixel is covered: what the resolve summed is divided by that again.
@@ -259,7 +265,7 @@ export class Occlusion {
     const quad = new THREE.MeshBasicNodeMaterial();
     quad.vertexNode = vec4(positionGeometry.xy, 0, 1);
     quad.maskNode = picked.w.greaterThanEqual(AO_COVER);
-    quad.normalNode = vec3(picked.xy, sqrt(max(float(1).sub(dot(picked.xy, picked.xy)), 0)));
+    quad.normalNode = unpackNormal(picked.xy);
     quad.depthNode = picked.z;
     quad.depthFunc = THREE.AlwaysDepth;
     const corners = new THREE.BufferGeometry();
@@ -285,10 +291,12 @@ export class Occlusion {
     this.smooth.lumaPhi.value = 10;
     this.smooth.normalPhi.value = 3;
     this.smooth.radius.value = 4;
-    const smoothed = rtt(this.smooth, null, null, { resolutionScale: AO_SCALE });
-    const drawn = scenePass.getTextureNode();
+    const smoothed = rtt(this.smooth, null, null, {
+      resolutionScale: AO_SCALE,
+      depthBuffer: false,
+    });
     this.pipeline = new THREE.RenderPipeline(renderer);
-    this.pipeline.outputNode = vec4(drawn.rgb.mul(pow(smoothed.r, 1 / 2.2)), drawn.a);
+    this.pipeline.outputNode = vec4(picture.rgb.mul(pow(smoothed.r, 1 / 2.2)), picture.a);
     this.passes = [scenePass, surfacePass, this.occlusion, this.smooth, smoothed, quad, corners];
   }
 

@@ -27,7 +27,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   private device: GPUDevice;
   private gpu: GpuUniforms;
   private idTarget: THREE.RenderTarget | null = null;
-  private occlusions = new Map<THREE.Camera, Occlusion | null>();
+  /** For the camera in use, made at its first still frame. */
+  private occlusion: Occlusion | null = null;
+  /** False where the occlusion could not be made, which is not tried again. */
+  private occluding = true;
 
   /**
    * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
@@ -93,7 +96,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   protected override disposeStage(): void {
     this.idTarget?.dispose();
-    for (const occlusion of this.occlusions.values()) occlusion?.dispose();
+    this.occlusion?.dispose();
     this.renderer.dispose();
     this.device.destroy();
   }
@@ -115,43 +118,44 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
-  /** Still, morphologies are drawn with ambient occlusion; moving, and the somas always, without. */
+  /**
+   * Still, morphologies are drawn with ambient occlusion; moving, and the somas always, without: the cloud of somas
+   * writes no surface for it. Its targets are the size of the canvas, so it is let go of with the morphologies.
+   */
   protected override draw(moving: boolean): void {
     this.gpu.sync();
-    const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionFor(this.camera);
+    if (!this.drawsMorphologies) this.dropOcclusion();
+    const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionNow();
     if (occlusion) occlusion.render(this.occlusionReach());
     else this.renderer.render(this.scene, this.camera);
   }
 
-  /**
-   * The occlusion for `camera`, made at its first still frame, the other camera's let go of, as its targets are the
-   * size of the canvas; null where it could not be made.
-   */
-  private occlusionFor(camera: THREE.Camera): Occlusion | null {
-    if (!this.occlusions.has(camera)) {
-      for (const [other, occlusion] of this.occlusions) {
-        if (!occlusion) continue;
-        occlusion.dispose();
-        this.occlusions.delete(other);
-      }
-      let made: Occlusion | null = null;
+  /** The occlusion was made for the other camera. */
+  protected override projectionChanged(): void {
+    this.dropOcclusion();
+  }
+
+  private occlusionNow(): Occlusion | null {
+    if (!this.occlusion && this.occluding) {
       try {
-        made = new Occlusion(this.renderer, this.scene, camera);
+        this.occlusion = new Occlusion(this.renderer, this.scene, this.camera);
       } catch (e) {
+        this.occluding = false;
         logError('Drawn without ambient occlusion', e);
       }
-      this.occlusions.set(camera, made);
     }
-    return this.occlusions.get(camera) ?? null;
+    return this.occlusion;
+  }
+
+  private dropOcclusion(): void {
+    this.occlusion?.dispose();
+    this.occlusion = null;
   }
 
   /** How far the occlusion reaches, µm: `AO_RADIUS_CSS` on screen, at the orbit's target in perspective. */
   private occlusionReach(): number {
     const { camera } = this;
-    const away =
-      camera instanceof THREE.PerspectiveCamera
-        ? camera.position.distanceTo(this.controls.target)
-        : 1;
+    const away = camera instanceof THREE.PerspectiveCamera ? this.controls.getDistance() : 1;
     return AO_RADIUS_CSS * pixelSpan(camera.projectionMatrix, this.height) * away;
   }
 

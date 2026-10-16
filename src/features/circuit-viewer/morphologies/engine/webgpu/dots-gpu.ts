@@ -11,7 +11,6 @@ import * as THREE from 'three/webgpu';
 
 import { RING_PX } from '../electrodes';
 import { col, typed, VIEW } from './cells-wgsl';
-import { NO_SURFACE } from './occlusion-gpu';
 
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
@@ -67,6 +66,7 @@ function dotMaterial(
   const corner = varying(positionGeometry.xy);
   const material = new THREE.MeshBasicNodeMaterial();
   material.vertexNode = col(quad, 0);
+  // Not a fragment node, which would write nothing of the occlusion's surface (`Occlusion`).
   material.colorNode = typed<'vec4'>(
     dotColour({
       corner,
@@ -76,8 +76,6 @@ function dotMaterial(
     })
   );
   material.maskNode = corner.length().lessThanEqual(1);
-  // Not occluded, and occluding nothing.
-  material.mrtNode = NO_SURFACE();
   material.depthTest = among;
   material.depthWrite = false;
   return material;

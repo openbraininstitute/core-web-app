@@ -488,7 +488,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const stream =
       data.chunks && DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate());
     const segments = stream ? stream.geometry : segmentGeometry(data);
-    const segmentMeshes = materials.segment.map((material) => quads(segments, material));
+    const onSegments = (drawn: THREE.Material[]) =>
+      drawn.map((material) => quads(segments, material));
+    const segmentMeshes = onSegments(materials.segment);
     this.chunks.add(...segmentMeshes);
 
     const { spheres, charts, cells } = placedSomas(data.somas, data.chart?.somas);
@@ -501,17 +503,14 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     // Beside `chunks`, which holds the segments.
     this.surfaces.add(somaMesh);
 
-    const segmentIds = materials.ids.segment.map((material) => quads(segments, material));
+    const segmentIds = onSegments(materials.ids.segment);
     const ids = [...segmentIds, quads(somas, materials.ids.soma)];
     this.ids.add(...ids);
     // Drawn as the boxes come in.
     if (stream) for (const mesh of [...segmentMeshes, ...segmentIds]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
-      ? [
-          ...materials.spots.segment.map((material) => quads(segments, material)),
-          quads(somas, materials.spots.soma),
-        ]
+      ? [...onSegments(materials.spots.segment), quads(somas, materials.spots.soma)]
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
