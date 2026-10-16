@@ -33,6 +33,8 @@ export type UploadsOf = (
   blocks: Float32Array
 ) => ArenaUploads;
 
+const NO_UPLOADS: ArenaUploads = { upload() {}, dispose() {} };
+
 /** three's attributes on the quads `geometry`, which three uploads where they changed. */
 function attributesOf(
   geometry: THREE.InstancedBufferGeometry,
@@ -169,9 +171,17 @@ export class SegmentArena {
     return Math.ceil((4 * count) / SEGMENT_BYTES);
   }
 
-  /** What it uploads to let go of; its quads are the caller's. */
+  /**
+   * What it uploads to let go of, and its arrays, which a read still under way would keep past a new arena's otherwise;
+   * its quads are the caller's.
+   */
   dispose(): void {
     this.uploads.dispose();
+    this.uploads = NO_UPLOADS;
+    this.ends = new Float32Array(0);
+    this.words = new Uint32Array(0);
+    this.blocks = new Float32Array(0);
+    this.blockWords = new Uint32Array(0);
   }
 
   /**

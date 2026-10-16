@@ -50,7 +50,6 @@ import type {
   ElectrodeHit,
   LocationMarker,
   MarkerOnScreen,
-  MorphologyChunks,
   Population,
   ScreenPoint,
   SectionSpot,
@@ -123,12 +122,11 @@ export interface ArenaDrawing {
 }
 
 /**
- * Morphologies read a box at a time: what reads and places them, where its arena is uploaded, and the camera, the
- * view's height and the rules their levels were last chosen for, and whether the view was still.
+ * Morphologies read a box at a time: what reads and places them, and the camera, the view's height and the rules their
+ * levels were last chosen for, and whether the view was still.
  */
 interface Detailed {
   stream: DetailStream;
-  uploadsOf?: UploadsOf;
   chosenFor: {
     projection: THREE.Matrix4;
     view: THREE.Matrix4;
@@ -504,8 +502,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
     const { materials } = this;
     const drawing = data.chunks ? this.arenaDrawing() : null;
-    const uploadsOf = drawing?.uploadsOf;
-    const stream = data.chunks && this.streamOf(data.chunks, uploadsOf);
+    const stream =
+      data.chunks &&
+      DetailStream.of(
+        data.chunks,
+        this.detailRules.budget,
+        quadGeometry(0),
+        () => this.invalidate(),
+        drawing?.uploadsOf
+      );
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
       drawn.map((material, k) => quads(drawing?.quads[k] ?? segments, material));
@@ -533,7 +538,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
-    const detailed = stream ? { stream, uploadsOf, chosenFor: null } : null;
+    const detailed = stream ? { stream, chosenFor: null } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
     this.compileIds();
 
@@ -562,27 +567,18 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
-  /** A stream of `chunks` into an arena made for the budget, uploaded as `uploadsOf` has it. */
-  private streamOf(chunks: MorphologyChunks, uploadsOf?: UploadsOf): DetailStream {
-    const { budget } = this.detailRules;
-    return DetailStream.of(chunks, budget, quadGeometry(0), () => this.invalidate(), uploadsOf);
-  }
-
   /** The arena made again where it holds less than the budget asks of it, its boxes read again. */
   private holdBudget(): void {
     const { layer } = this;
-    const detailed = layer?.detailed;
-    const chunks = layer?.data.chunks;
-    if (!detailed || !chunks || detailed.stream.holds(this.detailRules.budget)) return;
-    const was = detailed.stream;
-    // Before the new one: what it uploads to is let go of with it.
-    was.stop();
-    const stream = this.streamOf(chunks, detailed.uploadsOf);
+    const { budget } = this.detailRules;
+    if (!layer?.detailed || layer.detailed.stream.holds(budget)) return;
+    const was = layer.detailed.stream;
+    const stream = was.remade(budget, quadGeometry(0));
     for (const mesh of [...layer.meshes, ...layer.ids]) {
       if (mesh.geometry === was.geometry) mesh.geometry = stream.geometry;
     }
     was.geometry.dispose();
-    layer.detailed = { stream, uploadsOf: detailed.uploadsOf, chosenFor: null };
+    layer.detailed = { stream, chosenFor: null };
     this.culled = null;
   }
 

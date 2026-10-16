@@ -30,7 +30,7 @@ function capacityOf({ levels, boxes }: MorphologyChunks, budget: number): number
   for (let box = 0; box < boxes.length / 6; box++) {
     most += roomFor(Math.max(...levels.map((level) => level.segments[box])));
   }
-  return roomFor(Math.ceil(1.25 * Math.min(most, budget)));
+  return Math.ceil(1.25 * Math.min(most, budget));
 }
 
 /**
@@ -43,6 +43,7 @@ export class DetailStream {
   private chunks: MorphologyChunks;
   private arena: SegmentArena;
   private onRead: () => void;
+  private uploadsOf?: UploadsOf;
   /** The levels drawn of each box, -1 for none. */
   private drawn: Int8Array;
   /** What the view wants, as last chosen. */
@@ -56,11 +57,19 @@ export class DetailStream {
   private unread = new Set<number>();
   private told = false;
 
-  /** `onRead` is told when boxes came in, to be placed. */
-  constructor(chunks: MorphologyChunks, arena: SegmentArena, onRead: () => void) {
+  /**
+   * `onRead` is told when boxes came in, to be placed; `uploadsOf` uploads the arena it is made again with (`remade`).
+   */
+  constructor(
+    chunks: MorphologyChunks,
+    arena: SegmentArena,
+    onRead: () => void,
+    uploadsOf?: UploadsOf
+  ) {
     this.chunks = chunks;
     this.arena = arena;
     this.onRead = onRead;
+    this.uploadsOf = uploadsOf;
     this.drawn = new Int8Array(chunks.boxes.length / 6).fill(-1);
   }
 
@@ -76,12 +85,21 @@ export class DetailStream {
     uploadsOf?: UploadsOf
   ): DetailStream {
     const arena = new SegmentArena(geometry, capacityOf(chunks, budget), uploadsOf);
-    return new DetailStream(chunks, arena, onRead);
+    return new DetailStream(chunks, arena, onRead, uploadsOf);
   }
 
   /** Whether its arena holds as much as `budget` asks of it. */
   holds(budget: number): boolean {
     return capacityOf(this.chunks, budget) <= this.arena.capacity;
+  }
+
+  /**
+   * Its boxes streamed again into an arena on `geometry` made for `budget`; this stream stopped first, so that what its
+   * arena uploads to is let go of before the new one's is made.
+   */
+  remade(budget: number, geometry: THREE.InstancedBufferGeometry): DetailStream {
+    this.stop();
+    return DetailStream.of(this.chunks, budget, geometry, this.onRead, this.uploadsOf);
   }
 
   /** The arena's quads, which draw what is placed. */
