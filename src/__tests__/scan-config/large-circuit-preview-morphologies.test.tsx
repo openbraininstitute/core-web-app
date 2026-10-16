@@ -218,7 +218,7 @@ describe('LargeCircuitPreview morphologies', () => {
     await screen.findByTestId('morphologies');
 
     act(() => h.cells?.onLeftOut?.(true));
-    expect(status()).toBe('Only the morphologies nearest the middle fit: zoom in to see more');
+    expect(status()).toBe('Too many morphologies in view: zoom in to see them');
     act(() => h.cells?.onLeftOut?.(false));
     expect(status()).toBeNull();
   });

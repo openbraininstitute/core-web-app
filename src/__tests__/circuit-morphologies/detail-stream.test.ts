@@ -50,8 +50,8 @@ function chunksOf() {
  * An orthographic view `half` µm either side of the middle, 1000 device pixels high: 500 and more draws the coarsest
  * level, 100 the middle one, 20 the finest. The focus is on the first box.
  */
-function viewOf(half: number, shift = new THREE.Vector3()): DetailView {
-  const camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, 1e6);
+function viewOf(half: number, shift = new THREE.Vector3(), far = 1e6): DetailView {
+  const camera = new THREE.OrthographicCamera(-half, half, half, -half, 0.1, far);
   camera.updateMatrixWorld();
   return {
     projection: camera.projectionMatrix,
@@ -182,8 +182,8 @@ describe('DetailStream', () => {
 
   it('reads the other boxes on after a batch fails, and no more of those, logging it once', async () => {
     const { stream, arena, reads } = make();
-    // The budget takes the box nearest the focus alone.
-    stream.update(viewOf(500), { ...RULES, budget: COUNTS[2] }, true);
+    // The far plane takes the box nearest the focus alone.
+    stream.update(viewOf(500, undefined, 30), RULES, true);
     expect(reads[0].wanted).toEqual([{ level: 2, box: 0 }]);
     reads[0].reject(new Error('morphology pack chunk cut short'));
     await settled();

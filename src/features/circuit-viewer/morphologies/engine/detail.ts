@@ -1,7 +1,7 @@
 /**
  * Which level of a pack each of its boxes is drawn at, for a view: the coarsest whose tolerance spans no more than a few
- * device pixels where the box comes nearest the eye, coarser still while what is in view is over the budget, and the
- * boxes farthest from the view's focus left out where even the coarsest is. Outside the view, a box is not drawn.
+ * device pixels where the box comes nearest the eye, coarser still while what is in view is over the budget, and every
+ * box in view left out where even the coarsest is. Outside the view, a box is not drawn.
  */
 import * as THREE from 'three';
 
@@ -24,7 +24,7 @@ export interface DetailView {
   orthographic: boolean;
   /** The view's height, in device pixels. */
   height: number;
-  /** What the view turns about, in its own frame: the boxes nearest it are the last to go coarser or be left out. */
+  /** What the view turns about, in its own frame: the boxes nearest it are the last to go coarser. */
   focus: THREE.Vector3;
   /** Where the data's origin is in the view's frame. */
   shift: THREE.Vector3;
@@ -35,9 +35,9 @@ export interface Detail {
   levels: Int8Array;
   /** The boxes in view, the one nearest the focus first. */
   order: Uint32Array;
-  /** What the levels chosen come to. */
+  /** What the levels chosen come to; where the boxes in view are left out, what they come to at the coarsest. */
   segments: number;
-  /** The boxes in view left out for the budget. */
+  /** The boxes in view left out for the budget: none, or all of them. */
   leftOut: number;
 }
 
@@ -103,11 +103,8 @@ export function chooseDetail(
       coarser = true;
     }
   }
-  let leftOut = 0;
-  for (let i = order.length - 1; i >= 0 && segments > budget; i--) {
-    segments -= segmentsOf(order[i]);
-    chosen[order[i]] = -1;
-    leftOut++;
-  }
-  return { levels: chosen, order, segments, leftOut };
+  // A part of them would be cut at its boxes' sides, and another part as the view moves.
+  if (segments <= budget) return { levels: chosen, order, segments, leftOut: 0 };
+  for (const b of order) chosen[b] = -1;
+  return { levels: chosen, order, segments, leftOut: order.length };
 }

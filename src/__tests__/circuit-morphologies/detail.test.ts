@@ -126,14 +126,24 @@ describe('chooseDetail', () => {
       expect(segments).toBe(40);
     });
 
-    it('then leaves out the boxes farthest from the focus', () => {
-      const { levels, segments, leftOut } = chooseDetail(boxesAt(depths), view(), {
+    it('then leaves out every box in view, not those farthest from the focus alone', () => {
+      const { levels, order, segments, leftOut } = chooseDetail(boxesAt(depths), view(), {
         ...RULES,
-        budget: 25,
+        budget: 39,
       });
-      expect(Array.from(levels)).toEqual([2, 2, -1, -1]);
-      expect(segments).toBe(20);
-      expect(leftOut).toBe(2);
+      expect(Array.from(levels)).toEqual([-1, -1, -1, -1]);
+      expect(Array.from(order)).toEqual([0, 1, 2, 3]);
+      expect(segments).toBe(40);
+      expect(leftOut).toBe(4);
+    });
+
+    it('leaves out no box outside the view with them', () => {
+      const { levels, leftOut } = chooseDetail(boxesAt([-50, ...depths]), view(), {
+        ...RULES,
+        budget: 39,
+      });
+      expect(Array.from(levels)).toEqual([-1, -1, -1, -1, -1]);
+      expect(leftOut).toBe(4);
     });
   });
 });

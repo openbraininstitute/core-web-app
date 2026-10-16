@@ -5,7 +5,7 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
 const TOO_LARGE = 'This circuit is too large to show as morphologies';
-const LEFT_OUT = 'Only the morphologies nearest the middle fit: zoom in to see more';
+const LEFT_OUT = 'Too many morphologies in view: zoom in to see them';
 /** By OBI-One's word for why it built no pack. */
 const REFUSALS: Record<string, string> = {
   too_many_neurons: TOO_LARGE,
@@ -34,7 +34,7 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
 }
 
 /**
- * Over the cells: how far the pack has come, why the circuit stayed somas, or that some morphologies in view are left
+ * Over the cells: how far the pack has come, why the circuit stayed somas, or that the morphologies in view are left
  * out for the budget.
  */
 export function MorphologiesStatus({

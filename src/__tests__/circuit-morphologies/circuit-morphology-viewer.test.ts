@@ -1401,21 +1401,28 @@ describe('the morphologies read a box at a time', () => {
     expect(told).toHaveBeenLastCalledWith(null);
   });
 
-  it('holds the budget it is told, and leaves out the box farthest from the focus', async () => {
+  it('holds the budget it is told: no box while even the coarsest of those in view is over it, all once it is not', async () => {
     const { viewer, inner } = make();
     const told = vi.fn();
     viewer.onDetail(told);
     viewer.setData(chunked());
-    viewer.setDetailRules({ budget: COUNTS[2] });
+    viewer.setDetailRules({ budget: 2 * COUNTS[2] - 1 });
     frames(inner);
     await readAll(inner);
 
     expect(told.mock.lastCall?.[0]).toMatchObject({
-      budget: COUNTS[2],
-      drawn: COUNTS[2],
-      leftOut: 1,
+      budget: 2 * COUNTS[2] - 1,
+      drawn: 0,
+      wanted: 2 * COUNTS[2],
+      leftOut: 2,
     });
-    expect(segmentsOf(inner).geometry.instanceCount).toBe(COUNTS[2]);
+    expect(segmentsOf(inner).geometry.instanceCount).toBe(0);
+
+    viewer.setDetailRules({ budget: 2 * COUNTS[2] });
+    frames(inner);
+    await readAll(inner);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ drawn: 2 * COUNTS[2], leftOut: 0 });
+    expect(segmentsOf(inner).geometry.instanceCount).toBe(2 * COUNTS[2]);
   });
 
   it('places nothing of a read that ends after the morphologies are gone', async () => {
