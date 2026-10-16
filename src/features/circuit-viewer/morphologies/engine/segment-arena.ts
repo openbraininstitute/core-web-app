@@ -79,6 +79,7 @@ export class SegmentArena {
   private blocks: Float32Array;
   private blockWords: Uint32Array;
   private uploads: ArenaUploads;
+  private uploadsOf?: UploadsOf;
   private places = new Map<number, Place>();
   /** By where they start, none touching another or the end. */
   private holes: Place[] = [];
@@ -89,21 +90,25 @@ export class SegmentArena {
 
   /**
    * `geometry` is the segments' quad, drawn as many times as the arena has segments up to its last box; `capacity` is
-   * taken to a whole number of blocks.
+   * taken to a whole number of blocks; without `uploadsOf`, the arrays are three's attributes on `geometry`.
    */
-  constructor(
-    geometry: THREE.InstancedBufferGeometry,
-    capacity: number,
-    uploadsOf: UploadsOf = (ends, words) => attributesOf(geometry, ends, words)
-  ) {
+  constructor(geometry: THREE.InstancedBufferGeometry, capacity: number, uploadsOf?: UploadsOf) {
     this.geometry = geometry;
     this.capacity = roomFor(capacity);
     this.ends = new Float32Array(8 * this.capacity);
     this.words = new Uint32Array(this.capacity);
     this.blocks = new Float32Array(rowOf(this.capacity));
     this.blockWords = new Uint32Array(this.blocks.buffer);
-    this.uploads = uploadsOf(this.ends, this.words, this.blocks);
+    this.uploadsOf = uploadsOf;
+    this.uploads = uploadsOf
+      ? uploadsOf(this.ends, this.words, this.blocks)
+      : attributesOf(geometry, this.ends, this.words);
     geometry.instanceCount = 0;
+  }
+
+  /** An empty arena of `capacity` on `geometry`, uploaded as this one is. */
+  remade(geometry: THREE.InstancedBufferGeometry, capacity: number): SegmentArena {
+    return new SegmentArena(geometry, capacity, this.uploadsOf);
   }
 
   /** The segments of the boxes drawn, holes left out. */
@@ -172,8 +177,8 @@ export class SegmentArena {
   }
 
   /**
-   * What it uploads to let go of, and its arrays, which a read still under way would keep past a new arena's otherwise;
-   * its quads are the caller's.
+   * What it uploads to let go of, and its arrays, which a read still under way would keep past a new arena's otherwise
+   * (on WebGPU; on WebGL 2 its quads' attributes hold them too); its quads are the caller's.
    */
   dispose(): void {
     this.uploads.dispose();

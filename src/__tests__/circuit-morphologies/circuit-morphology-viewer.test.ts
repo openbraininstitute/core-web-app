@@ -1478,6 +1478,7 @@ describe('the morphologies read a box at a time', () => {
     viewer.setDetailRules({ budget: 2 * BLOCK });
     const { geometry } = segmentsOf(inner);
     expect(geometry).not.toBe(was);
+    expect(geometry.getAttribute('aCell')).toBeDefined();
     expect(disposed).toHaveBeenCalledOnce();
     expect(inner.ids.children.some((mesh) => (mesh as Quads).geometry === geometry)).toBe(true);
     frames(inner);

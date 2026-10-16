@@ -3,7 +3,11 @@ import * as THREE from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailStream } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
-import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import {
+  BLOCK,
+  SegmentArena,
+  type UploadsOf,
+} from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import { boxesAt } from './boxes';
 
@@ -181,6 +185,42 @@ describe('DetailStream', () => {
     // Every box at the finest takes two blocks: eight in all, whatever the budget past them.
     const whole = DetailStream.of(chunks, 8 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
     expect(whole.holds(1e9)).toBe(true);
+  });
+
+  it('is made again for a larger budget, its arena let go of before the new one is made, uploaded alike', () => {
+    const { chunks } = chunksOf();
+    const said: string[] = [];
+    const uploadsOf: UploadsOf = (_ends, words) => {
+      said.push(`made ${words.length}`);
+      return { upload: vi.fn(), dispose: () => said.push('disposed') };
+    };
+    const geometry = new THREE.InstancedBufferGeometry();
+    const small = DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf);
+    const larger = small.remade(4 * BLOCK, new THREE.InstancedBufferGeometry());
+    expect(said).toEqual([`made ${3 * BLOCK}`, 'disposed', `made ${5 * BLOCK}`]);
+    expect(larger.geometry).not.toBe(geometry);
+    expect(larger.holds(4 * BLOCK)).toBe(true);
+
+    // On three's attributes, the new quads take them.
+    const quads = new THREE.InstancedBufferGeometry();
+    const stream = DetailStream.of(chunks, 2 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
+    stream.remade(4 * BLOCK, quads);
+    expect(quads.getAttribute('aCell').count).toBe(5 * BLOCK);
+  });
+
+  it('made again, reads none of the boxes it could not read, nor logs a failure again', async () => {
+    const { stream, reads } = make();
+    // The far plane takes the box nearest the focus alone.
+    stream.update(viewOf(500, undefined, 30), RULES, true);
+    reads[0].reject(new Error('morphology pack chunk cut short'));
+    await settled();
+
+    const again = stream.remade(1000, new THREE.InstancedBufferGeometry());
+    again.update(viewOf(500), RULES, true);
+    expect(reads[1].wanted.map(({ box }) => box)).toEqual([1, 2, 3]);
+    reads[1].reject(new Error('morphology pack chunk cut short'));
+    await settled();
+    expect(h.logError).toHaveBeenCalledTimes(1);
   });
 
   it('holds the budget to the room the arena holds, a box taking whole blocks', () => {

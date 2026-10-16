@@ -13,7 +13,8 @@ import type { CircuitMorphologyView, DetailStats } from './types';
 
 const BUDGETS: Record<Tier, number[]> = {
   webgl: [SEGMENT_BUDGET.webgl, 1_000_000, 500_000, 200_000, 100_000],
-  // 12M at the most: an arena a quarter larger, 15M segments' ends, takes 480 MB of the 512 MiB binding the probe asks.
+  // 12M at the most: an arena a quarter larger, 15M segments' ends, takes 480 MB of the 512 MiB binding the probe asks;
+  // about 670 MB on the GPU in all, and 548 MB of arrays.
   webgpu: [12_000_000, SEGMENT_BUDGET.webgpu, 4_000_000],
 };
 const PIXELS = [1, DETAIL_PIXELS, 4, 8];
