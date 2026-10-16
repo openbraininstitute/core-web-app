@@ -3,7 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
-import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
+import { mortonOrder, openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
 
 import {
   expected,
@@ -16,7 +16,10 @@ import {
   withIndex,
 } from './packs';
 
-import type { CircuitMorphologyData } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CircuitMorphologyData,
+  MorphologySegments,
+} from '@/features/circuit-viewer/morphologies/types';
 
 type Change = (inflated: Buffer) => Uint8Array;
 
@@ -80,6 +83,9 @@ function inSteps(data: CircuitMorphologyData, i: number, { gridUm, radiusSteps }
 const everySegment = (data: CircuitMorphologyData, grid: Grid) =>
   Array.from(data.segmentCells, (_, i) => inSteps(data, i, grid));
 
+/** Rows in an order of their own: a box's segments come in the Morton order of their midpoints, not the pack's. */
+const sorted = (rows: number[][]) => rows.map((row) => row.join()).sort();
+
 /** The somas of `want`, by cell, are where the pack has them in the circuit's frame. */
 function expectSomas(
   data: CircuitMorphologyData,
@@ -101,7 +107,7 @@ describe('a level read box by box', () => {
     expect(want.levels).toHaveLength(3);
     for (const [number, level] of want.levels.entries()) {
       const data = await readPack(pack('small'), number);
-      expect(everySegment(data, want)).toEqual(level.segments);
+      expect(sorted(everySegment(data, want))).toEqual(sorted(level.segments));
       expect(data.level).toEqual({ toleranceUm: level.toleranceUm, pruneUm: level.pruneUm });
       expect(data.populations).toEqual(want.populations);
       expect(data.centre).toEqual(centre);
@@ -117,7 +123,7 @@ describe('a level read box by box', () => {
   it('reads streams three and four bytes wide', async () => {
     const want = expected('wide');
     const data = await readPack(pack('wide'));
-    expect(everySegment(data, want)).toEqual(want.levels[0].segments);
+    expect(sorted(everySegment(data, want))).toEqual(sorted(want.levels[0].segments));
     expect(new Set(data.segmentCells)).toEqual(new Set([0, 69_999]));
     expectSomas(data, want.somasOf, 1);
   });
@@ -143,10 +149,8 @@ describe('a level read box by box', () => {
     expect(ofType).toEqual(want.segmentsOfType);
     expect(lengthUm / want.lengthUm).toBeCloseTo(1, 5);
 
-    const sample = want.sample.map((_: number[], n: number) =>
-      inSteps(data, n * want.sampleEvery, want)
-    );
-    expect(sample).toEqual(want.sample);
+    const read = new Set(sorted(everySegment(data, want)));
+    for (const row of sorted(want.sample)) expect(read).toContain(row);
     expectSomas(data, want.somas, 3);
   });
 
@@ -260,7 +264,6 @@ describe('openPack', () => {
     });
     const opened = await openPack(halved);
     expect(opened.boxes).toEqual((await openPack(pack('small'))).boxes);
-    const sorted = (rows: number[][]) => rows.map((row) => row.join()).sort();
     const data = await readPack(halved, 1);
     expect(sorted(everySegment(data, want))).toEqual(sorted(want.levels[1].segments));
   });
@@ -269,6 +272,53 @@ describe('openPack', () => {
     const opened = await openPack(pack('small'));
     await expect(opened.readBox(0, opened.boxes.length / 6)).rejects.toThrow(RangeError);
     await expect(opened.readBox(3, 0)).rejects.toThrow('at level 3');
+  });
+});
+
+describe('mortonOrder', () => {
+  /** A segment a point, from it to a micrometre along x, each of a cell and a type of its own. */
+  const segmentsFrom = (points: number[][]): MorphologySegments => ({
+    segments: Float32Array.from(points.flatMap(([x, y, z]) => [x, y, z, 1, x + 1, y, z, 2])),
+    segmentCells: Uint32Array.from(points, (_, i) => 10 + i),
+    segmentTypes: Uint8Array.from(points, (_, i) => i + 1),
+  });
+
+  it('orders segments by their midpoints, x, y then z at each step, each with its cell and type', () => {
+    const corners = [
+      [0, 10, 10],
+      [10, 0, 0],
+      [10, 10, 0],
+      [0, 0, 10],
+      [0, 0, 0],
+      [10, 0, 10],
+      [0, 10, 0],
+      [10, 10, 10],
+    ];
+    const out = mortonOrder(segmentsFrom(corners));
+    const starts = Array.from(out.segmentCells, (_, i) =>
+      Array.from(out.segments.subarray(8 * i, 8 * i + 3))
+    );
+    expect(starts).toEqual([
+      [0, 0, 0],
+      [10, 0, 0],
+      [0, 10, 0],
+      [10, 10, 0],
+      [0, 0, 10],
+      [10, 0, 10],
+      [0, 10, 10],
+      [10, 10, 10],
+    ]);
+    starts.forEach(([x, y, z], i) => {
+      const was = corners.findIndex((corner) => corner.join() === [x, y, z].join());
+      expect(out.segmentCells[i]).toBe(10 + was);
+      expect(out.segmentTypes[i]).toBe(was + 1);
+      expect(Array.from(out.segments.subarray(8 * i + 3, 8 * i + 8))).toEqual([1, x + 1, y, z, 2]);
+    });
+  });
+
+  it('leaves a single segment as it is', () => {
+    const one = segmentsFrom([[1, 2, 3]]);
+    expect(mortonOrder(one)).toBe(one);
   });
 });
 
