@@ -211,14 +211,15 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
 /**
  * What a tier draws the circuit with, each reading the uniforms of `CircuitView`: the segments and the morphologies'
  * somas in the look, the cloud of somas, the same three in their cells' numbers for the pick, the segments and somas in
- * their segments' numbers for the pick of a section, and the dots.
+ * their segments' numbers for the pick of a section, and the dots. The segments are drawn once for each of their
+ * materials, over the same quads, each drawing its own share of them.
  */
 export interface CircuitMaterials {
-  segment: THREE.Material;
+  segment: THREE.Material[];
   soma: THREE.Material;
   cloud: THREE.Material;
-  ids: Record<'segment' | 'soma' | 'cloud', THREE.Material>;
-  spots: Record<'segment' | 'soma', THREE.Material>;
+  ids: { segment: THREE.Material[]; soma: THREE.Material; cloud: THREE.Material };
+  spots: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
@@ -414,9 +415,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.clear();
     const { ids, spots, ...drawn } = this.materials;
     const materials = new Set([
-      ...Object.values(drawn),
-      ...Object.values(ids),
-      ...Object.values(spots),
+      ...Object.values(drawn).flat(),
+      ...Object.values(ids).flat(),
+      ...Object.values(spots).flat(),
       this.look.material,
     ]);
     for (const material of materials) material.dispose();
@@ -482,8 +483,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const stream =
       data.chunks && DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate());
     const segments = stream ? stream.geometry : segmentGeometry(data);
-    const segmentMesh = quads(segments, materials.segment);
-    this.chunks.add(segmentMesh);
+    const segmentMeshes = materials.segment.map((material) => quads(segments, material));
+    this.chunks.add(...segmentMeshes);
 
     const { spheres, charts, cells } = placedSomas(data.somas, data.chart?.somas);
     const somas = quadGeometry(cells.length);
@@ -495,18 +496,22 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     // Beside `chunks`, which holds the segments.
     this.surfaces.add(somaMesh);
 
-    const ids = [quads(segments, materials.ids.segment), quads(somas, materials.ids.soma)];
+    const segmentIds = materials.ids.segment.map((material) => quads(segments, material));
+    const ids = [...segmentIds, quads(somas, materials.ids.soma)];
     this.ids.add(...ids);
     // Drawn as the boxes come in.
-    if (stream) for (const mesh of [segmentMesh, ids[0]]) mesh.visible = true;
+    if (stream) for (const mesh of [...segmentMeshes, ...segmentIds]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
-      ? [quads(segments, materials.spots.segment), quads(somas, materials.spots.soma)]
+      ? [
+          ...materials.spots.segment.map((material) => quads(segments, material)),
+          quads(somas, materials.spots.soma),
+        ]
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null } : null;
-    this.layer = { data, meshes: [segmentMesh, somaMesh], ids, spots, detailed };
+    this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
     this.compileIds();
 
     if (under) {
@@ -1212,10 +1217,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /** Let go of the morphologies, and of nothing else. */
   private clearMorphologies(): void {
-    for (const mesh of this.layer?.meshes ?? []) {
-      mesh.geometry.dispose();
-      mesh.removeFromParent();
-    }
+    const meshes = this.layer?.meshes ?? [];
+    for (const geometry of new Set(meshes.map((mesh) => mesh.geometry))) geometry.dispose();
+    for (const mesh of meshes) mesh.removeFromParent();
     for (const mesh of [...(this.layer?.ids ?? []), ...(this.layer?.spots ?? [])]) {
       mesh.removeFromParent();
     }

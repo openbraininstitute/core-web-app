@@ -78,11 +78,11 @@ interface Internals {
   look: Look;
   uniforms: ImpostorUniforms;
   materials: {
-    segment: THREE.Material;
+    segment: THREE.Material[];
     soma: THREE.Material;
     cloud: THREE.ShaderMaterial;
     ids: {
-      segment: THREE.ShaderMaterial;
+      segment: THREE.ShaderMaterial[];
       soma: THREE.ShaderMaterial;
       cloud: THREE.ShaderMaterial;
     };
@@ -407,7 +407,7 @@ describe('the circuit morphology viewer', () => {
     expect(inner.ids.children).toHaveLength(2);
     expect(inner.ids.parent).toBeNull();
     expect(segments.geometry).toBe(segmentsOf(inner).geometry);
-    expect(segments.material).toBe(inner.materials.ids.segment);
+    expect(inner.materials.ids.segment).toEqual([segments.material]);
     expect(somas.geometry).toBe(somasOf(inner).geometry);
     expect(somas.material).toBe(inner.materials.ids.soma);
     for (const quads of [segments, somas]) expect(quads.frustumCulled).toBe(false);
@@ -789,7 +789,7 @@ describe('the circuit morphology viewer', () => {
       inner.uniforms.uGlow.value as THREE.DataTexture,
       inner.materials.soma,
       inner.look.material,
-      inner.materials.ids.segment,
+      ...inner.materials.ids.segment,
       inner.materials.ids.soma,
       inner.materials.ids.cloud,
       inner.materials.cloud,

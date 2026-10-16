@@ -2,6 +2,7 @@ import { texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { NO_CELL } from '../impostors';
+import { TUBE_FROM_PX } from './impostors-gpu';
 
 import type { ElectrodeUniforms } from '../electrodes';
 import type { ImpostorUniforms } from '../impostors';
@@ -58,6 +59,8 @@ export class GpuUniforms {
   /** By SWC's numbers: unknown, soma, axon, basal, apical. */
   readonly sectionColours = Array.from({ length: 5 }, () => uniform(new THREE.Color()));
   readonly segments = uniform(0, 'uint');
+  /** The least radius of a segment drawn as the tube itself, in device pixels. */
+  readonly tubeFrom = uniform(TUBE_FROM_PX / 2);
   readonly offset = uniform(new THREE.Vector3());
   readonly radius = uniform(1);
   readonly opacity = uniform(1);
