@@ -28,6 +28,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-preview';
+import { EFeatureExtractionResultPreview } from '@/ui/segments/mini-detail-view/previews/efeature-extraction-result-preview';
 import { ExtracellularRecordingArrayPreview } from '@/ui/segments/mini-detail-view/previews/extracellular-recording-array-preview';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
@@ -49,6 +50,7 @@ import type {
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
+import type { ITaskResult } from '@/api/entitycore/types/entities/task-result';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
@@ -147,7 +149,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
-  const preview = match({ type: record.type })
+  const typePreview = match({ type: record.type })
     .with({ type: P.nullish }, () => null)
     .with(
       {
@@ -313,9 +315,22 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
     )
     .otherwise(() => null);
 
+  // task results share the generic `task_result` type; only the listing type tells them apart
+  const preview =
+    dataType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ? (
+      <EFeatureExtractionResultPreview key={record.id} record={record as unknown as ITaskResult} />
+    ) : (
+      typePreview
+    );
+
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
-      <DataActions record={record} dataType={dataType} theme={theme} />
+      <DataActions
+        record={record}
+        dataType={dataType}
+        theme={theme}
+        openDetailsInNewTab={openDetailsInNewTab}
+      />
     ))
     .with({ section: WorkspaceSection.Notebooks }, () => (
       <NotebookActions

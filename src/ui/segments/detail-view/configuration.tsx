@@ -1,8 +1,10 @@
 import { isNil } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
-import { getCellMorphology } from '@/api/entitycore/queries';
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
+import { getTaskActivities } from '@/api/entitycore/queries/task';
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
 import {
@@ -10,20 +12,22 @@ import {
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { resolveEModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/resolve-emodel-campaign';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import EModelConfig from '@/features/entities/e-model/detail-view/wrapper';
 import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
+import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import { OptimizeScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
+import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
+import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 
 import type {
-  ICellMorphology,
-  ICellMorphologyExpanded,
-  IEModel,
   IMEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
@@ -99,23 +103,53 @@ export default async function Configuration({
   const fieldVariant = detailViewVariantFromGroup(entityType.group);
 
   if (extendedType === 'emodel') {
-    let morphology: ICellMorphologyExpanded | ICellMorphology;
+    // the configuration is the scan config of the optimisation campaign that produced
+    // the e-model; render the same read-only editor as the campaign's own detail page when traceable
+    const { data: optimization } = await tryCatch(
+      resolveEModelOptimizationCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EModelOptimizationCampaign
+    );
 
-    try {
-      morphology = await getCellMorphology({
-        id: (entity as IEModel).exemplar_morphology.id,
-        expand: 'measurement_annotation',
-        context: context,
+    if (optimization && scanConfig) {
+      // a campaign without generated runs (e.g. a migrated e-model) has nothing to show but its
+      // configuration, so the tab strip is dropped
+      const { data: generations } = await getTaskActivities({
+        context,
+        filters: {
+          used__id: optimization.campaign.id,
+          task_activity_type: TaskActivityType.EModelOptimizationConfigGeneration,
+          page_size: 1,
+        },
       });
-    } catch {
-      notFound();
+      return (
+        <ScanConfiguration
+          // the e-model optimisation scan config has no `model_identifier` (session mode),
+          // so there is no input entity to pass
+          entityId={undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={optimization.campaign.id}
+          initialConfig={optimization.config?.form}
+          readOnly
+          hideTabs={generations.length === 0}
+          defaultTab={{
+            __activity: ScanConfigActivity.Optimize,
+            id: OptimizeScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Optimize}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={optimizeEModelWorkflow.taskTypeBindings}
+        />
+      );
     }
 
     return (
-      <EModelConfig
-        payload={{ source: entity as IEModel, exemplar_morphology: morphology }}
-        variant={fieldVariant}
-      />
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this e-model.
+      </div>
     );
   }
 

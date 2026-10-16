@@ -48,13 +48,15 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         id="template-header"
         className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
       >
-        <TabsSelector
-          activity={props.activity}
-          tab={state.tab}
-          setTab={state.setTab}
-          disableResultsTab={!state.campaignId || state.loading}
-          disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
-        />
+        {!props.hideTabs && (
+          <TabsSelector
+            activity={props.activity}
+            tab={state.tab}
+            setTab={state.setTab}
+            disableResultsTab={!state.campaignId || state.loading}
+            disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
+          />
+        )}
         <div className="flex items-center justify-center gap-8">
           {!!state.campaignId && (
             <ButtonCopyId

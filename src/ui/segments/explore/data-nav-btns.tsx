@@ -18,12 +18,14 @@ import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
+import { SectionSelector, useFullPageSection } from '@/ui/segments/explore/detail-menu';
 import { isBrowser } from '@/utils/environment';
 import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
+import type { TDetailViewSectionDict } from '@/entity-configuration/definitions/types';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -152,17 +154,22 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  sections,
+  configurationFullPage = false,
   variant = ViewVariant.Light,
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
+  sections?: TDetailViewSectionDict[];
+  configurationFullPage?: boolean;
   variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
+  const isFullPageSection = useFullPageSection(configurationFullPage);
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -195,6 +202,7 @@ export function DataBreadcrumb({
       <BackToEntityType
         {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
       />
+      {isFullPageSection && sections && <SectionSelector sections={sections} />}
     </div>
   );
 }
