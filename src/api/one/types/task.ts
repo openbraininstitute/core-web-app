@@ -14,6 +14,7 @@ export const ObiOneTaskTypeDict = {
   EModelOptimization: 'emodel_optimization',
   CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
   IonChannelFitting: 'ion_channel_fitting',
+  MEModelBuild: 'memodel_build',
 } as const;
 
 export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

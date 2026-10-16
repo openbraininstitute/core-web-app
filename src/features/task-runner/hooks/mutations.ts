@@ -7,7 +7,10 @@ import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { runIonChannelBuild } from '@/api/small-scale-simulator/ion-channel/build';
+import { runMEModelBuild } from '@/api/small-scale-simulator/single-neuron/build';
 import { useAppNotification } from '@/components/notification';
+import { useFlag } from '@/features/feature-flags';
+import { memodelBuildViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { getErrorMessage } from '@/utils/error';
@@ -54,6 +57,7 @@ type TTaskLauncher = (params: {
 // a module-level registry rather than a binding field: bindings cross the server/client boundary
 const LaunchersByTaskType: Partial<Record<TObiOneTaskType, TTaskLauncher>> = {
   [ObiOneTaskTypeDict.IonChannelFitting]: runIonChannelBuild,
+  [ObiOneTaskTypeDict.MEModelBuild]: runMEModelBuild,
 };
 
 export type TTaskLaunchMutationOptions = {
@@ -79,6 +83,7 @@ export function useTaskLaunchMutation({
   const notification = useAppNotification();
   const { runWithConsent } = useRunWithOfflineTokenConsent();
   const logTopicLower = logTopic.toLowerCase();
+  const memodelBuildViaLaunchSystem = !!useFlag(memodelBuildViaLaunchSystemFlag.key);
 
   const handleTaskError = useCallback(
     (error: unknown, configId: string) => {
@@ -102,7 +107,9 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
-      const launch = LaunchersByTaskType[obiOneTaskType] ?? runTask;
+      const viaLaunchSystem =
+        obiOneTaskType === ObiOneTaskTypeDict.MEModelBuild && memodelBuildViaLaunchSystem;
+      const launch = (!viaLaunchSystem && LaunchersByTaskType[obiOneTaskType]) || runTask;
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {

@@ -77,7 +77,7 @@ function findAssetByLabel(assets: readonly IAsset[], label: AssetLabel): IAsset 
   return getAsset({ assets, label }).getOneOrNull();
 }
 
-function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCustomFile {
+function makeEntityMiniDetailFile(entity: BuiltEntity): TActivityCustomFile {
   return {
     id: entity.id,
     entity,
@@ -101,6 +101,8 @@ function makeAssetOutputFiles(
 }
 
 function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivityCustomFile[] {
+  // an ME-model has no assets of its own: its row is the entity alone
+  if (entity?.type === EntityTypeDict.Memodel) return [makeEntityMiniDetailFile(entity)];
   if (!entity || !hasAssets(entity)) return [];
 
   if (shouldListAssetsAsOutputs(entity.type)) {
@@ -246,9 +248,14 @@ export function InOutFiles({
   });
 
   useEffect(() => {
-    if (!outputAvailable || !builtEntity || !isCircuitBuild) return;
+    if (!outputAvailable || !builtEntity) return;
 
-    invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.SingleNeuronCircuit);
+    if (isCircuitBuild) {
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.SingleNeuronCircuit);
+    }
+    if (builtEntity.type === EntityTypeDict.Memodel) {
+      invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.Memodel);
+    }
   }, [outputAvailable, builtEntity, isCircuitBuild, queryClient]);
 
   useAutoSelectFileOnConfigChange({
@@ -261,7 +268,8 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      showOutput={outputAvailable || logStreamFiles.showOutput}
+      // an ME-model build links its model before it is calibrated and validated
+      showOutput={outputAvailable || logStreamFiles.showOutput || builtOutputFiles.length > 0}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFilesWithLogs.map((file) => (

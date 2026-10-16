@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCompatibilityState } from '@/ui/segments/workflows/build/memodel/compatibility-state';
+import { deriveCompatibilityState } from './compatibility-state';
 
 import type { CompatibilityCheckResponse } from '@/api/small-scale-simulator/single-neuron/compatibility';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';

@@ -8,9 +8,10 @@ import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
+import { MEModelCompatibilityCheck } from '@/features/scan-config/components/memodel-compatibility';
 import TabsSelector from '@/features/scan-config/components/tabs-selector';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
-import { ScanConfigActivity } from '@/features/scan-config/types';
+import { ScanConfigActivity, SchemaNameDict } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
@@ -72,6 +73,9 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
           setConfig={state.setConfig}
           locked={state.editingLocked}
         />
+      )}
+      {!props.readOnly && props.schemaName === SchemaNameDict.MEModelBuildScanConfig && (
+        <MEModelCompatibilityCheck config={state.config} />
       )}
       <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
       <div id="template-content" className="flex-1 min-h-0">
