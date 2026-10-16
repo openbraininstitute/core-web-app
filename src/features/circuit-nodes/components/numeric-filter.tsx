@@ -25,30 +25,28 @@ const OPERATOR_OPTIONS: { value: NumberFilterOp; label: string }[] = [
 
 type Params = CustomFilterProps<unknown, unknown, NumberFilter | null>;
 
+function isNumber(value: string): boolean {
+  return value.trim() !== '' && Number.isFinite(Number(value));
+}
+
 function toModel(op: NumberFilterOp, value: string, valueTo: string): NumberFilter | null {
-  const n = Number(value);
-  if (value.trim() === '' || !Number.isFinite(n)) return null;
+  if (!isNumber(value)) return null;
   if (op === 'inRange') {
-    const m = Number(valueTo);
-    if (valueTo.trim() === '' || !Number.isFinite(m)) return null;
-    return { filterType: 'number', type: op, filter: n, filterTo: m };
+    if (!isNumber(valueTo)) return null;
+    return { filterType: 'number', type: op, filter: value.trim(), filterTo: valueTo.trim() };
   }
-  return { filterType: 'number', type: op, filter: n };
+  return { filterType: 'number', type: op, filter: value.trim() };
 }
 
 export function NumericFilter({ model, onModelChange }: Params) {
   const [op, setOp] = useState<NumberFilterOp>(model?.type ?? 'equals');
-  const [value, setValue] = useState<string>(
-    model?.filter !== undefined ? String(model.filter) : ''
-  );
-  const [valueTo, setValueTo] = useState<string>(
-    model?.filterTo !== undefined ? String(model.filterTo) : ''
-  );
+  const [value, setValue] = useState<string>(model?.filter ?? '');
+  const [valueTo, setValueTo] = useState<string>(model?.filterTo ?? '');
 
   useEffect(() => {
     setOp(model?.type ?? 'equals');
-    setValue(model?.filter !== undefined ? String(model.filter) : '');
-    setValueTo(model?.filterTo !== undefined ? String(model.filterTo) : '');
+    setValue(model?.filter ?? '');
+    setValueTo(model?.filterTo ?? '');
   }, [model]);
 
   const hidePopupRef = useRef<(() => void) | null>(null);
@@ -120,7 +118,8 @@ export function NumericFilter({ model, onModelChange }: Params) {
           ref={valueInputRef}
           size="small"
           controls={false}
-          value={value === '' ? null : Number(value)}
+          stringMode
+          value={value === '' ? null : value}
           onChange={(v) => onValueChange(v === null || v === undefined ? '' : String(v))}
           onPressEnter={onPressEnter}
           placeholder="Value"
@@ -132,7 +131,8 @@ export function NumericFilter({ model, onModelChange }: Params) {
             <InputNumber
               size="small"
               controls={false}
-              value={valueTo === '' ? null : Number(valueTo)}
+              stringMode
+              value={valueTo === '' ? null : valueTo}
               onChange={(v) => onValueToChange(v === null || v === undefined ? '' : String(v))}
               onPressEnter={onPressEnter}
               placeholder="Value"
