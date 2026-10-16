@@ -71,7 +71,7 @@ describe('getConfigKeyForEntity', () => {
       );
     });
 
-    it('returns null for a Build schema with no AI config key (e.g. the bespoke ion-channel fitting UI)', () => {
+    it('returns null for a Build schema with no AI config key (e.g. ion-channel fitting, pending prod-ai#103)', () => {
       expect(
         getConfigKeyForEntity(ExtendedEntitiesTypeDict.IonChannelModel, ScanConfigActivity.Build)
       ).toBeNull();
