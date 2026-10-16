@@ -266,9 +266,24 @@ export function SpaceSwitcher({ className }: Props) {
   const projectSegmentActive =
     activeModal?.type === WorkspaceActions.ProjectPreview && activeModal.projectId === projectId;
 
-  // closing the panel collapses every lab card; the active lab re-expands on
-  // its own (empty sets => visibleExpandedLabs auto-includes virtualLabId)
+  // Tracks whether a content modal is currently open so collapsePanel can
+  // always close it without depending on (and being recreated by) activeModal.
+  const boardModalOpenRef = useRef(boardModalOpen);
+  useEffect(() => {
+    boardModalOpenRef.current = boardModalOpen;
+  }, [boardModalOpen]);
+
+  // Collapsing the panel is the single reset path: it collapses every lab card
+  // (the active lab re-expands on its own since empty sets => visibleExpandedLabs
+  // auto-includes virtualLabId) *and* closes any open content modal. Resetting
+  // the modal here guarantees that reopening the panel always starts fresh,
+  // regardless of how it was closed (toggle, outside click, Esc, navigation).
+  // The modal is closed through the same event its own close button fires, so
+  // both this panel's activeModal and the modal container's state reset.
   const collapsePanel = useCallback(() => {
+    if (boardModalOpenRef.current) {
+      makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
+    }
     setExpandedLabs(new Set());
     setTryingToExpand(new Set());
     setCollapsedLabs(new Set());
@@ -294,16 +309,6 @@ export function SpaceSwitcher({ className }: Props) {
     }
   }, [pathname, collapsePanel]);
 
-  // Close the workspace manager modal (if open) and collapse the panel in a
-  // single action. Closing the modal is done through the same event the modal's
-  // own close button fires, so the panel's modal listener resets activeModal.
-  const closeAll = useCallback(() => {
-    if (boardModalOpen) {
-      makeTriggerWorkspaceConfigurationClickEvent({ on: false, data: null, type: null });
-    }
-    collapsePanel();
-  }, [boardModalOpen, collapsePanel]);
-
   // Auto-collapse the panel when the user clicks outside of it. When a content
   // modal is open, a single outside click closes both the modal and the panel.
   // Clicks inside the modal *dialog* (#modal-dialog) are ignored so the user can
@@ -316,7 +321,7 @@ export function SpaceSwitcher({ className }: Props) {
   useOnClickOutside(
     dropdownRef,
     () => {
-      if (isExpanded || boardModalOpen) closeAll();
+      if (isExpanded || boardModalOpen) collapsePanel();
     },
     undefined,
     ignoreOutsideClick
@@ -326,11 +331,11 @@ export function SpaceSwitcher({ className }: Props) {
   useEffect(() => {
     if (!isExpanded && !boardModalOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') closeAll();
+      if (event.key === 'Escape') collapsePanel();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isExpanded, boardModalOpen, closeAll]);
+  }, [isExpanded, boardModalOpen, collapsePanel]);
 
   return (
     <div
