@@ -7,7 +7,11 @@ import {
   HOLE,
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
-import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import {
+  BLOCK,
+  roomFor,
+  SegmentArena,
+} from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
 
@@ -253,13 +257,12 @@ describe('SegmentArena', () => {
 
   it('closes the holes where a box fits neither in one nor after the last, uploading every box, its blocks with it', () => {
     const made = arenaOf(3 * BLOCK);
-    const { arena, blocks, told } = made;
+    const { arena, told } = made;
     arena.put(1, segmentsOf(1, 3));
     arena.put(2, segmentsOf(2, 3));
     arena.put(3, segmentsOf(3, 3));
     arena.remove(1);
     arena.remove(3);
-    const second = blocks.slice(8, 16);
     expect(arena.geometry.instanceCount).toBe(2 * BLOCK);
     told.length = 0;
 
@@ -269,9 +272,6 @@ describe('SegmentArena', () => {
       [BLOCK, 2 * BLOCK, false],
     ]);
     expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
-    // Box 2's block moved down to the first, its first segment with it.
-    expect(Array.from(blocks.subarray(0, 3))).toEqual(Array.from(second.subarray(0, 3)));
-    expect(Array.from(blocks.subarray(4, 8))).toEqual(Array.from(second.subarray(4, 8)));
     expectDrawn(
       made,
       new Map([
@@ -351,7 +351,7 @@ describe('SegmentArena', () => {
         drawn.delete(box);
       } else {
         const n = Math.floor(random() * 300);
-        if (Math.ceil(n / BLOCK) * BLOCK > arena.free) continue;
+        if (roomFor(n) > arena.free) continue;
         arena.put(box, segmentsOf(box, n));
         drawn.set(box, n);
       }

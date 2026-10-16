@@ -59,7 +59,7 @@ export function chooseDetail(
   { boxes, levels }: PackBoxes,
   view: DetailView,
   { budget, pixels }: DetailRules,
-  roomFor: (segments: number) => number = (segments) => segments
+  roomFor: (segments: number) => number
 ): Detail {
   const count = boxes.length / 6;
   const chosen = new Int8Array(count).fill(-1);
@@ -91,25 +91,22 @@ export function chooseDetail(
 
   const order = Uint32Array.from(inView).sort((a, b) => away[a] - away[b]);
   const segmentsOf = (b: number) => levels[chosen[b]].segments[b];
-  let segments = 0;
   let room = 0;
-  const tally = (b: number, sign: number) => {
-    segments += sign * segmentsOf(b);
-    room += sign * roomFor(segmentsOf(b));
-  };
-  for (const b of order) tally(b, 1);
+  for (const b of order) room += roomFor(segmentsOf(b));
   // Coarser, a level at a time, the boxes farthest from the focus first.
   for (let coarser = true; room > budget && coarser; ) {
     coarser = false;
     for (let i = order.length - 1; i >= 0 && room > budget; i--) {
       const b = order[i];
       if (chosen[b] === coarsest) continue;
-      tally(b, -1);
+      room -= roomFor(segmentsOf(b));
       chosen[b]++;
-      tally(b, 1);
+      room += roomFor(segmentsOf(b));
       coarser = true;
     }
   }
+  let segments = 0;
+  for (const b of order) segments += segmentsOf(b);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
   if (room <= budget) return { levels: chosen, order, segments, leftOut: 0 };
   for (const b of order) chosen[b] = -1;

@@ -138,18 +138,22 @@ export class DetailStream {
         changed = true;
       }
     }
-    const arrived = [...this.ready].filter(([box, { level }]) => {
-      if (level === wanted[box]) return true;
-      this.ready.delete(box);
-      return false;
-    });
-    const growth = ([box, { segments }]: (typeof arrived)[number]) =>
-      roomFor(segments.segmentCells.length) - roomFor(arena.sizeOf(box) ?? 0);
-    arrived.sort((a, b) => growth(a) - growth(b));
+    const arrived = [...this.ready]
+      .filter(([box, { level }]) => {
+        if (level === wanted[box]) return true;
+        this.ready.delete(box);
+        return false;
+      })
+      .map(([box, { level, segments }]) => ({
+        box,
+        level,
+        segments,
+        growth: arena.growthOf(box, segments.segmentCells.length),
+      }))
+      .sort((a, b) => a.growth - b.growth);
     let more = full();
-    for (const entry of arrived) {
-      const [box, { level, segments }] = entry;
-      if (growth(entry) > arena.free) continue;
+    for (const { box, level, segments, growth } of arrived) {
+      if (growth > arena.free) continue;
       if (uploaded > 0 && uploaded + roomFor(segments.segmentCells.length) > cap) {
         more = true;
         break;

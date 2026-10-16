@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DetailStream } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
-import { SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import { BLOCK, SegmentArena } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
 import { boxesAt } from './boxes';
 
@@ -174,8 +174,8 @@ describe('DetailStream', () => {
   });
 
   it('holds the budget to the room the arena holds, a box taking whole blocks', () => {
-    // Room for five blocks of 64: a box of the finest level takes two, of the others one.
-    const { stream, reads } = make(5 * 64);
+    // Room for five blocks: a box of the finest level takes two, of the others one.
+    const { stream, reads } = make(5 * BLOCK);
     stream.update(viewOf(20), RULES, true);
 
     expect(reads[0].wanted.map(({ level }) => level)).toEqual([0, 1, 1, 1]);

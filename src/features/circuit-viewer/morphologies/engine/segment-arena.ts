@@ -14,6 +14,8 @@ const HOLE_WORD = (HOLE << TYPE_SHIFT) >>> 0;
 
 /** The room `segments` take in an arena: a whole number of blocks. */
 export const roomFor = (segments: number) => Math.ceil(segments / BLOCK) * BLOCK;
+/** Where the block that `slot` starts is in the blocks' array. */
+const rowOf = (slot: number) => (8 * slot) / BLOCK;
 
 /**
  * Where an arena's arrays are uploaded: told of the segments that changed and of the blocks over them, the segments'
@@ -99,7 +101,7 @@ export class SegmentArena {
     this.capacity = roomFor(capacity);
     this.ends = new Float32Array(8 * this.capacity);
     this.words = new Uint32Array(this.capacity);
-    this.blocks = new Float32Array((8 * this.capacity) / BLOCK);
+    this.blocks = new Float32Array(rowOf(this.capacity));
     this.blockWords = new Uint32Array(this.blocks.buffer);
     this.uploads = uploadsOf(this.ends, this.words, this.blocks);
     geometry.instanceCount = 0;
@@ -118,6 +120,11 @@ export class SegmentArena {
   /** The segments of `box` drawn; undefined where it is not. */
   sizeOf(box: number): number | undefined {
     return this.places.get(box)?.count;
+  }
+
+  /** The room `box` takes more with `segments` drawn in place of what it has. */
+  growthOf(box: number, segments: number): number {
+    return roomFor(segments) - roomFor(this.sizeOf(box) ?? 0);
   }
 
   /**
@@ -139,7 +146,7 @@ export class SegmentArena {
     this.ends.set(segments, 8 * start);
     packCellTypes(segmentCells, segmentTypes, this.words, start);
     this.words.fill(HOLE_WORD, start + n, start + room);
-    this.bound(segments, start / BLOCK);
+    this.bound(segments, start);
     this.places.set(box, { start, count: n });
     this.live += n;
     this.used += room;
@@ -157,7 +164,7 @@ export class SegmentArena {
     const room = roomFor(place.count);
     this.used -= room;
     this.words.fill(HOLE_WORD, place.start, place.start + place.count);
-    this.blocks.fill(0, (8 * place.start) / BLOCK, (8 * (place.start + room)) / BLOCK);
+    this.blocks.fill(0, rowOf(place.start), rowOf(place.start + room));
     this.leave({ start: place.start, count: room });
     // The last box's words are past the end once it goes, where nothing is drawn.
     const count = place.start < this.end ? place.count : 0;
@@ -171,13 +178,13 @@ export class SegmentArena {
   }
 
   /**
-   * The boxes of the blocks from `first` on, over `segments`: each end's reach (`BLOCK_REACH`) in each axis. A block's
-   * first segment is kept with its box's least corner, and its segments with its greatest.
+   * The boxes of the blocks from the one `start` starts on, over `segments`: each end's reach (`BLOCK_REACH`) in each
+   * axis. A block's first segment is kept with its box's least corner, and its segments with its greatest.
    */
-  private bound(segments: Float32Array, first: number): void {
+  private bound(segments: Float32Array, start: number): void {
     const { blocks, blockWords } = this;
     const n = segments.length / 8;
-    for (let s = 0, o = 8 * first; s < n; s += BLOCK, o += 8) {
+    for (let s = 0, o = rowOf(start); s < n; s += BLOCK, o += 8) {
       const last = Math.min(n, s + BLOCK);
       let x0 = Infinity;
       let y0 = Infinity;
@@ -197,7 +204,7 @@ export class SegmentArena {
       blocks[o] = x0;
       blocks[o + 1] = y0;
       blocks[o + 2] = z0;
-      blockWords[o + 3] = BLOCK * (first + s / BLOCK);
+      blockWords[o + 3] = start + s;
       blocks[o + 4] = x1;
       blocks[o + 5] = y1;
       blocks[o + 6] = z1;
@@ -258,20 +265,14 @@ export class SegmentArena {
       if (place.start !== at) {
         ends.copyWithin(8 * at, 8 * place.start, 8 * (place.start + room));
         words.copyWithin(at, place.start, place.start + room);
-        blocks.copyWithin(
-          (8 * at) / BLOCK,
-          (8 * place.start) / BLOCK,
-          (8 * (place.start + room)) / BLOCK
-        );
-        // Each block's first segment stays where the block is.
-        for (let b = at / BLOCK; b < (at + room) / BLOCK; b++) {
-          this.blockWords[8 * b + 3] = BLOCK * b;
-        }
+        blocks.copyWithin(rowOf(at), rowOf(place.start), rowOf(place.start + room));
         place.start = at;
       }
       at += room;
     }
-    blocks.fill(0, (8 * at) / BLOCK, (8 * this.end) / BLOCK);
+    // Every box from the first hole on moved, and each block's first segment is where the block now is.
+    for (let slot = from; slot < at; slot += BLOCK) this.blockWords[rowOf(slot) + 3] = slot;
+    blocks.fill(0, rowOf(at), rowOf(this.end));
     this.holes = [];
     this.end = at;
     this.upload(from, at - from);
