@@ -126,8 +126,16 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.gpu.sync();
     if (!this.drawsMorphologies) this.dropOcclusion();
     const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionNow();
-    if (occlusion) occlusion.render(this.occlusionReach());
-    else this.renderer.render(this.scene, this.camera);
+    if (occlusion) {
+      try {
+        occlusion.render(this.occlusionReach());
+        return;
+      } catch (e) {
+        // Its passes are put together at its first frame, where three's parts it reads may be missing.
+        this.withoutOcclusion(e);
+      }
+    }
+    this.renderer.render(this.scene, this.camera);
   }
 
   /** The occlusion was made for the other camera. */
@@ -140,11 +148,19 @@ export class CircuitMorphologyGPU extends CircuitView {
       try {
         this.occlusion = new Occlusion(this.renderer, this.scene, this.camera);
       } catch (e) {
-        this.occluding = false;
-        logError('Drawn without ambient occlusion', e);
+        this.withoutOcclusion(e);
       }
     }
     return this.occlusion;
+  }
+
+  /** The occlusion off for good after `e`, and the renderer drawing to the canvas again. */
+  private withoutOcclusion(e: unknown): void {
+    this.dropOcclusion();
+    this.occluding = false;
+    this.renderer.setRenderTarget(null);
+    this.renderer.setMRT(null);
+    logError('Drawn without ambient occlusion', e);
   }
 
   private dropOcclusion(): void {

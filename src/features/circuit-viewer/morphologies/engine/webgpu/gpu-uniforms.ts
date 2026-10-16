@@ -2,7 +2,6 @@ import { texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { NO_CELL } from '../impostors';
-import { TUBE_FROM_PX } from './impostors-gpu';
 
 import type { ElectrodeUniforms } from '../electrodes';
 import type { ImpostorUniforms } from '../impostors';
@@ -19,6 +18,14 @@ const NO_CELLS = empty(THREE.RGBAFormat, 4);
 NO_CELLS.colorSpace = THREE.SRGBColorSpace;
 const NO_GLOW = empty(THREE.RedFormat, 1);
 const NO_SHADE = empty(THREE.RGFormat, 2);
+
+/**
+ * How wide on screen a segment is drawn as the tube itself, round in depth and meeting the next in a round joint, in
+ * device pixels; a thinner one is drawn flat, as on WebGL 2. A tube writes its own depth, so each of its pixels is
+ * shaded under whatever covers it: from 12 px, CA1's 300 cells took 15 ms more a frame at 16 times nearer, and from 48
+ * px 2.6 ms.
+ */
+const TUBE_FROM_PX = 48;
 
 /** A kind of dot's uniforms as the nodes read them. */
 export class DotUniforms {

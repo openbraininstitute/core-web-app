@@ -25,7 +25,6 @@ import {
   mix,
   mrt,
   normalize,
-  normalView,
   output,
   PI,
   pass,
@@ -85,10 +84,9 @@ const PARTS = [
 ] as const;
 
 /**
- * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for three things: in an orthographic
- * view the way to the eye is +z everywhere, where three takes it as towards the camera's position; a pixel's depth is
- * its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's depth;
- * and a pixel with no normal is left alone.
+ * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for two things: in an orthographic
+ * view the way to the eye is +z everywhere, where three takes it as towards the camera's position; and a pixel's depth
+ * is its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's depth.
  */
 class SurfaceGTAONode extends GTAONode {
   private readonly orthographic: boolean;
@@ -100,7 +98,19 @@ class SurfaceGTAONode extends GTAONode {
     if (missing.length > 0) throw new Error(`three's GTAONode has no ${missing.join(', ')}`);
   }
 
+  /** What went wrong in `setup`, which three logs and draws past, in black. */
+  failed: unknown = null;
+
   override setup(builder: THREE.NodeBuilder) {
+    try {
+      return this.occlusionSetup(builder);
+    } catch (e) {
+      this.failed = e;
+      throw e;
+    }
+  }
+
+  private occlusionSetup(builder: THREE.NodeBuilder) {
     const own = this as unknown as GTAOParts & Record<string, unknown>;
     const depthNode = this.depthNode as TextureNode;
     const normalNode = this.normalNode as TextureNode;
@@ -112,11 +122,10 @@ class SurfaceGTAONode extends GTAONode {
 
     const occlusion = Fn(() => {
       const depth = sampleDepth(uvNode).toConst();
-      const rawNormal = normalNode.sample(uvNode).rgb.toConst();
-      depth.greaterThanEqual(1.0).or(dot(rawNormal, rawNormal).lessThan(0.25)).discard();
+      depth.greaterThanEqual(1.0).discard();
 
       const viewPosition = getViewPosition(uvNode, depth, unproject).toConst();
-      const viewNormal = rawNormal.normalize().toConst();
+      const viewNormal = normalNode.sample(uvNode).rgb.normalize().toConst();
       const radius = this.radius;
       const invRadius = radius.reciprocal().toConst();
       const viewDir = (orthographic ? vec3(0, 0, 1) : normalize(viewPosition.negate())).toConst();
@@ -265,7 +274,6 @@ export class Occlusion {
     const quad = new THREE.MeshBasicNodeMaterial();
     quad.vertexNode = vec4(positionGeometry.xy, 0, 1);
     quad.maskNode = picked.w.greaterThanEqual(AO_COVER);
-    quad.normalNode = unpackNormal(picked.xy);
     quad.depthNode = picked.z;
     quad.depthFunc = THREE.AlwaysDepth;
     const corners = new THREE.BufferGeometry();
@@ -279,7 +287,8 @@ export class Occlusion {
     surfaces.add(whole);
     const surfacePass = pass(surfaces, camera, { samples: 0 });
     surfacePass.setResolutionScale(AO_SCALE);
-    surfacePass.setMRT(mrt({ output: normalView }));
+    // The surfaces' normals, written as they are: three's basic material gives `normalView` the quad's own.
+    surfacePass.setMRT(mrt({ output: vec4(unpackNormal(picked.xy), 1) }));
     const depth = surfacePass.getTextureNode('depth');
     const normals = surfacePass.getTextureNode('output');
 
@@ -306,6 +315,7 @@ export class Occlusion {
     this.occlusion.thickness.value = reach;
     this.smooth.depthPhi.value = reach / 4;
     this.pipeline.render();
+    if (this.occlusion.failed) throw this.occlusion.failed;
   }
 
   dispose(): void {

@@ -338,15 +338,7 @@ fn rimOf(edge: vec4f, glow: f32, rimOn: f32) -> f32 {
   return glow * rimOn * (1.0 - smoothstep(width - 0.5, width + 0.5, edge.x));
 }`);
 
-/**
- * How wide on screen a segment is drawn as the tube itself, round in depth and meeting the next in a round joint, in
- * device pixels; a thinner one is drawn flat, as on WebGL 2. A tube writes its own depth, so each of its pixels is
- * shaded under whatever covers it: from 12 px, CA1's 300 cells took 15 ms more a frame at 16 times nearer, and from 48
- * px 2.6 ms.
- */
-export const TUBE_FROM_PX = 48;
-
-/** A segment drawn flat or as the tube itself, or a soma. */
+/** A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`), or a soma. */
 type Kind = 'segment' | 'tube' | 'soma';
 
 /**
