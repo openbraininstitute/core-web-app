@@ -18,8 +18,8 @@ export const roomFor = (segments: number) => Math.ceil(segments / BLOCK) * BLOCK
 const rowOf = (slot: number) => (8 * slot) / BLOCK;
 
 /**
- * Where an arena's arrays are uploaded: told of the segments that changed and of the blocks over them, the segments'
- * words alone where `wordsOnly`.
+ * Where an arena's arrays are uploaded: told of the segments that changed and always of the blocks over them;
+ * `wordsOnly` leaves out the segments' ends, never the blocks.
  */
 export interface ArenaUploads {
   upload(start: number, count: number, wordsOnly: boolean): void;
