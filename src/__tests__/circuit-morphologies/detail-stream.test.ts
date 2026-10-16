@@ -18,7 +18,7 @@ import type {
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
-const RULES: DetailRules = { budget: Infinity, pixels: 2 };
+const RULES: DetailRules = { budget: Infinity, pixels: 2, culling: true };
 /** Each box's segments at each level, the finest first. */
 const COUNTS = [100, 50, 10];
 const DEPTHS = [20, 40, 60, 80];

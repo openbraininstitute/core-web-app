@@ -25,7 +25,8 @@ interface RendererState {
 
 /**
  * For the debug tools: what draws the view, with WebGL 2 to choose instead of WebGPU; and what the view draws of
- * morphologies read a box at a time, with the budget and the pixels a level's tolerance may span to set lower.
+ * morphologies read a box at a time, with the budget and the pixels a level's tolerance may span to set lower, and on
+ * WebGPU the culling to switch off and what it counted.
  */
 export function DetailReadout({
   viewer,
@@ -58,6 +59,12 @@ export function DetailReadout({
               .map(({ toleranceUm, boxes }) => `${toleranceUm} µm × ${count(boxes)}`)
               .join(', ')}
           </div>
+          {detail.culled && (
+            <div data-testid="culled">
+              Culled: {count(detail.culled.tested)} tested, {count(detail.culled.kept)} kept,{' '}
+              {count(detail.culled.drawn)} drawn
+            </div>
+          )}
         </>
       )}
       <div className="flex gap-3">
@@ -91,6 +98,19 @@ export function DetailReadout({
                 ))}
               </select>
             </label>
+            {tier === 'webgpu' && (
+              <label className="flex items-center gap-1">
+                Culling
+                <select
+                  className="bg-transparent"
+                  value={detail.culling ? 'on' : 'off'}
+                  onChange={(e) => viewer.setDetailRules({ culling: e.target.value === 'on' })}
+                >
+                  <option value="on">On</option>
+                  <option value="off">Off</option>
+                </select>
+              </label>
+            )}
           </>
         )}
         <label className="flex items-center gap-1">

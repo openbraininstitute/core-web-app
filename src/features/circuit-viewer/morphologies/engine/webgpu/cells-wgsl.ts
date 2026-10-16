@@ -34,7 +34,7 @@ export const srgbWGSL = (color: string) =>
     .join(', ')})`;
 
 /** The view's measure of a pixel: as `PIXEL_UM` in `impostors.ts`. */
-export const VIEW = wgsl(/* wgsl */ `
+export const VIEW_WGSL = /* wgsl */ `
 fn isOrthographic(projection: mat4x4f) -> bool {
   return projection[3][3] > 0.5;
 }
@@ -43,7 +43,8 @@ fn pixelUm(z: f32, projection: mat4x4f, vp: vec4f) -> f32 {
   let span = 2.0 / (projection[1][1] * vp.w);
   return select(span * max(-z, 1e-3), span, isOrthographic(projection));
 }
-`);
+`;
+export const VIEW = wgsl(VIEW_WGSL);
 
 /** What WGSL that colours cells calls: as `CELL_GLSL` in `impostors.ts`. */
 export const CELLS = wgsl(/* wgsl */ `

@@ -70,7 +70,7 @@ describe('DetailStream, over a long run of views', () => {
         shift: new THREE.Vector3(),
       };
       const budget = random() < 0.2 ? 1000 + Math.floor(random() * 5000) : Infinity;
-      stream.update(view, { budget, pixels: 2 }, random() < 0.6);
+      stream.update(view, { budget, pixels: 2, culling: true }, random() < 0.6);
       await new Promise((resolve) => setTimeout(resolve, 0));
       for (let turn = 0; turn < 3; turn++) stream.apply(1 + Math.floor(random() * 3000));
 

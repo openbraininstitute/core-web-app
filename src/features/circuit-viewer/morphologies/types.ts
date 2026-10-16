@@ -89,6 +89,15 @@ export interface DetailRules {
   budget: number;
   /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
   pixels: number;
+  /** On WebGPU, whether the segments hidden behind others are left out, tested on the GPU; off, all are drawn. */
+  culling: boolean;
+}
+
+/** What the culling's tests last counted: the segments of the blocks tested, those kept to hide others, and those drawn. */
+export interface CullCounts {
+  tested: number;
+  kept: number;
+  drawn: number;
 }
 
 /** What a view draws of morphologies read a box at a time. */
@@ -100,6 +109,8 @@ export interface DetailStats extends DetailRules {
   levels: { toleranceUm: number; boxes: number }[];
   /** The boxes in view left out for the budget, which only their somas stand for. */
   leftOut: number;
+  /** What the culling counted; null where it does not cull. */
+  culled: CullCounts | null;
 }
 
 /** A circuit's somas as the page placed them, before any morphology is in. */

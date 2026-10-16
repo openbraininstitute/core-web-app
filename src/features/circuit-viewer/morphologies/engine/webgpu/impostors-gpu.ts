@@ -6,10 +6,12 @@ import {
   cameraWorldMatrix,
   float,
   instanceIndex,
+  ivec2,
   mix,
   output,
   positionGeometry,
   screenCoordinate,
+  select,
   sRGBTransferOETF,
   storage,
   toneMapping,
@@ -25,8 +27,9 @@ import * as THREE from 'three/webgpu';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION } from '../cell-table';
-import { CELL_MASK, HOLE, MIN_RADIUS, TYPE_SHIFT } from '../impostors';
+import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, TYPE_SHIFT } from '../impostors';
 import { CELLS, cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
+import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
 import { surfaceOf } from './occlusion-gpu';
 
 import type { Node } from 'three/webgpu';
@@ -37,10 +40,10 @@ import type { GpuUniforms } from './gpu-uniforms';
 /**
  * As `impostors.ts` draws a segment and a soma, in WGSL, and a segment wide on screen as the tube itself. Pixels: the
  * fragment's position counts them from the top left of the target, y down, where WebGL's counts y up; geometry is
- * worked in pixels y up, as view space has it, and the ends handed to the fragments are turned over.
+ * worked in pixels y up, as view space has it, and the ends handed to the fragments are turned over. The culling's
+ * passes are written with the same text (`culling.ts`).
  */
-const IMPOSTORS = wgsl(
-  /* wgsl */ `
+export const IMPOSTORS_WGSL = /* wgsl */ `
 // A view point in device pixels from the viewport's bottom left, y up.
 fn pixelsUp(p: vec3f, projection: mat4x4f, vp: vec4f) -> vec2f {
   let clip = projection * vec4f(p, 1.0);
@@ -78,16 +81,14 @@ fn ownColour(texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f, axon: vec3f,
     default: { return unknown; }
   }
 }
-`,
-  [VIEW]
-);
+`;
+const IMPOSTORS = wgsl(IMPOSTORS_WGSL, [VIEW]);
 
 /**
  * A segment's ends in view space, each with its radius, and their radii in pixels and the µm a pixel spans at each; w
  * of the last column 1 where it is drawn.
  */
-const segmentEnds = wgslFn(
-  /* wgsl */ `
+export const SEGMENT_ENDS_WGSL = /* wgsl */ `
 fn segmentEnds(word: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f, chartB: vec4f,
                morph: f32, shift: vec3f, view: mat4x4f, projection: mat4x4f, vp: vec4f, near: f32) -> mat4x4f {
   let none = mat4x4f(vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
@@ -119,9 +120,8 @@ fn segmentEnds(word: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, char
   ra = max(ra, least * umA);
   rb = max(rb, least * umB);
   return mat4x4f(vec4f(a, ra), vec4f(b, rb), vec4f(ra / umA, rb / umB, umA, umB), vec4f(0.0, 0.0, 0.0, 1.0));
-}`,
-  [IMPOSTORS]
-);
+}`;
+const segmentEnds = wgslFn(SEGMENT_ENDS_WGSL, [IMPOSTORS]);
 
 /**
  * A segment's quad, of its `ends`: the corner in the world, w 1 where it is drawn; its ends in the fragment's pixels;
@@ -340,13 +340,17 @@ fn rimOf(edge: vec4f, glow: f32, rimOn: f32) -> f32 {
 /** A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`), or a soma. */
 type Kind = 'segment' | 'tube' | 'soma';
 
-/** What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram. */
+/**
+ * What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram; and the least radius
+ * in pixels of a tube by which the draw keeps its own kind (`GpuUniforms.tubeFrom` where not given).
+ */
 interface SegmentInputs {
   word: Node<'uint'>;
   endA: Node<'vec4'>;
   endB: Node<'vec4'>;
   chartA: Node<'vec4'>;
   chartB: Node<'vec4'>;
+  round?: Node<'float'>;
 }
 
 /** A segment as its quads' attributes have it. */
@@ -358,15 +362,53 @@ const fromAttributes = (): SegmentInputs => ({
   chartB: attribute('aChartB', 'vec4'),
 });
 
-/** An arena's segment, the instance's: with no dendrogram, its ends stand for it. */
-function fromArena({ ends, words }: ArenaStorage): SegmentInputs {
-  const at = instanceIndex.mul(uint(2));
+/** Of the culling's lists, those kept to hide others, drawn to depth before the tests, or those seen. */
+type List = 'kept' | 'seen';
+
+/**
+ * An arena's segment, the instance's: culled (`listed`), the one at that place in `list` for the draw's kind, which
+ * holds its flat segments from its start and its tubes back from its end; not, every segment in turn. None at or past
+ * the arena's end. With no dendrogram, its ends stand for it. The culling chose a seen segment's kind, which its draw
+ * keeps; a kept one is drawn by its kind now, so that one whose kind changed is left out, as it may be.
+ */
+function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube', list: List) {
+  const { capacity, end } = arena;
+  const listed = arena.listed.equal(uint(1));
+  const first = capacity.mul(uint(list === 'kept' ? 0 : 1));
+  const at =
+    kind === 'tube'
+      ? first.add(capacity).sub(uint(1)).sub(instanceIndex)
+      : first.add(instanceIndex);
   // Of any length: the arena's buffers are bound in place of the attributes'.
-  const endsOf = storage(ends, 'vec4', 0).toReadOnly();
-  const endA = typed<'vec4'>(endsOf.element(at));
-  const endB = typed<'vec4'>(endsOf.element(at.add(uint(1))));
-  const word = typed<'uint'>(storage(words, 'uint', 0).toReadOnly().element(instanceIndex));
-  return { word, endA, endB, chartA: endA, chartB: endB };
+  const i = select(
+    listed,
+    storage(arena.lists, 'uint', 0).toReadOnly().element(at),
+    instanceIndex
+  ).toVar();
+  const endsOf = storage(arena.ends, 'vec4', 0).toReadOnly();
+  const endA = typed<'vec4'>(endsOf.element(i.mul(uint(2))));
+  const endB = typed<'vec4'>(endsOf.element(i.mul(uint(2)).add(uint(1))));
+  const word = typed<'uint'>(
+    select(
+      i.lessThan(end),
+      storage(arena.words, 'uint', 0).toReadOnly().element(i),
+      uint(HOLE_WORD)
+    )
+  );
+  const round =
+    list === 'kept' ? u.tubeFrom : select(listed, float(kind === 'tube' ? 0 : 1e30), u.tubeFrom);
+  return { word, endA, endB, chartA: endA, chartB: endB, round } satisfies SegmentInputs;
+}
+
+/**
+ * Where the arena is culled, a tube's pixel behind the farthest drawn there before the tests: what was drawn there
+ * covers it, and the nearest of that is drawn. `viewZ`: the tube's depth there in view space.
+ */
+function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
+  const away = viewZ.negate();
+  const nearest = away.sub(away.mul(NEAR_SHARE).add(NEAR_UM));
+  const farthest = arena.farthest.load(ivec2(screenCoordinate.xy)).x;
+  return arena.listed.equal(uint(1)).and(nearest.greaterThan(farthest));
 }
 
 /**
@@ -432,7 +474,7 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
         corner: positionGeometry,
         ends,
         tube: float(kind === 'tube' ? 1 : 0),
-        round: u.tubeFrom,
+        round: inputs.round ?? u.tubeFrom,
         world: cameraWorldMatrix,
         projection: cameraProjectionMatrix,
         vp: viewport,
@@ -463,13 +505,16 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
 /**
  * An impostor of `kind` in the look's material, three's standard one under the look's lights: the cell's colour from
  * the cell table where the vertex colour would go, lit by its glow, ringed as it glows on a light background, tone
- * mapped as Studio is on WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`).
+ * mapped as Studio is on WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`). A tube of a
+ * culled `arena` is not drawn where it lies behind what was drawn before the tests (`behindOf`): writing its depth, it
+ * would be shaded there under what covers it.
  */
 function lookMaterial(
   kind: Kind,
   u: GpuUniforms,
   look: Look,
-  inputs = fromAttributes()
+  inputs: SegmentInputs = fromAttributes(),
+  arena?: ArenaStorage
 ): THREE.MeshStandardNodeMaterial {
   const studio = look.material as THREE.MeshStandardMaterial;
   const material = new THREE.MeshStandardNodeMaterial({
@@ -507,7 +552,8 @@ function lookMaterial(
   material.roughnessNode = typed<'float'>(
     roughnessOf({ n: col(surface, 0).xyz, roughness: studio.roughness })
   );
-  material.maskNode = col(surface, 0).w.greaterThan(0.5);
+  const on = col(surface, 0).w.greaterThan(0.5);
+  material.maskNode = kind === 'tube' && arena ? on.and(behindOf(arena, viewZ).not()) : on;
   // Lit where the lights do not reach as well.
   material.emissiveNode = colour.mul(glowing).mul(0.2);
   if (kind !== 'segment') material.depthNode = depth;
@@ -543,6 +589,24 @@ function idMaterial(
   return material;
 }
 
+/**
+ * A segment of `kind` drawn to depth alone, placed and masked as in the look, for the culling's tests: the depth the
+ * look's material writes.
+ */
+function depthMaterial(
+  kind: 'segment' | 'tube',
+  u: GpuUniforms,
+  inputs: SegmentInputs
+): THREE.MeshBasicNodeMaterial {
+  const material = new THREE.MeshBasicNodeMaterial();
+  const { position, surface, depth } = impostorOf(kind, u, true, inputs);
+  material.positionNode = position;
+  material.maskNode = col(surface, 0).w.greaterThan(0.5);
+  if (kind === 'tube') material.depthNode = depth;
+  material.colorWrite = false;
+  return material;
+}
+
 /** A segment's materials, the two draws: the flat ones and the tubes. */
 const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M) => [
   of('segment'),
@@ -565,11 +629,16 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
   };
 }
 
-/** The segments' materials, in the look and in their cells' numbers, of an arena whose buffers `storage` binds. */
-export function arenaMaterials(u: GpuUniforms, look: Look, storage: ArenaStorage) {
-  const inputs = fromArena(storage);
+/**
+ * The segments' materials of an arena whose buffers `arena` binds: in the look and in their cells' numbers, of the
+ * segments seen, and to depth, of those kept (`fromArena`).
+ */
+export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) {
   return {
-    segment: segments((kind) => lookMaterial(kind, u, look, inputs)),
-    ids: segments((kind) => idMaterial(kind, u, false, inputs)),
+    segment: segments((kind) =>
+      lookMaterial(kind, u, look, fromArena(u, arena, kind, 'seen'), arena)
+    ),
+    ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
+    kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
 }

@@ -42,6 +42,7 @@ import type {
   CircuitMorphologyData,
   CircuitMorphologyView,
   CircuitSomas,
+  CullCounts,
   DetailRules,
   DetailStats,
   ElectrodeGroup,
@@ -122,12 +123,14 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 
 /**
  * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
- * go, and the materials of the segments in the look and in their cells' numbers.
+ * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on,
+ * by their order, where not on the arena's own.
  */
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
   segment: THREE.Material[];
   ids: THREE.Material[];
+  quads?: THREE.InstancedBufferGeometry[];
 }
 
 /**
@@ -272,10 +275,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     spots: Quads[];
     detailed: Detailed | null;
   } | null = null;
-  private detailRules: DetailRules = { budget: SEGMENT_BUDGET, pixels: DETAIL_PIXELS };
+  private detailRules: DetailRules = {
+    budget: SEGMENT_BUDGET,
+    pixels: DETAIL_PIXELS,
+    culling: true,
+  };
   private detailListeners = new Set<(detail: DetailStats | null) => void>();
   /** What the listeners were last told. */
   private toldDetail: DetailStats | null = null;
+  /** What the tier's culling last counted. */
+  private culled: CullCounts | null = null;
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
   private spots = new THREE.Scene();
   protected spotUniforms = { uSegments: { value: 0 } };
@@ -509,7 +518,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       DetailStream.of(data.chunks, quadGeometry(0), () => this.invalidate(), drawing?.uploadsOf);
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
-      drawn.map((material) => quads(segments, material));
+      drawn.map((material, k) => quads(drawing?.quads?.[k] ?? segments, material));
     const segmentMeshes = onSegments(drawing?.segment ?? materials.segment);
     this.chunks.add(...segmentMeshes);
 
@@ -555,8 +564,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   setDetailRules(rules: Partial<DetailRules>): void {
     const next = { ...this.detailRules, ...rules };
-    if (next.budget === this.detailRules.budget && next.pixels === this.detailRules.pixels) return;
+    if (isEqual(next, this.detailRules)) return;
     this.detailRules = next;
+    if (!next.culling) this.culled = null;
     this.tellDetail();
     this.invalidate();
   }
@@ -567,9 +577,26 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return () => this.detailListeners.delete(listener);
   }
 
+  /** Whether the tier culls the segments of morphologies read a box at a time (`DetailRules.culling`). */
+  protected get culls(): boolean {
+    return this.detailRules.culling;
+  }
+
+  /** Where the arena of morphologies read a box at a time ends: what its quads are drawn up to. */
+  protected get arenaEnd(): number {
+    return this.layer?.detailed?.stream.geometry.instanceCount ?? 0;
+  }
+
+  /** What the tier's culling counted, for the listeners. */
+  protected tellCulled(counts: CullCounts): void {
+    this.culled = counts;
+    this.tellDetail();
+  }
+
   /** The listeners told what is drawn of morphologies read a box at a time, where that changed. */
   private tellDetail(): void {
-    const detail = this.layer?.detailed?.stream.stats(this.detailRules) ?? null;
+    const stats = this.layer?.detailed?.stream.stats(this.detailRules);
+    const detail = stats ? { ...stats, culled: this.culled } : null;
     if (isEqual(detail, this.toldDetail)) return;
     this.toldDetail = detail;
     for (const listener of this.detailListeners) listener(detail);
@@ -1260,6 +1287,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.letGo(...meshes, ...(this.layer?.ids ?? []), ...(this.layer?.spots ?? []));
     this.layer?.detailed?.stream.stop();
     this.layer = null;
+    this.culled = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     // They sit on the morphologies.
     this.drawMarkers();

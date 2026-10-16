@@ -157,6 +157,8 @@ const COLORS: CellColors = { palette: ['#ff0000'], columnByCell: Uint16Array.of(
 const DETAIL: DetailStats = {
   budget: 2_000_000,
   pixels: 2,
+  culling: true,
+  culled: null,
   drawn: 1200,
   wanted: 1500,
   levels: [

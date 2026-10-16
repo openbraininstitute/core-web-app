@@ -48,6 +48,8 @@ export const HOLE = 255;
 /** A segment's cell and section type share a word: the type in its top byte, the cell below, under 2^24. */
 export const TYPE_SHIFT = 24;
 export const CELL_MASK = (1 << TYPE_SHIFT) - 1;
+/** The word of a hole. */
+export const HOLE_WORD = (HOLE << TYPE_SHIFT) >>> 0;
 
 /** Each segment's cell and type in one word (`TYPE_SHIFT`), written into `words` from `at`. */
 export function packCellTypes(

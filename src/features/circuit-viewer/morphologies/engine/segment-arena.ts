@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { HOLE, packCellTypes, segmentAttributes, TYPE_SHIFT } from './impostors';
+import { HOLE_WORD, packCellTypes, segmentAttributes } from './impostors';
 
 import type { MorphologySegments } from '../types';
 
@@ -10,7 +10,6 @@ export const SEGMENT_BYTES = 8 * 4 + 4;
 export const BLOCK = 64;
 /** How far a block's box reaches past its segments' ends, in their radii: a little past their tubes, as the bench's. */
 const BLOCK_REACH = 1.15;
-const HOLE_WORD = (HOLE << TYPE_SHIFT) >>> 0;
 
 /** The room `segments` take in an arena: a whole number of blocks. */
 export const roomFor = (segments: number) => Math.ceil(segments / BLOCK) * BLOCK;

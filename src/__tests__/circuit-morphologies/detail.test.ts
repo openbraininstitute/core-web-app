@@ -13,7 +13,7 @@ import { boxesAt } from './boxes';
 import type { DetailRules } from '@/features/circuit-viewer/morphologies/types';
 
 const HEIGHT = 1000;
-const RULES: DetailRules = { budget: Infinity, pixels: 2 };
+const RULES: DetailRules = { budget: Infinity, pixels: 2, culling: true };
 /** Each segment counted alone against the budget. */
 const bySegment = (segments: number) => segments;
 

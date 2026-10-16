@@ -6,6 +6,7 @@ import { logError } from '@/utils/logger';
 import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
 import { pixelSpan } from '../detail';
 import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
+import { Culling, DRAWS } from './culling';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
 import { arenaMaterials, impostorMaterials } from './impostors-gpu';
@@ -16,11 +17,21 @@ import { checkHooks, threeLoop } from './three-hooks';
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
 
+/** A pack's arena on the GPU: its materials, what they bind, and the culling of its segments. */
+interface GpuArena extends ReturnType<typeof arenaMaterials> {
+  storage: ArenaStorage;
+  culling: Culling;
+  /** Whether a pack's arena is on the GPU now. */
+  placed: boolean;
+}
+
 /**
  * The circuit's morphologies on WebGPU (`CircuitView`), on a device of the page's own (`probeWebGPU`), which goes
  * with the view. Each material writes the colour shown, as the WebGL 2 tier's do: Studio's tone maps its own, and the
  * somas are drawn as they come out, so the renderer converts nothing and draws straight to the canvas; a still frame of
- * morphologies goes through the ambient occlusion first (`Occlusion`).
+ * morphologies goes through the ambient occlusion first (`Occlusion`). A pack's segments are culled (`Culling`): the
+ * segments kept the frame before are drawn to depth (`keptQuads`), the culling's tests run, and the frame draws the
+ * segments seen.
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
@@ -34,7 +45,12 @@ export class CircuitMorphologyGPU extends CircuitView {
   /** False where the occlusion could not be made, which is not tried again. */
   private occluding = true;
   /** Made at the first pack and kept, its programs with it: each pack's arena only binds its buffers to `storage`. */
-  private arena: (ReturnType<typeof arenaMaterials> & { storage: ArenaStorage }) | null = null;
+  private arena: GpuArena | null = null;
+  /** The kept segments' quads, drawn to depth before the culling's tests. */
+  private keptQuads = new THREE.Scene();
+  /** Of each material of `keptQuads`, the quads last let go of: three keeps its programs while they are kept. */
+  private keptLetGo = new Map<THREE.Material, THREE.Mesh>();
+  private drawingSize = new THREE.Vector2();
 
   /**
    * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
@@ -104,8 +120,9 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override disposeStage(): void {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
-    const { segment = [], ids = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids]) material.dispose();
+    const { segment = [], ids = [], kept = [] } = this.arena ?? {};
+    for (const material of [...segment, ...ids, ...kept]) material.dispose();
+    this.arena?.culling.dispose();
     this.renderer.dispose();
     this.device.destroy();
   }
@@ -133,6 +150,7 @@ export class CircuitMorphologyGPU extends CircuitView {
    */
   protected override draw(moving: boolean): void {
     this.gpu.sync();
+    this.cull();
     if (!this.drawsMorphologies) this.dropOcclusion();
     const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionNow();
     if (occlusion) {
@@ -152,18 +170,74 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.dropOcclusion();
   }
 
-  /** In buffers of the page's, which the segments' materials read as storage. */
+  /**
+   * In buffers of the page's, which the segments' materials read as storage: the seen segments' quads drawn by the
+   * culling's draws, flat and tubes, and the kept segments' quads in their place in `keptQuads`.
+   */
   protected override arenaDrawing(): ArenaDrawing {
     if (!this.arena) {
       const storage = arenaStorage();
-      this.arena = { storage, ...arenaMaterials(this.gpu, this.look, storage) };
+      this.arena = {
+        storage,
+        ...arenaMaterials(this.gpu, this.look, storage),
+        culling: new Culling(this.renderer, this.device, storage),
+        placed: false,
+      };
     }
-    const { storage, segment, ids } = this.arena;
+    const arena = this.arena;
+    const { storage, segment, ids, kept, culling } = arena;
+    this.keep([
+      new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
+      new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
+    ]);
     return {
-      uploadsOf: (ends, words) => arenaOnGpu(this.renderer, this.device, storage, ends, words),
+      uploadsOf: (ends, words, blocks) =>
+        arenaOnGpu(this.renderer, this.device, storage, { ends, words, blocks }, (buffers) => {
+          arena.placed = buffers !== null;
+          culling.setArena(buffers);
+        }),
       segment,
       ids,
+      quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],
     };
+  }
+
+  /** `meshes` in place of the kept segments' quads, which are let go of. */
+  private keep(meshes: THREE.Mesh[]): void {
+    for (const mesh of [...this.keptQuads.children] as THREE.Mesh[]) {
+      mesh.removeFromParent();
+      mesh.geometry.dispose();
+      const material = mesh.material as THREE.Material;
+      this.keptLetGo.get(material)?.dispose();
+      this.keptLetGo.set(material, mesh);
+    }
+    for (const mesh of meshes) mesh.frustumCulled = false;
+    this.keptQuads.add(...meshes);
+  }
+
+  /**
+   * A pack's segments, where there is one: culled, the kept segments drawn to depth and the culling's tests run before
+   * the frame is drawn; not, where the culling is off, every one of them drawn.
+   */
+  private cull(): void {
+    const arena = this.arena;
+    if (!arena?.placed) return;
+    const { storage, culling } = arena;
+    const end = this.arenaEnd;
+    storage.end.value = end;
+    storage.listed.value = this.culls ? 1 : 0;
+    if (!this.culls) {
+      culling.drawAll(end);
+      return;
+    }
+    const { renderer } = this;
+    const size = renderer.getDrawingBufferSize(this.drawingSize);
+    renderer.setRenderTarget(culling.targetOf(size.x, size.y));
+    renderer.render(this.keptQuads, this.camera);
+    renderer.setRenderTarget(null);
+    culling.run(this.camera, this.uniforms.uShift.value, this.gpu.tubeFrom.value, end, (counts) =>
+      this.tellCulled(counts)
+    );
   }
 
   private occlusionNow(): Occlusion | null {

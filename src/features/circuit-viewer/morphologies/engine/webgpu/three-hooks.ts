@@ -1,7 +1,7 @@
 /**
  * The private parts of three's WebGPU renderer the circuit engine takes, in one place, as three r186 has them: what
  * holds a GPU object for each of three's (`backend.get`), whose buffer three binds for an attribute in place of making
- * one, and three's own loop. `checkHooks` is called once the renderer is ready; where a release of three changed one the
+ * one and whose texture is the one three made for a texture of its own, and three's own loop. `checkHooks` is called once the renderer is ready; where a release of three changed one the
  * engine cannot do without, the view is drawn with WebGL 2.
  */
 import { Unfit } from '../probe';
@@ -9,7 +9,7 @@ import { Unfit } from '../probe';
 import type * as THREE from 'three/webgpu';
 
 interface Backend {
-  get(object: object): { buffer?: GPUBuffer };
+  get(object: object): { buffer?: GPUBuffer; texture?: GPUTexture };
 }
 
 function backendOf(renderer: THREE.WebGPURenderer): Partial<Backend> | undefined {
@@ -30,6 +30,14 @@ export function shareBuffer(
   buffer: GPUBuffer
 ): void {
   (backendOf(renderer) as Backend).get(attribute).buffer = buffer;
+}
+
+/** The GPU texture three made for `texture`; undefined until it has made one. */
+export function gpuTexture(
+  renderer: THREE.WebGPURenderer,
+  texture: THREE.Texture
+): GPUTexture | undefined {
+  return (backendOf(renderer) as Backend).get(texture).texture;
 }
 
 interface Turns {

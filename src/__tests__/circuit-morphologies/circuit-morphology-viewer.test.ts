@@ -1413,7 +1413,14 @@ describe('the morphologies read a box at a time', () => {
     await readAll(inner);
 
     const detail = told.mock.lastCall?.[0];
-    expect(detail).toMatchObject({ budget: 2_000_000, pixels: 2, leftOut: 0 });
+    // WebGL 2 culls nothing, whatever the rule.
+    expect(detail).toMatchObject({
+      budget: 2_000_000,
+      pixels: 2,
+      culling: true,
+      culled: null,
+      leftOut: 0,
+    });
     expect(detail.drawn).toBeGreaterThan(0);
     expect(detail.drawn).toBe(detail.wanted);
     expect(
@@ -1421,6 +1428,8 @@ describe('the morphologies read a box at a time', () => {
         .map(({ boxes }: { boxes: number }) => boxes)
         .reduce((a: number, b: number) => a + b)
     ).toBe(2);
+    viewer.setDetailRules({ culling: false });
+    expect(told.mock.lastCall?.[0]).toMatchObject({ culling: false, culled: null });
     viewer.setData(null);
     expect(told).toHaveBeenLastCalledWith(null);
   });
