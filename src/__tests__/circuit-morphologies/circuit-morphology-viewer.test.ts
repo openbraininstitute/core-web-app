@@ -1462,6 +1462,34 @@ describe('the morphologies read a box at a time', () => {
     expect(segmentsOf(inner).geometry.instanceCount).toBe(2 * BLOCK);
   });
 
+  it('makes its arena again for a larger budget than it holds, reading its boxes again, and not for a smaller one', async () => {
+    const { viewer, inner } = make();
+    const told = vi.fn();
+    viewer.onDetail(told);
+    viewer.setDetailRules({ budget: BLOCK });
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ drawn: 0, leftOut: 2 });
+    const was = segmentsOf(inner).geometry;
+    const disposed = vi.fn();
+    was.addEventListener('dispose', disposed);
+
+    viewer.setDetailRules({ budget: 2 * BLOCK });
+    const { geometry } = segmentsOf(inner);
+    expect(geometry).not.toBe(was);
+    expect(disposed).toHaveBeenCalledOnce();
+    expect(inner.ids.children.some((mesh) => (mesh as Quads).geometry === geometry)).toBe(true);
+    frames(inner);
+    expect(reads).toHaveLength(1);
+    await readAll(inner);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ budget: 2 * BLOCK, leftOut: 0 });
+    expect(geometry.instanceCount).toBe(2 * BLOCK);
+
+    viewer.setDetailRules({ budget: BLOCK });
+    expect(segmentsOf(inner).geometry).toBe(geometry);
+  });
+
   it('places nothing of a read that ends after the morphologies are gone', async () => {
     const { viewer, inner } = make();
     viewer.setData(chunked());

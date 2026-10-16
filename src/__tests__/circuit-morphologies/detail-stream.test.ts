@@ -173,6 +173,16 @@ describe('DetailStream', () => {
     ]);
   });
 
+  it('makes its arena for the budget, holding a larger one only as far as the boxes can take', () => {
+    const { chunks } = chunksOf();
+    const small = DetailStream.of(chunks, 2 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
+    expect(small.holds(2 * BLOCK)).toBe(true);
+    expect(small.holds(4 * BLOCK)).toBe(false);
+    // Every box at the finest takes two blocks: eight in all, whatever the budget past them.
+    const whole = DetailStream.of(chunks, 8 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
+    expect(whole.holds(1e9)).toBe(true);
+  });
+
   it('holds the budget to the room the arena holds, a box taking whole blocks', () => {
     // Room for five blocks: a box of the finest level takes two, of the others one.
     const { stream, reads } = make(5 * BLOCK);

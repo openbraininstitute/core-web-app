@@ -1,6 +1,6 @@
 import { logError } from '@/utils/logger';
 
-import { chooseDetail, type Detail, type DetailView, SEGMENT_BUDGET } from './detail';
+import { chooseDetail, type Detail, type DetailView } from './detail';
 import { roomFor, SEGMENT_BYTES, SegmentArena, type UploadsOf } from './segment-arena';
 
 import type * as THREE from 'three';
@@ -23,14 +23,14 @@ function isAbort(e: unknown): boolean {
 
 /**
  * The segments an arena of a pack's boxes holds: the most room they can take drawn at once, each at its largest level,
- * within the budget, and a quarter more, so that its holes seldom have to be closed.
+ * within `budget`, and a quarter more, so that its holes seldom have to be closed.
  */
-function capacityOf({ levels, boxes }: MorphologyChunks): number {
+function capacityOf({ levels, boxes }: MorphologyChunks, budget: number): number {
   let most = 0;
   for (let box = 0; box < boxes.length / 6; box++) {
     most += roomFor(Math.max(...levels.map((level) => level.segments[box])));
   }
-  return Math.ceil(1.25 * Math.min(most, SEGMENT_BUDGET));
+  return roomFor(Math.ceil(1.25 * Math.min(most, budget)));
 }
 
 /**
@@ -65,17 +65,23 @@ export class DetailStream {
   }
 
   /**
-   * A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need, uploaded as
-   * `uploadsOf` has it.
+   * A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need within `budget`,
+   * uploaded as `uploadsOf` has it.
    */
   static of(
     chunks: MorphologyChunks,
+    budget: number,
     geometry: THREE.InstancedBufferGeometry,
     onRead: () => void,
     uploadsOf?: UploadsOf
   ): DetailStream {
-    const arena = new SegmentArena(geometry, capacityOf(chunks), uploadsOf);
+    const arena = new SegmentArena(geometry, capacityOf(chunks, budget), uploadsOf);
     return new DetailStream(chunks, arena, onRead);
+  }
+
+  /** Whether its arena holds as much as `budget` asks of it. */
+  holds(budget: number): boolean {
+    return capacityOf(this.chunks, budget) <= this.arena.capacity;
   }
 
   /** The arena's quads, which draw what is placed. */

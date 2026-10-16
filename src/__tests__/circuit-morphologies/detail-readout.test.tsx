@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { DetailReadout } from '@/features/circuit-viewer/morphologies/detail-readout';
@@ -55,5 +55,25 @@ describe('the detail readout', () => {
     readout('webgl', { ...DETAIL, culled: null });
     expect(screen.queryByRole('combobox', { name: 'Culling' })).toBeNull();
     expect(screen.queryByTestId('culled')).toBeNull();
+  });
+
+  it("offers each tier's budgets, its own first chosen", () => {
+    const options = () =>
+      [...screen.getByRole('combobox', { name: 'Budget' }).querySelectorAll('option')].map(
+        (option) => option.textContent
+      );
+    const gpu = readout('webgpu', { ...DETAIL, budget: 8_000_000 });
+    expect(options()).toEqual(['12,000,000', '8,000,000', '4,000,000']);
+    expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Budget' }).value).toBe(
+      '8000000'
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Budget' }), {
+      target: { value: '12000000' },
+    });
+    expect(gpu.setDetailRules).toHaveBeenCalledExactlyOnceWith({ budget: 12_000_000 });
+    cleanup();
+
+    readout('webgl');
+    expect(options()).toEqual(['2,000,000', '1,000,000', '500,000', '200,000', '100,000']);
   });
 });

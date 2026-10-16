@@ -11,7 +11,11 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
 import type { Tier, TierChoice } from './engine/create-view';
 import type { CircuitMorphologyView, DetailStats } from './types';
 
-const BUDGETS = [SEGMENT_BUDGET, 1_000_000, 500_000, 200_000, 100_000];
+const BUDGETS: Record<Tier, number[]> = {
+  webgl: [SEGMENT_BUDGET.webgl, 1_000_000, 500_000, 200_000, 100_000],
+  // 12M at the most: an arena a quarter larger, 15M segments' ends, takes 480 MB of the 512 MiB binding the probe asks.
+  webgpu: [12_000_000, SEGMENT_BUDGET.webgpu, 4_000_000],
+};
 const PIXELS = [1, DETAIL_PIXELS, 4, 8];
 const TIERS: Record<Tier, string> = { webgpu: 'WebGPU', webgl: 'WebGL 2' };
 
@@ -77,7 +81,7 @@ export function DetailReadout({
                 value={detail.budget}
                 onChange={(e) => viewer.setDetailRules({ budget: Number(e.target.value) })}
               >
-                {BUDGETS.map((value) => (
+                {BUDGETS[tier].map((value) => (
                   <option key={value} value={value}>
                     {count(value)}
                   </option>

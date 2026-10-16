@@ -4,6 +4,7 @@ import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
 import { type CircuitMaterials, CircuitView } from './circuit-view';
+import { SEGMENT_BUDGET } from './detail';
 import { electrodeMaterial } from './electrodes';
 import { idMaterial, impostor } from './impostors';
 import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
@@ -31,7 +32,7 @@ export class CircuitMorphologyViewer extends CircuitView {
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = EXPOSURE;
-    super(container, renderer.domElement, renderer.getPixelRatio());
+    super(container, renderer.domElement, renderer.getPixelRatio(), SEGMENT_BUDGET.webgl);
     this.renderer = renderer;
     renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
     const { uniforms, cloudUniforms, spotUniforms, pixelRatio } = this;

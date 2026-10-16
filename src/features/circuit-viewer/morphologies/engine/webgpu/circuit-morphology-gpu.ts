@@ -4,7 +4,7 @@ import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 import { logError } from '@/utils/logger';
 
 import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
-import { pixelSpan } from '../detail';
+import { pixelSpan, SEGMENT_BUDGET } from '../detail';
 import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
 import { Culling, DRAWS } from './culling';
 import { dotMaterials } from './dots-gpu';
@@ -80,7 +80,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     renderer.setClearColor(0x000000, 0);
     renderer.toneMapping = THREE.NoToneMapping;
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
-    super(host, renderer.domElement, renderer.getPixelRatio());
+    super(host, renderer.domElement, renderer.getPixelRatio(), SEGMENT_BUDGET.webgpu);
     this.renderer = renderer;
     this.device = device;
     device.lost.then((info) => {

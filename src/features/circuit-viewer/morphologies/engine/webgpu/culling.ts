@@ -284,6 +284,7 @@ export class Culling {
   private fail(e: unknown): void {
     if (this.broken) return;
     this.broken = true;
+    this.unread = false;
     this.generation++;
     logError('Drawn without culling', e);
     this.counted(null);

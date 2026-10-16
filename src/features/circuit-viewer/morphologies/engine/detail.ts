@@ -7,8 +7,8 @@ import * as THREE from 'three';
 
 import type { DetailRules, PackBoxes } from '../types';
 
-/** The segments drawn at once until told otherwise. */
-export const SEGMENT_BUDGET = 2_000_000;
+/** The segments drawn at once until told otherwise, by the tier that draws them. */
+export const SEGMENT_BUDGET = { webgl: 2_000_000, webgpu: 8_000_000 } as const;
 /** How many device pixels a level's tolerance may span until told otherwise. */
 export const DETAIL_PIXELS = 2;
 /**

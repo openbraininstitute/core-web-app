@@ -163,4 +163,13 @@ describe("the culling's counts and its failures", () => {
     await map(A);
     expect(counted).toHaveBeenCalledExactlyOnceWith(null);
   });
+
+  it('reads nothing more once failed, where a frame was left unread', async () => {
+    const { counted, run, map, maps } = cullingOn({ refused: { message: 'refused' } });
+    for (let frame = 0; frame < 9; frame++) run();
+    await Promise.resolve();
+    for (let k = 0; k < 8; k++) await map(A);
+    expect(maps).toHaveLength(0);
+    expect(counted).toHaveBeenCalledExactlyOnceWith(null);
+  });
 });
