@@ -16,7 +16,10 @@ import type { MorphologyChunks } from '@/features/circuit-viewer/morphologies/ty
 vi.mock('@/utils/logger', () => ({ logError: vi.fn() }));
 
 describe('DetailStream, over a long run of views', () => {
-  it('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there', async () => {
+  it.each([
+    ['', false],
+    [', each at its base or finer', true],
+  ])('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there%s', async (_, withBase) => {
     let seed = 11;
     const random = () => {
       seed = (seed * 16807) % 2147483647;
@@ -52,7 +55,8 @@ describe('DetailStream, over a long run of views', () => {
         }),
     };
     const geometry = new THREE.InstancedBufferGeometry();
-    const arena = new SegmentArena(geometry, 20_000);
+    const base = withBase ? levels[2].segments : undefined;
+    const arena = new SegmentArena(geometry, 20_000 + (base ? count * BLOCK : 0), undefined, base);
     const stream = new DetailStream(chunks, arena, () => {});
 
     for (let step = 0; step < 400; step++) {
@@ -77,6 +81,8 @@ describe('DetailStream, over a long run of views', () => {
       // Every segment drawn is of one level of its box, and each box drawn is whole.
       const words = geometry.getAttribute('aCell').array as Uint32Array;
       const drawn = new Map<number, { level: number; n: number }>();
+      // A base in the room kept for it, and no other level there.
+      const misplaced: number[] = [];
       for (let i = 0; i < geometry.instanceCount; i++) {
         if (words[i] >>> TYPE_SHIFT === HOLE) continue;
         const cell = words[i] & CELL_MASK;
@@ -85,11 +91,16 @@ describe('DetailStream, over a long run of views', () => {
         const was = drawn.get(box);
         if (was) expect(was.level).toBe(level);
         else expect(i % BLOCK).toBe(0);
+        if (i < arena.baseRoom !== (withBase && level === 2)) misplaced.push(i);
         drawn.set(box, { level, n: (was?.n ?? 0) + 1 });
       }
+      expect(misplaced).toEqual([]);
       for (const [box, { level, n }] of drawn) {
         expect(n).toBe(levels[level].segments[box]);
-        expect(arena.sizeOf(box)).toBe(n);
+        expect(arena.sizeOf(box)).toBe(withBase && level === 2 ? undefined : n);
+      }
+      if (withBase && step > 20) {
+        expect(levels[2].segments.every((n, box) => n === 0 || drawn.has(box))).toBe(true);
       }
     }
   });

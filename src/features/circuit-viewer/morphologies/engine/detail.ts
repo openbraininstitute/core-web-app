@@ -1,14 +1,15 @@
 /**
  * Which level of a pack each of its boxes is drawn at, for a view: the coarsest whose tolerance spans no more than a few
  * device pixels where the box comes nearest the eye, coarser still while what is in view is over the budget, and every
- * box in view left out where even the coarsest is. Outside the view, a box is not drawn.
+ * box in view left out where even the coarsest is. Outside the view, a box is not drawn; where every box's coarsest
+ * level is kept drawn (a base), a box is drawn at least at it, which the budget does not count.
  */
 import * as THREE from 'three';
 
 import type { DetailRules, PackBoxes } from '../types';
 
-/** The segments drawn at once until told otherwise, by the tier that draws them. */
-export const SEGMENT_BUDGET = { webgl: 2_000_000, webgpu: 8_000_000 } as const;
+/** The segments drawn at once until told otherwise, by the tier that draws them; on WebGPU, finer than the base. */
+export const SEGMENT_BUDGET = { webgl: 2_000_000, webgpu: 4_000_000 } as const;
 /** How many device pixels a level's tolerance may span until told otherwise. */
 export const DETAIL_PIXELS = 2;
 /**
@@ -35,7 +36,10 @@ export interface Detail {
   levels: Int8Array;
   /** The boxes in view, the one nearest the focus first. */
   order: Uint32Array;
-  /** What the levels chosen come to; where the boxes in view are left out, what they come to at the coarsest. */
+  /**
+   * What the levels chosen come to, of the boxes in view, or with a base of every box; where the boxes in view are left
+   * out, what they come to at the coarsest.
+   */
   segments: number;
   /** The boxes in view left out for the budget: none, or all of them. */
   leftOut: number;
@@ -54,22 +58,23 @@ const frustum = new THREE.Frustum();
 const projected = new THREE.Matrix4();
 const middle = new THREE.Vector3();
 
-/** `roomFor` gives what a box's segments take of the budget. */
+/** `roomFor` gives what a box's segments take of the budget; `base`, whether every box's coarsest level is kept drawn. */
 export function chooseDetail(
   { boxes, levels }: PackBoxes,
   view: DetailView,
   { budget, pixels }: DetailRules,
-  roomFor: (segments: number) => number
+  roomFor: (segments: number) => number,
+  base = false
 ): Detail {
   const count = boxes.length / 6;
-  const chosen = new Int8Array(count).fill(-1);
+  const coarsest = levels.length - 1;
+  const chosen = new Int8Array(count).fill(base ? coarsest : -1);
   const away = new Float64Array(count);
   const inView: number[] = [];
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
   const span = pixelSpan(view.projection, view.height);
   // The view matrix's row that gives a point's depth.
   const [, , zx, , , , zy, , , , zz, , , , zw] = view.view.elements;
-  const coarsest = levels.length - 1;
 
   for (let b = 0; b < count; b++) {
     box.min.fromArray(boxes, 6 * b).add(view.shift);
@@ -91,22 +96,24 @@ export function chooseDetail(
 
   const order = Uint32Array.from(inView).sort((a, b) => away[a] - away[b]);
   const segmentsOf = (b: number) => levels[chosen[b]].segments[b];
+  const roomOf = (b: number) => (base && chosen[b] === coarsest ? 0 : roomFor(segmentsOf(b)));
   let room = 0;
-  for (const b of order) room += roomFor(segmentsOf(b));
+  for (const b of order) room += roomOf(b);
   // Coarser, a level at a time, the boxes farthest from the focus first.
   for (let coarser = true; room > budget && coarser; ) {
     coarser = false;
     for (let i = order.length - 1; i >= 0 && room > budget; i--) {
       const b = order[i];
       if (chosen[b] === coarsest) continue;
-      room -= roomFor(segmentsOf(b));
+      room -= roomOf(b);
       chosen[b]++;
-      room += roomFor(segmentsOf(b));
+      room += roomOf(b);
       coarser = true;
     }
   }
   let segments = 0;
-  for (const b of order) segments += segmentsOf(b);
+  if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
+  else for (const b of order) segments += segmentsOf(b);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
   if (room <= budget) return { levels: chosen, order, segments, leftOut: 0 };
   for (const b of order) chosen[b] = -1;

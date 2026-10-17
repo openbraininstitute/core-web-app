@@ -87,6 +87,20 @@ describe('chooseDetail', () => {
     expect(leftOut).toBe(0);
   });
 
+  it('with a base, draws a box outside the view at the coarsest, and tells what every box comes to', () => {
+    const { levels, order, segments, leftOut } = chooseDetail(
+      boxesAt([-50, 100]),
+      viewOf(perspective()),
+      RULES,
+      bySegment,
+      true
+    );
+    expect(Array.from(levels)).toEqual([2, 0]);
+    expect(Array.from(order)).toEqual([1]);
+    expect(segments).toBe(10 + 100);
+    expect(leftOut).toBe(0);
+  });
+
   it('places the boxes where the shift puts them in the view', () => {
     const view = viewOf(perspective(), undefined, new THREE.Vector3(10_000, 0, 0));
     expect(Array.from(chooseDetail(boxesAt([100]), view, RULES, bySegment).levels)).toEqual([-1]);
@@ -163,6 +177,17 @@ describe('chooseDetail', () => {
       );
       expect(Array.from(levels)).toEqual([-1, -1, -1, -1, -1]);
       expect(leftOut).toBe(4);
+    });
+
+    it('with a base, counts the finer levels alone, and leaves no box out', () => {
+      const base = (budget: number) =>
+        chooseDetail(boxesAt(depths), view(), { ...RULES, budget }, bySegment, true);
+      // Where the base did count, [1, 1, 2, 2].
+      expect(Array.from(base(150).levels)).toEqual([1, 1, 1, 2]);
+      const { levels, segments, leftOut } = base(0);
+      expect(Array.from(levels)).toEqual([2, 2, 2, 2]);
+      expect(segments).toBe(40);
+      expect(leftOut).toBe(0);
     });
 
     it('counts the room each box takes against it, and tells its segments', () => {

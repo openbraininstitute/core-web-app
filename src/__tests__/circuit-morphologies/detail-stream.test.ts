@@ -67,13 +67,27 @@ function viewOf(half: number, shift = new THREE.Vector3(), far = 1e6): DetailVie
   };
 }
 
-function make(capacity = 1000) {
+/** With `base`, an arena keeping every box's coarsest level, four blocks, and `capacity` past it. */
+function make(capacity = 1000, base = false) {
   const { chunks, reads } = chunksOf();
-  const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), capacity);
+  const arena = base
+    ? new SegmentArena(
+        new THREE.InstancedBufferGeometry(),
+        4 * BLOCK + capacity,
+        undefined,
+        chunks.levels[2].segments
+      )
+    : new SegmentArena(new THREE.InstancedBufferGeometry(), capacity);
   const onRead = vi.fn();
   const stream = new DetailStream(chunks, arena, onRead);
   return { stream, arena, reads, onRead };
 }
+
+/** Boxes 0 and 1 behind the eye, the focus on box 3. */
+const behindOf = (half: number): DetailView => ({
+  ...viewOf(half, new THREE.Vector3(0, 0, 50)),
+  focus: new THREE.Vector3(0, 0, -30),
+});
 
 /** Lets the reads that were ended be taken in. */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -273,6 +287,85 @@ describe('DetailStream', () => {
     await settled();
 
     expect(h.logError).not.toHaveBeenCalled();
+  });
+
+  describe('with a base', () => {
+    it('reads every box at the coarsest first, those in view first, and a finer level once they are placed', async () => {
+      const { stream, arena, reads } = make(1000, true);
+      stream.update(behindOf(20), RULES, true);
+      expect(reads.map(({ wanted }) => wanted)).toEqual([
+        [3, 2, 0, 1].map((box) => ({ level: 2, box })),
+      ]);
+      reads[0].resolve();
+      await settled();
+      expect(reads).toHaveLength(1);
+
+      expect(stream.apply()).toEqual({ changed: true, more: false });
+      expect(arena.segments).toBe(40);
+      expect(reads[1].wanted).toEqual([3, 2].map((box) => ({ level: 0, box })));
+      reads[1].resolve();
+      await settled();
+      stream.apply();
+      // Their bases hidden.
+      expect(arena.segments).toBe(2 * 10 + 2 * 100);
+      expect(levelsDrawn(stream)).toEqual([2, 0, 2]);
+      expect(stream.stats(RULES)).toMatchObject({ drawn: 220, wanted: 220, leftOut: 0 });
+    });
+
+    it('goes back to it at once, the view moving, with no read', async () => {
+      const { stream, arena, reads } = make(1000, true);
+      stream.update(behindOf(20), RULES, true);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+      reads[1].resolve();
+      await settled();
+      stream.apply();
+
+      expect(stream.update(behindOf(500), RULES, false)).toBe(true);
+      expect(stream.apply()).toEqual({ changed: true, more: false });
+      expect(reads).toHaveLength(2);
+      expect(arena.segments).toBe(40);
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+    });
+
+    it('has a box of no segments at the coarsest drawn at it from the start', () => {
+      const { chunks } = chunksOf();
+      const base = Uint32Array.from([10, 0, 10, 10]);
+      const levels = chunks.levels.map((level, k) =>
+        k === 2 ? { ...level, segments: base } : level
+      );
+      const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
+      const stream = new DetailStream({ ...chunks, levels }, arena, vi.fn());
+      expect(levelsDrawn(stream)).toEqual([0, 0, 1]);
+    });
+
+    it('holds the budget to the room past the base, which it does not count', () => {
+      // Two blocks past it: the boxes nearest the focus at the middle level, the others at their bases.
+      const { stream } = make(2 * BLOCK, true);
+      stream.update(viewOf(20), RULES, true);
+      expect(stream.stats(RULES)).toMatchObject({ wanted: 50 + 50 + 10 + 10, leftOut: 0 });
+    });
+
+    it('is made with one where it holds no more than it may, and again without one where it would hold more', () => {
+      const { chunks } = chunksOf();
+      const said: string[] = [];
+      const uploadsOf: UploadsOf = (_ends, words) => {
+        said.push(`made ${words.length}`);
+        return { upload: vi.fn(), dispose: () => said.push('disposed') };
+      };
+      // Four blocks of base, and a quarter more than the budget past it.
+      const geometry = new THREE.InstancedBufferGeometry();
+      const stream = DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf, 500);
+      expect(said).toEqual([`made ${7 * BLOCK}`]);
+      expect(stream.holds(2 * BLOCK)).toBe(true);
+      expect(stream.holds(4 * BLOCK)).toBe(false);
+
+      const without = stream.remade(4 * BLOCK, new THREE.InstancedBufferGeometry());
+      expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${5 * BLOCK}`]);
+      expect(without.holds(4 * BLOCK)).toBe(true);
+      expect(without.holds(2 * BLOCK)).toBe(false);
+    });
   });
 
   it('places nothing once it is stopped', async () => {

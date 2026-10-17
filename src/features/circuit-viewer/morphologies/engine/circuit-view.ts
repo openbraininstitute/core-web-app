@@ -511,7 +511,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         this.detailRules.budget,
         quadGeometry(0),
         () => this.invalidate(),
-        drawing?.uploadsOf
+        drawing?.uploadsOf,
+        this.baseUpTo
       );
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
@@ -593,6 +594,14 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Whether the tier culls the segments of morphologies read a box at a time (`DetailRules.culling`). */
   protected get culls(): boolean {
     return this.detailRules.culling;
+  }
+
+  /**
+   * The most segments an arena of morphologies read a box at a time may hold where it keeps every box's coarsest level
+   * (`DetailStream`); none on a tier that draws every segment it holds.
+   */
+  protected get baseUpTo(): number {
+    return 0;
   }
 
   /** Where the arena of morphologies read a box at a time ends: what its quads are drawn up to. */

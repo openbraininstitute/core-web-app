@@ -61,11 +61,11 @@ describe('the detail readout', () => {
   });
 
   it('on WebGPU, offers its own budgets, its default chosen, and a larger one', () => {
-    const viewer = readout('webgpu', { ...DETAIL, budget: 8_000_000 });
-    expect(options()).toEqual(['12,000,000', '8,000,000', '4,000,000']);
-    expect(budget().value).toBe('8000000');
-    fireEvent.change(budget(), { target: { value: '12000000' } });
-    expect(viewer.setDetailRules).toHaveBeenCalledExactlyOnceWith({ budget: 12_000_000 });
+    const viewer = readout('webgpu', { ...DETAIL, budget: 4_000_000 });
+    expect(options()).toEqual(['8,000,000', '4,000,000', '2,000,000']);
+    expect(budget().value).toBe('4000000');
+    fireEvent.change(budget(), { target: { value: '8000000' } });
+    expect(viewer.setDetailRules).toHaveBeenCalledExactlyOnceWith({ budget: 8_000_000 });
   });
 
   it('on WebGL 2, offers its own budgets, none larger than its default', () => {

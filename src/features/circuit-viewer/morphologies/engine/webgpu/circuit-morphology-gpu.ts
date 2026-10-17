@@ -161,6 +161,12 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /** As many as the arena's ends, its largest buffer at 8 floats a segment, take in a binding. */
+  protected override get baseUpTo(): number {
+    const { maxStorageBufferBindingSize, maxBufferSize } = this.device.limits;
+    return Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4));
+  }
+
   /** The occlusion was made for the other camera. */
   protected override projectionChanged(): void {
     this.dropOcclusion();
