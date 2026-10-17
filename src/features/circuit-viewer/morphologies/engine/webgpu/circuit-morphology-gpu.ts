@@ -146,7 +146,7 @@ export class CircuitMorphologyGPU extends CircuitView {
    */
   protected override draw(moving: boolean): void {
     this.gpu.sync();
-    this.cull();
+    this.cull(!moving);
     if (!this.drawsMorphologies) this.dropOcclusion();
     const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionNow();
     if (occlusion) {
@@ -211,9 +211,9 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /**
    * A pack's segments, where there is one: culled, the kept segments drawn to depth and the culling's tests run before
-   * the frame is drawn; not, where the culling is off or failed, every one of them drawn.
+   * the frame, drawn `still` or not, is drawn; not, where the culling is off or failed, every one of them drawn.
    */
-  private cull(): void {
+  private cull(still: boolean): void {
     const arena = this.arena;
     if (!arena?.culling.placed) return;
     const { storage, culling } = arena;
@@ -231,7 +231,7 @@ export class CircuitMorphologyGPU extends CircuitView {
       renderer.render(this.keptQuads, this.camera);
       renderer.setRenderTarget(null);
       const { uShift } = this.uniforms;
-      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, end)) return;
+      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, end, still)) return;
     }
     storage.listed.value = 0;
     culling.drawAll(end);
@@ -275,7 +275,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     const side = target.width;
     this.gpu.sync();
     // The segments seen were culled for the frame last drawn, which the view may have moved from.
-    if (this.framePending) this.cull();
+    if (this.framePending) this.cull(!this.drawnMoving);
     renderer.setRenderTarget(target);
     renderer.render(scene, this.camera);
     renderer.setRenderTarget(null);

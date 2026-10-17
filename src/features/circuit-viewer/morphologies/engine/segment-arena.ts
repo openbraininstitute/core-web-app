@@ -187,7 +187,10 @@ export class SegmentArena {
     return this.baseCounts[box] >= 0;
   }
 
-  /** The boxes drawn with a block marked in `marked`, a bit a block. */
+  /**
+   * The boxes drawn with a block marked in `marked`, a bit a block, each once. Marks read back a frame or two late are
+   * taken as they are: a box put since its base was marked is among them, and one moved since may be missed.
+   */
   boxesMarked(marked: Uint32Array): number[] {
     const boxes: number[] = [];
     for (const [box, { start, count }] of this.places) {
@@ -203,14 +206,20 @@ export class SegmentArena {
     if (!baseAt) return boxes;
     // The base's blocks marked, each the box whose base it holds, in the boxes' order.
     const blocks = this.baseRoom / BLOCK;
+    let found: Set<number> | null = null;
     let was = -1;
     for (let word = 0; 32 * word < blocks; word++) {
       for (let bits = marked[word]; bits !== 0; bits &= bits - 1) {
         const block = 32 * word + 31 - Math.clz32(bits & -bits);
         if (block >= blocks) break;
         const box = boxAt(baseAt, BLOCK * block);
-        if (box !== was && !this.places.has(box)) boxes.push(box);
+        if (box === was) continue;
         was = box;
+        if (this.places.has(box)) {
+          found ??= new Set(boxes);
+          if (found.has(box)) continue;
+        }
+        boxes.push(box);
       }
     }
     return boxes;

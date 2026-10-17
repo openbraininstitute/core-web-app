@@ -502,15 +502,17 @@ describe('SegmentArena', () => {
       expectBlocks(made);
     });
 
-    it('tells the boxes with a block of their base marked, unless they are put', () => {
+    it('tells the boxes with a block of their base marked, those put since among them, each once', () => {
       const { arena } = arenaOf(10 * BLOCK, [3, 70]);
       arena.putBase(0, segmentsOf(0, 3));
       arena.putBase(1, segmentsOf(1, 70));
       expect(arena.boxesMarked(marked(0))).toEqual([0]);
-      expect(arena.boxesMarked(marked(2))).toEqual([1]);
+      expect(arena.boxesMarked(marked(1, 2))).toEqual([1]);
       arena.put(1, segmentsOf(1, 10));
-      expect(arena.boxesMarked(marked(2))).toEqual([]);
+      // Marked before it was put, a frame or two late.
+      expect(arena.boxesMarked(marked(2))).toEqual([1]);
       expect(arena.boxesMarked(marked(0, 3))).toEqual([1, 0]);
+      expect(arena.boxesMarked(marked(1, 2, 3))).toEqual([1]);
     });
 
     it('refuses a base where it keeps no room for one, larger than its room, or put already', () => {

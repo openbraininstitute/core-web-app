@@ -2,7 +2,8 @@
  * Which level of a pack each of its boxes is drawn at, for a view: the coarsest whose tolerance spans no more than a few
  * device pixels where the box comes nearest the eye, coarser still while what is in view is over the budget, and every
  * box in view left out where even the coarsest is. Outside the view, a box is not drawn; where every box's coarsest
- * level is kept drawn (a base), a box is drawn at least at it, which the budget does not count.
+ * level is kept drawn (a base), a box is drawn at least at it, which the budget does not count, and no finer than it
+ * may be (by what is seen, where that is given).
  */
 import * as THREE from 'three';
 
@@ -36,6 +37,8 @@ export interface Detail {
   levels: Int8Array;
   /** The boxes in view, the one nearest the focus first. */
   order: Uint32Array;
+  /** The boxes in view the pixels take finer than the coarsest, however fine they may be, before the budget. */
+  finer: Uint32Array;
   /**
    * What the levels chosen come to, of the boxes in view, or with a base of every box; where the boxes in view are left
    * out, what they come to at the coarsest.
@@ -58,19 +61,24 @@ const frustum = new THREE.Frustum();
 const projected = new THREE.Matrix4();
 const middle = new THREE.Vector3();
 
-/** `roomFor` gives what a box's segments take of the budget; `base`, whether every box's coarsest level is kept drawn. */
+/**
+ * `roomFor` gives what a box's segments take of the budget; `base`, whether every box's coarsest level is kept drawn;
+ * `finest`, with a base, the finest level a box in view may be drawn at.
+ */
 export function chooseDetail(
   { boxes, levels }: PackBoxes,
   view: DetailView,
   { budget, pixels }: DetailRules,
   roomFor: (segments: number) => number,
-  base = false
+  base = false,
+  finest?: (box: number) => number
 ): Detail {
   const count = boxes.length / 6;
   const coarsest = levels.length - 1;
   const chosen = new Int8Array(count).fill(base ? coarsest : -1);
   const away = new Float64Array(count);
   const inView: number[] = [];
+  const finerInView: number[] = [];
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
   const span = pixelSpan(view.projection, view.height);
   // The view matrix's row that gives a point's depth.
@@ -89,7 +97,8 @@ export function chooseDetail(
     const pixelUm = view.orthographic ? span : span * Math.max(-(z + reach), 0);
     let level = coarsest;
     while (level > 0 && levels[level].toleranceUm > pixels * pixelUm) level--;
-    chosen[b] = level;
+    if (level < coarsest) finerInView.push(b);
+    chosen[b] = base && finest ? Math.max(level, finest(b)) : level;
     away[b] = middle.distanceTo(view.focus);
     inView.push(b);
   }
@@ -114,8 +123,9 @@ export function chooseDetail(
   let segments = 0;
   if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
   else for (const b of order) segments += segmentsOf(b);
+  const finer = Uint32Array.from(finerInView);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
-  if (room <= budget) return { levels: chosen, order, segments, leftOut: 0 };
+  if (room <= budget) return { levels: chosen, order, finer, segments, leftOut: 0 };
   for (const b of order) chosen[b] = -1;
-  return { levels: chosen, order, segments, leftOut: order.length };
+  return { levels: chosen, order, finer, segments, leftOut: order.length };
 }

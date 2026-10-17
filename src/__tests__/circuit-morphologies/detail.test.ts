@@ -101,6 +101,27 @@ describe('chooseDetail', () => {
     expect(leftOut).toBe(0);
   });
 
+  it('with a base, draws a box in view no finer than it may be, still in view', () => {
+    const view = viewOf(perspective(), new THREE.Vector3(0, 0, -10));
+    const finest = (box: number) => [2, 0, 1][box];
+    const { levels, order, finer, segments } = chooseDetail(
+      boxesAt([10, 20, 30]),
+      view,
+      RULES,
+      bySegment,
+      true,
+      finest
+    );
+    expect(Array.from(levels)).toEqual([2, 0, 1]);
+    expect(Array.from(order)).toEqual([0, 1, 2]);
+    // Those the pixels take finer, however fine they may be.
+    expect(Array.from(finer)).toEqual([0, 1, 2]);
+    expect(segments).toBe(10 + 100 + 50);
+    // Without a base, how fine a box may be tells nothing.
+    const without = chooseDetail(boxesAt([10, 20, 30]), view, RULES, bySegment, false, finest);
+    expect(Array.from(without.levels)).toEqual([0, 0, 0]);
+  });
+
   it('places the boxes where the shift puts them in the view', () => {
     const view = viewOf(perspective(), undefined, new THREE.Vector3(10_000, 0, 0));
     expect(Array.from(chooseDetail(boxesAt([100]), view, RULES, bySegment).levels)).toEqual([-1]);
@@ -188,6 +209,18 @@ describe('chooseDetail', () => {
       expect(Array.from(levels)).toEqual([2, 2, 2, 2]);
       expect(segments).toBe(40);
       expect(leftOut).toBe(0);
+    });
+
+    it('with a base, counts the boxes that may be finer alone', () => {
+      const { levels } = chooseDetail(
+        boxesAt(depths),
+        view(),
+        { ...RULES, budget: 150 },
+        bySegment,
+        true,
+        (box) => (box < 2 ? 0 : 2)
+      );
+      expect(Array.from(levels)).toEqual([0, 1, 2, 2]);
     });
 
     it('counts the room each box takes against it, and tells its segments', () => {

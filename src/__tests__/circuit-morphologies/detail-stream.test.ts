@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { DetailStream } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
+import { DetailStream, LINGER } from '@/features/circuit-viewer/morphologies/engine/detail-stream';
 import {
   BLOCK,
   SegmentArena,
@@ -288,11 +288,55 @@ describe('DetailStream', () => {
   });
 
   describe('with a base', () => {
+    const EVERY_BOX = [0, 1, 2, 3];
+    const askedOf = (reads: { wanted: BoxRead[] }[]) =>
+      reads.map(({ wanted }) => wanted.map(({ level, box }) => `${box} at ${level}`));
+
+    /** Every read ended as it is asked for, and what came in placed. */
+    async function readAll({ stream, reads }: Pick<ReturnType<typeof make>, 'stream' | 'reads'>) {
+      for (let read = 0; read < reads.length; read++) {
+        reads[read].resolve();
+        await settled();
+      }
+      stream.apply();
+    }
+
+    /**
+     * A block past the base: box 2 seen and drawn at the middle level; then box 3 seen, nearer the focus, which the
+     * budget takes to the middle level in box 2's place, box 2 let go of; then box 3 seen no more before it came in,
+     * which leaves the room box 2 had. The view still.
+     */
+    async function letGoOf2() {
+      const made = make(BLOCK, true);
+      const { stream } = made;
+      stream.update(behindOf(20), RULES, true);
+      stream.see([2], true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([0, 1, 3]);
+      expect(stream.see([2, 3], true)).toBe(true);
+      stream.update(behindOf(20), RULES, true);
+      stream.apply();
+      expect(askedOf(made.reads).at(-1)).toEqual(['3 at 1']);
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+      for (let read = 0; read <= LINGER.still; read++) stream.see([2], true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+      return made;
+    }
+
+    /** At rest at `view`, every box seen by a frame drawn there. */
+    const seeingAll = (stream: DetailStream, view: DetailView) => {
+      stream.update(view, RULES, true);
+      stream.see(EVERY_BOX, true);
+      stream.update(view, RULES, true);
+    };
+
     it('reads the bases of the boxes in view, then the finer levels they want, then the other bases', async () => {
       const { stream, arena, reads } = make(1000, true);
-      const asked = () =>
-        reads.map(({ wanted }) => wanted.map(({ level, box }) => `${box} at ${level}`));
-      stream.update(behindOf(20), RULES, true);
+      const asked = () => askedOf(reads);
+      seeingAll(stream, behindOf(20));
       expect(asked()).toEqual([['3 at 2', '2 at 2']]);
       reads[0].resolve();
       await settled();
@@ -315,7 +359,7 @@ describe('DetailStream', () => {
 
     it('goes back to it at once, the view moving, with no read', async () => {
       const { stream, arena, reads } = make(1000, true);
-      stream.update(behindOf(20), RULES, true);
+      seeingAll(stream, behindOf(20));
       for (let read = 0; read < 3; read++) {
         reads[read].resolve();
         await settled();
@@ -340,11 +384,186 @@ describe('DetailStream', () => {
       expect(levelsDrawn(stream)).toEqual([0, 0, 1]);
     });
 
+    it('takes a box of no segments at its base as seen, which no culling can mark', async () => {
+      const { chunks, reads } = chunksOf();
+      const base = Uint32Array.from([10, 0, 10, 10]);
+      const levels = chunks.levels.map((level, k) =>
+        k === 2 ? { ...level, segments: base } : level
+      );
+      const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
+      const stream = new DetailStream({ ...chunks, levels }, arena, vi.fn());
+      stream.update(viewOf(20), RULES, true);
+      await readAll({ stream, reads });
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+    });
+
     it('holds the budget to the room past the base, which it does not count', () => {
       // Two blocks past it: the boxes nearest the focus at the middle level, the others at their bases.
       const { stream } = make(2 * BLOCK, true);
-      stream.update(viewOf(20), RULES, true);
+      seeingAll(stream, viewOf(20));
       expect(stream.stats(RULES)).toMatchObject({ wanted: 50 + 50 + 10 + 10, leftOut: 0 });
+    });
+
+    it('draws a box in view at its base until the culling sees it, then finer', async () => {
+      const made = make(1000, true);
+      const { stream, reads } = made;
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(askedOf(reads)).toEqual([
+        ['3 at 2', '2 at 2'],
+        ['0 at 2', '1 at 2'],
+      ]);
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+      expect(stream.stats(RULES)).toMatchObject({ drawn: 40, wanted: 40 });
+
+      // Behind the eye, which changes nothing the view wants.
+      expect(stream.see([0], true)).toBe(false);
+      expect(stream.see([3], true)).toBe(true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(askedOf(reads)[2]).toEqual(['3 at 0']);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+    });
+
+    it('tells no change where the pixels take the boxes seen no finer than the base', () => {
+      const { stream } = make(1000, true);
+      stream.update(behindOf(500), RULES, true);
+      expect(stream.see([2, 3], true)).toBe(false);
+      stream.update(behindOf(20), RULES, true);
+      expect(stream.see([], true)).toBe(false);
+      for (let read = 0; read < LINGER.still; read++) stream.see([], true);
+      expect(stream.see([2], true)).toBe(true);
+    });
+
+    it('keeps what a box seen no more has while the view rests, and takes it to its base once the view moves', async () => {
+      const made = make(1000, true);
+      const { stream, arena } = made;
+      stream.update(behindOf(20), RULES, true);
+      stream.see([3], true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+      for (let read = 0; read <= LINGER.still; read++) expect(stream.see([], true)).toBe(false);
+      expect(stream.update(behindOf(20), RULES, true)).toBe(false);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+
+      stream.update(behindOf(20), RULES, false);
+      for (let read = 0; read < LINGER.moving; read++) stream.see([], false);
+      expect(stream.update(behindOf(20), RULES, false)).toBe(true);
+      stream.apply();
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+      expect(arena.segments).toBe(40);
+      expect(stream.stats(RULES)).toMatchObject({ drawn: 40, wanted: 40 });
+    });
+
+    it('takes a box as seen for longer while the view moves, and at rest by the frames drawn since', async () => {
+      const made = make(1000, true);
+      const { stream } = made;
+      stream.update(behindOf(20), RULES, false);
+      stream.see([2, 3], false);
+      for (let read = 0; read < LINGER.moving; read++) expect(stream.see([2], false)).toBe(false);
+      expect(stream.see([2], false)).toBe(true);
+
+      // Come to rest, a moving frame's read that comes late is not of the view at rest.
+      stream.update(behindOf(20), RULES, true);
+      expect(stream.see([2, 3], false)).toBe(false);
+      expect(stream.see([2], true)).toBe(true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+      expect(made.reads.flatMap(({ wanted }) => wanted)).toContainEqual({ level: 0, box: 2 });
+    });
+
+    it.each([
+      ['the view moves', (stream: DetailStream) => stream.update(behindOf(20), RULES, false)],
+      [
+        'the camera jumps',
+        (stream: DetailStream) => stream.update(behindOf(20), RULES, true, true),
+      ],
+      [
+        'the rules change',
+        (stream: DetailStream) => stream.update(behindOf(20), { ...RULES }, true),
+      ],
+    ])('asks no more for a box let go of while the view rests, though there is room for it, until %s', async (_, change) => {
+      const { stream, reads } = await letGoOf2();
+      const asked = reads.length;
+      stream.see([2], true);
+      stream.update(behindOf(20), RULES, true);
+      expect(reads).toHaveLength(asked);
+      expect(stream.stats(RULES).wanted).toBe(40);
+
+      change(stream);
+      stream.update(behindOf(20), RULES, true);
+      stream.see([2], true);
+      stream.update(behindOf(20), RULES, true);
+      expect(askedOf(reads)[asked]).toEqual(['2 at 1']);
+    });
+
+    it('takes a jump of the camera at rest as coming to rest anew: nothing seen until a frame there is read', async () => {
+      const made = make(1000, true);
+      const { stream, reads } = made;
+      stream.update(behindOf(20), RULES, true);
+      stream.see([3], true);
+      stream.update(behindOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+
+      // Box 2 seen before the jump is not asked for after it, and box 3 keeps what it has.
+      stream.see([2, 3], true);
+      const asked = reads.length;
+      expect(stream.update(behindOf(20), RULES, true, true)).toBe(false);
+      expect(reads).toHaveLength(asked);
+      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+      stream.see([2], true);
+      stream.update(behindOf(20), RULES, true);
+      expect(askedOf(reads)[asked]).toEqual(['2 at 0']);
+    });
+
+    it('takes a box wanted coarser to its base at once while the view moves, and reads its level once still', async () => {
+      const made = make(1000, true);
+      const { stream, reads } = made;
+      seeingAll(stream, behindOf(20));
+      await readAll(made);
+      expect(levelsDrawn(stream)).toEqual([2, 0, 2]);
+
+      expect(stream.update(behindOf(100), RULES, false)).toBe(true);
+      stream.apply();
+      expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
+      const asked = reads.length;
+      stream.update(behindOf(100), RULES, false);
+      expect(reads).toHaveLength(asked);
+      // At rest, once a frame drawn there is read.
+      stream.update(behindOf(100), RULES, true);
+      expect(reads).toHaveLength(asked);
+      stream.see(EVERY_BOX, true);
+      stream.update(behindOf(100), RULES, true);
+      expect(askedOf(reads)[asked]).toEqual(['3 at 1', '2 at 1']);
+    });
+
+    it('takes every box in view as seen without the culling, or once it marks none', async () => {
+      const off = make(1000, true);
+      off.stream.update(behindOf(20), { ...RULES, culling: false }, true);
+      await readAll(off);
+      expect(levelsDrawn(off.stream)).toEqual([2, 0, 2]);
+
+      const failed = make(1000, true);
+      failed.stream.update(behindOf(20), RULES, true);
+      expect(failed.stream.see(null, true)).toBe(true);
+      expect(failed.stream.see(null, true)).toBe(false);
+      failed.stream.update(behindOf(20), RULES, true);
+      await readAll(failed);
+      expect(levelsDrawn(failed.stream)).toEqual([2, 0, 2]);
+    });
+
+    it('made again, takes the boxes it saw as seen', async () => {
+      const made = make(1000, true);
+      made.stream.update(behindOf(20), RULES, true);
+      made.stream.see([3], true);
+      const again = made.stream.remade(1000, new THREE.InstancedBufferGeometry());
+      made.reads.length = 0;
+      again.update(behindOf(20), RULES, true);
+      await readAll({ stream: again, reads: made.reads });
+      expect(levelsDrawn(again)).toEqual([1, 0, 3]);
     });
 
     it('is made with one where it holds no more than it may, and again without one where it would hold more', () => {

@@ -124,8 +124,8 @@ export interface ArenaDrawing {
 }
 
 /**
- * Morphologies read a box at a time: what reads and places them, and the camera, the view's height and the rules their
- * levels were last chosen for, and whether the view was still.
+ * Morphologies read a box at a time: what reads and places them, the camera, the view's height and the rules their
+ * levels were last chosen for, and whether the view was still; and whether the boxes seen changed since.
  */
 interface Detailed {
   stream: DetailStream;
@@ -136,6 +136,7 @@ interface Detailed {
     rules: DetailRules;
     still: boolean;
   } | null;
+  seenChanged: boolean;
 }
 
 /** The somas that have a position, four floats each, the same in the dendrogram, and the cell of each. */
@@ -542,7 +543,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       : [];
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
-    const detailed = stream ? { stream, chosenFor: null } : null;
+    const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
     this.compileIds();
 
@@ -582,7 +583,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       if (mesh.geometry === was.geometry) mesh.geometry = stream.geometry;
     }
     was.geometry.dispose();
-    layer.detailed = { stream, chosenFor: null };
+    layer.detailed = { stream, chosenFor: null, seenChanged: false };
     this.culled = null;
   }
 
@@ -604,16 +605,26 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /**
    * What the tier's culling counted, for the listeners: with what they were told last, which it alone changes; null
-   * where it no longer culls.
+   * where it no longer culls. The boxes it marked are those seen, which the levels are chosen again by where that
+   * changes what the view may want.
    */
   protected tellCulled(read: CullRead | null): void {
     const detailed = this.layer?.detailed;
     // Read back after the culling was switched off, or the pack let go of.
     if (!this.culls || !detailed) return;
     let counts: CullCounts | null = null;
+    let boxes: number[] | null = null;
+    let still = false;
     if (read) {
-      const { marked, ...counted } = read;
-      counts = { ...counted, boxes: detailed.stream.boxesMarked(marked).length };
+      const { marked, still: drawnStill, ...counted } = read;
+      boxes = detailed.stream.boxesMarked(marked);
+      counts = { ...counted, boxes: boxes.length };
+      still = drawnStill;
+    }
+    if (detailed.stream.see(boxes, still)) {
+      detailed.seenChanged = true;
+      // A frame asked for at rest alone: one moving is drawn anyway, and so is the still one after it.
+      if (detailed.chosenFor?.still ?? true) this.invalidate();
     }
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
@@ -632,9 +643,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The levels chosen again where the camera, the view's height, the rules or whether the view is still changed since
-   * they were last, and a frame asked for where that lets go of boxes or places some at once. Here, not in `work`: the
-   * camera's near and far planes are set for the frame first.
+   * The levels chosen again where the camera, the view's height, the rules, whether the view is still or the boxes seen
+   * changed since they were last, and a frame asked for at rest where that lets go of boxes or places some at once.
+   * Here, not in `work`: the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
     const detailed = this.layer?.detailed;
@@ -643,19 +654,19 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const height = this.height * this.pixelRatio;
     const was = detailed.chosenFor;
     const still = !moving;
-    if (
-      was?.still === still &&
-      was.rules === this.detailRules &&
-      was.height === height &&
-      was.projection.equals(camera.projectionMatrix) &&
-      was.view.equals(camera.matrixWorldInverse)
-    ) {
+    const moved =
+      !was ||
+      was.height !== height ||
+      !was.projection.equals(camera.projectionMatrix) ||
+      !was.view.equals(camera.matrixWorldInverse);
+    if (!moved && !detailed.seenChanged && was?.still === still && was.rules === this.detailRules) {
       return;
     }
     const chosenFor = was ?? { projection: new THREE.Matrix4(), view: new THREE.Matrix4() };
     chosenFor.projection.copy(camera.projectionMatrix);
     chosenFor.view.copy(camera.matrixWorldInverse);
     detailed.chosenFor = { ...chosenFor, height, rules: this.detailRules, still };
+    detailed.seenChanged = false;
     const view = {
       projection: camera.projectionMatrix,
       view: camera.matrixWorldInverse,
@@ -664,7 +675,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       focus: this.controls.target,
       shift: this.uniforms.uShift.value,
     };
-    if (detailed.stream.update(view, this.detailRules, still)) this.invalidate();
+    // While the view moves, the loop places what is to be placed, and the next frame draws it.
+    if (detailed.stream.update(view, this.detailRules, still, moved) && still) this.invalidate();
     this.tellDetail();
   }
 
@@ -1093,7 +1105,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!stream) return false;
     const { changed, more } = stream.apply();
     if (changed) {
-      this.invalidate();
+      if (this.layer?.detailed?.chosenFor?.still ?? true) this.invalidate();
       this.tellDetail();
     }
     return more;

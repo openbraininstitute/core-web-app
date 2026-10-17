@@ -17,9 +17,10 @@ vi.mock('@/utils/logger', () => ({ logError: vi.fn() }));
 
 describe('DetailStream, over a long run of views', () => {
   it.each([
-    ['', false],
-    [', each at its base or finer', true],
-  ])('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there%s', async (_, withBase) => {
+    ['', false, false],
+    [', each at its base or finer', true, false],
+    [', each at its base or finer where the culling sees it', true, true],
+  ])('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there%s', async (_, withBase, withMarks) => {
     let seed = 11;
     const random = () => {
       seed = (seed * 16807) % 2147483647;
@@ -74,6 +75,13 @@ describe('DetailStream, over a long run of views', () => {
         shift: new THREE.Vector3(),
       };
       const budget = random() < 0.2 ? 1000 + Math.floor(random() * 5000) : Infinity;
+      // A few frames' marks, each of some of the boxes.
+      for (let read = withMarks ? 1 + Math.floor(random() * 3) : 0; read > 0; read--) {
+        stream.see(
+          [...Array(count).keys()].filter(() => random() < 0.3),
+          random() < 0.6
+        );
+      }
       stream.update(view, { budget, pixels: 2, culling: true }, random() < 0.6);
       await new Promise((resolve) => setTimeout(resolve, 0));
       for (let turn = 0; turn < 3; turn++) stream.apply(1 + Math.floor(random() * 3000));

@@ -16,6 +16,37 @@ import type {
 const BATCH_SEGMENTS = 250_000;
 /** The segments placed in a turn of the loop, 4 MB of upload, unless one box alone is more. */
 const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
+/**
+ * The culling's reads a box is taken as seen for after the last that marked it, which come a frame or two late: while
+ * the view moves, long enough that a box at the edge of sight is not let go of as it comes and goes; at rest, of the
+ * frames drawn since it came to rest, no more than that.
+ */
+export const LINGER = { moving: 30, still: 4 } as const;
+
+/**
+ * What the culling's reads tell is seen: the reads, and of each box the one that last marked it (0 for none); the same
+ * of the reads of frames drawn still, and how many of those there were when the view last came to rest; and each box
+ * taken as seen, or with `all` every box in view, the marks read no more.
+ */
+interface Sight {
+  reads: number;
+  markedAt: Int32Array;
+  stillReads: number;
+  stillMarkedAt: Int32Array;
+  restFrom: number;
+  seen: Uint8Array;
+  all: boolean;
+}
+
+const sightOf = (count: number): Sight => ({
+  reads: 0,
+  markedAt: new Int32Array(count),
+  stillReads: 0,
+  stillMarkedAt: new Int32Array(count),
+  restFrom: 0,
+  seen: new Uint8Array(count),
+  all: false,
+});
 
 function isAbort(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
@@ -59,7 +90,10 @@ function arenaPlan(
  * come. A box goes finer only while the view is still; coarser, at once. Placing them is paced (`apply`), so that a
  * frame uploads little. Where the arena keeps a base, every box's coarsest level is read, those in view first and then
  * the finer levels they want, before the others, and kept: a box goes back to it with no read, and the budget counts
- * the finer levels alone.
+ * the finer levels alone. There, with the culling's marks (`see`), a box goes finer only while seen, and one no longer
+ * seen goes back to its base as the view moves (it keeps what it has at rest); one let go of while the view rests is
+ * not asked for again until it moves or the rules change; and while the view moves, a box wanted coarser goes back to
+ * its base at once.
  */
 export class DetailStream {
   private chunks: MorphologyChunks;
@@ -69,9 +103,26 @@ export class DetailStream {
   private coarsest: number;
   /** The levels drawn of each box, -1 for none. */
   private drawn: Int8Array;
-  /** What the view wants, as last chosen. */
+  /** What the view wants, as last chosen, the rules it was chosen by, and the boxes it would take finer where seen. */
   private detail: Detail | null = null;
+  private rules: DetailRules | null = null;
+  private finer: Uint8Array;
   private still = false;
+  private sight: Sight;
+  /** The boxes let go of while the view rested where it is. */
+  private letGo = new Set<number>();
+  /**
+   * The finest level `box` may be drawn at: any where it is seen, or has nothing at its base, which nothing marks; one
+   * not seen, while the view rests no finer than it is drawn and no coarser, so that no frame at rest takes away what
+   * it hides, and while it moves its base; one let go of, its base.
+   */
+  private finestFor = (box: number): number => {
+    const { coarsest } = this;
+    if (this.letGo.has(box)) return coarsest;
+    if (this.sight.seen[box] === 1 || this.chunks.levels[coarsest].segments[box] === 0) return 0;
+    const drawn = this.drawn[box];
+    return this.still && drawn >= 0 ? drawn : coarsest;
+  };
   /** What came in and is not placed yet, by box, and of the bases. */
   private ready = new Map<number, { level: number; segments: MorphologySegments }>();
   private bases = new Map<number, MorphologySegments>();
@@ -99,7 +150,10 @@ export class DetailStream {
     this.onRead = onRead;
     this.baseUpTo = baseUpTo;
     this.coarsest = chunks.levels.length - 1;
-    this.drawn = new Int8Array(chunks.boxes.length / 6).fill(-1);
+    const count = chunks.boxes.length / 6;
+    this.drawn = new Int8Array(count).fill(-1);
+    this.finer = new Uint8Array(count);
+    this.sight = sightOf(count);
     this.basesRead = !arena.keepsBase;
     if (arena.keepsBase) {
       // Those of no segments at the base's level are drawn at it.
@@ -134,8 +188,8 @@ export class DetailStream {
 
   /**
    * Its boxes streamed again into an arena on `geometry` made for `budget`, uploaded as its own is, those it could not
-   * read left out; this stream stopped first, so that what its arena uploads to is let go of before the new one's is
-   * made.
+   * read left out and those seen taken as seen; this stream stopped first, so that what its arena uploads to is let go
+   * of before the new one's is made.
    */
   remade(budget: number, geometry: THREE.InstancedBufferGeometry): DetailStream {
     this.stop();
@@ -144,6 +198,8 @@ export class DetailStream {
     const stream = new DetailStream(this.chunks, arena, this.onRead, this.baseUpTo);
     stream.unread = this.unread;
     stream.told = this.told;
+    stream.sight = this.sight;
+    stream.still = this.still;
     return stream;
   }
 
@@ -155,6 +211,49 @@ export class DetailStream {
   /** The boxes placed with a block of the arena marked in `marked`, a bit a block. */
   boxesMarked(marked: Uint32Array): number[] {
     return this.arena.boxesMarked(marked);
+  }
+
+  /**
+   * The boxes a frame's culling marked (`boxesMarked`), and whether that frame was drawn `still`; or null where it
+   * marks none for good: every box in view then taken as seen. Whether that changed what the view may want, a box it
+   * takes finer seen now seen or no longer, not let go of: then the levels are to be chosen again.
+   */
+  see(boxes: readonly number[] | null, still: boolean): boolean {
+    const { sight } = this;
+    if (!boxes) {
+      const was = sight.all;
+      sight.all = true;
+      return !was;
+    }
+    const read = ++sight.reads;
+    for (const box of boxes) sight.markedAt[box] = read;
+    if (still) {
+      const stillRead = ++sight.stillReads;
+      for (const box of boxes) sight.stillMarkedAt[box] = stillRead;
+    }
+    return this.judgeSeen();
+  }
+
+  /**
+   * Which boxes are taken as seen: as the view moves, by every read; at rest, by those of frames drawn since it came to
+   * rest. Whether that changed for one taken finer seen, not let go of: at rest, one now seen alone, as one no longer
+   * seen keeps what it has.
+   */
+  private judgeSeen(): boolean {
+    const { reads, markedAt, stillReads, stillMarkedAt, restFrom, seen } = this.sight;
+    const { still } = this;
+    let changed = false;
+    for (let box = 0; box < seen.length; box++) {
+      const at = still ? stillMarkedAt[box] : markedAt[box];
+      const seenNow = still
+        ? at > restFrom && stillReads - at <= LINGER.still
+        : at > 0 && reads - at <= LINGER.moving;
+      const now = seenNow ? 1 : 0;
+      if (now === seen[box]) continue;
+      seen[box] = now;
+      if (this.finer[box] === 1 && !this.letGo.has(box) && (seenNow || !still)) changed = true;
+    }
+    return changed;
   }
 
   /** What is drawn under `rules`. */
@@ -175,15 +274,34 @@ export class DetailStream {
 
   /**
    * The levels chosen again for `view`, a budget held to what the arena holds, and what is missing read; with `still`,
-   * finer levels too. Whether there is anything to place at once (`apply`).
+   * finer levels too; with `moved`, the camera or the view's size changed since they were last, which at rest comes to
+   * rest anew. Whether there is anything to place at once (`apply`).
    */
-  update(view: DetailView, rules: DetailRules, still: boolean): boolean {
+  update(view: DetailView, rules: DetailRules, still: boolean, moved = false): boolean {
     if (this.stopped) return false;
-    const { arena } = this;
-    const budget = Math.min(rules.budget, arena.capacity - arena.baseRoom);
-    const detail = chooseDetail(this.chunks, view, { ...rules, budget }, roomFor, arena.keepsBase);
-    this.detail = detail;
+    const { arena, sight } = this;
+    if (!still || moved || rules !== this.rules) this.letGo.clear();
+    // Come to rest, here or by a jump: nothing is seen until a frame drawn still is read.
+    const rested = still && (moved || !this.still);
+    if (rested) sight.restFrom = sight.stillReads;
+    const judged = rested || still !== this.still;
     this.still = still;
+    if (judged) this.judgeSeen();
+    const budget = Math.min(rules.budget, arena.capacity - arena.baseRoom);
+    // Without the culling's marks, every box in view as fine as the pixels take it.
+    const finest = rules.culling && !this.sight.all ? this.finestFor : undefined;
+    const detail = chooseDetail(
+      this.chunks,
+      view,
+      { ...rules, budget },
+      roomFor,
+      arena.keepsBase,
+      finest
+    );
+    this.finer.fill(0);
+    for (const box of detail.finer) this.finer[box] = 1;
+    this.detail = detail;
+    this.rules = rules;
     this.read();
     return (
       this.ready.size > 0 ||
@@ -205,11 +323,14 @@ export class DetailStream {
     const full = () => uploaded >= cap;
     for (let box = 0; box < wanted.length && !full(); box++) {
       const level = wanted[box];
-      if (this.atOnce(box, level)) {
-        uploaded += arena.remove(box);
-        drawn[box] = this.isBase(level) && !arena.hasBase(box) ? -1 : level;
-        changed = true;
-      }
+      if (!this.atOnce(box, level)) continue;
+      const put = arena.sizeOf(box) !== undefined;
+      uploaded += arena.remove(box);
+      // Its base drawn in its place, where it keeps one, unless it has nothing at the level wanted.
+      const atBase = this.isBase(level) || (arena.keepsBase && this.segmentsAt(box, level) > 0);
+      drawn[box] = !atBase ? level : arena.hasBase(box) ? this.coarsest : -1;
+      if (put && atBase && this.still) this.letGo.add(box);
+      changed = true;
     }
     let more = full();
     // The bases first, which take none of the room.
@@ -268,10 +389,16 @@ export class DetailStream {
     return this.arena.keepsBase && level === this.coarsest;
   }
 
-  /** Whether `box` goes to `level` with no read: let go of, its base drawn in its place, or nothing at its level. */
+  /**
+   * Whether `box` goes to `level` with no read: let go of, its base drawn in its place where it is wanted, or where a
+   * coarser level is while the view moves; or nothing at its level.
+   */
   private atOnce(box: number, level: number): boolean {
-    if (level === this.drawn[box]) return false;
-    if (this.isBase(level)) return this.arena.sizeOf(box) !== undefined;
+    const drawn = this.drawn[box];
+    if (level === drawn) return false;
+    const put = this.arena.sizeOf(box) !== undefined;
+    if (this.isBase(level)) return put;
+    if (put && this.arena.keepsBase && !this.still && level > drawn) return true;
     return this.segmentsAt(box, level) === 0;
   }
 
@@ -293,7 +420,10 @@ export class DetailStream {
     return batch;
   }
 
-  /** The boxes wanted and neither drawn, in nor unreadable, a batch of them; none of the base's level. */
+  /**
+   * The boxes wanted and neither drawn, in nor unreadable, a batch of them; none of the base's level, and while the
+   * view moves none finer than what is drawn, nor with a base any (one wanted coarser goes back to its base).
+   */
   private levelsToRead({ order, levels }: Detail): BoxRead[] {
     const { drawn } = this;
     const batch: BoxRead[] = [];
@@ -303,7 +433,8 @@ export class DetailStream {
       const segments = this.segmentsAt(box, level);
       if (segments === 0 || level === drawn[box] || this.ready.get(box)?.level === level) continue;
       if (this.unread.has(box) || this.isBase(level)) continue;
-      if (!this.still && drawn[box] >= 0 && level < drawn[box]) continue;
+      if (!this.still && (this.arena.keepsBase || (drawn[box] >= 0 && level < drawn[box])))
+        continue;
       batch.push({ level, box });
       size += segments;
       if (size >= BATCH_SEGMENTS) break;
