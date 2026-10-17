@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import IconPlus from '@/components/icons/Plus';
 import AiAssistant from '@/features/ai-assistant';
+import { aiButtonFlag, useFlag } from '@/features/feature-flags';
 import { usePanelState } from '@/ui/segments/ai/hooks';
 import { PanelState } from '@/ui/segments/ai/types';
 import { cn } from '@/utils/css-class';
@@ -13,6 +14,7 @@ import styles from '@/ui/segments/ai/container.module.css';
 
 export function Container() {
   const { state, setState } = usePanelState();
+  const aiButton = useFlag(aiButtonFlag.key);
 
   const isCollapsed = state === PanelState.Collapsed;
   const isFullscreen = state === PanelState.Fullscreen;
@@ -22,6 +24,9 @@ export function Container() {
     if (next === state) return;
     setState(next);
   }
+
+  // with the AI button in the top menu, there is no rail while it is closed: the button opens it
+  if (aiButton && isCollapsed) return null;
 
   return (
     <motion.div

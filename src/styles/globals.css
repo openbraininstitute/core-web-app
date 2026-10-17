@@ -8,6 +8,7 @@
 
 @import "./tailwind-preflight.css";
 @import "./diff-highlights.css";
+@import "./learn.css";
 
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";

@@ -3,8 +3,10 @@
 import { usePathname, useRouter } from 'next/navigation';
 
 import { useTabs } from '@/components/detail-view-tabs';
+import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { LEAN_HELP_SECTIONS } from '@/ui/segments/help/lean';
 import { cn } from '@/utils/css-class';
 
 const HelpSections = {
@@ -56,14 +58,21 @@ const tabsConfigItems: Array<{
 function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
+  // with Learn's "remove unneeded features" on, only the lean sections, opening on Guides
+  const lean = useLearnSetting('leanHelp');
+  const tabs = lean
+    ? tabsConfigItems.filter((tab) => LEAN_HELP_SECTIONS.includes(tab.key))
+    : tabsConfigItems;
 
   // Set default tab based on pathname
-  const defaultTab = pathname?.includes('/tutorials')
-    ? HelpSections.Tutorials
-    : HelpSections.Overview;
+  const defaultTab = lean
+    ? HelpSections.Guides
+    : pathname?.includes('/tutorials')
+      ? HelpSections.Tutorials
+      : HelpSections.Overview;
 
   const { activeTab } = useTabs<HelpSectionsKeys>({
-    tabsConfig: tabsConfigItems,
+    tabsConfig: tabs,
     tabKey: 'section',
     shallow: true,
     defaultKey: defaultTab,
@@ -73,8 +82,8 @@ function HelpTabs() {
 
   return (
     <PillTabs
-      value={activeTab ?? 'overview'}
-      defaultValue={activeTab ?? 'overview'}
+      value={activeTab ?? defaultTab}
+      defaultValue={activeTab ?? defaultTab}
       className="w-full"
       activationMode="manual"
       onValueChange={(value: string) => {
@@ -83,11 +92,15 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
-          'h-12': breakpoint === 'xl',
-        })}
+        className={cn(
+          'grid h-10 w-full bg-white p-0 shadow-2xl',
+          lean ? 'grid-cols-3' : 'grid-cols-7',
+          {
+            'h-12': breakpoint === 'xl',
+          }
+        )}
       >
-        {tabsConfigItems.map((tab) => (
+        {tabs.map((tab) => (
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}
