@@ -112,11 +112,12 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 
 /**
  * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
- * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on,
- * by their order.
+ * go and the most segments they hold, where the arena keeps every box's coarsest level (`DetailStream`), the materials
+ * of the segments in the look and in their cells' numbers, and the quads each of them is drawn on, by their order.
  */
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
+  most: number;
   segment: THREE.Material[];
   ids: THREE.Material[];
   quads: THREE.InstancedBufferGeometry[];
@@ -512,7 +513,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         quadGeometry(0),
         () => this.invalidate(),
         drawing?.uploadsOf,
-        this.baseUpTo
+        drawing?.most
       );
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
@@ -594,14 +595,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Whether the tier culls the segments of morphologies read a box at a time (`DetailRules.culling`). */
   protected get culls(): boolean {
     return this.detailRules.culling;
-  }
-
-  /**
-   * The most segments an arena of morphologies read a box at a time may hold where it keeps every box's coarsest level
-   * (`DetailStream`); none on a tier that draws every segment it holds.
-   */
-  protected get baseUpTo(): number {
-    return 0;
   }
 
   /** Where the arena of morphologies read a box at a time ends: what its quads are drawn up to. */

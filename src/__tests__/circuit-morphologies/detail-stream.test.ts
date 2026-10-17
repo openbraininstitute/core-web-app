@@ -70,14 +70,12 @@ function viewOf(half: number, shift = new THREE.Vector3(), far = 1e6): DetailVie
 /** With `base`, an arena keeping every box's coarsest level, four blocks, and `capacity` past it. */
 function make(capacity = 1000, base = false) {
   const { chunks, reads } = chunksOf();
-  const arena = base
-    ? new SegmentArena(
-        new THREE.InstancedBufferGeometry(),
-        4 * BLOCK + capacity,
-        undefined,
-        chunks.levels[2].segments
-      )
-    : new SegmentArena(new THREE.InstancedBufferGeometry(), capacity);
+  const arena = new SegmentArena(
+    new THREE.InstancedBufferGeometry(),
+    base ? 4 * BLOCK + capacity : capacity,
+    undefined,
+    base ? chunks.levels[2].segments : undefined
+  );
   const onRead = vi.fn();
   const stream = new DetailStream(chunks, arena, onRead);
   return { stream, arena, reads, onRead };
@@ -290,23 +288,26 @@ describe('DetailStream', () => {
   });
 
   describe('with a base', () => {
-    it('reads every box at the coarsest first, those in view first, and a finer level once they are placed', async () => {
+    it('reads the bases of the boxes in view, then the finer levels they want, then the other bases', async () => {
       const { stream, arena, reads } = make(1000, true);
+      const asked = () =>
+        reads.map(({ wanted }) => wanted.map(({ level, box }) => `${box} at ${level}`));
       stream.update(behindOf(20), RULES, true);
-      expect(reads.map(({ wanted }) => wanted)).toEqual([
-        [3, 2, 0, 1].map((box) => ({ level: 2, box })),
-      ]);
+      expect(asked()).toEqual([['3 at 2', '2 at 2']]);
       reads[0].resolve();
       await settled();
-      expect(reads).toHaveLength(1);
-
+      expect(asked()[1]).toEqual(['3 at 0', '2 at 0']);
       expect(stream.apply()).toEqual({ changed: true, more: false });
-      expect(arena.segments).toBe(40);
-      expect(reads[1].wanted).toEqual([3, 2].map((box) => ({ level: 0, box })));
+      expect(arena.segments).toBe(20);
+
       reads[1].resolve();
       await settled();
+      expect(asked()[2]).toEqual(['0 at 2', '1 at 2']);
+      reads[2].resolve();
+      await settled();
+      expect(reads).toHaveLength(3);
       stream.apply();
-      // Their bases hidden.
+      // The bases of those finer hidden.
       expect(arena.segments).toBe(2 * 10 + 2 * 100);
       expect(levelsDrawn(stream)).toEqual([2, 0, 2]);
       expect(stream.stats(RULES)).toMatchObject({ drawn: 220, wanted: 220, leftOut: 0 });
@@ -315,16 +316,15 @@ describe('DetailStream', () => {
     it('goes back to it at once, the view moving, with no read', async () => {
       const { stream, arena, reads } = make(1000, true);
       stream.update(behindOf(20), RULES, true);
-      reads[0].resolve();
-      await settled();
-      stream.apply();
-      reads[1].resolve();
-      await settled();
+      for (let read = 0; read < 3; read++) {
+        reads[read].resolve();
+        await settled();
+      }
       stream.apply();
 
       expect(stream.update(behindOf(500), RULES, false)).toBe(true);
       expect(stream.apply()).toEqual({ changed: true, more: false });
-      expect(reads).toHaveLength(2);
+      expect(reads).toHaveLength(3);
       expect(arena.segments).toBe(40);
       expect(levelsDrawn(stream)).toEqual([0, 0, 4]);
     });
@@ -365,6 +365,11 @@ describe('DetailStream', () => {
       expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${5 * BLOCK}`]);
       expect(without.holds(4 * BLOCK)).toBe(true);
       expect(without.holds(2 * BLOCK)).toBe(false);
+
+      // 416 segments, which take seven blocks, more than 420.
+      said.length = 0;
+      DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf, 420);
+      expect(said).toEqual([`made ${3 * BLOCK}`]);
     });
   });
 

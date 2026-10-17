@@ -51,6 +51,13 @@ function arenaOf(capacity: number, base?: number[]) {
 
 type Made = ReturnType<typeof arenaOf>;
 
+/** `blocks` marked, a bit a block. */
+const marked = (...blocks: number[]) => {
+  const words = new Uint32Array(2);
+  for (const block of blocks) words[block >> 5] |= 1 << (block & 31);
+  return words;
+};
+
 const cellAt = (words: Uint32Array, i: number) => words[i] & CELL_MASK;
 const typeAt = (words: Uint32Array, i: number) => words[i] >>> TYPE_SHIFT;
 
@@ -290,11 +297,6 @@ describe('SegmentArena', () => {
     arena.put(2, segmentsOf(2, 10));
     arena.put(3, segmentsOf(3, 0));
     arena.put(4, segmentsOf(4, 30 * BLOCK));
-    const marked = (...blocks: number[]) => {
-      const words = new Uint32Array(2);
-      for (const block of blocks) words[block >> 5] |= 1 << (block & 31);
-      return words;
-    };
     expect(arena.boxesMarked(marked())).toEqual([]);
     expect(arena.boxesMarked(marked(1, 32))).toEqual([1, 4]);
     expect(arena.boxesMarked(marked(2, 3, 4))).toEqual([2, 4]);
@@ -376,9 +378,14 @@ describe('SegmentArena', () => {
       if (withBase && !arena.hasBase(box) && random() < 0.5) {
         arena.putBase(box, segmentsOf(box, base[box]));
         based.set(box, base[box]);
-      } else if (put.has(box)) {
+      } else if (put.has(box) && random() < 0.5) {
         arena.remove(box);
         put.delete(box);
+      } else if (put.has(box)) {
+        const n = Math.floor(random() * 300);
+        if (arena.growthOf(box, n) > arena.free) continue;
+        arena.replace(box, segmentsOf(box, n));
+        put.set(box, n);
       } else {
         const n = Math.floor(random() * 300);
         if (roomFor(n) > arena.free) continue;
@@ -459,6 +466,21 @@ describe('SegmentArena', () => {
       expectBlocks(made);
     });
 
+    it('puts a box in place of what it has with its base hidden all along, uploading none of the base', () => {
+      const made = arenaOf(10 * BLOCK, [70]);
+      const { arena, told } = made;
+      arena.putBase(0, segmentsOf(0, 70));
+      arena.put(0, segmentsOf(0, 10));
+      told.length = 0;
+
+      // The box was the last: its words past the end once it goes, and the new ones in its place.
+      expect(arena.replace(0, segmentsOf(0, 100))).toBe(2 * BLOCK);
+      expect(told).toEqual([[2 * BLOCK, 2 * BLOCK, false]]);
+      const put = new Map([[0, 100]]);
+      expectDrawn(made, put, put);
+      expectBlocks(made);
+    });
+
     it('moves no base where it closes the holes', () => {
       const made = arenaOf(4 * BLOCK, [3, 0, 0, 0, 0, 0]);
       const { arena } = made;
@@ -484,11 +506,6 @@ describe('SegmentArena', () => {
       const { arena } = arenaOf(10 * BLOCK, [3, 70]);
       arena.putBase(0, segmentsOf(0, 3));
       arena.putBase(1, segmentsOf(1, 70));
-      const marked = (...blocks: number[]) => {
-        const words = new Uint32Array(1);
-        for (const block of blocks) words[0] |= 1 << block;
-        return words;
-      };
       expect(arena.boxesMarked(marked(0))).toEqual([0]);
       expect(arena.boxesMarked(marked(2))).toEqual([1]);
       arena.put(1, segmentsOf(1, 10));
