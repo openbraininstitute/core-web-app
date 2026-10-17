@@ -99,9 +99,9 @@ export class Culling {
   /** Buffers to read the counts back into, and those of them free. */
   private reads: GPUBuffer[] = [];
   private free: GPUBuffer[] = [];
-  /** Whether the last tested were left unread, no buffer free, and whether their frame was drawn still. */
+  /** Whether the last tested were left unread, no buffer free, and the rest their frame was drawn in (`run`). */
   private unread = false;
-  private still = false;
+  private rest = -1;
   /** Of the arena tested: counts read back of another are dropped. */
   private generation = 0;
   /** True once the culling could not be made or bound, which is not tried again. */
@@ -168,15 +168,15 @@ export class Culling {
   /**
    * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
    * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `end`: where the arena's segments end; `still`: whether the frame is drawn still, which its
-   * read tells. False where nothing was tested.
+   * pixels of a tube; `end`: where the arena's segments end; `rest`: the rest the frame is drawn still in, -1 for one
+   * drawn moving, which its read tells. False where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
     end: number,
-    still: boolean
+    rest: number
   ): boolean {
     const { device, arena, target } = this;
     if (!arena || !target || this.broken) return false;
@@ -216,7 +216,7 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
-    this.still = still;
+    this.rest = rest;
     this.submit(encoder, arena.marked);
     return true;
   }
@@ -402,8 +402,8 @@ export class Culling {
 
   /**
    * `encoder` submitted with what the tests left copied out at its end and read back: the counts, and the blocks marked
-   * (`marked`, the arena's), with whether the last tested were of a frame drawn still; where no buffer is free, the
-   * last tested once one is.
+   * (`marked`, the arena's), with the rest the last tested were drawn in; where no buffer is free, the last tested once
+   * one is.
    */
   private submit(encoder: GPUCommandEncoder, marked: GPUBuffer): void {
     const blocksAt = COUNTS_BYTES + DRAWS_BYTES;
@@ -417,7 +417,7 @@ export class Culling {
     this.device.queue.submit([encoder.finish()]);
     if (!read) return;
     const { generation } = this;
-    const still = this.still;
+    const rest = this.rest;
     const markedWords = marked.size / 4;
     read.mapAsync(READ).then(
       () => {
@@ -430,7 +430,7 @@ export class Culling {
           kept: at(DRAWS.keptFlat) + at(DRAWS.keptTubes),
           drawn: at(DRAWS.seenFlat) + at(DRAWS.seenTubes),
           marked: words.slice(blocksAt / 4, blocksAt / 4 + markedWords),
-          still,
+          rest,
         };
         read.unmap();
         this.free.push(read);

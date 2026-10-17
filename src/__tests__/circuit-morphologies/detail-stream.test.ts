@@ -499,8 +499,10 @@ describe('DetailStream', () => {
 
       // Box 2 seen before the jump is not asked for after it, and box 3 keeps what it has.
       stream.see([2, 3], true);
+      const { rest } = stream;
       const asked = reads.length;
       expect(stream.update(behindOf(20), RULES, true, true)).toBe(false);
+      expect(stream.rest).toBe(rest + 1);
       expect(reads).toHaveLength(asked);
       expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
       stream.see([2], true);

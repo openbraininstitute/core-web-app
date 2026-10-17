@@ -606,22 +606,23 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /**
    * What the tier's culling counted, for the listeners: with what they were told last, which it alone changes; null
    * where it no longer culls. The boxes it marked are those seen, which the levels are chosen again by where that
-   * changes what the view may want.
+   * changes what the view may want; at rest, those of the frames drawn in this rest alone.
    */
   protected tellCulled(read: CullRead | null): void {
     const detailed = this.layer?.detailed;
     // Read back after the culling was switched off, or the pack let go of.
     if (!this.culls || !detailed) return;
+    const { stream } = detailed;
     let counts: CullCounts | null = null;
     let boxes: number[] | null = null;
     let still = false;
     if (read) {
-      const { marked, still: drawnStill, ...counted } = read;
-      boxes = detailed.stream.boxesMarked(marked);
+      const { marked, rest, ...counted } = read;
+      boxes = stream.boxesMarked(marked);
       counts = { ...counted, boxes: boxes.length };
-      still = drawnStill;
+      still = rest === stream.rest;
     }
-    if (detailed.stream.see(boxes, still)) {
+    if (stream.see(boxes, still)) {
       detailed.seenChanged = true;
       this.invalidateAtRest();
     }
@@ -629,7 +630,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }
 
-  /** A frame asked for where the view is `still`: one moving is drawn anyway, and so is the still one after it. */
+  /** The rest a frame is drawn still in (`DetailStream.rest`), -1 for one drawn `moving`. */
+  protected restOf(moving: boolean): number {
+    return moving ? -1 : (this.layer?.detailed?.stream.rest ?? -1);
+  }
+
+  /**
+   * A frame asked for where the view is `still`. Moving, what changed is drawn with the next move, or by the still frame
+   * that follows the last.
+   */
   private invalidateAtRest(still = !this.drawnMoving): void {
     if (still) this.invalidate();
   }
@@ -658,11 +667,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const height = this.height * this.pixelRatio;
     const was = detailed.chosenFor;
     const still = !moving;
+    // A stream made again for the budget keeps what it saw: none chosen yet is no move.
     const moved =
-      !was ||
-      was.height !== height ||
-      !was.projection.equals(camera.projectionMatrix) ||
-      !was.view.equals(camera.matrixWorldInverse);
+      was !== null &&
+      (was.height !== height ||
+        !was.projection.equals(camera.projectionMatrix) ||
+        !was.view.equals(camera.matrixWorldInverse));
     if (!moved && !detailed.seenChanged && was?.still === still && was.rules === this.detailRules) {
       return;
     }

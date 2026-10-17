@@ -108,12 +108,12 @@ export interface CullCounts {
 }
 
 /**
- * What the culling's tests left, read back: their counts, a bit a block of the arena with a segment kept, and whether
- * their frame was drawn still.
+ * What the culling's tests left, read back: their counts, a bit a block of the arena with a segment kept, and the rest
+ * their frame was drawn still in (`DetailStream.rest`), -1 for one drawn moving.
  */
 export interface CullRead extends Omit<CullCounts, 'boxes'> {
   marked: Uint32Array;
-  still: boolean;
+  rest: number;
 }
 
 /** What a view draws of morphologies read a box at a time. */

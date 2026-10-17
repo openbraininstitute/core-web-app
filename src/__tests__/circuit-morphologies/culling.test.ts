@@ -23,11 +23,11 @@ function wordsOf({ tested, kept, drawn }: Counts, marked = [0, 0]): Uint32Array 
   return words;
 }
 
-/** What the culling hands on of a read of `counts`, no block marked, of a frame drawn still. */
-const read = (counts: Counts, marked = [0, 0], still = true) => ({
+/** What the culling hands on of a read of `counts`, no block marked, of a frame drawn still in the first rest. */
+const read = (counts: Counts, marked = [0, 0], rest = 1) => ({
   ...counts,
   marked: Uint32Array.from(marked),
-  still,
+  rest,
 });
 
 /**
@@ -109,7 +109,7 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (still = true) => culling.run(camera, shift, 12, 100, still);
+  const run = (rest = 1) => culling.run(camera, shift, 12, 100, rest);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
   const map = async (counts: Counts, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);
@@ -137,9 +137,10 @@ describe("the culling's counts and its failures", () => {
     expect(counted).toHaveBeenCalledOnce();
   });
 
-  it('reads the last frame tested once a buffer is free, where every one was busy, telling whether it was still', async () => {
+  it('reads the last frame tested once a buffer is free, where every one was busy, telling the rest it was drawn in', async () => {
     const { counted, run, map, maps } = cullingOn();
-    for (let frame = 0; frame < 9; frame++) run(frame === 0);
+    // The first frame still, the next seven moving, the ninth still in a rest after.
+    for (let frame = 0; frame < 9; frame++) run(frame === 0 ? 1 : frame === 8 ? 2 : -1);
     expect(maps).toHaveLength(8);
 
     await map(A);
@@ -147,9 +148,9 @@ describe("the culling's counts and its failures", () => {
     // The ninth frame's, read once the first's buffer was free.
     expect(maps).toHaveLength(8);
     for (let k = 0; k < 7; k++) await map(A);
-    expect(counted).toHaveBeenLastCalledWith(read(A, undefined, false));
+    expect(counted).toHaveBeenLastCalledWith(read(A, undefined, -1));
     await map(B);
-    expect(counted).toHaveBeenLastCalledWith(read(B, undefined, false));
+    expect(counted).toHaveBeenLastCalledWith(read(B, undefined, 2));
   });
 
   it.each([

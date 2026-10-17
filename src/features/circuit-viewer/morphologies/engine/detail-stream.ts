@@ -31,13 +31,14 @@ interface Marks {
 
 /**
  * What the culling's reads tell is seen: the marks of every read, and of the reads of frames drawn still, with how many
- * of those there were when the view last came to rest; and each box taken as seen, or with `all` every box in view,
- * the marks read no more.
+ * of those there were when the view last came to rest, and how many times it did; and each box taken as seen, or with
+ * `all` every box in view, the marks read no more.
  */
 interface Sight {
   every: Marks;
   still: Marks;
   restFrom: number;
+  rest: number;
   seen: Uint8Array;
   all: boolean;
 }
@@ -48,6 +49,7 @@ const sightOf = (count: number): Sight => ({
   every: marksOf(count),
   still: marksOf(count),
   restFrom: 0,
+  rest: 0,
   seen: new Uint8Array(count),
   all: false,
 });
@@ -221,10 +223,15 @@ export class DetailStream {
     return this.arena.boxesMarked(marked);
   }
 
+  /** Which rest the view is in: one more each time it comes to rest, here or by a jump (`update`). */
+  get rest(): number {
+    return this.sight.rest;
+  }
+
   /**
-   * The boxes a frame's culling marked (`boxesMarked`), and whether that frame was drawn `still`; or null where it
-   * marks none for good: every box in view then taken as seen. Whether that changed what the view may want, a box it
-   * takes finer seen now seen or no longer, not let go of: then the levels are to be chosen again.
+   * The boxes a frame's culling marked (`boxesMarked`), and whether that frame was drawn `still` in this rest; or null
+   * where it marks none for good: every box in view then taken as seen. Whether that changed what the view may want, a
+   * box it takes finer seen now seen or no longer, not let go of: then the levels are to be chosen again.
    */
   see(boxes: readonly number[] | null, still: boolean): boolean {
     const { sight } = this;
@@ -286,7 +293,10 @@ export class DetailStream {
     const { arena, sight } = this;
     if (!still || moved || rules !== this.rules) this.letGo.clear();
     // Come to rest, here or by a jump: nothing is seen until a frame drawn still is read.
-    if (still && (moved || !this.still)) sight.restFrom = sight.still.reads;
+    if (still && (moved || !this.still)) {
+      sight.restFrom = sight.still.reads;
+      sight.rest++;
+    }
     this.still = still;
     this.judgeSeen();
     const budget = Math.min(rules.budget, arena.capacity - arena.baseRoom);
