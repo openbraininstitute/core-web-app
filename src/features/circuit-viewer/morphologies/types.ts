@@ -118,9 +118,16 @@ export interface CullRead extends Omit<CullCounts, 'boxes'> {
 
 /** What a view draws of morphologies read a box at a time. */
 export interface DetailStats extends DetailRules {
-  /** The segments drawn, and what the levels the view wants come to. */
+  /**
+   * The segments in the arena, holes left out, drawn all where nothing culls them; and what the levels the view wants
+   * come to.
+   */
   drawn: number;
   wanted: number;
+  /** What those levels take of the budget, in whole blocks of the arena; where `base`, the finer levels alone. */
+  room: number;
+  /** Whether every box's coarsest level is kept, which the budget does not count. */
+  base: boolean;
   /** Each level's tolerance, µm, and the boxes drawn at it, the finest first. */
   levels: { toleranceUm: number; boxes: number }[];
   /** The boxes in view left out for the budget, which only their somas stand for. */

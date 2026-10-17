@@ -161,6 +161,8 @@ const DETAIL: DetailStats = {
   culled: null,
   drawn: 1200,
   wanted: 1500,
+  room: 1280,
+  base: false,
   levels: [
     { toleranceUm: 0.125, boxes: 3 },
     { toleranceUm: 0.25, boxes: 4 },
@@ -403,6 +405,20 @@ describe('CircuitCells', () => {
     expect(onLeftOut.mock.calls).toEqual([[false], [true], [false], [false]]);
   });
 
+  it('tells why WebGL 2 draws the view, whenever one is made', () => {
+    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
+    try {
+      const onFallback = vi.fn();
+      view({ onFallback });
+      expect(onFallback.mock.calls).toEqual([['missing']]);
+
+      fireEvent.change(screen.getByRole('combobox'), { target: { value: 'webgl' } });
+      expect(onFallback.mock.calls).toEqual([['missing'], [null]]);
+    } finally {
+      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
+    }
+  });
+
   it('shows what the engine draws in the debug tools alone, with its budget and tolerance to lower', async () => {
     const { viewer, unmount } = view();
     tellDetail(viewer, { ...DETAIL, leftOut: 2 });
@@ -418,6 +434,9 @@ describe('CircuitCells', () => {
         '1,200 segments drawn of 1,500 wanted, 2 boxes left out'
       );
       expect(readout.textContent).toContain('0.125 µm × 3, 0.25 µm × 4, 1 µm × 5');
+      expect(screen.getByTestId('room').textContent).toBe(
+        'Budget taken: 1,280 of 2,000,000, in blocks of 64'
+      );
       const [budget, pixels] = screen.getAllByRole('combobox');
       fireEvent.change(budget, { target: { value: '200000' } });
       fireEvent.change(pixels, { target: { value: '4' } });

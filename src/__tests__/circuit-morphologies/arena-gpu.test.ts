@@ -19,15 +19,22 @@ interface Bytes {
   destroy: () => void;
 }
 
-/** A device whose buffers are bytes, which its queue writes as WebGPU's `writeBuffer` does a typed array. */
-function fakeDevice() {
+/**
+ * A device whose buffers are bytes, which its queue writes as WebGPU's `writeBuffer` does a typed array; with
+ * `outOfMemory`, the buffers made in an error scope of that filter are out of memory.
+ */
+function fakeDevice(outOfMemory = false) {
   const made: Bytes[] = [];
+  const scopes: GPUErrorFilter[] = [];
   const device = {
     createBuffer: ({ size, label }: { size: number; label: string }) => {
       const buffer = { label, bytes: new Uint8Array(size), destroy: vi.fn() };
       made.push(buffer);
       return buffer;
     },
+    pushErrorScope: (filter: GPUErrorFilter) => scopes.push(filter),
+    popErrorScope: async () =>
+      scopes.pop() === 'out-of-memory' && outOfMemory ? new Error('out of memory') : null,
     queue: {
       writeBuffer: (
         buffer: Bytes,
@@ -58,11 +65,15 @@ function segmentsOf(box: number, count: number): MorphologySegments {
   };
 }
 
-/** An arena on the fake device, its own arrays, and the buffers it handed the culling. */
-function arenaOnFake(capacity: number) {
-  const { device, made } = fakeDevice();
+/**
+ * An arena on the fake device, its own arrays, the buffers it handed the culling, and how often it told of a device out
+ * of memory.
+ */
+function arenaOnFake(capacity: number, outOfMemory = false) {
+  const { device, made } = fakeDevice(outOfMemory);
   const storage = arenaStorage();
   const told: (ArenaBuffers | null)[] = [];
+  const memory = vi.fn();
   let arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array } = {
     ends: new Float32Array(),
     words: new Uint32Array(),
@@ -73,11 +84,18 @@ function arenaOnFake(capacity: number) {
     capacity,
     (ends, words, blocks) => {
       arrays = { ends, words, blocks };
-      return arenaOnGpu(fakeRenderer(), device, storage, arrays, (buffers) => told.push(buffers));
+      return arenaOnGpu(
+        fakeRenderer(),
+        device,
+        storage,
+        arrays,
+        (buffers) => told.push(buffers),
+        memory
+      );
     }
   );
   const bytesOf = (label: string) => (made.find((b) => b.label === label) as Bytes).bytes;
-  return { arena, arrays, storage, told, made, bytesOf };
+  return { arena, arrays, storage, told, made, bytesOf, memory };
 }
 
 const asBytes = (array: Float32Array | Uint32Array, count: number) =>
@@ -103,6 +121,16 @@ describe("an arena on the page's GPU buffers", () => {
     arena.dispose();
     expect(told).toEqual([told[0], null]);
     for (const buffer of made) expect(buffer.destroy).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    ['tells, a moment later, of a device out of memory for its buffers', true, 1],
+    ['tells of nothing where the device made them', false, 0],
+  ])('%s', async (_case, outOfMemory, times) => {
+    const { memory } = arenaOnFake(16 * BLOCK, outOfMemory);
+    expect(memory).not.toHaveBeenCalled();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(memory).toHaveBeenCalledTimes(times);
   });
 
   it("keeps the GPU's ends, words and blocks those of the arena up to its end, through holes and compaction", () => {

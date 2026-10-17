@@ -18,7 +18,12 @@ import { logError } from '@/utils/logger';
 
 import { DetailReadout } from './detail-readout';
 import { type ElectrodeTracker, trackElectrodes } from './electrodes';
-import { type CreatedView, createCircuitView, type TierChoice } from './engine/create-view';
+import {
+  type CreatedView,
+  createCircuitView,
+  type Fallback,
+  type TierChoice,
+} from './engine/create-view';
 import { loadCrowding } from './load/load-crowding';
 import { trackPointer } from './pointer';
 
@@ -84,6 +89,8 @@ export interface CircuitCellsProps {
   onZoomChange?: (zoom: number) => void;
   /** Told whether morphologies in view are left out for the budget, their somas alone drawn, whenever the view changes. */
   onLeftOut?: (leftOut: boolean) => void;
+  /** Told why WebGL 2 draws the view where WebGPU was asked for, null where it was not, whenever a view is made. */
+  onFallback?: (fallback: Fallback | null) => void;
 }
 
 /** The canvas as an image whose `src` is an object URL, which is what the snapshot signal hands on. */
@@ -137,6 +144,7 @@ export function CircuitCells({
   signals,
   onZoomChange,
   onLeftOut,
+  onFallback,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   /** What the view is made for: a new one, made again on WebGL 2, once the GPU device is lost. */
@@ -301,6 +309,11 @@ export function CircuitCells({
     () => viewer?.onDetail((detail) => leftOutChanged.current?.((detail?.leftOut ?? 0) > 0)),
     [viewer, leftOutChanged]
   );
+  const fellBack = useLatest(onFallback);
+  const fallback = created?.fallback;
+  useEffect(() => {
+    if (fallback !== undefined) fellBack.current?.(fallback);
+  }, [fallback, fellBack]);
 
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;

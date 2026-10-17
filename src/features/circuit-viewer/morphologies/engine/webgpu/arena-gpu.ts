@@ -52,20 +52,22 @@ export interface ArenaBuffers {
 /**
  * An arena's arrays `ends`, `words` and `blocks` in buffers of the page's on `device`, which three binds for `storage`,
  * with the culling's lists: what changes written to them, and no copy kept by three. `told` is handed the buffers, and
- * null once they are let go of.
+ * null once they are let go of; `outOfMemory`, told a moment later where the device could not make them.
  */
 export function arenaOnGpu(
   renderer: THREE.WebGPURenderer,
   device: GPUDevice,
   storage: ArenaStorage,
   arrays: { ends: Float32Array; words: Uint32Array; blocks: Float32Array },
-  told: (buffers: ArenaBuffers | null) => void
+  told: (buffers: ArenaBuffers | null) => void,
+  outOfMemory: () => void
 ): ArenaUploads {
   const { ends, words, blocks } = arrays;
   const capacity = words.length;
   // A binding holds something.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
     device.createBuffer({ label, size: Math.max(bytes, 32), usage });
+  device.pushErrorScope('out-of-memory');
   const buffers: ArenaBuffers = {
     ends: bufferOf(ends.byteLength, 'arena ends'),
     words: bufferOf(words.byteLength, 'arena words'),
@@ -78,6 +80,12 @@ export function arenaOnGpu(
       STORAGE | COPY_DST | COPY_SRC
     ),
   };
+  device.popErrorScope().then(
+    (error) => {
+      if (error) outOfMemory();
+    },
+    () => undefined
+  );
   shareBuffer(renderer, storage.ends, buffers.ends);
   shareBuffer(renderer, storage.words, buffers.words);
   shareBuffer(renderer, storage.lists, buffers.lists);

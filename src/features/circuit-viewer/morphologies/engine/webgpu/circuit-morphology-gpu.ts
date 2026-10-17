@@ -14,6 +14,8 @@ import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 import { checkHooks, threeLoop } from './three-hooks';
 
+import type { Lost } from '../create-view';
+
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
 
@@ -47,15 +49,16 @@ export class CircuitMorphologyGPU extends CircuitView {
   /** The kept segments' quads, drawn to depth before the culling's tests. */
   private keptQuads = new THREE.Scene();
   private drawingSize = new THREE.Vector2();
+  private onLost: ((how: Lost) => void) | null;
 
   /**
-   * A view in `host` on `device`; `onLost` is told if the device is lost, which the view does not draw past. Aborted
-   * (`signal`) before the renderer is ready, none is made.
+   * A view in `host` on `device`; `onLost` is told once if the device is lost, which the view does not draw past, or
+   * cannot make a pack's arena. Aborted (`signal`) before the renderer is ready, none is made.
    */
   static async create(
     host: HTMLElement,
     device: GPUDevice,
-    onLost: () => void,
+    onLost: (how: Lost) => void,
     signal?: AbortSignal
   ): Promise<CircuitMorphologyGPU> {
     const renderer = new THREE.WebGPURenderer({ device, antialias: true, alpha: true });
@@ -74,7 +77,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     host: HTMLElement,
     renderer: THREE.WebGPURenderer,
     device: GPUDevice,
-    onLost: () => void
+    onLost: (how: Lost) => void
   ) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setClearColor(0x000000, 0);
@@ -83,8 +86,9 @@ export class CircuitMorphologyGPU extends CircuitView {
     super(host, renderer.domElement, renderer.getPixelRatio(), SEGMENT_BUDGET.webgpu);
     this.renderer = renderer;
     this.device = device;
+    this.onLost = onLost;
     device.lost.then((info) => {
-      if (info.reason !== 'destroyed' && !this.disposed) onLost();
+      if (info.reason !== 'destroyed') this.giveOut('reset');
     });
     try {
       this.gpu = new GpuUniforms({
@@ -111,6 +115,13 @@ export class CircuitMorphologyGPU extends CircuitView {
       this.dispose();
       throw e;
     }
+  }
+
+  /** `onLost` told how the view gave out, once, unless it was let go of. */
+  private giveOut(how: Lost): void {
+    const told = this.onLost;
+    this.onLost = null;
+    if (told && !this.disposed) told(how);
   }
 
   protected override disposeStage(): void {
@@ -190,8 +201,13 @@ export class CircuitMorphologyGPU extends CircuitView {
     ]);
     return {
       uploadsOf: (ends, words, blocks) =>
-        arenaOnGpu(this.renderer, this.device, storage, { ends, words, blocks }, (buffers) =>
-          culling.setArena(buffers)
+        arenaOnGpu(
+          this.renderer,
+          this.device,
+          storage,
+          { ends, words, blocks },
+          (buffers) => culling.setArena(buffers),
+          () => this.giveOut('memory')
         ),
       most: Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4)),
       segment,

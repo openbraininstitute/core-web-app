@@ -2,10 +2,17 @@ import { megabytes, StatusAction, StatusPill } from '@/features/viewer-3d/chrome
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
+import type { Fallback } from './engine/create-view';
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
 const TOO_LARGE = 'This circuit is too large to show as morphologies';
 const LEFT_OUT = 'Too many morphologies in view: zoom in to see them';
+/** Where the browser has no WebGPU, which leaves out none. */
+const WITH_WEBGPU = 'A browser with WebGPU shows them all';
+const GAVE_OUT: Partial<Record<Fallback, string>> = {
+  reset: 'Drawn with WebGL 2 after the graphics were reset',
+  memory: 'Drawn with WebGL 2: the graphics ran out of memory',
+};
 /** By OBI-One's word for why it built no pack. */
 const REFUSALS: Record<string, string> = {
   too_many_neurons: TOO_LARGE,
@@ -34,38 +41,52 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
 }
 
 /**
- * Over the cells: how far the pack has come, why the circuit stayed somas, or that the morphologies in view are left
- * out for the budget.
+ * Over the cells: how far the pack has come, why the circuit stayed somas, that the morphologies in view are left out
+ * for the budget (and where the browser has no WebGPU, that one with it shows them), or that they are drawn with WebGL
+ * 2 since WebGPU gave out.
  */
 export function MorphologiesStatus({
   load,
   stopped,
   leftOut = false,
+  fallback = null,
   theme,
   place,
   onRetry,
   onDismiss,
+  onFallbackDismiss,
 }: {
   load: MorphologiesLoad;
   stopped: MorphologiesStop | null;
   /** Whether morphologies in view are left out, their somas alone drawn. */
   leftOut?: boolean;
+  /** Why WebGL 2 draws them where WebGPU was asked for. */
+  fallback?: Fallback | null;
   theme: ViewerTheme;
   place?: CSSProperties;
   onRetry(): void;
   onDismiss(): void;
+  onFallbackDismiss?(): void;
 }) {
   let pill: ReactNode = null;
+  const gaveOut = fallback && GAVE_OUT[fallback];
   if (load.status === 'loading') {
     pill = <StatusPill text={loadingText(load)} kind="busy" theme={theme} place={place} />;
   } else if (load.status === 'ready' && leftOut) {
-    pill = <StatusPill text={LEFT_OUT} kind="info" theme={theme} place={place} />;
+    const text = fallback === 'missing' ? `${LEFT_OUT}. ${WITH_WEBGPU}` : LEFT_OUT;
+    pill = <StatusPill text={text} kind="info" theme={theme} place={place} />;
   } else if (stopped) {
     const { text, retry } = stopNotice(stopped);
     pill = (
       <StatusPill text={text} kind="warning" theme={theme} place={place}>
         {retry && <StatusAction onClick={onRetry}>Try again</StatusAction>}
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
+      </StatusPill>
+    );
+  } else if (load.status === 'ready' && gaveOut) {
+    pill = (
+      <StatusPill text={gaveOut} kind="info" theme={theme} place={place}>
+        {onFallbackDismiss && <StatusAction onClick={onFallbackDismiss}>Dismiss</StatusAction>}
       </StatusPill>
     );
   }

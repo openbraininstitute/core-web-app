@@ -223,6 +223,45 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(status()).toBeNull();
   });
 
+  it.each([
+    ['the browser has no WebGPU', 'missing', '. A browser with WebGPU shows them all'],
+    ['WebGPU gave out', 'reset', ''],
+  ] as const)('says a browser with WebGPU shows them only where %s', async (_case, fallback, more) => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await screen.findByTestId('morphologies');
+
+    act(() => h.cells?.onFallback?.(fallback));
+    act(() => h.cells?.onLeftOut?.(true));
+    expect(status()).toBe(`Too many morphologies in view: zoom in to see them${more}`);
+  });
+
+  it.each([
+    ['reset', 'Drawn with WebGL 2 after the graphics were reset'],
+    ['memory', 'Drawn with WebGL 2: the graphics ran out of memory'],
+  ] as const)('says so once the morphologies are in where WebGPU gave out (%s), until dismissed', async (fallback, text) => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    act(() => h.cells?.onFallback?.(fallback));
+    expect(status()).toBe('Loading morphologies…');
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await screen.findByTestId('morphologies');
+
+    expect(screen.getByRole('status')).toHaveTextContent(text);
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(status()).toBeNull();
+  });
+
+  it('says nothing of the tier where the browser has no WebGPU and nothing is left out', async () => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await screen.findByTestId('morphologies');
+    act(() => h.cells?.onFallback?.('missing'));
+    expect(status()).toBeNull();
+  });
+
   /** The morphologies on show, as the view was last rendered. */
   async function shown(props: Partial<LargeCircuitPreviewProps> = {}): Promise<CircuitCellsProps> {
     render(<Hosted start="morphologies" {...props} />);

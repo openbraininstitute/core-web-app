@@ -275,6 +275,8 @@ export class DetailStream {
       ...rules,
       drawn: this.arena.segments,
       wanted: this.detail?.segments ?? 0,
+      room: this.detail?.room ?? 0,
+      base: this.arena.keepsBase,
       levels: this.chunks.levels.map(({ toleranceUm }, level) => ({
         toleranceUm,
         boxes: boxes[level],

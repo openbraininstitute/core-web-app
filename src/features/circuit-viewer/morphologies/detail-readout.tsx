@@ -6,6 +6,7 @@ import { panelStyle } from '@/features/scan-config/components/color-by/contrast'
 import { fmt as count } from '@/features/viewer-3d/chrome/debug-rows';
 
 import { DETAIL_PIXELS, SEGMENT_BUDGET } from './engine/detail';
+import { BLOCK } from './engine/segment-arena';
 
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { Tier, TierChoice } from './engine/create-view';
@@ -30,8 +31,9 @@ interface RendererState {
 
 /**
  * For the debug tools: what draws the view, with WebGL 2 to choose instead of WebGPU; and what the view draws of
- * morphologies read a box at a time, with the budget and the pixels a level's tolerance may span to set lower, and on
- * WebGPU the culling to switch off and what it counted.
+ * morphologies read a box at a time (on WebGPU, what is resident, which the culling draws a part of), what that takes
+ * of the budget, with the budget and the pixels a level's tolerance may span to set lower, and on WebGPU the culling to
+ * switch off and what it counted.
  */
 export function DetailReadout({
   viewer,
@@ -55,8 +57,13 @@ export function DetailReadout({
       {detail && (
         <>
           <div>
-            {count(detail.drawn)} segments drawn of {count(detail.wanted)} wanted
+            {count(detail.drawn)} segments {tier === 'webgpu' ? 'resident' : 'drawn'} of{' '}
+            {count(detail.wanted)} wanted
             {detail.leftOut > 0 && `, ${count(detail.leftOut)} boxes left out`}
+          </div>
+          <div data-testid="room">
+            Budget taken: {count(detail.room)} of {count(detail.budget)}
+            {detail.base && ' by the levels finer than the base'}, in blocks of {BLOCK}
           </div>
           <div>
             Boxes by level:{' '}

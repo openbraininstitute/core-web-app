@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createCircuitView } from '@/features/circuit-viewer/morphologies/engine/create-view';
 import { Unfit } from '@/features/circuit-viewer/morphologies/engine/probe';
 
+import type { Lost } from '@/features/circuit-viewer/morphologies/engine/create-view';
+
 const h = vi.hoisted(() => {
   /** The WebGL 2 engine, made with its host. */
   class FakeViewer {
@@ -11,8 +13,8 @@ const h = vi.hoisted(() => {
   /** The WebGPU engine: made on the device, or failing to start where the test says. */
   const gpu = {
     fails: null as Error | null,
-    made: [] as { host: HTMLElement; device: unknown; onLost: () => void }[],
-    create: async (host: HTMLElement, device: unknown, onLost: () => void) => {
+    made: [] as { host: HTMLElement; device: unknown; onLost: (how: Lost) => void }[],
+    create: async (host: HTMLElement, device: unknown, onLost: (how: Lost) => void) => {
       if (gpu.fails) throw gpu.fails;
       const view = { host, device, onLost };
       gpu.made.push(view);
@@ -78,7 +80,11 @@ describe('createCircuitView', () => {
     const into = host();
     const made = createCircuitView(into, 'auto', unheard);
     expect(made).not.toBeInstanceOf(Promise);
-    expect(made).toMatchObject({ tier: 'webgl', reason: 'no WebGPU in this browser' });
+    expect(made).toMatchObject({
+      tier: 'webgl',
+      reason: 'no WebGPU in this browser',
+      fallback: 'missing',
+    });
     expect((made as unknown as { view: InstanceType<typeof h.FakeViewer> }).view.host).toBe(into);
   });
 
@@ -87,6 +93,7 @@ describe('createCircuitView', () => {
     expect(createCircuitView(host(), 'webgl', unheard)).toMatchObject({
       tier: 'webgl',
       reason: 'chosen in the debug tools',
+      fallback: null,
     });
     expect(gpu.requestAdapter).not.toHaveBeenCalled();
   });
@@ -126,6 +133,7 @@ describe('createCircuitView', () => {
     await expect(createCircuitView(host(), 'auto', unheard)).resolves.toMatchObject({
       tier: 'webgl',
       reason,
+      fallback: null,
     });
   });
 
@@ -143,7 +151,7 @@ describe('createCircuitView', () => {
       requiredFeatures: ['timestamp-query', 'float32-filterable'],
       requiredLimits: { maxStorageBufferBindingSize: 2 * GIB, maxBufferSize: 1.5 * GIB },
     });
-    expect(made).toMatchObject({ tier: 'webgpu', reason: null });
+    expect(made).toMatchObject({ tier: 'webgpu', reason: null, fallback: null });
     expect(h.gpu.made).toHaveLength(1);
     expect(h.gpu.made[0]).toMatchObject({ host: into, device });
     expect(device.destroy).not.toHaveBeenCalled();
@@ -185,20 +193,25 @@ describe('createCircuitView', () => {
     expect(h.logError).not.toHaveBeenCalled();
   });
 
-  // Last: the page draws with WebGL 2 from then on.
-  it('tells of a lost device, and draws every view after it with WebGL 2', async () => {
+  // Each on a module of its own: the page draws with WebGL 2 from then on.
+  it.each([
+    ['a lost device', 'reset', 'the graphics were reset'],
+    ['a device out of memory for an arena', 'memory', 'the graphics ran out of memory'],
+  ] as const)('tells of %s, and draws every view after it with WebGL 2', async (_case, how, reason) => {
+    vi.resetModules();
+    const { createCircuitView: create } = await import(
+      '@/features/circuit-viewer/morphologies/engine/create-view'
+    );
     const { adapter } = adapterOf();
     const gpu = withGPU(async () => adapter);
     const onLost = vi.fn();
-    await createCircuitView(host(), 'auto', onLost);
+    await create(host(), 'auto', onLost);
 
-    h.gpu.made[0].onLost();
+    h.gpu.made[0].onLost(how);
 
     expect(onLost).toHaveBeenCalledTimes(1);
-    expect(createCircuitView(host(), 'auto', unheard)).toMatchObject({
-      tier: 'webgl',
-      reason: 'the graphics were reset',
-    });
+    expect(create(host(), 'auto', unheard)).toMatchObject({ tier: 'webgl', reason, fallback: how });
+    expect(create(host(), 'webgl', unheard)).toMatchObject({ fallback: null });
     expect(gpu.requestAdapter).toHaveBeenCalledTimes(1);
   });
 });

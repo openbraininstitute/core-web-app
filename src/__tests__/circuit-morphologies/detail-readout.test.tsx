@@ -16,6 +16,8 @@ const DETAIL: DetailStats = {
   culling: true,
   drawn: 1200,
   wanted: 1200,
+  room: 1280,
+  base: false,
   levels: [{ toleranceUm: 0.25, boxes: 4 }],
   leftOut: 0,
   culled: { tested: 9571, kept: 8908, drawn: 8894, boxes: 12 },
@@ -58,6 +60,30 @@ describe('the detail readout', () => {
     readout('webgl', { ...DETAIL, culled: null });
     expect(screen.queryByRole('combobox', { name: 'Culling' })).toBeNull();
     expect(screen.queryByTestId('culled')).toBeNull();
+  });
+
+  it.each([
+    ['webgl', '1,200 segments drawn of 1,200 wanted'],
+    ['webgpu', '1,200 segments resident of 1,200 wanted'],
+  ] as const)('on %s, says what is drawn as the tier draws it', (tier, said) => {
+    readout(tier);
+    expect(screen.getByTestId('detail-readout').textContent).toContain(said);
+  });
+
+  it.each([
+    [
+      'the finer levels alone beside a base',
+      { budget: 4_000_000, room: 3_912_384, base: true },
+      'Budget taken: 3,912,384 of 4,000,000 by the levels finer than the base, in blocks of 64',
+    ],
+    [
+      'how far over it they are where the boxes are left out',
+      { room: 2_400_064, leftOut: 7 },
+      'Budget taken: 2,400,064 of 2,000,000, in blocks of 64',
+    ],
+  ])('says what the levels take of the budget: %s', (_case, patch, said) => {
+    readout('webgl', { ...DETAIL, ...patch });
+    expect(screen.getByTestId('room').textContent).toBe(said);
   });
 
   it('on WebGPU, offers its own budgets, its default chosen, and a larger one', () => {

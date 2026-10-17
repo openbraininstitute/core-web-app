@@ -47,6 +47,8 @@ export interface Detail {
    * out, what they come to at the coarsest.
    */
   segments: number;
+  /** What the levels chosen take of the budget (`roomFor`), the base's aside; over it where the boxes are left out. */
+  room: number;
   /** The boxes in view left out for the budget: none, or all of them. */
   leftOut: number;
 }
@@ -131,7 +133,7 @@ export function chooseDetail(
   if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
   else for (const b of order) segments += segmentsOf(b);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
-  if (room <= budget) return { levels: chosen, order, finer, segments, leftOut: 0 };
+  if (room <= budget) return { levels: chosen, order, finer, segments, room, leftOut: 0 };
   for (const b of order) chosen[b] = -1;
-  return { levels: chosen, order, finer, segments, leftOut: order.length };
+  return { levels: chosen, order, finer, segments, room, leftOut: order.length };
 }

@@ -24,6 +24,7 @@ import { useSomaRadius } from './hooks';
 import type { ICircuit } from '@/api/entitycore/types';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { Fallback } from '@/features/circuit-viewer/morphologies/engine/create-view';
 import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
@@ -219,6 +220,7 @@ export function LargeCircuitPreview({
   );
   const shown = morphologies.load.status === 'ready' ? morphologies.load.data : null;
   const [leftOut, setLeftOut] = React.useState(false);
+  const [fallback, setFallback] = React.useState<Fallback | null>(null);
 
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
@@ -251,6 +253,7 @@ export function LargeCircuitPreview({
           signals={signals}
           onZoomChange={onZoomChange}
           onLeftOut={setLeftOut}
+          onFallback={setFallback}
         />
       )}
       {drawable && debugMode && subject && (
@@ -265,10 +268,12 @@ export function LargeCircuitPreview({
         // Why they could not be shown is nothing to say where they are no longer offered.
         stopped={onRepresentationChange ? morphologies.stopped : null}
         leftOut={leftOut}
+        fallback={fallback}
         theme={themeFromBackground(backgroundColor)}
         place={statusPlace}
         onRetry={() => onRepresentationChange?.('morphologies')}
         onDismiss={morphologies.dismiss}
+        onFallbackDismiss={() => setFallback(null)}
       />
     </div>
   );
