@@ -23,30 +23,40 @@ const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
  */
 export const LINGER = { moving: 30, still: 4 } as const;
 
+/** The culling's reads, and of each box the one that last marked it (0 for none). */
+interface Marks {
+  reads: number;
+  at: Int32Array;
+}
+
 /**
- * What the culling's reads tell is seen: the reads, and of each box the one that last marked it (0 for none); the same
- * of the reads of frames drawn still, and how many of those there were when the view last came to rest; and each box
- * taken as seen, or with `all` every box in view, the marks read no more.
+ * What the culling's reads tell is seen: the marks of every read, and of the reads of frames drawn still, with how many
+ * of those there were when the view last came to rest; and each box taken as seen, or with `all` every box in view,
+ * the marks read no more.
  */
 interface Sight {
-  reads: number;
-  markedAt: Int32Array;
-  stillReads: number;
-  stillMarkedAt: Int32Array;
+  every: Marks;
+  still: Marks;
   restFrom: number;
   seen: Uint8Array;
   all: boolean;
 }
 
+const marksOf = (count: number): Marks => ({ reads: 0, at: new Int32Array(count) });
+
 const sightOf = (count: number): Sight => ({
-  reads: 0,
-  markedAt: new Int32Array(count),
-  stillReads: 0,
-  stillMarkedAt: new Int32Array(count),
+  every: marksOf(count),
+  still: marksOf(count),
   restFrom: 0,
   seen: new Uint8Array(count),
   all: false,
 });
+
+/** `boxes` marked by a read more. */
+function mark(marks: Marks, boxes: readonly number[]): void {
+  const read = ++marks.reads;
+  for (const box of boxes) marks.at[box] = read;
+}
 
 function isAbort(e: unknown): boolean {
   return e instanceof DOMException && e.name === 'AbortError';
@@ -103,10 +113,9 @@ export class DetailStream {
   private coarsest: number;
   /** The levels drawn of each box, -1 for none. */
   private drawn: Int8Array;
-  /** What the view wants, as last chosen, the rules it was chosen by, and the boxes it would take finer where seen. */
+  /** What the view wants, as last chosen, and the rules it was chosen by. */
   private detail: Detail | null = null;
   private rules: DetailRules | null = null;
-  private finer: Uint8Array;
   private still = false;
   private sight: Sight;
   /** The boxes let go of while the view rested where it is. */
@@ -119,7 +128,7 @@ export class DetailStream {
   private finestFor = (box: number): number => {
     const { coarsest } = this;
     if (this.letGo.has(box)) return coarsest;
-    if (this.sight.seen[box] === 1 || this.chunks.levels[coarsest].segments[box] === 0) return 0;
+    if (this.sight.seen[box] === 1 || this.segmentsAt(box, coarsest) === 0) return 0;
     const drawn = this.drawn[box];
     return this.still && drawn >= 0 ? drawn : coarsest;
   };
@@ -152,7 +161,6 @@ export class DetailStream {
     this.coarsest = chunks.levels.length - 1;
     const count = chunks.boxes.length / 6;
     this.drawn = new Int8Array(count).fill(-1);
-    this.finer = new Uint8Array(count);
     this.sight = sightOf(count);
     this.basesRead = !arena.keepsBase;
     if (arena.keepsBase) {
@@ -225,12 +233,8 @@ export class DetailStream {
       sight.all = true;
       return !was;
     }
-    const read = ++sight.reads;
-    for (const box of boxes) sight.markedAt[box] = read;
-    if (still) {
-      const stillRead = ++sight.stillReads;
-      for (const box of boxes) sight.stillMarkedAt[box] = stillRead;
-    }
+    mark(sight.every, boxes);
+    if (still) mark(sight.still, boxes);
     return this.judgeSeen();
   }
 
@@ -240,18 +244,18 @@ export class DetailStream {
    * seen keeps what it has.
    */
   private judgeSeen(): boolean {
-    const { reads, markedAt, stillReads, stillMarkedAt, restFrom, seen } = this.sight;
-    const { still } = this;
+    const { sight, still, letGo } = this;
+    const { seen } = sight;
+    const { reads, at } = still ? sight.still : sight.every;
+    const from = still ? sight.restFrom : 0;
+    const linger = still ? LINGER.still : LINGER.moving;
+    const finer = this.detail?.finer;
     let changed = false;
     for (let box = 0; box < seen.length; box++) {
-      const at = still ? stillMarkedAt[box] : markedAt[box];
-      const seenNow = still
-        ? at > restFrom && stillReads - at <= LINGER.still
-        : at > 0 && reads - at <= LINGER.moving;
-      const now = seenNow ? 1 : 0;
+      const now = at[box] > from && reads - at[box] <= linger ? 1 : 0;
       if (now === seen[box]) continue;
       seen[box] = now;
-      if (this.finer[box] === 1 && !this.letGo.has(box) && (seenNow || !still)) changed = true;
+      if (finer?.[box] === 1 && !letGo.has(box) && (now === 1 || !still)) changed = true;
     }
     return changed;
   }
@@ -282,14 +286,12 @@ export class DetailStream {
     const { arena, sight } = this;
     if (!still || moved || rules !== this.rules) this.letGo.clear();
     // Come to rest, here or by a jump: nothing is seen until a frame drawn still is read.
-    const rested = still && (moved || !this.still);
-    if (rested) sight.restFrom = sight.stillReads;
-    const judged = rested || still !== this.still;
+    if (still && (moved || !this.still)) sight.restFrom = sight.still.reads;
     this.still = still;
-    if (judged) this.judgeSeen();
+    this.judgeSeen();
     const budget = Math.min(rules.budget, arena.capacity - arena.baseRoom);
     // Without the culling's marks, every box in view as fine as the pixels take it.
-    const finest = rules.culling && !this.sight.all ? this.finestFor : undefined;
+    const finest = rules.culling && !sight.all ? this.finestFor : undefined;
     const detail = chooseDetail(
       this.chunks,
       view,
@@ -298,15 +300,13 @@ export class DetailStream {
       arena.keepsBase,
       finest
     );
-    this.finer.fill(0);
-    for (const box of detail.finer) this.finer[box] = 1;
     this.detail = detail;
     this.rules = rules;
     this.read();
     return (
       this.ready.size > 0 ||
       this.bases.size > 0 ||
-      detail.levels.some((level, box) => this.atOnce(box, level))
+      detail.levels.some((level, box) => this.atOnce(box, level) !== null)
     );
   }
 
@@ -323,13 +323,11 @@ export class DetailStream {
     const full = () => uploaded >= cap;
     for (let box = 0; box < wanted.length && !full(); box++) {
       const level = wanted[box];
-      if (!this.atOnce(box, level)) continue;
-      const put = arena.sizeOf(box) !== undefined;
+      const to = this.atOnce(box, level);
+      if (to === null) continue;
       uploaded += arena.remove(box);
-      // Its base drawn in its place, where it keeps one, unless it has nothing at the level wanted.
-      const atBase = this.isBase(level) || (arena.keepsBase && this.segmentsAt(box, level) > 0);
-      drawn[box] = !atBase ? level : arena.hasBase(box) ? this.coarsest : -1;
-      if (put && atBase && this.still) this.letGo.add(box);
+      drawn[box] = to;
+      if (this.still && this.isBase(level)) this.letGo.add(box);
       changed = true;
     }
     let more = full();
@@ -390,16 +388,18 @@ export class DetailStream {
   }
 
   /**
-   * Whether `box` goes to `level` with no read: let go of, its base drawn in its place where it is wanted, or where a
-   * coarser level is while the view moves; or nothing at its level.
+   * The level `box` goes to for `level` with no read, or null: let go of, its base (or none, where it keeps none) where
+   * that is wanted, or where a coarser level is while the view moves; `level`, where it has nothing at it.
    */
-  private atOnce(box: number, level: number): boolean {
+  private atOnce(box: number, level: number): number | null {
     const drawn = this.drawn[box];
-    if (level === drawn) return false;
-    const put = this.arena.sizeOf(box) !== undefined;
-    if (this.isBase(level)) return put;
-    if (put && this.arena.keepsBase && !this.still && level > drawn) return true;
-    return this.segmentsAt(box, level) === 0;
+    if (level === drawn) return null;
+    const { arena } = this;
+    const base = arena.hasBase(box) ? this.coarsest : -1;
+    if (this.isBase(level)) return arena.sizeOf(box) !== undefined ? base : null;
+    if (this.segmentsAt(box, level) === 0) return level;
+    const coarser = arena.keepsBase && !this.still && level > drawn;
+    return coarser && arena.sizeOf(box) !== undefined ? base : null;
   }
 
   /** The bases neither placed, in nor unreadable, a batch of them: of the boxes in `order`, or else of every box. */

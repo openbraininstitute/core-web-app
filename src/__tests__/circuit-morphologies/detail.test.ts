@@ -115,11 +115,12 @@ describe('chooseDetail', () => {
     expect(Array.from(levels)).toEqual([2, 0, 1]);
     expect(Array.from(order)).toEqual([0, 1, 2]);
     // Those the pixels take finer, however fine they may be.
-    expect(Array.from(finer)).toEqual([0, 1, 2]);
+    expect(Array.from(finer)).toEqual([1, 1, 1]);
     expect(segments).toBe(10 + 100 + 50);
     // Without a base, how fine a box may be tells nothing.
     const without = chooseDetail(boxesAt([10, 20, 30]), view, RULES, bySegment, false, finest);
     expect(Array.from(without.levels)).toEqual([0, 0, 0]);
+    expect(Array.from(without.finer)).toEqual([0, 0, 0]);
   });
 
   it('places the boxes where the shift puts them in the view', () => {

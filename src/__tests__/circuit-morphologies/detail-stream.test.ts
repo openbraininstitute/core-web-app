@@ -309,9 +309,7 @@ describe('DetailStream', () => {
     async function letGoOf2() {
       const made = make(BLOCK, true);
       const { stream } = made;
-      stream.update(behindOf(20), RULES, true);
-      stream.see([2], true);
-      stream.update(behindOf(20), RULES, true);
+      seeing(stream, behindOf(20), [2]);
       await readAll(made);
       expect(levelsDrawn(stream)).toEqual([0, 1, 3]);
       expect(stream.see([2, 3], true)).toBe(true);
@@ -326,17 +324,28 @@ describe('DetailStream', () => {
       return made;
     }
 
-    /** At rest at `view`, every box seen by a frame drawn there. */
-    const seeingAll = (stream: DetailStream, view: DetailView) => {
+    /** At rest at `view`, `boxes` seen by a frame drawn there. */
+    function seeing(stream: DetailStream, view: DetailView, boxes = EVERY_BOX) {
       stream.update(view, RULES, true);
-      stream.see(EVERY_BOX, true);
+      stream.see(boxes, true);
       stream.update(view, RULES, true);
-    };
+    }
+
+    /** Box 1 with no segments at its base, the coarsest level. */
+    function emptyBase() {
+      const { chunks, reads } = chunksOf();
+      const base = Uint32Array.from([10, 0, 10, 10]);
+      const levels = chunks.levels.map((level, k) =>
+        k === 2 ? { ...level, segments: base } : level
+      );
+      const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
+      return { stream: new DetailStream({ ...chunks, levels }, arena, vi.fn()), reads };
+    }
 
     it('reads the bases of the boxes in view, then the finer levels they want, then the other bases', async () => {
       const { stream, arena, reads } = make(1000, true);
       const asked = () => askedOf(reads);
-      seeingAll(stream, behindOf(20));
+      seeing(stream, behindOf(20));
       expect(asked()).toEqual([['3 at 2', '2 at 2']]);
       reads[0].resolve();
       await settled();
@@ -358,13 +367,10 @@ describe('DetailStream', () => {
     });
 
     it('goes back to it at once, the view moving, with no read', async () => {
-      const { stream, arena, reads } = make(1000, true);
-      seeingAll(stream, behindOf(20));
-      for (let read = 0; read < 3; read++) {
-        reads[read].resolve();
-        await settled();
-      }
-      stream.apply();
+      const made = make(1000, true);
+      const { stream, arena, reads } = made;
+      seeing(stream, behindOf(20));
+      await readAll(made);
 
       expect(stream.update(behindOf(500), RULES, false)).toBe(true);
       expect(stream.apply()).toEqual({ changed: true, more: false });
@@ -374,33 +380,20 @@ describe('DetailStream', () => {
     });
 
     it('has a box of no segments at the coarsest drawn at it from the start', () => {
-      const { chunks } = chunksOf();
-      const base = Uint32Array.from([10, 0, 10, 10]);
-      const levels = chunks.levels.map((level, k) =>
-        k === 2 ? { ...level, segments: base } : level
-      );
-      const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
-      const stream = new DetailStream({ ...chunks, levels }, arena, vi.fn());
-      expect(levelsDrawn(stream)).toEqual([0, 0, 1]);
+      expect(levelsDrawn(emptyBase().stream)).toEqual([0, 0, 1]);
     });
 
     it('takes a box of no segments at its base as seen, which no culling can mark', async () => {
-      const { chunks, reads } = chunksOf();
-      const base = Uint32Array.from([10, 0, 10, 10]);
-      const levels = chunks.levels.map((level, k) =>
-        k === 2 ? { ...level, segments: base } : level
-      );
-      const arena = new SegmentArena(new THREE.InstancedBufferGeometry(), 1000, undefined, base);
-      const stream = new DetailStream({ ...chunks, levels }, arena, vi.fn());
-      stream.update(viewOf(20), RULES, true);
-      await readAll({ stream, reads });
-      expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
+      const made = emptyBase();
+      made.stream.update(viewOf(20), RULES, true);
+      await readAll(made);
+      expect(levelsDrawn(made.stream)).toEqual([1, 0, 3]);
     });
 
     it('holds the budget to the room past the base, which it does not count', () => {
       // Two blocks past it: the boxes nearest the focus at the middle level, the others at their bases.
       const { stream } = make(2 * BLOCK, true);
-      seeingAll(stream, viewOf(20));
+      seeing(stream, viewOf(20));
       expect(stream.stats(RULES)).toMatchObject({ wanted: 50 + 50 + 10 + 10, leftOut: 0 });
     });
 
@@ -438,9 +431,7 @@ describe('DetailStream', () => {
     it('keeps what a box seen no more has while the view rests, and takes it to its base once the view moves', async () => {
       const made = make(1000, true);
       const { stream, arena } = made;
-      stream.update(behindOf(20), RULES, true);
-      stream.see([3], true);
-      stream.update(behindOf(20), RULES, true);
+      seeing(stream, behindOf(20), [3]);
       await readAll(made);
       expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
       for (let read = 0; read <= LINGER.still; read++) expect(stream.see([], true)).toBe(false);
@@ -502,9 +493,7 @@ describe('DetailStream', () => {
     it('takes a jump of the camera at rest as coming to rest anew: nothing seen until a frame there is read', async () => {
       const made = make(1000, true);
       const { stream, reads } = made;
-      stream.update(behindOf(20), RULES, true);
-      stream.see([3], true);
-      stream.update(behindOf(20), RULES, true);
+      seeing(stream, behindOf(20), [3]);
       await readAll(made);
       expect(levelsDrawn(stream)).toEqual([1, 0, 3]);
 
@@ -522,7 +511,7 @@ describe('DetailStream', () => {
     it('takes a box wanted coarser to its base at once while the view moves, and reads its level once still', async () => {
       const made = make(1000, true);
       const { stream, reads } = made;
-      seeingAll(stream, behindOf(20));
+      seeing(stream, behindOf(20));
       await readAll(made);
       expect(levelsDrawn(stream)).toEqual([2, 0, 2]);
 

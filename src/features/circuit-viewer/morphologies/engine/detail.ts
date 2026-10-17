@@ -37,8 +37,11 @@ export interface Detail {
   levels: Int8Array;
   /** The boxes in view, the one nearest the focus first. */
   order: Uint32Array;
-  /** The boxes in view the pixels take finer than the coarsest, however fine they may be, before the budget. */
-  finer: Uint32Array;
+  /**
+   * Of each box, 1 where it is in view and the pixels take it finer than the coarsest, however fine it may be (`finest`),
+   * before the budget; none where that is not given.
+   */
+  finer: Uint8Array;
   /**
    * What the levels chosen come to, of the boxes in view, or with a base of every box; where the boxes in view are left
    * out, what they come to at the coarsest.
@@ -78,7 +81,8 @@ export function chooseDetail(
   const chosen = new Int8Array(count).fill(base ? coarsest : -1);
   const away = new Float64Array(count);
   const inView: number[] = [];
-  const finerInView: number[] = [];
+  const finer = new Uint8Array(count);
+  const finestOf = base ? finest : undefined;
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
   const span = pixelSpan(view.projection, view.height);
   // The view matrix's row that gives a point's depth.
@@ -97,8 +101,11 @@ export function chooseDetail(
     const pixelUm = view.orthographic ? span : span * Math.max(-(z + reach), 0);
     let level = coarsest;
     while (level > 0 && levels[level].toleranceUm > pixels * pixelUm) level--;
-    if (level < coarsest) finerInView.push(b);
-    chosen[b] = base && finest ? Math.max(level, finest(b)) : level;
+    if (finestOf && level < coarsest) {
+      finer[b] = 1;
+      level = Math.max(level, finestOf(b));
+    }
+    chosen[b] = level;
     away[b] = middle.distanceTo(view.focus);
     inView.push(b);
   }
@@ -123,7 +130,6 @@ export function chooseDetail(
   let segments = 0;
   if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
   else for (const b of order) segments += segmentsOf(b);
-  const finer = Uint32Array.from(finerInView);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
   if (room <= budget) return { levels: chosen, order, finer, segments, leftOut: 0 };
   for (const b of order) chosen[b] = -1;

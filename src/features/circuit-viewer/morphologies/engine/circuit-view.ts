@@ -623,11 +623,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     }
     if (detailed.stream.see(boxes, still)) {
       detailed.seenChanged = true;
-      // A frame asked for at rest alone: one moving is drawn anyway, and so is the still one after it.
-      if (detailed.chosenFor?.still ?? true) this.invalidate();
+      this.invalidateAtRest();
     }
     this.culled = counts;
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
+  }
+
+  /** A frame asked for where the view is `still`: one moving is drawn anyway, and so is the still one after it. */
+  private invalidateAtRest(still = !this.drawnMoving): void {
+    if (still) this.invalidate();
   }
 
   /** The listeners told what is drawn of morphologies read a box at a time, where that changed. */
@@ -675,8 +679,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       focus: this.controls.target,
       shift: this.uniforms.uShift.value,
     };
-    // While the view moves, the loop places what is to be placed, and the next frame draws it.
-    if (detailed.stream.update(view, this.detailRules, still, moved) && still) this.invalidate();
+    if (detailed.stream.update(view, this.detailRules, still, moved)) this.invalidateAtRest(still);
     this.tellDetail();
   }
 
@@ -1105,7 +1108,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!stream) return false;
     const { changed, more } = stream.apply();
     if (changed) {
-      if (this.layer?.detailed?.chosenFor?.still ?? true) this.invalidate();
+      this.invalidateAtRest();
       this.tellDetail();
     }
     return more;
