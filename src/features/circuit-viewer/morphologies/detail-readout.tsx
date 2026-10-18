@@ -57,8 +57,9 @@ export function DetailReadout({
       {detail && (
         <>
           <div>
-            {count(detail.drawn)} segments {detail.culled ? 'resident' : 'drawn'} of{' '}
-            {count(detail.wanted)} wanted
+            {count(detail.drawn)} segments{' '}
+            {tier === 'webgpu' && detail.culling ? 'resident' : 'drawn'} of {count(detail.wanted)}{' '}
+            wanted
             {detail.leftOut > 0 && `, ${count(detail.leftOut)} boxes left out`}
           </div>
           <div data-testid="room">

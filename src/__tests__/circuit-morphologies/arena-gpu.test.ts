@@ -124,11 +124,13 @@ describe("an arena on the page's GPU buffers", () => {
   });
 
   it.each([
-    ['tells, a moment later, of a device out of memory for its buffers', true, 1],
-    ['tells of nothing where the device made them', false, 0],
-  ])('%s', async (_case, outOfMemory, times) => {
-    const { memory } = arenaOnFake(16 * BLOCK, outOfMemory);
+    ['tells, a moment later, of a device out of memory for its buffers', true, false, 1],
+    ['tells of nothing where the device made them', false, false, 0],
+    ['tells of nothing where the arena was let go of before the device told', true, true, 0],
+  ])('%s', async (_case, outOfMemory, letGo, times) => {
+    const { arena, memory } = arenaOnFake(16 * BLOCK, outOfMemory);
     expect(memory).not.toHaveBeenCalled();
+    if (letGo) arena.dispose();
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(memory).toHaveBeenCalledTimes(times);
   });

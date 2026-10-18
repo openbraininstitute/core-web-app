@@ -53,7 +53,8 @@ export interface ArenaBuffers {
 /**
  * An arena's arrays `ends`, `words` and `blocks` in buffers of the page's on `device`, which three binds for `storage`,
  * with the culling's lists: what changes written to them, and no copy kept by three. `told` is handed the buffers, and
- * null once they are let go of; `outOfMemory`, told a moment later where the device could not make them.
+ * null once they are let go of; `outOfMemory`, told a moment later where the device could not make them, unless they
+ * were let go of first.
  */
 export function arenaOnGpu(
   renderer: THREE.WebGPURenderer,
@@ -68,6 +69,7 @@ export function arenaOnGpu(
   // A binding holds something.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
     device.createBuffer({ label, size: Math.max(bytes, 32), usage });
+  let gone = false;
   const buffers = scoped(
     device,
     'out-of-memory',
@@ -83,7 +85,9 @@ export function arenaOnGpu(
         STORAGE | COPY_DST | COPY_SRC
       ),
     }),
-    outOfMemory
+    () => {
+      if (!gone) outOfMemory();
+    }
   );
   shareBuffer(renderer, storage.ends, buffers.ends);
   shareBuffer(renderer, storage.words, buffers.words);
@@ -100,6 +104,7 @@ export function arenaOnGpu(
       device.queue.writeBuffer(buffers.blocks, 32 * first, blocks, 8 * first, 8 * (last - first));
     },
     dispose() {
+      gone = true;
       told(null);
       for (const buffer of Object.values(buffers)) buffer.destroy();
     },
