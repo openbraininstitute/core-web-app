@@ -64,7 +64,7 @@ export function arenaOnGpu(
   told: (buffers: ArenaBuffers | null) => void,
   outOfMemory: () => void
 ): ArenaUploads {
-  const { ends, words, blocks } = arrays;
+  let { ends, words, blocks } = arrays;
   const capacity = words.length;
   // A binding holds something.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
@@ -107,6 +107,10 @@ export function arenaOnGpu(
       gone = true;
       told(null);
       for (const buffer of Object.values(buffers)) buffer.destroy();
+      // The out-of-memory callback, which shares this scope, may make the next arena while it holds them.
+      ends = new Float32Array(0);
+      words = new Uint32Array(0);
+      blocks = new Float32Array(0);
     },
   };
 }

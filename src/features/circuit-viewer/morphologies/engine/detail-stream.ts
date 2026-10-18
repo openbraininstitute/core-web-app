@@ -90,9 +90,11 @@ function arenaPlan(
   budget: number,
   baseUpTo: number
 ): { capacity: number; base?: Uint32Array } {
-  const base = chunks.levels[chunks.levels.length - 1].segments;
-  const capacity = capacityOf(chunks, budget, base);
-  if (baseUpTo > 0 && roomFor(capacity) <= baseUpTo) return { capacity, base };
+  if (baseUpTo > 0) {
+    const base = chunks.levels[chunks.levels.length - 1].segments;
+    const capacity = capacityOf(chunks, budget, base);
+    if (roomFor(capacity) <= baseUpTo) return { capacity, base };
+  }
   return { capacity: capacityOf(chunks, budget) };
 }
 
@@ -111,7 +113,6 @@ export class DetailStream {
   private chunks: MorphologyChunks;
   private arena: SegmentArena;
   private onRead: () => void;
-  private baseUpTo: number;
   private coarsest: number;
   /** The levels drawn of each box, -1 for none. */
   private drawn: Int8Array;
@@ -146,20 +147,13 @@ export class DetailStream {
   private told = false;
 
   /**
-   * `onRead` is told when boxes came in, to be placed; `baseUpTo`, the most an arena made again may hold where it keeps
-   * a base (0, none; by default, as much as this one where it keeps one), which this one keeps where it keeps room for
-   * one (`SegmentArena`), of the coarsest level.
+   * `onRead` is told when boxes came in, to be placed; the arena keeps a base, of the coarsest level, where it keeps
+   * room for one (`SegmentArena`).
    */
-  constructor(
-    chunks: MorphologyChunks,
-    arena: SegmentArena,
-    onRead: () => void,
-    baseUpTo = arena.keepsBase ? arena.capacity : 0
-  ) {
+  constructor(chunks: MorphologyChunks, arena: SegmentArena, onRead: () => void) {
     this.chunks = chunks;
     this.arena = arena;
     this.onRead = onRead;
-    this.baseUpTo = baseUpTo;
     this.coarsest = chunks.levels.length - 1;
     const count = chunks.boxes.length / 6;
     this.drawn = new Int8Array(count).fill(-1);
@@ -187,30 +181,28 @@ export class DetailStream {
   ): DetailStream {
     const { capacity, base } = arenaPlan(chunks, budget, baseUpTo);
     const arena = new SegmentArena(geometry, capacity, uploadsOf, base);
-    return new DetailStream(chunks, arena, onRead, baseUpTo);
+    return new DetailStream(chunks, arena, onRead);
   }
 
-  /** Whether its arena holds as much as `budget` asks of it, and keeps a base where `budget` would. */
-  holds(budget: number): boolean {
-    const { capacity, base } = arenaPlan(this.chunks, budget, this.baseUpTo);
+  /**
+   * Whether its arena holds as much as `budget` asks of it, and keeps a base where one made for it would, holding no
+   * more than `baseUpTo`.
+   */
+  holds(budget: number, baseUpTo: number): boolean {
+    const { capacity, base } = arenaPlan(this.chunks, budget, baseUpTo);
     return (base !== undefined) === this.arena.keepsBase && capacity <= this.arena.capacity;
   }
 
   /**
    * Its boxes streamed again into an arena on `geometry` made for `budget`, uploaded as its own is, keeping a base where
-   * it then holds no more than `baseUpTo` (by default, as this one), those it could not read left out and those seen
-   * taken as seen; this stream stopped first, so that what its arena uploads to is let go of before the new one's is
-   * made.
+   * it then holds no more than `baseUpTo`, those it could not read left out and those seen taken as seen; this stream
+   * stopped first, so that what its arena uploads to is let go of before the new one's is made.
    */
-  remade(
-    budget: number,
-    geometry: THREE.InstancedBufferGeometry,
-    baseUpTo = this.baseUpTo
-  ): DetailStream {
+  remade(budget: number, baseUpTo: number, geometry: THREE.InstancedBufferGeometry): DetailStream {
     this.stop();
     const { capacity, base } = arenaPlan(this.chunks, budget, baseUpTo);
     const arena = this.arena.remade(geometry, capacity, base);
-    const stream = new DetailStream(this.chunks, arena, this.onRead, baseUpTo);
+    const stream = new DetailStream(this.chunks, arena, this.onRead);
     stream.unread = this.unread;
     stream.told = this.told;
     stream.sight = this.sight;
@@ -221,11 +213,6 @@ export class DetailStream {
   /** The arena's quads, which draw what is placed. */
   get geometry(): THREE.InstancedBufferGeometry {
     return this.arena.geometry;
-  }
-
-  /** Whether its arena keeps every box's coarsest level. */
-  get keepsBase(): boolean {
-    return this.arena.keepsBase;
   }
 
   /** The boxes placed with a block of the arena marked in `marked`, a bit a block. */

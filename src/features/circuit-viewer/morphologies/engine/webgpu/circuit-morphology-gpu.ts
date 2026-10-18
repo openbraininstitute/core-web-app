@@ -87,6 +87,9 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer = renderer;
     this.device = device;
     this.onLost = onLost;
+    // As many as a binding takes of their ends, 8 floats each.
+    const { maxStorageBufferBindingSize, maxBufferSize } = device.limits;
+    this.baseUpTo = Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4));
     device.lost.then((info) => {
       if (info.reason !== 'destroyed') this.giveOut('reset');
     });
@@ -124,9 +127,10 @@ export class CircuitMorphologyGPU extends CircuitView {
     if (told && !this.disposed) told(how);
   }
 
-  /** The arena made again without its base, where it keeps one; else the view given out. */
+  /** No arena keeps a base from then on, and this one is made again without it; where it kept none, the view given out. */
   private outOfMemory(): void {
-    if (this.dropBase())
+    this.baseUpTo = 0;
+    if (this.refitArena())
       logError('The device ran out of memory for the arena: made again without its base');
     else this.giveOut('memory');
   }
@@ -185,9 +189,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * In buffers of the page's, which the segments' materials read as storage, as many as their ends, the largest at 8
-   * floats a segment, take in a binding: the seen segments' quads drawn by the culling's draws, flat and tubes, and the
-   * kept segments' quads in their place in `keptQuads`.
+   * In buffers of the page's, which the segments' materials read as storage: the seen segments' quads drawn by the
+   * culling's draws, flat and tubes, and the kept segments' quads in their place in `keptQuads`.
    */
   protected override arenaDrawing(): ArenaDrawing {
     if (!this.arena) {
@@ -201,7 +204,6 @@ export class CircuitMorphologyGPU extends CircuitView {
       };
     }
     const { storage, segment, ids, kept, culling } = this.arena;
-    const { maxStorageBufferBindingSize, maxBufferSize } = this.device.limits;
     this.keep([
       new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
@@ -216,7 +218,6 @@ export class CircuitMorphologyGPU extends CircuitView {
           (buffers) => culling.setArena(buffers),
           () => this.outOfMemory()
         ),
-      most: Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4)),
       segment,
       ids,
       quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],

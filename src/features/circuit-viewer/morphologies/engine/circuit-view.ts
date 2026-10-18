@@ -112,12 +112,11 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
 
 /**
  * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
- * go and the most segments they hold, where the arena keeps every box's coarsest level (`DetailStream`), the materials
- * of the segments in the look and in their cells' numbers, and the quads each of them is drawn on, by their order.
+ * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on, by
+ * their order.
  */
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
-  most: number;
   segment: THREE.Material[];
   ids: THREE.Material[];
   quads: THREE.InstancedBufferGeometry[];
@@ -272,8 +271,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private toldDetail: DetailStats | null = null;
   /** What the tier's culling last counted. */
   private culled: CullCounts | null = null;
-  /** Whether no arena keeps a base, the device out of memory for one (`dropBase`). */
-  private baseless = false;
+  /** The most segments an arena may hold where it keeps every box's coarsest level (`DetailStream`), as the tier has it. */
+  protected baseUpTo = 0;
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
   private spots = new THREE.Scene();
   protected spotUniforms = { uSegments: { value: 0 } };
@@ -516,7 +515,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         quadGeometry(0),
         () => this.invalidate(),
         drawing?.uploadsOf,
-        this.baseless ? 0 : drawing?.most
+        this.baseUpTo
       );
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
@@ -569,41 +568,30 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (isEqual(next, this.detailRules)) return;
     this.detailRules = next;
     if (!next.culling) this.culled = null;
-    this.holdBudget();
+    this.refitArena();
     this.tellDetail();
     this.invalidate();
-  }
-
-  /** The arena made again where it holds less than the budget asks of it, its boxes read again. */
-  private holdBudget(): void {
-    if (this.layer?.detailed?.stream.holds(this.detailRules.budget) === false) this.remakeArena();
   }
 
   /**
-   * Where the arena keeps a base, it made again without one, its boxes read again, and no arena of this view keeps one
-   * from then on: the device ran out of memory for it. False where it keeps none.
+   * The arena made again where it holds less than the budget asks of it, or keeps a base where `baseUpTo` would not,
+   * its boxes read again. Whether it was.
    */
-  protected dropBase(): boolean {
-    if (!this.layer?.detailed?.stream.keepsBase) return false;
-    this.baseless = true;
-    this.remakeArena(0);
-    this.tellDetail();
-    this.invalidate();
-    return true;
-  }
-
-  /** The arena made again for the budget, keeping a base where `baseUpTo` has room for one (`DetailStream.remade`). */
-  private remakeArena(baseUpTo?: number): void {
-    const { layer } = this;
-    if (!layer?.detailed) return;
+  protected refitArena(): boolean {
+    const { layer, baseUpTo } = this;
+    const { budget } = this.detailRules;
+    if (!layer?.detailed || layer.detailed.stream.holds(budget, baseUpTo)) return false;
     const was = layer.detailed.stream;
-    const stream = was.remade(this.detailRules.budget, quadGeometry(0), baseUpTo);
+    const stream = was.remade(budget, baseUpTo, quadGeometry(0));
     for (const mesh of [...layer.meshes, ...layer.ids]) {
       if (mesh.geometry === was.geometry) mesh.geometry = stream.geometry;
     }
     was.geometry.dispose();
     layer.detailed = { stream, chosenFor: null, seenChanged: false };
     this.culled = null;
+    this.tellDetail();
+    this.invalidate();
+    return true;
   }
 
   onDetail(listener: (detail: DetailStats | null) => void): () => void {

@@ -50,6 +50,16 @@ function chunksOf() {
   return { chunks, reads };
 }
 
+/** Uploads that say when an arena's are made, of how many segments, and let go of. */
+function uploadsSaid() {
+  const said: string[] = [];
+  const uploadsOf: UploadsOf = (_ends, words) => {
+    said.push(`made ${words.length}`);
+    return { upload: vi.fn(), dispose: () => said.push('disposed') };
+  };
+  return { said, uploadsOf };
+}
+
 /**
  * An orthographic view `half` µm either side of the middle, 1000 device pixels high: 500 and more draws the coarsest
  * level, 100 the middle one, 20 the finest. The focus is on the first box.
@@ -192,31 +202,27 @@ describe('DetailStream', () => {
   it('makes its arena for the budget, holding a larger one only as far as the boxes can take', () => {
     const { chunks } = chunksOf();
     const small = DetailStream.of(chunks, 2 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
-    expect(small.holds(2 * BLOCK)).toBe(true);
-    expect(small.holds(4 * BLOCK)).toBe(false);
+    expect(small.holds(2 * BLOCK, 0)).toBe(true);
+    expect(small.holds(4 * BLOCK, 0)).toBe(false);
     // Every box at the finest takes two blocks: eight in all, whatever the budget past them.
     const whole = DetailStream.of(chunks, 8 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
-    expect(whole.holds(1e9)).toBe(true);
+    expect(whole.holds(1e9, 0)).toBe(true);
   });
 
   it('is made again for a larger budget, its arena let go of before the new one is made, uploaded alike', () => {
     const { chunks } = chunksOf();
-    const said: string[] = [];
-    const uploadsOf: UploadsOf = (_ends, words) => {
-      said.push(`made ${words.length}`);
-      return { upload: vi.fn(), dispose: () => said.push('disposed') };
-    };
+    const { said, uploadsOf } = uploadsSaid();
     const geometry = new THREE.InstancedBufferGeometry();
     const small = DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf);
-    const larger = small.remade(4 * BLOCK, new THREE.InstancedBufferGeometry());
+    const larger = small.remade(4 * BLOCK, 0, new THREE.InstancedBufferGeometry());
     expect(said).toEqual([`made ${3 * BLOCK}`, 'disposed', `made ${5 * BLOCK}`]);
     expect(larger.geometry).not.toBe(geometry);
-    expect(larger.holds(4 * BLOCK)).toBe(true);
+    expect(larger.holds(4 * BLOCK, 0)).toBe(true);
 
     // On three's attributes, the new quads take them.
     const quads = new THREE.InstancedBufferGeometry();
     const stream = DetailStream.of(chunks, 2 * BLOCK, new THREE.InstancedBufferGeometry(), vi.fn());
-    stream.remade(4 * BLOCK, quads);
+    stream.remade(4 * BLOCK, 0, quads);
     expect(quads.getAttribute('aCell').count).toBe(5 * BLOCK);
   });
 
@@ -227,7 +233,7 @@ describe('DetailStream', () => {
     reads[0].reject(new Error('morphology pack chunk cut short'));
     await settled();
 
-    const again = stream.remade(1000, new THREE.InstancedBufferGeometry());
+    const again = stream.remade(1000, 0, new THREE.InstancedBufferGeometry());
     again.update(viewOf(500), RULES, true);
     expect(reads[1].wanted.map(({ box }) => box)).toEqual([1, 2, 3]);
     reads[1].reject(new Error('morphology pack chunk cut short'));
@@ -550,7 +556,11 @@ describe('DetailStream', () => {
       const made = make(1000, true);
       made.stream.update(behindOf(20), RULES, true);
       made.stream.see([3], true);
-      const again = made.stream.remade(1000, new THREE.InstancedBufferGeometry());
+      const again = made.stream.remade(
+        1000,
+        made.arena.capacity,
+        new THREE.InstancedBufferGeometry()
+      );
       made.reads.length = 0;
       again.update(behindOf(20), RULES, true);
       await readAll({ stream: again, reads: made.reads });
@@ -559,22 +569,18 @@ describe('DetailStream', () => {
 
     it('is made with one where it holds no more than it may, and again without one where it would hold more', () => {
       const { chunks } = chunksOf();
-      const said: string[] = [];
-      const uploadsOf: UploadsOf = (_ends, words) => {
-        said.push(`made ${words.length}`);
-        return { upload: vi.fn(), dispose: () => said.push('disposed') };
-      };
+      const { said, uploadsOf } = uploadsSaid();
       // Four blocks of base, and a quarter more than the budget past it.
       const geometry = new THREE.InstancedBufferGeometry();
       const stream = DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf, 500);
       expect(said).toEqual([`made ${7 * BLOCK}`]);
-      expect(stream.holds(2 * BLOCK)).toBe(true);
-      expect(stream.holds(4 * BLOCK)).toBe(false);
+      expect(stream.holds(2 * BLOCK, 500)).toBe(true);
+      expect(stream.holds(4 * BLOCK, 500)).toBe(false);
 
-      const without = stream.remade(4 * BLOCK, new THREE.InstancedBufferGeometry());
+      const without = stream.remade(4 * BLOCK, 500, new THREE.InstancedBufferGeometry());
       expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${5 * BLOCK}`]);
-      expect(without.holds(4 * BLOCK)).toBe(true);
-      expect(without.holds(2 * BLOCK)).toBe(false);
+      expect(without.holds(4 * BLOCK, 500)).toBe(true);
+      expect(without.holds(2 * BLOCK, 500)).toBe(false);
 
       // 416 segments, which take seven blocks, more than 420.
       said.length = 0;
@@ -582,23 +588,17 @@ describe('DetailStream', () => {
       expect(said).toEqual([`made ${3 * BLOCK}`]);
     });
 
-    it('is made again without one where it may hold none, and keeps none for a budget after', () => {
+    it('is made again without one where it may hold none, its arena let go of first', () => {
       const { chunks } = chunksOf();
-      const said: string[] = [];
-      const uploadsOf: UploadsOf = (_ends, words) => {
-        said.push(`made ${words.length}`);
-        return { upload: vi.fn(), dispose: vi.fn() };
-      };
+      const { said, uploadsOf } = uploadsSaid();
       const geometry = () => new THREE.InstancedBufferGeometry();
       const stream = DetailStream.of(chunks, 2 * BLOCK, geometry(), vi.fn(), uploadsOf, 500);
-      expect(stream.keepsBase).toBe(true);
+      expect(stream.holds(2 * BLOCK, 0)).toBe(false);
 
-      const without = stream.remade(2 * BLOCK, geometry(), 0);
-      expect(without.keepsBase).toBe(false);
-      expect(said).toEqual([`made ${7 * BLOCK}`, `made ${3 * BLOCK}`]);
-      // Where it may hold 500, it would want the base back for this budget.
-      expect(without.holds(2 * BLOCK)).toBe(true);
-      expect(without.remade(4 * BLOCK, geometry()).keepsBase).toBe(false);
+      const without = stream.remade(2 * BLOCK, 0, geometry());
+      expect(said).toEqual([`made ${7 * BLOCK}`, 'disposed', `made ${3 * BLOCK}`]);
+      expect(without.holds(2 * BLOCK, 0)).toBe(true);
+      expect(without.holds(2 * BLOCK, 500)).toBe(false);
     });
   });
 
