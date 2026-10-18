@@ -197,15 +197,20 @@ export class DetailStream {
   }
 
   /**
-   * Its boxes streamed again into an arena on `geometry` made for `budget`, uploaded as its own is, those it could not
-   * read left out and those seen taken as seen; this stream stopped first, so that what its arena uploads to is let go
-   * of before the new one's is made.
+   * Its boxes streamed again into an arena on `geometry` made for `budget`, uploaded as its own is, keeping a base where
+   * it then holds no more than `baseUpTo` (by default, as this one), those it could not read left out and those seen
+   * taken as seen; this stream stopped first, so that what its arena uploads to is let go of before the new one's is
+   * made.
    */
-  remade(budget: number, geometry: THREE.InstancedBufferGeometry): DetailStream {
+  remade(
+    budget: number,
+    geometry: THREE.InstancedBufferGeometry,
+    baseUpTo = this.baseUpTo
+  ): DetailStream {
     this.stop();
-    const { capacity, base } = arenaPlan(this.chunks, budget, this.baseUpTo);
+    const { capacity, base } = arenaPlan(this.chunks, budget, baseUpTo);
     const arena = this.arena.remade(geometry, capacity, base);
-    const stream = new DetailStream(this.chunks, arena, this.onRead, this.baseUpTo);
+    const stream = new DetailStream(this.chunks, arena, this.onRead, baseUpTo);
     stream.unread = this.unread;
     stream.told = this.told;
     stream.sight = this.sight;
@@ -216,6 +221,11 @@ export class DetailStream {
   /** The arena's quads, which draw what is placed. */
   get geometry(): THREE.InstancedBufferGeometry {
     return this.arena.geometry;
+  }
+
+  /** Whether its arena keeps every box's coarsest level. */
+  get keepsBase(): boolean {
+    return this.arena.keepsBase;
   }
 
   /** The boxes placed with a block of the arena marked in `marked`, a bit a block. */

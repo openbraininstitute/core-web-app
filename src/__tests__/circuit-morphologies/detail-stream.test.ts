@@ -581,6 +581,25 @@ describe('DetailStream', () => {
       DetailStream.of(chunks, 2 * BLOCK, geometry, vi.fn(), uploadsOf, 420);
       expect(said).toEqual([`made ${3 * BLOCK}`]);
     });
+
+    it('is made again without one where it may hold none, and keeps none for a budget after', () => {
+      const { chunks } = chunksOf();
+      const said: string[] = [];
+      const uploadsOf: UploadsOf = (_ends, words) => {
+        said.push(`made ${words.length}`);
+        return { upload: vi.fn(), dispose: vi.fn() };
+      };
+      const geometry = () => new THREE.InstancedBufferGeometry();
+      const stream = DetailStream.of(chunks, 2 * BLOCK, geometry(), vi.fn(), uploadsOf, 500);
+      expect(stream.keepsBase).toBe(true);
+
+      const without = stream.remade(2 * BLOCK, geometry(), 0);
+      expect(without.keepsBase).toBe(false);
+      expect(said).toEqual([`made ${7 * BLOCK}`, `made ${3 * BLOCK}`]);
+      // Where it may hold 500, it would want the base back for this budget.
+      expect(without.holds(2 * BLOCK)).toBe(true);
+      expect(without.remade(4 * BLOCK, geometry()).keepsBase).toBe(false);
+    });
   });
 
   it('places nothing once it is stopped', async () => {

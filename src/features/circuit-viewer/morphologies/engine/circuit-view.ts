@@ -272,6 +272,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private toldDetail: DetailStats | null = null;
   /** What the tier's culling last counted. */
   private culled: CullCounts | null = null;
+  /** Whether no arena keeps a base, the device out of memory for one (`dropBase`). */
+  private baseless = false;
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
   private spots = new THREE.Scene();
   protected spotUniforms = { uSegments: { value: 0 } };
@@ -514,7 +516,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
         quadGeometry(0),
         () => this.invalidate(),
         drawing?.uploadsOf,
-        drawing?.most
+        this.baseless ? 0 : drawing?.most
       );
     const segments = stream ? stream.geometry : segmentGeometry(data);
     const onSegments = (drawn: THREE.Material[]) =>
@@ -574,11 +576,28 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /** The arena made again where it holds less than the budget asks of it, its boxes read again. */
   private holdBudget(): void {
+    if (this.layer?.detailed?.stream.holds(this.detailRules.budget) === false) this.remakeArena();
+  }
+
+  /**
+   * Where the arena keeps a base, it made again without one, its boxes read again, and no arena of this view keeps one
+   * from then on: the device ran out of memory for it. False where it keeps none.
+   */
+  protected dropBase(): boolean {
+    if (!this.layer?.detailed?.stream.keepsBase) return false;
+    this.baseless = true;
+    this.remakeArena(0);
+    this.tellDetail();
+    this.invalidate();
+    return true;
+  }
+
+  /** The arena made again for the budget, keeping a base where `baseUpTo` has room for one (`DetailStream.remade`). */
+  private remakeArena(baseUpTo?: number): void {
     const { layer } = this;
-    const { budget } = this.detailRules;
-    if (!layer?.detailed || layer.detailed.stream.holds(budget)) return;
+    if (!layer?.detailed) return;
     const was = layer.detailed.stream;
-    const stream = was.remade(budget, quadGeometry(0));
+    const stream = was.remade(this.detailRules.budget, quadGeometry(0), baseUpTo);
     for (const mesh of [...layer.meshes, ...layer.ids]) {
       if (mesh.geometry === was.geometry) mesh.geometry = stream.geometry;
     }

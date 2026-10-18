@@ -53,7 +53,7 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /**
    * A view in `host` on `device`; `onLost` is told once if the device is lost, which the view does not draw past, or
-   * cannot make a pack's arena. Aborted (`signal`) before the renderer is ready, none is made.
+   * cannot make a pack's arena, even without its base. Aborted (`signal`) before the renderer is ready, none is made.
    */
   static async create(
     host: HTMLElement,
@@ -122,6 +122,13 @@ export class CircuitMorphologyGPU extends CircuitView {
     const told = this.onLost;
     this.onLost = null;
     if (told && !this.disposed) told(how);
+  }
+
+  /** The arena made again without its base, where it keeps one; else the view given out. */
+  private outOfMemory(): void {
+    if (this.dropBase())
+      logError("The device ran out of memory for the arena's base: made again without it");
+    else this.giveOut('memory');
   }
 
   protected override disposeStage(): void {
@@ -207,7 +214,7 @@ export class CircuitMorphologyGPU extends CircuitView {
           storage,
           { ends, words, blocks },
           (buffers) => culling.setArena(buffers),
-          () => this.giveOut('memory')
+          () => this.outOfMemory()
         ),
       most: Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4)),
       segment,

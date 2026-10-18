@@ -17,6 +17,7 @@ import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
+import type { ArenaDrawing } from '@/features/circuit-viewer/morphologies/engine/circuit-view';
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import type { SomaCloudUniforms } from '@/features/circuit-viewer/morphologies/engine/soma-cloud';
 import type {
@@ -114,7 +115,10 @@ type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
 let viewers: CircuitMorphologyViewer[] = [];
 
 /** A viewer on a screen of `pixelRatio`. */
-function make(pixelRatio = 1): {
+function make(
+  pixelRatio = 1,
+  View = CircuitMorphologyViewer
+): {
   viewer: CircuitMorphologyViewer;
   inner: Internals;
   host: HTMLElement;
@@ -122,7 +126,7 @@ function make(pixelRatio = 1): {
   const host = document.body.appendChild(document.createElement('div'));
   Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
   FakeRenderer.devicePixelRatio = pixelRatio;
-  const viewer = new CircuitMorphologyViewer(host);
+  const viewer = new View(host);
   viewers.push(viewer);
   return { viewer, inner: viewer as unknown as Internals, host };
 }
@@ -1489,6 +1493,52 @@ describe('the morphologies read a box at a time', () => {
 
     viewer.setDetailRules({ budget: BLOCK });
     expect(segmentsOf(inner).geometry).toBe(geometry);
+  });
+
+  it("made again without its base where the device runs out of memory for it, its boxes read again, the next pack's too", async () => {
+    /** The arena's arrays uploaded elsewhere, as on WebGPU, with room for a base. */
+    class Based extends CircuitMorphologyViewer {
+      protected override arenaDrawing(): ArenaDrawing {
+        const { segment, ids } = this.materials;
+        return {
+          uploadsOf: () => ({ upload: vi.fn(), dispose: vi.fn() }),
+          most: 1_000_000,
+          segment,
+          ids: ids.segment,
+          quads: [],
+        };
+      }
+
+      /** As WebGPU's view does where the device cannot make the arena's buffers. */
+      outOfMemory(): boolean {
+        return this.dropBase();
+      }
+    }
+    const { viewer, inner } = make(1, Based);
+    const based = viewer as Based;
+    const told = vi.fn();
+    viewer.onDetail(told);
+    viewer.setData(chunked());
+    frames(inner);
+    await readAll(inner);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ base: true });
+    const was = segmentsOf(inner).geometry;
+
+    expect(based.outOfMemory()).toBe(true);
+    const { geometry } = segmentsOf(inner);
+    expect(geometry).not.toBe(was);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ base: false, drawn: 0 });
+    reads.length = 0;
+    frames(inner);
+    expect(reads).toHaveLength(1);
+    await readAll(inner);
+    expect(told.mock.lastCall?.[0]).toMatchObject({ base: false, leftOut: 0 });
+    expect(geometry.instanceCount).toBeGreaterThan(0);
+
+    // None kept to drop: WebGPU's view gives out.
+    expect(based.outOfMemory()).toBe(false);
+    viewer.setData(chunked());
+    expect(told.mock.lastCall?.[0]).toMatchObject({ base: false });
   });
 
   it('places nothing of a read that ends after the morphologies are gone', async () => {
