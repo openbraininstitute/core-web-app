@@ -6,6 +6,7 @@ import { MIN_RADIUS, quadGeometry } from '../impostors';
 import { BLOCK } from '../segment-arena';
 import { VIEW_WGSL } from './cells-wgsl';
 import { ARGS, BLOCKS, PYRAMID, RESOLVE, SEGMENTS } from './culling-wgsl';
+import { scoped } from './error-scope';
 import { IMPOSTORS_WGSL, SEGMENT_ENDS_WGSL } from './impostors-gpu';
 import { gpuTexture, shareBuffer } from './three-hooks';
 import {
@@ -142,7 +143,15 @@ export class Culling {
     this.arena = arena;
     this.bound = null;
     this.generation++;
+    // Sized for the last arena's marks.
+    this.dropReads();
     this.drawNone();
+  }
+
+  private dropReads(): void {
+    for (const read of this.reads) read.destroy();
+    this.reads = [];
+    this.free = [];
   }
 
   /** Quads drawn by the draw at `offset` (`DRAWS`). */
@@ -242,7 +251,7 @@ export class Culling {
     for (const buffer of [this.drawsBuffer, this.viewBuffer, this.counters, this.dispatch]) {
       buffer.destroy();
     }
-    for (const read of this.reads) read.destroy();
+    this.dropReads();
     this.target?.dispose();
     this.dropTargets();
   }
@@ -273,19 +282,17 @@ export class Culling {
           layout: 'auto',
           compute: { module: device.createShaderModule({ code, label }), entryPoint: 'main' },
         });
-      device.pushErrorScope('validation');
-      this.pipelines = {
-        resolve: pipeline(`${LIBRARY}\n${RESOLVE}`, 'cull resolve'),
-        pyramid: pipeline(PYRAMID, 'cull pyramid'),
-        blocks: pipeline(`${LIBRARY}\n${BLOCKS}`, 'cull blocks'),
-        args: pipeline(ARGS, 'cull args'),
-        segments: pipeline(`${LIBRARY}\n${SEGMENTS}`, 'cull segments'),
-      };
-      device.popErrorScope().then(
-        (error) => {
-          if (error) this.fail(error);
-        },
-        () => undefined
+      this.pipelines = scoped(
+        device,
+        'validation',
+        () => ({
+          resolve: pipeline(`${LIBRARY}\n${RESOLVE}`, 'cull resolve'),
+          pyramid: pipeline(PYRAMID, 'cull pyramid'),
+          blocks: pipeline(`${LIBRARY}\n${BLOCKS}`, 'cull blocks'),
+          args: pipeline(ARGS, 'cull args'),
+          segments: pipeline(`${LIBRARY}\n${SEGMENTS}`, 'cull segments'),
+        }),
+        (error) => this.fail(error)
       );
     }
     return this.pipelines;
@@ -382,17 +389,9 @@ export class Culling {
     return this.bound;
   }
 
-  /**
-   * A buffer of at least `bytes` to read the counts back into, one too small made again; none where the GPU is `READS`
-   * frames behind.
-   */
+  /** A buffer of `bytes` to read the counts back into; none where the GPU is `READS` frames behind. */
   private readNow(bytes: number): GPUBuffer | null {
     let read = this.free.pop();
-    if (read && read.size < bytes) {
-      read.destroy();
-      this.reads.splice(this.reads.indexOf(read), 1);
-      read = undefined;
-    }
     if (!read && this.reads.length < READS) {
       read = this.device.createBuffer({ size: bytes, usage: MAP_READ | COPY_DST });
       this.reads.push(read);

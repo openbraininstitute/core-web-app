@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CircuitCells,
@@ -235,6 +235,9 @@ const drag = (host: HTMLElement) => {
   fireEvent.pointerUp(host, { ...at, clientX: 40, clientY: 10 });
 };
 
+/** The flag that shows the debug tools. */
+const DEBUG = '@openbraininstitute/morphoviewer:debug';
+
 afterEach(() => {
   h.viewers = [];
   h.crowdings = [];
@@ -405,30 +408,28 @@ describe('CircuitCells', () => {
     expect(onLeftOut.mock.calls).toEqual([[false], [true], [false], [false]]);
   });
 
-  it('tells why WebGL 2 draws the view, whenever one is made', () => {
-    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
-    try {
+  it('shows nothing of what the engine draws outside the debug tools', () => {
+    const { viewer } = view();
+    tellDetail(viewer, { ...DETAIL, leftOut: 2 });
+    expect(screen.queryByTestId('detail-readout')).toBeNull();
+  });
+
+  describe('in the debug tools', () => {
+    beforeEach(() => localStorage.setItem(DEBUG, 'on'));
+    afterEach(() => localStorage.removeItem(DEBUG));
+
+    it('tells why WebGL 2 draws the view, whenever one is made', () => {
       const onFallback = vi.fn();
       view({ onFallback });
       expect(onFallback.mock.calls).toEqual([['missing']]);
 
       fireEvent.change(screen.getByRole('combobox'), { target: { value: 'webgl' } });
       expect(onFallback.mock.calls).toEqual([['missing'], [null]]);
-    } finally {
-      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
-    }
-  });
+    });
 
-  it('shows what the engine draws in the debug tools alone, with its budget and tolerance to lower', async () => {
-    const { viewer, unmount } = view();
-    tellDetail(viewer, { ...DETAIL, leftOut: 2 });
-    expect(screen.queryByTestId('detail-readout')).toBeNull();
-    unmount();
-
-    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
-    try {
-      const { viewer: debugged } = view();
-      tellDetail(debugged, { ...DETAIL, leftOut: 2 });
+    it('shows what the engine draws, with its budget and tolerance to lower', async () => {
+      const { viewer } = view();
+      tellDetail(viewer, { ...DETAIL, leftOut: 2 });
       const readout = await waitFor(() => screen.getByTestId('detail-readout'));
       expect(readout.textContent).toContain(
         '1,200 segments drawn of 1,500 wanted, 2 boxes left out'
@@ -440,15 +441,10 @@ describe('CircuitCells', () => {
       const [budget, pixels] = screen.getAllByRole('combobox');
       fireEvent.change(budget, { target: { value: '200000' } });
       fireEvent.change(pixels, { target: { value: '4' } });
-      expect(debugged.setDetailRules.mock.calls).toEqual([[{ budget: 200_000 }], [{ pixels: 4 }]]);
-    } finally {
-      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
-    }
-  });
+      expect(viewer.setDetailRules.mock.calls).toEqual([[{ budget: 200_000 }], [{ pixels: 4 }]]);
+    });
 
-  it('says in the debug tools what draws the view, and makes it again with WebGL 2 when asked', async () => {
-    localStorage.setItem('@openbraininstitute/morphoviewer:debug', 'on');
-    try {
+    it('says what draws the view, and makes it again with WebGL 2 when asked', async () => {
       const { viewer } = view();
       const told = await waitFor(() => screen.getByTestId('renderer'));
       expect(told.textContent).toBe('Drawn with WebGL 2: no WebGPU in this browser');
@@ -463,9 +459,7 @@ describe('CircuitCells', () => {
       expect(screen.getByTestId('renderer').textContent).toBe(
         'Drawn with WebGL 2: chosen in the debug tools'
       );
-    } finally {
-      localStorage.removeItem('@openbraininstitute/morphoviewer:debug');
-    }
+    });
   });
 
   it('nudges the view on the signal', async () => {

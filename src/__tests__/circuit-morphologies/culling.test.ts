@@ -6,15 +6,13 @@ import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webg
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 
 import type { ArenaBuffers } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
-import type { CullCounts } from '@/features/circuit-viewer/morphologies/types';
+import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 
 const h = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
 
-type Counts = Omit<CullCounts, 'boxes'>;
-
 /** The words a read of the counts finds: the counters, the draws' arguments, then the blocks marked. */
-function wordsOf({ tested, kept, drawn }: Counts, marked = [0, 0]): Uint32Array {
+function wordsOf({ tested, kept, drawn }: CullTally, marked = [0, 0]): Uint32Array {
   const words = new Uint32Array(4 + 20 + marked.length);
   words[1] = tested;
   words[4 + DRAWS.keptFlat / 4 + 1] = kept;
@@ -24,7 +22,7 @@ function wordsOf({ tested, kept, drawn }: Counts, marked = [0, 0]): Uint32Array 
 }
 
 /** What the culling hands on of a read of `counts`, no block marked, of a frame drawn still in the first rest. */
-const read = (counts: Counts, marked = [0, 0], rest = 1) => ({
+const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
   ...counts,
   marked: Uint32Array.from(marked),
   rest,
@@ -111,7 +109,7 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   culling.targetOf(16, 8);
   const run = (rest = 1) => culling.run(camera, shift, 12, 100, rest);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
-  const map = async (counts: Counts, marked?: number[]) => {
+  const map = async (counts: CullTally, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);
     gpu.maps.shift()?.();
     await Promise.resolve();

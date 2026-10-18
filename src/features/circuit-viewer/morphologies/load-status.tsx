@@ -2,14 +2,14 @@ import { megabytes, StatusAction, StatusPill } from '@/features/viewer-3d/chrome
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
-import type { Fallback } from './engine/create-view';
+import type { Fallback, Lost } from './engine/create-view';
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
 const TOO_LARGE = 'This circuit is too large to show as morphologies';
 const LEFT_OUT = 'Too many morphologies in view: zoom in to see them';
 /** Where the browser has no WebGPU, which leaves out none. */
 const WITH_WEBGPU = 'A browser with WebGPU shows them all';
-const GAVE_OUT: Partial<Record<Fallback, string>> = {
+const GAVE_OUT: Record<Lost, string> = {
   reset: 'Drawn with WebGL 2 after the graphics were reset',
   memory: 'Drawn with WebGL 2: the graphics ran out of memory',
 };
@@ -66,10 +66,10 @@ export function MorphologiesStatus({
   place?: CSSProperties;
   onRetry(): void;
   onDismiss(): void;
-  onFallbackDismiss?(): void;
+  onFallbackDismiss(): void;
 }) {
   let pill: ReactNode = null;
-  const gaveOut = fallback && GAVE_OUT[fallback];
+  const gaveOut = fallback && fallback !== 'missing' ? GAVE_OUT[fallback] : null;
   if (load.status === 'loading') {
     pill = <StatusPill text={loadingText(load)} kind="busy" theme={theme} place={place} />;
   } else if (load.status === 'ready' && leftOut) {
@@ -86,7 +86,7 @@ export function MorphologiesStatus({
   } else if (load.status === 'ready' && gaveOut) {
     pill = (
       <StatusPill text={gaveOut} kind="info" theme={theme} place={place}>
-        {onFallbackDismiss && <StatusAction onClick={onFallbackDismiss}>Dismiss</StatusAction>}
+        <StatusAction onClick={onFallbackDismiss}>Dismiss</StatusAction>
       </StatusPill>
     );
   }

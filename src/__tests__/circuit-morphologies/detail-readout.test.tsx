@@ -63,10 +63,11 @@ describe('the detail readout', () => {
   });
 
   it.each([
-    ['webgl', '1,200 segments drawn of 1,200 wanted'],
-    ['webgpu', '1,200 segments resident of 1,200 wanted'],
-  ] as const)('on %s, says what is drawn as the tier draws it', (tier, said) => {
-    readout(tier);
+    ['WebGL 2', 'webgl', null, '1,200 segments drawn of 1,200 wanted'],
+    ['WebGPU with the culling off', 'webgpu', null, '1,200 segments drawn of 1,200 wanted'],
+    ['WebGPU culling', 'webgpu', DETAIL.culled, '1,200 segments resident of 1,200 wanted'],
+  ] as const)('on %s, says what is drawn as it draws it', (_case, tier, culled, said) => {
+    readout(tier, { ...DETAIL, culled });
     expect(screen.getByTestId('detail-readout').textContent).toContain(said);
   });
 

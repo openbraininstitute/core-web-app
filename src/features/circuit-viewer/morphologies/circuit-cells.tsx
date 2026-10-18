@@ -154,6 +154,7 @@ export function CircuitCells({
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
   const debugMode = useCircuitViewerDebugMode();
+  const fellBack = useLatest(onFallback);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -168,6 +169,7 @@ export function CircuitCells({
       }
       made = view;
       setCreated(view);
+      fellBack.current?.(view.fallback);
     };
     const view = createCircuitView(
       host,
@@ -187,7 +189,7 @@ export function CircuitCells({
       setCreated(null);
       made?.view.dispose();
     };
-  }, [making]);
+  }, [making, fellBack]);
 
   // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
   // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
@@ -309,11 +311,6 @@ export function CircuitCells({
     () => viewer?.onDetail((detail) => leftOutChanged.current?.((detail?.leftOut ?? 0) > 0)),
     [viewer, leftOutChanged]
   );
-  const fellBack = useLatest(onFallback);
-  const fallback = created?.fallback;
-  useEffect(() => {
-    if (fallback !== undefined) fellBack.current?.(fallback);
-  }, [fallback, fellBack]);
 
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;

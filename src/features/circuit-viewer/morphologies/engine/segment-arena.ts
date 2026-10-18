@@ -207,14 +207,15 @@ export class SegmentArena {
     // The base's blocks marked, each the box whose base it holds, in the boxes' order.
     const blocks = this.baseRoom / BLOCK;
     let found: Set<number> | null = null;
-    let was = -1;
+    // Where the last box found's base ends: its other blocks are passed over.
+    let past = 0;
     for (let word = 0; 32 * word < blocks; word++) {
       for (let bits = marked[word]; bits !== 0; bits &= bits - 1) {
         const block = 32 * word + 31 - Math.clz32(bits & -bits);
         if (block >= blocks) break;
+        if (BLOCK * block < past) continue;
         const box = boxAt(baseAt, BLOCK * block);
-        if (box === was) continue;
-        was = box;
+        past = baseAt[box + 1];
         if (this.places.has(box)) {
           found ??= new Set(boxes);
           if (found.has(box)) continue;

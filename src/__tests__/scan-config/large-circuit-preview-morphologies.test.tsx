@@ -227,11 +227,7 @@ describe('LargeCircuitPreview morphologies', () => {
     ['the browser has no WebGPU', 'missing', '. A browser with WebGPU shows them all'],
     ['WebGPU gave out', 'reset', ''],
   ] as const)('says a browser with WebGPU shows them only where %s', async (_case, fallback, more) => {
-    render(<Hosted start="morphologies" />);
-    const load = await started();
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
-    await screen.findByTestId('morphologies');
-
+    await shown();
     act(() => h.cells?.onFallback?.(fallback));
     act(() => h.cells?.onLeftOut?.(true));
     expect(status()).toBe(`Too many morphologies in view: zoom in to see them${more}`);
@@ -254,10 +250,7 @@ describe('LargeCircuitPreview morphologies', () => {
   });
 
   it('says nothing of the tier where the browser has no WebGPU and nothing is left out', async () => {
-    render(<Hosted start="morphologies" />);
-    const load = await started();
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
-    await screen.findByTestId('morphologies');
+    await shown();
     act(() => h.cells?.onFallback?.('missing'));
     expect(status()).toBeNull();
   });

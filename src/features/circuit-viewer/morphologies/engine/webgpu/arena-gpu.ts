@@ -2,6 +2,7 @@ import { texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { BLOCK } from '../segment-arena';
+import { scoped } from './error-scope';
 import { shareBuffer } from './three-hooks';
 import { COPY_DST, COPY_SRC, STORAGE } from './usage';
 
@@ -67,24 +68,22 @@ export function arenaOnGpu(
   // A binding holds something.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
     device.createBuffer({ label, size: Math.max(bytes, 32), usage });
-  device.pushErrorScope('out-of-memory');
-  const buffers: ArenaBuffers = {
-    ends: bufferOf(ends.byteLength, 'arena ends'),
-    words: bufferOf(words.byteLength, 'arena words'),
-    blocks: bufferOf(blocks.byteLength, 'arena blocks'),
-    lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
-    passed: bufferOf((4 * capacity) / BLOCK, 'arena blocks passed', STORAGE),
-    marked: bufferOf(
-      4 * Math.ceil(capacity / BLOCK / 32),
-      'arena blocks marked',
-      STORAGE | COPY_DST | COPY_SRC
-    ),
-  };
-  device.popErrorScope().then(
-    (error) => {
-      if (error) outOfMemory();
-    },
-    () => undefined
+  const buffers = scoped(
+    device,
+    'out-of-memory',
+    (): ArenaBuffers => ({
+      ends: bufferOf(ends.byteLength, 'arena ends'),
+      words: bufferOf(words.byteLength, 'arena words'),
+      blocks: bufferOf(blocks.byteLength, 'arena blocks'),
+      lists: bufferOf(2 * 4 * capacity, 'arena lists', STORAGE),
+      passed: bufferOf((4 * capacity) / BLOCK, 'arena blocks passed', STORAGE),
+      marked: bufferOf(
+        4 * Math.ceil(capacity / BLOCK / 32),
+        'arena blocks marked',
+        STORAGE | COPY_DST | COPY_SRC
+      ),
+    }),
+    outOfMemory
   );
   shareBuffer(renderer, storage.ends, buffers.ends);
   shareBuffer(renderer, storage.words, buffers.words);
