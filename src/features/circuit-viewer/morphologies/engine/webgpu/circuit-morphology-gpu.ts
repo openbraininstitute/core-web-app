@@ -127,10 +127,20 @@ export class CircuitMorphologyGPU extends CircuitView {
     if (told && !this.disposed) told(how);
   }
 
-  /** No arena keeps a base from then on, and this one is made again without it; where it kept none, the view given out. */
+  /**
+   * No arena keeps a base from then on, and this one is made again without it; where it kept none, or could not be made
+   * again, the view given out.
+   */
   private outOfMemory(): void {
     this.baseUpTo = 0;
-    if (this.refitArena())
+    let refitted = false;
+    try {
+      refitted = this.refitArena();
+    } catch (e) {
+      // Its arrays, say, under the same pressure: thrown in the device's callback, it would go untold.
+      logError('Could not make the arena again without its base', e);
+    }
+    if (refitted)
       logError('The device ran out of memory for the arena: made again without its base');
     else this.giveOut('memory');
   }

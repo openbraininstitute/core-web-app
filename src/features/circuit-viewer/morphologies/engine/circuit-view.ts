@@ -568,7 +568,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (isEqual(next, this.detailRules)) return;
     this.detailRules = next;
     if (!next.culling) this.culled = null;
-    this.refitArena();
+    if (this.refitArena()) return;
     this.tellDetail();
     this.invalidate();
   }
