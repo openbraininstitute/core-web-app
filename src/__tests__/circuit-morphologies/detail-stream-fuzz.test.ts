@@ -18,6 +18,7 @@ vi.mock('@/utils/logger', () => ({ logError: vi.fn() }));
 describe('DetailStream, over a long run of views', () => {
   it.each([
     ['', false, false],
+    [', with no base where the culling sees', false, true],
     [', each at its base or finer', true, false],
     [', each at its base or finer where the culling sees it', true, true],
   ])('keeps the arena whole: each box drawn at one level from the start of a block, its segments all there%s', async (_, withBase, withMarks) => {
