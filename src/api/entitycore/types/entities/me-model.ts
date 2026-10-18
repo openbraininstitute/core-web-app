@@ -2,6 +2,7 @@ import z from 'zod';
 
 import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/brain-region';
 import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
+import type { TDerivationType } from '@/api/entitycore/types/entities/derivation';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type {
   EntityAuthorization,
@@ -93,6 +94,9 @@ export interface IMEModelFilter
   morphology__name__ilike: string;
   morphology__name__in: string[];
   morphology__name: string;
+  // morphology derivation join (entitycore GET /memodel); the dataset an ME-model's morphology came from
+  morphology__generated_derivation__used_id: string;
+  morphology__generated_derivation__derivation_type: TDerivationType;
 }
 
 export const CreateMEModelSchema = z.object({
