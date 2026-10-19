@@ -250,7 +250,14 @@ function readRuns(
   for (let r = 0; r < runs; r++) {
     cell += cellSteps[r];
     const end = i + lengths[r];
-    if (cell < 0 || cell >= cells || end > segments || lengths[r] < 1 || back[r] > r) {
+    if (
+      cell < 0 ||
+      cell >= cells ||
+      end > segments ||
+      lengths[r] < 1 ||
+      back[r] < 0 ||
+      back[r] > r
+    ) {
       throw new PackError(AT_ODDS);
     }
     let x: number;
@@ -333,6 +340,7 @@ function readChunk(
   let following = 0;
   let innerPoints = 0;
   for (let b = 0; b < followed; b++) {
+    if (counts[b] < 0) throw new PackError(AT_ODDS);
     following += counts[b];
     innerPoints += Math.max(counts[b] - 1, 0);
   }
@@ -390,6 +398,7 @@ function gatherBoxes(index: PackIndex): { corners: number[]; inBox: number[][] }
           least[k] + chunkSteps + reach
         );
       }
+      if (inBox[box][level] !== -1) throw new PackError(AT_ODDS);
       inBox[box][level] = chunk;
     }
   });
@@ -417,6 +426,8 @@ class Kept {
         if (this.held.get(key) !== entry) return;
         entry.bytes = GRID_BYTES * grid.count;
         this.total += entry.bytes;
+        this.held.delete(key);
+        this.held.set(key, entry);
         for (const [oldest, kept] of this.held) {
           if (this.total <= this.bytes || oldest === key) break;
           this.held.delete(oldest);
@@ -524,11 +535,11 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
       throw new RangeError(`morphology pack without a box ${b} at level ${level}`);
     }
     const grid = await gridAt(level, b);
-    // A box kept for the finer levels is not handed over: its cells are numbered again in place.
+    const { ends } = grid;
+    // A box kept for the finer levels is not handed over: its cells are numbered again in place. Any other box's whole
+    // numbers are made micrometres where they lie, each read before it is written over.
     const kept = isBase[level];
-    const ends = kept ? grid.ends.slice() : grid.ends;
-    // The whole numbers made micrometres where they lie, each read before it is written over.
-    const segments = new Float32Array(ends.buffer);
+    const segments = kept ? new Float32Array(ends.length) : new Float32Array(ends.buffer);
     const [cx, cy, cz] = centre;
     const { gridUm } = index;
     for (let o = 0; o < ends.length; o += 4) {

@@ -388,6 +388,11 @@ describe('openPack and readBox, of what is not a pack they read', () => {
       index.levels[0].segments -= 1;
     });
     await expect(readPack(fewer)).rejects.toThrow('at odds with its index');
+    const twice = withIndex(pack('small'), (index) => {
+      const { box } = index.levels[0].chunks;
+      box.splice(3, 3, ...box.slice(0, 3));
+    });
+    await expect(openPack(twice)).rejects.toThrow('at odds with its index');
   });
 
   it('refuses a cell beyond the populations', async () => {
