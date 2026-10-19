@@ -20,6 +20,8 @@ import type {
 } from '@/features/circuit-viewer/morphologies/types';
 
 export const HEADER_BYTES = 12;
+/** A chunk's four counts before its streams. */
+export const COUNTS_BYTES = 16;
 const file = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url));
 export const pack = (name: string) => new Uint8Array(file(`${name}.pack`));
 export const expected = (name: string) => JSON.parse(file(`${name}.json`).toString());

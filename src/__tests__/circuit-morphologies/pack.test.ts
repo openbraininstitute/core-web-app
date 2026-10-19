@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
 
 import {
+  COUNTS_BYTES,
   expected,
   HEADER_BYTES,
   type Index,
@@ -53,8 +54,6 @@ function withChunk(bytes: Uint8Array, change: Change, level = 0): Uint8Array {
     index.levels[level].chunks.bytes[0] = changed;
   });
 }
-
-const COUNTS_BYTES = 16;
 
 /**
  * Where a chunk has the length of its first run: past the base's counts and the inner points' four streams, in the

@@ -102,16 +102,20 @@ async function openIndex(bytes: Uint8Array): Promise<{ index: PackIndex; blocks:
 
 /** Whether the levels' chunks agree with one another and with their bases. */
 function soundLevels({ levels }: PackIndex): boolean {
-  const withChunks = levels.filter(({ chunks }) => chunks.bytes.length > 0);
-  return levels.every(
-    ({ chunks, chunkSteps, segments, base }, level) =>
-      chunks.box.length === 3 * chunks.bytes.length &&
-      chunks.segments.length === chunks.bytes.length &&
-      chunks.reach.length === chunks.bytes.length &&
-      sum(chunks.segments) === segments &&
-      (chunkSteps > 0 || chunks.bytes.length === 0) &&
-      withChunks.every((other) => other.chunkSteps === chunkSteps || chunks.bytes.length === 0) &&
-      (base === null || (base > level && base < levels.length))
+  const sizes = new Set(
+    levels.filter(({ chunks }) => chunks.bytes.length > 0).map(({ chunkSteps }) => chunkSteps)
+  );
+  return (
+    sizes.size <= 1 &&
+    levels.every(
+      ({ chunks, chunkSteps, segments, base }, level) =>
+        chunks.box.length === 3 * chunks.bytes.length &&
+        chunks.segments.length === chunks.bytes.length &&
+        chunks.reach.length === chunks.bytes.length &&
+        sum(chunks.segments) === segments &&
+        (chunkSteps > 0 || chunks.bytes.length === 0) &&
+        (base === null || (base > level && base < levels.length))
+    )
   );
 }
 
@@ -133,8 +137,8 @@ function readStream(
   const width = data[at];
   const end = at + 1 + width * count;
   if (!(width >= 1 && width <= 4) || end > data.length) throw new PackError(CUT_SHORT);
-  out.fill(0, 0, count);
-  for (let plane = 0, from = at + 1; plane < width; plane++, from += count) {
+  for (let i = 0; i < count; i++) out[i] = data[at + 1 + i];
+  for (let plane = 1, from = at + 1 + count; plane < width; plane++, from += count) {
     const shift = 8 * plane;
     for (let i = 0; i < count; i++) out[i] |= data[from + i] << shift;
   }
@@ -145,17 +149,15 @@ function readStream(
 /** A box's segments at a level, as whole numbers of the grid and of the radius' steps, in the order read. */
 interface Grid {
   count: number;
-  /** x, y, z and radius step of each segment's near end. */
-  near: Int32Array;
-  far: Int32Array;
+  /** x, y, z and radius step of each segment's near end, then of its far end. */
+  ends: Int32Array;
   cells: Uint32Array;
   types: Uint8Array;
 }
 
 const gridOf = (count: number): Grid => ({
   count,
-  near: new Int32Array(4 * count),
-  far: new Int32Array(4 * count),
+  ends: new Int32Array(8 * count),
   cells: new Uint32Array(count),
   types: new Uint8Array(count),
 });
@@ -165,8 +167,8 @@ const NO_BASE = gridOf(0);
 
 /** The chord's guess of the next point: a `left`-th of the way from `from` on to `to`, rounded down. */
 const towards = (from: number, to: number, left: number) => from + Math.floor((to - from) / left);
-/** A step guessed from the one before it in its run. */
-const guessed = (before: number) => Math.floor((3 * before + 2) / 4);
+/** A step guessed from the one before it in its run; a run's first, with 0 before it, is guessed 0. */
+const guessed = (before: number) => (3 * before + 2) >> 2;
 
 /**
  * The segments that follow the base's in `grid` from the first on: for each base segment, from its near end through its
@@ -174,27 +176,27 @@ const guessed = (before: number) => Math.floor((3 * before + 2) / 4);
  */
 function follow(base: Grid, counts: Int32Array, inner: Int32Array[], grid: Grid) {
   const [ix, iy, iz, ir] = inner;
-  const { near, far, cells, types } = grid;
+  const { ends, cells, types } = grid;
   let p = 0;
   let s = 0;
   for (let b = 0; b < base.count; b++) {
     const k = counts[b];
     if (k === 0) continue;
-    const o = 4 * b;
-    let x = base.near[o];
-    let y = base.near[o + 1];
-    let z = base.near[o + 2];
-    let r = base.near[o + 3];
-    const qx = base.far[o];
-    const qy = base.far[o + 1];
-    const qz = base.far[o + 2];
-    const qr = base.far[o + 3];
+    const o = 8 * b;
+    let x = base.ends[o];
+    let y = base.ends[o + 1];
+    let z = base.ends[o + 2];
+    let r = base.ends[o + 3];
+    const qx = base.ends[o + 4];
+    const qy = base.ends[o + 5];
+    const qz = base.ends[o + 6];
+    const qr = base.ends[o + 7];
     for (let left = k; left > 0; left--, s++) {
-      const e = 4 * s;
-      near[e] = x;
-      near[e + 1] = y;
-      near[e + 2] = z;
-      near[e + 3] = r;
+      const e = 8 * s;
+      ends[e] = x;
+      ends[e + 1] = y;
+      ends[e + 2] = z;
+      ends[e + 3] = r;
       if (left > 1) {
         x = towards(x, qx, left) + ix[p];
         y = towards(y, qy, left) + iy[p];
@@ -207,42 +209,39 @@ function follow(base: Grid, counts: Int32Array, inner: Int32Array[], grid: Grid)
         z = qz;
         r = qr;
       }
-      far[e] = x;
-      far[e + 1] = y;
-      far[e + 2] = z;
-      far[e + 3] = r;
+      ends[e + 4] = x;
+      ends[e + 5] = y;
+      ends[e + 6] = z;
+      ends[e + 7] = r;
       cells[s] = base.cells[b];
       types[s] = base.types[b];
     }
   }
 }
 
-/** A chunk's runs read from `at` into `grid` from `first` on, of the pack's `cells`; where they end. */
+/** A chunk's runs read from `at` into the end of `grid`, of the pack's `cells`; where they end. */
 function readRuns(
   data: Uint8Array,
   at: number,
+  runs: number,
+  segments: number,
   corner: Vec3,
   grid: Grid,
-  first: number,
   cells: number,
   scratch: Scratch
 ): number {
-  const view = new DataView(data.buffer, data.byteOffset, COUNTS_BYTES);
-  const runs = view.getUint32(8, true);
-  const segments = view.getUint32(12, true);
-  if (runs > segments) throw new PackError(AT_ODDS);
-  const s = scratch.streams;
+  const { streams, runEnds } = scratch;
   let next = at;
-  for (let k = 0; k < 4; k++) next = readStream(data, next, runs, false, s[k]);
-  const [cellSteps, types, lengths, back] = s;
+  for (let k = 0; k < 4; k++) next = readStream(data, next, runs, false, streams[k]);
+  const [cellSteps, types, lengths, back] = streams;
   let whole = 0;
   for (let r = 0; r < runs; r++) if (back[r] === 0) whole++;
-  for (let k = 0; k < 4; k++) next = readStream(data, next, whole, true, s[4 + k]);
-  next = readStream(data, next, runs - whole, true, s[8]);
-  for (let k = 0; k < 4; k++) next = readStream(data, next, segments, true, s[9 + k]);
-  const [sx, sy, sz, sr, referred, dx, dy, dz, dr] = s.slice(4);
-  const ends = scratch.ends;
-  const { near, far, cells: segmentCells, types: segmentTypes } = grid;
+  for (let k = 0; k < 4; k++) next = readStream(data, next, whole, true, streams[4 + k]);
+  next = readStream(data, next, runs - whole, true, streams[8]);
+  for (let k = 0; k < 4; k++) next = readStream(data, next, segments, true, streams[9 + k]);
+  const [sx, sy, sz, sr, referred, dx, dy, dz, dr] = streams.slice(4);
+  const { ends, cells: segmentCells, types: segmentTypes } = grid;
+  const first = grid.count - segments;
 
   let cell = 0;
   let w = 0;
@@ -265,40 +264,39 @@ function readRuns(
       rad = sr[w++];
     } else {
       const e = 4 * (r - back[r]);
-      x = ends[e];
-      y = ends[e + 1];
-      z = ends[e + 2];
-      rad = ends[e + 3] + referred[v++];
+      x = runEnds[e];
+      y = runEnds[e + 1];
+      z = runEnds[e + 2];
+      rad = runEnds[e + 3] + referred[v++];
     }
-    // The run's first step is stored whole, the others less the guess from the one before.
     let stepX = 0;
     let stepY = 0;
     let stepZ = 0;
-    for (let guess = 0; i < end; i++, guess = 1) {
-      stepX = dx[i] + guess * guessed(stepX);
-      stepY = dy[i] + guess * guessed(stepY);
-      stepZ = dz[i] + guess * guessed(stepZ);
+    for (; i < end; i++) {
+      stepX = dx[i] + guessed(stepX);
+      stepY = dy[i] + guessed(stepY);
+      stepZ = dz[i] + guessed(stepZ);
       const s = first + i;
-      const o = 4 * s;
-      near[o] = x;
-      near[o + 1] = y;
-      near[o + 2] = z;
-      near[o + 3] = rad;
+      const o = 8 * s;
+      ends[o] = x;
+      ends[o + 1] = y;
+      ends[o + 2] = z;
+      ends[o + 3] = rad;
       x += stepX;
       y += stepY;
       z += stepZ;
       rad += dr[i];
-      far[o] = x;
-      far[o + 1] = y;
-      far[o + 2] = z;
-      far[o + 3] = rad;
+      ends[o + 4] = x;
+      ends[o + 5] = y;
+      ends[o + 6] = z;
+      ends[o + 7] = rad;
       segmentCells[s] = cell;
       segmentTypes[s] = types[r];
     }
-    ends[4 * r] = x;
-    ends[4 * r + 1] = y;
-    ends[4 * r + 2] = z;
-    ends[4 * r + 3] = rad;
+    runEnds[4 * r] = x;
+    runEnds[4 * r + 1] = y;
+    runEnds[4 * r + 2] = z;
+    runEnds[4 * r + 3] = rad;
   }
   if (i !== segments) throw new PackError(AT_ODDS);
   return next;
@@ -308,7 +306,7 @@ interface Scratch {
   /** Arrays as long as the largest chunk has segments, for its streams. */
   streams: Int32Array[];
   /** Each run's far end, four numbers a run. */
-  ends: Int32Array;
+  runEnds: Int32Array;
 }
 
 /** A chunk's inflated block read over `base`, the base's segments in its box: `count` segments. */
@@ -324,8 +322,11 @@ function readChunk(
   const view = new DataView(data.buffer, data.byteOffset, COUNTS_BYTES);
   const followed = view.getUint32(0, true);
   const inner = view.getUint32(4, true);
+  const runs = view.getUint32(8, true);
   const runSegments = view.getUint32(12, true);
-  if (followed !== base.count || inner > count || runSegments > count) throw new PackError(AT_ODDS);
+  if (followed !== base.count || inner > count || runSegments > count || runs > runSegments) {
+    throw new PackError(AT_ODDS);
+  }
   const [counts, ...points] = scratch.streams;
   let at = readStream(data, COUNTS_BYTES, followed, false, counts);
   for (let k = 0; k < 4; k++) at = readStream(data, at, inner, true, points[k]);
@@ -338,7 +339,7 @@ function readChunk(
   if (following + runSegments !== count || innerPoints !== inner) throw new PackError(AT_ODDS);
   const grid = gridOf(count);
   follow(base, counts, points, grid);
-  at = readRuns(data, at, corner, grid, following, cells, scratch);
+  at = readRuns(data, at, runs, runSegments, corner, grid, cells, scratch);
   if (at !== data.length) throw new PackError('morphology pack chunk with bytes left over');
   return grid;
 }
@@ -363,13 +364,12 @@ function boxOf(index: PackIndex, somas: Float32Array) {
 }
 
 /**
- * Every level's chunks gathered in boxes, a box each place a level has a chunk: each box's corner in grid steps, its
- * cube grown by the farthest its chunks reach, least then greatest, and its chunk at each level, -1 for none.
+ * Every level's chunks gathered in boxes, a box each place a level has a chunk: each box's cube in grid steps grown by
+ * the farthest its chunks reach, least then greatest, and its chunk at each level, -1 for none.
  */
-function gatherBoxes(index: PackIndex): { corners: number[]; corner: number[]; inBox: number[][] } {
+function gatherBoxes(index: PackIndex): { corners: number[]; inBox: number[][] } {
   const numbers = new Map<string, number>();
   const corners: number[] = [];
-  const corner: number[] = [];
   const inBox: number[][] = [];
   index.levels.forEach(({ chunks, chunkSteps }, level) => {
     for (let chunk = 0; 3 * chunk < chunks.box.length; chunk++) {
@@ -380,7 +380,6 @@ function gatherBoxes(index: PackIndex): { corners: number[]; corner: number[]; i
       if (box === undefined) {
         box = numbers.size;
         numbers.set(key, box);
-        corner.push(...least);
         corners.push(...least, ...least.map((at) => at + chunkSteps));
         inBox.push(index.levels.map(() => -1));
       }
@@ -394,7 +393,7 @@ function gatherBoxes(index: PackIndex): { corners: number[]; corner: number[]; i
       inBox[box][level] = chunk;
     }
   });
-  return { corners, corner, inBox };
+  return { corners, inBox };
 }
 
 /** The boxes read last, as whole numbers, kept for the finer levels read over them while they fit in `bytes`. */
@@ -468,7 +467,7 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     level: { toleranceUm, pruneUm },
   };
 
-  const { corners, corner, inBox } = gatherBoxes(index);
+  const { corners, inBox } = gatherBoxes(index);
   const count = inBox.length;
   const boxes = Float32Array.from(corners, (steps, i) => steps * index.gridUm - centre[i % 3]);
   const levels = index.levels.map(({ toleranceUm, pruneUm, chunks }, level) => ({
@@ -494,7 +493,7 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
   const kept = new Kept(KEPT_BYTES);
 
   const readGrid = async (level: number, b: number): Promise<Grid> => {
-    const { base, chunks } = index.levels[level];
+    const { base, chunks, chunkSteps } = index.levels[level];
     const chunk = inBox[b][level];
     // Its own, not the shared one: a box read is handed over.
     if (chunk < 0) return gridOf(0);
@@ -504,9 +503,9 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     ]);
     scratch ??= {
       streams: Array.from({ length: SCRATCH_STREAMS }, () => new Int32Array(largest)),
-      ends: new Int32Array(4 * largest),
+      runEnds: new Int32Array(4 * largest),
     };
-    const at = corner.slice(3 * b, 3 * b + 3) as Vec3;
+    const at = [0, 1, 2].map((k) => chunks.box[3 * chunk + k] * chunkSteps) as Vec3;
     return readChunk(inflated, at, under, chunks.segments[chunk], cells, scratch);
   };
   const gridAt = (level: number, b: number): Promise<Grid> =>
@@ -524,25 +523,22 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     if (!index.levels[level] || !(b >= 0 && b < count)) {
       throw new RangeError(`morphology pack without a box ${b} at level ${level}`);
     }
-    const { count: n, near, far, cells: segmentCells, types } = await gridAt(level, b);
-    const segments = new Float32Array(8 * n);
+    const grid = await gridAt(level, b);
+    // A box kept for the finer levels is not handed over: its cells are numbered again in place.
+    const kept = isBase[level];
+    const ends = kept ? grid.ends.slice() : grid.ends;
+    // The whole numbers made micrometres where they lie, each read before it is written over.
+    const segments = new Float32Array(ends.buffer);
     const [cx, cy, cz] = centre;
     const { gridUm } = index;
-    for (let s = 0; s < n; s++) {
-      const o = 8 * s;
-      const e = 4 * s;
-      segments[o] = near[e] * gridUm - cx;
-      segments[o + 1] = near[e + 1] * gridUm - cy;
-      segments[o + 2] = near[e + 2] * gridUm - cz;
-      segments[o + 3] = radius(near[e + 3]);
-      segments[o + 4] = far[e] * gridUm - cx;
-      segments[o + 5] = far[e + 1] * gridUm - cy;
-      segments[o + 6] = far[e + 2] * gridUm - cz;
-      segments[o + 7] = radius(far[e + 3]);
+    for (let o = 0; o < ends.length; o += 4) {
+      segments[o] = ends[o] * gridUm - cx;
+      segments[o + 1] = ends[o + 1] * gridUm - cy;
+      segments[o + 2] = ends[o + 2] * gridUm - cz;
+      segments[o + 3] = radius(ends[o + 3]);
     }
-    // A box kept for the finer levels is not handed over: its cells are numbered again in place.
-    if (!isBase[level]) return { segments, segmentCells, segmentTypes: types };
-    return { segments, segmentCells: segmentCells.slice(), segmentTypes: types.slice() };
+    if (!kept) return { segments, segmentCells: grid.cells, segmentTypes: grid.types };
+    return { segments, segmentCells: grid.cells.slice(), segmentTypes: grid.types.slice() };
   };
   return { data, boxes, levels, readBox };
 }
