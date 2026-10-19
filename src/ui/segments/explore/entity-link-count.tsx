@@ -12,9 +12,11 @@ import {
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useFlags } from '@/features/feature-flags';
+import { getListingSplit } from '@/features/views/listing/splits/registry';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
+import { BrowseLinkGroup } from '@/ui/segments/explore/browse-link-group';
 import {
   BrowseExperimentalDataExtendedTypes,
   DataSectionDataTypeTabsConfig,
@@ -53,17 +55,23 @@ function BrowseLinkList({
   currentBrainRegionId,
   defaultBrainRegionId,
 }: TBrowseLinkListProps) {
-  return entities.map((entity) => (
-    <BrowseLink
-      enabled
-      key={`link-${entity.title}/${entity.extendedType}`}
-      scope={scope}
-      extendedType={entity.extendedType}
-      hierarchyId={hierarchyId}
-      currentBrainRegionId={currentBrainRegionId}
-      defaultBrainRegionId={defaultBrainRegionId}
-    />
-  ));
+  return entities.map((entity) => {
+    const linkProps = {
+      enabled: true,
+      scope,
+      extendedType: entity.extendedType,
+      hierarchyId,
+      currentBrainRegionId,
+      defaultBrainRegionId,
+    };
+    const split = getListingSplit(entity.extendedType);
+    const key = `link-${entity.title}/${entity.extendedType}`;
+    return split ? (
+      <BrowseLinkGroup key={key} split={split} {...linkProps} />
+    ) : (
+      <BrowseLink key={key} {...linkProps} />
+    );
+  });
 }
 
 export function EntityLinkCount() {

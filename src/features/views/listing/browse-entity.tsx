@@ -4,6 +4,8 @@ import { WarningOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
+import { resolveListingSplitOption } from '@/features/views/listing/splits/registry';
+import { useScopedListing } from '@/features/views/listing/splits/use-scoped-listing';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { log } from '@/utils/logger';
 
@@ -31,16 +33,31 @@ export type { BrowseEntityScopeProps };
  * explanation, which is how this last went unnoticed.
  */
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
-  const definition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
-  if (!definition) {
+  const baseDefinition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
+  const split = resolveListingSplitOption(props.dataType, props.splitSlug);
+  // The one place a split is applied: pinned params, stripped filters, isolated state.
+  const scoped = useScopedListing(props, baseDefinition, split);
+
+  if (!scoped.definition) {
     log('error', `[BrowseEntityScope] no grid definition registered for "${props.dataType}"`);
+    return <ListingUnavailable content={`"${props.dataType}" has no grid configuration.`} />;
+  }
+  // An unfiltered fallback would silently load every row, the slow path a split avoids.
+  if (props.splitSlug && !split) {
+    log('error', `[BrowseEntityScope] unknown split "${props.splitSlug}" for "${props.dataType}"`);
     return (
-      <GenericError
-        shouldContactSupport
-        content={`This listing is not available: "${props.dataType}" has no grid configuration.`}
-        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
-      />
+      <ListingUnavailable content={`"${props.splitSlug}" is not a "${props.dataType}" split.`} />
     );
   }
-  return <BrowseEntityGrid {...props} definition={definition} />;
+  return <BrowseEntityGrid {...props} {...scoped} definition={scoped.definition} split={split} />;
+}
+
+function ListingUnavailable({ content }: { content: string }) {
+  return (
+    <GenericError
+      shouldContactSupport
+      content={`This listing is not available: ${content}`}
+      icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+    />
+  );
 }

@@ -20,11 +20,14 @@ export function useTableQueryCount({
   scope,
   workspace,
   isActiveEntity,
+  instanceId,
 }: {
   extendedType: TExtendedEntitiesTypeDict;
   scope: TWorkspaceScope;
   workspace: WorkspaceContext;
   isActiveEntity: boolean;
+  /** the grid's `id` instance segment, e.g. a split sub-item's */
+  instanceId?: string;
 }) {
   const { virtualLabId, projectId } = workspace;
 
@@ -34,6 +37,7 @@ export function useTableQueryCount({
     section: WorkspaceSection.Data,
     dataType: extendedType,
     scope,
+    id: instanceId,
   });
 
   const gridTotal = useAtomValue(gridFilteredTotalAtom(dataKey));

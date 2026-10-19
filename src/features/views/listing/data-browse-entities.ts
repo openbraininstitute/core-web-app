@@ -1,4 +1,17 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { SelectionScope } from '@/features/data-grid/core';
+
+import type { TListingRouteProps } from './splits/types';
+
+/** What a standard Data listing route passes besides `dataType` (selection, download, delete). */
+export const DATA_BROWSE_LISTING_PROPS = {
+  mainTableProps: {
+    selectionType: 'checkbox',
+    selectionScope: SelectionScope.Shared,
+  },
+  allowDownload: true,
+  allowDelete: true,
+} as const satisfies TListingRouteProps;
 
 /**
  * The dataTypes the Data-browse `entity/[type]` route will render; anything else 404s.

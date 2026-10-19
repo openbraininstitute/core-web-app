@@ -795,6 +795,39 @@ Corollary: an in-cell control is **never** a way to open the row. If a cell shou
 show an affordance and open the row on click, put the affordance outside the row-click
 path or handle navigation in the control itself.
 
+## 6. Split a listing by a facet (sidebar sub-items)
+
+A split sub-item is **not** a new dataType. It is the parent dataType viewed through a
+pinned facet, at `/data/browse/entity/<type>/<slug>`: the server param is pinned and the
+facet's filter UI is stripped. Registry, mini-detail, download/delete and column layout
+all stay keyed on the parent dataType.
+
+```ts
+// features/views/listing/splits/<name>.ts
+export const circuitScaleSplit = defineFacetSplit({
+  dataType: ExtendedEntitiesTypeDict.Circuit,
+  field: 'scale',                              // the filter the split owns
+  toParams: (scale) => ({ scale__in: [scale] }), // explicit wire param (see 5.1)
+  options: [{ value: 'pair', label: 'Paired neurons' } /* ... */],
+});
+```
+
+To add one: (1) create that file, (2) add it to `LISTING_SPLITS` in `splits/registry.ts`.
+The parent must already be in `DATA_BROWSE_ALLOWED_ENTITIES`; `listing-splits.test.ts`
+enforces it. The sidebar, the generic `[type]/[split]` route and the grid need no change.
+
+Rules the composition point (`useScopedListing`) guarantees:
+
+- Pinned params are merged after the user's filters and win (5.3), so the filter UI for
+  the pinned field is removed from columns and advanced filters. The column itself stays,
+  because the layout slice is shared with the parent (5.5).
+- Per-listing session state is separated by the grid `id` segment (`listingInstanceId`);
+  the sidebar count hook uses the same function so both read one `dataKey`.
+- A plugin body that must adapt (circuit forces the flat view) reads `props.split`,
+  never the dataType.
+- A parent whose plugin owns selection/download (circuit) passes `listingProps: {}`,
+  otherwise the standard Data listing props apply.
+
 ## Where things live
 
 | concern | file |
@@ -816,4 +849,5 @@ path or handle navigation in the control itself.
 | **the migration flip** | `bindings/entitycore/registry.ts` + `features/views/listing/browse-entity.tsx` |
 | operator → entitycore param | `bindings/entitycore/query-serializer.ts` |
 | workspace host + plugin bodies | `host/` |
+| listing splits (sidebar sub-items) | `features/views/listing/splits/` |
 | migration backlog & parity contract | `docs/backlog.md` |

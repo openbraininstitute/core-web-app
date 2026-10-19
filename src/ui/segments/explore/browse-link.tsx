@@ -1,6 +1,6 @@
 'use client';
 
-import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
+import { DownOutlined, PlusOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
@@ -19,6 +19,7 @@ import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { listingInstanceId } from '@/features/views/listing/splits/scope-listing';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -34,15 +35,29 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import type { ReactNode } from 'react';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
+import type { IListingSplitOption } from '@/features/views/listing/splits/types';
 import type { WorkspaceContext } from '@/types/common';
 
 function buildDataUrl({
   virtualLabId,
   projectId,
   extendedType,
-}: WorkspaceContext & { extendedType: TExtendedEntitiesTypeDict }) {
-  return `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+  splitOption,
+}: WorkspaceContext & {
+  extendedType: TExtendedEntitiesTypeDict;
+  splitOption?: IListingSplitOption;
+}) {
+  const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
+  return splitOption ? `${base}/${splitOption.slug}` : base;
 }
+
+/** Collapse control of a row that owns sub-items (rendered beside, not inside, the link). */
+export type TBrowseLinkExpander = {
+  open: boolean;
+  onToggle: () => void;
+  controlsId: string;
+  label: string;
+};
 
 type BrowseLinkContentProps = {
   isLoading: boolean;
@@ -52,6 +67,10 @@ type BrowseLinkContentProps = {
   count: ReactNode;
   href: string;
   legacy?: boolean;
+  /** whether this row is the current listing */
+  active: boolean;
+  testIdKey: string;
+  expander?: TBrowseLinkExpander;
 };
 
 export function BrowseLinkContent({
@@ -62,12 +81,13 @@ export function BrowseLinkContent({
   count,
   href,
   legacy,
+  active,
+  testIdKey,
+  expander,
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
-  const pathname = usePathname();
   const scope = (searchParams.get('scope') ?? WorkspaceScope.Public) as TWorkspaceScope;
-  const entityType = snakeCase(getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
 
   const onContribute = () =>
     makeSelectContributionEntityClickEvent({
@@ -81,16 +101,33 @@ export function BrowseLinkContent({
   return (
     <div className="group flex w-full items-center justify-center gap-0">
       <div className="relative flex w-full items-center">
+        {expander && (
+          <button
+            type="button"
+            aria-expanded={expander.open}
+            aria-controls={expander.controlsId}
+            aria-label={expander.label}
+            data-testid={`entity-link-expander-${testIdKey}`}
+            onClick={expander.onToggle}
+            className={cn(
+              'absolute left-2 z-10 flex size-6 items-center justify-center rounded-full text-xs',
+              'focus-visible:ring-primary-8 hover:bg-neutral-2/60 focus-visible:ring-2',
+              active ? 'text-white hover:bg-white/20' : 'text-neutral-5'
+            )}
+          >
+            {expander.open ? <DownOutlined /> : <RightOutlined />}
+          </button>
+        )}
         <Button
           asChild
           rounded
-          key={`counter-${extendedType}`}
-          id={`counter-${extendedType}`}
-          data-testid={`entity-link-counter-${extendedType}`}
+          key={`counter-${testIdKey}`}
+          id={`counter-${testIdKey}`}
+          data-testid={`entity-link-counter-${testIdKey}`}
           variant="outline"
           size="lg"
           className="group w-full shrink grow border-none text-base"
-          active={entityType === extendedType}
+          active={active}
           onClick={onClick}
         >
           <Link
@@ -98,7 +135,9 @@ export function BrowseLinkContent({
               pathname: href,
               query: searchParams.toString(),
             }}
-            className="flex! w-full items-center justify-between!"
+            className={cn('flex! w-full items-center justify-between!', {
+              'pl-10!': expander,
+            })}
           >
             {/*
               Superseded types drop to normal weight, matching the workflow menus — the count
@@ -108,7 +147,7 @@ export function BrowseLinkContent({
             <div
               className={cn(
                 'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': entityType === extendedType }
+                { 'font-bold text-white': active }
               )}
             >
               {isLoading ? (
@@ -165,6 +204,9 @@ type Props = {
   hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
+  /** renders this row as a sub-item of `extendedType`'s split listing */
+  splitOption?: IListingSplitOption;
+  expander?: TBrowseLinkExpander;
 };
 
 function buildQuery({
@@ -175,12 +217,14 @@ function buildQuery({
   scope,
   extendedType,
   applyBrainRegionFilter,
+  splitOption,
 }: WorkspaceContext & {
   hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
   applyBrainRegionFilter: boolean;
+  splitOption?: IListingSplitOption;
 }) {
   const brainRegionQuery =
     applyBrainRegionFilter && brainRegionId
@@ -199,6 +243,8 @@ function buildQuery({
       page: 1,
       page_size: 0,
       ...brainRegionQuery,
+      // a sub-item counts only its own slice
+      ...splitOption?.params,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   };
@@ -210,6 +256,7 @@ function buildQuery({
     brainRegionId,
     hierarchyId,
     scope,
+    splitSlug: splitOption?.slug,
   });
 
   return { query, queryKey };
@@ -235,24 +282,28 @@ export function BrowseLink({
   hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
+  splitOption,
+  expander,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const { type } = useParams<{ type?: string }>();
+  const { type, split } = useParams<{ type?: string; split?: string }>();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
-  const href = buildDataUrl({ virtualLabId, projectId, extendedType });
+  const href = buildDataUrl({ virtualLabId, projectId, extendedType, splitOption });
 
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
-  const isActiveEntity = activeEntityType === extendedType;
+  const isActiveEntity = activeEntityType === extendedType && split === splitOption?.slug;
 
   const { count: tableCount } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
     isActiveEntity,
+    // must match the grid's `id` segment so both read the same dataKey
+    instanceId: listingInstanceId(undefined, splitOption),
   });
 
   const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
@@ -266,6 +317,7 @@ export function BrowseLink({
     scope,
     extendedType,
     applyBrainRegionFilter: scopesListingByBrainRegion,
+    splitOption,
   });
 
   // root count query: always fetch results (unfiltered total)
@@ -277,6 +329,7 @@ export function BrowseLink({
     scope,
     extendedType,
     applyBrainRegionFilter: scopesListingByBrainRegion,
+    splitOption,
   });
 
   const brainRegionDependentFetch =
@@ -371,8 +424,11 @@ export function BrowseLink({
           href,
           scope,
           isLoading,
-          isUploadable: entity?.isContributable,
-          title: entity?.title,
+          active: isActiveEntity,
+          expander,
+          testIdKey: splitOption ? `${extendedType}-${splitOption.slug}` : extendedType,
+          isUploadable: entity?.isContributable && !splitOption,
+          title: splitOption?.label ?? entity?.title,
           legacy: entity?.legacy,
           count: countRenderer,
         }}
