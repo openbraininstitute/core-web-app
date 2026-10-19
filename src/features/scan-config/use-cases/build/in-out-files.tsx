@@ -251,7 +251,8 @@ export function InOutFiles({
     files: builtOutputFiles,
   });
 
-  // an ME-model is linked before it is calibrated and validated, so fetch it again once the run ends
+  // an ME-model is linked before it is calibrated and validated, so fetch it and its preview
+  // again once the run ends
   const wasRunning = useRef(false);
   useEffect(() => {
     if (!execStatus) return;
@@ -262,7 +263,18 @@ export function InOutFiles({
     if (!wasRunning.current || !generatedId || !generatedType) return;
     wasRunning.current = false;
     refetchBuiltEntity();
-  }, [execStatus, outputAvailable, generatedId, generatedType, refetchBuiltEntity]);
+    queryClient.invalidateQueries({
+      queryKey: keyBuilder.preview(context, { entityId: generatedId }),
+    });
+  }, [
+    execStatus,
+    outputAvailable,
+    generatedId,
+    generatedType,
+    refetchBuiltEntity,
+    queryClient,
+    context,
+  ]);
 
   useEffect(() => {
     if (builtEntity && selectedFile?.id === builtEntity.id && selectedFile.entity !== builtEntity) {

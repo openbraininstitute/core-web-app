@@ -6,6 +6,7 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { InOutFiles } from '@/features/scan-config/use-cases/build/in-out-files';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { ComponentProps } from 'react';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
@@ -49,16 +50,18 @@ function setup() {
       />
     </QueryClientProvider>
   );
-  return { onSelect, view };
+  return { client, onSelect, view };
 }
 
 describe('build InOutFiles', () => {
   beforeEach(() => retrieveEntity.mockReset());
 
-  it('refetches the built ME-model once its run ends and reselects it', async () => {
+  it('refetches the built ME-model and its preview once its run ends, and reselects it', async () => {
     retrieveEntity.mockResolvedValueOnce(memodel('created'));
     retrieveEntity.mockResolvedValueOnce(memodel('done'));
-    const { onSelect, view } = setup();
+    const { client, onSelect, view } = setup();
+    const previewKey = keyBuilder.preview(context, { entityId: MEMODEL_ID, dpi: 100 });
+    client.setQueryData(previewKey, 'stale preview');
 
     const { rerender } = render(view(ActivityStatus.RUNNING));
     await waitFor(() => expect(onSelect).toHaveBeenCalled());
@@ -71,6 +74,7 @@ describe('build InOutFiles', () => {
     await waitFor(() =>
       expect(onSelect.mock.lastCall?.[0].entity).toMatchObject({ validation_status: 'done' })
     );
+    expect(client.getQueryState(previewKey)?.isInvalidated).toBe(true);
   });
 
   it('fetches a finished build once', async () => {
