@@ -26,6 +26,7 @@ import {
   flatAdvancedFilters,
   staticOptions,
 } from '@/features/data-grid/bindings/entitycore/schemas/common-filters';
+import { dataBrowseSelection } from '@/features/data-grid/bindings/entitycore/schemas/selection-policies';
 import {
   Align,
   byContext,
@@ -109,8 +110,9 @@ function circuitFlagColumn(
 export const circuitSchema: IGridSchema<Row> = {
   id: 'circuit',
   getRowId: (row) => row.id,
-  // No selection spec: this listing has no checkboxes. Pickers are unaffected — they
-  // supply their own `selectionType` through `mainTableProps`.
+  // One circuit at a time on the Data page, to open its download panel; nested
+  // subcircuit grids stay unselectable. Pickers supply their own `selectionType`.
+  selection: { ...dataBrowseSelection, mode: 'single' },
   // Sorting is off in the hierarchy view: rows there are a derivation tree and the
   // view-aware data source ignores `order_by`.
   sortable: byContext<boolean>({

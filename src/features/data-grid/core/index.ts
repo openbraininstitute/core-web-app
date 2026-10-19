@@ -93,7 +93,9 @@ export type {
 export type {
   IColumnFilter,
   IColumnModel,
+  IColumnSortOrder,
   IFilterTarget,
+  IRowGroup,
   IWidthSpec,
   TAlign,
   TCellValue,

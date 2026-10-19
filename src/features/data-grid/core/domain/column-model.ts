@@ -97,6 +97,35 @@ export interface IColumnFilter {
   available?: TContextualValue<boolean>;
   /** fields this column can be filtered by; omit and the flat props above become one target */
   targets?: ReadonlyArray<IFilterTarget>;
+  /**
+   * Turns an Eq value into request params itself, for a filter no single field
+   * expresses; `projectId` is the workspace's.
+   */
+  toParams?: (value: string, workspace: { projectId?: string }) => Record<string, unknown>;
+  /**
+   * Rows an Eq value leaves out that no param can, as a filter of their own; the data
+   * source passes over them in the listing `toParams` gives.
+   */
+  toExcept?: (
+    value: string,
+    workspace: { projectId?: string }
+  ) => Record<string, unknown> | undefined;
+}
+
+/** A filter's rows, less any rows of `except`, which no param can leave out. */
+export interface IRowGroup {
+  filter: Record<string, unknown>;
+  except?: Record<string, unknown>;
+}
+
+/** One way to list a column the backend cannot order by, as groups of rows. */
+export interface IColumnSortOrder {
+  id: string;
+  /**
+   * The groups listed one after the other, together every row; null when the order means
+   * nothing in the workspace (`projectId` is its project).
+   */
+  groups: (workspace: { projectId?: string }) => ReadonlyArray<IRowGroup> | null;
 }
 
 /**
@@ -116,6 +145,12 @@ export interface IColumnModel<Row = unknown> {
   sortable?: boolean;
   /** backend field(s) for order_by; defaults to field ?? id */
   sortField?: string | string[];
+  /**
+   * For a column the backend cannot order by, the orders its header cycles through in
+   * place of a direction; the sort entry's `order` names the one in force. Never reaches
+   * order_by.
+   */
+  sortOrders?: ReadonlyArray<IColumnSortOrder>;
   /** value accessor (sort fallback, free-text search, export) */
   getValue?: (row: Row) => TCellValue;
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */

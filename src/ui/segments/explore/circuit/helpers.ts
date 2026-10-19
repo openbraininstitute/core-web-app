@@ -147,16 +147,19 @@ export function buildFilteredHierarchyTree(
   return filteredTree;
 }
 
+/** Navy icons in circuit rows, leaving the Scope column its own colours. */
+const NAVY_ROW_ICONS = '[&_.ag-cell:not([col-id=scope])_svg]:text-primary-8!';
+
 /** Per-row class for the circuit listing: highlight filtered-in rows, dim filtered-out hierarchy rows. */
 export function circuitListingRowClass(
   record: ICircuit,
   view: TCircuitRepresentationView | null
 ): string {
   if ('isFiltered' in record && (record as { isFiltered?: boolean }).isFiltered) {
-    return 'filtered-in [&_.ag-cell_svg]:text-primary-8!';
+    return `filtered-in ${NAVY_ROW_ICONS}`;
   }
   if (view === CircuitRepresentationView.Hierarchy) {
     return 'filtered-out [&_.ag-cell]:bg-background! [&_.ag-cell]:text-neutral-4!';
   }
-  return '[&_.ag-cell_svg]:text-primary-8!';
+  return NAVY_ROW_ICONS;
 }

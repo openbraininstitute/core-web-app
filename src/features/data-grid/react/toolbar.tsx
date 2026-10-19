@@ -25,6 +25,8 @@ export interface IDataGridToolbarProps {
   slots?: IDataGridToolbarSlots;
   /** the selection and its actions — the exact middle, when the grid puts them up here */
   bulkActions?: ReactNode;
+  /** the selection's actions kept in place — left cluster, right after the call to action */
+  selection?: ReactNode;
   /** the advanced/active filters control — right cluster, after the search */
   filters?: ReactNode;
   /** the column chooser — right cluster, last */
@@ -41,12 +43,18 @@ export interface IDataGridToolbarProps {
 export function DataGridToolbar({
   slots,
   bulkActions,
+  selection,
   filters,
   columnChooser,
   className,
 }: IDataGridToolbarProps) {
   const hasLeft =
-    slots?.action || slots?.entityType || slots?.scope || slots?.brainRegion || slots?.left;
+    slots?.action ||
+    selection ||
+    slots?.entityType ||
+    slots?.scope ||
+    slots?.brainRegion ||
+    slots?.left;
   const hasRight = slots?.search || filters || columnChooser;
   const centred = Boolean(bulkActions);
   if (!hasLeft && !hasRight && !centred) return null;
@@ -64,6 +72,7 @@ export function DataGridToolbar({
           )}
         >
           {slots?.action}
+          {selection}
           {slots?.entityType}
           {slots?.scope}
           {slots?.brainRegion}

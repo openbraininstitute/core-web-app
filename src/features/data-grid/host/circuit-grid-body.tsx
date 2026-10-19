@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
@@ -20,6 +20,7 @@ import {
   CircuitRecursiveGrid,
   SubcircuitsDetail,
 } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import {
   CIRCUIT_VIEW_FACTOR,
@@ -57,6 +58,7 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const view = useAtomValue(circuitRepresentationViewAtom);
+  const setDownloadPanelCircuit = useSetAtom(downloadPanelCircuitAtom);
   const scope = listingScope({
     scope: defaultScope,
     requireScopeSelector: props.requireScopeSelector,
@@ -149,6 +151,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
       extraToolbarSlots={toolbarSlots}
       extraFactors={gridFactors}
       getRowClass={getRowClass}
+      // a circuit downloads through its panel of parts, not as one archive
+      onDownloadSelection={(rows) => setDownloadPanelCircuit((rows[0] as ICircuit) ?? null)}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
         isHierarchy

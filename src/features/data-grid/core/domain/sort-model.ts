@@ -9,6 +9,8 @@ export interface ISortEntry {
   /** logical column id */
   columnId: string;
   direction: TSortDirection;
+  /** for a column with `sortOrders`, the one in force; `direction` is then unused */
+  order?: string;
 }
 
 /**

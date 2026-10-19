@@ -6,6 +6,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import { BrowseEntityGrid } from '@/features/data-grid/host/browse-entity-grid';
+import { defaultFlags } from '@/features/feature-flags/config';
+import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope, TWorkspaceSection } from '@/constants';
@@ -46,19 +48,21 @@ async function columnsFor(props: {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={qc}>
-      <BrowseEntityGrid
-        definition={definition}
-        dataType={props.dataType}
-        section={props.section}
-        scope={props.scope}
-        requireScopeSelector={props.requireScopeSelector}
-        requireMiniDetailView={false}
-        requireBrainRegion={false}
-        allowQuery={false}
-        mainTableProps={
-          props.picker ? { selectionType: 'radio', onRowsSelected: () => {} } : undefined
-        }
-      />
+      <FlagsProvider flags={defaultFlags}>
+        <BrowseEntityGrid
+          definition={definition}
+          dataType={props.dataType}
+          section={props.section}
+          scope={props.scope}
+          requireScopeSelector={props.requireScopeSelector}
+          requireMiniDetailView={false}
+          requireBrainRegion={false}
+          allowQuery={false}
+          mainTableProps={
+            props.picker ? { selectionType: 'radio', onRowsSelected: () => {} } : undefined
+          }
+        />
+      </FlagsProvider>
     </QueryClientProvider>
   );
   await waitFor(() => expect(columnIds.length).toBeGreaterThan(0));

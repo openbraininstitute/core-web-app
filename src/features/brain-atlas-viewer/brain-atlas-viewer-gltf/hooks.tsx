@@ -24,10 +24,13 @@ export function usePainter({
   atlasId,
   loading,
   cameraZoom = 1,
+  backgroundColor,
 }: {
   atlasId?: string;
   loading: boolean;
   cameraZoom?: number;
+  /** the colour the canvas clears to; navy by default */
+  backgroundColor?: string;
 }): Painter | null {
   const notifier = useAppNotification();
   const queryClient = useQueryClient();
@@ -43,7 +46,7 @@ export function usePainter({
 
   if (loading || !atlasId) return null;
   if (!refPainter.current) {
-    refPainter.current = new Painter(atlasId, queryClient);
+    refPainter.current = new Painter(atlasId, queryClient, backgroundColor);
     refAtlasId.current = atlasId;
     refPainter.current.eventError.addListener((message) => {
       notifier.warning({

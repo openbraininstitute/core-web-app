@@ -32,6 +32,9 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { withScopeColumn } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
+import { useScopeMarks } from '@/features/data-grid/bindings/entitycore/renderers/scope-cell';
+import { ScopeToolbarToggles } from '@/features/data-grid/bindings/entitycore/renderers/scope-toolbar';
+import { SCOPE_COLUMN_ID } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,
   GridActionType,
@@ -122,6 +125,8 @@ export interface IEntityDataGridOverrides {
    * object identity rebuilds the controller.
    */
   extraFactors?: Readonly<Record<string, TGridContextValue>>;
+  /** replaces the bulk Download's archive with the page's own download of the picks */
+  onDownloadSelection?: (rows: EntityCoreIdentifiableNamed[]) => void;
 }
 
 export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
@@ -165,6 +170,7 @@ export function EntityDataGrid({
   expandColumn,
   extraEnabled,
   extraFactors,
+  onDownloadSelection,
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
@@ -279,6 +285,9 @@ export function EntityDataGrid({
   const resolvedGetRowClass = getRowClass || applyLifecycleGating ? composedGetRowClass : undefined;
 
   const speciesKey = isAllSpeciesMode ? 'all' : workspaceSpecies?.hierarchId;
+  // the filter design repeats the scope column's marks beside the search
+  const withScopeToggles =
+    useScopeMarks() === 'filter' && definition.schema.columns.some((c) => c.id === SCOPE_COLUMN_ID);
   const controller = useMemo(
     () =>
       new GridController<EntityCoreIdentifiableNamed>({
@@ -468,7 +477,9 @@ export function EntityDataGrid({
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
-          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 rounded-2xl [grid-area:body]',
+          // a framed table clips itself, and clipping here would cut off its card's edge
+          framed ? 'overflow-visible' : 'overflow-hidden',
           classNames?.container
         )}
       >
@@ -504,13 +515,17 @@ export function EntityDataGrid({
               />
             ) : undefined,
             search: allowSearch ? (
-              <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
+              <>
+                {withScopeToggles && <ScopeToolbarToggles controller={controller} />}
+                <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
+              </>
             ) : undefined,
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
           }}
           renderBulkActions={({ selectedRows, selectedCount, clearSelection, deselectRows }) => (
-            // Buttons only — the "N selected" count and Clear live in the footer. Each
+            // Buttons only: framed, the grid keeps them beside Upload data with a clear icon,
+            // otherwise the "N selected" count and Clear live in the footer. Each
             // badge shows what ITS action will touch: Download takes the whole basket, so
             // it gets `selectedCount`; Delete can only reach this project's rows, so it
             // counts those itself rather than promising a number it will not deliver.
@@ -523,6 +538,7 @@ export function EntityDataGrid({
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
+                  onDownload={onDownloadSelection}
                 />
               )}
               {allowDelete && (

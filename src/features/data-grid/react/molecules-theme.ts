@@ -40,3 +40,10 @@ export const GRID_ICON_BUTTON_ACTIVE_CLASS = [
 /** Text/search input: hairline border, white surface, no ring noise. */
 export const GRID_INPUT_CLASS =
   'h-9 rounded-xl border-gray-200 bg-white text-sm shadow-none! ring-0 focus-visible:border-primary-6! focus-visible:ring-0! focus-visible:shadow-none!';
+
+/**
+ * The Data page's card edge, set by the entity selector: a faint navy ring and a soft
+ * navy drop under a white top highlight.
+ */
+export const CARD_EDGE_CLASS =
+  'ring-1 ring-primary-9/5 shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]';

@@ -13,6 +13,7 @@ import {
 } from '@/features/brain-region-hierarchy/components/region-banner';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 import { MiniAtlas } from '@/ui/segments/explore/mini-atlas';
@@ -48,8 +49,10 @@ export function EntityLeftMenu({ dataKey }: Props) {
       view={view}
       onSwitchView={onSwitchView}
       classNames={{
-        container: 'ml-0 px-1 w-full pb-1',
-        selector: inCard ? 'rounded-none rounded-b-2xl border-t-0 bg-white' : 'shadow-sm bg-white',
+        container: inCard ? 'ml-0 w-full' : 'ml-0 px-1 w-full pb-1',
+        selector: inCard
+          ? 'rounded-none rounded-b-3xl border-transparent bg-white'
+          : `border-transparent bg-white ${CARD_EDGE_CLASS}`,
       }}
     />
   );

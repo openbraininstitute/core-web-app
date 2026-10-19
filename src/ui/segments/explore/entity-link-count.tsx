@@ -10,6 +10,7 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { useFlags } from '@/features/feature-flags';
 import { SegmentedTabs } from '@/ui/molecules/tabs/segmented-tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
@@ -128,8 +129,8 @@ export function EntityLinkCount() {
     <div
       className={cn(
         'mx-1 mt-2 flex min-h-0 flex-1 flex-col rounded-3xl border border-white/70 p-2',
-        'bg-white/75 ring-1 ring-primary-9/5 backdrop-blur-xl backdrop-saturate-150',
-        'shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]',
+        'bg-white/75 backdrop-blur-xl backdrop-saturate-150',
+        CARD_EDGE_CLASS,
         '[@media(prefers-reduced-transparency:reduce)]:bg-white [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none'
       )}
     >

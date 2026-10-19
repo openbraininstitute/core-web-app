@@ -1,12 +1,14 @@
 'use client';
 
-import { AnimatePresence, motion } from 'motion/react';
+import { RiCloseLine } from '@remixicon/react';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { GridActionType, isSelectionEnabled, SelectionMode } from '@/features/data-grid/core';
 import { ActiveFiltersButton } from '@/features/data-grid/react/active-filters';
 import { BulkActions } from '@/features/data-grid/react/bulk-actions';
 import { ColumnChooser } from '@/features/data-grid/react/column-chooser';
+import { ExpandingToolbarButton } from '@/features/data-grid/react/expanding-toolbar-button';
+import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { GridPagination } from '@/features/data-grid/react/pagination';
 import { DataGridToolbar } from '@/features/data-grid/react/toolbar';
 import { useDataGrid } from '@/features/data-grid/react/use-data-grid';
@@ -253,6 +255,8 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
         rows={rows}
         selection={state.selection}
         selectedCount={selectionCount}
+        // framed, they stay beside the call to action, greyed while nothing is picked
+        keepWhenEmpty={framed}
       >
         {renderBulkActions}
       </BulkActions>
@@ -275,23 +279,17 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
   );
 
   const selectionInToolbar = framed && Boolean(bulkActions);
-  const selectionBar = selectionInToolbar ? (
-    <AnimatePresence>
+  const selectionControls = selectionInToolbar ? (
+    <div className="flex items-center gap-2" data-testid="data-grid-selection-controls">
+      {bulkActions}
       {hasSelection && (
-        <motion.div
-          key="selection"
-          data-testid="data-grid-selection-bar"
-          initial={{ opacity: 0, transform: 'scale(0.97)' }}
-          animate={{ opacity: 1, transform: 'scale(1)' }}
-          exit={{ opacity: 0, transform: 'scale(0.97)', transition: { duration: 0.1 } }}
-          transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-          className="flex items-center gap-2 rounded-full border border-gray-100 bg-white py-1 pr-1 pl-3 shadow-sm"
-        >
-          {selectionSummary}
-          {bulkActions}
-        </motion.div>
+        <ExpandingToolbarButton
+          icon={<RiCloseLine size={20} />}
+          label="Clear selection"
+          onClick={clearSelection}
+        />
       )}
-    </AnimatePresence>
+    </div>
   ) : undefined;
 
   const body = (
@@ -327,7 +325,7 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
       <DataGridToolbar
         slots={toolbarSlots}
-        bulkActions={selectionBar}
+        selection={selectionControls}
         className={framed ? 'pb-3' : undefined}
         filters={
           <ActiveFiltersButton
@@ -342,7 +340,12 @@ export function DataGrid<Row>(props: IDataGridProps<Row>) {
         }
       />
       {framed ? (
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm [--ag-background-color:var(--color-white)]">
+        <div
+          className={cn(
+            'flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl bg-white [--ag-background-color:var(--color-white)]',
+            CARD_EDGE_CLASS
+          )}
+        >
           {body}
         </div>
       ) : (

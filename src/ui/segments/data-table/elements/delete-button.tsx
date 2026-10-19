@@ -14,6 +14,7 @@ import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 // direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
+  EXPANDING_PILL_IDLE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { Button } from '@/ui/molecules/button';
@@ -281,8 +282,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   // Nothing deletable in the basket (e.g. every pick is a public row): a button here
   // would confirm "delete 0 items", run the mutation on an empty list and then clear
-  // picks it never touched.
-  if (!permissions.delete || entityCount === 0) return null;
+  // picks it never touched. In the toolbar it stays in place, greyed, instead; a type that
+  // cannot be deleted at all gets no button.
+  if (!permissions.delete) return null;
+  const idle = entityCount === 0;
+  if (idle && !expanding) return null;
 
   const buttonLabel = getButtonLabel();
   /** gradient + chrome marking this as destructive */
@@ -308,7 +312,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       okText="Yes"
       cancelText="No"
       placement="bottomRight"
-      disabled={deleteMutation.isPending}
+      disabled={idle || deleteMutation.isPending}
       classNames={{
         body: cn(
           'max-w-70',
@@ -327,14 +331,15 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <Button
             rounded
             type="button"
-            aria-label={accessibleLabel}
+            aria-label={idle ? "Delete (select this project's rows first)" : accessibleLabel}
             title={buttonLabel}
             variant="default"
-            disabled={deleteMutation.isPending}
+            disabled={idle || deleteMutation.isPending}
             className={cn(
               EXPANDING_PILL_BASE_CLASS,
-              destructivePalette,
-              'focus-visible:ring-2 focus-visible:ring-destructive/40',
+              idle
+                ? EXPANDING_PILL_IDLE_CLASS
+                : cn(destructivePalette, 'focus-visible:ring-2 focus-visible:ring-destructive/40'),
               className
             )}
             data-testid="bulk-delete-button"

@@ -3,7 +3,7 @@
  * flexbox over that same order, which is also what a keyboard user traverses.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
@@ -103,18 +103,24 @@ describe('DataGrid footer', () => {
     expect(await screen.findByTestId('bulk-download')).toBeInTheDocument();
   });
 
-  it('framed, keeps the selection count and its actions together above the grid', async () => {
+  it('framed, keeps the actions above the grid, with a clear only while rows are picked', async () => {
     const { controller } = setup({ framed: true });
     await waitFor(() => expect(screen.getByTestId('results-count')).toBeInTheDocument());
-    expect(screen.queryByTestId('data-grid-selection-bar')).not.toBeInTheDocument();
+    const toolbar = screen.getByTestId('data-grid-toolbar');
+    const controls = screen.getByTestId('data-grid-selection-controls');
+    expect(toolbar.contains(controls)).toBe(true);
+    expect(controls.contains(screen.getByTestId('bulk-download'))).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Clear selection' })).not.toBeInTheDocument();
 
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['a'] }));
-    const bar = await screen.findByTestId('data-grid-selection-bar');
-    const toolbar = screen.getByTestId('data-grid-toolbar');
-    expect(toolbar.contains(bar)).toBe(true);
-    expect(bar.contains(screen.getByTestId('bulk-download'))).toBe(true);
-    expect(bar.contains(screen.getByText('1 selected'))).toBe(true);
+    const clear = await screen.findByRole('button', { name: 'Clear selection' });
+    expect(controls.contains(clear)).toBe(true);
+    expect(screen.queryByText('1 selected')).not.toBeInTheDocument();
     expect(toolbar.contains(screen.getByTestId('data-grid-pagination'))).toBe(false);
+
+    fireEvent.click(clear);
+    expect(controller.store.getSnapshot().selection).toEqual([]);
+    expect(screen.queryByRole('button', { name: 'Clear selection' })).not.toBeInTheDocument();
   });
 
   it('keeps the bulk actions out of the toolbar', async () => {
