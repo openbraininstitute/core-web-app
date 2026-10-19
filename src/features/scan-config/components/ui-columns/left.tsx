@@ -13,6 +13,7 @@ import {
 import { useAIConfig } from '@/services/ai-agent';
 import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
 
+import CopyCampaignButton from '../copy-campaign-button';
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
 
@@ -179,6 +180,12 @@ export default function Left({
             campaignEntityType={campaignEntityType}
             generatedApiUrl={generatedEndpoint}
           />
+        </div>
+      )}
+
+      {readOnly && !!campaignId && (
+        <div className="mt-auto w-full pr-4 pt-2">
+          <CopyCampaignButton campaignId={campaignId} activity={activity} />
         </div>
       )}
     </div>
