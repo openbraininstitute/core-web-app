@@ -22,12 +22,14 @@ type SectionTypeOption = { value: number; label: string };
  * (`number[][]`) or `null`. Only single selections are editable here, so scan
  * values are flattened best-effort for display.
  *
- * `null` / missing means “no section-type filter” — all endpoint options are
- * treated as selected. Stored values that are no longer returned by the
- * endpoint (e.g. apical when the morphology has none) are filtered out.
+ * `null` / missing means no selection has been made yet, so the widget must
+ * show nothing selected; showing every option as selected here would desync
+ * the widget from the real (unset) state used by the "Required" check below.
+ * Stored values that are no longer returned by the endpoint (e.g. apical when
+ * the morphology has none) are filtered out.
  */
 function toSelectedValues(value: ConfigValue, optionValues: number[]): number[] {
-  if (value == null || !Array.isArray(value)) return optionValues;
+  if (value == null || !Array.isArray(value)) return [];
   const result: number[] = [];
   for (const entry of value) {
     if (typeof entry === 'number') result.push(entry);
