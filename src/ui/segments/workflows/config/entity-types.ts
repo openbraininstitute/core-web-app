@@ -21,6 +21,18 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Subcellular,
     label: 'Ion channel modeling campaign',
   },
+  [ExtendedEntitiesTypeDict.IonChannelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    group: EntityGroupDict.Subcellular,
+    label: 'Ion channel',
+  },
+  // the build's source type: `resolveWorkflow` groups a workflow by its *source*, so without
+  // this the entry falls back to the Cellular default and sits away from the ion channel ones.
+  [ExtendedEntitiesTypeDict.IonChannelRecording]: {
+    value: ExtendedEntitiesTypeDict.IonChannelRecording,
+    group: EntityGroupDict.Subcellular,
+    label: 'Ion channel recording',
+  },
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: {
     value: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     group: EntityGroupDict.Subcellular,
@@ -134,15 +146,15 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
   [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign]: {
     value: ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
     group: EntityGroupDict.Cellular,
-    label: 'Intracellular EFeatures',
-    title: 'Intracellular EFeatures',
+    label: 'Intracellular E-features',
+    title: 'Intracellular E-features',
     description: 'Extract experimental e-features from intracellular electrophysiology recordings.',
   },
   [ExtendedEntitiesTypeDict.EModelOptimizationCampaign]: {
     value: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
     group: EntityGroupDict.Cellular,
-    label: 'E-Model optimization',
-    title: 'E-Model optimization',
+    label: 'E-model',
+    title: 'E-model',
     description: 'Optimize E-Model parameters against extracted e-features.',
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {

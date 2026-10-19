@@ -6,9 +6,25 @@ import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/h
 import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
+import {
+  DistanceFunctionField,
+  DistanceFunctionNullableField,
+} from '@/features/scan-config/components/ui-elements/distance-function/distance-function-field';
+import {
+  DistributionParameterList,
+  distributionParameterRows,
+  readParameterRows,
+  type TDistributionParameter,
+} from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
+import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
+import {
+  IonChannelModelProperties,
+  recordingIdsOf,
+  type TIonChannelModelPropertiesValue,
+} from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/global';
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
@@ -29,12 +45,14 @@ import {
   NeuronSetCombination,
   type NeuronSetCombinationEntry,
 } from '@/features/scan-config/components/ui-elements/neuron-set-combination';
+import { ObjectField } from '@/features/scan-config/components/ui-elements/object';
 import ParameterSweep from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { SelectRecordableIonChannelVariable } from '@/features/scan-config/components/ui-elements/recordable-ion-channel-variable';
 import { Reference } from '@/features/scan-config/components/ui-elements/reference';
 import { SelectEFeaturesByProtocol } from '@/features/scan-config/components/ui-elements/select-efeatures-by-protocol';
 import { Stochasticity } from '@/features/scan-config/components/ui-elements/stochasticity';
 import { StringListInput } from '@/features/scan-config/components/ui-elements/string-list-input';
+import { StringListOptional } from '@/features/scan-config/components/ui-elements/string-list-optional';
 import { StringSelection } from '@/features/scan-config/components/ui-elements/string-selection';
 import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
@@ -65,6 +83,9 @@ import type { Nullish } from '@/utils/type';
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
 
 const DISCRETE_PROBABILITIES_FIELD = 'probabilities';
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every((item) => typeof item === 'string');
 
 export function UIElementRender({
   k,
@@ -110,6 +131,69 @@ export function UIElementRender({
           }}
         />
       )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInput },
+      },
+      ({ paramSchema }) => (
+        <DistanceFunctionField
+          key={`${selectedEntry ?? ''}/${k}`}
+          paramSchema={paramSchema}
+          value={typeof value === 'string' ? value : ''}
+          disabled={disabled}
+          errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+          onChange={(next) => {
+            // Non-nullable `str`: clearing omits the key so the schema default applies; `null`
+            // is rejected by both Ajv ("must be string") and the backend (422).
+            if (!next) {
+              const { [k]: _removed, ...rest } = state;
+              setState(rest);
+              return;
+            }
+            setState({ ...state, [k]: next });
+          }}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistanceFunctionInputNullable },
+      },
+      ({ paramSchema }) => (
+        <DistanceFunctionNullableField
+          key={`${selectedEntry ?? ''}/${k}`}
+          paramSchema={paramSchema}
+          value={typeof value === 'string' ? value : ''}
+          disabled={disabled}
+          errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+          onChange={(next) => {
+            setState({ ...state, [k]: next || null });
+          }}
+        />
+      )
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.DistributionParameterList },
+      },
+      () => {
+        const functionText = typeof state.function === 'string' ? state.function : '';
+        const stored = readParameterRows(value);
+        const rows = distributionParameterRows(functionText, stored);
+        return (
+          <DistributionParameterList
+            key={`${selectedEntry ?? ''}/${k}`}
+            rows={rows}
+            stored={stored}
+            disabled={disabled}
+            errorPath={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+            onChange={(rows: TDistributionParameter[]) => {
+              setState({ ...state, [k]: rows as unknown as ConfigValue });
+            }}
+          />
+        );
+      }
     )
     .with(
       {
@@ -198,6 +282,43 @@ export function UIElementRender({
           />
         );
       }
+    )
+    .with(
+      { paramSchema: { ui_element: ScanConfigUIElementDict.FloatInput } },
+      ({ paramSchema }) => {
+        const bounds = numericSchemaBounds(paramSchema);
+        return (
+          <FloatInput
+            min={bounds.min}
+            max={bounds.max}
+            exclusiveMin={bounds.exclusiveMin}
+            exclusiveMax={bounds.exclusiveMax}
+            disabled={disabled}
+            value={typeof value === 'number' ? value : null}
+            onChange={(next) => {
+              // Clearing omits the key so the schema default applies; `null` is rejected by both
+              // Ajv and the backend.
+              if (next === null) {
+                const { [k]: _removed, ...rest } = state;
+                setState(rest);
+                return;
+              }
+              setState({ ...state, [k]: next });
+            }}
+          />
+        );
+      }
+    )
+    .with(
+      { paramSchema: { ui_element: ScanConfigUIElementDict.IonChannelModelProperties } },
+      () => (
+        <IonChannelModelProperties
+          value={(isPlainObject(value) ? value : {}) as TIonChannelModelPropertiesValue}
+          recordingIds={recordingIdsOf(state)}
+          disabled={disabled}
+          onChange={(next) => setState({ ...state, [k]: next as unknown as ConfigValue })}
+        />
+      )
     )
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.SelectEFeaturesByProtocol } },
@@ -632,16 +753,27 @@ export function UIElementRender({
         paramSchema: { ui_element: ScanConfigUIElementDict.StringListInput },
       },
       () => {
-        const currentValue = Array.isArray(value)
-          ? value.filter((item): item is string => typeof item === 'string')
-          : [];
+        const currentValue = isStringArray(value) ? value : [];
         return (
           <StringListInput
             value={currentValue}
             disabled={disabled}
-            // a disabled field has no editable controls — show the plain list
-            readOnly={disabled}
-            onChange={(newValue: string[]) => setState({ ...state, [k]: newValue })}
+            onChange={(newValue) => setState({ ...state, [k]: newValue })}
+          />
+        );
+      }
+    )
+    .with(
+      {
+        paramSchema: { ui_element: ScanConfigUIElementDict.StringListOptional },
+      },
+      () => {
+        const currentValue = isStringArray(value) ? value : null;
+        return (
+          <StringListOptional
+            value={currentValue}
+            disabled={disabled}
+            onChange={(newValue) => setState({ ...state, [k]: newValue })}
           />
         );
       }
@@ -800,5 +932,18 @@ export function UIElementRender({
         );
       }
     )
+    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.Object } }, ({ paramSchema }) => (
+      <ObjectField
+        value={value}
+        paramSchema={paramSchema}
+        disabled={disabled}
+        config={config}
+        schema={schema}
+        entity={entity}
+        schemaMappingConfig={schemaMappingConfig}
+        errorPathPrefix={errorPathPrefix ? `${errorPathPrefix}/${k}` : undefined}
+        onChange={(nextObject) => setState({ ...state, [k]: nextObject })}
+      />
+    ))
     .otherwise(() => null);
 }

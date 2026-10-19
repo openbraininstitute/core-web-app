@@ -92,6 +92,7 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
+
   const allEntries = useEntries({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
   const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
@@ -167,7 +168,12 @@ export function useScanConfigTemplate({
 
   useAgentState(
     aiEnabled
-      ? getConfigKeyForEntity(entityType, activity, entity as { scale?: string } | undefined)
+      ? getConfigKeyForEntity(
+          entityType,
+          activity,
+          entity as { scale?: string } | undefined,
+          schemaName
+        )
       : null,
     config
   );

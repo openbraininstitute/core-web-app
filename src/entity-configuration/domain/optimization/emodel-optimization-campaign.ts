@@ -123,8 +123,8 @@ export const EModelOptimizationCampaign: EntityCoreTypeConfig<
   TResolvedEModelOptimizationByCampaign,
   TResolvedEModelOptimizationByCampaigns
 > = {
-  group: EntityTypeGroup.Optimizations,
-  title: 'E-Model optimization',
+  group: EntityTypeGroup.Simulations,
+  title: 'E-model optimisation',
   extendedType: ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
   type: EntityTypeDict.TaskConfig,
   slug: EntitySlug.EModelOptimization,

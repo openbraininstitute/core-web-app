@@ -1,6 +1,5 @@
 import { ExtendedEntitiesTypeDict } from './extended-entity-type';
 
-import type { ISingleNeuronSimulation } from 'src/api/entitycore/types/entities/single-neuron-simulation';
 import type { IExperimentalBoutonDensity } from '@/api/entitycore/types/entities/bouton-density';
 import type {
   ICellMorphology,
@@ -17,6 +16,7 @@ import type { IMEModel } from '@/api/entitycore/types/entities/me-model';
 import type { IExperimentalNeuronDensity } from '@/api/entitycore/types/entities/neuron-density';
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { ICircuitSimulationCampaign } from '@/api/entitycore/types/entities/simulation-campaign';
+import type { ISingleNeuronSimulation } from '@/api/entitycore/types/entities/single-neuron-simulation';
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
 import type { ISingleNeuronSynaptomeSimulation } from '@/api/entitycore/types/entities/single-neuron-synaptome-simulation';
 import type { IExperimentalSynapsesPerConnection } from '@/api/entitycore/types/entities/synapses-per-connection';

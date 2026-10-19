@@ -24,7 +24,8 @@ vi.mock('@/ui/segments/mini-detail-view/interactive-viewers', async () => {
     <div data-testid="stub-viewer">{record.id}</div>
   );
   return {
-    resolveInteractiveViewer: (type: string) => (type === Types.EMCellMesh ? Viewer : null),
+    resolveInteractiveViewer: (type: string) =>
+      type === Types.EMCellMesh ? { Viewer, sizing: 'fill' } : null,
   };
 });
 

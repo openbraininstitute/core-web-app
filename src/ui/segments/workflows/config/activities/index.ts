@@ -1,6 +1,6 @@
 import { WorkflowActivityDictValue } from '@/constants';
 
-import { BuildWorkflows } from './build';
+import { BuildBrowseWorkflows, BuildWorkflows } from './build';
 import { ExtractionWorkflows } from './extract';
 import { OptimizeWorkflows } from './optimize';
 import { ProcessingWorkflows } from './process';
@@ -18,6 +18,9 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     /** Getter: build workflows and the circuit grid schema import each other. */
     get workflows() {
       return BuildWorkflows;
+    },
+    get browseWorkflows() {
+      return BuildBrowseWorkflows;
     },
   },
   [WorkflowActivityDictValue.simulate]: {

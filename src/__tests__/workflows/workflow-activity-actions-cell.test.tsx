@@ -9,6 +9,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { EntityLifecycleStatus, LifecycleStatusBadge } from '@/ui/molecules/lifecycle-status-badge';
 import { ActivityValues } from '@/ui/segments/workflows/config';
@@ -224,7 +225,28 @@ describe('WorkflowActivityActionsCell', () => {
   });
 
   it('duplicates through the router when clicked', () => {
-    // duplication always supports an ion-channel modeling campaign row
+    render(
+      <WorkflowActivityActionsCell
+        row={row({
+          type: EntityTypeDict.TaskConfig,
+          task_config_type: TaskConfigType.IonChannelModelingCampaign,
+          inputs: [{ id: 'recording-id', type: EntityTypeDict.IonChannelRecording }],
+        })}
+        value=""
+        rowIndex={0}
+        params={{
+          activity: ActivityValues.Build,
+          entityType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+        }}
+      />
+    );
+
+    expect(isDisabled('Duplicate')).toBe(false);
+    fireEvent.click(action('Duplicate') as HTMLElement);
+    expect(navigate).toHaveBeenCalledTimes(1);
+  });
+
+  it('cannot duplicate an ion channel campaign from before the scan-config editor', () => {
     render(
       <WorkflowActivityActionsCell
         row={row({ type: EntityTypeDict.IonChannelModelingCampaign })}
@@ -237,8 +259,6 @@ describe('WorkflowActivityActionsCell', () => {
       />
     );
 
-    expect(isDisabled('Duplicate')).toBe(false);
-    fireEvent.click(action('Duplicate') as HTMLElement);
-    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(isDisabled('Duplicate')).toBe(true);
   });
 });

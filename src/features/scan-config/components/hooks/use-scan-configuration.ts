@@ -18,6 +18,7 @@ import {
   useSchemaMappingConfiguration,
 } from '@/features/scan-config/components/hooks/schema';
 import {
+  getConfigKeyForEntity,
   ScanConfigCampaignOriginActionDict,
   type TScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
@@ -248,13 +249,17 @@ export function useScanConfiguration({
       };
     }
 
-    // Build is deliberately excluded: em_synapse_mapping_config is already in
-    // VALID_AI_CONFIG_KEYS but dormant, and admitting Build here would activate it before
-    // that path has been verified end to end.
+    // "Ask AI" is only shown when state sharing actually works for this page — resolve
+    // the same way useAgentState does downstream, rather than an activity-level allowlist
+    // that can drift out of sync with getConfigKeyForEntity (e.g. it used to show on Build
+    // pages with no entry in BUILD_CONFIG_KEY_BY_SCHEMA, like ion-channel fitting).
     const aiEnabled =
-      activity === ScanConfigActivity.Simulate ||
-      activity === ScanConfigActivity.Process ||
-      activity === ScanConfigActivity.Optimize;
+      getConfigKeyForEntity(
+        resolved.usedType,
+        activity,
+        entity as { scale?: string } | undefined,
+        resolved.schemaName
+      ) !== null;
 
     if (!entity && !resolved.usedType) {
       return { isLoading: false, error: null, unresolvedMessage: null, ready: null };
