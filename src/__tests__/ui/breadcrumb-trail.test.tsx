@@ -92,6 +92,45 @@ describe('BreadcrumbTrail', () => {
     expect(screen.getByRole('button', { name: 'Copy Two ID' })).toBeInTheDocument();
   });
 
+  it('middle-ellipsizes a long entity crumb, keeps it focusable,', () => {
+    const name = 'MEM__04531-04540-X11803-Y13470_final__cNAD_noscltb_Rt_RC';
+    render(
+      <BreadcrumbTrail
+        items={[
+          { key: 'a', label: 'Simulate', href: '/s' },
+          { key: 'b', label: name, ellipsis: name, copy: { value: 'id', label: `Copy ${name}` } },
+        ]}
+      />
+    );
+    const current = screen.getByRole('navigation').querySelector('[aria-current="page"]');
+    expect(current).toHaveTextContent(name);
+    expect(current).toHaveAttribute('tabindex', '0');
+    expect(current?.querySelector('.truncate')).not.toBeNull();
+    expect(screen.getByRole('button', { name: `Copy ${name}` })).toBeInTheDocument();
+  });
+  it('lists menu entries without titles and wraps long names', () => {
+    const long = 'a very long entity name that must wrap over several lines in the popover';
+    render(
+      <BreadcrumbTrail
+        items={[
+          {
+            key: 'b',
+            label: 'Multiple entities (2)',
+            menu: [
+              { key: '1', label: long, copy: { value: 'id-1', label: `Copy ${long}` } },
+              { key: '2', label: 'Two', copy: { value: 'id-2', label: 'Copy Two' } },
+            ],
+          },
+        ]}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Multiple entities \(2\)/ }));
+    const entry = screen.getByText(long);
+    expect(entry).toHaveClass('break-words');
+    expect(entry).not.toHaveClass('truncate');
+    expect(entry).not.toHaveAttribute('title');
+    expect(screen.getByRole('button', { name: `Copy ${long}` })).toBeInTheDocument();
+  });
   it('keeps a linked last item navigable while marking it current', () => {
     render(
       <BreadcrumbTrail

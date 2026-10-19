@@ -7,7 +7,6 @@ import {
 import ScanConfigSkeleton from '@/features/scan-config/components/skeletons/full-page';
 import { useScanConfigTopBarSlots } from '@/features/scan-config/components/top-bar/context';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
-import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
@@ -25,7 +24,7 @@ function ScanConfigFallback({ children }: { children?: ReactNode }) {
   const { start } = useScanConfigTopBarSlots();
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      <TopBar start={start ? <BreadcrumbChip>{start}</BreadcrumbChip> : undefined} />
+      <TopBar start={start} />
       <div className="flex min-h-0 flex-1 items-center justify-center">{children}</div>
     </div>
   );

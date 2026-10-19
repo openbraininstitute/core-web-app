@@ -10,7 +10,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
-import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
+import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -20,7 +20,13 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
-import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config';
+import {
+  buildWorkflowHomeHref,
+  findScanConfigRegistryByTargetType,
+  getWorkflow,
+  getWorkflowEntityLabel,
+  listActivities,
+} from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
@@ -52,10 +58,13 @@ export async function DataViewLayout({
   context,
   type,
   id,
+  origin = 'data',
 }: PropsWithChildren<{
   context: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   id: string;
+  /** Which section opened the page: it decides the breadcrumb and whether there is a close. */
+  origin?: 'data' | 'workflows';
 }>) {
   const { virtualLabId, projectId } = context;
   const entityType = getEntityByExtendedType({ type });
@@ -97,12 +106,17 @@ export async function DataViewLayout({
    */
   const chromeVariant = ViewVariant.Light;
 
-  const breadcrumbs = (
-    <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
-  );
-  const closePage = <ClosePage url={parentLink} variant={chromeVariant} />;
+  const breadcrumbs =
+    origin === 'workflows' ? (
+      <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
+    ) : (
+      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+    );
+  // the close lives at the far end of the details page's top bar, never inside the breadcrumb
+  const closePage =
+    origin === 'data' ? <ClosePage url={parentLink} variant={chromeVariant} /> : undefined;
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
-  const topBar = <TopBar start={<BreadcrumbChip>{breadcrumbs}</BreadcrumbChip>} end={closePage} />;
+  const topBar = <TopBar start={breadcrumbs} end={closePage} />;
 
   if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
     if (useClassicLayout) {
@@ -110,14 +124,7 @@ export async function DataViewLayout({
       // border and top bar: hand it the data breadcrumb as that bar's start slot
       return (
         <div className="ml-3 flex h-full min-h-0 flex-col">
-          <ScanConfigTopBarProvider
-            start={
-              <>
-                {breadcrumbs}
-                {closePage}
-              </>
-            }
-          >
+          <ScanConfigTopBarProvider start={breadcrumbs}>
             <div className="relative min-h-0 flex-1">{children}</div>
           </ScanConfigTopBarProvider>
         </div>
@@ -210,6 +217,45 @@ export async function DataViewLayout({
       </div>
       {downloadPanel}
     </DataViewFrame>
+  );
+}
+
+/**
+ * Activity › workflow type › entity for the details pages the workflow activity table links to.
+ * The activity is the first one that has a workflow for this type.
+ */
+function WorkflowsOriginBreadcrumb({
+  type,
+  entity,
+  context,
+}: {
+  type: TExtendedEntitiesTypeDict;
+  entity: { id: string; name: string };
+  context: WorkspaceContext;
+}) {
+  const activity = listActivities().find((candidate) =>
+    getWorkflow({ activity: candidate.value, targetType: type })
+  );
+  const typeLabel = getWorkflowEntityLabel(type);
+  const href = (targetType?: TExtendedEntitiesTypeDict) =>
+    buildWorkflowHomeHref({ activity: activity?.value, targetType, workspace: context });
+
+  return (
+    <BreadcrumbChip>
+      <BreadcrumbTrail
+        data-testid="data-view-breadcrumb"
+        items={[
+          ...(activity ? [{ key: 'activity', label: activity.label, href: href() }] : []),
+          ...(typeLabel ? [{ key: 'type', label: typeLabel, href: href(type) }] : []),
+          {
+            key: 'entity',
+            label: entity.name,
+            ellipsis: entity.name,
+            copy: { value: entity.id, label: `Copy ${entity.name}` },
+          },
+        ]}
+      />
+    </BreadcrumbChip>
   );
 }
 

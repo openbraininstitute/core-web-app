@@ -8,7 +8,9 @@ import { Fragment } from 'react';
 
 import { ChevronRightStroke } from '@/components/icons';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
 import type * as React from 'react';
@@ -132,6 +134,12 @@ export type BreadcrumbTrailItem = {
   /** Defaults to true for the last item. Sets `aria-current="page"` and the bold weight. */
   current?: boolean;
   title?: string;
+  /**
+   * The crumb's full text when it may be too long for the room it gets: shown middle-ellipsized
+   * (the end stays readable), with the full text in a white tooltip on hover and keyboard focus.
+   * Replaces `label`.
+   */
+  ellipsis?: string;
   className?: string;
   /** A copy icon button right after the crumb (e.g. the entity's id). */
   copy?: BreadcrumbCopy;
@@ -146,13 +154,20 @@ const CRUMB =
   'text-primary-9 focus-visible:ring-primary-9 rounded-sm text-sm outline-none transition-colors focus-visible:ring-2';
 
 /** Bare glyph at rest; the round chip only materialises under the pointer. */
-function BreadcrumbCopyButton({ copy }: { copy: BreadcrumbCopy }) {
+function BreadcrumbCopyButton({
+  copy,
+  tooltip = true,
+}: {
+  copy: BreadcrumbCopy;
+  /** Off where the copy button sits in a list of long names (a popover): `aria-label` only. */
+  tooltip?: boolean;
+}) {
   return (
     <ButtonCopyId
       iconOnly
       value={copy.value}
       label={copy.label}
-      tooltip={copy.label}
+      tooltip={tooltip && copy.label}
       classNames={{
         button: 'size-6 shrink-0 p-0',
         icon: cn(
@@ -205,11 +220,9 @@ function BreadcrumbMenu({
                     {entry.hint}
                   </div>
                 ) : null}
-                <div className="text-primary-9 truncate text-sm font-medium" title={entry.label}>
-                  {entry.label}
-                </div>
+                <div className="text-primary-9 text-sm font-medium break-words">{entry.label}</div>
               </div>
-              <BreadcrumbCopyButton copy={entry.copy} />
+              <BreadcrumbCopyButton copy={entry.copy} tooltip={false} />
             </li>
           ))}
         </ul>
@@ -231,14 +244,57 @@ function BreadcrumbTrailCrumb({ item, current }: { item: BreadcrumbTrailItem; cu
 }
 
 function BreadcrumbTrailLabel({ item, current }: { item: BreadcrumbTrailItem; current: boolean }) {
-  const className = cn(CRUMB, current ? 'font-bold' : 'font-light', item.className);
+  if (!item.ellipsis) {
+    return <BreadcrumbTrailLink item={item} label={item.label} current={current} />;
+  }
+  // white tooltip (the repo's light variant) with the full text, on hover and keyboard focus
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <BreadcrumbTrailLink
+          item={item}
+          label={<MiddleEllipsis text={item.ellipsis} />}
+          current={current}
+        />
+      </TooltipTrigger>
+      <TooltipContent
+        avoidCollisions
+        side="bottom"
+        sideOffset={4}
+        className="text-primary-9 z-999 max-w-sm bg-white text-sm break-words shadow-lg"
+        arrowClassName="bg-white! z-9999"
+      >
+        {item.ellipsis}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
+/** The crumb element; `rest` carries the tooltip trigger's handlers and ref onto it. */
+function BreadcrumbTrailLink({
+  item,
+  label,
+  current,
+  ...rest
+}: {
+  item: BreadcrumbTrailItem;
+  label: React.ReactNode;
+  current: boolean;
+} & React.HTMLAttributes<HTMLElement>) {
+  const className = cn(
+    CRUMB,
+    current ? 'font-bold' : 'font-light',
+    // a shrinkable crumb lets its text shrink with it (middle ellipsis) instead of overflowing
+    item.ellipsis && 'flex min-w-0',
+    item.className
+  );
   const ariaCurrent = current ? 'page' : undefined;
 
   if (item.menu) {
     return (
       <BreadcrumbMenu
         entries={item.menu}
-        label={item.label}
+        label={label}
         className={className}
         ariaCurrent={ariaCurrent}
       />
@@ -247,8 +303,14 @@ function BreadcrumbTrailLabel({ item, current }: { item: BreadcrumbTrailItem; cu
   if (item.href) {
     return (
       <BreadcrumbLink asChild className={cn(className, 'hover:text-primary-7')}>
-        <Link href={item.href} onClick={item.onClick} title={item.title} aria-current={ariaCurrent}>
-          {item.label}
+        <Link
+          {...rest}
+          href={item.href}
+          onClick={item.onClick}
+          title={item.title}
+          aria-current={ariaCurrent}
+        >
+          {label}
         </Link>
       </BreadcrumbLink>
     );
@@ -256,20 +318,28 @@ function BreadcrumbTrailLabel({ item, current }: { item: BreadcrumbTrailItem; cu
   if (item.onClick) {
     return (
       <button
+        {...rest}
         type="button"
         onClick={item.onClick}
         title={item.title}
         aria-current={ariaCurrent}
         className={cn(className, 'hover:text-primary-7')}
       >
-        {item.label}
+        {label}
       </button>
     );
   }
   return (
     // BreadcrumbPage defaults to "page"; the trail decides which crumb is current
-    <BreadcrumbPage title={item.title} className={className} aria-current={ariaCurrent}>
-      {item.label}
+    <BreadcrumbPage
+      {...rest}
+      title={item.title}
+      className={className}
+      aria-current={ariaCurrent}
+      // reachable by keyboard so the full-text tooltip can open on focus
+      tabIndex={item.ellipsis ? 0 : undefined}
+    >
+      {label}
     </BreadcrumbPage>
   );
 }
@@ -293,7 +363,12 @@ function BreadcrumbTrail({
                 {separator}
               </BreadcrumbSeparator>
             )}
-            <BreadcrumbItem className={index < items.length - 1 ? 'shrink-0' : undefined}>
+            {/* a menu crumb is a short fixed title (`Multiple entities (3)`): it never shrinks */}
+            <BreadcrumbItem
+              className={
+                index < items.length - 1 || item.menu ? 'shrink-0 whitespace-nowrap' : undefined
+              }
+            >
               <BreadcrumbTrailCrumb
                 item={item}
                 current={item.current ?? index === items.length - 1}

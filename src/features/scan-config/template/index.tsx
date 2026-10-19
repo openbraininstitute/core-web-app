@@ -18,9 +18,9 @@ import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/r
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
-import { messages } from '@/i18n/en/scan-config';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
 import { cn } from '@/utils/css-class';
 
 import { DEFAULT_COLUMNS_GRID, DefaultConfigColumns } from './default-columns';
@@ -126,17 +126,28 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={
           state.campaignId ? (
-            <BreadcrumbChip className="px-1">
+            <BreadcrumbChip className="max-w-full px-1">
               <ButtonCopyId
                 value={state.campaignId}
                 label={`Copy ${campaignName}`}
-                tooltip={get(messages, `${props.activity}.CopyCampaignId`)}
+                // hover and keyboard focus both show the full name the visible text elides
+                tooltip={campaignName}
+                className="min-w-0"
                 classNames={{
-                  button: 'h-8 gap-1 pr-0 pl-3',
-                  icon: 'size-6 border-transparent',
+                  button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
+                  icon: 'size-6 shrink-0 border-transparent',
                   glyph: 'size-3.5 text-primary-9',
+                  tooltip: 'max-w-sm break-words bg-white text-primary-9 shadow-lg',
+                  tooltipArrow: 'bg-white!',
                 }}
-              />
+              >
+                <span className="flex min-w-0 gap-1 text-base">
+                  <span className="shrink-0 font-normal">Copy</span>
+                  <b className="flex min-w-0 font-bold">
+                    <MiddleEllipsis text={campaignName} />
+                  </b>
+                </span>
+              </ButtonCopyId>
             </BreadcrumbChip>
           ) : undefined
         }

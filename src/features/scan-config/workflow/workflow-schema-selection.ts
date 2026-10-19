@@ -351,6 +351,33 @@ export function resolveEntityIdsFromConfigForm(
   schema: ConfigSchema,
   config: Config | undefined
 ): string[] {
+  return resolveEntityRefsFromConfigForm(schema, config).map((ref) => ref.id_str);
+}
+
+/**
+ * Every entity ref (a FromID of a known entity kind) anywhere in a saved config, deduped by id.
+ * Fallback for workflows that keep their entity outside `initialize`, e.g. ion channel models.
+ */
+export function collectEntityRefsFromConfig(value: unknown): TFromIdRef[] {
+  const found = new Map<string, TFromIdRef>();
+  const visit = (node: unknown) => {
+    if (isFromIdRef(node)) {
+      if (isScanConfigFromIdType(node.type)) found.set(node.id_str, node);
+    } else if (Array.isArray(node)) {
+      node.forEach(visit);
+    } else if (isPlainObject(node)) {
+      Object.values(node).forEach(visit);
+    }
+  };
+  visit(value);
+  return [...found.values()];
+}
+
+/** Every entity ref stored under the schema's initialize model field, in config order. */
+export function resolveEntityRefsFromConfigForm(
+  schema: ConfigSchema,
+  config: Config | undefined
+): TFromIdRef[] {
   const modelProperty = findInitializeModelProperty(schema);
   if (!modelProperty || !config) {
     return [];
@@ -365,7 +392,7 @@ export function resolveEntityIdsFromConfigForm(
     | ConfigValue
     | undefined;
 
-  return collectFromIdRefsFromModelFieldValue(modelFieldValue).map((ref) => ref.id_str);
+  return collectFromIdRefsFromModelFieldValue(modelFieldValue);
 }
 
 /**

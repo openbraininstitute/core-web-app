@@ -132,15 +132,7 @@ const RAIL_HEIGHT = 48;
 const SURFACE_INSET = 4;
 const LIQUID_JOIN = 24;
 const PANEL_RADIUS = 28;
-/** Where the rail's start/centre slots begin, clear of the panel corner. */
-const RAIL_INSET = SURFACE_INSET + PANEL_RADIUS;
-const RAIL_GAP = 8;
-/**
- * Half the widest centre slot we expect, to decide whether it fits beside the tabs.
- * ponytail: a guess sized for the copy chip, not a measurement. Past it the slots stop being the
- * panel centre and take the room left of the tabs; upgrade path is to measure the slot.
- */
-const RAIL_CENTER_RESERVE = 80;
+const RAIL_GAP = 16;
 /** Half the hairline, so the stroke sits fully inside the clipped root. */
 const SURFACE_EDGE = 0.5;
 
@@ -462,15 +454,10 @@ export function MorphingTabs({
         )
       : 0;
   const slotStart = SURFACE_INSET + tabsOffset;
-  // The rail slots span the panel so the centre slot is the panel's centre. When the tabs sit at
-  // the end and the centre slot (or a long start slot) would run into them, the slots take only
-  // the room left of the tabs instead.
-  const centreFitsBesideTabs =
-    Boolean(railCenter) && surfaceWidth / 2 + RAIL_CENTER_RESERVE <= slotStart - RAIL_GAP;
+  // The rail slots start flush with the panel's left edge and stop short of the tabs when they
+  // sit at the end, so the start/centre slots can never run into them.
   const railRight =
-    tabsAlign === 'end' && surfaceWidth > 0 && !centreFitsBesideTabs
-      ? surfaceWidth - slotStart + RAIL_GAP
-      : RAIL_INSET;
+    tabsAlign === 'end' && surfaceWidth > 0 ? surfaceWidth - slotStart + RAIL_GAP : SURFACE_INSET;
   const slotStep = tabWidth + slotGap;
 
   const slotLefts = useMemo(
@@ -950,23 +937,22 @@ export function MorphingTabs({
               </SpringTab>
             );
           })}
-
           {railStart || railCenter ? (
+            // flex, not a fixed grid: the start slot and the centre slot both shrink
+            // (min-w-0, proportionally to their content) before either can reach the tabs
             <div
               data-slot="morphing-tabs-rail-slots"
-              className="pointer-events-none absolute z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center"
-              style={{ left: RAIL_INSET, right: railRight, top: 0, height: RAIL_HEIGHT }}
+              className="pointer-events-none absolute z-30 flex items-center gap-4 overflow-hidden"
+              style={{ left: SURFACE_INSET, right: railRight, top: 0, height: RAIL_HEIGHT }}
             >
-              <div
-                className={cn(
-                  'col-start-1 flex min-w-0 [&>*]:pointer-events-auto',
-                  classNames?.railStart
-                )}
-              >
+              <div className={cn('flex min-w-0 [&>*]:pointer-events-auto', classNames?.railStart)}>
                 {railStart}
               </div>
               <div
-                className={cn('col-start-2 flex [&>*]:pointer-events-auto', classNames?.railCenter)}
+                className={cn(
+                  'flex min-w-0 max-w-[min(32rem,30%)] flex-auto justify-center [&>*]:pointer-events-auto',
+                  classNames?.railCenter
+                )}
               >
                 {railCenter}
               </div>

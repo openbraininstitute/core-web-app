@@ -18,7 +18,6 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
-import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
 
 import type { ReactNode } from 'react';
@@ -126,7 +125,7 @@ export default function ScanConfigTabsPanel({
       keepMounted
       reorderable={false}
       tabsAlign="end"
-      railStart={start ? <BreadcrumbChip>{start}</BreadcrumbChip> : undefined}
+      railStart={start}
       railCenter={railCenter}
       items={items}
       value={tab.id}

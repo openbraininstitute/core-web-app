@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
 import {
@@ -13,12 +13,11 @@ import {
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { createSessionStatePersistence } from '@/features/data-grid/react';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
+import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
-import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -38,8 +37,8 @@ function getGroupDisplayName(group: TEntityTypeGroup): string {
 }
 
 /**
- * Data › category › type trail for the data details page. Returns the trail only: the host
- * wraps it in a `BreadcrumbChip` (alongside any trailing action) where it wants a pill.
+ * Data › category › type trail for the data details page, in its chip. The host passes it as the
+ * top bar's `start` slot as is.
  */
 export function DataBreadcrumb({
   type,
@@ -53,8 +52,6 @@ export function DataBreadcrumb({
   title: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
-  const section = routeSegments.at(0);
   const queryParams = useSearchParams();
 
   const { dataKey } = makeDataKey({
@@ -80,8 +77,6 @@ export function DataBreadcrumb({
     }
   };
 
-  if (section !== WorkspaceSection.Data) return null;
-
   const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
   const withQuery = (path: string, set: Record<string, string> = {}) => {
     const query = new URLSearchParams(queryParams);
@@ -91,28 +86,30 @@ export function DataBreadcrumb({
   };
 
   return (
-    <BreadcrumbTrail
-      data-testid="data-view-breadcrumb"
-      items={[
-        { key: 'data', label: 'Data', href: withQuery(dataHome), onClick: onLinkClick },
-        {
-          key: 'group',
-          label: getGroupDisplayName(group),
-          href: withQuery(dataHome, { [DATA_GROUP_QUERY_PARAM]: group }),
-          onClick: onLinkClick,
-          className: 'capitalize',
-        },
-        {
-          key: 'type',
-          label: title,
-          href: withQuery(`${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`, {
-            [DATA_GROUP_QUERY_PARAM]: group,
-            [SCOPE_QUERY_PARAMS]: scope,
-          }),
-          onClick: onLinkClick,
-        },
-      ]}
-    />
+    <BreadcrumbChip>
+      <BreadcrumbTrail
+        data-testid="data-view-breadcrumb"
+        items={[
+          { key: 'data', label: 'Data', href: withQuery(dataHome), onClick: onLinkClick },
+          {
+            key: 'group',
+            label: getGroupDisplayName(group),
+            href: withQuery(dataHome, { [DATA_GROUP_QUERY_PARAM]: group }),
+            onClick: onLinkClick,
+            className: 'capitalize',
+          },
+          {
+            key: 'type',
+            label: title,
+            href: withQuery(`${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`, {
+              [DATA_GROUP_QUERY_PARAM]: group,
+              [SCOPE_QUERY_PARAMS]: scope,
+            }),
+            onClick: onLinkClick,
+          },
+        ]}
+      />
+    </BreadcrumbChip>
   );
 }
 
@@ -123,9 +120,5 @@ export function ClosePage({
   url: string;
   variant?: TViewVariant;
 }) {
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
-  const section = routeSegments.at(0);
-  if (section !== WorkspaceSection.Data) return null;
-
   return <Close href={url} className="mr-1" variant={variant} />;
 }
