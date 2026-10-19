@@ -57,9 +57,9 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const atomView = useAtomValue(circuitRepresentationViewAtom);
-  // A split pins a subset of the tree, and the hierarchy is built from ALL circuits
+  // A variant pins a subset of the tree, and the hierarchy is built from ALL circuits
   // (`/circuit/hierarchy` + every id), so it is neither meaningful nor cheap there.
-  const view = props.split ? CircuitRepresentationView.Flat : atomView;
+  const view = props.variant ? CircuitRepresentationView.Flat : atomView;
   const { scope } = useScope({ defaultScope, clearOnDefault: false });
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
@@ -132,8 +132,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   );
 
   const toolbarSlots = useMemo(
-    () => (props.split ? undefined : { left: <CircuitViewToggle dataKey={dataKey} /> }),
-    [dataKey, props.split]
+    () => (props.variant ? undefined : { left: <CircuitViewToggle dataKey={dataKey} /> }),
+    [dataKey, props.variant]
   );
 
   // Publish the view as a grid-context factor so the schema can gate hierarchy-only

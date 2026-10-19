@@ -8,11 +8,11 @@ export type TListingRouteProps = Pick<
 >;
 
 /**
- * One sub-item of a split listing: the parent `dataType` seen through a pinned facet.
+ * One variant of a listing: the parent `dataType` seen through a pinned facet.
  * It is NOT a new data type, only a server-side param plus the removal of that facet's
  * filter UI.
  */
-export interface IListingSplitOption {
+export interface IListingVariant {
   /** url segment and per-listing state discriminator */
   slug: string;
   /** sidebar text */
@@ -23,10 +23,10 @@ export interface IListingSplitOption {
   pinnedFields: readonly string[];
 }
 
-/** A data type whose listing is split into sub-items (see `define-facet-split.ts`). */
-export interface IListingSplit {
+/** A data type whose listing is offered as variants, i.e. sidebar sub-items (see `define-facet-variants.ts`). */
+export interface IListingVariantGroup {
   dataType: TExtendedEntitiesTypeDict;
-  options: readonly IListingSplitOption[];
+  variants: readonly IListingVariant[];
   /** route props for the sub-item pages; defaults to the standard Data listing props */
   listingProps?: TListingRouteProps;
 }

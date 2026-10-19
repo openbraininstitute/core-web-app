@@ -7,13 +7,13 @@ import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycor
 import { circuitSchema } from '@/features/data-grid/bindings/entitycore/schemas/circuit';
 import { FilterValueKind, OperatorId, resolveColumns } from '@/features/data-grid/core';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
-import { circuitScaleSplit } from '@/features/views/listing/splits/circuit-scale';
+import { circuitScaleVariants } from '@/features/views/listing/variants/circuit-scale';
 import {
-  getListingSplit,
-  LISTING_SPLITS,
-  resolveListingSplitOption,
-} from '@/features/views/listing/splits/registry';
-import { scopeListing, withoutFilterFields } from '@/features/views/listing/splits/scope-listing';
+  getVariantGroup,
+  LISTING_VARIANT_GROUPS,
+  resolveListingVariant,
+} from '@/features/views/listing/variants/registry';
+import { scopeListing, withoutFilterFields } from '@/features/views/listing/variants/scope-listing';
 
 import type { IGridContext, IGridSchema } from '@/features/data-grid/core';
 
@@ -28,9 +28,9 @@ const CTX: IGridContext = {
   scope: 'project',
 };
 
-describe('circuit scale split config', () => {
+describe('circuit scale variants config', () => {
   it('has one sub-item per scale except single, in enum order, with the agreed labels', () => {
-    expect(circuitScaleSplit.options.map((o) => [o.slug, o.label])).toEqual([
+    expect(circuitScaleVariants.variants.map((o) => [o.slug, o.label])).toEqual([
       ['pair', 'Paired neurons'],
       ['small', 'Small microcircuits'],
       ['microcircuit', 'Microcircuits'],
@@ -39,31 +39,34 @@ describe('circuit scale split config', () => {
       ['whole-brain', 'Whole brain circuits'],
     ]);
     const scales = Object.values(CircuitScaleDictionary).filter((s) => s !== 'single');
-    expect(circuitScaleSplit.options.map((o) => o.params)).toEqual(
+    expect(circuitScaleVariants.variants.map((o) => o.params)).toEqual(
       scales.map((s) => ({ scale__in: [s] }))
     );
-    for (const option of circuitScaleSplit.options) expect(option.pinnedFields).toEqual(['scale']);
+    for (const variant of circuitScaleVariants.variants)
+      expect(variant.pinnedFields).toEqual(['scale']);
   });
 });
 
-describe('listing split registry', () => {
-  it('resolves options by dataType + slug and misses otherwise', () => {
-    expect(resolveListingSplitOption(CIRCUIT, 'whole-brain')?.params).toEqual({
+describe('listing variants registry', () => {
+  it('resolves variants by dataType + slug and misses otherwise', () => {
+    expect(resolveListingVariant(CIRCUIT, 'whole-brain')?.params).toEqual({
       scale__in: ['whole_brain'],
     });
-    expect(resolveListingSplitOption(CIRCUIT, 'bogus')).toBeUndefined();
-    expect(resolveListingSplitOption(CIRCUIT, undefined)).toBeUndefined();
-    expect(resolveListingSplitOption(ExtendedEntitiesTypeDict.Emodel, 'pair')).toBeUndefined();
+    expect(resolveListingVariant(CIRCUIT, 'bogus')).toBeUndefined();
+    expect(resolveListingVariant(CIRCUIT, undefined)).toBeUndefined();
+    expect(resolveListingVariant(ExtendedEntitiesTypeDict.Emodel, 'pair')).toBeUndefined();
   });
 
-  it('is well formed: unique slugs, one split per type, routable and registered parents', () => {
-    expect(new Set(LISTING_SPLITS.map((s) => s.dataType)).size).toBe(LISTING_SPLITS.length);
-    for (const split of LISTING_SPLITS) {
-      const slugs = split.options.map((o) => o.slug);
+  it('is well formed: unique slugs, one variant group per type, routable and registered parents', () => {
+    expect(new Set(LISTING_VARIANT_GROUPS.map((s) => s.dataType)).size).toBe(
+      LISTING_VARIANT_GROUPS.length
+    );
+    for (const group of LISTING_VARIANT_GROUPS) {
+      const slugs = group.variants.map((o) => o.slug);
       expect(new Set(slugs).size).toBe(slugs.length);
-      expect(getListingSplit(split.dataType)).toBe(split);
-      expect(DATA_BROWSE_ALLOWED_ENTITIES).toContain(split.dataType);
-      expect(getEntityGridDefinition(split.dataType)).toBeDefined();
+      expect(getVariantGroup(group.dataType)).toBe(group);
+      expect(DATA_BROWSE_ALLOWED_ENTITIES).toContain(group.dataType);
+      expect(getEntityGridDefinition(group.dataType)).toBeDefined();
     }
   });
 });
@@ -126,8 +129,8 @@ describe('withoutFilterFields', () => {
 
 describe('scopeListing on the real circuit definition', () => {
   const definition = must(getEntityGridDefinition(CIRCUIT));
-  const option = must(resolveListingSplitOption(CIRCUIT, 'whole-brain'));
-  const scoped = scopeListing({ definition, extraQueryParams: { order_by: ['name'] } }, option);
+  const variant = must(resolveListingVariant(CIRCUIT, 'whole-brain'));
+  const scoped = scopeListing({ definition, extraQueryParams: { order_by: ['name'] } }, variant);
   const filterAvailable = (schema: IGridSchema<never>, id: string) =>
     resolveColumns(schema, CTX).find((c) => c.id === id)?.filterAvailable;
 
@@ -159,8 +162,8 @@ describe('scopeListing on the real circuit definition', () => {
     expect(params.order_by).toEqual(['name']);
   });
 
-  it('isolates per-listing state under the split slug', () => {
+  it('isolates per-listing state under the variant slug', () => {
     expect(scoped.id).toBe('whole-brain');
-    expect(scopeListing({ definition, id: 'base' }, option).id).toBe('base:whole-brain');
+    expect(scopeListing({ definition, id: 'base' }, variant).id).toBe('base:whole-brain');
   });
 });

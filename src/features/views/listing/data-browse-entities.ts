@@ -1,7 +1,7 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { SelectionScope } from '@/features/data-grid/core';
 
-import type { TListingRouteProps } from './splits/types';
+import type { TListingRouteProps } from './variants/types';
 
 /** What a standard Data listing route passes besides `dataType` (selection, download, delete). */
 export const DATA_BROWSE_LISTING_PROPS = {

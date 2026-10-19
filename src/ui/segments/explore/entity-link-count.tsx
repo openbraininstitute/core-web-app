@@ -12,7 +12,7 @@ import {
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { useFlags } from '@/features/feature-flags';
-import { getListingSplit } from '@/features/views/listing/splits/registry';
+import { getVariantGroup } from '@/features/views/listing/variants/registry';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
@@ -64,10 +64,10 @@ function BrowseLinkList({
       currentBrainRegionId,
       defaultBrainRegionId,
     };
-    const split = getListingSplit(entity.extendedType);
+    const group = getVariantGroup(entity.extendedType);
     const key = `link-${entity.title}/${entity.extendedType}`;
-    return split ? (
-      <BrowseLinkGroup key={key} split={split} {...linkProps} />
+    return group ? (
+      <BrowseLinkGroup key={key} group={group} {...linkProps} />
     ) : (
       <BrowseLink key={key} {...linkProps} />
     );

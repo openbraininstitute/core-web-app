@@ -85,16 +85,16 @@ import type {
   IDetailRuntime,
   IExpandColumnConfig,
 } from '@/features/data-grid/react';
-import type { IListingSplitOption } from '@/features/views/listing/splits/types';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/types';
+import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
 
 export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
   definition: TAnyEntityGridDefinition;
-  /** the resolved split sub-item, when the listing is one (plugin bodies adapt to it) */
-  split?: IListingSplitOption;
+  /** the resolved variant, when the listing is one (plugin bodies adapt to it) */
+  variant?: IListingVariant;
 }
 
 /**

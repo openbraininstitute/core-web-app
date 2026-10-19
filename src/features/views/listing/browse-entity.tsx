@@ -4,8 +4,8 @@ import { WarningOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
-import { resolveListingSplitOption } from '@/features/views/listing/splits/registry';
-import { useScopedListing } from '@/features/views/listing/splits/use-scoped-listing';
+import { resolveListingVariant } from '@/features/views/listing/variants/registry';
+import { useScopedListing } from '@/features/views/listing/variants/use-scoped-listing';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { log } from '@/utils/logger';
 
@@ -34,22 +34,27 @@ export type { BrowseEntityScopeProps };
  */
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
   const baseDefinition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
-  const split = resolveListingSplitOption(props.dataType, props.splitSlug);
-  // The one place a split is applied: pinned params, stripped filters, isolated state.
-  const scoped = useScopedListing(props, baseDefinition, split);
+  const variant = resolveListingVariant(props.dataType, props.variantSlug);
+  // The one place a variant is applied: pinned params, stripped filters, isolated state.
+  const scoped = useScopedListing(props, baseDefinition, variant);
 
   if (!scoped.definition) {
     log('error', `[BrowseEntityScope] no grid definition registered for "${props.dataType}"`);
     return <ListingUnavailable content={`"${props.dataType}" has no grid configuration.`} />;
   }
-  // An unfiltered fallback would silently load every row, the slow path a split avoids.
-  if (props.splitSlug && !split) {
-    log('error', `[BrowseEntityScope] unknown split "${props.splitSlug}" for "${props.dataType}"`);
+  // An unfiltered fallback would silently load every row, the slow path a variant avoids.
+  if (props.variantSlug && !variant) {
+    log(
+      'error',
+      `[BrowseEntityScope] unknown variant "${props.variantSlug}" for "${props.dataType}"`
+    );
     return (
-      <ListingUnavailable content={`"${props.splitSlug}" is not a "${props.dataType}" split.`} />
+      <ListingUnavailable content={`"${props.variantSlug}" is not a "${props.dataType}" split.`} />
     );
   }
-  return <BrowseEntityGrid {...props} {...scoped} definition={scoped.definition} split={split} />;
+  return (
+    <BrowseEntityGrid {...props} {...scoped} definition={scoped.definition} variant={variant} />
+  );
 }
 
 function ListingUnavailable({ content }: { content: string }) {

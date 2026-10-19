@@ -1,6 +1,7 @@
 'use client';
 
-import { DownOutlined, PlusOutlined, RightOutlined, WarningOutlined } from '@ant-design/icons';
+import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
+import { RiArrowDownSLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
@@ -19,7 +20,7 @@ import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
-import { listingInstanceId } from '@/features/views/listing/splits/scope-listing';
+import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -35,20 +36,20 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import type { ReactNode } from 'react';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
-import type { IListingSplitOption } from '@/features/views/listing/splits/types';
+import type { IListingVariant } from '@/features/views/listing/variants/types';
 import type { WorkspaceContext } from '@/types/common';
 
 function buildDataUrl({
   virtualLabId,
   projectId,
   extendedType,
-  splitOption,
+  variant,
 }: WorkspaceContext & {
   extendedType: TExtendedEntitiesTypeDict;
-  splitOption?: IListingSplitOption;
+  variant?: IListingVariant;
 }) {
   const base = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${kebabCase(extendedType)}`;
-  return splitOption ? `${base}/${splitOption.slug}` : base;
+  return variant ? `${base}/${variant.slug}` : base;
 }
 
 /** Collapse control of a row that owns sub-items (rendered beside, not inside, the link). */
@@ -100,71 +101,80 @@ export function BrowseLinkContent({
 
   return (
     <div className="group flex w-full items-center justify-center gap-0">
-      <div className="relative flex w-full items-center">
-        {expander && (
-          <button
-            type="button"
-            aria-expanded={expander.open}
-            aria-controls={expander.controlsId}
-            aria-label={expander.label}
-            data-testid={`entity-link-expander-${testIdKey}`}
-            onClick={expander.onToggle}
-            className={cn(
-              'absolute left-2 z-10 flex size-6 items-center justify-center rounded-full text-xs',
-              'focus-visible:ring-primary-8 hover:bg-neutral-2/60 focus-visible:ring-2',
-              active ? 'text-white hover:bg-white/20' : 'text-neutral-5'
-            )}
+      <div className="flex w-full items-center">
+        {/* the expander overlays the pill's right edge: a <button> cannot live inside the <a> */}
+        <div className="relative flex w-full items-center">
+          <Button
+            asChild
+            rounded
+            key={`counter-${testIdKey}`}
+            id={`counter-${testIdKey}`}
+            data-testid={`entity-link-counter-${testIdKey}`}
+            variant="outline"
+            size="lg"
+            className="group w-full shrink grow border-none text-base"
+            active={active}
+            onClick={onClick}
           >
-            {expander.open ? <DownOutlined /> : <RightOutlined />}
-          </button>
-        )}
-        <Button
-          asChild
-          rounded
-          key={`counter-${testIdKey}`}
-          id={`counter-${testIdKey}`}
-          data-testid={`entity-link-counter-${testIdKey}`}
-          variant="outline"
-          size="lg"
-          className="group w-full shrink grow border-none text-base"
-          active={active}
-          onClick={onClick}
-        >
-          <Link
-            href={{
-              pathname: href,
-              query: searchParams.toString(),
-            }}
-            className={cn('flex! w-full items-center justify-between!', {
-              'pl-10!': expander,
-            })}
-          >
-            {/*
+            <Link
+              href={{
+                pathname: href,
+                query: searchParams.toString(),
+              }}
+              className={cn('flex! w-full items-center justify-between!', { 'pr-12!': expander })}
+            >
+              {/*
               Superseded types drop to normal weight, matching the workflow menus — the count
               keeps its own weight rules, since it is data rather than part of the label.
             */}
-            <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>{title}</div>
-            <div
+              <div className={cn('text-current', legacy ? 'font-normal' : 'font-bold')}>
+                {title}
+              </div>
+              <div
+                className={cn(
+                  'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
+                  { 'font-bold text-white': active }
+                )}
+              >
+                {isLoading ? (
+                  <div
+                    data-testid={`entity-link-counter-loading-${extendedType}`}
+                    className="flex items-center justify-center gap-1"
+                  >
+                    <Skeleton className="h-3 w-5 rounded-full" />
+                    <span className="text-neutral-2 font-light">of</span>
+                    <Skeleton className="h-3 w-5 rounded-full" />
+                  </div>
+                ) : (
+                  count
+                )}
+              </div>
+            </Link>
+          </Button>
+          {expander && (
+            <button
+              type="button"
+              aria-expanded={expander.open}
+              aria-controls={expander.controlsId}
+              aria-label={expander.label}
+              data-testid={`entity-link-expander-${testIdKey}`}
+              onClick={expander.onToggle}
               className={cn(
-                'text-neutral-4 group-hover:text-label text-sm font-light group-hover:font-bold',
-                { 'font-bold text-white': active }
+                'absolute top-1/2 right-2 -translate-y-1/2',
+                'flex size-6 items-center justify-center rounded-full border',
+                'group/expander border-gray-100 bg-gray-100 text-neutral-5',
+                'focus-visible:ring-primary-8 focus-visible:ring-2'
               )}
             >
-              {isLoading ? (
-                <div
-                  data-testid={`entity-link-counter-loading-${extendedType}`}
-                  className="flex items-center justify-center gap-1"
-                >
-                  <Skeleton className="h-3 w-5 rounded-full" />
-                  <span className="text-neutral-2 font-light">of</span>
-                  <Skeleton className="h-3 w-5 rounded-full" />
-                </div>
-              ) : (
-                count
-              )}
-            </div>
-          </Link>
-        </Button>
+              <RiArrowDownSLine
+                className={cn(
+                  'size-4 transition-transform group-hover/expander:scale-125',
+                  expander.open && 'rotate-180'
+                )}
+              />
+            </button>
+          )}
+        </div>
         {isUploadable && scope === WorkspaceScope.Project && (
           <div
             className={cn(
@@ -204,8 +214,8 @@ type Props = {
   hierarchyId?: string;
   defaultBrainRegionId?: string;
   enabled: boolean;
-  /** renders this row as a sub-item of `extendedType`'s split listing */
-  splitOption?: IListingSplitOption;
+  /** renders this row as a variant of `extendedType` */
+  variant?: IListingVariant;
   expander?: TBrowseLinkExpander;
 };
 
@@ -217,14 +227,14 @@ function buildQuery({
   scope,
   extendedType,
   applyBrainRegionFilter,
-  splitOption,
+  variant,
 }: WorkspaceContext & {
   hierarchyId: string;
   brainRegionId: string;
   scope: TWorkspaceScope;
   extendedType: TExtendedEntitiesTypeDict;
   applyBrainRegionFilter: boolean;
-  splitOption?: IListingSplitOption;
+  variant?: IListingVariant;
 }) {
   const brainRegionQuery =
     applyBrainRegionFilter && brainRegionId
@@ -244,7 +254,7 @@ function buildQuery({
       page_size: 0,
       ...brainRegionQuery,
       // a sub-item counts only its own slice
-      ...splitOption?.params,
+      ...variant?.params,
       ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
     },
   };
@@ -256,7 +266,7 @@ function buildQuery({
     brainRegionId,
     hierarchyId,
     scope,
-    splitSlug: splitOption?.slug,
+    variantSlug: variant?.slug,
   });
 
   return { query, queryKey };
@@ -282,20 +292,20 @@ export function BrowseLink({
   hierarchyId,
   currentBrainRegionId,
   defaultBrainRegionId,
-  splitOption,
+  variant,
   expander,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const { type, split } = useParams<{ type?: string; split?: string }>();
+  const { type, variant: variantSlug } = useParams<{ type?: string; variant?: string }>();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const entity = getEntityByExtendedType({ type: extendedType });
-  const href = buildDataUrl({ virtualLabId, projectId, extendedType, splitOption });
+  const href = buildDataUrl({ virtualLabId, projectId, extendedType, variant });
 
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
-  const isActiveEntity = activeEntityType === extendedType && split === splitOption?.slug;
+  const isActiveEntity = activeEntityType === extendedType && variantSlug === variant?.slug;
 
   const { count: tableCount } = useTableQueryCount({
     extendedType,
@@ -303,7 +313,7 @@ export function BrowseLink({
     workspace: { virtualLabId, projectId },
     isActiveEntity,
     // must match the grid's `id` segment so both read the same dataKey
-    instanceId: listingInstanceId(undefined, splitOption),
+    instanceId: listingInstanceId(undefined, variant),
   });
 
   const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
@@ -317,7 +327,7 @@ export function BrowseLink({
     scope,
     extendedType,
     applyBrainRegionFilter: scopesListingByBrainRegion,
-    splitOption,
+    variant,
   });
 
   // root count query: always fetch results (unfiltered total)
@@ -329,7 +339,7 @@ export function BrowseLink({
     scope,
     extendedType,
     applyBrainRegionFilter: scopesListingByBrainRegion,
-    splitOption,
+    variant,
   });
 
   const brainRegionDependentFetch =
@@ -426,9 +436,9 @@ export function BrowseLink({
           isLoading,
           active: isActiveEntity,
           expander,
-          testIdKey: splitOption ? `${extendedType}-${splitOption.slug}` : extendedType,
-          isUploadable: entity?.isContributable && !splitOption,
-          title: splitOption?.label ?? entity?.title,
+          testIdKey: variant ? `${extendedType}-${variant.slug}` : extendedType,
+          isUploadable: entity?.isContributable && !variant,
+          title: variant?.label ?? entity?.title,
           legacy: entity?.legacy,
           count: countRenderer,
         }}

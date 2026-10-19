@@ -26,7 +26,7 @@ export function useTableQueryCount({
   scope: TWorkspaceScope;
   workspace: WorkspaceContext;
   isActiveEntity: boolean;
-  /** the grid's `id` instance segment, e.g. a split sub-item's */
+  /** the grid's `id` instance segment, e.g. a variant's */
   instanceId?: string;
 }) {
   const { virtualLabId, projectId } = workspace;

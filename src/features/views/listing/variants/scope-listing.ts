@@ -1,7 +1,7 @@
 import { resolveFilterTargets } from '@/features/data-grid/core';
 
 import type { IColumnModel, IGridSchema } from '@/features/data-grid/core';
-import type { IListingSplitOption } from './types';
+import type { IListingVariant } from './types';
 
 /**
  * `schema` without the column filters / advanced filters on `fields`. Columns stay (the
@@ -36,9 +36,9 @@ export function withoutFilterFields<Row>(
 /** Grid `id` instance segment: separates a sub-item's session state from its parent's. */
 export function listingInstanceId(
   baseId: string | undefined,
-  option: IListingSplitOption | undefined
+  variant: IListingVariant | undefined
 ): string | undefined {
-  return [baseId, option?.slug].filter(Boolean).join(':') || undefined;
+  return [baseId, variant?.slug].filter(Boolean).join(':') || undefined;
 }
 
 export interface IListingScope<D extends { schema: IGridSchema<never> }> {
@@ -47,18 +47,18 @@ export interface IListingScope<D extends { schema: IGridSchema<never> }> {
   id?: string;
 }
 
-/** Apply a split option to a listing: pin its params, strip its filters, isolate its state. */
+/** Apply a split variant to a listing: pin its params, strip its filters, isolate its state. */
 export function scopeListing<D extends { schema: IGridSchema<never> }>(
   { definition, extraQueryParams, id }: IListingScope<D>,
-  option: IListingSplitOption
+  variant: IListingVariant
 ): IListingScope<D> {
   return {
     definition: {
       ...definition,
-      schema: withoutFilterFields(definition.schema, option.pinnedFields),
+      schema: withoutFilterFields(definition.schema, variant.pinnedFields),
     },
     // the split's params win over the caller's
-    extraQueryParams: { ...extraQueryParams, ...option.params },
-    id: listingInstanceId(id, option),
+    extraQueryParams: { ...extraQueryParams, ...variant.params },
+    id: listingInstanceId(id, variant),
   };
 }
