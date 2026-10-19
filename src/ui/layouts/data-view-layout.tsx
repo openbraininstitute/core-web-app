@@ -93,8 +93,6 @@ export async function DataViewLayout({
    * Section content is the only part that uses the blue panel variant.
    */
   const chromeVariant = ViewVariant.Light;
-  // an e-model's Configuration is the full-page optimisation scan config
-  const configurationFullPage = type === ExtendedEntitiesTypeDict.Emodel;
 
   const breadcrumbs = (
     <DataBreadcrumb
@@ -102,8 +100,6 @@ export async function DataViewLayout({
       type={type}
       group={entityType.group}
       scope={scope}
-      sections={entityType.detailViewSections}
-      configurationFullPage={configurationFullPage}
       variant={chromeVariant}
     />
   );
@@ -184,7 +180,9 @@ export async function DataViewLayout({
         {closePage}
       </div>
       <DetailViewBody
-        configurationFullPage={configurationFullPage}
+        // an e-model's Workflow tab is the optimisation scan-config editor, styled for a light
+        // page background rather than the blue detail panel
+        plainContentSection={type === ExtendedEntitiesTypeDict.Emodel}
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}
