@@ -100,6 +100,15 @@ export const courseToolbarFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The top menu's links, all but the active one, on the page's grey rather than white. */
+export const greyMenuPillsFlag = defineFlag<boolean>({
+  key: 'grey-menu-pills',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top menu: links on the page's grey instead of white",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -112,6 +121,7 @@ export const flags = [
   learnFlag,
   aiButtonFlag,
   courseToolbarFlag,
+  greyMenuPillsFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

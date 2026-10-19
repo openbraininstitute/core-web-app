@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { FlagsProvider } from '@/features/feature-flags';
-import { defaultFlags } from '@/features/feature-flags/config';
+import { defaultFlags, type FeatureFlags } from '@/features/feature-flags/config';
 import { DEFAULT_LEARN_SETTINGS } from '@/features/learn/learn-settings';
 import { LearnSettingsProvider } from '@/features/learn/learn-settings-provider';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
@@ -22,9 +22,9 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
   useQuery: () => ({ data: undefined }),
 }));
 
-function renderMenu(learn: boolean, hideHelp = false) {
+function renderMenu(learn: boolean, hideHelp = false, flags: Partial<FeatureFlags> = {}) {
   render(
-    <FlagsProvider flags={{ ...defaultFlags, learn }}>
+    <FlagsProvider flags={{ ...defaultFlags, learn, ...flags }}>
       <LearnSettingsProvider settings={{ ...DEFAULT_LEARN_SETTINGS, hideHelp }}>
         <TopMenuNavigation />
       </LearnSettingsProvider>
@@ -67,5 +67,25 @@ describe('TopMenuNavigation / Learn', () => {
   it('hides Help with Learn\'s "hide Help altogether" setting on', () => {
     renderMenu(true, true);
     expect(screen.queryByTestId('workspace-help')).toBeNull();
+  });
+});
+
+describe('TopMenuNavigation / grey-menu-pills', () => {
+  it('keeps the links white, as on main, while its flag is off', () => {
+    renderMenu(true);
+    for (const id of ['workspace-explore-data', 'workspace-help']) {
+      expect(screen.getByTestId(id)).toHaveClass('bg-white');
+      expect(screen.getByTestId(id)).not.toHaveClass('bg-background');
+    }
+  });
+
+  it("puts them on the page's grey with its flag on", () => {
+    renderMenu(true, false, { 'grey-menu-pills': true });
+    for (const id of ['workspace-explore-data', 'workspace-help']) {
+      expect(screen.getByTestId(id)).toHaveClass('bg-background');
+      expect(screen.getByTestId(id)).not.toHaveClass('bg-white');
+    }
+    // the active one stays navy
+    expect(screen.getByTestId('workspace-learn')).toHaveClass('bg-primary-9');
   });
 });

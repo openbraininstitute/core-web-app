@@ -23,7 +23,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { learnFlag, useFlag } from '@/features/feature-flags';
+import { greyMenuPillsFlag, learnFlag, useFlag } from '@/features/feature-flags';
 import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -198,6 +198,9 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
 
   const learn = useFlag(learnFlag.key);
   const help = !useLearnSetting('hideHelp');
+  // the links, all but the active one, on the page's grey rather than white: behind its flag
+  const grey = useFlag(greyMenuPillsFlag.key) === true;
+  const fill = grey ? 'bg-background' : 'bg-white';
   const hasCourse = virtualLabData?.course;
   const isVlabAdmin = useMemo(
     () =>
@@ -243,7 +246,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
               rounded
               className={cn(
                 'text-primary-9 h-10 w-10 p-0',
-                plain && 'bg-background hover:bg-background hover:shadow-sm'
+                (plain || grey) && 'bg-background hover:bg-background hover:shadow-sm'
               )}
             >
               <MenuOutlined className="text-base" />
@@ -350,7 +353,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center cursor-pointer',
-                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                      `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
                       plain && PLAIN,
                       {
                         'bg-primary-9 text-white': isActive && !plain,
@@ -392,7 +395,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center',
-                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                      `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
                       plain && PLAIN,
                       {
                         'bg-primary-9 text-white': isActiveHelp && !plain,
@@ -442,7 +445,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                       '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
                     'group relative flex items-center justify-center',
-                    '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
+                    `!overflow-visible !py-0 ${fill} select-none hover:shadow-sm hover:bg-background`,
                     plain && PLAIN,
                     {
                       'bg-primary-9 text-white': isActiveLink && !plain,
