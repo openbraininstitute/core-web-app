@@ -167,7 +167,14 @@ function BreadcrumbCopyButton({
       iconOnly
       value={copy.value}
       label={copy.label}
-      tooltip={tooltip && copy.label}
+      // "Copy <name>": the verb stays regular, the entity name is bold
+      tooltip={
+        tooltip && (
+          <>
+            {copy.label.split(' ')[0]} <b>{copy.label.split(' ').slice(1).join(' ')}</b>
+          </>
+        )
+      }
       classNames={{
         button: 'size-6 shrink-0 p-0',
         icon: cn(
@@ -175,6 +182,8 @@ function BreadcrumbCopyButton({
           'hover:border-primary-8 hover:bg-primary-8 hover:[&_svg]:text-white'
         ),
         glyph: 'size-3.5 text-primary-9',
+        tooltip: 'max-w-72 bg-white text-primary-9 text-wrap break-words shadow-lg',
+        tooltipArrow: 'bg-white!',
       }}
     />
   );
@@ -261,7 +270,7 @@ function BreadcrumbTrailLabel({ item, current }: { item: BreadcrumbTrailItem; cu
         avoidCollisions
         side="bottom"
         sideOffset={4}
-        className="text-primary-9 z-999 max-w-sm bg-white text-sm break-words shadow-lg"
+        className="text-primary-9 z-999 max-w-72 bg-white text-sm text-wrap break-words shadow-lg"
         arrowClassName="bg-white! z-9999"
       >
         {item.ellipsis}
@@ -283,7 +292,8 @@ function BreadcrumbTrailLink({
 } & React.HTMLAttributes<HTMLElement>) {
   const className = cn(
     CRUMB,
-    current ? 'font-bold' : 'font-light',
+    // entity crumbs (they carry a copy button or a menu) are always bold
+    current || item.copy || item.menu ? 'font-bold' : 'font-light',
     // a shrinkable crumb lets its text shrink with it (middle ellipsis) instead of overflowing
     item.ellipsis && 'flex min-w-0',
     item.className

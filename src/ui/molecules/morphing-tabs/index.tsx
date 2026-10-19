@@ -948,13 +948,16 @@ export function MorphingTabs({
               <div className={cn('flex min-w-0 [&>*]:pointer-events-auto', classNames?.railStart)}>
                 {railStart}
               </div>
-              <div
-                className={cn(
-                  'flex min-w-0 max-w-[min(32rem,30%)] flex-auto justify-center [&>*]:pointer-events-auto',
-                  classNames?.railCenter
-                )}
-              >
-                {railCenter}
+              {/* flex-auto grows into all the space between start and tabs (and still shrinks with start), so the capped child is centred in it */}
+              <div className="flex min-w-0 flex-auto justify-center">
+                <div
+                  className={cn(
+                    'flex min-w-0 max-w-[min(32rem,100%)] [&>*]:pointer-events-auto',
+                    classNames?.railCenter
+                  )}
+                >
+                  {railCenter}
+                </div>
               </div>
             </div>
           ) : null}

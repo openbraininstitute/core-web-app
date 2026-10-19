@@ -28,7 +28,7 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   const { mdv, setMdv } = useMiniDetailView();
   const { startNextStep } = useNextStep();
   useDisableElementOverflow({ id: 'workspace-body' });
-  // the scope switch moved into the grid toolbar; point it out once per browser
+  // the scope switch lives in the grid toolbar; point it out once per browser
   useLocalOnboardingTour({
     tour: workflowScopeTour,
     selector: '#scope-selector',

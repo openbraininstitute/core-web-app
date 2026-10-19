@@ -200,8 +200,8 @@ export async function DataViewLayout({
             variant={chromeVariant}
           />
         </div>
-        <div className="min-h-0 w-4/5 pl-2 pr-3">
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pr-0.5">
+        <div className="min-h-0 w-4/5 px-2 pb-2">
+          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
             <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               <EntityNameDisplay
                 name={entity.name}

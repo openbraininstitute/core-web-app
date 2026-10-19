@@ -449,7 +449,7 @@ export function EntityDataGrid({
   // `compact` is the grid-scoped height opt-in: both pickers are taller than the
   // h-10 search pill elsewhere, and inside one toolbar row they must agree with it.
   const toolbarScope = useMemo<ReactNode>(
-    () => (requireScopeSelector ? <WorkflowScopeTabs iconOnly className="max-w-max" /> : undefined),
+    () => (requireScopeSelector ? <WorkflowScopeTabs compact className="max-w-max" /> : undefined),
     [requireScopeSelector]
   );
   const toolbarBrainRegion = useMemo<ReactNode>(

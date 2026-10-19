@@ -535,11 +535,7 @@ export const OnboardingDiscoverSteps: Tour[] = [
       {
         icon: null,
         title: 'Public and project data',
-        content: (
-          <>
-            Switch the table between public and project data. Hover an icon to see which is which.
-          </>
-        ),
+        content: <>Switch the table between public and project data.</>,
         selector: '#scope-selector',
         // `left` centres the arrow on the card's own edge; the bottom-* sides pin it 20px
         // from a corner, which only lines up when the card happens to be the right width

@@ -137,7 +137,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
                   button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
                   icon: 'size-6 shrink-0 border-transparent',
                   glyph: 'size-3.5 text-primary-9',
-                  tooltip: 'max-w-sm break-words bg-white text-primary-9 shadow-lg',
+                  tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
                   tooltipArrow: 'bg-white!',
                 }}
               >

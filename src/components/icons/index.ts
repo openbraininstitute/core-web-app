@@ -27,7 +27,6 @@ import IconPlus from './Plus';
 import RangeIcon from './Range';
 import ReadMeIcon from './ReadMeIcon';
 import ResetIcon from './ResetIcon';
-import { FolderAdminOpen, FolderPublicOpen } from './ScopeFolders';
 import { SettingsIcon } from './Settings';
 import UndoIcon from './UndoIcon';
 import UserIcon from './UserIcon';
@@ -54,8 +53,6 @@ export {
   FileDownloadFill,
   FileIcon,
   FlatListViewIcon,
-  FolderAdminOpen,
-  FolderPublicOpen,
   HierarchicalViewIcon,
   HomeIcon,
   IconPlus as PlusIcon,

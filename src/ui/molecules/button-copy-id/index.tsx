@@ -13,7 +13,7 @@ interface ButtonCopyIdProps {
   className?: string;
   label?: string;
   /** Hover/focus tooltip. `false` drops it: the button keeps its `aria-label` only. */
-  tooltip?: string | false;
+  tooltip?: React.ReactNode | false;
   value: string;
   /** Drops the visible label; the tooltip becomes the only affordance. */
   iconOnly?: boolean;
