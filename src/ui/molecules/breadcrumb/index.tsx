@@ -24,7 +24,7 @@ function BreadcrumbList({ className, ...props }: React.ComponentProps<'ol'>) {
     <ol
       data-slot="breadcrumb-list"
       className={cn(
-        'text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm break-words sm:gap-2.5',
+        'text-muted-foreground flex flex-wrap items-center gap-0.5 text-base break-words',
         className
       )}
       {...props}
@@ -100,13 +100,13 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
   );
 }
 
-/** The pill the trail sits in; children after the trail are trailing actions (copy, close…). */
+/** The row the trail sits in (no background of its own); children after the trail are trailing actions (copy, close…). */
 function BreadcrumbChip({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="breadcrumb-chip"
       className={cn(
-        'flex h-8 min-w-0 items-center gap-1 rounded-full bg-[oklch(0.968_0.007_247.896)] px-4 empty:hidden [&_nav]:min-w-0 [&_ol]:flex-nowrap',
+        'flex h-10 min-w-0 items-center gap-1 empty:hidden [&_nav]:min-w-0 [&_ol]:flex-nowrap',
         className
       )}
       {...props}
@@ -151,7 +151,7 @@ export type BreadcrumbTrailItem = {
 };
 
 const CRUMB =
-  'text-primary-9 focus-visible:ring-primary-9 rounded-sm text-sm outline-none transition-colors focus-visible:ring-2';
+  'text-primary-9 focus-visible:ring-primary-9 rounded-full px-2 py-1 text-base outline-none transition-colors hover:bg-gray-200 focus-visible:ring-2';
 
 /** Bare glyph at rest; the round chip only materialises under the pointer. */
 function BreadcrumbCopyButton({
@@ -357,7 +357,7 @@ function BreadcrumbTrailLink({
 /** Data-driven trail: items in, `nav > ol > li` out. Customise with `className` and `separator`. */
 function BreadcrumbTrail({
   items,
-  separator = <ChevronRightStroke className="size-3.5" />,
+  separator = <ChevronRightStroke className="size-4" />,
   ...props
 }: Omit<React.ComponentProps<typeof Breadcrumb>, 'children'> & {
   items: BreadcrumbTrailItem[];
