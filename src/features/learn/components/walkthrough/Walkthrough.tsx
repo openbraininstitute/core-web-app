@@ -51,6 +51,24 @@ export interface Slide {
   cta?: { label: string; course?: string };
 }
 
+/**
+ * Whether a touch belongs to what it starts on rather than to the swipe between slides: a control
+ * such as a slider, or something scrolling sideways, anywhere between it and the deck.
+ */
+function ownTouch(target: EventTarget, deck: Element) {
+  for (
+    let el = target instanceof Element ? target : null;
+    el && el !== deck;
+    el = el.parentElement
+  ) {
+    if (el.matches('input, textarea, select, [contenteditable]:not([contenteditable="false"])'))
+      return true;
+    if (el.scrollWidth > el.clientWidth && /auto|scroll/.test(getComputedStyle(el).overflowX))
+      return true;
+  }
+  return false;
+}
+
 export default function Walkthrough({
   slides,
   typewriter = false,
@@ -126,10 +144,13 @@ export default function Walkthrough({
     return () => window.removeEventListener('keydown', onKey);
   }, [go]);
 
-  // horizontal swipe
+  // horizontal swipe, with one finger, and not one dragging a slider or scrolling something sideways
   const touchX = useRef<number | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
-    touchX.current = e.touches[0]?.clientX ?? null;
+    touchX.current =
+      e.touches.length === 1 && !ownTouch(e.target, e.currentTarget)
+        ? (e.touches[0]?.clientX ?? null)
+        : null;
   };
   const onTouchEnd = (e: React.TouchEvent) => {
     if (touchX.current === null) return;

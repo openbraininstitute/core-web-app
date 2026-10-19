@@ -241,7 +241,10 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
               variant="outline"
               size="md"
               rounded
-              className="text-primary-9 bg-background hover:bg-background h-10 w-10 p-0 hover:shadow-sm"
+              className={cn(
+                'text-primary-9 h-10 w-10 p-0',
+                plain && 'bg-background hover:bg-background hover:shadow-sm'
+              )}
             >
               <MenuOutlined className="text-base" />
             </Button>
@@ -347,7 +350,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center cursor-pointer',
-                      '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                       plain && PLAIN,
                       {
                         'bg-primary-9 text-white': isActive && !plain,
@@ -389,7 +392,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                         '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                       },
                       'group relative flex items-center justify-center',
-                      '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                      '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                       plain && PLAIN,
                       {
                         'bg-primary-9 text-white': isActiveHelp && !plain,
@@ -439,7 +442,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                       '!w-10 !justify-center !px-0': breakpoint === 'l' && !allowText,
                     },
                     'group relative flex items-center justify-center',
-                    '!overflow-visible !py-0 bg-background select-none hover:shadow-sm hover:bg-background',
+                    '!overflow-visible !py-0 bg-white select-none hover:shadow-sm hover:bg-background',
                     plain && PLAIN,
                     {
                       'bg-primary-9 text-white': isActiveLink && !plain,

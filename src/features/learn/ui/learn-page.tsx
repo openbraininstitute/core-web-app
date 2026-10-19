@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
   parseAsArrayOf,
@@ -47,11 +48,10 @@ import { MiniCode } from '@/features/learn/ui/mini-code';
 import { type Focus, MiniFigure } from '@/features/learn/ui/mini-figure';
 import { PlayChip } from '@/features/learn/ui/play-chip';
 import { ShareButton, ShareChip } from '@/features/learn/ui/share';
-import { StandardCard, StandardIndex } from '@/features/learn/ui/standard';
 import { TeachCard, TeachIndex } from '@/features/learn/ui/teach';
 import { TutorialCard, TutorialsIndex } from '@/features/learn/ui/tutorials';
 import { WorkflowCard, WorkflowsIndex } from '@/features/learn/ui/workflows';
-import { getStdEntity, stdEntities } from '@/features/obi-standard';
+import { useStreamed } from '@/features/learn/use-streamed';
 import { cn } from '@/utils/css-class';
 
 import type { FeedItem } from '@/features/learn/feed-item';
@@ -75,6 +75,25 @@ const BOX =
 const PANEL_FRAME = 'relative flex min-h-0 min-w-0 flex-1 flex-col lg:my-[8px] lg:mr-[8px]';
 const PANEL =
   'learn-card secondary-scrollbar min-h-0 w-full flex-1 overflow-y-auto rounded-[12px] border border-[#d9d9d9] bg-white';
+
+/** The Standard section, and its 0.4 MB of entity types, fetched only once the section is opened. */
+const StandardIndex = dynamic(
+  () => import('@/features/learn/ui/standard').then((m) => m.StandardIndex),
+  {
+    loading: () => (
+      <p className="px-[4px] py-[20px] text-center text-[13px] text-[#8c8c8c]">Loading…</p>
+    ),
+  }
+);
+const StandardCard = dynamic(
+  () => import('@/features/learn/ui/standard').then((m) => m.StandardCard),
+  { loading: () => <section className={PANEL} /> }
+);
+
+/** The streamed sections until they come, or if they cannot be read. */
+const NO_LECTURES = { recorded: [] as FeedItem[], upcoming: [] as FeedItem[] };
+const NO_ITEMS: FeedItem[] = [];
+const NO_WORKFLOWS: Workflows = { configs: [], blocks: {} };
 
 /**
  * The courses whose small picture on the left is their own figure, live, and which part of it:
@@ -115,22 +134,22 @@ export function LearnPage({
   courseIds,
   learnPath,
   tutorials: tutorialsAsFetched,
-  lectures = { recorded: [], upcoming: [] },
-  conferences = [],
-  articles = [],
-  workflows = { configs: [], blocks: {} },
+  lectures: lecturesSent,
+  conferences: conferencesSent,
+  articles: articlesSent,
+  workflows: workflowsSent,
 }: {
   courseIds: string[];
   learnPath: string;
   tutorials: TTutorial[];
   /** World Wide Neuro's computational neuroscience talks: recorded, and still to come. */
-  lectures?: { recorded: FeedItem[]; upcoming: FeedItem[] };
+  lectures: Promise<{ recorded: FeedItem[]; upcoming: FeedItem[] }>;
   /** The conferences coming up, World Wide Neuro's and the field's main meetings. */
-  conferences?: FeedItem[];
+  conferences: Promise<FeedItem[]>;
   /** The Transmitter's latest articles. */
-  articles?: FeedItem[];
+  articles: Promise<FeedItem[]>;
   /** obi-one's ScanConfigs shown in the platform's workflows, with their blocks. */
-  workflows?: Workflows;
+  workflows: Promise<Workflows>;
 }) {
   // Learn's settings, behind the Dev settings: which courses show, and Help's — changed at once
   const settings = useLearnSettings();
@@ -215,6 +234,14 @@ export function LearnPage({
       : sectionParam;
   const [termId, setTermId] = useQueryState('term');
   const term = glossaryTerm(termId) ?? GLOSSARY[0];
+  // the outside sections and the workflows, as the server streams them in
+  const { value: lectures, pending: lecturesPending } = useStreamed(lecturesSent, NO_LECTURES);
+  const { value: conferences, pending: conferencesPending } = useStreamed(
+    conferencesSent,
+    NO_ITEMS
+  );
+  const { value: articles, pending: articlesPending } = useStreamed(articlesSent, NO_ITEMS);
+  const { value: workflows, pending: workflowsPending } = useStreamed(workflowsSent, NO_WORKFLOWS);
   // the outside sections: each its chosen entry, and the literature's filters
   const [lectureId, setLectureId] = useQueryState('lecture');
   const [talks, setTalks] = useQueryState(
@@ -252,10 +279,12 @@ export function LearnPage({
   );
   const [litWords, setLitWords] = useState('');
   const transmitter = useTransmitter(articles, section === 'articles' ? articleWords : '');
+  // searched only while its section is open
   const literature = useLiterature(
     litTopic as LiteratureTopic,
     section === 'literature' ? litWords : '',
-    litSort as LiteratureSort
+    litSort as LiteratureSort,
+    section === 'literature'
   );
   const pick = (items: FeedItem[], id: string | null) => items.find((x) => x.id === id) ?? items[0];
   const feed = {
@@ -277,6 +306,18 @@ export function LearnPage({
     },
   } as const;
   const feedSection = section in feed ? (section as keyof typeof feed) : null;
+  // what an outside section says with nothing in it: still on its way, or why not
+  const pending = {
+    lectures: lecturesPending,
+    conferences: conferencesPending,
+    articles: articlesPending,
+    literature: false,
+  };
+  const feedEmpty = !feedSection
+    ? ''
+    : pending[feedSection]
+      ? 'Loading…'
+      : FEED_EMPTY[feedSection](literature.state);
   // the OBI Standard's chosen entity type
   const [stdSlug, setStdSlug] = useQueryState('entity');
   // and which half of it: the data's entity types, or the workflows' ScanConfigs
@@ -286,7 +327,6 @@ export function LearnPage({
   );
   const [workflowId, setWorkflowId] = useQueryState('workflow');
   const workflow = workflows.configs.find((c) => c.id === workflowId) ?? workflows.configs[0];
-  const stdEntity = (stdSlug ? getStdEntity(stdSlug) : undefined) ?? stdEntities[0];
   const [teachId, setTeachId] = useQueryState('topic');
   const teach = teachTopic(teachId) ?? TEACH_TOPICS[0];
   const [tutorialSlug, setTutorialSlug] = useQueryState('tutorial');
@@ -319,7 +359,7 @@ export function LearnPage({
             items={feed[feedSection].items}
             selected={feed[feedSection].selected}
             onSelect={feed[feedSection].onSelect}
-            empty={FEED_EMPTY[feedSection](literature.state)}
+            empty={feedEmpty}
             filters={
               feedSection === 'articles' ? (
                 <div className="flex flex-col gap-[6px]">
@@ -382,7 +422,8 @@ export function LearnPage({
                           setLectureId(null);
                         }}
                       >
-                        {k === 'recorded' ? 'Recordings' : 'Upcoming'} · {lectures[k].length}
+                        {k === 'recorded' ? 'Recordings' : 'Upcoming'} ·{' '}
+                        {lecturesPending ? '…' : lectures[k].length}
                       </button>
                     ))}
                     <span className="ml-auto">
@@ -420,9 +461,14 @@ export function LearnPage({
               ))}
             </div>
             {stdHalf === 'workflows' ? (
-              <WorkflowsIndex workflows={workflows} selected={workflow} onSelect={setWorkflowId} />
+              <WorkflowsIndex
+                workflows={workflows}
+                pending={workflowsPending}
+                selected={workflow}
+                onSelect={setWorkflowId}
+              />
             ) : (
-              <StandardIndex selected={stdEntity} onSelect={setStdSlug} />
+              <StandardIndex slug={stdSlug} onSelect={setStdSlug} />
             )}
           </div>
         ) : section === 'teach' ? (
@@ -586,7 +632,7 @@ export function LearnPage({
                 ? OPENALEX
                 : FEED_SOURCES[feedSection]
             }
-            empty={FEED_EMPTY[feedSection](literature.state)}
+            empty={feedEmpty}
             className={panel}
           />
         ) : section === 'standard' && stdHalf === 'workflows' ? (
@@ -594,15 +640,11 @@ export function LearnPage({
             key={workflow?.id}
             config={workflow}
             workflows={workflows}
+            pending={workflowsPending}
             className={panel}
           />
         ) : section === 'standard' ? (
-          <StandardCard
-            key={stdEntity?.slug}
-            entity={stdEntity}
-            onSelect={setStdSlug}
-            className={panel}
-          />
+          <StandardCard key={stdSlug} slug={stdSlug} onSelect={setStdSlug} className={panel} />
         ) : section === 'teach' ? (
           <TeachCard
             key={teach.id}

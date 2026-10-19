@@ -5,11 +5,15 @@ import { useState } from 'react';
 import { listBox } from '@/features/learn/ui/category-tiles';
 import {
   categoryColor,
+  getStdEntity,
   StandardEntityDetail,
-  type StdEntity,
+  stdEntities,
   stdEntitiesByCategory,
 } from '@/features/obi-standard';
 import { cn } from '@/utils/css-class';
+
+/** The entity type the address names, or the first. */
+const chosen = (slug: string | null) => (slug ? getStdEntity(slug) : undefined) ?? stdEntities[0];
 
 /**
  * The Standard section: the OBI Standard's entity types, as entitycore and entitysdk define them,
@@ -17,12 +21,13 @@ import { cn } from '@/utils/css-class';
  * snippets and endpoints on the right.
  */
 export function StandardIndex({
-  selected,
+  slug,
   onSelect,
 }: {
-  selected?: StdEntity;
+  slug: string | null;
   onSelect: (slug: string) => void;
 }) {
+  const selected = chosen(slug);
   const lb = listBox();
   const [words, setWords] = useState('');
   const q = words.trim().toLowerCase();
@@ -103,14 +108,15 @@ export function StandardIndex({
 
 /** The right-hand side: the chosen entity type, in the standard's own layout. */
 export function StandardCard({
-  entity,
+  slug,
   onSelect,
   className,
 }: {
-  entity?: StdEntity;
+  slug: string | null;
   onSelect: (slug: string) => void;
   className?: string;
 }) {
+  const entity = chosen(slug);
   return (
     <section className={cn(className, 'pt-[28px] pr-[44px] pb-[34px] pl-[40px]')}>
       {entity ? (

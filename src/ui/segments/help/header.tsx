@@ -1,12 +1,13 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import { useTabs } from '@/components/detail-view-tabs';
 import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
-import { LEAN_HELP_SECTIONS } from '@/ui/segments/help/lean';
+import { helpSectionShown, LEAN_HELP_SECTIONS } from '@/ui/segments/help/lean';
 import { cn } from '@/utils/css-class';
 
 const HelpSections = {
@@ -71,19 +72,25 @@ function HelpTabs() {
       ? HelpSections.Tutorials
       : HelpSections.Overview;
 
-  const { activeTab } = useTabs<HelpSectionsKeys>({
+  const { activeTab, onChangeTab } = useTabs<HelpSectionsKeys>({
     tabsConfig: tabs,
     tabKey: 'section',
     shallow: true,
     defaultKey: defaultTab,
   });
+  // the section the page shows, as the server picks it: with Help lean, Guides for a link to one
+  // it leaves off; and the address put right to match
+  const shown = (lean ? helpSectionShown(activeTab, true) : activeTab) as HelpSectionsKeys;
+  useEffect(() => {
+    if (shown !== activeTab) onChangeTab(shown)();
+  }, [shown, activeTab, onChangeTab]);
 
   const router = useRouter();
 
   return (
     <PillTabs
-      value={activeTab ?? defaultTab}
-      defaultValue={activeTab ?? defaultTab}
+      value={shown}
+      defaultValue={shown}
       className="w-full"
       activationMode="manual"
       onValueChange={(value: string) => {

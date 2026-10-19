@@ -17,10 +17,16 @@ const HEADERS = {
     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128 Safari/537.36',
 };
 const HOUR = 3600;
+/** How long to wait for a source before leaving its section empty. */
+const TIMEOUT_MS = 8000;
 
 async function text(url: string): Promise<string | null> {
   try {
-    const res = await fetch(url, { headers: HEADERS, next: { revalidate: HOUR } });
+    const res = await fetch(url, {
+      headers: HEADERS,
+      next: { revalidate: HOUR },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     return res.ok ? await res.text() : null;
   } catch {
     return null;
@@ -67,56 +73,63 @@ function wwnCards(html: string) {
 /** How many of World Wide Neuro's pages of recorded talks to read, 20 talks a page. */
 const RECORDED_PAGES = 10;
 
-/** A page of World Wide Neuro's computational neuroscience talks, as entries. */
+/** The day a recording was given, which World Wide Neuro puts in its abstract: "on 2026-05-27." */
+const ON_DAY = / on (\d{4}-\d{2}-\d{2})\./;
+
+/** World Wide Neuro's talks in a field, as entries: the pages of its listing asked for, in order. */
 async function wwnTalks(
-  query: string,
+  queries: string[],
   recorded: boolean,
   field = 'comp-neuro'
 ): Promise<FeedItem[]> {
-  const html = await text(`${WWN}/${field}/seminars?${query}`);
-  if (!html) return [];
-  // the listing leaves out the year: newest first for recordings, so going down the list a later
-  // day of the year than the one before means a year further back
+  const pages = await Promise.all(queries.map((q) => text(`${WWN}/${field}/seminars?${q}`)));
+  // the listing leaves out the year: newest first for recordings, so going down it, page after
+  // page, a later day of the year than the one before means a year further back; and a recording
+  // is never later than today
+  const today = new Date().toISOString().slice(0, 10);
   let year = new Date().getUTCFullYear();
   let last = Number.POSITIVE_INFINITY;
-  return wwnCards(html).map(({ href, title, paras }) => {
-    const [byline = '', when = '', ...rest] = paras;
-    const body = rest.join(' ');
-    // the series and the length, which World Wide Neuro puts at the end of the abstract
-    const series = body.match(/Presented in the (.+?) on \d{4}-\d{2}-\d{2}\./)?.[1];
-    const length = body.match(/Recording duration: (\d{2}:\d{2}:\d{2})/)?.[1];
-    let start = talkDate(body, when, recorded ? undefined : 'next');
-    if (recorded && start && !/ on \d{4}-/.test(body)) {
-      const day = Number(start.slice(5, 7)) * 40 + Number(start.slice(8, 10));
-      if (day > last) year -= 1;
-      last = day;
-      start = `${year}${start.slice(4)}`;
-    } else if (recorded && start) {
-      year = Number(start.slice(0, 4));
-      last = Number(start.slice(5, 7)) * 40 + Number(start.slice(8, 10));
-    }
-    return {
-      id: href.split('/').pop() ?? href,
-      title,
-      byline: byline.replace(/\s*·\s*/, ' · '),
-      // with its year, which the listing leaves out
-      when: start
-        ? `${new Date(start).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}${when.includes('·') ? ` ·${when.split('·').slice(1).join('·')}` : ''}`
-        : when,
-      start,
-      body: body
-        .replace(/\s*Presented in the .+? on \d{4}-\d{2}-\d{2}\.\s*/, ' ')
-        .replace(/\s*Recording duration: \S+\.?/, '')
-        .trim(),
-      tags: [
-        recorded ? 'Recorded' : 'Upcoming',
-        series,
-        length && `${length.replace(/^00:/, '')} recording`,
-      ].filter((t): t is string => !!t),
-      href,
-      hrefLabel: recorded ? 'Watch on World Wide Neuro' : 'See it on World Wide Neuro',
-    };
-  });
+  return pages
+    .flatMap((html) => (html ? wwnCards(html) : []))
+    .map(({ href, title, paras }) => {
+      const [byline = '', when = '', ...rest] = paras;
+      const body = rest.join(' ');
+      // the series and the length, which World Wide Neuro puts at the end of the abstract
+      const series = body.match(/Presented in the (.+?) on \d{4}-\d{2}-\d{2}\./)?.[1];
+      const length = body.match(/Recording duration: (\d{2}:\d{2}:\d{2})/)?.[1];
+      let start = talkDate(body, when, recorded ? undefined : 'next');
+      if (recorded && start) {
+        const day = Number(start.slice(5, 7)) * 40 + Number(start.slice(8, 10));
+        if (ON_DAY.test(body)) year = Number(start.slice(0, 4));
+        else {
+          if (day > last) year -= 1;
+          if (`${year}${start.slice(4)}` > today) year -= 1;
+          start = `${year}${start.slice(4)}`;
+        }
+        last = day;
+      }
+      return {
+        id: href.split('/').pop() ?? href,
+        title,
+        byline: byline.replace(/\s*·\s*/, ' · '),
+        // with its year, which the listing leaves out
+        when: start
+          ? `${new Date(start).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}${when.includes('·') ? ` ·${when.split('·').slice(1).join('·')}` : ''}`
+          : when,
+        start,
+        body: body
+          .replace(/\s*Presented in the .+? on \d{4}-\d{2}-\d{2}\.\s*/, ' ')
+          .replace(/\s*Recording duration: \S+\.?/, '')
+          .trim(),
+        tags: [
+          recorded ? 'Recorded' : 'Upcoming',
+          series,
+          length && `${length.replace(/^00:/, '')} recording`,
+        ].filter((t): t is string => !!t),
+        href,
+        hrefLabel: recorded ? 'Watch on World Wide Neuro' : 'See it on World Wide Neuro',
+      };
+    });
 }
 
 /**
@@ -124,7 +137,7 @@ async function wwnTalks(
  * its abstract; otherwise from its listing's "Mon, Oct 12", in the year that puts it next.
  */
 function talkDate(body: string, when: string, next?: 'next') {
-  const iso = body.match(/ on (\d{4}-\d{2}-\d{2})\./)?.[1];
+  const iso = body.match(ON_DAY)?.[1];
   if (iso) return iso;
   const m = when.match(/([A-Z][a-z]{2}) (\d{1,2})/);
   if (!m) return undefined;
@@ -151,12 +164,11 @@ const unique = (items: FeedItem[]) => {
 
 /** Recorded talks in computational neuroscience, newest first: several pages of them. */
 export async function wwnRecordings(): Promise<FeedItem[]> {
-  const pages = await Promise.all(
-    Array.from({ length: RECORDED_PAGES }, (_, i) =>
-      wwnTalks(`timing=past&hasVideo=true${i ? `&page=${i + 1}` : ''}`, true)
-    )
+  const queries = Array.from(
+    { length: RECORDED_PAGES },
+    (_, i) => `timing=past&hasVideo=true${i ? `&page=${i + 1}` : ''}`
   );
-  return byDate(unique(pages.flat()), true);
+  return byDate(unique(await wwnTalks(queries, true)), true);
 }
 
 /**
@@ -165,8 +177,8 @@ export async function wwnRecordings(): Promise<FeedItem[]> {
  */
 export async function wwnUpcoming(): Promise<FeedItem[]> {
   const [comp, all] = await Promise.all([
-    wwnTalks('timing=upcoming', false),
-    wwnTalks('timing=upcoming', false, 'neuro'),
+    wwnTalks(['timing=upcoming'], false),
+    wwnTalks(['timing=upcoming'], false, 'neuro'),
   ]);
   const today = new Date().toISOString().slice(0, 10);
   return byDate(
@@ -240,7 +252,11 @@ function startOf(c: FeedItem) {
 /** The Transmitter's latest 100 articles, from its API. */
 export async function transmitterArticles(): Promise<FeedItem[]> {
   try {
-    const res = await fetch(transmitterUrl(100), { headers: HEADERS, next: { revalidate: HOUR } });
+    const res = await fetch(transmitterUrl(100), {
+      headers: HEADERS,
+      next: { revalidate: HOUR },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (!res.ok) return [];
     return ((await res.json()) as Post[]).map(fromPost);
   } catch {

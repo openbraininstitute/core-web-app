@@ -27,31 +27,27 @@ export default async function Page({
   if (!flags[learnFlag.key]) notFound();
 
   // the home page's tutorials, fetched the same way and under the same key, so they are shared
-  // and the outside sections', each cached for an hour, and empty if its source cannot be read
-  const [{ data: tutorials }, recordings, upcoming, meetings, articles, workflows] =
-    await Promise.all([
-      tryCatch(
-        getQueryClient().fetchQuery({
-          queryKey: keyBuilderExternal.discoverTutorialsList(),
-          queryFn: () => getClient().fetch<Array<TTutorial>>(TutorialQuery),
-        })
-      ),
-      wwnRecordings(),
-      wwnUpcoming(),
-      conferences(),
-      transmitterArticles(),
-      obiOneWorkflows(),
-    ]);
+  const { data: tutorials } = await tryCatch(
+    getQueryClient().fetchQuery({
+      queryKey: keyBuilderExternal.discoverTutorialsList(),
+      queryFn: () => getClient().fetch<Array<TTutorial>>(TutorialQuery),
+    })
+  );
   return (
     <LearnPage
       // every course: the page leaves off those Learn's settings hide, as they change
       courseIds={LEARN_COURSES.map((course) => course.id)}
       learnPath={learnPagePath(config.ROOT_ROUTE, virtualLabId, projectId)}
       tutorials={tutorials ?? []}
-      lectures={{ recorded: recordings, upcoming }}
-      conferences={meetings}
-      articles={articles}
-      workflows={workflows}
+      // and the outside sections' and the workflows', not waited for: each streams in when its
+      // source answers, cached for an hour, and empty if it cannot be read in time
+      lectures={Promise.all([wwnRecordings(), wwnUpcoming()]).then(([recorded, upcoming]) => ({
+        recorded,
+        upcoming,
+      }))}
+      conferences={conferences()}
+      articles={transmitterArticles()}
+      workflows={obiOneWorkflows()}
     />
   );
 }

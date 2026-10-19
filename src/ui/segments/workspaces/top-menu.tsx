@@ -24,6 +24,8 @@ function AiButton() {
   return (
     <button
       type="button"
+      // where the onboarding tour points for the assistant, as the panel is gone while closed
+      id="workspace-ai-button"
       onClick={() => setState(isCollapsed ? PanelState.Expanded : PanelState.Collapsed)}
       aria-label={isCollapsed ? 'Open the AI assistant' : 'Close the AI assistant'}
       aria-expanded={!isCollapsed}

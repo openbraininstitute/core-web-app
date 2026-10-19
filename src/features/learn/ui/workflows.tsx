@@ -10,10 +10,13 @@ import type { WfBlock, WfConfig, WfParam, Workflows } from '@/features/learn/wor
 /** The left-hand side: the workflows' ScanConfigs, searchable by name, block or parameter. */
 export function WorkflowsIndex({
   workflows,
+  pending = false,
   selected,
   onSelect,
 }: {
   workflows: Workflows;
+  /** obi-one's schema still on its way. */
+  pending?: boolean;
   selected?: WfConfig;
   onSelect: (id: string) => void;
 }) {
@@ -48,7 +51,11 @@ export function WorkflowsIndex({
       />
       {shown.length === 0 ? (
         <p className="px-[4px] py-[20px] text-center text-[13px] text-[#8c8c8c]">
-          {workflows.configs.length ? 'No workflows match.' : 'obi-one could not be reached.'}
+          {workflows.configs.length
+            ? 'No workflows match.'
+            : pending
+              ? 'Loading…'
+              : 'obi-one could not be reached.'}
         </p>
       ) : (
         <ul className="secondary-scrollbar -mr-[6px] flex min-h-0 flex-col gap-[9px] overflow-y-auto pr-[6px]">
@@ -204,10 +211,13 @@ const KIND: Record<string, string> = {
 export function WorkflowCard({
   config,
   workflows,
+  pending = false,
   className,
 }: {
   config?: WfConfig;
   workflows: Workflows;
+  /** obi-one's schema still on its way. */
+  pending?: boolean;
   className?: string;
 }) {
   if (!config)
@@ -218,7 +228,7 @@ export function WorkflowCard({
           'flex items-center justify-center p-10 text-[15px] text-[#8c8c8c]'
         )}
       >
-        No workflows to show.
+        {pending ? 'Loading…' : 'No workflows to show.'}
       </section>
     );
   const groups = [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { FeedItem } from '@/features/learn/feed-item';
 
@@ -180,12 +180,23 @@ async function fromEuropePmc(
 
 type LiteratureSource = 'openalex' | 'europepmc';
 
-/** The papers for a topic, words and order; fetched again whenever one changes. */
-export function useLiterature(topic: LiteratureTopic, words: string, sort: LiteratureSort) {
+/**
+ * The papers for a topic, words and order; fetched again whenever one changes, but only while
+ * `enabled`, and not again for the papers already there.
+ */
+export function useLiterature(
+  topic: LiteratureTopic,
+  words: string,
+  sort: LiteratureSort,
+  enabled = true
+) {
   const [items, setItems] = useState<FeedItem[]>([]);
   const [state, setState] = useState<'loading' | 'done' | 'failed'>('loading');
   const [source, setSource] = useState<LiteratureSource>('europepmc');
+  // what the papers there were found for
+  const found = useRef<string | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     const typed = cleanWords(words);
     // with words typed, All means all of neuroscience, not only its computational models
     const base =
@@ -193,6 +204,8 @@ export function useLiterature(topic: LiteratureTopic, words: string, sort: Liter
         ? ''
         : cleanWords(LITERATURE_TOPICS.find((t) => t.id === topic)?.query ?? '');
     const query = [base, typed].filter(Boolean).join(' ');
+    const asked = `${sort} ${query}`;
+    if (asked === found.current) return;
     const ctrl = new AbortController();
     // a little after the last key press, rather than on every one
     const timer = window.setTimeout(async () => {
@@ -206,6 +219,7 @@ export function useLiterature(topic: LiteratureTopic, words: string, sort: Liter
           setItems(await fromOpenAlex(query, sort, ctrl.signal));
           setSource('openalex');
         }
+        found.current = asked;
         setState('done');
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setState('failed');
@@ -215,6 +229,6 @@ export function useLiterature(topic: LiteratureTopic, words: string, sort: Liter
       window.clearTimeout(timer);
       ctrl.abort();
     };
-  }, [topic, words, sort]);
+  }, [topic, words, sort, enabled]);
   return { items, state, source };
 }

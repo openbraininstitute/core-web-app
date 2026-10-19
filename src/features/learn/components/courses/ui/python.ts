@@ -130,8 +130,22 @@ function cleanError(message: string) {
   return ['Traceback (most recent call last):', ...lines.slice(start)].join('\n').trim();
 }
 
+type Run = { out: string; error: string | null };
+
+/**
+ * Runs, one after another: what Python prints goes to a handler the interpreter holds, not the
+ * cell, so a cell started while another is still going would print into the other's output.
+ */
+let queue: Promise<unknown> = Promise.resolve();
+
 /** Run `code` in a fresh namespace; what it printed, and the traceback if it failed. */
-export async function runPython(code: string): Promise<{ out: string; error: string | null }> {
+export function runPython(code: string): Promise<Run> {
+  const run = queue.then(() => runNow(code));
+  queue = run.catch(() => undefined);
+  return run;
+}
+
+async function runNow(code: string): Promise<Run> {
   let py: Pyodide;
   try {
     py = await load();

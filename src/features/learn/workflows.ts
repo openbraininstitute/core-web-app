@@ -6,8 +6,11 @@
  * block is listed with its parameters.
  */
 
-const OBI_ONE_OPENAPI = 'https://staging.openbraininstitute.org/api/obi-one/openapi.json';
+import { config } from '@/config';
+
 const HOUR = 3600;
+/** How long to wait for the schema before showing the section empty. */
+const TIMEOUT_MS = 8000;
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -151,7 +154,10 @@ function blockOf(id: string, schemas: Json): WfBlock {
 export async function obiOneWorkflows(): Promise<Workflows> {
   let api: Json;
   try {
-    const res = await fetch(OBI_ONE_OPENAPI, { next: { revalidate: HOUR } });
+    const res = await fetch(`${config.OBI_ONE_URL}/openapi.json`, {
+      next: { revalidate: HOUR },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
     if (!res.ok) return { configs: [], blocks: {} };
     api = await res.json();
   } catch {
