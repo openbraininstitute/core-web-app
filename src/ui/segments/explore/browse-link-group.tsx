@@ -52,10 +52,23 @@ export function BrowseLinkGroup({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="flex w-full flex-col gap-2 overflow-hidden pl-6"
+            // -mt-2/pt-2 cancels the parent's gap-2 so the first connector can reach up past
+            // the ul's overflow clip toward the parent row without shifting the layout
+            className="-mt-2 flex w-full flex-col gap-2 overflow-hidden pt-2 pl-8"
           >
             {group.variants.map((variant) => (
-              <li key={variant.slug}>
+              <li key={variant.slug} className="group/sub relative">
+                {/* tree connector: one continuous trunk (a segment per row, overlapping 1px so
+                    there is no seam) with a curve-only elbow branching into each row's center;
+                    the last segment stops where its elbow starts curving */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute -top-[9px] -bottom-[9px] -left-5 w-px bg-gray-200 group-last/sub:bottom-[calc(50%+0.75rem)]"
+                />
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute top-[calc(50%-0.75rem)] -left-5 h-3 w-4 rounded-bl-xl border-b border-l border-gray-200"
+                />
                 <BrowseLink {...linkProps} variant={variant} />
               </li>
             ))}
