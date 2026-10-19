@@ -1,11 +1,9 @@
 'use client';
 
-import { RiCheckLine, RiExternalLinkLine, RiFileCopyLine } from '@remixicon/react';
 import { useAtomValue } from 'jotai';
-import Link from 'next/link';
 import { useMemo } from 'react';
 
-import { ChevronRightStroke } from '@/components/icons';
+import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
 import { collectWorkflowSessionRefs } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
@@ -13,24 +11,21 @@ import {
   workflowBreadcrumbEntitiesAtom,
   workflowBreadcrumbEntitiesFromSelection,
 } from '@/features/scan-config/workflow/breadcrumb-entities';
-import { findWorkflowDescriptorByDefinitionId } from '@/features/scan-config/workflow/components';
 import { useScanConfigWorkflowOptional } from '@/features/scan-config/workflow/context';
-import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
+import { findWorkflowDescriptorByDefinitionId } from '@/features/scan-config/workflow/find-descriptor';
+import { BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/ui/molecules/breadcrumb/index';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { getActivity, getWorkflowEntityLabel } from '@/ui/segments/workflows/config';
-import { cn } from '@/utils/css-class';
+  buildWorkflowHomeHref,
+  getActivity,
+  getWorkflowEntityLabel,
+} from '@/ui/segments/workflows/config';
 
 import type { ReactNode } from 'react';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkflowBreadcrumbEntity } from '@/features/scan-config/workflow/breadcrumb-entities';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 import type { WorkspaceContext } from '@/types/common';
+import type { BreadcrumbTrailItem } from '@/ui/molecules/breadcrumb';
 
 /**
  * Names for the picked entities. Refs stored before names were recorded — or reached by
@@ -59,23 +54,33 @@ function useResolvedEntityNames(
   });
 }
 
+const copyOf = (entity: { id: string; name: string }) => ({
+  value: entity.id,
+  label: `Copy ${entity.name} ID`,
+});
+
 /**
- * Trail for `/workflows/{activity}/configure/…`: the workflow, then what it was pointed at.
- * A multi-entity pick collapses to one crumb whose popover lists every name.
+ * Fills the scan-config top bar's start for `/workflows/{activity}/configure/…`: the breadcrumb
+ * (activity › workflow › what it was pointed at). The picked entity carries its own copy button
+ * (several: a dropdown with one per entity). The tabs take the end, inside the template.
  */
-export function ScanConfigWorkflowBreadcrumb({ className }: { className?: string }) {
+export function ScanConfigWorkflowTopBar({ children }: { children: ReactNode }) {
   const context = useScanConfigWorkflowOptional();
-  return context ? <Trail context={context} className={className} /> : null;
+  return context ? (
+    <WorkflowTopBarSlots context={context}>{children}</WorkflowTopBarSlots>
+  ) : (
+    children
+  );
 }
 
-function Trail({
+function WorkflowTopBarSlots({
   context,
-  className,
+  children,
 }: {
   context: NonNullable<ReturnType<typeof useScanConfigWorkflowOptional>>;
-  className?: string;
+  children: ReactNode;
 }) {
-  const { workspace, entity } = context;
+  const { workspace, entity, definition } = context;
   // live selection wins over the stored payload: the in-editor picker changes it without a nav
   const published = useAtomValue(workflowBreadcrumbEntitiesAtom);
   const stored = workflowBreadcrumbEntitiesFromSelection(entity.workflowSessionSelection);
@@ -86,185 +91,55 @@ function Trail({
   const candidates = published.length > 0 ? published : stored.length > 0 ? stored : primary;
   const selected = useResolvedEntityNames(candidates, entity.workflowSessionSelection, workspace);
 
-  if (selected.length === 0) return null;
-
-  return (
-    <div className={cn('flex h-8 items-center', className)}>
-      <div className="flex h-8 items-center rounded-full bg-[oklch(0.968_0.007_247.896)] px-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              {selected.length === 1 ? (
-                <span className="flex min-w-0 items-center gap-1">
-                  <BreadcrumbPage
-                    className="text-primary-9 max-w-80 truncate text-sm font-bold"
-                    title={selected[0].name}
-                  >
-                    {selected[0].name}
-                  </BreadcrumbPage>
-                  <EntityActions size="sm" id={selected[0].id} name={selected[0].name} />
-                </span>
-              ) : (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-primary-9 hover:text-primary-7 text-sm font-bold underline decoration-dotted underline-offset-4 transition-colors"
-                    >
-                      Multiple entities ({selected.length})
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="end"
-                    side="bottom"
-                    sideOffset={8}
-                    // the trigger sits inside the chip's px-4, so nudge back out to
-                    // finish flush with the chip's trailing edge
-                    alignOffset={-14}
-                    className="max-h-96 w-96 overflow-y-auto rounded-2xl border border-[oklch(0.968_0.007_247.896)] bg-white p-2 shadow-lg"
-                  >
-                    <ul className="flex flex-col gap-1">
-                      {selected.map((item) => (
-                        <li key={item.key}>
-                          <EntityRow
-                            id={item.id}
-                            name={item.name}
-                            typeLabel={getEntityTypeTagLabel(item.type)}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </PopoverContent>
-                </Popover>
-              )}
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Copy-id and open-entity, the two things you ever want from a named entity here.
- * `size` follows the surface: the breadcrumb chip is 32px tall, the popover rows are not.
- */
-function EntityActions({
-  id,
-  name,
-  size = 'md',
-}: {
-  id: string;
-  name: string;
-  size?: 'sm' | 'md';
-}) {
-  const [, copyId, , copied] = useCopyToClipboard();
-  const button = cn(
-    'text-primary-9 grid shrink-0 place-items-center rounded-full transition-colors hover:bg-white',
-    size === 'sm' ? 'size-6' : 'size-8'
-  );
-  const glyph = size === 'sm' ? 'size-3.5' : 'size-4';
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => copyId(id)}
-        aria-label={`Copy ${name} ID`}
-        title="Copy ID"
-        className={button}
-      >
-        {copied ? (
-          <RiCheckLine className={cn(glyph, 'text-green-600')} />
-        ) : (
-          <RiFileCopyLine className={glyph} />
-        )}
-      </button>
-
-      <Link
-        href={`/app/entity/${id}`}
-        target="_blank"
-        rel="noreferrer"
-        aria-label={`Open ${name}`}
-        title="Open entity"
-        className={button}
-      >
-        <RiExternalLinkLine className={glyph} />
-      </Link>
-    </>
-  );
-}
-
-function EntityRow({ id, name, typeLabel }: { id: string; name: string; typeLabel: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-[oklch(0.968_0.007_247.896)]">
-      <div className="min-w-0 flex-1">
-        <div className="text-xs font-bold text-[oklch(0.704_0.04_256.788)] uppercase">
-          {typeLabel}
-        </div>
-        <div className="text-primary-9 truncate text-sm font-medium" title={name}>
-          {name}
-        </div>
-      </div>
-
-      <EntityActions id={id} name={name} />
-    </div>
-  );
-}
-
-/**
- * Workflow identity, centred on the panel's top edge: the activity, then the workflow's own
- * name. Resolved the way the workflows home page resolves it — `entity.entityType` is the
- * scan-config type, which flattens every circuit kind to "Circuit".
- */
-export function ScanConfigWorkflowSummary({
-  className,
-  action,
-}: {
-  className?: string;
-  action?: ReactNode;
-}) {
-  const context = useScanConfigWorkflowOptional();
-  if (!context) return null;
-
-  const { definition, entity } = context;
+  // resolved the way the workflows home page resolves it: `entity.entityType` is the
+  // scan-config type, which flattens every circuit kind to "Circuit"
   const workflow = findWorkflowDescriptorByDefinitionId(definition.id);
-
-  const activityLabel = getActivity(definition.activity)?.label;
+  const activity = getActivity(definition.activity);
   const typeLabel =
     workflow?.label ?? getWorkflowEntityLabel(workflow?.sourceType ?? entity.entityType);
+  const href = (targetType?: TExtendedEntitiesTypeDict) =>
+    buildWorkflowHomeHref({ activity: activity?.value, targetType, workspace });
 
-  if (!activityLabel && !typeLabel) return null;
+  const items: BreadcrumbTrailItem[] = [
+    ...(activity ? [{ key: 'activity', label: activity.label, href: href() }] : []),
+    ...(typeLabel
+      ? [
+          {
+            key: 'type',
+            label: typeLabel,
+            href: href(workflow?.targetType),
+            className: 'max-w-96 truncate',
+          },
+        ]
+      : []),
+    ...(selected.length > 0
+      ? [
+          {
+            key: 'selection',
+            label:
+              selected.length === 1 ? selected[0].name : `Multiple entities (${selected.length})`,
+            title: selected.length === 1 ? selected[0].name : undefined,
+            className: 'max-w-80 truncate',
+            ...(selected.length === 1
+              ? { copy: copyOf(selected[0]) }
+              : {
+                  menu: selected.map((item) => ({
+                    key: item.key,
+                    label: item.name,
+                    hint: getEntityTypeTagLabel(item.type),
+                    copy: copyOf(item),
+                  })),
+                }),
+          },
+        ]
+      : []),
+  ];
 
   return (
-    <div className={cn('flex h-8 items-center', className)}>
-      <div className="flex h-8 items-center gap-1 rounded-full bg-[oklch(0.968_0.007_247.896)] pr-2 pl-4">
-        <Breadcrumb>
-          <BreadcrumbList>
-            {activityLabel ? (
-              <BreadcrumbItem>
-                <span className="text-primary-9 text-sm font-light">{activityLabel}</span>
-              </BreadcrumbItem>
-            ) : null}
-
-            {activityLabel && typeLabel ? (
-              <BreadcrumbSeparator className="text-primary-9 text-sm font-bold">
-                <ChevronRightStroke className="size-3.5" />
-              </BreadcrumbSeparator>
-            ) : null}
-
-            {typeLabel ? (
-              <BreadcrumbItem>
-                <BreadcrumbPage className="text-primary-9 max-w-96 truncate text-sm font-bold">
-                  {typeLabel}
-                </BreadcrumbPage>
-              </BreadcrumbItem>
-            ) : null}
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {action}
-      </div>
-    </div>
+    <ScanConfigTopBarProvider
+      start={items.length > 0 ? <BreadcrumbTrail items={items} /> : undefined}
+    >
+      {children}
+    </ScanConfigTopBarProvider>
   );
 }

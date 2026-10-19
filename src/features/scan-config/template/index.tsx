@@ -17,12 +17,9 @@ import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/resul
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
-import {
-  ScanConfigWorkflowBreadcrumb,
-  ScanConfigWorkflowSummary,
-} from '@/features/scan-config/workflow/breadcrumb';
 import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { messages } from '@/i18n/en/scan-config';
+import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { cn } from '@/utils/css-class';
 
@@ -48,6 +45,9 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
   const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
+  const configuredName = get(state.config, 'info.campaign_name');
+  const campaignName =
+    typeof configuredName === 'string' && configuredName ? configuredName : state.campaignId;
 
   // The breadcrumb's entities are module state that outlives the route. Clearing in a
   // cleanup keyed on `schemaName` fires on unmount *and* on a workflow switch, and — unlike
@@ -56,7 +56,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   useEffect(() => () => setBreadcrumbEntities([]), [props.schemaName, setBreadcrumbEntities]);
 
   const configurationContent = (
-    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-6 pb-2">
+    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
       {!props.readOnly && (
         <IonChannelModelPropertiesChecks
           schema={props.schema}
@@ -105,7 +105,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       <div
         id="scan-config-results"
         data-testid="scan-config-results"
-        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-6 pb-2"
+        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
       >
         <ScanConfigResults props={props} state={state} />
       </div>
@@ -123,30 +123,23 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}
+        // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={
-          <ScanConfigWorkflowSummary
-            action={
-              state.campaignId ? (
-                <ButtonCopyId
-                  iconOnly
-                  label={get(messages, `${props.activity}.CopyCampaignId`)}
-                  tooltip={get(messages, `${props.activity}.CopyCampaignId`)}
-                  value={state.campaignId}
-                  classNames={{
-                    button: 'size-6 p-0',
-                    // bare glyph at rest; the chip only materialises under the pointer
-                    icon: cn(
-                      'size-6 rounded-full border-transparent bg-transparent transition-colors',
-                      'hover:border-primary-8 hover:bg-primary-8 hover:[&_svg]:text-white'
-                    ),
-                    glyph: 'size-3.5 text-primary-9',
-                  }}
-                />
-              ) : null
-            }
-          />
+          state.campaignId ? (
+            <BreadcrumbChip className="px-1">
+              <ButtonCopyId
+                value={state.campaignId}
+                label={`Copy ${campaignName}`}
+                tooltip={get(messages, `${props.activity}.CopyCampaignId`)}
+                classNames={{
+                  button: 'h-8 gap-1 pr-0 pl-3',
+                  icon: 'size-6 border-transparent',
+                  glyph: 'size-3.5 text-primary-9',
+                }}
+              />
+            </BreadcrumbChip>
+          ) : undefined
         }
-        railEnd={<ScanConfigWorkflowBreadcrumb />}
       />
     </div>
   );

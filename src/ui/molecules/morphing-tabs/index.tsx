@@ -52,7 +52,7 @@ export type MorphingTabsClassNames = {
   icon?: string;
   label?: string;
   action?: string;
-  railEnd?: string;
+  railStart?: string;
   railCenter?: string;
   content?: string;
   panel?: string;
@@ -71,9 +71,11 @@ export interface MorphingTabsProps {
   keepMounted?: boolean;
   /** Set false where tab order carries meaning, to drop drag reordering. */
   reorderable?: boolean;
-  /** Rail-level trailing content, sitting level with the tabs on the panel's top edge. */
-  railEnd?: ReactNode;
-  /** Rail-level content centred on the panel's top edge. */
+  /** Which side of the rail the tabs sit on. Default `start`; `end` leaves the start free. */
+  tabsAlign?: 'start' | 'end';
+  /** Rail-level leading content (e.g. a breadcrumb), in the rail row above the panel's top edge. */
+  railStart?: ReactNode;
+  /** Rail-level content centred in the rail row. */
   railCenter?: ReactNode;
   ariaLabel?: string;
   className?: string;
@@ -130,6 +132,15 @@ const RAIL_HEIGHT = 48;
 const SURFACE_INSET = 4;
 const LIQUID_JOIN = 24;
 const PANEL_RADIUS = 28;
+/** Where the rail's start/centre slots begin, clear of the panel corner. */
+const RAIL_INSET = SURFACE_INSET + PANEL_RADIUS;
+const RAIL_GAP = 8;
+/**
+ * Half the widest centre slot we expect, to decide whether it fits beside the tabs.
+ * ponytail: a guess sized for the copy chip, not a measurement. Past it the slots stop being the
+ * panel centre and take the room left of the tabs; upgrade path is to measure the slot.
+ */
+const RAIL_CENTER_RESERVE = 80;
 /** Half the hairline, so the stroke sits fully inside the clipped root. */
 const SURFACE_EDGE = 0.5;
 
@@ -224,10 +235,12 @@ function SpringTab({
   );
   const draggedTransform = useTransform(dragLeft, (left) => `translate3d(${left}px, 0, 0)`);
 
+  // until the parent has placed the surface (`surfaceWidth` is 0) the tab jumps; only later moves glide
+  const placed = surfaceWidth > 0;
   useLayoutEffect(() => {
     target.set(targetLeft);
-    if (reduce) position.jump(targetLeft);
-  }, [position, reduce, target, targetLeft]);
+    if (reduce || !placed) position.jump(targetLeft);
+  }, [placed, position, reduce, target, targetLeft]);
 
   useLayoutEffect(() => {
     registerPosition(id, position);
@@ -344,7 +357,8 @@ export function MorphingTabs({
   onOrderChange,
   keepMounted = false,
   reorderable = true,
-  railEnd,
+  tabsAlign = 'start',
+  railStart,
   railCenter,
   ariaLabel = 'Tabs',
   className,
@@ -371,6 +385,7 @@ export function MorphingTabs({
   const dragRef = useRef<DragSession | null>(null);
   const dragAnimationRef = useRef<ReturnType<typeof animateValue> | null>(null);
   const surfaceAnimationRef = useRef<ReturnType<typeof animateValue> | null>(null);
+  const [placed, setPlaced] = useState(false);
   const [surfaceWidth, setSurfaceWidth] = useState(0);
   const [surfaceHeight, setSurfaceHeight] = useState(0);
   const [tabGap, setTabGap] = useState(12);
@@ -436,9 +451,31 @@ export function MorphingTabs({
     return { tabWidth: Math.max(0, widthAt(0)), slotGap: 0 };
   }, [order.length, surfaceWidth, tabGap]);
 
+  // tabs hug the end of the rail when aligned there; derived in render, no state
+  const tabsOffset =
+    tabsAlign === 'end'
+      ? Math.max(
+          0,
+          surfaceWidth -
+            SURFACE_INSET * 2 -
+            (order.length * tabWidth + Math.max(0, order.length - 1) * slotGap)
+        )
+      : 0;
+  const slotStart = SURFACE_INSET + tabsOffset;
+  // The rail slots span the panel so the centre slot is the panel's centre. When the tabs sit at
+  // the end and the centre slot (or a long start slot) would run into them, the slots take only
+  // the room left of the tabs instead.
+  const centreFitsBesideTabs =
+    Boolean(railCenter) && surfaceWidth / 2 + RAIL_CENTER_RESERVE <= slotStart - RAIL_GAP;
+  const railRight =
+    tabsAlign === 'end' && surfaceWidth > 0 && !centreFitsBesideTabs
+      ? surfaceWidth - slotStart + RAIL_GAP
+      : RAIL_INSET;
+  const slotStep = tabWidth + slotGap;
+
   const slotLefts = useMemo(
-    () => order.map((_, index) => SURFACE_INSET + index * (tabWidth + slotGap)),
-    [order, slotGap, tabWidth]
+    () => order.map((_, index) => slotStart + index * slotStep),
+    [order, slotStart, slotStep]
   );
 
   const dragStartIndex = draggingId ? order.indexOf(draggingId) : -1;
@@ -510,12 +547,29 @@ export function MorphingTabs({
 
     if (draggingId) return;
 
+    // first measured layout: sit on the active tab instead of gliding in from the rail's start.
+    // The surface only mounts once `placed`, so its path reads the right position on first paint
+    if (!placed && surfaceWidth > 0) {
+      surfaceLeft.set(slotLefts[activeVisualIndex]);
+      setPlaced(true);
+      return;
+    }
+
     surfaceAnimationRef.current = animateValue(
       surfaceLeft,
       slotLefts[activeVisualIndex],
       reduce ? { duration: 0 } : SPRING_GLIDE
     );
-  }, [activeId, activeVisualIndex, draggingId, reduce, slotLefts, surfaceLeft]);
+  }, [
+    activeId,
+    activeVisualIndex,
+    draggingId,
+    placed,
+    reduce,
+    slotLefts,
+    surfaceLeft,
+    surfaceWidth,
+  ]);
 
   const commitOrder = useCallback(
     (next: string[], notify: boolean) => {
@@ -538,9 +592,7 @@ export function MorphingTabs({
 
       const startIndex = orderRef.current.indexOf(id);
       if (startIndex < 0) return;
-      const capturedSlots = orderRef.current.map(
-        (_, index) => SURFACE_INSET + index * (tabWidth + slotGap)
-      );
+      const capturedSlots = orderRef.current.map((_, index) => slotStart + index * slotStep);
       const startLeft = capturedSlots[startIndex];
 
       dragAnimationRef.current?.stop();
@@ -559,7 +611,7 @@ export function MorphingTabs({
         slotLefts: capturedSlots,
       };
     },
-    [dragLeft, itemMap, reorderable, slotGap, tabWidth]
+    [dragLeft, itemMap, reorderable, slotStart, slotStep]
   );
 
   const moveDrag = useCallback(
@@ -762,7 +814,7 @@ export function MorphingTabs({
                 active={isActive}
                 anyDragging={Boolean(draggingId)}
                 surfaceHost={rootRef.current}
-                surfaceWidth={surfaceWidth}
+                surfaceWidth={placed ? surfaceWidth : 0}
                 surfaceHeight={surfaceHeight}
                 tabWidth={tabWidth}
                 surfaceClassName={classNames?.activeTab}
@@ -899,27 +951,25 @@ export function MorphingTabs({
             );
           })}
 
-          {railCenter ? (
+          {railStart || railCenter ? (
             <div
-              className={cn(
-                'pointer-events-none absolute inset-x-0 z-30 flex justify-center',
-                classNames?.railCenter
-              )}
-              style={{ bottom: -20, height: 32 }}
+              data-slot="morphing-tabs-rail-slots"
+              className="pointer-events-none absolute z-30 grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center"
+              style={{ left: RAIL_INSET, right: railRight, top: 0, height: RAIL_HEIGHT }}
             >
-              <div className="pointer-events-auto flex items-center">{railCenter}</div>
-            </div>
-          ) : null}
-
-          {railEnd ? (
-            <div
-              className={cn(
-                'pointer-events-auto absolute z-30 flex items-center',
-                classNames?.railEnd
-              )}
-              style={{ right: SURFACE_INSET + PANEL_RADIUS, bottom: -20, height: 32 }}
-            >
-              {railEnd}
+              <div
+                className={cn(
+                  'col-start-1 flex min-w-0 [&>*]:pointer-events-auto',
+                  classNames?.railStart
+                )}
+              >
+                {railStart}
+              </div>
+              <div
+                className={cn('col-start-2 flex [&>*]:pointer-events-auto', classNames?.railCenter)}
+              >
+                {railCenter}
+              </div>
             </div>
           ) : null}
         </div>

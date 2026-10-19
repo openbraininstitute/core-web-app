@@ -2,13 +2,19 @@
 
 import { MoreOutlined, RightOutlined } from '@ant-design/icons';
 import { Slot } from '@radix-ui/react-slot';
+import { RiArrowDownSLine } from '@remixicon/react';
+import Link from 'next/link';
+import { Fragment } from 'react';
 
+import { ChevronRightStroke } from '@/components/icons';
+import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
 import type * as React from 'react';
 
 function Breadcrumb({ ...props }: React.ComponentProps<'nav'>) {
-  return <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />;
+  return <nav aria-label="Breadcrumb" data-slot="breadcrumb" {...props} />;
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<'ol'>) {
@@ -28,7 +34,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<'li'>) {
   return (
     <li
       data-slot="breadcrumb-item"
-      className={cn('inline-flex items-center gap-1.5', className)}
+      className={cn('inline-flex min-w-0 items-center gap-1.5', className)}
       {...props}
     />
   );
@@ -56,8 +62,6 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
       data-slot="breadcrumb-page"
-      role="link"
-      aria-disabled="true"
       aria-current="page"
       className={cn('text-foreground font-normal', className)}
       {...props}
@@ -94,12 +98,222 @@ function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<'span'
   );
 }
 
+/** The pill the trail sits in; children after the trail are trailing actions (copy, close…). */
+function BreadcrumbChip({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      data-slot="breadcrumb-chip"
+      className={cn(
+        'flex h-8 min-w-0 items-center gap-1 rounded-full bg-[oklch(0.968_0.007_247.896)] px-4 empty:hidden [&_nav]:min-w-0 [&_ol]:flex-nowrap',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+/** What a copy button puts on the clipboard, and how it is announced (`aria-label`, tooltip). */
+export type BreadcrumbCopy = { value: string; label: string };
+
+/** One entry of a menu crumb: its name, an optional kind label, and its own copy button. */
+export type BreadcrumbMenuEntry = {
+  key: string;
+  label: string;
+  hint?: string;
+  copy: BreadcrumbCopy;
+};
+
+export type BreadcrumbTrailItem = {
+  key: string;
+  label: React.ReactNode;
+  /** Renders a link. Without it, `onClick` renders a button and neither renders plain text. */
+  href?: string;
+  onClick?: () => void;
+  /** Defaults to true for the last item. Sets `aria-current="page"` and the bold weight. */
+  current?: boolean;
+  title?: string;
+  className?: string;
+  /** A copy icon button right after the crumb (e.g. the entity's id). */
+  copy?: BreadcrumbCopy;
+  /**
+   * The crumb stands for several things: it becomes a dropdown trigger listing them, each with
+   * its own copy button. Wins over `href` / `onClick`.
+   */
+  menu?: BreadcrumbMenuEntry[];
+};
+
+const CRUMB =
+  'text-primary-9 focus-visible:ring-primary-9 rounded-sm text-sm outline-none transition-colors focus-visible:ring-2';
+
+/** Bare glyph at rest; the round chip only materialises under the pointer. */
+function BreadcrumbCopyButton({ copy }: { copy: BreadcrumbCopy }) {
+  return (
+    <ButtonCopyId
+      iconOnly
+      value={copy.value}
+      label={copy.label}
+      tooltip={copy.label}
+      classNames={{
+        button: 'size-6 shrink-0 p-0',
+        icon: cn(
+          'size-6 rounded-full border-transparent bg-transparent transition-colors',
+          'hover:border-primary-8 hover:bg-primary-8 hover:[&_svg]:text-white'
+        ),
+        glyph: 'size-3.5 text-primary-9',
+      }}
+    />
+  );
+}
+
+function BreadcrumbMenu({
+  entries,
+  label,
+  className,
+  ariaCurrent,
+}: {
+  entries: BreadcrumbMenuEntry[];
+  label: React.ReactNode;
+  className: string;
+  ariaCurrent?: 'page';
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-current={ariaCurrent}
+          className={cn(className, 'hover:text-primary-7 inline-flex items-center gap-0.5')}
+        >
+          {label}
+          <RiArrowDownSLine aria-hidden className="size-4 shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        sideOffset={8}
+        className="max-h-96 w-96 overflow-y-auto rounded-2xl border border-[oklch(0.968_0.007_247.896)] bg-white p-2 shadow-lg"
+      >
+        <ul className="flex flex-col gap-1">
+          {entries.map((entry) => (
+            <li
+              key={entry.key}
+              className="flex items-center gap-3 rounded-xl px-3 py-2 transition-colors hover:bg-[oklch(0.968_0.007_247.896)]"
+            >
+              <div className="min-w-0 flex-1">
+                {entry.hint ? (
+                  <div className="text-xs font-bold text-[oklch(0.704_0.04_256.788)] uppercase">
+                    {entry.hint}
+                  </div>
+                ) : null}
+                <div className="text-primary-9 truncate text-sm font-medium" title={entry.label}>
+                  {entry.label}
+                </div>
+              </div>
+              <BreadcrumbCopyButton copy={entry.copy} />
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function BreadcrumbTrailCrumb({ item, current }: { item: BreadcrumbTrailItem; current: boolean }) {
+  const crumb = <BreadcrumbTrailLabel item={item} current={current} />;
+  return item.copy ? (
+    <>
+      {crumb}
+      <BreadcrumbCopyButton copy={item.copy} />
+    </>
+  ) : (
+    crumb
+  );
+}
+
+function BreadcrumbTrailLabel({ item, current }: { item: BreadcrumbTrailItem; current: boolean }) {
+  const className = cn(CRUMB, current ? 'font-bold' : 'font-light', item.className);
+  const ariaCurrent = current ? 'page' : undefined;
+
+  if (item.menu) {
+    return (
+      <BreadcrumbMenu
+        entries={item.menu}
+        label={item.label}
+        className={className}
+        ariaCurrent={ariaCurrent}
+      />
+    );
+  }
+  if (item.href) {
+    return (
+      <BreadcrumbLink asChild className={cn(className, 'hover:text-primary-7')}>
+        <Link href={item.href} onClick={item.onClick} title={item.title} aria-current={ariaCurrent}>
+          {item.label}
+        </Link>
+      </BreadcrumbLink>
+    );
+  }
+  if (item.onClick) {
+    return (
+      <button
+        type="button"
+        onClick={item.onClick}
+        title={item.title}
+        aria-current={ariaCurrent}
+        className={cn(className, 'hover:text-primary-7')}
+      >
+        {item.label}
+      </button>
+    );
+  }
+  return (
+    // BreadcrumbPage defaults to "page"; the trail decides which crumb is current
+    <BreadcrumbPage title={item.title} className={className} aria-current={ariaCurrent}>
+      {item.label}
+    </BreadcrumbPage>
+  );
+}
+
+/** Data-driven trail: items in, `nav > ol > li` out. Customise with `className` and `separator`. */
+function BreadcrumbTrail({
+  items,
+  separator = <ChevronRightStroke className="size-3.5" />,
+  ...props
+}: Omit<React.ComponentProps<typeof Breadcrumb>, 'children'> & {
+  items: BreadcrumbTrailItem[];
+  separator?: React.ReactNode;
+}) {
+  return (
+    <Breadcrumb {...props}>
+      <BreadcrumbList>
+        {items.map((item, index) => (
+          <Fragment key={item.key}>
+            {index > 0 && (
+              <BreadcrumbSeparator className="text-primary-9 shrink-0">
+                {separator}
+              </BreadcrumbSeparator>
+            )}
+            <BreadcrumbItem className={index < items.length - 1 ? 'shrink-0' : undefined}>
+              <BreadcrumbTrailCrumb
+                item={item}
+                current={item.current ?? index === items.length - 1}
+              />
+            </BreadcrumbItem>
+          </Fragment>
+        ))}
+      </BreadcrumbList>
+    </Breadcrumb>
+  );
+}
+
 export {
   Breadcrumb,
+  BreadcrumbChip,
   BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
+  BreadcrumbTrail,
 };

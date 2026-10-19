@@ -1,6 +1,7 @@
 import { InfoCircleFilled } from '@ant-design/icons';
 
 import { ConfigurationIcon, ResultsIcon } from '@/components/icons';
+import { useScanConfigTopBarSlots } from '@/features/scan-config/components/top-bar/context';
 import {
   LEGACY_SIMULATION_ERROR_CODE,
   SCAN_CONFIG_ERRORS,
@@ -17,6 +18,7 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
+import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
 
 import type { ReactNode } from 'react';
@@ -30,9 +32,7 @@ type ScanConfigTabsPanelProps = {
   disableConfigurationTab: boolean;
   configuration: ReactNode;
   results: ReactNode;
-  /** Rail-level trailing content, level with the tabs (e.g. the selected model). */
-  railEnd?: ReactNode;
-  /** Rail-level content centred on the panel edge (e.g. the workflow summary). */
+  /** Rail-level content centred on the panel edge (e.g. the selection's copy action). */
   railCenter?: ReactNode;
 };
 
@@ -99,9 +99,10 @@ export default function ScanConfigTabsPanel({
   disableConfigurationTab,
   configuration,
   results,
-  railEnd,
   railCenter,
 }: ScanConfigTabsPanelProps) {
+  // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
+  const { start } = useScanConfigTopBarSlots();
   // not memoised: `configuration` and `results` are fresh nodes on every render
   const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
     const isConfiguration = id === BaseScanConfigTabs.configuration;
@@ -124,7 +125,8 @@ export default function ScanConfigTabsPanel({
     <MorphingTabs
       keepMounted
       reorderable={false}
-      railEnd={railEnd}
+      tabsAlign="end"
+      railStart={start ? <BreadcrumbChip>{start}</BreadcrumbChip> : undefined}
       railCenter={railCenter}
       items={items}
       value={tab.id}

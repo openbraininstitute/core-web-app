@@ -9,6 +9,8 @@ export function ConfigurationIcon(props: SVGProps<SVGSVGElement>) {
       width="1em"
       height="1em"
       viewBox="0 0 512 512"
+      aria-hidden="true"
+      focusable="false"
       {...props}
     >
       <path

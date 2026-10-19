@@ -1,3 +1,5 @@
+'use client';
+
 import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
 
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';

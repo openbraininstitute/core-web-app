@@ -6,6 +6,7 @@ import { useNextStep } from 'nextstepjs';
 
 import { useLocalOnboardingTour } from '@/hooks/use-local-onboarding';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { TopBar } from '@/ui/molecules/top-bar';
 import { workflowScopeTour } from '@/ui/segments/app-setup/discover-app';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowBreadcrumbProvider } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
@@ -46,7 +47,7 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   return (
     <div className="mx-2 flex h-full min-h-0 w-[calc(100%-10px)] flex-col overflow-hidden">
       <WorkflowBreadcrumbProvider key={type}>
-        <WorkflowBreadcrumb />
+        <TopBar start={<WorkflowBreadcrumb />} />
         <div className="bg-background border-neutral-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border">
           <motion.div
             id="browse-workflow-new-inner-layout"

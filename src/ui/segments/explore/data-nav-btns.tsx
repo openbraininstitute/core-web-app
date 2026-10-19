@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
@@ -14,7 +13,7 @@ import {
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { createSessionStatePersistence } from '@/features/data-grid/react';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
+import { BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
@@ -25,7 +24,6 @@ import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
-import type { WorkspaceContext } from '@/types/common';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -39,130 +37,25 @@ function getGroupDisplayName(group: TEntityTypeGroup): string {
   return groupLabels[group] || group;
 }
 
-export function BackToListingOriginButton({
-  virtualLabId,
-  projectId,
-  onClick,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & { onClick: () => void; variant?: TViewVariant }) {
-  const queryParams = useSearchParams();
-  const query = new URLSearchParams(queryParams);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'capitalize text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
-          query: query.toString(),
-        }}
-        className={linkClass}
-      >
-        Data
-      </Link>
-    </Breadcrumb>
-  );
-}
-
-export function BackToCategory({
-  virtualLabId,
-  projectId,
-  group,
-  onClick,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & {
-  group: TEntityTypeGroup;
-  onClick: () => void;
-  variant?: TViewVariant;
-}) {
-  const queryParams = useSearchParams();
-  const groupDisplayName = getGroupDisplayName(group);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'capitalize text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
-          query: { ...Object.fromEntries(queryParams.entries()), group },
-        }}
-        className={linkClass}
-      >
-        {groupDisplayName}
-      </Link>
-    </Breadcrumb>
-  );
-}
-
-export function BackToEntityType({
-  virtualLabId,
-  projectId,
-  type,
-  title,
-  onClick,
-  group,
-  scope,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & {
-  type: TExtendedEntitiesTypeDict;
-  title: string;
-  group: TEntityTypeGroup;
-  scope: TWorkspaceScope;
-  onClick: () => void;
-  variant?: TViewVariant;
-}) {
-  const queryParams = useSearchParams();
-  const query = new URLSearchParams(queryParams);
-  query.set(DATA_GROUP_QUERY_PARAM, group);
-  query.set(SCOPE_QUERY_PARAMS, scope);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'font-bold text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'font-bold text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb showChevron={false} variant={variant} tone={ToneDict.Active}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}`,
-          query: query.toString(),
-        }}
-        className={linkClass}
-      >
-        {title}
-      </Link>
-    </Breadcrumb>
-  );
-}
-
+/**
+ * Data › category › type trail for the data details page. Returns the trail only: the host
+ * wraps it in a `BreadcrumbChip` (alongside any trailing action) where it wants a pill.
+ */
 export function DataBreadcrumb({
   type,
   title,
   group,
   scope,
-  variant = ViewVariant.Light,
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
-  variant?: TViewVariant;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
   const section = routeSegments.at(0);
+  const queryParams = useSearchParams();
 
   const { dataKey } = makeDataKey({
     virtualLabId,
@@ -188,14 +81,38 @@ export function DataBreadcrumb({
   };
 
   if (section !== WorkspaceSection.Data) return null;
+
+  const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
+  const withQuery = (path: string, set: Record<string, string> = {}) => {
+    const query = new URLSearchParams(queryParams);
+    for (const [key, value] of Object.entries(set)) query.set(key, value);
+    const search = query.toString();
+    return search ? `${path}?${search}` : path;
+  };
+
   return (
-    <div data-testid="data-view-breadcrumb" className="flex flex-nowrap gap-3">
-      <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
-      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
-      <BackToEntityType
-        {...{ virtualLabId, projectId, type, title, group, scope, onClick: onLinkClick, variant }}
-      />
-    </div>
+    <BreadcrumbTrail
+      data-testid="data-view-breadcrumb"
+      items={[
+        { key: 'data', label: 'Data', href: withQuery(dataHome), onClick: onLinkClick },
+        {
+          key: 'group',
+          label: getGroupDisplayName(group),
+          href: withQuery(dataHome, { [DATA_GROUP_QUERY_PARAM]: group }),
+          onClick: onLinkClick,
+          className: 'capitalize',
+        },
+        {
+          key: 'type',
+          label: title,
+          href: withQuery(`${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`, {
+            [DATA_GROUP_QUERY_PARAM]: group,
+            [SCOPE_QUERY_PARAMS]: scope,
+          }),
+          onClick: onLinkClick,
+        },
+      ]}
+    />
   );
 }
 
