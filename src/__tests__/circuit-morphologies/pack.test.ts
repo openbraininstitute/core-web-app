@@ -46,21 +46,29 @@ function withSomas(bytes: Uint8Array, change: Change): Uint8Array {
   });
 }
 
-/** The pack with the first chunk of its first level changed. */
-function withChunk(bytes: Uint8Array, change: Change): Uint8Array {
-  const { offset, chunks } = indexOf(bytes).levels[0];
+/** The pack with the first chunk of a level changed. */
+function withChunk(bytes: Uint8Array, change: Change, level = 0): Uint8Array {
+  const { offset, chunks } = indexOf(bytes).levels[level];
   return withBlock(bytes, offset, chunks.bytes[0], change, (index, changed) => {
-    index.levels[0].chunks.bytes[0] = changed;
+    index.levels[level].chunks.bytes[0] = changed;
   });
 }
 
-/** Where a chunk has the length of its first run: in its third stream, a number a run. */
+const COUNTS_BYTES = 16;
+
+/**
+ * Where a chunk has the length of its first run: past the base's counts and the inner points' four streams, in the
+ * third stream a run.
+ */
 function firstLength(chunk: Buffer): number {
-  const runs = chunk.readUInt32LE(0);
-  let at = 8;
-  for (let stream = 0; stream < 2; stream++) at += 1 + chunk[at] * runs;
+  const [base, inner, runs] = [0, 4, 8].map((at) => chunk.readUInt32LE(at));
+  let at = COUNTS_BYTES;
+  for (const count of [base, inner, inner, inner, inner, runs, runs]) at += 1 + chunk[at] * count;
   return at + 1;
 }
+
+/** Each level's segments, sorted, as the JSON has them. */
+const sorted = (rows: number[][]) => rows.map((row) => row.join()).sort();
 
 interface Grid {
   gridUm: number;
@@ -101,7 +109,8 @@ describe('a level read box by box', () => {
     expect(want.levels).toHaveLength(3);
     for (const [number, level] of want.levels.entries()) {
       const data = await readPack(pack('small'), number);
-      expect(everySegment(data, want)).toEqual(level.segments);
+      // Boxes are numbered by the first level's chunks, so another level's may come in another order.
+      expect(sorted(everySegment(data, want))).toEqual(sorted(level.segments));
       expect(data.level).toEqual({ toleranceUm: level.toleranceUm, pruneUm: level.pruneUm });
       expect(data.populations).toEqual(want.populations);
       expect(data.centre).toEqual(centre);
@@ -227,7 +236,7 @@ describe('openPack', () => {
     expect(opened.levels.map(levelOf)).toEqual(expected('small').levels.map(levelOf));
   });
 
-  it("puts each segment's far end in its box, and counts each box's segments", async () => {
+  it("puts both ends of each segment in its box, and counts each box's segments", async () => {
     const opened = await openPack(pack('small'));
     const { boxes } = opened;
     expect(boxes.length % 6).toBe(0);
@@ -238,10 +247,12 @@ describe('openPack', () => {
         const read = await opened.readBox(number, box);
         expect(read.segmentCells).toHaveLength(level.segments[box]);
         for (let i = 0; i < read.segmentCells.length; i++) {
-          for (let k = 0; k < 3; k++) {
-            const far = read.segments[8 * i + 4 + k];
-            expect(far).toBeGreaterThanOrEqual(boxes[6 * box + k] - 1e-3);
-            expect(far).toBeLessThanOrEqual(boxes[6 * box + 3 + k] + 1e-3);
+          for (const end of [0, 4]) {
+            for (let k = 0; k < 3; k++) {
+              const at = read.segments[8 * i + end + k];
+              expect(at).toBeGreaterThanOrEqual(boxes[6 * box + k] - 1e-3);
+              expect(at).toBeLessThanOrEqual(boxes[6 * box + 3 + k] + 1e-3);
+            }
           }
         }
         total += level.segments[box];
@@ -250,19 +261,68 @@ describe('openPack', () => {
     }
   });
 
-  it('gathers a level cut finer in the boxes of the coarsest', async () => {
-    const want = expected('small');
-    // The second level on a grid of half the steps: its chunks and segments stay where they were.
-    const halved = withIndex(pack('small'), (index) => {
-      const level = index.levels[1];
-      level.chunkSteps /= 2;
-      level.chunks.box = level.chunks.box.map((at) => 2 * at);
+  it('grows a box by as far as its chunks reach', async () => {
+    const reaching = (reach: number) =>
+      openPack(
+        withIndex(pack('small'), (index) => {
+          for (const { chunks } of index.levels) chunks.reach.fill(0);
+          index.levels[0].chunks.reach[0] = reach;
+        })
+      );
+    const [cubes, grown] = await Promise.all([reaching(0), reaching(400)]);
+    const by = 400 * expected('small').gridUm;
+    const { chunkSteps } = indexOf(pack('small')).levels[0];
+    // The boxes are numbered by the first level's chunks.
+    // In µm as float32: to the nanometre.
+    const nm = (um: number) => Math.round(um * 1000) / 1000;
+    expect(Array.from(grown.boxes, (at, i) => nm(at - cubes.boxes[i]))).toEqual(
+      Array.from(grown.boxes, (_, i) => (i >= 6 ? 0 : i < 3 ? -by : by))
+    );
+    for (let i = 0; i < cubes.boxes.length; i += 6) {
+      expect(cubes.boxes[i + 3] - cubes.boxes[i]).toBeCloseTo(
+        chunkSteps * expected('small').gridUm,
+        3
+      );
+    }
+  });
+
+  it('reads a level over its base, whether the base was read before or not', async () => {
+    const cold = await openPack(pack('small'));
+    const warm = await openPack(pack('small'));
+    for (let box = 0; box < cold.boxes.length / 6; box++) await warm.readBox(1, box);
+    for (let box = 0; box < cold.boxes.length / 6; box++) {
+      const [first, again] = await Promise.all([cold.readBox(0, box), warm.readBox(0, box)]);
+      expect(again).toEqual(first);
+    }
+  });
+
+  it('hands over a box with nothing at a level as arrays of its own', async () => {
+    const bytes = withIndex(pack('small'), (index) => {
+      const [finest] = index.levels;
+      finest.segments -= finest.chunks.segments.pop() ?? 0;
+      finest.chunks.bytes.pop();
+      finest.chunks.reach.pop();
+      finest.chunks.box.splice(-3);
     });
-    const opened = await openPack(halved);
-    expect(opened.boxes).toEqual((await openPack(pack('small'))).boxes);
-    const sorted = (rows: number[][]) => rows.map((row) => row.join()).sort();
-    const data = await readPack(halved, 1);
-    expect(sorted(everySegment(data, want))).toEqual(sorted(want.levels[1].segments));
+    const opened = await openPack(bytes);
+    const empty = opened.levels[0].segments.indexOf(0);
+    expect(empty).toBeGreaterThanOrEqual(0);
+    const [one, other] = await Promise.all([opened.readBox(0, empty), opened.readBox(0, empty)]);
+    expect(one.segmentCells).toHaveLength(0);
+    expect(one.segmentCells.buffer).not.toBe(other.segmentCells.buffer);
+    expect(one.segments.buffer).not.toBe(other.segments.buffer);
+  });
+
+  it('hands over a box of a base kept for the finer levels as a copy', async () => {
+    const opened = await openPack(pack('small'));
+    const box = Array.from(opened.levels[1].segments).findIndex((n) => n > 0);
+    const read = await opened.readBox(1, box);
+    const cells = read.segmentCells.slice();
+    read.segmentCells.fill(9);
+    expect((await opened.readBox(1, box)).segmentCells).toEqual(cells);
+    expect(await opened.readBox(0, box)).toEqual(
+      await (await openPack(pack('small'))).readBox(0, box)
+    );
   });
 
   it('reads only the boxes there are', async () => {
@@ -299,10 +359,23 @@ describe('openPack and readBox, of what is not a pack they read', () => {
     for (const length of [HEADER_BYTES, end - 1, end + 1]) {
       await expect(readPack(bytes.subarray(0, length))).rejects.toThrow('cut short');
     }
-    // The last level's last chunk: the levels before it are whole.
-    const lastByteGone = bytes.subarray(0, bytes.length - 1);
-    await expect(readPack(lastByteGone, 2)).rejects.toThrow('cut short');
-    expect((await readPack(lastByteGone, 1)).segments.length).toBeGreaterThan(0);
+    // The last level's last chunk: its box is refused at every level read over it, and the other boxes are whole.
+    const lastByteGone = await openPack(bytes.subarray(0, bytes.length - 1));
+    const refused: number[] = [];
+    for (let box = 0; box < lastByteGone.boxes.length / 6; box++) {
+      await lastByteGone.readBox(2, box).then(
+        () => {},
+        (e) => {
+          expect(e.message).toContain('cut short');
+          refused.push(box);
+        }
+      );
+    }
+    expect(refused).toHaveLength(1);
+    await expect(lastByteGone.readBox(0, refused[0])).rejects.toThrow('cut short');
+    expect(
+      (await lastByteGone.readBox(0, refused[0] === 0 ? 1 : 0)).segmentCells.length
+    ).toBeGreaterThan(0);
   });
 
   it('refuses a chunk that is not what the index says', async () => {
@@ -350,7 +423,7 @@ describe('openPack and readBox, of what is not a pack they read', () => {
       (chunk) => chunk.subarray(0, 4),
       (chunk) => chunk.subarray(0, chunk.length - 1),
       // No stream is no bytes wide.
-      (chunk) => chunk.fill(0, 8, 9),
+      (chunk) => chunk.fill(0, COUNTS_BYTES, COUNTS_BYTES + 1),
     ];
     for (const change of changes) {
       await expect(readPack(withChunk(pack('small'), change))).rejects.toThrow('cut short');
@@ -359,12 +432,40 @@ describe('openPack and readBox, of what is not a pack they read', () => {
 
   it('refuses a chunk whose runs are not as long as it is', async () => {
     for (const by of [-1, 1]) {
-      const bytes = withChunk(pack('small'), (chunk) => {
-        chunk[firstLength(chunk)] += by;
-        return chunk;
-      });
-      await expect(readPack(bytes)).rejects.toThrow('at odds with its index');
+      const bytes = withChunk(
+        pack('small'),
+        (chunk) => {
+          chunk[firstLength(chunk)] += by;
+          return chunk;
+        },
+        2
+      );
+      await expect(readPack(bytes, 2)).rejects.toThrow('at odds with its index');
+      await expect(readPack(bytes, 0)).rejects.toThrow('at odds with its index');
     }
+  });
+
+  it('refuses a chunk whose segments follow more or fewer of the base than are in its box', async () => {
+    const bytes = withChunk(pack('small'), (chunk) => {
+      chunk.writeUInt32LE(chunk.readUInt32LE(0) + 1, 0);
+      return chunk;
+    });
+    await expect(readPack(bytes)).rejects.toThrow('at odds with its index');
+  });
+
+  it('refuses levels read over a level that is not coarser, or cut in other chunks', async () => {
+    for (const base of [0, 1, 3]) {
+      const bytes = withIndex(pack('small'), (index) => {
+        index.levels[1].base = base;
+      });
+      await expect(openPack(bytes)).rejects.toThrow('at odds with its index');
+    }
+    const halved = withIndex(pack('small'), (index) => {
+      const level = index.levels[1];
+      level.chunkSteps /= 2;
+      level.chunks.box = level.chunks.box.map((at) => 2 * at);
+    });
+    await expect(openPack(halved)).rejects.toThrow('at odds with its index');
   });
 
   it('refuses a chunk with bytes after its streams', async () => {

@@ -63,8 +63,8 @@ export interface PackLevel {
 
 /**
  * Where a pack's segments lie: boxes of space, six floats a box, its least x, y and z then its greatest, in µm in the
- * data's frame, and the pack's levels, the finest first. A box holds a segment whose far end it holds: the near end
- * may lie outside it.
+ * data's frame, and the pack's levels, the finest first. A box holds both ends of each of its segments: a chunk's cube,
+ * grown by as far as the chunk's segments reach past it.
  */
 export interface PackBoxes {
   boxes: Float32Array;

@@ -27,7 +27,7 @@ import type {
 } from '../types';
 
 /** Kept a day, not an asset's 30: OBI-One builds the pack on request, so what is behind its URL can change. */
-export const PACK_CACHE = bucket('circuit-morphology-pack', 1);
+export const PACK_CACHE = bucket('circuit-morphology-pack', 2);
 
 /** The pack opened: its somas and frame, with no segments, and where its segments lie. */
 export type Opened =
