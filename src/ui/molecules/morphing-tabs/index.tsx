@@ -821,10 +821,10 @@ export function MorphingTabs({
 
                     <button
                       ref={(node) => {
+                        tabButtonRefs.current[item.id] = node;
+                      }}
                       id={tabId}
                       data-testid={item.testId}
-                      type="button"
-                      id={tabId}
                       type="button"
                       role="tab"
                       aria-selected={isActive}
