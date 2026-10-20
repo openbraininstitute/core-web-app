@@ -1,5 +1,6 @@
 'use client';
 
+import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import { ExemplarTraces } from '@/features/entities/e-model/detail-view/exemplar-traces';
@@ -46,6 +47,29 @@ export function RelatedEntities({ emodel, variant = ViewVariant.Light }: Props) 
               allowSearch={false}
               dataType={ExtendedEntitiesTypeDict.Memodel}
               extraQueryParams={{ emodel__id: emodel.id }}
+              scope={WorkspaceScope.Combined}
+              detailVariant={variant}
+              contentOnInsetPanel={variant === ViewVariant.Default}
+              classNames={{
+                container: cn(detailViewGridContainerClass(variant), '[grid-area:body]'),
+                miniView: '[grid-area:mini-view]',
+              }}
+              requireBrainRegion={false}
+            />
+          </div>
+        </Tab>
+        <Tab label="Circuits">
+          <div className={listingAreaClass}>
+            <BrowseEntityScope
+              id={`related-emodel-circuit-${emodel.id}`}
+              requireMiniDetailView
+              allowFilter={false}
+              allowSearch={false}
+              dataType={ExtendedEntitiesTypeDict.Circuit}
+              extraQueryParams={{
+                generated_derivation__used_id: emodel.id,
+                generated_derivation__derivation_type: DerivationTypeDictionary.EmodelCircuit,
+              }}
               scope={WorkspaceScope.Combined}
               detailVariant={variant}
               contentOnInsetPanel={variant === ViewVariant.Default}
