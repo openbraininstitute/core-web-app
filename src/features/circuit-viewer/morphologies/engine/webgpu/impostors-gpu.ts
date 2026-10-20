@@ -54,12 +54,6 @@ fn pixelsUp(p: vec3f, projection: mat4x4f, vp: vec4f) -> vec2f {
 fn toFragment(q: vec2f, vp: vec4f) -> vec2f {
   return vec2f(vp.x + q.x, vp.y + vp.w - q.y);
 }
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most.
-fn lifted(p: vec3f, lift: f32, orthographic: bool) -> vec3f {
-  if (orthographic) { return vec3f(p.xy, p.z + lift); }
-  let z = p.z + min(lift, -0.5 * p.z);
-  return vec3f(p.xy * (z / p.z), z);
-}
 // The view point p's depth as the depth buffer takes it.
 fn depthOf(p: vec3f, projection: mat4x4f) -> f32 {
   let clip = projection * vec4f(p, 1.0);

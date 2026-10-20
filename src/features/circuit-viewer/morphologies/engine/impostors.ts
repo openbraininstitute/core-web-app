@@ -124,6 +124,12 @@ vec3 glowing( vec3 colour, float glow ) {
 }
 // Where the corners of a cell that is not drawn go: one point outside the view.
 const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
+// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most.
+vec3 lifted( vec3 p, float lift ) {
+	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
+	float z = p.z + min( lift, - 0.5 * p.z );
+	return vec3( p.xy * ( z / p.z ), z );
+}
 `;
 
 /**
@@ -149,13 +155,22 @@ export function segmentAttributes(
 const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
 const TRIANGLES = [0, 1, 2, 2, 1, 3];
 
-/** `instances` quads, for the caller to add the attributes a shader places each by. */
-export function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
+/** `instances` of one shape, for the caller to add the attributes a shader places each by. */
+export function instancedGeometry(
+  corners: number[],
+  triangles: number[],
+  instances: number
+): THREE.InstancedBufferGeometry {
   const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(CORNERS, 3));
-  geometry.setIndex(TRIANGLES);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
+  geometry.setIndex(triangles);
   geometry.instanceCount = instances;
   return geometry;
+}
+
+/** `instances` quads. */
+export function quadGeometry(instances: number): THREE.InstancedBufferGeometry {
+  return instancedGeometry(CORNERS, TRIANGLES, instances);
 }
 
 /** `pixelUm`, for a vertex shader that has `uViewport`. */
@@ -216,13 +231,6 @@ in vec4 aChartB;
 flat out vec2 vSegmentA;
 flat out vec2 vSegmentB;
 flat out vec2 vSegmentRadii;
-
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most.
-vec3 lifted( vec3 p, float lift ) {
-	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
-	float z = p.z + min( lift, - 0.5 * p.z );
-	return vec3( p.xy * ( z / p.z ), z );
-}
 
 float sectionType() {
 	return float( aCell >> ${TYPE_SHIFT}u );

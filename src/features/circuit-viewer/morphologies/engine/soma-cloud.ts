@@ -1,9 +1,8 @@
 /**
  * The somas of a circuit: a low pyramid a cell (`fanGeometry`), its base facing the eye at the soma's centre and as
  * wide as its sphere, its tip a radius nearer, shaded as a sphere by a fixed light. Where two somas meet, each covers the
- * other where its pyramid is nearer, much as their spheres would, without one covering the other whole as they turn;
- * and the depth test keeps its early pass: no depth is written by the fragments, which costs several times more. The
- * colours are worked in sRGB and drawn as they come out, with no tone mapping.
+ * other where its pyramid is nearer, much as their spheres would, without one covering the other whole as they turn.
+ * The colours are worked in sRGB and drawn as they come out, with no tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
  * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white, rings it
@@ -15,7 +14,7 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
-import { CELL_GLSL, GLOW_RIM_COLOR } from './impostors';
+import { CELL_GLSL, GLOW_RIM_COLOR, instancedGeometry } from './impostors';
 
 import type { ImpostorUniforms } from './impostors';
 
@@ -50,30 +49,20 @@ export const BLUE_RAMP = ['hsl(200, 100%, 80%)', 'hsl(200, 100%, 50%)', 'hsl(220
 const glsl = (values: number[]) => `vec3( ${values.map((v) => v.toFixed(6)).join(', ')} )`;
 const srgb = (color: string) => glsl(chroma(color).gl().slice(0, 3));
 
-/**
- * The pyramid's base: a hexagon about the unit circle, its corners 1 / cos 30° out. Where two somas meet, a square's
- * corners show; more sides cost more corners, each of which reads the cell table.
- */
+// A hexagon round the unit circle: where two somas meet, a square base's corners show.
 const FAN_SIDES = 6;
 const FAN_REACH = 1 / Math.cos(Math.PI / FAN_SIDES);
+const FAN_CORNERS = [0, 0, 1];
+const FAN_TRIANGLES: number[] = [];
+for (let k = 0; k < FAN_SIDES; k++) {
+  const angle = (2 * Math.PI * (k + 0.5)) / FAN_SIDES;
+  FAN_CORNERS.push(FAN_REACH * Math.cos(angle), FAN_REACH * Math.sin(angle), 0);
+  FAN_TRIANGLES.push(0, 1 + k, 1 + ((k + 1) % FAN_SIDES));
+}
 
-/**
- * `instances` pyramids of `soma-cloud.ts`: the tip first, at z 1, then the base at z 0, its triangles facing the eye;
- * for the caller to add the attributes a shader places each by.
- */
+/** `instances` pyramids: the tip first, at z 1, then the base at z 0, its triangles facing the eye. */
 export function fanGeometry(instances: number): THREE.InstancedBufferGeometry {
-  const corners = [0, 0, 1];
-  const triangles = [];
-  for (let k = 0; k < FAN_SIDES; k++) {
-    const angle = (2 * Math.PI * (k + 0.5)) / FAN_SIDES;
-    corners.push(FAN_REACH * Math.cos(angle), FAN_REACH * Math.sin(angle), 0);
-    triangles.push(0, 1 + k, 1 + ((k + 1) % FAN_SIDES));
-  }
-  const geometry = new THREE.InstancedBufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
-  geometry.setIndex(triangles);
-  geometry.instanceCount = instances;
-  return geometry;
+  return instancedGeometry(FAN_CORNERS, FAN_TRIANGLES, instances);
 }
 
 const SHARED_VERTEX = /* glsl */ `
@@ -86,13 +75,10 @@ ${CELL_GLSL}
 uint cellOf() {
 	return uint( gl_InstanceID );
 }
-// The pyramid's corner: the tip brought a radius nearer along the eye's ray through the centre, so that it stays over it.
+// The pyramid's corner, its tip a radius nearer.
 vec4 cornerAt( float radius ) {
 	vec4 centre = modelViewMatrix * vec4( aPosition - uOffset, 1.0 );
-	vec3 p = vec3( centre.xy + position.xy * radius, centre.z );
-	float z = p.z + min( position.z * radius, - 0.5 * p.z );
-	if ( ! isOrthographic ) p.xy *= z / p.z;
-	return projectionMatrix * vec4( p.xy, z, 1.0 );
+	return projectionMatrix * vec4( lifted( vec3( centre.xy + position.xy * radius, centre.z ), position.z * radius ), 1.0 );
 }
 `;
 

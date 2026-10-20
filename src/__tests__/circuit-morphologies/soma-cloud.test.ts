@@ -47,8 +47,10 @@ describe('the somas drawn as the somas view drew them', () => {
       expect(corners.getZ(k)).toBe(0);
     }
     for (const { vertexShader, fragmentShader } of [cloud, ids]) {
-      expect(vertexShader).toContain('float z = p.z + min( position.z * radius, - 0.5 * p.z );');
-      expect(vertexShader).toContain('if ( ! isOrthographic ) p.xy *= z / p.z;');
+      expect(vertexShader).toContain(
+        'lifted( vec3( centre.xy + position.xy * radius, centre.z ), position.z * radius )'
+      );
+      expect(vertexShader).toContain('float z = p.z + min( lift, - 0.5 * p.z );');
       expect(fragmentShader).not.toContain('gl_FragDepth');
     }
   });

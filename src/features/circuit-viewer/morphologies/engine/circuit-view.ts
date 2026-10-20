@@ -92,7 +92,7 @@ type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
 
 function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material): Quads {
   const mesh = new THREE.Mesh(geometry, material);
-  // The geometry's own four corners say nothing of where the quads are.
+  // The geometry's own corners say nothing of where its instances are.
   mesh.frustumCulled = false;
   mesh.visible = geometry.instanceCount > 0;
   return mesh;
@@ -288,7 +288,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   protected cloudUniforms = somaCloudUniforms();
   /**
    * The somas the cloud draws, whose populations decide whether the next ones are framed, the box round all of them,
-   * and their quads, and the same quads for the pick.
+   * and their pyramids, and the same pyramids for the pick.
    */
   private cloud: {
     somas: CircuitSomas;
@@ -296,7 +296,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     mesh: Quads;
     ids: Quads;
   } | null = null;
-  /** The quads of the cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
+  /** The cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
   /** Of each material, the quads last let go of (`letGo`). */
   private kept = new Map<THREE.Material, Quads>();

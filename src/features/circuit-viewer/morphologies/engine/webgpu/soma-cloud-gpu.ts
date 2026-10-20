@@ -33,10 +33,7 @@ fn cloudCorner(centre: vec3f, corner: vec3f, offset: vec3f, radius: f32, modelVi
   if (texel.a == 0.0) { return vec4f(2.0, 2.0, 2.0, 1.0); }
   let c = modelView * vec4f(centre - offset, 1.0);
   let r = radius * (1.0 + ${GLOW_SWELL.toFixed(6)} * swell);
-  var p = vec3f(c.xy + corner.xy * r, c.z);
-  let z = p.z + min(corner.z * r, -0.5 * p.z);
-  if (!isOrthographic(projection)) { p = vec3f(p.xy * (z / p.z), p.z); }
-  return projection * vec4f(p.xy, z, 1.0);
+  return projection * vec4f(lifted(vec3f(c.xy + corner.xy * r, c.z), corner.z * r, isOrthographic(projection)), 1.0);
 }`,
   [VIEW]
 );
