@@ -14,7 +14,7 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
-import { CELL_GLSL, GLOW_RIM_COLOR, instancedGeometry } from './impostors';
+import { CELL_GLSL, GLOW_RIM_COLOR, instancedGeometry, LIFTED } from './impostors';
 
 import type { ImpostorUniforms } from './impostors';
 
@@ -72,6 +72,7 @@ uniform float uRadius;
 in vec3 aPosition;
 
 ${CELL_GLSL}
+${LIFTED}
 uint cellOf() {
 	return uint( gl_InstanceID );
 }
@@ -79,6 +80,11 @@ uint cellOf() {
 vec4 cornerAt( float radius ) {
 	vec4 centre = modelViewMatrix * vec4( aPosition - uOffset, 1.0 );
 	return projectionMatrix * vec4( lifted( vec3( centre.xy + position.xy * radius, centre.z ), position.z * radius ), 1.0 );
+}
+// The corner on the unit disc times the corner's w, and w: divided in the fragments, it runs straight across the
+// screen, which the tip, nearer than the base, would otherwise bend.
+vec3 discCoord( vec4 clip ) {
+	return vec3( position.xy * clip.w, clip.w );
 }
 `;
 
@@ -90,7 +96,7 @@ uniform uint uHighlighted;
 uniform vec3 uHighlight;
 uniform float uOpacity;
 out vec3 vColour;
-out vec2 vCoord;
+out vec3 vCoord;
 out float vGlow;
 out float vAlpha;
 
@@ -121,26 +127,27 @@ void main() {
 	vColour = glowing( colour, glow );
 	vGlow = glow;
 	vAlpha = lit ? 1.0 : mix( uOpacity, 1.0, glow );
-	vCoord = position.xy;
 	gl_Position = cornerAt( uRadius * ( 1.0 + ${GLOW_SWELL.toFixed(6)} * glow ) );
+	vCoord = discCoord( gl_Position );
 }
 `;
 
 const FRAGMENT = /* glsl */ `
 uniform vec4 uGlowRim;
 in vec3 vColour;
-in vec2 vCoord;
+in vec3 vCoord;
 in float vGlow;
 in float vAlpha;
 
 void main() {
-	float z2 = 1.0 - dot( vCoord, vCoord );
+	vec2 coord = vCoord.xy / vCoord.z;
+	float z2 = 1.0 - dot( coord, coord );
 	if ( z2 < 0.0 ) discard;
-	float facing = 0.5 * ( 1.0 + dot( vec3( vCoord, sqrt( z2 ) ), ${glsl(LIGHT)} ) );
+	float facing = 0.5 * ( 1.0 + dot( vec3( coord, sqrt( z2 ) ), ${glsl(LIGHT)} ) );
 	vec3 shaded = vColour * ( 0.5 + 0.5 * smoothstep( 0.0, 1.0, facing ) ) + 0.33 * pow( facing, 50.0 );
 	// Light of its own while it glows, and a ring at its edge where the morphologies have one.
 	vec3 hot = shaded + 0.2 * vGlow * vColour;
-	float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( vCoord ) );
+	float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( coord ) );
 	gl_FragColor = vec4( mix( hot, ${srgb(GLOW_RIM_COLOR)}, rim ), vAlpha );
 }
 `;
@@ -148,7 +155,7 @@ void main() {
 const ID_VERTEX = /* glsl */ `
 ${SHARED_VERTEX}
 flat out vec4 vId;
-out vec2 vCoord;
+out vec3 vCoord;
 
 void main() {
 	uint cell = cellOf();
@@ -157,17 +164,18 @@ void main() {
 		return;
 	}
 	vId = cellId( cell );
-	vCoord = position.xy;
 	gl_Position = cornerAt( uRadius );
+	vCoord = discCoord( gl_Position );
 }
 `;
 
 const ID_FRAGMENT = /* glsl */ `
 flat in vec4 vId;
-in vec2 vCoord;
+in vec3 vCoord;
 
 void main() {
-	if ( dot( vCoord, vCoord ) > 1.0 ) discard;
+	vec2 coord = vCoord.xy / vCoord.z;
+	if ( dot( coord, coord ) > 1.0 ) discard;
 	gl_FragColor = vId;
 }
 `;

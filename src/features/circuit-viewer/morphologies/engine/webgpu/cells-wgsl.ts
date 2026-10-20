@@ -33,15 +33,17 @@ export const srgbWGSL = (color: string) =>
     .map((v) => v.toFixed(6))
     .join(', ')})`;
 
-/** The view's measure of a pixel, as `PIXEL_UM` in `impostors.ts`, and `lifted`, as in `CELL_GLSL`. */
+/** The view's measure of a pixel and `lifted`: as `PIXEL_UM` and `LIFTED` in `impostors.ts`. */
 export const VIEW_WGSL = /* wgsl */ `
 fn isOrthographic(projection: mat4x4f) -> bool {
   return projection[3][3] > 0.5;
 }
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most.
-fn lifted(p: vec3f, lift: f32, orthographic: bool) -> vec3f {
-  if (orthographic) { return vec3f(p.xy, p.z + lift); }
-  let z = p.z + min(lift, -0.5 * p.z);
+// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most, and behind the
+// near plane, at depth 0 here.
+fn lifted(p: vec3f, lift: f32, projection: mat4x4f) -> vec3f {
+  if (isOrthographic(projection)) { return vec3f(p.xy, p.z + lift); }
+  let near = projection[3][2] / projection[2][2];
+  let z = max(p.z, min(p.z + lift, min(0.5 * p.z, -1.01 * near)));
   return vec3f(p.xy * (z / p.z), z);
 }
 // The µm a device pixel spans at the view depth z.

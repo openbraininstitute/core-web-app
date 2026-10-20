@@ -137,7 +137,6 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
   let rb = ends[1].w;
   let umA = ends[2].z;
   let umB = ends[2].w;
-  let orthographic = isOrthographic(projection);
   let pa = pixelsUp(a, projection, vp);
   let pb = pixelsUp(b, projection, vp);
   var along = pb - pa;
@@ -150,7 +149,7 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
   // cut into the wider end.
   let wide = ${QUAD_REACH} * max(radii.x, radii.y) * select(umA, umB, atB);
   let outward = select(-along, along, atB) + across * corner.y;
-  let p = lifted(vec3f(end.xy + outward * wide, end.z), select(ra, rb, atB), orthographic);
+  let p = lifted(vec3f(end.xy + outward * wide, end.z), select(ra, rb, atB), projection);
   return mat4x4f(world * vec4f(p, 1.0), vec4f(toFragment(pa, vp), toFragment(pb, vp)), vec4f(p, 0.0), vec4f(0.0));
 }`,
   [IMPOSTORS]

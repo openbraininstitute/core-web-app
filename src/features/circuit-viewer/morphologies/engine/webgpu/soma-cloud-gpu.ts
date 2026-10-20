@@ -33,7 +33,7 @@ fn cloudCorner(centre: vec3f, corner: vec3f, offset: vec3f, radius: f32, modelVi
   if (texel.a == 0.0) { return vec4f(2.0, 2.0, 2.0, 1.0); }
   let c = modelView * vec4f(centre - offset, 1.0);
   let r = radius * (1.0 + ${GLOW_SWELL.toFixed(6)} * swell);
-  return projection * vec4f(lifted(vec3f(c.xy + corner.xy * r, c.z), corner.z * r, isOrthographic(projection)), 1.0);
+  return projection * vec4f(lifted(vec3f(c.xy + corner.xy * r, c.z), corner.z * r, projection), 1.0);
 }`,
   [VIEW]
 );
@@ -74,6 +74,9 @@ fn cloudColour(coord: vec2f, look: vec4f, alpha: f32, rimOn: f32) -> vec4f {
   return vec4f(mix(hot, ${srgbWGSL(GLOW_RIM_COLOR)}, rim), alpha);
 }`);
 
+/** The corner on the unit disc, straight across the screen, as `discCoord` in `soma-cloud.ts` has it. */
+export const DISC_COORD = varying(positionGeometry.xy).setInterpolation('linear');
+
 /**
  * The somas of `soma-cloud.ts` on WebGPU: a pyramid a cell at its position, shaded as a sphere and drawn as it comes out,
  * as on WebGL 2; and the same pyramids in their cells' numbers.
@@ -97,7 +100,7 @@ export function somaCloudMaterials(u: GpuUniforms): {
     projection: cameraProjectionMatrix,
     texel,
   };
-  const coord = varying(positionGeometry.xy);
+  const coord = DISC_COORD;
   const outside = coord.dot(coord).greaterThan(1);
 
   const cloud = new THREE.MeshBasicNodeMaterial();

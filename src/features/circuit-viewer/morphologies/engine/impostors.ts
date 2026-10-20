@@ -124,12 +124,6 @@ vec3 glowing( vec3 colour, float glow ) {
 }
 // Where the corners of a cell that is not drawn go: one point outside the view.
 const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most.
-vec3 lifted( vec3 p, float lift ) {
-	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
-	float z = p.z + min( lift, - 0.5 * p.z );
-	return vec3( p.xy * ( z / p.z ), z );
-}
 `;
 
 /**
@@ -182,6 +176,18 @@ float pixelUm( float z ) {
 }
 `;
 
+/** `lifted`, for a vertex shader: as `VIEW_WGSL` has it. */
+export const LIFTED = /* glsl */ `
+// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most, and behind the
+// near plane.
+vec3 lifted( vec3 p, float lift ) {
+	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
+	float near = projectionMatrix[ 3 ][ 2 ] / ( projectionMatrix[ 2 ][ 2 ] - 1.0 );
+	float z = max( p.z, min( p.z + lift, min( 0.5 * p.z, - 1.01 * near ) ) );
+	return vec3( p.xy * ( z / p.z ), z );
+}
+`;
+
 const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
 uniform highp sampler2D uSomas;
@@ -201,6 +207,7 @@ vec4 cellTexel() {
 	return texelFetch( uCells, cellXY( impostorCell() ), 0 );
 }
 ${PIXEL_UM}
+${LIFTED}
 // Where a view point is drawn, as gl_FragCoord counts pixels.
 vec2 toPixels( vec3 p ) {
 	vec4 clip = projectionMatrix * vec4( p, 1.0 );

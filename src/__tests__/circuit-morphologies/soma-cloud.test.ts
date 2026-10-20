@@ -50,8 +50,16 @@ describe('the somas drawn as the somas view drew them', () => {
       expect(vertexShader).toContain(
         'lifted( vec3( centre.xy + position.xy * radius, centre.z ), position.z * radius )'
       );
-      expect(vertexShader).toContain('float z = p.z + min( lift, - 0.5 * p.z );');
       expect(fragmentShader).not.toContain('gl_FragDepth');
+    }
+  });
+
+  // The tip is nearer than the base: interpolated as three does, the disc would bend.
+  it('runs the disc’s coordinate straight across the screen', () => {
+    for (const { vertexShader, fragmentShader } of [cloud, ids]) {
+      expect(vertexShader).toContain('return vec3( position.xy * clip.w, clip.w );');
+      expect(vertexShader).toContain('vCoord = discCoord( gl_Position );');
+      expect(fragmentShader).toContain('vec2 coord = vCoord.xy / vCoord.z;');
     }
   });
 
@@ -104,13 +112,13 @@ describe('the somas drawn as the somas view drew them', () => {
   // On a dark background the impostors have none, so a spike looks the same on the somas and on the morphologies.
   it('rings a spiking soma only as far as the impostors ring their cells', () => {
     expect(cloud.fragmentShader).toContain(
-      'float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( vCoord ) );'
+      'float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( coord ) );'
     );
   });
 
   it('picks with the same pyramids in their cells’ numbers, round as they are drawn, unblended', () => {
     expect(ids.blending).toBe(THREE.NoBlending);
     expect(ids.vertexShader).toContain('uint id = cell + 1u;');
-    expect(ids.fragmentShader).toContain('if ( dot( vCoord, vCoord ) > 1.0 ) discard;');
+    expect(ids.fragmentShader).toContain('if ( dot( coord, coord ) > 1.0 ) discard;');
   });
 });

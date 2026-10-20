@@ -8,6 +8,7 @@ import {
   idMaterial,
   impostor,
   impostorUniforms,
+  LIFTED,
   NO_CELL,
   setSectionColours,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
@@ -319,5 +320,17 @@ describe('the cell of a pick', () => {
     expect(cellNearMiddle(square({ 4: 0 }), 3)).toBe(0);
     expect(cellNearMiddle(square({ 4: 70_000 }), 3)).toBe(70_000);
     expect(cellNearMiddle(square({ 4: 3_000_000_000 }), 3)).toBe(3_000_000_000);
+  });
+});
+
+describe('`lifted`, as the segments and the somas share it', () => {
+  it('lifts the whole way in an orthographic view, and in perspective by half the depth at most, behind the near plane', () => {
+    expect(LIFTED).toContain('if ( isOrthographic ) return vec3( p.xy, p.z + lift );');
+    expect(LIFTED).toContain(
+      'float near = projectionMatrix[ 3 ][ 2 ] / ( projectionMatrix[ 2 ][ 2 ] - 1.0 );'
+    );
+    expect(LIFTED).toContain(
+      'float z = max( p.z, min( p.z + lift, min( 0.5 * p.z, - 1.01 * near ) ) );'
+    );
   });
 });
