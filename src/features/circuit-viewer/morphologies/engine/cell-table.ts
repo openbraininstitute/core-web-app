@@ -13,6 +13,21 @@ const opaque = (color: string) => [...chroma(color).rgb(), 255];
 export const BY_SECTION = 254;
 /** How crowded a cell is taken to be until it is known, as the somas view did: halfway. */
 const HALF_CROWDED = 128;
+/** The glow kept is the glow to this power: held near full, then let go. */
+export const GLOW_POWER = 0.4;
+
+/** Each cell's soma (`CircuitMorphologyData.somas`) laid out as the cell table: x, y and z, and w 1 where it has a place. */
+export function somaTexture(somas: Float32Array): THREE.DataTexture {
+  const cells = Math.floor(somas.length / 4);
+  const rows = Math.max(1, Math.ceil(cells / ROW));
+  const texels = new Float32Array(4 * ROW * rows);
+  texels.set(somas.subarray(0, 4 * cells));
+  for (let cell = 0; cell < cells; cell++)
+    texels[4 * cell + 3] = Number.isNaN(somas[4 * cell]) ? 0 : 1;
+  const texture = new THREE.DataTexture(texels, ROW, rows, THREE.RGBAFormat, THREE.FloatType);
+  texture.needsUpdate = true;
+  return texture;
+}
 
 /**
  * A texel a cell, which the shaders look up by the cell's number: its colour, and in alpha whether it is drawn.
@@ -70,7 +85,7 @@ export class CellTable {
       changed = true;
     }
     for (const cell of lit) {
-      const byte = Math.round(255 * glow[cell] ** 0.4);
+      const byte = Math.round(255 * glow[cell] ** GLOW_POWER);
       if (byte === this.glowTexels[cell]) continue;
       this.glowTexels[cell] = byte;
       changed = true;

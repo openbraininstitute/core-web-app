@@ -231,14 +231,15 @@ export class Culling {
   }
 
   /**
-   * Not culled: every segment up to `end` drawn by the seen lists' draws, each of its own kind. As with `drawNone`, the
-   * last tests left unread are not read: the draws they counted are gone.
+   * Not culled: every segment up to `end` drawn by the seen lists' draws and the kept ones, each of its own kind. As
+   * with `drawNone`, the last tests left unread are not read: the draws they counted are gone.
    */
   drawAll(end: number): void {
     this.unread = false;
     this.allDraws[INSTANCES] = end;
     this.allDraws[(DRAWS.seenTubes - DRAWS.seenFlat) / 4 + INSTANCES] = end;
     this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.seenFlat, this.allDraws);
+    this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.keptFlat, this.allDraws);
   }
 
   /** None drawn, kept or seen. */

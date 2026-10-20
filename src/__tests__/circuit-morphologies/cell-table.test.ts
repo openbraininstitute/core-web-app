@@ -2,13 +2,27 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 
-import { CellTable } from '@/features/circuit-viewer/morphologies/engine/cell-table';
+import { CellTable, somaTexture } from '@/features/circuit-viewer/morphologies/engine/cell-table';
 
 const OWN = '#102030';
 const texels = (table: CellTable) => table.texture.image.data as Uint8Array;
 const texel = (table: CellTable, cell: number) => [
   ...texels(table).subarray(4 * cell, 4 * cell + 4),
 ];
+
+describe("the cells' somas", () => {
+  it('lays each out as the cell table, a float a coordinate, w 1 where it has a place', () => {
+    const somas = Float32Array.of(1, 2, 3, 4, Number.NaN, Number.NaN, Number.NaN, 0, -5, 6, 7, 2);
+    const texture = somaTexture(somas);
+    expect(texture.image.width).toBe(2048);
+    expect(texture.image.height).toBe(1);
+    expect(texture.type).toBe(THREE.FloatType);
+    const data = texture.image.data as Float32Array;
+    expect([...data.subarray(0, 4)]).toEqual([1, 2, 3, 1]);
+    expect(data[7]).toBe(0);
+    expect([...data.subarray(8, 12)]).toEqual([-5, 6, 7, 1]);
+  });
+});
 
 describe('the cell table', () => {
   it('has a texel a cell in rows of 2,048, and a row at least', () => {

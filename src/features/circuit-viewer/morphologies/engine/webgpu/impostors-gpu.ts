@@ -17,6 +17,7 @@ import {
   toneMapping,
   uint,
   varying,
+  vec2,
   vec4,
   viewport,
   wgsl,
@@ -28,9 +29,10 @@ import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION } from '../cell-table';
 import { CELL_MASK, HOLE, HOLE_WORD, MIN_RADIUS, QUAD_REACH, TYPE_SHIFT } from '../impostors';
-import { CELLS, cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
+import { PULSE_FRONT_WGSL, SOMA_LINE, SPIKE_COLOUR_WGSL, SPIKE_LIGHT_WGSL } from '../spike-light';
+import { cellGlow, cellId, cellXY, col, flat, keptUnless, typed, VIEW } from './cells-wgsl';
 import { NEAR_SHARE, NEAR_UM } from './culling-wgsl';
-import { surfaceOf } from './occlusion-gpu';
+import { AO_COVER, surfaceAt, surfaceOf } from './occlusion-gpu';
 
 import type { Node } from 'three/webgpu';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -306,18 +308,27 @@ fn somaSurface(p: vec3f, sphere: vec4f, radiusPx: f32, projection: mat4x4f) -> m
   [IMPOSTORS]
 );
 
-/** The cell's colour, linear, as the look lights it: the highlight, or its own lit by its glow. */
+/** The cell's colour, linear: the highlight, or its own. */
 const colourOf = wgslFn(
   /* wgsl */ `
-fn colourOf(cell: u32, highlighted: u32, highlight: vec3f, texel: vec4f, type_: u32, glow: f32, unknown: vec3f,
-            soma: vec3f, axon: vec3f, basal: vec3f, apical: vec3f) -> vec3f {
+fn colourOf(cell: u32, highlighted: u32, highlight: vec3f, texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f,
+            axon: vec3f, basal: vec3f, apical: vec3f) -> vec3f {
   if (cell == highlighted) { return highlight; }
-  let own = ownColour(texel, type_, unknown, soma, axon, basal, apical);
-  if (glow == 0.0) { return own; }
-  return pow(glowing(pow(own, vec3f(1.0 / 2.2)), glow), vec3f(2.2));
+  return ownColour(texel, type_, unknown, soma, axon, basal, apical);
 }`,
-  [IMPOSTORS, CELLS]
+  [IMPOSTORS]
 );
+
+/** How far the corner's end is from its cell's soma, µm, as `somaDistance` in `impostors.ts`. */
+const somaDistance = wgslFn(/* wgsl */ `
+fn somaDistance(corner: vec3f, endA: vec4f, endB: vec4f, soma: vec4f) -> f32 {
+  return select(0.0, distance(select(endA.xyz, endB.xyz, corner.x > 0.0), soma.xyz), soma.w > 0.5);
+}`);
+
+/** A spike's light (`spike-light.ts`). */
+const pulseFront = wgslFn(PULSE_FRONT_WGSL);
+const spikeLight = wgslFn(SPIKE_LIGHT_WGSL);
+const spikeColour = wgslFn(SPIKE_COLOUR_WGSL);
 
 /**
  * The look's roughness and as much more as the normal turns from a pixel to the next, as three's WebGL lighting has
@@ -328,13 +339,6 @@ const roughnessOf = wgslFn(/* wgsl */ `
 fn roughnessOf(n: vec3f, roughness: f32) -> f32 {
   let turn = max(abs(dpdx(n)), abs(dpdy(n)));
   return min(max(roughness, 0.0525) + max(max(turn.x, turn.y), turn.z), 1.0);
-}`);
-
-/** A tenth of the radius in from the edge, a pixel at the least, as the somas view rings a soma. */
-const rimOf = wgslFn(/* wgsl */ `
-fn rimOf(edge: vec4f, glow: f32, rimOn: f32) -> f32 {
-  let width = max(0.1 * edge.y, 1.0);
-  return glow * rimOn * (1.0 - smoothstep(width - 0.5, width + 0.5, edge.x));
 }`);
 
 /** A segment drawn flat or as the tube itself (`GpuUniforms.tubeFrom`), or a soma. */
@@ -412,13 +416,20 @@ function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
 }
 
 /**
- * What every material of a kind shares: the cell, its texel and its glow where `glowing`, where its quad's corner is,
+ * What every material of a kind shares: the cell, its texel and how lit it is by a spike where `glowing`
+ * (`spike-light.ts`), where its quad's corner is,
  * what the fragments take of it, and whether a pixel is on the tube or the sphere, with its normal, how far it is from
  * the edge, and its depth: as the depth buffer takes it, which a segment drawn flat does not write, and in view space.
  * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen. Its word, and a segment, are read
- * from `inputs`.
+ * from `inputs`. `litOnly`: an unlit cell's quads are not drawn.
  */
-function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: SegmentInputs) {
+function impostorOf(
+  kind: Kind,
+  u: GpuUniforms,
+  glowing: boolean,
+  inputs: SegmentInputs,
+  litOnly = false
+) {
   const { word } = inputs;
   const cell = word.bitAnd(uint(CELL_MASK));
   const xy = cellXY({ cell });
@@ -426,6 +437,7 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
   const glow = glowing
     ? typed<'float'>(cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) }))
     : float(0);
+  const shown = litOnly ? select(glow.greaterThan(0), texel.a, float(0)) : texel.a;
   const least = float(MIN_RADIUS).mul(glow.add(1));
   let quad: Node<'mat4'>;
   let shape: Node;
@@ -433,7 +445,7 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
     quad = typed<'mat4'>(
       somaQuad({
         corner: positionGeometry,
-        shown: texel.a,
+        shown,
         least,
         sphere: attribute('aSoma', 'vec4'),
         chart: attribute('aSomaChart', 'vec4'),
@@ -455,7 +467,7 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
     const ends = typed<'mat4'>(
       segmentEnds({
         word,
-        shown: texel.a,
+        shown,
         least,
         endA: inputs.endA,
         endB: inputs.endB,
@@ -499,13 +511,109 @@ function impostorOf(kind: Kind, u: GpuUniforms, glowing: boolean, inputs: Segmen
   }
   const surface = typed<'mat4'>(shape).toVar();
   const { z: depth, w: viewZ } = col(surface, 1);
-  return { word, cell, texel, glow, position: col(quad, 0).xyz, surface, depth, viewZ };
+  const fromSoma =
+    kind === 'soma'
+      ? float(0)
+      : somaDistance({
+          corner: positionGeometry,
+          endA: inputs.endA,
+          endB: inputs.endB,
+          soma: u.somas.load(xy),
+        });
+  const pulse = typed<'float'>(pulseFront({ d: fromSoma, glow, afterglow: u.afterglow }));
+  const spiking = typed<'float'>(spikeLight({ x: varying(pulse), glow: flat(glow) }));
+  return { word, cell, texel, spiking, position: col(quad, 0).xyz, surface, depth, viewZ };
+}
+
+/** The cell's colour (`colourOf`), the same across the impostor. */
+function cellColour(
+  kind: Kind,
+  u: GpuUniforms,
+  word: Node<'uint'>,
+  cell: Node<'uint'>,
+  texel: Node<'vec4'>
+): Node<'vec3'> {
+  const [unknown, soma, axon, basal, apical] = u.sectionColours;
+  return flat(
+    typed<'vec3'>(
+      colourOf({
+        cell,
+        highlighted: u.highlighted,
+        highlight: u.highlight,
+        texel,
+        type_: kind === 'soma' ? uint(1) : word.shiftRight(uint(TYPE_SHIFT)),
+        unknown,
+        soma,
+        axon,
+        basal,
+        apical,
+      })
+    )
+  );
+}
+
+/** A lit cell of `kind` in its spike's colour, linear. */
+function spikeLit(kind: Kind, colour: Node<'vec3'>, facing: Node<'float'>, u: GpuUniforms) {
+  const neon = kind === 'soma' ? u.neon.mul(vec2(1, SOMA_LINE)) : u.neon;
+  return typed<'vec3'>(spikeColour({ own: colour, facing, neon, hue: u.spikeHue }));
+}
+
+/** Tone mapped as Studio is on WebGL 2. */
+function toneMapped(colour: Node<'vec3'>): Node<'vec3'> {
+  return typed<'vec3'>(toneMapping(THREE.ACESFilmicToneMapping, float(EXPOSURE), colour));
+}
+
+/** How much of a lit cell shows through what covers it, and through how much, µm: less the deeper it lies. */
+const THROUGH = 0.6;
+const THROUGH_UM = 30;
+/** Nearer the front than this, µm, a lit cell is the front, which the look draws. */
+const FRONT_UM = 0.5;
+
+/** How far a pixel `away` µm from the eye lies behind what the frame drew in front there (`Occlusion.front`), µm. */
+function behindFront(u: GpuUniforms, away: Node<'float'>) {
+  const p = ivec2(screenCoordinate.xy);
+  const cover = u.frontPicture.load(p).a;
+  return { cover, behind: away.sub(surfaceAt(u.frontSurface.load(p), cover).away) };
+}
+
+/**
+ * A lit cell of `kind` drawn over the frame where it lies behind what was drawn in front, by up to `THROUGH_UM`, in its
+ * spike's colour as much as it is lit by `THROUGH`, less the deeper it lies.
+ */
+function throughMaterial(
+  kind: Kind,
+  u: GpuUniforms,
+  inputs: SegmentInputs = fromAttributes()
+): THREE.MeshBasicNodeMaterial {
+  const material = new THREE.MeshBasicNodeMaterial();
+  const { word, cell, texel, spiking, position, surface, viewZ } = impostorOf(
+    kind,
+    u,
+    true,
+    inputs,
+    true
+  );
+  const { cover, behind } = behindFront(u, viewZ.negate());
+  material.positionNode = position;
+  material.maskNode = col(surface, 0)
+    .w.greaterThan(0.5)
+    .and(cover.greaterThanEqual(AO_COVER))
+    .and(behind.greaterThan(FRONT_UM))
+    .and(behind.lessThan(THROUGH_UM));
+  const colour = cellColour(kind, u, word, cell, texel);
+  const mapped = toneMapped(spikeLit(kind, colour, col(surface, 0).z, u));
+  const shown = spiking.mul(THROUGH).mul(behind.div(THROUGH_UM).oneMinus());
+  material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(mapped)), shown);
+  material.transparent = true;
+  material.depthTest = false;
+  material.depthWrite = false;
+  return material;
 }
 
 /**
  * An impostor of `kind` in the look's material, three's standard one under the look's lights: the cell's colour from
- * the cell table where the vertex colour would go, lit by its glow, ringed as it glows on a light background, tone
- * mapped as Studio is on WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`). A tube of a
+ * the cell table where the vertex colour would go, lit by a spike (`spike-light.ts`), tone mapped as Studio is on
+ * WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`). A tube of a
  * culled `arena` is not drawn where it lies behind what was drawn before the tests (`behindOf`): writing its depth, it
  * would be shaded there under what covers it.
  */
@@ -521,31 +629,13 @@ function lookMaterial(
     roughness: studio.roughness,
     metalness: studio.metalness,
   });
-  const { word, cell, texel, glow, position, surface, depth, viewZ } = impostorOf(
+  const { word, cell, texel, spiking, position, surface, depth, viewZ } = impostorOf(
     kind,
     u,
     true,
     inputs
   );
-  const [unknown, soma, axon, basal, apical] = u.sectionColours;
-  const colour = flat(
-    typed<'vec3'>(
-      colourOf({
-        cell,
-        highlighted: u.highlighted,
-        highlight: u.highlight,
-        texel,
-        type_: kind === 'soma' ? uint(1) : word.shiftRight(uint(TYPE_SHIFT)),
-        glow,
-        unknown,
-        soma,
-        axon,
-        basal,
-        apical,
-      })
-    )
-  );
-  const glowing = flat(glow);
+  const colour = cellColour(kind, u, word, cell, texel);
   material.positionNode = position;
   material.colorNode = vec4(colour, 1);
   material.normalNode = col(surface, 0).xyz;
@@ -554,14 +644,14 @@ function lookMaterial(
   );
   const on = col(surface, 0).w.greaterThan(0.5);
   material.maskNode = kind === 'tube' && arena ? on.and(behindOf(arena, viewZ).not()) : on;
-  // Lit where the lights do not reach as well.
-  material.emissiveNode = colour.mul(glowing).mul(0.2);
   if (kind !== 'segment') material.depthNode = depth;
-  const rim = typed<'float'>(rimOf({ edge: col(surface, 1), glow: glowing, rimOn: u.glowRim.w }));
-  const lit = mix(output.rgb, u.glowRim.xyz, rim);
-  const mapped = typed<'vec3'>(toneMapping(THREE.ACESFilmicToneMapping, float(EXPOSURE), lit));
-  material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(mapped)), output.a);
-  material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ);
+  const facing = col(surface, 0).z;
+  const spike = spikeLit(kind, colour, facing, u);
+  let shown = toneMapped(mix(output.rgb, spike, spiking));
+  // Past white, on a screen that shows it.
+  if (u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
+  material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(shown)), output.a);
+  material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ, spiking);
   return material;
 }
 
@@ -614,8 +704,8 @@ const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M)
 ];
 
 /**
- * The impostors' materials on WebGPU: in the look, in their cells' numbers, and in their segments' numbers, the
- * segments in two draws, the flat ones and the tubes.
+ * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
+ * what covers them, the segments in two draws, the flat ones and the tubes.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
   return {
@@ -626,12 +716,16 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
       segment: segments((kind) => idMaterial(kind, u, true)),
       soma: idMaterial('soma', u, true),
     },
+    through: {
+      segment: segments((kind) => throughMaterial(kind, u)),
+      soma: throughMaterial('soma', u),
+    },
   };
 }
 
 /**
  * The segments' materials of an arena whose buffers `arena` binds: in the look and in their cells' numbers, of the
- * segments seen, and to depth, of those kept (`fromArena`).
+ * segments seen, and to depth and lit through what covers them, of those kept (`fromArena`), which the seen are among.
  */
 export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) {
   return {
@@ -640,5 +734,6 @@ export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) 
     ),
     ids: segments((kind) => idMaterial(kind, u, false, fromArena(u, arena, kind, 'seen'))),
     kept: segments((kind) => depthMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
+    through: segments((kind) => throughMaterial(kind, u, fromArena(u, arena, kind, 'kept'))),
   };
 }

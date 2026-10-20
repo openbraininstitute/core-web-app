@@ -2,7 +2,7 @@
 
 import { SettingOutlined } from '@ant-design/icons';
 import { RiPauseFill, RiPlayFill, RiRestartLine } from '@remixicon/react';
-import { Slider } from 'antd';
+import { Slider, Switch } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
@@ -39,10 +39,13 @@ interface TransportBarProps {
   /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
   afterglowInSeconds: number;
   onAfterglowChange: (afterglowInSeconds: number) => void;
+  /** Whether spiking cells give off light. */
+  glow: boolean;
+  onGlowChange: (glow: boolean) => void;
   disabled?: boolean;
 }
 
-/** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
+/** Play / pause, scrubber, playback rate, how long a spike stays lit, and whether it glows. */
 export function TransportBar({
   playing,
   onPlayingChange,
@@ -54,6 +57,8 @@ export function TransportBar({
   onSpeedChange,
   afterglowInSeconds,
   onAfterglowChange,
+  glow,
+  onGlowChange,
   disabled = false,
 }: TransportBarProps) {
   const duration = timeMaxInMs - timeMinInMs;
@@ -151,6 +156,21 @@ export function TransportBar({
             <p className="text-[11px] leading-snug text-gray-500">
               How long a spike stays lit on screen. Measured in real time, so a flash looks the same
               at any playback speed.
+            </p>
+            <div className="mt-2 flex items-center justify-between gap-2 text-xs text-gray-600">
+              <span>Glow</span>
+              <Switch
+                size="small"
+                aria-label="Glow"
+                checked={glow}
+                disabled={disabled}
+                onChange={onGlowChange}
+              />
+            </div>
+            <p className="text-[11px] leading-snug text-gray-500">
+              Spiking cells give off a soft light on a dark background, and a tint of their colour
+              on a light one. Shown with morphologies on WebGPU; turn it off on a slow graphics
+              card.
             </p>
           </div>
         </PopoverContent>

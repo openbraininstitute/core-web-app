@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  DEFAULT_SPIKE_GLOW,
   DEFAULT_SPIKE_SPEED,
 } from '@/features/circuit-viewer/spike-clock';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
@@ -238,10 +239,12 @@ export function CircuitCells({
     playing = false,
     speed = DEFAULT_SPIKE_SPEED,
     afterglowInSeconds = DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+    glow = DEFAULT_SPIKE_GLOW,
   } = spikes ?? {};
   useEffect(() => viewer?.setSpikes(spikeData ?? null), [viewer, spikeData]);
   useEffect(() => viewer?.setSpikeSpeed(speed), [viewer, speed]);
   useEffect(() => viewer?.setSpikeAfterglow(afterglowInSeconds), [viewer, afterglowInSeconds]);
+  useEffect(() => viewer?.setSpikeGlow(glow), [viewer, glow]);
   useEffect(() => {
     if (timeInMs !== undefined) viewer?.seekSpikes(timeInMs);
   }, [viewer, timeInMs]);

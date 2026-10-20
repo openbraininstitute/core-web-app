@@ -2,7 +2,7 @@ import chroma from 'chroma-js';
 import { isEqual } from 'es-toolkit';
 import * as THREE from 'three';
 
-import { SpikeClock } from '@/features/circuit-viewer/spike-clock';
+import { DEFAULT_SPIKE_GLOW, SpikeClock } from '@/features/circuit-viewer/spike-clock';
 import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { boxCorners } from '@/features/viewer-3d/engine/framing';
@@ -18,7 +18,7 @@ import {
   sectionNumbered,
   somaSectionOf,
 } from '../sections';
-import { CellTable } from './cell-table';
+import { CellTable, somaTexture } from './cell-table';
 import { DETAIL_PIXELS, pixelSpan } from './detail';
 import { DetailStream } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
@@ -33,6 +33,7 @@ import {
   setSectionColours,
 } from './impostors';
 import { GLOW_SWELL, somaCloudUniforms } from './soma-cloud';
+import { NEON, SPIKE_HUE } from './spike-light';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -120,6 +121,8 @@ export interface ArenaDrawing {
   segment: THREE.Material[];
   ids: THREE.Material[];
   quads: THREE.InstancedBufferGeometry[];
+  /** Lit through what covers them (`CircuitMaterials.through`), on quads of their own. */
+  through?: { materials: THREE.Material[]; quads: THREE.InstancedBufferGeometry[] };
 }
 
 /**
@@ -224,6 +227,8 @@ export interface CircuitMaterials {
   cloud: THREE.Material;
   ids: { segment: THREE.Material[]; soma: THREE.Material; cloud: THREE.Material };
   spots: { segment: THREE.Material[]; soma: THREE.Material };
+  /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
+  through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
@@ -253,6 +258,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private chunks = new THREE.Group();
   /** The segments, the morphologies' somas and the cloud: what the cells are. */
   private surfaces = new THREE.Group();
+  /** The lit cells' quads drawn through what covers them, which the tier draws over the frame. */
+  protected readonly throughs = new THREE.Scene();
   protected uniforms = impostorUniforms();
   /**
    * The morphologies, their segments' and their somas' quads, the same quads for the pick, and for the pick of a section
@@ -340,7 +347,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     zoom: number;
     target: THREE.Vector3;
   } | null = null;
-  private spiking = new SpikeClock();
+  protected readonly spiking = new SpikeClock();
+  private glowAsked = DEFAULT_SPIKE_GLOW;
+  /** Whether the background is dark. */
+  protected dark = false;
   private spikeTimeListeners = new Set<(timeInMs: number) => void>();
   private spikesPlayingListeners = new Set<(playing: boolean) => void>();
 
@@ -372,6 +382,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.background = look.background[theme][0];
       this.uniforms.uHighlight.value.set(FOREGROUND[theme]);
       this.uniforms.uGlowRim.value.w = dark ? 0 : 1;
+      this.uniforms.uNeon.value.fromArray(NEON[theme]);
+      const hue = SPIKE_HUE[theme];
+      const { r, g, b } = new THREE.Color(hue ?? 0);
+      this.uniforms.uSpikeHue.value.set(r, g, b, hue ? 1 : 0);
+      this.dark = dark;
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
     };
     // A gesture takes the view: the nudge's zoom would stop its glide every frame.
@@ -438,11 +453,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       return;
     }
     this.clear();
-    const { ids, spots, ...drawn } = this.materials;
+    const { ids, spots, through, ...drawn } = this.materials;
     const materials = new Set([
       ...Object.values(drawn).flat(),
       ...Object.values(ids).flat(),
       ...Object.values(spots).flat(),
+      ...Object.values(through ?? {}).flat(),
       this.look.material,
     ]);
     for (const material of materials) material.dispose();
@@ -523,6 +539,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const segmentMeshes = onSegments(drawing?.segment ?? materials.segment);
     this.chunks.add(...segmentMeshes);
 
+    this.uniforms.uSomas.value = somaTexture(data.somas);
     const { spheres, charts, cells } = placedSomas(data.somas, data.chart?.somas);
     const somas = quadGeometry(cells.length);
     somas
@@ -536,8 +553,19 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const segmentIds = onSegments(drawing?.ids ?? materials.ids.segment);
     const ids = [...segmentIds, quads(somas, materials.ids.soma)];
     this.ids.add(...ids);
+    let throughSegments: Quads[] = [];
+    let through: Quads[] = [];
+    if (materials.through) {
+      const arenaThrough = drawing?.through;
+      throughSegments = arenaThrough
+        ? arenaThrough.materials.map((material, k) => quads(arenaThrough.quads[k], material))
+        : onSegments(materials.through.segment);
+      through = [...throughSegments, quads(somas, materials.through.soma)];
+      this.throughs.add(...through);
+    }
     // Drawn as the boxes come in.
-    if (stream) for (const mesh of [...segmentMeshes, ...segmentIds]) mesh.visible = true;
+    if (stream)
+      for (const mesh of [...segmentMeshes, ...segmentIds, ...throughSegments]) mesh.visible = true;
     // Sections and offsets are known only of morphologies read whole.
     const spots = data.trees
       ? [...onSegments(materials.spots.segment), quads(somas, materials.spots.soma)]
@@ -545,7 +573,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (spots.length > 0) this.spots.add(...spots);
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
-    this.layer = { data, meshes: [...segmentMeshes, somaMesh], ids, spots, detailed };
+    this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
     this.compileIds();
 
     if (under) {
@@ -1088,9 +1116,21 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.showGlow();
   }
 
+  setSpikeGlow(on: boolean): void {
+    if (on === this.glowAsked) return;
+    this.glowAsked = on;
+    this.invalidate();
+  }
+
+  /** Whether spiking cells give off light (`setSpikeGlow`): asked, while there are spikes, round morphologies. */
+  protected get glowing(): boolean {
+    return this.glowAsked && this.spiking.replaying && this.drawsMorphologies;
+  }
+
   setSpikeAfterglow(seconds: number): void {
     if (seconds === this.spiking.afterglowInSeconds) return;
     this.spiking.afterglowInSeconds = seconds;
+    this.uniforms.uAfterglow.value = seconds;
     this.showGlow();
   }
 
@@ -1347,6 +1387,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.letGo(...meshes, ...(this.layer?.ids ?? []), ...(this.layer?.spots ?? []));
     this.layer?.detailed?.stream.stop();
     this.layer = null;
+    this.uniforms.uSomas.value?.dispose();
+    this.uniforms.uSomas.value = null;
     this.culled = null;
     this.uniforms.uShift.value.set(0, 0, 0);
     // They sit on the morphologies.

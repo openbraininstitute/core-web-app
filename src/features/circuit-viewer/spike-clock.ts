@@ -4,6 +4,8 @@ import type { CircuitSpikes } from './types';
 export const DEFAULT_SPIKE_SPEED = 100;
 /** The seconds a spike takes to fade to 1/e. */
 export const DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS = 0.25;
+/** Whether spiking cells glow where the renderer can. */
+export const DEFAULT_SPIKE_GLOW = true;
 
 /** A spike older than this many fading times no longer glows. */
 const GLOW_CUTOFF_IN_TAUS = 5;
@@ -32,6 +34,11 @@ export class SpikeClock {
   /** The cells that glow at the moment, an array of its own each time it changes. */
   get lit(): readonly number[] {
     return this._lit;
+  }
+
+  /** Whether there are spikes to replay. */
+  get replaying(): boolean {
+    return this.spikes !== null;
   }
 
   private get timeMinInMs(): number {

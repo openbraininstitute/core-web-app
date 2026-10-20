@@ -18,6 +18,8 @@ import type { Lost } from '../create-view';
 
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
+/** How much brighter than white a fully lit cell is drawn besides, on a screen that shows past it. */
+const OVER_WHITE = 0.6;
 
 /** A pack's arena on the GPU: its materials, what they bind, and the culling of its segments. */
 interface GpuArena extends ReturnType<typeof arenaMaterials> {
@@ -44,6 +46,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   private occlusion: Occlusion | null = null;
   /** False where the occlusion could not be made, which is not tried again. */
   private occluding = true;
+  /** False where the occlusion could not be made to glow, which is not tried again: it is made without. */
+  private glowWorks = true;
   /** Made at the first pack and kept, its programs with it: each pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
   /** The kept segments' quads, drawn to depth before the culling's tests. */
@@ -61,7 +65,14 @@ export class CircuitMorphologyGPU extends CircuitView {
     onLost: (how: Lost) => void,
     signal?: AbortSignal
   ): Promise<CircuitMorphologyGPU> {
-    const renderer = new THREE.WebGPURenderer({ device, antialias: true, alpha: true });
+    const overWhite = window.matchMedia('(dynamic-range: high)').matches;
+    const renderer = new THREE.WebGPURenderer({
+      device,
+      antialias: true,
+      alpha: true,
+      // Past white, where the screen shows it.
+      ...(overWhite && { outputType: THREE.HalfFloatType }),
+    });
     await renderer.init();
     try {
       if (signal?.aborted) throw signal.reason;
@@ -70,14 +81,15 @@ export class CircuitMorphologyGPU extends CircuitView {
       renderer.dispose();
       throw e;
     }
-    return new CircuitMorphologyGPU(host, renderer, device, onLost);
+    return new CircuitMorphologyGPU(host, renderer, device, onLost, overWhite);
   }
 
   private constructor(
     host: HTMLElement,
     renderer: THREE.WebGPURenderer,
     device: GPUDevice,
-    onLost: (how: Lost) => void
+    onLost: (how: Lost) => void,
+    overWhite: boolean
   ) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
     renderer.setClearColor(0x000000, 0);
@@ -102,6 +114,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         synapses: this.synapseUniforms,
         markers: this.markerUniforms,
       });
+      if (overWhite) this.gpu.overWhite = OVER_WHITE;
       const cloud = somaCloudMaterials(this.gpu);
       const impostors = impostorMaterials(this.gpu, this.look);
       this.materials = {
@@ -110,6 +123,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         cloud: cloud.cloud,
         ids: { ...impostors.ids, cloud: cloud.id },
         spots: impostors.spots,
+        through: impostors.through,
         ...dotMaterials(this.gpu, this.pixelRatio),
       };
       this.start();
@@ -148,8 +162,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   protected override disposeStage(): void {
     this.idTarget?.dispose();
     this.occlusion?.dispose();
-    const { segment = [], ids = [], kept = [] } = this.arena ?? {};
-    for (const material of [...segment, ...ids, ...kept]) material.dispose();
+    const { segment = [], ids = [], kept = [], through = [] } = this.arena ?? {};
+    for (const material of [...segment, ...ids, ...kept, ...through]) material.dispose();
     this.arena?.culling.dispose();
     this.renderer.dispose();
     this.device.destroy();
@@ -174,20 +188,27 @@ export class CircuitMorphologyGPU extends CircuitView {
 
   /**
    * Still, morphologies are drawn with ambient occlusion; moving, and the somas always, without: the cloud of somas
-   * writes no surface for it. Its targets are the size of the canvas, so it is let go of with the morphologies.
+   * writes no surface for it. Its targets are the size of the canvas, so it is let go of with the morphologies. Where
+   * spiking cells glow, morphologies are drawn through its target moving too while any is lit, and it is made again as
+   * whether they glow changes.
    */
   protected override draw(moving: boolean): void {
     this.gpu.sync();
     this.cull(this.restOf(moving));
-    if (!this.drawsMorphologies) this.dropOcclusion();
-    const occlusion = moving || !this.drawsMorphologies ? null : this.occlusionNow();
+    const glowing = this.glowing && this.glowWorks;
+    if (!this.drawsMorphologies || this.occlusion?.glows !== glowing) this.dropOcclusion();
+    const through = this.drawsMorphologies && (!moving || (glowing && this.spiking.lit.length > 0));
+    const occlusion = through ? this.occlusionNow(glowing) : null;
     if (occlusion) {
       try {
-        occlusion.render(this.occlusionReach());
+        occlusion.dark.value = this.dark ? 1 : 0;
+        this.throughs.visible = this.spiking.lit.length > 0;
+        if (moving) occlusion.renderMoving();
+        else occlusion.render(this.occlusionReach());
         return;
       } catch (e) {
         // Its passes are put together at its first frame, where three's parts it reads may be missing.
-        this.withoutOcclusion(e);
+        this.withoutOcclusion(e, glowing && !occlusion.occlusionFailed);
       }
     }
     this.renderer.render(this.scene, this.camera);
@@ -213,7 +234,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         ),
       };
     }
-    const { storage, segment, ids, kept, culling } = this.arena;
+    const { storage, segment, ids, kept, through, culling } = this.arena;
     this.keep([
       new THREE.Mesh(culling.quads(DRAWS.keptFlat), kept[0]),
       new THREE.Mesh(culling.quads(DRAWS.keptTubes), kept[1]),
@@ -231,6 +252,10 @@ export class CircuitMorphologyGPU extends CircuitView {
       segment,
       ids,
       quads: [culling.quads(DRAWS.seenFlat), culling.quads(DRAWS.seenTubes)],
+      through: {
+        materials: through,
+        quads: [culling.quads(DRAWS.keptFlat), culling.quads(DRAWS.keptTubes)],
+      },
     };
   }
 
@@ -274,29 +299,41 @@ export class CircuitMorphologyGPU extends CircuitView {
     culling.drawAll(end);
   }
 
-  private occlusionNow(): Occlusion | null {
+  private occlusionNow(glows: boolean): Occlusion | null {
     if (!this.occlusion && this.occluding) {
       try {
-        this.occlusion = new Occlusion(this.renderer, this.scene, this.camera);
+        this.occlusion = new Occlusion(
+          this.renderer,
+          this.scene,
+          this.camera,
+          glows,
+          this.throughs
+        );
+        this.gpu.showFront(this.occlusion.front);
       } catch (e) {
-        this.withoutOcclusion(e);
+        this.withoutOcclusion(e, glows);
       }
     }
     return this.occlusion;
   }
 
-  /** The occlusion off for good after `e`, and the renderer drawing to the canvas again. */
-  private withoutOcclusion(e: unknown): void {
+  /**
+   * After `e`, the glow off for good where the occlusion glowed, else the occlusion, and the renderer drawing to the
+   * canvas again. An occlusion that fails again without the glow goes the next frame.
+   */
+  private withoutOcclusion(e: unknown, glows: boolean): void {
     this.dropOcclusion();
-    this.occluding = false;
+    if (glows) this.glowWorks = false;
+    else this.occluding = false;
     this.renderer.setRenderTarget(null);
     this.renderer.setMRT(null);
-    logError('Drawn without ambient occlusion', e);
+    logError(glows ? 'Drawn without the spike glow' : 'Drawn without ambient occlusion', e);
   }
 
   private dropOcclusion(): void {
     this.occlusion?.dispose();
     this.occlusion = null;
+    this.gpu.showFront(null);
   }
 
   /** How far the occlusion reaches, µm: `AO_RADIUS_CSS` on screen, at the orbit's target in perspective. */

@@ -12,9 +12,11 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
+import { DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS } from '@/features/circuit-viewer/spike-clock';
 import { addShaderHook } from '@/features/viewer-3d/engine/looks';
 
 import { BY_SECTION, ROW_BITS } from './cell-table';
+import { NEON, PULSE_FRONT_GLSL, SOMA_LINE, SPIKE_LIGHT_GLSL } from './spike-light';
 
 import type { SectionColors } from '../types';
 
@@ -23,6 +25,13 @@ export interface ImpostorUniforms {
   /** The cell table's texture, and its glow beside it. */
   uCells: { value: THREE.Texture | null };
   uGlow: { value: THREE.Texture | null };
+  /** Each cell's soma, laid out as the cell table (`somaTexture`). */
+  uSomas: { value: THREE.Texture | null };
+  /** The seconds a spike takes to fade to 1/e, and how a spike lights a cell on the background (`NEON`). */
+  uAfterglow: { value: number };
+  uNeon: { value: THREE.Vector2 };
+  /** The colour a lit cell takes, linear, and in w how much of it (`SPIKE_HUE`). */
+  uSpikeHue: { value: THREE.Vector4 };
   /** The viewport that is drawn into, in device pixels: where it starts, x and y, then its width and height. */
   uViewport: { value: THREE.Vector4 };
   /** Added to every position: where the data's origin is in the view's. */
@@ -33,8 +42,8 @@ export interface ImpostorUniforms {
   uHighlighted: { value: number };
   uHighlight: { value: THREE.Color };
   /**
-   * The colour a glowing cell is ringed in, and in w how much: on a light background, where a cell lit near white would
-   * read as fading out, and not on a dark one, where the ring would hide a thin one.
+   * The colour a glowing soma of the somas view is ringed in, and in w how much: on a light background, where a soma lit
+   * near white would read as fading out, and not on a dark one, where the ring would hide a small one.
    */
   uGlowRim: { value: THREE.Vector4 };
   /** The colours of a cell drawn in its sections' colours, by SWC's numbers: unknown, soma, axon, basal, apical. */
@@ -76,6 +85,10 @@ export function impostorUniforms(): ImpostorUniforms {
   return {
     uCells: { value: null },
     uGlow: { value: null },
+    uSomas: { value: null },
+    uAfterglow: { value: DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS },
+    uNeon: { value: new THREE.Vector2(...NEON.light) },
+    uSpikeHue: { value: new THREE.Vector4() },
     uViewport: { value: new THREE.Vector4(0, 0, 1, 1) },
     uShift: { value: new THREE.Vector3() },
     uMix: { value: 0 },
@@ -156,6 +169,7 @@ float pixelUm( float z ) {
 
 const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
+uniform highp sampler2D uSomas;
 uniform vec4 uViewport;
 uniform vec3 uShift;
 uniform float uMix;
@@ -184,8 +198,9 @@ vec3 viewToWorld( vec3 v ) {
 
 /**
  * What a kind adds to each shader: `impostorCorner`, a corner of its quad in view space, false where it is not drawn,
- * no thinner than `least` device pixels, and `impostorNormal`, the normal under the pixel in view space, and in `edge`
- * how far the pixel is from the impostor's edge and its radius, both in device pixels.
+ * no thinner than `least` device pixels, `somaDistance`, how far the corner's end is from its cell's soma in µm, and
+ * `impostorNormal`, the normal under the pixel in view space, and in `edge` how far the pixel is from the impostor's
+ * edge and its radius, both in device pixels.
  */
 interface Kind {
   vertex: string;
@@ -255,6 +270,12 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	P = lifted( vec3( end.xy + outward * wide, end.z ), atB ? rb : ra );
 	return true;
 }
+
+// The real ends', not the dendrogram's. A cell with no place for its soma is lit as one with its soma under it.
+float somaDistance( vec3 corner ) {
+	vec4 soma = texelFetch( uSomas, cellXY( impostorCell() ), 0 );
+	return soma.w > 0.5 ? distance( ( corner.x > 0.0 ? aB : aA ).xyz, soma.xyz ) : 0.0;
+}
 `,
   fragment: /* glsl */ `
 flat in vec2 vSegmentA;
@@ -316,6 +337,10 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	vSomaPoint = P;
 	return true;
 }
+
+float somaDistance( vec3 corner ) {
+	return 0.0;
+}
 `,
   fragment: /* glsl */ `
 uniform mat4 projectionMatrix;
@@ -344,14 +369,16 @@ vec3 impostorNormal( out vec2 edge ) {
 `,
 };
 
-// A spike lights a cell as it does a soma of the somas view: brighter, nearer a warm white, shining, and ringed on a
-// light background.
+// A spike lights a cell from inside (`spike-light.ts`).
 const LOOK_VERTEX = /* glsl */ `
 uniform uint uHighlighted;
 uniform vec3 uHighlight;
 uniform highp sampler2D uGlow;
 uniform vec3 uSectionColours[ 5 ];
+uniform float uAfterglow;
 out float vGlow;
+out float vPulse;
+${PULSE_FRONT_GLSL}
 
 // The kind's.
 float sectionType();
@@ -369,22 +396,17 @@ float cellGlow() {
 	return cell == uHighlighted ? 0.0 : texelFetch( uGlow, cellXY( cell ), 0 ).r;
 }
 
-vec3 cellColour( vec3 own, float glow ) {
-	if ( impostorCell() == uHighlighted ) return uHighlight;
-	if ( glow == 0.0 ) return own;
-	return pow( glowing( pow( own, vec3( 1.0 / 2.2 ) ), glow ), vec3( 2.2 ) );
+vec3 cellColour( vec3 own ) {
+	return impostorCell() == uHighlighted ? uHighlight : own;
 }
 `;
 
 const LOOK_FRAGMENT = /* glsl */ `
-uniform vec4 uGlowRim;
+uniform vec2 uNeon;
+uniform vec4 uSpikeHue;
 in float vGlow;
-
-// A tenth of the radius in from the edge, a pixel at the least, as the somas view rings a soma.
-float glowRim( vec2 edge ) {
-	float width = max( 0.1 * edge.y, 1.0 );
-	return vGlow * uGlowRim.a * ( 1.0 - smoothstep( width - 0.5, width + 0.5, edge.x ) );
-}
+in float vPulse;
+${SPIKE_LIGHT_GLSL}
 `;
 
 /** `id` the number the impostor is drawn in. */
@@ -418,6 +440,11 @@ void main() {
 const KINDS = { segment: SEGMENT, soma: SOMA };
 type KindName = keyof typeof KINDS;
 
+const NEON_OF: Record<KindName, string> = {
+  segment: 'uNeon',
+  soma: `uNeon * vec2( 1.0, ${SOMA_LINE.toFixed(6)} )`,
+};
+
 /** Keep `uniforms.uViewport` at what `material` is drawn into. */
 export function followViewport(
   material: THREE.Material,
@@ -432,7 +459,7 @@ export function followViewport(
 
 /**
  * Draw `material`, one of three's own lit materials with `vertexColors`, as impostors of `kind`. It reads the cell's
- * colour from the cell table where the vertex colour would go, lit by its glow, and keeps `uniforms.uViewport` at what
+ * colour from the cell table where the vertex colour would go, lit by a spike, and keeps `uniforms.uViewport` at what
  * it is drawn into.
  */
 export function impostor<T extends THREE.Material>(
@@ -452,7 +479,7 @@ export function impostor<T extends THREE.Material>(
       .replace(
         '#include <color_vertex>',
         'vec4 cell = cellTexel();\n\tvGlow = cellGlow();' +
-          '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ), vGlow ), 1.0 );\n\t#endif'
+          '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ) ), 1.0 );\n\t#endif'
       )
       // The vertex normal is never shaded: the fragment shader finds its own. Glowing in full, a cell drawn at the
       // least width is drawn at twice it, to be seen.
@@ -460,6 +487,7 @@ export function impostor<T extends THREE.Material>(
         '#include <beginnormal_vertex>',
         'vec3 cornerView;' +
           '\n\tbool cornerOn = impostorCorner( position, cell.a, MIN_RADIUS * ( 1.0 + vGlow ), cornerView );' +
+          '\n\tvPulse = vGlow > 0.0 ? pulseFront( somaDistance( position ), vGlow, uAfterglow ) : 0.0;' +
           '\n\tvec3 objectNormal = vec3( 0.0, 0.0, 1.0 );'
       )
       // Not drawn, its four corners are one point.
@@ -474,14 +502,10 @@ export function impostor<T extends THREE.Material>(
         '#include <normal_fragment_begin>\n\tvec2 impostorEdge;' +
           '\n\tnormal = impostorNormal( impostorEdge );\n\tnonPerturbedNormal = normal;'
       )
-      // Lit where the lights do not reach as well.
-      .replace(
-        '#include <emissivemap_fragment>',
-        '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += 0.2 * vGlow * diffuseColor.rgb;'
-      )
       .replace(
         '#include <opaque_fragment>',
-        'outgoingLight = mix( outgoingLight, uGlowRim.rgb, glowRim( impostorEdge ) );' +
+        'float spiking = spikeLight( vPulse, vGlow );' +
+          `\n\toutgoingLight = mix( outgoingLight, spikeColour( vColor.rgb, normal.z, ${NEON_OF[kind]}, uSpikeHue ), spiking );` +
           '\n\t#include <opaque_fragment>'
       );
   });

@@ -11,6 +11,7 @@ import {
   TYPE_SHIFT,
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { BLOCK, roomFor } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
+import { NEON } from '@/features/circuit-viewer/morphologies/engine/spike-light';
 import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
@@ -899,7 +900,7 @@ describe("the circuit morphology viewer's spike replay", () => {
     expect(frames(inner)).toBe(0);
   });
 
-  it('rings a glowing cell on a light background, in the somas view’s ring colour, and not on a dark one', () => {
+  it('rings a glowing soma of the somas view on a light background, in its ring colour, and not on a dark one', () => {
     const { viewer, inner } = make();
     const rim = inner.uniforms.uGlowRim.value;
     expect(rim.w).toBe(1);
@@ -910,6 +911,49 @@ describe("the circuit morphology viewer's spike replay", () => {
     expect(frames(inner)).toBe(1);
     viewer.setDark(false);
     expect(rim.w).toBe(1);
+  });
+
+  it('lights a spiking cell less brightly on a light background, fading as the afterglow says', () => {
+    const { viewer, inner } = make();
+    const neon = inner.uniforms.uNeon.value;
+    expect(neon.toArray()).toEqual(NEON.light);
+    viewer.setDark(true);
+    expect(neon.toArray()).toEqual(NEON.dark);
+    viewer.setDark(false);
+    expect(neon.toArray()).toEqual(NEON.light);
+    expect(inner.uniforms.uAfterglow.value).toBe(0.25);
+    viewer.setSpikeAfterglow(0.5);
+    expect(inner.uniforms.uAfterglow.value).toBe(0.5);
+  });
+
+  it("holds each cell's soma for its morphology's light to run out from, and lets go of it with them", () => {
+    const { viewer, inner } = make();
+    const data = circuit();
+    viewer.setData(data);
+    const somas = inner.uniforms.uSomas.value as THREE.DataTexture;
+    expect(somas.type).toBe(THREE.FloatType);
+    expect([...(somas.image.data as Float32Array).subarray(0, 4)]).toEqual([
+      ...data.somas.subarray(0, 3),
+      1,
+    ]);
+    const dispose = vi.spyOn(somas, 'dispose');
+    viewer.setData(null);
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(inner.uniforms.uSomas.value).toBeNull();
+  });
+
+  it('glows round morphologies while there are spikes, unless told not to', () => {
+    const { viewer } = make();
+    const glowing = () => (viewer as unknown as { glowing: boolean }).glowing;
+    viewer.setSpikes(SPIKES);
+    expect(glowing()).toBe(false);
+    viewer.setData(circuit());
+    expect(glowing()).toBe(true);
+    viewer.setSpikeGlow(false);
+    expect(glowing()).toBe(false);
+    viewer.setSpikeGlow(true);
+    viewer.setSpikes(null);
+    expect(glowing()).toBe(false);
   });
 
   it('lights the cells of data that comes after the spikes', () => {

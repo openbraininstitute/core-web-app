@@ -71,6 +71,7 @@ const h = vi.hoisted(() => {
     setSpikesPlaying = vi.fn();
     setSpikeSpeed = vi.fn();
     setSpikeAfterglow = vi.fn();
+    setSpikeGlow = vi.fn();
     spikeTimeListeners = new Set<(timeInMs: number) => void>();
     spikesPlayingListeners = new Set<(playing: boolean) => void>();
     setDetailRules = vi.fn();
@@ -648,13 +649,14 @@ describe('CircuitCells', () => {
     expect(viewer.pick).not.toHaveBeenCalled();
   });
 
-  it("replays no spikes where it is given none, at the somas view's speed and afterglow", () => {
+  it("replays no spikes where it is given none, at the somas view's speed and afterglow, glowing", () => {
     const { viewer } = view();
     expect(viewer.setSpikes).toHaveBeenCalledExactlyOnceWith(null);
     expect(viewer.setSpikesPlaying).toHaveBeenCalledExactlyOnceWith(false);
     expect(viewer.seekSpikes).not.toHaveBeenCalled();
     expect(viewer.setSpikeSpeed).toHaveBeenCalledExactlyOnceWith(100);
     expect(viewer.setSpikeAfterglow).toHaveBeenCalledExactlyOnceWith(0.25);
+    expect(viewer.setSpikeGlow).toHaveBeenCalledExactlyOnceWith(true);
   });
 
   it('hands the engine the spikes and the transport, and seeks only to a moment it is given', () => {
@@ -664,11 +666,12 @@ describe('CircuitCells', () => {
       timeMinInMs: 0,
       timeMaxInMs: 10,
     };
-    const transport = { data, playing: false, speed: 50, afterglowInSeconds: 0.5 };
+    const transport = { data, playing: false, speed: 50, afterglowInSeconds: 0.5, glow: false };
     const { viewer, update } = view({ spikes: transport });
     expect(viewer.setSpikes).toHaveBeenCalledExactlyOnceWith(data);
     expect(viewer.setSpikeSpeed).toHaveBeenCalledExactlyOnceWith(50);
     expect(viewer.setSpikeAfterglow).toHaveBeenCalledExactlyOnceWith(0.5);
+    expect(viewer.setSpikeGlow).toHaveBeenCalledExactlyOnceWith(false);
     expect(viewer.seekSpikes).not.toHaveBeenCalled();
     // The spikes first, which start the replay again, then where it is to be.
     expect(viewer.setSpikes.mock.invocationCallOrder[0]).toBeLessThan(

@@ -313,6 +313,11 @@ export interface CircuitMorphologyView extends ViewControls {
   setSpikeSpeed(speed: number): void;
   /** The seconds a spike takes to fade to 1/e. */
   setSpikeAfterglow(seconds: number): void;
+  /**
+   * Whether spiking cells give off light while there are spikes: a glow round them on a dark background, a veil of
+   * their colour on a light one, and shown through what covers them a little. Drawn round morphologies on WebGPU only.
+   */
+  setSpikeGlow(on: boolean): void;
   /** Told the replay's moment whenever it moves, a frame at a time while it plays. */
   onSpikeTime(listener: (timeInMs: number) => void): () => void;
   /** Told when the replay plays or stops, the end of the spikes included. */

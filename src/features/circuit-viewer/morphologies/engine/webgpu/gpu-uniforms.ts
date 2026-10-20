@@ -8,8 +8,18 @@ import type { ImpostorUniforms } from '../impostors';
 import type { SomaCloudUniforms } from '../soma-cloud';
 
 /** A texel of `format`, for a texture node to bind while there is no cell table. */
-function empty(format: THREE.PixelFormat, channels: number): THREE.DataTexture {
-  const blank = new THREE.DataTexture(new Uint8Array(channels), 1, 1, format);
+function empty(
+  format: THREE.PixelFormat,
+  channels: number,
+  type: THREE.TextureDataType = THREE.UnsignedByteType
+): THREE.DataTexture {
+  const data =
+    type === THREE.FloatType
+      ? new Float32Array(channels)
+      : type === THREE.HalfFloatType
+        ? new Uint16Array(channels)
+        : new Uint8Array(channels);
+  const blank = new THREE.DataTexture(data, 1, 1, format, type);
   blank.needsUpdate = true;
   return blank;
 }
@@ -18,6 +28,8 @@ const NO_CELLS = empty(THREE.RGBAFormat, 4);
 NO_CELLS.colorSpace = THREE.SRGBColorSpace;
 const NO_GLOW = empty(THREE.RedFormat, 1);
 const NO_SHADE = empty(THREE.RGFormat, 2);
+const NO_SOMAS = empty(THREE.RGBAFormat, 4, THREE.FloatType);
+const NO_FRONT = empty(THREE.RGBAFormat, 4, THREE.HalfFloatType);
 
 /**
  * How wide on screen a segment is drawn as the tube itself, round in depth and meeting the next in a round joint, in
@@ -58,6 +70,21 @@ export class GpuUniforms {
   readonly cells = texture(NO_CELLS);
   readonly glow = texture(NO_GLOW);
   readonly shade = texture(NO_SHADE);
+  readonly somas = texture(NO_SOMAS);
+  readonly afterglow = uniform(0);
+  readonly neon = uniform(new THREE.Vector2());
+  readonly spikeHue = uniform(new THREE.Vector4());
+  /** How much brighter than white a fully lit cell is drawn besides, on a screen that shows past it; 0 on others. */
+  overWhite = 0;
+  /** The frame's picture and surfaces as the occlusion drew them (`Occlusion.front`): what is in front, where. */
+  readonly frontPicture = texture(NO_FRONT);
+  readonly frontSurface = texture(NO_FRONT);
+
+  /** What the frame drew in front (`Occlusion.front`), or none. */
+  showFront(front: { picture: THREE.Texture; surface: THREE.Texture } | null): void {
+    this.frontPicture.value = front?.picture ?? NO_FRONT;
+    this.frontSurface.value = front?.surface ?? NO_FRONT;
+  }
   readonly highlighted = uniform(NO_CELL, 'uint');
   readonly highlight = uniform(new THREE.Color());
   readonly glowRim = uniform(new THREE.Vector4());
@@ -88,6 +115,10 @@ export class GpuUniforms {
     this.cells.value = i.uCells.value ?? NO_CELLS;
     this.glow.value = i.uGlow.value ?? NO_GLOW;
     this.shade.value = c.uShade.value ?? NO_SHADE;
+    this.somas.value = i.uSomas.value ?? NO_SOMAS;
+    this.afterglow.value = i.uAfterglow.value;
+    this.neon.value.copy(i.uNeon.value);
+    this.spikeHue.value.copy(i.uSpikeHue.value);
     this.highlighted.value = i.uHighlighted.value;
     this.highlight.value.copy(i.uHighlight.value);
     this.glowRim.value.copy(i.uGlowRim.value);

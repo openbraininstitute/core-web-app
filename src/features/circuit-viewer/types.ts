@@ -31,4 +31,6 @@ export interface ISpikeReplayBinding {
   speed?: number;
   /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
   afterglowInSeconds?: number;
+  /** Whether spiking cells give off light, where the viewer can draw it. */
+  glow?: boolean;
 }

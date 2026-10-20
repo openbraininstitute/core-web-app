@@ -80,7 +80,7 @@ describe('impostors on the Studio look', () => {
     const { vertexShader } = compile(material);
     expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
     expect(vertexShader).toContain('return texelFetch( uCells, cellXY( impostorCell() ), 0 );');
-    expect(vertexShader).toContain('vColor = vec4( cellColour( ownColour( cell ), vGlow ), 1.0 );');
+    expect(vertexShader).toContain('vColor = vec4( cellColour( ownColour( cell ) ), 1.0 );');
   });
 
   it("draws a cell a step short of opaque in its sections' colours, by each segment's type, the soma in the soma's", () => {
@@ -125,50 +125,52 @@ describe('impostors on the Studio look', () => {
     expect(own.uHighlighted.value).toBe(NO_CELL);
     const shader = compile(impostor(studio(), 'soma', own));
     expect(shader.vertexShader).toContain(
-      'if ( impostorCell() == uHighlighted ) return uHighlight;'
+      'return impostorCell() == uHighlighted ? uHighlight : own;'
     );
     expect(shader.vertexShader).toContain('return cell == uHighlighted ? 0.0 :');
     expect(shader.uniforms.uHighlighted).toBe(own.uHighlighted);
     expect(shader.uniforms.uHighlight).toBe(own.uHighlight);
   });
 
-  it.each(KINDS)("lights the $kind by its cell's glow, shaped and from its own texel", ({
+  it.each(
+    KINDS
+  )("lights the $kind by its cell's glow, shaped, after the lights, its own colour unlit", ({
     kind,
   }) => {
     const own = impostorUniforms();
     expect(own.uGlow.value).toBeNull();
     const { vertexShader, fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
-    expect(read.uGlow).toBe(own.uGlow);
+    for (const name of ['uGlow', 'uSomas', 'uAfterglow', 'uNeon', 'uSpikeHue'] as const) {
+      expect(read[name], name).toBe(own[name]);
+    }
     // Shaped already, by the cell table.
     expect(vertexShader).toContain('texelFetch( uGlow, cellXY( cell ), 0 ).r;');
-    // Brightened, and a third of the way to a warm white, in sRGB; as it is where it does not glow.
-    expect(vertexShader).toContain('if ( glow == 0.0 ) return own;');
     expect(vertexShader).toContain(
-      'mix( min( colour * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 )'
+      'vPulse = vGlow > 0.0 ? pulseFront( somaDistance( position ), vGlow, uAfterglow ) : 0.0;'
     );
-    expect(vertexShader).toContain(
-      'return pow( glowing( pow( own, vec3( 1.0 / 2.2 ) ), glow ), vec3( 2.2 ) );'
-    );
-    expect(fragmentShader).toContain('in float vGlow;');
+    expect(fragmentShader).toContain('float spikeLight( float x, float glow ) {');
     expect(fragmentShader).toContain(
-      '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance += 0.2 * vGlow * diffuseColor.rgb;'
-    );
-  });
-
-  it.each(KINDS)('rings the glowing $kind after the lights, as far in as its edge is found', ({
-    kind,
-  }) => {
-    const own = impostorUniforms();
-    const { fragmentShader, uniforms: read } = compile(impostor(studio(), kind, own));
-    expect(read.uGlowRim).toBe(own.uGlowRim);
-    expect(own.uGlowRim.value.w).toBe(1);
-    expect(fragmentShader).toContain('edge = vec2( ');
-    expect(fragmentShader).toContain('float width = max( 0.1 * edge.y, 1.0 );');
-    expect(fragmentShader).toContain(
-      'outgoingLight = mix( outgoingLight, uGlowRim.rgb, glowRim( impostorEdge ) );' +
+      'float spiking = spikeLight( vPulse, vGlow );' +
+        `\n\toutgoingLight = mix( outgoingLight, spikeColour( vColor.rgb, normal.z, ${kind === 'soma' ? 'uNeon * vec2( 1.0, 0.350000 )' : 'uNeon'}, uSpikeHue ), spiking );` +
         '\n\t#include <opaque_fragment>'
     );
+    expect(fragmentShader).not.toContain('uGlowRim');
     expect(redeclared(fragmentShader)).toEqual([]);
+  });
+
+  it('reads the time since a spike back from the glow the cell table keeps, a vertex at a time', () => {
+    const { vertexShader, fragmentShader } = compile(impostor(studio(), 'segment', uniforms));
+    expect(vertexShader).toContain('return d + 1000.000000 * afterglow * log( glow );');
+    expect(fragmentShader).toContain('return glow * max( band, 0.250000 );');
+  });
+
+  it("measures a segment's way from its soma at its real ends, a soma's as none", () => {
+    const segment = compile(impostor(studio(), 'segment', uniforms)).vertexShader;
+    expect(segment).toContain(
+      'return soma.w > 0.5 ? distance( ( corner.x > 0.0 ? aB : aA ).xyz, soma.xyz ) : 0.0;'
+    );
+    const soma = compile(impostor(studio(), 'soma', uniforms)).vertexShader;
+    expect(soma).toContain('float somaDistance( vec3 corner ) {\n\treturn 0.0;\n}');
   });
 
   it("measures a segment's edge across it alone, so that the rings of two meet without a seam", () => {
