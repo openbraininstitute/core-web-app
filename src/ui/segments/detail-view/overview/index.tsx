@@ -67,6 +67,7 @@ import {
 import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
+import EModelOverview from '@/ui/segments/detail-view/overview/e-model';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
@@ -75,6 +76,7 @@ import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/conf
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-channel-recording';
@@ -711,6 +713,11 @@ export default async function Overview({
     />
   ) : null;
 
+  const emodelFilePreviewSection =
+    extendedType === ExtendedEntitiesTypeDict.Emodel ? (
+      <EModelOverview emodel={entity as IEModel} ctx={context} variant={fieldVariant} />
+    ) : null;
+
   if (isSimulationPage) {
     return (
       <>
@@ -735,6 +742,7 @@ export default async function Overview({
       {synaptomeSection}
       {emCellMeshSection}
       {morphometricsSection}
+      {emodelFilePreviewSection}
     </>
   );
 }
