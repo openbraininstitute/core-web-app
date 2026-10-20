@@ -13,9 +13,10 @@ import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activit
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
 const retrieveEntity = vi.hoisted(() => vi.fn());
+const invalidateEntityListings = vi.hoisted(() => vi.fn());
 
 vi.mock('@/entity-configuration/domain/requests', () => ({ retrieveEntity }));
-vi.mock('@/features/data-grid/listing-queries', () => ({ invalidateEntityListings: vi.fn() }));
+vi.mock('@/features/data-grid/listing-queries', () => ({ invalidateEntityListings }));
 vi.mock('@/features/scan-config/components/shared/io-layout', () => ({ IoLayout: () => null }));
 
 const MEMODEL_ID = 'memodel-1';
@@ -54,9 +55,12 @@ function setup() {
 }
 
 describe('build InOutFiles', () => {
-  beforeEach(() => retrieveEntity.mockReset());
+  beforeEach(() => {
+    retrieveEntity.mockReset();
+    invalidateEntityListings.mockReset();
+  });
 
-  it('refetches the built ME-model and its preview once its run ends, and reselects it', async () => {
+  it('refetches the built ME-model, its preview and listings once its run ends, and reselects it', async () => {
     retrieveEntity.mockResolvedValueOnce(memodel('created'));
     retrieveEntity.mockResolvedValueOnce(memodel('done'));
     const { client, onSelect, view } = setup();
@@ -75,15 +79,18 @@ describe('build InOutFiles', () => {
       expect(onSelect.mock.lastCall?.[0].entity).toMatchObject({ validation_status: 'done' })
     );
     expect(client.getQueryState(previewKey)?.isInvalidated).toBe(true);
+    expect(invalidateEntityListings).toHaveBeenCalledWith(client, EntityTypeDict.Memodel);
   });
 
   it('fetches a finished build once', async () => {
     retrieveEntity.mockResolvedValue(memodel('done'));
-    const { onSelect, view } = setup();
+    const { client, onSelect, view } = setup();
 
     render(view(ActivityStatus.DONE));
 
     await waitFor(() => expect(onSelect).toHaveBeenCalled());
     expect(retrieveEntity).toHaveBeenCalledTimes(1);
+    // the run may have ended while nothing was mounted
+    expect(invalidateEntityListings).toHaveBeenCalledWith(client, EntityTypeDict.Memodel);
   });
 });

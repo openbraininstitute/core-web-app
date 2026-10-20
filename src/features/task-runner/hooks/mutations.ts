@@ -113,8 +113,10 @@ export function useTaskLaunchMutation({
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
       const launcher = LaunchersByTaskType[obiOneTaskType];
-      const viaLaunchSystem = !!launcher?.launchSystemFlag && !!flags[launcher.launchSystemFlag];
-      const launch = (!viaLaunchSystem && launcher?.launch) || runTask;
+      const launch =
+        launcher && !(launcher.launchSystemFlag && flags[launcher.launchSystemFlag])
+          ? launcher.launch
+          : runTask;
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {

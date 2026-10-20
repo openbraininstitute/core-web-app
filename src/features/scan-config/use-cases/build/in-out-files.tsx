@@ -298,7 +298,6 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      // an ME-model build links its model before it is calibrated and validated
       showOutput={outputAvailable || logStreamFiles.showOutput || builtOutputFiles.length > 0}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}

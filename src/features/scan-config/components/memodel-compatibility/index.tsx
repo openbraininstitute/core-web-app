@@ -17,8 +17,10 @@ import type { Config } from '@/features/scan-config/types';
 
 const INPUTS_BLOCK = 'initialize';
 
-const BLOCKING_MESSAGE: Partial<Record<CompatibilityState['kind'], string>> = {
+const BLOCKING_MESSAGE: Record<CompatibilityState['kind'], string | undefined> = {
+  idle: messages.CheckingCompatibility,
   checking: messages.CheckingCompatibility,
+  compatible: undefined,
   incompatible: messages.IncompatibleModels,
   check_failed: messages.CompatibilityBlockedTooltip,
 };
@@ -57,11 +59,7 @@ export function MEModelCompatibilityCheck({ config }: { config: Config }) {
   });
 
   const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck);
-  // `idle` can briefly occur with a complete selection, so only `compatible` lets it through
-  const blockingMessage =
-    selectionComplete && compatibility.kind !== 'compatible'
-      ? (BLOCKING_MESSAGE[compatibility.kind] ?? messages.CheckingCompatibility)
-      : undefined;
+  const blockingMessage = selectionComplete ? BLOCKING_MESSAGE[compatibility.kind] : undefined;
 
   useFieldError(`${INPUTS_BLOCK}.compatibility`, blockingMessage);
 
