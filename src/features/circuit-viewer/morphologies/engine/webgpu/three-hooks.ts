@@ -24,13 +24,17 @@ export function checkHooks(renderer: THREE.WebGPURenderer): void {
   }
 }
 
-/** `attribute` bound as `buffer`, of the page's: three makes no buffer of its own for an attribute that has one. */
-export function shareBuffer(
+/**
+ * `attribute` bound as `buffer`, of the page's: three makes no buffer of its own for an attribute that has one. Three
+ * binds a buffer once for each attribute, so another buffer takes another attribute.
+ */
+export function shareBuffer<A extends THREE.BufferAttribute>(
   renderer: THREE.WebGPURenderer,
-  attribute: THREE.BufferAttribute,
+  attribute: A,
   buffer: GPUBuffer
-): void {
+): A {
   (backendOf(renderer) as Backend).get(attribute).buffer = buffer;
+  return attribute;
 }
 
 /** The GPU texture three made for `texture`; undefined until it has made one. */

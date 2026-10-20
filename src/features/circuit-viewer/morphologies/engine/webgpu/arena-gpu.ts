@@ -1,4 +1,4 @@
-import { texture, uniform } from 'three/tsl';
+import { storage, texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { BLOCK } from '../segment-arena';
@@ -18,6 +18,10 @@ const NOTHING_DRAWN = new THREE.DataTexture(
 );
 NOTHING_DRAWN.needsUpdate = true;
 
+/** Of any length: the arena's buffers are bound in place of the attributes'. */
+const endsAttribute = () => new THREE.StorageBufferAttribute(new Float32Array(4), 4);
+const wordsAttribute = () => new THREE.StorageBufferAttribute(new Uint32Array(4), 1);
+
 /**
  * What an arena's materials read and how: its segments' ends, two `vec4`s each, their cell-and-type words, and the
  * culling's lists; where the arena ends, how many segments it and each list hold, whether it is culled, through the
@@ -25,9 +29,9 @@ NOTHING_DRAWN.needsUpdate = true;
  */
 export function arenaStorage() {
   return {
-    ends: new THREE.StorageBufferAttribute(new Float32Array(4), 4),
-    words: new THREE.StorageBufferAttribute(new Uint32Array(4), 1),
-    lists: new THREE.StorageBufferAttribute(new Uint32Array(4), 1),
+    ends: storage(endsAttribute(), 'vec4', 0).toReadOnly(),
+    words: storage(wordsAttribute(), 'uint', 0).toReadOnly(),
+    lists: storage(wordsAttribute(), 'uint', 0).toReadOnly(),
     end: uniform(0, 'uint'),
     capacity: uniform(0, 'uint'),
     listed: uniform(0, 'uint'),
@@ -89,9 +93,9 @@ export function arenaOnGpu(
       if (!gone) outOfMemory();
     }
   );
-  shareBuffer(renderer, storage.ends, buffers.ends);
-  shareBuffer(renderer, storage.words, buffers.words);
-  shareBuffer(renderer, storage.lists, buffers.lists);
+  storage.ends.value = shareBuffer(renderer, endsAttribute(), buffers.ends);
+  storage.words.value = shareBuffer(renderer, wordsAttribute(), buffers.words);
+  storage.lists.value = shareBuffer(renderer, wordsAttribute(), buffers.lists);
   storage.capacity.value = capacity;
   told(buffers);
   return {

@@ -13,7 +13,6 @@ import {
   screenCoordinate,
   select,
   sRGBTransferOETF,
-  storage,
   toneMapping,
   uint,
   varying,
@@ -383,22 +382,10 @@ function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube'
     kind === 'tube'
       ? first.add(capacity).sub(uint(1)).sub(instanceIndex)
       : first.add(instanceIndex);
-  // Of any length: the arena's buffers are bound in place of the attributes'.
-  const i = select(
-    listed,
-    storage(arena.lists, 'uint', 0).toReadOnly().element(at),
-    instanceIndex
-  ).toVar();
-  const endsOf = storage(arena.ends, 'vec4', 0).toReadOnly();
-  const endA = typed<'vec4'>(endsOf.element(i.mul(uint(2))));
-  const endB = typed<'vec4'>(endsOf.element(i.mul(uint(2)).add(uint(1))));
-  const word = typed<'uint'>(
-    select(
-      i.lessThan(end),
-      storage(arena.words, 'uint', 0).toReadOnly().element(i),
-      uint(HOLE_WORD)
-    )
-  );
+  const i = select(listed, arena.lists.element(at), instanceIndex).toVar();
+  const endA = typed<'vec4'>(arena.ends.element(i.mul(uint(2))));
+  const endB = typed<'vec4'>(arena.ends.element(i.mul(uint(2)).add(uint(1))));
+  const word = typed<'uint'>(select(i.lessThan(end), arena.words.element(i), uint(HOLE_WORD)));
   const round =
     list === 'kept' ? u.tubeFrom : select(listed, float(kind === 'tube' ? 0 : 1e30), u.tubeFrom);
   return { word, endA, endB, chartA: endA, chartB: endB, round } satisfies SegmentInputs;
