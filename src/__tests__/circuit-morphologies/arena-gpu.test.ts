@@ -55,7 +55,14 @@ function fakeDevice(outOfMemory = false) {
 }
 
 /** A renderer whose backend holds something of each object, as three r186's does. */
-const fakeRenderer = () => ({ backend: { get: () => ({}) } }) as unknown as GPU.WebGPURenderer;
+function fakeRenderer() {
+  const held = new WeakMap<object, { buffer?: unknown }>();
+  const get = (object: object) => {
+    if (!held.has(object)) held.set(object, {});
+    return held.get(object) as { buffer?: unknown };
+  };
+  return { renderer: { backend: { get } } as unknown as GPU.WebGPURenderer, get };
+}
 
 function segmentsOf(box: number, count: number): MorphologySegments {
   return {
@@ -71,6 +78,7 @@ function segmentsOf(box: number, count: number): MorphologySegments {
  */
 function arenaOnFake(capacity: number, outOfMemory = false) {
   const { device, made } = fakeDevice(outOfMemory);
+  const { renderer, get } = fakeRenderer();
   const storage = arenaStorage();
   const told: (ArenaBuffers | null)[] = [];
   const memory = vi.fn();
@@ -84,18 +92,11 @@ function arenaOnFake(capacity: number, outOfMemory = false) {
     capacity,
     (ends, words, blocks) => {
       arrays = { ends, words, blocks };
-      return arenaOnGpu(
-        fakeRenderer(),
-        device,
-        storage,
-        arrays,
-        (buffers) => told.push(buffers),
-        memory
-      );
+      return arenaOnGpu(renderer, device, storage, arrays, (buffers) => told.push(buffers), memory);
     }
   );
   const bytesOf = (label: string) => (made.find((b) => b.label === label) as Bytes).bytes;
-  return { arena, arrays, storage, told, made, bytesOf, memory };
+  return { arena, arrays, storage, told, made, bytesOf, memory, backendOf: get };
 }
 
 const asBytes = (array: Float32Array | Uint32Array, count: number) =>
@@ -121,6 +122,20 @@ describe("an arena on the page's GPU buffers", () => {
     arena.dispose();
     expect(told).toEqual([told[0], null]);
     for (const buffer of made) expect(buffer.destroy).toHaveBeenCalledOnce();
+  });
+
+  it('binds an arena made again through new attributes, which three binds again, on its own buffers', () => {
+    const { arena, storage, made, backendOf } = arenaOnFake(4 * BLOCK);
+    const names = ['ends', 'words', 'lists'] as const;
+    const was = names.map((name) => storage[name].value);
+    arena.dispose();
+    arena.remade(new THREE.InstancedBufferGeometry(), 8 * BLOCK);
+    names.forEach((name, k) => {
+      const attribute = storage[name].value;
+      expect(attribute).not.toBe(was[k]);
+      expect(backendOf(attribute).buffer).toBe(made.findLast((b) => b.label === `arena ${name}`));
+      expect(backendOf(was[k]).buffer).toBe(made.find((b) => b.label === `arena ${name}`));
+    });
   });
 
   it.each([

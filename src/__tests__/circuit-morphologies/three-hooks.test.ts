@@ -53,7 +53,7 @@ describe("three's private parts", () => {
     const backend = { get: backendGet(), device };
     const attribute = new StorageBufferAttribute(new Float32Array(4), 4);
     const buffer = {} as GPUBuffer;
-    shareBuffer(rendererWith(backend), attribute, buffer);
+    expect(shareBuffer(rendererWith(backend), attribute, buffer)).toBe(attribute);
 
     new WebGPUAttributeUtils(backend).createAttribute(attribute, 0);
     new WebGPUBindingUtils(backend).createBindGroup(

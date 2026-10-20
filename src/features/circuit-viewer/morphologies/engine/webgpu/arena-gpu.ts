@@ -1,4 +1,4 @@
-import { storage, texture, uniform } from 'three/tsl';
+import { storage as storageNode, texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { BLOCK } from '../segment-arena';
@@ -29,9 +29,9 @@ const wordsAttribute = () => new THREE.StorageBufferAttribute(new Uint32Array(4)
  */
 export function arenaStorage() {
   return {
-    ends: storage(endsAttribute(), 'vec4', 0).toReadOnly(),
-    words: storage(wordsAttribute(), 'uint', 0).toReadOnly(),
-    lists: storage(wordsAttribute(), 'uint', 0).toReadOnly(),
+    ends: storageNode(endsAttribute(), 'vec4', 0).toReadOnly(),
+    words: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
+    lists: storageNode(wordsAttribute(), 'uint', 0).toReadOnly(),
     end: uniform(0, 'uint'),
     capacity: uniform(0, 'uint'),
     listed: uniform(0, 'uint'),
