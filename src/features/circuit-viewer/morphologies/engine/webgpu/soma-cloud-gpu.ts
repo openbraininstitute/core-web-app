@@ -11,19 +11,34 @@ import * as THREE from 'three/webgpu';
 
 import { GLOW_RIM_COLOR } from '../impostors';
 import { BLUE_RAMP, GLOW_SWELL, LIGHT } from '../soma-cloud';
-import { CELLS, cellGlow, cellId, cellXY, flat, keptUnless, srgbWGSL, typed } from './cells-wgsl';
+import {
+  CELLS,
+  cellGlow,
+  cellId,
+  cellXY,
+  flat,
+  keptUnless,
+  srgbWGSL,
+  typed,
+  VIEW,
+} from './cells-wgsl';
 
 import type { GpuUniforms } from './gpu-uniforms';
 
-/** The quad's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view. */
+/** The pyramid's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view. */
 const cloudCorner = wgslFn(
   /* wgsl */ `
-fn cloudCorner(centre: vec3f, corner: vec2f, offset: vec3f, radius: f32, modelView: mat4x4f, projection: mat4x4f,
+fn cloudCorner(centre: vec3f, corner: vec3f, offset: vec3f, radius: f32, modelView: mat4x4f, projection: mat4x4f,
                texel: vec4f, swell: f32) -> vec4f {
   if (texel.a == 0.0) { return vec4f(2.0, 2.0, 2.0, 1.0); }
   let c = modelView * vec4f(centre - offset, 1.0);
-  return projection * vec4f(c.xy + corner * radius * (1.0 + ${GLOW_SWELL.toFixed(6)} * swell), c.z, 1.0);
-}`
+  let r = radius * (1.0 + ${GLOW_SWELL.toFixed(6)} * swell);
+  var p = vec3f(c.xy + corner.xy * r, c.z);
+  let z = p.z + min(corner.z * r, -0.5 * p.z);
+  if (!isOrthographic(projection)) { p = vec3f(p.xy * (z / p.z), p.z); }
+  return projection * vec4f(p.xy, z, 1.0);
+}`,
+  [VIEW]
 );
 
 /** The cell's colour in sRGB and its glow, as `soma-cloud.ts` takes them. */
@@ -63,8 +78,8 @@ fn cloudColour(coord: vec2f, look: vec4f, alpha: f32, rimOn: f32) -> vec4f {
 }`);
 
 /**
- * The somas of `soma-cloud.ts` on WebGPU: a quad a cell at its position, shaded as a sphere and drawn as it comes out,
- * as on WebGL 2; and the same quads in their cells' numbers.
+ * The somas of `soma-cloud.ts` on WebGPU: a pyramid a cell at its position, shaded as a sphere and drawn as it comes out,
+ * as on WebGL 2; and the same pyramids in their cells' numbers.
  */
 export function somaCloudMaterials(u: GpuUniforms): {
   cloud: THREE.MeshBasicNodeMaterial;
@@ -78,7 +93,7 @@ export function somaCloudMaterials(u: GpuUniforms): {
   );
   const place = {
     centre: attribute('aPosition', 'vec3'),
-    corner: positionGeometry.xy,
+    corner: positionGeometry,
     offset: u.offset,
     radius: u.radius,
     modelView: modelViewMatrix,

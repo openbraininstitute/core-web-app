@@ -32,7 +32,7 @@ import {
   segmentAttributes,
   setSectionColours,
 } from './impostors';
-import { GLOW_SWELL, somaCloudUniforms } from './soma-cloud';
+import { fanGeometry, GLOW_SWELL, somaCloudUniforms } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
@@ -749,7 +749,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!somas) return;
     const cells = Math.floor(somas.positions.length / 3);
     this.makeTable(cells);
-    const geometry = quadGeometry(cells);
+    const geometry = fanGeometry(cells);
     geometry.setAttribute('aPosition', new THREE.InstancedBufferAttribute(somas.positions, 3));
     const mesh = quads(geometry, this.materials.cloud);
     mesh.name = 'somas';

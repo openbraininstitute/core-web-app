@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { impostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import {
+  fanGeometry,
   somaCloudIdMaterial,
   somaCloudMaterial,
   somaCloudUniforms,
@@ -26,20 +27,46 @@ describe('the somas drawn as the somas view drew them', () => {
     expect(ids.uniforms.uRadius).toBe(own.uRadius);
   });
 
-  it("places a quad a cell, by the instance's number, at its position less the view's origin", () => {
+  it("places a pyramid a cell, by the instance's number, at its position less the view's origin", () => {
     for (const { vertexShader } of [cloud, ids]) {
       expect(vertexShader).toContain('return uint( gl_InstanceID );');
       expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
       expect(vertexShader).toContain('modelViewMatrix * vec4( aPosition - uOffset, 1.0 )');
-      // A cell that is not drawn has its quad out of view, and in no pick.
+      // A cell that is not drawn has its pyramid out of view, and in no pick.
       expect(vertexShader).toContain('gl_Position = NOWHERE;');
       expect(redeclared(vertexShader)).toEqual([]);
     }
   });
 
-  it('writes no depth of its own: the quad keeps the depth of the soma’s centre', () => {
-    expect(cloud.fragmentShader).not.toContain('gl_FragDepth');
-    expect(cloud.vertexShader).toContain('centre.z, 1.0 )');
+  it('draws a pyramid a cell, its tip a radius nearer over its centre, and writes no depth of its own', () => {
+    const corners = fanGeometry(5).getAttribute('position');
+    const reach = 1 / Math.cos(Math.PI / 6);
+    expect([corners.getX(0), corners.getY(0), corners.getZ(0)]).toEqual([0, 0, 1]);
+    for (let k = 1; k < corners.count; k++) {
+      expect(Math.hypot(corners.getX(k), corners.getY(k))).toBeCloseTo(reach);
+      expect(corners.getZ(k)).toBe(0);
+    }
+    for (const { vertexShader, fragmentShader } of [cloud, ids]) {
+      expect(vertexShader).toContain('float z = p.z + min( position.z * radius, - 0.5 * p.z );');
+      expect(vertexShader).toContain('if ( ! isOrthographic ) p.xy *= z / p.z;');
+      expect(fragmentShader).not.toContain('gl_FragDepth');
+    }
+  });
+
+  it('turns each pyramid to face the eye, its triangles about its tip', () => {
+    const geometry = fanGeometry(5);
+    const corners = geometry.getAttribute('position');
+    const triangles = geometry.getIndex()?.array ?? [];
+    expect(geometry.instanceCount).toBe(5);
+    expect(triangles).toHaveLength(18);
+    for (let t = 0; t < triangles.length; t += 3) {
+      const [a, b, c] = [triangles[t], triangles[t + 1], triangles[t + 2]];
+      expect(a).toBe(0);
+      const turn =
+        (corners.getX(b) - corners.getX(a)) * (corners.getY(c) - corners.getY(a)) -
+        (corners.getY(b) - corners.getY(a)) * (corners.getX(c) - corners.getX(a));
+      expect(turn).toBeGreaterThan(0);
+    }
   });
 
   it("darkens a cell's colour by up to 55% as it is crowded, and runs one with none of its own along a blue ramp", () => {
@@ -79,7 +106,7 @@ describe('the somas drawn as the somas view drew them', () => {
     );
   });
 
-  it('picks with the same quads in their cells’ numbers, round as they are drawn, unblended', () => {
+  it('picks with the same pyramids in their cells’ numbers, round as they are drawn, unblended', () => {
     expect(ids.blending).toBe(THREE.NoBlending);
     expect(ids.vertexShader).toContain('uint id = cell + 1u;');
     expect(ids.fragmentShader).toContain('if ( dot( vCoord, vCoord ) > 1.0 ) discard;');
