@@ -563,9 +563,15 @@ function toneMapped(colour: Node<'vec3'>): Node<'vec3'> {
   return typed<'vec3'>(toneMapping(THREE.ACESFilmicToneMapping, float(EXPOSURE), colour));
 }
 
-/** How much of a lit cell shows through what covers it, and through how much, µm: less the deeper it lies. */
+/** How much of a lit cell shows through what covers it: less the deeper it lies. */
 const THROUGH = 0.6;
-const THROUGH_UM = 30;
+/**
+ * Through how much, CSS pixels at the orbit's target, and no more than the culling keeps (`KEEP_UM`); and as a line
+ * along its middle this wide, CSS pixels, a soma as a dot this many times as wide: the same on screen at any zoom.
+ */
+export const THROUGH_CSS_PX = 60;
+export const THROUGH_LINE_CSS_PX = 3;
+const THROUGH_DOT = 2;
 /** Nearer the front than this, µm, a lit cell is the front, which the look draws. */
 const FRONT_UM = 0.5;
 
@@ -577,8 +583,8 @@ function behindFront(u: GpuUniforms, away: Node<'float'>) {
 }
 
 /**
- * A lit cell of `kind` drawn over the frame where it lies behind what was drawn in front, by up to `THROUGH_UM`, in its
- * spike's colour as much as it is lit by `THROUGH`, less the deeper it lies.
+ * A lit cell of `kind` drawn over the frame where it lies behind what was drawn in front, by up to `throughUm`, as a
+ * line along its middle, in its spike's colour as much as it is lit by `THROUGH`, less the deeper it lies.
  */
 function throughMaterial(
   kind: Kind,
@@ -594,15 +600,19 @@ function throughMaterial(
     true
   );
   const { cover, behind } = behindFront(u, viewZ.negate());
+  const { x: edge, y: radius } = col(surface, 1);
+  const half = kind === 'soma' ? u.throughHalfPx.mul(THROUGH_DOT) : u.throughHalfPx;
+  const line = radius.sub(edge).sub(half).add(0.5).clamp(0, 1).oneMinus();
   material.positionNode = position;
   material.maskNode = col(surface, 0)
     .w.greaterThan(0.5)
+    .and(line.greaterThan(0))
     .and(cover.greaterThanEqual(AO_COVER))
     .and(behind.greaterThan(FRONT_UM))
-    .and(behind.lessThan(THROUGH_UM));
+    .and(behind.lessThan(u.throughUm));
   const colour = cellColour(kind, u, word, cell, texel);
   const mapped = toneMapped(spikeLit(kind, colour, col(surface, 0).z, u));
-  const shown = spiking.mul(THROUGH).mul(behind.div(THROUGH_UM).oneMinus());
+  const shown = spiking.mul(THROUGH).mul(line).mul(behind.div(u.throughUm).oneMinus());
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(mapped)), shown);
   material.transparent = true;
   material.depthTest = false;

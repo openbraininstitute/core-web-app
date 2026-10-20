@@ -76,6 +76,9 @@ export class GpuUniforms {
   readonly spikeHue = uniform(new THREE.Vector4());
   /** How much brighter than white a fully lit cell is drawn besides, on a screen that shows past it; 0 on others. */
   overWhite = 0;
+  /** How far behind what is in front a lit cell shows through, µm, and half the line it shows as, device pixels. */
+  readonly throughUm = uniform(0);
+  readonly throughHalfPx = uniform(0);
   /** The frame's picture and surfaces as the occlusion drew them (`Occlusion.front`): what is in front, where. */
   readonly frontPicture = texture(NO_FRONT);
   readonly frontSurface = texture(NO_FRONT);

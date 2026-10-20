@@ -7,9 +7,15 @@ import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circui
 import { pixelSpan, SEGMENT_BUDGET } from '../detail';
 import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
 import { Culling, DRAWS } from './culling';
+import { KEEP_UM } from './culling-wgsl';
 import { dotMaterials } from './dots-gpu';
 import { GpuUniforms } from './gpu-uniforms';
-import { arenaMaterials, impostorMaterials } from './impostors-gpu';
+import {
+  arenaMaterials,
+  impostorMaterials,
+  THROUGH_CSS_PX,
+  THROUGH_LINE_CSS_PX,
+} from './impostors-gpu';
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 import { checkHooks, threeLoop } from './three-hooks';
@@ -115,6 +121,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         markers: this.markerUniforms,
       });
       if (overWhite) this.gpu.overWhite = OVER_WHITE;
+      this.gpu.throughHalfPx.value = (THROUGH_LINE_CSS_PX / 2) * this.pixelRatio;
       const cloud = somaCloudMaterials(this.gpu);
       const impostors = impostorMaterials(this.gpu, this.look);
       this.materials = {
@@ -203,8 +210,10 @@ export class CircuitMorphologyGPU extends CircuitView {
       try {
         occlusion.dark.value = this.dark ? 1 : 0;
         this.throughs.visible = this.spiking.lit.length > 0;
+        const umPerPx = this.umPerCssPx();
+        this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);
         if (moving) occlusion.renderMoving();
-        else occlusion.render(this.occlusionReach());
+        else occlusion.render(AO_RADIUS_CSS * umPerPx);
         return;
       } catch (e) {
         // Its passes are put together at its first frame, where three's parts it reads may be missing.
@@ -336,11 +345,11 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.gpu.showFront(null);
   }
 
-  /** How far the occlusion reaches, µm: `AO_RADIUS_CSS` on screen, at the orbit's target in perspective. */
-  private occlusionReach(): number {
+  /** How many µm a CSS pixel spans, at the orbit's target in perspective. */
+  private umPerCssPx(): number {
     const { camera } = this;
     const away = camera instanceof THREE.PerspectiveCamera ? this.controls.getDistance() : 1;
-    return AO_RADIUS_CSS * pixelSpan(camera.projectionMatrix, this.height) * away;
+    return pixelSpan(camera.projectionMatrix, this.height) * away;
   }
 
   protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
