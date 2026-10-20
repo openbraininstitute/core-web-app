@@ -208,7 +208,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     const occlusion = through ? this.occlusionNow(glowing) : null;
     if (occlusion) {
       try {
-        occlusion.dark.value = this.dark ? 1 : 0;
+        occlusion.background.value.set(this.background).convertLinearToSRGB();
         this.throughs.visible = this.spiking.lit.length > 0;
         const umPerPx = this.umPerCssPx();
         this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);

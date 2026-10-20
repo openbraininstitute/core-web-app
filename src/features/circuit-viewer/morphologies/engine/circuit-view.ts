@@ -303,7 +303,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
   private defaultColor = DEFAULT_NEURON_COLOR;
-  private background = CANVAS_LIGHT;
+  protected background = CANVAS_LIGHT;
   /** What the data's positions have taken off: the electrodes come in the circuit's own frame. */
   private centre: Vec3 = [0, 0, 0];
   private electrodeGroups: readonly ElectrodeGroup[] = [];

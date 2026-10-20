@@ -58,14 +58,10 @@ const AO_SAMPLES = 16;
 export const AO_COVER = 0.5;
 /**
  * The glow round a spiking cell: its colour as shown times how lit it is (`spike-light.ts`), blurred by three's bloom
- * this strong and this wide, added on a dark background; on a light one, where light added to white is none, a veil
- * of its colour this thick, never wholly over what is behind.
+ * this strong and this wide, added over the frame and its background.
  */
-const GLOW_STRENGTH = 1.6;
+const GLOW_STRENGTH = 1.4;
 const GLOW_RADIUS = 0.5;
-const VEIL = 0.8;
-const VEIL_MOST = 0.85;
-const VEIL_HUE = 0.8;
 
 /**
  * What a surface writes for the occlusion, besides its colour: its normal's x and y in view space, and how far it is
@@ -92,20 +88,18 @@ export function surfaceAt(resolved: Node<'vec4'>, cover: Node<'float'>) {
 }
 
 /**
- * `under`, a picture as the canvas takes it, its colours times how much of each pixel is covered, with `glow` added on
- * a dark background and veiled by it on a light one.
+ * `under`, a picture as the canvas takes it, its colours times how much of each pixel is covered, over `background`,
+ * as the canvas takes it, with `glow`: added round the cells, past white only on a screen that shows past white; over
+ * them, by what room is left below white, so they keep their detail under it.
  */
-function glowOver(under: Node<'vec4'>, glow: Node<'vec4'>, dark: Node<'float'>): Node<'vec4'> {
-  // Past 1 only on a screen that shows past white.
-  const added = under.rgb.add(glow.rgb);
-  const onDark = vec4(added, max(under.a, max(added.r, max(added.g, added.b))).min(1));
-  const most = max(glow.r, max(glow.g, glow.b));
-  const veil = most.mul(VEIL).min(VEIL_MOST);
-  // A spiking fibre is lit near white: its veil takes the hue of what is left of its own colour.
-  const grey = min(glow.r, min(glow.g, glow.b)).mul(VEIL_HUE);
-  const tint = glow.rgb.sub(grey).div(max(most.sub(grey), 1e-4));
-  const onLight = vec4(tint.mul(veil), veil).add(under.mul(veil.oneMinus()));
-  return mix(onLight, onDark, dark);
+function glowOver(
+  under: Node<'vec4'>,
+  glow: Node<'vec4'>,
+  background: Node<'color'>
+): Node<'vec4'> {
+  const picture = under.rgb.add(background.mul(under.a.oneMinus()));
+  const room = picture.oneMinus().clamp(0, 1).sub(1).mul(under.a).add(1);
+  return vec4(picture.add(glow.rgb.mul(room)), 1);
 }
 
 /** `over`, drawn on transparent black, over `under`, both as the canvas takes them. */
@@ -288,8 +282,8 @@ class SurfaceGTAONode extends GTAONode {
  * draws the scene into the same target and leaves the occlusion out.
  */
 export class Occlusion {
-  /** Whether the background is dark, 1, or light, 0. */
-  readonly dark = uniform(0);
+  /** The background as the canvas takes it, which the glow is added over. */
+  readonly background = uniform(new THREE.Color());
   private pipeline: THREE.RenderPipeline;
   private moving: THREE.RenderPipeline | null = null;
   private occlusion: SurfaceGTAONode;
@@ -398,9 +392,9 @@ export class Occlusion {
     throughPass.setMRT(mrt({ output }).setClearColor('output', 0x000000, 0));
     const over = throughPass.getTextureNode('output');
     this.passes.push(glow, throughPass);
-    this.pipeline.outputNode = drawnOver(glowOver(under, glow, this.dark), over);
+    this.pipeline.outputNode = drawnOver(glowOver(under, glow, this.background), over);
     this.moving = new THREE.RenderPipeline(renderer);
-    this.moving.outputNode = drawnOver(glowOver(picture, glow, this.dark), over);
+    this.moving.outputNode = drawnOver(glowOver(picture, glow, this.background), over);
   }
 
   /** Whether three's occlusion failed, rather than what glows. */

@@ -229,13 +229,13 @@ describe('the circuit morphology viewer', () => {
 
   it("has the circuit viewer's flat background of the theme in place of Studio's gradient", () => {
     const { viewer, host } = make();
-    const white = 'linear-gradient(rgb(255, 255, 255), rgb(255, 255, 255))';
+    const light = 'linear-gradient(rgb(228, 231, 237), rgb(228, 231, 237))';
     const black = 'linear-gradient(rgb(0, 0, 0), rgb(0, 0, 0))';
-    expect(host.style.background).toBe(white);
+    expect(host.style.background).toBe(light);
     viewer.setDark(true);
     expect(host.style.background).toBe(black);
     viewer.setDark(false);
-    expect(host.style.background).toBe(white);
+    expect(host.style.background).toBe(light);
   });
 
   it('takes a snapshot of a frame drawn for it, over the background of the theme', () => {
