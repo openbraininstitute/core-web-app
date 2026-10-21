@@ -146,7 +146,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   interactive?: boolean;
 }) {
   if (!record) return null;
-  const InteractiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
+  const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
   const typePreview = match({ type: record.type })
@@ -444,7 +444,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
             <div
               className={cn('primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5', {
                 'bg-white text-primary-9 secondary-scrollbar': theme === 'light',
-                'flex flex-col': InteractiveViewer,
+                'flex flex-col': interactiveViewer,
               })}
             >
               {record.description && (
@@ -477,12 +477,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   )}
                 </ExpandableText>
               )}
-              {InteractiveViewer ? (
+              {interactiveViewer ? (
                 <div
                   data-testid="mini-detail-interactive-viewer"
-                  className="mt-5 min-h-[320px] flex-1"
+                  className={cn(
+                    'mt-5 min-h-[320px]',
+                    interactiveViewer.sizing === 'fill' ? 'flex-1' : 'flex-[1_0_auto]'
+                  )}
                 >
-                  <InteractiveViewer key={record.id} record={record} />
+                  <interactiveViewer.Viewer key={record.id} record={record} />
                 </div>
               ) : (
                 (preview ?? (

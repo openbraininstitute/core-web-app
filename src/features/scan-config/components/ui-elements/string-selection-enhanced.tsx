@@ -7,6 +7,7 @@ import { useCallback, useId, useMemo, useState } from 'react';
 import 'katex/dist/katex.min.css';
 
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Modal } from '@/ui/molecules/modal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
@@ -35,17 +36,27 @@ function OptionContent({
   content,
   onExpandLatex,
   testId,
+  markdown = false,
 }: {
   content: TOptionContent;
   onExpandLatex?: () => void;
   /** Set only where this content is the chosen value, never in the list. */
   testId?: string;
+  /** Render the description as markdown instead of plain text. */
+  markdown?: boolean;
 }) {
   return (
     // min-w-0 lets a wide formula scroll inside the card instead of spilling past it
     <div className="flex min-w-0 flex-col gap-2" data-testid={testId}>
       <span className="text-primary-8 text-lg font-bold">{content.title}</span>
-      {content.description && <span className="text-sm text-gray-700">{content.description}</span>}
+      {content.description &&
+        (markdown ? (
+          <MarkdownDescription className="text-sm text-gray-700">
+            {content.description}
+          </MarkdownDescription>
+        ) : (
+          <span className="text-sm text-gray-700">{content.description}</span>
+        ))}
       {content.latexHtml && (
         <div className="relative rounded-md border-t border-gray-100 pt-2">
           <div
@@ -77,6 +88,8 @@ export interface IStringSelectionEnhancedProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   paramSchema: TStringSelectionEnhanced;
+  /** Render option descriptions as markdown instead of plain text. */
+  markdown?: boolean;
 }
 
 /**
@@ -96,6 +109,7 @@ export function StringSelectionEnhanced({
   onChange,
   disabled = false,
   paramSchema,
+  markdown = false,
 }: IStringSelectionEnhancedProps) {
   const [open, setOpen] = useState(false);
   const optionsId = useId();
@@ -149,6 +163,7 @@ export function StringSelectionEnhanced({
             {selectedContent ? (
               <OptionContent
                 content={selectedContent}
+                markdown={markdown}
                 testId={value ? scanConfigHeldTestId(value) : undefined}
               />
             ) : (
@@ -202,6 +217,7 @@ export function StringSelectionEnhanced({
                 >
                   <OptionContent
                     content={content}
+                    markdown={markdown}
                     onExpandLatex={
                       content.latexHtml
                         ? () => setExpandedLatexHtml(content.latexHtml ?? null)

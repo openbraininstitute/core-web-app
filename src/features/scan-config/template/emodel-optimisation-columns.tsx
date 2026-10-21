@@ -6,6 +6,7 @@ import { usePreviewRecord } from '@/features/scan-config/bridge/entity-preview';
 import { IonChannelModelsPanel } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-models-panel';
 import {
   assignedModelIds,
+  availableDistributions,
   errorsUnder,
   nonParameterErrors,
   parameterErrors,
@@ -224,6 +225,7 @@ export function EModelOptimisationColumns({ props, state }: Props) {
               onChange={writeValue}
               disabled={editingLocked}
               errors={parametersErrors}
+              availableDistributions={availableDistributions(config)}
             />
           </DrawerColumn>
         )}

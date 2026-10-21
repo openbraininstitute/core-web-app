@@ -10,7 +10,7 @@ export const fieldErrorsAtomFamily = makeSessionAtomWithDefault<Map<string, stri
 const NO_SESSION_KEY = '__no_session__';
 
 /** workflow session id that scopes field errors; shared fallback outside workflow pages */
-function useFieldErrorsSessionKey(): string {
+export function useFieldErrorsSessionKey(): string {
   return useScanConfigWorkflowEditorField()?.workflowSessionId ?? NO_SESSION_KEY;
 }
 

@@ -171,12 +171,16 @@ export function toIonChannelFittingForm(form: TIonChannelFittingFormInput): Conf
 
   const equationKey = (block?: TLegacyEquationBlock) =>
     block?.type ? (LegacyEquationKeys[block.type] ?? block.type) : undefined;
-  const { recordings, ...initialize } = form.initialize ?? {};
+  const { recordings, ion_channel_name, ...initialize } = form.initialize ?? {};
 
   return {
     type: form.type,
     info: form.info,
-    initialize: { ...initialize, recordings: [recordings].flat().filter(Boolean) },
+    initialize: {
+      ...initialize,
+      model_properties: { ion_channel_name },
+      recordings: [recordings].flat().filter(Boolean),
+    },
     model_type: {
       type: 'HodgkinHuxleyIonChannelModel',
       minf_eq: equationKey(form.minf_eq),

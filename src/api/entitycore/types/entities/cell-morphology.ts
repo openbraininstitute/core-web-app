@@ -23,7 +23,7 @@ import type { MeasurementAnnotation } from '@/api/entitycore/types/entities/meas
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   IBrainLocation,
@@ -95,7 +95,7 @@ export type CellMorphologyFilter = Partial<
   EntityDerivationFilter & {
     has_segmented_spines?: boolean;
   };
-interface ICellMorphologyBase extends EntityCoreIdentifiable {
+interface ICellMorphologyBase extends EntityCoreIdentifiableNamed {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
