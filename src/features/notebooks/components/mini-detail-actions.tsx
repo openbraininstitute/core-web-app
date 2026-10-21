@@ -7,7 +7,7 @@ import {
 } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine, RiPlayFill } from '@remixicon/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Modal, Popconfirm } from 'antd';
+import { Dropdown, Modal, Popconfirm } from 'antd';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Link from 'next/link';
 import { type ReactNode, useState } from 'react';
@@ -119,7 +119,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     'description' in record ? (record.description as string | undefined) : undefined;
   const assets = 'assets' in record && record.assets ? (record.assets as IAsset[]) : [];
 
-  const { run, runTargets, runningTarget, running, creditsModal } = useRunNotebook({
+  const { run, runTargets, runningTarget, running, creditsModal, profiles } = useRunNotebook({
     id: record.id,
     assets,
   });
@@ -291,21 +291,60 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         )}
 
         {isTemplate ? (
-          runTargets.map((target) => (
-            <MiniActionIcon
-              key={target.key}
-              label={target.label}
-              testId={`notebook-run-${target.key}-button`}
-              theme={theme}
-              onClick={() => run(target)}
-            >
-              {runningTarget === target.key ? (
-                <LoadingOutlined spin className="text-primary-3" />
-              ) : (
-                <target.Icon className="size-6" />
-              )}
-            </MiniActionIcon>
-          ))
+          runTargets.map((target) =>
+            profiles.length > 0 ? (
+              <Dropdown
+                key={target.key}
+                trigger={['click']}
+                menu={{
+                  items: profiles.map((profile) => ({
+                    key: profile.name,
+                    // Prefer the backend-provided human-readable description,
+                    // then the short display label, falling back to the raw
+                    // profile name if the service hasn't been updated yet.
+                    label: profile.description ?? profile.display_name ?? profile.name,
+                    onClick: () => run(target, profile.name),
+                  })),
+                }}
+              >
+                {/* Clicking opens the profile menu; selecting an item runs that profile.
+                    A plain Button is used (not MiniActionIcon) so antd Dropdown can
+                    attach its click trigger to a real DOM element. */}
+                <Button
+                  rounded
+                  title={target.label}
+                  data-testid={`notebook-run-${target.key}-button`}
+                  className={cn(
+                    'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                    {
+                      'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                    }
+                  )}
+                >
+                  {runningTarget === target.key ? (
+                    <LoadingOutlined spin className="text-primary-3" />
+                  ) : (
+                    <target.Icon className="size-6" />
+                  )}
+                </Button>
+              </Dropdown>
+            ) : (
+              // No profiles available (service unreachable): run the default directly.
+              <MiniActionIcon
+                key={target.key}
+                label={target.label}
+                testId={`notebook-run-${target.key}-button`}
+                theme={theme}
+                onClick={() => run(target)}
+              >
+                {runningTarget === target.key ? (
+                  <LoadingOutlined spin className="text-primary-3" />
+                ) : (
+                  <target.Icon className="size-6" />
+                )}
+              </MiniActionIcon>
+            )
+          )
         ) : (
           <MiniActionIcon
             label="Run"

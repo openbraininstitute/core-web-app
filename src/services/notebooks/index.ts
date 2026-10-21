@@ -7,6 +7,25 @@ export type NotebookStartResponse = {
   url: string;
 };
 
+/** A single selectable session size, as advertised by GET /profiles. */
+export interface NotebookProfile {
+  name: string;
+  /** Friendly short label for the UI (e.g. "S", "M", "L", "XL"). */
+  display_name: string | null;
+  /** Human-readable description for the UI (e.g. "M: 2 CPU, 4 GB RAM"). */
+  description: string | null;
+  requests_cpu: string | null;
+  limits_cpu: string | null;
+  requests_memory: string | null;
+  limits_memory: string | null;
+}
+
+/** Response of GET /profiles: the selectable sizes and the default used when none is sent. */
+export interface NotebookProfilesResponse {
+  default_profile: string;
+  profiles: NotebookProfile[];
+}
+
 export interface NotebookStartInNumberedPodRequest {
   analysis_notebook_template_id: string;
   analysis_notebook_template_filename: string;
@@ -25,6 +44,8 @@ export interface NotebookStartInNumberedPodRequest {
   podNumber: number;
   cloud: string;
   grading?: NotebookGradingLaunch;
+  /** Optional session size profile name (see getNotebookProfiles). Omit for the default size. */
+  profile?: string;
 }
 
 export interface NotebookGradingLaunch {
@@ -46,6 +67,8 @@ export interface EmptyNotebookStartRequest {
     };
   };
   cloud: string;
+  /** Optional session size profile name (see getNotebookProfiles). Omit for the default size. */
+  profile?: string;
 }
 
 /**
@@ -59,6 +82,7 @@ export interface EmptyNotebookStartRequest {
  * @param grading : optional grading-launch context. When set, the notebook service writes the
  *   per-assignment launch file in the spawned pod so the in-pod `obi-notebook` module can
  *   call /params and /grade against grading-service.
+ * @param profile : optional session size profile name (see getNotebookProfiles). Omit for the default size.
  */
 export async function startNotebook(
   id: string,
@@ -67,7 +91,8 @@ export async function startNotebook(
   projectId: string,
   cloud: string,
   podNum?: number,
-  grading?: NotebookGradingLaunch
+  grading?: NotebookGradingLaunch,
+  profile?: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -100,6 +125,7 @@ export async function startNotebook(
     podNumber: podNum === undefined ? 0 : podNum,
     cloud: cloud,
     ...(grading ? { grading } : {}),
+    ...(profile ? { profile } : {}),
   };
 
   res = await authFetch(
@@ -142,15 +168,31 @@ export async function startNotebook(
 }
 
 /**
+ * Fetch the session size profiles the notebook service offers.
+ * Use the returned `name` values as the `profile` argument of startNotebook /
+ * startEmptyNotebook, and `default_profile` to preselect the default option.
+ */
+export async function getNotebookProfiles(): Promise<NotebookProfilesResponse> {
+  const res = await authFetch(`${config.NOTEBOOK_API_URL}/profiles`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  return assertApiResponse(res);
+}
+
+/**
  * Start an empty jupyterhub notebook
  * @param vlabId : ID of the virtual lab
  * @param projectId : ID of the project
  * @param cloud : notebook service accepts 'cell_a', 'aws', 'cell_b', 'azure'
+ * @param profile : optional session size profile name (see getNotebookProfiles). Omit for the default size.
  */
 export async function startEmptyNotebook(
   virtualLabId: string,
   projectId: string,
-  computeCell: string // accepted: aws, azure, cell_a, cell_b as notebook service does conversion
+  computeCell: string, // accepted: aws, azure, cell_a, cell_b as notebook service does conversion
+  profile?: string
 ): Promise<NotebookStartResponse> {
   const session = await getSession();
 
@@ -163,7 +205,7 @@ export async function startEmptyNotebook(
     });
   }
 
-  const request = {
+  const request: EmptyNotebookStartRequest = {
     vlabId: virtualLabId,
     projectId: projectId,
     session: {
@@ -177,6 +219,7 @@ export async function startEmptyNotebook(
       },
     },
     cloud: computeCell,
+    ...(profile ? { profile } : {}),
   };
   const res = await authFetch(`${config.NOTEBOOK_API_URL}/empty/start`, {
     method: 'POST',
