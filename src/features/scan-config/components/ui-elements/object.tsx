@@ -63,11 +63,7 @@ export function ObjectField({
               data-testid={`scan-config-field-${fieldKey}`}
             >
               <div className="mb-1 flex w-full items-center gap-0.5">
-                <label
-                  htmlFor={fieldKey}
-                  className="text-primary-9 text-sm font-medium"
-                  title={fieldSchema.description}
-                >
+                <label htmlFor={fieldKey} className="text-primary-9 text-sm font-medium">
                   {fieldSchema.title}
                 </label>
                 {fieldSchema.units && (
@@ -106,7 +102,7 @@ export function ObjectField({
                   )}
                   arrowClassName="bg-primary-8"
                 >
-                  <MarkdownDescription>{fieldSchema.description}</MarkdownDescription>
+                  <MarkdownDescription dark>{fieldSchema.description}</MarkdownDescription>
                 </TooltipContent>
               </Tooltip>
             </div>

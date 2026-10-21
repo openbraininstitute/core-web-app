@@ -127,7 +127,6 @@ export default function Block({
                       className={cn('text-primary-9 text-base font-semibold uppercase', {
                         'cursor-pointer': isBooleanInput,
                       })}
-                      title={blockElementSchema.description}
                     >
                       {blockElementSchema.title}
                     </label>
@@ -189,9 +188,13 @@ export default function Block({
                       )}
                       arrowClassName="bg-primary-8"
                     >
-                      {k === 'circuit' && entity
-                        ? entity.description
-                        : blockElementSchema.description}
+                      {k === 'circuit' && entity ? (
+                        entity.description
+                      ) : (
+                        <MarkdownDescription dark>
+                          {blockElementSchema.description}
+                        </MarkdownDescription>
+                      )}
                     </TooltipContent>
                   </Tooltip>
 

@@ -16,6 +16,11 @@ import {
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { limitNewPicks } from '@/features/scan-config/workflow/selection-cap';
+import {
+  SelectionCapHint,
+  useSelectionCap,
+} from '@/features/scan-config/workflow/selection-cap-ui';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
@@ -151,25 +156,18 @@ export function ModelIdentifierBrowseWidget({
 
   const activeEntityType = selectedEntityType ?? mergedInputs[0]?.type ?? null;
   const activeInput = mergedInputs.find((input) => input.type === activeEntityType);
-  const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
+  const activeSelectedRows = useMemo(
+    () => (activeEntityType ? (selectionsByType[activeEntityType] ?? []) : []),
+    [activeEntityType, selectionsByType]
+  );
   const selectedCount = countSelectedEntities(selectionsByType);
 
-  // when a cap is set, block picking beyond it at the checkbox level
-  // and hide select-all so it can't overshoot. Already-selected rows stay selectable
-  // so they can be unpicked.
-  const capReached = typeof maxSelections === 'number' && selectedCount >= maxSelections;
-  const isRowSelectable = useCallback(
-    (row: EntityCoreIdentifiableNamed) => {
-      if (typeof maxSelections !== 'number' || !activeEntityType) {
-        return true;
-      }
-      const alreadySelected = (selectionsByType[activeEntityType] ?? []).some(
-        (r) => r.id === row.id
-      );
-      return alreadySelected || selectedCount < maxSelections;
-    },
-    [activeEntityType, maxSelections, selectedCount, selectionsByType]
-  );
+  // when a cap is set, hide select-all so it can't overshoot
+  const { isRowSelectable, confirmDisabled } = useSelectionCap({
+    selectedRows: activeSelectedRows,
+    selectedCount,
+    maxSelections,
+  });
 
   // custom loader = same dataset-scoped query the /new page used (e.g. EM cell morphologies
   // derived from the chosen reconstruction dataset). when present we replace the base-entity
@@ -240,10 +238,21 @@ export function ModelIdentifierBrowseWidget({
           return { [activeEntityType]: rows.slice(-1) };
         }
 
-        return { ...previous, [activeEntityType]: rows };
+        const currentRows = previous[activeEntityType] ?? [];
+        return {
+          ...previous,
+          [activeEntityType]: limitNewPicks({
+            rows,
+            currentRows,
+            room:
+              maxSelections === undefined
+                ? undefined
+                : maxSelections - (countSelectedEntities(previous) - currentRows.length),
+          }),
+        };
       });
     },
-    [activeEntityType, isSingleSelect]
+    [activeEntityType, isSingleSelect, maxSelections]
   );
 
   const handleRemoveEntity = useCallback(
@@ -293,12 +302,11 @@ export function ModelIdentifierBrowseWidget({
           groupName={showGroupName ? groupName : undefined}
           onGroupNameChange={setGroupName}
           disabled={disabled}
-          confirmDisabled={selectedCount === 0}
+          confirmDisabled={confirmDisabled}
           onConfirm={handleConfirm}
           onCancel={onCancel}
           className="h-full"
           maxSelections={maxSelections}
-          capReached={capReached}
         />
       ) : null}
 
@@ -370,13 +378,15 @@ export function ModelIdentifierBrowseWidget({
                   disabled={disabled}
                   showRemove={false}
                 />
+              ) : !isSingleSelect && typeof maxSelections === 'number' ? (
+                <SelectionCapHint
+                  className="min-w-0 truncate"
+                  selectedCount={selectedCount}
+                  maxSelections={maxSelections}
+                />
               ) : (
                 <span className="min-w-0 truncate text-sm text-gray-500">
-                  {isSingleSelect
-                    ? 'Select a row to continue'
-                    : typeof maxSelections === 'number'
-                      ? `${selectedCount} / ${maxSelections} selected (max ${maxSelections} allowed)`
-                      : `${selectedCount} selected`}
+                  {isSingleSelect ? 'Select a row to continue' : `${selectedCount} selected`}
                 </span>
               )}
             </div>
@@ -386,7 +396,7 @@ export function ModelIdentifierBrowseWidget({
               selectedCount={selectedCount}
               showCount={!isSingleSelect}
               disabled={disabled}
-              confirmDisabled={selectedCount === 0}
+              confirmDisabled={confirmDisabled}
               onConfirm={handleConfirm}
               onCancel={onCancel}
             />

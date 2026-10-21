@@ -6,6 +6,11 @@ import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'r
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
+import { limitNewPicks } from '@/features/scan-config/workflow/selection-cap';
+import {
+  SelectionCapHint,
+  useSelectionCap,
+} from '@/features/scan-config/workflow/selection-cap-ui';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -176,6 +181,11 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     () => Object.values(selectionCountsByType).reduce((sum, count) => sum + (count ?? 0), 0),
     [selectionCountsByType]
   );
+
+  const maxSelections =
+    selectionConfig?.selectionMode === WorkflowSchemaSelectionMode.Multiple
+      ? selectionConfig.maxSelections
+      : undefined;
 
   const defaultEntityType = useMemo(() => {
     return (
@@ -361,7 +371,16 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const goBackRef = useLatest(goBack);
   const handleBack = useCallback(() => goBackRef.current(), [goBackRef]);
 
-  const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
+  const activeSelectedRows = useMemo(
+    () => (activeEntityType ? (selectionsByType[activeEntityType] ?? []) : []),
+    [activeEntityType, selectionsByType]
+  );
+
+  const { isRowSelectable, confirmDisabled } = useSelectionCap({
+    selectedRows: activeSelectedRows,
+    selectedCount: totalSelectedCount,
+    maxSelections,
+  });
 
   const handleRowsSelected = useCallback(
     (rows: EntityCoreIdentifiableNamed[]) => {
@@ -381,11 +400,19 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
 
         return {
           ...previous,
-          [activeEntityType]: rows.filter(isEntitySelectableForWorkflow),
+          [activeEntityType]: limitNewPicks({
+            rows: rows.filter(isEntitySelectableForWorkflow),
+            currentRows,
+            room:
+              maxSelections === undefined
+                ? undefined
+                : maxSelections -
+                  (totalSelectedCount - (selectionCountsByType[activeEntityType] ?? 0)),
+          }),
         };
       });
     },
-    [activeEntityType]
+    [activeEntityType, maxSelections, selectionCountsByType, totalSelectedCount]
   );
 
   const shouldRedirectToConfigure =
@@ -569,6 +596,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
             ? {
                 selectedRows: activeSelectedRows,
                 onRowsSelected: handleRowsSelected,
+                ...(maxSelections === undefined ? {} : { isRowSelectable, hideSelectAll: true }),
               }
             : {}),
         }}
@@ -611,10 +639,18 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
               </Button>
             </div>
           )}
+          {maxSelections !== undefined && (
+            <SelectionCapHint
+              testId="workflow-browse-selection-cap"
+              className="self-center"
+              selectedCount={totalSelectedCount}
+              maxSelections={maxSelections}
+            />
+          )}
           <Button
             rounded
             variant="default"
-            disabled={totalSelectedCount === 0}
+            disabled={confirmDisabled}
             className={cn(
               'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
               'disabled:bg-neutral-2 disabled:text-neutral-4!'
