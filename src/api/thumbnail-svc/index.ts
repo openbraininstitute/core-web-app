@@ -13,6 +13,7 @@ function buildAssetUrl(
   options?: {
     dpi?: number;
     target?: 'simulation' | 'stimulus';
+    format?: 'png' | 'webp';
   }
 ) {
   let queryParams = '';
@@ -24,6 +25,7 @@ function buildAssetUrl(
     entity_id: resource.id,
     asset_id: asset?.id,
     target: options?.target,
+    format: options?.format,
   });
 
   queryParams = queryParams ? `?${queryParams}` : '';
@@ -46,9 +48,9 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-  accept: string = 'image/png'
+  accept: string = 'image/webp,image/png'
 ) {
-  const url = buildAssetUrl(resource, { dpi: 400, target });
+  const url = buildAssetUrl(resource, { dpi: 150, target, format: 'webp' });
   const session = await getSession();
 
   const headers: Record<string, string> = {
