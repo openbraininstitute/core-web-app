@@ -107,6 +107,10 @@ function Hosted({
 }: { start: CircuitRepresentation } & Partial<LargeCircuitPreviewProps>) {
   const [representation, setRepresentation] = useState(start);
   const [offered, setOffered] = useState(true);
+  const ask = (next: CircuitRepresentation) => {
+    asked.push(next);
+    setRepresentation(next);
+  };
   return (
     <>
       <button type="button" onClick={() => setRepresentation('morphologies')}>
@@ -126,14 +130,8 @@ function Hosted({
         backgroundColor="#000000"
         signals={{} as never}
         representation={offered ? representation : 'somas'}
-        onRepresentationChange={
-          offered
-            ? (next) => {
-                asked.push(next);
-                setRepresentation(next);
-              }
-            : undefined
-        }
+        onRepresentationChange={offered ? ask : undefined}
+        onMorphologiesStopped={() => (offered ? ask('somas') : undefined)}
         {...props}
       />
     </>
@@ -519,6 +517,47 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(asked).toEqual([]);
     await started(2);
     expect(status()).toBe('Loading morphologies…');
+  });
+
+  it.each([
+    ['OBI-One refuses', { kind: 'refused', reason: 'busy', detail: '' }],
+    ['the load fails', new Error('Download failed (HTTP 500)')],
+  ] as const)('leaves it to the host what to draw where %s', async (_, end) => {
+    const onMorphologiesStopped = vi.fn();
+    render(<Hosted start="morphologies" onMorphologiesStopped={onMorphologiesStopped} />);
+    const load = await started();
+
+    await act(async () => (end instanceof Error ? load.reject(end) : load.resolve(end)));
+
+    expect(onMorphologiesStopped).toHaveBeenCalledOnce();
+    expect(asked).toEqual([]);
+  });
+
+  it('loads them again on another try where the host stayed on the morphologies', async () => {
+    render(<Hosted start="morphologies" onMorphologiesStopped={() => {}} />);
+    const first = await started();
+    await act(async () => first.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(asked).toEqual([]);
+    await started(2);
+    expect(status()).toBe('Loading morphologies…');
+  });
+
+  it('does not tell the host where the rest of the pack does not come in', async () => {
+    const onMorphologiesStopped = vi.fn();
+    render(<Hosted start="morphologies" onMorphologiesStopped={onMorphologiesStopped} />);
+    const load = await started();
+    await act(async () =>
+      load.resolve(loadedOf(data(), false, Promise.reject(new Error('Download cut short'))))
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    );
+
+    expect(onMorphologiesStopped).not.toHaveBeenCalled();
+    expect(screen.getByTestId('morphologies')).toBeInTheDocument();
   });
 
   it('says nothing of a pack cut short once switched back to the somas', async () => {

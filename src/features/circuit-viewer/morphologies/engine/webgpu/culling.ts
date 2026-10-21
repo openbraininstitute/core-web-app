@@ -132,13 +132,15 @@ export class Culling {
   /**
    * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
    * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `end`: where the arena's segments end; `rest`: the rest the frame is drawn still in, -1 for one
-   * drawn moving, which its read tells. False where nothing was tested.
+   * pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
+   * segments end; `rest`: the rest the frame is drawn still in, -1 for one drawn moving, which its read tells. False
+   * where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
     shift: THREE.Vector3,
     tubeFrom: number,
+    hidden: number,
     end: number,
     rest: number
   ): boolean {
@@ -155,7 +157,7 @@ export class Culling {
       camera,
       shift,
       [tubeFrom, LEAST_PX, 0],
-      [blocks, this.storage.capacity.value, 0]
+      [blocks, this.storage.capacity.value, hidden]
     );
     if (!levels) {
       this.fail(new Error('three made no texture of the depth the culling reads'));

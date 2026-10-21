@@ -2,6 +2,7 @@
 import * as THREE from 'three/webgpu';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { HOLE } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 
@@ -41,7 +42,7 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1) => culling.run(camera, shift, 12, 100, rest);
+  const run = (rest = 1) => culling.run(camera, shift, 12, HOLE, 100, rest);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
   const map = async (counts: CullTally, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);

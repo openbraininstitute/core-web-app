@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CANVAS_LIGHT, normalizeCanvasBackground } from './contrast';
 
-import type { ViewerConfig } from './types';
+import type { CircuitRepresentation, ViewerConfig } from './types';
 
 // v2: `colorByProperty` went from `string | null` to a per-population record.
 const STORAGE_PREFIX = 'obi:circuit-viewer-config:v2:';
@@ -62,15 +62,21 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   colorOverrides: {},
 };
 
-export function resolveViewerConfigDefaults(options?: {
+interface ViewerConfigDefaults {
   /** Initial neuron opacity (0–1). Hosts set this; viewer does not infer context. */
   defaultNeuronOpacity?: number;
-}): ViewerConfig {
-  const neuronOpacity = options?.defaultNeuronOpacity ?? DEFAULT_NEURON_OPACITY;
-  if (neuronOpacity === DEFAULT_VIEWER_CONFIG.neuronOpacity) return DEFAULT_VIEWER_CONFIG;
+  /** What the cells are drawn as to begin with, and again on reset. */
+  defaultRepresentation?: CircuitRepresentation;
+  /** Whether the axons are drawn to begin with, and again on reset. */
+  defaultShowAxons?: boolean;
+}
+
+export function resolveViewerConfigDefaults(options: ViewerConfigDefaults = {}): ViewerConfig {
   return {
     ...DEFAULT_VIEWER_CONFIG,
-    neuronOpacity,
+    neuronOpacity: options.defaultNeuronOpacity ?? DEFAULT_VIEWER_CONFIG.neuronOpacity,
+    representation: options.defaultRepresentation ?? DEFAULT_VIEWER_CONFIG.representation,
+    showAxons: options.defaultShowAxons ?? DEFAULT_VIEWER_CONFIG.showAxons,
   };
 }
 
@@ -118,12 +124,17 @@ interface UseViewerConfig {
  */
 export function useViewerConfig(
   circuitId: string,
-  options?: { defaultNeuronOpacity?: number }
+  options?: ViewerConfigDefaults
 ): UseViewerConfig {
-  const defaultNeuronOpacity = options?.defaultNeuronOpacity ?? DEFAULT_NEURON_OPACITY;
+  const { defaultNeuronOpacity, defaultRepresentation, defaultShowAxons } = options ?? {};
   const defaults = useMemo(
-    () => resolveViewerConfigDefaults({ defaultNeuronOpacity }),
-    [defaultNeuronOpacity]
+    () =>
+      resolveViewerConfigDefaults({
+        defaultNeuronOpacity,
+        defaultRepresentation,
+        defaultShowAxons,
+      }),
+    [defaultNeuronOpacity, defaultRepresentation, defaultShowAxons]
   );
   const [config, setConfig] = useState<ViewerConfig>(defaults);
   const [hasSavedConfig, setHasSavedConfig] = useState(false);

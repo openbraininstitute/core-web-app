@@ -81,13 +81,15 @@ const IMPOSTORS = wgsl(IMPOSTORS_WGSL, [VIEW]);
 
 /**
  * A segment's ends in view space, each with its radius, and their radii in pixels and the µm a pixel spans at each; w
- * of the last column 1 where it is drawn.
+ * of the last column 1 where it is drawn: not a hole's, nor of the `hidden` type (`ImpostorUniforms.uHidden`).
  */
 export const SEGMENT_ENDS_WGSL = /* wgsl */ `
-fn segmentEnds(word: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f, chartB: vec4f,
-               morph: f32, shift: vec3f, view: mat4x4f, projection: mat4x4f, vp: vec4f, near: f32) -> mat4x4f {
+fn segmentEnds(word: u32, hidden: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f,
+               chartB: vec4f, morph: f32, shift: vec3f, view: mat4x4f, projection: mat4x4f, vp: vec4f,
+               near: f32) -> mat4x4f {
   let none = mat4x4f(vec4f(0.0), vec4f(0.0), vec4f(0.0), vec4f(0.0));
-  if (shown < 0.5 || (word >> ${TYPE_SHIFT}u) == ${HOLE}u) { return none; }
+  let type_ = word >> ${TYPE_SHIFT}u;
+  if (shown < 0.5 || type_ == ${HOLE}u || type_ == hidden) { return none; }
   let A = mix(endA, chartA, morph);
   let B = mix(endB, chartB, morph);
   var a = (view * vec4f(A.xyz + shift, 1.0)).xyz;
@@ -447,6 +449,7 @@ function impostorOf(
     const ends = typed<'mat4'>(
       segmentEnds({
         word,
+        hidden: u.hidden,
         shown,
         least,
         endA: inputs.endA,

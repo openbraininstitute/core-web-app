@@ -23,8 +23,8 @@ import type { CircuitRepresentation, ColorByProperty, ColorMapping } from './typ
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 interface Options {
-  /** whether this viewer exposes an axons toggle (morphology viewer only) */
-  supportsAxons?: boolean;
+  /** whether the axons are drawn to begin with; hidden when omitted */
+  defaultShowAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
@@ -33,6 +33,8 @@ interface Options {
   drawsSomas?: boolean;
   /** whether the circuit's cells can be drawn as morphologies in place of the soma points */
   supportsMorphologies?: boolean;
+  /** what the cells are drawn as to begin with, where morphologies are offered; somas when omitted */
+  defaultRepresentation?: CircuitRepresentation;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -94,11 +96,12 @@ export interface PopulationsControls {
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
   {
-    supportsAxons,
+    defaultShowAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
     drawsSomas,
     supportsMorphologies,
+    defaultRepresentation,
     defaultNeuronOpacity,
     population,
     subject,
@@ -107,6 +110,8 @@ export function useCircuitColorBy(
   const shown = subject ?? circuit;
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
+    defaultRepresentation,
+    defaultShowAxons,
   });
   // The choice is kept where morphologies stop being offered, and comes back with them.
   const representation: CircuitRepresentation = supportsMorphologies
@@ -115,6 +120,8 @@ export function useCircuitColorBy(
   const morphologies = representation === 'morphologies';
   // The morphologies are drawn opaque, at their own size.
   const somas = !!drawsSomas && !morphologies;
+  // Wherever morphologies are drawn, their axons can be hidden.
+  const axons = !somas;
   const populationName = population?.name;
   const property =
     populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
@@ -220,8 +227,8 @@ export function useCircuitColorBy(
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
         update({ backgroundColor: dark ? CANVAS_DARK : CANVAS_LIGHT }),
-      showAxons: supportsAxons ? config.showAxons : undefined,
-      onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
+      showAxons: axons ? config.showAxons : undefined,
+      onToggleAxons: axons ? (value) => update({ showAxons: value }) : undefined,
       showMorphologies: supportsMorphologies ? morphologies : undefined,
       onToggleMorphologies: supportsMorphologies
         ? (value) => onRepresentationChange(value ? 'morphologies' : 'somas')
@@ -273,7 +280,7 @@ export function useCircuitColorBy(
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       config.showScalebar,
-      supportsAxons,
+      axons,
       supportsElectrodes,
       supportsMorphologyLocations,
       supportsMorphologies,

@@ -48,12 +48,16 @@ export interface ImpostorUniforms {
   uGlowRim: { value: THREE.Vector4 };
   /** The colours of a cell drawn in its sections' colours, by SWC's numbers: unknown, soma, axon, basal, apical. */
   uSectionColours: { value: THREE.Color[] };
+  /** The section type not drawn besides a hole's; `HOLE` for none. */
+  uHidden: { value: number };
 }
 
 /** No cell has this number: the cell table has not that many texels. */
 export const NO_CELL = 0xffffffff;
 /** The section type of a segment that is not drawn: a place in a buffer that no box holds. */
 export const HOLE = 255;
+/** An axon's section type, as SWC numbers it. */
+export const AXON = 2;
 /** A segment's cell and section type share a word: the type in its top byte, the cell below, under 2^24. */
 export const TYPE_SHIFT = 24;
 export const CELL_MASK = (1 << TYPE_SHIFT) - 1;
@@ -96,6 +100,7 @@ export function impostorUniforms(): ImpostorUniforms {
     uHighlight: { value: new THREE.Color(0x000000) },
     uGlowRim: { value: new THREE.Vector4(GLOW_RIM.r, GLOW_RIM.g, GLOW_RIM.b, 1) },
     uSectionColours: { value: Array.from({ length: 5 }, () => new THREE.Color()) },
+    uHidden: { value: HOLE },
   };
 }
 
@@ -194,6 +199,7 @@ uniform highp sampler2D uSomas;
 uniform vec4 uViewport;
 uniform vec3 uShift;
 uniform float uMix;
+uniform uint uHidden;
 in uint aCell;
 
 const float MIN_RADIUS = ${MIN_RADIUS.toFixed(6)};
@@ -245,7 +251,8 @@ float sectionType() {
 
 // corner.x picks the end, corner.y the side.
 bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
-	if ( shown < 0.5 || ( aCell >> ${TYPE_SHIFT}u ) == ${HOLE}u ) return false;
+	uint segmentType = aCell >> ${TYPE_SHIFT}u;
+	if ( shown < 0.5 || segmentType == ${HOLE}u || segmentType == uHidden ) return false;
 	vec4 A = mix( aA, aChartA, uMix );
 	vec4 B = mix( aB, aChartB, uMix );
 	vec3 a = ( viewMatrix * vec4( A.xyz + uShift, 1.0 ) ).xyz;
@@ -544,6 +551,7 @@ export function idMaterial(
       uViewport: uniforms.uViewport,
       uShift: uniforms.uShift,
       uMix: uniforms.uMix,
+      uHidden: uniforms.uHidden,
       ...segments,
     },
     vertexShader: `${SHARED_VERTEX}\n${declared}${vertex}\n${idVertex(segments ? SEGMENT_NUMBERS[kind] : 'impostorCell()')}`,

@@ -35,6 +35,7 @@ describe('the WebGPU tier’s uniforms', () => {
     from.impostors.uMix.value = 0.4;
     from.impostors.uShift.value.set(1, 2, 3);
     from.impostors.uSectionColours.value[2].set(0xff0000);
+    from.impostors.uHidden.value = 2;
     from.cloud.uRadius.value = 12;
     from.cloud.uOpacity.value = 0.5;
     from.segments.uSegments.value = 99;
@@ -48,6 +49,7 @@ describe('the WebGPU tier’s uniforms', () => {
     expect(u.mix.value).toBe(0.4);
     expect(u.shift.value.toArray()).toEqual([1, 2, 3]);
     expect(u.sectionColours[2].value.getHex()).toBe(0xff0000);
+    expect(u.hidden.value).toBe(2);
     expect([u.radius.value, u.opacity.value, u.segments.value]).toEqual([12, 0.5, 99]);
     expect([u.electrodes.radius.value, u.synapses.radius.value, u.markers.minRadius.value]).toEqual(
       [5, 0.5, 6]

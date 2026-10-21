@@ -51,7 +51,7 @@ type TOptions = {
  *
  * A virtual population is drawn as somas even where it names morphologies, which some do. It is an input projection,
  * with no biophysics of its own to show, and it is routinely hundreds of thousands of nodes in a circuit whose
- * biophysical population is a handful. The scale gate does not catch that: `circuitDrawsMorphologies` measures the
+ * biophysical population is a handful. The scale gate does not catch that: `circuitDrawsEachCell` measures the
  * circuit rather than the population.
  */
 export function useSmallCircuitSource({

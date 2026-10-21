@@ -29,8 +29,10 @@ import { DETAIL_PIXELS, pixelSpan } from './detail';
 import { DetailStream } from './detail-stream';
 import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
 import {
+  AXON,
   CELL_MASK,
   cellNearMiddle,
+  HOLE,
   impostorUniforms,
   NO_CELL,
   packCellTypes,
@@ -957,6 +959,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     for (const { pyramids, reach } of this.cloud?.pieces ?? []) {
       (pyramids.geometry.boundingSphere as THREE.Sphere).radius = reach + pad;
     }
+  }
+
+  setAxons(shown: boolean): void {
+    const hidden = shown ? HOLE : AXON;
+    if (this.uniforms.uHidden.value === hidden) return;
+    this.uniforms.uHidden.value = hidden;
+    this.invalidate();
   }
 
   setSomaOpacity(opacity: number): void {

@@ -1,7 +1,7 @@
 import { texture, uniform } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { NO_CELL } from '../impostors';
+import { HOLE, NO_CELL } from '../impostors';
 
 import type { ElectrodeUniforms } from '../electrodes';
 import type { ImpostorUniforms } from '../impostors';
@@ -95,6 +95,7 @@ export class GpuUniforms {
   readonly mix = uniform(0);
   /** By SWC's numbers: unknown, soma, axon, basal, apical. */
   readonly sectionColours = Array.from({ length: 5 }, () => uniform(new THREE.Color()));
+  readonly hidden = uniform(HOLE, 'uint');
   readonly segments = uniform(0, 'uint');
   /** The least radius of a segment drawn as the tube itself, in device pixels. */
   readonly tubeFrom = uniform(TUBE_FROM_PX / 2);
@@ -132,6 +133,7 @@ export class GpuUniforms {
     this.sectionColours.forEach((node, type) => {
       node.value.copy(i.uSectionColours.value[type]);
     });
+    this.hidden.value = i.uHidden.value;
     this.segments.value = this.held.segments.uSegments.value;
     this.offset.value.copy(c.uOffset.value);
     this.radius.value = c.uRadius.value;

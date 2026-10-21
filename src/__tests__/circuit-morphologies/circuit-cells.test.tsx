@@ -53,6 +53,7 @@ const h = vi.hoisted(() => {
     setSynapses = vi.fn();
     nudge = vi.fn();
     setDendrogram = vi.fn();
+    setAxons = vi.fn();
     setLocationMarkers = vi.fn();
     setLocationMarkerRadius = vi.fn();
     markerAt = vi.fn((_x: number, _y: number) => null);
@@ -396,6 +397,15 @@ describe('CircuitCells', () => {
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(false);
     update({ dendrogram: true });
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
+  });
+
+  it('draws the axons unless told not to, and again when told', () => {
+    const { viewer, update } = view();
+    expect(viewer.setAxons).toHaveBeenLastCalledWith(true);
+    update({ axons: false });
+    expect(viewer.setAxons).toHaveBeenLastCalledWith(false);
+    update({ axons: true });
+    expect(viewer.setAxons).toHaveBeenLastCalledWith(true);
   });
 
   it('tells whether morphologies in view are left out, whenever the engine tells what it draws', () => {

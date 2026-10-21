@@ -425,6 +425,25 @@ describe('the circuit morphology viewer', () => {
     expect(frames(inner)).toBe(1);
   });
 
+  it('leaves the axons out where told, drawn and picked alike, and draws them again', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const { uHidden } = inner.uniforms;
+    expect(uHidden.value).toBe(HOLE);
+    expect(inner.materials.ids.segment[0].uniforms.uHidden).toBe(uHidden);
+
+    frames(inner);
+    viewer.setAxons(false);
+    expect(uHidden.value).toBe(2);
+    expect(frames(inner)).toBe(1);
+    viewer.setAxons(false);
+    expect(frames(inner)).toBe(0);
+
+    viewer.setAxons(true);
+    expect(uHidden.value).toBe(HOLE);
+    expect(frames(inner)).toBe(1);
+  });
+
   it('highlights no cell of the data that comes next, whose cells are others', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());

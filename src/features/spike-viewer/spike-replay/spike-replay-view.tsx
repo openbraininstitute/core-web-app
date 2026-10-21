@@ -14,7 +14,7 @@ import {
   DEFAULT_SPIKE_GLOW,
   DEFAULT_SPIKE_SPEED,
 } from '@/features/circuit-viewer/spike-clock';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
@@ -104,6 +104,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
+  const drawsEachCell = useCircuitDrawsEachCell();
   const {
     config: circuitConfig,
     isLoading: configLoading,
@@ -348,7 +349,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               {sceneMounted && (
                 <CircuitScene
                   {...subject}
-                  largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+                  largeCircuit={circuit !== undefined && !drawsEachCell(circuit.scale)}
                   active={showScene}
                   features={SCENE_FEATURES}
                   // Only a name the config backs with cells. A name the scene

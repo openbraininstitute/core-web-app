@@ -60,6 +60,8 @@ export interface CircuitCellsProps {
   crowding?: boolean;
   /** Morph the morphologies whose dendrograms were charted into those. */
   dendrogram?: boolean;
+  /** Draw the axons' segments of the morphologies. */
+  axons?: boolean;
   /** As the somas view takes them: a palette and each cell's column of it. */
   cellColors: CellColors;
   /** What a morphology with no colour of its own is drawn in; such a soma runs along the somas view's ramp. */
@@ -129,6 +131,7 @@ export function CircuitCells({
   follow = false,
   crowding = true,
   dendrogram = false,
+  axons = true,
   cellColors,
   defaultColor,
   cellHover = false,
@@ -221,6 +224,7 @@ export function CircuitCells({
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
   useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
   useEffect(() => viewer?.setDendrogram(dendrogram), [viewer, dendrogram]);
+  useEffect(() => viewer?.setAxons(axons), [viewer, axons]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
   const timeChanged = useLatest(spikes?.onTimeChange);

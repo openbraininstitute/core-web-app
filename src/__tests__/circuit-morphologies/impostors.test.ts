@@ -102,6 +102,20 @@ describe('impostors on the Studio look', () => {
     expect(soma).not.toContain('aCell >> 24u');
   });
 
+  it('draws no segment of the hidden type, as none of a hole, and hides none but holes until told', () => {
+    const own = impostorUniforms();
+    expect(own.uHidden.value).toBe(255);
+    const ids = idMaterial('segment', own);
+    expect(ids.uniforms.uHidden).toBe(own.uHidden);
+    const look = compile(impostor(studio(), 'segment', own));
+    expect(look.uniforms.uHidden).toBe(own.uHidden);
+    for (const shader of [look, compile(ids)]) {
+      expect(shader.vertexShader).toContain(
+        'if ( shown < 0.5 || segmentType == 255u || segmentType == uHidden ) return false;'
+      );
+    }
+  });
+
   it('takes section colours in the linear space the cell table hands over, by SWC numbers', () => {
     const own = impostorUniforms();
     setSectionColours(own, {

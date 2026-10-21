@@ -6,7 +6,7 @@ import { match, P } from 'ts-pattern';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
@@ -51,6 +51,7 @@ export function ModelPreview({
   viewerFeatures?: Partial<IEntityViewerFeatures>;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
+  const drawsEachCell = useCircuitDrawsEachCell();
   const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
   const domainElectrodes = viewerFeatures?.electrodes ?? false;
 
@@ -99,12 +100,11 @@ export function ModelPreview({
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
-      // Single / pair / small share CircuitPreview, their morphologies served by
-      // OBI-One `/circuit/viz`.
+      // A morphology per cell, each served by OBI-One `/circuit/viz`.
       .with(
         {
           type: EntityTypeDict.Circuit,
-          scale: P.when(circuitDrawsMorphologies),
+          scale: P.when(drawsEachCell),
         },
         (circuit) => (
           <CircuitPreview

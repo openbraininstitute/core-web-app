@@ -96,17 +96,20 @@ export interface LargeCircuitPreviewProps {
   neuronOpacity?: number;
   /** Multiplier on the per-species soma radius. */
   somaSizeScale?: number;
+  /** Draw the morphologies' axons; drawn when omitted. */
+  showAxons?: boolean;
   /**
    * What each cell is drawn as. The morphologies are loaded first, with the
    * somas on show until they are in.
    */
   representation?: CircuitRepresentation;
   /**
-   * Called with `somas` when the morphologies asked for cannot be shown, and
-   * with `morphologies` to try them again. Absent where the circuit is not
-   * offered as morphologies.
+   * Called with `morphologies` to try them again once they could not be shown.
+   * Absent where the circuit is not offered as morphologies.
    */
   onRepresentationChange?: (representation: CircuitRepresentation) => void;
+  /** Called where the morphologies asked for cannot be shown, none of them drawn. */
+  onMorphologiesStopped?: () => void;
   /** Where the morphologies' status goes, clear of the host's chrome. Top-centre when omitted. */
   statusPlace?: React.CSSProperties;
   /** Electrode marker radius (world units). */
@@ -144,8 +147,10 @@ export function LargeCircuitPreview({
   highlightedOverlayId = null,
   neuronOpacity,
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
+  showAxons,
   representation = 'somas',
   onRepresentationChange,
+  onMorphologiesStopped,
   statusPlace,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
@@ -238,9 +243,7 @@ export function LargeCircuitPreview({
       storedSha256,
     ]
   );
-  const morphologies = useCircuitMorphologies(morphologiesSource, () =>
-    onRepresentationChange?.('somas')
-  );
+  const morphologies = useCircuitMorphologies(morphologiesSource, () => onMorphologiesStopped?.());
   const shown = morphologies.load.status === 'ready' ? morphologies.load.data : null;
   const [leftOut, setLeftOut] = React.useState(false);
   const [fallback, setFallback] = React.useState<Fallback | null>(null);
@@ -262,6 +265,7 @@ export function LargeCircuitPreview({
           somaRadius={somaRadius}
           somaOpacity={neuronOpacity}
           data={shown}
+          axons={showAxons}
           cellColors={cellColors}
           defaultColor={defaultColor}
           cellHover={features?.cellHover ?? true}
@@ -294,11 +298,9 @@ export function LargeCircuitPreview({
         fallback={fallback}
         theme={themeFromBackground(backgroundColor)}
         place={statusPlace}
-        // A load that stopped short is still on; one that stopped with nothing went back to somas.
+        // Loaded again where the morphologies are still asked for; asked for again where the host went back to somas.
         onRetry={() =>
-          morphologies.stopped?.kind === 'cut'
-            ? morphologies.retry()
-            : onRepresentationChange?.('morphologies')
+          wantsMorphologies ? morphologies.retry() : onRepresentationChange?.('morphologies')
         }
         onDismiss={morphologies.dismiss}
         onFallbackDismiss={() => setFallback(null)}

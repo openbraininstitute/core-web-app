@@ -12,6 +12,7 @@ import {
   CircuitVisualization,
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
+import { circuitSmallForThePack } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import {
   CircuitViewerChrome,
   STATUS_PLACE,
@@ -76,7 +77,7 @@ export type TSceneSubject =
   | { memodel: TSceneMemodel; circuit?: never };
 
 interface ICircuitSceneOptions {
-  /** Draw somas only. Region-scale circuits have too many cells for morphologies. */
+  /** Draw with `LargeCircuitPreview`, as somas or as the morphologies of OBI-One's pack. @see circuitDrawsEachCell */
   largeCircuit?: boolean;
   /**
    * Whether this scene is the view currently on show.
@@ -168,7 +169,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
 export function CircuitScene({
   circuit,
   memodel,
-  largeCircuit = false,
+  largeCircuit: drawnLarge = false,
   active = true,
   features,
   defaultNeuronOpacity,
@@ -197,6 +198,15 @@ export function CircuitScene({
   const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
+  const morphologiesFlag = !!useFlag(circuitMorphologiesFlag.key);
+  const smallForThePack =
+    morphologiesFlag &&
+    drawnLarge &&
+    circuit !== undefined &&
+    circuitSmallForThePack(circuit.scale);
+  const [fellBackFor, setFellBackFor] = useState<string | null>(null);
+  const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
+
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
@@ -224,9 +234,9 @@ export function CircuitScene({
   const handlePopulationClick =
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
-  // Every small-circuit source filters axon sections, so the toggle is offered wherever the
-  // morphology itself is drawn.
-  const supportsAxons = !largeCircuit;
+  // Drawn as somas, the cells can be switched to their morphologies; whether OBI-One will build
+  // the pack is known only once it is asked for.
+  const supportsMorphologies = morphologiesFlag && largeCircuit;
 
   const canPickMorphologyLocations =
     !largeCircuit &&
@@ -262,11 +272,6 @@ export function CircuitScene({
     () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
     [overlays, visibleOverlayIds]
   );
-  const morphologiesFlag = useFlag(circuitMorphologiesFlag.key);
-  // Drawn as somas, the cells can be switched to their morphologies; whether OBI-One will build
-  // the pack is known only once it is asked for.
-  const supportsMorphologies = !!morphologiesFlag && largeCircuit;
-
   const handleOverlayTransform = useCallback(
     (event: ElectrodeTransform) => {
       if (!setConfig || !enableElectrodes) return;
@@ -296,11 +301,13 @@ export function CircuitScene({
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
-    supportsAxons,
+    // A larger circuit keeps the axons it was drawn with before they could be hidden.
+    defaultShowAxons: drawnLarge && !smallForThePack,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
     drawsSomas: largeCircuit,
     supportsMorphologies,
+    defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
     population,
     subject: memodel,
@@ -538,8 +545,12 @@ export function CircuitScene({
             highlightedOverlayId={highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
             somaSizeScale={config.somaSizeScale}
+            showAxons={config.showAxons}
             representation={representation}
             onRepresentationChange={onRepresentationChange}
+            onMorphologiesStopped={() =>
+              smallForThePack ? setFellBackFor(circuit.id) : onRepresentationChange?.('somas')
+            }
             statusPlace={STATUS_PLACE}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}

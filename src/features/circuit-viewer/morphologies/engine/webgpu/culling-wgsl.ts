@@ -29,7 +29,8 @@ struct View {
   shift: vec4f,
   // x: the far plane's distance; y: the least radius of a tube, px; z: the least radius of any, px; w: a soma's, µm.
   more: vec4f,
-  // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas.
+  // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas, or for the segments the type not
+  // drawn, as segmentEnds takes it.
   counts: vec4u,
 }
 @group(0) @binding(0) var<uniform> view: View;
@@ -269,9 +270,9 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
 fn listed(i: u32) -> bool {
   let A = ends[2u * i];
   let B = ends[2u * i + 1u];
-  let e = segmentEnds(words[i], 1.0, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view, view.projection,
-                      view.vp, view.shift.w);
-  // A hole, or behind the eye.
+  let e = segmentEnds(words[i], view.counts.w, 1.0, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view,
+                      view.projection, view.vp, view.shift.w);
+  // A hole, hidden, or behind the eye: drawn neither to be seen nor to hide others.
   if (e[3].w < 0.5) { return false; }
   let radii = e[2].xy;
   let near = nearer(min(-e[0].z - e[0].w, -e[1].z - e[1].w));

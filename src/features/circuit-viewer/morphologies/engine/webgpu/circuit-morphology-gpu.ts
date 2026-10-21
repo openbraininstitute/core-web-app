@@ -356,8 +356,9 @@ export class CircuitMorphologyGPU extends CircuitView {
       renderer.setRenderTarget(culling.targetOf(size.x, size.y));
       renderer.render(this.keptQuads, this.camera);
       renderer.setRenderTarget(null);
-      const { uShift } = this.uniforms;
-      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, end, rest)) return;
+      const { uShift, uHidden } = this.uniforms;
+      if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, uHidden.value, end, rest))
+        return;
     } else if (this.culls) {
       // Told once as it failed, which neither a pack's stream made since nor one while the culling was off heard.
       this.tellCulled(null);

@@ -155,6 +155,28 @@ describe('useCircuitColorBy', () => {
     expect(result.current.menu.showMorphologies).toBe(false);
   });
 
+  it('starts on the morphologies where the host says, and somas where they are not offered', () => {
+    const { result, rerender } = renderHook(
+      ({ offered }: { offered: boolean }) =>
+        useCircuitColorBy(circuit, {
+          population: CORTEX,
+          drawsSomas: true,
+          supportsMorphologies: offered,
+          defaultRepresentation: 'morphologies',
+        }),
+      { initialProps: { offered: true } }
+    );
+    expect(result.current.representation).toBe('morphologies');
+    expect(result.current.menu.showMorphologies).toBe(true);
+
+    act(() => result.current.menu.onToggleMorphologies?.(false));
+    act(() => result.current.menu.onResetConfig?.());
+    expect(result.current.representation).toBe('morphologies');
+
+    rerender({ offered: false });
+    expect(result.current.representation).toBe('somas');
+  });
+
   it('draws somas while morphologies are not offered, and the morphologies chosen once they are again', () => {
     const { result, rerender } = renderHook(
       ({ offered }: { offered: boolean }) =>

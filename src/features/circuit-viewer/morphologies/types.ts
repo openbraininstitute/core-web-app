@@ -346,6 +346,8 @@ export interface CircuitMorphologyView extends ViewControls {
    * with them. The dendrogram faces the eye and is not turned.
    */
   setDendrogram(shown: boolean): void;
+  /** Draw the axons' segments, or leave them out, as if they were not there: seen, hiding others, or picked. */
+  setAxons(shown: boolean): void;
   /** How near the view is, 1 as `resetView` frames it; the pixel scale's listeners hear when it changes. */
   readonly zoom: number;
   setZoom(zoom: number): void;

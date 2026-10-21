@@ -3,7 +3,20 @@ import { describe, expect, it, vi } from 'vitest';
 
 // `@tolokoban/tgd` runs WebGL and WASM setup at module scope; the raster pair
 // reaches for a canvas on mount. Neither runs under jsdom.
-vi.mock('@/features/circuit-viewer/circuit-scene', () => ({ CircuitScene: () => null }));
+const h = vi.hoisted(() => ({
+  flags: {} as Record<string, boolean>,
+  scene: null as { largeCircuit?: boolean } | null,
+}));
+vi.mock('@/features/circuit-viewer/circuit-scene', () => ({
+  CircuitScene: (props: { largeCircuit?: boolean }) => {
+    h.scene = props;
+    return null;
+  },
+}));
+vi.mock('@/features/feature-flags', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/feature-flags')>()),
+  useFlag: (key: string) => h.flags[key],
+}));
 vi.mock('@/features/spike-viewer/components/raster-plot', () => ({ default: () => null }));
 vi.mock('@/features/spike-viewer/components/raster-plot-controls', () => ({ default: () => null }));
 // The nodes session behind the raster's axis span reads the workspace off the route.
@@ -23,6 +36,8 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
   useNextStepOnboarding,
 }));
 
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
@@ -54,6 +69,20 @@ describe('SpikeReplayView', () => {
       condition: true,
       tour: 'simulation-spike-replay',
     });
+  });
+
+  it.each([
+    [false, false],
+    [true, true],
+  ])('replays over a small microcircuit from the pack only with it (%s)', (pack, large) => {
+    h.flags = { [circuitMorphologiesFlag.key]: pack };
+    h.scene = null;
+    const small = {
+      circuit: { id: 'c1', assets: [], scale: CircuitScaleDictionary.SmallMicrocircuit },
+    } as unknown as TSceneSubject;
+    render(<SpikeReplayView data={data} subject={small} />);
+
+    expect(h.scene).toMatchObject({ largeCircuit: large });
   });
 
   it('holds the announcement back when there is nothing to replay over', () => {
