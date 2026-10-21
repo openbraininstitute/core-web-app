@@ -28,6 +28,13 @@ export async function started(count = 1) {
   return loads[count - 1];
 }
 
+/** A load that ended with `data`, the whole pack in once `whole` settles. */
+export const loadedOf = (
+  data: CircuitMorphologyData,
+  fromCache = false,
+  whole: Promise<void> = Promise.resolve()
+) => ({ kind: 'loaded', data, fromCache, whole }) as const;
+
 /** What the loader hands over: `somas` are four floats a cell, NaN where the pack has none of it. */
 export function loadedData(
   populations: Population[],

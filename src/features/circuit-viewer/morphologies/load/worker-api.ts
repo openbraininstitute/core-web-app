@@ -1,7 +1,8 @@
 /**
- * What the pack worker exposes over Comlink: a circuit's pack opened, from the cache a visit before left it in, or from
- * OBI-One, which builds it and whose pack goes into the cache once it has been opened; then its boxes read as the view
- * asks for them, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
+ * What the pack worker exposes over Comlink: a circuit's pack opened, from the cache a visit before left it in, or as it
+ * comes in, from OBI-One, which builds it, or stored as the circuit's asset; opened once its somas are in, and put in
+ * the cache once the whole of it is (`whole`). Then its boxes read as the view asks for them, each once its bytes are
+ * in, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
  */
 import * as Comlink from 'comlink';
 
@@ -27,15 +28,25 @@ import type {
 } from '../types';
 
 /** Kept a day, not an asset's 30: OBI-One builds the pack on request, so what is behind its URL can change. */
-export const PACK_CACHE = bucket('circuit-morphology-pack', 2);
+export const PACK_CACHE = bucket('circuit-morphology-pack', 1);
+/** A stored pack, an asset, whose content cannot change under its URL. */
+export const STORED_PACK_CACHE = bucket('circuit-morphology-mpack');
 
-/** The pack opened: its somas and frame, with no segments, and where its segments lie. */
+/**
+ * The pack opened: its somas and frame, with no segments, where its segments lie, and how much of the file each box
+ * needs in to be read at each level (`Pack.readableAt`).
+ */
 export type Opened =
-  | ({ kind: 'opened'; data: CircuitMorphologyData; fromCache: boolean } & PackBoxes)
+  | ({
+      kind: 'opened';
+      data: CircuitMorphologyData;
+      fromCache: boolean;
+      readableAt: Float64Array[];
+    } & PackBoxes)
   | Refused;
 
-async function openCached(cache: CacheBounds, key: string): Promise<Pack | null> {
-  const bytes = await readEntry(cache, key);
+async function openCached(cache: CacheBounds, key: string, size?: number): Promise<Pack | null> {
+  const bytes = await readEntry(cache, key, size);
   if (!bytes) return null;
   try {
     return await openPack(new Uint8Array(bytes));
@@ -46,38 +57,65 @@ async function openCached(cache: CacheBounds, key: string): Promise<Pack | null>
   }
 }
 
+const hex = (digest: ArrayBuffer) =>
+  Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+
+/** The pack once the whole of it is in, checked against its asset's digest, put in the cache. */
+async function keep(whole: Promise<Uint8Array>, request: PackRequest, cache: CacheBounds) {
+  const bytes = await whole;
+  // Too large for the cache, it is not kept, nor checked: it is drawn already.
+  if (bytes.byteLength > cache.maxBytes) return;
+  const sha256 = request.stored?.sha256;
+  if (sha256) {
+    const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
+    if (hex(digest) !== sha256.toLowerCase()) {
+      throw new PackError("morphology pack whose digest is not its asset's");
+    }
+  }
+  await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
+}
+
 const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments) => [
   segments.buffer,
   segmentCells.buffer,
   segmentTypes.buffer,
 ];
 
-export function createPackApi(cache: CacheBounds) {
-  let opened: { readBox: Pack['readBox']; numbers: Uint32Array } | null = null;
+/** `built` keeps the packs OBI-One builds, and `stored` those stored as assets. */
+export function createPackApi(built: CacheBounds, stored: CacheBounds) {
+  let opened: { readBox: Pack['readBox']; numbers: Uint32Array; whole: Promise<void> } | null =
+    null;
   return {
     async open(
       request: PackRequest,
       populations: Population[],
       onProgress: OnProgress
     ): Promise<Opened> {
-      let pack = await openCached(cache, request.url);
+      const cache = request.stored ? stored : built;
+      let pack = await openCached(cache, request.url, request.stored?.size);
       const fromCache = pack !== null;
+      let whole = Promise.resolve();
       if (!pack) {
         const download = await downloadPack(request, onProgress);
         if (download.kind === 'refused') return download;
-        const { bytes } = download;
-        pack = await openPack(bytes);
-        // Before the answer: once it has the pack, the page may let go of the worker at any time.
-        await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
+        pack = await openPack(download.file);
+        whole = keep(download.whole, request, cache);
+        whole.catch(() => {});
       }
       const numbers = pageCells(pack.data.populations, populations);
-      opened = { readBox: pack.readBox, numbers };
+      opened = { readBox: pack.readBox, numbers, whole };
       const data = renumberSomas(pack.data, numbers, populations);
       // The boxes and the levels are copied, not handed over: the pack reads by them.
-      return Comlink.transfer(
-        { kind: 'opened', data, boxes: pack.boxes, levels: pack.levels, fromCache },
-        [data.somas.buffer as ArrayBuffer]
-      );
+      const { boxes, levels, readableAt } = pack;
+      return Comlink.transfer({ kind: 'opened', data, boxes, levels, readableAt, fromCache }, [
+        data.somas.buffer as ArrayBuffer,
+      ]);
+    },
+
+    /** Once the whole pack is in, checked and in the cache; it fails where the download did, or the check. */
+    async whole(): Promise<void> {
+      if (!opened) throw new Error('no morphology pack is open');
+      await opened.whole;
     },
 
     async read(wanted: BoxRead[]): Promise<MorphologySegments[]> {

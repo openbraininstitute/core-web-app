@@ -10,6 +10,7 @@ import type {
   DetailStats,
   MorphologyChunks,
   MorphologySegments,
+  PackArrival,
 } from '../types';
 
 /** The most segments asked of the pack's worker at once: a batch is read in some milliseconds. */
@@ -107,7 +108,8 @@ function arenaPlan(
  * the finer levels alone. There, with the culling's marks (`see`), a box goes finer only while seen, and one no longer
  * seen goes back to its base as the view moves (it keeps what it has at rest); one let go of while the view rests is
  * not asked for again until it moves or the rules change; and while the view moves, a box wanted coarser goes back to
- * its base at once.
+ * its base at once. Of a pack still coming in, a box is asked for at a level only once its bytes are in, and wanted no
+ * finer than what is in, as if the pixels wanted no more.
  */
 export class DetailStream {
   private chunks: MorphologyChunks;
@@ -145,10 +147,17 @@ export class DetailStream {
   /** The boxes of a batch that could not be read, which are read no more, and whether that was told. */
   private unread = new Set<number>();
   private told = false;
+  /**
+   * Of a pack still coming in, how much is in and the finest level of each box that is (the levels' count where none
+   * is), whether that lifted what a box was chosen at since the levels were last chosen, and what stops it being told.
+   */
+  private coming: { arrival: PackArrival; arrived: Int8Array } | null = null;
+  private arrivedMore = false;
+  private unlisten: (() => void) | null = null;
 
   /**
-   * `onRead` is told when boxes came in, to be placed; the arena keeps a base, of the coarsest level, where it keeps
-   * room for one (`SegmentArena`).
+   * `onRead` is told when boxes came in, to be placed, or more of the pack did, to be read; the arena keeps a base, of
+   * the coarsest level, where it keeps room for one (`SegmentArena`).
    */
   constructor(chunks: MorphologyChunks, arena: SegmentArena, onRead: () => void) {
     this.chunks = chunks;
@@ -165,6 +174,52 @@ export class DetailStream {
         if (arena.hasBase(box)) this.drawn[box] = this.coarsest;
       }
     }
+    const { arrival } = chunks;
+    if (arrival) {
+      this.coming = { arrival, arrived: new Int8Array(count).fill(chunks.levels.length) };
+      this.arrive();
+      // Only a box drawn coarser for what was in has the levels chosen again; what is newly in otherwise is just read.
+      this.unlisten = arrival.listen(() => {
+        if (!this.arrive()) {
+          this.read();
+          return;
+        }
+        this.arrivedMore = true;
+        this.onRead();
+      });
+    }
+  }
+
+  /** Whether the levels are to be chosen again, more of the pack having come in since they were last. */
+  get moreArrived(): boolean {
+    return this.arrivedMore;
+  }
+
+  /**
+   * The finest level of each box that is in brought up to what is in now; whether that lifted what a box in view was
+   * chosen at for what was in.
+   */
+  private arrive(): boolean {
+    if (!this.coming) return false;
+    const { arrival, arrived } = this.coming;
+    const received = arrival.received();
+    const { readableAt } = arrival;
+    const capped = this.detail?.capped;
+    const chosen = this.detail?.levels;
+    let lifted = false;
+    for (let box = 0; box < arrived.length; box++) {
+      let level = arrived[box];
+      while (level > 0 && readableAt[level - 1][box] <= received) level--;
+      if (level === arrived[box]) continue;
+      arrived[box] = level;
+      if (capped?.[box] === 1 && chosen && chosen[box] > level) lifted = true;
+    }
+    return lifted;
+  }
+
+  /** Whether `box` is in at `level`. */
+  private isIn(box: number, level: number): boolean {
+    return !this.coming || this.coming.arrived[box] <= level;
   }
 
   /**
@@ -307,8 +362,10 @@ export class DetailStream {
       { ...rules, budget },
       roomFor,
       arena.keepsBase,
-      finest
+      finest,
+      this.coming?.arrived
     );
+    this.arrivedMore = false;
     this.detail = detail;
     this.rules = rules;
     this.read();
@@ -381,6 +438,7 @@ export class DetailStream {
   /** Nothing more is read or placed, and what the arena uploads to is let go of. */
   stop(): void {
     this.stopped = true;
+    this.unlisten?.();
     this.ready.clear();
     this.bases.clear();
     this.arena.dispose();
@@ -411,21 +469,29 @@ export class DetailStream {
     return coarser && arena.sizeOf(box) !== undefined ? base : null;
   }
 
-  /** The bases neither placed, in nor unreadable, a batch of them: of the boxes in `order`, or else of every box. */
+  /**
+   * The bases neither placed, in nor unreadable, of the pack's bytes in, a batch of them: of the boxes in `order`, or
+   * else of every box.
+   */
   private basesToRead(order: Uint32Array | null): BoxRead[] {
     const batch: BoxRead[] = [];
     if (this.basesRead) return batch;
     const { arena, coarsest } = this;
     const count = order ? order.length : this.drawn.length;
     let size = 0;
+    let waiting = false;
     for (let i = 0; i < count; i++) {
       const box = order ? order[i] : i;
       if (arena.hasBase(box) || this.bases.has(box) || this.unread.has(box)) continue;
+      if (!this.isIn(box, coarsest)) {
+        waiting = true;
+        continue;
+      }
       batch.push({ level: coarsest, box });
       size += this.segmentsAt(box, coarsest);
       if (size >= BATCH_SEGMENTS) break;
     }
-    if (!order && batch.length === 0) this.basesRead = true;
+    if (!order && batch.length === 0 && !waiting) this.basesRead = true;
     return batch;
   }
 
@@ -441,7 +507,7 @@ export class DetailStream {
       const level = levels[box];
       const segments = this.segmentsAt(box, level);
       if (segments === 0 || level === drawn[box] || this.ready.get(box)?.level === level) continue;
-      if (this.unread.has(box) || this.isBase(level)) continue;
+      if (this.unread.has(box) || this.isBase(level) || !this.isIn(box, level)) continue;
       if (!this.still && (this.arena.keepsBase || (drawn[box] >= 0 && level < drawn[box])))
         continue;
       batch.push({ level, box });

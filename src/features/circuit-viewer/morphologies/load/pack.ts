@@ -7,6 +7,8 @@
 // The whole of zod comes with `z` imported by name, and the reader runs in a worker of its own.
 import * as z from 'zod';
 
+import { Arriving } from './arriving';
+
 import type { CircuitMorphologyData, MorphologySegments, PackBoxes, Vec3 } from '../types';
 
 const MAGIC = 0x4b43504d;
@@ -79,17 +81,18 @@ async function inflate(deflated: Uint8Array): Promise<Uint8Array> {
   }
 }
 
-/** The index, and the bytes its offsets count in. */
-async function openIndex(bytes: Uint8Array): Promise<{ index: PackIndex; blocks: Uint8Array }> {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  if (bytes.byteLength < HEADER_BYTES || view.getUint32(0, true) !== MAGIC) {
-    throw new PackError('not a morphology pack');
-  }
+/** The index, and where in the file the blocks its offsets count in start. */
+async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: number }> {
+  const whole = await file.until(HEADER_BYTES);
+  const header = file.bytes(0, HEADER_BYTES);
+  const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+  if (!whole || view.getUint32(0, true) !== MAGIC) throw new PackError('not a morphology pack');
   const version = view.getUint16(4, true);
   if (version !== VERSION) throw new PackError(`morphology pack version ${version}`);
   const end = HEADER_BYTES + view.getUint32(8, true);
-  if (end > bytes.byteLength) throw new PackError(CUT_SHORT);
-  const json = new TextDecoder().decode(await inflate(bytes.subarray(HEADER_BYTES, end)));
+  const json = new TextDecoder().decode(
+    await inflate(await blockAt(file, HEADER_BYTES, end - HEADER_BYTES))
+  );
   let index: PackIndex;
   try {
     index = indexSchema.parse(JSON.parse(json));
@@ -97,7 +100,7 @@ async function openIndex(bytes: Uint8Array): Promise<{ index: PackIndex; blocks:
     throw new PackError('morphology pack with a malformed index', { cause });
   }
   if (index.layout !== 'space') throw new PackError(`morphology pack laid out by ${index.layout}`);
-  return { index, blocks: bytes.subarray(end) };
+  return { index, blocks: end };
 }
 
 /** Whether the levels' chunks agree with one another and with their bases. */
@@ -119,9 +122,10 @@ function soundLevels({ levels }: PackIndex): boolean {
   );
 }
 
-function blockAt(blocks: Uint8Array, offset: number, bytes: number): Uint8Array {
-  if (offset + bytes > blocks.byteLength) throw new PackError(CUT_SHORT);
-  return blocks.subarray(offset, offset + bytes);
+/** The block at `start` in the file, once its bytes are in. */
+async function blockAt(file: Arriving, start: number, bytes: number): Promise<Uint8Array> {
+  if (!(await file.until(start + bytes))) throw new PackError(CUT_SHORT);
+  return file.bytes(start, start + bytes);
 }
 
 const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0);
@@ -448,14 +452,25 @@ export interface Pack extends PackBoxes {
   data: CircuitMorphologyData;
   /** The segments level `level` has in box `box`, their cells numbered as the pack numbers them. */
   readBox(level: number, box: number): Promise<MorphologySegments>;
+  /**
+   * Of each level, how much of the file each box needs in to be read at it: up to the end of its chunk and of its
+   * bases' (0 where it has none).
+   */
+  readableAt: Float64Array[];
 }
 
-/** The index and the somas of a pack, read now; its chunks are read a box at a time (`readBox`). */
-export async function openPack(bytes: Uint8Array): Promise<Pack> {
-  const { index, blocks } = await openIndex(bytes);
+/**
+ * The index and the somas of a pack, read now, or once they are in where the pack is still coming in; its chunks are
+ * read a box at a time (`readBox`), each once its bytes and its bases' are in.
+ */
+export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
+  const file = bytes instanceof Arriving ? bytes : Arriving.whole(bytes);
+  const { index, blocks } = await openIndex(file);
   if (!soundLevels(index)) throw new PackError(AT_ODDS);
   const cells = sum(index.populations.map((p) => p.cells));
-  const somaBytes = await inflate(blockAt(blocks, index.somas.offset, index.somas.bytes));
+  const somaBytes = await inflate(
+    await blockAt(file, blocks + index.somas.offset, index.somas.bytes)
+  );
   if (somaBytes.byteLength !== SOMA_BYTES * cells) throw new PackError(AT_ODDS);
   const somas = new Float32Array(somaBytes.buffer);
 
@@ -490,13 +505,23 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
   }));
   const offsets = index.levels.map(({ offset, chunks }) => {
     const starts: number[] = [];
-    let at = offset;
+    let at = blocks + offset;
     for (const bytes of chunks.bytes) {
       starts.push(at);
       at += bytes;
     }
     return starts;
   });
+  const readableAt = index.levels.map(() => new Float64Array(count));
+  // A level's base is coarser, and later in the index.
+  for (let level = index.levels.length - 1; level >= 0; level--) {
+    const { base, chunks } = index.levels[level];
+    for (let b = 0; b < count; b++) {
+      const chunk = inBox[b][level];
+      const own = chunk < 0 ? 0 : offsets[level][chunk] + chunks.bytes[chunk];
+      readableAt[level][b] = Math.max(own, base === null ? 0 : readableAt[base][b]);
+    }
+  }
   const isBase = index.levels.map((_, level) => index.levels.some(({ base }) => base === level));
   const largest = Math.max(0, ...index.levels.flatMap(({ chunks }) => chunks.segments));
   // Made at the first read, and shared by every read: a chunk is read with no wait between.
@@ -510,7 +535,7 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     if (chunk < 0) return gridOf(0);
     const [under, inflated] = await Promise.all([
       base === null ? NO_BASE : gridAt(base, b),
-      inflate(blockAt(blocks, offsets[level][chunk], chunks.bytes[chunk])),
+      blockAt(file, offsets[level][chunk], chunks.bytes[chunk]).then(inflate),
     ]);
     scratch ??= {
       streams: Array.from({ length: SCRATCH_STREAMS }, () => new Int32Array(largest)),
@@ -551,5 +576,5 @@ export async function openPack(bytes: Uint8Array): Promise<Pack> {
     if (!kept) return { segments, segmentCells: grid.cells, segmentTypes: grid.types };
     return { segments, segmentCells: grid.cells.slice(), segmentTypes: grid.types.slice() };
   };
-  return { data, boxes, levels, readBox };
+  return { data, boxes, levels, readBox, readableAt };
 }

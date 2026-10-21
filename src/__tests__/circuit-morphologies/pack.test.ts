@@ -3,6 +3,7 @@ import { deflateSync, inflateSync } from 'node:zlib';
 
 import { describe, expect, it } from 'vitest';
 
+import { Arriving } from '@/features/circuit-viewer/morphologies/load/arriving';
 import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
 
 import {
@@ -358,11 +359,11 @@ describe('openPack and readBox, of what is not a pack they read', () => {
     for (const length of [HEADER_BYTES, end - 1, end + 1]) {
       await expect(readPack(bytes.subarray(0, length))).rejects.toThrow('cut short');
     }
-    // The last level's last chunk: its box is refused at every level read over it, and the other boxes are whole.
+    // The file's last chunk, the finest level's last: its box is refused at that level alone, and the others are whole.
     const lastByteGone = await openPack(bytes.subarray(0, bytes.length - 1));
     const refused: number[] = [];
     for (let box = 0; box < lastByteGone.boxes.length / 6; box++) {
-      await lastByteGone.readBox(2, box).then(
+      await lastByteGone.readBox(0, box).then(
         () => {},
         (e) => {
           expect(e.message).toContain('cut short');
@@ -371,10 +372,11 @@ describe('openPack and readBox, of what is not a pack they read', () => {
       );
     }
     expect(refused).toHaveLength(1);
-    await expect(lastByteGone.readBox(0, refused[0])).rejects.toThrow('cut short');
-    expect(
-      (await lastByteGone.readBox(0, refused[0] === 0 ? 1 : 0)).segmentCells.length
-    ).toBeGreaterThan(0);
+    for (const level of [1, 2]) {
+      expect((await lastByteGone.readBox(level, refused[0])).segmentCells.length).toBeGreaterThan(
+        0
+      );
+    }
   });
 
   it('refuses a chunk that is not what the index says', async () => {
@@ -480,10 +482,129 @@ describe('openPack and readBox, of what is not a pack they read', () => {
   it('refuses a block that does not inflate', async () => {
     const bytes = pack('small');
     bytes.fill(0xff, bytes.length - 40);
-    await expect(readPack(bytes, 2)).rejects.toThrow('damaged block');
-    await expect(readPack(bytes, 2)).rejects.toThrow(PackError);
+    await expect(readPack(bytes, 0)).rejects.toThrow('damaged block');
+    await expect(readPack(bytes, 0)).rejects.toThrow(PackError);
     const noIndex = pack('small');
     new DataView(noIndex.buffer).setUint32(8, 0, true);
     await expect(readPack(noIndex)).rejects.toThrow('damaged block');
+  });
+});
+
+describe('a pack still coming in', () => {
+  /** Long enough for every read the bytes in let go on to end, inflating included. */
+  const settled = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+  /** `promise`, and whether it has settled. */
+  function watched<T>(promise: Promise<T>) {
+    const watch = { promise, done: false };
+    const done = () => {
+      watch.done = true;
+    };
+    promise.then(done, done);
+    return watch;
+  }
+
+  /** The box of `small` that needs the most of the file at its finest level. */
+  async function lastBox(bytes: Uint8Array) {
+    const whole = await openPack(bytes);
+    const finest = whole.readableAt[0];
+    return { whole, box: finest.indexOf(Math.max(...finest)) };
+  }
+
+  it('opens once its somas are in, before its chunks, as it opens whole', async () => {
+    const bytes = pack('small');
+    const index = indexOf(bytes);
+    const somasEnd = indexEnd(bytes) + index.somas.offset + index.somas.bytes;
+    const file = new Arriving(bytes.byteLength);
+    const opening = watched(openPack(file));
+
+    for (let at = 0; at < somasEnd - 1; at += 7) {
+      file.add(bytes.subarray(at, Math.min(at + 7, somasEnd - 1)));
+    }
+    await settled();
+    expect(opening.done).toBe(false);
+    file.add(bytes.subarray(somasEnd - 1, somasEnd));
+    const opened = await opening.promise;
+
+    const whole = await openPack(bytes);
+    expect(opened.data).toEqual(whole.data);
+    expect(opened.boxes).toEqual(whole.boxes);
+    expect(opened.readableAt).toEqual(whole.readableAt);
+  });
+
+  it('says how much of the file each box needs in at each level, its bases first', async () => {
+    const bytes = pack('small');
+    const { levels } = indexOf(bytes);
+    const { readableAt, boxes } = await openPack(bytes);
+
+    const ends = levels.map(
+      ({ offset, chunks }) => indexEnd(bytes) + offset + chunks.bytes.reduce((a, b) => a + b, 0)
+    );
+    expect(ends[2]).toBeLessThan(ends[1]);
+    expect(ends[1]).toBeLessThan(ends[0]);
+    expect(ends[0]).toBe(bytes.byteLength);
+    for (let box = 0; box < boxes.length / 6; box++) {
+      expect(readableAt[2][box]).toBeLessThanOrEqual(ends[2]);
+      expect(readableAt[1][box]).toBeGreaterThanOrEqual(readableAt[2][box]);
+      expect(readableAt[0][box]).toBeGreaterThanOrEqual(readableAt[1][box]);
+    }
+    expect(Math.max(...readableAt[0])).toBe(bytes.byteLength);
+  });
+
+  it('reads a box once its bytes and its bases have come, and not before', async () => {
+    const bytes = pack('small');
+    const { whole, box } = await lastBox(bytes);
+    const { readableAt } = whole;
+    const file = new Arriving(bytes.byteLength);
+    file.add(bytes.subarray(0, readableAt[2][box]));
+    const opened = await openPack(file);
+
+    const base = watched(opened.readBox(2, box));
+    const finest = watched(opened.readBox(0, box));
+    await settled();
+    expect(base.done).toBe(true);
+    expect(finest.done).toBe(false);
+
+    file.add(bytes.subarray(readableAt[2][box], readableAt[0][box] - 1));
+    await settled();
+    expect(finest.done).toBe(false);
+    file.add(bytes.subarray(readableAt[0][box] - 1));
+    expect(await finest.promise).toEqual(await whole.readBox(0, box));
+    expect(await base.promise).toEqual(await whole.readBox(2, box));
+  });
+
+  it('refuses what waits for bytes once the file ends without them', async () => {
+    const bytes = pack('small');
+    const { whole, box } = await lastBox(bytes);
+    const file = new Arriving(bytes.byteLength);
+    file.add(bytes.subarray(0, Math.max(...whole.readableAt[2])));
+    const opened = await openPack(file);
+    const finest = opened.readBox(0, box);
+
+    file.end();
+    await expect(finest).rejects.toThrow('cut short');
+    expect((await opened.readBox(2, box)).segmentCells.length).toBeGreaterThan(0);
+  });
+});
+
+describe('Arriving', () => {
+  it('grows where the file is longer than said, and keeps what came', async () => {
+    const file = new Arriving(2);
+    const waiting = file.until(5);
+    file.add(Uint8Array.of(1, 2, 3));
+    file.add(Uint8Array.of(4, 5));
+    await expect(waiting).resolves.toBe(true);
+    expect([...file.all]).toEqual([1, 2, 3, 4, 5]);
+    expect([...file.bytes(1, 4)]).toEqual([2, 3, 4]);
+  });
+
+  it('tells what waits past its end that it will not come, and what is in that it has', async () => {
+    const file = new Arriving(0);
+    const past = file.until(4);
+    file.add(Uint8Array.of(1, 2));
+    file.end();
+    await expect(past).resolves.toBe(false);
+    await expect(file.until(2)).resolves.toBe(true);
+    await expect(file.until(3)).resolves.toBe(false);
   });
 });

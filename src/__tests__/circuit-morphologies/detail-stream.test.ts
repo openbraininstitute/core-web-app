@@ -9,6 +9,7 @@ import {
   type UploadsOf,
 } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 
+import { arrivalOf } from './arrival';
 import { boxesAt } from './boxes';
 
 import type { DetailView } from '@/features/circuit-viewer/morphologies/engine/detail';
@@ -612,5 +613,86 @@ describe('DetailStream', () => {
     expect(onRead).not.toHaveBeenCalled();
     expect(stream.apply()).toEqual({ changed: false, more: false });
     expect(arena.segments).toBe(0);
+  });
+
+  describe('of a pack still coming in', () => {
+    /**
+     * Laid out as OBI-One writes it, the base first: each box's base in by 10 bytes a box, its middle level by 50 and on,
+     * its finest by 90 and on. `to` says that much is in.
+     */
+    function makeArriving(base = false) {
+      const { chunks, reads } = chunksOf();
+      const box = (first: number) => Float64Array.from([0, 1, 2, 3], (b) => first + 10 * b);
+      const { arrival, to, listeners } = arrivalOf([box(90), box(50), box(10)]);
+      chunks.arrival = arrival;
+      const arena = new SegmentArena(
+        new THREE.InstancedBufferGeometry(),
+        base ? 4 * BLOCK + 1000 : 1000,
+        undefined,
+        base ? chunks.levels[2].segments : undefined
+      );
+      const onRead = vi.fn();
+      const stream = new DetailStream(chunks, arena, onRead);
+      return { stream, reads, onRead, to, listeners };
+    }
+
+    const asked = (reads: { wanted: BoxRead[] }[]) => reads.map(({ wanted }) => wanted);
+
+    it('asks for a base only once it is in, the nearest the focus first, and the others as they come', async () => {
+      const { stream, reads, onRead, to } = makeArriving(true);
+      stream.update(viewOf(500), RULES, false);
+      expect(reads).toHaveLength(0);
+
+      // A base newly in is read, with no need to choose the levels again.
+      to(25);
+      expect(onRead).not.toHaveBeenCalled();
+      expect(stream.moreArrived).toBe(false);
+      expect(asked(reads)).toEqual([[0, 1].map((box) => ({ level: 2, box }))]);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+
+      // Every base not in yet is still to be read, not taken as read.
+      to(45);
+      stream.update(viewOf(500), RULES, false);
+      expect(asked(reads).at(-1)).toEqual([2, 3].map((box) => ({ level: 2, box })));
+    });
+
+    it('wants a box no finer than is in, and finer as more comes', async () => {
+      const { stream, reads, to } = makeArriving();
+      to(65);
+      stream.update(viewOf(20), RULES, true);
+      expect(asked(reads)).toEqual([
+        [
+          { level: 1, box: 0 },
+          { level: 1, box: 1 },
+          { level: 2, box: 2 },
+          { level: 2, box: 3 },
+        ],
+      ]);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+      expect(levelsDrawn(stream)).toEqual([0, 2, 2]);
+
+      to(120);
+      expect(stream.moreArrived).toBe(true);
+      stream.update(viewOf(20), RULES, true);
+      expect(stream.moreArrived).toBe(false);
+      expect(asked(reads).at(-1)).toEqual([0, 1, 2, 3].map((box) => ({ level: 0, box })));
+    });
+
+    it('tells of nothing where what came in leaves every box as it was', () => {
+      const { stream, onRead, to } = makeArriving();
+      to(5);
+      expect(onRead).not.toHaveBeenCalled();
+      expect(stream.moreArrived).toBe(false);
+    });
+
+    it('is told no more once it is stopped', () => {
+      const { stream, listeners } = makeArriving();
+      stream.stop();
+      expect(listeners.size).toBe(0);
+    });
   });
 });

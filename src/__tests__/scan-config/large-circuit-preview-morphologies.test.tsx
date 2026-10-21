@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
-import { loadedData, loads, started } from '../circuit-morphologies/pending-loads';
+import { loadedData, loadedOf, loads, started } from '../circuit-morphologies/pending-loads';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
@@ -53,6 +53,13 @@ vi.mock(
 vi.mock('@/api/one/circuit-visualization', () => ({
   buildCircuitMorphologyPackRequest: async (circuitId: string) => ({
     url: `https://obi-one.test/circuit/viz/${circuitId}/morphology-pack`,
+    headers: {},
+  }),
+}));
+
+vi.mock('@/api/entitycore/queries/assets', () => ({
+  buildAssetDownloadRequest: async ({ entityId, id }: { entityId: string; id: string }) => ({
+    url: `https://entitycore.test/circuit/${entityId}/assets/${id}/download`,
     headers: {},
   }),
 }));
@@ -193,7 +200,7 @@ describe('LargeCircuitPreview morphologies', () => {
     const somas = h.cells?.somas;
     const loaded = data();
 
-    await act(async () => load.resolve({ kind: 'loaded', data: loaded, fromCache: false }));
+    await act(async () => load.resolve(loadedOf(loaded)));
     await screen.findByTestId('morphologies');
 
     expect(screen.queryByTestId('somas')).toBeNull();
@@ -211,10 +218,60 @@ describe('LargeCircuitPreview morphologies', () => {
     expect([...loaded.somas.subarray(8)]).toEqual([9, 9, 9, 12]);
   });
 
+  it('says how much of the rest of the pack has come in while the morphologies are drawn, the same viewer kept', async () => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    const loaded = data();
+    await act(async () => load.resolve(loadedOf(loaded, false, new Promise(() => {}))));
+    await screen.findByTestId('morphologies');
+    const shown = h.cells;
+
+    act(() => load.options.onProgress?.(3e6, 6e6));
+    expect(status()).toBe('Loading morphologies… 3.0 / 6.0 MB');
+    expect(screen.getByTestId('morphologies')).toBeInTheDocument();
+    expect(h.cells?.data).toBe(shown?.data);
+    act(() => load.options.onProgress?.(6e6, 6e6));
+    expect(status()).toBeNull();
+    expect(h.mounts).toBe(1);
+  });
+
+  it('says what is left out, or drawn with WebGL 2, over how much of the rest has come in', async () => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    await act(async () => load.resolve(loadedOf(data(), false, new Promise(() => {}))));
+    await screen.findByTestId('morphologies');
+    act(() => load.options.onProgress?.(3e6, 6e6));
+
+    act(() => h.cells?.onLeftOut?.(true));
+    expect(status()).toBe('Too many morphologies in view: zoom in to see them');
+    act(() => h.cells?.onLeftOut?.(false));
+    act(() => h.cells?.onFallback?.('memory'));
+    expect(status()).toBe('Drawn with WebGL 2: the graphics ran out of memoryDismiss');
+  });
+
+  it("asks entitycore for the circuit's stored pack where it has one", async () => {
+    const pack = {
+      id: 'pack-id',
+      label: 'circuit_morphology_pack',
+      is_directory: false,
+      status: 'created',
+      size: 6e6,
+      sha256_digest: 'ab12',
+    };
+    render(<Hosted start="morphologies" circuit={{ ...circuit, assets: [pack] } as ICircuit} />);
+    const load = await started();
+
+    expect(load.options.request).toEqual({
+      url: 'https://entitycore.test/circuit/circuit-id/assets/pack-id/download',
+      headers: {},
+      stored: { size: 6e6, sha256: 'ab12' },
+    });
+  });
+
   it('says so while morphologies in view are left out for the budget', async () => {
     render(<Hosted start="morphologies" />);
     const load = await started();
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await act(async () => load.resolve(loadedOf(data())));
     await screen.findByTestId('morphologies');
 
     act(() => h.cells?.onLeftOut?.(true));
@@ -241,7 +298,7 @@ describe('LargeCircuitPreview morphologies', () => {
     const load = await started();
     act(() => h.cells?.onFallback?.(fallback));
     expect(status()).toBe('Loading morphologies…');
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await act(async () => load.resolve(loadedOf(data())));
     await screen.findByTestId('morphologies');
 
     expect(screen.getByRole('status')).toHaveTextContent(text);
@@ -259,7 +316,7 @@ describe('LargeCircuitPreview morphologies', () => {
   async function shown(props: Partial<LargeCircuitPreviewProps> = {}): Promise<CircuitCellsProps> {
     render(<Hosted start="morphologies" {...props} />);
     const load = await started();
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: false }));
+    await act(async () => load.resolve(loadedOf(data())));
     await screen.findByTestId('morphologies');
     return h.cells as CircuitCellsProps;
   }
@@ -367,7 +424,7 @@ describe('LargeCircuitPreview morphologies', () => {
     fireEvent.click(screen.getByText('switch off'));
     fireEvent.click(screen.getByText('switch on'));
     const load = await started(2);
-    await act(async () => load.resolve({ kind: 'loaded', data: data(), fromCache: true }));
+    await act(async () => load.resolve(loadedOf(data(), true)));
     await screen.findByTestId('morphologies');
 
     expect(h.mounts).toBe(1);

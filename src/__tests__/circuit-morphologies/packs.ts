@@ -1,6 +1,6 @@
 /**
  * The packs in `fixtures` are written by OBI-One's `morphology_pack` library as of obi-one#1101, its levels read over
- * one another, and the JSON beside each is what OBI-One's own reader gets from it. A segment is there in whole numbers: its cell, its section
+ * one another and laid out coarsest first, and the JSON beside each is what OBI-One's own reader gets from it. A segment is there in whole numbers: its cell, its section
  * type, then x, y, z in steps of the grid and the radius in its own steps, for the near end and for the far end.
  *
  * - `small`: two made-up morphologies as five cells of two populations, at three levels. Cell 2 is a soma alone,

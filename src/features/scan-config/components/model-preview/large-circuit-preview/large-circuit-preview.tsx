@@ -6,7 +6,10 @@ import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode'
 import { cellColorsOf, populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
-import { useCircuitMorphologies } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
+import {
+  storedPackOf,
+  useCircuitMorphologies,
+} from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import {
@@ -208,12 +211,32 @@ export function LargeCircuitPreview({
   const drawable = placed.length > 0 && !error;
   // The cells are numbered through `placed`, as `positions` and `cellColors`
   // are, so a morphology's cell is the soma of the same index.
+  const stored = storedPackOf(circuit.assets);
+  // By its fields: the circuit fetched again is the same pack.
+  const { id: storedId, size: storedSize = 0, sha256: storedSha256 = null } = stored ?? {};
   const morphologiesSource = React.useMemo(
     () =>
       wantsMorphologies && drawable
-        ? { circuitId: circuit.id, ...somas, somaRadius: speciesRadius }
+        ? {
+            circuitId: circuit.id,
+            ...somas,
+            somaRadius: speciesRadius,
+            stored:
+              storedId === undefined
+                ? null
+                : { id: storedId, size: storedSize, sha256: storedSha256 },
+          }
         : null,
-    [wantsMorphologies, drawable, circuit.id, somas, speciesRadius]
+    [
+      wantsMorphologies,
+      drawable,
+      circuit.id,
+      somas,
+      speciesRadius,
+      storedId,
+      storedSize,
+      storedSha256,
+    ]
   );
   const morphologies = useCircuitMorphologies(morphologiesSource, () =>
     onRepresentationChange?.('somas')

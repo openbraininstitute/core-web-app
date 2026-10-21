@@ -42,6 +42,8 @@ export interface Detail {
    * before the budget; none where that is not given.
    */
   finer: Uint8Array;
+  /** Of a pack still coming in, 1 where a box in view is drawn coarser than the pixels take it for what is in. */
+  capped?: Uint8Array;
   /**
    * What the levels chosen come to, of the boxes in view, or with a base of every box; where the boxes in view are left
    * out, what they come to at the coarsest.
@@ -68,7 +70,8 @@ const middle = new THREE.Vector3();
 
 /**
  * `roomFor` gives what a box's segments take of the budget; `base`, whether every box's coarsest level is kept drawn;
- * `finest`, with a base, the finest level a box in view may be drawn at.
+ * `finest`, with a base, the finest level a box in view may be drawn at; `arrived`, of a pack still coming in, the
+ * finest level of each box that is in, as if the pixels wanted no finer (beyond the coarsest where none is).
  */
 export function chooseDetail(
   { boxes, levels }: PackBoxes,
@@ -76,7 +79,8 @@ export function chooseDetail(
   { budget, pixels }: DetailRules,
   roomFor: (segments: number) => number,
   base = false,
-  finest?: (box: number) => number
+  finest?: (box: number) => number,
+  arrived?: Int8Array
 ): Detail {
   const count = boxes.length / 6;
   const coarsest = levels.length - 1;
@@ -84,6 +88,7 @@ export function chooseDetail(
   const away = new Float64Array(count);
   const inView: number[] = [];
   const finer = new Uint8Array(count);
+  const capped = arrived && new Uint8Array(count);
   const finestOf = base ? finest : undefined;
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
   const span = pixelSpan(view.projection, view.height);
@@ -106,6 +111,10 @@ export function chooseDetail(
     if (finestOf && level < coarsest) {
       finer[b] = 1;
       level = Math.max(level, finestOf(b));
+    }
+    if (arrived && capped && arrived[b] > level) {
+      capped[b] = 1;
+      level = Math.min(arrived[b], coarsest);
     }
     chosen[b] = level;
     away[b] = middle.distanceTo(view.focus);
@@ -133,7 +142,7 @@ export function chooseDetail(
   if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
   else for (const b of order) segments += segmentsOf(b);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
-  if (room <= budget) return { levels: chosen, order, finer, segments, room, leftOut: 0 };
+  if (room <= budget) return { levels: chosen, order, finer, capped, segments, room, leftOut: 0 };
   for (const b of order) chosen[b] = -1;
-  return { levels: chosen, order, finer, segments, room, leftOut: order.length };
+  return { levels: chosen, order, finer, capped, segments, room, leftOut: order.length };
 }

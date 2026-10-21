@@ -81,6 +81,18 @@ export interface BoxRead {
 export interface MorphologyChunks extends PackBoxes {
   /** The segments of each box asked for, at its level, in that order, their cells numbered as the data's. */
   read(wanted: BoxRead[]): Promise<MorphologySegments[]>;
+  /** Where the pack is still coming in: a box is read at a level once its bytes are in. None, and the whole is. */
+  arrival?: PackArrival;
+}
+
+/** How much of a pack coming in is in, and how much each box needs. */
+export interface PackArrival {
+  /** Of each level, how much of the file each box needs in to be read at it. */
+  readableAt: Float64Array[];
+  /** How much of the file is in. */
+  received(): number;
+  /** `listener` told each time more is in; returns what stops that. */
+  listen(listener: () => void): () => void;
 }
 
 /** How much of a pack read a box at a time is drawn. */

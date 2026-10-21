@@ -41,9 +41,9 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
 }
 
 /**
- * Over the cells: how far the pack has come, why the circuit stayed somas, that the morphologies in view are left out
- * for the budget (and where the browser has no WebGPU, that one with it shows them), or that they are drawn with WebGL
- * 2 since WebGPU gave out.
+ * Over the cells: how far the pack has come before it is shown, why the circuit stayed somas, that the morphologies in
+ * view are left out for the budget (and where the browser has no WebGPU, that one with it shows them), that they are
+ * drawn with WebGL 2 since WebGPU gave out, or, where there is nothing else to say, how far the rest has come.
  */
 export function MorphologiesStatus({
   load,
@@ -70,8 +70,11 @@ export function MorphologiesStatus({
 }) {
   let pill: ReactNode = null;
   const gaveOut = fallback && fallback !== 'missing' ? GAVE_OUT[fallback] : null;
+  const busy = (of: { received: number; total: number }) => (
+    <StatusPill text={loadingText(of)} kind="busy" theme={theme} place={place} />
+  );
   if (load.status === 'loading') {
-    pill = <StatusPill text={loadingText(load)} kind="busy" theme={theme} place={place} />;
+    pill = busy(load);
   } else if (load.status === 'ready' && leftOut) {
     const text = fallback === 'missing' ? `${LEFT_OUT}. ${WITH_WEBGPU}` : LEFT_OUT;
     pill = <StatusPill text={text} kind="info" theme={theme} place={place} />;
@@ -89,6 +92,8 @@ export function MorphologiesStatus({
         <StatusAction onClick={onFallbackDismiss}>Dismiss</StatusAction>
       </StatusPill>
     );
+  } else if (load.status === 'ready' && load.coming) {
+    pill = busy(load.coming);
   }
   return pill && <div className="pointer-events-none absolute inset-0 z-10">{pill}</div>;
 }

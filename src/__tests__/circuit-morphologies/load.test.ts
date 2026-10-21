@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { createHash } from 'node:crypto';
+
 import * as Comlink from 'comlink';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -15,11 +17,13 @@ import { mortonOrder } from '@/features/circuit-viewer/morphologies/load/morton'
 import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 import {
   createPackApi,
+  PACK_CACHE,
   type PackApi,
+  STORED_PACK_CACHE,
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
-import { joined, pack } from './packs';
+import { indexEnd, indexOf, joined, pack } from './packs';
 
 import type { OnProgress } from '@/features/circuit-viewer/morphologies/load/download';
 import type {
@@ -32,6 +36,7 @@ import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
 
 const URL_A = 'https://obi-one.test/circuit/viz/a/morphology-pack?all_levels=true';
 const BOUNDS: CacheBounds = { name: 'test-pack', ttlMs: 60_000, maxBytes: 2 ** 20 };
+const STORED: CacheBounds = { name: 'test-mpack', ttlMs: 60_000, maxBytes: 2 ** 20 };
 /** The pack's own, in its order: a page with these numbers its cells as the pack does. */
 const POPULATIONS = [
   { name: 'excitatory', cells: 3 },
@@ -79,7 +84,7 @@ function inProcess(): TestWorker {
     fail = reject;
   });
   died.catch(() => {});
-  const api = createPackApi(BOUNDS);
+  const api = createPackApi(BOUNDS, STORED);
   const handedOver: ArrayBufferLike[] = [];
   const exposed: PackApi = {
     async open(...args) {
@@ -87,6 +92,7 @@ function inProcess(): TestWorker {
       if (opened.kind === 'opened') handedOver.push(opened.data.somas.buffer);
       return opened;
     },
+    whole: () => api.whole(),
     async read(wanted) {
       const read = await api.read(wanted);
       for (const { segments } of read) handedOver.push(segments.buffer);
@@ -121,17 +127,37 @@ const load = (overrides: Partial<LoadOptions> = {}) =>
   });
 
 async function loaded(overrides?: Partial<LoadOptions>) {
-  const outcome = await load(overrides);
-  if (outcome.kind !== 'loaded') throw new Error(`refused: ${outcome.reason}`);
-  return outcome;
+  const result = await load(overrides);
+  if (result.kind !== 'loaded') throw new Error(`refused: ${result.reason}`);
+  return result;
 }
 
-/** What a load of `bytes` hands over for a page of `populations`: the pack opened, its somas numbered the page's way. */
-async function opened(bytes: Uint8Array, populations: Population[] = POPULATIONS) {
-  const { data, boxes, levels } = await openPack(bytes);
+/** A load, once the whole pack is in and kept. */
+const kept = async (overrides?: Partial<LoadOptions>) => (await loaded(overrides)).whole;
+
+/**
+ * What a load of `bytes` hands over for a page of `populations`: the pack opened, its somas numbered the page's way;
+ * downloaded, with how much each box needs in.
+ */
+async function opened(
+  bytes: Uint8Array,
+  populations: Population[] = POPULATIONS,
+  downloaded = true
+) {
+  const { data, boxes, levels, readableAt } = await openPack(bytes);
   const page = renumberSomas(data, pageCells(data.populations, populations), populations);
-  return { ...page, chunks: { boxes, levels, read: expect.any(Function) } };
+  const arrival = { readableAt, received: expect.any(Function), listen: expect.any(Function) };
+  const chunks = { boxes, levels, read: expect.any(Function) };
+  return { ...page, chunks: downloaded ? { ...chunks, arrival } : chunks };
 }
+
+/** A load of `bytes` as `toEqual` takes it. */
+const outcome = async (bytes: Uint8Array, fromCache = false) => ({
+  kind: 'loaded',
+  fromCache,
+  data: await opened(bytes, POPULATIONS, !fromCache),
+  whole: expect.any(Promise),
+});
 
 /** Every box of a level of `bytes` as the worker reads it: the cells numbered the page's way, each box in Morton order. */
 async function asRead(bytes: Uint8Array, level = 0, populations = POPULATIONS) {
@@ -171,11 +197,12 @@ function replaceCached(body: Uint8Array) {
 }
 
 describe('loadCircuitMorphologies', () => {
-  it('fetches the pack, opens it, hands its somas over and keeps it in the cache, the worker kept', async () => {
+  it('fetches the pack, opens it, hands its somas over and keeps it in the cache once it is all in, the worker kept', async () => {
     const { fetch } = serve(small());
-    const outcome = await load();
+    const first = await loaded();
 
-    expect(outcome).toEqual({ kind: 'loaded', fromCache: false, data: await opened(small()) });
+    expect(first).toEqual(await outcome(small()));
+    await first.whole;
     expect(fetch).toHaveBeenCalledExactlyOnceWith(URL_A, {
       headers: { Authorization: 'Bearer token' },
     });
@@ -207,7 +234,7 @@ describe('loadCircuitMorphologies', () => {
   it('reports progress at most every 100 ms, and at the end', async () => {
     serve(small());
     vi.spyOn(performance, 'now').mockReturnValue(1000);
-    await load();
+    await kept();
 
     const size = small().byteLength;
     expect(progress).toEqual([
@@ -218,7 +245,7 @@ describe('loadCircuitMorphologies', () => {
 
   it('reports no total where the server gives none', async () => {
     serve(small(), { length: false });
-    await load();
+    await kept();
 
     expect(progress.at(-1)).toEqual([small().byteLength, 0]);
   });
@@ -242,14 +269,64 @@ describe('loadCircuitMorphologies', () => {
     expect(progress).toEqual([[1, 2]]);
   });
 
+  describe('once the whole pack has settled, a report come late on its own channel', () => {
+    /** A load whose whole pack settles as the test says, and whose reports the test sends. */
+    async function settling() {
+      let report: OnProgress = () => {};
+      let settle: (failure?: Error) => void = () => {};
+      const all = new Promise<void>((resolve, reject) => {
+        settle = (failure) => (failure ? reject(failure) : resolve());
+      });
+      const { data, boxes, levels, readableAt } = await openPack(small());
+      const api = {
+        async open(_request: unknown, _populations: unknown, onProgress: OnProgress) {
+          report = onProgress;
+          return { kind: 'opened', data, boxes, levels, readableAt, fromCache: false };
+        },
+        whole: () => all,
+      } as unknown as Comlink.Remote<PackApi>;
+      const worker = () => ({ api, died: new Promise<never>(() => {}), terminate() {} });
+      const { data: shown, whole } = await loaded({ worker });
+      const arrival = shown.chunks?.arrival;
+      const told = vi.fn();
+      arrival?.listen(told);
+      return { report, settle, whole, arrival, told };
+    }
+
+    it('takes the whole pack as in where it all came, and moves nothing', async () => {
+      const { report, settle, whole, arrival, told } = await settling();
+      report(1, 2);
+      expect(arrival?.received()).toBe(1);
+      settle();
+      await whole;
+      report(1, 2);
+
+      expect(arrival?.received()).toBe(Number.POSITIVE_INFINITY);
+      expect(told).toHaveBeenCalledTimes(2);
+      expect(progress).toEqual([[1, 2]]);
+    });
+
+    it('moves what is in where it did not all come, and is told the page no more', async () => {
+      const { report, settle, whole, arrival, told } = await settling();
+      report(1, 4);
+      settle(new Error('Download not resumed (HTTP 403)'));
+      await whole.catch(() => {});
+      report(3, 4);
+
+      expect(arrival?.received()).toBe(3);
+      expect(told).toHaveBeenCalledTimes(2);
+      expect(progress).toEqual([[1, 4]]);
+    });
+  });
+
   it('opens the pack from the cache on a later visit', async () => {
     const { served } = serve(small());
-    await loaded();
+    await kept();
     expect(cached()?.body).toEqual(small());
     const onProgress = vi.fn();
     const second = await load({ onProgress });
 
-    expect(second).toEqual({ kind: 'loaded', fromCache: true, data: await opened(small()) });
+    expect(second).toEqual(await outcome(small(), true));
     expect(served.requests).toBe(1);
     expect(onProgress).not.toHaveBeenCalled();
   });
@@ -258,7 +335,7 @@ describe('loadCircuitMorphologies', () => {
     const other = URL_A.replace('/a/', '/b/');
     const server = fakeServer({ [URL_A]: small(), [other]: small() });
     vi.stubGlobal('fetch', server.fetch);
-    await loaded();
+    await kept();
     const second = await loaded({ request: { url: other, headers: {} } });
 
     expect(second.fromCache).toBe(false);
@@ -267,13 +344,14 @@ describe('loadCircuitMorphologies', () => {
 
   it('drops a cached pack that does not open, and fetches it again', async () => {
     const { served } = serve(small());
-    await loaded();
+    await kept();
     expect(cached()?.body).toEqual(small());
     replaceCached(broken());
     const again = await loaded();
 
     expect(again.fromCache).toBe(false);
     expect(again.data).toEqual(await opened(small()));
+    await again.whole;
     expect(served.requests).toBe(2);
     expect(cached()?.body).toEqual(small());
   });
@@ -387,13 +465,129 @@ describe('loadCircuitMorphologies', () => {
     expect(workers[0].terminated).toBe(true);
   });
 
+  describe('of a pack stored as the circuit asset', () => {
+    const URL_S = 'https://entitycore.test/circuit/c/assets/p/download';
+    const S3 = 'https://s3.test/pack?signature';
+    const digestOf = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+    /** Past the somas, into the base. */
+    const breakAt = (bytes: Uint8Array) => indexEnd(bytes) + indexOf(bytes).levels[2].offset + 40;
+
+    /**
+     * entitycore sending the request on to S3, which serves ranges; the `n`th response's body breaks at `breaks[n]`
+     * bytes into the file, where there is one.
+     */
+    function storedServer(bytes: Uint8Array, breaks: number[]) {
+      const fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+        const range = (init?.headers as Record<string, string> | undefined)?.Range;
+        const from = range ? Number(range.slice('bytes='.length, -1)) : 0;
+        const to = breaks[fetch.mock.calls.length - 1] ?? bytes.byteLength;
+        let sent = false;
+        const body = new ReadableStream<Uint8Array>({
+          pull(controller) {
+            if (!sent) {
+              sent = true;
+              controller.enqueue(bytes.slice(from, to));
+            } else if (to < bytes.byteLength) controller.error(new TypeError('network error'));
+            else controller.close();
+          },
+        });
+        const response = new Response(body, {
+          status: range ? 206 : 200,
+          headers: { 'Content-Length': String(bytes.byteLength - from) },
+        });
+        Object.defineProperty(response, 'url', { value: S3 });
+        return response;
+      });
+      vi.stubGlobal('fetch', fetch);
+      return fetch;
+    }
+
+    const storedRequest = (bytes: Uint8Array, sha256: string | null = digestOf(bytes)) => ({
+      url: URL_S,
+      headers: { Authorization: 'Bearer token' },
+      stored: { size: bytes.byteLength, sha256 },
+    });
+    const storedEntry = () => storage.buckets.get(STORED.name)?.entries.get(URL_S);
+
+    it('resumes where the body broke, of the URL it was sent on to with the range alone, and keeps it in a bucket of its own', async () => {
+      const bytes = small();
+      const fetch = storedServer(bytes, [breakAt(bytes)]);
+      const first = await loaded({ request: storedRequest(bytes) });
+      await first.whole;
+
+      expect(fetch.mock.calls.map(([url, init]) => [url, init])).toEqual([
+        [URL_S, { headers: { Authorization: 'Bearer token' } }],
+        [S3, { headers: { Range: `bytes=${breakAt(bytes)}-` } }],
+      ]);
+      for (const level of [0, 1, 2]) {
+        expect(await readLevel(first.data, level)).toEqual(await asRead(bytes, level));
+      }
+      expect(storedEntry()?.body).toEqual(bytes);
+      expect(storage.buckets.get(BOUNDS.name)?.entries.size ?? 0).toBe(0);
+
+      const again = await loaded({ request: storedRequest(bytes) });
+      expect(again.fromCache).toBe(true);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('refuses the boxes past a second break, keeps nothing, and fails the whole', async () => {
+      const bytes = small();
+      storedServer(bytes, [breakAt(bytes), breakAt(bytes) + 100]);
+      const { data, whole } = await loaded({ request: storedRequest(bytes) });
+
+      await expect(whole).rejects.toThrow(`Download of ${breakAt(bytes) + 100} bytes`);
+      await expect(readLevel(data, 0)).rejects.toThrow('cut short');
+      expect(storedEntry()).toBeUndefined();
+    });
+
+    it("keeps no pack whose digest is not its asset's, its morphologies still read", async () => {
+      const bytes = small();
+      storedServer(bytes, []);
+      const { data, whole } = await loaded({ request: storedRequest(bytes, '00'.repeat(32)) });
+
+      await expect(whole).rejects.toThrow("digest is not its asset's");
+      expect(await readLevel(data, 2)).toEqual(await asRead(bytes, 2));
+      expect(storedEntry()).toBeUndefined();
+    });
+
+    it('takes one whose body broke after its last byte as whole, and keeps it', async () => {
+      const bytes = small();
+      let sent = false;
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (sent) controller.error(new TypeError('network error'));
+          else controller.enqueue(bytes.slice());
+          sent = true;
+        },
+      });
+      vi.stubGlobal('fetch', async () => new Response(body));
+      await kept({ request: storedRequest(bytes) });
+
+      expect(storedEntry()?.body).toEqual(bytes);
+    });
+
+    it('keeps one with no digest to check against', async () => {
+      const bytes = small();
+      storedServer(bytes, []);
+      await kept({ request: storedRequest(bytes, null) });
+
+      expect(storedEntry()?.body).toEqual(bytes);
+    });
+
+    it('keeps stored packs a month, and those OBI-One builds a day', () => {
+      const DAY_MS = 24 * 60 * 60 * 1000;
+      expect(STORED_PACK_CACHE.ttlMs).toBe(30 * DAY_MS);
+      expect(PACK_CACHE.ttlMs).toBe(DAY_MS);
+    });
+  });
+
   it('fetches the pack every time where the browser has no Cache Storage', async () => {
     vi.stubGlobal('caches', undefined);
     const { served } = serve(small());
-    await loaded();
+    await kept();
     const second = await loaded();
 
-    expect(second).toEqual({ kind: 'loaded', fromCache: false, data: await opened(small()) });
+    expect(second).toEqual(await outcome(small()));
     expect(served.requests).toBe(2);
   });
 });

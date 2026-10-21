@@ -18,6 +18,8 @@ import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
+import { arrivalOf } from './arrival';
+
 import type { ArenaDrawing } from '@/features/circuit-viewer/morphologies/engine/circuit-view';
 import type { ImpostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import type { SomaCloudUniforms } from '@/features/circuit-viewer/morphologies/engine/soma-cloud';
@@ -27,6 +29,7 @@ import type {
   CircuitMorphologyData,
   CircuitSomas,
   ElectrodeGroup,
+  MorphologyChunks,
 } from '@/features/circuit-viewer/morphologies/types';
 import type { Sections } from '@/features/scan-config/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -1676,6 +1679,26 @@ describe('the morphologies read a box at a time', () => {
     ).filter((w) => w >>> TYPE_SHIFT !== HOLE);
     expect(words).toHaveLength(wanted.reduce((sum, { level }) => sum + COUNTS[level], 0));
     expect(new Set(words.map((w) => w & CELL_MASK))).toEqual(new Set([0, 2]));
+  });
+
+  it('asks for the boxes of a pack still coming in as their bytes come, a frame at rest drawn once a finer level is in', () => {
+    const { viewer, inner } = make();
+    const data = chunked();
+    const { arrival, to } = arrivalOf([
+      Float64Array.of(90, 100),
+      Float64Array.of(50, 60),
+      Float64Array.of(10, 20),
+    ]);
+    (data.chunks as MorphologyChunks).arrival = arrival;
+    viewer.setData(data);
+    frames(inner);
+    expect(reads).toHaveLength(0);
+    expect(frames(inner)).toBe(0);
+
+    // A base newly in is read, with no frame drawn for it until it is.
+    to(15);
+    expect(frames(inner)).toBe(0);
+    expect(reads.flatMap(({ wanted }) => wanted)).toEqual([{ level: 2, box: 0 }]);
   });
 
   it('picks with the same quads', async () => {

@@ -784,8 +784,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The levels chosen again where the camera, the view's height, the rules, whether the view is still or the boxes seen
-   * changed since they were last, and a frame asked for at rest where that lets go of boxes or places some at once.
+   * The levels chosen again where the camera, the view's height, the rules, whether the view is still, the boxes seen
+   * or what of the pack is in changed since they were last, and a frame asked for at rest where that lets go of boxes or
+   * places some at once.
    * Here, not in `work`: the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
@@ -803,7 +804,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       (was.height !== height ||
         !was.projection.equals(camera.projectionMatrix) ||
         !was.view.equals(camera.matrixWorldInverse));
-    if (!moved && !detailed.seenChanged && was?.still === still && was.rules === this.detailRules) {
+    if (
+      !moved &&
+      !detailed.seenChanged &&
+      !detailed.stream.moreArrived &&
+      was?.still === still &&
+      was.rules === this.detailRules
+    ) {
       return;
     }
     const chosenFor = was ?? { projection: new THREE.Matrix4(), view: new THREE.Matrix4() };
