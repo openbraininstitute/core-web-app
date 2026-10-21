@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -498,6 +498,42 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(asked).toEqual(['somas']);
     expect(screen.getByRole('status')).toHaveTextContent('The morphologies could not be loaded');
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('keeps what is drawn where the rest of the pack does not come in, says so over what is left out, and loads it again', async () => {
+    render(<Hosted start="morphologies" />);
+    const first = await started();
+    const cut = Promise.reject(new Error('Download cut short'));
+    await act(async () => first.resolve(loadedOf(data(), false, cut)));
+    await screen.findByTestId('morphologies');
+    act(() => h.cells?.onLeftOut?.(true));
+
+    await waitFor(() =>
+      expect(status()).toBe('Not all of the morphologies could be loadedTry againDismiss')
+    );
+    expect(screen.getByTestId('morphologies')).toBeInTheDocument();
+    expect(asked).toEqual([]);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(asked).toEqual([]);
+    await started(2);
+    expect(status()).toBe('Loading morphologies…');
+  });
+
+  it('says nothing of a pack cut short once switched back to the somas', async () => {
+    render(<Hosted start="morphologies" />);
+    const load = await started();
+    await act(async () =>
+      load.resolve(loadedOf(data(), false, Promise.reject(new Error('Download cut short'))))
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+    );
+
+    fireEvent.click(screen.getByText('switch off'));
+
+    expect(status()).toBeNull();
   });
 
   it('says nothing of morphologies the circuit is no longer offered as', async () => {

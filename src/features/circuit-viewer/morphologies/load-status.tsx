@@ -34,6 +34,9 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
   if (stopped.kind === 'failed') {
     return { text: 'The morphologies could not be loaded', retry: true };
   }
+  if (stopped.kind === 'cut') {
+    return { text: 'Not all of the morphologies could be loaded', retry: true };
+  }
   return {
     text: REFUSALS[stopped.reason] ?? 'The morphologies cannot be shown',
     retry: stopped.reason === 'busy',
@@ -41,8 +44,8 @@ function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean }
 }
 
 /**
- * Over the cells: how far the pack has come before it is shown, why the circuit stayed somas, that the morphologies in
- * view are left out for the budget (and where the browser has no WebGPU, that one with it shows them), that they are
+ * Over the cells: how far the pack has come before it is shown, why the circuit stayed somas or the rest of the pack
+ * did not come in, that the morphologies in view are left out for the budget (and where the browser has no WebGPU, that one with it shows them), that they are
  * drawn with WebGL 2 since WebGPU gave out, or, where there is nothing else to say, how far the rest has come.
  */
 export function MorphologiesStatus({
@@ -75,9 +78,6 @@ export function MorphologiesStatus({
   );
   if (load.status === 'loading') {
     pill = busy(load);
-  } else if (load.status === 'ready' && leftOut) {
-    const text = fallback === 'missing' ? `${LEFT_OUT}. ${WITH_WEBGPU}` : LEFT_OUT;
-    pill = <StatusPill text={text} kind="info" theme={theme} place={place} />;
   } else if (stopped) {
     const { text, retry } = stopNotice(stopped);
     pill = (
@@ -86,6 +86,9 @@ export function MorphologiesStatus({
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
       </StatusPill>
     );
+  } else if (load.status === 'ready' && leftOut) {
+    const text = fallback === 'missing' ? `${LEFT_OUT}. ${WITH_WEBGPU}` : LEFT_OUT;
+    pill = <StatusPill text={text} kind="info" theme={theme} place={place} />;
   } else if (load.status === 'ready' && gaveOut) {
     pill = (
       <StatusPill text={gaveOut} kind="info" theme={theme} place={place}>

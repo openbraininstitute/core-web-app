@@ -44,8 +44,11 @@ export type MorphologiesLoad =
   /** `coming`, while the rest of the pack comes in. */
   | { status: 'ready'; data: CircuitMorphologyData; coming?: { received: number; total: number } };
 
-/** Why a load ended with nothing to show: OBI-One would not build the pack, or the load failed. */
-export type MorphologiesStop = Refused | { kind: 'failed' };
+/**
+ * Why a load stopped: OBI-One would not build the pack, or the load failed, both with nothing to show; or the rest of
+ * the pack did not come in, what had shown kept (`cut`).
+ */
+export type MorphologiesStop = Refused | { kind: 'failed' } | { kind: 'cut' };
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
@@ -77,22 +80,34 @@ async function packRequest(
  * Loads the morphologies of `source`, whose boxes the view reads as it wants them, until `source` changes or goes and
  * they are let go of: ready once the pack's somas are in, the rest still coming. A circuit OBI-One refuses and a load
  * that fails both end idle, with `onStopped` called and `stopped` saying why until it is dismissed or the next load
- * starts.
+ * starts. Where the rest of the pack does not come in, what is shown stays and `stopped` says so until `retry` loads
+ * it again or `source` goes.
  */
 export function useCircuitMorphologies(
   source: MorphologiesSource | null,
   onStopped: () => void
-): { load: MorphologiesLoad; stopped: MorphologiesStop | null; dismiss(): void } {
+): {
+  load: MorphologiesLoad;
+  stopped: MorphologiesStop | null;
+  dismiss(): void;
+  retry(): void;
+} {
   const workspace = useWorkspace();
   const [current, setCurrent] = useState<{
     source: MorphologiesSource;
     load: MorphologiesLoad;
   } | null>(null);
   const [stopped, setStopped] = useState<MorphologiesStop | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const told = useLatest(onStopped);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new attempt loads the same source again
   useEffect(() => {
-    if (!source) return;
+    // The rest of a pack no longer shown is nothing to say.
+    if (!source) {
+      setStopped((was) => (was?.kind === 'cut' ? null : was));
+      return;
+    }
     const controller = new AbortController();
     const { signal } = controller;
     const setLoad = (load: MorphologiesLoad) => setCurrent({ source, load });
@@ -137,7 +152,9 @@ export function useCircuitMorphologies(
       show(data, loaded.fromCache ? null : last);
       loaded.whole
         .catch((e: unknown) => {
-          if (!signal.aborted) logError('Could not load the whole of the circuit morphologies', e);
+          if (signal.aborted) return;
+          logError('Could not load the whole of the circuit morphologies', e);
+          setStopped({ kind: 'cut' });
         })
         .finally(() => {
           if (!signal.aborted) show(data, null);
@@ -160,9 +177,14 @@ export function useCircuitMorphologies(
       controller.abort();
       setCurrent(null);
     };
-  }, [source, workspace, told]);
+  }, [source, workspace, told, attempt]);
 
   // A source that changed or went leaves its load behind for a render, which is not the next one's.
   const load = current?.source === source ? current.load : IDLE;
-  return { load, stopped, dismiss: () => setStopped(null) };
+  return {
+    load,
+    stopped,
+    dismiss: () => setStopped(null),
+    retry: () => setAttempt((n) => n + 1),
+  };
 }

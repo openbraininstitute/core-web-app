@@ -171,7 +171,7 @@ describe('useCircuitMorphologies', () => {
     });
   });
 
-  it('keeps the morphologies shown where the rest of the pack does not come in, and says so in the log', async () => {
+  it('keeps the morphologies shown where the rest of the pack does not come in, and says so', async () => {
     const { result, onStopped } = render();
     const load = await started();
     const loaded = data();
@@ -179,15 +179,56 @@ describe('useCircuitMorphologies', () => {
     await act(async () => load.resolve(loadedOf(loaded, false, Promise.reject(error))));
     await ready(result);
 
-    await waitFor(() =>
-      expect(h.logError).toHaveBeenCalledWith(
-        'Could not load the whole of the circuit morphologies',
-        error
-      )
+    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+    expect(h.logError).toHaveBeenCalledWith(
+      'Could not load the whole of the circuit morphologies',
+      error
     );
     expect(result.current.load).toEqual({ status: 'ready', data: loaded });
-    expect(result.current.stopped).toBeNull();
     expect(onStopped).not.toHaveBeenCalled();
+  });
+
+  it('loads a pack cut short again when asked, letting go of the one before', async () => {
+    const { result } = render();
+    const first = await started();
+    await act(async () => first.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
+    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+
+    act(() => result.current.retry());
+
+    expect(first.options.signal.aborted).toBe(true);
+    expect(result.current.stopped).toBeNull();
+    expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 0 });
+    const second = await started(2);
+    expect(second.options.request).toEqual(first.options.request);
+  });
+
+  it('forgets a pack cut short once its source goes, as it does not a refusal', async () => {
+    const { result, rerender } = render();
+    const load = await started();
+    await act(async () => load.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
+    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+
+    rerender({ source: null });
+
+    expect(result.current.stopped).toBeNull();
+  });
+
+  it('says nothing of a pack cut short after its load was stopped', async () => {
+    let cut = (_: Error) => {};
+    const whole = new Promise<void>((_, reject) => {
+      cut = reject;
+    });
+    const { result, rerender } = render();
+    const load = await started();
+    await act(async () => load.resolve(loadedOf(data(), false, whole)));
+    await ready(result);
+    rerender({ source: null });
+
+    await act(async () => cut(new Error('aborted')));
+
+    expect(result.current.stopped).toBeNull();
+    expect(h.logError).not.toHaveBeenCalled();
   });
 
   it('ends idle and says why, until that is dismissed, when OBI-One refuses the circuit', async () => {

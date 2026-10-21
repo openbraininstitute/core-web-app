@@ -294,7 +294,12 @@ export function LargeCircuitPreview({
         fallback={fallback}
         theme={themeFromBackground(backgroundColor)}
         place={statusPlace}
-        onRetry={() => onRepresentationChange?.('morphologies')}
+        // A load that stopped short is still on; one that stopped with nothing went back to somas.
+        onRetry={() =>
+          morphologies.stopped?.kind === 'cut'
+            ? morphologies.retry()
+            : onRepresentationChange?.('morphologies')
+        }
         onDismiss={morphologies.dismiss}
         onFallbackDismiss={() => setFallback(null)}
       />
