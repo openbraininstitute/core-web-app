@@ -18,14 +18,13 @@ import {
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
+import { defaultFlags } from '@/features/feature-flags/config';
+import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IGridDataSource, IGridPage, IGridState } from '@/features/data-grid/core';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: WorkspaceScope.Public, isPending: false, changeScope: () => {} }),
-}));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl', projectId: 'pr' }),
 }));
@@ -81,7 +80,9 @@ function wrap(ui: ReactNode, store: ReturnType<typeof createStore>) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <Provider store={store}>{ui}</Provider>
+      <Provider store={store}>
+        <FlagsProvider flags={defaultFlags}>{ui}</FlagsProvider>
+      </Provider>
     </QueryClientProvider>
   );
 }

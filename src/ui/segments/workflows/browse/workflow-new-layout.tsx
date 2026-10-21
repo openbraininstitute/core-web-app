@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowBreadcrumbProvider } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { WorkflowBreadcrumb } from '@/ui/segments/workflows/elements/workflow-breadcrumb';
 import { cn } from '@/utils/css-class';
 
@@ -36,7 +35,6 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="mx-2 flex h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] flex-col overflow-hidden">
-      <WorkflowScopeTabs className="mb-3 max-w-max" />
       <WorkflowBreadcrumbProvider key={type}>
         <div className="bg-background border-neutral-2 h-full overflow-hidden rounded-2xl border">
           <WorkflowBreadcrumb />

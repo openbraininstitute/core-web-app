@@ -20,6 +20,10 @@ export type MiniBrainAtlasViewerGltfProps = {
   regionName?: string;
   className?: string;
   onLoading?: (loading: boolean) => void;
+  /** above 1 the brain fills more of the canvas */
+  cameraZoom?: number;
+  /** the colour the canvas clears to; navy by default */
+  backgroundColor?: string;
 };
 
 export function MiniBrainAtlasViewerGltf({
@@ -28,11 +32,18 @@ export function MiniBrainAtlasViewerGltf({
   regionName = 'Brain',
   className,
   onLoading,
+  cameraZoom,
+  backgroundColor,
 }: MiniBrainAtlasViewerGltfProps) {
   const accessToken = useAccessToken();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const painter = usePainter({ loading: false, atlasId });
+  const painter = usePainter({
+    loading: false,
+    atlasId,
+    cameraZoom,
+    backgroundColor,
+  });
 
   const regions = useMemo<VisibleRegion[]>(
     () => [

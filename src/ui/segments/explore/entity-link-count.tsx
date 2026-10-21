@@ -1,9 +1,8 @@
 import { useAtomValue } from 'jotai';
-import { useSearchParams } from 'next/navigation';
 import { match } from 'ts-pattern';
 
 import { useTabs } from '@/components/detail-view-tabs';
-import { SCOPE_QUERY_PARAMS, type TWorkspaceScope, WorkspaceScope } from '@/constants';
+import { DATA_SECTION_SCOPE, type TWorkspaceScope } from '@/constants';
 import {
   speciesSelectionModeAtom,
   useGetSelectedBrainRegion,
@@ -11,9 +10,9 @@ import {
 } from '@/features/brain-region-hierarchy/context';
 import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy/hooks';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { useFlags } from '@/features/feature-flags';
-import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
-import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { SegmentedTabs } from '@/ui/molecules/tabs/segmented-tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import {
   BrowseExperimentalDataExtendedTypes,
@@ -28,6 +27,13 @@ import { cn } from '@/utils/css-class';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 
 export { ExploreDataTypeTabs, type TExploreDataTypeTabs } from '@/ui/segments/explore/helpers';
+
+const DATA_TYPE_SEGMENTS = DataSectionDataTypeTabsConfig.map((tab) => ({
+  value: tab.key,
+  label: tab.title,
+  id: `data-type-tab-${tab.key}`,
+  testId: `data-type-tab-${tab.key}`,
+}));
 
 type TBrowseLinkListEntity = {
   title: string;
@@ -68,14 +74,11 @@ function BrowseLinkList({
 
 export function EntityLinkCount() {
   const featureFlags = useFlags();
-  const breakpoint = useDefaultBreakpoint();
   const { workspaceHierarchyId } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
 
   const { selectedBrainRegion } = useGetSelectedBrainRegion();
-  const scope = (useSearchParams().get(SCOPE_QUERY_PARAMS) ??
-    WorkspaceScope.Public) as TWorkspaceScope;
 
   const { result: brainRegionHierarchy } = usePrimaryHierarchyOfCurrentSpeciesQuery();
 
@@ -90,6 +93,7 @@ export function EntityLinkCount() {
     tabKey: 'group',
     shallow: true,
   });
+  const selectedTab = activeTab ?? ExploreDataTypeTabs.Experimental;
 
   const experimental = Object.values(BrowseExperimentalDataExtendedTypes).filter(
     (config) =>
@@ -105,7 +109,7 @@ export function EntityLinkCount() {
   );
 
   const listProps = {
-    scope,
+    scope: DATA_SECTION_SCOPE,
     hierarchyId: effectiveHierarchyId,
     currentBrainRegionId: effectiveCurrentBrainRegionId,
     defaultBrainRegionId: effectiveDefaultBrainRegionId,
@@ -122,49 +126,32 @@ export function EntityLinkCount() {
     .otherwise(() => null);
 
   return (
-    <div className="py-2">
-      <div id="data-type-tabs-container" data-testid="data-type-tabs-container" className="w-full">
-        <PillTabs
+    <div
+      className={cn(
+        'mx-1 mt-2 flex min-h-0 flex-1 flex-col rounded-3xl border border-white/70 p-2',
+        'bg-white/75 backdrop-blur-xl backdrop-saturate-150',
+        CARD_EDGE_CLASS,
+        '[@media(prefers-reduced-transparency:reduce)]:bg-white [@media(prefers-reduced-transparency:reduce)]:backdrop-blur-none'
+      )}
+    >
+      <div
+        id="data-type-tabs-container"
+        data-testid="data-type-tabs-container"
+        className="w-full shrink-0"
+      >
+        <SegmentedTabs
           id="data-type-selector"
-          data-testid="data-type-selector"
-          value={activeTab ?? ExploreDataTypeTabs.Experimental}
-          defaultValue={activeTab ?? ExploreDataTypeTabs.Experimental}
-          className="w-full px-1"
-          activationMode="manual"
-          onValueChange={(value) => {
-            onChangeTab(value as TExploreDataTypeTabs)();
-          }}
-        >
-          <PillTabsList
-            className={cn(
-              'grid h-10 w-full grid-cols-3 bg-white p-0 shadow-sm border-gray-100 border',
-              {
-                'h-12': breakpoint === 'xl',
-              }
-            )}
-          >
-            {DataSectionDataTypeTabsConfig.map((tab) => (
-              <PillTabsTrigger
-                key={tab.key}
-                value={tab.key}
-                id={`data-type-tab-${tab.key}`}
-                data-testid={`data-type-tab-${tab.key}`}
-                className={cn(
-                  'data-[state=active]:bg-primary-9 hover:bg-neutral-1 hover:text-primary-8 h-10 px-14! py-3 text-base select-none',
-                  'data-[state=active]:font-bold data-[state=active]:text-white',
-                  { 'h-12': breakpoint === 'xl' }
-                )}
-              >
-                {tab.title}
-              </PillTabsTrigger>
-            ))}
-          </PillTabsList>
-        </PillTabs>
+          aria-label="Data type"
+          value={selectedTab}
+          onValueChange={(value) => onChangeTab(value as TExploreDataTypeTabs)()}
+          segments={DATA_TYPE_SEGMENTS}
+          segmentClassName="text-base xl:h-10"
+        />
       </div>
       <div
         id="data-type-items-container"
         data-testid="data-type-items-container"
-        className="mb-4 mt-2 flex w-full flex-col items-center justify-center gap-2 py-2"
+        className="secondary-scrollbar mt-2 -mr-2 flex min-h-0 flex-1 flex-col items-center gap-2 overflow-x-hidden overflow-y-auto py-1 pr-0.5 [scrollbar-gutter:stable]"
       >
         {content}
       </div>

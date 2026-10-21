@@ -10,6 +10,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 // direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
+  EXPANDING_PILL_IDLE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
@@ -43,12 +44,15 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   workspace,
   className,
   expanding = false,
+  onDownload,
 }: RenderButtonProps<T> & {
   children?: ReactNode;
   workspace?: WorkspaceContext;
   className?: string;
   /** Render as the grid's expanding pill (icon at rest, label on hover/focus-visible). */
   expanding?: boolean;
+  /** replaces the archive download, e.g. with the page's own download panel */
+  onDownload?: (rows: T[]) => void;
 }) {
   const session = useAtomValue(sessionAtom);
   const [downloadState, setDownloadState] = useState<TDownloadState>(DownloadStateDict.idle);
@@ -170,6 +174,8 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
   );
 
   if (expanding) {
+    // with nothing picked it stays in place, greyed, rather than appearing on a pick
+    const idle = entityCount === 0;
     return (
       <motion.div
         initial={{ opacity: 0, x: -20 }}
@@ -179,17 +185,18 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
       >
         <Button
           rounded
-          aria-label={accessibleLabel}
+          aria-label={idle ? 'Download (select rows first)' : accessibleLabel}
           title={label}
           variant="default"
-          disabled={downloadState === DownloadStateDict.loading}
+          disabled={idle || downloadState === DownloadStateDict.loading}
           className={cn(
             EXPANDING_PILL_BASE_CLASS,
-            palette,
-            'focus-visible:ring-2 focus-visible:ring-primary-8/40',
+            idle
+              ? EXPANDING_PILL_IDLE_CLASS
+              : cn(palette, 'focus-visible:ring-2 focus-visible:ring-primary-8/40'),
             className
           )}
-          onClick={download}
+          onClick={onDownload ? () => onDownload(selectedRows) : download}
           data-testid="bulk-download-button"
         >
           <ExpandingPillContent icon={renderButtonIcon()} label={label} badge={selectionBadge} />
@@ -218,7 +225,7 @@ export function EntityDownloadButton<T extends EntityCoreIdentifiable>({
           'disabled:cursor-not-allowed disabled:opacity-70',
           className
         )}
-        onClick={download}
+        onClick={onDownload ? () => onDownload(selectedRows) : download}
         data-testid="bulk-download-button"
       >
         <span className="flex items-center justify-center gap-2.5">

@@ -8,12 +8,16 @@ import {
 import { AgExpandCell } from '@/features/data-grid/renderers/aggrid/expand-cell';
 import { AgExpandHostCell } from '@/features/data-grid/renderers/aggrid/expand-host-cell';
 import { AgHeader } from '@/features/data-grid/renderers/aggrid/header';
+import { cn } from '@/utils/css-class';
 
 import type { ColDef } from 'ag-grid-community';
 import type { IResolvedColumn } from '@/features/data-grid/core';
 import type { IExpandColumnConfig } from '@/features/data-grid/react';
 
 export const EXPAND_COL_ID = '__expand';
+
+/** An inset line, so it never fights AG Grid's own cell borders (focus, range). */
+const DIVIDER_CLASS = 'shadow-[inset_-1px_0_0_var(--ag-border-color)]';
 
 export interface IBuildColDefsOptions {
   hidden: Set<string>;
@@ -75,11 +79,14 @@ export function buildColDefs<Row>(
       hide: hidden.has(c.id),
       sortable: false,
       headerComponent: AgHeader,
+      // a keyed header lays itself out, edge to edge
+      headerClass: cn(c.headerRenderer && 'px-0!', c.divider && DIVIDER_CLASS) || undefined,
       headerComponentParams: {
         columnId: c.id,
         unit: c.unit,
         sortable: !!c.sortable,
         filter: filterParams,
+        headerRenderer: c.headerRenderer,
       },
       width: userWidth ?? c.width?.width,
       minWidth: c.width?.minWidth,
@@ -92,11 +99,11 @@ export function buildColDefs<Row>(
       pinned: c.pinned,
       lockPosition: c.pinned,
       cellClass:
-        c.align === Align.Right
-          ? 'ag-right-aligned-cell'
-          : c.align === Align.Center
-            ? 'ag-center-aligned-cell'
-            : undefined,
+        cn(
+          c.align === Align.Right && 'ag-right-aligned-cell',
+          c.align === Align.Center && 'ag-center-aligned-cell',
+          c.divider && DIVIDER_CLASS
+        ) || undefined,
     };
 
     if (getValue) {

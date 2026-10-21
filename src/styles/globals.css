@@ -402,6 +402,27 @@
   }
 }
 
+/* AG Grid draws its scroll bars in these viewports */
+.ag-body-horizontal-scroll-viewport,
+.ag-body-vertical-scroll-viewport {
+  @apply secondary-scrollbar;
+
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-400) var(--color-gray-200);
+  }
+}
+
+/* the spacers beside them only pad the pinned columns and corner: no track of their own */
+.ag-horizontal-left-spacer,
+.ag-horizontal-right-spacer {
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @utility white-scrollbar {
   @layer utilities {
     &::-webkit-scrollbar {
@@ -565,6 +586,27 @@ dialog {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Atlas morph: the full atlas and the mini atlas card are one box changing size */
+::view-transition-group(.atlas-morph) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  border-radius: 1rem;
+  overflow: clip;
+  /* atlas-morph.ts scales it from this corner, and the atlas's clear colour fills it */
+  transform-origin: 0 0;
+  background-color: var(--color-primary-9);
+}
+
+/* each view at its own size, centred even when larger than the box: atlas-morph.ts scales it */
+::view-transition-old(.atlas-morph),
+::view-transition-new(.atlas-morph) {
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  translate: -50% -50%;
+}
+
 /* Slide up enter — new content rises into view */
 .vt-slide-up-enter::view-transition-new(*) {
   animation: vt-enter-slide-up 350ms cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -638,7 +680,8 @@ dialog {
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(*),
-  ::view-transition-new(*) {
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
     animation-duration: 0ms !important;
   }
 }

@@ -341,17 +341,6 @@ export const OnboardingDiscoverSteps: Tour[] = [
     steps: [
       {
         icon: null,
-        title: 'Data location',
-        content: <>Browse public and project data.</>,
-        selector: '#scope-selector',
-        side: 'bottom-left',
-        showControls: true,
-        blockKeyboardControl: true,
-        pointerPadding: 4,
-        pointerRadius: 25,
-      },
-      {
-        icon: null,
         title: 'Atlas',
         content: <>Selecting the top level will show all available data</>,
         selector: '#atlas-regions-selector',

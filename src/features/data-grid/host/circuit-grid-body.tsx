@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
@@ -13,13 +13,14 @@ import {
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { Align } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
-import { useScope } from '@/ui/hooks/use-scope';
+import { listingScope } from '@/features/data-grid/host/listing-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import {
   CircuitRecursiveGrid,
   SubcircuitsDetail,
 } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import {
   CIRCUIT_VIEW_FACTOR,
@@ -57,7 +58,11 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryClient = useQueryClient();
   const view = useAtomValue(circuitRepresentationViewAtom);
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const setDownloadPanelCircuit = useSetAtom(downloadPanelCircuitAtom);
+  const scope = listingScope({
+    scope: defaultScope,
+    requireScopeSelector: props.requireScopeSelector,
+  });
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
 
@@ -146,6 +151,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
       extraToolbarSlots={toolbarSlots}
       extraFactors={gridFactors}
       getRowClass={getRowClass}
+      // a circuit downloads through its panel of parts, not as one archive
+      onDownloadSelection={(rows) => setDownloadPanelCircuit((rows[0] as ICircuit) ?? null)}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
         isHierarchy

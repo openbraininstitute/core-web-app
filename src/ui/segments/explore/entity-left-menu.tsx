@@ -2,6 +2,7 @@
 
 import { useAtomValue } from 'jotai';
 import { motion } from 'motion/react';
+import { usePathname } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { BrainRegionHierarchy } from '@/features/brain-region-hierarchy';
@@ -12,7 +13,11 @@ import {
 } from '@/features/brain-region-hierarchy/components/region-banner';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { EntityLinkCount } from '@/ui/segments/explore/entity-link-count';
+import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
+import { MiniAtlas } from '@/ui/segments/explore/mini-atlas';
+import { UploadDataButton } from '@/ui/segments/explore/upload-data-button';
 
 import type { TTreeNode } from '@/components/tree/types';
 import type { TExploreLeftMenuContext } from '@/features/brain-region-hierarchy/components/region-banner';
@@ -23,6 +28,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
   const [view, updateView] = useState<TExploreLeftMenuContext>(ExploreLeftMenuContext.DataGroup);
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const isAllMode = speciesSelectionMode === SpeciesSelectionMode.All;
+  const isTableShowing = !!getEntityTypeFromUrlOnEntityScope(usePathname());
 
   // while in "all species" mode, force the data-group view so the hierarchy tree is never shown
   useEffect(() => {
@@ -38,6 +44,18 @@ export function EntityLeftMenu({ dataKey }: Props) {
   const onClickBrainRegion = (_node: TTreeNode) => {
     onSwitchView(ExploreLeftMenuContext.DataGroup);
   };
+  const regionBanner = (inCard: boolean) => (
+    <RegionBanner
+      view={view}
+      onSwitchView={onSwitchView}
+      classNames={{
+        container: inCard ? 'ml-0 w-full' : 'ml-0 px-1 w-full pb-1',
+        selector: inCard
+          ? 'rounded-none rounded-b-3xl border-transparent bg-white'
+          : `border-transparent bg-white ${CARD_EDGE_CLASS}`,
+      }}
+    />
+  );
 
   return (
     <div
@@ -45,15 +63,11 @@ export function EntityLeftMenu({ dataKey }: Props) {
       data-testid="data-entity-left-menu"
       id="data-entity-left-menu"
     >
-      <RegionBanner
-        view={view}
-        onSwitchView={onSwitchView}
-        classNames={{ container: 'px-1 w-full pb-1', selector: 'shadow-sm bg-white' }}
-      />
+      {isTableShowing ? <MiniAtlas>{regionBanner}</MiniAtlas> : regionBanner(false)}
       <div
         data-testid="data-entity-left-menu-content"
         id="data-entity-left-menu-content"
-        className="relative min-h-0 flex-1 overflow-hidden"
+        className="relative min-h-0 flex-1 overflow-x-clip"
       >
         {!isAllMode && (
           <motion.div
@@ -93,7 +107,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
             y: view === ExploreLeftMenuContext.DataGroup ? 0 : -6,
           }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className={`absolute inset-0 ${
+          className={`absolute inset-0 flex flex-col ${
             view === ExploreLeftMenuContext.DataGroup
               ? 'pointer-events-auto'
               : 'pointer-events-none'
@@ -101,6 +115,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
           aria-hidden={view !== ExploreLeftMenuContext.DataGroup}
         >
           <EntityLinkCount />
+          {!isTableShowing && <UploadDataButton className="shrink-0 px-1 pt-2" />}
         </motion.div>
       </div>
     </div>

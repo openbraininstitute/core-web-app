@@ -10,14 +10,13 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
+import { defaultFlags } from '@/features/feature-flags/config';
+import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { ReactNode } from 'react';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IGridDataSource, IGridPage } from '@/features/data-grid/core';
 
-vi.mock('@/ui/hooks/use-scope', () => ({
-  useScope: () => ({ scope: WorkspaceScope.Public, isPending: false, changeScope: () => {} }),
-}));
 vi.mock('@/ui/hooks/use-workspace', () => ({
   useWorkspace: () => ({ virtualLabId: 'vl', projectId: 'pr' }),
 }));
@@ -39,7 +38,11 @@ const source: IGridDataSource<EntityCoreIdentifiableNamed> = {
 
 function wrap(ui: ReactNode) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={qc}>
+      <FlagsProvider flags={defaultFlags}>{ui}</FlagsProvider>
+    </QueryClientProvider>
+  );
 }
 
 describe('picker listing toolbar controls', () => {

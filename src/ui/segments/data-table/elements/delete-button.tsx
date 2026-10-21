@@ -9,15 +9,14 @@ import pMap from 'p-map';
 import { type ReactNode, useMemo } from 'react';
 
 import { useAppNotification } from '@/components/notification';
-import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { invalidateEntityListings } from '@/features/data-grid/listing-queries';
 // direct module import: the react barrel would close a module-init cycle via the grid host
 import {
   EXPANDING_PILL_BASE_CLASS,
+  EXPANDING_PILL_IDLE_CLASS,
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
-import { useScope } from '@/ui/hooks/use-scope';
 import { Button } from '@/ui/molecules/button';
 import {
   SelectionBadgeAnchor,
@@ -150,7 +149,6 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 }) {
   const notify = useAppNotification();
   const queryClient = useQueryClient();
-  const { scope: currentScope } = useScope();
 
   // Only rows this project owns can be deleted; a cross-scope basket can hold public
   // rows that are not ours to touch.
@@ -168,6 +166,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       <SelectionCountBadge count={badgeCount} className="text-destructive" />
     ) : undefined;
   const label = isSingular ? '1 item selected' : `${entityCount} items selected`;
+  const keptCount = selectedRows.length - entityCount;
+  const keptNote =
+    keptCount > 0
+      ? `${keptCount} public ${keptCount === 1 ? 'item' : 'items'} in your selection will be kept.`
+      : null;
 
   const getButtonLabel = (): string => {
     return isSingular ? `Delete entity` : `Delete entities`;
@@ -179,13 +182,10 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   const entityTypeConfig = getEntityByExtendedType({ type: dataType });
 
-  const permissions = useMemo(() => {
-    const isProjectScope = currentScope === WorkspaceScope.Project;
-    return {
-      delete:
-        !!entityTypeConfig?.isDeletable && isProjectScope && !!entityTypeConfig.api.query.delete,
-    };
-  }, [currentScope, entityTypeConfig]);
+  const permissions = useMemo(
+    () => ({ delete: !!entityTypeConfig?.isDeletable && !!entityTypeConfig.api.query.delete }),
+    [entityTypeConfig]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -282,8 +282,11 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
 
   // Nothing deletable in the basket (e.g. every pick is a public row): a button here
   // would confirm "delete 0 items", run the mutation on an empty list and then clear
-  // picks it never touched.
-  if (!permissions.delete || entityCount === 0) return null;
+  // picks it never touched. In the toolbar it stays in place, greyed, instead; a type that
+  // cannot be deleted at all gets no button.
+  if (!permissions.delete) return null;
+  const idle = entityCount === 0;
+  if (idle && !expanding) return null;
 
   const buttonLabel = getButtonLabel();
   /** gradient + chrome marking this as destructive */
@@ -301,6 +304,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <div className="font-bold text-sm text-primary-8">
             Are you sure you want to delete {label}?
           </div>
+          {keptNote && <div className="text-sm text-primary-8">{keptNote}</div>}
           <small className="font-light text-primary-6">This action cannot be undone.</small>
         </div>
       }
@@ -308,7 +312,7 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
       okText="Yes"
       cancelText="No"
       placement="bottomRight"
-      disabled={deleteMutation.isPending}
+      disabled={idle || deleteMutation.isPending}
       classNames={{
         body: cn(
           'max-w-70',
@@ -327,14 +331,15 @@ export function EntityDeleteButton<T extends EntityCoreIdentifiable>({
           <Button
             rounded
             type="button"
-            aria-label={accessibleLabel}
+            aria-label={idle ? "Delete (select this project's rows first)" : accessibleLabel}
             title={buttonLabel}
             variant="default"
-            disabled={deleteMutation.isPending}
+            disabled={idle || deleteMutation.isPending}
             className={cn(
               EXPANDING_PILL_BASE_CLASS,
-              destructivePalette,
-              'focus-visible:ring-2 focus-visible:ring-destructive/40',
+              idle
+                ? EXPANDING_PILL_IDLE_CLASS
+                : cn(destructivePalette, 'focus-visible:ring-2 focus-visible:ring-destructive/40'),
               className
             )}
             data-testid="bulk-delete-button"

@@ -72,6 +72,30 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The Data table's mark for a project's own records: two people, or one. */
+export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
+  key: 'project-scope-icon',
+  defaultValue: 'two',
+  values: ['two', 'one'],
+  labels: ['Two people', 'One person'],
+  description: 'Project icon in the Data table',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** How the Data table marks a project's data that was made public, and sorts or filters by scope. */
+export const scopeMarksFlag = defineFlag<'filter' | 'sort' | 'badge'>({
+  key: 'scope-marks',
+  defaultValue: 'filter',
+  values: ['filter', 'sort', 'badge'],
+  labels: [
+    'Both icons, filter button for one side',
+    'Both icons, sortable column',
+    'Badged icon, three toggles',
+  ],
+  description: 'Scope marks in the Data table',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -81,6 +105,8 @@ export const flags = [
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
+  projectScopeIconFlag,
+  scopeMarksFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

@@ -46,6 +46,8 @@ export type TGridAction =
       type: typeof GridActionType.SetFilter;
       columnId: string;
       entry: IFilterEntry | null;
+      /** keep the selection, for a filter that only changes which rows are in view */
+      keepSelection?: boolean;
     }
   | { type: typeof GridActionType.ClearFilters }
   | { type: typeof GridActionType.SetSort; sort: TSortModel }

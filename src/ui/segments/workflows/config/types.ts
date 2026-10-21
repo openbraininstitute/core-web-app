@@ -185,8 +185,6 @@ export type IWorkflowDescriptor = {
   requiredFeatures?: readonly FlagKey[];
   /** when true, browse table shows species / brain region selector */
   requireSpecies?: boolean;
-  /** when true, browse table shows workspace scope selector */
-  requireScope?: boolean;
   /** when true, browse table shows filter controls */
   requireFilters?: boolean;
   /**
@@ -334,8 +332,7 @@ export const WorkflowStagePresets = {
 
 export const WorkflowBrowseDefaults = {
   requireSpecies: false,
-  requireScope: false,
-} as const satisfies Pick<IWorkflowDescriptor, 'requireSpecies' | 'requireScope'>;
+} as const satisfies Pick<IWorkflowDescriptor, 'requireSpecies'>;
 
 export type TActivityEntry = {
   value: TActivityValue;

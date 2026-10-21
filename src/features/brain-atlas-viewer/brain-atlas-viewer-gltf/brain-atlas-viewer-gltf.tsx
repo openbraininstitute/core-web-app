@@ -8,6 +8,7 @@ import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
 import { useAccessToken } from '@/hooks/useAccessToken';
 import { classNames } from '@/util/utils';
 
+import { COMPACT_CAMERA_ZOOM } from './constants';
 import {
   useAtlasViewerSettingsValues,
   usePainter,
@@ -19,6 +20,8 @@ import styles from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/brain-
 
 export interface BrainAtlasViewerGltfProps {
   className?: string;
+  /** A small preview: no settings or atlas label, and a smaller camera reset. */
+  compact?: boolean;
   onLoading(loading: boolean): void;
 }
 
@@ -27,7 +30,11 @@ const ATLAS_LABELS: Record<string, string> = {
   [SPECIES_TAXONOMY_IDS.RATTUS_NORVEGICUS]: 'Waxholm Space Rat Brain Atlas',
 };
 
-export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerGltfProps) {
+export function BrainAtlasViewerGltf({
+  className,
+  compact = false,
+  onLoading,
+}: BrainAtlasViewerGltfProps) {
   const [showResetCamera, setShowResetCamera] = React.useState(false);
   const accessToken = useAccessToken();
   const containerRef = React.useRef<HTMLDivElement | null>(null);
@@ -45,6 +52,7 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
   const painter = usePainter({
     loading: loading || !resolvedAtlasId,
     atlasId: resolvedAtlasId,
+    cameraZoom: compact ? COMPACT_CAMERA_ZOOM : 1,
   });
   const [values, setValues] = useAtlasViewerSettingsValues(painter);
 
@@ -134,7 +142,10 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
   }, []);
 
   return (
-    <div ref={containerRef} className={classNames(className, styles.brainAtlasViewerGltf)}>
+    <div
+      ref={containerRef}
+      className={classNames(className, styles.brainAtlasViewerGltf, compact && styles.compact)}
+    >
       <canvas ref={canvasRef} />
       <header className={classNames(showResetCamera && styles.show)}>
         <button
@@ -148,8 +159,8 @@ export function BrainAtlasViewerGltf({ className, onLoading }: BrainAtlasViewerG
           <CameraFilled /> <div>Reset camera</div>
         </button>
       </header>
-      <Settings values={values} onChange={setValues} />
-      {atlasLabel && <span className={styles.atlasLabel}>{atlasLabel}</span>}
+      {!compact && <Settings values={values} onChange={setValues} />}
+      {!compact && atlasLabel && <span className={styles.atlasLabel}>{atlasLabel}</span>}
     </div>
   );
 }
