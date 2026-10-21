@@ -2,11 +2,13 @@ import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
 import { match } from 'ts-pattern';
 
 import { LeftMenuTab } from '@/features/scan-config/components/components';
+import { GLOBAL_PARAMETER_KEYS } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/global-parameters-selection';
 import {
   errorsUnder,
   hasErrorAt,
   nonParameterErrors,
   parameterErrors,
+  selectedModelCount,
   totalAssignedModelCount,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
@@ -47,6 +49,24 @@ function tabHasErrors(tab: string, emodelErrors: readonly ErrorObject[]): boolea
 }
 
 /**
+ * The count each tab's badge shows:
+ * - Mechanism Selection: ion channel models selected for optimisation
+ * - Region Assignment / Parameters Selection: ion channel model assignments across every region
+ *   (same count, they're two views over the same `mechanism_regions` data)
+ * - Global Parameters: the keys this tab actually renders, not whatever a stored dict might hold
+ */
+function tabCount(tab: string, value: ConfigValue): number {
+  return match(tab)
+    .with(EModelOptimisationMechanismsTabs.MechanismSelection, () => selectedModelCount(value))
+    .with(EModelOptimisationMechanismsTabs.RegionAssignment, () => totalAssignedModelCount(value))
+    .with(EModelOptimisationMechanismsTabs.ParametersSelection, () =>
+      totalAssignedModelCount(value)
+    )
+    .with(EModelOptimisationMechanismsTabs.GlobalParameters, () => GLOBAL_PARAMETER_KEYS.length)
+    .otherwise(() => 0);
+}
+
+/**
  * Nested left-nav tabs for the `emodel_optimisation_parameters` root element.
  *
  * The layout is fully hardcoded (a fixed set of mechanisms tabs), not derived from schema. Each tab
@@ -70,7 +90,6 @@ export function EModelOptimisationMechanismsTabList({
   errors: ErrorObject[] | null | undefined;
 }) {
   const emodelErrors = errorsUnder(errors, `/${rootElement}`);
-  const assignedCount = totalAssignedModelCount(value);
 
   return (
     <div className="ml-3 flex flex-col gap-0.5 border-l border-gray-200 pl-2">
@@ -87,14 +106,12 @@ export function EModelOptimisationMechanismsTabList({
         >
           <span className="wrap-break-word min-w-0 text-sm">{label}</span>
           <div className="flex shrink-0 items-center gap-3">
-            {key === EModelOptimisationMechanismsTabs.ParametersSelection && (
-              <span
-                className="inline-flex size-5 min-w-5 shrink-0 items-center justify-center rounded-full border border-current px-1 text-[11px] leading-none font-semibold tabular-nums"
-                data-testid="scan-config-emodel-parameters-selection-icm-count"
-              >
-                {assignedCount}
-              </span>
-            )}
+            <span
+              className="inline-flex size-5 min-w-5 shrink-0 items-center justify-center rounded-full border border-current px-1 text-[11px] leading-none font-semibold tabular-nums"
+              data-testid={`scan-config-emodel-mechanisms-tab-count-${key}`}
+            >
+              {tabCount(key, value)}
+            </span>
             {tabHasErrors(key, emodelErrors) ? (
               <WarningFilled className="text-yellow-400!" />
             ) : (
