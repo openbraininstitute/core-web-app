@@ -4,8 +4,6 @@ import { DerivationType } from '@/api/entitycore/types/entities/derivation';
 
 import type { CellMorphologyFilter } from '@/api/entitycore/types/entities/cell-morphology';
 import type { IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
-import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
-import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type {
   TBrowseListQueryFn,
   TBrowsePrerequisiteValue,
@@ -47,7 +45,7 @@ export const buildMemodelLoader =
       return undefined;
     }
 
-    const memodels = await getMEModels({
+    return getMEModels({
       context,
       withFacets,
       filters: {
@@ -57,7 +55,4 @@ export const buildMemodelLoader =
         morphology__generated_derivation__used_id: prerequisite.id,
       },
     });
-
-    // IMEModel lacks `lifecycle_status` that the grid row type declares; same drift as the sibling loader
-    return memodels as unknown as EntityCoreResponse<EntityCoreIdentifiableNamed>;
   };

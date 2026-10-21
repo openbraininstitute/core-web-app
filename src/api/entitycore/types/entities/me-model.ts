@@ -10,6 +10,7 @@ import type {
   EntityCoreOwnership,
   EntityCoreType,
   IContributor,
+  IEntityLifecycleStatus,
   IEType,
   IMType,
   ISpecies,
@@ -52,7 +53,8 @@ export interface IMEModel
     Timestamps,
     EntityAuthorization,
     EntityCoreType,
-    EntityCoreOwnership {
+    EntityCoreOwnership,
+    IEntityLifecycleStatus {
   species: ISpecies;
   strain?: IStrain | null;
   brain_region: BrainRegionHierarchyBase;

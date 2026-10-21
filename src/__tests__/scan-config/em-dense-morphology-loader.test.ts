@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getMEModels } from '@/api/entitycore/queries';
 import { searchDerivations } from '@/api/entitycore/queries/general/derivation';
 
-import { buildMemodelLoader } from './em-dense-morphology-loader';
+import { buildMemodelLoader } from '../../features/scan-config/workflow/loaders/em-dense-morphology-loader';
 
 import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
 
@@ -11,7 +11,9 @@ vi.mock('@/api/entitycore/queries', () => ({ getMEModels: vi.fn() }));
 vi.mock('@/api/entitycore/queries/experimental/cell-morphology', () => ({
   getCellMorphologies: vi.fn(),
 }));
-vi.mock('@/api/entitycore/queries/general/derivation', () => ({ searchDerivations: vi.fn() }));
+vi.mock('@/api/entitycore/queries/general/derivation', () => ({
+  searchDerivations: vi.fn(),
+}));
 
 const prerequisite = { id: 'ds-1' } as TBrowsePrerequisiteValue;
 const context = { virtualLabId: 'vl', projectId: 'p' };
@@ -55,7 +57,11 @@ describe('buildMemodelLoader', () => {
     );
     const call = mockedMEModels.mock.calls[0][0];
     expect(call.withFacets).toBe(true);
-    expect(call.filters).toMatchObject({ page: 2, search: 'abc', mtype__id: 'x' });
+    expect(call.filters).toMatchObject({
+      page: 2,
+      search: 'abc',
+      mtype__id: 'x',
+    });
     expect(call.filters?.morphology__generated_derivation__used_id).toBe('ds-1');
     expect(call.filters?.morphology__generated_derivation__derivation_type).toBe(DERIVATION_TYPE);
   });
