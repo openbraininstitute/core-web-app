@@ -52,7 +52,7 @@ export default function CopyCampaignButton({
         }
 
         notifyError({
-          message: 'Could not copy this campaign',
+          message: 'Could not generate a new campaign',
           description:
             result.outcome === WorkflowConfigureOutcomeDict.LifecycleBlocked
               ? result.reason
@@ -60,7 +60,7 @@ export default function CopyCampaignButton({
         });
       })
       .catch(() => {
-        notifyError({ message: 'Could not copy this campaign' });
+        notifyError({ message: 'Could not generate a new campaign' });
       })
       .finally(() => setLoading(false));
   };
@@ -79,7 +79,7 @@ export default function CopyCampaignButton({
       disabled={loading}
     >
       <div className="flex justify-between gap-5">
-        {get(messages, `${activity}.CopyCampaign`, 'Copy campaign')}
+        {get(messages, `${activity}.CopyCampaign`, 'Generate new campaign')}
         {loading && <LoadingOutlined />}
       </div>
     </button>
