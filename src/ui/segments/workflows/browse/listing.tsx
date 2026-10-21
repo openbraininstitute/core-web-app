@@ -1,16 +1,11 @@
 'use client';
 
 import { useRouter } from '@bprogress/next';
-import { useSetAtom } from 'jotai';
 import { notFound, useSearchParams } from 'next/navigation';
 import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'react';
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
-import {
-  workflowBreadcrumbEntitiesAtom,
-  workflowBreadcrumbEntitiesFromSelection,
-} from '@/features/scan-config/workflow/breadcrumb-entities';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -458,8 +453,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     [configurationInputs, selectionCountsByType]
   );
 
-  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
-
   const handleConfigureSelected = useCallback(() => {
     const payload = buildWorkflowBrowseSelectionPayload({
       selectionConfig,
@@ -472,10 +465,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     if (!payload) {
       return;
     }
-
-    // hand the names to the configure breadcrumb; the payload carries them too, but this
-    // reaches a breadcrumb that mounts before the session read resolves
-    setBreadcrumbEntities(workflowBreadcrumbEntitiesFromSelection(payload));
 
     // carry the confirmed prerequisites, keyed by entity type so the configure-page browse can
     // look one up directly (no share-key logic on the read side) and rebuild the same loader
@@ -499,7 +488,6 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
       })
     );
   }, [
-    setBreadcrumbEntities,
     activity,
     confirmedPrerequisiteByKey,
     configurationInputs,

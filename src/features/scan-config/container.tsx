@@ -5,9 +5,8 @@ import {
   useScanConfiguration,
 } from '@/features/scan-config/components/hooks/use-scan-configuration';
 import ScanConfigSkeleton from '@/features/scan-config/components/skeletons/full-page';
-import { useScanConfigTopBarSlots } from '@/features/scan-config/components/top-bar/context';
+import { ScanConfigTopBar } from '@/features/scan-config/components/top-bar/context';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
-import { TopBar } from '@/ui/molecules/top-bar';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
 import type { ReactNode } from 'react';
@@ -21,10 +20,9 @@ export type ScanConfigContainerProps = TUseScanConfigurationParams & {
  * keep their usual row above the message instead of disappearing with the template.
  */
 function ScanConfigFallback({ children }: { children?: ReactNode }) {
-  const { start } = useScanConfigTopBarSlots();
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
-      <TopBar start={start} />
+      <ScanConfigTopBar />
       <div className="flex min-h-0 flex-1 items-center justify-center">{children}</div>
     </div>
   );

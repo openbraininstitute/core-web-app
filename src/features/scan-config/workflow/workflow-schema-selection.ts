@@ -295,7 +295,9 @@ export function findInitializeModelProperty(schema: ConfigSchema): {
     if (isModelIdentifierUiElement(property.ui_element)) {
       return {
         key,
-        field: property as TBlockElement & { ui_element: TWorkflowInitializeModelUiElement },
+        field: property as TBlockElement & {
+          ui_element: TWorkflowInitializeModelUiElement;
+        },
       };
     }
   }
@@ -393,6 +395,20 @@ export function resolveEntityRefsFromConfigForm(
     | undefined;
 
   return collectFromIdRefsFromModelFieldValue(modelFieldValue);
+}
+
+/**
+ * The entities a workflow config is about: the `initialize` model field when the schema has
+ * one (even when empty, so clearing it clears the result), otherwise every entity ref in the
+ * config (workflows that pick outside `initialize`, e.g. ion channel models).
+ */
+export function resolveWorkflowEntityRefs(
+  schema: ConfigSchema,
+  config: Config | undefined
+): TFromIdRef[] {
+  return findInitializeModelProperty(schema)
+    ? resolveEntityRefsFromConfigForm(schema, config)
+    : collectEntityRefsFromConfig(config);
 }
 
 /**

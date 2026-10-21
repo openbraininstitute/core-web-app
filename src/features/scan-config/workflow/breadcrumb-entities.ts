@@ -2,9 +2,11 @@
 
 import { atom } from 'jotai';
 
+import { resolveEntityFetchTarget } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { WorkflowSessionSelectionMode } from '@/features/scan-config/workflow/workflow-session-selection';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { TFromIdRef } from '@/features/scan-config/helpers';
 import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
 
 export type TWorkflowBreadcrumbEntity = {
@@ -17,13 +19,32 @@ export type TWorkflowBreadcrumbEntity = {
 };
 
 /**
- * Entities the current workflow points at, for the configure breadcrumb.
+ * Entity refs of the mounted scan-config editor's live config, for the configure breadcrumb.
  *
- * Written by whoever owns a selection — the browse page on its way to `/configure`, and the
- * in-editor model selectors, which can change it without a navigation. Read by the breadcrumb.
- * Module-scoped (jotai's default store), so it survives the client push from `/new`.
+ * Single writer: the template, which owns the config (see `resolveWorkflowEntityRefs`), and
+ * resets it to `null` on unmount. `null` = no editor mounted (the breadcrumb falls back to the
+ * session / campaign); `[]` = the editor holds no entity, which clears the crumb.
  */
-export const workflowBreadcrumbEntitiesAtom = atom<TWorkflowBreadcrumbEntity[]>([]);
+export const workflowBreadcrumbRefsAtom = atom<TFromIdRef[] | null>(null);
+
+/** Config refs as breadcrumb entities; refs of unknown kinds are dropped. Names come later. */
+export function workflowBreadcrumbEntitiesFromRefs(
+  refs: readonly TFromIdRef[]
+): TWorkflowBreadcrumbEntity[] {
+  return refs.flatMap((ref) => {
+    const target = resolveEntityFetchTarget(ref);
+    return target
+      ? [
+          {
+            key: `${target.entityType}:${target.id}`,
+            id: target.id,
+            type: target.entityType,
+            name: null,
+          },
+        ]
+      : [];
+  });
+}
 
 /**
  * Named entities a selection payload points at, in pick order. A ref stored before names were

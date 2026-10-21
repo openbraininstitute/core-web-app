@@ -9,8 +9,7 @@
  * in single-select mode
  */
 
-import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { WorkspaceSection } from '@/constants';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
@@ -37,7 +36,6 @@ import {
   type TFromIdRef,
 } from '@/features/scan-config/helpers';
 import { type ConfigValue, ScanConfigUIElementDict } from '@/features/scan-config/types';
-import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Modal } from '@/ui/molecules/modal';
@@ -111,20 +109,6 @@ export function EntitySelectorSingle({
     ? entities.find((entity) => entity.id === selectedRef.id_str)
     : undefined;
   const isPending = Boolean(selectedRef && !resolvedEntity && pendingIds.has(selectedRef.id_str));
-
-  // the editor can re-point the workflow without a navigation; keep the breadcrumb in step
-  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
-  useEffect(() => {
-    if (!resolvedEntity) return;
-    setBreadcrumbEntities([
-      {
-        key: `${resolvedEntity.entityType}:${resolvedEntity.id}`,
-        id: resolvedEntity.id,
-        type: resolvedEntity.entityType,
-        name: resolvedEntity.name ?? null,
-      },
-    ]);
-  }, [resolvedEntity, setBreadcrumbEntities]);
 
   const typeTitle = getEntityTypeTagLabel(browseEntityType);
   const entityLabel = typeTitle.toLowerCase();

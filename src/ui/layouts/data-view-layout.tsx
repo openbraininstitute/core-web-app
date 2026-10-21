@@ -21,10 +21,9 @@ import {
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
 import {
-  buildWorkflowHomeHref,
+  buildWorkflowCrumbs,
   findScanConfigRegistryByTargetType,
   getWorkflow,
-  getWorkflowEntityLabel,
   listActivities,
 } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
@@ -121,10 +120,10 @@ export async function DataViewLayout({
   if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
     if (useClassicLayout) {
       // campaign / simulation pages render the scan-config tabs panel, which draws its own
-      // border and top bar: hand it the data breadcrumb as that bar's start slot
+      // border and top bar: hand it the breadcrumb and close as that bar's start and end slots
       return (
         <div className="ml-3 flex h-full min-h-0 flex-col">
-          <ScanConfigTopBarProvider start={breadcrumbs}>
+          <ScanConfigTopBarProvider start={breadcrumbs} end={closePage}>
             <div className="relative min-h-0 flex-1">{children}</div>
           </ScanConfigTopBarProvider>
         </div>
@@ -221,8 +220,8 @@ export async function DataViewLayout({
 }
 
 /**
- * Activity › workflow type › entity for the details pages the workflow activity table links to.
- * The activity is the first one that has a workflow for this type.
+ * Activity › workflow › entity for the details pages the workflow activity table links to. The
+ * page has no workflow definition, so the activity is the first one with a workflow for this type.
  */
 function WorkflowsOriginBreadcrumb({
   type,
@@ -233,20 +232,22 @@ function WorkflowsOriginBreadcrumb({
   entity: { id: string; name: string };
   context: WorkspaceContext;
 }) {
-  const activity = listActivities().find((candidate) =>
-    getWorkflow({ activity: candidate.value, targetType: type })
-  );
-  const typeLabel = getWorkflowEntityLabel(type);
-  const href = (targetType?: TExtendedEntitiesTypeDict) =>
-    buildWorkflowHomeHref({ activity: activity?.value, targetType, workspace: context });
+  const [match] = listActivities().flatMap((activity) => {
+    const workflow = getWorkflow({ activity: activity.value, targetType: type });
+    return workflow ? [{ activity, workflow }] : [];
+  });
 
   return (
     <BreadcrumbChip>
       <BreadcrumbTrail
         data-testid="data-view-breadcrumb"
         items={[
-          ...(activity ? [{ key: 'activity', label: activity.label, href: href() }] : []),
-          ...(typeLabel ? [{ key: 'type', label: typeLabel, href: href(type) }] : []),
+          ...buildWorkflowCrumbs({
+            activity: match?.activity ?? null,
+            workflow: match?.workflow ?? null,
+            workspace: context,
+            fallbackType: type,
+          }),
           {
             key: 'entity',
             label: entity.name,

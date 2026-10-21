@@ -1,8 +1,9 @@
 'use client';
 
+import { isEqual } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
-import { Activity, Suspense, useEffect } from 'react';
+import { Activity, Suspense, useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
 import {
@@ -17,7 +18,8 @@ import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/resul
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
-import { workflowBreadcrumbEntitiesAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
+import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
+import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
@@ -44,16 +46,24 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const state = useScanConfigTemplate(props);
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
-  const setBreadcrumbEntities = useSetAtom(workflowBreadcrumbEntitiesAtom);
   const configuredName = get(state.config, 'info.campaign_name');
   const campaignName =
     typeof configuredName === 'string' && configuredName ? configuredName : state.campaignId;
 
-  // The breadcrumb's entities are module state that outlives the route. Clearing in a
-  // cleanup keyed on `schemaName` fires on unmount *and* on a workflow switch, and — unlike
-  // an effect body — runs before the next workflow's model selectors publish their own.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `schemaName` is the key, not a read — it is what makes the cleanup fire on a workflow switch
-  useEffect(() => () => setBreadcrumbEntities([]), [props.schemaName, setBreadcrumbEntities]);
+  // the breadcrumb names what the live config points at; this template is its only writer
+  const setBreadcrumbRefs = useSetAtom(workflowBreadcrumbRefsAtom);
+  const entityRefs = useMemo(
+    () => resolveWorkflowEntityRefs(props.schema, state.config),
+    [props.schema, state.config]
+  );
+  // keep the previous array when equal, so edits elsewhere in the config don't re-render it
+  useEffect(() => {
+    setBreadcrumbRefs((current) =>
+      current && isEqual(current, entityRefs) ? current : entityRefs
+    );
+  }, [entityRefs, setBreadcrumbRefs]);
+  // module state outlives the route: hand back to the session / campaign fallbacks on unmount
+  useEffect(() => () => setBreadcrumbRefs(null), [setBreadcrumbRefs]);
 
   const configurationContent = (
     <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">

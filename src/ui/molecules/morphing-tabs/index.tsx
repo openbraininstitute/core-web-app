@@ -1,34 +1,27 @@
 'use client';
-// beui.dev/components/blocks/morphing-tabs
+// beui.dev/components/blocks/morphing-tabs — trimmed to a fixed-order rail with mounted panels
 
 import {
-  AnimatePresence,
   animate as animateValue,
   type MotionValue,
   motion,
   useMotionValue,
   useReducedMotion,
-  useSpring,
   useTransform,
 } from 'motion/react';
 import {
+  type KeyboardEvent,
   type ReactNode,
-  type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
   useId,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
 
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
-
-import { EASE_OUT, SPRING_GLIDE, SPRING_PRESS } from './ease';
-import { capturePointer, TOUCH_GESTURE_CLASS } from './touch';
 
 export type MorphingTabsItem = {
   id: string;
@@ -38,8 +31,6 @@ export type MorphingTabsItem = {
   disabled?: boolean;
   /** Shown on hover. Sits outside the button, so it also works while disabled. */
   tooltip?: ReactNode;
-  /** Trailing control inside the tab. Rendered only while the tab is active. */
-  action?: ReactNode;
   /** E2E handle on the tab button. */
   testId?: string;
 };
@@ -51,9 +42,9 @@ export type MorphingTabsClassNames = {
   activeTab?: string;
   icon?: string;
   label?: string;
-  action?: string;
   railStart?: string;
   railCenter?: string;
+  railEnd?: string;
   content?: string;
   panel?: string;
   tooltip?: string;
@@ -65,68 +56,24 @@ export interface MorphingTabsProps {
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (id: string | null) => void;
-  /** Called once after a pointer drag or keyboard reorder completes. */
-  onOrderChange?: (ids: string[]) => void;
-  /** Keeps every panel mounted and hides the inactive ones, instead of swapping them. */
-  keepMounted?: boolean;
-  /** Set false where tab order carries meaning, to drop drag reordering. */
-  reorderable?: boolean;
   /** Which side of the rail the tabs sit on. Default `start`; `end` leaves the start free. */
   tabsAlign?: 'start' | 'end';
   /** Rail-level leading content (e.g. a breadcrumb), in the rail row above the panel's top edge. */
   railStart?: ReactNode;
   /** Rail-level content centred in the rail row. */
   railCenter?: ReactNode;
+  /** Rail-level trailing content after the tabs (e.g. a close button). */
+  railEnd?: ReactNode;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
 }
 
-type DragSession = {
-  id: string;
-  pointerId: number;
-  originX: number;
-  startLeft: number;
-  startIndex: number;
-  targetIndex: number;
-  moved: boolean;
-  finishing: boolean;
-  startOrder: string[];
-  slotLefts: number[];
-};
-
-type SpringTabProps = {
-  id: string;
-  targetLeft: number;
-  dragging: boolean;
-  dragLeft: MotionValue<number>;
-  surfaceLeft: MotionValue<number>;
-  reduce: boolean;
-  active: boolean;
-  anyDragging: boolean;
-  surfaceHost: HTMLDivElement | null;
-  surfaceWidth: number;
-  surfaceHeight: number;
-  tabWidth: number;
-  surfaceClassName?: string;
-  zIndex: number;
-  className: string;
-  children: ReactNode;
-  registerPosition: (id: string, position: MotionValue<number> | null) => void;
-  onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onPointerCancel: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onLostPointerCapture: (event: ReactPointerEvent<HTMLDivElement>) => void;
-};
-
-const DRAG_THRESHOLD = 5;
 // The design width of a tab, and the narrowest it may shrink to before the
 // label stops reading. See `tabWidth` in MorphingTabs.
 const MAX_TAB_WIDTH = 232;
 const MIN_TAB_WIDTH = 132;
 const TAB_HEIGHT = 48;
-const TAB_TOP = 0;
 const TAB_RADIUS = 24;
 const RAIL_HEIGHT = 48;
 const SURFACE_INSET = 4;
@@ -135,21 +82,11 @@ const PANEL_RADIUS = 28;
 const RAIL_GAP = 16;
 /** Half the hairline, so the stroke sits fully inside the clipped root. */
 const SURFACE_EDGE = 0.5;
-
-function sameOrder(a: string[], b: string[]) {
-  return a.length === b.length && a.every((id, index) => id === b[index]);
-}
+/** Critically damped: the surface glides to the active tab and never rebounds. */
+const SPRING_GLIDE = { stiffness: 700, damping: 50, mass: 0.5 } as const;
 
 function safeId(value: string) {
   return value.replace(/[^a-zA-Z0-9_-]/g, '-');
-}
-
-function moveItem(order: string[], from: number, to: number) {
-  if (from === to) return order.slice();
-  const next = order.slice();
-  const [item] = next.splice(from, 1);
-  next.splice(to, 0, item);
-  return next;
 }
 
 function liquidTabPath(
@@ -195,119 +132,40 @@ function liquidTabPath(
   ].join(' ');
 }
 
-function SpringTab({
-  id,
-  targetLeft,
-  dragging,
-  dragLeft,
-  surfaceLeft,
-  reduce,
-  active,
-  anyDragging,
-  surfaceHost,
-  surfaceWidth,
-  surfaceHeight,
-  tabWidth,
-  surfaceClassName,
-  zIndex,
-  className,
-  children,
-  registerPosition,
-  onPointerDown,
-  onPointerMove,
-  onPointerUp,
-  onPointerCancel,
-  onLostPointerCapture,
-}: SpringTabProps) {
-  const target = useMotionValue(targetLeft);
-  const position = useSpring(target, SPRING_GLIDE);
-  const settledTransform = useTransform(
-    reduce ? target : position,
-    (left) => `translate3d(${left}px, 0, 0)`
-  );
-  const draggedTransform = useTransform(dragLeft, (left) => `translate3d(${left}px, 0, 0)`);
-
-  // until the parent has placed the surface (`surfaceWidth` is 0) the tab jumps; only later moves glide
-  const placed = surfaceWidth > 0;
-  useLayoutEffect(() => {
-    target.set(targetLeft);
-    if (reduce || !placed) position.jump(targetLeft);
-  }, [placed, position, reduce, target, targetLeft]);
-
-  useLayoutEffect(() => {
-    registerPosition(id, position);
-    return () => registerPosition(id, null);
-  }, [id, position, registerPosition]);
-
-  const liquidDriver = anyDragging ? (dragging ? dragLeft : position) : surfaceLeft;
-
-  return (
-    <>
-      {active && surfaceHost && surfaceWidth > SURFACE_INSET * 2
-        ? createPortal(
-            <svg
-              aria-hidden="true"
-              focusable="false"
-              viewBox={`0 0 ${surfaceWidth} ${surfaceHeight}`}
-              preserveAspectRatio="none"
-              className={cn(
-                // the surface is the panel: white fill, hairline edge, and it
-                // stays under the content (z-0) now that it spans the panel
-                'pointer-events-none absolute inset-0 z-0 h-full w-full text-white',
-                surfaceClassName
-              )}
-            >
-              <LiquidSurfacePath
-                key={anyDragging ? (dragging ? 'dragged' : 'displaced') : 'idle'}
-                left={liquidDriver}
-                surfaceWidth={surfaceWidth}
-                surfaceHeight={surfaceHeight}
-                tabWidth={tabWidth}
-              />
-            </svg>,
-            surfaceHost
-          )
-        : null}
-      <motion.div
-        style={{
-          zIndex,
-          transform: dragging ? draggedTransform : settledTransform,
-        }}
-        className={className}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        onLostPointerCapture={onLostPointerCapture}
-      >
-        {children}
-      </motion.div>
-    </>
-  );
-}
-
-function LiquidSurfacePath({
+/** The panel and the notch of the active tab, as one shape that follows `left`. */
+function LiquidSurface({
   left,
   surfaceWidth,
   surfaceHeight,
   tabWidth,
+  className,
 }: {
   left: MotionValue<number>;
   surfaceWidth: number;
   surfaceHeight: number;
   tabWidth: number;
+  className?: string;
 }) {
   const path = useTransform(left, (value) =>
     liquidTabPath(value, surfaceWidth, surfaceHeight, tabWidth)
   );
   return (
-    <motion.path
-      d={path}
-      fill="currentColor"
-      className="stroke-neutral-2"
-      strokeWidth={1}
-      vectorEffect="non-scaling-stroke"
-    />
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox={`0 0 ${surfaceWidth} ${surfaceHeight}`}
+      preserveAspectRatio="none"
+      // the surface is the panel: white fill, hairline edge, under the content (z-0)
+      className={cn('pointer-events-none absolute inset-0 z-0 h-full w-full text-white', className)}
+    >
+      <motion.path
+        d={path}
+        fill="currentColor"
+        className="stroke-neutral-2"
+        strokeWidth={1}
+        vectorEffect="non-scaling-stroke"
+      />
+    </svg>
   );
 }
 
@@ -341,147 +199,82 @@ function TabTooltip({
   );
 }
 
+/**
+ * The narrowest layout that fits: the rail cannot scroll (the surface is one continuous shape, its
+ * notch has to stay over the tab that cut it), so slots shrink in this order of sacrifice:
+ *   1. the design width, down to a floor where a truncated label still reads;
+ *   2. the gap between slots, so the floor survives one panel narrower;
+ *   3. the floor itself — a cramped tab is still tappable, a clipped one is not reachable.
+ */
+function fitTabs(count: number, inner: number, gap: number) {
+  if (inner <= 0 || count === 0) return { tabWidth: MAX_TAB_WIDTH, slotGap: gap };
+  const widthAt = (g: number) => Math.floor((inner - g * (count - 1)) / count);
+
+  if (widthAt(gap) >= MIN_TAB_WIDTH) {
+    return { tabWidth: Math.min(MAX_TAB_WIDTH, widthAt(gap)), slotGap: gap };
+  }
+  if (count > 1 && widthAt(0) >= MIN_TAB_WIDTH) {
+    const fitted = Math.floor((inner - MIN_TAB_WIDTH * count) / (count - 1));
+    return { tabWidth: MIN_TAB_WIDTH, slotGap: Math.max(0, fitted) };
+  }
+  return { tabWidth: Math.max(0, widthAt(0)), slotGap: 0 };
+}
+
 export function MorphingTabs({
   items,
   value,
   defaultValue,
   onValueChange,
-  onOrderChange,
-  keepMounted = false,
-  reorderable = true,
   tabsAlign = 'start',
   railStart,
   railCenter,
+  railEnd,
   ariaLabel = 'Tabs',
   className,
   classNames,
 }: MorphingTabsProps) {
   const reduce = Boolean(useReducedMotion());
+  const hasEnd = Boolean(railEnd);
   const uid = useId();
-  const itemIds = useMemo(() => items.map((item) => item.id), [items]);
-  const itemMap = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
-  const [order, setOrder] = useState(itemIds);
-  const orderRef = useRef(order);
-  orderRef.current = order;
 
   const [internalValue, setInternalValue] = useState<string | null>(
-    defaultValue ?? itemIds[0] ?? null
+    defaultValue ?? items[0]?.id ?? null
   );
   const controlled = value !== undefined;
   const currentValue = controlled ? (value ?? null) : internalValue;
 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const railRef = useRef<HTMLDivElement | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
   const tabButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const tabPositionRefs = useRef<Record<string, MotionValue<number> | null>>({});
-  const dragRef = useRef<DragSession | null>(null);
-  const dragAnimationRef = useRef<ReturnType<typeof animateValue> | null>(null);
-  const surfaceAnimationRef = useRef<ReturnType<typeof animateValue> | null>(null);
+  const [surface, setSurface] = useState({ width: 0, height: 0, gap: 12, end: 0 });
   const [placed, setPlaced] = useState(false);
-  const [surfaceWidth, setSurfaceWidth] = useState(0);
-  const [surfaceHeight, setSurfaceHeight] = useState(0);
-  const [tabGap, setTabGap] = useState(12);
-  const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragTargetIndex, setDragTargetIndex] = useState(-1);
-  const dragLeft = useMotionValue(SURFACE_INSET);
   const surfaceLeft = useMotionValue(SURFACE_INSET);
 
-  useEffect(() => {
-    setOrder((current) => {
-      const available = new Set(itemIds);
-      const retained = current.filter((id) => available.has(id));
-      const retainedSet = new Set(retained);
-      const added = itemIds.filter((id) => !retainedSet.has(id));
-      const next = [...retained, ...added];
-      return sameOrder(current, next) ? current : next;
-    });
-  }, [itemIds]);
-
-  const orderedItems = useMemo(
-    () =>
-      order.flatMap((id) => {
-        const item = itemMap.get(id);
-        return item ? [item] : [];
-      }),
-    [itemMap, order]
-  );
-
-  const firstEnabledItem = orderedItems.find((item) => !item.disabled) ?? orderedItems[0] ?? null;
-  const activeItem =
-    currentValue && itemMap.has(currentValue)
-      ? (itemMap.get(currentValue) ?? null)
-      : firstEnabledItem;
+  const firstEnabledItem = items.find((item) => !item.disabled) ?? items[0] ?? null;
+  const activeItem = items.find((item) => item.id === currentValue) ?? firstEnabledItem;
   const activeId = activeItem?.id ?? null;
 
-  // The rail cannot scroll: the liquid surface is one continuous shape spanning
-  // the panel, so its notch has to stay over the tab that cut it. Slots narrow
-  // to fit the panel instead, in that order of sacrifice:
-  //   1. the design width, down to a floor where a truncated label still reads;
-  //   2. the gap between slots, so the floor survives one panel narrower;
-  //   3. the floor itself — a cramped tab is still tappable, a clipped one is
-  //      not reachable at all.
-  // Every tier fits inside the panel by construction, so no tab is ever cut off
-  // and the notch never has to be clamped away from the tab that cut it.
-  const { tabWidth, slotGap } = useMemo(() => {
-    const count = order.length;
-    if (!surfaceWidth || count === 0) {
-      return { tabWidth: MAX_TAB_WIDTH, slotGap: tabGap };
-    }
-    const inner = surfaceWidth - SURFACE_INSET * 2;
-    const widthAt = (gap: number) => Math.floor((inner - gap * (count - 1)) / count);
-
-    if (widthAt(tabGap) >= MIN_TAB_WIDTH) {
-      return {
-        tabWidth: Math.min(MAX_TAB_WIDTH, widthAt(tabGap)),
-        slotGap: tabGap,
-      };
-    }
-    if (count > 1 && widthAt(0) >= MIN_TAB_WIDTH) {
-      const gap = Math.floor((inner - MIN_TAB_WIDTH * count) / (count - 1));
-      return { tabWidth: MIN_TAB_WIDTH, slotGap: Math.max(0, gap) };
-    }
-    return { tabWidth: Math.max(0, widthAt(0)), slotGap: 0 };
-  }, [order.length, surfaceWidth, tabGap]);
-
-  // tabs hug the end of the rail when aligned there; derived in render, no state
-  const tabsOffset =
-    tabsAlign === 'end'
-      ? Math.max(
-          0,
-          surfaceWidth -
-            SURFACE_INSET * 2 -
-            (order.length * tabWidth + Math.max(0, order.length - 1) * slotGap)
-        )
-      : 0;
-  const slotStart = SURFACE_INSET + tabsOffset;
-  // The rail slots start flush with the panel's left edge and stop short of the tabs when they
-  // sit at the end, so the start/centre slots can never run into them.
+  // the end slot takes its own width (plus a gap) off the room the tabs fit into
+  const endReserve = surface.end > 0 ? surface.end + RAIL_GAP : 0;
+  const { tabWidth, slotGap } = fitTabs(
+    items.length,
+    surface.width - SURFACE_INSET * 2 - endReserve,
+    surface.gap
+  );
+  const tabsWidth = items.length * tabWidth + Math.max(0, items.length - 1) * slotGap;
+  // tabs hug the end of the rail (before the end slot) when aligned there
+  const slotStart =
+    SURFACE_INSET +
+    (tabsAlign === 'end'
+      ? Math.max(0, surface.width - SURFACE_INSET * 2 - endReserve - tabsWidth)
+      : 0);
+  const slotLeft = (index: number) => slotStart + index * (tabWidth + slotGap);
+  // start / centre slots stop short of the tabs when they sit at the end, so they never collide
   const railRight =
-    tabsAlign === 'end' && surfaceWidth > 0 ? surfaceWidth - slotStart + RAIL_GAP : SURFACE_INSET;
-  const slotStep = tabWidth + slotGap;
-
-  const slotLefts = useMemo(
-    () => order.map((_, index) => slotStart + index * slotStep),
-    [order, slotStart, slotStep]
-  );
-
-  const dragStartIndex = draggingId ? order.indexOf(draggingId) : -1;
-
-  const visualIndexFor = useCallback(
-    (index: number) => {
-      if (dragStartIndex < 0 || dragTargetIndex < 0) return index;
-      if (index === dragStartIndex) return dragTargetIndex;
-
-      if (dragTargetIndex > dragStartIndex && index > dragStartIndex && index <= dragTargetIndex) {
-        return index - 1;
-      }
-      if (dragTargetIndex < dragStartIndex && index >= dragTargetIndex && index < dragStartIndex) {
-        return index + 1;
-      }
-      return index;
-    },
-    [dragStartIndex, dragTargetIndex]
-  );
+    tabsAlign === 'end' && surface.width > 0
+      ? surface.width - slotStart + RAIL_GAP
+      : SURFACE_INSET + endReserve;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -489,281 +282,63 @@ export function MorphingTabs({
     if (!root || !rail) return;
 
     const measure = () => {
-      setSurfaceWidth(root.clientWidth);
-      setSurfaceHeight(root.clientHeight);
-      const nextGap = Number.parseFloat(getComputedStyle(rail).columnGap);
-      if (Number.isFinite(nextGap)) setTabGap(nextGap);
+      const gap = Number.parseFloat(getComputedStyle(rail).columnGap);
+      setSurface({
+        width: root.clientWidth,
+        height: root.clientHeight,
+        gap: Number.isFinite(gap) ? gap : 12,
+        end: hasEnd ? (endRef.current?.offsetWidth ?? 0) : 0,
+      });
     };
 
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(root);
+    if (endRef.current) observer.observe(endRef.current);
     return () => observer.disconnect();
-  }, []);
+  }, [hasEnd]);
 
   const setActive = useCallback(
     (id: string | null) => {
-      if (id && itemMap.get(id)?.disabled) return;
+      if (id && items.find((item) => item.id === id)?.disabled) return;
       if (!controlled) setInternalValue(id);
       onValueChange?.(id);
     },
-    [controlled, itemMap, onValueChange]
+    [controlled, items, onValueChange]
   );
 
+  // a value that names no tab (or none yet) falls back to the first enabled one
   useEffect(() => {
-    if (currentValue && itemMap.has(currentValue)) return;
-    if (firstEnabledItem && firstEnabledItem.id !== currentValue) {
+    if (firstEnabledItem && !items.some((item) => item.id === currentValue)) {
       setActive(firstEnabledItem.id);
     }
-  }, [currentValue, firstEnabledItem, itemMap, setActive]);
+  }, [currentValue, firstEnabledItem, items, setActive]);
 
-  const activeOrderIndex = activeId ? order.indexOf(activeId) : -1;
-  const activeVisualIndex = activeOrderIndex < 0 ? -1 : visualIndexFor(activeOrderIndex);
+  const activeIndex = activeId ? items.findIndex((item) => item.id === activeId) : -1;
+  const activeLeft = activeIndex < 0 ? null : slotLeft(activeIndex);
 
   useLayoutEffect(() => {
-    if (
-      !activeId ||
-      activeVisualIndex < 0 ||
-      activeId === draggingId ||
-      !slotLefts[activeVisualIndex]
-    ) {
-      return;
-    }
-
-    surfaceAnimationRef.current?.stop();
-
-    if (draggingId) return;
-
-    // first measured layout: sit on the active tab instead of gliding in from the rail's start.
-    // The surface only mounts once `placed`, so its path reads the right position on first paint
-    if (!placed && surfaceWidth > 0) {
-      surfaceLeft.set(slotLefts[activeVisualIndex]);
+    if (activeLeft === null || surface.width === 0) return;
+    // first measured layout: sit on the active tab instead of gliding in from the rail's start
+    if (!placed) {
+      surfaceLeft.set(activeLeft);
       setPlaced(true);
       return;
     }
+    const controls = animateValue(surfaceLeft, activeLeft, reduce ? { duration: 0 } : SPRING_GLIDE);
+    return () => controls.stop();
+  }, [activeLeft, placed, reduce, surface.width, surfaceLeft]);
 
-    surfaceAnimationRef.current = animateValue(
-      surfaceLeft,
-      slotLefts[activeVisualIndex],
-      reduce ? { duration: 0 } : SPRING_GLIDE
-    );
-  }, [
-    activeId,
-    activeVisualIndex,
-    draggingId,
-    placed,
-    reduce,
-    slotLefts,
-    surfaceLeft,
-    surfaceWidth,
-  ]);
+  const handleTabKeyDown = (index: number, event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const direction = event.key === 'ArrowLeft' ? -1 : 1;
+    const nextId = items[(index + direction + items.length) % items.length].id;
+    setActive(nextId);
+    requestAnimationFrame(() => tabButtonRefs.current[nextId]?.focus());
+  };
 
-  const commitOrder = useCallback(
-    (next: string[], notify: boolean) => {
-      orderRef.current = next;
-      setOrder((current) => (sameOrder(current, next) ? current : next));
-      if (notify) onOrderChange?.(next);
-    },
-    [onOrderChange]
-  );
-
-  const registerPosition = useCallback((id: string, position: MotionValue<number> | null) => {
-    tabPositionRefs.current[id] = position;
-  }, []);
-
-  const startDrag = useCallback(
-    (id: string, event: ReactPointerEvent<HTMLDivElement>) => {
-      if (!reorderable || event.button !== 0 || itemMap.get(id)?.disabled || dragRef.current) {
-        return;
-      }
-
-      const startIndex = orderRef.current.indexOf(id);
-      if (startIndex < 0) return;
-      const capturedSlots = orderRef.current.map((_, index) => slotStart + index * slotStep);
-      const startLeft = capturedSlots[startIndex];
-
-      dragAnimationRef.current?.stop();
-      dragAnimationRef.current = null;
-      dragLeft.set(startLeft);
-      dragRef.current = {
-        id,
-        pointerId: event.pointerId,
-        originX: event.clientX,
-        startLeft,
-        startIndex,
-        targetIndex: startIndex,
-        moved: false,
-        finishing: false,
-        startOrder: orderRef.current.slice(),
-        slotLefts: capturedSlots,
-      };
-    },
-    [dragLeft, itemMap, reorderable, slotStart, slotStep]
-  );
-
-  const moveDrag = useCallback(
-    (event: ReactPointerEvent<HTMLDivElement>) => {
-      const drag = dragRef.current;
-      if (!drag || drag.finishing || drag.pointerId !== event.pointerId) return;
-
-      const delta = event.clientX - drag.originX;
-      if (!drag.moved && Math.abs(delta) < DRAG_THRESHOLD) return;
-      event.preventDefault();
-
-      if (!drag.moved) {
-        drag.moved = true;
-        capturePointer(event.currentTarget, event.pointerId);
-        if (drag.id === activeId) {
-          surfaceAnimationRef.current?.stop();
-          surfaceLeft.set(drag.startLeft);
-        }
-        setDraggingId(drag.id);
-        setDragTargetIndex(drag.startIndex);
-      }
-
-      const minLeft = drag.slotLefts[0];
-      const maxLeft = drag.slotLefts[drag.slotLefts.length - 1];
-      const visualLeft = Math.max(minLeft, Math.min(maxLeft, drag.startLeft + delta));
-      let targetIndex = drag.startIndex;
-
-      if (visualLeft >= drag.startLeft) {
-        for (let index = drag.startIndex + 1; index < drag.slotLefts.length; index += 1) {
-          if (visualLeft + tabWidth / 2 >= drag.slotLefts[index]) {
-            targetIndex = index;
-          }
-        }
-      } else {
-        for (let index = drag.startIndex - 1; index >= 0; index -= 1) {
-          if (visualLeft <= drag.slotLefts[index] + tabWidth / 2) {
-            targetIndex = index;
-          }
-        }
-      }
-
-      dragLeft.set(visualLeft);
-      if (targetIndex !== drag.targetIndex) {
-        drag.targetIndex = targetIndex;
-        setDragTargetIndex(targetIndex);
-      }
-    },
-    [activeId, dragLeft, surfaceLeft, tabWidth]
-  );
-
-  const finishDrag = useCallback(
-    (pointerId: number) => {
-      const drag = dragRef.current;
-      if (!drag || drag.pointerId !== pointerId || drag.finishing) return;
-
-      if (!drag.moved) {
-        dragRef.current = null;
-        return;
-      }
-
-      drag.finishing = true;
-      const targetLeft = drag.slotLefts[drag.targetIndex];
-      const controls = animateValue(dragLeft, targetLeft, reduce ? { duration: 0 } : SPRING_GLIDE);
-      dragAnimationRef.current = controls;
-
-      controls.then(async () => {
-        if (dragAnimationRef.current !== controls) return;
-        const next = moveItem(drag.startOrder, drag.startIndex, drag.targetIndex);
-
-        if (!reduce) {
-          await new Promise<void>((resolve) => {
-            const startedAt = performance.now();
-            const check = () => {
-              const settled = next.every((id, index) => {
-                if (id === drag.id) return true;
-                const position = tabPositionRefs.current[id];
-                if (!position) return true;
-                return (
-                  Math.abs(position.get() - drag.slotLefts[index]) < 0.5 &&
-                  Math.abs(position.getVelocity()) < 10
-                );
-              });
-
-              if (settled || performance.now() - startedAt > 500) {
-                resolve();
-                return;
-              }
-              requestAnimationFrame(check);
-            };
-            check();
-          });
-        }
-
-        if (dragAnimationRef.current !== controls) return;
-        if (drag.id === activeId) {
-          surfaceLeft.set(targetLeft);
-        } else if (activeId) {
-          const activePosition = tabPositionRefs.current[activeId];
-          if (activePosition) surfaceLeft.set(activePosition.get());
-        }
-        tabPositionRefs.current[drag.id]?.jump(targetLeft);
-        dragAnimationRef.current = null;
-        dragRef.current = null;
-        commitOrder(next, !sameOrder(drag.startOrder, next));
-        setDraggingId(null);
-        setDragTargetIndex(-1);
-      });
-    },
-    [activeId, commitOrder, dragLeft, reduce, surfaceLeft]
-  );
-
-  useEffect(() => {
-    const finishFromWindow = (event: PointerEvent) => {
-      finishDrag(event.pointerId);
-    };
-    window.addEventListener('pointerup', finishFromWindow, true);
-    window.addEventListener('pointercancel', finishFromWindow, true);
-    return () => {
-      window.removeEventListener('pointerup', finishFromWindow, true);
-      window.removeEventListener('pointercancel', finishFromWindow, true);
-    };
-  }, [finishDrag]);
-
-  const moveBy = useCallback(
-    (id: string, direction: -1 | 1) => {
-      const current = orderRef.current;
-      const index = current.indexOf(id);
-      const nextIndex = index + direction;
-      if (
-        !reorderable ||
-        index < 0 ||
-        nextIndex < 0 ||
-        nextIndex >= current.length ||
-        itemMap.get(id)?.disabled
-      ) {
-        return;
-      }
-      commitOrder(moveItem(current, index, nextIndex), true);
-    },
-    [commitOrder, itemMap, reorderable]
-  );
-
-  const handleTabKeyDown = useCallback(
-    (id: string, event: React.KeyboardEvent<HTMLButtonElement>) => {
-      const index = orderRef.current.indexOf(id);
-      if (index < 0) return;
-
-      if (event.altKey && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
-        event.preventDefault();
-        moveBy(id, event.key === 'ArrowLeft' ? -1 : 1);
-        return;
-      }
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-
-      event.preventDefault();
-      const direction = event.key === 'ArrowLeft' ? -1 : 1;
-      const nextIndex = (index + direction + orderRef.current.length) % orderRef.current.length;
-      const nextId = orderRef.current[nextIndex];
-      setActive(nextId);
-      requestAnimationFrame(() => tabButtonRefs.current[nextId]?.focus());
-    },
-    [moveBy, setActive]
-  );
-
-  if (!orderedItems.length) return null;
+  if (!items.length) return null;
 
   return (
     <div
@@ -774,6 +349,16 @@ export function MorphingTabs({
         className
       )}
     >
+      {placed && surface.width > SURFACE_INSET * 2 ? (
+        <LiquidSurface
+          left={surfaceLeft}
+          surfaceWidth={surface.width}
+          surfaceHeight={surface.height}
+          tabWidth={tabWidth}
+          className={classNames?.activeTab}
+        />
+      ) : null}
+
       <div className="relative h-12 shrink-0">
         <div
           ref={railRef}
@@ -782,56 +367,20 @@ export function MorphingTabs({
           aria-orientation="horizontal"
           className={cn('relative z-30 flex h-full gap-3 md:gap-4', classNames?.rail)}
         >
-          {orderedItems.map((item, index) => {
+          {items.map((item, index) => {
             const isActive = item.id === activeId;
-            const isDragging = item.id === draggingId;
-            const visualIndex = visualIndexFor(index);
-            const targetLeft = slotLefts[visualIndex] ?? SURFACE_INSET;
-            const tabId = `${uid}-tab-${safeId(item.id)}`;
 
             return (
-              <SpringTab
+              <div
                 key={item.id}
-                id={item.id}
-                targetLeft={targetLeft}
-                dragging={isDragging}
-                dragLeft={dragLeft}
-                surfaceLeft={surfaceLeft}
-                reduce={reduce}
-                active={isActive}
-                anyDragging={Boolean(draggingId)}
-                surfaceHost={rootRef.current}
-                surfaceWidth={placed ? surfaceWidth : 0}
-                surfaceHeight={surfaceHeight}
-                tabWidth={tabWidth}
-                surfaceClassName={classNames?.activeTab}
-                zIndex={isDragging ? 30 : isActive ? 20 : 1}
-                className={cn(
-                  // The drag is ours end to end, so iPadOS must not answer the
-                  // press with its callout or a native drag of the label.
-                  'group absolute left-0 top-0 flex touch-pan-y items-stretch',
-                  TOUCH_GESTURE_CLASS,
-                  item.disabled && 'cursor-not-allowed',
-                  !item.disabled && !reorderable && 'cursor-pointer',
-                  !item.disabled && reorderable && (isDragging ? 'cursor-grabbing' : 'cursor-grab')
-                )}
-                registerPosition={registerPosition}
-                onPointerDown={(event) => startDrag(item.id, event)}
-                onPointerMove={moveDrag}
-                onPointerUp={(event) => finishDrag(event.pointerId)}
-                onPointerCancel={(event) => finishDrag(event.pointerId)}
-                // A touch is implicitly captured by whatever it landed on —
-                // here the label inside the tab — so the moment the drag takes
-                // the capture for the tab itself, that child *loses* it, and
-                // the notification bubbles straight back up to this handler.
-                // Ending the drag on it kills the gesture on the frame it
-                // starts. Only the tab losing its own capture means the
-                // platform took the pointer away. A mouse has no implicit
-                // capture, which is why this only ever bit on a real finger.
-                onLostPointerCapture={(event) => {
-                  if (event.target !== event.currentTarget) return;
-                  finishDrag(event.pointerId);
+                style={{
+                  zIndex: isActive ? 20 : 1,
+                  transform: `translate3d(${slotLeft(index)}px, 0, 0)`,
                 }}
+                className={cn(
+                  'group absolute top-0 left-0 flex items-stretch select-none',
+                  item.disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+                )}
               >
                 <TabTooltip
                   tooltip={item.tooltip}
@@ -839,22 +388,13 @@ export function MorphingTabs({
                   arrowClassName={classNames?.tooltipArrow}
                 >
                   <div
-                    style={{
-                      width: tabWidth,
-                      height: TAB_HEIGHT,
-                      marginTop: TAB_TOP,
-                    }}
+                    style={{ width: tabWidth, height: TAB_HEIGHT }}
                     className="relative flex items-stretch"
                   >
                     {!isActive ? (
                       <span
                         aria-hidden
-                        className={cn(
-                          'absolute inset-x-0 bottom-2 top-0 rounded-[1.25rem] transition-colors duration-200',
-                          isDragging
-                            ? 'bg-[oklch(0.929_0.013_255.508)]'
-                            : 'bg-[oklch(0.984_0.003_247.858)] group-hover:bg-[oklch(0.929_0.013_255.508)]'
-                        )}
+                        className="absolute inset-x-0 top-0 bottom-2 rounded-[1.25rem] bg-[oklch(0.984_0.003_247.858)] transition-colors duration-200 group-hover:bg-[oklch(0.929_0.013_255.508)]"
                       />
                     ) : null}
 
@@ -862,7 +402,7 @@ export function MorphingTabs({
                       ref={(node) => {
                         tabButtonRefs.current[item.id] = node;
                       }}
-                      id={tabId}
+                      id={`${uid}-tab-${safeId(item.id)}`}
                       data-testid={item.testId}
                       type="button"
                       role="tab"
@@ -871,15 +411,10 @@ export function MorphingTabs({
                       aria-disabled={item.disabled || undefined}
                       tabIndex={isActive ? 0 : -1}
                       disabled={item.disabled}
-                      onClick={() => {
-                        const drag = dragRef.current;
-                        if (drag?.id === item.id && drag.moved) return;
-                        setActive(item.id);
-                      }}
-                      onKeyDown={(event) => handleTabKeyDown(item.id, event)}
+                      onClick={() => setActive(item.id)}
+                      onKeyDown={(event) => handleTabKeyDown(index, event)}
                       className={cn(
                         'group relative z-10 flex h-full w-full min-w-0 items-center gap-2 overflow-hidden rounded-t-[1.5rem] px-3 text-left outline-none transition-colors',
-                        isActive && item.action && 'pr-12',
                         isActive ? 'text-primary-8' : 'pb-2 text-neutral-4 hover:text-[#181818]',
                         item.disabled && 'cursor-not-allowed opacity-60 hover:text-neutral-4',
                         classNames?.tab
@@ -919,22 +454,9 @@ export function MorphingTabs({
                         {item.label}
                       </span>
                     </button>
-
-                    {isActive && item.action ? (
-                      <div
-                        className={cn(
-                          'absolute right-2 top-1/2 z-20 flex -translate-y-1/2 items-center',
-                          classNames?.action
-                        )}
-                        // the tab owns the drag; the control inside it does not
-                        onPointerDown={(event) => event.stopPropagation()}
-                      >
-                        {item.action}
-                      </div>
-                    ) : null}
                   </div>
                 </TabTooltip>
-              </SpringTab>
+              </div>
             );
           })}
           {railStart || railCenter ? (
@@ -961,6 +483,16 @@ export function MorphingTabs({
               </div>
             </div>
           ) : null}
+          {railEnd ? (
+            <div
+              ref={endRef}
+              data-slot="morphing-tabs-rail-end"
+              className={cn('absolute z-30 flex items-center', classNames?.railEnd)}
+              style={{ right: SURFACE_INSET, top: 0, height: RAIL_HEIGHT }}
+            >
+              {railEnd}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -973,47 +505,19 @@ export function MorphingTabs({
           classNames?.content
         )}
       >
-        {keepMounted ? (
-          orderedItems.map((item) => (
-            <div
-              key={item.id}
-              className={cn(
-                'min-h-0 flex-1 flex-col',
-                item.id === activeId ? 'flex' : 'hidden',
-                classNames?.panel
-              )}
-            >
-              {item.content}
-            </div>
-          ))
-        ) : (
-          <AnimatePresence mode="popLayout" initial={false}>
-            {activeItem ? (
-              <motion.div
-                key={activeItem.id}
-                initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8, filter: 'blur(6px)' }}
-                animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                exit={
-                  reduce
-                    ? {
-                        opacity: 0,
-                        transition: { duration: 0.08, ease: EASE_OUT },
-                      }
-                    : {
-                        opacity: 0,
-                        y: -5,
-                        filter: 'blur(5px)',
-                        transition: { duration: 0.12, ease: EASE_OUT },
-                      }
-                }
-                transition={reduce ? { duration: 0.12, ease: EASE_OUT } : SPRING_PRESS}
-                className={cn('flex min-h-0 flex-1 flex-col', classNames?.panel)}
-              >
-                {activeItem.content}
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-        )}
+        {/* every panel stays mounted (editor state survives a tab switch); inactive ones hide */}
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className={cn(
+              'min-h-0 flex-1 flex-col',
+              item.id === activeId ? 'flex' : 'hidden',
+              classNames?.panel
+            )}
+          >
+            {item.content}
+          </div>
+        ))}
       </div>
     </div>
   );

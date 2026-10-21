@@ -101,7 +101,7 @@ export default function ScanConfigTabsPanel({
   railCenter,
 }: ScanConfigTabsPanelProps) {
   // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
-  const { start } = useScanConfigTopBarSlots();
+  const { start, end } = useScanConfigTopBarSlots();
   // not memoised: `configuration` and `results` are fresh nodes on every render
   const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
     const isConfiguration = id === BaseScanConfigTabs.configuration;
@@ -122,11 +122,10 @@ export default function ScanConfigTabsPanel({
 
   return (
     <MorphingTabs
-      keepMounted
-      reorderable={false}
       tabsAlign="end"
       railStart={start}
       railCenter={railCenter}
+      railEnd={end}
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}
