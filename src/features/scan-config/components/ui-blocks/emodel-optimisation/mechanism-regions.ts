@@ -90,6 +90,14 @@ export function readRegions(mechanisms: Record<string, ConfigValue>): Record<str
   return asRecord(mechanisms[MECHANISM_REGIONS_KEY]);
 }
 
+/** Total ion channel model assignments across every region (each region row counts once; a model assigned to several regions, or twice within one, counts each time). */
+export function totalAssignedModelCount(value: ConfigValue): number {
+  return Object.values(readRegions(readMechanisms(value))).reduce<number>(
+    (total, region) => total + (Array.isArray(region) ? region.length : 0),
+    0
+  );
+}
+
 /** The MechanismRegionSelection entry array for one region choice. */
 export function readRegionEntries(
   mechanisms: Record<string, ConfigValue>,

@@ -7,6 +7,7 @@ import {
   hasErrorAt,
   nonParameterErrors,
   parameterErrors,
+  totalAssignedModelCount,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import {
   EMODEL_OPTIMISATION_MECHANISMS_TABS,
@@ -14,6 +15,7 @@ import {
 } from '@/features/scan-config/types';
 
 import type { ErrorObject } from 'ajv';
+import type { ConfigValue } from '@/features/scan-config/types';
 
 /**
  * Whether the config a tab writes has schema errors. Each tab owns the keys it writes (paths are
@@ -55,16 +57,20 @@ export function EModelOptimisationMechanismsTabList({
   selectedRootElement,
   selectedMechanismsTab,
   onSelectTab,
+  value,
   errors,
 }: {
   rootElement: string;
   selectedRootElement: string;
   selectedMechanismsTab: string;
   onSelectTab: (tab: string) => void;
+  /** value of the `emodel_optimisation_parameters` config key */
+  value: ConfigValue;
   /** ajv schema errors of the whole config */
   errors: ErrorObject[] | null | undefined;
 }) {
   const emodelErrors = errorsUnder(errors, `/${rootElement}`);
+  const assignedCount = totalAssignedModelCount(value);
 
   return (
     <div className="ml-3 flex flex-col gap-0.5 border-l border-gray-200 pl-2">
@@ -80,11 +86,21 @@ export function EModelOptimisationMechanismsTabList({
           style={undefined}
         >
           <span className="wrap-break-word min-w-0 text-sm">{label}</span>
-          {tabHasErrors(key, emodelErrors) ? (
-            <WarningFilled className="text-yellow-400!" />
-          ) : (
-            <CheckCircleFilled className="text-green-600!" />
-          )}
+          <div className="flex shrink-0 items-center gap-3">
+            {key === EModelOptimisationMechanismsTabs.ParametersSelection && (
+              <span
+                className="inline-flex size-5 min-w-5 shrink-0 items-center justify-center rounded-full border border-current px-1 text-[11px] leading-none font-semibold tabular-nums"
+                data-testid="scan-config-emodel-parameters-selection-icm-count"
+              >
+                {assignedCount}
+              </span>
+            )}
+            {tabHasErrors(key, emodelErrors) ? (
+              <WarningFilled className="text-yellow-400!" />
+            ) : (
+              <CheckCircleFilled className="text-green-600!" />
+            )}
+          </div>
         </LeftMenuTab>
       ))}
     </div>

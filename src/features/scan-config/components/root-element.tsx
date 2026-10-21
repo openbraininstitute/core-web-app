@@ -222,6 +222,7 @@ export function RootElement({
             setSelectedMechanismsTab(key);
             setEditing(true);
           }}
+          value={config[rootElement]}
           errors={errors}
         />
       )}
