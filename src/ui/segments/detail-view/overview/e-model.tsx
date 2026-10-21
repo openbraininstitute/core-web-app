@@ -45,7 +45,7 @@ export default async function EModelOverview({
 
   return (
     <div>
-      <div className={sectionHeadingClass(variant)}>File preview</div>
+      <div className={sectionHeadingClass(variant)}>File Preview: NEURON hoc</div>
       <div
         className={cn(
           'overflow-x-auto secondary-scrollbar overflow-y-auto font-mono text-sm whitespace-pre shadow-lg',
