@@ -11,6 +11,7 @@ const dots = (radius: number, minRadius: number) => ({
   uRadius: { value: radius },
   uMinRadius: { value: minRadius },
   uRingColour: { value: new THREE.Vector3(0.1, 0.2, 0.3) },
+  uScale: { value: 1 },
 });
 
 function held() {
@@ -37,6 +38,7 @@ describe('the WebGPU tier’s uniforms', () => {
     from.cloud.uRadius.value = 12;
     from.cloud.uOpacity.value = 0.5;
     from.segments.uSegments.value = 99;
+    from.electrodes.uScale.value = 0.5;
     expect(u.mix.value).toBe(0);
 
     u.sync();
@@ -51,6 +53,7 @@ describe('the WebGPU tier’s uniforms', () => {
       [5, 0.5, 6]
     );
     expect(u.ringColour.value.toArray()).toEqual([0.1, 0.2, 0.3]);
+    expect(u.dotScale.value).toBe(0.5);
   });
 
   it('bind a blank table while there is none, not the one before', () => {

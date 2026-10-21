@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import { impostorUniforms } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import {
+  cloudPieces,
   fanGeometry,
   somaCloudIdMaterial,
   somaCloudMaterial,
@@ -27,9 +28,10 @@ describe('the somas drawn as the somas view drew them', () => {
     expect(ids.uniforms.uRadius).toBe(own.uRadius);
   });
 
-  it("places a pyramid a cell, by the instance's number, at its position less the view's origin", () => {
+  it("places a pyramid a cell, by the cell it is given, at its position less the view's origin", () => {
     for (const { vertexShader } of [cloud, ids]) {
-      expect(vertexShader).toContain('return uint( gl_InstanceID );');
+      expect(vertexShader).toContain('in uint aCell;');
+      expect(vertexShader).toContain('return aCell;');
       expect(vertexShader).toContain('ivec2( int( cell & 2047u ), int( cell >> 11u ) )');
       expect(vertexShader).toContain('modelViewMatrix * vec4( aPosition - uOffset, 1.0 )');
       // A cell that is not drawn has its pyramid out of view, and in no pick.
@@ -120,5 +122,40 @@ describe('the somas drawn as the somas view drew them', () => {
     expect(ids.blending).toBe(THREE.NoBlending);
     expect(ids.vertexShader).toContain('uint id = cell + 1u;');
     expect(ids.fragmentShader).toContain('if ( dot( coord, coord ) > 1.0 ) discard;');
+  });
+});
+
+describe('the cloud cut into pieces', () => {
+  it('orders the somas by place, each with its cell, a sphere round them, and none with no place in it', () => {
+    const positions = Float32Array.of(10, 10, 10, 0, 0, 0, Number.NaN, 0, 0, 10, 0, 0, 0, 10, 0);
+    const [piece, ...more] = cloudPieces(positions);
+    expect(more).toEqual([]);
+    expect([...piece.cells]).toEqual([1, 2, 3, 4, 0]);
+    piece.cells.forEach((cell, i) => {
+      expect([...piece.positions.subarray(3 * i, 3 * i + 3)]).toEqual([
+        ...positions.subarray(3 * cell, 3 * cell + 3),
+      ]);
+    });
+    expect(piece.centre.toArray()).toEqual([5, 5, 5]);
+    expect(piece.reach).toBeCloseTo(5 * Math.sqrt(3));
+  });
+
+  it('cuts the cloud by place: neighbours in a piece, whatever their order in the page', () => {
+    // Every other cell in one of two corners far apart.
+    const n = 2 * 32768;
+    const positions = new Float32Array(3 * n);
+    for (let cell = 0; cell < n; cell++)
+      positions.fill((cell % 2) * 1000 + (cell % 7), 3 * cell, 3 * cell + 3);
+    const pieces = cloudPieces(positions);
+    expect(pieces).toHaveLength(2);
+    for (const { cells } of pieces)
+      expect(new Set(Array.from(cells, (cell) => cell % 2)).size).toBe(1);
+  });
+
+  it('cuts the cloud into pieces of 32,768 neighbours', () => {
+    const sizes = (n: number) => cloudPieces(new Float32Array(3 * n)).map((p) => p.cells.length);
+    expect(sizes(70000)).toEqual([32768, 32768, 4464]);
+    expect(sizes(1)).toEqual([1]);
+    expect(sizes(0)).toEqual([]);
   });
 });

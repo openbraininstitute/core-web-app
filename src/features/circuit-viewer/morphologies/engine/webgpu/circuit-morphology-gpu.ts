@@ -5,6 +5,7 @@ import { logError } from '@/utils/logger';
 
 import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
 import { pixelSpan, SEGMENT_BUDGET } from '../detail';
+import { GLOW_SWELL } from '../soma-cloud';
 import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
 import { Culling, DRAWS } from './culling';
 import { KEEP_UM } from './culling-wgsl';
@@ -18,7 +19,8 @@ import {
 } from './impostors-gpu';
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
-import { checkHooks, threeLoop } from './three-hooks';
+import { SomaCulling } from './soma-culling';
+import { checkHooks, FrameTimes, threeLoop, trackTimestamps } from './three-hooks';
 
 import type { Lost } from '../create-view';
 
@@ -37,9 +39,9 @@ interface GpuArena extends ReturnType<typeof arenaMaterials> {
  * The circuit's morphologies on WebGPU (`CircuitView`), on a device of the page's own (`probeWebGPU`), which goes
  * with the view. Each material writes the colour shown, as the WebGL 2 tier's do: Studio's tone maps its own, and the
  * somas are drawn as they come out, so the renderer converts nothing and draws straight to the canvas; a still frame of
- * morphologies goes through the ambient occlusion first (`Occlusion`). A pack's segments are culled (`Culling`): the
- * segments kept the frame before are drawn to depth (`keptQuads`), the culling's tests run, and the frame draws the
- * segments seen.
+ * morphologies or opaque somas goes through the ambient occlusion first (`Occlusion`). A pack's segments are culled
+ * (`Culling`): the segments kept the frame before are drawn to depth (`keptQuads`), the culling's tests run, and the
+ * frame draws the segments seen. So are the somas drawn alone and opaque (`SomaCulling`).
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
@@ -58,7 +60,12 @@ export class CircuitMorphologyGPU extends CircuitView {
   private arena: GpuArena | null = null;
   /** The kept segments' quads, drawn to depth before the culling's tests. */
   private keptQuads = new THREE.Scene();
+  /** Made for the cloud's somas, and let go of with them. */
+  private somaCulling: SomaCulling | null = null;
   private drawingSize = new THREE.Vector2();
+  /** Whether what a frame cost is being read back, which the next frames do not wait for. */
+  private reading = false;
+  private frameTimes: FrameTimes;
   private onLost: ((how: Lost) => void) | null;
 
   /**
@@ -76,6 +83,8 @@ export class CircuitMorphologyGPU extends CircuitView {
       device,
       antialias: true,
       alpha: true,
+      // What frames cost the GPU, where the device can tell, for the frames timed (`timeFrame`).
+      trackTimestamp: true,
       // Past white, where the screen shows it.
       ...(overWhite && { outputType: THREE.HalfFloatType }),
     });
@@ -104,6 +113,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     super(host, renderer.domElement, renderer.getPixelRatio(), SEGMENT_BUDGET.webgpu);
     this.renderer = renderer;
     this.device = device;
+    this.frameTimes = new FrameTimes(device);
     this.onLost = onLost;
     // As many as a binding takes of their ends, 8 floats each.
     const { maxStorageBufferBindingSize, maxBufferSize } = device.limits;
@@ -172,6 +182,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     const { segment = [], ids = [], kept = [], through = [] } = this.arena ?? {};
     for (const material of [...segment, ...ids, ...kept, ...through]) material.dispose();
     this.arena?.culling.dispose();
+    this.somaCulling?.dispose();
+    this.frameTimes.dispose();
     this.renderer.dispose();
     this.device.destroy();
   }
@@ -193,18 +205,58 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
+  protected override scaleDrawing(scale: number): void {
+    this.renderer.setPixelRatio(this.pixelRatio * scale);
+  }
+
   /**
-   * Still, morphologies are drawn with ambient occlusion; moving, and the somas always, without: the cloud of somas
-   * writes no surface for it. Its targets are the size of the canvas, so it is let go of with the morphologies. Where
-   * spiking cells glow, morphologies are drawn through its target moving too while any is lit, and it is made again as
-   * whether they glow changes.
+   * Still, morphologies and opaque somas are drawn with ambient occlusion, and moving, the somas alone while the motion
+   * keeps it (`aoMoving`); other moving frames and translucent somas without. Its targets are the size of the canvas, so
+   * it is let go of with what it shades. Where spiking cells glow, morphologies are drawn through its target moving too
+   * while any is lit, and it is made again as whether they glow changes.
    */
   protected override draw(moving: boolean): void {
+    const from = performance.now();
+    const tracked = trackTimestamps(this.renderer, this.timing !== null && !this.reading);
+    try {
+      this.drawFrame(moving);
+    } finally {
+      this.timeFrame(from, tracked);
+    }
+  }
+
+  /**
+   * What the frame drawn since `from` cost the GPU, told where `timing` asks: by three's timestamps of its passes where
+   * they were `tracked`, the last frame's of those read at once (`FrameTimes`); where the device has none, from the
+   * frame's start until the GPU is done with it, which errs on the slow side. Frames not timed write no timestamps.
+   */
+  private timeFrame(from: number, tracked: boolean): void {
+    const { timing, renderer } = this;
+    if (!timing || this.reading) return;
+    this.reading = true;
+    const read = tracked
+      ? this.frameTimes.last(renderer)
+      : this.device.queue.onSubmittedWorkDone().then(() => performance.now() - from);
+    read.then(
+      (ms) => {
+        this.reading = false;
+        if (typeof ms === 'number' && ms > 0 && !this.disposed) this.measured(timing, ms);
+      },
+      () => {
+        this.reading = false;
+      }
+    );
+  }
+
+  private drawFrame(moving: boolean): void {
     this.gpu.sync();
     this.cull(this.restOf(moving));
+    this.cullSomas();
     const glowing = this.glowing && this.glowWorks;
-    if (!this.drawsMorphologies || this.occlusion?.glows !== glowing) this.dropOcclusion();
-    const through = this.drawsMorphologies && (!moving || (glowing && this.spiking.lit.length > 0));
+    const shaded = this.drawsMorphologies || this.drawsOpaqueSomas;
+    if (!shaded || this.occlusion?.glows !== glowing) this.dropOcclusion();
+    const occluded = !moving || this.aoMoving;
+    const through = shaded && (occluded || (glowing && this.spiking.lit.length > 0));
     const occlusion = through ? this.occlusionNow(glowing) : null;
     if (occlusion) {
       try {
@@ -212,7 +264,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         this.throughs.visible = this.spiking.lit.length > 0;
         const umPerPx = this.umPerCssPx();
         this.gpu.throughUm.value = Math.min(THROUGH_CSS_PX * umPerPx, KEEP_UM);
-        if (moving) occlusion.renderMoving();
+        if (!occluded) occlusion.renderMoving();
         else occlusion.render(AO_RADIUS_CSS * umPerPx);
         return;
       } catch (e) {
@@ -223,9 +275,15 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** The occlusion was made for the other camera. */
+  /** The occlusion was made for the other camera, and the somas kept for it hide little in this one. */
   protected override projectionChanged(): void {
     this.dropOcclusion();
+    this.somaCulling?.reseed();
+  }
+
+  /** The somas kept for the view before may hide little in this one. */
+  protected override viewSet(): void {
+    this.somaCulling?.reseed();
   }
 
   /**
@@ -308,6 +366,59 @@ export class CircuitMorphologyGPU extends CircuitView {
     culling.drawAll(end);
   }
 
+  protected override get occludes(): boolean {
+    return true;
+  }
+
+  protected override get cullsSomas(): boolean {
+    return this.culls && this.somaCulling?.failed === false && this.uniforms.uCells.value !== null;
+  }
+
+  protected override placeSomas(
+    positions: Float32Array | null,
+    pieces: readonly THREE.InstancedBufferGeometry[]
+  ): void {
+    this.somaCulling?.dispose();
+    this.somaCulling = null;
+    if (!positions) return;
+    try {
+      this.somaCulling = new SomaCulling(
+        this.renderer,
+        this.device,
+        this.gpu,
+        positions,
+        pieces,
+        () => this.invalidate()
+      );
+      this.scene.add(this.somaCulling.seen);
+    } catch (e) {
+      logError('Somas drawn without culling', e);
+    }
+  }
+
+  /**
+   * The somas drawn alone and opaque, culled: the culling's test run before the frame, which draws the somas seen in
+   * place of the pieces, at the most a soma swells to while spikes are replayed. Not culled, its targets are let go of;
+   * where the test could not run, the pieces are drawn from this frame on.
+   */
+  private cullSomas(): void {
+    const culling = this.somaCulling;
+    if (!culling) return;
+    const on = this.drawsOpaqueSomas && this.cullsSomas;
+    culling.seen.visible = on;
+    if (!on) {
+      culling.release();
+      return;
+    }
+    const { uOffset, uRadius } = this.cloudUniforms;
+    const radius = uRadius.value * (this.spiking.replaying ? 1 + GLOW_SWELL : 1);
+    const cells = this.uniforms.uCells.value;
+    const size = this.renderer.getDrawingBufferSize(this.drawingSize);
+    if (cells && culling.run(this.camera, uOffset.value, radius, cells, size.x, size.y)) return;
+    culling.seen.visible = false;
+    this.showPieces();
+  }
+
   private occlusionNow(glows: boolean): Occlusion | null {
     if (!this.occlusion && this.occluding) {
       try {
@@ -333,7 +444,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   private withoutOcclusion(e: unknown, glows: boolean): void {
     this.dropOcclusion();
     if (glows) this.glowWorks = false;
-    else this.occluding = false;
+    else {
+      this.occluding = false;
+      this.occlusionGone();
+    }
     this.renderer.setRenderTarget(null);
     this.renderer.setMRT(null);
     logError(glows ? 'Drawn without the spike glow' : 'Drawn without ambient occlusion', e);

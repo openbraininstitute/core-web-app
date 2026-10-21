@@ -6,6 +6,7 @@ export const COPY_DST = 0x0008;
 export const UNIFORM = 0x0040;
 export const STORAGE = 0x0080;
 export const INDIRECT = 0x0100;
+export const QUERY_RESOLVE = 0x0200;
 
 export const TEXTURE_BINDING = 0x04;
 export const STORAGE_BINDING = 0x08;

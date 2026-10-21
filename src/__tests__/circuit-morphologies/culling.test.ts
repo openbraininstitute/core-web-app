@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { arenaStorage } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import { Culling, DRAWS } from '@/features/circuit-viewer/morphologies/engine/webgpu/culling';
 
+import { fakeGpu } from './fake-gpu';
+
 import type { ArenaBuffers } from '@/features/circuit-viewer/morphologies/engine/webgpu/arena-gpu';
 import type { CullTally } from '@/features/circuit-viewer/morphologies/types';
 
@@ -27,74 +29,6 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
   marked: Uint32Array.from(marked),
   rest,
 });
-
-/**
- * A device whose reads are mapped when the test says (`map`), finding `found`; `textures` false where three made no
- * texture of its own, and `refused` the error its programs' scope ends with.
- */
-function fakeGpu({ textures = true, refused = null as object | null } = {}) {
-  const maps: (() => void)[] = [];
-  const gpu = { found: wordsOf({ tested: 0, kept: 0, drawn: 0 }), maps };
-  const buffer = ({ size }: { size: number }) => {
-    const b = {
-      size,
-      mapState: 'unmapped',
-      destroy: () => {
-        b.mapState = 'unmapped';
-      },
-      mapAsync: () =>
-        new Promise<void>((resolve) => {
-          b.mapState = 'pending';
-          maps.push(() => {
-            if (b.mapState === 'pending') b.mapState = 'mapped';
-            resolve();
-          });
-        }),
-      getMappedRange: () => {
-        const range = new Uint32Array(size / 4);
-        range.set(gpu.found.subarray(0, range.length));
-        return range.buffer;
-      },
-      unmap: () => {
-        b.mapState = 'unmapped';
-      },
-    };
-    return b;
-  };
-  const view = { createView: () => ({}) };
-  const pass = {
-    setPipeline: vi.fn(),
-    setBindGroup: vi.fn(),
-    dispatchWorkgroups: vi.fn(),
-    dispatchWorkgroupsIndirect: vi.fn(),
-    end: vi.fn(),
-  };
-  const device = {
-    createBuffer: buffer,
-    createTexture: () => ({ ...view, destroy: vi.fn() }),
-    createShaderModule: () => ({}),
-    createComputePipeline: () => ({ getBindGroupLayout: () => ({}) }),
-    createBindGroup: () => ({}),
-    pushErrorScope: vi.fn(),
-    popErrorScope: () => Promise.resolve(refused),
-    createCommandEncoder: () => ({
-      clearBuffer: vi.fn(),
-      beginComputePass: () => pass,
-      copyBufferToBuffer: vi.fn(),
-      finish: () => ({}),
-    }),
-    queue: { writeBuffer: vi.fn(), submit: vi.fn() },
-  };
-  const renderer = {
-    backend: { get: () => (textures ? { texture: view } : {}) },
-    initTexture: vi.fn(),
-  };
-  return {
-    gpu,
-    device: device as unknown as GPUDevice,
-    renderer: renderer as unknown as THREE.WebGPURenderer,
-  };
-}
 
 /** An arena of 64 blocks: two words of them marked. */
 const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
@@ -133,6 +67,15 @@ describe("the culling's counts and its failures", () => {
     culling.setArena(null);
     await map(B);
     expect(counted).toHaveBeenCalledOnce();
+  });
+
+  it('lets go of its targets with its arena', () => {
+    const { culling } = cullingOn();
+    const target = culling.targetOf(16, 8);
+    const dispose = vi.spyOn(target, 'dispose');
+    culling.setArena(null);
+    expect(dispose).toHaveBeenCalledOnce();
+    expect(culling.targetOf(16, 8)).not.toBe(target);
   });
 
   it('reads the last frame tested once a buffer is free, where every one was busy, telling the rest it was drawn in', async () => {

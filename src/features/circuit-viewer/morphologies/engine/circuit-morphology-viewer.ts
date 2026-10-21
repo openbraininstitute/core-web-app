@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 
+import { GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-timer';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
@@ -11,14 +12,20 @@ import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
 
 /**
  * The circuit's morphologies on WebGL 2 (`CircuitView`), the fallback where WebGPU is missing. Frames go straight to
- * the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. After a lost context three uploads
- * the arrays again.
+ * the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. They are timed on the GPU
+ * (`GpuTimer`) where the view asks. After a lost context three uploads the arrays again.
  */
 export class CircuitMorphologyViewer extends CircuitView {
   protected materials: CircuitMaterials;
   protected readonly rowsUp = true;
   private renderer: THREE.WebGLRenderer;
   private idTarget: THREE.WebGLRenderTarget | null = null;
+  /**
+   * What frames cost the GPU, made the first time one is timed, null without WebGL 2; and what the frame it times was
+   * timed for.
+   */
+  private timer: GpuTimer | null | undefined;
+  private timed: 'moving' | 'still' | null = null;
 
   constructor(container: HTMLElement) {
     // Transparent canvas over the container's background.
@@ -61,6 +68,7 @@ export class CircuitMorphologyViewer extends CircuitView {
   protected override disposeStage(): void {
     this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.idTarget?.dispose();
+    this.timer?.dispose();
     this.renderer.dispose();
     this.renderer.forceContextLoss();
   }
@@ -73,11 +81,42 @@ export class CircuitMorphologyViewer extends CircuitView {
     this.renderer.setSize(width, height, false);
   }
 
-  protected override draw(): void {
-    this.renderer.render(this.scene, this.camera);
+  protected override scaleDrawing(scale: number): void {
+    this.renderer.setPixelRatio(this.pixelRatio * scale);
   }
 
-  private onContextRestored = (): void => this.invalidate();
+  /** A frame, timed on the GPU where `timing` asks and no other is being timed. */
+  protected override draw(): void {
+    const { timing } = this;
+    const timer = timing ? this.timerNow() : null;
+    const timed = timer !== null && !timer.busy;
+    if (timed) {
+      this.timed = timing;
+      timer.begin();
+    }
+    this.renderer.render(this.scene, this.camera);
+    if (timed) timer.end();
+  }
+
+  private timerNow(): GpuTimer | null {
+    if (this.timer === undefined) {
+      const gl = this.renderer.getContext();
+      this.timer =
+        typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext
+          ? new GpuTimer(gl, (ms) => {
+              if (this.timed) this.measured(this.timed, ms);
+            })
+          : null;
+    }
+    return this.timer;
+  }
+
+  private onContextRestored = (): void => {
+    // Its queries went with the context.
+    this.timer?.dispose();
+    this.timer = undefined;
+    this.invalidate();
+  };
 
   protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
     const { renderer } = this;

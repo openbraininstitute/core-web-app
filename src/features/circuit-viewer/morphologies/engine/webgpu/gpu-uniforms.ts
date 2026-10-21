@@ -44,7 +44,7 @@ export class DotUniforms {
   readonly radius = uniform(0);
   readonly minRadius = uniform(0);
 
-  constructor(private from: Omit<ElectrodeUniforms, 'uRingColour'>) {}
+  constructor(private from: Omit<ElectrodeUniforms, 'uRingColour' | 'uScale'>) {}
 
   sync(): void {
     this.radius.value = this.from.uRadius.value;
@@ -102,6 +102,8 @@ export class GpuUniforms {
   readonly radius = uniform(1);
   readonly opacity = uniform(1);
   readonly ringColour = uniform(new THREE.Vector3());
+  /** The fraction of the resolution the frame is drawn at, as the dots take it (`ElectrodeUniforms.uScale`). */
+  readonly dotScale = uniform(1);
   readonly electrodes: DotUniforms;
   readonly synapses: DotUniforms;
   readonly markers: DotUniforms;
@@ -135,6 +137,7 @@ export class GpuUniforms {
     this.radius.value = c.uRadius.value;
     this.opacity.value = c.uOpacity.value;
     this.ringColour.value.copy(this.held.electrodes.uRingColour.value);
+    this.dotScale.value = this.held.electrodes.uScale.value;
     this.electrodes.sync();
     this.synapses.sync();
     this.markers.sync();

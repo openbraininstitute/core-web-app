@@ -1,7 +1,8 @@
 /**
  * The culling's passes, the bench's (`docs/circuit-morphology-bench/src/cull/wgsl.js`) on the arena's segments and in
- * µm from the eye, so that the same holds in perspective. Each pass is put together with the impostors' own WGSL
- * (`culling.ts`), whose `segmentEnds` places a segment as its draw does.
+ * µm from the eye, so that the same holds in perspective, and the bench's of the somas drawn alone
+ * (`docs/circuit-morphology-bench/web/soma-cull.js`). Each pass is put together with the impostors' own WGSL
+ * (`depth-pyramid.ts`), whose `segmentEnds` places a segment as its draw does.
  */
 
 import { QUAD_REACH } from '../impostors';
@@ -26,9 +27,9 @@ struct View {
   vp: vec4f,
   // xyz: what the arena's positions are moved by; w: the near plane's distance.
   shift: vec4f,
-  // x: the far plane's distance; y: the least radius of a tube, px; z: the least radius of any, px.
+  // x: the far plane's distance; y: the least radius of a tube, px; z: the least radius of any, px; w: a soma's, µm.
   more: vec4f,
-  // x: the pyramid's levels; y: the blocks; z: the arena's capacity.
+  // x: the pyramid's levels; y: the blocks; z: the arena's capacity; w: the somas.
   counts: vec4u,
 }
 @group(0) @binding(0) var<uniform> view: View;
@@ -51,6 +52,10 @@ fn farthest(p: vec2i, m: u32) -> f32 {
 
 const BLOCK = /* wgsl */ `
 struct Block { lo: vec3f, first: u32, hi: vec3f, count: u32 }
+`;
+
+const DRAW_ARGS = /* wgsl */ `
+struct Args { indices: u32, instances: atomic<u32>, firstIndex: u32, baseVertex: u32, firstInstance: u32 }
 `;
 
 /**
@@ -103,9 +108,9 @@ export const PYRAMID = /* wgsl */ `
 export const BLOCKS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}
 struct Counters { blocks: atomic<u32>, candidates: atomic<u32>, pad: vec2u }
-@group(0) @binding(1) var<storage, read> blocks: array<Block>;
-@group(0) @binding(2) var full: texture_2d<f32>;
-@group(0) @binding(3) var hiz: texture_2d<f32>;
+@group(0) @binding(1) var full: texture_2d<f32>;
+@group(0) @binding(2) var hiz: texture_2d<f32>;
+@group(0) @binding(3) var<storage, read> blocks: array<Block>;
 @group(0) @binding(4) var<storage, read_write> passed: array<u32>;
 @group(0) @binding(5) var<storage, read_write> counters: Counters;
 
@@ -175,12 +180,11 @@ export const ARGS = /* wgsl */ `
  * A block with a segment kept is marked, a bit a block (\`marked\`), for the boxes seen to be read back.
  */
 export const SEGMENTS = /* wgsl */ `
-${VIEW}${BLOCK}${FARTHEST}
-struct Args { indices: u32, instances: atomic<u32>, firstIndex: u32, baseVertex: u32, firstInstance: u32 }
+${VIEW}${BLOCK}${FARTHEST}${DRAW_ARGS}
 struct Draws { keptFlat: Args, keptTubes: Args, seenFlat: Args, seenTubes: Args }
-@group(0) @binding(1) var<storage, read> blocks: array<Block>;
-@group(0) @binding(2) var full: texture_2d<f32>;
-@group(0) @binding(3) var hiz: texture_2d<f32>;
+@group(0) @binding(1) var full: texture_2d<f32>;
+@group(0) @binding(2) var hiz: texture_2d<f32>;
+@group(0) @binding(3) var<storage, read> blocks: array<Block>;
 @group(0) @binding(4) var<storage, read> passed: array<u32>;
 @group(0) @binding(5) var<storage, read> counters: array<u32>;
 @group(0) @binding(6) var<storage, read> ends: array<vec4f>;
@@ -302,5 +306,64 @@ var<workgroup> keeps: atomic<u32>;
   }
   workgroupBarrier();
   if (lid == 0u && atomicLoad(&keeps) != 0u) { atomicOr(&marked[c >> 5u], 1u << (c & 31u)); }
+}
+`;
+
+/**
+ * Each soma of the cloud drawn alone, a thread a soma, as a sphere of the radius it may be drawn at, against the
+ * farthest drawn before it on the level of the pyramid where its box on screen is 2 × 2 texels, taken at its nearest.
+ * Those seen go on the seen list, and they and those hidden by no more than \`KEEP_UM\` on the kept list, which the
+ * next frame draws to depth before the test. A cell the cell table hides is on neither: drawing nothing, it hides
+ * nothing behind it, and would be seen. The somas are \`positions\`, three floats each, in the order of their cells.
+ */
+export const SOMAS = /* wgsl */ `
+${VIEW}${FARTHEST}${DRAW_ARGS}
+struct Draws { kept: Args, seen: Args }
+@group(0) @binding(1) var full: texture_2d<f32>;
+@group(0) @binding(2) var hiz: texture_2d<f32>;
+@group(0) @binding(3) var cells: texture_2d<f32>;
+@group(0) @binding(4) var<storage, read> positions: array<f32>;
+@group(0) @binding(5) var<storage, read_write> kept: array<u32>;
+@group(0) @binding(6) var<storage, read_write> seen: array<u32>;
+@group(0) @binding(7) var<storage, read_write> draws: Draws;
+
+// 0 out of view, or hidden by more than KEEP_UM; 1 hidden by no more; 2 seen. c: its centre; r: its radius.
+fn sphereSeen(c: vec3f, r: f32) -> u32 {
+  let p = (view.view * vec4f(c + view.shift.xyz, 1.0)).xyz;
+  let away = -p.z - r;
+  if (away > view.more.x) { return 0u; }
+  // Near the eye or behind it, it has no place on screen to test.
+  if (!isOrthographic(view.projection) && away < 2.0 * view.shift.w) { return 2u; }
+  var lo = vec2f(1e30);
+  var hi = vec2f(-1e30);
+  for (var k = 0u; k < 8u; k++) {
+    let q = texelOf(p + select(vec3f(-r), vec3f(r), vec3<bool>((k & 1u) != 0u, (k & 2u) != 0u, (k & 4u) != 0u)));
+    lo = min(lo, q);
+    hi = max(hi, q);
+  }
+  if (hi.x < 0.0 || hi.y < 0.0 || lo.x >= view.vp.z || lo.y >= view.vp.w) { return 0u; }
+  let a = clamp(lo, vec2f(0.0), view.vp.zw - 1.0);
+  let b = clamp(hi, vec2f(0.0), view.vp.zw - 1.0);
+  let m = u32(clamp(ceil(log2(max(max(b.x - a.x, b.y - a.y), 1.0))), 0.0, f32(view.counts.x)));
+  let t0 = vec2i(a) >> vec2u(m);
+  let t1 = vec2i(b) >> vec2u(m);
+  var far = 0.0;
+  for (var y = t0.y; y <= t1.y; y++) {
+    for (var x = t0.x; x <= t1.x; x++) { far = max(far, farthest(vec2i(x, y), m)); }
+  }
+  let near = nearer(away);
+  if (near <= far) { return 2u; }
+  return select(0u, 1u, near - ${KEEP_UM} <= far);
+}
+
+// Over two dimensions where the somas take more workgroups than one has.
+@compute @workgroup_size(64) fn main(@builtin(global_invocation_id) id: vec3u, @builtin(num_workgroups) n: vec3u) {
+  let i = id.y * n.x * 64u + id.x;
+  if (i >= view.counts.w) { return; }
+  if (textureLoad(cells, cellXY(i), 0).a == 0.0) { return; }
+  let v = sphereSeen(vec3f(positions[3u * i], positions[3u * i + 1u], positions[3u * i + 2u]), view.more.w);
+  if (v == 0u) { return; }
+  kept[atomicAdd(&draws.kept.instances, 1u)] = i;
+  if (v == 2u) { seen[atomicAdd(&draws.seen.instances, 1u)] = i; }
 }
 `;

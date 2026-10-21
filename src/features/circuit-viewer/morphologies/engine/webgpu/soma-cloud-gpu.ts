@@ -1,10 +1,12 @@
 import {
   attribute,
   cameraProjectionMatrix,
-  instanceIndex,
   modelViewMatrix,
   positionGeometry,
+  sqrt,
   varying,
+  vec3,
+  vec4,
   wgslFn,
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
@@ -22,8 +24,16 @@ import {
   typed,
   VIEW,
 } from './cells-wgsl';
+import { surfaceOf } from './occlusion-gpu';
 
+import type { Node } from 'three/webgpu';
 import type { GpuUniforms } from './gpu-uniforms';
+
+/** Where a soma's cell and centre are read from: its instance's attributes, or a culling's lists. */
+export interface SomaSource {
+  cell: Node<'uint'>;
+  centre: Node<'vec3'>;
+}
 
 /** The pyramid's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view. */
 const cloudCorner = wgslFn(
@@ -79,20 +89,26 @@ export const DISC_COORD = varying(positionGeometry.xy).setInterpolation('linear'
 
 /**
  * The somas of `soma-cloud.ts` on WebGPU: a pyramid a cell at its position, shaded as a sphere and drawn as it comes out,
- * as on WebGL 2; and the same pyramids in their cells' numbers.
+ * as on WebGL 2, and for the occlusion, the sphere's surface (`surfaceOf`); and the same pyramids in their cells'
+ * numbers. Each reads its cell and centre where it is given them (`SomaSource`).
  */
-export function somaCloudMaterials(u: GpuUniforms): {
+export function somaCloudMaterials(
+  u: GpuUniforms,
+  { cell, centre }: SomaSource = {
+    cell: attribute('aCell', 'uint'),
+    centre: attribute('aPosition', 'vec3'),
+  }
+): {
   cloud: THREE.MeshBasicNodeMaterial;
   id: THREE.MeshBasicNodeMaterial;
 } {
-  const cell = instanceIndex;
   const xy = cellXY({ cell });
   const texel = u.cells.load(xy);
   const glow = typed<'float'>(
     cellGlow({ cell, highlighted: u.highlighted, glowTexel: u.glow.load(xy) })
   );
   const place = {
-    centre: attribute('aPosition', 'vec3'),
+    centre,
     corner: positionGeometry,
     offset: u.offset,
     radius: u.radius,
@@ -105,6 +121,9 @@ export function somaCloudMaterials(u: GpuUniforms): {
 
   const cloud = new THREE.MeshBasicNodeMaterial();
   cloud.vertexNode = cloudCorner({ ...place, swell: glow });
+  const centreZ = flat(modelViewMatrix.mul(vec4(place.centre.sub(u.offset), 1)).z);
+  const radius = flat(u.radius.mul(glow.mul(GLOW_SWELL).add(1)));
+  const facing = sqrt(coord.dot(coord).oneMinus().max(0));
   const look = cloudLook({
     cell,
     highlighted: u.highlighted,
@@ -114,17 +133,17 @@ export function somaCloudMaterials(u: GpuUniforms): {
     highlight: u.highlight,
   });
   const alpha = cloudAlpha({ cell, highlighted: u.highlighted, glow, opacity: u.opacity });
-  cloud.fragmentNode = keptUnless(
-    outside,
-    typed<'vec4'>(
-      cloudColour({
-        coord,
-        look: flat(typed<'vec4'>(look)),
-        alpha: flat(typed<'float'>(alpha)),
-        rimOn: u.glowRim.w,
-      })
-    )
+  // Not a fragment node, which would write nothing of the occlusion's surface (`Occlusion`).
+  cloud.maskNode = outside.not();
+  cloud.outputNode = typed<'vec4'>(
+    cloudColour({
+      coord,
+      look: flat(typed<'vec4'>(look)),
+      alpha: flat(typed<'float'>(alpha)),
+      rimOn: u.glowRim.w,
+    })
   );
+  cloud.mrtNode = surfaceOf(vec3(coord, facing), centreZ.add(radius.mul(facing)), flat(glow));
 
   const id = new THREE.MeshBasicNodeMaterial();
   id.vertexNode = cloudCorner({ ...place, swell: 0 });

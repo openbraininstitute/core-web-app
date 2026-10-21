@@ -67,10 +67,11 @@ fn toSRGB(linear: vec3f) -> vec3f {
 `);
 
 /** A cell's texel in the cell table. */
-export const cellXY = wgslFn(/* wgsl */ `
+export const CELL_XY_WGSL = /* wgsl */ `
 fn cellXY(cell: u32) -> vec2i {
   return vec2i(i32(cell & ${(1 << ROW_BITS) - 1}u), i32(cell >> ${ROW_BITS}u));
-}`);
+}`;
+export const cellXY = wgslFn(CELL_XY_WGSL);
 
 /** A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's. */
 export const cellId = wgslFn(/* wgsl */ `

@@ -3,6 +3,12 @@ import { isEqual } from 'es-toolkit';
 import * as THREE from 'three';
 
 import { DEFAULT_SPIKE_GLOW, SpikeClock } from '@/features/circuit-viewer/spike-clock';
+import { WAKE_FRAMES } from '@/features/entities/em-cell-mesh/viewer/engine/mesh-choice';
+import {
+  DEFAULT_MOTION,
+  type MotionOptions,
+  MotionQuality,
+} from '@/features/entities/em-cell-mesh/viewer/engine/motion-quality';
 import { CANVAS_DARK, CANVAS_LIGHT } from '@/features/scan-config/components/color-by/contrast';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { boxCorners } from '@/features/viewer-3d/engine/framing';
@@ -32,12 +38,20 @@ import {
   segmentAttributes,
   setSectionColours,
 } from './impostors';
-import { fanGeometry, GLOW_SWELL, somaCloudUniforms } from './soma-cloud';
+import {
+  cloudPieces,
+  fanGeometry,
+  GLOW_SWELL,
+  PYRAMIDS_ABOVE_PX,
+  QUADS_BELOW_PX,
+  somaCloudUniforms,
+} from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { Look, ThemeColors } from '@/features/viewer-3d/engine/looks';
+import type { MovingFrame } from '@/features/viewer-3d/engine/scene-viewer';
 import type { TreeSection } from '../load/tree';
 import type {
   CellColors,
@@ -86,9 +100,27 @@ const NUDGE_MS = 900;
 const NUDGE_GROWTH = 0.06;
 /** How long the morph into the dendrogram and back takes, ms, the whole way: morphoviewer's. */
 const MORPH_MS = 600;
+/**
+ * Moving frames over the somas alone cut down as the EM mesh viewer's are, but a step in resolution kept only where it
+ * saves a tenth: drawn front first, many somas cost their corners more than their pixels.
+ */
+const MOTION: MotionOptions = { ...DEFAULT_MOTION, leastSaving: 0.1 };
 const point = new THREE.Vector3();
+const pieceBox = new THREE.Box3();
 
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
+
+/**
+ * A piece of the cloud: its pyramids, the same somas as flat quads where they are small on screen (`QUADS_BELOW_PX`),
+ * which of the two is drawn, the pyramids for the pick, and how far its somas reach from its centre.
+ */
+interface CloudMeshes {
+  pyramids: Quads;
+  flat: Quads;
+  small: boolean;
+  ids: Quads;
+  reach: number;
+}
 
 function quads(geometry: THREE.InstancedBufferGeometry, material: THREE.Material): Quads {
   const mesh = new THREE.Mesh(geometry, material);
@@ -288,14 +320,33 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   protected cloudUniforms = somaCloudUniforms();
   /**
    * The somas the cloud draws, whose populations decide whether the next ones are framed, the box round all of them,
-   * and their pyramids, and the same pyramids for the pick.
+   * their pieces (`cloudPieces`), the whole of them while translucent (`wholeCloud`), and whether it is shown.
    */
   private cloud: {
     somas: CircuitSomas;
     box: SomasBox | null;
-    mesh: Quads;
-    ids: Quads;
+    pieces: CloudMeshes[];
+    whole: Quads | null;
+    shown: boolean;
   } | null = null;
+  /**
+   * How far frames drawn while the view moves over the somas alone are cut down, by what they cost the GPU (`MOTION`):
+   * the occlusion left out, then the resolution. Then the fraction of the resolution the last frame was drawn at, and
+   * the moving frames drawn at it one after another.
+   */
+  private motion = new MotionQuality({ ...MOTION, ao: this.occludes ? 'auto' : 'off' });
+  private drawnScale = 1;
+  private drawnRung: MovingFrame | null = null;
+  private steadyFrames = 0;
+  /**
+   * What the frame drawn now is timed for, which the tier tells `measured`: a moving frame from the third at one
+   * resolution, as a GPU waking up draws its first slowly, a still one, or none, over morphologies.
+   */
+  protected timing: 'moving' | 'still' | null = null;
+  /** Whether a moving frame over the somas alone keeps the occlusion, where the tier draws one. */
+  protected get aoMoving(): boolean {
+    return this.cloud?.shown === true && this.motion.rung.ao;
+  }
   /** The cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
   /** Of each material, the quads last let go of (`letGo`). */
@@ -313,6 +364,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRadius: { value: 0 },
     uMinRadius: { value: minRadius(0) },
     uRingColour: { value: new THREE.Vector3() },
+    uScale: { value: 1 },
   };
   private electrodes: Quads | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
@@ -321,6 +373,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRadius: { value: SYNAPSE_RADIUS },
     uMinRadius: { value: SYNAPSE_MIN_RADIUS },
     uRingColour: this.electrodeUniforms.uRingColour,
+    uScale: this.electrodeUniforms.uScale,
   };
   private synapseDots: Quads | null = null;
   private markers: readonly LocationMarker[] = [];
@@ -331,6 +384,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRadius: { value: MARKER_RADIUS },
     uMinRadius: { value: MARKER_MIN_RADIUS },
     uRingColour: this.electrodeUniforms.uRingColour,
+    uScale: this.electrodeUniforms.uScale,
   };
   private markerDots: Quads | null = null;
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
@@ -407,6 +461,38 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return this.layer !== null;
   }
 
+  /** Whether the somas are drawn alone and opaque. */
+  protected get drawsOpaqueSomas(): boolean {
+    return this.cloud?.shown === true && this.cloud.whole === null;
+  }
+
+  /** Whether the tier draws ambient occlusion. */
+  protected get occludes(): boolean {
+    return false;
+  }
+
+  /** The tier's occlusion given up on: moving frames no longer step through it. */
+  protected occlusionGone(): void {
+    this.motion.configure({ ...MOTION, ao: 'off' });
+  }
+
+  /** Whether the tier culls the somas drawn alone and opaque, drawing them itself in place of the cloud's pieces. */
+  protected get cullsSomas(): boolean {
+    return false;
+  }
+
+  /**
+   * The tier told of the cloud's somas as they are set, at `positions`, three floats a cell, cut into the pieces whose
+   * pyramids are `pieces`, and of none as they are let go of: what it culls (`cullsSomas`).
+   */
+  protected placeSomas(
+    _positions: Float32Array | null,
+    _pieces: readonly THREE.InstancedBufferGeometry[]
+  ): void {}
+
+  /** The canvas drawn at `scale` of the resolution, scaled up onto the page. */
+  protected abstract scaleDrawing(scale: number): void;
+
   /** The target a pick is drawn into, `pickSide` square. */
   protected abstract pickTarget(): THREE.RenderTarget;
 
@@ -430,8 +516,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const middle = (side - 1) / 2;
     const ratio = this.pixelRatio;
     const row = Math.floor(y * ratio);
-    // The whole view, placed so that the pixel asked for is the target's middle one.
-    const { width, height } = this.canvas;
+    // The whole view, placed so that the pixel asked for is the target's middle one; at full resolution, where a moving
+    // frame was drawn at less.
+    const width = Math.floor(this.width * ratio);
+    const height = Math.floor(this.height * ratio);
     this.pickTarget().viewport.set(
       middle - Math.floor(x * ratio),
       middle - (this.rowsUp ? height - 1 - row : row),
@@ -478,17 +566,19 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   snapshot(): HTMLCanvasElement | null {
-    const frame = this.canvas;
     const canvas = document.createElement('canvas');
-    canvas.width = frame.width;
-    canvas.height = frame.height;
     const context = canvas.getContext('2d');
     if (!context) return null;
+    // The canvas holds a frame only in the task that drew it, so it is drawn again here, still and at the full
+    // resolution, and copied at once.
+    this.readyCamera();
+    this.beforeDraw(false);
+    this.draw(false);
+    const frame = this.canvas;
+    canvas.width = frame.width;
+    canvas.height = frame.height;
     context.fillStyle = this.background;
     context.fillRect(0, 0, canvas.width, canvas.height);
-    // The canvas holds a frame only in the task that drew it, so it is drawn again here and copied at once.
-    this.readyCamera();
-    this.draw(false);
     context.drawImage(frame, 0, 0);
     return canvas;
   }
@@ -628,7 +718,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return () => this.detailListeners.delete(listener);
   }
 
-  /** Whether the tier culls the segments of morphologies read a box at a time (`DetailRules.culling`). */
+  /**
+   * Whether the tier culls the segments of morphologies read a box at a time, and the somas drawn alone
+   * (`DetailRules.culling`).
+   */
   protected get culls(): boolean {
     return this.detailRules.culling;
   }
@@ -696,6 +789,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * Here, not in `work`: the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
+    this.shapeCloud();
+    this.cutDown(moving);
     const detailed = this.layer?.detailed;
     if (!detailed) return;
     const { camera } = this;
@@ -749,21 +844,40 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!somas) return;
     const cells = Math.floor(somas.positions.length / 3);
     this.makeTable(cells);
-    const geometry = fanGeometry(cells);
-    geometry.setAttribute('aPosition', new THREE.InstancedBufferAttribute(somas.positions, 3));
-    const mesh = quads(geometry, this.materials.cloud);
-    mesh.name = 'somas';
-    this.surfaces.add(mesh);
-    const ids = quads(geometry, this.materials.ids.cloud);
-    this.ids.add(ids);
     const box = somasBox(somas.positions);
-    this.cloud = { somas, box, mesh, ids };
-    this.compileIds();
-
     const reframe = framesAgain(before, somas.populations);
     // Kept otherwise, so that the somas stay where they were drawn.
     if (reframe) this.centre = box?.mean ?? [0, 0, 0];
-    this.cloudUniforms.uOffset.value.fromArray(this.centre);
+    const offset = this.cloudUniforms.uOffset.value.fromArray(this.centre);
+    const pieces = cloudPieces(somas.positions).map(({ positions, cells, centre, reach }) => {
+      const sphere = new THREE.Sphere(centre.sub(offset), reach);
+      // One buffer each, which both shapes draw from.
+      const position = new THREE.InstancedBufferAttribute(positions, 3);
+      const cell = new THREE.InstancedBufferAttribute(cells, 1);
+      const placed = (geometry: THREE.InstancedBufferGeometry) => {
+        geometry.boundingSphere = sphere;
+        return geometry.setAttribute('aPosition', position).setAttribute('aCell', cell);
+      };
+      const shape = placed(fanGeometry(cells.length));
+      const pyramids = quads(shape, this.materials.cloud);
+      const flat = quads(placed(quadGeometry(cells.length)), this.materials.cloud);
+      const ids = quads(shape, this.materials.ids.cloud);
+      for (const mesh of [pyramids, flat, ids]) mesh.frustumCulled = true;
+      flat.visible = false;
+      pyramids.name = flat.name = 'somas';
+      this.surfaces.add(pyramids, flat);
+      this.ids.add(ids);
+      return { pyramids, flat, small: false, ids, reach };
+    });
+    this.cloud = { somas, box, pieces, whole: null, shown: true };
+    this.placeSomas(
+      somas.positions,
+      pieces.map(({ pyramids }) => pyramids.geometry)
+    );
+    this.motion.reset();
+    this.padPieces();
+    this.wholeCloud();
+    this.compileIds();
     this.bound();
     this.drawElectrodes();
     this.drawSynapses();
@@ -773,8 +887,69 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   setSomaRadius(radius: number): void {
     if (radius === this.cloudUniforms.uRadius.value) return;
     this.cloudUniforms.uRadius.value = radius;
+    this.padPieces();
     this.bound();
-    if (this.cloud?.mesh.visible) this.invalidate();
+    if (this.cloud?.shown) this.invalidate();
+  }
+
+  /**
+   * A moving frame over the somas alone drawn at the resolution `motion` steps it to, any other at the full one, and
+   * whether it is timed. Morphologies are drawn through targets of the canvas's size, which a cut would make again.
+   */
+  private cutDown(moving: boolean): void {
+    const alone = this.cloud?.shown === true;
+    const rung = moving && alone ? this.motion.rung : null;
+    const scale = rung?.scale ?? 1;
+    if (scale !== this.drawnScale) {
+      this.scaleDrawing(scale);
+      this.drawnScale = scale;
+      this.electrodeUniforms.uScale.value = scale;
+    }
+    // Drawn another way, as the occlusion left out, the first frames are slow again.
+    if (rung !== this.drawnRung) {
+      this.drawnRung = rung;
+      this.steadyFrames = 0;
+    }
+    this.steadyFrames = moving ? this.steadyFrames + 1 : 0;
+    this.timing = !alone
+      ? null
+      : !moving
+        ? 'still'
+        : this.steadyFrames > WAKE_FRAMES
+          ? 'moving'
+          : null;
+  }
+
+  /** What a frame timed as `timing` cost the GPU, ms. */
+  protected measured(timing: 'moving' | 'still', ms: number): void {
+    if (timing === 'moving') this.motion.add(ms);
+    else this.motion.still(ms);
+  }
+
+  /** The view's size changed what a frame costs. */
+  protected override frameChanged(): void {
+    this.motion.reset();
+  }
+
+  /** Each piece of the cloud drawn as flat quads where its somas are small on screen, and as pyramids elsewhere. */
+  private shapeCloud(): void {
+    const { cloud } = this;
+    if (!cloud?.shown || cloud.whole) return;
+    const radius = this.cloudUniforms.uRadius.value * this.pixelRatio;
+    for (const piece of cloud.pieces) {
+      const sphere = piece.pyramids.geometry.boundingSphere as THREE.Sphere;
+      const px = radius / this.cssPixelNear(sphere.getBoundingBox(pieceBox));
+      piece.small = px < (piece.small ? PYRAMIDS_ABOVE_PX : QUADS_BELOW_PX);
+    }
+    this.showPieces();
+  }
+
+  /** Each piece's sphere round its somas as large as one glowing in full. */
+  private padPieces(): void {
+    const pad = this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL);
+    for (const { pyramids, reach } of this.cloud?.pieces ?? []) {
+      (pyramids.geometry.boundingSphere as THREE.Sphere).radius = reach + pad;
+    }
   }
 
   setSomaOpacity(opacity: number): void {
@@ -786,15 +961,59 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (translucent !== cloud.transparent) {
       cloud.transparent = translucent;
       cloud.needsUpdate = true;
+      this.wholeCloud();
     }
-    if (this.cloud?.mesh.visible) this.invalidate();
+    if (this.cloud?.shown) this.invalidate();
+  }
+
+  /**
+   * Translucent, the cloud drawn whole, in the page's order, as before it was cut into pieces: drawn a piece after
+   * another, which of two overlapping somas blends over the other would follow the pieces, and show them. Made as the
+   * somas turn translucent, and let go of as they turn opaque.
+   */
+  private wholeCloud(): void {
+    const { cloud } = this;
+    if (!cloud) return;
+    const translucent = this.materials.cloud.transparent;
+    if (translucent && !cloud.whole) {
+      const { positions } = cloud.somas;
+      const cells = new Uint32Array(Math.floor(positions.length / 3));
+      for (let cell = 0; cell < cells.length; cell++) cells[cell] = cell;
+      const geometry = fanGeometry(cells.length)
+        .setAttribute('aPosition', new THREE.InstancedBufferAttribute(positions, 3))
+        .setAttribute('aCell', new THREE.InstancedBufferAttribute(cells, 1));
+      cloud.whole = quads(geometry, this.materials.cloud);
+      cloud.whole.name = 'somas';
+      this.surfaces.add(cloud.whole);
+    } else if (!translucent && cloud.whole) {
+      cloud.whole.geometry.dispose();
+      this.letGo(cloud.whole);
+      cloud.whole = null;
+    }
+    this.showPieces();
+  }
+
+  /**
+   * The cloud's pieces as shown and as small as they were last found, where the tier does not cull them, or its whole
+   * where it is drawn whole.
+   */
+  protected showPieces(): void {
+    const { cloud } = this;
+    if (!cloud) return;
+    const pieces = cloud.shown && !cloud.whole && !this.cullsSomas;
+    for (const piece of cloud.pieces) {
+      piece.pyramids.visible = pieces && !piece.small;
+      piece.flat.visible = pieces && piece.small;
+      piece.ids.visible = cloud.shown;
+    }
+    if (cloud.whole) cloud.whole.visible = cloud.shown;
   }
 
   setCrowding(somas: CircuitSomas, crowding: Uint8Array | null): void {
     // Worked out for other somas.
     if (!this.table || this.cloud?.somas !== somas) return;
     this.table.setCrowding(crowding);
-    if (this.cloud?.mesh.visible) this.invalidate();
+    if (this.cloud?.shown) this.invalidate();
   }
 
   /**
@@ -1358,11 +1577,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /** The cloud and its pick shown, or not while the morphologies take their place. */
   private showCloud(shown: boolean): void {
-    if (this.cloud) {
-      for (const mesh of [this.cloud.mesh, this.cloud.ids]) {
-        mesh.visible = shown && mesh.geometry.instanceCount > 0;
-      }
-    }
+    if (this.cloud) this.cloud.shown = shown;
+    this.showPieces();
     this.invalidate();
   }
 
@@ -1407,9 +1623,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   private clear(): void {
     this.clearMorphologies();
-    const { cloud } = this;
-    cloud?.mesh.geometry.dispose();
-    if (cloud) this.letGo(cloud.mesh, cloud.ids);
+    if (this.cloud) this.placeSomas(null, []);
+    for (const { pyramids, flat, ids } of this.cloud?.pieces ?? []) {
+      pyramids.geometry.dispose();
+      flat.geometry.dispose();
+      this.letGo(pyramids, flat, ids);
+    }
+    const whole = this.cloud?.whole;
+    whole?.geometry.dispose();
+    if (whole) this.letGo(whole);
     this.cloud = null;
     this.table?.dispose();
     this.table = null;

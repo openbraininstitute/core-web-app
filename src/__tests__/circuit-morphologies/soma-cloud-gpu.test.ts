@@ -17,6 +17,7 @@ const dots = () => ({
   uRadius: { value: 1 },
   uMinRadius: { value: 1 },
   uRingColour: { value: new THREE.Vector3() },
+  uScale: { value: 1 },
 });
 
 const { cloud, id } = somaCloudMaterials(
@@ -47,8 +48,27 @@ describe('the somas on WebGPU, as on WebGL 2', () => {
     }
   });
 
+  it('reads each cell by the cell it is given, not by the instance’s number', () => {
+    for (const material of [cloud, id]) {
+      const { texel } = (material.vertexNode as unknown as Call).parameters as {
+        texel: { uvNode: Call };
+      };
+      const cell = texel.uvNode.parameters.cell as { getAttributeName(): string; nodeType: string };
+      expect([cell.getAttributeName(), cell.nodeType]).toEqual(['aCell', 'uint']);
+    }
+  });
+
   it('runs the disc’s coordinate straight across the screen', () => {
     expect(DISC_COORD.interpolationType).toBe('linear');
+  });
+
+  // A fragment node would write nothing of the surface.
+  it('writes the sphere’s surface for the occlusion, and how lit it is, beside its colour', () => {
+    expect(cloud.fragmentNode).toBeNull();
+    expect(cloud.outputNode).not.toBeNull();
+    expect(cloud.maskNode).not.toBeNull();
+    const surfaces = cloud.mrtNode as unknown as { outputNodes: Record<string, unknown> };
+    expect(Object.keys(surfaces.outputNodes).sort()).toEqual(['lit', 'surface']);
   });
 });
 

@@ -2,7 +2,8 @@
  * The somas of a circuit: a low pyramid a cell (`fanGeometry`), its base facing the eye at the soma's centre and as
  * wide as its sphere, its tip a radius nearer, shaded as a sphere by a fixed light. Where two somas meet, each covers the
  * other where its pyramid is nearer, much as their spheres would, without one covering the other whole as they turn.
- * The colours are worked in sRGB and drawn as they come out, with no tone mapping.
+ * Where somas are a few pixels across, a flat quad a soma does (`QUADS_BELOW_PX`). The cloud is cut into pieces of
+ * neighbours (`cloudPieces`). The colours are worked in sRGB and drawn as they come out, with no tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
  * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white, rings it
@@ -14,6 +15,8 @@
 import chroma from 'chroma-js';
 import * as THREE from 'three';
 
+import { extentOf } from '../extent';
+import { mortonPermutation } from '../load/morton';
 import { CELL_GLSL, GLOW_RIM_COLOR, instancedGeometry, LIFTED } from './impostors';
 
 import type { ImpostorUniforms } from './impostors';
@@ -65,16 +68,67 @@ export function fanGeometry(instances: number): THREE.InstancedBufferGeometry {
   return instancedGeometry(FAN_CORNERS, FAN_TRIANGLES, instances);
 }
 
+/**
+ * The device pixels a soma's radius spans below which a piece of the cloud is drawn as flat quads, 4 corners a soma
+ * against the pyramid's 7, and above which as pyramids again: so small, which of two overlapping somas covers the other
+ * cannot be seen to jump.
+ */
+export const QUADS_BELOW_PX = 3;
+export const PYRAMIDS_ABOVE_PX = 3.6;
+
+/** The fewest cells a piece of the cloud has, and the most pieces it is cut into. */
+const PIECE_CELLS = 32768;
+const MOST_PIECES = 512;
+
+/** Somas near one another: their positions and cells, and the sphere round their positions. */
+export interface CloudPiece {
+  positions: Float32Array;
+  cells: Uint32Array;
+  centre: THREE.Vector3;
+  reach: number;
+}
+
+/**
+ * The somas in the Morton order of their positions, cut into pieces of neighbours, each drawn by meshes of its own: three
+ * leaves out those out of view and draws the nearer first.
+ */
+export function cloudPieces(positions: Float32Array): CloudPiece[] {
+  const order = mortonPermutation(positions);
+  const n = order.length;
+  const sorted = new Float32Array(3 * n);
+  for (let to = 0; to < n; to++) {
+    for (let k = 0; k < 3; k++) sorted[3 * to + k] = positions[3 * order[to] + k];
+  }
+  const size = Math.max(PIECE_CELLS, Math.ceil(n / MOST_PIECES));
+  const pieces: CloudPiece[] = [];
+  for (let first = 0; first < n; first += size) {
+    const end = Math.min(n, first + size);
+    const piece = sorted.subarray(3 * first, 3 * end);
+    const extent = extentOf(piece);
+    const point = new THREE.Vector3();
+    const centre = new THREE.Vector3();
+    if (extent) centre.fromArray(extent.min).add(point.fromArray(extent.max)).multiplyScalar(0.5);
+    let reach = 0;
+    for (let i = 0; i < piece.length; i += 3) {
+      const d = point.fromArray(piece, i).distanceTo(centre);
+      if (Number.isFinite(d)) reach = Math.max(reach, d);
+    }
+    pieces.push({ positions: piece, cells: order.subarray(first, end), centre, reach });
+  }
+  return pieces;
+}
+
 const SHARED_VERTEX = /* glsl */ `
 uniform highp sampler2D uCells;
 uniform vec3 uOffset;
 uniform float uRadius;
 in vec3 aPosition;
+in uint aCell;
 
 ${CELL_GLSL}
 ${LIFTED}
 uint cellOf() {
-	return uint( gl_InstanceID );
+	return aCell;
 }
 // The pyramid's corner, its tip a radius nearer.
 vec4 cornerAt( float radius ) {

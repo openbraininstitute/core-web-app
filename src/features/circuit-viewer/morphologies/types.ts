@@ -92,7 +92,10 @@ export interface DetailRules {
   budget: number;
   /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
   pixels: number;
-  /** On WebGPU, whether the segments hidden behind others are left out, tested on the GPU; off, all are drawn. */
+  /**
+   * On WebGPU, whether the segments hidden behind others are left out, tested on the GPU, and so the somas drawn alone;
+   * off, all are drawn.
+   */
   culling: boolean;
 }
 

@@ -21,9 +21,9 @@ import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 const dotQuad = wgslFn(
   /* wgsl */ `
 fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-           radius: f32, minRadius: f32, ring: f32, lift: f32) -> mat4x4f {
+           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
-  let um = pixelUm(c.z, projection, vp);
+  let um = pixelUm(c.z, projection, vp) * scale;
   let r = max(radius * look.a, minRadius * um);
   let outer = r + ring * um;
   return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, 0.0, 0.0, 0.0),
@@ -61,6 +61,7 @@ function dotMaterial(
       minRadius: dots.minRadius,
       ring: among ? 0 : RING_PX * pixelRatio,
       lift: among ? 1 : 0,
+      scale: u.dotScale,
     })
   ).toVar();
   const corner = varying(positionGeometry.xy);

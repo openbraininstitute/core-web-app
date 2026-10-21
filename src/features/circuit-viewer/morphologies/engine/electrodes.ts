@@ -27,6 +27,11 @@ export interface ElectrodeUniforms {
   uMinRadius: { value: number };
   /** The ring's colour, in sRGB. */
   uRingColour: { value: THREE.Vector3 };
+  /**
+   * The fraction of the resolution the frame is drawn at: the least radius and the ring are in the device pixels of all
+   * of it, so that a frame drawn at less draws them as wide on screen.
+   */
+  uScale: { value: number };
 }
 
 /** The least radius in device pixels for contacts `radius` µm wide: the somas view's, which counts it so. */
@@ -49,6 +54,7 @@ uniform float uRadius;
 uniform float uMinRadius;
 uniform float uRing;
 uniform float uLift;
+uniform float uScale;
 in vec3 aContact;
 in vec4 aLook;
 out vec3 vColour;
@@ -57,7 +63,7 @@ out float vInner;
 ${PIXEL_UM}
 void main() {
 	vec3 c = ( modelViewMatrix * vec4( aContact, 1.0 ) ).xyz;
-	float um = pixelUm( c.z );
+	float um = pixelUm( c.z ) * uScale;
 	float r = max( uRadius * aLook.a, uMinRadius * um );
 	float outer = r + uRing * um;
 	vInner = r / outer;

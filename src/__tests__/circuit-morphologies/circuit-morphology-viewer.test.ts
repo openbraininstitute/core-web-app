@@ -64,7 +64,11 @@ const { FakeRenderer } = vi.hoisted(() => {
       return this.pixelRatio;
     }
 
-    setPixelRatio(): void {}
+    setPixelRatio = vi.fn();
+    /** No WebGL 2 context, which has frames go untimed. */
+    getContext(): object {
+      return {};
+    }
     setClearColor(): void {}
     setSize(): void {}
     dispose(): void {}
@@ -80,6 +84,17 @@ vi.mock('three', async (importOriginal) => ({
 
 interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
+  beforeDraw(moving: boolean): void;
+  drawsOpaqueSomas: boolean;
+  cullsSomas: boolean;
+  placeSomas(
+    positions: Float32Array | null,
+    pieces: readonly THREE.InstancedBufferGeometry[]
+  ): void;
+  viewSet(): void;
+  measured(timing: 'moving' | 'still', ms: number): void;
+  timing: 'moving' | 'still' | null;
+  aoMoving: boolean;
   chunks: THREE.Group;
   surfaces: THREE.Group;
   bounds: THREE.Box3;
@@ -95,8 +110,14 @@ interface Internals {
       cloud: THREE.ShaderMaterial;
     };
     electrode: THREE.ShaderMaterial;
+    synapse: THREE.ShaderMaterial;
+    marker: THREE.ShaderMaterial;
   };
-  cloud: { mesh: Quads; ids: Quads } | null;
+  cloud: {
+    pieces: { pyramids: Quads; flat: Quads; small: boolean; ids: Quads; reach: number }[];
+    whole: Quads | null;
+    shown: boolean;
+  } | null;
   cloudUniforms: SomaCloudUniforms;
   ids: THREE.Scene;
   idTarget: THREE.WebGLRenderTarget | null;
@@ -151,6 +172,9 @@ const somasOf = (inner: Internals) =>
   inner.surfaces.children.find(
     (o) => o instanceof THREE.Mesh && o.material === inner.materials.soma
   ) as Quads;
+/** The cloud's first piece, which holds the few somas of these tests whole. */
+const pieceOf = (inner: Internals) =>
+  inner.cloud?.pieces[0] as NonNullable<Internals['cloud']>['pieces'][number];
 const texel = (inner: Internals, cell: number) => {
   const { data } = (inner.uniforms.uCells.value as THREE.DataTexture).image;
   return [...(data as Uint8Array).subarray(4 * cell, 4 * cell + 4)];
@@ -262,7 +286,7 @@ describe('the circuit morphology viewer', () => {
 
     expect(shot).toBeInstanceOf(HTMLCanvasElement);
     expect([shot?.width, shot?.height]).toEqual([800, 600]);
-    expect(steps).toEqual(['fill #000000 0 0 800 600', 'draw', 'copy frame 0 0']);
+    expect(steps).toEqual(['draw', 'fill #000000 0 0 800 600', 'copy frame 0 0']);
   });
 
   it('has no snapshot where the browser gives no 2D canvas', () => {
@@ -835,7 +859,7 @@ describe('the circuit morphology viewer', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
     const freed = [
-      (inner.cloud?.mesh as Quads).geometry,
+      pieceOf(inner).pyramids.geometry,
       inner.cloudUniforms.uShade.value as THREE.DataTexture,
     ].map((o) => vi.spyOn(o, 'dispose'));
     viewer.dispose();
@@ -1062,31 +1086,164 @@ function somas(
 const HIDE_B: CellColors = { palette: [null, false], columnByCell: Uint16Array.of(0, 0, 1) };
 
 describe('the somas, before any morphology is in', () => {
-  it("draws a quad a soma from the page's positions as they are, in a material of its own", () => {
+  it("draws a pyramid a soma from the page's positions, each with its cell, in pieces three leaves out of view", () => {
     const { viewer, inner } = make();
-    const given = somas();
-    viewer.setSomas(given);
-    const cloud = inner.cloud?.mesh as Quads;
-    expect(cloud.parent).toBe(inner.surfaces);
-    expect(cloud.material).toBe(inner.materials.cloud);
-    expect(cloud.frustumCulled).toBe(false);
-    expect(cloud.geometry.instanceCount).toBe(3);
-    const positions = cloud.geometry.getAttribute('aPosition') as THREE.InstancedBufferAttribute;
-    expect(positions).toBeInstanceOf(THREE.InstancedBufferAttribute);
-    expect(positions.array).toBe(given.positions);
+    viewer.setSomas(somas());
+    expect(inner.cloud?.pieces).toHaveLength(1);
+    const { pyramids, reach } = pieceOf(inner);
+    expect(pyramids.parent).toBe(inner.surfaces);
+    expect(pyramids.material).toBe(inner.materials.cloud);
+    expect(pyramids.frustumCulled).toBe(true);
+    expect(pyramids.geometry.instanceCount).toBe(3);
+    const attribute = (name: string) => [...pyramids.geometry.getAttribute(name).array];
+    const where = [
+      [0, 0, 0],
+      [100, 0, 0],
+      [1000, 1000, 1000],
+    ];
+    const cells = attribute('aCell');
+    expect([...cells].sort()).toEqual([0, 1, 2]);
+    expect(attribute('aPosition')).toEqual(cells.flatMap((cell) => where[cell]));
+    // Round its somas' box, less the view's origin, and a soma glowing in full more.
+    const sphere = pyramids.geometry.boundingSphere as THREE.Sphere;
+    const centre = new THREE.Vector3(500, 500, 500).sub(new THREE.Vector3(...inner.centre));
+    expect(rounded(sphere.center.toArray())).toEqual(rounded(centre.toArray()));
+    expect(reach).toBeCloseTo(500 * Math.sqrt(3), 3);
+    expect(sphere.radius).toBeCloseTo(reach + 1.7, 3);
+    viewer.setSomaRadius(10);
+    expect(sphere.radius).toBeCloseTo(reach + 17, 3);
     expect(inner.cloudUniforms.uShade.value).toBeInstanceOf(THREE.DataTexture);
     // The cell table's, which the somas share with the morphologies.
     expect(texel(inner, 0)).toEqual([...rgb(DEFAULT_NEURON_COLOR), 255]);
   });
 
-  it('picks with the same quads in their numbers', () => {
+  it('draws a piece as flat quads while its somas are under 3 pixels round, and as pyramids again past 3.6', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const { pyramids, flat, ids } = pieceOf(inner);
+    for (const name of ['aPosition', 'aCell']) {
+      expect(flat.geometry.getAttribute(name)).toBe(pyramids.geometry.getAttribute(name));
+    }
+    expect(flat.geometry.boundingSphere).toBe(pyramids.geometry.boundingSphere);
+    expect(flat.geometry.getAttribute('position').count).toBe(4);
+    expect([flat.parent, flat.material, flat.frustumCulled]).toEqual([
+      inner.surfaces,
+      inner.materials.cloud,
+      true,
+    ]);
+    const umPerPx = viewer.currentPixelScale as number;
+    const drawnAt = (px: number) => {
+      viewer.setSomaRadius(px * umPerPx);
+      frames(inner);
+      return { flat: flat.visible, pyramids: pyramids.visible };
+    };
+    expect(drawnAt(2.9)).toEqual({ flat: true, pyramids: false });
+    expect(drawnAt(3.5)).toEqual({ flat: true, pyramids: false });
+    expect(drawnAt(3.7)).toEqual({ flat: false, pyramids: true });
+    expect(drawnAt(3.5)).toEqual({ flat: false, pyramids: true });
+    // The pick's are pyramids at any size.
+    expect(ids.geometry).toBe(pyramids.geometry);
+
+    viewer.setData(ofTheSomas());
+    expect([flat.visible, pyramids.visible, ids.visible]).toEqual([false, false, false]);
+  });
+
+  it('draws moving frames at less of the resolution while they cost the GPU over 22 ms, and still ones at all of it', () => {
+    const { viewer, inner } = make(2);
+    viewer.setSomas(somas());
+    const ratios = () => inner.renderer.setPixelRatio.mock.calls.map(([ratio]) => ratio);
+    const drawn = (moving: boolean) => {
+      inner.renderer.setPixelRatio.mockClear();
+      inner.beforeDraw(moving);
+      return { ratios: ratios(), timing: inner.timing };
+    };
+    // The first two moving frames at a resolution are not timed: a GPU waking up draws them slowly.
+    expect(drawn(true)).toEqual({ ratios: [], timing: null });
+    expect(drawn(true)).toEqual({ ratios: [], timing: null });
+    expect(drawn(true)).toEqual({ ratios: [], timing: 'moving' });
+    // No occlusion to leave out on WebGL 2.
+    expect(inner.aoMoving).toBe(false);
+    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], timing: null });
+    // A snapshot taken then is drawn still, at all of it.
+    vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValueOnce({
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    inner.renderer.setPixelRatio.mockClear();
+    viewer.snapshot();
+    expect([ratios(), inner.timing]).toEqual([[2], 'still']);
+    expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], timing: null });
+    // The dots' least radius and ring as wide on screen as at all of it.
+    const { electrode, synapse, marker } = inner.materials;
+    const dotScales = () =>
+      [electrode, synapse, marker].map((material) => material.uniforms.uScale.value);
+    expect(dotScales()).toEqual([Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2]);
+    expect(drawn(false)).toEqual({ ratios: [2], timing: 'still' });
+    expect(dotScales()).toEqual([1, 1, 1]);
+    // A still frame well within the budget has moving ones drawn at all of it again.
+    inner.measured('still', 5);
+    expect(drawn(true).ratios).toEqual([]);
+
+    // Over morphologies, at all of it and untimed.
+    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    viewer.setData(ofTheSomas());
+    expect(drawn(true)).toEqual({ ratios: [], timing: null });
+  });
+
+  it('where the tier occludes, leaves the occlusion out of moving frames over the somas first, whatever it saves', () => {
+    class Occluding extends CircuitMorphologyViewer {
+      protected override get occludes(): boolean {
+        return true;
+      }
+    }
+    const host = document.body.appendChild(document.createElement('div'));
+    Object.defineProperties(host, { clientWidth: { value: 400 }, clientHeight: { value: 300 } });
+    FakeRenderer.devicePixelRatio = 2;
+    const viewer = new Occluding(host);
+    viewers.push(viewer);
+    const inner = viewer as unknown as Internals;
+    viewer.setSomas(somas());
+    const drawn = (moving: boolean) => {
+      inner.renderer.setPixelRatio.mockClear();
+      inner.beforeDraw(moving);
+      return {
+        ratios: inner.renderer.setPixelRatio.mock.calls.map(([ratio]) => ratio),
+        ao: inner.aoMoving,
+      };
+    };
+    const timed = () =>
+      [1, 2, 3].map(() => {
+        inner.beforeDraw(true);
+        return inner.timing;
+      });
+    expect(drawn(true)).toEqual({ ratios: [], ao: true });
+    expect(timed()).toEqual([null, 'moving', 'moving']);
+    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    expect(drawn(true)).toEqual({ ratios: [], ao: false });
+    // Drawn without it, at the same resolution, the first two frames are not timed either.
+    expect(inner.timing).toBeNull();
+    expect(timed()).toEqual([null, 'moving', 'moving']);
+    // 29 ms is 3% less, kept all the same: the resolution next.
+    for (const ms of [29, 29, 29]) inner.measured('moving', ms);
+    expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], ao: false });
+    inner.measured('still', 5);
+    expect(drawn(true)).toEqual({ ratios: [2], ao: true });
+
+    // Over morphologies, never.
+    viewer.setData(ofTheSomas());
+    expect(drawn(true).ao).toBe(false);
+  });
+
+  it('picks with the same pyramids in their numbers', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
     const [ids] = inner.ids.children as Quads[];
     expect(inner.ids.children).toHaveLength(1);
-    expect(ids).toBe(inner.cloud?.ids);
-    expect(ids.geometry).toBe(inner.cloud?.mesh.geometry);
+    expect(ids).toBe(pieceOf(inner).ids);
+    expect(ids.geometry).toBe(pieceOf(inner).pyramids.geometry);
     expect(ids.material).toBe(inner.materials.ids.cloud);
+    expect(ids.frustumCulled).toBe(true);
     expect(inner.renderer.compile).toHaveBeenCalledWith(inner.ids, inner.camera);
   });
 
@@ -1168,6 +1325,88 @@ describe('the somas, before any morphology is in', () => {
     expect([inner.cloudUniforms.uOpacity.value, material.transparent]).toEqual([1, false]);
   });
 
+  it('tells the tier the somas are drawn alone and opaque, which the occlusion shades', () => {
+    const { viewer, inner } = make();
+    expect(inner.drawsOpaqueSomas).toBe(false);
+    viewer.setSomas(somas());
+    expect(inner.drawsOpaqueSomas).toBe(true);
+    viewer.setSomaOpacity(0.2);
+    expect(inner.drawsOpaqueSomas).toBe(false);
+    viewer.setSomaOpacity(1);
+    viewer.setData(ofTheSomas());
+    expect(inner.drawsOpaqueSomas).toBe(false);
+    viewer.setData(null);
+    expect(inner.drawsOpaqueSomas).toBe(true);
+  });
+
+  it('tells the tier of the somas it may cull, and hides the pieces where it does, but for the pick', () => {
+    const { viewer, inner } = make();
+    const placed = vi.spyOn(inner, 'placeSomas');
+    const given = somas();
+    viewer.setSomas(given);
+    const piece = pieceOf(inner);
+    expect(placed).toHaveBeenLastCalledWith(given.positions, [piece.pyramids.geometry]);
+    expect(inner.cullsSomas).toBe(false);
+    inner.beforeDraw(false);
+    expect([piece.pyramids.visible || piece.flat.visible, piece.ids.visible]).toEqual([true, true]);
+
+    Object.defineProperty(inner, 'cullsSomas', { get: () => true, configurable: true });
+    inner.beforeDraw(false);
+    expect([piece.pyramids.visible, piece.flat.visible, piece.ids.visible]).toEqual([
+      false,
+      false,
+      true,
+    ]);
+    viewer.setSomas(null);
+    expect(placed).toHaveBeenLastCalledWith(null, []);
+  });
+
+  it('tells the tier the view was set, framed or turned to an axis, which a zoom does not', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const set = vi.spyOn(inner, 'viewSet');
+    viewer.resetView();
+    viewer.setZoom(2);
+    viewer.viewAlong(0, 1);
+    expect(set).toHaveBeenCalledTimes(2);
+  });
+
+  it('draws translucent somas whole, in the page’s order, in place of the pieces, and lets go of them opaque', () => {
+    const { viewer, inner } = make();
+    const given = somas();
+    viewer.setSomas(given);
+    expect(inner.cloud?.whole).toBeNull();
+    viewer.setSomaOpacity(0.2);
+    const whole = inner.cloud?.whole as Quads;
+    expect([whole.parent, whole.material, whole.frustumCulled, whole.visible]).toEqual([
+      inner.surfaces,
+      inner.materials.cloud,
+      false,
+      true,
+    ]);
+    expect(whole.geometry.getAttribute('aPosition').array).toBe(given.positions);
+    expect([...whole.geometry.getAttribute('aCell').array]).toEqual([0, 1, 2]);
+    const { pyramids, flat, ids } = pieceOf(inner);
+    frames(inner);
+    expect([pyramids.visible, flat.visible, ids.visible]).toEqual([false, false, true]);
+    // Over morphologies, not drawn.
+    viewer.setData(ofTheSomas());
+    expect(whole.visible).toBe(false);
+    viewer.setData(null);
+    expect(whole.visible).toBe(true);
+
+    const freed = vi.spyOn(whole.geometry, 'dispose');
+    viewer.setSomaOpacity(1);
+    expect(inner.cloud?.whole).toBeNull();
+    expect(whole.parent).toBeNull();
+    expect(freed).toHaveBeenCalledTimes(1);
+    expect(pyramids.visible || flat.visible).toBe(true);
+    // Somas that come in translucent.
+    viewer.setSomaOpacity(0.5);
+    viewer.setSomas(somas());
+    expect(inner.cloud?.whole?.visible).toBe(true);
+  });
+
   it('takes how crowded each soma is, for these somas only', () => {
     const { viewer, inner } = make();
     const given = somas();
@@ -1198,10 +1437,10 @@ describe('the somas, before any morphology is in', () => {
     const { cloud } = inner;
     viewer.setData(circuit());
     expect(inner.cloud).toBe(cloud);
-    expect(cloud?.mesh.visible).toBe(true);
+    expect(cloud?.pieces[0].pyramids.visible).toBe(true);
     expect(inner.chunks.children).toHaveLength(0);
     viewer.setData(null);
-    expect(cloud?.mesh.visible).toBe(true);
+    expect(cloud?.pieces[0].pyramids.visible).toBe(true);
 
     viewer.setSomas(null);
     viewer.setData(circuit());
@@ -1255,7 +1494,7 @@ describe('the morphologies over the somas', () => {
 
     expect(reset).toHaveBeenCalledTimes(1);
     expect(inner.cloud).toBe(cloud);
-    expect(cloud?.mesh.visible).toBe(false);
+    expect(cloud?.pieces[0].pyramids.visible).toBe(false);
     expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([false, true, true]);
     expect(inner.uniforms.uCells.value).toBe(table);
     expect(texel(inner, 2)[3]).toBe(0);
@@ -1278,7 +1517,7 @@ describe('the morphologies over the somas', () => {
     frames(inner);
     viewer.setData(null);
     for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
-    expect(inner.cloud?.mesh.visible).toBe(true);
+    expect(pieceOf(inner).pyramids.visible).toBe(true);
     expect(inner.ids.children.map((mesh) => mesh.visible)).toEqual([true]);
     expect(inner.chunks.children).toHaveLength(0);
     expect(inner.uniforms.uCells.value).toBe(table);
@@ -1360,7 +1599,7 @@ describe('the morphologies over the somas', () => {
     viewer.setData(ofTheSomas());
     viewer.setSomas(somas());
     expect(inner.chunks.children).toHaveLength(0);
-    expect(inner.cloud?.mesh.visible).toBe(true);
+    expect(pieceOf(inner).pyramids.visible).toBe(true);
     expect(inner.ids.children).toHaveLength(1);
   });
 });

@@ -345,6 +345,9 @@ export abstract class SceneView implements ViewControls {
     stopGlide(this.controls);
   }
 
+  /** The camera is set at once by the view, not moved a little by a gesture or a zoom: framed, or turned to an axis. */
+  protected viewSet(): void {}
+
   // A gesture takes the camera over from a turn to an axis, keeping OrbitControls' easing.
   private onControlsStart = (): void => {
     this.turn = null;
@@ -538,6 +541,7 @@ export abstract class SceneView implements ViewControls {
     }
     camera.up.set(0, 1, 0);
     this.stopCamera();
+    this.viewSet();
     this.controls.target.set(0, 0, 0);
     this.controls.update();
     this.invalidate();
@@ -547,6 +551,7 @@ export abstract class SceneView implements ViewControls {
   /** Turn the camera about the target to view the cell from the tip of an axis, or from the opposite tip when it already does. */
   viewAlong(axis: Axis, sign: Sign): void {
     this.stopCamera();
+    this.viewSet();
     const from = this.camera.quaternion.clone();
     this.turn = { from, to: axisView(axis, sign, from), start: performance.now() };
     this.invalidate();

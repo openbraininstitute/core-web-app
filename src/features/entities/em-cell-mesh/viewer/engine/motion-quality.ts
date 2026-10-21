@@ -26,6 +26,12 @@ export interface MotionOptions {
   budgetMs: number;
   /** What a full frame may cost the GPU before the stand-in is drawn while the view moves, ms. */
   standInMs: number;
+  /**
+   * The share of a moving frame's cost a step down in resolution must save to be kept, where frames may cost little by
+   * their pixels; one that saves less is taken back, and none further tried for a while (`REMEMBER_MS`). Unset, every
+   * step is kept, as is the occlusion left out, whatever it saves.
+   */
+  leastSaving?: number;
 }
 
 /**
@@ -63,7 +69,10 @@ export function motionRungs({
 export class MotionQuality {
   private rungs: MovingFrame[] = [];
   private budgetMs = 0;
+  private leastSaving = 0;
   private level = 0;
+  /** The rung below which a step lately saved too little, and when. */
+  private floor: { level: number; at: number } | null = null;
   private samples: number[] = [];
   /** What each rung cost when last measured. */
   private known: ({ ms: number; at: number } | undefined)[] = [];
@@ -76,9 +85,11 @@ export class MotionQuality {
   configure(options: MotionOptions): void {
     this.rungs = motionRungs(options);
     this.budgetMs = options.budgetMs;
+    this.leastSaving = options.leastSaving ?? 0;
     this.level = 0;
     this.samples = [];
     this.known = [];
+    this.floor = null;
   }
 
   /** How moving frames are drawn now: the same object until a step, or new options. */
@@ -97,14 +108,22 @@ export class MotionQuality {
     const measured = median(this.samples);
     this.samples = [];
     this.known[this.level] = { ms: measured, at: now };
+    const up = this.known[this.level - 1];
+    const lately = up && now - up.at < REMEMBER_MS ? up : undefined;
     if (measured > this.budgetMs) {
-      if (this.level < this.rungs.length - 1) this.step(1);
+      const cut = this.rungs[this.level - 1]?.ao === this.rungs[this.level].ao;
+      if (this.leastSaving > 0 && lately && cut && measured > (1 - this.leastSaving) * lately.ms) {
+        this.floor = { level: this.level - 1, at: now };
+        this.step(-1);
+        return;
+      }
+      const floor = this.floor && now - this.floor.at < REMEMBER_MS ? this.floor.level : Infinity;
+      if (this.level < Math.min(this.rungs.length - 1, floor)) this.step(1);
       return;
     }
     if (this.level === 0) return;
     // A step up doubles the pixels or brings the occlusion back, taken to double the cost, unless measured lately.
-    const up = this.known[this.level - 1];
-    const cost = up && now - up.at < REMEMBER_MS ? up.ms : 2 * measured;
+    const cost = lately ? lately.ms : 2 * measured;
     if (cost < HEADROOM * this.budgetMs) this.step(-1);
   }
 
@@ -122,6 +141,7 @@ export class MotionQuality {
   reset(): void {
     this.samples = [];
     this.known = [];
+    this.floor = null;
   }
 
   private step(by: number): void {

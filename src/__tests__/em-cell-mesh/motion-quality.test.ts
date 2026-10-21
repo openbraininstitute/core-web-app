@@ -104,6 +104,44 @@ describe('MotionQuality', () => {
     expect(q.ms).toBeNull();
   });
 
+  it('takes back a step that saved less than the share asked, and tries none lower for a while', () => {
+    const q = new MotionQuality({ ...DEFAULT_MOTION, ao: 'off', leastSaving: 0.1 });
+    frames(q, 30, 0);
+    // 25 ms is 17% less: kept, and the next tried.
+    frames(q, 25, 100);
+    expect(q.rung.scale).toBe(MOTION_SCALES[2]);
+    // 24 ms is 4% less: taken back, and none lower tried while frames stay over the budget.
+    frames(q, 24, 200);
+    expect(q.rung.scale).toBe(MOTION_SCALES[1]);
+    frames(q, 25, 300);
+    expect(q.rung.scale).toBe(MOTION_SCALES[1]);
+    // Five seconds on, what a step saves is measured again.
+    frames(q, 25, 5400);
+    expect(q.rung.scale).toBe(MOTION_SCALES[2]);
+    q.reset();
+    frames(q, 24, 5500);
+    expect(q.rung.scale).toBe(MOTION_SCALES[3]);
+  });
+
+  it('keeps the occlusion left out whatever it saves, and asks the share of the steps in resolution', () => {
+    const q = new MotionQuality({ ...DEFAULT_MOTION, leastSaving: 0.1 });
+    frames(q, 30, 0);
+    expect(q.rung).toEqual(NO_AO);
+    // 29 ms is 3% less: kept all the same, and the resolution cut next.
+    frames(q, 29, 100);
+    expect(q.rung).toEqual({ ...NO_AO, scale: MOTION_SCALES[1] });
+    // 28.5 ms is 2% less: taken back.
+    frames(q, 28.5, 200);
+    expect(q.rung).toEqual(NO_AO);
+  });
+
+  it('keeps every step without a share asked, as the mesh viewer has it', () => {
+    const q = new MotionQuality({ ...DEFAULT_MOTION, ao: 'off' });
+    frames(q, 30, 0);
+    frames(q, 29.9, 100);
+    expect(q.rung.scale).toBe(MOTION_SCALES[2]);
+  });
+
   it('keeps its step through a change of what frames cost, and starts again from the top with new options', () => {
     const q = new MotionQuality();
     frames(q, 30);
