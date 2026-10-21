@@ -1,5 +1,4 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -275,8 +274,7 @@ function SelectedUnionVariantLabel({
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
-    return upperFirst(lowerCase(fallbackTitle));
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -296,5 +294,5 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return upperFirst(lowerCase(selectedVariant?.title ?? fallbackTitle));
+  return selectedVariant?.title ?? fallbackTitle;
 }
