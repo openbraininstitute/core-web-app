@@ -131,7 +131,11 @@ export function EntityLinkCount() {
 
   return (
     <div className="py-2">
-      <div id="data-type-tabs-container" data-testid="data-type-tabs-container" className="w-full">
+      <div
+        id="data-type-tabs-container"
+        data-testid="data-type-tabs-container"
+        className="bg-card sticky top-0 z-10 w-full pb-1"
+      >
         <PillTabs
           id="data-type-selector"
           data-testid="data-type-selector"
