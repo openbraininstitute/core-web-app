@@ -20,7 +20,7 @@ const DETAIL: DetailStats = {
   base: false,
   levels: [{ toleranceUm: 0.25, boxes: 4 }],
   leftOut: 0,
-  whole: false,
+  floor: -1,
   culled: { tested: 9571, kept: 8908, drawn: 8894, boxes: 12 },
 };
 
@@ -89,18 +89,35 @@ describe('the detail readout', () => {
     expect(screen.getByTestId('room').textContent).toBe(said);
   });
 
-  it('where the pixels choose the levels, says nothing of the finest and has them to set', () => {
-    readout('webgpu');
-    expect(screen.queryByTestId('whole')).toBeNull();
-    expect(screen.getByRole('combobox', { name: 'Tolerance within' })).toBeEnabled();
-  });
+  describe('of the level every box is drawn at the least', () => {
+    const LEVELS = [
+      { toleranceUm: 0.125, boxes: 3 },
+      { toleranceUm: 0.25, boxes: 4 },
+      { toleranceUm: 1, boxes: 0 },
+    ];
+    const pixels = () => screen.getByRole('combobox', { name: 'Tolerance within' });
 
-  it('where every box is at the finest level, says so and has no pixels to set', () => {
-    readout('webgpu', { ...DETAIL, whole: true });
-    expect(screen.getByTestId('whole').textContent).toBe(
-      'Every box at the finest level, which fits the budget whole'
-    );
-    expect(screen.getByRole('combobox', { name: 'Tolerance within' })).toBeDisabled();
+    it('where there is none, says nothing and has the pixels to set', () => {
+      readout('webgpu', { ...DETAIL, levels: LEVELS });
+      expect(screen.queryByTestId('floor')).toBeNull();
+      expect(pixels()).toBeEnabled();
+    });
+
+    it('says which, with the pixels to set where they may take a box finer', () => {
+      readout('webgpu', { ...DETAIL, levels: LEVELS, floor: 1 });
+      expect(screen.getByTestId('floor').textContent).toBe(
+        'Every box at least at 0.25 µm, which fits the budget whole'
+      );
+      expect(pixels()).toBeEnabled();
+    });
+
+    it('at the finest, has no pixels to set', () => {
+      readout('webgpu', { ...DETAIL, levels: LEVELS, floor: 0 });
+      expect(screen.getByTestId('floor').textContent).toBe(
+        'Every box at least at 0.125 µm, which fits the budget whole'
+      );
+      expect(pixels()).toBeDisabled();
+    });
   });
 
   it('on WebGPU, offers its own budgets, its default chosen, and a larger one', () => {

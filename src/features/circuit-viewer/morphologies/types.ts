@@ -116,10 +116,10 @@ export interface DetailRules {
   /** A level is fine enough for a box where its tolerance spans this many device pixels or fewer. */
   pixels: number;
   /**
-   * Whether a pack whose finest level fits the budget whole is drawn at it, every box however far, in view or not: the
-   * coarser levels would save nothing, and close up their long segments show.
+   * Whether every box, however far, in view or not, is drawn at least at the finest level finer than the coarsest that
+   * the whole pack at fits the budget: coarser would save nothing, and close up their long segments show.
    */
-  finestWhole?: boolean;
+  wholeFloor?: boolean;
   /**
    * On WebGPU, whether the segments hidden behind others are left out, tested on the GPU, and so the somas drawn alone;
    * off, all are drawn.
@@ -164,8 +164,8 @@ export interface DetailStats extends DetailRules {
   levels: { toleranceUm: number; boxes: number }[];
   /** The boxes in view left out for the budget, which only their somas stand for. */
   leftOut: number;
-  /** Whether every box is drawn at the finest level, which fits the budget whole (`finestWhole`), the pixels unused. */
-  whole: boolean;
+  /** The level every box is drawn at the least, which the whole pack at fits the budget (`wholeFloor`); -1 for none. */
+  floor: number;
   /** What the culling counted; null where it does not cull. */
   culled: CullCounts | null;
 }

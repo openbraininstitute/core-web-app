@@ -108,7 +108,7 @@ function arenaPlan(
  * the finer levels alone. There, with the culling's marks (`see`), a box goes finer only while seen, and one no longer
  * seen goes back to its base as the view moves (it keeps what it has at rest); one let go of while the view rests is
  * not asked for again until it moves or the rules change; and while the view moves, a box wanted coarser goes back to
- * its base at once. Of a pack still coming in, a box is asked for at a level only once its bytes are in, and wanted no
+ * its base at once, unless wanted at the floor (`Detail.floor`), no coarser than which it stays. Of a pack still coming in, a box is asked for at a level only once its bytes are in, and wanted no
  * finer than what is in, as if the pixels wanted no more.
  */
 export class DetailStream {
@@ -334,7 +334,7 @@ export class DetailStream {
         boxes: boxes[level],
       })),
       leftOut: this.detail?.leftOut ?? 0,
-      whole: this.detail?.whole ?? false,
+      floor: this.detail?.floor ?? -1,
     };
   }
 
@@ -457,7 +457,8 @@ export class DetailStream {
 
   /**
    * The level `box` goes to for `level` with no read, or null: let go of, its base (or none, where it keeps none) where
-   * that is wanted, or where a coarser level is while the view moves; `level`, where it has nothing at it.
+   * that is wanted, or where a coarser level is while the view moves, unless one no coarser than the floor (which keeps
+   * what it has until that is read); `level`, where it has nothing at it.
    */
   private atOnce(box: number, level: number): number | null {
     const drawn = this.drawn[box];
@@ -466,7 +467,8 @@ export class DetailStream {
     const base = arena.hasBase(box) ? this.coarsest : -1;
     if (this.isBase(level)) return arena.sizeOf(box) !== undefined ? base : null;
     if (this.segmentsAt(box, level) === 0) return level;
-    const coarser = arena.keepsBase && !this.still && level > drawn;
+    const floor = this.detail?.floor ?? -1;
+    const coarser = arena.keepsBase && !this.still && level > drawn && level > floor;
     return coarser && arena.sizeOf(box) !== undefined ? base : null;
   }
 
@@ -525,7 +527,7 @@ export class DetailStream {
   private read(): void {
     const { detail } = this;
     if (!detail || this.stopped || this.reading) return;
-    let batch = this.basesToRead(detail.order);
+    let batch = this.basesToRead(detail.order.subarray(0, detail.inView));
     if (batch.length === 0) batch = this.levelsToRead(detail);
     if (batch.length === 0) batch = this.basesToRead(null);
     if (batch.length === 0) return;

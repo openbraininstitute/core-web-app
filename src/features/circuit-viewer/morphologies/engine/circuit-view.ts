@@ -421,7 +421,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     budget: number
   ) {
     super(container, canvas);
-    this.detailRules = { budget, pixels: DETAIL_PIXELS, finestWhole: true, culling: true };
+    this.detailRules = { budget, pixels: DETAIL_PIXELS, wholeFloor: true, culling: true };
     this.pickSide = 2 * Math.ceil(PICK_REACH * pixelRatio) + 1;
     this.markerUniforms.uMinRadius.value = MARKER_MIN_RADIUS * pixelRatio;
     const [look] = createLooks(pixelRatio, ['color'], ['studio']);

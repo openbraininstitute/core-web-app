@@ -149,47 +149,59 @@ describe('chooseDetail', () => {
     expect(Array.from(order)).toEqual([1, 3, 0, 2]);
   });
 
-  describe('with finestWhole', () => {
-    // One behind the eye, one where the pixels take the finest, one where they take the coarsest.
+  describe('with wholeFloor', () => {
+    // One behind the eye, one where the pixels take the finest, one where they take the coarsest. Every box at the
+    // finest comes to 300 segments, at the middle level 150.
     const depths = [-50, 100, depthOf(1) + 20];
-    const WHOLE = { ...RULES, finestWhole: true };
-
-    it('draws every box at the finest level, in view or not, where that fits the budget whole', () => {
-      const { levels, order, whole, finer, segments } = chooseDetail(
+    const WHOLE = { ...RULES, wholeFloor: true };
+    const choose = (budget: number, base = false, finest?: (box: number) => number) =>
+      chooseDetail(
         boxesAt(depths),
         viewOf(perspective()),
-        { ...WHOLE, budget: 300 },
-        bySegment
+        { ...WHOLE, budget },
+        bySegment,
+        base,
+        finest
       );
-      expect(whole).toBe(true);
+
+    it('draws every box at the finest level, in view or not, where that fits the budget whole', () => {
+      const { levels, order, inView, floor, finer, segments } = choose(300);
+      expect(floor).toBe(0);
       expect(Array.from(levels)).toEqual([0, 0, 0]);
-      expect(Array.from(order)).toEqual([1, 0, 2]);
+      // Those in view first, the one behind the eye after them though nearer the focus.
+      expect(Array.from(order)).toEqual([1, 2, 0]);
+      expect(inView).toBe(2);
       expect(Array.from(finer)).toEqual([0, 0, 0]);
       expect(segments).toBe(300);
     });
 
-    it('where it does not, draws the boxes in view as fine as the pixels take them', () => {
-      const { levels, whole } = chooseDetail(
-        boxesAt(depths),
-        viewOf(perspective()),
-        { ...WHOLE, budget: 299 },
-        bySegment
-      );
-      expect(whole).toBe(false);
+    it('where only a coarser level fits, draws every box at least at it, and finer where the pixels take it', () => {
+      const { levels, order, floor, leftOut } = choose(299);
+      expect(floor).toBe(1);
+      expect(Array.from(levels)).toEqual([1, 0, 1]);
+      expect(Array.from(order)).toEqual([1, 2, 0]);
+      expect(leftOut).toBe(0);
+    });
+
+    it('goes no coarser than that level for the budget', () => {
+      const { levels, room, leftOut } = choose(160);
+      expect(Array.from(levels)).toEqual([1, 1, 1]);
+      expect(room).toBe(150);
+      expect(leftOut).toBe(0);
+    });
+
+    it('where only the coarsest fits, draws the boxes in view as fine as the pixels take them', () => {
+      const { levels, floor } = choose(149);
+      expect(floor).toBe(-1);
       expect(Array.from(levels)).toEqual([-1, 0, 2]);
     });
 
-    it('with a base, draws every box at the finest level, however fine it may be', () => {
-      const { levels, whole } = chooseDetail(
-        boxesAt(depths),
-        viewOf(perspective()),
-        WHOLE,
-        bySegment,
-        true,
-        () => 2
-      );
-      expect(whole).toBe(true);
-      expect(Array.from(levels)).toEqual([0, 0, 0]);
+    it('with a base, draws every box at least at that level, however fine it may be', () => {
+      expect(Array.from(choose(Infinity, true, () => 2).levels)).toEqual([0, 0, 0]);
+      const { levels, finer } = choose(299, true, () => 2);
+      expect(Array.from(levels)).toEqual([1, 1, 1]);
+      // Only the one the pixels take finer than that level.
+      expect(Array.from(finer)).toEqual([0, 1, 0]);
     });
 
     it('draws every box at the finest level in a view no pixels high', () => {

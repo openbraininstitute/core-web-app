@@ -103,10 +103,16 @@ const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 const levelsDrawn = (stream: DetailStream) => stream.stats(RULES).levels.map(({ boxes }) => boxes);
 
+/** The levels of each read asked for, and with the boxes. */
+const asked = (reads: { wanted: BoxRead[] }[]) =>
+  reads.map(({ wanted }) => wanted.map(({ level }) => level));
+const askedOf = (reads: { wanted: BoxRead[] }[]) =>
+  reads.map(({ wanted }) => wanted.map(({ level, box }) => `${box} at ${level}`));
+
 /** Every box drawn at `half`'s level, the view still. */
-async function drawnAt(half: number) {
+async function drawnAt(half: number, rules = RULES) {
   const made = make();
-  made.stream.update(viewOf(half), RULES, true);
+  made.stream.update(viewOf(half), rules, true);
   made.reads[0].resolve();
   await settled();
   made.stream.apply();
@@ -142,7 +148,7 @@ describe('DetailStream', () => {
     expect(reads).toHaveLength(0);
 
     stream.update(viewOf(20), RULES, true);
-    expect(reads.map(({ wanted }) => wanted.map(({ level }) => level))).toEqual([[0, 0, 0, 0]]);
+    expect(asked(reads)).toEqual([[0, 0, 0, 0]]);
     reads[0].resolve();
     await settled();
     stream.apply();
@@ -194,7 +200,7 @@ describe('DetailStream', () => {
 
     expect(stream.apply()).toEqual({ changed: false, more: false });
     expect(arena.segments).toBe(0);
-    expect(reads.map(({ wanted }) => wanted.map(({ level }) => level))).toEqual([
+    expect(asked(reads)).toEqual([
       [2, 2, 2, 2],
       [0, 0, 0, 0],
     ]);
@@ -210,39 +216,32 @@ describe('DetailStream', () => {
     expect(whole.holds(1e9, 0)).toBe(true);
   });
 
-  describe('with finestWhole', () => {
-    const WHOLE: DetailRules = { ...RULES, finestWhole: true };
-    const asked = (reads: { wanted: BoxRead[] }[]) =>
-      reads.map(({ wanted }) => wanted.map(({ level }) => level));
+  describe('with wholeFloor', () => {
+    const WHOLE: DetailRules = { ...RULES, wholeFloor: true };
 
-    it('draws every box at its finest level, however far, where that level fits the budget and the arena whole', () => {
+    it('draws every box at least at the finest level that fits the budget and the arena whole, however far', () => {
       const levelsAsked = (budget: number, capacity = 1000) => {
         const { stream, reads } = make(capacity);
         stream.update(viewOf(500), { ...WHOLE, budget }, true);
         return asked(reads)[0];
       };
-      // Every box at the finest takes two blocks: eight in all.
+      // Every box takes two blocks at the finest, eight in all, and one at the others, four in all.
       expect(levelsAsked(8 * BLOCK)).toEqual([0, 0, 0, 0]);
-      expect(levelsAsked(8 * BLOCK - 1)).toEqual([2, 2, 2, 2]);
-      expect(levelsAsked(Infinity, 7 * BLOCK)).toEqual([2, 2, 2, 2]);
+      expect(levelsAsked(8 * BLOCK - 1)).toEqual([1, 1, 1, 1]);
+      expect(levelsAsked(Infinity, 7 * BLOCK)).toEqual([1, 1, 1, 1]);
     });
 
-    it('keeps every box at its finest level as the view moves away and back, with no read', async () => {
-      const { stream, reads } = make();
-      stream.update(viewOf(500), WHOLE, true);
-      reads[0].resolve();
-      await settled();
-      stream.apply();
-      reads.length = 0;
+    it('keeps every box at the finest level as the view moves away and back, with no read', async () => {
+      const { stream, reads } = await drawnAt(500, WHOLE);
 
       expect(stream.update(viewOf(500, new THREE.Vector3(10_000, 0, 0)), WHOLE, false)).toBe(false);
       expect(stream.update(viewOf(500), WHOLE, false)).toBe(false);
       expect(reads).toHaveLength(0);
       expect(levelsDrawn(stream)).toEqual([4, 0, 0]);
-      expect(stream.stats(WHOLE).whole).toBe(true);
+      expect(stream.stats(WHOLE).floor).toBe(0);
     });
 
-    it('with a base, reads it and then every box at its finest level, which it keeps as the view moves away', async () => {
+    it('with a base, reads it and then every box at the finest level, which it keeps as the view moves away', async () => {
       const { stream, reads } = make(1000, true);
       stream.update(viewOf(500), WHOLE, true);
       reads[0].resolve();
@@ -261,18 +260,57 @@ describe('DetailStream', () => {
       expect(levelsDrawn(stream)).toEqual([4, 0, 0]);
     });
 
-    it('goes back to the pixels where a smaller budget no longer fits it whole', async () => {
-      const { stream, reads } = make();
-      stream.update(viewOf(500), WHOLE, true);
+    it('with a base, reads the bases of the boxes in view, then the floor of every box, then the other bases', async () => {
+      const { stream, reads } = make(1000, true);
+      stream.update(behindOf(500), WHOLE, true);
+      for (let i = 0; i < 3; i++) {
+        reads[i].resolve();
+        await settled();
+      }
+      expect(askedOf(reads)).toEqual([
+        ['3 at 2', '2 at 2'],
+        ['3 at 0', '2 at 0', '1 at 0', '0 at 0'],
+        ['0 at 2', '1 at 2'],
+      ]);
+    });
+
+    it('with a base, keeps a box finer than the floor while the view moves, and reads the floor at rest', async () => {
+      // The middle level whole takes four blocks, the finest eight: the two nearest the focus at the finest.
+      const rules = { ...WHOLE, budget: 6 * BLOCK, culling: false };
+      const { stream, reads } = make(1000, true);
+      stream.update(viewOf(20), rules, true);
       reads[0].resolve();
       await settled();
+      reads[1].resolve();
+      await settled();
       stream.apply();
+      expect(asked(reads)).toEqual([
+        [2, 2, 2, 2],
+        [0, 0, 1, 1],
+      ]);
+      expect(levelsDrawn(stream)).toEqual([2, 2, 0]);
       reads.length = 0;
+
+      // Wanted at the floor, not at the base.
+      expect(stream.update(viewOf(500), rules, false)).toBe(false);
+      expect(reads).toHaveLength(0);
+      expect(levelsDrawn(stream)).toEqual([2, 2, 0]);
+
+      stream.update(viewOf(500), rules, true);
+      expect(asked(reads)).toEqual([[1, 1]]);
+    });
+
+    it('takes a coarser level where a smaller budget no longer fits the finest whole', async () => {
+      const { stream, reads } = await drawnAt(500, WHOLE);
 
       const smaller = { ...WHOLE, budget: 4 * BLOCK };
       stream.update(viewOf(500), smaller, true);
-      expect(asked(reads)).toEqual([[2, 2, 2, 2]]);
-      expect(stream.stats(smaller).whole).toBe(false);
+      expect(stream.stats(smaller).floor).toBe(1);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+      expect(asked(reads)).toEqual([[1, 1, 1, 1]]);
+      expect(levelsDrawn(stream)).toEqual([0, 4, 0]);
     });
   });
 
@@ -362,8 +400,6 @@ describe('DetailStream', () => {
 
   describe('with a base', () => {
     const EVERY_BOX = [0, 1, 2, 3];
-    const askedOf = (reads: { wanted: BoxRead[] }[]) =>
-      reads.map(({ wanted }) => wanted.map(({ level, box }) => `${box} at ${level}`));
 
     /** Every read ended as it is asked for, and what came in placed. */
     async function readAll({ stream, reads }: Pick<ReturnType<typeof make>, 'stream' | 'reads'>) {
