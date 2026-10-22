@@ -222,6 +222,47 @@ describe('a level read box by box', () => {
 });
 
 describe('openPack', () => {
+  it("keeps each population's box of each section type, round its points of the first level", async () => {
+    const data = await readPack(pack('small'));
+    const ends: Record<string, Record<string, number[][]>> = { excitatory: {}, inhibitory: {} };
+    data.segmentCells.forEach((cell, i) => {
+      // Cells 0 to 2 are excitatory, 3 and 4 inhibitory.
+      const own = ends[cell < 3 ? 'excitatory' : 'inhibitory'];
+      own[data.segmentTypes[i]] ??= [];
+      own[data.segmentTypes[i]].push([...data.segments.subarray(8 * i, 8 * i + 3)]);
+      own[data.segmentTypes[i]].push([...data.segments.subarray(8 * i + 4, 8 * i + 7)]);
+    });
+    const near = (points: number[][], pick: (...values: number[]) => number) =>
+      [0, 1, 2].map((k) => expect.closeTo(pick(...points.map((point) => point[k])), 3));
+    const want = Object.fromEntries(
+      Object.entries(ends).map(([name, types]) => [
+        name,
+        Object.fromEntries(
+          Object.entries(types).map(([type, points]) => [
+            type,
+            { min: near(points, Math.min), max: near(points, Math.max) },
+          ])
+        ),
+      ])
+    );
+    expect(Object.values(want).every((types) => Object.keys(types).length > 0)).toBe(true);
+    expect(data.boxes).toEqual(want);
+  });
+
+  it('reads a pack written before populations had boxes, and the fields of the index it does not know', async () => {
+    const bytes = withIndex(pack('small'), (index) => {
+      for (const population of index.populations) {
+        delete population.boxes;
+        Object.assign(population, { later: 1 });
+      }
+      Object.assign(index, { later: { any: 'thing' } });
+    });
+    const data = await readPack(bytes);
+    expect(data.boxes).toBeUndefined();
+    expect(data.populations).toEqual(expected('small').populations);
+    expect(data.segments).toEqual((await readPack(pack('small'))).segments);
+  });
+
   it('reads nothing of the segments, and the somas and frame as a whole level has them', async () => {
     const opened = await openPack(pack('small'));
     const whole = await readPack(pack('small'));

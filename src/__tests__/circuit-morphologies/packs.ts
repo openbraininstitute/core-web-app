@@ -31,7 +31,7 @@ export const indexEnd = (bytes: Uint8Array) =>
 
 export interface Index {
   layout: string;
-  populations: { cells: number }[];
+  populations: { cells: number; boxes?: Record<string, number[][]> }[];
   somas: { offset: number; bytes: number };
   levels: {
     segments: number;

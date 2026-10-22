@@ -7,6 +7,12 @@ import type { LocationOptions } from './pointer';
 
 export type Vec3 = [number, number, number];
 
+/** A box in µm in the data's frame. */
+export interface Box {
+  min: Vec3;
+  max: Vec3;
+}
+
 export interface Population {
   name: string;
   cells: number;
@@ -28,7 +34,12 @@ export interface CircuitMorphologyData {
   populations: Population[];
   centre: Vec3;
   /** Around every segment's ends and every soma that has a position. */
-  bounds: { min: Vec3; max: Vec3 };
+  bounds: Box;
+  /**
+   * From a pack that keeps them: by population name, then by section type, the box of the population's points of
+   * that type.
+   */
+  boxes?: Record<string, Record<string, Box>>;
   /** What the level left out: end branches shorter than `pruneUm`, then points within `toleranceUm` of the path. */
   level: { toleranceUm: number; pruneUm: number };
   /**

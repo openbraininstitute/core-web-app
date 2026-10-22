@@ -197,7 +197,7 @@ export function CircuitCells({
 
   // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
   // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
-  // they come with, painted once where both change; the morphologies over them.
+  // they come with, painted once where both change; the morphologies over them, framed with the axons as drawn.
   const colors = useLatest(cellColors);
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
@@ -219,12 +219,12 @@ export function CircuitCells({
   useEffect(() => viewer?.setSomas(somas, colors.current), [viewer, somas, colors]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   const following = useLatest(follow);
+  useEffect(() => viewer?.setAxons(axons), [viewer, axons]);
   useEffect(() => viewer?.setData(data, following.current), [viewer, data, following]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
   useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
   useEffect(() => viewer?.setDendrogram(dendrogram), [viewer, dendrogram]);
-  useEffect(() => viewer?.setAxons(axons), [viewer, axons]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
   const timeChanged = useLatest(spikes?.onTimeChange);

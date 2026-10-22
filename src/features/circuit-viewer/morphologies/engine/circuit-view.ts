@@ -16,7 +16,7 @@ import { backgroundCss, createLooks, PLAIN } from '@/features/viewer-3d/engine/l
 import { SceneView } from '@/features/viewer-3d/engine/scene-view';
 import { logError } from '@/utils/logger';
 
-import { extentOf, morphologiesExtent } from '../extent';
+import { extentOf, morphologiesExtent, packExtent } from '../extent';
 import {
   morphed,
   pointAtOffset,
@@ -1035,7 +1035,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /**
    * Over the somas, the view frames those drawn as the somas view did: centred on their mean, as far either side as the
    * farthest of them from it on each axis, and a soma's radius more; where none is drawn, all of them. Over their
-   * morphologies, it frames those of the cells drawn about their middle, or all of a pack's.
+   * morphologies, it frames those of the cells drawn about their middle, a pack's by its populations' boxes of the
+   * sections drawn.
    */
   override resetView(): void {
     this.frameCells();
@@ -1055,12 +1056,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       return;
     }
     if (layer) {
-      // A pack's segments are in its boxes, out of the extent's reach: its bounds frame all its cells.
-      const shown =
-        table.hides && !layer.data.chunks
-          ? morphologiesExtent(layer.data, (cell) => table.shown(cell))
+      const { data } = layer;
+      const shown = table.hides ? (cell: number) => table.shown(cell) : undefined;
+      // A pack's segments are in its chunks, out of the extent's reach: its populations' boxes stand for them, or its
+      // bounds where it keeps none.
+      const drawn = data.chunks
+        ? packExtent(data, (type) => type !== this.uniforms.uHidden.value, shown)
+        : shown
+          ? morphologiesExtent(data, shown)
           : null;
-      this.frameBox(this.shifted(shown ?? layer.data.bounds));
+      this.frameBox(this.shifted(drawn ?? data.bounds));
       return;
     }
     const shown = table.hides ? somasBox(cloud.somas.positions, (cell) => table.shown(cell)) : null;

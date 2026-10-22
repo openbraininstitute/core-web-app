@@ -44,7 +44,14 @@ const indexSchema = z.object({
   gridUm: z.number().positive(),
   radiusSteps: z.number().positive(),
   bounds: z.tuple([corner, corner]),
-  populations: z.array(z.object({ name: z.string(), cells: count })),
+  populations: z.array(
+    z.object({
+      name: z.string(),
+      cells: count,
+      // By section type; absent from a pack written before populations had them.
+      boxes: z.record(z.string(), z.tuple([corner, corner])).nullish(),
+    })
+  ),
   somas: z.object({ offset: count, bytes: count }),
   levels: z
     .array(
@@ -477,6 +484,7 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
   const box = boxOf(index, somas) ?? { min: [0, 0, 0], max: [0, 0, 0] };
   const centre = box.min.map((lowest, k) => (lowest + box.max[k]) / 2) as Vec3;
   const around = (point: Vec3) => point.map((value, k) => value - centre[k]) as Vec3;
+  const fromSteps = (steps: Vec3) => around(steps.map((step) => step * index.gridUm) as Vec3);
   for (let i = 0; i < somas.length; i += 4) {
     const placed = hasPosition(somas, i);
     for (let k = 0; k < 3; k++) somas[i + k] = placed ? somas[i + k] - centre[k] : NaN;
@@ -487,7 +495,20 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     segmentCells: new Uint32Array(0),
     segmentTypes: new Uint8Array(0),
     somas,
-    populations: index.populations,
+    populations: index.populations.map(({ name, cells }) => ({ name, cells })),
+    boxes: index.populations.every((p) => p.boxes)
+      ? Object.fromEntries(
+          index.populations.map(({ name, boxes }) => [
+            name,
+            Object.fromEntries(
+              Object.entries(boxes ?? {}).map(([type, [least, most]]) => [
+                type,
+                { min: fromSteps(least), max: fromSteps(most) },
+              ])
+            ),
+          ])
+        )
+      : undefined,
     centre,
     bounds: { min: around(box.min), max: around(box.max) },
     level: { toleranceUm, pruneUm },

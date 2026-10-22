@@ -399,9 +399,10 @@ describe('CircuitCells', () => {
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
   });
 
-  it('draws the axons unless told not to, and again when told', () => {
+  it('draws the axons unless told not to, and again when told, the morphologies framed as they are drawn', () => {
     const { viewer, update } = view();
     expect(viewer.setAxons).toHaveBeenLastCalledWith(true);
+    expect(calledAt(viewer.setAxons)).toBeLessThan(calledAt(viewer.setData));
     update({ axons: false });
     expect(viewer.setAxons).toHaveBeenLastCalledWith(false);
     update({ axons: true });

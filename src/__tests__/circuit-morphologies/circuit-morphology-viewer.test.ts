@@ -1720,7 +1720,34 @@ describe('the morphologies read a box at a time', () => {
     expect(reads.flatMap(({ wanted }) => wanted)).toEqual([{ level: 2, box: 0 }]);
   });
 
-  it('frames all of the pack on a reset over the somas, with cells hidden', () => {
+  it("frames a reset on the shown cells' somas and their populations' boxes of the sections drawn", () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    const boxes: CircuitMorphologyData['boxes'] = {
+      A: {
+        2: { min: [-30, -60, -2], max: [2, 0, 2] },
+        3: { min: [-2, -1, -1], max: [40, 8, 1] },
+      },
+      B: { 3: { min: [8, 18, -1], max: [500, 30, 1] } },
+    };
+    viewer.setData({ ...chunked(), populations: somas().populations, boxes });
+    viewer.setCellColors(HIDE_B);
+    const framedAbout = (x: number, y: number, z: number) => {
+      viewer.resetView();
+      const middle = new THREE.Vector3(x, y, z).add(inner.uniforms.uShift.value);
+      expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+    };
+    // Cell 0's soma, 5 µm round the origin, and A's dendrites; B hidden.
+    viewer.setAxons(false);
+    framedAbout(17.5, 1.5, 0);
+    viewer.setAxons(true);
+    framedAbout(5, -26, 0);
+    // Nothing hidden: every soma and every box.
+    viewer.setCellColors({ palette: [null], columnByCell: Uint16Array.of(0, 0, 0) });
+    framedAbout(235, -15, 0);
+  });
+
+  it('frames all of a pack that keeps no boxes on a reset over the somas, with cells hidden', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
     viewer.setData({ ...chunked(), populations: somas().populations });
