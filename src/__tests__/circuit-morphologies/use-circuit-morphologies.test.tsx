@@ -339,7 +339,7 @@ describe('storedPackOf', () => {
       full_path: 'circuit/circuit.mpack',
       bucket_name: 'bucket',
       is_directory: false,
-      content_type: 'application/vnd.obi.morphology-pack',
+      content_type: 'application/octet-stream',
       size: 1234,
       sha256_digest: 'ab12',
       label: AssetLabel.circuit_morphology_pack,

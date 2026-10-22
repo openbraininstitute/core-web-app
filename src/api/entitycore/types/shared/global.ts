@@ -306,7 +306,6 @@ export enum AssetContentType {
   jpeg = 'image/jpeg',
   json = 'application/json',
   mod = 'application/mod',
-  mpack = 'application/vnd.obi.morphology-pack',
   nrrd = 'application/nrrd',
   nwb = 'application/nwb',
   obj = 'application/obj',
