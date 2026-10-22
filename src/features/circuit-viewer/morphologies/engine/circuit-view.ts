@@ -1035,7 +1035,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /**
    * Over the somas, the view frames those drawn as the somas view did: centred on their mean, as far either side as the
    * farthest of them from it on each axis, and a soma's radius more; where none is drawn, all of them. Over their
-   * morphologies, it frames those of the cells drawn about their middle.
+   * morphologies, it frames those of the cells drawn about their middle, or all of a pack's.
    */
   override resetView(): void {
     this.frameCells();
@@ -1055,9 +1055,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       return;
     }
     if (layer) {
-      const shown = table.hides
-        ? morphologiesExtent(layer.data, (cell) => table.shown(cell))
-        : null;
+      // A pack's segments are in its boxes, out of the extent's reach: its bounds frame all its cells.
+      const shown =
+        table.hides && !layer.data.chunks
+          ? morphologiesExtent(layer.data, (cell) => table.shown(cell))
+          : null;
       this.frameBox(this.shifted(shown ?? layer.data.bounds));
       return;
     }

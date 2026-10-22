@@ -216,6 +216,13 @@ describe('LargeCircuitPreview morphologies', () => {
     expect([...loaded.somas.subarray(8)]).toEqual([9, 9, 9, 12]);
   });
 
+  it('frames the view on the morphologies as they come where the host says, and not otherwise', async () => {
+    const { rerender } = render(<Hosted start="morphologies" />);
+    expect(h.cells?.follow).toBe(false);
+    rerender(<Hosted start="morphologies" followMorphologies />);
+    expect(h.cells?.follow).toBe(true);
+  });
+
   it('says how much of the rest of the pack has come in while the morphologies are drawn, the same viewer kept', async () => {
     render(<Hosted start="morphologies" />);
     const load = await started();

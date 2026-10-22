@@ -98,6 +98,8 @@ export interface LargeCircuitPreviewProps {
   somaSizeScale?: number;
   /** Draw the morphologies' axons; drawn when omitted. */
   showAxons?: boolean;
+  /** Frame the view on the morphologies as they come, until the user moves it. */
+  followMorphologies?: boolean;
   /**
    * What each cell is drawn as. The morphologies are loaded first, with the
    * somas on show until they are in.
@@ -148,6 +150,7 @@ export function LargeCircuitPreview({
   neuronOpacity,
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
   showAxons,
+  followMorphologies = false,
   representation = 'somas',
   onRepresentationChange,
   onMorphologiesStopped,
@@ -265,6 +268,7 @@ export function LargeCircuitPreview({
           somaRadius={somaRadius}
           somaOpacity={neuronOpacity}
           data={shown}
+          follow={followMorphologies}
           axons={showAxons}
           cellColors={cellColors}
           defaultColor={defaultColor}

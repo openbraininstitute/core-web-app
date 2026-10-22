@@ -546,6 +546,7 @@ export function CircuitScene({
             neuronOpacity={config.neuronOpacity}
             somaSizeScale={config.somaSizeScale}
             showAxons={config.showAxons}
+            followMorphologies={smallForThePack}
             representation={representation}
             onRepresentationChange={onRepresentationChange}
             onMorphologiesStopped={() =>

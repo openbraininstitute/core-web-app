@@ -95,6 +95,7 @@ describe('CircuitScene on the pack', () => {
     );
 
     expect(h.large?.representation).toBe('morphologies');
+    expect(h.large?.followMorphologies).toBe(true);
     expect(h.menu?.showMorphologies).toBe(true);
     expect(h.menu?.showAxons).toBe(false);
     expect(h.large?.showAxons).toBe(false);
@@ -112,6 +113,7 @@ describe('CircuitScene on the pack', () => {
     );
 
     expect(h.large?.representation).toBe('somas');
+    expect(h.large?.followMorphologies).toBe(false);
     // Nothing to hide on the somas.
     expect(h.menu?.showAxons).toBeUndefined();
 

@@ -1720,6 +1720,16 @@ describe('the morphologies read a box at a time', () => {
     expect(reads.flatMap(({ wanted }) => wanted)).toEqual([{ level: 2, box: 0 }]);
   });
 
+  it('frames all of the pack on a reset over the somas, with cells hidden', () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas());
+    viewer.setData({ ...chunked(), populations: somas().populations });
+    viewer.setCellColors(HIDE_B);
+    viewer.resetView();
+    const middle = new THREE.Vector3(5, 12.5, 0).add(inner.uniforms.uShift.value);
+    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
+  });
+
   it('picks with the same quads', async () => {
     const { viewer, inner } = make();
     viewer.setData(chunked());
