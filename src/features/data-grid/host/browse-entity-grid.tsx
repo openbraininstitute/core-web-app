@@ -470,7 +470,7 @@ export function EntityDataGrid({
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
-          'h-full max-h-[calc(100vh-10.8rem)] min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          'h-full min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
           classNames?.container
         )}
       >
@@ -567,7 +567,7 @@ export function EntityDataGrid({
         <div
           id="mini-detail-view-container"
           className={cn(
-            'h-full max-h-[calc(100vh-10.8rem)] w-full min-w-0',
+            'h-full min-h-0 w-full min-w-0',
             '[grid-area:mini-view]',
             { hidden: !mdv },
             classNames?.miniView

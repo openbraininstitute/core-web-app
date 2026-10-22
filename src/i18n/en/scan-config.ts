@@ -7,7 +7,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the simulation',
     Generate: 'Generate simulation(s)',
     New: 'New simulation campaign',
-    CopyCampaignId: 'Copy simulation campaign ID',
     CopyCampaign: 'Generate new simulation campaign',
     InsufficientCreditsNonAdmin:
       "You don't have enough credits to launch such simulation. Please contact your administrator",
@@ -18,7 +17,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the extraction',
     Generate: 'Generate extraction(s)',
     New: 'New extraction campaign',
-    CopyCampaignId: 'Copy extraction campaign ID',
     CopyCampaign: 'Generate new extraction campaign',
     InsufficientCreditsNonAdmin:
       "You don't have enough credits to launch such extraction. Please contact your administrator",
@@ -29,7 +27,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the skeletonization',
     Generate: 'Generate skeletonization(s)',
     New: 'New skeletonization campaign',
-    CopyCampaignId: 'Copy skeletonization campaign ID',
     CopyCampaign: 'Generate new skeletonization campaign',
     LowFunds:
       'The project does not have enough credits to run the skeletonization, please add credits and try again',
@@ -41,7 +38,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the build',
     Generate: 'Generate build(s)',
     New: 'New build campaign',
-    CopyCampaignId: 'Copy build campaign ID',
     CopyCampaign: 'Generate new build campaign',
     InsufficientCreditsNonAdmin:
       "You don't have enough credits to launch this build. Please contact your administrator",
@@ -53,7 +49,6 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the optimization',
     Generate: 'Generate optimization(s)',
     New: 'New optimization campaign',
-    CopyCampaignId: 'Copy optimization campaign ID',
     CopyCampaign: 'Generate new optimization campaign',
     InsufficientCreditsNonAdmin:
       "You don't have enough credits to launch this optimization. Please contact your administrator",

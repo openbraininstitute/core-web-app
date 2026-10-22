@@ -27,13 +27,13 @@ export function DetailViewBody({
   const isPlainContent = plainContentSection && page === DetailViewSectionsDict.Workflow;
 
   return (
-    <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-3 overflow-hidden pt-2">
+    <div className="flex min-h-0 flex-1 gap-3 overflow-hidden pt-3">
       <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">{sidebar}</div>
-      <div className="min-h-0 w-4/5 pl-2 pr-3">
+      <div className="min-h-0 w-4/5 px-2 pb-2">
         {isPlainContent ? (
           <div className="primary-scrollbar h-full overflow-x-auto overflow-y-auto">{children}</div>
         ) : (
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pr-0.5">
+          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
             <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               {nameDisplay}
               <EntityNameDisplayWrapper>{children}</EntityNameDisplayWrapper>

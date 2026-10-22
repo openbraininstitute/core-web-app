@@ -10,8 +10,12 @@
 .workflow-checkbox.ant-checkbox-wrapper
   .ant-checkbox-disabled.ant-checkbox-checked
   .ant-checkbox-inner {
-  background-color: var(--color-primary-8);
-  border-color: var(--color-primary-8);
+  background-color: var(--color-primary-9);
+  border-color: var(--color-primary-9);
+}
+
+.workflow-checkbox.ant-checkbox-wrapper .ant-checkbox-indeterminate .ant-checkbox-inner::after {
+  background-color: var(--color-primary-9);
 }
 
 .workflow-checkbox.ant-checkbox-wrapper .ant-checkbox-checked .ant-checkbox-inner::after,
@@ -24,12 +28,12 @@
 .workflow-checkbox.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover
   .ant-checkbox-checked:not(.ant-checkbox-disabled)
   .ant-checkbox-inner {
-  background-color: var(--color-primary-7);
-  border-color: var(--color-primary-7);
+  background-color: var(--color-primary-8);
+  border-color: var(--color-primary-8);
 }
 
 .workflow-checkbox.ant-checkbox-wrapper:not(.ant-checkbox-wrapper-disabled):hover
   .ant-checkbox:not(.ant-checkbox-disabled):not(.ant-checkbox-checked)
   .ant-checkbox-inner {
-  border-color: var(--color-primary-8);
+  border-color: var(--color-primary-9);
 }

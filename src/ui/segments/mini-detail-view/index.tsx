@@ -8,6 +8,7 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DETAIL_PREVIEW_DPI } from '@/api/thumbnail-svc';
 import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
@@ -190,7 +191,10 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   rootClassName=" w-full  h-80"
                   className="max-h-full w-full rounded-md object-contain"
                 />
-              )
+              ),
+              undefined,
+              undefined,
+              DETAIL_PREVIEW_DPI
             )}
           </div>
         );
