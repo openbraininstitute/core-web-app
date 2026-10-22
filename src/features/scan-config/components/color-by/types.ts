@@ -123,6 +123,7 @@ export interface ViewerConfig {
   showZoomSlider: boolean;
   /** Show the scalebar down the side of the canvas. */
   showScalebar: boolean;
+  spin: boolean;
   /** per-property, per-value color overrides chosen by the user */
   colorOverrides: ColorOverrides;
 }

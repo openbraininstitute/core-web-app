@@ -64,6 +64,7 @@ interface CircuitVizProps {
   backgroundColor: string;
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
+  spin?: boolean;
   /** signal bus: camera reset, snapshot, zoom and the form hint's nudge */
   signals: CircuitViewerSignals;
   /** World-coordinate electrode overlays from {@link usePlacedElectrodeOverlays}. */
@@ -183,6 +184,7 @@ function CircuitVizView({
   showAxons,
   backgroundColor,
   showScalebar = true,
+  spin,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -261,6 +263,7 @@ function CircuitVizView({
           spikes={spikes}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
+          spin={spin}
           signals={signals}
           onZoomChange={onZoomChange}
         />

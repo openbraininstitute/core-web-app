@@ -1,4 +1,10 @@
-import { RiCameraLine, RiEqualizerLine, RiNodeTree, RiResetLeftLine } from '@remixicon/react';
+import {
+  RiCameraLine,
+  RiEqualizerLine,
+  RiLoopRightLine,
+  RiNodeTree,
+  RiResetLeftLine,
+} from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
@@ -51,6 +57,9 @@ export interface ViewerControlsMenuProps {
   /** scalebar down the side of the canvas */
   showScalebar?: boolean;
   onToggleScalebar?: (value: boolean) => void;
+  /** the view turning slowly on its own */
+  spin?: boolean;
+  onToggleSpin?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -85,6 +94,8 @@ export function ViewerControlsMenu({
   onToggleZoomSlider,
   showScalebar,
   onToggleScalebar,
+  spin,
+  onToggleSpin,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -145,6 +156,11 @@ export function ViewerControlsMenu({
               value={electrodeRadius}
               onChange={onElectrodeRadiusChange}
             />
+          )}
+          {onToggleSpin && (
+            <MenuRow label="Spin" icon={<RiLoopRightLine className="size-4 shrink-0" />}>
+              <ViewerSwitch testId="viewer-toggle-spin" checked={!!spin} onChange={onToggleSpin} />
+            </MenuRow>
           )}
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>

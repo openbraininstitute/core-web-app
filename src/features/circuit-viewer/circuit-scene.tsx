@@ -458,6 +458,7 @@ export function CircuitScene({
       showAxons: config.showAxons,
       backgroundColor: config.backgroundColor,
       showScalebar: config.showScalebar,
+      spin: config.spin,
       signals,
       overlays: styledOverlays,
       overlaysInteractive,
@@ -488,6 +489,7 @@ export function CircuitScene({
       config.showAxons,
       config.backgroundColor,
       config.showScalebar,
+      config.spin,
       config.neuronOpacity,
       config.electrodeRadius,
       config.morphologyLocationRadius,
@@ -541,6 +543,7 @@ export function CircuitScene({
             onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
             showScalebar={config.showScalebar}
+            spin={config.spin}
             signals={signals}
             onZoomChange={config.showZoomSlider ? zoom.onZoomChange : undefined}
             overlays={styledOverlays}

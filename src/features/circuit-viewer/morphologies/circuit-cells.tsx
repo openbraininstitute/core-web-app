@@ -86,6 +86,7 @@ export interface CircuitCellsProps {
   spikes?: ISpikeReplayBinding;
   backgroundColor: string;
   showScalebar: boolean;
+  spin?: boolean;
   /** The circuit viewer's bus, on which this view answers the camera reset, the snapshot, the zoom and the nudge. */
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
@@ -145,6 +146,7 @@ export function CircuitCells({
   spikes,
   backgroundColor,
   showScalebar,
+  spin = false,
   signals,
   onZoomChange,
   onLeftOut,
@@ -225,6 +227,7 @@ export function CircuitCells({
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
   useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
   useEffect(() => viewer?.setDendrogram(dendrogram), [viewer, dendrogram]);
+  useEffect(() => viewer?.setSpin(spin), [viewer, spin]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
   const timeChanged = useLatest(spikes?.onTimeChange);

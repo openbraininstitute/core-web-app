@@ -356,6 +356,8 @@ export interface CircuitMorphologyView extends ViewControls {
   /** Told when the replay plays or stops, the end of the spikes included. */
   onSpikesPlaying(listener: (playing: boolean) => void): () => void;
   setDark(dark: boolean): void;
+  /** Turn the view slowly about the screen's vertical, but not while a pointer holds it. */
+  setSpin(on: boolean): void;
   resetView(): void;
   /** Zoom in a little and back out once, to point at the view; any move of the user's ends it. */
   nudge(): void;

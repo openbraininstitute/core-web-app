@@ -61,6 +61,7 @@ const h = vi.hoisted(() => {
     pickSection = vi.fn(async (_x: number, _y: number) => SPOT);
     markersOnScreen = new Set<(markers: readonly unknown[]) => void>();
     setDark = vi.fn();
+    setSpin = vi.fn();
     resetView = vi.fn();
     dispose = vi.fn();
     snapshot = vi.fn((): HTMLCanvasElement | null => null);
@@ -398,6 +399,15 @@ describe('CircuitCells', () => {
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(false);
     update({ dendrogram: true });
     expect(viewer.setDendrogram).toHaveBeenLastCalledWith(true);
+  });
+
+  it('spins the view where told, and stops it', () => {
+    const { viewer, update } = view();
+    expect(viewer.setSpin).toHaveBeenLastCalledWith(false);
+    update({ spin: true });
+    expect(viewer.setSpin).toHaveBeenLastCalledWith(true);
+    update({ spin: false });
+    expect(viewer.setSpin).toHaveBeenLastCalledWith(false);
   });
 
   it('draws the axons unless told not to, and again when told, the morphologies framed as they are drawn', () => {

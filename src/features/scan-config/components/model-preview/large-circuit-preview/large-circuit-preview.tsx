@@ -77,6 +77,7 @@ export interface LargeCircuitPreviewProps {
   backgroundColor: string;
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
+  spin?: boolean;
   /** The viewer's bus: camera reset, snapshot and zoom. */
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, the user's own scrolling included. */
@@ -141,6 +142,7 @@ export function LargeCircuitPreview({
   onPopulationClick,
   backgroundColor,
   showScalebar = true,
+  spin,
   signals,
   onZoomChange,
   overlays,
@@ -279,6 +281,7 @@ export function LargeCircuitPreview({
           spikes={spikes}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
+          spin={spin}
           signals={signals}
           onZoomChange={onZoomChange}
           onLeftOut={setLeftOut}

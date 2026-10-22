@@ -59,6 +59,7 @@ export const DEFAULT_VIEWER_CONFIG: ViewerConfig = {
   // and a handle rather than a wheel.
   showZoomSlider: false,
   showScalebar: true,
+  spin: false,
   colorOverrides: {},
 };
 
