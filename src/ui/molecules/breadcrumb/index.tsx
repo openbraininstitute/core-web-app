@@ -151,7 +151,7 @@ export type BreadcrumbTrailItem = {
 };
 
 const CRUMB =
-  'text-primary-9 focus-visible:ring-primary-9 rounded-full px-2 py-1 text-base outline-none transition-colors hover:bg-gray-200 focus-visible:ring-2';
+  'text-primary-9 focus-visible:ring-primary-9 rounded-full px-2 py-1 text-base outline-none transition-colors focus-visible:ring-2';
 
 /** Bare glyph at rest; the round chip only materialises under the pointer. */
 function BreadcrumbCopyButton({
@@ -206,7 +206,10 @@ function BreadcrumbMenu({
         <button
           type="button"
           aria-current={ariaCurrent}
-          className={cn(className, 'hover:text-primary-7 inline-flex items-center gap-0.5')}
+          className={cn(
+            className,
+            'hover:bg-gray-200 hover:text-primary-7 inline-flex items-center gap-0.5'
+          )}
         >
           {label}
           <RiArrowDownSLine aria-hidden className="size-4 shrink-0" />
@@ -312,7 +315,7 @@ function BreadcrumbTrailLink({
   }
   if (item.href) {
     return (
-      <BreadcrumbLink asChild className={cn(className, 'hover:text-primary-7')}>
+      <BreadcrumbLink asChild className={cn(className, 'hover:bg-gray-200 hover:text-primary-7')}>
         <Link
           {...rest}
           href={item.href}
@@ -333,7 +336,7 @@ function BreadcrumbTrailLink({
         onClick={item.onClick}
         title={item.title}
         aria-current={ariaCurrent}
-        className={cn(className, 'hover:text-primary-7')}
+        className={cn(className, 'hover:bg-gray-200 hover:text-primary-7')}
       >
         {label}
       </button>

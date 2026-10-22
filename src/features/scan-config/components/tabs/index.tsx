@@ -19,7 +19,6 @@ import {
   type TScanConfigTabs,
 } from '@/features/scan-config/types';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
-import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
@@ -34,8 +33,6 @@ type ScanConfigTabsPanelProps = {
   results: ReactNode;
   /** Rail-level content centred on the panel edge (e.g. the selection's copy action). */
   railCenter?: ReactNode;
-  /** Drops the tab strip entirely, showing only the configuration (e.g. nothing to show in Results yet). */
-  hideTabs?: boolean;
 };
 
 /** The results tab is named after the activity — `simulations`, `extractions`, … */
@@ -102,28 +99,9 @@ export default function ScanConfigTabsPanel({
   configuration,
   results,
   railCenter,
-  hideTabs,
 }: ScanConfigTabsPanelProps) {
   // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
   const { start, end } = useScanConfigTopBarSlots();
-
-  if (hideTabs) {
-    return (
-      <div
-        className={cn('relative isolate flex min-h-0 min-w-0 flex-col overflow-hidden', className)}
-      >
-        <div className="relative z-30 flex h-12 shrink-0 items-center justify-between gap-4">
-          <div className="flex min-w-0">{start}</div>
-          <div className="flex min-w-0 flex-1 justify-center">{railCenter}</div>
-          <div className="flex shrink-0 items-center">{end}</div>
-        </div>
-        <div className="relative z-20 mx-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] bg-white">
-          {configuration}
-        </div>
-      </div>
-    );
-  }
-
   // not memoised: `configuration` and `results` are fresh nodes on every render
   const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
     const isConfiguration = id === BaseScanConfigTabs.configuration;

@@ -45,11 +45,14 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  name,
 }: {
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
+  /** The entity's own name, trailing the trail as plain (non-clickable) text. */
+  name: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
@@ -107,6 +110,8 @@ export function DataBreadcrumb({
             }),
             onClick: onLinkClick,
           },
+          // the entity itself is plain text: it has no listing of its own to link back to
+          { key: 'entity', label: name },
         ]}
       />
     </BreadcrumbChip>

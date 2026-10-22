@@ -110,7 +110,13 @@ export async function DataViewLayout({
     origin === 'workflows' ? (
       <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
     ) : (
-      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+      <DataBreadcrumb
+        title={entityType.title}
+        type={type}
+        group={entityType.group}
+        scope={scope}
+        name={entity.name}
+      />
     );
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =
