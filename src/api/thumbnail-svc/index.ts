@@ -8,6 +8,11 @@ import buildQueryString from '@/util/query-params-builder';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 
+/** Resolution for small grid-cell thumbnails. Keeps payloads light. */
+export const GRID_PREVIEW_DPI = 100;
+/** Resolution for the zoomable detail-view preview, where the user can expand the image. */
+export const DETAIL_PREVIEW_DPI = 400;
+
 function buildAssetUrl(
   resource: EntityCoreResource,
   options?: {
@@ -48,9 +53,10 @@ export async function getPreviewBlob(
   virtualLabId?: string,
   projectId?: string,
   target?: 'simulation' | 'stimulus',
-  accept: string = 'image/webp,image/png'
+  accept: string = 'image/webp,image/png',
+  dpi: number = GRID_PREVIEW_DPI
 ) {
-  const url = buildAssetUrl(resource, { dpi: 150, target, format: 'webp' });
+  const url = buildAssetUrl(resource, { dpi, target, format: 'webp' });
   const session = await getSession();
 
   const headers: Record<string, string> = {
