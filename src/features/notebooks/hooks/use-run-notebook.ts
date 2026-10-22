@@ -107,6 +107,8 @@ export function useRunNotebook({
     staleTime: 5 * 60 * 1000,
   });
   const profiles: NotebookProfilesResponse['profiles'] = profilesData?.profiles ?? [];
+  // Profile the service uses when none is sent; the UI highlights it as default.
+  const defaultProfile = profilesData?.default_profile ?? null;
 
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 
@@ -185,5 +187,6 @@ export function useRunNotebook({
     opening,
     creditsModal,
     profiles,
+    defaultProfile,
   };
 }
