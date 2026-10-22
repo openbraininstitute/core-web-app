@@ -26,7 +26,6 @@ export const createExtracellularRecordingArrayWorkflow = defineScanConfigWorkflo
     config: TaskConfigType.ExtracellularRecordingWeightsCalculationConfig,
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Build,

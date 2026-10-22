@@ -8,15 +8,15 @@ import { ScanConfigWorkflowEditorFieldProvider } from '@/features/scan-config/br
 import { ScanConfigContainer } from '@/features/scan-config/container';
 import { ScanConfigActivity, type TScanConfigActivity } from '@/features/scan-config/types';
 import { useScanConfigWorkflow } from '@/features/scan-config/workflow/context';
-import { ActivityRegistry } from '@/ui/segments/workflows/config/activities';
+import { findWorkflowDescriptorByDefinitionId } from '@/features/scan-config/workflow/find-descriptor';
 import { resolveScanConfigFromIdType } from '@/ui/segments/workflows/config/scan-config-binding';
 import { cn } from '@/utils/css-class';
 
+import { ScanConfigWorkflowTopBar } from './breadcrumb';
 import { ScanConfigWorkflowStatus } from './types';
 
 import type { ReactNode } from 'react';
 import type { TWorkspaceSection } from '@/constants';
-import type { IWorkflowDescriptor } from '@/ui/segments/workflows/config/types';
 
 function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TWorkspaceSection {
   switch (activity) {
@@ -33,20 +33,6 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
     default:
       return WorkspaceSection.GeneralWorkflow;
   }
-}
-
-function findWorkflowDescriptorByDefinitionId(definitionId: string): IWorkflowDescriptor | null {
-  for (const activity of Object.values(ActivityRegistry)) {
-    const workflows = [...activity.workflows, ...(activity.browseWorkflows ?? [])];
-
-    for (const workflow of workflows) {
-      if (workflow.scanConfig?.definition.id === definitionId) {
-        return workflow;
-      }
-    }
-  }
-
-  return null;
 }
 
 function ScanConfigWorkflowGate({ children }: { children: ReactNode }) {
@@ -71,8 +57,8 @@ function ScanConfigWorkflowFrame({
   className?: string;
 }) {
   return (
-    <div className={cn('border-neutral-2 ml-2 h-full rounded-2xl border', className)}>
-      {children}
+    <div className={cn('h-full min-h-0 pl-2', className)}>
+      <ScanConfigWorkflowTopBar>{children}</ScanConfigWorkflowTopBar>
     </div>
   );
 }
