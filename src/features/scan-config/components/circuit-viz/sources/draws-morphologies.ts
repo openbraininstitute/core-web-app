@@ -1,13 +1,16 @@
 import {
   CircuitScaleDictionary,
+  type ICircuit,
   type TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import { storedPackOf } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 
 /**
  * Whether a circuit is drawn a morphology per cell, or by
- * `LargeCircuitPreview`: as somas, or as the morphologies of OBI-One's pack
- * where `packMorphologies` (the `circuit-morphologies` flag) is on.
+ * `LargeCircuitPreview`: as somas, or as the morphologies of the circuit's
+ * stored pack where `packMorphologies` (the `circuit-morphologies` flag) is on.
+ * A pair or small circuit is drawn from its pack where it has one, else per cell.
  *
  * The cutoff is cost: the per-cell path reads every point of one morphology
  * per cell, which a microcircuit and everything above it has far too many of.
@@ -22,20 +25,25 @@ import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
  * pass here and still be mostly somas.
  */
 export function circuitDrawsEachCell(
-  scale: TCircuitScaleDictionary,
+  circuit: Pick<ICircuit, 'scale' | 'assets'>,
   packMorphologies: boolean
 ): boolean {
-  if (scale === CircuitScaleDictionary.Single) return true;
-  return !packMorphologies && circuitSmallForThePack(scale);
+  if (circuit.scale === CircuitScaleDictionary.Single) return true;
+  return (
+    circuitSmallForThePack(circuit.scale) &&
+    (!packMorphologies || storedPackOf(circuit.assets) === null)
+  );
 }
 
 /** {@link circuitDrawsEachCell} with the flag as it is. */
-export function useCircuitDrawsEachCell(): (scale: TCircuitScaleDictionary) => boolean {
+export function useCircuitDrawsEachCell(): (
+  circuit: Pick<ICircuit, 'scale' | 'assets'>
+) => boolean {
   const packMorphologies = !!useFlag(circuitMorphologiesFlag.key);
-  return (scale) => circuitDrawsEachCell(scale, packMorphologies);
+  return (circuit) => circuitDrawsEachCell(circuit, packMorphologies);
 }
 
-/** Pair and small circuits: on the pack, opened on its morphologies, and per cell where it cannot be had. */
+/** Pair and small circuits: on the pack, opened on its morphologies, and per cell where they have none or it cannot be had. */
 export function circuitSmallForThePack(scale: TCircuitScaleDictionary): boolean {
   return (
     scale === CircuitScaleDictionary.PairNeuron ||

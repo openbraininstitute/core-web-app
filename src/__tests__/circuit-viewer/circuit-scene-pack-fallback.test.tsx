@@ -2,6 +2,7 @@ import { act, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { AssetLabel, AssetStatus } from '@/api/entitycore/types/shared/global';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 
@@ -80,7 +81,18 @@ vi.mock('@/features/scan-config/components/color-by/use-node-color-mapping', () 
   }),
 }));
 
-const circuitOf = (id: string, scale: ICircuit['scale']) => ({ id, name: id, scale }) as ICircuit;
+const PACK = {
+  id: 'pack',
+  label: AssetLabel.circuit_morphology_pack,
+  is_directory: false,
+  status: AssetStatus.CREATED,
+  size: 1234,
+  sha256_digest: null,
+};
+
+/** A circuit with its stored pack, unless `withPack` is false. */
+const circuitOf = (id: string, scale: ICircuit['scale'], withPack = true) =>
+  ({ id, name: id, scale, assets: withPack ? [PACK] : [] }) as unknown as ICircuit;
 
 describe('CircuitScene on the pack', () => {
   beforeEach(() => {
@@ -140,6 +152,19 @@ describe('CircuitScene on the pack', () => {
     expect(screen.getByTestId('each-cell')).toBeInTheDocument();
     expect(h.menu?.showAxons).toBe(false);
     expect(h.menu?.showMorphologies).toBeUndefined();
+  });
+
+  it('offers no morphologies for a microcircuit without a stored pack, its somas alone drawn', () => {
+    render(
+      <CircuitScene
+        circuit={circuitOf('micro', CircuitScaleDictionary.Microcircuit, false)}
+        largeCircuit
+      />
+    );
+
+    expect(h.large?.representation).toBe('somas');
+    expect(h.menu?.showMorphologies).toBeUndefined();
+    expect(h.menu?.onToggleMorphologies).toBeUndefined();
   });
 
   it('tries the pack again for the next circuit', () => {

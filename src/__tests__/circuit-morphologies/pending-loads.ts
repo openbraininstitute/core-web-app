@@ -33,7 +33,7 @@ export const loadedOf = (
   data: CircuitMorphologyData,
   fromCache = false,
   whole: Promise<void> = Promise.resolve()
-) => ({ kind: 'loaded', data, fromCache, whole }) as const;
+): Loaded => ({ data, fromCache, whole });
 
 /** What the loader hands over: `somas` are four floats a cell, NaN where the pack has none of it. */
 export function loadedData(

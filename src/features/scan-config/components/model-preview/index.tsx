@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { useFlag } from '@/features/feature-flags';
@@ -102,10 +102,8 @@ export function ModelPreview({
       ))
       // A morphology per cell, each served by OBI-One `/circuit/viz`.
       .with(
-        {
-          type: EntityTypeDict.Circuit,
-          scale: P.when(drawsEachCell),
-        },
+        { type: EntityTypeDict.Circuit },
+        (circuit) => drawsEachCell(circuit as ICircuit),
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}

@@ -1,7 +1,7 @@
 /**
- * What the pack worker exposes over Comlink: a circuit's pack opened, from the cache a visit before left it in, or as it
- * comes in, from OBI-One, which builds it, or stored as the circuit's asset; opened once its somas are in, and put in
- * the cache once the whole of it is (`whole`). Then its boxes read as the view asks for them, each once its bytes are
+ * What the pack worker exposes over Comlink: a circuit's pack, stored as its asset, opened, from the cache a visit
+ * before left it in, or as it comes in; opened once its somas are in, and put in the cache once the whole of it is
+ * (`whole`). Then its boxes read as the view asks for them, each once its bytes are
  * in, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
  */
 import * as Comlink from 'comlink';
@@ -15,7 +15,7 @@ import {
 } from '@/features/viewer-3d/load/asset-cache';
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
-import { downloadPack, type OnProgress, type PackRequest, type Refused } from './download';
+import { downloadPack, type OnProgress, type PackRequest } from './download';
 import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
 
@@ -27,8 +27,6 @@ import type {
   Population,
 } from '../types';
 
-/** Kept a day, not an asset's 30: OBI-One builds the pack on request, so what is behind its URL can change. */
-export const PACK_CACHE = bucket('circuit-morphology-pack', 1);
 /** A stored pack, an asset, whose content cannot change under its URL. */
 export const STORED_PACK_CACHE = bucket('circuit-morphology-mpack');
 
@@ -36,16 +34,13 @@ export const STORED_PACK_CACHE = bucket('circuit-morphology-mpack');
  * The pack opened: its somas and frame, with no segments, where its segments lie, and how much of the file each box
  * needs in to be read at each level (`Pack.readableAt`).
  */
-export type Opened =
-  | ({
-      kind: 'opened';
-      data: CircuitMorphologyData;
-      fromCache: boolean;
-      readableAt: Float64Array[];
-    } & PackBoxes)
-  | Refused;
+export type Opened = {
+  data: CircuitMorphologyData;
+  fromCache: boolean;
+  readableAt: Float64Array[];
+} & PackBoxes;
 
-async function openCached(cache: CacheBounds, key: string, size?: number): Promise<Pack | null> {
+async function openCached(cache: CacheBounds, key: string, size: number): Promise<Pack | null> {
   const bytes = await readEntry(cache, key, size);
   if (!bytes) return null;
   try {
@@ -65,7 +60,7 @@ async function keep(whole: Promise<Uint8Array>, request: PackRequest, cache: Cac
   const bytes = await whole;
   // Too large for the cache, it is not kept, nor checked: it is drawn already.
   if (bytes.byteLength > cache.maxBytes) return;
-  const sha256 = request.stored?.sha256;
+  const { sha256 } = request.stored;
   if (sha256) {
     const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
     if (hex(digest) !== sha256.toLowerCase()) {
@@ -81,8 +76,7 @@ const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments)
   segmentTypes.buffer,
 ];
 
-/** `built` keeps the packs OBI-One builds, and `stored` those stored as assets. */
-export function createPackApi(built: CacheBounds, stored: CacheBounds) {
+export function createPackApi(cache: CacheBounds) {
   let opened: { readBox: Pack['readBox']; numbers: Uint32Array; whole: Promise<void> } | null =
     null;
   return {
@@ -91,13 +85,11 @@ export function createPackApi(built: CacheBounds, stored: CacheBounds) {
       populations: Population[],
       onProgress: OnProgress
     ): Promise<Opened> {
-      const cache = request.stored ? stored : built;
-      let pack = await openCached(cache, request.url, request.stored?.size);
+      let pack = await openCached(cache, request.url, request.stored.size);
       const fromCache = pack !== null;
       let whole = Promise.resolve();
       if (!pack) {
         const download = await downloadPack(request, onProgress);
-        if (download.kind === 'refused') return download;
         pack = await openPack(download.file);
         whole = keep(download.whole, request, cache);
         whole.catch(() => {});
@@ -107,7 +99,7 @@ export function createPackApi(built: CacheBounds, stored: CacheBounds) {
       const data = renumberSomas(pack.data, numbers, populations);
       // The boxes and the levels are copied, not handed over: the pack reads by them.
       const { boxes, levels, readableAt } = pack;
-      return Comlink.transfer({ kind: 'opened', data, boxes, levels, readableAt, fromCache }, [
+      return Comlink.transfer({ data, boxes, levels, readableAt, fromCache }, [
         data.somas.buffer as ArrayBuffer,
       ]);
     },

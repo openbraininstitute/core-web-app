@@ -349,7 +349,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               {sceneMounted && (
                 <CircuitScene
                   {...subject}
-                  largeCircuit={circuit !== undefined && !drawsEachCell(circuit.scale)}
+                  largeCircuit={circuit !== undefined && !drawsEachCell(circuit)}
                   active={showScene}
                   features={SCENE_FEATURES}
                   // Only a name the config backs with cells. A name the scene

@@ -222,17 +222,15 @@ export function LargeCircuitPreview({
   const stored = storedPackOf(circuit.assets);
   // By its fields: the circuit fetched again is the same pack.
   const { id: storedId, size: storedSize = 0, sha256: storedSha256 = null } = stored ?? {};
+  // A circuit without a stored pack stays somas.
   const morphologiesSource = React.useMemo(
     () =>
-      wantsMorphologies && drawable
+      wantsMorphologies && drawable && storedId !== undefined
         ? {
             circuitId: circuit.id,
             ...somas,
             somaRadius: speciesRadius,
-            stored:
-              storedId === undefined
-                ? null
-                : { id: storedId, size: storedSize, sha256: storedSha256 },
+            stored: { id: storedId, size: storedSize, sha256: storedSha256 },
           }
         : null,
     [

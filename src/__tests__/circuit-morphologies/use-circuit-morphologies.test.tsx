@@ -12,10 +12,6 @@ import {
 import { loadedData, loadedOf, loads, started } from './pending-loads';
 
 const h = vi.hoisted(() => ({
-  request: vi.fn(async (circuitId: string, _ctx: unknown) => ({
-    url: `https://obi-one.test/circuit/viz/${circuitId}/morphology-pack`,
-    headers: { Authorization: 'Bearer token' },
-  })),
   assetRequest: vi.fn(async ({ entityId, id }: { entityId: string; id: string }) => ({
     url: `https://entitycore.test/circuit/${entityId}/assets/${id}/download`,
     headers: { Authorization: 'Bearer token' },
@@ -24,10 +20,6 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('@/features/circuit-viewer/morphologies/load/load', () => import('./pending-loads'));
-
-vi.mock('@/api/one/circuit-visualization', () => ({
-  buildCircuitMorphologyPackRequest: h.request,
-}));
 
 vi.mock('@/api/entitycore/queries/assets', () => ({ buildAssetDownloadRequest: h.assetRequest }));
 
@@ -50,6 +42,7 @@ const SOURCE: MorphologiesSource = {
   populations: POPULATIONS,
   positions: Float32Array.of(100, 200, 300, 130, 200, 300),
   somaRadius: 4,
+  stored: { id: 'pack-id', size: 1234, sha256: 'ab12' },
 };
 
 function render(source: MorphologiesSource | null = SOURCE) {
@@ -85,16 +78,22 @@ describe('useCircuitMorphologies', () => {
     expect(loads).toHaveLength(0);
   });
 
-  it("asks OBI-One for the circuit's pack, in the route's workspace", async () => {
+  it("asks entitycore for the circuit's stored pack, in the route's workspace, with its size and digest", async () => {
     const { result } = render();
-    expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 0 });
+    expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 1234 });
 
     const load = await started();
-    expect(h.request).toHaveBeenCalledWith('circuit-id', {
-      virtualLabId: 'lab',
-      projectId: 'project',
+    expect(h.assetRequest).toHaveBeenCalledWith({
+      ctx: { virtualLabId: 'lab', projectId: 'project' },
+      entityType: 'circuit',
+      entityId: 'circuit-id',
+      id: 'pack-id',
     });
-    expect(load.options.request).toBe(await h.request.mock.results[0].value);
+    expect(load.options.request).toEqual({
+      url: 'https://entitycore.test/circuit/circuit-id/assets/pack-id/download',
+      headers: { Authorization: 'Bearer token' },
+      stored: { size: 1234, sha256: 'ab12' },
+    });
     expect(load.options.populations).toBe(SOURCE.populations);
   });
 
@@ -115,25 +114,6 @@ describe('useCircuitMorphologies', () => {
     expect(onStopped).not.toHaveBeenCalled();
   });
 
-  it('asks entitycore for a stored pack, with its size and digest', async () => {
-    const stored = { id: 'pack-id', size: 1234, sha256: 'ab12' };
-    render({ ...SOURCE, stored });
-    const load = await started();
-
-    expect(h.request).not.toHaveBeenCalled();
-    expect(h.assetRequest).toHaveBeenCalledWith({
-      ctx: { virtualLabId: 'lab', projectId: 'project' },
-      entityType: 'circuit',
-      entityId: 'circuit-id',
-      id: 'pack-id',
-    });
-    expect(load.options.request).toEqual({
-      url: 'https://entitycore.test/circuit/circuit-id/assets/pack-id/download',
-      headers: { Authorization: 'Bearer token' },
-      stored: { size: 1234, sha256: 'ab12' },
-    });
-  });
-
   it('says how much of the rest of the pack has come in once the morphologies are shown, until it all has', async () => {
     const { result } = render();
     const load = await started();
@@ -151,23 +131,22 @@ describe('useCircuitMorphologies', () => {
     expect(result.current.load).toEqual({ status: 'ready', data: loaded });
   });
 
-  it('says the rest is coming from the moment the morphologies are shown, and while it comes of no total said', async () => {
+  it('says the rest is coming from the moment the morphologies are shown, before any report says how much has come', async () => {
     const { result } = render();
     const load = await started();
-    act(() => load.options.onProgress?.(1e6, 4e6));
     const loaded = data();
     await act(async () => load.resolve(loadedOf(loaded, false, new Promise(() => {}))));
 
     expect(result.current.load).toEqual({
       status: 'ready',
       data: loaded,
-      coming: { received: 1e6, total: 4e6 },
+      coming: { received: 0, total: 1234 },
     });
-    act(() => load.options.onProgress?.(5e6, 0));
+    act(() => load.options.onProgress?.(1e6, 4e6));
     expect(result.current.load).toEqual({
       status: 'ready',
       data: loaded,
-      coming: { received: 5e6, total: 0 },
+      coming: { received: 1e6, total: 4e6 },
     });
   });
 
@@ -198,12 +177,12 @@ describe('useCircuitMorphologies', () => {
 
     expect(first.options.signal.aborted).toBe(true);
     expect(result.current.stopped).toBeNull();
-    expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 0 });
+    expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 1234 });
     const second = await started(2);
     expect(second.options.request).toEqual(first.options.request);
   });
 
-  it('forgets a pack cut short once its source goes, as it does not a refusal', async () => {
+  it('forgets a pack cut short once its source goes', async () => {
     const { result, rerender } = render();
     const load = await started();
     await act(async () => load.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
@@ -231,22 +210,7 @@ describe('useCircuitMorphologies', () => {
     expect(h.logError).not.toHaveBeenCalled();
   });
 
-  it('ends idle and says why, until that is dismissed, when OBI-One refuses the circuit', async () => {
-    const { result, onStopped } = render();
-    const load = await started();
-    const refusal = { kind: 'refused', reason: 'too_many_neurons', detail: 'Over 5000' } as const;
-
-    await act(async () => load.resolve(refusal));
-
-    expect(result.current.load).toEqual({ status: 'idle' });
-    expect(result.current.stopped).toBe(refusal);
-    expect(onStopped).toHaveBeenCalledTimes(1);
-
-    act(() => result.current.dismiss());
-    expect(result.current.stopped).toBeNull();
-  });
-
-  it('ends idle and says so when the load fails', async () => {
+  it('ends idle and says so when the load fails, until that is dismissed', async () => {
     const { result, onStopped } = render();
     const load = await started();
     const error = new Error('Download failed (HTTP 500)');
@@ -257,15 +221,18 @@ describe('useCircuitMorphologies', () => {
     expect(result.current.stopped).toEqual({ kind: 'failed' });
     expect(onStopped).toHaveBeenCalledTimes(1);
     expect(h.logError).toHaveBeenCalledWith('Could not load the circuit morphologies', error);
+
+    act(() => result.current.dismiss());
+    expect(result.current.stopped).toBeNull();
   });
 
   it('keeps why the last load stopped while its source is gone, and forgets it when the next starts', async () => {
     const { result, rerender } = render();
     const first = await started();
-    await act(async () => first.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+    await act(async () => first.reject(new Error('Download failed (HTTP 500)')));
 
     rerender({ source: null });
-    expect(result.current.stopped).toMatchObject({ reason: 'busy' });
+    expect(result.current.stopped).toEqual({ kind: 'failed' });
 
     rerender({ source: SOURCE });
     expect(result.current.stopped).toBeNull();
@@ -327,7 +294,7 @@ describe('useCircuitMorphologies', () => {
     await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
 
     expect(loads).toHaveLength(1);
-    expect(h.request).toHaveBeenCalledTimes(1);
+    expect(h.assetRequest).toHaveBeenCalledTimes(1);
   });
 });
 

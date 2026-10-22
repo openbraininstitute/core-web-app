@@ -50,13 +50,6 @@ vi.mock(
   () => import('../circuit-morphologies/pending-loads')
 );
 
-vi.mock('@/api/one/circuit-visualization', () => ({
-  buildCircuitMorphologyPackRequest: async (circuitId: string) => ({
-    url: `https://obi-one.test/circuit/viz/${circuitId}/morphology-pack`,
-    headers: {},
-  }),
-}));
-
 vi.mock('@/api/entitycore/queries/assets', () => ({
   buildAssetDownloadRequest: async ({ entityId, id }: { entityId: string; id: string }) => ({
     url: `https://entitycore.test/circuit/${entityId}/assets/${id}/download`,
@@ -81,11 +74,21 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
   usePopulationsPlacement: () => h.placement,
 }));
 
+const PACK = {
+  id: 'pack-id',
+  label: 'circuit_morphology_pack',
+  is_directory: false,
+  status: 'created',
+  size: 6e6,
+  sha256_digest: 'ab12',
+};
+
 const circuit = {
   id: 'circuit-id',
   name: 'Circuit',
   subject: { species: { name: 'Mus musculus' } },
-} as ICircuit;
+  assets: [PACK],
+} as unknown as ICircuit;
 
 /** As the loader hands it over: the two cortex cells, and no soma for the input. */
 const data = () =>
@@ -177,8 +180,6 @@ describe('LargeCircuitPreview morphologies', () => {
 
     act(() => load.options.onProgress?.(1.5e6, 6e6));
     expect(status()).toBe('Loading morphologies… 1.5 / 6.0 MB');
-    act(() => load.options.onProgress?.(2.5e6, 0));
-    expect(status()).toBe('Loading morphologies… 2.5 MB');
   });
 
   it('numbers the cells for the loader as it numbers the somas: through what was placed, in its order', async () => {
@@ -254,16 +255,8 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(status()).toBe('Drawn with WebGL 2: the graphics ran out of memoryDismiss');
   });
 
-  it("asks entitycore for the circuit's stored pack where it has one", async () => {
-    const pack = {
-      id: 'pack-id',
-      label: 'circuit_morphology_pack',
-      is_directory: false,
-      status: 'created',
-      size: 6e6,
-      sha256_digest: 'ab12',
-    };
-    render(<Hosted start="morphologies" circuit={{ ...circuit, assets: [pack] } as ICircuit} />);
+  it("asks entitycore for the circuit's stored pack", async () => {
+    render(<Hosted start="morphologies" />);
     const load = await started();
 
     expect(load.options.request).toEqual({
@@ -271,6 +264,15 @@ describe('LargeCircuitPreview morphologies', () => {
       headers: {},
       stored: { size: 6e6, sha256: 'ab12' },
     });
+  });
+
+  it('loads nothing for a circuit without a stored pack, its somas on show and nothing said', async () => {
+    render(<Hosted start="morphologies" circuit={{ ...circuit, assets: [] }} />);
+    await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
+
+    expect(loads).toHaveLength(0);
+    expect(screen.getByTestId('somas')).toBeInTheDocument();
+    expect(status()).toBeNull();
   });
 
   it('says so while morphologies in view are left out for the budget', async () => {
@@ -447,62 +449,35 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(status()).toBeNull();
   });
 
-  it.each([
-    ['too_many_neurons', 'This circuit is too large to show as morphologies'],
-    ['files_too_large', 'This circuit is too large to show as morphologies'],
-    ['too_many_points', 'This circuit is too large to show as morphologies'],
-    ['too_many_segments', 'This circuit is too large to show as morphologies'],
-    ['no_morphologies', 'This circuit has no morphologies to show'],
-    ['something_new', 'The morphologies cannot be shown'],
-  ])('stays on the somas and says why when OBI-One refuses with %s', async (reason, text) => {
-    render(<Hosted start="morphologies" />);
-    const load = await started();
-
-    await act(async () => load.resolve({ kind: 'refused', reason, detail: 'In numbers' }));
-
-    expect(asked).toEqual(['somas']);
-    expect(screen.getByTestId('somas')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(text);
-    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(status()).toBeNull();
-  });
-
-  it('puts its status where the host says, loading and refused alike', async () => {
+  it('puts its status where the host says, loading and failed alike', async () => {
     const placed = () => screen.getByRole('status').parentElement;
     render(<Hosted start="morphologies" statusPlace={{ top: 52, left: 52 }} />);
     const load = await started();
     expect(placed()).toHaveStyle({ top: '52px', left: '52px' });
 
-    await act(async () => load.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+    await act(async () => load.reject(new Error('Download failed (HTTP 500)')));
     expect(placed()).toHaveStyle({ top: '52px', left: '52px' });
   });
 
-  it('offers another try when OBI-One is busy with another circuit', async () => {
+  it('stays on the somas and offers another try when the load fails, until dismissed', async () => {
     render(<Hosted start="morphologies" />);
     const first = await started();
-    await act(async () => first.resolve({ kind: 'refused', reason: 'busy', detail: 'Try again' }));
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Morphologies are being built for another circuit'
-    );
+
+    await act(async () => first.reject(new Error('Download failed (HTTP 500)')));
+
+    expect(asked).toEqual(['somas']);
+    expect(screen.getByTestId('somas')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('The morphologies could not be loaded');
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
     expect(asked).toEqual(['somas', 'morphologies']);
-    await started(2);
+    const second = await started(2);
     expect(status()).toBe('Loading morphologies…');
-  });
 
-  it('offers another try when the load fails', async () => {
-    render(<Hosted start="morphologies" />);
-    const load = await started();
-
-    await act(async () => load.reject(new Error('Download failed (HTTP 500)')));
-
-    expect(asked).toEqual(['somas']);
-    expect(screen.getByRole('status')).toHaveTextContent('The morphologies could not be loaded');
-    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+    await act(async () => second.reject(new Error('Download failed (HTTP 500)')));
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(status()).toBeNull();
   });
 
   it('keeps what is drawn where the rest of the pack does not come in, says so over what is left out, and loads it again', async () => {
@@ -526,15 +501,12 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(status()).toBe('Loading morphologies…');
   });
 
-  it.each([
-    ['OBI-One refuses', { kind: 'refused', reason: 'busy', detail: '' }],
-    ['the load fails', new Error('Download failed (HTTP 500)')],
-  ] as const)('leaves it to the host what to draw where %s', async (_, end) => {
+  it('leaves it to the host what to draw where the load fails', async () => {
     const onMorphologiesStopped = vi.fn();
     render(<Hosted start="morphologies" onMorphologiesStopped={onMorphologiesStopped} />);
     const load = await started();
 
-    await act(async () => (end instanceof Error ? load.reject(end) : load.resolve(end)));
+    await act(async () => load.reject(new Error('Download failed (HTTP 500)')));
 
     expect(onMorphologiesStopped).toHaveBeenCalledOnce();
     expect(asked).toEqual([]);
@@ -543,7 +515,7 @@ describe('LargeCircuitPreview morphologies', () => {
   it('loads them again on another try where the host stayed on the morphologies', async () => {
     render(<Hosted start="morphologies" onMorphologiesStopped={() => {}} />);
     const first = await started();
-    await act(async () => first.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+    await act(async () => first.reject(new Error('Download failed (HTTP 500)')));
 
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
 
@@ -585,7 +557,7 @@ describe('LargeCircuitPreview morphologies', () => {
   it('says nothing of morphologies the circuit is no longer offered as', async () => {
     render(<Hosted start="morphologies" />);
     const load = await started();
-    await act(async () => load.resolve({ kind: 'refused', reason: 'busy', detail: '' }));
+    await act(async () => load.reject(new Error('Download failed (HTTP 500)')));
     expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('stop offering'));

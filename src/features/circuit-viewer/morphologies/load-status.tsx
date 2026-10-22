@@ -5,7 +5,6 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
 import type { Fallback, Lost } from './engine/create-view';
 import type { MorphologiesLoad, MorphologiesStop } from './use-circuit-morphologies';
 
-const TOO_LARGE = 'This circuit is too large to show as morphologies';
 const LEFT_OUT = 'Too many morphologies in view: zoom in to see them';
 /** Where the browser has no WebGPU, which leaves out none. */
 const WITH_WEBGPU = 'A browser with WebGPU shows them all';
@@ -13,39 +12,19 @@ const GAVE_OUT: Record<Lost, string> = {
   reset: 'Drawn with WebGL 2 after the graphics were reset',
   memory: 'Drawn with WebGL 2: the graphics ran out of memory',
 };
-/** By OBI-One's word for why it built no pack. */
-const REFUSALS: Record<string, string> = {
-  too_many_neurons: TOO_LARGE,
-  files_too_large: TOO_LARGE,
-  too_many_points: TOO_LARGE,
-  too_many_segments: TOO_LARGE,
-  no_morphologies: 'This circuit has no morphologies to show',
-  busy: 'Morphologies are being built for another circuit',
+const STOPPED: Record<MorphologiesStop['kind'], string> = {
+  failed: 'The morphologies could not be loaded',
+  cut: 'Not all of the morphologies could be loaded',
 };
 
 function loadingText({ received, total }: { received: number; total: number }): string {
   if (received === 0) return 'Loading morphologies…';
-  const of = total > 0 ? ` / ${megabytes(total)}` : '';
-  return `Loading morphologies… ${megabytes(received)}${of} MB`;
-}
-
-/** What to say of a load that stopped, and whether asking again may help. */
-function stopNotice(stopped: MorphologiesStop): { text: string; retry: boolean } {
-  if (stopped.kind === 'failed') {
-    return { text: 'The morphologies could not be loaded', retry: true };
-  }
-  if (stopped.kind === 'cut') {
-    return { text: 'Not all of the morphologies could be loaded', retry: true };
-  }
-  return {
-    text: REFUSALS[stopped.reason] ?? 'The morphologies cannot be shown',
-    retry: stopped.reason === 'busy',
-  };
+  return `Loading morphologies… ${megabytes(received)} / ${megabytes(total)} MB`;
 }
 
 /**
- * Over the cells: how far the pack has come before it is shown, why the circuit stayed somas or the rest of the pack
- * did not come in, that the morphologies in view are left out for the budget (and where the browser has no WebGPU, that one with it shows them), that they are
+ * Over the cells: how far the pack has come before it is shown, that it could not be loaded or the rest of it did not
+ * come in, that the morphologies in view are left out for the budget (and where the browser has no WebGPU, that one with it shows them), that they are
  * drawn with WebGL 2 since WebGPU gave out, or, where there is nothing else to say, how far the rest has come.
  */
 export function MorphologiesStatus({
@@ -79,10 +58,9 @@ export function MorphologiesStatus({
   if (load.status === 'loading') {
     pill = busy(load);
   } else if (stopped) {
-    const { text, retry } = stopNotice(stopped);
     pill = (
-      <StatusPill text={text} kind="warning" theme={theme} place={place}>
-        {retry && <StatusAction onClick={onRetry}>Try again</StatusAction>}
+      <StatusPill text={STOPPED[stopped.kind]} kind="warning" theme={theme} place={place}>
+        <StatusAction onClick={onRetry}>Try again</StatusAction>
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
       </StatusPill>
     );

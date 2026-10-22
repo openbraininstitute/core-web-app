@@ -5,7 +5,6 @@ import { useEffect, useState } from 'react';
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel, AssetStatus, type IAsset } from '@/api/entitycore/types/shared/global';
-import { buildCircuitMorphologyPackRequest } from '@/api/one/circuit-visualization';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { logError } from '@/utils/logger';
@@ -14,7 +13,7 @@ import { fillSomas } from './load/cells';
 import { loadCircuitMorphologies } from './load/load';
 
 import type { WorkspaceContext } from '@/types/common';
-import type { PackRequest, Refused } from './load/download';
+import type { PackRequest } from './load/download';
 import type { CircuitMorphologyData, Population } from './types';
 
 /** A pack stored as the circuit's asset. */
@@ -33,22 +32,22 @@ export interface MorphologiesSource {
   positions: Float32Array;
   /** The radius of such a soma, µm. */
   somaRadius: number;
-  /** The circuit's stored pack, read in place of the one OBI-One builds; none, and OBI-One builds it. */
-  stored?: StoredPack | null;
+  /** The pack stored as the circuit's asset, which the morphologies are read from. */
+  stored: StoredPack;
 }
 
 export type MorphologiesLoad =
   | { status: 'idle' }
-  /** `total` is 0 until the pack's bytes come in: while OBI-One builds it, or reading it from the cache. */
+  /** `total` is the stored pack's size. */
   | { status: 'loading'; received: number; total: number }
   /** `coming`, while the rest of the pack comes in. */
   | { status: 'ready'; data: CircuitMorphologyData; coming?: { received: number; total: number } };
 
 /**
- * Why a load stopped: OBI-One would not build the pack, or the load failed, both with nothing to show; or the rest of
- * the pack did not come in, what had shown kept (`cut`).
+ * Why a load stopped: it failed, with nothing to show; or the rest of the pack did not come in, what had shown kept
+ * (`cut`).
  */
-export type MorphologiesStop = Refused | { kind: 'failed' } | { kind: 'cut' };
+export type MorphologiesStop = { kind: 'failed' } | { kind: 'cut' };
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
@@ -62,11 +61,9 @@ export function storedPackOf(assets: IAsset[] | undefined): StoredPack | null {
 }
 
 async function packRequest(
-  source: MorphologiesSource,
+  { stored, circuitId }: MorphologiesSource,
   ctx: WorkspaceContext | null
 ): Promise<PackRequest> {
-  const { stored, circuitId } = source;
-  if (!stored) return buildCircuitMorphologyPackRequest(circuitId, ctx);
   const request = await buildAssetDownloadRequest({
     ctx,
     entityType: EntityTypeDict.Circuit,
@@ -78,10 +75,9 @@ async function packRequest(
 
 /**
  * Loads the morphologies of `source`, whose boxes the view reads as it wants them, until `source` changes or goes and
- * they are let go of: ready once the pack's somas are in, the rest still coming. A circuit OBI-One refuses and a load
- * that fails both end idle, with `onStopped` called and `stopped` saying why until it is dismissed or the next load
- * starts. Where the rest of the pack does not come in, what is shown stays and `stopped` says so until `retry` loads
- * it again or `source` goes.
+ * they are let go of: ready once the pack's somas are in, the rest still coming. A load that fails ends idle, with
+ * `onStopped` called and `stopped` saying so until it is dismissed or the next load starts. Where the rest of the
+ * pack does not come in, what is shown stays and `stopped` says so until `retry` loads it again or `source` goes.
  */
 export function useCircuitMorphologies(
   source: MorphologiesSource | null,
@@ -111,7 +107,8 @@ export function useCircuitMorphologies(
     const controller = new AbortController();
     const { signal } = controller;
     const setLoad = (load: MorphologiesLoad) => setCurrent({ source, load });
-    setLoad({ status: 'loading', received: 0, total: 0 });
+    let last = { received: 0, total: source.stored.size };
+    setLoad({ status: 'loading', ...last });
     setStopped(null);
 
     const stop = (why: MorphologiesStop) => {
@@ -120,11 +117,9 @@ export function useCircuitMorphologies(
       told.current();
     };
     let ready: CircuitMorphologyData | null = null;
-    let last = { received: 0, total: 0 };
-    // Where the server says no total, the rest is coming until the whole is in.
     const show = (data: CircuitMorphologyData, coming: typeof last | null) =>
       setLoad(
-        coming && (coming.total === 0 || coming.received < coming.total)
+        coming && coming.received < coming.total
           ? { status: 'ready', data, coming }
           : { status: 'ready', data }
       );
@@ -142,10 +137,6 @@ export function useCircuitMorphologies(
         },
       });
       if (signal.aborted) return;
-      if (loaded.kind === 'refused') {
-        stop(loaded);
-        return;
-      }
       fillSomas(loaded.data, source.positions, source.somaRadius);
       const data = loaded.data;
       ready = data;
@@ -160,8 +151,8 @@ export function useCircuitMorphologies(
           if (!signal.aborted) show(data, null);
         });
     };
-    // Not in the effect itself: in development React runs it twice, and OBI-One goes on building for a request that
-    // is gone while the next one waits behind it.
+    // Not in the effect itself: in development React runs it twice, and the first download would be started and
+    // aborted for nothing.
     const timer = setTimeout(() => {
       run().catch((e: unknown) => {
         if (signal.aborted) return;

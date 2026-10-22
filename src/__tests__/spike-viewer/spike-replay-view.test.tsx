@@ -37,6 +37,7 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
 }));
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { AssetLabel, AssetStatus } from '@/api/entitycore/types/shared/global';
 import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
@@ -72,13 +73,24 @@ describe('SpikeReplayView', () => {
   });
 
   it.each([
-    [false, false],
-    [true, true],
-  ])('replays over a small microcircuit from the pack only with it (%s)', (pack, large) => {
-    h.flags = { [circuitMorphologiesFlag.key]: pack };
+    [false, true, false],
+    [true, true, true],
+    [true, false, false],
+  ])('replays over a small microcircuit from the pack only with the flag (%s) and the pack (%s)', (flag, stored, large) => {
+    h.flags = { [circuitMorphologiesFlag.key]: flag };
     h.scene = null;
+    const pack = {
+      id: 'pack',
+      label: AssetLabel.circuit_morphology_pack,
+      is_directory: false,
+      status: AssetStatus.CREATED,
+    };
     const small = {
-      circuit: { id: 'c1', assets: [], scale: CircuitScaleDictionary.SmallMicrocircuit },
+      circuit: {
+        id: 'c1',
+        assets: stored ? [pack] : [],
+        scale: CircuitScaleDictionary.SmallMicrocircuit,
+      },
     } as unknown as TSceneSubject;
     render(<SpikeReplayView data={data} subject={small} />);
 

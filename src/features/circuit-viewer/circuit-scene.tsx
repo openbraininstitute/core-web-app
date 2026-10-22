@@ -7,6 +7,7 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { storedPackOf } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
@@ -77,7 +78,10 @@ export type TSceneSubject =
   | { memodel: TSceneMemodel; circuit?: never };
 
 interface ICircuitSceneOptions {
-  /** Draw with `LargeCircuitPreview`, as somas or as the morphologies of OBI-One's pack. @see circuitDrawsEachCell */
+  /**
+   * Draw with `LargeCircuitPreview`, as somas or as the morphologies of the circuit's stored pack. @see
+   * circuitDrawsEachCell
+   */
   largeCircuit?: boolean;
   /**
    * Whether this scene is the view currently on show.
@@ -204,6 +208,7 @@ export function CircuitScene({
     drawnLarge &&
     circuit !== undefined &&
     circuitSmallForThePack(circuit.scale);
+  const hasPack = storedPackOf(circuit?.assets) !== null;
   const [fellBackFor, setFellBackFor] = useState<string | null>(null);
   const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
 
@@ -234,9 +239,8 @@ export function CircuitScene({
   const handlePopulationClick =
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
-  // Drawn as somas, the cells can be switched to their morphologies; whether OBI-One will build
-  // the pack is known only once it is asked for.
-  const supportsMorphologies = morphologiesFlag && largeCircuit;
+  // Drawn as somas, the cells can be switched to their morphologies where the circuit has its pack.
+  const supportsMorphologies = morphologiesFlag && largeCircuit && hasPack;
 
   const canPickMorphologyLocations =
     !largeCircuit &&

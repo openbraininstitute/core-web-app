@@ -1,7 +1,5 @@
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
-import { getSession } from '@/auth-fetch';
-import { config } from '@/config';
 
 import type { WorkspaceContext } from '@/types/common';
 
@@ -19,21 +17,6 @@ export function circuitMorphologyPath(circuitId: string, file: string, name?: st
 /** An MEModel's morphology, in the same `Sections` shape as {@link circuitMorphologyPath}. */
 export function memodelMorphologyPath(memodelId: string): string {
   return `/memodel/viz/${encodeURIComponent(memodelId)}/morphology`;
-}
-
-/**
- * The URL and headers of a circuit's morphology pack, for a worker to fetch: every morphology at every level, which
- * OBI-One builds while the request waits.
- */
-export async function buildCircuitMorphologyPackRequest(
-  circuitId: string,
-  ctx: WorkspaceContext | null
-): Promise<{ url: string; headers: Record<string, string> }> {
-  const session = await getSession();
-  const headers: Record<string, string> = { ...getEntityCoreContext(ctx).headers };
-  if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
-  const url = `${config.OBI_ONE_URL}/circuit/viz/${circuitId}/morphology-pack?all_levels=true`;
-  return { url, headers };
 }
 
 /**
