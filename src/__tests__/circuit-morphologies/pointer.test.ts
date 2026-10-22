@@ -100,16 +100,32 @@ describe('the pointer over the morphologies', () => {
     expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(null);
   });
 
-  it('lets go of an answer that comes once it has moved on', async () => {
+  it('shows an answer that comes once it has moved on, and looks again where it is now', async () => {
     const view = track({ hover: true });
     rest();
     pointer('pointermove', [160, 90]);
 
     await answer(view, 7);
 
-    expect(view.setHighlight).not.toHaveBeenCalled();
+    expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(7);
     vi.advanceTimersByTime(60);
     expect(view.pick).toHaveBeenLastCalledWith(60, 50);
+  });
+
+  it('looks under a pointer that keeps moving, where it is each time', async () => {
+    const view = track({ hover: true });
+    for (let x = 150; x < 200; x += 2) {
+      pointer('pointermove', [x, 90]);
+      vi.advanceTimersByTime(16);
+      await answer(view, x);
+    }
+
+    expect(view.pick).toHaveBeenCalledTimes(6);
+    expect(view.pick.mock.calls.slice(0, 2)).toEqual([
+      [56, 50],
+      [64, 50],
+    ]);
+    expect(view.setHighlight).toHaveBeenCalledTimes(6);
   });
 
   it('asks for one pick at a time, and the next once the first is answered', async () => {
@@ -125,7 +141,7 @@ describe('the pointer over the morphologies', () => {
     expect(view.pick).toHaveBeenCalledTimes(2);
     expect(view.pick).toHaveBeenLastCalledWith(60, 50);
     await answer(view, 8);
-    expect(view.setHighlight).toHaveBeenCalledExactlyOnceWith(8);
+    expect(view.setHighlight.mock.calls).toEqual([[7], [8]]);
   });
 
   it('highlights nothing while the view is dragged, and looks again once it has stopped', async () => {

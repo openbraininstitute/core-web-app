@@ -2,14 +2,14 @@ import type { CircuitMorphologyView, MarkerOnScreen, SectionSpot } from './types
 
 /** How far the pointer may go between going down and coming up, in CSS pixels, and still have clicked. */
 const CLICK_REACH = 4;
-/** How long the pointer rests before the cell under it is looked for: a pick sends every segment through the GPU. */
-const REST_MS = 60;
+/** How often the cell under the pointer is looked for while it moves: a pick sends every segment through the GPU. */
+const LOOK_MS = 60;
 
 /** A morphology location's marker by its index, or a point of a section where there is none. */
 export type LocationHit = ({ marker: number } & MarkerOnScreen) | { spot: SectionSpot };
 
 export interface LocationOptions {
-  /** Told what the pointer rests on, null for nothing, and of nothing once it moves the view or leaves. */
+  /** Told what the pointer is over, null for nothing, and of nothing once it moves the view or leaves. */
   onHover?: (hit: LocationHit | null) => void;
   /** Told what a click lands on. */
   onPick?: (hit: LocationHit) => void;
@@ -18,7 +18,7 @@ export interface LocationOptions {
 }
 
 interface PointerOptions {
-  /** Highlight the cell the pointer rests on. */
+  /** Highlight the cell the pointer is over. */
   hover: boolean;
   /** Called with the cell that is clicked. */
   onClick?: (cell: number) => void;
@@ -32,10 +32,9 @@ export type Point = { x: number; y: number };
 /** Whether a pointer that went down at `from` and is now at `to`, in CSS pixels, may yet have clicked. */
 export const clicks = (from: Point, to: Point) =>
   Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
-
 /**
- * Tell `view` which cell the pointer over `element` rests on, and `onClick` which one it clicks, as against drags;
- * with `locations`, also the morphology location's marker or the point of a section it rests on and clicks. Returns
+ * Tell `view` which cell the pointer over `element` is over, and `onClick` which one it clicks, as against drags;
+ * with `locations`, also the morphology location's marker or the point of a section it is over and clicks. Returns
  * what stops it.
  */
 export function trackPointer(
@@ -50,11 +49,12 @@ export function trackPointer(
   // On the page, as the events have them: the view is measured only for a pick.
   let down: (Point & { id: number }) | null = null;
   let last: Point | null = null;
-  let rest: ReturnType<typeof setTimeout> | undefined;
-  // Counts what may have changed the cell under the pointer, to tell a pick that is out of date by its answer.
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  // Counts what may have changed the cell under a pointer that stays put, to tell a pick that is out of date by its
+  // answer. A pointer that moves on is looked under again, and shown what was under it until then.
   let changes = 0;
   let picking = false;
-  const resting = hover || locations?.onHover !== undefined;
+  const looks = hover || locations?.onHover !== undefined;
 
   const at = (e: PointerEvent): Point => ({ x: e.clientX, y: e.clientY });
 
@@ -102,11 +102,12 @@ export function trackPointer(
   };
 
   const look = () => {
+    pending = undefined;
     const point = last;
     if (!point) return;
     // One pick at a time, as a slow GPU would fall behind the pointer, and none while the view glides under it.
     if (picking || view.moving) {
-      rest = setTimeout(look, REST_MS);
+      pending = setTimeout(look, LOOK_MS);
       return;
     }
     picking = true;
@@ -122,20 +123,26 @@ export function trackPointer(
     });
   };
 
-  const forget = () => {
-    changes++;
-    clearTimeout(rest);
+  // Unless a look waits already: one waited for after each move would never come while the pointer keeps moving.
+  const lookSoon = () => {
+    if (looks && last && pending === undefined) pending = setTimeout(look, LOOK_MS);
   };
 
-  const lookAfterRest = () => {
+  const forget = () => {
+    changes++;
+    clearTimeout(pending);
+    pending = undefined;
+  };
+
+  const lookAgain = () => {
     forget();
-    if (resting && last) rest = setTimeout(look, REST_MS);
+    lookSoon();
   };
 
   const onMove = (e: PointerEvent) => {
     if (e.buttons === 0) {
       last = at(e);
-      lookAfterRest();
+      lookSoon();
       return;
     }
     // A drag moves the view from under the pointer. A press that may yet be a click keeps the highlight.
@@ -155,7 +162,7 @@ export function trackPointer(
     const point = at(e);
     last = point;
     if (!from || !clicks(from, point)) {
-      lookAfterRest();
+      lookAgain();
       return;
     }
     // A click left the view where it was: one pick answers for the highlight and the click.
@@ -174,7 +181,7 @@ export function trackPointer(
         if (off.signal.aborted || !hit) return;
         onPick(hit);
         // What is under the pointer has changed: a location added there is a marker now.
-        lookAfterRest();
+        lookAgain();
       });
     }
   };
@@ -191,7 +198,7 @@ export function trackPointer(
   };
 
   // Only a wheel that zooms is heard here: the viewer keeps the others from its canvas.
-  const onWheel = () => lookAfterRest();
+  const onWheel = () => lookAgain();
 
   const { signal } = off;
   // In the capture phase: a press the electrodes keep from the canvas is still heard here.

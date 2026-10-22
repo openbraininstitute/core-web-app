@@ -66,7 +66,7 @@ export interface CircuitCellsProps {
   cellColors: CellColors;
   /** What a morphology with no colour of its own is drawn in; such a soma runs along the somas view's ramp. */
   defaultColor: string;
-  /** Highlight the cell the pointer rests on. */
+  /** Highlight the cell the pointer is over. */
   cellHover?: boolean;
   /** Called with the cell that is clicked. */
   onCellClick?: (cell: number) => void;
@@ -78,7 +78,7 @@ export interface CircuitCellsProps {
   selectedElectrode?: string | null;
   /** Told where an array was moved or turned to with the pointer; without it the arrays stay put. */
   onElectrodeTransform?: (transform: ElectrodeTransform) => void;
-  /** Morphology locations: their markers, and what the pointer rests on and clicks of them and of the sections. */
+  /** Morphology locations: their markers, and what the pointer is over and clicks of them and of the sections. */
   locations?: ViewLocations;
   /** Synapses on the cells, a colour a group. Memoise them: other groups are drawn again. */
   synapses?: readonly SynapseGroup[];
