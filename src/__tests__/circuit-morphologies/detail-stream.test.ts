@@ -210,6 +210,72 @@ describe('DetailStream', () => {
     expect(whole.holds(1e9, 0)).toBe(true);
   });
 
+  describe('with finestWhole', () => {
+    const WHOLE: DetailRules = { ...RULES, finestWhole: true };
+    const asked = (reads: { wanted: BoxRead[] }[]) =>
+      reads.map(({ wanted }) => wanted.map(({ level }) => level));
+
+    it('draws every box at its finest level, however far, where that level fits the budget and the arena whole', () => {
+      const levelsAsked = (budget: number, capacity = 1000) => {
+        const { stream, reads } = make(capacity);
+        stream.update(viewOf(500), { ...WHOLE, budget }, true);
+        return asked(reads)[0];
+      };
+      // Every box at the finest takes two blocks: eight in all.
+      expect(levelsAsked(8 * BLOCK)).toEqual([0, 0, 0, 0]);
+      expect(levelsAsked(8 * BLOCK - 1)).toEqual([2, 2, 2, 2]);
+      expect(levelsAsked(Infinity, 7 * BLOCK)).toEqual([2, 2, 2, 2]);
+    });
+
+    it('keeps every box at its finest level as the view moves away and back, with no read', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), WHOLE, true);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+      reads.length = 0;
+
+      expect(stream.update(viewOf(500, new THREE.Vector3(10_000, 0, 0)), WHOLE, false)).toBe(false);
+      expect(stream.update(viewOf(500), WHOLE, false)).toBe(false);
+      expect(reads).toHaveLength(0);
+      expect(levelsDrawn(stream)).toEqual([4, 0, 0]);
+      expect(stream.stats(WHOLE).whole).toBe(true);
+    });
+
+    it('with a base, reads it and then every box at its finest level, which it keeps as the view moves away', async () => {
+      const { stream, reads } = make(1000, true);
+      stream.update(viewOf(500), WHOLE, true);
+      reads[0].resolve();
+      await settled();
+      reads[1].resolve();
+      await settled();
+      stream.apply();
+      expect(asked(reads)).toEqual([
+        [2, 2, 2, 2],
+        [0, 0, 0, 0],
+      ]);
+      reads.length = 0;
+
+      expect(stream.update(behindOf(500), WHOLE, false)).toBe(false);
+      expect(reads).toHaveLength(0);
+      expect(levelsDrawn(stream)).toEqual([4, 0, 0]);
+    });
+
+    it('goes back to the pixels where a smaller budget no longer fits it whole', async () => {
+      const { stream, reads } = make();
+      stream.update(viewOf(500), WHOLE, true);
+      reads[0].resolve();
+      await settled();
+      stream.apply();
+      reads.length = 0;
+
+      const smaller = { ...WHOLE, budget: 4 * BLOCK };
+      stream.update(viewOf(500), smaller, true);
+      expect(asked(reads)).toEqual([[2, 2, 2, 2]]);
+      expect(stream.stats(smaller).whole).toBe(false);
+    });
+  });
+
   it('is made again for a larger budget, its arena let go of before the new one is made, uploaded alike', () => {
     const { chunks } = chunksOf();
     const { said, uploadsOf } = uploadsSaid();

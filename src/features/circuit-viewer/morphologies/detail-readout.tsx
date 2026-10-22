@@ -72,6 +72,11 @@ export function DetailReadout({
               .map(({ toleranceUm, boxes }) => `${toleranceUm} µm × ${count(boxes)}`)
               .join(', ')}
           </div>
+          {detail.whole && (
+            <div data-testid="whole">
+              Every box at the finest level, which fits the budget whole
+            </div>
+          )}
           {detail.culled && (
             <div data-testid="culled">
               Culled: {count(detail.culled.tested)} tested, {count(detail.culled.kept)} kept,{' '}
@@ -102,6 +107,7 @@ export function DetailReadout({
               <select
                 className="bg-transparent"
                 value={detail.pixels}
+                disabled={detail.whole}
                 onChange={(e) => viewer.setDetailRules({ pixels: Number(e.target.value) })}
               >
                 {PIXELS.map((value) => (

@@ -20,6 +20,7 @@ const DETAIL: DetailStats = {
   base: false,
   levels: [{ toleranceUm: 0.25, boxes: 4 }],
   leftOut: 0,
+  whole: false,
   culled: { tested: 9571, kept: 8908, drawn: 8894, boxes: 12 },
 };
 
@@ -86,6 +87,20 @@ describe('the detail readout', () => {
   ])('says what the levels take of the budget: %s', (_case, patch, said) => {
     readout('webgl', { ...DETAIL, ...patch });
     expect(screen.getByTestId('room').textContent).toBe(said);
+  });
+
+  it('where the pixels choose the levels, says nothing of the finest and has them to set', () => {
+    readout('webgpu');
+    expect(screen.queryByTestId('whole')).toBeNull();
+    expect(screen.getByRole('combobox', { name: 'Tolerance within' })).toBeEnabled();
+  });
+
+  it('where every box is at the finest level, says so and has no pixels to set', () => {
+    readout('webgpu', { ...DETAIL, whole: true });
+    expect(screen.getByTestId('whole').textContent).toBe(
+      'Every box at the finest level, which fits the budget whole'
+    );
+    expect(screen.getByRole('combobox', { name: 'Tolerance within' })).toBeDisabled();
   });
 
   it('on WebGPU, offers its own budgets, its default chosen, and a larger one', () => {

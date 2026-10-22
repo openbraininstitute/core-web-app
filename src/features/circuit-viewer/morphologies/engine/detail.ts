@@ -3,7 +3,8 @@
  * device pixels where the box comes nearest the eye, coarser still while what is in view is over the budget, and every
  * box in view left out where even the coarsest is. Outside the view, a box is not drawn; where every box's coarsest
  * level is kept drawn (a base), a box is drawn at least at it, which the budget does not count, and no finer than it
- * may be (by what is seen, where that is given).
+ * may be (by what is seen, where that is given). With `DetailRules.finestWhole`, where every box at the finest level fits
+ * the budget, every box is drawn at it, in view or not.
  */
 import * as THREE from 'three';
 
@@ -35,8 +36,10 @@ export interface DetailView {
 export interface Detail {
   /** Each box's level, -1 for a box not drawn. */
   levels: Int8Array;
-  /** The boxes in view, the one nearest the focus first. */
+  /** The boxes in view, or where `whole` every box, the one nearest the focus first. */
   order: Uint32Array;
+  /** Whether every box is drawn at the finest level, which fits the budget whole (`DetailRules.finestWhole`). */
+  whole: boolean;
   /**
    * Of each box, 1 where it is in view and the pixels take it finer than the coarsest, however fine it may be (`finest`),
    * before the budget; none where that is not given.
@@ -76,7 +79,7 @@ const middle = new THREE.Vector3();
 export function chooseDetail(
   { boxes, levels }: PackBoxes,
   view: DetailView,
-  { budget, pixels }: DetailRules,
+  { budget, pixels, finestWhole }: DetailRules,
   roomFor: (segments: number) => number,
   base = false,
   finest?: (box: number) => number,
@@ -86,20 +89,21 @@ export function chooseDetail(
   const coarsest = levels.length - 1;
   const chosen = new Int8Array(count).fill(base ? coarsest : -1);
   const away = new Float64Array(count);
-  const inView: number[] = [];
+  const drawn: number[] = [];
   const finer = new Uint8Array(count);
   const capped = arrived && new Uint8Array(count);
   const finestOf = base ? finest : undefined;
+  let whole = finestWhole === true;
+  for (let b = 0, room = 0; whole && b < count; b++) {
+    room += roomFor(levels[0].segments[b]);
+    whole = room <= budget;
+  }
   frustum.setFromProjectionMatrix(projected.multiplyMatrices(view.projection, view.view));
   const span = pixelSpan(view.projection, view.height);
   // The view matrix's row that gives a point's depth.
   const [, , zx, , , , zy, , , , zz, , , , zw] = view.view.elements;
-
-  for (let b = 0; b < count; b++) {
-    box.min.fromArray(boxes, 6 * b).add(view.shift);
-    box.max.fromArray(boxes, 6 * b + 3).add(view.shift);
-    box.expandByVector(box.getSize(middle).multiplyScalar(REACH));
-    if (!frustum.intersectsBox(box)) continue;
+  /** The coarsest level whose tolerance spans no more than `pixels` where `box` comes nearest the eye. */
+  const levelInView = () => {
     const { x: hx, y: hy, z: hz } = box.getSize(middle).multiplyScalar(0.5);
     box.getCenter(middle);
     // Where the box comes nearest the eye, as deep as the view sees it: its middle's depth less its reach towards it.
@@ -108,20 +112,32 @@ export function chooseDetail(
     const pixelUm = view.orthographic ? span : span * Math.max(-(z + reach), 0);
     let level = coarsest;
     while (level > 0 && levels[level].toleranceUm > pixels * pixelUm) level--;
-    if (finestOf && level < coarsest) {
-      finer[b] = 1;
-      level = Math.max(level, finestOf(b));
+    return level;
+  };
+
+  for (let b = 0; b < count; b++) {
+    box.min.fromArray(boxes, 6 * b).add(view.shift);
+    box.max.fromArray(boxes, 6 * b + 3).add(view.shift);
+    box.expandByVector(box.getSize(middle).multiplyScalar(REACH));
+    let level = 0;
+    if (!whole) {
+      if (!frustum.intersectsBox(box)) continue;
+      level = levelInView();
+      if (finestOf && level < coarsest) {
+        finer[b] = 1;
+        level = Math.max(level, finestOf(b));
+      }
     }
     if (arrived && capped && arrived[b] > level) {
       capped[b] = 1;
       level = Math.min(arrived[b], coarsest);
     }
     chosen[b] = level;
-    away[b] = middle.distanceTo(view.focus);
-    inView.push(b);
+    away[b] = box.getCenter(middle).distanceTo(view.focus);
+    drawn.push(b);
   }
 
-  const order = Uint32Array.from(inView).sort((a, b) => away[a] - away[b]);
+  const order = Uint32Array.from(drawn).sort((a, b) => away[a] - away[b]);
   const segmentsOf = (b: number) => levels[chosen[b]].segments[b];
   const roomOf = (b: number) => (base && chosen[b] === coarsest ? 0 : roomFor(segmentsOf(b)));
   let room = 0;
@@ -142,7 +158,8 @@ export function chooseDetail(
   if (base) for (let b = 0; b < count; b++) segments += segmentsOf(b);
   else for (const b of order) segments += segmentsOf(b);
   // A part of them would be cut at its boxes' sides, and another part as the view moves.
-  if (room <= budget) return { levels: chosen, order, finer, capped, segments, room, leftOut: 0 };
+  if (room <= budget)
+    return { levels: chosen, order, whole, finer, capped, segments, room, leftOut: 0 };
   for (const b of order) chosen[b] = -1;
-  return { levels: chosen, order, finer, capped, segments, room, leftOut: order.length };
+  return { levels: chosen, order, whole, finer, capped, segments, room, leftOut: order.length };
 }

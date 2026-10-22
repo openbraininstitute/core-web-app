@@ -334,6 +334,7 @@ export class DetailStream {
         boxes: boxes[level],
       })),
       leftOut: this.detail?.leftOut ?? 0,
+      whole: this.detail?.whole ?? false,
     };
   }
 

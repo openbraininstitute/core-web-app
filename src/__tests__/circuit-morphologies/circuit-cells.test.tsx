@@ -171,6 +171,7 @@ const DETAIL: DetailStats = {
     { toleranceUm: 1, boxes: 5 },
   ],
   leftOut: 0,
+  whole: false,
 };
 
 function view(props: Partial<CircuitCellsProps> = {}) {

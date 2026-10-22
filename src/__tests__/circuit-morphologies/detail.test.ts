@@ -149,6 +149,71 @@ describe('chooseDetail', () => {
     expect(Array.from(order)).toEqual([1, 3, 0, 2]);
   });
 
+  describe('with finestWhole', () => {
+    // One behind the eye, one where the pixels take the finest, one where they take the coarsest.
+    const depths = [-50, 100, depthOf(1) + 20];
+    const WHOLE = { ...RULES, finestWhole: true };
+
+    it('draws every box at the finest level, in view or not, where that fits the budget whole', () => {
+      const { levels, order, whole, finer, segments } = chooseDetail(
+        boxesAt(depths),
+        viewOf(perspective()),
+        { ...WHOLE, budget: 300 },
+        bySegment
+      );
+      expect(whole).toBe(true);
+      expect(Array.from(levels)).toEqual([0, 0, 0]);
+      expect(Array.from(order)).toEqual([1, 0, 2]);
+      expect(Array.from(finer)).toEqual([0, 0, 0]);
+      expect(segments).toBe(300);
+    });
+
+    it('where it does not, draws the boxes in view as fine as the pixels take them', () => {
+      const { levels, whole } = chooseDetail(
+        boxesAt(depths),
+        viewOf(perspective()),
+        { ...WHOLE, budget: 299 },
+        bySegment
+      );
+      expect(whole).toBe(false);
+      expect(Array.from(levels)).toEqual([-1, 0, 2]);
+    });
+
+    it('with a base, draws every box at the finest level, however fine it may be', () => {
+      const { levels, whole } = chooseDetail(
+        boxesAt(depths),
+        viewOf(perspective()),
+        WHOLE,
+        bySegment,
+        true,
+        () => 2
+      );
+      expect(whole).toBe(true);
+      expect(Array.from(levels)).toEqual([0, 0, 0]);
+    });
+
+    it('draws every box at the finest level in a view no pixels high', () => {
+      const view = { ...viewOf(perspective()), height: 0 };
+      expect(Array.from(chooseDetail(boxesAt(depths), view, WHOLE, bySegment).levels)).toEqual([
+        0, 0, 0,
+      ]);
+    });
+
+    it('of a pack still coming in, draws each box no finer than what is in', () => {
+      const { levels, capped } = chooseDetail(
+        boxesAt(depths),
+        viewOf(perspective()),
+        WHOLE,
+        bySegment,
+        false,
+        undefined,
+        Int8Array.of(0, 1, 3)
+      );
+      expect(Array.from(levels)).toEqual([0, 1, 2]);
+      expect(Array.from(capped ?? [])).toEqual([0, 1, 1]);
+    });
+  });
+
   describe('over the budget', () => {
     // All at the finest level, the focus at the first.
     const depths = [10, 20, 30, 40];
