@@ -60,10 +60,10 @@ const EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES: readonly TCircuitScaleDictiona
 ];
 
 /**
- * obi-one refuses weights that need more memory than its largest machine has. 10,000 neurons
- * fit with up to about 40 electrodes; denser arrays lower the limit.
+ * obi-one fits about 416,000 neurons in its largest machine, and about 23 million neurons ×
+ * electrodes in a task's disk. It refuses larger jobs at launch.
  */
-const EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS = 10_000;
+const EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS = 400_000;
 
 /** The circuits a build workflow's backend accepts. */
 type TCircuitBuildLimits = {
