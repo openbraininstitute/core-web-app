@@ -210,8 +210,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * Still, morphologies and opaque somas are drawn with ambient occlusion, and moving, the somas alone while the motion
-   * keeps it (`aoMoving`); other moving frames and translucent somas without. Its targets are the size of the canvas, so
+   * Still, morphologies and opaque somas are drawn with ambient occlusion, and moving, while the motion keeps it
+   * (`aoMoving`); other moving frames and translucent somas without. Its targets are the size of the canvas, so
    * it is let go of with what it shades. Where spiking cells glow, morphologies are drawn through its target moving too
    * while any is lit, and it is made again as whether they glow changes.
    */

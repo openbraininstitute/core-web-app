@@ -107,6 +107,11 @@ const MORPH_MS = 600;
  * saves a tenth: drawn front first, many somas cost their corners more than their pixels.
  */
 const MOTION: MotionOptions = { ...DEFAULT_MOTION, leastSaving: 0.1 };
+/**
+ * Over morphologies, only the occlusion left out: they are drawn through targets of the canvas's size, which a cut in
+ * resolution would make again.
+ */
+const MORPHOLOGY_MOTION: MotionOptions = { ...DEFAULT_MOTION, scale: 1 };
 const point = new THREE.Vector3();
 const pieceBox = new THREE.Box3();
 
@@ -150,6 +155,12 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
  * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on, by
  * their order.
  */
+/** What a frame is timed for: moving or still, and the motion told what it cost, the one it was drawn under. */
+export interface FrameTiming {
+  kind: 'moving' | 'still';
+  motion: MotionQuality;
+}
+
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
   segment: THREE.Material[];
@@ -333,21 +344,29 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   } | null = null;
   /**
    * How far frames drawn while the view moves over the somas alone are cut down, by what they cost the GPU (`MOTION`):
-   * the occlusion left out, then the resolution. Then the fraction of the resolution the last frame was drawn at, and
-   * the moving frames drawn at it one after another.
+   * the occlusion left out, then the resolution.
    */
   private motion = new MotionQuality({ ...MOTION, ao: this.occludes ? 'auto' : 'off' });
+  /** The same over morphologies, where the tier draws the occlusion; null where it does not. */
+  private morphologyMotion = this.occludes ? new MotionQuality(MORPHOLOGY_MOTION) : null;
+  /** Of either motion, the fraction of the resolution the last frame was drawn at, and the moving frames drawn so. */
   private drawnScale = 1;
   private drawnRung: MovingFrame | null = null;
   private steadyFrames = 0;
   /**
-   * What the frame drawn now is timed for, which the tier tells `measured`: a moving frame from the third at one
-   * resolution, as a GPU waking up draws its first slowly, a still one, or none, over morphologies.
+   * What the frame drawn now is timed for, which the tier tells `measured`: a moving frame from the third drawn one way,
+   * as a GPU waking up draws its first slowly, a still one, or none, where nothing is cut down.
    */
-  protected timing: 'moving' | 'still' | null = null;
-  /** Whether a moving frame over the somas alone keeps the occlusion, where the tier draws one. */
+  protected timing: FrameTiming | null = null;
+  /** Whether a moving frame keeps the occlusion, where the tier draws one. */
   protected get aoMoving(): boolean {
-    return this.cloud?.shown === true && this.motion.rung.ao;
+    return this.motionNow()?.rung.ao === true;
+  }
+
+  /** What cuts down moving frames of what is drawn now: the somas alone, or morphologies. */
+  private motionNow(): MotionQuality | null {
+    if (this.cloud?.shown) return this.motion;
+    return this.drawsMorphologies ? this.morphologyMotion : null;
   }
   /** The cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
@@ -476,6 +495,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** The tier's occlusion given up on: moving frames no longer step through it. */
   protected occlusionGone(): void {
     this.motion.configure({ ...MOTION, ao: 'off' });
+    this.morphologyMotion = null;
   }
 
   /** Whether the tier culls the somas drawn alone and opaque, drawing them itself in place of the cloud's pieces. */
@@ -666,6 +686,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
+    // From the top: what dropped the occlusion for other morphologies says nothing of these.
+    this.morphologyMotion?.configure(MORPHOLOGY_MOTION);
     this.compileIds();
 
     if (under) {
@@ -902,12 +924,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * A moving frame over the somas alone drawn at the resolution `motion` steps it to, any other at the full one, and
-   * whether it is timed. Morphologies are drawn through targets of the canvas's size, which a cut would make again.
+   * A moving frame drawn at the resolution its motion steps it to (`motionNow`), any other at the full one, and whether
+   * it is timed.
    */
   private cutDown(moving: boolean): void {
-    const alone = this.cloud?.shown === true;
-    const rung = moving && alone ? this.motion.rung : null;
+    const motion = this.motionNow();
+    const rung = moving && motion ? motion.rung : null;
     const scale = rung?.scale ?? 1;
     if (scale !== this.drawnScale) {
       this.scaleDrawing(scale);
@@ -920,24 +942,20 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.steadyFrames = 0;
     }
     this.steadyFrames = moving ? this.steadyFrames + 1 : 0;
-    this.timing = !alone
-      ? null
-      : !moving
-        ? 'still'
-        : this.steadyFrames > WAKE_FRAMES
-          ? 'moving'
-          : null;
+    const kind = !moving ? 'still' : this.steadyFrames > WAKE_FRAMES ? 'moving' : null;
+    this.timing = motion && kind ? { kind, motion } : null;
   }
 
   /** What a frame timed as `timing` cost the GPU, ms. */
-  protected measured(timing: 'moving' | 'still', ms: number): void {
-    if (timing === 'moving') this.motion.add(ms);
-    else this.motion.still(ms);
+  protected measured({ kind, motion }: FrameTiming, ms: number): void {
+    if (kind === 'moving') motion.add(ms);
+    else motion.still(ms);
   }
 
   /** The view's size changed what a frame costs. */
   protected override frameChanged(): void {
     this.motion.reset();
+    this.morphologyMotion?.reset();
   }
 
   /** Each piece of the cloud drawn as flat quads where its somas are small on screen, and as pyramids elsewhere. */

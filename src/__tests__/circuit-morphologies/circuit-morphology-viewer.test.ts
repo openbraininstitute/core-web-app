@@ -95,8 +95,9 @@ interface Internals {
     pieces: readonly THREE.InstancedBufferGeometry[]
   ): void;
   viewSet(): void;
-  measured(timing: 'moving' | 'still', ms: number): void;
-  timing: 'moving' | 'still' | null;
+  measured(timing: Timing, ms: number): void;
+  timing: Timing | null;
+  motionNow(): unknown;
   aoMoving: boolean;
   chunks: THREE.Group;
   surfaces: THREE.Group;
@@ -139,6 +140,11 @@ interface Internals {
 }
 
 type Quads = THREE.Mesh<THREE.InstancedBufferGeometry>;
+type Timing = { kind: 'moving' | 'still'; motion: unknown };
+
+/** The tier telling what a frame drawn as `kind` cost, under the motion of what is drawn now. */
+const measure = (inner: Internals, kind: Timing['kind'], ms: number) =>
+  inner.measured({ kind, motion: inner.motionNow() }, ms);
 
 let viewers: CircuitMorphologyViewer[] = [];
 
@@ -1177,7 +1183,7 @@ describe('the somas, before any morphology is in', () => {
     const drawn = (moving: boolean) => {
       inner.renderer.setPixelRatio.mockClear();
       inner.beforeDraw(moving);
-      return { ratios: ratios(), timing: inner.timing };
+      return { ratios: ratios(), timing: inner.timing?.kind ?? null };
     };
     // The first two moving frames at a resolution are not timed: a GPU waking up draws them slowly.
     expect(drawn(true)).toEqual({ ratios: [], timing: null });
@@ -1185,7 +1191,7 @@ describe('the somas, before any morphology is in', () => {
     expect(drawn(true)).toEqual({ ratios: [], timing: 'moving' });
     // No occlusion to leave out on WebGL 2.
     expect(inner.aoMoving).toBe(false);
-    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    for (const ms of [30, 31, 29]) measure(inner, 'moving', ms);
     expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], timing: null });
     // A snapshot taken then is drawn still, at all of it.
     vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValueOnce({
@@ -1194,7 +1200,7 @@ describe('the somas, before any morphology is in', () => {
     } as unknown as CanvasRenderingContext2D);
     inner.renderer.setPixelRatio.mockClear();
     viewer.snapshot();
-    expect([ratios(), inner.timing]).toEqual([[2], 'still']);
+    expect([ratios(), inner.timing?.kind]).toEqual([[2], 'still']);
     expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], timing: null });
     // The dots' least radius and ring as wide on screen as at all of it.
     const { electrode, synapse, marker } = inner.materials;
@@ -1204,11 +1210,11 @@ describe('the somas, before any morphology is in', () => {
     expect(drawn(false)).toEqual({ ratios: [2], timing: 'still' });
     expect(dotScales()).toEqual([1, 1, 1]);
     // A still frame well within the budget has moving ones drawn at all of it again.
-    inner.measured('still', 5);
+    measure(inner, 'still', 5);
     expect(drawn(true).ratios).toEqual([]);
 
     // Over morphologies, at all of it and untimed.
-    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    for (const ms of [30, 31, 29]) measure(inner, 'moving', ms);
     viewer.setData(ofTheSomas());
     expect(drawn(true)).toEqual({ ratios: [], timing: null });
   });
@@ -1237,24 +1243,48 @@ describe('the somas, before any morphology is in', () => {
     const timed = () =>
       [1, 2, 3].map(() => {
         inner.beforeDraw(true);
-        return inner.timing;
+        return inner.timing?.kind ?? null;
       });
     expect(drawn(true)).toEqual({ ratios: [], ao: true });
     expect(timed()).toEqual([null, 'moving', 'moving']);
-    for (const ms of [30, 31, 29]) inner.measured('moving', ms);
+    for (const ms of [30, 31, 29]) measure(inner, 'moving', ms);
     expect(drawn(true)).toEqual({ ratios: [], ao: false });
     // Drawn without it, at the same resolution, the first two frames are not timed either.
     expect(inner.timing).toBeNull();
     expect(timed()).toEqual([null, 'moving', 'moving']);
     // 29 ms is 3% less, kept all the same: the resolution next.
-    for (const ms of [29, 29, 29]) inner.measured('moving', ms);
+    for (const ms of [29, 29, 29]) measure(inner, 'moving', ms);
     expect(drawn(true)).toEqual({ ratios: [2 * Math.SQRT1_2], ao: false });
-    inner.measured('still', 5);
+    measure(inner, 'still', 5);
     expect(drawn(true)).toEqual({ ratios: [2], ao: true });
+    inner.beforeDraw(false);
+    const somasStill = inner.timing;
 
-    // Over morphologies, never.
+    // Over morphologies, the occlusion alone, timed on its own: never the resolution.
     viewer.setData(ofTheSomas());
+    expect(drawn(true)).toEqual({ ratios: [], ao: true });
+    expect(timed()).toEqual([null, 'moving', 'moving']);
+    for (const ms of [30, 31, 29]) measure(inner, 'moving', ms);
+    expect(drawn(true)).toEqual({ ratios: [], ao: false });
+    // A still frame of the somas, told of only now, is the somas' to step by.
+    if (somasStill) inner.measured(somasStill, 5);
+    expect(somasStill?.kind).toBe('still');
     expect(drawn(true).ao).toBe(false);
+    timed();
+    for (const ms of [40, 40, 40]) measure(inner, 'moving', ms);
+    expect(drawn(true)).toEqual({ ratios: [], ao: false });
+    measure(inner, 'still', 5);
+    expect(drawn(true)).toEqual({ ratios: [], ao: true });
+  });
+
+  it('keeps the occlusion out of moving frames over morphologies where the tier draws none', () => {
+    const { viewer, inner } = make();
+    viewer.setData(ofTheSomas());
+    inner.beforeDraw(true);
+    expect(inner.aoMoving).toBe(false);
+    inner.beforeDraw(true);
+    inner.beforeDraw(true);
+    expect(inner.timing).toBeNull();
   });
 
   it('picks with the same pyramids in their numbers', () => {

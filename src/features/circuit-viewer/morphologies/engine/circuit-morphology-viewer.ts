@@ -4,7 +4,7 @@ import { GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-tim
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
-import { type CircuitMaterials, CircuitView } from './circuit-view';
+import { type CircuitMaterials, CircuitView, type FrameTiming } from './circuit-view';
 import { SEGMENT_BUDGET } from './detail';
 import { electrodeMaterial } from './electrodes';
 import { idMaterial, impostor } from './impostors';
@@ -25,7 +25,7 @@ export class CircuitMorphologyViewer extends CircuitView {
    * timed for.
    */
   private timer: GpuTimer | null | undefined;
-  private timed: 'moving' | 'still' | null = null;
+  private timed: FrameTiming | null = null;
 
   constructor(container: HTMLElement) {
     // Transparent canvas over the container's background.
