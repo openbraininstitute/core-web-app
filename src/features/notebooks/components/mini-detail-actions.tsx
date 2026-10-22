@@ -45,6 +45,7 @@ import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
+import type { NotebookProfile } from '@/services/notebooks';
 
 function MiniActionIcon({
   label,
@@ -91,6 +92,113 @@ function MiniActionIcon({
   );
 }
 
+const FALLBACK_PROFILE_LABEL = '2 CPU, 4 GB RAM';
+
+/**
+ * Split a profile description like "4 CPU, 16 GB RAM (dedicated node)" into its
+ * size line and an optional parenthetical note, so the note can be shown as a
+ * separate tag and each row stays on one line.
+ */
+function splitDescription(description: string | null): { size: string; note: string | null } {
+  if (!description) return { size: '', note: null };
+  const match = description.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
+  if (match) {
+    const raw = match[2].trim();
+    // Sentence-case for a consistent badge label regardless of backend casing.
+    const note = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : null;
+    return { size: match[1].trim(), note };
+  }
+  return { size: description.trim(), note: null };
+}
+
+/**
+ * Scrollable size picker rendered in the run-button dropdown. Clicking a size
+ * runs it. When the service lists no profiles, a single hardcoded default is
+ * shown that runs with no explicit profile (backend applies its own default).
+ */
+function SessionSizePanel({
+  profiles,
+  defaultProfile,
+  onSelect,
+}: {
+  profiles: NotebookProfile[];
+  defaultProfile: string | null;
+  onSelect: (profileName?: string) => void;
+}) {
+  const hasProfiles = profiles.length > 0;
+
+  return (
+    <div className="w-60 rounded-md border border-neutral-200 bg-white p-2 shadow-xl">
+      <p className="text-primary-8 mb-1.5 text-sm font-semibold">Choose session size</p>
+      <div className="flex max-h-56 flex-col gap-1 overflow-y-auto pr-1">
+        {hasProfiles ? (
+          profiles.map((profile) => {
+            const isDefault = profile.name === defaultProfile;
+            const title = profile.display_name ?? profile.name;
+            // `description` is the authoritative size label; the structured
+            // requests_* fields are k8s values that can differ from it.
+            const { size, note } = splitDescription(profile.description);
+            return (
+              <button
+                type="button"
+                key={profile.name}
+                data-testid={`notebook-profile-${profile.name}`}
+                onClick={() => onSelect(profile.name)}
+                className={cn(
+                  'text-primary-8 flex items-center justify-between gap-2 rounded-md border px-2.5 py-1.5 text-left transition-colors',
+                  isDefault
+                    ? 'border-blue-300 bg-blue-50 hover:bg-blue-100'
+                    : 'border-neutral-200 hover:bg-neutral-100'
+                )}
+              >
+                <span className="flex min-w-0 flex-col">
+                  <span className="flex items-center gap-2 font-semibold">
+                    {title}
+                    {isDefault && (
+                      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-600">
+                        Default
+                      </span>
+                    )}
+                    {note && (
+                      <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
+                        {note}
+                      </span>
+                    )}
+                  </span>
+                  {size && (
+                    <span className="truncate text-xs whitespace-nowrap text-neutral-500">
+                      {size}
+                    </span>
+                  )}
+                </span>
+                <RiPlayFill className="size-4 shrink-0 text-neutral-500" />
+              </button>
+            );
+          })
+        ) : (
+          // No profiles from the service: run the backend default (no profile arg).
+          <button
+            type="button"
+            data-testid="notebook-profile-default-fallback"
+            onClick={() => onSelect(undefined)}
+            className="text-primary-8 flex items-center justify-between gap-2 rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1.5 text-left transition-colors hover:bg-blue-100"
+          >
+            <span className="flex flex-col">
+              <span className="flex items-center gap-2 font-semibold">
+                {FALLBACK_PROFILE_LABEL}
+                <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-600">
+                  Default
+                </span>
+              </span>
+            </span>
+            <RiPlayFill className="size-4 shrink-0 text-neutral-500" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function NotebookActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
@@ -119,10 +227,11 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     'description' in record ? (record.description as string | undefined) : undefined;
   const assets = 'assets' in record && record.assets ? (record.assets as IAsset[]) : [];
 
-  const { run, runTargets, runningTarget, running, creditsModal, profiles } = useRunNotebook({
-    id: record.id,
-    assets,
-  });
+  const { run, runTargets, runningTarget, running, creditsModal, profiles, defaultProfile } =
+    useRunNotebook({
+      id: record.id,
+      assets,
+    });
 
   const [pendingDownload, setPendingDownload] = useState(false);
 
@@ -291,60 +400,39 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
         )}
 
         {isTemplate ? (
-          runTargets.map((target) =>
-            profiles.length > 0 ? (
-              <Dropdown
-                key={target.key}
-                trigger={['click']}
-                menu={{
-                  items: profiles.map((profile) => ({
-                    key: profile.name,
-                    // Prefer the backend-provided human-readable description,
-                    // then the short display label, falling back to the raw
-                    // profile name if the service hasn't been updated yet.
-                    label: profile.description ?? profile.display_name ?? profile.name,
-                    onClick: () => run(target, profile.name),
-                  })),
-                }}
-              >
-                {/* Clicking opens the profile menu; selecting an item runs that profile.
-                    A plain Button is used (not MiniActionIcon) so antd Dropdown can
-                    attach its click trigger to a real DOM element. */}
-                <Button
-                  rounded
-                  title={target.label}
-                  data-testid={`notebook-run-${target.key}-button`}
-                  className={cn(
-                    'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
-                    {
-                      'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
-                    }
-                  )}
-                >
-                  {runningTarget === target.key ? (
-                    <LoadingOutlined spin className="text-primary-3" />
-                  ) : (
-                    <target.Icon className="size-6" />
-                  )}
-                </Button>
-              </Dropdown>
-            ) : (
-              // No profiles available (service unreachable): run the default directly.
-              <MiniActionIcon
-                key={target.key}
-                label={target.label}
-                testId={`notebook-run-${target.key}-button`}
-                theme={theme}
-                onClick={() => run(target)}
+          runTargets.map((target) => (
+            <Dropdown
+              key={target.key}
+              trigger={['click']}
+              popupRender={() => (
+                <SessionSizePanel
+                  profiles={profiles}
+                  defaultProfile={defaultProfile}
+                  onSelect={(profileName) => run(target, profileName)}
+                />
+              )}
+            >
+              {/* Plain Button (not MiniActionIcon) so antd Dropdown can attach
+                  its click trigger to a real DOM element. */}
+              <Button
+                rounded
+                title={target.label}
+                data-testid={`notebook-run-${target.key}-button`}
+                className={cn(
+                  'group hover:bg-primary-7/40 h-12 w-12 border border-white/16 shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]',
+                  {
+                    'hover:bg-white! hover:text-primary-8!': theme === ViewVariant.Light,
+                  }
+                )}
               >
                 {runningTarget === target.key ? (
                   <LoadingOutlined spin className="text-primary-3" />
                 ) : (
                   <target.Icon className="size-6" />
                 )}
-              </MiniActionIcon>
-            )
-          )
+              </Button>
+            </Dropdown>
+          ))
         ) : (
           <MiniActionIcon
             label="Run"
