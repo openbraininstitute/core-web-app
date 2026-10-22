@@ -23,9 +23,11 @@ export function defineFacetVariants<V extends string>({
 }: IFacetVariantsConfig<V>): IListingVariantGroup {
   return {
     dataType,
+    field,
     listingProps,
     variants: variants.map(({ value, label }) => ({
       slug: kebabCase(value),
+      value,
       label,
       params: toParams(value),
       pinnedFields: [field],

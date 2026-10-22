@@ -10,6 +10,7 @@ import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
+import { resolveEntityVariant } from '@/features/views/listing/variants/registry';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
 import ActionMenu from '@/ui/segments/action-menu';
@@ -84,7 +85,9 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
+  // a split type (circuit scales) closes back to the sub-item the entity belongs to
+  const variant = resolveEntityVariant(type, entity);
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}&scope=${scope}`;
 
   // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
   const opensAsCampaign =
@@ -109,7 +112,13 @@ export async function DataViewLayout({
     origin === 'workflows' ? (
       <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
     ) : (
-      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+      <DataBreadcrumb
+        title={entityType.title}
+        type={type}
+        group={entityType.group}
+        scope={scope}
+        variant={variant}
+      />
     );
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =

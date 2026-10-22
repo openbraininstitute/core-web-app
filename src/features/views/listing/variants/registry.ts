@@ -23,3 +23,13 @@ export function resolveListingVariant(
     ? undefined
     : getVariantGroup(dataType)?.variants.find((variant) => variant.slug === slug);
 }
+
+/** The variant an entity belongs to (e.g. a whole-brain circuit), if its type is split. */
+export function resolveEntityVariant(
+  dataType: string,
+  entity: object
+): IListingVariant | undefined {
+  const group = getVariantGroup(dataType);
+  const value = (entity as Record<string, unknown>)[group?.field ?? ''];
+  return group?.variants.find((variant) => variant.value === value);
+}

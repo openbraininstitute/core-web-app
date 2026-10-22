@@ -15,6 +15,8 @@ export type TListingRouteProps = Pick<
 export interface IListingVariant {
   /** url segment and per-listing state discriminator */
   slug: string;
+  /** the facet value this variant pins (what an entity of this variant holds in `group.field`) */
+  value: string;
   /** sidebar text */
   label: string;
   /** wire params pinned onto every request; they win over the caller's and the user's */
@@ -26,6 +28,8 @@ export interface IListingVariant {
 /** A data type whose listing is offered as variants, i.e. sidebar sub-items (see `define-facet-variants.ts`). */
 export interface IListingVariantGroup {
   dataType: TExtendedEntitiesTypeDict;
+  /** the entity property the variants split on */
+  field: string;
   variants: readonly IListingVariant[];
   /** route props for the sub-item pages; defaults to the standard Data listing props */
   listingProps?: TListingRouteProps;

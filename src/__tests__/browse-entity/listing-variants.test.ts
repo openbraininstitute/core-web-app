@@ -11,6 +11,7 @@ import { circuitScaleVariants } from '@/features/views/listing/variants/circuit-
 import {
   getVariantGroup,
   LISTING_VARIANT_GROUPS,
+  resolveEntityVariant,
   resolveListingVariant,
 } from '@/features/views/listing/variants/registry';
 import { scopeListing, withoutFilterFields } from '@/features/views/listing/variants/scope-listing';
@@ -165,5 +166,15 @@ describe('scopeListing on the real circuit definition', () => {
   it('isolates per-listing state under the variant slug', () => {
     expect(scoped.id).toBe('whole-brain');
     expect(scopeListing({ definition, id: 'base' }, variant).id).toBe('base:whole-brain');
+  });
+});
+
+describe('resolveEntityVariant', () => {
+  it('maps an entity to its scale variant; single and other types have none', () => {
+    expect(resolveEntityVariant(CIRCUIT, { scale: CircuitScaleDictionary.WholeBrain })?.slug).toBe(
+      'whole-brain'
+    );
+    expect(resolveEntityVariant(CIRCUIT, { scale: CircuitScaleDictionary.Single })).toBeUndefined();
+    expect(resolveEntityVariant('emodel', { scale: 'pair' })).toBeUndefined();
   });
 });
