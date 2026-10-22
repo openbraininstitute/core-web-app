@@ -1,7 +1,6 @@
 'use client';
 
 import { PlusOutlined, WarningOutlined } from '@ant-design/icons';
-import { RiArrowDownSLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { kebabCase, snakeCase } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
@@ -52,14 +51,6 @@ function buildDataUrl({
   return variant ? `${base}/${variant.slug}` : base;
 }
 
-/** Collapse control of a row that owns sub-items (rendered beside, not inside, the link). */
-export type TBrowseLinkExpander = {
-  open: boolean;
-  onToggle: () => void;
-  controlsId: string;
-  label: string;
-};
-
 type BrowseLinkContentProps = {
   isLoading: boolean;
   isUploadable?: boolean;
@@ -71,7 +62,7 @@ type BrowseLinkContentProps = {
   /** whether this row is the current listing */
   active: boolean;
   testIdKey: string;
-  expander?: TBrowseLinkExpander;
+  onNavigate?: () => void;
 };
 
 export function BrowseLinkContent({
@@ -84,7 +75,7 @@ export function BrowseLinkContent({
   legacy,
   active,
   testIdKey,
-  expander,
+  onNavigate,
 }: BrowseLinkContentProps) {
   const breakpoint = useDefaultBreakpoint();
   const searchParams = useSearchParams();
@@ -97,12 +88,14 @@ export function BrowseLinkContent({
       sessionId: crypto.randomUUID(),
     });
 
-  const onClick = () => userJourneyTracker.registerArtifactClick(title);
+  const onClick = () => {
+    onNavigate?.();
+    userJourneyTracker.registerArtifactClick(title);
+  };
 
   return (
     <div className="group flex w-full items-center justify-center gap-0">
       <div className="flex w-full items-center">
-        {/* the expander overlays the pill's right edge: a <button> cannot live inside the <a> */}
         <div className="relative flex w-full items-center">
           <Button
             asChild
@@ -121,7 +114,7 @@ export function BrowseLinkContent({
                 pathname: href,
                 query: searchParams.toString(),
               }}
-              className={cn('flex! w-full items-center justify-between!', { 'pr-12!': expander })}
+              className="flex! w-full items-center justify-between!"
             >
               {/*
               Superseded types drop to normal weight, matching the workflow menus — the count
@@ -151,29 +144,6 @@ export function BrowseLinkContent({
               </div>
             </Link>
           </Button>
-          {expander && (
-            <button
-              type="button"
-              aria-expanded={expander.open}
-              aria-controls={expander.controlsId}
-              aria-label={expander.label}
-              data-testid={`entity-link-expander-${testIdKey}`}
-              onClick={expander.onToggle}
-              className={cn(
-                'absolute top-1/2 right-2 -translate-y-1/2',
-                'flex size-6 items-center justify-center rounded-full border',
-                'group/expander border-gray-100 bg-gray-100 text-neutral-5',
-                'focus-visible:ring-primary-8 focus-visible:ring-2'
-              )}
-            >
-              <RiArrowDownSLine
-                className={cn(
-                  'size-4 transition-transform group-hover/expander:scale-125',
-                  expander.open && 'rotate-180'
-                )}
-              />
-            </button>
-          )}
         </div>
         {isUploadable && scope === WorkspaceScope.Project && (
           <div
@@ -216,7 +186,8 @@ type Props = {
   enabled: boolean;
   /** renders this row as a variant of `extendedType` */
   variant?: IListingVariant;
-  expander?: TBrowseLinkExpander;
+  /** runs synchronously on click, before navigation */
+  onClick?: () => void;
 };
 
 function buildQuery({
@@ -293,7 +264,7 @@ export function BrowseLink({
   currentBrainRegionId,
   defaultBrainRegionId,
   variant,
-  expander,
+  onClick,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
@@ -435,7 +406,7 @@ export function BrowseLink({
           scope,
           isLoading,
           active: isActiveEntity,
-          expander,
+          onNavigate: onClick,
           testIdKey: variant ? `${extendedType}-${variant.slug}` : extendedType,
           isUploadable: entity?.isContributable && !variant,
           title: variant?.label ?? entity?.title,
