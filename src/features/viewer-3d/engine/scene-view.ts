@@ -78,6 +78,10 @@ export abstract class SceneView implements ViewControls {
   protected framesDrawn = 0;
   /** A gesture is under way, between OrbitControls' start and end: a drag, a wheel turned, a pinch. */
   private gesture = false;
+  /** The spin asked for, turned only while no pointer is pressed on the view, the view may be turned, and no turn to an axis is under way. */
+  private spin = false;
+  /** Pointers pressed on the view, whatever took the press: an electrode dragged holds the spin as a drag of the view does. */
+  private pressed = new Set<number>();
   /** When the loop last turned, null while it is stopped, and how long its last turn took, for the glide's easing. */
   private lastFrameAt: number | null = null;
   private frameMs = 1000 / 120;
@@ -119,6 +123,10 @@ export abstract class SceneView implements ViewControls {
     this.controls.addEventListener('end', this.onControlsEnd);
     // Before OrbitControls sees it: outside fullscreen a plain wheel scrolls the page.
     container.addEventListener('wheel', this.onWheel, { capture: true });
+    // Ahead of whatever on the view keeps a press from OrbitControls.
+    container.addEventListener('pointerdown', this.onPress, { capture: true });
+    container.addEventListener('pointerup', this.onRelease, { capture: true });
+    container.addEventListener('pointercancel', this.onRelease, { capture: true });
     this.scene.add(this.perspective, this.orthographic);
 
     this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -145,6 +153,9 @@ export abstract class SceneView implements ViewControls {
     document.removeEventListener('visibilitychange', this.onVisibility);
     this.seenListeners.clear();
     this.container.removeEventListener('wheel', this.onWheel, { capture: true });
+    this.container.removeEventListener('pointerdown', this.onPress, { capture: true });
+    this.container.removeEventListener('pointerup', this.onRelease, { capture: true });
+    this.container.removeEventListener('pointercancel', this.onRelease, { capture: true });
     this.controls.removeEventListener('change', this.onControlsChange);
     this.controls.removeEventListener('start', this.onControlsStart);
     this.controls.removeEventListener('end', this.onControlsEnd);
@@ -186,8 +197,10 @@ export abstract class SceneView implements ViewControls {
     const eased = this.easing(now);
     // Let go of, a glide stops short of the little left; held, that is turned at once, as a slow drag adds a pixel or
     // two a move, all of which must be turned.
-    // The spin adds to the glide every frame, but not while a pointer holds the view.
-    const creeping = !(this.controls.autoRotate && !this.gesture) && this.creeping();
+    // The spin adds to the glide every frame. A turn to an axis ends on it; a flat view (`enableRotate`) is not turned.
+    const spinning = this.spin && this.pressed.size === 0 && this.controls.enableRotate && !turning;
+    this.controls.autoRotate = spinning;
+    const creeping = !spinning && this.creeping();
     if (creeping && !this.gesture) stopGlide(this.controls);
     this.controls.dampingFactor = creeping && this.gesture ? 1 : eased;
     const moved = this.controls.update();
@@ -354,10 +367,18 @@ export abstract class SceneView implements ViewControls {
     this.gesture = true;
   };
 
-  // A spin held off by a still pointer can have let the loop stop by the time the pointer is let go.
   private onControlsEnd = (): void => {
     this.gesture = false;
     this.invalidate();
+  };
+
+  private onPress = (e: PointerEvent): void => {
+    this.pressed.add(e.pointerId);
+  };
+
+  // A spin held off by a pointer pressed still can have let the loop stop by the time it is let go.
+  private onRelease = (e: PointerEvent): void => {
+    if (this.pressed.delete(e.pointerId)) this.invalidate();
   };
 
   private onWheel = (e: WheelEvent): void => {
@@ -440,7 +461,7 @@ export abstract class SceneView implements ViewControls {
   // View options
 
   setSpin(on: boolean): void {
-    this.controls.autoRotate = on;
+    this.spin = on;
     this.invalidate();
   }
 

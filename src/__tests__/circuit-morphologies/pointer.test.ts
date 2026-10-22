@@ -1,16 +1,36 @@
 // @vitest-environment jsdom
+import { Quaternion } from 'three';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { trackPointer } from '@/features/circuit-viewer/morphologies/pointer';
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
-import type { MarkerOnScreen, SectionSpot } from '@/features/circuit-viewer/morphologies/types';
+import type {
+  CircuitMorphologyView,
+  MarkerOnScreen,
+  SectionSpot,
+} from '@/features/circuit-viewer/morphologies/types';
+
+type ViewListener = Parameters<CircuitMorphologyView['onViewChange']>[0];
 
 /** The view's part: each pick waits to be answered. */
 function fakeView() {
   const answers: ((cell: number | null) => void)[] = [];
   const spots: ((spot: SectionSpot | null) => void)[] = [];
+  const turned = new Set<ViewListener>();
+  const orientation = new Quaternion();
   return {
+    /** The camera turned, as a spin turns it a frame at a time. */
+    turn: () => {
+      for (const listener of turned) listener(orientation);
+    },
+    onViewChange: (listener: ViewListener) => {
+      turned.add(listener);
+      listener(orientation);
+      return () => {
+        turned.delete(listener);
+      };
+    },
     answers,
     spots,
     pick: vi.fn((_x: number, _y: number) => new Promise<number | null>((r) => answers.push(r))),
@@ -164,6 +184,36 @@ describe('the pointer over the morphologies', () => {
     view.moving = false;
     vi.advanceTimersByTime(60);
     expect(view.pick).toHaveBeenLastCalledWith(150, 150);
+  });
+
+  it('takes the highlight off a view that turns under a pointer at rest, and looks again once it has stopped', async () => {
+    const view = track({ hover: true });
+    rest();
+    await answer(view, 7);
+
+    view.moving = true;
+    view.turn();
+    expect(view.setHighlight).toHaveBeenLastCalledWith(null);
+    for (let frame = 0; frame < 60; frame++) {
+      vi.advanceTimersByTime(16);
+      view.turn();
+    }
+    expect(view.pick).toHaveBeenCalledTimes(1);
+    view.moving = false;
+    vi.advanceTimersByTime(60);
+
+    expect(view.pick).toHaveBeenCalledTimes(2);
+    expect(view.pick).toHaveBeenLastCalledWith(50, 50);
+  });
+
+  it('shows no answer that comes once the view has turned', async () => {
+    const view = track({ hover: true });
+    rest();
+    view.turn();
+
+    await answer(view, 7);
+
+    expect(view.setHighlight.mock.calls).toEqual([[null]]);
   });
 
   it('keeps the highlight through a click, and takes it from the pick the click makes', async () => {

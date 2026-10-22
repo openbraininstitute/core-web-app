@@ -41,7 +41,7 @@ export function trackPointer(
   element: HTMLElement,
   view: Pick<
     CircuitMorphologyView,
-    'pick' | 'setHighlight' | 'moving' | 'pickSection' | 'markerAt'
+    'pick' | 'setHighlight' | 'moving' | 'pickSection' | 'markerAt' | 'onViewChange'
   >,
   { hover, onClick, taken, locations }: PointerOptions
 ): () => void {
@@ -209,9 +209,17 @@ export function trackPointer(
   element.addEventListener('pointercancel', onCancel, capture);
   element.addEventListener('pointerleave', onLeave, { signal });
   element.addEventListener('wheel', onWheel, { signal, passive: true });
+  // Turned under a pointer that stays put, by a spin or to an axis: what it was over has moved away.
+  const offTurn = view.onViewChange(() => {
+    if (!last) return;
+    if (hover) view.setHighlight(null);
+    tell(null);
+    lookAgain();
+  });
 
   return () => {
     off.abort();
+    offTurn();
     onLeave();
   };
 }
