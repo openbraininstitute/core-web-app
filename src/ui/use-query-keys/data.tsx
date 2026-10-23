@@ -252,10 +252,6 @@ export const keyBuilder = {
       pageSize,
     },
   ],
-  ionChannelsFile: ({ entityName }: { entityName: string }) => [
-    `${prefix}-ion-channels-file`,
-    { entityName },
-  ],
   scientificArtifactPublicationLinks: ({
     context,
     ...props

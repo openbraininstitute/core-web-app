@@ -277,6 +277,7 @@ export const DetailViewSectionsDict = {
   RelatedPublications: 'related-publications',
   RelatedArtifacts: 'related-artifacts',
   Configuration: 'configuration',
+  Workflow: 'workflow',
 } as const;
 
 export type TDetailViewSectionDict =

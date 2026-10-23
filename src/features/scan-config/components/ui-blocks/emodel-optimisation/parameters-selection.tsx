@@ -52,6 +52,7 @@ export function ParametersSelection({
         setSelectedRegionChoice={setSelectedRegionChoice}
         errors={parameterErrors(errors)}
         onlyAssigned
+        showParameterCounts
       />
     </div>
   );

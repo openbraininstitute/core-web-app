@@ -20,6 +20,8 @@ type Props = {
   setSelectedRegionChoice: (choice: string) => void;
   /** ajv errors inside the emodel config value (paths relative to it) */
   errors: readonly ErrorObject[];
+  /** read-only: nothing can be assigned, so sections without models are only noise and are hidden */
+  disabled?: boolean;
 };
 
 /**
@@ -36,6 +38,7 @@ export function RegionAssignment({
   selectedRegionChoice,
   setSelectedRegionChoice,
   errors,
+  disabled,
 }: Props) {
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
@@ -51,6 +54,8 @@ export function RegionAssignment({
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
         errors={nonParameterErrors(errors)}
+        onlyAssigned={disabled}
+        emptyMessage="No section lists have assigned ion channel models."
       />
     </div>
   );

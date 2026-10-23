@@ -1,5 +1,6 @@
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
@@ -13,8 +14,6 @@ import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
 import { SingleNeuronSynaptome } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { SynthesizedCellMorphology } from '@/entity-configuration/domain/model/synthesized-morphology';
-import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
-import { EFeatureExtractionResult } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -60,6 +59,7 @@ export const BrowseExperimentalDataExtendedTypes = {
   BoutonDensity,
   SynapsesPerConnection,
   EmCellMesh,
+  EFeatureExtractionResult,
 } as const;
 
 /**
@@ -86,8 +86,6 @@ export const SimulationDataExtendedTypes = {
   MicrocircuitSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
-  EModelOptimizationCampaign,
-  EFeatureExtractionResult,
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } as const;

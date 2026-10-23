@@ -70,6 +70,7 @@ export function EModelOptimisationParameters({
         selectedRegionChoice={selectedRegionChoice}
         setSelectedRegionChoice={setSelectedRegionChoice}
         errors={errors}
+        disabled={disabled}
       />
     ))
     .with(EModelOptimisationMechanismsTabs.ParametersSelection, () => (

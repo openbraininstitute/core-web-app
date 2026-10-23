@@ -90,6 +90,35 @@ export function readRegions(mechanisms: Record<string, ConfigValue>): Record<str
   return asRecord(mechanisms[MECHANISM_REGIONS_KEY]);
 }
 
+/** Number of ion channel models selected for optimisation (`mechanisms.ion_channel_models`). */
+export function selectedModelCount(value: ConfigValue): number {
+  const list = readMechanisms(value)[ION_CHANNEL_MODELS_KEY];
+  return Array.isArray(list) ? list.length : 0;
+}
+
+/** Total ion channel model assignments across every region (each region row counts once; a model assigned to several regions, or twice within one, counts each time). */
+export function totalAssignedModelCount(value: ConfigValue): number {
+  return Object.values(readRegions(readMechanisms(value))).reduce<number>(
+    (total, region) => total + (Array.isArray(region) ? region.length : 0),
+    0
+  );
+}
+
+/** Total parameter selections across every region entry (each key in every entry's `parameters` dict, in every region). */
+export function totalAssignedParameterCount(value: ConfigValue): number {
+  return Object.values(readRegions(readMechanisms(value))).reduce<number>((total, region) => {
+    if (!Array.isArray(region)) return total;
+    return (
+      total +
+      region.reduce<number>(
+        (sum, entry) =>
+          sum + (isPlainObject(entry) ? Object.keys(entryParameters(entry)).length : 0),
+        0
+      )
+    );
+  }, 0);
+}
+
 /** The MechanismRegionSelection entry array for one region choice. */
 export function readRegionEntries(
   mechanisms: Record<string, ConfigValue>,
@@ -143,6 +172,23 @@ export function readOptimizationValue(parameterSelection: ConfigValue): TOptimiz
       : null;
 
   return { mode, value, bounds };
+}
+
+/** Count of fixed vs. optimized (bounds) parameters assigned to a region choice. */
+export function regionParameterCounts(
+  mechanisms: Record<string, ConfigValue>,
+  choiceName: string
+): { fixed: number; optimized: number } {
+  return readRegionEntries(mechanisms, choiceName).reduce<{ fixed: number; optimized: number }>(
+    (counts, entry) => {
+      Object.values(entryParameters(entry)).forEach((selection) => {
+        if (readOptimizationValue(selection).mode === ParameterMode.Bounds) counts.optimized += 1;
+        else counts.fixed += 1;
+      });
+      return counts;
+    },
+    { fixed: 0, optimized: 0 }
+  );
 }
 
 /** Reads a stored `ParameterSelection.distribution`; `null` when unset (the default: no distribution). */

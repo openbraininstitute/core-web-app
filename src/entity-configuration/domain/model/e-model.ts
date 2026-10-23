@@ -32,7 +32,8 @@ export const Emodel: EntityCoreTypeConfig<IEModel> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
-    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Workflow,
+    DetailViewSectionsDict.RelatedArtifacts,
   ],
   isDownloadable: true,
   isBookmarkable: true,

@@ -31,10 +31,12 @@ export function DataActions<T extends EntityCoreObjectTypes>({
   record,
   dataType,
   theme,
+  openDetailsInNewTab,
 }: {
   record: T;
   dataType?: TExtendedEntitiesTypeDict;
   theme?: TViewVariant;
+  openDetailsInNewTab?: boolean;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const notify = useAppNotification();
@@ -186,6 +188,7 @@ export function DataActions<T extends EntityCoreObjectTypes>({
             href={{
               pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/view/${resolveConcreteEntityPathParam(effectiveDataType)}/${record.id}`,
             }}
+            target={openDetailsInNewTab ? '_blank' : undefined}
           >
             View details
           </Link>

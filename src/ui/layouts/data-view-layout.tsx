@@ -8,7 +8,6 @@ import { ViewVariant, WorkspaceScope } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
@@ -16,6 +15,7 @@ import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
+import { DetailViewBody } from '@/ui/segments/explore/detail-view-body';
 import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
@@ -86,16 +86,9 @@ export async function DataViewLayout({
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
-  // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
-  const opensAsCampaign =
-    type === ExtendedEntitiesTypeDict.EFeatureExtractionResult &&
-    Boolean(
-      (await tryCatch(resolveEFeatureExtractionResultCampaign(id, virtualLabId, projectId))).data
-    );
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
-    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ||
-    opensAsCampaign;
+    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
   const useClassicLayout =
     entityType.group === EntityTypeGroup.Simulations || rendersFullPageWorkflowUi;
   const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
@@ -109,7 +102,13 @@ export async function DataViewLayout({
     origin === 'workflows' ? (
       <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
     ) : (
-      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+      <DataBreadcrumb
+        title={entityType.title}
+        type={type}
+        group={entityType.group}
+        scope={scope}
+        name={entity.name}
+      />
     );
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =
@@ -117,7 +116,7 @@ export async function DataViewLayout({
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
   const topBar = <TopBar start={breadcrumbs} end={closePage} />;
 
-  if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
+  if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
       // campaign / simulation pages render the scan-config tabs panel, which draws its own
       // border and top bar: hand it the breadcrumb and close as that bar's start and end slots
@@ -157,8 +156,6 @@ export async function DataViewLayout({
               <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
             <ActionMenu
-              // TODO: fix entity type
-              // @ts-expect-error this is a temporary fix
               entity={entity}
               type={type}
               ctx={{ virtualLabId, projectId }}
@@ -183,37 +180,38 @@ export async function DataViewLayout({
 
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
-      <div className="flex min-h-0 flex-1 gap-3 overflow-hidden pt-3">
-        <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">
-          <div className="flex flex-col gap-1.5">
-            <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
-          </div>
-          <ActionMenu
-            // TODO: fix entity type
-            // @ts-expect-error this is a temporary fix
-            entity={entity}
-            type={type}
-            ctx={{ virtualLabId, projectId }}
-            parentLink={parentLink}
-            isPublicEntity={isPublicEntity}
-            variant={chromeVariant}
+      <DetailViewBody
+        // an e-model's/e-feature extraction result's Workflow tab is the campaign's scan-config
+        // editor, styled for a light page background rather than the blue detail panel
+        plainContentSection={
+          type === ExtendedEntitiesTypeDict.Emodel ||
+          type === ExtendedEntitiesTypeDict.EFeatureExtractionResult
+        }
+        nameDisplay={
+          <EntityNameDisplay
+            name={entity.name}
+            description={'description' in entity ? entity.description : undefined}
+            variant={contentVariant}
           />
-        </div>
-        <div className="min-h-0 w-4/5 px-2 pb-2">
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
-            <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
-              <EntityNameDisplay
-                name={entity.name}
-                description={'description' in entity ? entity.description : undefined}
-                variant={contentVariant}
-              />
-              <EntityNameDisplayWrapper variant={contentVariant}>
-                {children}
-              </EntityNameDisplayWrapper>
+        }
+        sidebar={
+          <>
+            <div className="flex flex-col gap-1.5">
+              <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
             </div>
-          </div>
-        </div>
-      </div>
+            <ActionMenu
+              entity={entity}
+              type={type}
+              ctx={{ virtualLabId, projectId }}
+              parentLink={parentLink}
+              isPublicEntity={isPublicEntity}
+              variant={chromeVariant}
+            />
+          </>
+        }
+      >
+        {children}
+      </DetailViewBody>
       {downloadPanel}
     </DataViewFrame>
   );

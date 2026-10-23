@@ -129,7 +129,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         activity={props.activity}
         tab={state.tab}
         setTab={state.setTab}
-        disableResultsTab={!state.campaignId || state.loading}
+        disableResultsTab={!state.campaignId || state.loading || Boolean(props.hideTabs)}
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}

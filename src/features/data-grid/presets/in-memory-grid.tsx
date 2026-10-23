@@ -60,7 +60,9 @@ import type {
   GridApi,
   GridReadyEvent,
   ICellRendererParams,
+  RowClassParams,
   RowSelectionOptions,
+  RowStyle,
   SelectionChangedEvent,
 } from 'ag-grid-community';
 import type { ReactNode } from 'react';
@@ -877,6 +879,9 @@ export function InMemoryGrid<Row>({
           getRowHeight={(p) => (isDetailRow(p.data) ? initialDetailHeight : rowHeight)}
           getRowClass={(p) =>
             !isDetailRow(p.data) && getRowClass ? getRowClass(p.data as Row) : undefined
+          }
+          getRowStyle={(p: RowClassParams<TDisplayRow<Row>>): RowStyle | undefined =>
+            !isDetailRow(p.data) && onRowClick ? { cursor: 'pointer' } : undefined
           }
           rowSelection={agRowSelection}
           onSelectionChanged={rowSelection ? onSelectionChanged : undefined}
