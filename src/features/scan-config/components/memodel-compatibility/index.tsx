@@ -3,7 +3,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
 
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
+import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { extractConfigValueId } from '@/features/scan-config/helpers';
 import { messages } from '@/i18n/en/me-model';
@@ -58,7 +60,25 @@ export function MEModelCompatibilityCheck({ config }: { config: Config }) {
     staleTime: Infinity,
   });
 
-  const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck);
+  const { data: emodelName } = useQuery({
+    queryKey: keyBuilder.entity({
+      context: { virtualLabId, projectId },
+      id: emodelId ?? '',
+      type: ExtendedEntitiesTypeDict.Emodel,
+    }),
+    queryFn: () =>
+      retrieveEntity({
+        type: ExtendedEntitiesTypeDict.Emodel,
+        // biome-ignore lint/style/noNonNullAssertion: Guaranteed by enabled
+        id: emodelId!,
+        ctx: { virtualLabId, projectId },
+      }),
+    select: (emodel) => get(emodel, 'name') as string | undefined,
+    enabled: !!emodelId,
+    staleTime: Infinity,
+  });
+
+  const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck, emodelName);
   const blockingMessage = selectionComplete ? BLOCKING_MESSAGE[compatibility.kind] : undefined;
 
   useFieldError(`${INPUTS_BLOCK}.compatibility`, blockingMessage);
