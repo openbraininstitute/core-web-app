@@ -50,6 +50,7 @@ export const VALID_AI_CONFIG_KEYS = [
   'me_model_synaptic_model_placement_config',
   'create_extracellular_recording_array_config',
   'synapse_parameterization_config',
+  'ion_channel_fitting_config',
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -81,6 +82,7 @@ const BUILD_CONFIG_KEY_BY_SCHEMA: Partial<Record<SchemaName, TAIConfigKey>> = {
   [SchemaNameDict.ExtracellularRecordingArrayScanConfig]:
     'create_extracellular_recording_array_config',
   [SchemaNameDict.SynapseParameterizationScanConfig]: 'synapse_parameterization_config',
+  [SchemaNameDict.IonChannelFittingScanConfig]: 'ion_channel_fitting_config',
 };
 
 export function getConfigKeyForEntity(

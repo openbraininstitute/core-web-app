@@ -50,6 +50,17 @@ describe('getConfigKeyForEntity', () => {
       ).toBe('synapse_parameterization_config');
     });
 
+    it('resolves ion channel fitting by schemaName', () => {
+      expect(
+        getConfigKeyForEntity(
+          ExtendedEntitiesTypeDict.IonChannelRecording,
+          ScanConfigActivity.Build,
+          undefined,
+          SchemaNameDict.IonChannelFittingScanConfig
+        )
+      ).toBe('ion_channel_fitting_config');
+    });
+
     it('disambiguates two Circuit-entityType Build workflows by schemaName alone', () => {
       // Extracellular recording array and circuit synaptic physiology both
       // operate on a Circuit entity — schemaName is the only discriminator.
