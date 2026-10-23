@@ -4,6 +4,8 @@ import { WarningOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
 
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore';
+import { resolveListingVariant } from '@/features/views/listing/variants/registry';
+import { useScopedListing } from '@/features/views/listing/variants/use-scoped-listing';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { log } from '@/utils/logger';
 
@@ -31,16 +33,36 @@ export type { BrowseEntityScopeProps };
  * explanation, which is how this last went unnoticed.
  */
 export function BrowseEntityScope(props: BrowseEntityScopeProps) {
-  const definition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
-  if (!definition) {
+  const baseDefinition = props.gridDefinitionOverride ?? getEntityGridDefinition(props.dataType);
+  const variant = resolveListingVariant(props.dataType, props.variantSlug);
+  // The one place a variant is applied: pinned params, stripped filters, isolated state.
+  const scoped = useScopedListing(props, baseDefinition, variant);
+
+  if (!scoped.definition) {
     log('error', `[BrowseEntityScope] no grid definition registered for "${props.dataType}"`);
+    return <ListingUnavailable content={`"${props.dataType}" has no grid configuration.`} />;
+  }
+  // An unfiltered fallback would silently load every row, the slow path a variant avoids.
+  if (props.variantSlug && !variant) {
+    log(
+      'error',
+      `[BrowseEntityScope] unknown variant "${props.variantSlug}" for "${props.dataType}"`
+    );
     return (
-      <GenericError
-        shouldContactSupport
-        content={`This listing is not available: "${props.dataType}" has no grid configuration.`}
-        icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
-      />
+      <ListingUnavailable content={`"${props.variantSlug}" is not a "${props.dataType}" split.`} />
     );
   }
-  return <BrowseEntityGrid {...props} definition={definition} />;
+  return (
+    <BrowseEntityGrid {...props} {...scoped} definition={scoped.definition} variant={variant} />
+  );
+}
+
+function ListingUnavailable({ content }: { content: string }) {
+  return (
+    <GenericError
+      shouldContactSupport
+      content={`This listing is not available: ${content}`}
+      icon={<WarningOutlined className="fill-current [font-size:inherit]" />}
+    />
+  );
 }

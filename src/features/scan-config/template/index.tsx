@@ -151,12 +151,9 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
                   tooltipArrow: 'bg-white!',
                 }}
               >
-                <span className="flex min-w-0 gap-1 text-base">
-                  <span className="shrink-0 font-normal">Copy</span>
-                  <b className="flex min-w-0 font-bold">
-                    <MiddleEllipsis text={campaignName} />
-                  </b>
-                </span>
+                <b className="flex min-w-0 text-base font-bold">
+                  <MiddleEllipsis text={campaignName} />
+                </b>
               </ButtonCopyId>
             </BreadcrumbChip>
           ) : undefined

@@ -12,6 +12,7 @@ import {
 } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { createSessionStatePersistence } from '@/features/data-grid/react';
+import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
@@ -23,6 +24,7 @@ import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
+import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -45,7 +47,10 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  variant,
 }: {
+  /** the listing variant the entity belongs to (e.g. its circuit scale): adds a crumb after the type */
+  variant?: IListingVariant;
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
@@ -74,10 +79,24 @@ export function DataBreadcrumb({
       // breadcrumb = fresh listing, so clear the grid's transient session slice
       // (filters/sort/page/search); the durable column-layout slice is left intact
       createSessionStatePersistence().clear?.(dataKey);
+      if (variant) {
+        createSessionStatePersistence().clear?.(
+          makeDataKey({
+            virtualLabId,
+            projectId,
+            section: WorkspaceSection.Data,
+            dataType: type,
+            scope,
+            id: listingInstanceId(undefined, variant),
+          }).dataKey
+        );
+      }
     }
   };
 
   const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
+  const typeHome = `${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`;
+  const listingQuery = { [DATA_GROUP_QUERY_PARAM]: group, [SCOPE_QUERY_PARAMS]: scope };
   const withQuery = (path: string, set: Record<string, string> = {}) => {
     const query = new URLSearchParams(queryParams);
     for (const [key, value] of Object.entries(set)) query.set(key, value);
@@ -101,12 +120,19 @@ export function DataBreadcrumb({
           {
             key: 'type',
             label: title,
-            href: withQuery(`${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`, {
-              [DATA_GROUP_QUERY_PARAM]: group,
-              [SCOPE_QUERY_PARAMS]: scope,
-            }),
+            href: withQuery(typeHome, listingQuery),
             onClick: onLinkClick,
           },
+          ...(variant
+            ? [
+                {
+                  key: 'variant',
+                  label: variant.label,
+                  href: withQuery(`${typeHome}/${variant.slug}`, listingQuery),
+                  onClick: onLinkClick,
+                },
+              ]
+            : []),
         ]}
       />
     </BreadcrumbChip>
