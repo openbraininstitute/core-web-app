@@ -65,6 +65,16 @@ const LaunchersByTaskType: Partial<
   },
 };
 
+function pickLauncher(
+  taskType: TObiOneTaskType,
+  flags: ReturnType<typeof useFlags>
+): TTaskLauncher {
+  const launcher = LaunchersByTaskType[taskType];
+  if (!launcher) return runTask;
+  if (launcher.launchSystemFlag && flags[launcher.launchSystemFlag]) return runTask;
+  return launcher.launch;
+}
+
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
   obiOneTaskType: TObiOneTaskType;
@@ -112,11 +122,7 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
-      const launcher = LaunchersByTaskType[obiOneTaskType];
-      const launch =
-        launcher && !(launcher.launchSystemFlag && flags[launcher.launchSystemFlag])
-          ? launcher.launch
-          : runTask;
+      const launch = pickLauncher(obiOneTaskType, flags);
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {

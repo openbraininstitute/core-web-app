@@ -251,23 +251,26 @@ export function InOutFiles({
     files: builtOutputFiles,
   });
 
-  // an ME-model is linked before it is calibrated and validated, so fetch it and its preview
-  // again once the run ends
-  const wasRunning = useRef(false);
+  // a task can link what it builds before it is done with it, so fetch that and its preview
+  // again once the run seen running here ends
+  const executionId = execution?.id;
+  const runningExecutionId = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!execStatus) return;
+    if (!execStatus || !executionId) return;
     if (!outputAvailable) {
-      wasRunning.current = true;
+      runningExecutionId.current = executionId;
       return;
     }
-    if (!wasRunning.current || !generatedId || !generatedType) return;
-    wasRunning.current = false;
+    if (runningExecutionId.current !== executionId) return;
+    runningExecutionId.current = undefined;
+    if (!generatedId || !generatedType) return;
     refetchBuiltEntity();
     queryClient.invalidateQueries({
       queryKey: keyBuilder.preview(context, { entityId: generatedId }),
     });
   }, [
     execStatus,
+    executionId,
     outputAvailable,
     generatedId,
     generatedType,

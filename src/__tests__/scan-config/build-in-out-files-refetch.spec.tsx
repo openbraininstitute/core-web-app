@@ -24,13 +24,16 @@ const context = { virtualLabId: 'vl-1', projectId: 'proj-1' };
 const config = { id: 'config-1', assets: [] } as unknown as ComponentProps<
   typeof InOutFiles
 >['config'];
-const execution = {
-  id: 'exec-1',
-  generated: [{ id: MEMODEL_ID, type: EntityTypeDict.Memodel }],
-} as unknown as ITaskActivity;
+const makeExecution = (id: string, memodelId?: string) =>
+  ({
+    id,
+    generated: memodelId ? [{ id: memodelId, type: EntityTypeDict.Memodel }] : [],
+  }) as unknown as ITaskActivity;
 
-const memodel = (validation_status: string) => ({
-  id: MEMODEL_ID,
+const execution = makeExecution('exec-1', MEMODEL_ID);
+
+const memodel = (validation_status: string, id = MEMODEL_ID) => ({
+  id,
   type: EntityTypeDict.Memodel,
   validation_status,
 });
@@ -38,12 +41,16 @@ const memodel = (validation_status: string) => ({
 function setup() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const onSelect = vi.fn();
-  const view = (execStatus: TActivityStatus, selectedFile?: TActivityCustomFile) => (
+  const view = (
+    execStatus: TActivityStatus,
+    selectedFile?: TActivityCustomFile,
+    shownExecution = execution
+  ) => (
     <QueryClientProvider client={client}>
       <InOutFiles
         config={config}
         execStatus={execStatus}
-        execution={execution}
+        execution={shownExecution}
         selectedFile={selectedFile}
         onSelect={onSelect}
         context={context}
@@ -92,5 +99,36 @@ describe('build InOutFiles', () => {
     expect(retrieveEntity).toHaveBeenCalledTimes(1);
     // the run may have ended while nothing was mounted
     expect(invalidateEntityListings).toHaveBeenCalledWith(client, EntityTypeDict.Memodel);
+  });
+
+  it('does not refetch a finished build picked while another one is running', async () => {
+    retrieveEntity.mockImplementation(({ id }: { id: string }) =>
+      Promise.resolve(memodel(id === MEMODEL_ID ? 'created' : 'done', id))
+    );
+    const { client, onSelect, view } = setup();
+    const previewKey = keyBuilder.preview(context, { entityId: 'memodel-2', dpi: 100 });
+    client.setQueryData(previewKey, 'preview');
+
+    const { rerender } = render(view(ActivityStatus.RUNNING));
+    await waitFor(() => expect(onSelect).toHaveBeenCalled());
+
+    rerender(view(ActivityStatus.DONE, undefined, makeExecution('exec-2', 'memodel-2')));
+    await waitFor(() => expect(retrieveEntity).toHaveBeenCalledTimes(2));
+    expect(client.getQueryState(previewKey)?.isInvalidated).toBe(false);
+  });
+
+  it('does not refetch when the built ME-model is linked only after its run ended', async () => {
+    retrieveEntity.mockResolvedValue(memodel('done'));
+    const { client, view } = setup();
+    const previewKey = keyBuilder.preview(context, { entityId: MEMODEL_ID, dpi: 100 });
+    client.setQueryData(previewKey, 'preview');
+    const unlinked = makeExecution('exec-1');
+
+    const { rerender } = render(view(ActivityStatus.RUNNING, undefined, unlinked));
+    rerender(view(ActivityStatus.DONE, undefined, unlinked));
+    rerender(view(ActivityStatus.DONE));
+
+    await waitFor(() => expect(retrieveEntity).toHaveBeenCalledTimes(1));
+    expect(client.getQueryState(previewKey)?.isInvalidated).toBe(false);
   });
 });
