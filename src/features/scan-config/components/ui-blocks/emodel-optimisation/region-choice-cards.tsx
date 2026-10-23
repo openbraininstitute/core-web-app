@@ -31,6 +31,8 @@ type Props = {
   errors: readonly ErrorObject[];
   /** when true, hides choices with no assigned ion channel models (Parameters Selection tab) */
   onlyAssigned?: boolean;
+  /** when true, each card also breaks down its parameters into fixed vs. optimized (Parameters Selection tab) */
+  showParameterCounts?: boolean;
   /** shown instead of the cards when `onlyAssigned` leaves none */
   emptyMessage?: string;
 };
@@ -56,6 +58,7 @@ export function RegionChoiceCards({
   setSelectedRegionChoice,
   errors,
   onlyAssigned,
+  showParameterCounts,
   emptyMessage = 'No section lists have assigned ion channel models yet. Assign models in Region Assignment to configure their parameters here.',
 }: Props) {
   const mechanisms = readMechanisms(value);
@@ -65,8 +68,7 @@ export function RegionChoiceCards({
     .map((choice) => ({
       choice,
       channelCount: assignedModelIds(mechanisms, choice.name).length,
-      // only the Parameters Selection tab (`onlyAssigned`) shows a parameters breakdown
-      parameterCounts: onlyAssigned ? regionParameterCounts(mechanisms, choice.name) : null,
+      parameterCounts: showParameterCounts ? regionParameterCounts(mechanisms, choice.name) : null,
     }))
     .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
 

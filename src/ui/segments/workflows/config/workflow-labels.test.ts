@@ -181,8 +181,6 @@ describe('data navigation naming', () => {
       'Microcircuit',
       'Region circuit',
       'Whole brain circuit',
-      'E-model optimisation',
-      'Intracellular e-feature extraction',
       'Single neuron (legacy)',
       'Synaptome (legacy)',
     ]);
