@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runPython } from '@/features/learn/components/courses/ui/python';
 
@@ -24,17 +24,29 @@ const py = {
 };
 
 describe('runPython', () => {
-  afterEach(() => vi.restoreAllMocks());
-
-  it("keeps each cell's prints to itself when two are run at once", async () => {
+  beforeEach(() => {
     window.loadPyodide = async () => py as never;
     // the script tag loads at once
     vi.spyOn(document.head, 'appendChild').mockImplementation((el) => {
       queueMicrotask(() => (el as HTMLScriptElement).onload?.(new Event('load')));
       return el;
     });
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("keeps each cell's prints to itself when two are run at once", async () => {
     const [first, second] = await Promise.all([runPython('a1\nyield\na2'), runPython('b1')]);
     expect(first).toEqual({ out: 'a1\na2\n', error: null });
     expect(second).toEqual({ out: 'b1\n', error: null });
+  });
+
+  it("gives NumPy that can't be fetched back as the cell's error, and runs the next cell", async () => {
+    const loadPackage = vi.spyOn(py, 'loadPackage').mockRejectedValueOnce(new Error('network'));
+    expect(await runPython('import numpy as np\nnope')).toEqual({
+      out: '',
+      error: "Couldn't fetch NumPy — are you online?",
+    });
+    expect(loadPackage).toHaveBeenCalledWith('numpy');
+    expect(await runPython('b1')).toEqual({ out: 'b1\n', error: null });
   });
 });

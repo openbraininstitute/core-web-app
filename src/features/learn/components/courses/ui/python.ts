@@ -152,7 +152,13 @@ async function runNow(code: string): Promise<Run> {
   } catch (e) {
     return { out: '', error: e instanceof Error ? e.message : String(e) };
   }
-  if (/^\s*(import|from)\s+numpy\b/m.test(code)) await py.loadPackage('numpy');
+  if (/^\s*(import|from)\s+numpy\b/m.test(code)) {
+    try {
+      await py.loadPackage('numpy');
+    } catch {
+      return { out: '', error: "Couldn't fetch NumPy — are you online?" };
+    }
+  }
   let out = '';
   py.setStdout({ batched: (s) => (out += `${s}\n`) });
   py.setStderr({ batched: (s) => (out += `${s}\n`) });

@@ -46,9 +46,13 @@ export default function Runnable({
   const run = async () => {
     if (busy) return;
     setBusy(pythonLoaded() ? 'running' : 'loading');
-    const r = await runPython(code);
-    setResult({ ...parseOutput(r.out), error: r.error });
-    setBusy('');
+    // whatever happens, the cell can be run again
+    try {
+      const r = await runPython(code);
+      setResult({ ...parseOutput(r.out), error: r.error });
+    } finally {
+      setBusy('');
+    }
   };
   const reset = () => {
     setCode(cell.code);
