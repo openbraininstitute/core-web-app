@@ -82,7 +82,7 @@ export const EFeatureExtractionResult: EntityCoreTypeConfig<TEFeatureExtractionR
     },
   },
   asset: { extension: 'application/json' },
-  detailViewSections: [DetailViewSectionsDict.Overview],
+  detailViewSections: [DetailViewSectionsDict.Overview, DetailViewSectionsDict.Workflow],
   isDownloadable: true,
   isBookmarkable: false,
   isCopyable: true,

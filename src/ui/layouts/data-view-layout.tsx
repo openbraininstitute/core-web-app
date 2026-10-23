@@ -5,7 +5,6 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { ViewVariant, WorkspaceScope } from '@/constants';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -87,16 +86,9 @@ export async function DataViewLayout({
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
-  // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
-  const opensAsCampaign =
-    type === ExtendedEntitiesTypeDict.EFeatureExtractionResult &&
-    Boolean(
-      (await tryCatch(resolveEFeatureExtractionResultCampaign(id, virtualLabId, projectId))).data
-    );
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
-    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ||
-    opensAsCampaign;
+    type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
   const useClassicLayout =
     entityType.group === EntityTypeGroup.Simulations || rendersFullPageWorkflowUi;
   const contentVariant = useClassicLayout ? ViewVariant.Light : ViewVariant.Default;
@@ -124,7 +116,7 @@ export async function DataViewLayout({
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
   const topBar = <TopBar start={breadcrumbs} end={closePage} />;
 
-  if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
+  if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
       // campaign / simulation pages render the scan-config tabs panel, which draws its own
       // border and top bar: hand it the breadcrumb and close as that bar's start and end slots
@@ -189,9 +181,12 @@ export async function DataViewLayout({
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
       <DetailViewBody
-        // an e-model's Workflow tab is the optimisation scan-config editor, styled for a light
-        // page background rather than the blue detail panel
-        plainContentSection={type === ExtendedEntitiesTypeDict.Emodel}
+        // an e-model's/e-feature extraction result's Workflow tab is the campaign's scan-config
+        // editor, styled for a light page background rather than the blue detail panel
+        plainContentSection={
+          type === ExtendedEntitiesTypeDict.Emodel ||
+          type === ExtendedEntitiesTypeDict.EFeatureExtractionResult
+        }
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}

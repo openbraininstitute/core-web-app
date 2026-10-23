@@ -53,7 +53,20 @@ describe('EFeatureExtractionResultPreview', () => {
           },
         ],
         protocols: [
-          { name: 'Step_140', validation: false, stimuli: [{ thresh_perc: 140.6698 }] },
+          {
+            name: 'Step_140',
+            validation: false,
+            stimuli: [
+              {
+                delay: 700,
+                amp: 0.12,
+                thresh_perc: 140,
+                duration: 2000,
+                totduration: 3000,
+                holding_current: -0.05,
+              },
+            ],
+          },
           { name: 'RinProtocol', validation: true, stimuli: [{ amp: -0.02 }] },
         ],
       }),
@@ -61,14 +74,25 @@ describe('EFeatureExtractionResultPreview', () => {
 
     renderPreview();
 
-    expect(await screen.findByText('Step_140')).toBeInTheDocument();
+    expect((await screen.findAllByText('Step_140')).length).toBeGreaterThan(0);
     expect(screen.getByText('voltage_base')).toBeInTheDocument();
     expect(screen.getByText('ohmic_input_resistance_vb_ssse')).toBeInTheDocument();
     // the target value and its spread are rendered
     expect(screen.getByText('-85.65')).toBeInTheDocument();
     expect(screen.getByText('1.853')).toBeInTheDocument();
     expect(screen.getByText('110.5')).toBeInTheDocument();
-    expect(screen.getByText(/validation/)).toBeInTheDocument();
+    expect(screen.getAllByText(/validation/).length).toBeGreaterThan(0);
+
+    // the protocols section's columns are whatever stimulus fields are actually present
+    expect(screen.getByText('Stimulation protocols')).toBeInTheDocument();
+    expect(screen.getByText('Delay')).toBeInTheDocument();
+    expect(screen.getByText('Thresh perc')).toBeInTheDocument();
+    expect(screen.getByText('Holding current')).toBeInTheDocument();
+    expect(screen.getByText('700')).toBeInTheDocument();
+    expect(screen.getByText('2000')).toBeInTheDocument();
+    expect(screen.getByText('-0.05')).toBeInTheDocument();
+    // RinProtocol has only `amp`; the columns Step_140 introduced are blank for it
+    expect(screen.getAllByText('—').length).toBeGreaterThan(0);
   });
 
   it('says so when the result has no extracted-features asset', async () => {

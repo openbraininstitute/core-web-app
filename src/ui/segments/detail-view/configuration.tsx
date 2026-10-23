@@ -7,6 +7,7 @@ import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity'
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { tryCatch } from '@/api/utils';
 import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/configuration-tab';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import {
   applyEntityExpansions,
   getEntityByExtendedType,
@@ -22,7 +23,12 @@ import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
-import { OptimizeScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
+import {
+  ExtractScanConfigTabs,
+  OptimizeScanConfigTabs,
+  ScanConfigActivity,
+} from '@/features/scan-config/types';
+import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
@@ -149,6 +155,53 @@ export default async function Configuration({
     return (
       <div className="flex h-full w-full items-center justify-center">
         No configuration found for this e-model.
+      </div>
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult) {
+    // the workflow tab is the scan config of the extraction campaign that produced this
+    // result; render the same read-only editor as the campaign's own detail page when traceable
+    const { data: extraction } = await tryCatch(
+      resolveEFeatureExtractionResultCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EFeatureExtractionCampaign
+    );
+
+    if (extraction && scanConfig) {
+      const { data: generations } = await getTaskActivities({
+        context,
+        filters: {
+          used__id: extraction.campaign.id,
+          task_activity_type: TaskActivityType.EFeatureExtractionConfigGeneration,
+          page_size: 1,
+        },
+      });
+      return (
+        <ScanConfiguration
+          entityId={extraction.recordingIds.at(0)}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={extraction.campaign.id}
+          initialConfig={extraction.config?.form}
+          readOnly
+          hideTabs={generations.length === 0}
+          defaultTab={{
+            __activity: ScanConfigActivity.Extract,
+            id: ExtractScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Extract}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={extractEFeaturesWorkflow.taskTypeBindings}
+        />
+      );
+    }
+
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this result.
       </div>
     );
   }

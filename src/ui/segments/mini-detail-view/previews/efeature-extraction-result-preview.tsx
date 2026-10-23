@@ -29,7 +29,10 @@ type ExtractedFeatures = {
   protocols: {
     name: string;
     validation?: boolean;
-    stimuli?: { amp?: number | null; thresh_perc?: number | null }[];
+    // the field set varies by protocol type (e.g. a threshold-based protocol's `amp`/
+    // `thresh_perc`/`delay`/`duration`/`holding_current` vs. others' own fields), so it is read
+    // generically rather than as a fixed shape.
+    stimuli?: Record<string, number | null>[];
   }[];
 };
 
@@ -50,6 +53,13 @@ type ProtocolGroup = {
   features: FeatureRow[];
 };
 
+type ProtocolRow = {
+  protocol: string;
+  validation: boolean;
+  /** the raw stimulus fields (field set varies by protocol type); null when there's none */
+  stimulus: Record<string, number | null> | null;
+};
+
 /** Round to a few significant figures without trailing-zero noise. */
 function formatNumber(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '—';
@@ -58,6 +68,37 @@ function formatNumber(value: number | null | undefined): string {
   // very small or very large: scientific; otherwise up to 4 significant digits
   const text = abs < 1e-3 || abs >= 1e5 ? value.toExponential(2) : value.toPrecision(4);
   return Number.parseFloat(text).toString();
+}
+
+/**
+ * The protocols a result's features were extracted under, one row per stimulus (a protocol with
+ * several stimuli gets several rows; one with none still gets a row, with no stimulus fields).
+ */
+function summarizeProtocols(protocols: ExtractedFeatures['protocols']): ProtocolRow[] {
+  return protocols.flatMap((protocol): ProtocolRow[] => {
+    const validation = protocol.validation ?? false;
+    const stimuli = protocol.stimuli ?? [];
+    return stimuli.length > 0
+      ? stimuli.map((stimulus) => ({ protocol: protocol.name, validation, stimulus }))
+      : [{ protocol: protocol.name, validation, stimulus: null }];
+  });
+}
+
+/** Every stimulus field seen across all rows, in first-seen order - the table's dynamic columns. */
+function stimulusColumns(rows: ProtocolRow[]): string[] {
+  const columns: string[] = [];
+  for (const row of rows) {
+    for (const key of Object.keys(row.stimulus ?? {})) {
+      if (!columns.includes(key)) columns.push(key);
+    }
+  }
+  return columns;
+}
+
+/** `holding_current` -> "Holding current"; a key with no separators is just capitalized. */
+function humanizeKey(key: string): string {
+  const label = key.replace(/_/g, ' ');
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /** Group the extracted e-features by protocol, keeping each feature's target value. */
@@ -95,11 +136,7 @@ function groupByProtocol({ efeatures, protocols }: ExtractedFeatures): ProtocolG
 /** Read-only view of the target e-features a result holds, grouped by their protocol. */
 export function EFeatureExtractionResultPreview({ record }: { record: ITaskResult }) {
   const context = useWorkspace();
-  const {
-    data: groups,
-    isLoading,
-    error,
-  } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['efeature-extraction-features', context, record.id],
     queryFn: async () => {
       // a list row may arrive without its assets; fetch the full result when so
@@ -119,9 +156,15 @@ export function EFeatureExtractionResultPreview({ record }: { record: ITaskResul
         asRawResponse: true,
       });
       const features = (await response.json()) as ExtractedFeatures;
-      return groupByProtocol(features);
+      return {
+        groups: groupByProtocol(features),
+        protocols: summarizeProtocols(features.protocols),
+      };
     },
   });
+  const groups = data?.groups;
+  const protocols = data?.protocols;
+  const stimulusCols = protocols ? stimulusColumns(protocols) : [];
 
   if (isLoading) {
     return (
@@ -203,6 +246,43 @@ export function EFeatureExtractionResultPreview({ record }: { record: ITaskResul
           </li>
         ))}
       </ul>
+
+      {protocols && protocols.length > 0 && (
+        <>
+          <div className="text-label mt-2 text-base font-light">Stimulation protocols</div>
+          <div className="border-neutral-2 overflow-hidden rounded-lg border bg-white">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-left text-gray-500">
+                  <th className="px-3 py-1.5 font-medium">Protocol</th>
+                  {stimulusCols.map((key) => (
+                    <th key={key} className="px-3 py-1.5 text-right font-medium">
+                      {humanizeKey(key)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {protocols.map((row, index) => (
+                  <tr key={`${row.protocol}-${index}`} className="border-neutral-1 border-t">
+                    <td className="text-primary-9 px-3 py-1.5">
+                      {row.protocol}
+                      {row.validation && (
+                        <span className="font-light text-gray-500"> · validation</span>
+                      )}
+                    </td>
+                    {stimulusCols.map((key) => (
+                      <td key={key} className="px-3 py-1.5 text-right tabular-nums text-gray-700">
+                        {formatNumber(row.stimulus?.[key] ?? null)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </div>
   );
 }

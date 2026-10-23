@@ -111,7 +111,7 @@ export function DataBreadcrumb({
             onClick: onLinkClick,
           },
           // the entity itself is plain text: it has no listing of its own to link back to
-          { key: 'entity', label: name },
+          { key: 'entity', label: name, ellipsis: name },
         ]}
       />
     </BreadcrumbChip>
