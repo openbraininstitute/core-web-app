@@ -107,7 +107,7 @@ function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivity
     return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];
   }
 
-  // the model row previews its figures, so of its assets only the mod file needs a row
+  // of an ion channel model's assets only the mod file gets its own row
   const modFile =
     entity.type === EntityTypeDict.IonChannelModel
       ? findAssetByLabel(entity.assets, AssetLabel.neuron_mechanisms)

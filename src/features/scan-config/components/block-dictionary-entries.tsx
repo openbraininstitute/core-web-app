@@ -19,6 +19,7 @@ import {
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -497,7 +498,9 @@ const BlockDictionaryEntryTooltip = memo(
     return (
       <div className="flex flex-col gap-2">
         <div className="font-bold">{blockType.title}</div>
-        <div className="max-w-2xs wrap-break-word">{blockType.description}</div>
+        <MarkdownDescription dark className="max-w-2xs">
+          {blockType.description}
+        </MarkdownDescription>
       </div>
     );
   },

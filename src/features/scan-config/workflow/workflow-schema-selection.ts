@@ -17,6 +17,7 @@ import {
   ScanConfigFromIdType,
   type TScanConfigFromIdType,
 } from '@/features/scan-config/workflow/scan-config-from-id-type';
+import { readFieldMaxItems } from '@/features/scan-config/workflow/selection-cap';
 
 const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.CellMorphologyFromID]: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -99,6 +100,8 @@ export type TWorkflowSchemaSelectionMultiple = TWorkflowSchemaSelectionBase & {
   selectionMode: typeof WorkflowSchemaSelectionMode.Multiple;
   acceptedEntityTypes: readonly TExtendedEntitiesTypeDict[];
   tableSelectionType: typeof WorkflowBrowseTableSelection.Checkbox;
+  /** the field's `maxItems`, when ObiOne caps how many entities it takes */
+  maxSelections?: number;
 };
 
 /** `model_identifier_grouped` with grouped NamedTuple shape. */
@@ -480,6 +483,7 @@ function buildModelFieldSelection(opts: {
     acceptedFromIdTypes: opts.acceptedFromIdTypes,
     acceptedEntityTypes: mapScanConfigFromIdTypesToEntityTypes(opts.acceptedFromIdTypes),
     tableSelectionType: WorkflowBrowseTableSelection.Checkbox,
+    maxSelections: readFieldMaxItems(opts.modelField),
   };
 }
 
@@ -506,7 +510,7 @@ export type TParseWorkflowSchemaSelectionParams = {
  * | Schema field | Mode |
  * |--------------|------|
  * | `model_identifier` | `single` → table selection `none` |
- * | `model_identifier_multiple` (flat) | `multiple` → table `checkbox` |
+ * | `model_identifier_multiple` (flat) | `multiple` → table `checkbox`, capped at `maxItems` |
  * | `model_identifier_multiple` (NamedTuple) | `grouped` → table `checkbox` per group |
  *
  * Accepted entity types are resolved from `accepted_input_types` or embedded
