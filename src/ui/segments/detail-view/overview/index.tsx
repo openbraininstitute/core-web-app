@@ -23,19 +23,21 @@ import {
   getViewDefinitionByExtendedType,
   withLifecycleStatusLast,
 } from '@/entity-configuration/definitions/view-defs';
-import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
   resolveSingleNeuronSimulation,
   resolveSingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import {
   resolveSimulationByCampaignId as resolveIonChannelModelSimulationByCampaignId,
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
@@ -52,21 +54,24 @@ import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/syn
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigTopBar } from '@/features/scan-config/components/top-bar/context';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
   type Config,
   ExtractScanConfigTabs,
+  OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
+import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
+import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
 import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
-import { IonChannelModelBuilding } from '@/ui/segments/workflows/build/ion-channel-build';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import { cn } from '@/utils/css-class';
 
@@ -77,6 +82,7 @@ import type { IIonChannelRecording } from '@/api/entitycore/types/entities/ion-c
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 import type { TypeSummaryProps } from '@/entity-configuration/definitions/view-defs/types';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
+import type { TWorkflowTaskTypeBindingsInput } from '@/features/scan-config/workflow/types';
 import type { AwaitedType, WorkspaceContext } from '@/types/common';
 
 /** Build campaigns whose overview is the read-only scan configuration editor. */
@@ -90,6 +96,7 @@ const BuildScanConfigCampaigns: Partial<
         config: { form?: Config } | null;
         sourceEntityId: string | null;
       }>;
+      taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
     }
   >
 > = {
@@ -97,6 +104,12 @@ const BuildScanConfigCampaigns: Partial<
     extendedType: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
     resolve: EmSynapseMappingCampaign.api.query.resolve!,
+  },
+  [TaskConfigType.IonChannelModelingCampaign]: {
+    extendedType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    resolve: IonChannelBuildCampaign.api.query.resolve!,
+    taskTypeBindings: buildIonChannelWorkflow.taskTypeBindings,
   },
   [TaskConfigType.CircuitSynapticPhysiologyCampaign]: {
     extendedType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
@@ -217,6 +230,38 @@ export default async function Overview({
     }
   }
 
+  if (extendedType === ExtendedEntitiesTypeDict.EModelOptimizationCampaign) {
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    const resolveCampaign = EModelOptimizationCampaign.api.query.resolve!;
+    const { data: optimization } = await tryCatch(resolveCampaign({ id: entity.id, context }));
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.EModelOptimizationCampaign
+    );
+
+    if (optimization && scanConfig) {
+      return (
+        <ScanConfiguration
+          // the e-model optimisation scan config has no `model_identifier` (session mode),
+          // so there is no input entity to pass
+          entityId={undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={optimization.campaign.id}
+          initialConfig={optimization.config?.form}
+          readOnly={!isWorkflow}
+          defaultTab={{
+            __activity: ScanConfigActivity.Optimize,
+            id: OptimizeScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Optimize}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={optimizeEModelWorkflow.taskTypeBindings}
+        />
+      );
+    }
+  }
+
   // TODO: new simulation and extraction campaigns should be handled here
   if (entity.type === EntityTypeDict.TaskConfig) {
     if (
@@ -293,6 +338,7 @@ export default async function Overview({
           }}
           activity={ScanConfigActivity.Build}
           campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={buildCampaign.taskTypeBindings}
         />
       );
     }
@@ -428,21 +474,48 @@ export default async function Overview({
     );
   }
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign) {
-    const { data } = await tryCatch(
+    const { data, error } = await tryCatch(
       resolveIonChannelModelingCampaignConfig({
         id: entity.id,
         context,
       })
     );
 
-    const initialConfig = data?.config?.form ?? data?.config ?? null;
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.IonChannelBuildCampaign
+    );
+    if (!scanConfig) {
+      notFound();
+    }
+    if (error || !data.form) {
+      // no tabs rail here, so the host's breadcrumb and close need their own bar
+      return (
+        <div className="flex h-full w-full flex-col">
+          <ScanConfigTopBar />
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            {error
+              ? 'The configuration of this campaign could not be loaded'
+              : 'This campaign has no saved configuration'}
+          </div>
+        </div>
+      );
+    }
 
     return (
-      <IonChannelModelBuilding
-        readonly
-        sessionId={entity.id}
-        originalConfig={initialConfig}
-        originalCampaignId={entity.id}
+      <ScanConfiguration
+        entityId={data.recordingId}
+        scanConfig={scanConfig}
+        virtualLabId={context.virtualLabId}
+        projectId={context.projectId}
+        origin={entity.id}
+        initialConfig={data.form}
+        readOnly
+        defaultTab={{
+          __activity: ScanConfigActivity.Build,
+          id: BuildScanConfigTabs.configuration,
+        }}
+        activity={ScanConfigActivity.Build}
+        campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
       />
     );
   }

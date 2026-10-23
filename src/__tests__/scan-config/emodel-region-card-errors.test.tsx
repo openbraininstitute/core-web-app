@@ -1,11 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { makeRegionEntry } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { ParametersSelection } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/parameters-selection';
 import { RegionAssignment } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/region-assignment';
 
 import type { ErrorObject } from 'ajv';
-import type { IEModelOptimisationParameters } from '@/features/scan-config/types';
+import type { ConfigValue, IEModelOptimisationParameters } from '@/features/scan-config/types';
 
 const rootSchema = {
   properties: {
@@ -17,6 +18,17 @@ const rootSchema = {
   },
 } as unknown as IEModelOptimisationParameters;
 
+const NA = '00000000-0000-4000-8000-00000000000a';
+
+// A parameter error only exists under an assigned model's entry, so `somatic` carries one here.
+// Parameters Selection also hides regions with no assigned models, which this keeps visible.
+const value: ConfigValue = {
+  mechanisms: {
+    ion_channel_models: [{ type: 'IonChannelModelFromID', id_str: NA }],
+    mechanism_regions: { somatic: [makeRegionEntry(NA)] },
+  },
+};
+
 const error = (instancePath: string) => ({ instancePath }) as ErrorObject;
 const PARAMETER_ERROR = error('/mechanisms/mechanism_regions/somatic/0/parameters/gNa/value/value');
 const ENTRY_ERROR = error('/mechanisms/mechanism_regions/somatic/0/ion_channel_model');
@@ -25,7 +37,7 @@ function somaticCardWarns(Tab: typeof RegionAssignment, errors: ErrorObject[]) {
   render(
     <Tab
       rootSchema={rootSchema}
-      value={null}
+      value={value}
       onChange={() => {}}
       selectedRegionChoice=""
       setSelectedRegionChoice={() => {}}

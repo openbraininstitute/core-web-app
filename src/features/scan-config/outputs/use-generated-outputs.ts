@@ -10,6 +10,7 @@ import {
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { TResolvedOutput } from '@/features/scan-config/outputs/types';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
@@ -41,7 +42,7 @@ function outputIdentity(data: TResolvedOutput | null | undefined): string {
   if (!data) return '-';
 
   const assets = Array.isArray(data.entity?.assets)
-    ? data.entity.assets.map((asset) => asset?.id ?? '').join(',')
+    ? data.entity.assets.map((asset: IAsset | undefined) => asset?.id ?? '').join(',')
     : '';
 
   return [data.ref?.id, data.strategyId, data.extendedType, data.entity?.id, assets].join(':');

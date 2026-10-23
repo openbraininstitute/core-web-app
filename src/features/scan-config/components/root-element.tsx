@@ -22,6 +22,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -83,6 +84,13 @@ export function RootElement({
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
+  const isSelected = selectedRootElement === rootElement;
+  // only a dictionary holds sub-entries; the count is what it currently holds
+  const entryCount =
+    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
+      ? Object.keys(isPlainObject(config[rootElement]) ? (config[rootElement] as object) : {})
+          .length
+      : null;
 
   if (!schema?.properties) return;
 
@@ -175,7 +183,21 @@ export function RootElement({
                   fallbackTitle={schema.properties?.[rootElement]?.title}
                 />
               </span>
-              <div className="flex gap-3">
+              <div className="flex items-center gap-3">
+                {entryCount ? (
+                  <span
+                    className={cn(
+                      // 1em box: the same height as the status mark beside it
+                      'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
+                      isSelected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
+                    )}
+                  >
+                    <span className="text-[0.7em] leading-none font-semibold tabular-nums">
+                      {entryCount}
+                    </span>
+                  </span>
+                ) : null}
+
                 {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
                 hasFieldErrors ? (
                   <WarningFilled className="text-yellow-400!" />
@@ -208,7 +230,7 @@ export function RootElement({
           )}
           arrowClassName="bg-primary-8"
         >
-          {rootElementSchema.description}
+          <MarkdownDescription dark>{rootElementSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
 

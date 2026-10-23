@@ -25,6 +25,7 @@ export {
   buildConfigureUrlForEntity,
   buildScanConfigConfigureHref,
   buildSimulateConfigureUrlFromDataViewEntity,
+  buildWorkflowCrumbs,
   buildWorkflowHomeHref,
   buildWorkflowStartingPageUrl,
   resolveSimulateSourceTypeFromDataView,

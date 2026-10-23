@@ -2,7 +2,7 @@ import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 
 import type { DirectoryListContent, IAsset } from '@/api/entitycore/types/shared/global';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TActivityCustomFile, TAssetBackedFile } from '@/features/scan-config/types';
 
 /** A sub-folder of the level currently being listed. */
 export type TDirectoryFolderEntry = {
@@ -159,7 +159,7 @@ export function makeDirectoryChildFile({
   asset: IAsset;
   entity: TActivityCustomFile['entity'];
   entry: TDirectoryFileEntry;
-}): TActivityCustomFile {
+}): TAssetBackedFile {
   return {
     id: `${asset.id}:${entry.path}`,
     entity,

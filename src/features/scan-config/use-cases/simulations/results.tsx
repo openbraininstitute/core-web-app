@@ -345,7 +345,7 @@ export default function SimulationsTab({
         onSimulationStatusLoad={onSimulationStatusLoad}
         onRun={onLaunch}
         middle={
-          <div className="h-full bg-background! w-full">
+          <div className="h-full bg-white! w-full">
             {loading ? (
               <InOutFilesColumnSkeleton />
             ) : (
@@ -388,22 +388,21 @@ export default function SimulationsTab({
                 isCampaignIdChanged={isCampaignIdChanged}
               />
             )}
-            {selectedFile?.renderer !== ActivityCustomFileRenderer.TaskLogsViewer &&
-              selectedFile?.renderer !== ActivityCustomFileRenderer.TaskConfigurationViewer && (
-                <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-                  {/* The spike viewer replays over the circuit that was scanned and
+            {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+              <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+                {/* The spike viewer replays over the circuit that was scanned and
                       spans its axis over the run window, neither of which is in the
                       file it is handed. Both already resolved above. */}
-                  <SimulationProvider model={model} run={simConfig?.run}>
-                    <FileViewer
-                      file={selectedFile}
-                      className="h-full w-full"
-                      context={context}
-                      loading={filesLoading}
-                    />
-                  </SimulationProvider>
-                </SimulationReportsProvider>
-              )}
+                <SimulationProvider model={model} run={simConfig?.run}>
+                  <FileViewer
+                    file={selectedFile}
+                    className="h-full w-full"
+                    context={context}
+                    loading={filesLoading}
+                  />
+                </SimulationProvider>
+              </SimulationReportsProvider>
+            )}
           </>
         }
       />

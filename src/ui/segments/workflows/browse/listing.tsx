@@ -6,6 +6,11 @@ import { use, useCallback, useEffect, useMemo, useState, useTransition } from 'r
 
 import { INTERNAL_QUERY_CACHE_PREFIX } from '@/constants';
 import { isEntitySelectableForWorkflow } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
+import { limitNewPicks } from '@/features/scan-config/workflow/selection-cap';
+import {
+  SelectionCapHint,
+  useSelectionCap,
+} from '@/features/scan-config/workflow/selection-cap-ui';
 import {
   type TWorkflowSchemaSelection,
   WorkflowSchemaSelectionMode,
@@ -46,9 +51,6 @@ import type { TWorkspaceSection } from '@/constants';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
 import type { KebabCase } from '@/utils/type';
-
-/** height reserved for the multi-entity "Use selection" footer in workflow browse grids. */
-const WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT = '4.5rem';
 
 type WorkflowNewBrowsePageProps = {
   activity: TActivityValue;
@@ -93,6 +95,7 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
         .map((row) => ({
           type: input.type,
           id: row.id,
+          name: row.name,
         })),
     }))
     .filter((group) => group.items.length > 0);
@@ -133,11 +136,11 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
 function getBrowseClassNames(isMultiEntityBrowse: boolean) {
   return {
     container: isMultiEntityBrowse
-      ? `max-h-full min-h-0 flex-1 [grid-area:body] max-h-[calc(100vh-11.8rem-${WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT})]`
-      : 'max-h-full min-h-0 flex-1 relative [grid-area:body]',
+      ? 'h-full max-h-full min-h-0 flex-1 [grid-area:body]'
+      : 'h-full max-h-full min-h-0 flex-1 relative [grid-area:body]',
     miniView: isMultiEntityBrowse
-      ? 'max-h-[calc(100vh-11rem)] [grid-area:mini-view] row-span-2 self-stretch'
-      : 'max-h-[calc(100vh-11rem)] [grid-area:mini-view]',
+      ? 'h-full min-h-0 [grid-area:mini-view] row-span-2 self-stretch'
+      : 'h-full min-h-0 [grid-area:mini-view]',
     footer: 'flex shrink-0 justify-end bg-background pt-3 pb-2 [grid-area:footer]',
   };
 }
@@ -176,6 +179,11 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
     () => Object.values(selectionCountsByType).reduce((sum, count) => sum + (count ?? 0), 0),
     [selectionCountsByType]
   );
+
+  const maxSelections =
+    selectionConfig?.selectionMode === WorkflowSchemaSelectionMode.Multiple
+      ? selectionConfig.maxSelections
+      : undefined;
 
   const defaultEntityType = useMemo(() => {
     return (
@@ -361,7 +369,16 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
   const goBackRef = useLatest(goBack);
   const handleBack = useCallback(() => goBackRef.current(), [goBackRef]);
 
-  const activeSelectedRows = activeEntityType ? (selectionsByType[activeEntityType] ?? []) : [];
+  const activeSelectedRows = useMemo(
+    () => (activeEntityType ? (selectionsByType[activeEntityType] ?? []) : []),
+    [activeEntityType, selectionsByType]
+  );
+
+  const { isRowSelectable, confirmDisabled } = useSelectionCap({
+    selectedRows: activeSelectedRows,
+    selectedCount: totalSelectedCount,
+    maxSelections,
+  });
 
   const handleRowsSelected = useCallback(
     (rows: EntityCoreIdentifiableNamed[]) => {
@@ -379,13 +396,25 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           return previous;
         }
 
+        const otherSelectedCount = configurationInputs
+          .filter((input) => input.type !== activeEntityType)
+          .reduce(
+            (sum, input) =>
+              sum + (previous[input.type]?.filter(isEntitySelectableForWorkflow).length ?? 0),
+            0
+          );
+
         return {
           ...previous,
-          [activeEntityType]: rows.filter(isEntitySelectableForWorkflow),
+          [activeEntityType]: limitNewPicks({
+            rows: rows.filter(isEntitySelectableForWorkflow),
+            currentRows,
+            room: maxSelections === undefined ? undefined : maxSelections - otherSelectedCount,
+          }),
         };
       });
     },
-    [activeEntityType]
+    [activeEntityType, configurationInputs, maxSelections]
   );
 
   const shouldRedirectToConfigure =
@@ -551,7 +580,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireMiniDetailView
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
-        requireScopeSelector={workflow.requireScope}
+        requireScopeSelector
         allowFilter={workflow.requireFilters}
         section={section}
         classNames={{
@@ -569,6 +598,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
             ? {
                 selectedRows: activeSelectedRows,
                 onRowsSelected: handleRowsSelected,
+                ...(maxSelections === undefined ? {} : { isRowSelectable, hideSelectAll: true }),
               }
             : {}),
         }}
@@ -611,10 +641,18 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
               </Button>
             </div>
           )}
+          {maxSelections !== undefined && (
+            <SelectionCapHint
+              testId="workflow-browse-selection-cap"
+              className="self-center"
+              selectedCount={totalSelectedCount}
+              maxSelections={maxSelections}
+            />
+          )}
           <Button
             rounded
             variant="default"
-            disabled={totalSelectedCount === 0}
+            disabled={confirmDisabled}
             className={cn(
               'h-12 min-w-64 px-10 text-lg font-bold shadow-skmp-s',
               'disabled:bg-neutral-2 disabled:text-neutral-4!'

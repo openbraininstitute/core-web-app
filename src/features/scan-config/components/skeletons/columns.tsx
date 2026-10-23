@@ -43,13 +43,13 @@ export function ConfigListCardSkeleton() {
 
 export function InOutFilesColumnSkeleton() {
   return (
-    <div className="h-full w-full overflow-y-auto pr-2 secondary-scrollbar bg-background!">
+    <div className="h-full w-full overflow-y-auto pr-2 secondary-scrollbar bg-white!">
       <Skeleton className="h-5 w-36 rounded-full" />
       <div className="mt-4 mb-8 flex flex-col gap-4">
         {(['file-a', 'file-b', 'file-c', 'file-d'] as const).map((key) => (
           <div
             key={key}
-            className="flex w-full items-center justify-between rounded-4xl gap-4 bg-white p-4"
+            className="flex w-full items-center justify-between gap-4 rounded-4xl border border-[oklch(0.968_0.007_247.896)] bg-white p-4"
           >
             <Skeleton className="h-5 min-w-0 flex-1 rounded-full" />
             <Skeleton className="ml-4 h-5 w-14 shrink-0 rounded-full" />

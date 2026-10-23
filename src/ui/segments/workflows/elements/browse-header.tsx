@@ -41,7 +41,7 @@ export function ActivityAndTypeSelectors({
         listWorkflows({
           activity: v,
           flags: featureFlags,
-          context: 'configure',
+          context: 'browse',
           sort: 'order',
         }).find((w) => !w.disabled)?.targetType ?? null;
       onEntityTypeChange(type);

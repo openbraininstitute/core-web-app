@@ -24,7 +24,6 @@ export function defineSimulateCircuitScanConfigWorkflow({
     campaign: { resolve },
     editor: {
       campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
-      className: 'px-4',
     },
     taskTypeBindings: ({ entity }) => ({
       obiOne:

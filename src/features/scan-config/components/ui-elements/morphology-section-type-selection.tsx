@@ -22,12 +22,14 @@ type SectionTypeOption = { value: number; label: string };
  * (`number[][]`) or `null`. Only single selections are editable here, so scan
  * values are flattened best-effort for display.
  *
- * `null` / missing means “no section-type filter” — all endpoint options are
- * treated as selected. Stored values that are no longer returned by the
- * endpoint (e.g. apical when the morphology has none) are filtered out.
+ * `null` / missing means no selection has been made yet, so the widget must
+ * show nothing selected; showing every option as selected here would desync
+ * the widget from the real (unset) state used by the "Required" check below.
+ * Stored values that are no longer returned by the endpoint (e.g. apical when
+ * the morphology has none) are filtered out.
  */
 function toSelectedValues(value: ConfigValue, optionValues: number[]): number[] {
-  if (value == null || !Array.isArray(value)) return optionValues;
+  if (value == null || !Array.isArray(value)) return [];
   const result: number[] = [];
   for (const entry of value) {
     if (typeof entry === 'number') result.push(entry);
@@ -94,34 +96,44 @@ export function MorphologySectionTypeSelection({
     return toSelectedValues(value, optionValues);
   }, [value, options]);
 
+  const noOptions = !isLoading && !isError && !!endpoint && options.length === 0;
+
   return (
-    <Select<number[]>
-      data-scan-config-block-element={ScanConfigUIElementDict.MorphologySectionTypeSelection}
-      mode="multiple"
-      className="w-full"
-      disabled={disabled || !endpoint}
-      loading={isLoading}
-      status={isError ? 'error' : undefined}
-      value={selected}
-      placeholder={
-        isLoading
-          ? 'Loading section types…'
-          : isError
-            ? 'Section types could not be loaded'
-            : 'Select section types…'
-      }
-      optionFilterProp="label"
-      suffixIcon={isLoading ? <LoadingOutlined spin /> : undefined}
-      notFoundContent={
-        isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-2 text-gray-400">
-            <LoadingOutlined spin />
-            <span>Loading section types…</span>
-          </div>
-        ) : undefined
-      }
-      options={options.map((option) => ({ label: option.label, value: option.value }))}
-      onChange={(next) => onChange(next.length > 0 ? next : null)}
-    />
+    <>
+      <Select<number[]>
+        data-scan-config-block-element={ScanConfigUIElementDict.MorphologySectionTypeSelection}
+        mode="multiple"
+        className="w-full"
+        disabled={disabled || !endpoint}
+        loading={isLoading}
+        status={isError || noOptions ? 'error' : undefined}
+        value={selected}
+        placeholder={
+          isLoading
+            ? 'Loading section types…'
+            : isError
+              ? 'Section types could not be loaded'
+              : 'Select section types…'
+        }
+        optionFilterProp="label"
+        suffixIcon={isLoading ? <LoadingOutlined spin /> : undefined}
+        notFoundContent={
+          isLoading ? (
+            <div className="flex items-center justify-center gap-2 py-2 text-gray-400">
+              <LoadingOutlined spin />
+              <span>Loading section types…</span>
+            </div>
+          ) : undefined
+        }
+        options={options.map((option) => ({ label: option.label, value: option.value }))}
+        onChange={(next) => onChange(next.length > 0 ? next : null)}
+      />
+      {noOptions && (
+        <p className="mt-1 text-red-500 text-xs">
+          No section types found for the selected morphology. Choose a different morphology to place
+          synapses.
+        </p>
+      )}
+    </>
   );
 }

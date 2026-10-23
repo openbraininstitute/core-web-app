@@ -8,6 +8,7 @@ import { extracellularRecordingArrayBuildFlag } from '@/features/feature-flags/f
 import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildCircuitSynapticPhysiologyWorkflow } from '@/features/scan-config/workflow/definitions/build-circuit-synaptic-physiology';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
+import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 import {
@@ -20,6 +21,7 @@ import { EmSynapseMappingDatasetPrerequisiteCards } from '@/ui/segments/workflow
 import {
   buildCircuitSynapticPhysiologyConfigureBinding,
   buildEmSynapseMappingConfigureBinding,
+  buildIonChannelConfigureBinding,
   buildSynaptomeConfigureBinding,
   createExtracellularRecordingArrayConfigureBinding,
 } from '../scan-config-binding';
@@ -58,10 +60,10 @@ const EXTRACELLULAR_RECORDING_ARRAY_BUILD_SCALES: readonly TCircuitScaleDictiona
 ];
 
 /**
- * obi-one refuses weights that need more memory than its largest machine has. 10,000 neurons
- * fit with up to about 40 electrodes; denser arrays lower the limit.
+ * obi-one fits about 416,000 neurons in its largest machine, and about 23 million neurons ×
+ * electrodes in a task's disk. It refuses larger jobs at launch.
  */
-const EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS = 10_000;
+const EXTRACELLULAR_RECORDING_ARRAY_MAX_NEURONS = 400_000;
 
 /** The circuits a build workflow's backend accepts. */
 type TCircuitBuildLimits = {
@@ -173,9 +175,24 @@ const extracellularRecordingArrayBrowseConfig = circuitBuildBrowseConfig({
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.IonChannelModel,
-    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    ...WorkflowStagePresets.ScanConfig,
+    sourceType: ExtendedEntitiesTypeDict.IonChannelRecording,
+    targetType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    label: 'Ion channel',
+    breadcrumb: {
+      root: 'Ion channel build',
+      steps: {
+        selection: 'Select ion channel recordings',
+      },
+    },
+    scanConfig: {
+      definition: buildIonChannelWorkflow,
+      schemaName: SchemaNameDict.IonChannelFittingScanConfig,
+      configureBinding: buildIonChannelConfigureBinding(),
+    },
+    configurationInputs: [{ type: ExtendedEntitiesTypeDict.IonChannelRecording }],
+    requireFilters: false,
+    requireSpecies: false,
     order: 1,
     disabled: false,
   },
@@ -393,5 +410,20 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
     sourceType: ExtendedEntitiesTypeDict.WholeBrain,
     targetType: ExtendedEntitiesTypeDict.WholeBrain,
     disabled: true,
+  },
+];
+
+// past runs also list the ion channel campaigns built before the scan-config editor
+export const BuildBrowseWorkflows: readonly IWorkflowDescriptor[] = [
+  ...BuildWorkflows,
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.DirectConfigure,
+    sourceType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    targetType: ExtendedEntitiesTypeDict.IonChannelModelingCampaign,
+    label: 'Ion channel (legacy)',
+    legacy: true,
+    order: 8,
+    disabled: false,
   },
 ];

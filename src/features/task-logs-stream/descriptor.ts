@@ -3,7 +3,7 @@ import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
-import type { TActivityCustomFile } from '@/features/scan-config/types';
+import type { TActivityCustomFile, TAssetBackedFile } from '@/features/scan-config/types';
 
 export const LogStreamFileRenderer = {
   TaskConfiguration: 'task-configuration-viewer',
@@ -88,7 +88,7 @@ export function makeTaskConfigurationFile<T extends Record<string, unknown>>({
 }: {
   descriptor: TLogStreamFileDescriptor;
   config: ITaskConfig<T>;
-}): TActivityCustomFile {
+}): TAssetBackedFile {
   return {
     id: descriptor.id,
     entity: config,
@@ -110,7 +110,7 @@ export function makeTaskLogsFile({
 }: {
   descriptor: TLogStreamFileDescriptor;
   execution: ITaskActivity;
-}): TActivityCustomFile {
+}): TAssetBackedFile {
   return {
     id: descriptor.id,
     entity: execution as TActivityCustomFile['entity'],

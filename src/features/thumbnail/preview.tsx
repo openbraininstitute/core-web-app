@@ -105,7 +105,9 @@ export function PreviewThumbnail({
         entity,
         virtualLabId as string | undefined,
         projectId as string | undefined,
-        target as TThumbnailServiceTarget
+        target as TThumbnailServiceTarget,
+        undefined,
+        dpi
       );
     },
     select: toObjectUrl,

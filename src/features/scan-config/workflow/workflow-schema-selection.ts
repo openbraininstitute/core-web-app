@@ -17,6 +17,7 @@ import {
   ScanConfigFromIdType,
   type TScanConfigFromIdType,
 } from '@/features/scan-config/workflow/scan-config-from-id-type';
+import { readFieldMaxItems } from '@/features/scan-config/workflow/selection-cap';
 
 const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.CellMorphologyFromID]: ExtendedEntitiesTypeDict.UniversalCellMorphology,
@@ -30,6 +31,7 @@ const scanConfigFromIdTypeToEntityType = {
     ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
   [ScanConfigFromIdType.ElectricalCellRecordingFromID]:
     ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  [ScanConfigFromIdType.IonChannelRecordingFromID]: ExtendedEntitiesTypeDict.IonChannelRecording,
 } as const satisfies Record<TScanConfigFromIdType, TExtendedEntitiesTypeDict>;
 
 function isScanConfigFromIdType(value: string): value is TScanConfigFromIdType {
@@ -98,6 +100,8 @@ export type TWorkflowSchemaSelectionMultiple = TWorkflowSchemaSelectionBase & {
   selectionMode: typeof WorkflowSchemaSelectionMode.Multiple;
   acceptedEntityTypes: readonly TExtendedEntitiesTypeDict[];
   tableSelectionType: typeof WorkflowBrowseTableSelection.Checkbox;
+  /** the field's `maxItems`, when ObiOne caps how many entities it takes */
+  maxSelections?: number;
 };
 
 /** `model_identifier_grouped` with grouped NamedTuple shape. */
@@ -294,7 +298,9 @@ export function findInitializeModelProperty(schema: ConfigSchema): {
     if (isModelIdentifierUiElement(property.ui_element)) {
       return {
         key,
-        field: property as TBlockElement & { ui_element: TWorkflowInitializeModelUiElement },
+        field: property as TBlockElement & {
+          ui_element: TWorkflowInitializeModelUiElement;
+        },
       };
     }
   }
@@ -342,21 +348,70 @@ export function resolvePrimaryEntityIdFromConfigForm(
   schema: ConfigSchema,
   config: Config | undefined
 ): string | undefined {
+  return resolveEntityIdsFromConfigForm(schema, config).at(0);
+}
+
+/** Every entity id stored under the schema's initialize model field, in config order. */
+export function resolveEntityIdsFromConfigForm(
+  schema: ConfigSchema,
+  config: Config | undefined
+): string[] {
+  return resolveEntityRefsFromConfigForm(schema, config).map((ref) => ref.id_str);
+}
+
+/**
+ * Every entity ref (a FromID of a known entity kind) anywhere in a saved config, deduped by id.
+ * Fallback for workflows that keep their entity outside `initialize`, e.g. ion channel models.
+ */
+export function collectEntityRefsFromConfig(value: unknown): TFromIdRef[] {
+  const found = new Map<string, TFromIdRef>();
+  const visit = (node: unknown) => {
+    if (isFromIdRef(node)) {
+      if (isScanConfigFromIdType(node.type)) found.set(node.id_str, node);
+    } else if (Array.isArray(node)) {
+      node.forEach(visit);
+    } else if (isPlainObject(node)) {
+      Object.values(node).forEach(visit);
+    }
+  };
+  visit(value);
+  return [...found.values()];
+}
+
+/** Every entity ref stored under the schema's initialize model field, in config order. */
+export function resolveEntityRefsFromConfigForm(
+  schema: ConfigSchema,
+  config: Config | undefined
+): TFromIdRef[] {
   const modelProperty = findInitializeModelProperty(schema);
   if (!modelProperty || !config) {
-    return undefined;
+    return [];
   }
 
   const initialize = config.initialize;
   if (!initialize || typeof initialize !== 'object' || Array.isArray(initialize)) {
-    return undefined;
+    return [];
   }
 
   const modelFieldValue = initialize[modelProperty.key as keyof typeof initialize] as
     | ConfigValue
     | undefined;
 
-  return collectFromIdRefsFromModelFieldValue(modelFieldValue).at(0)?.id_str;
+  return collectFromIdRefsFromModelFieldValue(modelFieldValue);
+}
+
+/**
+ * The entities a workflow config is about: the `initialize` model field when the schema has
+ * one (even when empty, so clearing it clears the result), otherwise every entity ref in the
+ * config (workflows that pick outside `initialize`, e.g. ion channel models).
+ */
+export function resolveWorkflowEntityRefs(
+  schema: ConfigSchema,
+  config: Config | undefined
+): TFromIdRef[] {
+  return findInitializeModelProperty(schema)
+    ? resolveEntityRefsFromConfigForm(schema, config)
+    : collectEntityRefsFromConfig(config);
 }
 
 /**
@@ -428,6 +483,7 @@ function buildModelFieldSelection(opts: {
     acceptedFromIdTypes: opts.acceptedFromIdTypes,
     acceptedEntityTypes: mapScanConfigFromIdTypesToEntityTypes(opts.acceptedFromIdTypes),
     tableSelectionType: WorkflowBrowseTableSelection.Checkbox,
+    maxSelections: readFieldMaxItems(opts.modelField),
   };
 }
 
@@ -454,7 +510,7 @@ export type TParseWorkflowSchemaSelectionParams = {
  * | Schema field | Mode |
  * |--------------|------|
  * | `model_identifier` | `single` → table selection `none` |
- * | `model_identifier_multiple` (flat) | `multiple` → table `checkbox` |
+ * | `model_identifier_multiple` (flat) | `multiple` → table `checkbox`, capped at `maxItems` |
  * | `model_identifier_multiple` (NamedTuple) | `grouped` → table `checkbox` per group |
  *
  * Accepted entity types are resolved from `accepted_input_types` or embedded

@@ -145,7 +145,7 @@ export function BuildTab({
         }
         middle={
           !!resolvedActiveConfig && (
-            <div className="h-full bg-background! w-full">
+            <div className="h-full bg-white! w-full">
               <InOutFiles
                 config={resolvedActiveConfig}
                 execStatus={activeConfigExecStatus}
@@ -168,7 +168,7 @@ export function BuildTab({
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as EntityCoreObjectTypes}
-                  dataType={selectedFile.entity.type}
+                  dataType={selectedFile.dataType}
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

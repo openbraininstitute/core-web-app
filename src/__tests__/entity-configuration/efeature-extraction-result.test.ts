@@ -7,14 +7,14 @@ import {
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
-import { BrowseExperimentalDataExtendedTypes } from '@/ui/segments/explore/helpers';
+import { SimulationDataExtendedTypes } from '@/ui/segments/explore/helpers';
 
 describe('intracellular efeature extraction result', () => {
-  it('is registered in the entity configuration under experimental data', () => {
+  it('is registered in the entity configuration under simulations', () => {
     const config = EntityCoreConfiguration.EFeatureExtractionResult;
 
     expect(config.extendedType).toBe(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
-    expect(config.group).toBe('experimental');
+    expect(config.group).toBe('simulations');
   });
 
   it('lists only the columns a task result actually carries', () => {
@@ -60,13 +60,13 @@ describe('intracellular efeature extraction result', () => {
     ).toBe(true);
   });
 
-  it('appears in the Data > Experimental sidebar', () => {
+  it('appears in the Data > Simulations sidebar', () => {
     // registering the entity config is not enough on its own: the sidebar iterates its own list,
     // and a type missing from it is simply never offered
-    const experimental = Object.values(BrowseExperimentalDataExtendedTypes).map(
+    const simulations = Object.values(SimulationDataExtendedTypes).map(
       (entry) => entry.extendedType
     );
 
-    expect(experimental).toContain(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
+    expect(simulations).toContain(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
   });
 });

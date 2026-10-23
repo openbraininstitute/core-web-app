@@ -2,7 +2,6 @@
 
 import { useMemo } from 'react';
 
-import { EntityTypeDict } from '@/api/entitycore/types';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
@@ -147,7 +146,7 @@ export function SkeletonizationTab({
         }
         middle={
           !!resolvedActiveConfig && (
-            <div className="h-full bg-background! w-full">
+            <div className="h-full bg-white! w-full">
               <InOutFiles
                 config={resolvedActiveConfig}
                 execStatus={activeConfigExecStatus}
@@ -169,7 +168,7 @@ export function SkeletonizationTab({
                 <MiniDetailViewRenderer
                   section={WorkspaceSection.Data}
                   record={selectedFile.entity as ICellMorphology}
-                  dataType={EntityTypeDict.CellMorphology}
+                  dataType={selectedFile.dataType}
                   theme={ViewVariant.Light}
                   enableAnimation={false}
                 />

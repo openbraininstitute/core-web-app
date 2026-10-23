@@ -60,7 +60,9 @@ type SyntheticNodeIdHandle = {
 
 type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | SyntheticNodeIdHandle;
 
-type LoadedColumn = Float32Array | Float64Array | Uint32Array | string[];
+type NumericColumn = Float32Array | Float64Array | BigInt64Array | BigUint64Array;
+
+type LoadedColumn = NumericColumn | Uint32Array | string[];
 
 type GenericFilter =
   | TextFilter
@@ -68,8 +70,10 @@ type GenericFilter =
   | { filterType: 'text'; operator: 'AND' | 'OR'; conditions: TextFilter[] }
   | { filterType: 'number'; operator: 'AND' | 'OR'; conditions: NumberFilter[] };
 
+type RowTest = (row: number) => boolean;
+
 type Compiled =
-  | { kind: 'generic'; handle: ColumnHandle; data: LoadedColumn; filter: GenericFilter }
+  | { kind: 'generic'; test: RowTest }
   | { kind: 'set'; data: Uint32Array; mask: Uint8Array };
 
 function classifyDtype(dtype: string): ColumnKind {
@@ -85,8 +89,9 @@ function classifyDtype(dtype: string): ColumnKind {
   return 'string';
 }
 
-function toNumber(v: number | bigint): number {
-  return typeof v === 'bigint' ? Number(v) : v;
+/** A 64-bit integer column, which h5wasm reads as a BigInt64Array or BigUint64Array. */
+function isInt64(handle: ColumnHandle): boolean {
+  return handle.kind === 'numeric' && /^[<>|]?[qQ]$/.test(handle.dtype);
 }
 
 function alphabeticRank(library: string[]): Uint32Array {
@@ -335,7 +340,7 @@ export class NodesSession {
         }
         return [{ kind: 'set', data: data as Uint32Array, mask }];
       }
-      return [{ kind: 'generic', handle, data, filter: f }];
+      return [{ kind: 'generic', test: rowTest(handle, data, f) }];
     });
 
     const buf = new Uint32Array(this.rowCount);
@@ -348,7 +353,7 @@ export class NodesSession {
             pass = false;
             break;
           }
-        } else if (!matchOne(c.handle, c.data, i, c.filter)) {
+        } else if (!c.test(i)) {
           pass = false;
           break;
         }
@@ -430,14 +435,18 @@ export class NodesSession {
     // is sharing.
     if (!names.every((name) => this.columnIndex.get(name)?.kind === 'numeric')) return null;
 
-    // Numeric handles, so `loadColumn` went through `ensureFloatArray`.
-    const columns = names.map((name) => this.loadColumn(name) as Float32Array | Float64Array);
+    // Numeric handles, so `loadColumn` went through `ensureNumericArray`.
+    const columns = names.map((name) => this.loadColumn(name) as NumericColumn);
 
     const stride = names.length;
     const out = new Float32Array(this.rowCount * stride);
     for (let c = 0; c < stride; c++) {
       const column = columns[c];
-      for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+      if (column instanceof BigInt64Array || column instanceof BigUint64Array) {
+        for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = Number(column[i]);
+      } else {
+        for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+      }
     }
     return out;
   }
@@ -460,7 +469,7 @@ export class NodesSession {
     if (handle.kind === 'categorical') {
       loaded = ensureUint32(raw);
     } else if (handle.kind === 'numeric') {
-      loaded = ensureFloatArray(raw);
+      loaded = ensureNumericArray(raw);
     } else {
       loaded = ensureStringArray(raw);
     }
@@ -504,10 +513,12 @@ export class NodesSession {
         out[i] = lib[libIdx] ?? String(libIdx);
       }
     } else if (handle.kind === 'numeric') {
-      const arr = data as Float32Array | Float64Array;
+      const arr = data as NumericColumn;
+      // 64-bit integers as exact text, as `decodeSliceForPage` gives them, whatever their size.
+      const asText = isInt64(handle);
       for (let i = 0; i < indices.length; i++) {
         const idx = (indices as Uint32Array)[i] ?? (indices as number[])[i];
-        out[i] = arr[idx];
+        out[i] = asText ? String(arr[idx]) : Number(arr[idx]);
       }
     } else {
       const arr = data as string[];
@@ -545,9 +556,14 @@ export class NodesSession {
       };
     }
     if (handle.kind === ColumnKindDict.Numeric) {
+      const column = data as NumericColumn;
       return {
         kind: ColumnKindDict.Numeric,
-        values: (data as Float32Array | Float64Array).slice(),
+        // Numbers: ids past 2^53 lose their last digits, so close ones share a colour.
+        values:
+          column instanceof BigInt64Array || column instanceof BigUint64Array
+            ? Float64Array.from(column, Number)
+            : column.slice(),
       };
     }
     return { kind: ColumnKindDict.String, values: [...(data as string[])] };
@@ -605,7 +621,8 @@ function ensureUint32(raw: unknown): Uint32Array {
   return new Uint32Array(0);
 }
 
-function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
+/** 64-bit integers stay BigInt when any is past 2^53, so that ids such as FlyWire's stay exact. */
+function ensureNumericArray(raw: unknown): NumericColumn {
   if (raw instanceof Float64Array) return raw;
   if (raw instanceof Float32Array) return raw;
   if (
@@ -618,7 +635,10 @@ function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
   }
   if (raw instanceof BigInt64Array || raw instanceof BigUint64Array) {
     const out = new Float64Array(raw.length);
-    for (let i = 0; i < raw.length; i++) out[i] = Number(raw[i]);
+    for (let i = 0; i < raw.length; i++) {
+      out[i] = Number(raw[i]);
+      if (!Number.isSafeInteger(out[i])) return raw;
+    }
     return out;
   }
   if (Array.isArray(raw)) return Float64Array.from(raw.map((v) => Number(v)));
@@ -638,7 +658,7 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
     return rank[arr[a]] - rank[arr[b]];
   }
   if (handle.kind === 'numeric') {
-    const arr = data as Float32Array | Float64Array;
+    const arr = data as NumericColumn;
     const va = arr[a];
     const vb = arr[b];
     if (va < vb) return -1;
@@ -652,48 +672,43 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
   return arr[a].localeCompare(arr[b]);
 }
 
-function matchOne(
-  handle: ColumnHandle,
-  data: LoadedColumn,
-  row: number,
-  filter: GenericFilter
-): boolean {
+/** A filter as a test on a row, with its bounds parsed and its comparison chosen once, not per row. */
+function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter): RowTest {
   if ('operator' in filter) {
-    const { operator, conditions } = filter;
-    if (conditions.length === 0) return true;
-    if (operator === 'OR') {
-      for (const c of conditions) if (matchOne(handle, data, row, c)) return true;
-      return false;
+    const tests = filter.conditions.map((c) => rowTest(handle, data, c));
+    if (tests.length === 0) return () => true;
+    if (filter.operator === 'OR') {
+      return (row) => {
+        for (const test of tests) if (test(row)) return true;
+        return false;
+      };
     }
-    for (const c of conditions) if (!matchOne(handle, data, row, c)) return false;
-    return true;
+    return (row) => {
+      for (const test of tests) if (!test(row)) return false;
+      return true;
+    };
   }
-  if (filter.filterType === 'text') {
-    let value: string;
-    if (handle.kind === 'categorical') {
-      const arr = data as Uint32Array;
-      value = handle.library[arr[row]] ?? '';
-    } else if (handle.kind === 'string') {
-      value = (data as string[])[row] ?? '';
-    } else if (handle.kind === 'numeric') {
-      value = String((data as Float32Array | Float64Array)[row]);
-    } else {
-      value = String(row);
-    }
-    return matchText(value, filter);
+  if (filter.filterType === 'text') return (row) => matchText(textAt(handle, data, row), filter);
+  if (data instanceof BigInt64Array || data instanceof BigUint64Array) {
+    const test = integerTest(filter);
+    if (test) return (row) => test(data[row]);
   }
-  // number filter
-  let num: number;
-  if (handle.kind === 'numeric') {
-    num = (data as Float32Array | Float64Array)[row];
-  } else if (handle.kind === 'synthetic-node-id') {
-    num = row;
-  } else if (handle.kind === 'categorical') {
-    num = (data as Uint32Array)[row];
-  } else {
-    num = Number((data as string[])[row]);
-  }
-  return matchNumber(num, filter);
+  const test = numberTest(filter);
+  return (row) => test(numberAt(handle, data, row));
+}
+
+function textAt(handle: ColumnHandle, data: LoadedColumn, row: number): string {
+  if (handle.kind === 'categorical') return handle.library[(data as Uint32Array)[row]] ?? '';
+  if (handle.kind === 'string') return (data as string[])[row] ?? '';
+  if (handle.kind === 'numeric') return String((data as NumericColumn)[row]);
+  return String(row);
+}
+
+function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number {
+  if (handle.kind === 'numeric') return Number((data as NumericColumn)[row]);
+  if (handle.kind === 'synthetic-node-id') return row;
+  if (handle.kind === 'categorical') return (data as Uint32Array)[row];
+  return Number((data as string[])[row]);
 }
 
 function matchText(value: string, f: TextFilter): boolean {
@@ -708,22 +723,74 @@ function matchText(value: string, f: TextFilter): boolean {
     .exhaustive();
 }
 
-function matchNumber(value: number, f: NumberFilter): boolean {
+function numberTest(f: NumberFilter): (v: number) => boolean {
   const q = Number(f.filter);
+  const q2 = Number(f.filterTo ?? f.filter);
+  const lo = Math.min(q, q2);
+  const hi = Math.max(q, q2);
   return match(f.type)
-    .with('equals', () => value === q)
-    .with('notEqual', () => value !== q)
-    .with('lessThan', () => value < q)
-    .with('lessThanOrEqual', () => value <= q)
-    .with('greaterThan', () => value > q)
-    .with('greaterThanOrEqual', () => value >= q)
-    .with('inRange', () => {
-      const q2 = Number(f.filterTo ?? q);
-      const lo = Math.min(q, q2);
-      const hi = Math.max(q, q2);
-      return value >= lo && value <= hi;
-    })
+    .with('equals', () => (v: number) => v === q)
+    .with('notEqual', () => (v: number) => v !== q)
+    .with('lessThan', () => (v: number) => v < q)
+    .with('lessThanOrEqual', () => (v: number) => v <= q)
+    .with('greaterThan', () => (v: number) => v > q)
+    .with('greaterThanOrEqual', () => (v: number) => v >= q)
+    .with('inRange', () => (v: number) => v >= lo && v <= hi)
     .exhaustive();
+}
+
+/**
+ * A number filter as an exact test on 64-bit integers: each bound becomes the whole numbers either
+ * side of it, since as a number it would round. Null when a bound is not a decimal ("Infinity").
+ */
+function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
+  const a = wholeBounds(f.filter);
+  const b = wholeBounds(f.filterTo ?? f.filter);
+  if (!a || !b) return null;
+  const [floor, ceil] = a;
+  const lo = a[1] < b[1] ? a[1] : b[1];
+  const hi = a[0] > b[0] ? a[0] : b[0];
+  return match(f.type)
+    .with('equals', () => (floor === ceil ? (v: bigint) => v === floor : () => false))
+    .with('notEqual', () => (floor === ceil ? (v: bigint) => v !== floor : () => true))
+    .with('lessThan', () => (v: bigint) => v < ceil)
+    .with('lessThanOrEqual', () => (v: bigint) => v <= floor)
+    .with('greaterThan', () => (v: bigint) => v > floor)
+    .with('greaterThanOrEqual', () => (v: bigint) => v >= ceil)
+    .with('inRange', () => (v: bigint) => v >= lo && v <= hi)
+    .exhaustive();
+}
+
+const ZERO = BigInt(0);
+const ONE = BigInt(1);
+const DECIMAL = /^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i;
+
+/** The floor and ceiling of a decimal such as "5.5" or "7.2e17"; null if it is not one. */
+function wholeBounds(text: string): [bigint, bigint] | null {
+  const m = DECIMAL.exec(text.trim());
+  if (!m || (m[2] === '' && !m[3])) return null;
+  const [, sign, int, frac = '', exp = '0'] = m;
+  const digits = BigInt(int + frac);
+  const shift = Number(exp) - frac.length; // the decimal is digits × 10^shift
+  let floor: bigint;
+  let ceil: bigint;
+  if (shift >= 0) {
+    // Capped past every 64-bit integer, which is all it is compared with.
+    floor = digits * pow10(Math.min(shift, 40));
+    ceil = floor;
+  } else if (-shift > int.length + frac.length) {
+    floor = ZERO; // below 1
+    ceil = digits === ZERO ? ZERO : ONE;
+  } else {
+    const scale = pow10(-shift);
+    floor = digits / scale;
+    ceil = digits % scale === ZERO ? floor : floor + ONE;
+  }
+  return sign === '-' ? [-ceil, -floor] : [floor, ceil];
+}
+
+function pow10(n: number): bigint {
+  return BigInt(`1${'0'.repeat(n)}`);
 }
 
 class LruMap<K, V> {
@@ -770,17 +837,17 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
     if (sliced instanceof Float64Array || sliced instanceof Float32Array) {
       return Array.from(sliced);
     }
+    if (sliced instanceof BigInt64Array || sliced instanceof BigUint64Array) {
+      // Exact text, which a number past 2^53 would round.
+      return Array.from(sliced, (v) => v.toString());
+    }
     if (
-      sliced instanceof BigInt64Array ||
-      sliced instanceof BigUint64Array ||
       sliced instanceof Int32Array ||
       sliced instanceof Uint32Array ||
       sliced instanceof Int16Array ||
       sliced instanceof Uint16Array
     ) {
-      const out = new Array<number>(sliced.length);
-      for (let i = 0; i < sliced.length; i++) out[i] = toNumber(sliced[i] as number | bigint);
-      return out;
+      return Array.from(sliced);
     }
     if (Array.isArray(sliced)) return sliced.map((v) => Number(v));
     return [];

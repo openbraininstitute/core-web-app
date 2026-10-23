@@ -1,22 +1,28 @@
 'use client';
 
+import { isEqual } from 'es-toolkit';
 import { get } from 'es-toolkit/compat';
-import { Activity, Suspense } from 'react';
+import { useSetAtom } from 'jotai';
+import { Activity, Suspense, useEffect, useMemo } from 'react';
 import { match } from 'ts-pattern';
 
 import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
-import TabsSelector from '@/features/scan-config/components/tabs-selector';
+import ScanConfigTabsPanel from '@/features/scan-config/components/tabs';
+import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
 import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
-import { messages } from '@/i18n/en/scan-config';
+import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
+import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
+import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
 import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
+import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
 import { cn } from '@/utils/css-class';
 
 import { DEFAULT_COLUMNS_GRID, DefaultConfigColumns } from './default-columns';
@@ -40,81 +46,122 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
   const state = useScanConfigTemplate(props);
   const browseOverlay = useScanConfigMainOverlayOptional()?.overlay;
   const { isConfigurationTab, isEModelOptimisationParameters } = state;
+  const configuredName = get(state.config, 'info.campaign_name');
+  const campaignName =
+    typeof configuredName === 'string' && configuredName ? configuredName : state.campaignId;
 
-  return (
-    <div className={cn('flex h-full flex-col', props.className)}>
-      <header
-        id="template-header"
-        className={cn('flex flex-nowrap justify-between items-center gap-4 pt-4 pb-2')}
-      >
-        <TabsSelector
-          activity={props.activity}
-          tab={state.tab}
-          setTab={state.setTab}
-          disableResultsTab={!state.campaignId || state.loading}
-          disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
+  // the breadcrumb names what the live config points at; this template is its only writer
+  const setBreadcrumbRefs = useSetAtom(workflowBreadcrumbRefsAtom);
+  const entityRefs = useMemo(
+    () => resolveWorkflowEntityRefs(props.schema, state.config),
+    [props.schema, state.config]
+  );
+  // keep the previous array when equal, so edits elsewhere in the config don't re-render it
+  useEffect(() => {
+    setBreadcrumbRefs((current) =>
+      current && isEqual(current, entityRefs) ? current : entityRefs
+    );
+  }, [entityRefs, setBreadcrumbRefs]);
+  // module state outlives the route: hand back to the session / campaign fallbacks on unmount
+  useEffect(() => () => setBreadcrumbRefs(null), [setBreadcrumbRefs]);
+
+  const configurationContent = (
+    <div id="template-content" className="flex min-h-0 flex-1 flex-col px-2 pt-4 pb-2">
+      {!props.readOnly && (
+        <IonChannelModelPropertiesChecks
+          schema={props.schema}
+          config={state.config}
+          setConfig={state.setConfig}
+          locked={state.editingLocked}
         />
-        <div className="flex items-center justify-center gap-8">
-          {!!state.campaignId && (
-            <ButtonCopyId
-              label={get(messages, `${props.activity}.CopyCampaignId`)}
-              value={state.campaignId}
-            />
-          )}
-        </div>
-      </header>
-
-      <div id="template-separator" className="w-full h-px bg-gray-200 my-2 px-3" />
-      <div id="template-content" className="flex-1 min-h-0">
-        {isConfigurationTab && browseOverlay ? (
-          <div
-            id="scan-config-model-selection-overlay"
-            data-testid="scan-config-model-picker"
-            // the picker replaces the whole main area — fade + slight rise on open
-            // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
-            // reduced motion keeps the fade, drops the movement
-            className={cn(
-              'h-[calc(100%-0.5rem)] min-h-0',
-              'transition-[opacity,transform] duration-200 ease-out-expo',
-              'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
-            )}
-          >
-            <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
-              {browseOverlay}
-            </Suspense>
-          </div>
-        ) : null}
+      )}
+      {browseOverlay ? (
         <div
-          id="scan-config-content-columns"
+          id="scan-config-model-selection-overlay"
+          data-testid="scan-config-model-picker"
+          // the picker replaces the whole main area — fade + slight rise on open
+          // so it reads as a panel arriving, not a hard cut. entry-only (no JS);
+          // reduced motion keeps the fade, drops the movement
           className={cn(
-            'py-2',
-            {
-              'grid gap-[5px] h-full overflow-hidden *:min-w-0':
-                isConfigurationTab && !browseOverlay,
-              [EMODEL_OPTIMISATION_COLUMNS_GRID]:
-                isConfigurationTab && !browseOverlay && isEModelOptimisationParameters,
-              [DEFAULT_COLUMNS_GRID]:
-                isConfigurationTab && !browseOverlay && !isEModelOptimisationParameters,
-            },
-            { hidden: !isConfigurationTab || Boolean(browseOverlay) }
+            'min-h-0 flex-1',
+            'transition-[opacity,transform] duration-200 ease-out-expo',
+            'starting:opacity-0 starting:translate-y-1.5 motion-reduce:starting:translate-y-0'
           )}
         >
-          {isEModelOptimisationParameters ? (
-            <EModelOptimisationColumns props={props} state={state} />
-          ) : (
-            <DefaultConfigColumns props={props} state={state} />
-          )}
+          <Suspense fallback={<div className="h-full w-full rounded-2xl bg-gray-50" />}>
+            {browseOverlay}
+          </Suspense>
         </div>
-        <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
-          <div
-            id="scan-config-results"
-            data-testid="scan-config-results"
-            className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 h-full overflow-hidden"
-          >
-            <ScanConfigResults props={props} state={state} />
-          </div>
-        </Activity>
+      ) : null}
+      <div
+        id="scan-config-content-columns"
+        className={cn(
+          'grid gap-[5px] min-h-0 flex-1 overflow-hidden *:min-w-0',
+          isEModelOptimisationParameters ? EMODEL_OPTIMISATION_COLUMNS_GRID : DEFAULT_COLUMNS_GRID,
+          { hidden: Boolean(browseOverlay) }
+        )}
+      >
+        {isEModelOptimisationParameters ? (
+          <EModelOptimisationColumns props={props} state={state} />
+        ) : (
+          <DefaultConfigColumns props={props} state={state} />
+        )}
       </div>
+    </div>
+  );
+
+  const resultsContent = (
+    <Activity mode={isConfigurationTab ? 'hidden' : 'visible'} name="scan-config-results">
+      <div
+        id="scan-config-results"
+        data-testid="scan-config-results"
+        className="w-full grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)] gap-1.25 min-h-0 flex-1 overflow-hidden px-2 pt-4 pb-2"
+      >
+        <ScanConfigResults props={props} state={state} />
+      </div>
+    </Activity>
+  );
+
+  return (
+    <div className={cn('flex h-full min-h-0 flex-col', props.className)}>
+      <ScanConfigTabsPanel
+        className="min-h-0 flex-1"
+        activity={props.activity}
+        tab={state.tab}
+        setTab={state.setTab}
+        disableResultsTab={!state.campaignId || state.loading}
+        disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
+        configuration={configurationContent}
+        results={resultsContent}
+        // the centre copy button exists only once a campaign has been generated (its id is known)
+        railCenter={
+          state.campaignId ? (
+            <BreadcrumbChip className="max-w-full px-1">
+              <ButtonCopyId
+                value={state.campaignId}
+                label={`Copy ${campaignName}`}
+                // hover and keyboard focus both show the full name the visible text elides
+                tooltip={campaignName}
+                className="min-w-0"
+                classNames={{
+                  button: 'h-8 min-w-0 shrink gap-1 pr-0 pl-3',
+                  icon: 'size-6 shrink-0 border-transparent',
+                  glyph: 'size-3.5 text-primary-9',
+                  tooltip: 'max-w-72 text-wrap break-words bg-white text-primary-9 shadow-lg',
+                  tooltipArrow: 'bg-white!',
+                }}
+              >
+                <span className="flex min-w-0 gap-1 text-base">
+                  <span className="shrink-0 font-normal">Copy</span>
+                  <b className="flex min-w-0 font-bold">
+                    <MiddleEllipsis text={campaignName} />
+                  </b>
+                </span>
+              </ButtonCopyId>
+            </BreadcrumbChip>
+          ) : undefined
+        }
+      />
     </div>
   );
 }

@@ -2,11 +2,12 @@ import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/b
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   IBrainLocation,
   ILicense,
+  NestedSubject,
   Timestamps,
 } from '@/api/entitycore/types/shared/global';
 import type {
@@ -61,7 +62,7 @@ export type IonChannelRecordingFilter = Partial<
     ValidationResultNestedFilter
 >;
 
-interface IIonChannelRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+interface IIonChannelRecordingBase extends EntityCoreIdentifiableNamed, EntityCoreOwnership {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;
@@ -85,4 +86,6 @@ export interface IIonChannelRecording
   license?: ILicense | null;
   brain_region: BrainRegionHierarchyBase;
   ion_channel: IonChannel;
+  subject: NestedSubject;
+  temperature: number | null;
 }

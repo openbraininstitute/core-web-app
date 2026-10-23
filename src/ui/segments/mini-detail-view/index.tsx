@@ -8,6 +8,7 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DETAIL_PREVIEW_DPI } from '@/api/thumbnail-svc';
 import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
@@ -37,6 +38,7 @@ import { cn } from '@/utils/css-class';
 import { WorkflowBuildActions } from './actions/build';
 import { DataActions } from './actions/data';
 import { WorkflowActions } from './actions/simulate-extract-process';
+import { resolveInteractiveViewer } from './interactive-viewers';
 
 import type {
   EntityCoreObjectTypes,
@@ -126,6 +128,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   workflowTargetType,
   isPrivate = true,
   virtualLabData,
+  interactive,
 }: {
   section: TWorkspaceSection;
   record: T | null;
@@ -138,8 +141,11 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   workflowTargetType?: TExtendedEntitiesTypeDict;
   isPrivate?: boolean;
   virtualLabData?: TVirtualLab;
+  /** The host has room for a live viewer, for entity types that have one. */
+  interactive?: boolean;
 }) {
   if (!record) return null;
+  const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
   const preview = match({ type: record.type })
@@ -183,7 +189,10 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   rootClassName=" w-full  h-80"
                   className="max-h-full w-full rounded-md object-contain"
                 />
-              )
+              ),
+              undefined,
+              undefined,
+              DETAIL_PREVIEW_DPI
             )}
           </div>
         );
@@ -424,6 +433,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
             <div
               className={cn('primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5', {
                 'bg-white text-primary-9 secondary-scrollbar': theme === 'light',
+                'flex flex-col': interactiveViewer,
               })}
             >
               {record.description && (
@@ -456,12 +466,24 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   )}
                 </ExpandableText>
               )}
-              {preview ?? (
+              {interactiveViewer ? (
                 <div
-                  className={cn('bg-primary-3 my-4 h-px w-full', {
-                    'bg-gray-400': theme === 'light',
-                  })}
-                />
+                  data-testid="mini-detail-interactive-viewer"
+                  className={cn(
+                    'mt-5 min-h-[320px]',
+                    interactiveViewer.sizing === 'fill' ? 'flex-1' : 'flex-[1_0_auto]'
+                  )}
+                >
+                  <interactiveViewer.Viewer key={record.id} record={record} />
+                </div>
+              ) : (
+                (preview ?? (
+                  <div
+                    className={cn('bg-primary-3 my-4 h-px w-full', {
+                      'bg-gray-400': theme === 'light',
+                    })}
+                  />
+                ))
               )}
               <div className="mb-5 grid grid-flow-row-dense grid-cols-2 items-start justify-between gap-2 pt-4">
                 {miniConfig?.map((o) => {

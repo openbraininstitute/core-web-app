@@ -25,6 +25,7 @@ export const ExtendedEntitiesTypeDict = {
   SkeletonizationCampaign: 'skeletonization_campaign',
   ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
   BuildSynaptomeCampaign: 'build_synaptome_campaign',
+  IonChannelBuildCampaign: 'ion_channel_build_campaign',
   CircuitSynapticPhysiologyCampaign: 'circuit_synaptic_physiology_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',
@@ -58,7 +59,7 @@ export function dataBrowseListingUsesBrainRegionHierarchy(extendedType: TExtende
   // entities it was derived from -- so constraining the query by the hierarchy finds nothing
   if (
     extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ||
-    extendedType === ExtendedEntitiesTypeDict.EModelOptimizationResult
+    extendedType === ExtendedEntitiesTypeDict.EModelOptimizationCampaign
   ) {
     return false;
   }

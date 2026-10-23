@@ -35,6 +35,7 @@ export const ScanConfigGeneratedApiPath = {
   BuildSynaptome: 'me-model-synaptic-model-placement-scan-config-generate-grid',
   EModelOptimization: 'e-model-optimization-scan-config-generate-grid',
   SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
+  IonChannelFitting: 'ion-channel-fitting-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -56,6 +57,11 @@ export type TScanConfigConfigureBinding = {
    * into one neuron set instead of one group per tab.
    */
   mergeBrowseSelectionIntoSingleGroup?: boolean;
+  /**
+   * When `true`, the right column always shows an entity from the config: the first one by
+   * default, and the card has no close button.
+   */
+  pinEntityPreview?: boolean;
 };
 
 export function resolveScanConfigFromIdType(
@@ -201,6 +207,7 @@ export function processEmCellMeshConfigureBinding(): TScanConfigConfigureBinding
       [ExtendedEntitiesTypeDict.EMCellMesh]: ScanConfigFromIdType.EMCellMeshFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.Skeletonization,
+    pinEntityPreview: true,
   };
 }
 
@@ -250,6 +257,19 @@ export function buildSynaptomeConfigureBinding(): TScanConfigConfigureBinding {
     },
     generatedApiPath: ScanConfigGeneratedApiPath.BuildSynaptome,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.IonChannelRecording,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.IonChannelRecording,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.IonChannelRecording]:
+        ScanConfigFromIdType.IonChannelRecordingFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFitting,
+    pinEntityPreview: true,
   };
 }
 

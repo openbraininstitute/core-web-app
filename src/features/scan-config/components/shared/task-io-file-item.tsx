@@ -1,5 +1,6 @@
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { isDirectoryAsset } from '@/features/scan-config/components/file-viewer/directory-entries';
+import { isAssetBackedFile } from '@/features/scan-config/types';
 import { classNames } from '@/util/utils';
 
 import type { ReactNode } from 'react';
@@ -25,9 +26,11 @@ type Props = {
 };
 
 export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Props) {
-  const fileName = file.assetPath?.split('/').at(-1) ?? file.asset?.path.split('/').at(-1);
-  const isDirectory = !!file.asset && isDirectoryAsset(file.asset);
-  const isCircuitDirectory = isDirectory && file.asset?.label === AssetLabel.sonata_circuit;
+  const asset = isAssetBackedFile(file) ? file.asset : undefined;
+  const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
+  const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
+  const isDirectory = !!asset && isDirectoryAsset(asset);
+  const isCircuitDirectory = isDirectory && asset?.label === AssetLabel.sonata_circuit;
   const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));
@@ -41,10 +44,11 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       type="button"
       title={displayName}
       className={classNames(
-        'group flex w-full cursor-pointer flex-nowrap items-center justify-between gap-x-4 rounded-4xl p-4',
+        'group flex w-full cursor-pointer flex-nowrap items-center justify-between gap-x-4 rounded-4xl border p-4 transition-colors',
         'shadow-[0_1px_2px_rgba(16,24,40,0.06)]',
-        selected ? 'bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]' : 'bg-white',
-        'hover:bg-gray-100'
+        selected
+          ? 'border-transparent bg-[linear-gradient(95.07deg,#003A8C_42.23%,#001026_109.71%)]'
+          : 'border-[oklch(0.968_0.007_247.896)] bg-white hover:bg-[oklch(0.968_0.007_247.896)]'
       )}
       onClick={() => onSelect(file)}
     >
@@ -59,10 +63,11 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       </div>
       <span
         className={classNames(
-          'group-hover:bg-gray-200 group-hover:border-gray-100',
-          'min-w-0 max-w-[48%] truncate rounded-full border border-gray-200 px-4 uppercase text-xs py-1',
+          'min-w-0 max-w-[48%] truncate rounded-full border px-4 uppercase text-xs py-1',
           'transition-[max-width] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:max-w-[88%]',
-          selected ? 'border-white text-primary-9 bg-white' : 'text-neutral-5'
+          selected
+            ? 'border-white text-primary-9 bg-white'
+            : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
         )}
       >
         {badgeContent}
