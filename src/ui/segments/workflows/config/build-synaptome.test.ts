@@ -37,14 +37,14 @@ describe('build synaptome workflow registration', () => {
     );
   });
 
-  it('carries the campaign type on the registry entry, which the ME-model source type cannot give', () => {
+  it("is the build an ME-model's Build action resolves to", () => {
     const registry = findScanConfigRegistryByDefinition(buildSynaptomeWorkflow);
 
     expect(registry?.targetType).toBe(ExtendedEntitiesTypeDict.BuildSynaptomeCampaign);
-    // the single neuron build declares the same source type and is registered first
-    expect(
-      getTargetType({ activity: 'build', sourceType: ExtendedEntitiesTypeDict.Memodel })
-    ).not.toBe(ExtendedEntitiesTypeDict.BuildSynaptomeCampaign);
+    // the single neuron build picks its inputs in the editor, so no other build takes an ME-model
+    expect(getTargetType({ activity: 'build', sourceType: ExtendedEntitiesTypeDict.Memodel })).toBe(
+      ExtendedEntitiesTypeDict.BuildSynaptomeCampaign
+    );
   });
 
   it('writes the browsed ME-model into initialize as an MEModelFromID', () => {

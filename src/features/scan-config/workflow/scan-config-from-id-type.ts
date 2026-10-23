@@ -17,6 +17,7 @@ export const ScanConfigFromIdType = {
   SimulatableExtracellularRecordingArrayFromID: 'SimulatableExtracellularRecordingArrayFromID',
   ElectricalCellRecordingFromID: 'ElectricalCellRecordingFromID',
   IonChannelRecordingFromID: 'IonChannelRecordingFromID',
+  EModelFromID: 'EModelFromID',
 } as const;
 
 export type TScanConfigFromIdType =

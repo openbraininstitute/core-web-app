@@ -9,6 +9,7 @@ import { SchemaNameDict } from '@/features/scan-config/types';
 import { buildCircuitSynapticPhysiologyWorkflow } from '@/features/scan-config/workflow/definitions/build-circuit-synaptic-physiology';
 import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/definitions/build-em-synapse-mapping';
 import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
+import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 import { createExtracellularRecordingArrayWorkflow } from '@/features/scan-config/workflow/definitions/create-extracellular-recording-array';
 import {
@@ -22,10 +23,15 @@ import {
   buildCircuitSynapticPhysiologyConfigureBinding,
   buildEmSynapseMappingConfigureBinding,
   buildIonChannelConfigureBinding,
+  buildMEModelConfigureBinding,
   buildSynaptomeConfigureBinding,
   createExtracellularRecordingArrayConfigureBinding,
 } from '../scan-config-binding';
-import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
+import {
+  WorkflowBrowseDefaults,
+  WorkflowConfigureRoutingDict,
+  WorkflowStagePresets,
+} from '../types';
 
 import type { TCircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
 import type {
@@ -198,9 +204,20 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   },
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.DirectConfigure,
-    sourceType: ExtendedEntitiesTypeDict.Memodel,
-    targetType: ExtendedEntitiesTypeDict.Memodel,
+    ...WorkflowStagePresets.ScanConfigInEditorSelection,
+    // no input entity type: the source mirrors the target
+    sourceType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    label: 'Single neuron',
+    breadcrumb: {
+      root: 'Single neuron build',
+    },
+    configureRouting: WorkflowConfigureRoutingDict.Standalone,
+    scanConfig: {
+      definition: buildMEModelWorkflow,
+      schemaName: SchemaNameDict.MEModelBuildScanConfig,
+      configureBinding: buildMEModelConfigureBinding(),
+    },
     order: 2,
     disabled: false,
   },

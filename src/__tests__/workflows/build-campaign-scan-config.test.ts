@@ -8,6 +8,7 @@ describe('build campaign overview', () => {
     ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,
     ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
     ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    ExtendedEntitiesTypeDict.MEModelBuildCampaign,
   ])('resolves a scan config for %s so the overview renders the editor', (targetType) => {
     expect(findScanConfigRegistryByTargetType(targetType)).not.toBeNull();
   });

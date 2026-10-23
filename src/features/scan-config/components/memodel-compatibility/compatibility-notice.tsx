@@ -11,12 +11,13 @@ import type { CompatibilityState } from './compatibility-state';
 type Props = {
   state: CompatibilityState;
   onRetry: () => void;
+  className?: string;
 };
 
-export function CompatibilityNotice({ state, onRetry }: Props) {
+export function CompatibilityNotice({ state, onRetry, className }: Props) {
   if (state.kind === 'checking') {
     return (
-      <div className="text-primary-9 flex items-center gap-3 p-4 pl-6 font-semibold">
+      <div className={cn('text-primary-9 flex items-center gap-3 font-semibold', className)}>
         <LoadingOutlined />
         {messages.CheckingCompatibility}
       </div>
@@ -26,7 +27,7 @@ export function CompatibilityNotice({ state, onRetry }: Props) {
   if (state.kind === 'incompatible') {
     return (
       <Notice
-        className="text-destructive"
+        className={cn('text-destructive', className)}
         icon={<ExclamationCircleOutlined />}
         message={messages.IncompatibleModels}
         detail={state.detail}
@@ -37,7 +38,7 @@ export function CompatibilityNotice({ state, onRetry }: Props) {
   if (state.kind === 'check_failed') {
     return (
       <Notice
-        className="text-warning"
+        className={cn('text-warning', className)}
         icon={<WarningOutlined />}
         message={messages.CompatibilityCheckFailed}
         detail={state.detail}
@@ -63,7 +64,7 @@ type NoticeProps = {
 
 function Notice({ className, icon, message, detail, action }: NoticeProps) {
   return (
-    <div className={cn('flex flex-col gap-2 p-4 pl-6', className)}>
+    <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-start gap-3 font-semibold">
         <span className="mt-0.5 shrink-0">{icon}</span>
         <span>{message}</span>

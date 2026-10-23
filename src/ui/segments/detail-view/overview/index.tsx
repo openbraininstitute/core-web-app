@@ -31,6 +31,7 @@ import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memodel-build-campaign';
 import { EModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/emodel-optimization-campaign';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
 import {
@@ -66,6 +67,7 @@ import {
   SimulateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
+import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { Field } from '@/ui/segments/detail-view/overview/field';
@@ -110,6 +112,12 @@ const BuildScanConfigCampaigns: Partial<
     // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
     resolve: IonChannelBuildCampaign.api.query.resolve!,
     taskTypeBindings: buildIonChannelWorkflow.taskTypeBindings,
+  },
+  [TaskConfigType.MEModelBuildCampaign]: {
+    extendedType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    resolve: MEModelBuildCampaign.api.query.resolve!,
+    taskTypeBindings: buildMEModelWorkflow.taskTypeBindings,
   },
   [TaskConfigType.CircuitSynapticPhysiologyCampaign]: {
     extendedType: ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
