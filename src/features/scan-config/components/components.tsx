@@ -46,6 +46,30 @@ export function LeftMenuTab({
   );
 }
 
+/** Small numeric pill shown next to a tab label, e.g. how many entries/parameters it holds. */
+export function CountBadge({
+  count,
+  selected,
+  testId,
+}: {
+  count: number;
+  selected?: boolean;
+  testId?: string;
+}) {
+  return (
+    <span
+      data-testid={testId}
+      className={classNames(
+        // 1em box: the same height as the status mark beside it
+        'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
+        selected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
+      )}
+    >
+      <span className="text-[0.7em] leading-none font-semibold tabular-nums">{count}</span>
+    </span>
+  );
+}
+
 export function Chevron({ rotate }: { rotate?: number }) {
   return (
     <svg

@@ -1,12 +1,14 @@
 'use client';
 
 import { WarningFilled } from '@ant-design/icons';
-import { RiArrowRightSLine } from '@remixicon/react';
+import { RiArrowRightSLine, RiEqualizerLine } from '@remixicon/react';
 
+import { IonChannelIcon } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-icon';
 import {
   assignedModelIds,
   hasErrorAt,
   readMechanisms,
+  regionParameterCounts,
   regionPath,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -60,7 +62,12 @@ export function RegionChoiceCards({
 
   const choices = [...rootSchema.properties.base_parameters.choices]
     .sort((a, b) => a.display_order - b.display_order)
-    .map((choice) => ({ choice, channelCount: assignedModelIds(mechanisms, choice.name).length }))
+    .map((choice) => ({
+      choice,
+      channelCount: assignedModelIds(mechanisms, choice.name).length,
+      // only the Parameters Selection tab (`onlyAssigned`) shows a parameters breakdown
+      parameterCounts: onlyAssigned ? regionParameterCounts(mechanisms, choice.name) : null,
+    }))
     .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
 
   if (onlyAssigned && choices.length === 0) {
@@ -69,8 +76,12 @@ export function RegionChoiceCards({
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
-      {choices.map(({ choice, channelCount }) => {
+      {choices.map(({ choice, channelCount, parameterCounts }) => {
         const isSelected = choice.name === selectedRegionChoice;
+        const pillClass = cn(
+          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+          isSelected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600'
+        );
 
         return (
           <Tooltip key={choice.name}>
@@ -102,15 +113,28 @@ export function RegionChoiceCards({
                   <MarkdownDescription className={cn('mt-3', isSelected && 'text-primary-1')}>
                     {choice.description}
                   </MarkdownDescription>
-                  <span
-                    data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
-                    className={cn(
-                      'mt-3 block text-sm',
-                      isSelected ? 'text-primary-1' : 'text-gray-500'
-                    )}
-                  >
-                    {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
-                  </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span
+                      data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
+                      className={pillClass}
+                    >
+                      <IonChannelIcon className="size-3" />
+                      {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
+                    </span>
+                  </div>
+                  {parameterCounts && (
+                    <div
+                      data-testid={`scan-config-emodel-section-list-${choice.name}-parameter-count`}
+                      className="mt-1.5 flex flex-wrap items-center gap-1.5"
+                    >
+                      <span className={pillClass}>
+                        <RiEqualizerLine className="size-3" aria-hidden />
+                        {parameterCounts.fixed + parameterCounts.optimized} parameters
+                      </span>
+                      <span className={pillClass}>{parameterCounts.fixed} fixed</span>
+                      <span className={pillClass}>{parameterCounts.optimized} optimized</span>
+                    </div>
+                  )}
                 </div>
                 {hasErrorAt(errors, regionPath(choice.name)) && (
                   <WarningFilled className="text-yellow-400!" />
