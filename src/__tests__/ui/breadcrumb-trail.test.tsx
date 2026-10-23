@@ -61,7 +61,7 @@ describe('BreadcrumbTrail', () => {
     expect(screen.getByText('Last')).toHaveAttribute('aria-current', 'page');
   });
 
-  it('puts a copy button next to a single entity and a per-entity menu on a multiple one', () => {
+  it('puts a copy button next to a single entity and a copy-less menu on a multiple one', () => {
     const { rerender } = render(
       <BreadcrumbTrail
         items={[
@@ -80,16 +80,16 @@ describe('BreadcrumbTrail', () => {
             key: 'b',
             label: 'Multiple entities (2)',
             menu: [
-              { key: '1', label: 'One', copy: { value: 'id-1', label: 'Copy One ID' } },
-              { key: '2', label: 'Two', copy: { value: 'id-2', label: 'Copy Two ID' } },
+              { key: '1', label: 'One' },
+              { key: '2', label: 'Two' },
             ],
           },
         ]}
       />
     );
     fireEvent.click(screen.getByRole('button', { name: /Multiple entities \(2\)/ }));
-    expect(screen.getByRole('button', { name: 'Copy One ID' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Copy Two ID' })).toBeInTheDocument();
+    expect(screen.getByText('One')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Copy/ })).toBeNull();
   });
 
   it('middle-ellipsizes a long entity crumb, keeps it focusable,', () => {
@@ -117,8 +117,8 @@ describe('BreadcrumbTrail', () => {
             key: 'b',
             label: 'Multiple entities (2)',
             menu: [
-              { key: '1', label: long, copy: { value: 'id-1', label: `Copy ${long}` } },
-              { key: '2', label: 'Two', copy: { value: 'id-2', label: 'Copy Two' } },
+              { key: '1', label: long },
+              { key: '2', label: 'Two' },
             ],
           },
         ]}
@@ -129,7 +129,6 @@ describe('BreadcrumbTrail', () => {
     expect(entry).toHaveClass('break-words');
     expect(entry).not.toHaveClass('truncate');
     expect(entry).not.toHaveAttribute('title');
-    expect(screen.getByRole('button', { name: `Copy ${long}` })).toBeInTheDocument();
   });
   it('keeps a linked last item navigable while marking it current', () => {
     render(
