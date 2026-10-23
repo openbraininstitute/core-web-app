@@ -154,7 +154,7 @@ motion-quality.ts     how moving frames are cut down: the occlusion, then the re
 gpu-timer.ts          what a frame costs the GPU: a timer query, or a fence
 ```
 
-Shared with the circuit viewer's loader, in `src/features/viewer-3d/load/`: `asset-cache.ts`, which keeps a Cache Storage bucket in bounds (lifetime, total size, the least recently opened first), and `worker-handle.ts`, a worker behind Comlink that says when it dies.
+Shared with [the circuit viewer's loader](../../../../circuit-viewer/morphologies/load/README.md), in `src/features/viewer-3d/load/`: `asset-cache.ts`, which keeps a Cache Storage bucket in bounds (lifetime, total size, the least recently opened first), and `worker-handle.ts`, a worker behind Comlink that says when it dies.
 
 The scene is shared with the morphology viewer, in `src/features/viewer-3d/engine/`. Its cameras, controls and looks are described in [the morphology engine's reference](../../../cell-morphology/morpho-viewer/engine/README.md#looks).
 
