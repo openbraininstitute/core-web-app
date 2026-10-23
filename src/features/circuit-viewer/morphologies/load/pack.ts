@@ -1,8 +1,9 @@
 /**
  * Reads a morphology pack: the binary file OBI-One writes of a circuit's morphologies, simplified, placed in the circuit
- * and cut into chunks of space. The format is specified in OBI-One's `docs/internal/circuit-morphology-pack.md`. The
- * index and the somas are read when the pack is opened, and the chunks a box of space at a time: a level's box over its
- * base's, whose boxes read last are kept a while for the finer levels.
+ * and cut into chunks of space. The format is specified in OBI-One's `obi_one/scientific/library/morphology_pack/docs/`
+ * (`format.md`; what this reader relies on is in `reader-contract.md`). The index and the somas are read when the pack is
+ * opened, and the chunks a box of space at a time: a level's box over its base's, whose boxes read last are kept a while
+ * for the finer levels.
  */
 // The whole of zod comes with `z` imported by name, and the reader runs in a worker of its own.
 import * as z from 'zod';
