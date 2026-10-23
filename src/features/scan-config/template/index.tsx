@@ -11,8 +11,17 @@ import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
-import ScanConfigTabsPanel from '@/features/scan-config/components/tabs';
+import { ScanConfigTabsPanel } from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
+import {
+  DEFAULT_COLUMNS_GRID,
+  DefaultConfigColumns,
+} from '@/features/scan-config/template/default-columns';
+import {
+  EMODEL_OPTIMISATION_COLUMNS_GRID,
+  EModelOptimisationColumns,
+} from '@/features/scan-config/template/emodel-optimisation-columns';
+import { useScanConfigTemplate } from '@/features/scan-config/template/use-scan-config-template';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
@@ -20,7 +29,7 @@ import {
   OptimizationTab,
   type TTaskNoun,
 } from '@/features/scan-config/use-cases/optimization/results';
-import SimulationsTab from '@/features/scan-config/use-cases/simulations/results';
+import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
 import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
@@ -29,14 +38,8 @@ import { ButtonCopyId } from '@/ui/molecules/button-copy-id';
 import { MiddleEllipsis } from '@/ui/molecules/middle-ellipsis';
 import { cn } from '@/utils/css-class';
 
-import { DEFAULT_COLUMNS_GRID, DefaultConfigColumns } from './default-columns';
-import {
-  EMODEL_OPTIMISATION_COLUMNS_GRID,
-  EModelOptimisationColumns,
-} from './emodel-optimisation-columns';
-import { type ScanConfigTemplateState, useScanConfigTemplate } from './use-scan-config-template';
-
-import type { ScanConfigTemplateProps } from './types';
+import type { ScanConfigTemplateProps } from '@/features/scan-config/template/types';
+import type { ScanConfigTemplateState } from '@/features/scan-config/template/use-scan-config-template';
 
 /** Optimize and Validate share one results tab; this is the only thing that differs. */
 const TASK_NOUN = {
@@ -108,7 +111,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
       <div
         id="scan-config-content-columns"
         className={cn(
-          'grid gap-[5px] min-h-0 flex-1 overflow-hidden *:min-w-0',
+          'grid gap-1.25 min-h-0 flex-1 overflow-hidden *:min-w-0',
           isEModelOptimisationParameters ? EMODEL_OPTIMISATION_COLUMNS_GRID : DEFAULT_COLUMNS_GRID,
           { hidden: Boolean(browseOverlay) }
         )}

@@ -96,7 +96,7 @@ function LegacyConfigurationTooltip() {
   );
 }
 
-export default function ScanConfigTabsPanel({
+export function ScanConfigTabsPanel({
   className,
   tab,
   setTab,
@@ -142,3 +142,5 @@ export default function ScanConfigTabsPanel({
     />
   );
 }
+
+export default ScanConfigTabsPanel;

@@ -54,7 +54,7 @@ type SimulationTabProps = {
   isCampaignIdChanged: boolean;
 };
 
-export default function SimulationsTab({
+export function SimulationsTab({
   campaignId,
   campaignOriginAction,
   isCampaignIdChanged,
@@ -420,3 +420,5 @@ export default function SimulationsTab({
     </>
   );
 }
+
+export default SimulationsTab;
