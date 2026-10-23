@@ -9,6 +9,9 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
+import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
+import { TopBar } from '@/ui/molecules/top-bar';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { ClosePage, DataBreadcrumb } from '@/ui/segments/explore/data-nav-btns';
@@ -17,10 +20,16 @@ import {
   EntityNameDisplay,
   EntityNameDisplayWrapper,
 } from '@/ui/segments/explore/entity-name-display';
-import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config';
+import {
+  buildWorkflowCrumbs,
+  findScanConfigRegistryByTargetType,
+  getWorkflow,
+  listActivities,
+} from '@/ui/segments/workflows/config';
+import { cn } from '@/utils/css-class';
 import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -49,10 +58,13 @@ export async function DataViewLayout({
   context,
   type,
   id,
+  origin = 'data',
 }: PropsWithChildren<{
   context: WorkspaceContext;
   type: TExtendedEntitiesTypeDict;
   id: string;
+  /** Which section opened the page: it decides the breadcrumb and whether there is a close. */
+  origin?: 'data' | 'workflows';
 }>) {
   const { virtualLabId, projectId } = context;
   const entityType = getEntityByExtendedType({ type });
@@ -94,55 +106,53 @@ export async function DataViewLayout({
    */
   const chromeVariant = ViewVariant.Light;
 
-  const breadcrumbs = (
-    <DataBreadcrumb
-      title={entityType.title}
-      type={type}
-      group={entityType.group}
-      scope={scope}
-      variant={chromeVariant}
-    />
-  );
-  const closePage = <ClosePage url={parentLink} variant={chromeVariant} />;
+  const breadcrumbs =
+    origin === 'workflows' ? (
+      <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
+    ) : (
+      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+    );
+  // the close lives at the far end of the details page's top bar, never inside the breadcrumb
+  const closePage =
+    origin === 'data' ? <ClosePage url={parentLink} variant={chromeVariant} /> : undefined;
+  // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
+  const topBar = <TopBar start={breadcrumbs} end={closePage} />;
 
   if (includes(LeftMenuUnsupportedEntityTypes, type) || opensAsCampaign) {
     if (useClassicLayout) {
+      // campaign / simulation pages render the scan-config tabs panel, which draws its own
+      // border and top bar: hand it the breadcrumb and close as that bar's start and end slots
       return (
-        <div className="ml-3 flex h-full flex-col rounded-2xl border border-[rgb(217,217,217)] px-3 pt-3">
-          <div className="flex w-full items-center justify-between">
-            {breadcrumbs}
-            {closePage}
-          </div>
-          <div className="relative flex-1 overflow-y-auto">{children}</div>
+        <div className="ml-3 flex h-full min-h-0 flex-col">
+          <ScanConfigTopBarProvider start={breadcrumbs} end={closePage}>
+            <div className="relative min-h-0 flex-1">{children}</div>
+          </ScanConfigTopBarProvider>
         </div>
       );
     }
 
     return (
-      <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
-        <div className="flex w-full items-center justify-between px-5 pt-4">
-          {breadcrumbs}
-          {closePage}
-        </div>
+      <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white pt-5">
         <div className="primary-scrollbar relative mx-5 mb-5 min-h-0 flex-1 overflow-y-auto">
           <div className="rounded-3xl border border-neutral-2 bg-primary-9 px-5 py-5 text-white">
             {children}
           </div>
         </div>
-      </div>
+      </DataViewFrame>
     );
   }
 
   if (!entityType.detailViewSections) return null;
 
+  const downloadPanel = includes(
+    [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
+    entityType.extendedType
+  ) && <CircuitDownloadPanel />;
+
   if (useClassicLayout) {
     return (
-      <div className="relative ml-5 flex h-full flex-col rounded-md border border-[#D9D9D9]">
-        <div className="flex w-full items-center justify-between pl-5 pr-3 py-2">
-          {breadcrumbs}
-          {closePage}
-        </div>
-        <div className="flex h-full max-h-[calc(100%-56px)] overflow-hidden pt-2">
+      <DataViewFrame topBar={topBar} className="rounded-md">
+        <div className="flex min-h-0 flex-1 overflow-hidden pt-3">
           <div className="w-1/5 pl-5">
             <div className="flex flex-col gap-3">
               <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
@@ -167,21 +177,14 @@ export async function DataViewLayout({
             </div>
           </div>
         </div>
-        {includes(
-          [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
-          entityType.extendedType
-        ) && <CircuitDownloadPanel />}
-      </div>
+        {downloadPanel}
+      </DataViewFrame>
     );
   }
 
   return (
-    <div className="relative ml-5 flex h-full flex-col overflow-hidden rounded-2xl border border-[#D9D9D9] bg-white">
-      <div className="flex w-full items-center justify-between pl-5 pr-3  pt-4">
-        {breadcrumbs}
-        {closePage}
-      </div>
-      <div className="flex h-full min-h-0 max-h-[calc(100%-3.5rem)] gap-3 overflow-hidden pt-2">
+    <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
+      <div className="flex min-h-0 flex-1 gap-3 overflow-hidden pt-3">
         <div className="flex w-1/5 shrink-0 flex-col bg-white pl-3.5">
           <div className="flex flex-col gap-1.5">
             <DetailMenu sections={entityType.detailViewSections} variant={chromeVariant} />
@@ -197,8 +200,8 @@ export async function DataViewLayout({
             variant={chromeVariant}
           />
         </div>
-        <div className="min-h-0 w-4/5 pl-2 pr-3">
-          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pr-0.5">
+        <div className="min-h-0 w-4/5 px-2 pb-2">
+          <div className="primary-scrollbar-dark h-full overflow-x-auto overflow-y-auto">
             <div className="min-h-full rounded-2xl border border-neutral-2 bg-primary-9 p-10 pt-4 pb-10 text-white">
               <EntityNameDisplay
                 name={entity.name}
@@ -212,10 +215,66 @@ export async function DataViewLayout({
           </div>
         </div>
       </div>
-      {includes(
-        [ExtendedEntitiesTypeDict.Circuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
-        entityType.extendedType
-      ) && <CircuitDownloadPanel />}
+      {downloadPanel}
+    </DataViewFrame>
+  );
+}
+
+/**
+ * Activity › workflow › entity for the details pages the workflow activity table links to. The
+ * page has no workflow definition, so the activity is the first one with a workflow for this type.
+ */
+function WorkflowsOriginBreadcrumb({
+  type,
+  entity,
+  context,
+}: {
+  type: TExtendedEntitiesTypeDict;
+  entity: { id: string; name: string };
+  context: WorkspaceContext;
+}) {
+  const [match] = listActivities().flatMap((activity) => {
+    const workflow = getWorkflow({ activity: activity.value, targetType: type });
+    return workflow ? [{ activity, workflow }] : [];
+  });
+
+  return (
+    <BreadcrumbChip>
+      <BreadcrumbTrail
+        data-testid="data-view-breadcrumb"
+        items={[
+          ...buildWorkflowCrumbs({
+            activity: match?.activity ?? null,
+            workflow: match?.workflow ?? null,
+            workspace: context,
+            fallbackType: type,
+          }),
+          {
+            key: 'entity',
+            label: entity.name,
+            ellipsis: entity.name,
+            copy: { value: entity.id, label: `Copy ${entity.name}` },
+          },
+        ]}
+      />
+    </BreadcrumbChip>
+  );
+}
+
+/** Bordered container with the top bar row above it (outside the card, not on its border). */
+function DataViewFrame({
+  topBar,
+  className,
+  children,
+}: PropsWithChildren<{ topBar: ReactNode; className?: string }>) {
+  return (
+    <div className="ml-5 flex h-full min-h-0 flex-col">
+      {topBar}
+      <div
+        className={cn('relative flex min-h-0 flex-1 flex-col border border-[#D9D9D9]', className)}
+      >
+        {children}
+      </div>
     </div>
   );
 }

@@ -345,7 +345,7 @@ export default function SimulationsTab({
         onSimulationStatusLoad={onSimulationStatusLoad}
         onRun={onLaunch}
         middle={
-          <div className="h-full bg-background! w-full">
+          <div className="h-full bg-white! w-full">
             {loading ? (
               <InOutFilesColumnSkeleton />
             ) : (

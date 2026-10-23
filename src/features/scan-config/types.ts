@@ -700,10 +700,22 @@ export const EMODEL_OPTIMISATION_MECHANISMS_TABS: ReadonlyArray<{
   key: TEModelOptimisationMechanismsTab;
   label: string;
 }> = [
-  { key: EModelOptimisationMechanismsTabs.MechanismSelection, label: 'Mechanism Selection' },
-  { key: EModelOptimisationMechanismsTabs.RegionAssignment, label: 'Region Assignment' },
-  { key: EModelOptimisationMechanismsTabs.ParametersSelection, label: 'Parameters Selection' },
-  { key: EModelOptimisationMechanismsTabs.GlobalParameters, label: 'Global Parameters' },
+  {
+    key: EModelOptimisationMechanismsTabs.MechanismSelection,
+    label: 'Mechanism Selection',
+  },
+  {
+    key: EModelOptimisationMechanismsTabs.RegionAssignment,
+    label: 'Region Assignment',
+  },
+  {
+    key: EModelOptimisationMechanismsTabs.ParametersSelection,
+    label: 'Parameters Selection',
+  },
+  {
+    key: EModelOptimisationMechanismsTabs.GlobalParameters,
+    label: 'Global Parameters',
+  },
 ];
 
 export type TBlockElement = {

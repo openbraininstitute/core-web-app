@@ -47,9 +47,6 @@ import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
 import type { TBrowsePrerequisiteValue } from '@/ui/segments/workflows/browse/browse-config';
 import type { KebabCase } from '@/utils/type';
 
-/** height reserved for the multi-entity "Use selection" footer in workflow browse grids. */
-const WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT = '4.5rem';
-
 type WorkflowNewBrowsePageProps = {
   activity: TActivityValue;
   section: TWorkspaceSection;
@@ -93,6 +90,7 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
         .map((row) => ({
           type: input.type,
           id: row.id,
+          name: row.name,
         })),
     }))
     .filter((group) => group.items.length > 0);
@@ -133,11 +131,11 @@ export function buildWorkflowBrowseSelectionPayload(opts: {
 function getBrowseClassNames(isMultiEntityBrowse: boolean) {
   return {
     container: isMultiEntityBrowse
-      ? `max-h-full min-h-0 flex-1 [grid-area:body] max-h-[calc(100vh-11.8rem-${WORKFLOW_BROWSE_USE_SELECTION_BAR_HEIGHT})]`
-      : 'max-h-full min-h-0 flex-1 relative [grid-area:body]',
+      ? 'h-full max-h-full min-h-0 flex-1 [grid-area:body]'
+      : 'h-full max-h-full min-h-0 flex-1 relative [grid-area:body]',
     miniView: isMultiEntityBrowse
-      ? 'max-h-[calc(100vh-11rem)] [grid-area:mini-view] row-span-2 self-stretch'
-      : 'max-h-[calc(100vh-11rem)] [grid-area:mini-view]',
+      ? 'h-full min-h-0 [grid-area:mini-view] row-span-2 self-stretch'
+      : 'h-full min-h-0 [grid-area:mini-view]',
     footer: 'flex shrink-0 justify-end bg-background pt-3 pb-2 [grid-area:footer]',
   };
 }
@@ -551,7 +549,7 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
         requireMiniDetailView
         requireBrainRegion={workflow.requireSpecies}
         requireSpeciesSelector={workflow.requireSpecies}
-        requireScopeSelector={workflow.requireScope}
+        requireScopeSelector
         allowFilter={workflow.requireFilters}
         section={section}
         classNames={{

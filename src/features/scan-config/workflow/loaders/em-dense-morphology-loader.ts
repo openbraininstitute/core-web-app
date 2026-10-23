@@ -1,25 +1,15 @@
-import { pick } from 'es-toolkit/compat';
-
 import { getMEModels } from '@/api/entitycore/queries';
 import { getCellMorphologies } from '@/api/entitycore/queries/experimental/cell-morphology';
-import { searchDerivations } from '@/api/entitycore/queries/general/derivation';
 import { DerivationType } from '@/api/entitycore/types/entities/derivation';
-import { DEFAULT_PAGE_NUMBER, DEFAULT_PAGE_SIZE } from '@/constants';
 
 import type { CellMorphologyFilter } from '@/api/entitycore/types/entities/cell-morphology';
+import type { IMEModelFilter } from '@/api/entitycore/types/entities/me-model';
 import type {
   TBrowseListQueryFn,
   TBrowsePrerequisiteValue,
 } from '@/ui/segments/workflows/browse/browse-config';
 
-const SCOPE_FILTER_KEYS = ['authorized_public', 'authorized_project_id'] as const;
-
 const DATASET_MORPHOLOGY_DERIVATION = DerivationType.EmDenseReconstructionDatasetCellMorphology.key;
-
-function readNumber(value: unknown, fallback: number): number {
-  const parsed = typeof value === 'string' ? Number(value) : value;
-  return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : fallback;
-}
 
 /**
  * cell morphologies generated from the picked EM dense reconstruction dataset, in one request:
@@ -45,47 +35,24 @@ export const buildEmDenseMorphologyLoader =
   };
 
 /**
- * ME-models built on the dataset's morphologies. Still two requests: no derivation links a
- * dataset to an ME-model, and `GET /memodel` only filters morphologies by id.
+ * ME-models built on the dataset's morphologies, in one request: `GET /memodel` joins the
+ * morphology's derivation, so paging/sorting/filters/facets are the endpoint's own.
  */
 export const buildMemodelLoader =
   (prerequisite: TBrowsePrerequisiteValue | null): TBrowseListQueryFn =>
-  async ({ filters, context }) => {
+  async ({ filters, withFacets, context }) => {
     if (!prerequisite) {
       return undefined;
     }
 
-    const page = readNumber(filters.page, DEFAULT_PAGE_NUMBER);
-    const pageSize = readNumber(filters.page_size, DEFAULT_PAGE_SIZE);
-
-    const derivations = await searchDerivations({
+    return getMEModels({
       context,
+      withFacets,
       filters: {
-        derivation_type: DATASET_MORPHOLOGY_DERIVATION,
-        used__id: prerequisite.id,
-        page,
-        page_size: pageSize,
+        ...(filters as Partial<IMEModelFilter>),
+        // after the spread so a grid filter can't override them
+        morphology__generated_derivation__derivation_type: DATASET_MORPHOLOGY_DERIVATION,
+        morphology__generated_derivation__used_id: prerequisite.id,
       },
     });
-
-    const morphologyIds = derivations.data
-      .map((derivation) => derivation.generated?.id)
-      .filter((id): id is string => Boolean(id));
-
-    if (morphologyIds.length === 0) {
-      return { data: [], pagination: derivations.pagination };
-    }
-
-    const memodels = await getMEModels({
-      context,
-      withFacets: false,
-      filters: {
-        ...pick(filters, SCOPE_FILTER_KEYS),
-        morphology__id__in: morphologyIds,
-        page: DEFAULT_PAGE_NUMBER,
-        page_size: morphologyIds.length,
-      },
-    });
-
-    return { data: memodels.data, pagination: derivations.pagination };
   };
