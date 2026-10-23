@@ -10,10 +10,13 @@ import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
 } from '@/features/scan-config/bridge/main-overlay-context';
-import { MEModelCompatibilityCheck } from '@/features/scan-config/components/memodel-compatibility';
+import {
+  checksMEModelCompatibility,
+  MEModelCompatibilityCheck,
+} from '@/features/scan-config/components/memodel-compatibility';
 import ScanConfigTabsPanel from '@/features/scan-config/components/tabs';
 import { IonChannelModelPropertiesChecks } from '@/features/scan-config/components/ui-elements/ion-channel-model-properties';
-import { ScanConfigActivity, SchemaNameDict } from '@/features/scan-config/types';
+import { ScanConfigActivity } from '@/features/scan-config/types';
 import { BuildTab } from '@/features/scan-config/use-cases/build/results';
 import { ExtractionTab } from '@/features/scan-config/use-cases/extraction/results';
 import { OptimizationTab } from '@/features/scan-config/use-cases/optimization/results';
@@ -76,9 +79,7 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
           locked={state.editingLocked}
         />
       )}
-      {!props.readOnly && props.schemaName === SchemaNameDict.MEModelBuildScanConfig && (
-        <MEModelCompatibilityCheck config={state.config} />
-      )}
+      {checksMEModelCompatibility(props) && <MEModelCompatibilityCheck config={state.config} />}
       {browseOverlay ? (
         <div
           id="scan-config-model-selection-overlay"

@@ -8,6 +8,7 @@ import { checkSingleNeuronCompatibility } from '@/api/small-scale-simulator';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
 import { extractConfigValueId } from '@/features/scan-config/helpers';
+import { type Config, type SchemaName, SchemaNameDict } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/me-model';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
@@ -15,9 +16,11 @@ import { keyBuilder } from '@/ui/use-query-keys/data';
 import { CompatibilityNotice } from './compatibility-notice';
 import { type CompatibilityState, deriveCompatibilityState } from './compatibility-state';
 
-import type { Config } from '@/features/scan-config/types';
+export const MEMODEL_INPUTS_BLOCK = 'initialize';
 
-const INPUTS_BLOCK = 'initialize';
+export function checksMEModelCompatibility(editor: { readOnly?: boolean; schemaName: SchemaName }) {
+  return !editor.readOnly && editor.schemaName === SchemaNameDict.MEModelBuildScanConfig;
+}
 
 const BLOCKING_MESSAGE: Record<CompatibilityState['kind'], string | undefined> = {
   idle: messages.CheckingCompatibility,
@@ -27,15 +30,11 @@ const BLOCKING_MESSAGE: Record<CompatibilityState['kind'], string | undefined> =
   check_failed: messages.CompatibilityBlockedTooltip,
 };
 
-/**
- * Checks the picked morphology and e-model with the small-scale simulator, and blocks Generate
- * until they are compatible. Mounted for the whole editor, not under the pickers, so the block
- * holds on every tab.
- */
-export function MEModelCompatibilityCheck({ config }: { config: Config }) {
+// both callers share the queries, so the pair is checked once
+function useMEModelCompatibility(config: Config) {
   const { virtualLabId, projectId } = useWorkspace();
-  const morphologyId = extractConfigValueId(get(config, `${INPUTS_BLOCK}.morphology`));
-  const emodelId = extractConfigValueId(get(config, `${INPUTS_BLOCK}.emodel`));
+  const morphologyId = extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.morphology`));
+  const emodelId = extractConfigValueId(get(config, `${MEMODEL_INPUTS_BLOCK}.emodel`));
   const selectionComplete = !!morphologyId && !!emodelId;
 
   const compatibilityCheck = useQuery({
@@ -60,7 +59,7 @@ export function MEModelCompatibilityCheck({ config }: { config: Config }) {
     staleTime: Infinity,
   });
 
-  const { data: emodelName } = useQuery({
+  const emodelName = useQuery({
     queryKey: keyBuilder.entity({
       context: { virtualLabId, projectId },
       id: emodelId ?? '',
@@ -78,10 +77,41 @@ export function MEModelCompatibilityCheck({ config }: { config: Config }) {
     staleTime: Infinity,
   });
 
-  const compatibility = deriveCompatibilityState(selectionComplete, compatibilityCheck, emodelName);
+  // the name decides the unbuildable block, so the check isn't done until it is known
+  const compatibility = deriveCompatibilityState(
+    selectionComplete,
+    {
+      isFetching: compatibilityCheck.isFetching || emodelName.isLoading,
+      isError: compatibilityCheck.isError || emodelName.isError,
+      data: compatibilityCheck.data,
+    },
+    emodelName.data
+  );
+
+  return {
+    selectionComplete,
+    compatibility,
+    retry: () => {
+      compatibilityCheck.refetch();
+      if (emodelName.isError) emodelName.refetch();
+    },
+  };
+}
+
+/**
+ * Blocks Generate until the picked morphology and e-model are compatible. Mounted for the whole
+ * editor so the block holds on every tab; the result shows under the pickers.
+ */
+export function MEModelCompatibilityCheck({ config }: { config: Config }) {
+  const { selectionComplete, compatibility } = useMEModelCompatibility(config);
   const blockingMessage = selectionComplete ? BLOCKING_MESSAGE[compatibility.kind] : undefined;
 
-  useFieldError(`${INPUTS_BLOCK}.compatibility`, blockingMessage);
+  useFieldError(`${MEMODEL_INPUTS_BLOCK}.compatibility`, blockingMessage);
 
-  return <CompatibilityNotice state={compatibility} onRetry={() => compatibilityCheck.refetch()} />;
+  return null;
+}
+
+export function MEModelCompatibilityResult({ config }: { config: Config }) {
+  const { compatibility, retry } = useMEModelCompatibility(config);
+  return <CompatibilityNotice state={compatibility} onRetry={retry} className="pt-6 pb-4" />;
 }
