@@ -398,21 +398,25 @@ function WorkflowNewBrowsePage({ activity, section, targetType }: WorkflowNewBro
           return previous;
         }
 
+        const otherSelectedCount = configurationInputs
+          .filter((input) => input.type !== activeEntityType)
+          .reduce(
+            (sum, input) =>
+              sum + (previous[input.type]?.filter(isEntitySelectableForWorkflow).length ?? 0),
+            0
+          );
+
         return {
           ...previous,
           [activeEntityType]: limitNewPicks({
             rows: rows.filter(isEntitySelectableForWorkflow),
             currentRows,
-            room:
-              maxSelections === undefined
-                ? undefined
-                : maxSelections -
-                  (totalSelectedCount - (selectionCountsByType[activeEntityType] ?? 0)),
+            room: maxSelections === undefined ? undefined : maxSelections - otherSelectedCount,
           }),
         };
       });
     },
-    [activeEntityType, maxSelections, selectionCountsByType, totalSelectedCount]
+    [activeEntityType, configurationInputs, maxSelections]
   );
 
   const shouldRedirectToConfigure =
