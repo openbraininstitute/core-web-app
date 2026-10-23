@@ -6,6 +6,7 @@ import { useSetAtom } from 'jotai';
 import { Activity, Suspense, useEffect, useMemo } from 'react';
 import { match, P } from 'ts-pattern';
 
+import { DefaultLookupProvider } from '@/features/scan-config/bridge/default-lookup-context';
 import {
   ScanConfigMainOverlayProvider,
   useScanConfigMainOverlayOptional,
@@ -46,7 +47,9 @@ const TASK_NOUN = {
 export function ScanConfigTemplate(props: ScanConfigTemplateProps) {
   return (
     <ScanConfigMainOverlayProvider>
-      <ScanConfigTemplateContent {...props} />
+      <DefaultLookupProvider>
+        <ScanConfigTemplateContent {...props} />
+      </DefaultLookupProvider>
     </ScanConfigMainOverlayProvider>
   );
 }
