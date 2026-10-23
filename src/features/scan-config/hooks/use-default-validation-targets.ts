@@ -4,6 +4,10 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 
 import { resolveOptimisationTargetEFeaturesId } from '@/entity-configuration/domain/validation/optimisation-targets';
+import {
+  DefaultLookupSlot,
+  usePublishDefaultLookup,
+} from '@/features/scan-config/components/ui-elements/default-target-lookup';
 import { isFromIdRef } from '@/features/scan-config/helpers';
 import { type Config, SchemaNameDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -39,13 +43,15 @@ export function useDefaultValidationTargets({
   const emodelId = isValidation ? (readRef(config, 'emodel', 'emodel')?.id_str ?? null) : null;
   const hasTarget = Boolean(readRef(config, TARGET_BLOCK, TARGET_FIELD));
 
-  const { data: targetId } = useQuery({
+  const { data: targetId, isLoading } = useQuery({
     queryKey: ['emodel-optimisation-targets', virtualLabId, projectId, emodelId],
     queryFn: () =>
       resolveOptimisationTargetEFeaturesId(emodelId as string, { virtualLabId, projectId }),
     enabled: Boolean(emodelId) && !hasTarget,
     staleTime: Number.POSITIVE_INFINITY,
   });
+
+  usePublishDefaultLookup(DefaultLookupSlot.ValidationTargetEFeatures, isLoading);
 
   const appliedFor = useRef<string | null>(null);
   useEffect(() => {
