@@ -1,11 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { getTaskResult } from '@/api/entitycore/queries/task';
+import { TaskResultType } from '@/api/entitycore/types/entities/task-result';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveOutputStrategy } from '@/features/scan-config/outputs/registry';
 import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
 
 import type { TOutputEntity, TResolvedOutput } from '@/features/scan-config/outputs/types';
+
+vi.mock('@/api/entitycore/queries/task', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/entitycore/queries/task')>()),
+  getTaskResult: vi.fn(),
+}));
 
 function makeResolved(entity: Partial<TOutputEntity>, strategyId = 'circuit'): TResolvedOutput {
   return {
@@ -176,5 +183,31 @@ describe('workflow output strategies', () => {
       dataUpdateCount: 1,
     });
     expect(settled).toBe(false);
+  });
+});
+
+describe('task result extended type', () => {
+  const ref = { id: 'r', type: EntityTypeDict.TaskResult };
+  const resolvedTypeOf = async (taskResultType: string) => {
+    vi.mocked(getTaskResult).mockResolvedValue({
+      id: 'r',
+      type: EntityTypeDict.TaskResult,
+      task_result_type: taskResultType,
+    } as never);
+    const strategy = resolveOutputStrategy(ref);
+    return (await strategy?.resolve({ ref, context: {} as never }))?.extendedType;
+  };
+
+  it('resolves the registered result kinds to their entity configuration', async () => {
+    await expect(resolvedTypeOf(TaskResultType.EFeatureExtractionResult)).resolves.toBe(
+      ExtendedEntitiesTypeDict.EFeatureExtractionResult
+    );
+    await expect(
+      resolvedTypeOf(TaskResultType.OptimizedEModelAnalysisValidationResult)
+    ).resolves.toBe(ExtendedEntitiesTypeDict.EModelValidationResult);
+  });
+
+  it('leaves an unregistered result kind without one, so only its assets render', async () => {
+    await expect(resolvedTypeOf(TaskResultType.CircuitSimulationResult)).resolves.toBeUndefined();
   });
 });

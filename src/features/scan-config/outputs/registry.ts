@@ -1,15 +1,13 @@
 import { hasAssets } from '@/api/entitycore/guards';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getTaskResult } from '@/api/entitycore/queries/task';
-import { TaskResultType } from '@/api/entitycore/types/entities/task-result';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { MAX_VISUALIZATION_ASSET_REFETCH_RETRIES } from '@/features/task-runner';
 
-import type { TTaskResultType } from '@/api/entitycore/types/entities/task-result';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type {
@@ -19,20 +17,6 @@ import type {
 } from '@/features/scan-config/outputs/types';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 import type { WorkspaceContext } from '@/types/common';
-
-/**
- * Which virtual entity type a task result of a given kind is configured under.
- *
- * A `generated` ref only says `task_result`; the kind lives on the record, so the extended type —
- * and with it the entity configuration, detail view and slug — can only be resolved after fetching.
- * A result kind absent from this map still renders its assets, it just has no entity config behind
- * it, so add an entry when you register one.
- */
-const TASK_RESULT_EXTENDED_TYPE: Partial<Record<TTaskResultType, TExtendedEntitiesTypeDict>> = {
-  [TaskResultType.EFeatureExtractionResult]: ExtendedEntitiesTypeDict.EFeatureExtractionResult,
-  [TaskResultType.OptimizedEModelAnalysisValidationResult]:
-    ExtendedEntitiesTypeDict.EModelValidationResult,
-};
 
 /**
  * Assets stored under a generic content type whose content the code viewer can show. The viewer
@@ -85,7 +69,9 @@ const taskResultStrategy: TOutputStrategy = {
       ref,
       strategyId: taskResultStrategy.id,
       entity: entity as unknown as TOutputEntity,
-      extendedType: TASK_RESULT_EXTENDED_TYPE[entity.task_result_type],
+      // a `generated` ref only says `task_result`; the kind lives on the record. An unregistered
+      // kind gets `undefined`, and its assets still render.
+      extendedType: getExtendedTypeByTaskResultType(entity.task_result_type),
     };
   },
   toFiles: ({ entity, extendedType }) => [
