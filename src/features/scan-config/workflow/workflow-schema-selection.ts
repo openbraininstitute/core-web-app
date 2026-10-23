@@ -21,6 +21,7 @@ import {
 const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.CellMorphologyFromID]: ExtendedEntitiesTypeDict.UniversalCellMorphology,
   [ScanConfigFromIdType.MEModelFromID]: ExtendedEntitiesTypeDict.Memodel,
+  [ScanConfigFromIdType.EModelFromID]: ExtendedEntitiesTypeDict.Emodel,
   [ScanConfigFromIdType.CircuitFromID]: ExtendedEntitiesTypeDict.Circuit,
   [ScanConfigFromIdType.EMCellMeshFromID]: ExtendedEntitiesTypeDict.EMCellMesh,
   [ScanConfigFromIdType.MEModelWithSynapsesCircuitFromID]:
