@@ -62,6 +62,7 @@ const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
+  ExtendedEntitiesTypeDict.EModelValidationCampaign,
 ] as const;
 
 export async function DataViewLayout({

@@ -43,6 +43,7 @@ import {
   resolveSimulationByCampaignId as resolveIonChannelModelSimulationByCampaignId,
   type TResolvedSimulationByCampaign as TResolvedIonChannelModelSimulationByCampaign,
 } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
+import { EModelValidationCampaign } from '@/entity-configuration/domain/validation/emodel-validation-campaign';
 import { CellMorphologyViewer } from '@/features/entities/cell-morphology/detail-view';
 import { Morphometrics } from '@/features/entities/cell-morphology/morphometrics';
 import { CircuitDetailViewer } from '@/features/entities/circuit/detail-view';
@@ -265,9 +266,16 @@ export default async function Overview({
     }
   }
 
-  if (extendedType === ExtendedEntitiesTypeDict.EModelValidationResult) {
+  if (
+    extendedType === ExtendedEntitiesTypeDict.EModelValidationResult ||
+    extendedType === ExtendedEntitiesTypeDict.EModelValidationCampaign
+  ) {
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    const resolveCampaign = EModelValidationCampaign.api.query.resolve!;
     const { data: validation } = await tryCatch(
-      resolveEModelValidationResultCampaign(entity.id, context.virtualLabId, context.projectId)
+      extendedType === ExtendedEntitiesTypeDict.EModelValidationCampaign
+        ? resolveCampaign({ id: entity.id, context })
+        : resolveEModelValidationResultCampaign(entity.id, context.virtualLabId, context.projectId)
     );
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.EModelValidationCampaign
