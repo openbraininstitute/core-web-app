@@ -96,5 +96,10 @@ describe('getConfigKeyForEntity', () => {
         getConfigKeyForEntity(ExtendedEntitiesTypeDict.Memodel, ScanConfigActivity.Optimize)
       ).toBe('emodel_optimization_config');
     });
+    it('returns null for Validate: the AI agent has no emodel_validation_config key yet', () => {
+      expect(
+        getConfigKeyForEntity(ExtendedEntitiesTypeDict.Emodel, ScanConfigActivity.Validate)
+      ).toBeNull();
+    });
   });
 });

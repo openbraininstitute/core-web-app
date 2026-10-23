@@ -9,6 +9,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { resolveEModelValidationResultCampaign } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
@@ -33,6 +34,17 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
+/** task results that open as the scan config of the campaign they came from (see Overview) */
+const CampaignResultResolvers: Partial<
+  Record<
+    TExtendedEntitiesTypeDict,
+    (id: string, virtualLabId: string, projectId: string) => Promise<unknown>
+  >
+> = {
+  [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: resolveEFeatureExtractionResultCampaign,
+  [ExtendedEntitiesTypeDict.EModelValidationResult]: resolveEModelValidationResultCampaign,
+};
+
 const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
@@ -50,6 +62,7 @@ const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
+  ExtendedEntitiesTypeDict.EModelValidationCampaign,
 ] as const;
 
 export async function DataViewLayout({
@@ -86,12 +99,11 @@ export async function DataViewLayout({
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
 
-  // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
+  // a traceable task result renders its campaign's scan config (see Overview)
+  const resolveResultCampaign = CampaignResultResolvers[type];
   const opensAsCampaign =
-    type === ExtendedEntitiesTypeDict.EFeatureExtractionResult &&
-    Boolean(
-      (await tryCatch(resolveEFeatureExtractionResultCampaign(id, virtualLabId, projectId))).data
-    );
+    resolveResultCampaign !== undefined &&
+    Boolean((await tryCatch(resolveResultCampaign(id, virtualLabId, projectId))).data);
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
     type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ||
