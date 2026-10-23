@@ -4,9 +4,14 @@ import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import type { WorkspaceContext } from '@/types/common';
 
-// ponytail: #2002 adds the same walk as `Task.campaignIdOf`; switch to it once that lands.
+// ponytail: #2002 moves this walk (and usedTaskConfigId) into `Task.campaignIdOf`; once it lands,
+// delete this file and point the extraction, validation and optimisation-target callers at it.
 /** id of the task config an activity of `type` used to generate entity `id` */
-async function usedTaskConfigId(id: string, type: TTaskActivityType, context: WorkspaceContext) {
+export async function usedTaskConfigId(
+  id: string,
+  type: TTaskActivityType,
+  context: WorkspaceContext
+) {
   const { data } = await getTaskActivities({
     context,
     filters: { generated__id: id, task_activity_type: type },

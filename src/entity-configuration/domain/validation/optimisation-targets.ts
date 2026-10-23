@@ -4,7 +4,7 @@ import { getAsset } from '@/api/entitycore/selectors/assets';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { usedTaskConfigId } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { usedTaskConfigId } from '@/entity-configuration/domain/simulation/task-result-campaign';
 
 import type { WorkspaceContext } from '@/types/common';
 
