@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import { useTabs } from '@/components/detail-view-tabs';
+import { learnFlag, useFlag } from '@/features/feature-flags';
 import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
@@ -59,8 +60,10 @@ const tabsConfigItems: Array<{
 function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
-  // with Learn's "remove unneeded features" on, only the lean sections, opening on Guides
-  const lean = useLearnSetting('leanHelp');
+  // with Learn's "remove unneeded features" on, only the lean sections, opening on Guides; but
+  // only while Learn is on, as only its page can switch the setting back
+  const learn = useFlag(learnFlag.key) === true;
+  const lean = useLearnSetting('leanHelp') && learn;
   const tabs = lean
     ? tabsConfigItems.filter((tab) => LEAN_HELP_SECTIONS.includes(tab.key))
     : tabsConfigItems;

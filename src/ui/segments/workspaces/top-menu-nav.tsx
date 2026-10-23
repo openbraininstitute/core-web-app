@@ -23,8 +23,7 @@ import {
 import { FeedbackStarIcon } from '@/components/icons/FeedbackStarIcon';
 import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
-import { greyMenuPillsFlag, learnFlag, useFlag } from '@/features/feature-flags';
-import { useLearnSetting } from '@/features/learn/learn-settings-provider';
+import { greyMenuPillsFlag, hideHelpFlag, learnFlag, useFlag } from '@/features/feature-flags';
 import { createBreakpoint, useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Badge } from '@/ui/molecules/badge';
@@ -197,7 +196,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
   });
 
   const learn = useFlag(learnFlag.key);
-  const help = !useLearnSetting('hideHelp');
+  const help = useFlag(hideHelpFlag.key) !== true;
   // the links, all but the active one, on the page's grey rather than white: behind its flag
   const grey = useFlag(greyMenuPillsFlag.key) === true;
   const fill = grey ? 'bg-background' : 'bg-white';

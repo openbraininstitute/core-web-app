@@ -9,8 +9,7 @@ import {
 import { type ReactNode, useLayoutEffect, useMemo } from 'react';
 
 import { OnboardingFeature } from '@/api/virtual-lab-svc/queries/types';
-import { aiButtonFlag, useFlag } from '@/features/feature-flags';
-import { useLearnSetting } from '@/features/learn/learn-settings-provider';
+import { aiButtonFlag, hideHelpFlag, useFlag } from '@/features/feature-flags';
 import { useOnboardingStatus, useUpdateOnboardingStatus } from '@/hooks/use-onboarding';
 import { Button } from '@/ui/molecules/button';
 import { Card } from '@/ui/molecules/card';
@@ -63,7 +62,7 @@ function QuitOnboardingOnClickOutside({
 export function AppOnboardingProvider({ children }: { children: ReactNode }) {
   const { mutate: updateBackend } = useUpdateOnboardingStatus();
   const aiButton = useFlag(aiButtonFlag.key) === true;
-  const hideHelp = useLearnSetting('hideHelp');
+  const hideHelp = useFlag(hideHelpFlag.key) === true;
   const tours = useMemo(() => discoverTours({ aiButton, hideHelp }), [aiButton, hideHelp]);
 
   const onSkipOrComplete = (tour: string | null, step?: number, action?: TTourAction) => {
@@ -519,9 +518,9 @@ export const OnboardingDiscoverSteps: Tour[] = [
 ];
 
 /**
- * The tours, as the top menu stands: no Help step while Learn's "Hide Help altogether" is on, and
- * the AI step on the AI button when the `ai-button` flag puts one there, as no panel is left to
- * point at while it is closed.
+ * The tours, as the top menu stands: no Help step while the `hide-help` flag is on, and the AI step
+ * on the AI button when the `ai-button` flag puts one there, as no panel is left to point at while
+ * it is closed.
  */
 export function discoverTours({
   aiButton,

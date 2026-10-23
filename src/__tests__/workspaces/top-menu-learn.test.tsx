@@ -2,9 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { FlagsProvider } from '@/features/feature-flags';
-import { defaultFlags, type FeatureFlags } from '@/features/feature-flags/config';
-import { DEFAULT_LEARN_SETTINGS } from '@/features/learn/learn-settings';
-import { LearnSettingsProvider } from '@/features/learn/learn-settings-provider';
+import { defaultFlags } from '@/features/feature-flags/config';
 import { TopMenuNavigation } from '@/ui/segments/workspaces/top-menu-nav';
 
 const VLAB = '11111111-1111-1111-1111-111111111111';
@@ -22,19 +20,18 @@ vi.mock('@tanstack/react-query', async (importOriginal) => ({
   useQuery: () => ({ data: undefined }),
 }));
 
-function renderMenu(learn: boolean, hideHelp = false, flags: Partial<FeatureFlags> = {}) {
+/** The menu, with the flags given switched on or off over their defaults. */
+function renderMenu(flags: Record<string, boolean> = {}) {
   render(
-    <FlagsProvider flags={{ ...defaultFlags, learn, ...flags }}>
-      <LearnSettingsProvider settings={{ ...DEFAULT_LEARN_SETTINGS, hideHelp }}>
-        <TopMenuNavigation />
-      </LearnSettingsProvider>
+    <FlagsProvider flags={{ ...defaultFlags, ...flags }}>
+      <TopMenuNavigation />
     </FlagsProvider>
   );
 }
 
 describe('TopMenuNavigation / Learn', () => {
   it('shows Learn, after Home, while its flag is on', () => {
-    renderMenu(true);
+    renderMenu({ learn: true });
     const learn = screen.getByTestId('workspace-learn');
     expect(learn).toHaveAttribute('href', `${base}/learn`);
     expect(learn).toHaveClass('bg-primary-9');
@@ -42,37 +39,33 @@ describe('TopMenuNavigation / Learn', () => {
     expect(ids.indexOf('workspace-learn')).toBe(ids.indexOf('workspace-home') + 1);
   });
 
-  it('shows Learn by default: its flag is on unless switched off', () => {
-    render(
-      <FlagsProvider flags={defaultFlags}>
-        <LearnSettingsProvider settings={DEFAULT_LEARN_SETTINGS}>
-          <TopMenuNavigation />
-        </LearnSettingsProvider>
-      </FlagsProvider>
-    );
-    expect(screen.getByTestId('workspace-learn')).toBeInTheDocument();
-  });
-
-  it('leaves Learn out while its flag is off', () => {
-    renderMenu(false);
+  it('leaves Learn out by default: its flag is off unless switched on', () => {
+    renderMenu();
     expect(screen.queryByTestId('workspace-learn')).toBeNull();
     expect(screen.getByTestId('workspace-explore-data')).toBeInTheDocument();
   });
+});
 
+describe('TopMenuNavigation / hide-help', () => {
   it('keeps Help by default, with Learn on or off', () => {
-    renderMenu(false);
+    renderMenu();
     expect(screen.getByTestId('workspace-help')).toBeInTheDocument();
   });
 
-  it('hides Help with Learn\'s "hide Help altogether" setting on', () => {
-    renderMenu(true, true);
+  it('keeps Help with Learn on', () => {
+    renderMenu({ learn: true });
+    expect(screen.getByTestId('workspace-help')).toBeInTheDocument();
+  });
+
+  it('hides Help with its flag on', () => {
+    renderMenu({ 'hide-help': true });
     expect(screen.queryByTestId('workspace-help')).toBeNull();
   });
 });
 
 describe('TopMenuNavigation / grey-menu-pills', () => {
   it('keeps the links white, as on main, while its flag is off', () => {
-    renderMenu(true);
+    renderMenu({ learn: true });
     for (const id of ['workspace-explore-data', 'workspace-help']) {
       expect(screen.getByTestId(id)).toHaveClass('bg-white');
       expect(screen.getByTestId(id)).not.toHaveClass('bg-background');
@@ -80,7 +73,7 @@ describe('TopMenuNavigation / grey-menu-pills', () => {
   });
 
   it("puts them on the page's grey with its flag on", () => {
-    renderMenu(true, false, { 'grey-menu-pills': true });
+    renderMenu({ learn: true, 'grey-menu-pills': true });
     for (const id of ['workspace-explore-data', 'workspace-help']) {
       expect(screen.getByTestId(id)).toHaveClass('bg-background');
       expect(screen.getByTestId(id)).not.toHaveClass('bg-white');

@@ -687,9 +687,10 @@ export function LearnPage({
             No courses to show yet.
           </section>
         )}
-        {/* Dev settings, behind a small gear in the card's corner: which courses show, Help made lean or
-            hidden, and — TEMPORARY, for judging — the page's sections and appearance; each option marked
-            with its default. (The AI button and the courses' top bar are feature flags.) */}
+        {/* Dev settings, behind a small gear in the card's corner: which courses show, Help made lean,
+            and — TEMPORARY, for judging — the page's sections and appearance; each option marked with
+            its default. (Hiding Help, the AI button, the courses' top bar and the grey pills are
+            feature flags.) */}
         <OptionMenus>
           <OptionMenu title="Courses">
             {LEARN_COURSES.map((c) => (
@@ -708,12 +709,6 @@ export function LearnPage({
               on={settings.leanHelp}
               defaultOn={DEFAULT_LEARN_SETTINGS.leanHelp}
               onChange={(on) => setSetting('leanHelp', on)}
-            />
-            <SettingToggle
-              label="Hide Help altogether"
-              on={settings.hideHelp}
-              defaultOn={DEFAULT_LEARN_SETTINGS.hideHelp}
-              onChange={(on) => setSetting('hideHelp', on)}
             />
           </OptionMenu>
           <OptionMenu title="Sections">

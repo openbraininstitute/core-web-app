@@ -72,11 +72,11 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. On
- * unless switched off. */
+/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
+ * unless switched on. */
 export const learnFlag = defineFlag<boolean>({
   key: 'learn',
-  defaultValue: true,
+  defaultValue: false,
   values: [true, false],
   description: 'Learn: free courses, each a deck of slides',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
@@ -109,6 +109,15 @@ export const greyMenuPillsFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** Help hidden altogether: no Help button in the top menu, and no Help page. */
+export const hideHelpFlag = defineFlag<boolean>({
+  key: 'hide-help',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Help hidden altogether: no Help button and no Help page',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -122,6 +131,7 @@ export const flags = [
   aiButtonFlag,
   courseToolbarFlag,
   greyMenuPillsFlag,
+  hideHelpFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

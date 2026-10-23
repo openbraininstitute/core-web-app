@@ -1,9 +1,10 @@
 /**
  * Learn's own settings, set from the Dev settings on the Learn page: the courses it leaves off the
- * page, and two for Help - made lean, without what Learn now covers, or hidden altogether. Kept in a
- * cookie, so that pages render with them on the server and nothing flashes; written from the browser,
- * so a change shows at once. Each is off by default, so that without them the platform is as it is.
- * (The AI button and the top bar in the courses' style are feature flags.)
+ * page, and Help made lean, without what Learn now covers. Kept in a cookie, so that pages render
+ * with them on the server and nothing flashes; written from the browser, so a change shows at once.
+ * Each is off by default, and Help's applies only while the `learn` flag is on, as only the Learn
+ * page can change it. (Hiding Help, the AI button, the courses' top bar and the grey pills are
+ * feature flags.)
  */
 
 export const LEARN_SETTINGS_COOKIE = 'learn-settings';
@@ -13,17 +14,14 @@ export type LearnSettings = {
   hiddenCourses: string[];
   /** Help without what Learn now covers or does without: its overview, tutorials, glossary and AI chat tools. */
   leanHelp: boolean;
-  /** No Help button in the top menu, and no Help page. */
-  hideHelp: boolean;
 };
 
 export const DEFAULT_LEARN_SETTINGS: LearnSettings = {
   hiddenCourses: [],
   leanHelp: false,
-  hideHelp: false,
 };
 
-const SWITCHES = ['leanHelp', 'hideHelp'] as const;
+const SWITCHES = ['leanHelp'] as const;
 
 /**
  * The cookie's format. It holds only what differs from the defaults, so that a default changed later

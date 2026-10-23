@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 
-import { getLearnSettings } from '@/features/learn/learn-settings-server';
+import { getAllFlags, hideHelpFlag } from '@/features/feature-flags';
 import { HelpLayout } from '@/ui/layouts/help-layout';
 import { HelpHeader } from '@/ui/segments/help/header';
 import Sections from '@/ui/segments/help/sections';
@@ -12,8 +12,8 @@ export default async function Page({
 }: {
   searchParams?: Record<string, string | string[] | undefined>;
 }) {
-  // hidden only with Learn's "hide Help altogether" setting on
-  if ((await getLearnSettings()).hideHelp) notFound();
+  // hidden only with the hide-help flag on
+  if ((await getAllFlags())[hideHelpFlag.key]) notFound();
 
   return (
     <HelpLayout>

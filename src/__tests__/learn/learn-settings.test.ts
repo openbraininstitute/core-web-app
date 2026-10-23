@@ -8,7 +8,7 @@ import {
 
 describe('parseLearnSettings', () => {
   it('gives the defaults - every course listed, Help as it is - with no cookie or one that cannot be read', () => {
-    expect(DEFAULT_LEARN_SETTINGS).toEqual({ hiddenCourses: [], leanHelp: false, hideHelp: false });
+    expect(DEFAULT_LEARN_SETTINGS).toEqual({ hiddenCourses: [], leanHelp: false });
     expect(parseLearnSettings(undefined)).toEqual(DEFAULT_LEARN_SETTINGS);
     expect(parseLearnSettings('not json')).toEqual(DEFAULT_LEARN_SETTINGS);
   });
@@ -18,12 +18,13 @@ describe('parseLearnSettings', () => {
       parseLearnSettings(
         JSON.stringify({
           hiddenCourses: ['python', 3],
-          hideHelp: true,
           leanHelp: 'yes',
           help: true,
+          // Help hidden altogether, a setting until it became the hide-help flag
+          hideHelp: true,
         })
       )
-    ).toEqual({ hiddenCourses: ['python'], leanHelp: false, hideHelp: true });
+    ).toEqual({ hiddenCourses: ['python'], leanHelp: false });
   });
 });
 

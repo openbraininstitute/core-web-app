@@ -2,26 +2,27 @@
 
 Free courses, each one deck of slides, with a glossary, teaching material, tutorials and outside
 sources: lectures (World Wide Neuro), literature (Europe PMC), articles (The Transmitter), and
-conferences and workshops. All behind the `learn` feature flag.
+conferences and workshops. All behind the `learn` feature flag, off by default.
 
 Learn's own settings (`learn-settings.ts`) are set from the Dev settings gear on the Learn page and
 kept in the `learn-settings` cookie, so that pages render with them on the server:
 
 - the courses the page leaves off;
 - Help made lean (`leanHelp`): without its Overview, Tutorials, Glossary and AI Chat Tools, which
-  Learn now covers or does without (`src/ui/segments/help/lean.ts`);
-- Help hidden altogether (`hideHelp`): no Help button in the top menu, and no Help page.
+  Learn now covers or does without (`src/ui/segments/help/lean.ts`).
 
 The cookie keeps only what differs from the defaults, and is written from the browser, so a change
-shows at once. The Help settings are off by default, so that without them Help is as it is. The Dev
-settings' Sections and Appearance options are TEMPORARY, kept in the URL, for judging the page's
-designs.
+shows at once. The Help setting is off by default, and applies only while `learn` is on, since only
+the Learn page can switch it back: with Learn off, Help is as it is. The Dev settings' Sections and
+Appearance options are TEMPORARY, kept in the URL, for judging the page's designs.
 
-Two more platform changes Learn tries out are feature flags of their own, off by default:
+The other platform changes Learn tries out are feature flags of their own, off by default:
 
 - `ai-button`: the AI assistant opened from a round "AI" button in the top menu, rather than its side
   rail;
-- `course-toolbar`: the top bar drawn in the style of the courses' bar.
+- `course-toolbar`: the top bar drawn in the style of the courses' bar;
+- `grey-menu-pills`: the top menu's links on the page's grey rather than white;
+- `hide-help`: Help hidden altogether, with no Help button in the top menu and no Help page.
 
 ## Pages and files
 
