@@ -27,16 +27,14 @@ import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/
 /** What a run of this tab is called in its launch button, notifications and cost modal. */
 export type TTaskNoun = { singular: string; plural: string };
 
-const OPTIMIZATION_NOUN: TTaskNoun = { singular: 'optimization', plural: 'optimizations' };
-
 type Props = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this optimization workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
-  /** wording for the run; defaults to optimization. The tab itself is shared with validation. */
-  noun?: TTaskNoun;
+  /** wording for the run (optimization or validation); the tab is shared */
+  noun: TTaskNoun;
 };
 
 export function OptimizationTab({
@@ -44,7 +42,7 @@ export function OptimizationTab({
   campaignId,
   isCampaignIdChanged,
   taskTypeBindings,
-  noun = OPTIMIZATION_NOUN,
+  noun,
 }: Props) {
   const context = useWorkspace();
 
