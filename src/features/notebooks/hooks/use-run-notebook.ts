@@ -16,6 +16,8 @@ import { useAppNotification } from '@/components/notification';
 import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import {
+  getNotebookProfiles,
+  type NotebookProfilesResponse,
   type NotebookStartResponse,
   startEmptyNotebook,
   startNotebook,
@@ -97,9 +99,20 @@ export function useRunNotebook({
     enabled: Boolean(virtualLabId) && enabled,
   });
 
+  // Session size profiles offered by the notebook service (e.g. S, M, L, XL).
+  const { data: profilesData } = useQuery({
+    queryKey: ['notebook-profiles'],
+    queryFn: () => getNotebookProfiles(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+  const profiles: NotebookProfilesResponse['profiles'] = profilesData?.profiles ?? [];
+  // Profile the service uses when none is sent; the UI highlights it as default.
+  const defaultProfile = profilesData?.default_profile ?? null;
+
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 
-  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET) {
+  async function run(target: NotebookRunTarget = DEFAULT_RUN_TARGET, profile?: string) {
     if (runningTarget) return;
     const asset = getAsset({
       assets,
@@ -117,7 +130,9 @@ export function useRunNotebook({
         virtualLabId,
         projectId,
         cloud,
-        0
+        0,
+        undefined,
+        profile
       );
       notification.success({
         message: 'Notebook starting',
@@ -171,5 +186,7 @@ export function useRunNotebook({
     openJupyterHub,
     opening,
     creditsModal,
+    profiles,
+    defaultProfile,
   };
 }
