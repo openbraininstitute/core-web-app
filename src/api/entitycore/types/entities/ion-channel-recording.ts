@@ -2,7 +2,7 @@ import type { BrainRegionHierarchyBase } from '@/api/entitycore/types/entities/b
 import type {
   EntityAuthorization,
   EntityCoreBaseAsset,
-  EntityCoreIdentifiable,
+  EntityCoreIdentifiableNamed,
   EntityCoreOwnership,
   EntityCoreType,
   IBrainLocation,
@@ -62,7 +62,7 @@ export type IonChannelRecordingFilter = Partial<
     ValidationResultNestedFilter
 >;
 
-interface IIonChannelRecordingBase extends EntityCoreIdentifiable, EntityCoreOwnership {
+interface IIonChannelRecordingBase extends EntityCoreIdentifiableNamed, EntityCoreOwnership {
   name: string;
   description: string;
   brain_location?: IBrainLocation | null;

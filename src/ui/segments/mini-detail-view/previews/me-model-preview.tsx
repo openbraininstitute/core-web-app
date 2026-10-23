@@ -1,6 +1,7 @@
 import { Image } from 'antd';
 
 import { hasAssets } from '@/api/entitycore/guards';
+import { DETAIL_PREVIEW_DPI } from '@/api/thumbnail-svc';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
 import { cn } from '@/utils/css-class';
 
@@ -35,7 +36,10 @@ export function MEModelPreview({ record, cls }: Props) {
           rootClassName="w-full h-full"
           className="h-full! w-full! rounded-md object-contain"
         />
-      )
+      ),
+      undefined,
+      undefined,
+      DETAIL_PREVIEW_DPI
     );
 
   const tracePreview: JSX.Element | null = renderPreview(
@@ -52,7 +56,10 @@ export function MEModelPreview({ record, cls }: Props) {
         rootClassName="w-full h-full flex items-center justify-center"
         className="h-full! w-full! rounded-md object-contain"
       />
-    )
+    ),
+    undefined,
+    undefined,
+    DETAIL_PREVIEW_DPI
   );
   return (
     <div

@@ -54,6 +54,7 @@ import SynaptomeDetails from '@/features/entities/neuron-simulation/elements/syn
 import { EphysViewer } from '@/features/ephys-viewer';
 import { IonChannelRecordingViewer } from '@/features/ion-channel-recording-viewer';
 import { ScanConfiguration } from '@/features/scan-config';
+import { ScanConfigTopBar } from '@/features/scan-config/components/top-bar/context';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   BuildScanConfigTabs,
@@ -487,11 +488,15 @@ export default async function Overview({
       notFound();
     }
     if (error || !data.form) {
+      // no tabs rail here, so the host's breadcrumb and close need their own bar
       return (
-        <div className="flex h-full w-full items-center justify-center">
-          {error
-            ? 'The configuration of this campaign could not be loaded'
-            : 'This campaign has no saved configuration'}
+        <div className="flex h-full w-full flex-col">
+          <ScanConfigTopBar />
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            {error
+              ? 'The configuration of this campaign could not be loaded'
+              : 'This campaign has no saved configuration'}
+          </div>
         </div>
       );
     }
