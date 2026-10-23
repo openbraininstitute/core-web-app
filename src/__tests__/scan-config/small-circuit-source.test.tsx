@@ -1,37 +1,39 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
-import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type { CellColors } from '@/features/circuit-viewer/morphologies/types';
 
 const DEFAULT: NodePopulation = { name: 'default', type: 'biophysical', file: 'nodes.h5' };
 const OTHER: NodePopulation = { name: 'other', type: 'biophysical', file: 'nodes.h5' };
 const INPUTS: NodePopulation = { name: 'inputs', type: 'virtual', file: 'inputs.h5' };
 
 /**
- * One population's placement, as this viewer asks the hook to read it:
- * positions, orientations, and the morphology each node names. That last is
- * null for a population that names none, which is what an input population
- * looks like.
+ * One population's placement, as this viewer asks the hook to read it: positions, orientations where given, and the
+ * morphology each node names, null for a population that names none, as an input population does.
  */
-function placement(positions: number[], morphologies: string[] | null = null): NodeGeometry {
+function placement(
+  positions: number[],
+  morphologies: string[] | null = null,
+  turned = true
+): NodeGeometry {
   const count = positions.length / 3;
   const orientations = new Float32Array(count * 4);
-  for (let i = 0; i < count; i++) orientations[i * 4 + 3] = 1;
+  for (let i = 0; i < count; i++) orientations.set([0, 0, 1, 0], 4 * i);
   return {
     count,
     positions: new Float32Array(positions),
-    orientations,
+    orientations: turned ? orientations : null,
     morphologies,
-  };
+  } as NodeGeometry;
 }
 
-// Hoisted so the module factories below, which run before the test body, can
-// read them.
+// Hoisted so the module factories below, which run before the test body, can read them.
 const fixtures = vi.hoisted(() => ({
   config: {
     nodes: [
@@ -40,8 +42,8 @@ const fixtures = vi.hoisted(() => ({
     ],
     edges: [],
     circuitAssetId: 'asset',
-    // Every population inherits the components directory, so `type` is the only
-    // thing keeping `inputs` off the detailed path.
+    // Every population inherits the components directory, so `type` is the only thing keeping `inputs` off the
+    // detailed path.
     raw: {
       components: { morphologies_dir: 'morphologies' },
       networks: {
@@ -59,9 +61,6 @@ const fixtures = vi.hoisted(() => ({
     typeof usePopulationsPlacement
   >,
 }));
-
-// The viewer barrel pulls in tgd, which touches `document` at module scope.
-vi.mock('@/morpho-viewer', () => ({}));
 
 vi.mock('@/ui/hooks/use-workspace', () => {
   const useWorkspace = () => ({ virtualLabId: 'lab', projectId: 'project' });
@@ -81,35 +80,10 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
   usePopulationsPlacement: () => fixtures.placement,
 }));
 
-/** Soma plus one dendrite, whose morphio ids and SONATA ids are not one apart. */
-vi.mock('@/api/one/circuit-visualization', async () => {
-  const { MorphoViewerTreeItemType } = await import('@/features/scan-config/types');
-  return {
-    circuitMorphologyPath: (circuitId: string, file: string, name: string) =>
-      `${circuitId}/${file}/${name}`,
-    fetchCircuitViz: async () => [
-      {
-        id: 'soma',
-        sonata_section_id: 0,
-        parent_id: null,
-        type: MorphoViewerTreeItemType.Soma,
-        points: [[0, 0, 0]],
-        radii: [8],
-      },
-      {
-        id: '0',
-        sonata_section_id: 3,
-        parent_id: 'soma',
-        type: MorphoViewerTreeItemType.BasalDendrite,
-        points: [
-          [8, 0, 0],
-          [58, 0, 0],
-        ],
-        radii: [1, 1],
-      },
-    ],
-  };
-});
+vi.mock('@/api/one/circuit-visualization', () => ({
+  circuitMorphologyPath: (circuitId: string, file: string, name: string) =>
+    `${circuitId}/${file}?name=${name}`,
+}));
 
 const circuit = { id: 'circuit-id' } as ICircuit;
 
@@ -117,258 +91,164 @@ type TProps = {
   population: NodePopulation;
   populations?: NodePopulation[];
   hiddenPopulations?: string[];
-  showAxons: boolean;
+  recededColor?: string;
 };
 
 function render(
-  showAxons: boolean,
   populations?: NodePopulation[],
   population = DEFAULT,
   hiddenPopulations?: string[]
 ) {
-  // Annotated, so the optional props stay optional for `rerender`, which
-  // otherwise infers its argument from this literal and demands all four.
-  const initialProps: TProps = { population, populations, hiddenPopulations, showAxons };
+  const initialProps: TProps = { population, populations, hiddenPopulations };
   return renderHook(
     (props: TProps) =>
       useSmallCircuitSource({
         circuit,
         ...props,
         populations: props.populations ?? [props.population],
-        recededColor: '#cccccc',
+        recededColor: props.recededColor ?? '#cccccc',
       }),
     { initialProps }
   );
 }
 
+/** Each cell's colour, through its column. */
+const colorsOf = ({ palette, columnByCell }: CellColors) =>
+  Array.from(columnByCell, (column) => palette[column]);
+
+function placed(...entries: [NodePopulation, NodeGeometry][]) {
+  fixtures.placement = {
+    placed: entries.map(([population, geometry]) => ({ population, geometry })),
+    failures: new Map(),
+    settled: true,
+    download: null,
+  };
+}
+
 describe('useSmallCircuitSource', () => {
   beforeEach(() => {
     fixtures.configError = null;
-    fixtures.placement = {
-      placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])]);
   });
 
-  /**
-   * The regression this pins: morphoviewer splits a cell id on `?` and calls
-   * `loadCell` with the path part, so keying the index by the argument stores it
-   * under an id `useMorphologyLocationSelection` never asks for — and every
-   * morphology location silently stops being drawn.
-   */
-  it('indexes SONATA section ids under the id the viewer knows the cell by', async () => {
-    const { result } = render(true);
-    const cellId = result.current.cells[0].id;
-
-    expect(cellId).toContain('?axons=');
-    // As the viewer calls it: the query part stripped.
-    await act(async () => {
-      await result.current.loadCell(cellId.split('?')[0]);
-    });
-
-    await waitFor(() => expect(result.current.sonataSectionIds?.get(cellId)?.get(3)).toBe('0'));
-  });
-
-  it('keys the two axon states apart', async () => {
-    const withAxons = render(true);
-    await act(async () => {
-      await withAxons.result.current.loadCell('circuit-id/default #0');
-    });
-
-    const withoutAxons = render(false);
-    await act(async () => {
-      await withoutAxons.result.current.loadCell('circuit-id/default #0');
-    });
-
-    // Each viewer id carries its own index: the axon-off one is built from the
-    // filtered sections, so it names a different set of sections.
-    await waitFor(() => {
-      expect([...(withAxons.result.current.sonataSectionIds?.keys() ?? [])]).toEqual([
-        'circuit-id/default #0?axons=true',
-      ]);
-      expect([...(withoutAxons.result.current.sonataSectionIds?.keys() ?? [])]).toEqual([
-        'circuit-id/default #0?axons=false',
-      ]);
-    });
-  });
-
-  it('stands a population with no morphologies as receded somas that load nothing', async () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0]) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, INPUTS]);
-
-    // Declared order, with ids that tell the populations apart.
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false',
-      'circuit-id/inputs #0?axons=false',
+  it("asks for each cell's morphology where OBI-One serves it, in the workspace", () => {
+    const { result } = render();
+    expect(result.current.tree?.requests).toEqual([
+      {
+        path: expect.stringMatching(/^circuit-id\/.*morph-a/),
+        virtualLabId: 'lab',
+        projectId: 'project',
+      },
     ]);
-    expect(result.current.cells[1]).toMatchObject({ center: [10, 0, 0], color: '#cccccc' });
-    // Marked, not left for the viewer to find out by asking: it counts the cells it is
-    // waiting on, so one that will never answer has to be left out of that count.
-    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
+  });
+
+  it('stands a population with no morphologies as receded somas that read nothing', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const { result } = render([DEFAULT, INPUTS]);
+    const { tree, cellColors, anchor } = result.current;
+
+    // Declared order, every cell numbered through the populations.
+    expect(Array.from(tree?.somas.positions ?? [])).toEqual([0, 0, 0, 10, 0, 0]);
+    expect(tree?.somas.populations).toEqual([
+      { name: 'default', cells: 1 },
+      { name: 'inputs', cells: 1 },
+    ]);
+    expect(tree?.requests[1]).toBeNull();
+    expect(colorsOf(cellColors)[1]).toBe('#cccccc');
     // The anchor stays on the population on show; the other one sits 10 away.
-    expect(result.current.anchor).toEqual([0, 0, 0]);
-    await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+    expect(anchor).toEqual([0, 0, 0]);
   });
 
-  it('stands a virtual population as somas even where it names morphologies', async () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0], ['morph-b']) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, INPUTS]);
-
-    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
-    // The two must agree, or the viewer waits on a morphology that never arrives.
-    await expect(result.current.loadCell('circuit-id/inputs #0')).resolves.toBeNull();
+  it('stands a virtual population as somas even where it names morphologies', () => {
+    placed(
+      [DEFAULT, placement([0, 0, 0], ['morph-a'])],
+      [INPUTS, placement([10, 0, 0], ['morph-b'])]
+    );
+    const { result } = render([DEFAULT, INPUTS]);
+    expect(result.current.tree?.requests.map((request) => request !== null)).toEqual([true, false]);
   });
 
-  /**
-   * The regression this pins: a `virtual` population has no morphology to draw,
-   * so making it the one on show used to take every morphology in the scene off
-   * the screen and leave a field of grey dots with no way back but a click on
-   * one of them.
-   */
-  it('keeps the morphologies drawn when a population with none goes on show', async () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0]) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, INPUTS], INPUTS);
-
-    // `default` still draws its morphology, now receded; `inputs` is on show
-    // and has nothing but its somas either way.
-    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, true]);
-    expect(result.current.cells[0].color).toBe('#cccccc');
-    // And it is still served, so the viewer has geometry to draw it from.
-    await expect(result.current.loadCell('circuit-id/default #0')).resolves.not.toBeNull();
+  it("turns each cell by its population's orientations, and leaves one without them unturned", () => {
+    placed(
+      [DEFAULT, placement([0, 0, 0], ['morph-a'])],
+      [OTHER, placement([10, 0, 0], ['morph-b'], false)]
+    );
+    const { result } = render([DEFAULT, OTHER]);
+    expect(Array.from(result.current.tree?.orientations ?? [])).toEqual([0, 0, 1, 0, 0, 0, 0, 1]);
   });
 
-  it('draws every population that has morphologies, receded except the one on show', async () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: OTHER, geometry: placement([10, 0, 0, 20, 0, 0], ['morph-b', 'morph-c']) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, OTHER]);
+  it('draws a lone cell in its sections’ colours, and a crowd in flat ones, the rest receded', () => {
+    expect(colorsOf(render().result.current.cellColors)).toEqual([SECTION_TYPE_COLORS]);
 
-    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, false, false]);
-    expect(result.current.cells.map((cell) => cell.color)).toEqual([
-      result.current.cells[0].color,
-      '#cccccc',
-      '#cccccc',
-    ]);
-    await expect(result.current.loadCell('circuit-id/other #1')).resolves.not.toBeNull();
+    placed(
+      [DEFAULT, placement([0, 0, 0], ['morph-a'])],
+      [OTHER, placement([10, 0, 0, 20, 0, 0], ['morph-b', 'morph-c'])]
+    );
+    const { result } = render([DEFAULT, OTHER], OTHER);
+    // The view's own colour for the population on show, which colour-by has nothing to say of here.
+    expect(colorsOf(result.current.cellColors)).toEqual(['#cccccc', null, null]);
   });
 
-  // Built one time only, because the viewer re-fits every cell when the id set
-  // changes.
-  // A morphology location is a section id and an offset with no cell of its
-  // own, so it is read against the population on show. Offered the whole scene
-  // it would put a marker on every cell of every population whose morphology
+  it('keeps the morphologies of a population read when one with none goes on show', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const { result } = render([DEFAULT, INPUTS], INPUTS);
+    expect(result.current.tree?.requests[0]).not.toBeNull();
+    expect(colorsOf(result.current.cellColors)[0]).toBe('#cccccc');
+  });
+
+  // A morphology location is a section id and an offset with no cell of its own, so it is read against the
+  // population on show; offered the whole scene it would mark every cell of every population whose morphology
   // happens to number a section the same way.
-  it('offers only the population on show for morphology locations', () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0, 1, 0, 0], ['morph-a', 'morph-b']) },
-        { population: OTHER, geometry: placement([10, 0, 0], ['morph-c']) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, OTHER]);
-
-    expect(result.current.cells).toHaveLength(3);
-    expect(result.current.locationCells?.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false',
-      'circuit-id/default #1?axons=false',
-    ]);
+  it('offers only the cells of the population on show that have a morphology for locations', () => {
+    placed(
+      [DEFAULT, placement([0, 0, 0, 1, 0, 0, 2, 0, 0], ['morph-a', '', 'morph-b'])],
+      [OTHER, placement([10, 0, 0], ['morph-c'])]
+    );
+    const { result } = render([DEFAULT, OTHER]);
+    expect(result.current.locationCells).toEqual([0, 2]);
   });
 
   it('draws nothing until every population is placed', () => {
     fixtures.placement = { placed: [], failures: new Map(), settled: false, download: null };
-    const { result } = render(false, [DEFAULT, INPUTS]);
-
-    expect(result.current.cells).toEqual([]);
-    expect(result.current.isLoading).toBe(true);
+    const { result } = render([DEFAULT, INPUTS]);
+    expect(result.current.tree).toBeNull();
+    expect(result.current.error).toBeNull();
   });
 
   /**
-   * Nothing is re-read on a switch, so there is no gap to cover: every
-   * population's morphology names and orientations arrived together, and the
-   * selection decides colour alone.
+   * Nothing is read again on a switch: every population's morphology names and orientations arrived together, and the
+   * selection decides colour alone. Another scene would be read and framed anew.
    */
   it('changes colour alone when another population goes on show', () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: OTHER, geometry: placement([10, 0, 0], ['morph-b']) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result, rerender } = render(false, [DEFAULT, OTHER]);
-    const shown = result.current.cells;
-    expect(shown[1].color).toBe('#cccccc');
-
-    rerender({ population: OTHER, populations: [DEFAULT, OTHER], showAxons: false });
-
-    // The ids have to be untouched: the viewer reads a scene whose ids it
-    // already holds as the one it is standing in, and keeps the morphologies it
-    // has drawn for it, so switching back does not reload them.
-    expect(result.current.cells.map((cell) => cell.id)).toEqual(shown.map((cell) => cell.id));
-    expect(result.current.cells.map((cell) => cell.center)).toEqual(
-      shown.map((cell) => cell.center)
+    placed(
+      [DEFAULT, placement([0, 0, 0], ['morph-a'])],
+      [OTHER, placement([10, 0, 0], ['morph-b'])]
     );
-    expect(result.current.cells.map((cell) => cell.somaOnly)).toEqual([false, false]);
-    expect(result.current.cells[0].color).toBe('#cccccc');
-    expect(result.current.cells[1].color).not.toBe('#cccccc');
+    const { result, rerender } = render([DEFAULT, OTHER]);
+    const { tree } = result.current;
+    expect(colorsOf(result.current.cellColors)[1]).toBe('#cccccc');
+
+    rerender({ population: OTHER, populations: [DEFAULT, OTHER] });
+
+    expect(result.current.tree).toBe(tree);
+    expect(colorsOf(result.current.cellColors)[0]).toBe('#cccccc');
+    expect(colorsOf(result.current.cellColors)[1]).not.toBe('#cccccc');
   });
 
-  // An input population carrying no positions is the ordinary case, and the
-  // circuit is drawable without it. Failing the viewer over it would cover a
-  // correct render with a panel about the one thing missing from it.
-  it('draws on when a population cannot be placed', () => {
+  // An input population carrying no positions is the ordinary case, and the circuit is drawable without it.
+  it('draws on when a population cannot be placed, nothing receding behind the one on show', () => {
     fixtures.placement = {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
       failures: new Map([['inputs', new Error('no x/y/z columns')]]),
       settled: true,
       download: null,
     };
-    const { result } = render(false, [DEFAULT, INPUTS], INPUTS);
+    const { result } = render([DEFAULT, INPUTS], INPUTS);
 
     expect(result.current.error).toBeNull();
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false',
-    ]);
-    // Painted, not receded: with the population on show nowhere on screen,
-    // there is nothing for the rest to recede behind.
-    expect(result.current.cells[0].color).toBe(DEFAULT_NEURON_COLOR);
+    expect(result.current.tree?.somas.populations).toEqual([{ name: 'default', cells: 1 }]);
+    // No colour of its own anywhere: every cell in the view's.
+    expect(result.current.cellColors.palette).toEqual([]);
   });
 
   it('fails only once no population at all could be placed', () => {
@@ -379,79 +259,53 @@ describe('useSmallCircuitSource', () => {
       settled: true,
       download: null,
     };
-    const { result } = render(false, [DEFAULT]);
-
+    const { result } = render([DEFAULT]);
     expect(result.current.error).toBe(failure);
-    expect(result.current.cells).toEqual([]);
+    expect(result.current.tree).toBeNull();
   });
 
-  // Here hiding is a real saving rather than a repaint: the viewer asks
-  // `loadCell` for every cell it is handed, so a population that contributes
-  // none is a population whose morphologies are never asked of OBI-One.
-  it('leaves a hidden population out of the scene, and puts it back where it was', () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0]) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result, rerender } = render(false, [DEFAULT, INPUTS], DEFAULT, ['inputs']);
+  // The same cells, in the same places, on both sides of the hide: the view reads the same scene and keeps it framed.
+  it('keeps a hidden population in the scene undrawn, its morphologies left unread', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const hidden = ['inputs'];
+    const { result, rerender } = render([DEFAULT, INPUTS], DEFAULT, hidden);
+    const { tree } = result.current;
+    expect(colorsOf(result.current.cellColors)).toEqual([SECTION_TYPE_COLORS, false]);
+    expect(result.current.hidden).toBe(hidden);
 
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false',
-    ]);
-
-    rerender({ population: DEFAULT, populations: [DEFAULT, INPUTS], showAxons: false });
-
-    // The same id, in the same place, on both sides of the hide. What the
-    // viewer sees is a subset and then a superset of the ids it already holds,
-    // which is how it knows this is the scene it is standing in rather than a
-    // new one to re-frame.
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/default #0?axons=false',
-      'circuit-id/inputs #0?axons=false',
-    ]);
-    expect(result.current.cells[0].center).toEqual([0, 0, 0]);
+    rerender({ population: DEFAULT, populations: [DEFAULT, INPUTS] });
+    expect(result.current.tree).toBe(tree);
+    expect(colorsOf(result.current.cellColors)).toEqual([SECTION_TYPE_COLORS, '#cccccc']);
   });
 
-  // An empty scene reads as a finished one, or the viewer sits on its loading
-  // indicator for good: with no cells it is never mounted, so the progress the
-  // indicator waits on never arrives.
-  it('is not loading once every population has been hidden', () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0]) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default', 'inputs']);
+  // The receded colour follows the background: with nothing on screen to recede, another background repaints nothing.
+  it('recedes only where another population is on screen beside the one on show', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const hidden = ['inputs'];
+    const { result, rerender } = render([DEFAULT, INPUTS], DEFAULT, hidden);
+    const { cellColors } = result.current;
 
-    expect(result.current.cells).toEqual([]);
-    expect(result.current.isLoading).toBe(false);
+    rerender({
+      population: DEFAULT,
+      populations: [DEFAULT, INPUTS],
+      hiddenPopulations: hidden,
+      recededColor: '#333333',
+    });
+    expect(result.current.cellColors).toBe(cellColors);
   });
 
-  it('drops the population on show when that is the hidden one', () => {
-    fixtures.placement = {
-      placed: [
-        { population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) },
-        { population: INPUTS, geometry: placement([10, 0, 0]) },
-      ],
-      failures: new Map(),
-      settled: true,
-      download: null,
-    };
-    const { result } = render(false, [DEFAULT, INPUTS], DEFAULT, ['default']);
+  it('keeps the scene once every population has been hidden', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const { result } = render([DEFAULT, INPUTS], DEFAULT, ['default', 'inputs']);
+    expect(result.current.tree).not.toBeNull();
+    expect(colorsOf(result.current.cellColors)).toEqual([false, false]);
+  });
 
-    // What is left is the other population, still a receded soma: being the one
-    // on show is not what puts a cell on screen, being unhidden is.
-    expect(result.current.cells.map((cell) => cell.id)).toEqual([
-      'circuit-id/inputs #0?axons=false',
-    ]);
+  it('hides the population on show when that is the hidden one, the rest still receded', () => {
+    placed([DEFAULT, placement([0, 0, 0], ['morph-a'])], [INPUTS, placement([10, 0, 0])]);
+    const { result } = render([DEFAULT, INPUTS], DEFAULT, ['default']);
+    expect(colorsOf(result.current.cellColors)).toEqual([false, '#cccccc']);
+    // Its locations go with it: nothing is drawn to mark them on.
+    expect(result.current.locationCells).toEqual([]);
   });
 });

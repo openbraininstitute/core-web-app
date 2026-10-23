@@ -1,5 +1,5 @@
+import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
-import type { MorphoViewerSpikes } from '@/morpho-viewer';
 
 /**
  * Turn a parsed `spikes.h5` into the flat arrays the 3D viewer replays.
@@ -18,7 +18,7 @@ import type { MorphoViewerSpikes } from '@/morpho-viewer';
 export function spikesToViewer(
   data: SpikeData,
   populationName: string | undefined
-): MorphoViewerSpikes | null {
+): CircuitSpikes | null {
   if (!populationName) return null;
 
   const population = data.populations.find((p) => p.name === populationName);

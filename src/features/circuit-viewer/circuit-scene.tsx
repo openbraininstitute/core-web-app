@@ -7,11 +7,17 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { storedPackOf } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
+import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
-import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
+import { circuitSmallForThePack } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import {
+  CircuitViewerChrome,
+  STATUS_PLACE,
+} from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
 import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
@@ -41,11 +47,11 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const NOTHING_HIDDEN: readonly string[] = [];
 const MIN_TABLE_HEIGHT = 280;
@@ -72,7 +78,10 @@ export type TSceneSubject =
   | { memodel: TSceneMemodel; circuit?: never };
 
 interface ICircuitSceneOptions {
-  /** Draw somas only. Region-scale circuits have too many cells for morphologies. */
+  /**
+   * Draw with `LargeCircuitPreview`, as somas or as the morphologies of the circuit's stored pack. @see
+   * circuitDrawsEachCell
+   */
   largeCircuit?: boolean;
   /**
    * Whether this scene is the view currently on show.
@@ -154,7 +163,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
  * How electrode sync works here:
  * - {@link useElectrodeOverlays} → coloured overlays from every source
  * - form selection → `highlightedOverlayId` + selection styling
- * - morphoviewer `onOverlayTransform` (phase `end`) →
+ * - the viewer's `onOverlayTransform` (phase `end`) →
  *   {@link applyElectrodeOverlayTransform} → `setConfig`
  *
  * Why: keep 3D↔form bidirectional without pushing config on every pointer move.
@@ -164,7 +173,7 @@ export type ICircuitSceneProps = ICircuitSceneOptions & TSceneSubject;
 export function CircuitScene({
   circuit,
   memodel,
-  largeCircuit = false,
+  largeCircuit: drawnLarge = false,
   active = true,
   features,
   defaultNeuronOpacity,
@@ -193,6 +202,16 @@ export function CircuitScene({
   const enableCellHover = Boolean(circuit) && (features?.cellHover ?? true);
   const enableNodesTable = Boolean(circuit) && (features?.nodesTable ?? true);
 
+  const morphologiesFlag = !!useFlag(circuitMorphologiesFlag.key);
+  const smallForThePack =
+    morphologiesFlag &&
+    drawnLarge &&
+    circuit !== undefined &&
+    circuitSmallForThePack(circuit.scale);
+  const hasPack = storedPackOf(circuit?.assets) !== null;
+  const [fellBackFor, setFellBackFor] = useState<string | null>(null);
+  const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
+
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
@@ -220,9 +239,8 @@ export function CircuitScene({
   const handlePopulationClick =
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
-  // Every small-circuit source filters axon sections, so the toggle is offered wherever the
-  // morphology itself is drawn.
-  const supportsAxons = !largeCircuit;
+  // Drawn as somas, the cells can be switched to their morphologies where the circuit has its pack.
+  const supportsMorphologies = morphologiesFlag && largeCircuit && hasPack;
 
   const canPickMorphologyLocations =
     !largeCircuit &&
@@ -254,8 +272,12 @@ export function CircuitScene({
     arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
 
+  const scopedOverlays = useMemo(
+    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
+    [overlays, visibleOverlayIds]
+  );
   const handleOverlayTransform = useCallback(
-    (event: MorphoViewerOverlayTransformEvent) => {
+    (event: ElectrodeTransform) => {
       if (!setConfig || !enableElectrodes) return;
       // Overlays the form does not own (arrays a simulation only references)
       // have nowhere to write back to.
@@ -278,13 +300,18 @@ export function CircuitScene({
     signals,
     colorBy,
     onHiddenPopulationsChange,
+    representation,
+    onRepresentationChange,
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
-    supportsAxons,
+    // A larger circuit keeps the axons it was drawn with before they could be hidden.
+    defaultShowAxons: drawnLarge && !smallForThePack,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
-    supportsSomaSize: largeCircuit,
+    drawsSomas: largeCircuit,
+    supportsMorphologies,
+    defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
     population,
     subject: memodel,
@@ -348,10 +375,6 @@ export function CircuitScene({
     enableElectrodes && selectedRootElement && selectedEntry
       ? (overlayIdByBlockPath.get(electrodeBlockPath(selectedRootElement, selectedEntry)) ?? null)
       : null;
-  const scopedOverlays = useMemo(
-    () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
-    [overlays, visibleOverlayIds]
-  );
   // When the host supplies `visibleIds` it owns visibility outright. Letting the
   // viewer's own show/hide toggle also gate them strands the host control: with
   // the toggle off, ticking an electrode draws nothing and the auto-enable effect
@@ -434,8 +457,8 @@ export function CircuitScene({
     () => ({
       showAxons: config.showAxons,
       backgroundColor: config.backgroundColor,
-      scalebarColor: theme?.foreground,
       showScalebar: config.showScalebar,
+      spin: config.spin,
       signals,
       overlays: styledOverlays,
       overlaysInteractive,
@@ -466,13 +489,13 @@ export function CircuitScene({
       config.showAxons,
       config.backgroundColor,
       config.showScalebar,
+      config.spin,
       config.neuronOpacity,
       config.electrodeRadius,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       enableColorBy,
-      theme?.foreground,
       signals,
       styledOverlays,
       overlaysInteractive,
@@ -515,18 +538,28 @@ export function CircuitScene({
             populations={populations}
             hiddenPopulations={hiddenPopulations}
             nodeColors={enableColorBy ? nodeColors : undefined}
+            defaultColor={defaultColor}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
             backgroundColor={config.backgroundColor}
-            scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
+            spin={config.spin}
             signals={signals}
+            onZoomChange={config.showZoomSlider ? zoom.onZoomChange : undefined}
             overlays={styledOverlays}
             overlaysInteractive={overlaysInteractive}
             onOverlayTransform={handleOverlayTransform}
             highlightedOverlayId={highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
             somaSizeScale={config.somaSizeScale}
+            showAxons={config.showAxons}
+            followMorphologies={smallForThePack}
+            representation={representation}
+            onRepresentationChange={onRepresentationChange}
+            onMorphologiesStopped={() =>
+              smallForThePack ? setFellBackFor(circuit.id) : onRepresentationChange?.('somas')
+            }
+            statusPlace={STATUS_PLACE}
             electrodeRadius={config.electrodeRadius}
             features={vizFeatures}
             spikes={spikes}
@@ -569,9 +602,8 @@ export function CircuitScene({
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,
-          // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
-          // props, and with the setting off there is nothing to drive.
-          zoom: largeCircuit || !config.showZoomSlider ? undefined : zoom,
+          // Omitted rather than hidden downstream: with the setting off there is nothing to drive.
+          zoom: config.showZoomSlider ? zoom : undefined,
         }}
       />
 
@@ -630,7 +662,7 @@ function styleOverlaysForSelection(
 }
 
 /**
- * Strip any CSS alpha so morphoviewer palette texels stay fully opaque.
+ * Strip any CSS alpha so electrode markers stay fully opaque.
  *
  * Same `try`/`catch` shape as {@link adaptColorToBackground} and
  * {@link recedeMarkerColor}, the two functions this one sits between: a colour

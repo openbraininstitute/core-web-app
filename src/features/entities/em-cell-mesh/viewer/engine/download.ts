@@ -7,7 +7,13 @@
  * large for the browser stops the download there. A GLB in the cache is read the same way, so that one refused is not
  * read whole either.
  */
-import { type CacheBounds, deleteEntry, openEntry, writeEntry } from './asset-cache';
+import {
+  type CacheBounds,
+  deleteEntry,
+  openEntry,
+  writeEntry,
+} from '@/features/viewer-3d/load/asset-cache';
+
 import { type MeshHeader, meshHeader, readGlbJson } from './glb';
 
 export interface DownloadRequest {

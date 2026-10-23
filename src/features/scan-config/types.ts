@@ -2,9 +2,7 @@ import { z } from 'zod';
 
 // biome-ignore lint/style/useImportType: biome hallucination
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-// Past the package barrel: `SectionSchema` needs the enum as a runtime value,
-// and the barrel would cost this module a WebGL renderer.
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 
 import type {
   ICellMorphology,
@@ -20,7 +18,6 @@ import type { IEntity } from '@/api/entitycore/types/entities/entity';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { AssetContentType, IAsset } from '@/api/entitycore/types/shared/global';
-import type { MorphoViewerTreeItem } from '@/morpho-viewer/tree-item-type';
 import type { Prettify } from '@/utils/type';
 
 export type SetAtom<Args extends unknown[], Result> = (...args: Args) => Result;
@@ -867,11 +864,6 @@ export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBack
   return file.renderer !== ActivityCustomFileRenderer.MiniDetailView && 'asset' in file;
 }
 
-// Re-exported rather than re-declared: a structurally identical enum is still a
-// *different* enum to TypeScript, so two copies never compare equal.
-export type { MorphoViewerTreeItem };
-export { MorphoViewerTreeItemType };
-
 const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
 
 export const SectionSchema = z.object({
@@ -888,7 +880,7 @@ export const SectionSchema = z.object({
    */
   sonata_section_id: z.number().int().optional(),
   parent_id: z.string().nullable(),
-  type: z.enum(MorphoViewerTreeItemType),
+  type: z.enum(SectionType),
   points: z.array(Point3DSchema),
   radii: z.array(z.number()),
 });

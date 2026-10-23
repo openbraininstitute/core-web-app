@@ -1,0 +1,17 @@
+{
+  "gridUm": 0.025,
+  "radiusSteps": 16,
+  "bounds": [[0, 0, 0], [0, 0, 0]],
+  "populations": [{ "name": "points", "cells": 3 }],
+  "somas": [[10.0, 20.0, 30.0, 0.0], [-50.0, 0.0, 5.0, 0.0], [null, null, null, 0.0]],
+  "levels": [
+    {
+      "toleranceUm": 0.125,
+      "pruneUm": 0.0,
+      "chunkSteps": 2000,
+      "runs": 0,
+      "chunks": 0,
+      "segments": []
+    }
+  ]
+}

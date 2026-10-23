@@ -1,4 +1,10 @@
-import { RiCameraLine, RiEqualizerLine, RiResetLeftLine } from '@remixicon/react';
+import {
+  RiCameraLine,
+  RiEqualizerLine,
+  RiLoopRightLine,
+  RiNodeTree,
+  RiResetLeftLine,
+} from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
@@ -24,6 +30,9 @@ export interface ViewerControlsMenuProps {
   /** axons toggle — omit for viewers that have no axons (point cloud) */
   showAxons?: boolean;
   onToggleAxons?: (value: boolean) => void;
+  /** the cells as morphologies and not soma points; omit where a circuit is not offered both */
+  showMorphologies?: boolean;
+  onToggleMorphologies?: (value: boolean) => void;
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
@@ -48,6 +57,9 @@ export interface ViewerControlsMenuProps {
   /** scalebar down the side of the canvas */
   showScalebar?: boolean;
   onToggleScalebar?: (value: boolean) => void;
+  /** the view turning slowly on its own */
+  spin?: boolean;
+  onToggleSpin?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -65,6 +77,8 @@ export function ViewerControlsMenu({
   onBackgroundDarkChange,
   showAxons,
   onToggleAxons,
+  showMorphologies,
+  onToggleMorphologies,
   neuronOpacity,
   onNeuronOpacityChange,
   somaSizeScale,
@@ -80,6 +94,8 @@ export function ViewerControlsMenu({
   onToggleZoomSlider,
   showScalebar,
   onToggleScalebar,
+  spin,
+  onToggleSpin,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -103,6 +119,15 @@ export function ViewerControlsMenu({
               onCaptureImage();
             }}
           />
+          {onToggleMorphologies && (
+            <MenuRow label="Morphologies" icon={<RiNodeTree className="size-4 shrink-0" />}>
+              <ViewerSwitch
+                testId="viewer-toggle-morphologies"
+                checked={!!showMorphologies}
+                onChange={onToggleMorphologies}
+              />
+            </MenuRow>
+          )}
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
               <ViewerSwitch
@@ -131,6 +156,11 @@ export function ViewerControlsMenu({
               value={electrodeRadius}
               onChange={onElectrodeRadiusChange}
             />
+          )}
+          {onToggleSpin && (
+            <MenuRow label="Spin" icon={<RiLoopRightLine className="size-4 shrink-0" />}>
+              <ViewerSwitch testId="viewer-toggle-spin" checked={!!spin} onChange={onToggleSpin} />
+            </MenuRow>
           )}
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>

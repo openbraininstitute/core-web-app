@@ -14,7 +14,7 @@ const LOADING_LABEL = 'Loading visualization…';
  *
  * Whether the data was already in hand cannot be asked directly: the nodes
  * registry may hold a live session, the browser may serve the file from its own
- * cache, and morphoviewer may answer a cell it has already drawn. What can be
+ * cache, and a morphology read in the last hour is kept. What can be
  * asked is whether the user is still waiting, and a wait this short is not one.
  *
  * The veil waits too, so switching populations leaves the previous scene on

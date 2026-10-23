@@ -9,7 +9,12 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import {
+  DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  DEFAULT_SPIKE_GLOW,
+  DEFAULT_SPIKE_SPEED,
+} from '@/features/circuit-viewer/spike-clock';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
@@ -44,11 +49,6 @@ const DEFAULT_RASTER_HEIGHT_RATIO = 0.4;
  * belonging to it rather than as two separate views.
  */
 const SPLIT_GUTTER_IN_PX = 12;
-
-/** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
-const DEFAULT_SPEED = 100;
-/** Wall-clock seconds for a spike to fade to `1/e`. */
-const DEFAULT_AFTERGLOW_IN_SECONDS = 0.25;
 
 /** Radius in pixels of a raster marker. */
 const DEFAULT_MARKER_SIZE = 4;
@@ -85,8 +85,9 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(DEFAULT_SPEED);
-  const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_AFTERGLOW_IN_SECONDS);
+  const [speed, setSpeed] = useState(DEFAULT_SPIKE_SPEED);
+  const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS);
+  const [glow, setGlow] = useState(DEFAULT_SPIKE_GLOW);
   const [seekToMs, setSeekToMs] = useState<number | undefined>();
   // False until the viewer has painted a frame. It arrives on a dynamic
   // chunk, so for a while there is no child to receive anything.
@@ -103,6 +104,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
+  const drawsEachCell = useCircuitDrawsEachCell();
   const {
     config: circuitConfig,
     isLoading: configLoading,
@@ -347,7 +349,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               {sceneMounted && (
                 <CircuitScene
                   {...subject}
-                  largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+                  largeCircuit={circuit !== undefined && !drawsEachCell(circuit)}
                   active={showScene}
                   features={SCENE_FEATURES}
                   // Only a name the config backs with cells. A name the scene
@@ -368,6 +370,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                     onPlayingChange: setPlaying,
                     speed,
                     afterglowInSeconds,
+                    glow,
                   }}
                 />
               )}
@@ -436,6 +439,8 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
             onSpeedChange={setSpeed}
             afterglowInSeconds={afterglowInSeconds}
             onAfterglowChange={setAfterglowInSeconds}
+            glow={glow}
+            onGlowChange={setGlow}
             disabled={!replayable}
           />
         )}

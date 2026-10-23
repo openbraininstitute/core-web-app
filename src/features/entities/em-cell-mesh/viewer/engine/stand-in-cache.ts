@@ -5,11 +5,12 @@
 import {
   packEntry,
   readEntry,
-  STAND_IN_CACHE,
   unpackEntry,
   versionedKey,
   writeEntry,
-} from './asset-cache';
+} from '@/features/viewer-3d/load/asset-cache';
+
+import { STAND_IN_CACHE } from './caches';
 import { chunkArrays } from './chunks';
 import { TRIANGLES_PER_FACE } from './cluster';
 

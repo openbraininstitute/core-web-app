@@ -68,8 +68,13 @@ export interface ColorByProperty {
  */
 export type ColorOverrides = Record<string, Record<string, string>>;
 
+/** What each cell of a circuit past the small scales is drawn as. */
+export type CircuitRepresentation = 'somas' | 'morphologies';
+
 /** persisted, per-circuit viewer configuration */
 export interface ViewerConfig {
+  /** Asked for; the scene draws somas wherever morphologies are not offered. */
+  representation: CircuitRepresentation;
   /**
    * Selected colour-by property, by population name; absent or null for the
    * default (blue). Stored per population because the property list is per
@@ -103,7 +108,7 @@ export interface ViewerConfig {
   /** Show electrode location overlays when present. Default on. */
   showElectrodes: boolean;
   /**
-   * World-space electrode marker radius (morphoviewer overlaysRadius).
+   * World-space electrode marker radius.
    * Defaults to {@link DEFAULT_ELECTRODE_RADIUS}.
    */
   electrodeRadius: number;
@@ -118,6 +123,7 @@ export interface ViewerConfig {
   showZoomSlider: boolean;
   /** Show the scalebar down the side of the canvas. */
   showScalebar: boolean;
+  spin: boolean;
   /** per-property, per-value color overrides chosen by the user */
   colorOverrides: ColorOverrides;
 }

@@ -1,61 +1,39 @@
 import type { DownloadProgress } from '@/features/circuit-nodes/types';
-import type {
-  MorphoViewerSmallCircuitCell,
-  MorphoViewerSmallCircuitCellData,
-  MorphoViewerSmallCircuitProps,
-} from '@/morpho-viewer';
+import type { CellColors, SynapseGroup } from '@/features/circuit-viewer/morphologies/types';
+import type { TreeSource } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
+
+/** One coloured group of synapses, and what the legend calls it. */
+export type TSmallCircuitSynapseGroup = SynapseGroup & { label: string };
 
 /**
- * One coloured synapse point cloud — flat `[x, y, z, …]` world coordinates.
- * Derived from the package prop so the contract can't drift from the viewer.
- */
-export type TSmallCircuitSynapseGroup = NonNullable<
-  MorphoViewerSmallCircuitProps['synapses']
->[number] & {
-  /** What the legend calls this group. Extra fields are ignored by the viewer. */
-  label: string;
-};
-
-/**
- * Normalized data contract for {@link MorphoViewerSmallCircuit}.
- *
- * Shared so the GPU surface does not know where its cells came from: a circuit's nodes are
- * read from its SONATA files in the browser, an MEModel is served by `/memodel/viz`.
+ * What the small-circuit view draws, wherever its cells come from: a circuit's nodes are read from its SONATA files in
+ * the browser, an MEModel is one cell at the origin.
  */
 export type TSmallCircuitSource = {
-  cells: MorphoViewerSmallCircuitCell[];
-  loadCell: (cellId: string) => Promise<MorphoViewerSmallCircuitCellData | null>;
-  isLoading: boolean;
+  /** The cells, and where each one's morphology is read; null until there are cells to draw. Another is another scene. */
+  tree: TreeSource | null;
   /**
-   * Node-file bytes still coming, so the viewer can say what it is waiting for.
-   * Optional: an MEModel is served whole by `/memodel/viz` and reads no node
-   * files at all.
+   * Each cell's colour: the population on show by colour-by, or a lone cell by its sections' types; the rest receded;
+   * the hidden populations not drawn.
    */
+  cellColors: CellColors;
+  /** The populations taken out of the scene, whose morphologies are not read while they are. */
+  hidden: readonly string[];
+  /**
+   * The cells a stored morphology location applies to: those of the population on show that have a morphology. A
+   * location is a section id and an offset with no cell of its own, so it can only be read against one population's
+   * morphologies.
+   */
+  locationCells: readonly number[];
+  /** Node-file bytes still coming, so the viewer can say what it is waiting for. An MEModel reads no node files. */
   download?: DownloadProgress | null;
-  /** Anything the source failed at — the node list or a morphology. */
+  /** What the source failed at: the circuit's config or the placement of every population. */
   error: Error | null;
-  /** Discard the failure and fetch again. */
-  retry: () => void;
-  /**
-   * Afferent synapses, one group per edge population. Optional: only a single-scale circuit
-   * has them, and an MEModel is not stored as a circuit at all.
-   */
+  /** Afferent synapses, one group per edge population; only a single-cell circuit has them. */
   synapses?: TSmallCircuitSynapseGroup[];
-  /** Per loaded cell (by the id in {@link cells}): SONATA section id → the viewer's section name. */
-  sonataSectionIds?: ReadonlyMap<string, ReadonlyMap<number, string>>;
   /**
-   * The subset of {@link cells} a stored morphology location applies to: the
-   * population on show. A location is a section id and an offset with no cell
-   * of its own, so it can only be read against one population's morphologies.
-   * Every other population has section ids of its own, answering to nothing.
-   * Omitted where every cell is one, as for an MEModel.
-   */
-  locationCells?: MorphoViewerSmallCircuitCell[];
-  /**
-   * Centre of the population on show, used to place things near it: a new
-   * electrode seeds its origin here. Null until that population's nodes are
-   * placed. This is not the centre of {@link cells}, which may include context
-   * populations that would pull it away from the cells being recorded.
+   * Centre of the population on show, used to place things near it: a new electrode seeds its origin here. Null until
+   * that population's nodes are placed.
    */
   anchor: [x: number, y: number, z: number] | null;
 };

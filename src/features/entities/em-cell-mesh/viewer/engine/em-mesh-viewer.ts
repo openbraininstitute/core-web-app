@@ -527,11 +527,12 @@ export class EmMeshViewer extends SceneViewer {
     this.tellStatus();
   };
 
-  protected override afterDraw(moved: MovingFrame | null): void {
+  protected override afterDraw(moving: boolean): void {
     if (this.timing) {
       this.timing = false;
       this.timer?.end();
     }
+    const moved = moving ? this.drawnCut : null;
     if (moved && this.choice) this.lastMoving = { mesh: this.choice.mesh, ...moved };
     this.tellStatus();
   }

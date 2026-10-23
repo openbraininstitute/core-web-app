@@ -9,21 +9,12 @@ import {
 } from './sdf';
 
 /**
- * The surface the viewer actually draws.
+ * The surface the circuit viewer draws: a round-capped cone a segment, at the radii the morphology states, and the
+ * soma one sphere (`circuit-viewer/morphologies/load/tree.ts`). Reconstructing exactly that, rather than something
+ * merely soma-shaped, is what lets a synapse land *on* what is drawn instead of near it.
  *
- * `TgdPainterSegments` renders a morphology as a union of round-capped cones —
- * one per parent→child sample pair, with a parentless root drawn as a sphere.
- * Reconstructing exactly that, rather than something merely soma-shaped, is what
- * lets a synapse land *on* the mesh instead of near it.
- *
- * Needed because SONATA computes `afferent_surface_*` for soma synapses against
- * a *spherical* soma, while the SWC morphology describes the soma as a stack of
- * cones. The two disagree, so the raw coordinates fall inside the drawn mesh
- * (invisible) or hover off it.
- *
- * "Drawn" is meant literally, bugs included — see {@link drawnRadiusFactor}.
- *
- * @see node_modules/@openbraininstitute/morphoviewer/dist/components/morpho-viewer-small-circuit/painter/painter-cell/factory/tree.js
+ * Needed because SONATA computes `afferent_surface_*` for soma synapses against a *spherical* soma of its own, which
+ * need not be the drawn one, so the raw coordinates can fall inside it (invisible) or hover off it.
  */
 
 /** A morphology sample in world coordinates. */
@@ -44,58 +35,6 @@ export type SurfaceSdf = (p: Vec3) => { distance: number; normal: Vec3 };
  */
 export function isSomaSection(sectionId: number): boolean {
   return sectionId === 0;
-}
-
-/**
- * How much thinner than its stated radius the renderer actually draws a segment.
- *
- * `TgdPainterSegments` builds each capsule's frame in its vertex shader and
- * forgets to normalise it:
- *
- * ```glsl
- * vec3 Z = dir / len;
- * vec3 fakeY = abs(Z.y) < 0.9 ? vec3(0.0, 1.0, 0.0) : vec3(0.0, 0.0, 1.0);
- * vec3 X = cross(fakeY, Z);   // |X| = sin(angle between them), not 1
- * vec3 Y = cross(Z, X);
- * pos = mat3(X, Y, Z) * (pos * radius) + center;
- * ```
- *
- * `X` and `Y` span the capsule's cross-section, so the segment is drawn
- * `sqrt(1 - (fakeY·Z)²)` times as thick as it should be while its reach along
- * `Z` is untouched. The `fakeY` switch also makes that discontinuous: a segment
- * just under the 0.9 threshold is drawn at 0.436 of its radius and jumps back to
- * full width just over it. Zero-length segments take the shader's sphere branch,
- * which never builds the basis, so single-point somas are drawn correctly.
- *
- * Somas are the only place it shows. A typical one lands near 0.71 — a 29%
- * shortfall, enough for a soma synapse projected onto the soma the *morphology*
- * describes to stand ~2.4µm proud of the soma the viewer *paints*. Neurites lose
- * the same 29% but their median radius is 0.22µm, so it costs them 0.06µm.
- *
- * Projecting onto the shrunken shape instead is knowingly wrong: the synapses
- * stop sitting where the data puts them and sit where the picture is. It errs in
- * the harmless direction, though — shrinking the radius isotropically describes a
- * shape strictly inside what is drawn, because the renderer squashes the
- * cross-section but leaves the caps' reach along the axis alone. A synapse can
- * come out slightly buried; it cannot come out floating.
- *
- * The upstream fix is `normalize(cross(fakeY, Z))`. The day tgd ships it, delete
- * this and the projection goes back to being honest.
- *
- * Expects morphology-local coordinates: the shader runs before the cell's
- * orientation is applied, so which way a segment points to the renderer is not
- * which way it points in the world.
- *
- * @see node_modules/@tolokoban/tgd/lib/dist/painter/segments/segments.js
- */
-export function drawnRadiusFactor(from: Vec3, to: Vec3): number {
-  const axis = subtract(to, from);
-  const len = length(axis);
-  if (len === 0) return 1;
-
-  const [, y, z] = scale(axis, 1 / len);
-  const alignment = Math.abs(y) < 0.9 ? y : z;
-  return Math.sqrt(Math.max(0, 1 - alignment * alignment));
 }
 
 const toVec3 = ({ x, y, z }: SurfacePoint): Vec3 => [x, y, z];

@@ -15,5 +15,7 @@ export function BuildStatus({ mesh, theme }: { mesh: MorphologyMeshState; theme:
   else if (!mesh.summary) text = 'Reading morphology…';
   else if (mesh.progress !== null) text = `Building mesh… ${Math.round(100 * mesh.progress)} %`;
   if (!text) return null;
-  return <StatusPill text={text} failed={mesh.buildError !== null} theme={theme} />;
+  return (
+    <StatusPill text={text} kind={mesh.buildError === null ? 'busy' : 'warning'} theme={theme} />
+  );
 }

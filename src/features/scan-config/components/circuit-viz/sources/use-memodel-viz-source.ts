@@ -1,104 +1,46 @@
-import { useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { fetchCircuitViz, memodelMorphologyPath } from '@/api/one/circuit-visualization';
-import { IDENTITY_QUATERNION } from '@/features/circuit-nodes/geometry-utils';
-import {
-  buildMorphoTree,
-  buildSonataSectionIdIndex,
-} from '@/features/scan-config/components/circuit-viz/build-morpho-tree';
-import { STATIC_RESOURCE_QUERY_OPTIONS } from '@/features/scan-config/components/circuit-viz/query-options';
-import { makeVizCellId } from '@/features/scan-config/components/circuit-viz/sources/node-key';
-import { PLACEHOLDER_SOMA_RADIUS } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
+import { memodelMorphologyPath } from '@/api/one/circuit-visualization';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
-import { MorphoViewerTreeItemType, SectionsArraySchema } from '@/features/scan-config/types';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
+import type { CellColors } from '@/features/circuit-viewer/morphologies/types';
+import type { TreeSource } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import type { TSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/types';
-import type { MorphoViewerSmallCircuitCell } from '@/morpho-viewer';
 
-type TOptions = {
-  memodelId: string;
-  showAxons?: boolean;
-};
-
-const MEMODEL_CELL_ID = 'memodel-cell';
-
-/** An MEModel is one neuron at the origin, unrotated. */
+/** An MEModel is one neuron, in its sections' colours. */
+const BY_SECTION: CellColors = { palette: [SECTION_TYPE_COLORS], columnByCell: Uint16Array.of(0) };
+const NOTHING_HIDDEN: readonly string[] = [];
+const THE_CELL = [0];
 const ORIGIN: [number, number, number] = [0, 0, 0];
 
 /**
- * Viewer source for one MEModel, served by OBI-One `/memodel/viz/{id}/morphology`.
- * Sections carry `sonata_section_id`, so morphology locations can be picked here too.
+ * Viewer source for one MEModel: a cell at the origin, unturned, whose morphology OBI-One serves at
+ * `/memodel/viz/{id}/morphology`. Its sections carry `sonata_section_id`, so morphology locations can be picked here
+ * too.
  */
 export function useMemodelVisualizationSource({
   memodelId,
-  showAxons = false,
-}: TOptions): TSmallCircuitSource {
-  const { data: allSections, error, isLoading, refetch } = useMemodelMorphology(memodelId);
-  // The simulation replaces the axon, so it is hidden by default.
-  const sections = useMemo(
-    () =>
-      allSections?.filter((section) => showAxons || section.type !== MorphoViewerTreeItemType.Axon),
-    [allSections, showAxons]
-  );
-
-  // The axon flag makes a new id, so toggling axons reloads the morphology in place.
-  // `sonataSectionIds` must be keyed by this full id.
-  const cellId = makeVizCellId(MEMODEL_CELL_ID, { showAxons });
-
-  // Only announce the cell once it can be loaded.
-  const cells: MorphoViewerSmallCircuitCell[] = useMemo(
-    () =>
-      sections
-        ? [
-            {
-              id: cellId,
-              center: ORIGIN,
-              orientation: IDENTITY_QUATERNION,
-              somaRadius: PLACEHOLDER_SOMA_RADIUS,
-              color: SECTION_TYPE_COLORS,
-            },
-          ]
-        : [],
-    [sections, cellId]
-  );
-
-  const loadCell = useCallback(
-    async (id: string) => (sections ? buildMorphoTree(sections, id) : null),
-    [sections]
-  );
-
-  // Built from the same filtered sections that `loadCell` draws.
-  const sonataSectionIds = useMemo(
-    () => (sections ? new Map([[cellId, buildSonataSectionIdIndex(sections)]]) : undefined),
-    [sections, cellId]
-  );
-
-  const retry = useCallback(() => {
-    refetch().catch(() => {});
-  }, [refetch]);
-
-  return {
-    cells,
-    loadCell,
-    isLoading,
-    error,
-    retry,
-    sonataSectionIds,
-    anchor: cells.length > 0 ? ORIGIN : null,
-  };
-}
-
-/** The MEModel's sections, cached indefinitely per workspace. */
-function useMemodelMorphology(id: string) {
+}: {
+  memodelId: string;
+}): TSmallCircuitSource {
   const { virtualLabId, projectId } = useWorkspace();
-  return useQuery({
-    queryKey: ['memodel-viz-morphology', id, virtualLabId, projectId],
-    queryFn: async () => {
-      const json = await fetchCircuitViz(memodelMorphologyPath(id), { virtualLabId, projectId });
-      return SectionsArraySchema.parse(json);
-    },
-    ...STATIC_RESOURCE_QUERY_OPTIONS,
-  });
+  const tree = useMemo(
+    (): TreeSource => ({
+      somas: { positions: Float32Array.of(0, 0, 0), populations: [{ name: 'memodel', cells: 1 }] },
+      orientations: null,
+      requests: [{ path: memodelMorphologyPath(memodelId), virtualLabId, projectId }],
+      // The preview offers its dendrogram.
+      charts: true,
+    }),
+    [memodelId, virtualLabId, projectId]
+  );
+  return {
+    tree,
+    cellColors: BY_SECTION,
+    hidden: NOTHING_HIDDEN,
+    locationCells: THE_CELL,
+    error: null,
+    anchor: ORIGIN,
+  };
 }

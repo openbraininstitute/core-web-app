@@ -1,4 +1,10 @@
-import type { MorphoViewerSpikes } from '@/morpho-viewer';
+/** A replay's spikes: the `i`th fires cell `cellIndices[i]` at `times[i]`, in ms and in ascending order. */
+export interface CircuitSpikes {
+  cellIndices: Uint32Array;
+  times: Float32Array;
+  timeMinInMs: number;
+  timeMaxInMs: number;
+}
 
 /**
  * A spike replay and the controls driving it.
@@ -13,7 +19,7 @@ import type { MorphoViewerSpikes } from '@/morpho-viewer';
  * them back.
  */
 export interface ISpikeReplayBinding {
-  data?: MorphoViewerSpikes;
+  data?: CircuitSpikes;
   /** Move the playhead here. Only read when it changes. */
   timeInMs?: number;
   /** The playhead on every painted frame. Throttle before putting it in state. */
@@ -25,4 +31,6 @@ export interface ISpikeReplayBinding {
   speed?: number;
   /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
   afterglowInSeconds?: number;
+  /** Whether spiking cells give off light, where the viewer can draw it. */
+  glow?: boolean;
 }

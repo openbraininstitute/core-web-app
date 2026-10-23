@@ -1,10 +1,12 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitVisualization } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { QUIET_MS } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { CircuitCellsProps } from '@/features/circuit-viewer/morphologies/circuit-cells';
+import type { TreeSource } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import type { SmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources';
 
 /** The label the loading indicator announces itself by with nothing to count. */
@@ -12,17 +14,16 @@ const LOADING = 'Loading visualization…';
 
 const fixtures = vi.hoisted(() => ({
   source: {} as SmallCircuitSource,
-  /** One entry per time the viewer was mounted. */
-  mounted: [] as unknown[],
+  /** The props of each time the viewer was drawn. */
+  mounted: [] as CircuitCellsProps[],
   /** Whether the form is taking morphology locations from the 3D view. */
   pickMode: null as string | null,
+  morphologies: { data: null, loaded: 0, total: 0, failed: 0, retry: () => {} },
 }));
 
-// A WebGL surface, and the thing whose absence this file is about. The section
-// types come along because the location labels read them at module scope.
-vi.mock('@/morpho-viewer', async () => ({
-  ...(await vi.importActual<object>('@/morpho-viewer/tree-item-type')),
-  MorphoViewerCircuitMultipleNeurons: (props: unknown) => {
+// A WebGL surface.
+vi.mock('@/features/circuit-viewer/morphologies/lazy-circuit-cells', () => ({
+  LazyCircuitCells: (props: CircuitCellsProps) => {
     fixtures.mounted.push(props);
     return null;
   },
@@ -33,25 +34,44 @@ vi.mock('@/features/scan-config/components/circuit-viz/sources', () => ({
   useSmallCircuitSource: () => fixtures.source,
 }));
 
-// Reads the form and raises antd messages; none of that is what a scene with no
-// cells in it turns on.
-vi.mock('@/features/scan-config/components/hooks/use-morphology-location-selection', () => ({
-  useMorphologyLocationSelection: () => ({
-    selection: undefined,
-    hover: null,
-    labels: [],
-    pickMode: fixtures.pickMode,
-  }),
+vi.mock('@/features/circuit-viewer/morphologies/use-tree-morphologies', () => ({
+  useTreeMorphologies: () => fixtures.morphologies,
 }));
+
+// Reads the form and raises antd messages; none of that is what these turn on.
+vi.mock(
+  '@/features/scan-config/components/circuit-viz/morphology-location/use-location-selection',
+  () => ({
+    useLocationSelection: () => ({
+      locations: undefined,
+      hover: null,
+      labels: [],
+      pickMode: fixtures.pickMode,
+    }),
+  })
+);
+
+/** Two cells, one of each population. */
+const TREE: TreeSource = {
+  somas: {
+    positions: new Float32Array(6),
+    populations: [
+      { name: 'default', cells: 1 },
+      { name: 'other', cells: 1 },
+    ],
+  },
+  orientations: null,
+  requests: [null, null],
+};
 
 /** A source in one of the states the view has to tell apart. */
 function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
   return {
-    cells: [],
-    loadCell: async () => null,
-    isLoading: false,
+    tree: null,
+    cellColors: { palette: [], columnByCell: new Uint16Array(0) },
+    hidden: [],
+    locationCells: [],
     error: null,
-    retry: vi.fn(),
     anchor: null,
     ...overrides,
   };
@@ -62,14 +82,28 @@ function draw(
   {
     pickMode = null,
     onPopulationClick,
-  }: { pickMode?: string | null; onPopulationClick?: () => void } = {}
+    morphologies = {},
+  }: {
+    pickMode?: string | null;
+    onPopulationClick?: (name: string) => void;
+    morphologies?: Partial<typeof fixtures.morphologies>;
+  } = {}
 ) {
   fixtures.source = source(state);
   fixtures.mounted = [];
   fixtures.pickMode = pickMode;
+  fixtures.morphologies = {
+    data: null,
+    loaded: 0,
+    total: 0,
+    failed: 0,
+    retry: vi.fn(),
+    ...morphologies,
+  };
   render(
     <CircuitVisualization
       circuit={{ id: 'circuit-id', scale: 'microcircuit' } as ICircuit}
+      population={{ name: 'default', type: 'biophysical', file: 'nodes.h5' }}
       populations={[]}
       showAxons={false}
       backgroundColor="#000000"
@@ -79,66 +113,82 @@ function draw(
   );
 }
 
-const CELL = {
-  id: 'circuit-id/default #0',
-  center: [0, 0, 0] as [number, number, number],
-  orientation: [0, 0, 0, 1] as [number, number, number, number],
-  somaRadius: 8,
-};
-
 /** Past the quiet period the indicator holds itself back for. */
 function waitOutTheQuietPeriod() {
   act(() => vi.advanceTimersByTime(QUIET_MS + 1));
 }
 
 describe('CircuitVisualization on an empty scene', () => {
-  // Driven rather than waited out: on a slow runner an indicator that should
-  // not be there can outlast whatever timeout the assertion carries.
+  // Driven rather than waited out: on a slow runner an indicator that should not be there can outlast whatever
+  // timeout the assertion carries.
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  // The indicator waits on the viewer's own paint progress, and with no cells
-  // the viewer is never mounted to report any. Waiting on it would leave the
-  // indicator up for good over a scene the user emptied on purpose.
+  // Every population hidden: the user emptied the scene on purpose, and nothing is left to read.
   it('reads a finished, empty scene as finished', () => {
-    draw({ cells: [], isLoading: false });
+    draw({ tree: TREE, hidden: ['default', 'other'] });
     waitOutTheQuietPeriod();
 
-    // By role, since which phase it would have named is not the point.
     expect(screen.queryByRole('status')).toBeNull();
-    expect(fixtures.mounted).toHaveLength(0);
   });
 
-  it('still covers an empty scene that has not arrived yet', () => {
-    draw({ cells: [], isLoading: true });
+  it('still covers a scene that has not arrived yet', () => {
+    draw({ tree: null });
     waitOutTheQuietPeriod();
 
     expect(screen.getByLabelText(LOADING)).toBeInTheDocument();
   });
 
-  it('keeps covering a scene whose cells are placed but not yet painted', () => {
-    draw({ cells: [CELL], isLoading: false });
+  it('draws the cells at once, and covers them while their morphologies are on their way', () => {
+    draw({ tree: TREE }, { morphologies: { loaded: 0, total: 1 } });
     waitOutTheQuietPeriod();
 
-    // Mounted, and reporting no progress: the morphologies are still on their
-    // way from OBI-One, which is what the cover says it is waiting for.
-    expect(fixtures.mounted).toHaveLength(1);
+    expect(fixtures.mounted.at(-1)).toMatchObject({
+      somas: TREE.somas,
+      somaRadius: 8,
+      follow: true,
+      crowding: false,
+    });
     expect(screen.getByLabelText('Drawing morphologies… 0 of 1')).toBeInTheDocument();
+  });
+
+  it('says the morphologies could not be read where none could, and reads them again', () => {
+    draw({ tree: TREE }, { morphologies: { loaded: 2, total: 2, failed: 2 } });
+    expect(screen.getByRole('alert')).toHaveTextContent('The morphologies could not be read.');
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(fixtures.morphologies.retry).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no try again for what the source failed at, which it would not read again', () => {
+    draw({ error: new Error('nodes.h5 could not be opened') });
+    expect(screen.getByRole('alert')).toHaveTextContent('nodes.h5 could not be opened');
+    expect(screen.queryByRole('button', { name: 'Try again' })).toBeNull();
+  });
+
+  it('says nothing where some could be read', () => {
+    draw({ tree: TREE }, { morphologies: { loaded: 2, total: 2, failed: 1 } });
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });
 
-describe('CircuitVisualization while a morphology location is being placed', () => {
-  // morphoviewer dispatches the cell click and the location pick from the same
-  // tap. Left wired, a tap meant for a neurite would also put another
-  // population on show, recolouring the scene and swapping the nodes table
-  // under the user. The checklist still changes population.
-  it('takes the population click off the tap', () => {
-    const onCellClick = () => (fixtures.mounted[0] as { onCellClick?: unknown }).onCellClick;
+describe('CircuitVisualization clicks', () => {
+  it('puts the population of the cell clicked on show', () => {
+    const onPopulationClick = vi.fn();
+    draw({ tree: TREE }, { onPopulationClick });
+    const onCellClick = fixtures.mounted.at(-1)?.onCellClick;
+    act(() => onCellClick?.(0));
+    expect(onPopulationClick).not.toHaveBeenCalled();
+    act(() => onCellClick?.(1));
+    expect(onPopulationClick).toHaveBeenCalledExactlyOnceWith('other');
+  });
 
-    draw({ cells: [CELL] }, { onPopulationClick: vi.fn() });
-    expect(onCellClick()).toBeDefined();
+  // One tap is both the cell click and the location pick. Left wired, a tap meant for a neurite would also put
+  // another population on show, recolouring the scene and swapping the nodes table under the user.
+  it('takes the population click off the tap while a morphology location is being placed', () => {
+    draw({ tree: TREE }, { onPopulationClick: vi.fn() });
+    expect(fixtures.mounted.at(-1)?.onCellClick).toBeDefined();
 
-    draw({ cells: [CELL] }, { onPopulationClick: vi.fn(), pickMode: 'edit' });
-    expect(onCellClick()).toBeUndefined();
+    draw({ tree: TREE }, { onPopulationClick: vi.fn(), pickMode: 'edit' });
+    expect(fixtures.mounted.at(-1)?.onCellClick).toBeUndefined();
   });
 });

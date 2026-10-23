@@ -20,7 +20,7 @@ import { cn } from '@/utils/css-class';
 
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
 
-// ModelPreview pulls in color-by (web worker + h5wasm) and morphoviewer, both of
+// ModelPreview pulls in color-by (web worker + h5wasm) and the 3D viewer, both of
 // which must stay off the server bundle.
 const ModelPreview = dynamic(
   () => import('@/features/scan-config/components/model-preview').then((m) => m.ModelPreview),

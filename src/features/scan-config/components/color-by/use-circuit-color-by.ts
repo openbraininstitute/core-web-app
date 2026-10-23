@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react';
 
+import { useCircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import { downloadCircuitImage } from '@/features/scan-config/components/shared/3d-viewer';
-import { useMorphoViewerSignals } from '@/morpho-viewer';
 
 import {
   BACKGROUND_ADAPTIVE,
@@ -19,18 +19,22 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
-import type { ColorByProperty, ColorMapping } from './types';
+import type { CircuitRepresentation, ColorByProperty, ColorMapping } from './types';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 interface Options {
-  /** whether this viewer exposes an axons toggle (morphology viewer only) */
-  supportsAxons?: boolean;
+  /** whether the axons are drawn to begin with; hidden when omitted */
+  defaultShowAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
   supportsMorphologyLocations?: boolean;
-  /** whether the viewer draws cells as soma points, which the soma size control scales */
-  supportsSomaSize?: boolean;
+  /** whether the viewer draws cells as soma points, which the soma size and opacity controls act on */
+  drawsSomas?: boolean;
+  /** whether the circuit's cells can be drawn as morphologies in place of the soma points */
+  supportsMorphologies?: boolean;
+  /** what the cells are drawn as to begin with, where morphologies are offered; somas when omitted */
+  defaultRepresentation?: CircuitRepresentation;
   /**
    * Initial neuron opacity (0–1). Host-owned — e.g. pass
    * {@link ELECTRODE_FOCUSED_NEURON_OPACITY} when placing electrodes.
@@ -92,10 +96,12 @@ export interface PopulationsControls {
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
   {
-    supportsAxons,
+    defaultShowAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
-    supportsSomaSize,
+    drawsSomas,
+    supportsMorphologies,
+    defaultRepresentation,
     defaultNeuronOpacity,
     population,
     subject,
@@ -104,7 +110,18 @@ export function useCircuitColorBy(
   const shown = subject ?? circuit;
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
+    defaultRepresentation,
+    defaultShowAxons,
   });
+  // The choice is kept where morphologies stop being offered, and comes back with them.
+  const representation: CircuitRepresentation = supportsMorphologies
+    ? config.representation
+    : 'somas';
+  const morphologies = representation === 'morphologies';
+  // The morphologies are drawn opaque, at their own size.
+  const somas = !!drawsSomas && !morphologies;
+  // Wherever morphologies are drawn, their axons can be hidden.
+  const axons = !somas;
   const populationName = population?.name;
   const property =
     populationName === undefined ? null : (config.colorByProperty[populationName] ?? null);
@@ -137,7 +154,7 @@ export function useCircuitColorBy(
   const containerRef = useRef<HTMLDivElement>(null);
   // one signal bus per viewer instance: dispatch to trigger camera reset /
   // snapshot, and let the viewer components listen for the captured image.
-  const signals = useMorphoViewerSignals();
+  const signals = useCircuitViewerSignals();
   const captureImage = useCallback(async () => {
     const image = await signals.snapshot.dispatch(undefined).catch(() => null);
     if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
@@ -160,6 +177,11 @@ export function useCircuitColorBy(
 
   const onHiddenPopulationsChange = useCallback(
     (hiddenPopulations: string[]) => update({ hiddenPopulations }),
+    [update]
+  );
+
+  const onRepresentationChange = useCallback(
+    (next: CircuitRepresentation) => update({ representation: next }),
     [update]
   );
 
@@ -205,12 +227,16 @@ export function useCircuitColorBy(
       backgroundDark,
       onBackgroundDarkChange: (dark) =>
         update({ backgroundColor: dark ? CANVAS_DARK : CANVAS_LIGHT }),
-      showAxons: supportsAxons ? config.showAxons : undefined,
-      onToggleAxons: supportsAxons ? (value) => update({ showAxons: value }) : undefined,
-      neuronOpacity: config.neuronOpacity,
-      onNeuronOpacityChange: (value) => update({ neuronOpacity: value }),
-      somaSizeScale: supportsSomaSize ? config.somaSizeScale : undefined,
-      onSomaSizeScaleChange: supportsSomaSize
+      showAxons: axons ? config.showAxons : undefined,
+      onToggleAxons: axons ? (value) => update({ showAxons: value }) : undefined,
+      showMorphologies: supportsMorphologies ? morphologies : undefined,
+      onToggleMorphologies: supportsMorphologies
+        ? (value) => onRepresentationChange(value ? 'morphologies' : 'somas')
+        : undefined,
+      neuronOpacity: somas ? config.neuronOpacity : undefined,
+      onNeuronOpacityChange: somas ? (value) => update({ neuronOpacity: value }) : undefined,
+      somaSizeScale: somas ? config.somaSizeScale : undefined,
+      onSomaSizeScaleChange: somas
         ? (value: number) => update({ somaSizeScale: value })
         : undefined,
       showElectrodes: supportsElectrodes ? config.showElectrodes : undefined,
@@ -235,14 +261,12 @@ export function useCircuitColorBy(
       onToggleMorphologyLocationLabels: supportsMorphologyLocations
         ? (value: boolean) => update({ showMorphologyLocationLabels: value })
         : undefined,
-      // Offered only where a zoom slider can actually appear — the large-circuit viewer
-      // has none, and a switch that does nothing is worse than no switch.
-      showZoomSlider: supportsAxons ? config.showZoomSlider : undefined,
-      onToggleZoomSlider: supportsAxons
-        ? (value: boolean) => update({ showZoomSlider: value })
-        : undefined,
+      showZoomSlider: config.showZoomSlider,
+      onToggleZoomSlider: (value: boolean) => update({ showZoomSlider: value }),
       showScalebar: config.showScalebar,
       onToggleScalebar: (value: boolean) => update({ showScalebar: value }),
+      spin: config.spin,
+      onToggleSpin: (value: boolean) => update({ spin: value }),
       hasSavedConfig,
       onResetConfig: reset,
     }),
@@ -258,10 +282,14 @@ export function useCircuitColorBy(
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       config.showScalebar,
-      supportsAxons,
+      config.spin,
+      axons,
       supportsElectrodes,
       supportsMorphologyLocations,
-      supportsSomaSize,
+      supportsMorphologies,
+      morphologies,
+      somas,
+      onRepresentationChange,
       hasSavedConfig,
       update,
       reset,
@@ -285,6 +313,10 @@ export function useCircuitColorBy(
     colorBy,
     /** Take populations out of the scene, or put them back; see {@link PopulationsControls}. */
     onHiddenPopulationsChange,
+    /** what the cells are drawn as; see {@link ViewerConfig.representation} */
+    representation,
+    /** absent where morphologies are not offered */
+    onRepresentationChange: supportsMorphologies ? onRepresentationChange : undefined,
     menu,
   };
 }
