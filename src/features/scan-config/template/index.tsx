@@ -182,6 +182,7 @@ function ScanConfigResults({
           campaignOriginAction={props.campaignOriginAction}
           isCampaignIdChanged={state.isCampaignIdChanged}
           neuronSetNames={neuronSetNamesOf(props.initialConfig, state.config)}
+          configSchema={props.schema}
         />
       </Suspense>
     ))

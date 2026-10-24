@@ -11,7 +11,7 @@ import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
-  EventLabelBox,
+  MarkerGroup,
   PlotRect,
   RowAxis,
   ViewBounds,
@@ -56,6 +56,11 @@ export type RasterWindow = { time: [number, number] | null; rows: [number, numbe
  * A scrubber laid out to match lines up with the raster above it.
  */
 export type TimeAxis = { from: number; to: number; left: number; right: number; width: number };
+
+/** The config's markers under the pointer, and where it is on screen. */
+export type EventsHover = { group: MarkerGroup; clientX: number; clientY: number };
+
+const NO_EVENTS: readonly TimelineEvent[] = [];
 
 /** How near a spike a click has to land to pick its cell. */
 const CLICK_RADIUS_PX = 12;
@@ -114,7 +119,8 @@ export class RasterRenderer {
   private events: readonly TimelineEvent[] = [];
   /** The timings under the pointer, whose windows show, and where the names were drawn. */
   private hoveredEvents: readonly TimelineEvent[] = [];
-  private labelBoxes: EventLabelBox[] = [];
+  private markerGroups: MarkerGroup[] = [];
+  private eventsHoverHandler: ((hover: EventsHover | null) => void) | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -282,6 +288,14 @@ export class RasterRenderer {
       return;
     }
     handler(order ? order.cellAtRow[row] : row);
+  }
+
+  /**
+   * Told the group of the config's markers under the pointer, and where the
+   * pointer is on screen, for a card of its blocks; null once it leaves them.
+   */
+  set onEventsHover(handler: ((hover: EventsHover | null) => void) | null) {
+    this.eventsHoverHandler = handler;
   }
 
   /** The simulation config's timings, drawn behind the spikes and named on hover. */
@@ -485,7 +499,7 @@ export class RasterRenderer {
       const dpr = window.devicePixelRatio || 1;
       ctx.save();
       ctx.scale(dpr, dpr);
-      this.labelBoxes = drawEventMarks(
+      this.markerGroups = drawEventMarks(
         ctx,
         view,
         plotRect.width,
@@ -583,7 +597,8 @@ export class RasterRenderer {
   private handleHover(info: HoverInfo | null) {
     if (!info) {
       this.tooltipEl.style.display = 'none';
-      this.setHoveredEvents([]);
+      this.setHoveredEvents(NO_EVENTS);
+      this.eventsHoverHandler?.(null);
       return;
     }
 
@@ -617,7 +632,8 @@ export class RasterRenderer {
     this.tooltipEl.style.display = 'block';
     this.tooltipEl.textContent = `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
     this.placeTooltip(info);
-    this.setHoveredEvents([]);
+    this.setHoveredEvents(NO_EVENTS);
+    this.eventsHoverHandler?.(null);
   }
 
   private setHoveredEvents(events: readonly TimelineEvent[]) {
@@ -630,51 +646,37 @@ export class RasterRenderer {
   }
 
   /**
-   * What the config has going on under the pointer, away from any spike: a
-   * stimulus anywhere over its band, a synaptic change near its rule, a
-   * recording on its strip along the bottom.
-   */
-  /**
-   * What the config marks under the pointer: a stimulus by its marker or name
-   * along the top, a recording by its marker along the bottom, a synaptic
-   * change anywhere along its rule. Their windows show while it is there.
+   * The group of markers under the pointer: an onset's or offset's along the
+   * top by its marker or name, a recording's along the bottom by its marker, a
+   * synaptic change's anywhere along its rule. Its blocks' windows show, and
+   * the host is told, to lay its card out.
    */
   private showEventsAt(info: HoverInfo): boolean {
-    const { view, plotRect } = this;
+    const { plotRect } = this;
     const x = info.pixelX - plotRect.x;
-    const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
     const inTop = info.pixelY <= plotRect.y + EVENT_TOP_ZONE_PX;
     const inBottom = info.pixelY >= plotRect.y + plotRect.height - EVENT_BOTTOM_ZONE_PX;
-    const named = inTop
-      ? this.labelBoxes.filter((b) => x >= b.x && x <= b.x + b.width).map((b) => b.event)
-      : [];
-    const under = this.events.filter((e) => {
-      if (named.includes(e)) return true;
-      const near = Math.abs(x - xAt(e.start)) <= (e.kind === 'manipulation' ? 4 : EVENT_HIT_PX);
-      if (!near) return false;
-      if (e.kind === 'stimulus') return inTop;
-      if (e.kind === 'recording') return inBottom;
-      return true;
-    });
-    this.setHoveredEvents(under);
-    if (under.length === 0) {
-      this.tooltipEl.style.display = 'none';
-      return false;
-    }
-    const kind = { stimulus: 'Stimulus', recording: 'Recording', manipulation: 'Synaptic change' };
-    this.tooltipEl.style.display = 'block';
-    this.tooltipEl.textContent = under
-      .slice(0, 6)
-      .map((e) => {
-        const when =
-          e.end === undefined
-            ? `from ${e.start.toFixed(1)} ms`
-            : `${e.start.toFixed(1)}–${e.end.toFixed(1)} ms`;
-        return [`${kind[e.kind]} ${e.name}`, when, e.detail].filter(Boolean).join(' · ');
-      })
-      .join('\n');
-    this.placeTooltip(info);
-    return true;
+    const group =
+      this.markerGroups.find((g) => {
+        if (g.top ? !inTop : !inBottom) return false;
+        const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
+        return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
+      }) ??
+      this.markerGroups.find(
+        (g) =>
+          g.edge === 'start' &&
+          Math.abs(x - g.x) <= 4 &&
+          g.events.some((e) => e.kind === 'manipulation')
+      );
+    this.tooltipEl.style.display = 'none';
+    this.setHoveredEvents(group?.events ?? NO_EVENTS);
+    const box = this.glCanvas.parentElement?.getBoundingClientRect();
+    this.eventsHoverHandler?.(
+      group && box
+        ? { group, clientX: box.left + info.pixelX, clientY: box.top + info.pixelY }
+        : null
+    );
+    return group !== undefined;
   }
 
   private placeTooltip(info: HoverInfo) {

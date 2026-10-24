@@ -289,16 +289,82 @@ export const EVENT_BOTTOM_ZONE_PX = 10;
 /** How near a marker, sideways, a pointer has to be to read it. */
 export const EVENT_HIT_PX = 7;
 
-/** Where a name was drawn, so a hover over it reads its event as one over its marker would. */
-export type EventLabelBox = { event: TimelineEvent; x: number; width: number };
+/**
+ * Markers that fall in one place along the axis - onsets, or offsets, along
+ * the top or along the bottom - read as one: one marker, one name ("Multi"
+ * for several blocks), one hover for all of them.
+ */
+export type MarkerGroup = {
+  events: TimelineEvent[];
+  edge: 'start' | 'end';
+  /** Along the top (stimuli, changes) or along the bottom (recordings). */
+  top: boolean;
+  time: number;
+  /** Across the plot, in px. */
+  x: number;
+  /** Where its name was drawn, if it was. */
+  label?: { x: number; width: number };
+};
+
+/** How near, sideways, markers have to fall to be read as one. */
+const GROUP_PX = 3;
+const MIXED_COLOR = '#475569';
+
+function markerGroups(
+  events: readonly TimelineEvent[],
+  view: ViewBounds,
+  width: number
+): MarkerGroup[] {
+  const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * width;
+  const marks: { event: TimelineEvent; edge: 'start' | 'end'; top: boolean; time: number }[] = [];
+  for (const event of events) {
+    const top = event.kind !== 'recording';
+    marks.push({ event, edge: 'start', top, time: event.start });
+    if (event.end !== undefined && event.end > event.start) {
+      marks.push({ event, edge: 'end', top, time: event.end });
+    }
+  }
+  marks.sort(
+    (a, b) => Number(a.top) - Number(b.top) || a.edge.localeCompare(b.edge) || a.time - b.time
+  );
+  const groups: MarkerGroup[] = [];
+  for (const mark of marks) {
+    const x = xAt(mark.time);
+    const last = groups.at(-1);
+    if (last && last.top === mark.top && last.edge === mark.edge && x - last.x <= GROUP_PX) {
+      last.events.push(mark.event);
+    } else {
+      groups.push({ events: [mark.event], edge: mark.edge, top: mark.top, time: mark.time, x });
+    }
+  }
+  return groups.filter((g) => g.x >= -6 && g.x <= width + 6);
+}
+
+/** What a group's name says: its block's, or "Multi" for several. */
+export function groupName(group: MarkerGroup): string {
+  const names = new Set(group.events.map((e) => e.name));
+  return names.size === 1 ? group.events[0].name : 'Multi';
+}
+
+function groupColor(group: MarkerGroup): string {
+  const kinds = new Set(group.events.map((e) => e.kind));
+  if (kinds.size > 1) return MIXED_COLOR;
+  const [kind] = kinds;
+  return kind === 'stimulus'
+    ? TIMELINE_COLORS.stimulus
+    : kind === 'recording'
+      ? TIMELINE_COLORS.recording
+      : TIMELINE_COLORS.manipulation;
+}
 
 /**
- * Over the spikes, on a canvas laid over the plot area alone: a marker at
- * each onset - stimuli along the top, recordings along the bottom, synaptic
- * changes atop their rules - and the names of the top ones where they fit, on
- * white so the spikes under them do not muddle them. Only what is under the
- * pointer shows its whole window, as a band: a stimulus lasting the whole
- * run would otherwise tint all of it.
+ * Over the spikes, on a canvas laid over the plot area alone: a filled marker
+ * at each onset and a hollow one at each offset - stimuli and changes along
+ * the top, recordings along the bottom - and the names of the onsets along
+ * the top where they fit before the next marker, on white so the spikes under
+ * them do not muddle them. Only the blocks under the pointer show their whole
+ * windows, as bands: a stimulus lasting the whole run would otherwise tint all
+ * of it. Returns the groups as drawn, for a hover to find.
  */
 export function drawEventMarks(
   ctx: CanvasRenderingContext2D,
@@ -307,10 +373,15 @@ export function drawEventMarks(
   height: number,
   events: readonly TimelineEvent[],
   hovered: readonly TimelineEvent[]
-): EventLabelBox[] {
+): MarkerGroup[] {
   const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * width;
 
+  // A window shared by several blocks is drawn once: stacked, the bands would bury the spikes.
+  const drawn = new Set<string>();
   for (const e of hovered) {
+    const window = `${e.kind}:${e.start}:${e.end}`;
+    if (drawn.has(window)) continue;
+    drawn.add(window);
     const x0 = xAt(e.start);
     const x1 = e.end === undefined ? width : xAt(e.end);
     const w = Math.max(2, x1 - x0);
@@ -330,53 +401,51 @@ export function drawEventMarks(
     }
   }
 
-  const triangle = (x: number, y: number, down: boolean, color: string) => {
-    ctx.fillStyle = color;
+  const groups = markerGroups(events, view, width);
+  for (const g of groups) {
+    const color = groupColor(g);
+    const y = g.top ? 0 : height;
+    const tip = g.top ? 7 : -7;
     ctx.beginPath();
-    ctx.moveTo(x - 4.5, y);
-    ctx.lineTo(x + 4.5, y);
-    ctx.lineTo(x, down ? y + 7 : y - 7);
+    ctx.moveTo(g.x - 4.5, y);
+    ctx.lineTo(g.x + 4.5, y);
+    ctx.lineTo(g.x, y + tip);
     ctx.closePath();
-    ctx.fill();
-  };
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 1;
-  for (const e of events) {
-    const x = xAt(e.start);
-    if (x < -5 || x > width + 5) continue;
-    if (e.kind === 'recording') triangle(x, height, false, TIMELINE_COLORS.recording);
-    else
-      triangle(
-        x,
-        0,
-        true,
-        e.kind === 'stimulus' ? TIMELINE_COLORS.stimulus : TIMELINE_COLORS.manipulation
-      );
+    if (g.edge === 'start') {
+      ctx.fillStyle = color;
+      ctx.fill();
+    } else {
+      // An offset: the same marker, hollow.
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
   }
 
-  // Names of the top markers, left to right, each only where it fits before
-  // the next marker and clears the name before it.
   ctx.font = '600 10px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
-  const top = events.filter((e) => e.kind !== 'recording');
-  const boxes: EventLabelBox[] = [];
+  const top = groups.filter((g) => g.top);
   let clear = Number.NEGATIVE_INFINITY;
-  top.forEach((e, i) => {
-    const x = xAt(e.start) + 6;
-    const next = top.slice(i + 1).find((later) => xAt(later.start) > x - 6);
-    const room = (next ? xAt(next.start) - 6 : width) - x;
-    const textWidth = ctx.measureText(e.name).width;
+  top.forEach((g, i) => {
+    if (g.edge !== 'start') return;
+    const name = groupName(g);
+    const x = g.x + 6;
+    const next = top.slice(i + 1).find((later) => later.x > g.x + GROUP_PX);
+    const room = (next ? next.x - 6 : width) - x;
+    const textWidth = ctx.measureText(name).width;
     if (x < clear || x < 0 || textWidth + 6 > room) return;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
     ctx.beginPath();
     ctx.roundRect(x, 2, textWidth + 6, 13, 4);
     ctx.fill();
-    ctx.fillStyle =
-      e.kind === 'stimulus' ? TIMELINE_COLORS.stimulusText : TIMELINE_COLORS.manipulation;
-    ctx.fillText(e.name, x + 3, 8.5);
-    boxes.push({ event: e, x, width: textWidth + 6 });
+    const color = groupColor(g);
+    ctx.fillStyle = color === TIMELINE_COLORS.stimulus ? TIMELINE_COLORS.stimulusText : color;
+    ctx.fillText(name, x + 3, 8.5);
+    g.label = { x, width: textWidth + 6 };
     clear = x + textWidth + 12;
   });
-  return boxes;
+  return groups;
 }

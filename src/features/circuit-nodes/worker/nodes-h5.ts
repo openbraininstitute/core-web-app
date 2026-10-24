@@ -904,7 +904,6 @@ function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
   const lo = a[1] < b[1] ? a[1] : b[1];
   const hi = a[0] > b[0] ? a[0] : b[0];
   return match(f.type)
-    .with('equals', () => (floor === ceil ? (v: bigint) => v === floor : () => false))
     .with('notEqual', () => (floor === ceil ? (v: bigint) => v !== floor : () => true))
     .with('lessThan', () => (v: bigint) => v < ceil)
     .with('lessThanOrEqual', () => (v: bigint) => v <= floor)

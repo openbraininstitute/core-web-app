@@ -6,6 +6,7 @@ import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
   CellColors,
+  EventsHover,
   RasterWindow,
   RowOrder,
   TimeAxis,
@@ -35,6 +36,8 @@ export type RasterRendererOptions = {
   timeWindowRequest?: { from: number; to: number; key: number };
   /** The simulation config's timings, drawn behind the spikes. */
   events?: readonly TimelineEvent[];
+  /** Told the group of those timings' markers under the pointer, for a card; null once it leaves. */
+  onEventsHover?: (hover: EventsHover | null) => void;
 };
 
 const NO_EVENTS: readonly TimelineEvent[] = [];
@@ -54,6 +57,7 @@ export function useRasterRenderer(
     windowResetKey,
     timeWindowRequest,
     events = NO_EVENTS,
+    onEventsHover,
   }: RasterRendererOptions
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
@@ -62,10 +66,12 @@ export function useRasterRenderer(
   const onCellClickRef = useRef(onCellClick);
   const onWindowChangeRef = useRef(onWindowChange);
   const onTimeAxisChangeRef = useRef(onTimeAxisChange);
+  const onEventsHoverRef = useRef(onEventsHover);
   useEffect(() => {
     onCellClickRef.current = onCellClick;
     onWindowChangeRef.current = onWindowChange;
     onTimeAxisChangeRef.current = onTimeAxisChange;
+    onEventsHoverRef.current = onEventsHover;
   });
 
   useEffect(() => {
@@ -76,6 +82,7 @@ export function useRasterRenderer(
     renderer.onCellClick = (cell) => onCellClickRef.current?.(cell);
     renderer.onWindowChange = (window) => onWindowChangeRef.current?.(window);
     renderer.onTimeAxisChange = (axis) => onTimeAxisChangeRef.current?.(axis);
+    renderer.onEventsHover = (hover) => onEventsHoverRef.current?.(hover);
     rendererRef.current = renderer;
 
     return () => {

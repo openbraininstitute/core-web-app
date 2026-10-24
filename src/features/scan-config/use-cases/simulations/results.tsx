@@ -49,6 +49,7 @@ import { log } from '@/utils/logger';
 
 import type { TSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TimelineSchema } from '@/features/spike-viewer/config-timeline';
 
 type SimulationTabProps = {
   campaignId: string;
@@ -56,6 +57,8 @@ type SimulationTabProps = {
   isCampaignIdChanged: boolean;
   /** The neuron sets the campaign's config defines, which the output viewers list cells by. */
   neuronSetNames?: string[];
+  /** The scan config's schema, which names the config's block types and settings for a reader. */
+  configSchema?: TimelineSchema;
 };
 
 export default function SimulationsTab({
@@ -63,6 +66,7 @@ export default function SimulationsTab({
   campaignOriginAction,
   isCampaignIdChanged,
   neuronSetNames,
+  configSchema,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
@@ -140,7 +144,34 @@ export default function SimulationsTab({
   });
 
   // What happens when in the simulation, for the spike raster to mark.
-  const timeline = useMemo(() => configTimeline(simConfig), [simConfig]);
+  // The simulation's single config: its blocks as set for this simulation, which say
+  // when each stimulus fires where the SONATA config only says how it is wired.
+  const coordinateAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.simulation_generation_config
+  );
+  const { data: coordinateConfig } = useQuery({
+    queryKey: [
+      'simulation-coordinate-config',
+      { simulationId: activeSimulation?.id, assetId: coordinateAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: coordinateAsset!.id,
+        asRawResponse: true,
+      });
+      return req.json();
+    },
+    enabled: !!activeSimulation && !!coordinateAsset,
+  });
+  const timeline = useMemo(
+    () => configTimeline(simConfig, coordinateConfig, configSchema),
+    [simConfig, coordinateConfig, configSchema]
+  );
 
   // The simulation's node sets file: the config's neuron sets resolved, which
   // the output viewers list cells by, beside the circuit's own node sets.
