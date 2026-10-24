@@ -1,13 +1,19 @@
 'use client';
 
 import { Empty } from 'antd';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 
+import type { RasterRendererOptions } from '@/features/spike-viewer/hooks/use-raster-renderer';
+import type { EventsHover } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
-type RasterPlotProps = {
+type RasterPlotProps = Omit<
+  RasterRendererOptions,
+  'data' | 'populationName' | 'cellCount' | 'onEventsHover'
+> & {
   data: SpikeData;
   /**
    * The one population to plot.
@@ -28,8 +34,6 @@ type RasterPlotProps = {
    * move one line.
    */
   playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
-  /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void;
 };
 
 export default function RasterPlot({
@@ -38,16 +42,18 @@ export default function RasterPlot({
   cellCount,
   markerSize,
   playheadRef,
-  onSeek,
+  ...options
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
-    containerRef,
+  // The config's markers under the pointer, carded here: the renderer draws only canvases.
+  const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
+  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(containerRef, {
     data,
     populationName,
     cellCount,
-    onSeek
-  );
+    ...options,
+    onEventsHover: setEventsHover,
+  });
 
   useEffect(() => {
     if (!playheadRef) return;
@@ -95,6 +101,7 @@ export default function RasterPlot({
           />
         </div>
       )}
+      {eventsHover && <TimelineCard hover={eventsHover} />}
     </div>
   );
 }

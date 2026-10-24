@@ -1,11 +1,16 @@
 import { sortBy } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
+import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
+import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
+import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
@@ -14,6 +19,12 @@ import {
   type TActivityCustomFile,
   type TAssetBackedFile,
 } from '@/features/scan-config/types';
+import { reportKind } from '@/features/scan-config/use-cases/simulations/report-picker';
+import {
+  chosenReportPopulationAtom,
+  reportPopulationsAtom,
+} from '@/features/spike-viewer/report-populations';
+import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import {
   makeLogStreamFileDescriptors,
   makeTaskConfigurationFile,
@@ -27,6 +38,17 @@ import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { WorkspaceContext } from '@/types/common';
+
+/** A row of the files column: a file, or one of a report's populations. */
+type FileRow = {
+  file: TAssetBackedFile;
+  name: string | undefined;
+  population: string | undefined;
+  selected: boolean;
+};
+
+/** Which of the groups are open: kept as the simulation on show changes. */
+const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
 
 type SimulationFilesProps = {
   simulation: ISimulation;
@@ -52,7 +74,11 @@ export function SimulationFiles({
   const outputAvailable =
     !!execStatus && [ActivityStatus.ERROR, ActivityStatus.DONE].includes(execStatus);
 
-  const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
+  const [outputLoading, outputFiles] = useSimulationResultFiles(
+    simulation.id,
+    context,
+    outputAvailable
+  );
 
   const logStreamFiles = useMemo(
     () =>
@@ -144,31 +170,109 @@ export function SimulationFiles({
     onSelect,
   });
 
+  // The circuit's files, the simulation's and its result's, each as one pill that opens to list them.
+  const [open, setOpen] = useAtom(openGroupsAtom);
+  // The model's files are the circuit's, not the simulation's.
+  const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
+  const circuitFiles = inputFilesWithLogs.filter(isCircuitFile);
+  // A spike file or a voltage report opens straight on its statistics, which keep its raster
+  // or traces and its replay beside them. They are listed against the circuit's node file,
+  // so only a circuit's simulation has them.
+  const sidePanel = useResultsSidePanel();
+  const select = (file: TActivityCustomFile) => {
+    onSelect(file);
+    if (circuitFiles.length > 0 && isAssetBackedFile(file) && hasStatistics(file)) {
+      sidePanel?.setOpen(true);
+    }
+  };
+  const isSelected = (file: TAssetBackedFile) =>
+    file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath;
+  // A report reads as the picker over the statistics lists it, a row per population:
+  // "Spikes: S1nonbarrel_neurons". Until it has been opened its populations are the
+  // circuit's own that are not virtual, which are what a simulation records.
+  const published = useAtomValue(reportPopulationsAtom);
+  const [chosenPopulations, setChosenPopulations] = useAtom(chosenReportPopulationAtom);
+  const { entity: model } = useModelQuery({ id: simulation.entity_id, context });
+  const { config: circuitConfig } = useCircuitConfig(replaySubject(model ?? null)?.circuit);
+  const recordable = useMemo(
+    () =>
+      circuitConfig?.nodes
+        .filter((n) => n.type !== NodePopulationType.Virtual)
+        .map((n) => n.name) ?? [],
+    [circuitConfig]
+  );
+  const rowsOf = (files: TAssetBackedFile[]): FileRow[] =>
+    files.flatMap((file): FileRow[] => {
+      if (file.asset.label !== AssetLabel.spike_report && !isVoltageReportFile(file)) {
+        return [{ file, name: file.name, population: undefined, selected: isSelected(file) }];
+      }
+      const known = published[file.asset.path];
+      const populations = known?.populations ?? recordable;
+      const kind = reportKind(file, files);
+      if (populations.length === 0) {
+        return [{ file, name: kind, population: undefined, selected: isSelected(file) }];
+      }
+      const shown = known?.current ?? chosenPopulations[file.asset.path] ?? populations[0];
+      return populations.map((population) => ({
+        file,
+        name: `${kind}: ${population}`,
+        population,
+        selected: isSelected(file) && population === shown,
+      }));
+    });
+  const group = (key: keyof typeof open, title: string, files: TAssetBackedFile[]) => {
+    const rows = rowsOf(files);
+    return (
+      files.length > 0 && (
+        <TaskIOFileGroup
+          key={key}
+          title={title}
+          count={rows.length}
+          selected={files.some(isSelected)}
+          expanded={open[key]}
+          onToggle={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
+        >
+          {rows.map(({ file, name, population, selected }) => {
+            const id = `${file.id ?? file.asset.id}${population ? `:${population}` : ''}`;
+            return (
+              <TaskIOFileItem
+                id={id}
+                key={id}
+                selected={selected}
+                file={file}
+                name={name}
+                onSelect={() => {
+                  if (population) {
+                    setChosenPopulations((previous) => ({
+                      ...previous,
+                      [file.asset.path]: population,
+                    }));
+                  }
+                  select(file);
+                }}
+              />
+            );
+          })}
+        </TaskIOFileGroup>
+      )
+    );
+  };
   return (
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
-      inputItems={inputFilesWithLogs.map((file) => (
-        <TaskIOFileItem
-          id={file.id ?? file.asset.id}
-          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
-          key={file.id ?? file.asset.id}
-          file={file}
-          name={file.name}
-          onSelect={onSelect}
-        />
-      ))}
-      outputItems={outputFilesWithLogs.map((file) => (
-        <TaskIOFileItem
-          id={file.id ?? file.asset.id}
-          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
-          key={file.id ?? file.asset.id}
-          file={file}
-          name={file.name}
-          onSelect={onSelect}
-        />
-      ))}
+      inputItems={
+        <>
+          {group('circuit', 'Circuit', circuitFiles)}
+          {group(
+            'simulation',
+            'Simulation',
+            inputFilesWithLogs.filter((file) => !isCircuitFile(file))
+          )}
+        </>
+      }
+      outputItems={group('result', 'Simulation Result', outputFilesWithLogs)}
     />
   );
 }
@@ -213,13 +317,14 @@ function useInputFiles(
   return [isLoading, inputFiles];
 }
 
-function useOutputFiles(
-  simulation: ISimulation,
+/** A simulation's result files, once it has run: whether they are loading, and the files. */
+export function useSimulationResultFiles(
+  simulationId: string,
   context: WorkspaceContext,
   enabled: boolean
 ): [boolean, TAssetBackedFile[]] {
   const simResultAtom = simResultBySimIdAtomFamily({
-    simulationId: simulation.id,
+    simulationId,
     context,
     enabled,
   });

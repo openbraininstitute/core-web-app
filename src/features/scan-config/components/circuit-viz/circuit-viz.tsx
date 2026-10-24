@@ -16,7 +16,7 @@ import {
   useMemodelVisualizationSource,
   useSmallCircuitSource,
 } from './sources';
-import { parseNodeKey } from './sources/node-key';
+import { makeNodeKey, makeVizCellId, parseNodeKey } from './sources/node-key';
 import { SynapseLegend } from './synapse-legend';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -72,10 +72,16 @@ interface CircuitVizProps {
    * viewer only asks for the morphologies of cells it has been given.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 recedes that cell like another population's. */
+  shownCells?: Uint8Array;
+  /** A cell of the population on show to highlight, by node index, as a hover on it would. */
+  highlightedCell?: number;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** Called with the node index when a cell of the population on show is clicked. */
+  onSubjectCellClick?: (index: number) => void;
   showAxons: boolean;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
@@ -152,8 +158,11 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
 export function CircuitVisualization({
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
   recededColor,
   onPopulationClick,
+  onSubjectCellClick,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -161,6 +170,7 @@ export function CircuitVisualization({
     population: props.population,
     populations,
     hiddenPopulations,
+    shownCells,
     showAxons: props.showAxons,
     nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
@@ -171,15 +181,24 @@ export function CircuitVisualization({
   const handleCellClick = useCallback(
     (cell: MorphoViewerSmallCircuitCell | undefined) => {
       const node = cell && parseNodeKey(cell.id);
-      if (node && node.population !== subjectName) onPopulationClick?.(node.population);
+      if (!node) return;
+      if (node.population !== subjectName) onPopulationClick?.(node.population);
+      else onSubjectCellClick?.(node.index);
     },
-    [subjectName, onPopulationClick]
+    [subjectName, onPopulationClick, onSubjectCellClick]
   );
+  const pointedCellId =
+    highlightedCell !== undefined && subjectName
+      ? makeVizCellId(makeNodeKey(props.circuit.id, subjectName, highlightedCell), {
+          showAxons: props.showAxons,
+        })
+      : undefined;
   return (
     <CircuitVizView
       {...props}
       source={source}
-      onCellClick={onPopulationClick ? handleCellClick : undefined}
+      onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
+      pointedCellId={pointedCellId}
     />
   );
 }
@@ -193,14 +212,19 @@ type TCircuitVizViewProps = Omit<
   | 'population'
   | 'populations'
   | 'hiddenPopulations'
+  | 'shownCells'
+  | 'highlightedCell'
   | 'recededColor'
   | 'onPopulationClick'
+  | 'onSubjectCellClick'
   | 'nodeColors'
   | 'defaultColor'
 > & {
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
+  /** A cell pointed out from outside the scene, highlighted beside the one hovered in it. */
+  pointedCellId?: string;
 };
 
 function CircuitVizView({
@@ -223,6 +247,7 @@ function CircuitVizView({
   spikes,
   chromeTopRight = false,
   onCellClick,
+  pointedCellId,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -298,10 +323,11 @@ function CircuitVizView({
     draggingOverlayRef.current = false;
   };
 
-  const highlightedCellIds = useMemo(
-    () => (enableCellHover ? [highlightedCellId] : []),
-    [enableCellHover, highlightedCellId]
-  );
+  const highlightedCellIds = useMemo(() => {
+    const ids = enableCellHover ? [highlightedCellId] : [];
+    if (pointedCellId) ids.push(pointedCellId);
+    return ids;
+  }, [enableCellHover, highlightedCellId, pointedCellId]);
 
   // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.
   const prevAxonRef = useRef(showAxons);

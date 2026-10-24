@@ -57,6 +57,12 @@ type Props = {
   onRun: (simulationIds: string[]) => void;
   middle: ReactNode;
   right: ReactNode;
+  /** Picks the simulation by its scan parameters, where the list is out of view. */
+  simulationPicker?: ReactNode;
+  /** Beside it, switches between the simulation's reports, where the files column is out of view. */
+  reportPicker?: ReactNode;
+  /** Offers the side panel's campaign statistics, for a campaign of more than one simulation. */
+  campaignStatistics?: boolean;
 };
 
 export function SimulationsResultsUiAdapter({
@@ -77,10 +83,17 @@ export function SimulationsResultsUiAdapter({
   onRun,
   middle,
   right,
+  simulationPicker,
+  reportPicker,
+  campaignStatistics,
 }: Props) {
   return (
     <ResultsLayout
       campaignId={campaignId}
+      // With a side panel up the list is out of view, so the bar over it picks the simulation.
+      sidePanelBar={simulationPicker}
+      sidePanelReport={reportPicker}
+      campaignStatistics={campaignStatistics}
       left={
         <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
           {loading ? (
@@ -242,8 +255,8 @@ function SimulationListItem({
           } as CSSProperties & { '--card-color': string }
         }
       >
-        <div className="mb-2 flex min-h-18 w-full items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 overflow-hidden pt-1 text-left font-bold">
+        <div className="mb-2 flex min-h-18 w-full items-center justify-between gap-2 py-2">
+          <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {!execStatus ||
             ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
               canBeSelectedForSim) ? (
@@ -277,7 +290,7 @@ function SimulationListItem({
               </span>
             )}
           </div>
-          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5 pt-1">
+          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5">
             <div
               className={cn(
                 'flex items-center justify-center overflow-hidden transition-[width,opacity] duration-200',

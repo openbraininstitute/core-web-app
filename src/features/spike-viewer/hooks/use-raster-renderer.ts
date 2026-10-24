@@ -3,32 +3,86 @@ import { useCallback, useEffect, useRef } from 'react';
 import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
+import type {
+  CellColors,
+  EventsHover,
+  RasterWindow,
+  RowOrder,
+  TimeAxis,
+} from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+
+export type RasterRendererOptions = {
+  data: SpikeData | null;
+  /** The population on show; scales the y-axis to its own node-id range. */
+  populationName?: string;
+  cellCount?: number;
+  /** Colours for the cells of the population on show; undefined draws it in its own. */
+  cellColors?: CellColors;
+  /** Rows for the cells of the population on show; undefined keeps them by node id. */
+  rowOrder?: RowOrder;
+  /** A cell of the population on show to point out, by node id. */
+  highlightedCell?: number | null;
+  /** Called with the node id of a cell clicked in the plot, or null for a click on nothing. */
+  onCellClick?: (cell: number | null) => void;
+  /** Told what the plot is zoomed to, or null for everything, whenever that changes. */
+  onWindowChange?: (window: RasterWindow | null) => void;
+  /** Told where the time axis's visible span sits across the plot, whenever that moves. */
+  onTimeAxisChange?: (axis: TimeAxis) => void;
+  /** Zooms back out to everything whenever it changes. */
+  windowResetKey?: number;
+  /** Zooms the time axis to a span, whenever a new one is asked for. */
+  timeWindowRequest?: { from: number; to: number; key: number };
+  /** The simulation config's timings, drawn behind the spikes. */
+  events?: readonly TimelineEvent[];
+  /** Told the group of those timings' markers under the pointer, for a card; null once it leaves. */
+  onEventsHover?: (hover: EventsHover | null) => void;
+};
+
+const NO_EVENTS: readonly TimelineEvent[] = [];
 
 export function useRasterRenderer(
   containerRef: React.RefObject<HTMLDivElement | null>,
-  data: SpikeData | null,
-  /** The population on show; scales the y-axis to its own node-id range. */
-  populationName?: string,
-  cellCount?: number,
-  /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void
+  {
+    data,
+    populationName,
+    cellCount,
+    cellColors,
+    rowOrder,
+    highlightedCell,
+    onCellClick,
+    onWindowChange,
+    onTimeAxisChange,
+    windowResetKey,
+    timeWindowRequest,
+    events = NO_EVENTS,
+    onEventsHover,
+  }: RasterRendererOptions
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
-  // Held in a ref so a caller passing an inline handler does not tear the
+  // Held in refs so a caller passing inline handlers does not tear the
   // renderer down and rebuild its WebGL context on every render.
-  const onSeekRef = useRef(onSeek);
-
+  const onCellClickRef = useRef(onCellClick);
+  const onWindowChangeRef = useRef(onWindowChange);
+  const onTimeAxisChangeRef = useRef(onTimeAxisChange);
+  const onEventsHoverRef = useRef(onEventsHover);
   useEffect(() => {
-    onSeekRef.current = onSeek;
-  }, [onSeek]);
+    onCellClickRef.current = onCellClick;
+    onWindowChangeRef.current = onWindowChange;
+    onTimeAxisChangeRef.current = onTimeAxisChange;
+    onEventsHoverRef.current = onEventsHover;
+  });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const renderer = new RasterRenderer(el);
-    renderer.onSeek = (timeInMs) => onSeekRef.current?.(timeInMs);
+    renderer.onCellClick = (cell) => onCellClickRef.current?.(cell);
+    renderer.onWindowChange = (window) => onWindowChangeRef.current?.(window);
+    renderer.onTimeAxisChange = (axis) => onTimeAxisChangeRef.current?.(axis);
+    renderer.onEventsHover = (hover) => onEventsHoverRef.current?.(hover);
     rendererRef.current = renderer;
 
     return () => {
@@ -60,6 +114,36 @@ export function useRasterRenderer(
     const { min, max } = nodeIdAxisRange(pop.nodeIdRange.max, cellCount);
     rendererRef.current.setYBounds(min, max);
   }, [data, populationName, cellCount]);
+
+  // The renderer keeps them across new data, so the upload above needs no re-run.
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setCellColors(populationName, cellColors ?? null);
+  }, [populationName, cellColors]);
+
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setRowOrder(populationName, rowOrder ?? null);
+  }, [populationName, rowOrder]);
+
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setHighlightedCell(populationName, highlightedCell ?? null);
+  }, [populationName, highlightedCell]);
+
+  useEffect(() => {
+    if (windowResetKey) rendererRef.current?.resetView();
+  }, [windowResetKey]);
+
+  useEffect(() => {
+    rendererRef.current?.setEvents(events);
+  }, [events]);
+
+  useEffect(() => {
+    if (timeWindowRequest) {
+      rendererRef.current?.setTimeWindow(timeWindowRequest.from, timeWindowRequest.to);
+    }
+  }, [timeWindowRequest]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

@@ -13,8 +13,11 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { IDatasource } from 'ag-grid-community';
 import type {
   ColumnMeta,
+  DerivedColumn,
+  FilterModel,
   NodeGeometryOptions,
   NodePopulation,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -137,6 +140,30 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const setDerivedColumns = useCallback(
+    async (owner: string, derived: DerivedColumn[]) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.setDerivedColumns(key, owner, derived);
+    },
+    [key]
+  );
+
+  const getFilteredIndices = useCallback(
+    async (filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getFilteredIndices(key, filter);
+    },
+    [key]
+  );
+
+  const getRowIndex = useCallback(
+    async (nodeId: number, sort: SortItem[], filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getRowIndex(key, nodeId, sort, filter);
+    },
+    [key]
+  );
+
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
   }, [key]);
@@ -148,6 +175,9 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     datasource,
     getColumn,
     getGeometry,
+    setDerivedColumns,
+    getFilteredIndices,
+    getRowIndex,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

@@ -4,9 +4,12 @@ import { SettingOutlined } from '@ant-design/icons';
 import { RiPauseFill, RiPlayFill, RiRestartLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
+import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
+
+import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
 
 /**
  * Playback rates, as simulated milliseconds per wall-clock second.
@@ -15,7 +18,7 @@ import { fullscreenPopupContainer } from '@/utils/fullscreen';
  * takes a millisecond to watch. Real recordings are milliseconds long, which is
  * why every preset below `1×` is the useful part of the range.
  */
-const SPEEDS = [
+export const SPEEDS = [
   { label: '1×', value: 1000 },
   { label: '0.5×', value: 500 },
   { label: '0.2×', value: 200 },
@@ -40,6 +43,20 @@ interface TransportBarProps {
   afterglowInSeconds: number;
   onAfterglowChange: (afterglowInSeconds: number) => void;
   disabled?: boolean;
+  /**
+   * The raster's time axis, for a scrubber laid out under it: the span it
+   * shows and where that sits. The bar is then play and scrubber alone; the
+   * time rides the raster's playhead, and speed and afterglow sit with the
+   * raster's own controls.
+   */
+  axis?: TimeAxis | null;
+  /** For the scrubber under the axis: the replay's clock, and where the replay moves its thumb from. */
+  clock?: {
+    timeRef: React.RefObject<number>;
+    moveRef: React.RefObject<((timeInMs: number) => void) | null>;
+  };
+  /** In the raster's own box, which already insets and sets it apart: no rule, no inset. */
+  boxed?: boolean;
 }
 
 /** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
@@ -55,10 +72,51 @@ export function TransportBar({
   afterglowInSeconds,
   onAfterglowChange,
   disabled = false,
+  axis = null,
+  clock,
+  boxed = false,
 }: TransportBarProps) {
   const duration = timeMaxInMs - timeMinInMs;
   // Sub-millisecond steps: a 20 ms recording would otherwise scrub in 5% jumps.
   const step = Math.max(duration / 1000, 1e-3);
+
+  if (axis && clock) {
+    return (
+      <div
+        id="spike-replay-transport"
+        className={boxed ? undefined : 'border-t border-neutral-200 px-3'}
+      >
+        {/* The raster's own frame: its container starts at this inset too. */}
+        <div className="relative h-10">
+          <div
+            className="absolute inset-y-0 left-0 flex items-center justify-end pr-1.5"
+            style={{ width: axis.left }}
+          >
+            <Button
+              type="button"
+              variant="icon"
+              size="sm"
+              disabled={disabled}
+              aria-label={playing ? 'Pause spike replay' : 'Play spike replay'}
+              onClick={() => onPlayingChange(!playing)}
+            >
+              {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
+            </Button>
+          </div>
+          <Scrubber
+            from={axis.from}
+            to={axis.to}
+            left={axis.left}
+            right={axis.right}
+            disabled={disabled}
+            timeRef={clock.timeRef}
+            moveRef={clock.moveRef}
+            onSeek={onSeek}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

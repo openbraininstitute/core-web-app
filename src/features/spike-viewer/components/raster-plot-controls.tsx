@@ -12,8 +12,8 @@ type RasterPlotControlsProps = {
   onMarkerSizeChange: (size: number) => void;
   minSize?: number;
   maxSize?: number;
-  /** Whether a plain click in the plot seeks right now. */
-  canSeek?: boolean;
+  /** The replay's spike afterglow, set beside the marker size where a replay plays alongside. */
+  afterglow?: { seconds: number; onChange: (seconds: number) => void };
 };
 
 export default function RasterPlotControls({
@@ -21,7 +21,7 @@ export default function RasterPlotControls({
   onMarkerSizeChange,
   minSize = 1,
   maxSize = 10,
-  canSeek,
+  afterglow,
 }: RasterPlotControlsProps) {
   return (
     <div className="flex items-center gap-1">
@@ -31,7 +31,7 @@ export default function RasterPlotControls({
             <SettingOutlined />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-64 border-neutral-2 bg-white shadow-lg">
+        <PopoverContent align="start" className="w-64 border-neutral-2 bg-white shadow-lg">
           <div className="flex select-none flex-col gap-2">
             <div className="flex items-center justify-between text-xs text-gray-600">
               <span>Marker size</span>
@@ -45,6 +45,26 @@ export default function RasterPlotControls({
               onChange={onMarkerSizeChange}
               tooltip={{ formatter: null }}
             />
+            {afterglow && (
+              <>
+                <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
+                  <span>Spike afterglow</span>
+                  <span className="tabular-nums">{afterglow.seconds.toFixed(2)} s</span>
+                </div>
+                <Slider
+                  value={afterglow.seconds}
+                  min={0.05}
+                  max={1}
+                  step={0.05}
+                  onChange={afterglow.onChange}
+                  tooltip={{ formatter: null }}
+                />
+                <p className="text-[11px] leading-snug text-gray-500">
+                  How long a spike stays lit in the 3D view. Measured in real time, so a flash looks
+                  the same at any playback speed.
+                </p>
+              </>
+            )}
           </div>
         </PopoverContent>
       </Popover>
@@ -56,14 +76,13 @@ export default function RasterPlotControls({
           </Button>
         </TooltipTrigger>
         <TooltipContent
-          side="left"
+          side="bottom"
           align="start"
-          alignOffset={-32}
           showArrow={false}
           className="bg-white text-primary-9 shadow-md"
         >
-          Drag to zoom · Shift+drag to pan · Double-click to reset
-          {canSeek && ' · Click to seek'}
+          Drag to zoom: the statistics and the 3D view follow the window · Shift+drag to pan ·
+          Double-click to reset · Click a spike to pick its cell
         </TooltipContent>
       </Tooltip>
     </div>

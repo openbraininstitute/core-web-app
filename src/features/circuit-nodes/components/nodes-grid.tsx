@@ -4,9 +4,10 @@ import { Modal } from 'antd';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+import { RiCheckLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
@@ -14,21 +15,56 @@ import { ColumnHeader } from '@/features/circuit-nodes/components/column-header'
 import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
+import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import { PILL_CLASS, PillToggle } from '@/ui/molecules/select/pill-select';
+import { cn } from '@/utils/css-class';
 
 import type {
+  CellMouseOverEvent,
   ColDef,
   ColumnMovedEvent,
+  FilterChangedEvent,
+  GridApi,
   GridReadyEvent,
+  ICellRendererParams,
   IDatasource,
+  IHeaderParams,
+  RowClassParams,
+  RowClickedEvent,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import type { ColumnMeta } from '@/features/circuit-nodes/types';
+import type {
+  ColumnMeta,
+  FilterModel,
+  SortDirection,
+  SortItem,
+} from '@/features/circuit-nodes/types';
 
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
 const CATEGORICAL_SET_FILTER_MAX = 100;
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
+
+/**
+ * A numeric column held against the grid's right edge, such as a spike
+ * statistic. Always shown and left out of the column chooser: it is what the
+ * host put the table up for, not one of the file's columns.
+ */
+export type PinnedColumn = {
+  /** The column's name in the nodes session. */
+  name: string;
+  headerName: string;
+  /** Shown over the header, for a short header that leaves something out. */
+  headerTooltip?: string;
+  /** What the values are in, small and muted after a short header. */
+  headerUnit?: string;
+  width?: number;
+  /** Text for a value; `NaN` renders blank without asking. */
+  format?: (value: number) => string;
+  /** Tighter padding, for a narrow column whose numbers would otherwise be cut. */
+  compact?: boolean;
+};
 
 type Props = {
   columns: ColumnMeta[];
@@ -37,28 +73,179 @@ type Props = {
   datasource: IDatasource;
   visibleColumns: Set<string>;
   onVisibleColumnsChange: (next: Set<string>) => void;
+  pinnedColumns?: readonly PinnedColumn[];
+  /** Changes whenever the pinned columns' values do, so the rows are paged in again. */
+  pinnedVersion?: unknown;
+  onFilterModelChange?: (model: FilterModel) => void;
+  /**
+   * Filters to start with, kept from an earlier grid over the same rows. They go
+   * back on once every column they name is in, unless the filters change first.
+   */
+  initialFilterModel?: FilterModel;
+  /** Called with a clicked row's node id. */
+  onRowClick?: (nodeId: number) => void;
+  /**
+   * The rows to draw as selected, by node id. Held by the host rather than the
+   * grid: the infinite row model drops selection with every page it reloads,
+   * and a host picking cells wants them kept through sorts and filters.
+   */
+  selectedNodeIds?: ReadonlySet<number>;
+  /** Adds a tick column, for hosts whose clicks pick several rows at once. */
+  pickColumn?: boolean;
+  /**
+   * A tick atop that column for every row the table shows at once: whether all,
+   * some or none of them are picked, and what a click on it should do.
+   */
+  pickAll?: { state: PickAllState; onToggle: () => void };
+  /** Called with the node id of the row under the pointer, once per row, and null when it leaves the grid. */
+  onRowHover?: (nodeId: number | null) => void;
+  /** Said beside the count above the rows, such as how to use them. */
+  headerNote?: React.ReactNode;
+  /** Right after the count, before the quick filters: what else narrows the rows, say. */
+  headerExtra?: React.ReactNode;
+  /** Makes the edge before the pinned columns draggable: told the width they should share. */
+  onPinnedResize?: (width: number) => void;
+  /**
+   * A Reset above the rows while a filter is on, or while `picked` says the host
+   * holds a pick to undo: it clears the filters and calls `onReset`.
+   */
+  reset?: { picked: boolean; onReset: () => void };
+  /**
+   * Filters a click puts on beside the count, and a second click takes off,
+   * leaving the other columns' filters as they are.
+   */
+  quickFilters?: readonly QuickFilter[];
+  /**
+   * A row to bring into view and flash, by node id, such as a cell clicked in
+   * a scene beside the table; a new `key` asks again for the same one.
+   * `rowIndexOf` says where that node falls among the rows the grid's sort and
+   * filter show, or -1 where the filter leaves it out.
+   */
+  focusRow?: { nodeId: number; key: number };
+  rowIndexOf?: (nodeId: number, sort: SortItem[], filter: FilterModel) => Promise<number>;
+  /** A row to keep marked, by node id, such as the cell picked in a view beside the table. */
+  markedNodeId?: number | null;
 };
+
+export type QuickFilter = { label: string; title?: string; model: FilterModel };
+
+/** File columns kept in view beside the pinned ones, however far their edge is dragged. */
+const MIN_FILE_COLUMNS_WIDTH = 120;
+
+/** The synthetic row-index column, which names a clicked row. */
+const NODE_ID_COLUMN = 'node_id';
+
+export type PickAllState = 'all' | 'some' | 'none';
+
+/** What the cell renderers, row classes and the tick column's header read off the grid's context. */
+type GridContext = {
+  visibleColumns: string[];
+  isPicked: (nodeId: number) => boolean;
+  pickAll: () => { state: PickAllState; onToggle: () => void } | undefined;
+};
+
+const PICKED_ROW_CLASS = 'nodes-row-picked';
+const FLASHED_ROW_CLASS = 'nodes-row-flashed';
+const MARKED_ROW_CLASS = 'nodes-row-marked';
+/** As long as the flash's fade in the stylesheet. */
+const FLASH_MS = 1600;
+
+function nodeIdOf(data: unknown): number {
+  return Number((data as Record<string, unknown> | undefined)?.[NODE_ID_COLUMN]);
+}
+
+function PickBox({ state }: { state: PickAllState }) {
+  return (
+    <span
+      className={cn(
+        'flex size-4 items-center justify-center rounded border transition-colors',
+        state === 'none' ? 'border-neutral-3 bg-white' : 'border-primary-8 bg-primary-8 text-white'
+      )}
+    >
+      {state === 'all' && <RiCheckLine className="size-3" />}
+      {state === 'some' && <RiSubtractLine className="size-3" />}
+    </span>
+  );
+}
+
+function PickCell(params: ICellRendererParams) {
+  const picked = (params.context as GridContext | undefined)?.isPicked(nodeIdOf(params.data));
+  return (
+    <span aria-hidden className="flex h-full items-center justify-center">
+      <PickBox state={picked ? 'all' : 'none'} />
+    </span>
+  );
+}
+
+/** The tick atop the tick column: all the rows on show, some, or none. */
+function PickHeader(params: IHeaderParams) {
+  const context = params.context as GridContext | undefined;
+  const pickAll = context?.pickAll();
+  if (!pickAll) return null;
+  return (
+    <button
+      type="button"
+      // The latest handler, not the one this header was drawn with: it only
+      // redraws when the state changes.
+      onClick={() => context?.pickAll()?.onToggle()}
+      aria-label={pickAll.state === 'all' ? 'Untick every row' : 'Tick every row'}
+      title={pickAll.state === 'all' ? 'Untick every row' : 'Tick every row'}
+      className="flex h-full w-full cursor-pointer items-center justify-center"
+    >
+      <PickBox state={pickAll.state} />
+    </button>
+  );
+}
+
+const PICK_COLUMN: ColDef = {
+  colId: '__pick',
+  headerName: '',
+  width: 44,
+  minWidth: 44,
+  maxWidth: 44,
+  pinned: 'left',
+  lockPinned: true,
+  lockPosition: 'left',
+  sortable: false,
+  filter: false,
+  resizable: false,
+  suppressMovable: true,
+  suppressHeaderMenuButton: true,
+  headerComponent: PickHeader,
+  cellRenderer: PickCell,
+};
+
+const NO_SELECTION: ReadonlySet<number> = new Set();
 
 type BuildArgs = {
   orderedColumns: ColumnMeta[];
   visible: Set<string>;
+  pinned: readonly PinnedColumn[];
   onReset: () => void;
   onOpenChooser: () => void;
 };
+
+const NO_PINNED_COLUMNS: readonly PinnedColumn[] = [];
 
 const PREFERRED_WIDTH_BY_NAME = new Map(
   PREFERRED_COLUMNS.filter((p) => p.width !== undefined).map((p) => [p.name, p.width as number])
 );
 
-function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: BuildArgs): ColDef[] {
-  return orderedColumns.map((c) => {
+function buildColumnDefs({
+  orderedColumns,
+  visible,
+  pinned,
+  onReset,
+  onOpenChooser,
+}: BuildArgs): ColDef[] {
+  const fileColumns = orderedColumns.map((c) => {
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
     const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 100 : 120);
     return {
       field: c.name,
-      headerName: capitalize(c.name.replace(/_/g, ' ')),
+      headerName: c.label ?? capitalize(c.name.replace(/_/g, ' ')),
       headerComponent: ColumnHeader,
       headerComponentParams: {
         onReset,
@@ -80,6 +267,40 @@ function buildColumnDefs({ orderedColumns, visible, onReset, onOpenChooser }: Bu
         : undefined,
     } satisfies ColDef;
   });
+
+  const pinnedColumns = pinned.map((p) => {
+    const format = p.format ?? formatNumber;
+    return {
+      field: p.name,
+      headerName: p.headerName,
+      headerComponent: ColumnHeader,
+      headerComponentParams: {
+        onReset,
+        isNumeric: true,
+        onOpenChooser,
+        tooltip: p.headerTooltip,
+        unit: p.headerUnit,
+      },
+      headerClass: p.compact ? [styles.pinned, styles.compact] : styles.pinned,
+      sortable: true,
+      resizable: true,
+      pinned: 'right',
+      lockPinned: true,
+      filter: NumericFilter,
+      suppressHeaderMenuButton: true,
+      minWidth: 36,
+      width: p.width ?? 110,
+      cellClass: p.compact
+        ? ['ag-right-aligned-cell', styles.pinned, styles.compact]
+        : ['ag-right-aligned-cell', styles.pinned],
+      valueFormatter: (params: ValueFormatterParams) => {
+        if (typeof params.value !== 'number') return params.value;
+        return Number.isNaN(params.value) ? '' : format(params.value);
+      },
+    } satisfies ColDef;
+  });
+
+  return [...fileColumns, ...pinnedColumns];
 }
 
 function formatNumber(v: number): string {
@@ -97,9 +318,148 @@ export function NodesGrid({
   datasource,
   visibleColumns,
   onVisibleColumnsChange,
+  pinnedColumns = NO_PINNED_COLUMNS,
+  pinnedVersion,
+  onFilterModelChange,
+  initialFilterModel,
+  onRowClick,
+  selectedNodeIds = NO_SELECTION,
+  pickColumn = false,
+  pickAll,
+  onRowHover,
+  headerNote,
+  headerExtra,
+  onPinnedResize,
+  reset,
+  quickFilters,
+  focusRow,
+  rowIndexOf,
+  markedNodeId = null,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
+
+  // Where the pinned columns start and end across the grid, read back off it:
+  // the grid lays them out, with its scrollbar beside them, and builds their
+  // header only once it is ready, so it is looked for until it is there.
+  const gridBoxRef = useRef<HTMLDivElement>(null);
+  const [pinnedSpan, setPinnedSpan] = useState<{ left: number; right: number } | null>(null);
+  const pinnedResizable = onPinnedResize !== undefined && pinnedColumns.length > 0;
+  useLayoutEffect(() => {
+    const box = gridBoxRef.current;
+    if (!pinnedResizable || !box) return;
+    let frame = 0;
+    let watched: Element | null = null;
+    const observer = new ResizeObserver(() => measure());
+    function measure() {
+      if (!box) return;
+      const pinned = box.querySelector('.ag-pinned-right-header');
+      if (!pinned) {
+        frame = requestAnimationFrame(measure);
+        return;
+      }
+      if (pinned !== watched) {
+        observer.observe(pinned);
+        watched = pinned;
+      }
+      const outer = box.getBoundingClientRect();
+      const inner = pinned.getBoundingClientRect();
+      setPinnedSpan(
+        inner.width > 0 ? { left: inner.left - outer.left, right: inner.right - outer.left } : null
+      );
+    }
+    observer.observe(box);
+    measure();
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [pinnedResizable]);
   const autoSizedKeyRef = useRef<string>('');
+
+  // What the datasource reads per page: the chosen file columns and the pinned
+  // ones. Keyed on the pinned names, not the array, which a host rebuilds
+  // whenever it resizes them - and each new array would page every row again.
+  // A clicked or selected row is named by its node id, so that is read even
+  // when hidden.
+  const pinnedNames = pinnedColumns.map((p) => p.name).join('\n');
+  const clickable = onRowClick !== undefined;
+  const requestedColumns = useMemo(() => {
+    const names = [...visibleColumns, ...(pinnedNames ? pinnedNames.split('\n') : [])];
+    if (clickable && !visibleColumns.has(NODE_ID_COLUMN)) names.push(NODE_ID_COLUMN);
+    return names;
+  }, [visibleColumns, pinnedNames, clickable]);
+
+  // Read through a ref by the row classes and the tick column, so a new
+  // selection redraws the rows on show rather than rebuilding the columns.
+  const selectedRef = useRef(selectedNodeIds);
+  const isPicked = useCallback((nodeId: number) => selectedRef.current.has(nodeId), []);
+  const pickAllRef = useRef(pickAll);
+  const readPickAll = useCallback(() => pickAllRef.current, []);
+  const gridContext = useMemo<GridContext>(
+    () => ({ visibleColumns: requestedColumns, isPicked, pickAll: readPickAll }),
+    [requestedColumns, isPicked, readPickAll]
+  );
+  const pickAllState = pickAll?.state;
+  useEffect(() => {
+    pickAllRef.current = pickAll;
+  });
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pickAllState redraws the tick atop the column
+  useEffect(() => {
+    gridRef.current?.api?.refreshHeader();
+  }, [pickAllState]);
+  const flashedRef = useRef<number | null>(null);
+  const markedRef = useRef(markedNodeId);
+  const rowClassRules = useMemo(
+    () => ({
+      [PICKED_ROW_CLASS]: (p: RowClassParams) => isPicked(nodeIdOf(p.data)),
+      [FLASHED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === flashedRef.current,
+      [MARKED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === markedRef.current,
+    }),
+    [isPicked]
+  );
+  useEffect(() => {
+    if (markedRef.current === markedNodeId) return;
+    markedRef.current = markedNodeId;
+    gridRef.current?.api?.redrawRows();
+  }, [markedNodeId]);
+  // Asked again once the grid is up: a focus can arrive before it, with the table.
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const shownCountRef = useRef(filteredCount ?? rowCount);
+  useEffect(() => {
+    shownCountRef.current = filteredCount ?? rowCount;
+  });
+  useEffect(() => {
+    const api = gridApi;
+    if (!focusRow || !rowIndexOf || !api) return;
+    let cancelled = false;
+    const sort: SortItem[] = api
+      .getColumnState()
+      .filter((c) => c.sort)
+      .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+      .map((c) => ({ column: c.colId, direction: c.sort as SortDirection }));
+    rowIndexOf(focusRow.nodeId, sort, api.getFilterModel() as FilterModel)
+      .then((index) => {
+        if (cancelled || index < 0) return;
+        flashedRef.current = focusRow.nodeId;
+        // Rows past the pages read so far are not counted yet, so there is nowhere to scroll.
+        if (index >= api.getDisplayedRowCount()) api.setRowCount(shownCountRef.current, true);
+        api.ensureIndexVisible(index, 'middle');
+        api.redrawRows();
+      })
+      .catch(() => {});
+    const timer = setTimeout(() => {
+      flashedRef.current = null;
+      gridRef.current?.api?.redrawRows();
+    }, FLASH_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [focusRow, rowIndexOf, gridApi]);
+  useEffect(() => {
+    selectedRef.current = selectedNodeIds;
+    gridRef.current?.api?.redrawRows();
+  }, [selectedNodeIds]);
 
   const [orderedNames, setOrderedNames] = useState<string[]>(() => defaultColumnOrder(columns));
   const [chooserOpen, setChooserOpen] = useState(false);
@@ -125,16 +485,16 @@ export function NodesGrid({
     onVisibleColumnsChange(defaultVisibleColumnSet(columns));
   }, [columns, onVisibleColumnsChange]);
 
-  const columnDefs = useMemo(
-    () =>
-      buildColumnDefs({
-        orderedColumns,
-        visible: visibleColumns,
-        onReset: resetAll,
-        onOpenChooser: openChooser,
-      }),
-    [orderedColumns, visibleColumns, resetAll, openChooser]
-  );
+  const columnDefs = useMemo(() => {
+    const defs = buildColumnDefs({
+      orderedColumns,
+      visible: visibleColumns,
+      pinned: pinnedColumns,
+      onReset: resetAll,
+      onOpenChooser: openChooser,
+    });
+    return pickColumn ? [PICK_COLUMN, ...defs] : defs;
+  }, [orderedColumns, visibleColumns, pinnedColumns, resetAll, openChooser, pickColumn]);
 
   const onColumnMoved = (e: ColumnMovedEvent) => {
     if (!e.finished) return;
@@ -145,25 +505,83 @@ export function NodesGrid({
     setOrderedNames((prev) => (isEqual(prev, nextOrder) ? prev : nextOrder));
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: new pinned values are a reason to page the rows in again
   useEffect(() => {
     const api = gridRef.current?.api;
-    if (!api) return;
-    api.setGridOption('context', { visibleColumns: Array.from(visibleColumns) });
+    if (!api || api.isDestroyed()) return;
+    api.setGridOption('context', gridContext);
     api.refreshInfiniteCache();
-  }, [visibleColumns]);
+  }, [gridContext, pinnedVersion]);
 
   useEffect(() => {
+    // A grid torn down under a column change, as its table is swapped, takes no more calls.
     const api = gridRef.current?.api;
-    if (!api) return;
+    if (!api || api.isDestroyed()) return;
     api.applyColumnState({
       state: orderedNames.map((colId) => ({ colId })),
       applyOrder: true,
     });
   }, [orderedNames]);
 
+  // Derived columns can arrive after the grid is up, and a kept filter may name one.
+  const pendingFiltersRef = useRef(
+    initialFilterModel && Object.keys(initialFilterModel).length > 0 ? initialFilterModel : null
+  );
+  const restoreFilters = (api: GridApi) => {
+    const model = pendingFiltersRef.current;
+    if (!model || !Object.keys(model).every((colId) => api.getColumn(colId))) return;
+    pendingFiltersRef.current = null;
+    api.setFilterModel(model);
+  };
+
   const onGridReady = (e: GridReadyEvent) => {
-    e.api.setGridOption('context', { visibleColumns: Array.from(visibleColumns) });
+    e.api.setGridOption('context', gridContext);
+    // Before the datasource, so the first page asked for is already filtered.
+    restoreFilters(e.api);
     e.api.setGridOption('datasource', datasource);
+    setGridApi(e.api);
+  };
+
+  const [filters, setFilters] = useState<FilterModel>({});
+  const filtering = Object.keys(filters).length > 0;
+  const onFilterChanged = (e: FilterChangedEvent) => {
+    pendingFiltersRef.current = null;
+    const model = e.api.getFilterModel() as FilterModel;
+    setFilters(model);
+    onFilterModelChange?.(model);
+  };
+  const onResetClick = () => {
+    pendingFiltersRef.current = null;
+    gridRef.current?.api.setFilterModel(null);
+    reset?.onReset();
+  };
+  const isOn = (quick: QuickFilter) =>
+    Object.entries(quick.model).every(([colId, f]) => isEqual(filters[colId], f));
+  const toggleQuickFilter = (quick: QuickFilter) => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    pendingFiltersRef.current = null;
+    const next: FilterModel = { ...(api.getFilterModel() as FilterModel) };
+    if (isOn(quick)) for (const colId of Object.keys(quick.model)) delete next[colId];
+    else Object.assign(next, quick.model);
+    api.setFilterModel(next);
+  };
+
+  const onRowClicked = (e: RowClickedEvent) => {
+    const nodeId = nodeIdOf(e.data);
+    if (Number.isFinite(nodeId)) onRowClick?.(nodeId);
+  };
+
+  // Cells report the pointer one by one; the host hears about rows.
+  const hoveredRef = useRef<number | null>(null);
+  const reportHover = (nodeId: number | null) => {
+    if (nodeId === hoveredRef.current) return;
+    hoveredRef.current = nodeId;
+    onRowHover?.(nodeId);
+  };
+  const onCellMouseOver = (e: CellMouseOverEvent) => {
+    const nodeId = nodeIdOf(e.data);
+    reportHover(Number.isFinite(nodeId) ? nodeId : null);
   };
 
   useEffect(() => {
@@ -192,18 +610,54 @@ export function NodesGrid({
   return (
     <div className={styles.gridWrapper}>
       <div className={styles.gridHeader}>
-        <span className={styles.gridStat}>
-          {filteredCount === null ? (
-            <>{rowCount.toLocaleString()} nodes</>
-          ) : (
-            <>
-              <strong className={styles.gridStatHighlight}>{filteredCount.toLocaleString()}</strong>{' '}
-              of {rowCount.toLocaleString()} nodes
-            </>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={styles.gridStat}>
+            {filteredCount === null ? (
+              <>{rowCount.toLocaleString()} nodes</>
+            ) : (
+              <>
+                <strong className={styles.gridStatHighlight}>
+                  {filteredCount.toLocaleString()}
+                </strong>{' '}
+                of {rowCount.toLocaleString()} nodes
+              </>
+            )}
+          </span>
+          {headerExtra}
+          {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
+          {quickFilters?.map((quick) => (
+            <PillToggle
+              key={quick.label}
+              value={isOn(quick)}
+              onChange={(on) => {
+                if (on !== isOn(quick)) toggleQuickFilter(quick);
+              }}
+              options={[
+                { value: false, label: 'All', title: 'Every row' },
+                { value: true, label: quick.label, title: quick.title },
+              ]}
+            />
+          ))}
+          {/* Last, so the buttons before it stay put as it comes and goes. */}
+          {reset && (filtering || reset.picked) && (
+            <button
+              type="button"
+              onClick={onResetClick}
+              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+              className={PILL_CLASS}
+            >
+              <RiResetLeftLine className="size-4" />
+              Reset
+            </button>
           )}
-        </span>
+        </div>
+        {headerNote && <span className={styles.gridNote}>{headerNote}</span>}
       </div>
-      <div className={styles.grid}>
+      <div
+        ref={gridBoxRef}
+        className={styles.grid}
+        onMouseLeave={onRowHover ? () => reportHover(null) : undefined}
+      >
         <AgGridReact
           ref={gridRef}
           columnDefs={columnDefs}
@@ -219,10 +673,25 @@ export function NodesGrid({
           maintainColumnOrder
           headerHeight={60}
           onGridReady={onGridReady}
+          onNewColumnsLoaded={(e) => restoreFilters(e.api)}
           onColumnMoved={onColumnMoved}
           onModelUpdated={onModelUpdated}
-          context={{ visibleColumns: Array.from(visibleColumns) }}
+          onFilterChanged={onFilterChanged}
+          onRowClicked={clickable ? onRowClicked : undefined}
+          onCellMouseOver={onRowHover ? onCellMouseOver : undefined}
+          rowClassRules={rowClassRules}
+          rowClass={clickable ? styles.clickableRow : undefined}
+          context={gridContext}
         />
+        {pinnedResizable && pinnedSpan && (
+          <div className="absolute inset-y-0 z-10 w-0" style={{ left: pinnedSpan.left }}>
+            <PaneSideResizeHandle
+              containerRef={gridBoxRef}
+              minWidth={MIN_FILE_COLUMNS_WIDTH}
+              onResize={(left) => onPinnedResize?.(pinnedSpan.right - left)}
+            />
+          </div>
+        )}
       </div>
       <Modal
         title="Choose columns"

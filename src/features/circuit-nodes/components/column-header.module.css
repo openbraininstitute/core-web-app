@@ -54,6 +54,14 @@
   white-space: nowrap;
 }
 
+.unit {
+  flex: 0 0 auto;
+  margin-left: 1px;
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: #a3a3a3;
+}
+
 .sortIcon {
   flex: 0 0 auto;
   color: var(--color-primary-9);

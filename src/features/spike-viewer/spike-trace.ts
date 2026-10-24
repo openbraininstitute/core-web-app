@@ -190,3 +190,56 @@ export function sortSpikes(
   }
   return { timestamps: sortedTimestamps, nodeIds: sortedNodeIds };
 }
+
+/**
+ * One population's spikes cut to the cells `keep` flags, by node id; every
+ * other population as it was. The order is the parser's, so the result stays
+ * time-sorted, and an id past the flags' end has no cell to keep.
+ */
+/** A population's spikes from `fromMs` to `toMs`, as views of its own time-sorted arrays. */
+export function spikesBetween(
+  population: SpikePopulation,
+  fromMs: number,
+  toMs: number
+): SpikePopulation {
+  const { timestamps } = population;
+  const at = (t: number, after: boolean) => {
+    let lo = 0;
+    let hi = timestamps.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1;
+      if (after ? timestamps[mid] <= t : timestamps[mid] < t) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+  const start = at(fromMs, false);
+  const end = at(toMs, true);
+  return {
+    ...population,
+    nodeIds: population.nodeIds.subarray(start, end),
+    timestamps: timestamps.subarray(start, end),
+  };
+}
+
+export function keepSpikesOf(data: SpikeData, populationName: string, keep: Uint8Array): SpikeData {
+  return {
+    ...data,
+    populations: data.populations.map((population) => {
+      if (population.name !== populationName) return population;
+      const { nodeIds, timestamps } = population;
+      let kept = 0;
+      for (let i = 0; i < nodeIds.length; i++) if (keep[nodeIds[i]] === 1) kept += 1;
+      const keptNodeIds = new Float64Array(kept);
+      const keptTimestamps = new Float32Array(kept);
+      let n = 0;
+      for (let i = 0; i < nodeIds.length; i++) {
+        if (keep[nodeIds[i]] !== 1) continue;
+        keptNodeIds[n] = nodeIds[i];
+        keptTimestamps[n] = timestamps[i];
+        n += 1;
+      }
+      return { ...population, nodeIds: keptNodeIds, timestamps: keptTimestamps };
+    }),
+  };
+}

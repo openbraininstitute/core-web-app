@@ -49,7 +49,7 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   // where the circuit preview's does.
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
-      <SpikeReplayView data={data} subject={subject} />
+      <SpikeReplayView data={data} subject={subject} reportPath={asset.path} />
     </ErrorBoundary>
   );
 }
