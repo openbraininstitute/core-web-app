@@ -279,7 +279,7 @@ export class RasterRenderer {
       const px =
         plotRect.x + ((nearest.time - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
       const py =
-        plotRect.y + (1 - (nearest.row - view.yMin) / (view.yMax - view.yMin)) * plotRect.height;
+        plotRect.y + ((nearest.row - view.yMin) / (view.yMax - view.yMin)) * plotRect.height;
       if (Math.hypot(info.pixelX - px, info.pixelY - py) <= CLICK_RADIUS_PX) {
         handler(nearest.nodeId);
         return;
@@ -522,7 +522,8 @@ export class RasterRenderer {
     const row = rows ? (rows[highlight.cell] ?? highlight.cell) : highlight.cell;
     const yRange = view.yMax - view.yMin;
     const xRange = view.xMax - view.xMin;
-    const py = (1 - (row - view.yMin) / yRange) * plotRect.height;
+    // Rows run down from the top.
+    const py = ((row - view.yMin) / yRange) * plotRect.height;
     if (py < -8 || py > plotRect.height + 8) return;
 
     const dpr = window.devicePixelRatio || 1;
@@ -626,8 +627,7 @@ export class RasterRenderer {
       ((nearest.time - this.view.xMin) / (this.view.xMax - this.view.xMin)) * this.plotRect.width;
     const pxY =
       this.plotRect.y +
-      (1 - (nearest.row - this.view.yMin) / (this.view.yMax - this.view.yMin)) *
-        this.plotRect.height;
+      ((nearest.row - this.view.yMin) / (this.view.yMax - this.view.yMin)) * this.plotRect.height;
     const dist = Math.hypot(info.pixelX - pxX, info.pixelY - pxY);
 
     if (dist > 20) {

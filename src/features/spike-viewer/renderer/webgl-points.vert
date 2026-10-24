@@ -9,7 +9,8 @@ out vec4 v_color;
 
 void main() {
   float x = 2.0 * (a_x - u_bounds.x) / (u_bounds.z - u_bounds.x) - 1.0;
-  float y = 2.0 * (a_y - u_bounds.y) / (u_bounds.w - u_bounds.y) - 1.0;
+  // Rows run down from the top: node 0, or the first of an order, uppermost.
+  float y = 1.0 - 2.0 * (a_y - u_bounds.y) / (u_bounds.w - u_bounds.y);
   gl_Position = vec4(x, y, 0.0, 1.0);
   gl_PointSize = u_pointSize;
   v_color = a_color;

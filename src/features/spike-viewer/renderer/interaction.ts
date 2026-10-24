@@ -136,7 +136,8 @@ export class InteractionManager {
     const { x: px, y: py } = this.elementPoint(clientX, clientY);
     const { x, y, width, height } = this.plotRect;
     const normX = (px - x) / width;
-    const normY = 1 - (py - y) / height;
+    // Rows run down from the top.
+    const normY = (py - y) / height;
     return {
       x: this.view.xMin + normX * (this.view.xMax - this.view.xMin),
       y: this.view.yMin + normY * (this.view.yMax - this.view.yMin),
@@ -244,7 +245,7 @@ export class InteractionManager {
         const xRange = this.view.xMax - this.view.xMin;
         const yRange = this.view.yMax - this.view.yMin;
         const dataX = -(dx / this.plotRect.width) * xRange;
-        const dataY = (dy / this.plotRect.height) * yRange;
+        const dataY = -(dy / this.plotRect.height) * yRange;
 
         this.view = {
           xMin: this.view.xMin + dataX,

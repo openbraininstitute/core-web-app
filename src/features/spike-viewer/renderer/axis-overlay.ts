@@ -181,7 +181,8 @@ export class AxisOverlay {
       return;
     }
     yTicks.forEach((v, i) => {
-      const py = rect.y + rect.height - ((v - bounds.yMin) / yRange) * rect.height;
+      // Rows run down from the top.
+      const py = rect.y + ((v - bounds.yMin) / yRange) * rect.height;
       ctx.beginPath();
       ctx.moveTo(rect.x - 5, py);
       ctx.lineTo(rect.x, py);
@@ -227,7 +228,7 @@ export class AxisOverlay {
     groups: NonNullable<RowAxis['groups']>
   ) {
     const yAt = (row: number) =>
-      rect.y + rect.height - ((row - bounds.yMin) / (bounds.yMax - bounds.yMin)) * rect.height;
+      rect.y + ((row - bounds.yMin) / (bounds.yMax - bounds.yMin)) * rect.height;
     const top = rect.y;
     const bottom = rect.y + rect.height;
 
@@ -245,8 +246,9 @@ export class AxisOverlay {
     ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
     const room = MARGIN.left - 12;
     for (const group of groups) {
-      const from = Math.max(top, yAt(group.end - 0.5));
-      const to = Math.min(bottom, yAt(group.start - 0.5));
+      const edges = [yAt(group.start - 0.5), yAt(group.end - 0.5)];
+      const from = Math.max(top, Math.min(...edges));
+      const to = Math.min(bottom, Math.max(...edges));
       if (to - from < 11) continue;
       ctx.fillText(fitted(ctx, group.label, room), rect.x - 8, (from + to) / 2);
     }
