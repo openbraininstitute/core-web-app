@@ -12,6 +12,7 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import type { CampaignCourse } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 
 type Props = {
   simulations: ISimulation[];
@@ -59,6 +60,14 @@ export function ReportCampaignView({
     enabled: true,
   });
   const metrics = useMemo(() => reportCampaignMetrics(variable, units), [variable, units]);
+  const course = useMemo<CampaignCourse>(
+    () => ({
+      label: 'Mean',
+      yLabel: variable === null ? `Mean voltage (${units})` : `Mean ${variable} (${units})`,
+      steps: false,
+    }),
+    [variable, units]
+  );
   const picked = useMemo(
     () => (cells ? cells.reduce((sum, flag) => sum + flag, 0) : null),
     [cells]
@@ -78,6 +87,7 @@ export function ReportCampaignView({
       reading={variable === null ? 'voltages' : 'reports'}
       files={variable === null ? 'voltage reports' : 'reports'}
       scope={`${populationName ?? ''}${of}`}
+      course={course}
     />
   );
 }

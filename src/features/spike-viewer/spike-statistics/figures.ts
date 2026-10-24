@@ -610,6 +610,44 @@ export function psthFigure(
   );
 }
 
+/**
+ * One population's firing over time, over the cells flagged in `cells` or all
+ * `cellCount` of them: spikes per cell per second, in the same round bins as a
+ * PSTH figure's, as steps - each bin's rate from its start, held to the end.
+ */
+export function psthSeries(
+  spikes: SpikePopulation | undefined,
+  cells: Uint8Array | null,
+  cellCount: number,
+  span: [number, number]
+): { x: Float64Array; y: Float64Array } {
+  const [from, to] = span;
+  const width = roundStep(Math.max(to - from, 1e-6) / PSTH_BINS);
+  const bins = Math.max(1, Math.ceil((to - from) / width));
+  let n = cellCount;
+  if (cells) {
+    n = 0;
+    for (let i = 0; i < cellCount; i++) n += cells[i] ? 1 : 0;
+  }
+  const counts = new Float64Array(bins);
+  if (spikes && n > 0) {
+    const { nodeIds, timestamps } = spikes;
+    for (let i = 0; i < nodeIds.length; i++) {
+      const t = timestamps[i];
+      const cell = nodeIds[i];
+      if (t < from || t >= to || !(cell >= 0 && cell < cellCount)) continue;
+      if (cells && !cells[cell]) continue;
+      counts[Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
+    }
+  }
+  const x = Float64Array.from({ length: bins + 1 }, (_, b) => Math.min(to, from + b * width));
+  const y = new Float64Array(bins + 1);
+  const seconds = width / 1000;
+  for (let b = 0; b < bins; b++) y[b] = n > 0 ? counts[b] / (n * seconds) : 0;
+  y[bins] = y[bins - 1];
+  return { x, y };
+}
+
 /** Each group's recorded cells averaged frame by frame: their mean over time, a line per group. */
 export function meanTraceFigure(
   groups: CellGroup[],

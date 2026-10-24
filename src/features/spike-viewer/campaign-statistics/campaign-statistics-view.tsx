@@ -12,6 +12,7 @@ import {
 } from '@/features/scan-config/components/scan-coordinates';
 import { scanParamValueText } from '@/features/scan-config/components/scan-params';
 import {
+  courseGridFigure,
   heatmapFigure,
   linesFigure,
   SPIKE_CAMPAIGN_METRICS,
@@ -56,9 +57,15 @@ type PlotKind = 'heatmaps' | 'lines';
  * The plot and its axes, outside the view: picking a simulation swaps the file
  * underneath and remounts the viewer it is shown from.
  */
-const campaignPlotAtom = atom<{ plotKind: PlotKind; x?: string; y?: string }>({
+const campaignPlotAtom = atom<{ plotKind: PlotKind; measure?: string; x?: string; y?: string }>({
   plotKind: 'heatmaps',
 });
+
+/** The measure that is each simulation over time, beside the summaries' keys. */
+const COURSE = '__course__';
+
+/** Each simulation over time, as its own measure: its PSTH, or its mean. */
+type CampaignCourse = { label: string; yLabel: string; steps: boolean };
 
 type Props = {
   simulations: ISimulation[];
@@ -125,9 +132,12 @@ export function CampaignStatisticsView({
       reading="spikes"
       files="spike files"
       scope={`${populationName ?? ''}${of}${span}`}
+      course={SPIKE_COURSE}
     />
   );
 }
+
+const SPIKE_COURSE: CampaignCourse = { label: 'PSTHs', yLabel: 'Rate (Hz)', steps: true };
 
 type PlotsProps = {
   simulations: ISimulation[];
@@ -142,6 +152,8 @@ type PlotsProps = {
   files: string;
   /** What the summaries are over, after the count of simulations: the population, the cells. */
   scope: string;
+  /** Each simulation over time, offered first and shown at first. */
+  course?: CampaignCourse;
 };
 
 /**
@@ -149,6 +161,8 @@ type PlotsProps = {
  * its swept parameters - or lines - with the rest held at the simulation on
  * show. A click on a finished simulation's point shows it below.
  */
+export type { CampaignCourse };
+
 export function CampaignPlots({
   simulations,
   statusMap,
@@ -159,11 +173,23 @@ export function CampaignPlots({
   reading,
   files,
   scope,
+  course,
 }: PlotsProps) {
   const swept = useMemo(() => sweptParameters(simulations), [simulations]);
   const active = simulations.find((s) => s.id === activeSimulationId);
-  const [{ plotKind, x: chosenX, y: chosenY }, setPlot] = useAtom(campaignPlotAtom);
+  const [{ plotKind, measure: chosenMeasure, x: chosenX, y: chosenY }, setPlot] =
+    useAtom(campaignPlotAtom);
   const setPlotKind = (next: PlotKind) => setPlot((p) => ({ ...p, plotKind: next }));
+  const setMeasure = (next: string) => setPlot((p) => ({ ...p, measure: next }));
+  // One plot at a time: the simulations over time, or one of their summaries across the scan.
+  const measureOptions = [
+    ...(course ? [{ value: COURSE, label: course.label }] : []),
+    ...metrics.map((m) => ({ value: m.key, label: m.label })),
+  ];
+  const measure = measureOptions.some((o) => o.value === chosenMeasure)
+    ? (chosenMeasure as string)
+    : (measureOptions[0]?.value ?? '');
+  const metric = metrics.find((m) => m.key === measure);
   const setChosenX = (next: string) => setPlot((p) => ({ ...p, x: next }));
   const setChosenY = (next: string) => setPlot((p) => ({ ...p, y: next }));
   const xKey = swept.some((p) => p.key === chosenX) ? chosenX : swept[0]?.key;
@@ -174,7 +200,7 @@ export function CampaignPlots({
         ? (chosenY as string)
         : (swept.find((p) => p.key !== xKey)?.key ?? NO_AXIS);
 
-  const figures = useMemo(() => {
+  const figure = useMemo(() => {
     if (!active || !xKey) return null;
     const axisOf = (key: string): ScanAxis => ({
       label: key.split('.').at(-1) ?? key,
@@ -203,11 +229,23 @@ export function CampaignPlots({
       }
       return { simulationId: simulation.id, summary: byId?.get(simulation.id) };
     };
-    return metrics.map((metric, i) =>
-      plotKind === 'heatmaps'
-        ? heatmapFigure(metric, x, y, cellAt, activeSimulationId)
-        : linesFigure(metric, x, y, cellAt, activeSimulationId, i === metrics.length - 1)
-    );
+    if (course && measure === COURSE) {
+      const courses =
+        summaries.state === 'loading' || summaries.state === 'ready' ? summaries.courses : null;
+      return courseGridFigure(
+        x,
+        y,
+        cellAt,
+        courses ?? new Map(),
+        activeSimulationId,
+        course.yLabel,
+        course.steps
+      );
+    }
+    if (!metric) return null;
+    return plotKind === 'heatmaps'
+      ? heatmapFigure(metric, x, y, cellAt, activeSimulationId)
+      : linesFigure(metric, x, y, cellAt, activeSimulationId, true);
   }, [
     active,
     xKey,
@@ -218,7 +256,9 @@ export function CampaignPlots({
     statusMap,
     plotKind,
     activeSimulationId,
-    metrics,
+    course,
+    measure,
+    metric,
   ]);
 
   const pick = (id: unknown) => {
@@ -236,15 +276,19 @@ export function CampaignPlots({
           summaries.state === 'too-large' && 'invisible'
         )}
       >
-        <PillSelect
-          label="Plot"
-          value={plotKind}
-          options={[
-            { value: 'heatmaps', label: 'Heatmaps' },
-            { value: 'lines', label: 'Lines' },
-          ]}
-          onChange={(v) => setPlotKind(v as PlotKind)}
-        />
+        <PillSelect label="Show" value={measure} options={measureOptions} onChange={setMeasure} />
+        {/* Over time each simulation is its own small plot; a summary is a heatmap or lines. */}
+        {measure !== COURSE && (
+          <PillSelect
+            label="Plot"
+            value={plotKind}
+            options={[
+              { value: 'heatmaps', label: 'Heatmaps' },
+              { value: 'lines', label: 'Lines' },
+            ]}
+            onChange={(v) => setPlotKind(v as PlotKind)}
+          />
+        )}
         {xKey && <PillSelect label="X" value={xKey} options={axisOptions} onChange={setChosenX} />}
         {xKey && (
           <PillSelect
@@ -265,19 +309,15 @@ export function CampaignPlots({
         <TooLarge bytes={summaries.bytes} count={summaries.count} files={files} />
       ) : swept.length === 0 ? (
         <Notice>This campaign sweeps no parameter, so there is nothing to compare.</Notice>
-      ) : !figures || summaries.state === 'resolving' ? (
+      ) : !figure || summaries.state === 'resolving' ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
           <Spin tip={`Finding the simulations’ ${files}…`}>
             <div className="size-12" />
           </Spin>
         </div>
       ) : (
-        <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-3 @4xl:grid-cols-4">
-          {figures.map((figure, i) => (
-            <div key={metrics[i].key} className="min-h-0 min-w-0">
-              <StatisticsPlot figure={figure} onPointClick={pick} />
-            </div>
-          ))}
+        <div className="min-h-0 min-w-0 flex-1">
+          <StatisticsPlot figure={figure} onPointClick={pick} />
         </div>
       )}
     </div>

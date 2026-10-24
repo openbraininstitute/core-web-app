@@ -8,6 +8,7 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { psthSeries } from '@/features/spike-viewer/spike-statistics/figures';
 import { computeSpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
@@ -38,12 +39,17 @@ export type CellStatistics = {
   cvs: Float32Array;
   /** The window the counts are over. */
   seconds: number;
+  /** Where that window starts and ends, in ms. */
+  span?: [number, number];
   /** The population's spikes, time-sorted. */
   spikes: SpikePopulation;
 };
 
 /** One simulation's population, summed up, by measure: what the campaign's plots compare. */
 export type SimulationSummary = Readonly<Record<string, number>>;
+
+/** One simulation's population over time, such as its PSTH: a value at each of `x`, in ms. */
+export type TimeCourseSeries = { x: ArrayLike<number>; y: ArrayLike<number> };
 
 /** A simulation's spikes summed up: its rates, its active share (0 to 1) and its mean ISI CV. */
 type SpikeSummary = {
@@ -59,6 +65,8 @@ export type CampaignSummaries =
   | {
       state: 'loading' | 'ready';
       summaries: ReadonlyMap<string, SimulationSummary>;
+      /** Each simulation over time, over the same cells and span as its summary. */
+      courses: ReadonlyMap<string, TimeCourseSeries>;
       loaded: number;
       total: number;
     };
@@ -186,12 +194,31 @@ export function useCampaignSummaries({
     () => new Map([...loaded].map(([id, s]) => [id, summarize(s, cells, timeWindow)] as const)),
     [loaded, cells, timeWindow]
   );
+  const courses = useMemo(
+    () =>
+      new Map(
+        [...loaded].map(
+          ([id, s]) =>
+            [
+              id,
+              psthSeries(
+                s.spikes,
+                cells,
+                s.counts.length,
+                timeWindow ?? s.span ?? [0, s.seconds * 1000]
+              ),
+            ] as const
+        )
+      ),
+    [loaded, cells, timeWindow]
+  );
 
   if (!files) return { state: 'resolving' };
   if (tooLarge) return { state: 'too-large', bytes, count: files.length };
   return {
     state: loaded.size >= files.length ? 'ready' : 'loading',
     summaries,
+    courses,
     loaded: loaded.size,
     total: files.length,
   };
@@ -224,6 +251,7 @@ export function cellStatisticsOf(
     counts: Uint32Array.from(count),
     cvs: Float32Array.from(isiCv),
     seconds: (window.max - window.min) / 1000,
+    span: [window.min, window.max],
     // Copies, so the rest of the file's buffers can go.
     spikes: {
       name: population?.name ?? '',

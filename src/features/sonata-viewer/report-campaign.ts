@@ -12,17 +12,24 @@ import {
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
-import type { CellValueStatistics } from '@/features/sonata-viewer/types';
+import type { CellFrames, CellValueStatistics } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 import type { CampaignMetric } from '@/features/spike-viewer/campaign-statistics/campaign-figures';
 import type {
   CampaignSummaries,
   SimulationSummary,
+  TimeCourseSeries,
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 import type { WorkspaceContext } from '@/types/common';
 
-/** One simulation's report, cell by cell, and the span it covers, in seconds. */
-export type ReportCellStatistics = CellValueStatistics & { seconds: number };
+/**
+ * One simulation's report, cell by cell, the span it covers, in seconds, and
+ * its cells over time, thinned, for their mean.
+ */
+export type ReportCellStatistics = CellValueStatistics & { seconds: number; frames?: CellFrames };
+
+/** Frames each simulation's cells are kept at, for their mean over time. */
+const COURSE_FRAMES = 400;
 
 /** What a campaign is compared by for a voltage: its level, its spread and its spiking. */
 const VOLTAGE_CAMPAIGN_METRICS: readonly CampaignMetric[] = [
@@ -140,8 +147,9 @@ export function useReportCampaignSummaries({
                 const population = metadata.populations.find((p) => p.name === populationName);
                 if (!population) throw new Error(`No population ${populationName} in the report`);
                 const found = await worker.getCellStatistics(populationName, spikeThreshold);
+                const frames = await worker.getCellFrames(populationName, COURSE_FRAMES);
                 const { startTime, endTime } = population.timeConfig;
-                return { ...found, seconds: (endTime - startTime) / 1000 };
+                return { ...found, frames, seconds: (endTime - startTime) / 1000 };
               } finally {
                 await worker.destroy();
               }
@@ -170,12 +178,23 @@ export function useReportCampaignSummaries({
     () => new Map([...loaded].map(([id, s]) => [id, summarizeReport(s, cells)] as const)),
     [loaded, cells]
   );
+  const courses = useMemo(
+    () =>
+      new Map(
+        [...loaded].flatMap(([id, s]) => {
+          const course = s.frames && meanCourse(s.frames, cells);
+          return course ? [[id, course] as const] : [];
+        })
+      ),
+    [loaded, cells]
+  );
 
   if (!files) return { state: 'resolving' };
   if (tooLarge) return { state: 'too-large', bytes, count: files.length };
   return {
     state: loaded.size >= files.length ? 'ready' : 'loading',
     summaries,
+    courses,
     loaded: loaded.size,
     total: files.length,
   };
@@ -227,4 +246,19 @@ export function summarizeReport(
     spikingFraction: spikes ? spiking / n : Number.NaN,
     rate: spikes && seconds > 0 ? spikeSum / n / seconds : Number.NaN,
   };
+}
+
+/** The mean, frame by frame, of the cells flagged in `cells`, or every recorded one. */
+function meanCourse(frames: CellFrames, cells: Uint8Array | null): TimeCourseSeries | null {
+  const columns = frames.nodeIds.length;
+  const picked: number[] = [];
+  for (let c = 0; c < columns; c++) if (!cells || cells[frames.nodeIds[c]]) picked.push(c);
+  if (picked.length === 0) return null;
+  const y = new Float64Array(frames.times.length);
+  for (let f = 0; f < frames.times.length; f++) {
+    let sum = 0;
+    for (const c of picked) sum += frames.values[f * columns + c];
+    y[f] = sum / picked.length;
+  }
+  return { x: frames.times, y };
 }

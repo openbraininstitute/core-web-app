@@ -1,7 +1,10 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 
 import type { Data, Layout } from 'plotly.js-dist-min';
-import type { SimulationSummary } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
+import type {
+  SimulationSummary,
+  TimeCourseSeries,
+} from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 
 /** One measure of a simulation the campaign's plots compare, by its key in the summaries. */
@@ -272,5 +275,190 @@ export function linesFigure(
       },
       yaxis: { automargin: true, gridcolor: GRID_COLOR, zeroline: false, rangemode: 'tozero' },
     },
+  };
+}
+
+/**
+ * Each simulation over time - its PSTH, or its mean - in the cell of the
+ * scan's grid it stands at: the first parameter across, the second up, the
+ * rest at the simulation on show, which is outlined. One scale throughout, so
+ * the cells compare. An unfinished simulation is named in its cell, in its
+ * status's colour, and a click on a line shows its simulation.
+ */
+export function courseGridFigure(
+  x: ScanAxis,
+  y: ScanAxis | null,
+  cellAt: (xi: number, yi: number) => GridCell,
+  courses: ReadonlyMap<string, TimeCourseSeries>,
+  activeId: string | undefined,
+  label: string,
+  steps: boolean
+): Figure {
+  const rows = y ? y.values.length : 1;
+  const columns = x.values.length;
+  const gapX = Math.min(0.04, 0.3 / columns);
+  const gapY = Math.min(0.08, 0.4 / rows);
+  const data: Data[] = [];
+  const annotations: NonNullable<Layout['annotations']> = [];
+  const shapes: NonNullable<Layout['shapes']> = [];
+  const axes: Record<string, unknown> = {};
+  let k = 0;
+  for (let yi = 0; yi < rows; yi++) {
+    for (let xi = 0; xi < columns; xi++) {
+      const xDomain = [xi / columns + gapX / 2, (xi + 1) / columns - gapX / 2];
+      const yDomain = [yi / rows + gapY / 2, (yi + 1) / rows - gapY / 2];
+      const cell = cellAt(xi, yi);
+      const course = cell ? courses.get(cell.simulationId) : undefined;
+      // Axes only where there is a line: an empty one would stretch the shared scale.
+      if (cell && course) {
+        k += 1;
+        const suffix = k === 1 ? '' : String(k);
+        axes[`xaxis${suffix}`] = {
+          domain: xDomain,
+          anchor: `y${suffix}`,
+          ...(k > 1 ? { matches: 'x' } : {}),
+          showticklabels: yi === 0,
+          nticks: 4,
+          showgrid: false,
+          zeroline: false,
+          linecolor: GRID_COLOR,
+          tickfont: { size: 9 },
+        };
+        axes[`yaxis${suffix}`] = {
+          domain: yDomain,
+          anchor: `x${suffix}`,
+          ...(k > 1 ? { matches: 'y' } : {}),
+          showticklabels: xi === 0,
+          nticks: 4,
+          gridcolor: GRID_COLOR,
+          zeroline: false,
+          tickfont: { size: 9 },
+        };
+        const where = `${x.label} ${x.values[xi].text}${y ? ` · ${y.label} ${y.values[yi].text}` : ''}`;
+        data.push({
+          type: 'scatter',
+          mode: 'lines',
+          x: course.x,
+          y: course.y,
+          xaxis: `x${suffix}`,
+          yaxis: `y${suffix}`,
+          line: { color: PICK_COLORS[0], width: 1.2, shape: steps ? 'hv' : 'linear' },
+          // Each point names its simulation, so a click anywhere on the line picks it.
+          customdata: Array.from({ length: course.x.length }, () => cell.simulationId),
+          hovertemplate: `${where}<br>%{x:.0f} ms · ${label} %{y:.3g}<extra>click to show</extra>`,
+        } as Data);
+      } else if (cell?.status) {
+        // Named in its cell, on a wash of its status's colour.
+        shapes.push({
+          type: 'rect',
+          xref: 'paper',
+          yref: 'paper',
+          x0: xDomain[0],
+          x1: xDomain[1],
+          y0: yDomain[0],
+          y1: yDomain[1],
+          line: { width: 0 },
+          fillcolor: `${cell.status.color}14`,
+          layer: 'below',
+        });
+        annotations.push({
+          text: cell.status.name,
+          xref: 'paper',
+          yref: 'paper',
+          x: (xDomain[0] + xDomain[1]) / 2,
+          y: (yDomain[0] + yDomain[1]) / 2,
+          showarrow: false,
+          font: { size: 10, color: cell.status.color },
+        });
+      }
+      if (cell && cell.simulationId === activeId) {
+        shapes.push({
+          type: 'rect',
+          xref: 'paper',
+          yref: 'paper',
+          x0: xDomain[0],
+          x1: xDomain[1],
+          y0: yDomain[0],
+          y1: yDomain[1],
+          line: { color: '#0f172a', width: 1.5 },
+        });
+      }
+    }
+  }
+  // The parameters' values over the columns and beside the rows, and their names.
+  x.values.forEach((v, xi) => {
+    annotations.push({
+      text: v.text,
+      xref: 'paper',
+      yref: 'paper',
+      x: (xi + 0.5) / columns,
+      y: 1,
+      yanchor: 'bottom',
+      showarrow: false,
+      font: { size: 10, color: AXIS_COLOR },
+    });
+  });
+  annotations.push({
+    text: `${x.label} →`,
+    xref: 'paper',
+    yref: 'paper',
+    x: 1,
+    xanchor: 'right',
+    y: 1,
+    yanchor: 'bottom',
+    yshift: 14,
+    showarrow: false,
+    font: { size: 10, color: AXIS_COLOR },
+  });
+  if (y) {
+    y.values.forEach((v, yi) => {
+      annotations.push({
+        text: v.text,
+        xref: 'paper',
+        yref: 'paper',
+        x: 0,
+        xanchor: 'right',
+        xshift: -30,
+        y: (yi + 0.5) / rows,
+        showarrow: false,
+        textangle: '-90',
+        font: { size: 10, color: AXIS_COLOR },
+      });
+    });
+    annotations.push({
+      text: `${y.label} →`,
+      xref: 'paper',
+      yref: 'paper',
+      x: 0,
+      xanchor: 'right',
+      xshift: -46,
+      y: 1,
+      yanchor: 'top',
+      showarrow: false,
+      textangle: '-90',
+      font: { size: 10, color: AXIS_COLOR },
+    });
+  }
+  annotations.push({
+    text: 'Time (ms)',
+    xref: 'paper',
+    yref: 'paper',
+    x: 0.5,
+    y: 0,
+    yanchor: 'top',
+    yshift: -18,
+    showarrow: false,
+    font: { size: 10, color: AXIS_COLOR },
+  });
+  return {
+    data,
+    layout: {
+      ...BASE_LAYOUT,
+      title: title(label),
+      margin: { l: y ? 76 : 48, r: 8, t: 52, b: 36 },
+      ...axes,
+      annotations,
+      shapes,
+    } as Partial<Layout>,
   };
 }
