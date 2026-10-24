@@ -58,7 +58,9 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
         ))}
       </div>
       <div className="mt-2 text-[10px] text-neutral-400">
-        Click to set the raster to {blocks.length > 1 ? 'their window' : 'this window'}
+        {blocks.every((e) => e.end === e.start)
+          ? 'Click to start the raster’s window here'
+          : `Click to set the raster to ${blocks.length > 1 ? 'their window' : 'this window'}`}
       </div>
     </div>,
     fullscreenPopupContainer()

@@ -697,18 +697,21 @@ export class RasterRenderer {
 
   /**
    * Zoom the time axis to a group's blocks: from the first onset to the last
-   * offset, what holds on to the end of the run, and an instant with a little
-   * room either side, since a window needs a width.
+   * offset, and what holds on to the end of the run. Instants alone - a
+   * synchronous volley - only move the window's start to them, keeping its
+   * end, or the run's where that would come first.
    */
   private zoomToWindowOf(group: MarkerGroup) {
     const { xMin, xMax } = this.dataBounds;
-    let from = Math.min(...group.events.map((e) => e.start));
-    let to = Math.max(...group.events.map((e) => e.end ?? xMax));
-    if (to - from < (xMax - xMin) * 0.002) {
-      const room = (xMax - xMin) * 0.025;
-      from -= room;
-      to += room;
-    }
+    const from = Math.min(...group.events.map((e) => e.start));
+    const instants = group.events.every((e) => e.end === e.start);
+    const shownEnd = Math.min(xMax, this.view.xMax);
+    const to = instants
+      ? shownEnd > from
+        ? shownEnd
+        : xMax
+      : Math.max(...group.events.map((e) => e.end ?? xMax));
+    if (to <= from) return;
     this.setTimeWindow(Math.max(xMin, from), Math.min(xMax, to));
   }
 
