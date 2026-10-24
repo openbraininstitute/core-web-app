@@ -1,7 +1,8 @@
 import {
   AxisOverlay,
   drawEventMarks,
-  EVENT_STRIP_PX,
+  EVENT_BOTTOM_ZONE_PX,
+  EVENT_HIT_PX,
   EVENT_TOP_ZONE_PX,
   MARGIN,
 } from '@/features/spike-viewer/renderer/axis-overlay';
@@ -9,7 +10,12 @@ import { InteractionManager } from '@/features/spike-viewer/renderer/interaction
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
-import type { PlotRect, RowAxis, ViewBounds } from '@/features/spike-viewer/renderer/axis-overlay';
+import type {
+  EventLabelBox,
+  PlotRect,
+  RowAxis,
+  ViewBounds,
+} from '@/features/spike-viewer/renderer/axis-overlay';
 import type { HoverInfo } from '@/features/spike-viewer/renderer/interaction';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
@@ -106,6 +112,9 @@ export class RasterRenderer {
   private lastTimeAxis = '';
   private playheadLabel: HTMLSpanElement;
   private events: readonly TimelineEvent[] = [];
+  /** The timings under the pointer, whose windows show, and where the names were drawn. */
+  private hoveredEvents: readonly TimelineEvent[] = [];
+  private labelBoxes: EventLabelBox[] = [];
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -134,10 +143,11 @@ export class RasterRenderer {
     this.playheadEl.style.cssText =
       'position:absolute;pointer-events:none;display:none;width:1.5px;background:#f5222d';
     container.appendChild(this.playheadEl);
-    // Its time, at its head: the scrubber below is laid out against the axis, with no room for it.
+    // Its time, at its foot: the scrubber below is laid out against the axis,
+    // with no room for it, and the config's markers hold the top.
     this.playheadLabel = document.createElement('span');
     this.playheadLabel.style.cssText =
-      'position:absolute;top:2px;padding:0 4px;border-radius:4px;white-space:nowrap;' +
+      'position:absolute;bottom:6px;padding:0 4px;border-radius:4px;white-space:nowrap;' +
       'background:rgba(255,255,255,0.9);color:#f5222d;font:600 10px/14px -apple-system,BlinkMacSystemFont,sans-serif';
     this.playheadEl.appendChild(this.playheadLabel);
 
@@ -475,7 +485,14 @@ export class RasterRenderer {
       const dpr = window.devicePixelRatio || 1;
       ctx.save();
       ctx.scale(dpr, dpr);
-      drawEventMarks(ctx, view, plotRect.width, plotRect.height, this.events);
+      this.labelBoxes = drawEventMarks(
+        ctx,
+        view,
+        plotRect.width,
+        plotRect.height,
+        this.events,
+        this.hoveredEvents
+      );
       ctx.restore();
     }
     const pop = highlight && this.pops.find((p) => p.name === highlight.name && p.visible);
@@ -566,13 +583,14 @@ export class RasterRenderer {
   private handleHover(info: HoverInfo | null) {
     if (!info) {
       this.tooltipEl.style.display = 'none';
+      this.setHoveredEvents([]);
       return;
     }
 
     // Along the strips at the top and bottom, the timings read before the spikes.
     const inStrips =
       info.pixelY <= this.plotRect.y + EVENT_TOP_ZONE_PX ||
-      info.pixelY >= this.plotRect.y + this.plotRect.height - EVENT_STRIP_PX - 5;
+      info.pixelY >= this.plotRect.y + this.plotRect.height - EVENT_BOTTOM_ZONE_PX;
     if (inStrips && this.showEventsAt(info)) return;
 
     const nearest = this.findNearestPoint(info.dataX, info.dataY);
@@ -599,6 +617,16 @@ export class RasterRenderer {
     this.tooltipEl.style.display = 'block';
     this.tooltipEl.textContent = `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
     this.placeTooltip(info);
+    this.setHoveredEvents([]);
+  }
+
+  private setHoveredEvents(events: readonly TimelineEvent[]) {
+    const same =
+      events.length === this.hoveredEvents.length &&
+      events.every((e, i) => e === this.hoveredEvents[i]);
+    if (same) return;
+    this.hoveredEvents = events;
+    this.drawHighlight();
   }
 
   /**
@@ -606,18 +634,29 @@ export class RasterRenderer {
    * stimulus anywhere over its band, a synaptic change near its rule, a
    * recording on its strip along the bottom.
    */
+  /**
+   * What the config marks under the pointer: a stimulus by its marker or name
+   * along the top, a recording by its marker along the bottom, a synaptic
+   * change anywhere along its rule. Their windows show while it is there.
+   */
   private showEventsAt(info: HoverInfo): boolean {
     const { view, plotRect } = this;
-    const msPerPx = (view.xMax - view.xMin) / Math.max(1, plotRect.width);
-    const nearBottom = info.pixelY >= plotRect.y + plotRect.height - 8;
-    const t = info.dataX;
+    const x = info.pixelX - plotRect.x;
+    const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
+    const inTop = info.pixelY <= plotRect.y + EVENT_TOP_ZONE_PX;
+    const inBottom = info.pixelY >= plotRect.y + plotRect.height - EVENT_BOTTOM_ZONE_PX;
+    const named = inTop
+      ? this.labelBoxes.filter((b) => x >= b.x && x <= b.x + b.width).map((b) => b.event)
+      : [];
     const under = this.events.filter((e) => {
-      if (e.kind === 'manipulation' || e.end === undefined) {
-        return Math.abs(t - e.start) <= 4 * msPerPx;
-      }
-      if (e.kind === 'recording' && !nearBottom) return false;
-      return t >= e.start - 2 * msPerPx && t <= e.end + 2 * msPerPx;
+      if (named.includes(e)) return true;
+      const near = Math.abs(x - xAt(e.start)) <= (e.kind === 'manipulation' ? 4 : EVENT_HIT_PX);
+      if (!near) return false;
+      if (e.kind === 'stimulus') return inTop;
+      if (e.kind === 'recording') return inBottom;
+      return true;
     });
+    this.setHoveredEvents(under);
     if (under.length === 0) {
       this.tooltipEl.style.display = 'none';
       return false;

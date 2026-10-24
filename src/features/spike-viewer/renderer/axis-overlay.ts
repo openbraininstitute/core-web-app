@@ -192,7 +192,7 @@ export class AxisOverlay {
     });
   }
 
-  /** Behind the spikes: a pale band over each stimulus, a dashed rule from each synaptic change. */
+  /** Behind the spikes: a dashed rule from each synaptic change's onset. */
   private drawEvents(
     ctx: CanvasRenderingContext2D,
     bounds: ViewBounds,
@@ -205,12 +205,6 @@ export class AxisOverlay {
     ctx.beginPath();
     ctx.rect(rect.x, rect.y, rect.width, rect.height);
     ctx.clip();
-    ctx.fillStyle = TIMELINE_COLORS.stimulusBand;
-    for (const e of events) {
-      if (e.kind !== 'stimulus') continue;
-      const x = xAt(e.start);
-      ctx.fillRect(x, rect.y, Math.max(1, xAt(e.end ?? e.start) - x), rect.height);
-    }
     ctx.strokeStyle = TIMELINE_COLORS.manipulation;
     ctx.lineWidth = 1.5;
     ctx.setLineDash([4, 3]);
@@ -289,66 +283,100 @@ function fitted(ctx: CanvasRenderingContext2D, text: string, width: number): str
   return `${text.slice(0, end)}…`;
 }
 
-/** How tall the strips along the plot's top and bottom are, which a hover there reads first. */
-export const EVENT_STRIP_PX = 3;
-/** The band along the top holding the stimuli's strips and the names. */
+/** The bands along the plot's top and bottom holding the markers, which a hover there reads first. */
 export const EVENT_TOP_ZONE_PX = 18;
+export const EVENT_BOTTOM_ZONE_PX = 10;
+/** How near a marker, sideways, a pointer has to be to read it. */
+export const EVENT_HIT_PX = 7;
+
+/** Where a name was drawn, so a hover over it reads its event as one over its marker would. */
+export type EventLabelBox = { event: TimelineEvent; x: number; width: number };
 
 /**
- * Over the spikes, on a canvas laid over the plot area alone: each stimulus's
- * strip along the top and each recording's along the bottom, a mark at the
- * top of each synaptic change's rule, and the names where they fit, on white
- * so the spikes under them do not muddle them.
+ * Over the spikes, on a canvas laid over the plot area alone: a marker at
+ * each onset - stimuli along the top, recordings along the bottom, synaptic
+ * changes atop their rules - and the names of the top ones where they fit, on
+ * white so the spikes under them do not muddle them. Only what is under the
+ * pointer shows its whole window, as a band: a stimulus lasting the whole
+ * run would otherwise tint all of it.
  */
 export function drawEventMarks(
   ctx: CanvasRenderingContext2D,
   view: ViewBounds,
   width: number,
   height: number,
-  events: readonly TimelineEvent[]
-) {
+  events: readonly TimelineEvent[],
+  hovered: readonly TimelineEvent[]
+): EventLabelBox[] {
   const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * width;
-  for (const e of events) {
-    const x = xAt(e.start);
-    const w = Math.max(2, xAt(e.end ?? e.start) - x);
+
+  for (const e of hovered) {
+    const x0 = xAt(e.start);
+    const x1 = e.end === undefined ? width : xAt(e.end);
+    const w = Math.max(2, x1 - x0);
     if (e.kind === 'stimulus') {
+      ctx.fillStyle = TIMELINE_COLORS.stimulusBand;
+      ctx.fillRect(x0, 0, w, height);
       ctx.fillStyle = TIMELINE_COLORS.stimulus;
-      ctx.fillRect(x, 0, w, EVENT_STRIP_PX);
+      ctx.fillRect(x0, 0, w, 3);
     } else if (e.kind === 'recording') {
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.14)';
+      ctx.fillRect(x0, 0, w, height);
       ctx.fillStyle = TIMELINE_COLORS.recording;
-      ctx.fillRect(x, height - EVENT_STRIP_PX, w, EVENT_STRIP_PX);
+      ctx.fillRect(x0, height - 3, w, 3);
     } else {
-      ctx.fillStyle = TIMELINE_COLORS.manipulation;
-      ctx.beginPath();
-      ctx.moveTo(x - 4, 0);
-      ctx.lineTo(x + 4, 0);
-      ctx.lineTo(x, 6);
-      ctx.closePath();
-      ctx.fill();
+      ctx.fillStyle = 'rgba(124, 58, 237, 0.07)';
+      ctx.fillRect(x0, 0, w, height);
     }
   }
 
-  // Names left to right, each only where it fits and clears the one before.
+  const triangle = (x: number, y: number, down: boolean, color: string) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(x - 4.5, y);
+    ctx.lineTo(x + 4.5, y);
+    ctx.lineTo(x, down ? y + 7 : y - 7);
+    ctx.closePath();
+    ctx.fill();
+  };
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1;
+  for (const e of events) {
+    const x = xAt(e.start);
+    if (x < -5 || x > width + 5) continue;
+    if (e.kind === 'recording') triangle(x, height, false, TIMELINE_COLORS.recording);
+    else
+      triangle(
+        x,
+        0,
+        true,
+        e.kind === 'stimulus' ? TIMELINE_COLORS.stimulus : TIMELINE_COLORS.manipulation
+      );
+  }
+
+  // Names of the top markers, left to right, each only where it fits before
+  // the next marker and clears the name before it.
   ctx.font = '600 10px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
+  const top = events.filter((e) => e.kind !== 'recording');
+  const boxes: EventLabelBox[] = [];
   let clear = Number.NEGATIVE_INFINITY;
-  for (const e of events) {
-    if (e.kind === 'recording') continue;
-    const x = xAt(e.start) + (e.kind === 'manipulation' ? 5 : 3);
+  top.forEach((e, i) => {
+    const x = xAt(e.start) + 6;
+    const next = top.slice(i + 1).find((later) => xAt(later.start) > x - 6);
+    const room = (next ? xAt(next.start) - 6 : width) - x;
     const textWidth = ctx.measureText(e.name).width;
-    const room =
-      e.kind === 'stimulus' && e.end !== undefined
-        ? xAt(e.end) - xAt(e.start) - 6
-        : Number.POSITIVE_INFINITY;
-    if (textWidth + 6 > room || x < clear || x + textWidth + 6 > width) continue;
+    if (x < clear || x < 0 || textWidth + 6 > room) return;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
     ctx.beginPath();
-    ctx.roundRect(x, 6, textWidth + 6, 13, 4);
+    ctx.roundRect(x, 2, textWidth + 6, 13, 4);
     ctx.fill();
     ctx.fillStyle =
       e.kind === 'stimulus' ? TIMELINE_COLORS.stimulusText : TIMELINE_COLORS.manipulation;
-    ctx.fillText(e.name, x + 3, 12.5);
+    ctx.fillText(e.name, x + 3, 8.5);
+    boxes.push({ event: e, x, width: textWidth + 6 });
     clear = x + textWidth + 12;
-  }
+  });
+  return boxes;
 }
