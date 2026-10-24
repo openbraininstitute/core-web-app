@@ -69,7 +69,7 @@ export function TaskIOFileGroup({
               : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5'
           )}
         >
-          {count} {count === 1 ? 'file' : 'files'}
+          {count}
           <RiArrowDownSLine
             className={classNames('size-4 transition-transform', expanded && 'rotate-180')}
           />
