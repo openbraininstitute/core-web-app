@@ -1,12 +1,16 @@
 import { sortBy } from 'es-toolkit/compat';
-import { useAtomValue } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useEffect, useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
-import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
+import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
+import {
+  TaskIOFileItem,
+  taskIOFileName,
+} from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
   ActivityCustomFileRenderer,
@@ -27,6 +31,9 @@ import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
 import type { WorkspaceContext } from '@/types/common';
+
+/** Which of the groups are open: kept as the simulation on show changes. */
+const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
 
 type SimulationFilesProps = {
   simulation: ISimulation;
@@ -144,31 +151,57 @@ export function SimulationFiles({
     onSelect,
   });
 
+  // The circuit's files, the simulation's and its result's, each as one pill that opens to list them.
+  const [open, setOpen] = useAtom(openGroupsAtom);
+  const isSelected = (file: TAssetBackedFile) =>
+    file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath;
+  const rows = (files: TAssetBackedFile[]) =>
+    files.map((file) => (
+      <TaskIOFileItem
+        id={file.id ?? file.asset.id}
+        selected={isSelected(file)}
+        key={file.id ?? file.asset.id}
+        file={file}
+        name={file.name}
+        onSelect={onSelect}
+      />
+    ));
+  const group = (key: keyof typeof open, title: string, files: TAssetBackedFile[]) => {
+    const selected = files.find(isSelected);
+    return (
+      files.length > 0 && (
+        <TaskIOFileGroup
+          key={key}
+          title={title}
+          count={files.length}
+          selectedName={selected && taskIOFileName(selected, selected.name)}
+          expanded={open[key]}
+          onToggle={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
+        >
+          {rows(files)}
+        </TaskIOFileGroup>
+      )
+    );
+  };
+  // The model's files are the circuit's, not the simulation's.
+  const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
+
   return (
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
-      inputItems={inputFilesWithLogs.map((file) => (
-        <TaskIOFileItem
-          id={file.id ?? file.asset.id}
-          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
-          key={file.id ?? file.asset.id}
-          file={file}
-          name={file.name}
-          onSelect={onSelect}
-        />
-      ))}
-      outputItems={outputFilesWithLogs.map((file) => (
-        <TaskIOFileItem
-          id={file.id ?? file.asset.id}
-          selected={file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath}
-          key={file.id ?? file.asset.id}
-          file={file}
-          name={file.name}
-          onSelect={onSelect}
-        />
-      ))}
+      inputItems={
+        <>
+          {group('circuit', 'Circuit', inputFilesWithLogs.filter(isCircuitFile))}
+          {group(
+            'simulation',
+            'Simulation',
+            inputFilesWithLogs.filter((file) => !isCircuitFile(file))
+          )}
+        </>
+      }
+      outputItems={group('result', 'Simulation Result', outputFilesWithLogs)}
     />
   );
 }
