@@ -26,11 +26,22 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import { FileViewer, isSpikeFile } from '@/features/scan-config/components/file-viewer';
-import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
+import {
+  FileViewer,
+  hasStatistics,
+  isSpikeFile,
+} from '@/features/scan-config/components/file-viewer';
+import {
+  SimulationFiles,
+  useSimulationResultFiles,
+} from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
+import {
+  byReportKind,
+  ReportPicker,
+} from '@/features/scan-config/use-cases/simulations/report-picker';
 import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulations/scan-parameter-picker';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
@@ -238,6 +249,25 @@ export default function SimulationsTab({
   } = useLowCredits({ context, subject: 'run the simulation' });
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
+
+  // The result's reports with statistics, to switch between from the bar over
+  // the open panel; an input's spikes on show among them.
+  const [, resultFiles] = useSimulationResultFiles(
+    activeSimulation?.id ?? '',
+    context,
+    !!activeSimulationExecStatus &&
+      [ActivityStatus.ERROR, ActivityStatus.DONE].includes(activeSimulationExecStatus)
+  );
+  const shownReport =
+    selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile)
+      ? selectedFile
+      : undefined;
+  const reportFiles = useMemo(() => {
+    const reports = resultFiles.filter((f) => hasStatistics(f)).sort(byReportKind);
+    return shownReport && !reports.some((f) => f.asset.id === shownReport.asset.id)
+      ? [shownReport, ...reports]
+      : reports;
+  }, [resultFiles, shownReport]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
@@ -427,6 +457,13 @@ export default function SimulationsTab({
     <>
       <SimulationsResultsUiAdapter
         simulationPicker={simulationPicker}
+        reportPicker={
+          <ReportPicker
+            files={reportFiles}
+            selectedAssetId={shownReport?.asset.id}
+            onSelect={act.onSelectedFileChange}
+          />
+        }
         // The campaign's statistics compare its spikes, so only a spike file offers them.
         campaignStatistics={
           campaign !== null &&

@@ -59,6 +59,8 @@ type Props = {
   right: ReactNode;
   /** Picks the simulation by its scan parameters, where the list is out of view. */
   simulationPicker?: ReactNode;
+  /** Beside it, switches between the simulation's reports, where the files column is out of view. */
+  reportPicker?: ReactNode;
   /** Offers the side panel's campaign statistics, for a campaign of more than one simulation. */
   campaignStatistics?: boolean;
 };
@@ -82,13 +84,19 @@ export function SimulationsResultsUiAdapter({
   middle,
   right,
   simulationPicker,
+  reportPicker,
   campaignStatistics,
 }: Props) {
   return (
     <ResultsLayout
       campaignId={campaignId}
       // With a side panel up the list is out of view, so the bar over it picks the simulation.
-      sidePanelBar={simulationPicker}
+      sidePanelBar={
+        <div className="flex min-w-0 items-center gap-2">
+          {simulationPicker}
+          {reportPicker}
+        </div>
+      }
       campaignStatistics={campaignStatistics}
       left={
         <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">

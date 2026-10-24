@@ -70,6 +70,11 @@ export function isVoltageReportFile(file: TAssetBackedFile): boolean {
   );
 }
 
+/** A file whose statistics open beside it in a results layout: spikes, or a voltage report. */
+export function hasStatistics(file: TAssetBackedFile): boolean {
+  return isSpikeFile(file) || isVoltageReportFile(file);
+}
+
 /**
  * The viewer a file's content type calls for.
  *

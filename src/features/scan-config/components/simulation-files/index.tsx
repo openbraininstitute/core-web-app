@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { isSpikeFile, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import { hasStatistics } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
@@ -58,7 +58,11 @@ export function SimulationFiles({
   const outputAvailable =
     !!execStatus && [ActivityStatus.ERROR, ActivityStatus.DONE].includes(execStatus);
 
-  const [outputLoading, outputFiles] = useOutputFiles(simulation, context, outputAvailable);
+  const [outputLoading, outputFiles] = useSimulationResultFiles(
+    simulation.id,
+    context,
+    outputAvailable
+  );
 
   const logStreamFiles = useMemo(
     () =>
@@ -161,11 +165,7 @@ export function SimulationFiles({
   const sidePanel = useResultsSidePanel();
   const select = (file: TActivityCustomFile) => {
     onSelect(file);
-    if (
-      circuitFiles.length > 0 &&
-      isAssetBackedFile(file) &&
-      (isSpikeFile(file) || isVoltageReportFile(file))
-    ) {
+    if (circuitFiles.length > 0 && isAssetBackedFile(file) && hasStatistics(file)) {
       sidePanel?.setOpen(true);
     }
   };
@@ -255,13 +255,14 @@ function useInputFiles(
   return [isLoading, inputFiles];
 }
 
-function useOutputFiles(
-  simulation: ISimulation,
+/** A simulation's result files, once it has run: whether they are loading, and the files. */
+export function useSimulationResultFiles(
+  simulationId: string,
   context: WorkspaceContext,
   enabled: boolean
 ): [boolean, TAssetBackedFile[]] {
   const simResultAtom = simResultBySimIdAtomFamily({
-    simulationId: simulation.id,
+    simulationId,
     context,
     enabled,
   });
