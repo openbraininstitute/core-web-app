@@ -4,7 +4,7 @@ import { Modal } from 'antd';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-import { RiCheckLine, RiPulseLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
+import { RiCheckLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -16,7 +16,7 @@ import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filte
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
-import { PILL_CLASS, PILL_PRESSED_CLASS } from '@/ui/molecules/select/pill-select';
+import { PILL_CLASS, PillToggle } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -624,22 +624,20 @@ export function NodesGrid({
             )}
           </span>
           {headerExtra}
-          {quickFilters?.map((quick) => {
-            const on = isOn(quick);
-            return (
-              <button
-                key={quick.label}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggleQuickFilter(quick)}
-                title={quick.title}
-                className={cn(PILL_CLASS, on && PILL_PRESSED_CLASS)}
-              >
-                <RiPulseLine className="size-4" />
-                {quick.label}
-              </button>
-            );
-          })}
+          {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
+          {quickFilters?.map((quick) => (
+            <PillToggle
+              key={quick.label}
+              value={isOn(quick)}
+              onChange={(on) => {
+                if (on !== isOn(quick)) toggleQuickFilter(quick);
+              }}
+              options={[
+                { value: false, label: 'All', title: 'Every row' },
+                { value: true, label: quick.label, title: quick.title },
+              ]}
+            />
+          ))}
           {/* Last, so the buttons before it stay put as it comes and goes. */}
           {reset && (filtering || reset.picked) && (
             <button

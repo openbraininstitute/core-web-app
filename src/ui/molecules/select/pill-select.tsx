@@ -22,8 +22,43 @@ export const PILL_CLASS = cn(
   'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
 );
 
-/** The same pill pressed, such as a filter that is on. */
-export const PILL_PRESSED_CLASS = 'bg-primary-9 text-white hover:bg-primary-8';
+/**
+ * Two or more choices on one pill, the chosen one filled: a switch with the
+ * dropdowns' look, such as All | Spiking.
+ */
+export function PillToggle<Value extends string | boolean>({
+  options,
+  value,
+  onChange,
+  className,
+}: {
+  options: { value: Value; label: string; title?: string }[];
+  value: Value;
+  onChange: (value: Value) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn(PILL_CLASS, 'shrink-0 gap-0.5 p-1 hover:bg-white', className)}>
+      {options.map((option) => (
+        <button
+          key={String(option.value)}
+          type="button"
+          aria-pressed={value === option.value}
+          title={option.title}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            'h-full cursor-pointer rounded-full px-3 transition-colors',
+            value === option.value
+              ? 'bg-primary-9 text-white'
+              : 'text-primary-9 hover:bg-neutral-100'
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** A labelled pill select: the muted label, then what is chosen, on a raised white pill. */
 export function PillSelect({

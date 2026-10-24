@@ -76,7 +76,7 @@ export function ReportStatisticsPanel({
     return spikes
       ? [
           {
-            label: 'Spiking neurons',
+            label: 'Spiking',
             title: 'Only the cells whose voltage crossed −20 mV',
             model: { [spikes.column]: { filterType: 'number', type: 'greaterThan', filter: '0' } },
           },

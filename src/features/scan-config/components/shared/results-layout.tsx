@@ -17,7 +17,7 @@ import {
   PaneSideResizeHandle,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
-import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { PillToggle } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -247,28 +247,18 @@ export function ResultsLayout({
         {sidePanelReport}
         {/* What the statistics are over: the simulation on show, or the whole campaign. */}
         {campaignStatistics && (
-          <div className={cn(PILL_CLASS, 'shrink-0 gap-0.5 p-1 hover:bg-white')}>
-            {[
-              { on: false, label: 'Simulation', title: 'The statistics of the simulation on show' },
-              { on: true, label: 'Campaign', title: 'The statistics across the campaign' },
-            ].map((choice) => (
-              <button
-                key={choice.label}
-                type="button"
-                aria-pressed={campaign === choice.on}
-                title={choice.title}
-                onClick={() => chooseCampaign(choice.on)}
-                className={cn(
-                  'h-full cursor-pointer rounded-full px-3 transition-colors',
-                  campaign === choice.on
-                    ? 'bg-primary-9 text-white'
-                    : 'text-primary-9 hover:bg-neutral-100'
-                )}
-              >
-                {choice.label}
-              </button>
-            ))}
-          </div>
+          <PillToggle
+            value={campaign}
+            onChange={chooseCampaign}
+            options={[
+              {
+                value: false,
+                label: 'Simulation',
+                title: 'The statistics of the simulation on show',
+              },
+              { value: true, label: 'Campaign', title: 'The statistics across the campaign' },
+            ]}
+          />
         )}
       </div>
       {/* The campaign's region, over the file and the panel, its height dragged by its edge */}

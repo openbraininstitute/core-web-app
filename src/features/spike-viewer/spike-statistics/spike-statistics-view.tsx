@@ -72,7 +72,7 @@ const NO_TICKS: ReadonlySet<number> = new Set();
 /** One click to the cells that fired at all. */
 const SPIKING_FILTER: readonly QuickFilter[] = [
   {
-    label: 'Spiking neurons',
+    label: 'Spiking',
     title: 'Only the cells with at least one spike',
     model: {
       [SPIKE_STATISTICS.find((s) => s.key === 'count')?.column ?? 'spikes:count']: {
