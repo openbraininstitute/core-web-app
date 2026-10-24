@@ -22,6 +22,8 @@ type Props = CustomHeaderProps & {
   onOpenChooser?: () => void;
   /** Shown over the label in place of its own text, for a short label that leaves something out. */
   tooltip?: string;
+  /** Muted after the label, small: what the values are in, where the label is too short to say. */
+  unit?: string;
 };
 
 export function ColumnHeader(props: Props) {
@@ -37,6 +39,7 @@ export function ColumnHeader(props: Props) {
     isNumeric,
     onOpenChooser,
     tooltip,
+    unit,
   } = props;
 
   const [sort, setSortState] = useState(column.getSort());
@@ -144,6 +147,7 @@ export function ColumnHeader(props: Props) {
     >
       {isNumeric && sortArrow}
       <span className={styles.labelText}>{displayName}</span>
+      {unit && <span className={styles.unit}>{unit}</span>}
       {!isNumeric && sortArrow}
     </button>
   );

@@ -56,6 +56,8 @@ export type PinnedColumn = {
   headerName: string;
   /** Shown over the header, for a short header that leaves something out. */
   headerTooltip?: string;
+  /** What the values are in, small and muted after a short header. */
+  headerUnit?: string;
   width?: number;
   /** Text for a value; `NaN` renders blank without asking. */
   format?: (value: number) => string;
@@ -274,7 +276,13 @@ function buildColumnDefs({
       field: p.name,
       headerName: p.headerName,
       headerComponent: ColumnHeader,
-      headerComponentParams: { onReset, isNumeric: true, onOpenChooser, tooltip: p.headerTooltip },
+      headerComponentParams: {
+        onReset,
+        isNumeric: true,
+        onOpenChooser,
+        tooltip: p.headerTooltip,
+        unit: p.headerUnit,
+      },
       headerClass: p.compact ? [styles.pinned, styles.compact] : styles.pinned,
       sortable: true,
       resizable: true,

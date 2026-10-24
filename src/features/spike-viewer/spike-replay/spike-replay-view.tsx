@@ -103,7 +103,7 @@ interface SpikeReplayViewProps {
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
 export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
-  const { simulationPicker, campaign: campaignInfo, run } = useSimulation();
+  const { simulationPicker, campaign: campaignInfo, run, timeline } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
@@ -123,6 +123,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const containerRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
   const liveTimeRef = useRef(data.timeRange.min);
+  // The scrubber under the raster's axis, moved like the playhead: every frame.
+  const scrubberRef = useRef<((timeInMs: number) => void) | null>(null);
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
@@ -348,8 +350,20 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     to: number;
     key: number;
   }>();
-  const requestTimeWindow = (from: number, to: number) =>
+  // A typed span applies at once, ahead of the raster's settled report of it,
+  // so a second field committed straight after builds on it.
+  const requestTimeWindow = (from: number, to: number) => {
     setTimeWindowRequest((previous) => ({ from, to, key: (previous?.key ?? 0) + 1 }));
+    if (populationName) {
+      setRasterWindow((previous) => ({
+        population: populationName,
+        window: {
+          time: [from, to],
+          rows: previous?.population === populationName ? previous.window.rows : null,
+        },
+      }));
+    }
+  };
 
   // Waits for a replay that works, so the last step never points at a disabled play button.
   useNextStepOnboarding({ condition: replayable && showScene, tour: spikeReplayTour });
@@ -394,6 +408,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const handleTimeChange = useCallback((timeInMs: number) => {
     liveTimeRef.current = timeInMs;
     playheadRef.current?.(timeInMs);
+    scrubberRef.current?.(timeInMs);
     setSceneLive(true);
     if (timeInMs >= playEndRef.current) setPlaying(false);
   }, []);
@@ -425,6 +440,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       setReadoutTimeInMs(timeInMs);
       liveTimeRef.current = timeInMs;
       playheadRef.current?.(timeInMs);
+      scrubberRef.current?.(timeInMs);
     },
     [timeMinInMs, timeMaxInMs]
   );
@@ -667,6 +683,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 windowResetKey={windowResetKey}
                 onTimeAxisChange={setTimeAxis}
                 timeWindowRequest={timeWindowRequest}
+                events={timeline}
               />
               {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and
@@ -749,7 +766,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               populationName={populationName}
               cellCount={cellCount}
               run={run}
-              cells={shownCells ?? null}
+              cells={sceneCells ?? null}
+              timeWindow={currentWindow?.time ?? null}
             />,
             sidePanel.campaignTarget
           )}
@@ -763,6 +781,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               setPlaying(next);
             }}
             axis={isSplit ? timeAxis : null}
+            clock={{ timeRef: liveTimeRef, moveRef: scrubberRef }}
             timeInMs={readoutTimeInMs}
             timeMinInMs={data.timeRange.min}
             timeMaxInMs={data.timeRange.max}

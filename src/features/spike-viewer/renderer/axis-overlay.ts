@@ -1,3 +1,5 @@
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
+
 export type ViewBounds = {
   xMin: number;
   xMax: number;
@@ -26,6 +28,15 @@ export type RowAxis = {
   title: string;
   groups?: { label: string; start: number; end: number }[];
   valueAt?: (row: number) => string;
+};
+
+/** The config's timings: stimuli in amber, recordings in slate, synaptic changes in violet. */
+export const TIMELINE_COLORS = {
+  stimulus: '#f59e0b',
+  stimulusBand: 'rgba(245, 158, 11, 0.1)',
+  stimulusText: '#b45309',
+  recording: '#94a3b8',
+  manipulation: '#7c3aed',
 };
 
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
@@ -69,7 +80,12 @@ export class AxisOverlay {
     this.ctx = ctx;
   }
 
-  draw(bounds: ViewBounds, plotRect: PlotRect, rows?: RowAxis) {
+  draw(
+    bounds: ViewBounds,
+    plotRect: PlotRect,
+    rows?: RowAxis,
+    events: readonly TimelineEvent[] = []
+  ) {
     const ctx = this.ctx;
     const dpr = window.devicePixelRatio || 1;
 
@@ -84,6 +100,7 @@ export class AxisOverlay {
 
     this.drawBackground(ctx, plotRect);
     this.drawGrid(ctx, bounds, plotRect, xTicks);
+    if (events.length > 0) this.drawEvents(ctx, bounds, plotRect, events);
     this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks, rows);
     // Groups label the axis all along, where the title would sit on them.
     this.drawAxisTitles(ctx, plotRect, rows?.groups ? null : (rows?.title ?? 'Neuron ID'));
@@ -175,6 +192,39 @@ export class AxisOverlay {
     });
   }
 
+  /** Behind the spikes: a pale band over each stimulus, a dashed rule from each synaptic change. */
+  private drawEvents(
+    ctx: CanvasRenderingContext2D,
+    bounds: ViewBounds,
+    rect: PlotRect,
+    events: readonly TimelineEvent[]
+  ) {
+    const xAt = (t: number) =>
+      rect.x + ((t - bounds.xMin) / (bounds.xMax - bounds.xMin)) * rect.width;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(rect.x, rect.y, rect.width, rect.height);
+    ctx.clip();
+    ctx.fillStyle = TIMELINE_COLORS.stimulusBand;
+    for (const e of events) {
+      if (e.kind !== 'stimulus') continue;
+      const x = xAt(e.start);
+      ctx.fillRect(x, rect.y, Math.max(1, xAt(e.end ?? e.start) - x), rect.height);
+    }
+    ctx.strokeStyle = TIMELINE_COLORS.manipulation;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    for (const e of events) {
+      if (e.kind !== 'manipulation') continue;
+      const px = Math.round(xAt(e.start)) + 0.5;
+      ctx.moveTo(px, rect.y);
+      ctx.lineTo(px, rect.y + rect.height);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   /** A rule between groups of rows, and each group's label beside its middle where it fits. */
   private drawGroups(
     ctx: CanvasRenderingContext2D,
@@ -237,4 +287,68 @@ function fitted(ctx: CanvasRenderingContext2D, text: string, width: number): str
   let end = text.length;
   while (end > 1 && ctx.measureText(`${text.slice(0, end)}…`).width > width) end -= 1;
   return `${text.slice(0, end)}…`;
+}
+
+/** How tall the strips along the plot's top and bottom are, which a hover there reads first. */
+export const EVENT_STRIP_PX = 3;
+/** The band along the top holding the stimuli's strips and the names. */
+export const EVENT_TOP_ZONE_PX = 18;
+
+/**
+ * Over the spikes, on a canvas laid over the plot area alone: each stimulus's
+ * strip along the top and each recording's along the bottom, a mark at the
+ * top of each synaptic change's rule, and the names where they fit, on white
+ * so the spikes under them do not muddle them.
+ */
+export function drawEventMarks(
+  ctx: CanvasRenderingContext2D,
+  view: ViewBounds,
+  width: number,
+  height: number,
+  events: readonly TimelineEvent[]
+) {
+  const xAt = (t: number) => ((t - view.xMin) / (view.xMax - view.xMin)) * width;
+  for (const e of events) {
+    const x = xAt(e.start);
+    const w = Math.max(2, xAt(e.end ?? e.start) - x);
+    if (e.kind === 'stimulus') {
+      ctx.fillStyle = TIMELINE_COLORS.stimulus;
+      ctx.fillRect(x, 0, w, EVENT_STRIP_PX);
+    } else if (e.kind === 'recording') {
+      ctx.fillStyle = TIMELINE_COLORS.recording;
+      ctx.fillRect(x, height - EVENT_STRIP_PX, w, EVENT_STRIP_PX);
+    } else {
+      ctx.fillStyle = TIMELINE_COLORS.manipulation;
+      ctx.beginPath();
+      ctx.moveTo(x - 4, 0);
+      ctx.lineTo(x + 4, 0);
+      ctx.lineTo(x, 6);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Names left to right, each only where it fits and clears the one before.
+  ctx.font = '600 10px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  let clear = Number.NEGATIVE_INFINITY;
+  for (const e of events) {
+    if (e.kind === 'recording') continue;
+    const x = xAt(e.start) + (e.kind === 'manipulation' ? 5 : 3);
+    const textWidth = ctx.measureText(e.name).width;
+    const room =
+      e.kind === 'stimulus' && e.end !== undefined
+        ? xAt(e.end) - xAt(e.start) - 6
+        : Number.POSITIVE_INFINITY;
+    if (textWidth + 6 > room || x < clear || x + textWidth + 6 > width) continue;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
+    ctx.beginPath();
+    ctx.roundRect(x, 6, textWidth + 6, 13, 4);
+    ctx.fill();
+    ctx.fillStyle =
+      e.kind === 'stimulus' ? TIMELINE_COLORS.stimulusText : TIMELINE_COLORS.manipulation;
+    ctx.fillText(e.name, x + 3, 12.5);
+    clear = x + textWidth + 12;
+  }
 }

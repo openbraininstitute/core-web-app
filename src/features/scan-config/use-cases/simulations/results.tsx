@@ -35,6 +35,7 @@ import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulation
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
+import { configTimeline } from '@/features/spike-viewer/config-timeline';
 import { SimulationProvider } from '@/features/spike-viewer/simulation-context';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
@@ -137,6 +138,9 @@ export default function SimulationsTab({
     },
     enabled: !!activeSimulation && !!simConfigAsset,
   });
+
+  // What happens when in the simulation, for the spike raster to mark.
+  const timeline = useMemo(() => configTimeline(simConfig), [simConfig]);
 
   // The simulation's node sets file: the config's neuron sets resolved, which
   // the output viewers list cells by, beside the circuit's own node sets.
@@ -463,6 +467,7 @@ export default function SimulationsTab({
                   neuronSets={neuronSets}
                   simulationPicker={simulationPicker}
                   campaign={campaign}
+                  timeline={timeline}
                 >
                   <FileViewer
                     file={selectedFile}

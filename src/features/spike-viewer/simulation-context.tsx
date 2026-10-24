@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
 
 /**
@@ -33,7 +34,11 @@ type SimulationContextValue = {
   /** Picks which of the campaign's simulations is on show, for a viewer's header. */
   simulationPicker: ReactNode;
   campaign: SimulationCampaign | null;
+  /** When the simulation's stimuli, recordings and synaptic changes happen, from its config. */
+  timeline: readonly TimelineEvent[];
 };
+
+const NO_TIMELINE: readonly TimelineEvent[] = [];
 
 /**
  * What the campaign knows about the simulation a file came from, made available
@@ -55,6 +60,7 @@ const SimulationContext = createContext<SimulationContextValue>({
   neuronSets: null,
   simulationPicker: null,
   campaign: null,
+  timeline: NO_TIMELINE,
 });
 
 export function SimulationProvider({
@@ -63,6 +69,7 @@ export function SimulationProvider({
   neuronSets,
   simulationPicker = null,
   campaign = null,
+  timeline = NO_TIMELINE,
   children,
 }: {
   model: TSupportedEntitiesForScanConfiguration | null | undefined;
@@ -70,6 +77,7 @@ export function SimulationProvider({
   neuronSets?: SimulationNeuronSets | null;
   simulationPicker?: ReactNode;
   campaign?: SimulationCampaign | null;
+  timeline?: readonly TimelineEvent[];
   children: ReactNode;
 }) {
   const value = useMemo(
@@ -79,8 +87,9 @@ export function SimulationProvider({
       neuronSets: neuronSets ?? null,
       simulationPicker,
       campaign,
+      timeline,
     }),
-    [model, run, neuronSets, simulationPicker, campaign]
+    [model, run, neuronSets, simulationPicker, campaign, timeline]
   );
 
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;

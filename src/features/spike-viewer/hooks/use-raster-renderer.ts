@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
   CellColors,
   RasterWindow,
@@ -32,7 +33,11 @@ export type RasterRendererOptions = {
   windowResetKey?: number;
   /** Zooms the time axis to a span, whenever a new one is asked for. */
   timeWindowRequest?: { from: number; to: number; key: number };
+  /** The simulation config's timings, drawn behind the spikes. */
+  events?: readonly TimelineEvent[];
 };
+
+const NO_EVENTS: readonly TimelineEvent[] = [];
 
 export function useRasterRenderer(
   containerRef: React.RefObject<HTMLDivElement | null>,
@@ -48,6 +53,7 @@ export function useRasterRenderer(
     onTimeAxisChange,
     windowResetKey,
     timeWindowRequest,
+    events = NO_EVENTS,
   }: RasterRendererOptions
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
@@ -121,6 +127,10 @@ export function useRasterRenderer(
   useEffect(() => {
     if (windowResetKey) rendererRef.current?.resetView();
   }, [windowResetKey]);
+
+  useEffect(() => {
+    rendererRef.current?.setEvents(events);
+  }, [events]);
 
   useEffect(() => {
     if (timeWindowRequest) {

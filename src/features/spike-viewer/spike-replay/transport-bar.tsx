@@ -4,9 +4,9 @@ import { SettingOutlined } from '@ant-design/icons';
 import { RiPauseFill, RiPlayFill, RiRestartLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
+import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
@@ -50,6 +50,11 @@ interface TransportBarProps {
    * raster's own controls.
    */
   axis?: TimeAxis | null;
+  /** For the scrubber under the axis: the replay's clock, and where the replay moves its thumb from. */
+  clock?: {
+    timeRef: React.RefObject<number>;
+    moveRef: React.RefObject<((timeInMs: number) => void) | null>;
+  };
 }
 
 /** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
@@ -66,12 +71,13 @@ export function TransportBar({
   onAfterglowChange,
   disabled = false,
   axis = null,
+  clock,
 }: TransportBarProps) {
   const duration = timeMaxInMs - timeMinInMs;
   // Sub-millisecond steps: a 20 ms recording would otherwise scrub in 5% jumps.
   const step = Math.max(duration / 1000, 1e-3);
 
-  if (axis) {
+  if (axis && clock) {
     return (
       <div id="spike-replay-transport" className="border-t border-neutral-200 px-3">
         {/* The raster's own frame: its container starts at this inset too. */}
@@ -91,19 +97,15 @@ export function TransportBar({
               {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
             </Button>
           </div>
-          <Slider
-            className={cn('!absolute !m-0 top-1/2 -translate-y-1/2')}
-            style={{ left: axis.left, width: axis.right - axis.left }}
-            value={Math.min(axis.to, Math.max(axis.from, timeInMs))}
-            min={axis.from}
-            max={axis.to}
-            step={Math.max((axis.to - axis.from) / 1000, 1e-3)}
+          <Scrubber
+            from={axis.from}
+            to={axis.to}
+            left={axis.left}
+            right={axis.right}
             disabled={disabled}
-            onChange={onSeek}
-            tooltip={{
-              formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
-              getPopupContainer: fullscreenPopupContainer,
-            }}
+            timeRef={clock.timeRef}
+            moveRef={clock.moveRef}
+            onSeek={onSeek}
           />
         </div>
       </div>

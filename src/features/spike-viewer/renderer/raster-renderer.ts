@@ -1,7 +1,14 @@
-import { AxisOverlay, MARGIN } from '@/features/spike-viewer/renderer/axis-overlay';
+import {
+  AxisOverlay,
+  drawEventMarks,
+  EVENT_STRIP_PX,
+  EVENT_TOP_ZONE_PX,
+  MARGIN,
+} from '@/features/spike-viewer/renderer/axis-overlay';
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
 
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { PlotRect, RowAxis, ViewBounds } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { HoverInfo } from '@/features/spike-viewer/renderer/interaction';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
@@ -98,6 +105,7 @@ export class RasterRenderer {
   private timeAxisHandler: ((axis: TimeAxis) => void) | null = null;
   private lastTimeAxis = '';
   private playheadLabel: HTMLSpanElement;
+  private events: readonly TimelineEvent[] = [];
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -143,7 +151,7 @@ export class RasterRenderer {
     this.tooltipEl.style.cssText =
       'position:absolute;pointer-events:none;display:none;' +
       'background:rgba(0,0,0,0.8);color:#fff;padding:4px 8px;border-radius:4px;' +
-      'font:11px -apple-system,BlinkMacSystemFont,sans-serif;white-space:nowrap;z-index:10';
+      'font:11px -apple-system,BlinkMacSystemFont,sans-serif;white-space:pre;z-index:10';
     container.appendChild(this.tooltipEl);
 
     this.webgl = new WebGLPoints(this.glCanvas);
@@ -251,6 +259,12 @@ export class RasterRenderer {
     const count = order ? order.cellAtRow.length : this.dataBounds.yMax + 1;
     if (row < 0 || row >= count) return;
     handler(order ? order.cellAtRow[row] : row);
+  }
+
+  /** The simulation config's timings, drawn behind the spikes and named on hover. */
+  setEvents(events: readonly TimelineEvent[]) {
+    this.events = events;
+    this.scheduleRender();
   }
 
   /** Point out one cell of a population, by node id, or none. */
@@ -428,19 +442,29 @@ export class RasterRenderer {
     const visible = this.pops.find((p) => p.visible);
     const rows =
       visible && this.rowOrder?.name === visible.name ? this.rowOrder.order.axis : undefined;
-    this.axis.draw(this.view, this.plotRect, rows);
+    this.axis.draw(this.view, this.plotRect, rows, this.events);
     this.positionPlayhead();
     this.drawHighlight();
     this.reportTimeAxis();
   }
 
-  /** The pointed-out cell: a band along its row, and its spikes over the rest. */
+  /**
+   * The layer over the spikes: the config's timings, then the pointed-out
+   * cell - a band along its row, and its spikes over the rest.
+   */
   private drawHighlight() {
     const ctx = this.highlightCtx;
     if (!ctx) return;
     ctx.clearRect(0, 0, this.highlightCanvas.width, this.highlightCanvas.height);
     const highlight = this.highlight;
     const { view, plotRect } = this;
+    if (this.hasData && this.events.length > 0) {
+      const dpr = window.devicePixelRatio || 1;
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      drawEventMarks(ctx, view, plotRect.width, plotRect.height, this.events);
+      ctx.restore();
+    }
     const pop = highlight && this.pops.find((p) => p.name === highlight.name && p.visible);
     if (!highlight || !pop || !this.hasData) return;
 
@@ -532,9 +556,15 @@ export class RasterRenderer {
       return;
     }
 
+    // Along the strips at the top and bottom, the timings read before the spikes.
+    const inStrips =
+      info.pixelY <= this.plotRect.y + EVENT_TOP_ZONE_PX ||
+      info.pixelY >= this.plotRect.y + this.plotRect.height - EVENT_STRIP_PX - 5;
+    if (inStrips && this.showEventsAt(info)) return;
+
     const nearest = this.findNearestPoint(info.dataX, info.dataY);
     if (!nearest) {
-      this.tooltipEl.style.display = 'none';
+      this.showEventsAt(info);
       return;
     }
 
@@ -549,13 +579,53 @@ export class RasterRenderer {
     const dist = Math.hypot(info.pixelX - pxX, info.pixelY - pxY);
 
     if (dist > 20) {
-      this.tooltipEl.style.display = 'none';
+      this.showEventsAt(info);
       return;
     }
 
     this.tooltipEl.style.display = 'block';
     this.tooltipEl.textContent = `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
+    this.placeTooltip(info);
+  }
 
+  /**
+   * What the config has going on under the pointer, away from any spike: a
+   * stimulus anywhere over its band, a synaptic change near its rule, a
+   * recording on its strip along the bottom.
+   */
+  private showEventsAt(info: HoverInfo): boolean {
+    const { view, plotRect } = this;
+    const msPerPx = (view.xMax - view.xMin) / Math.max(1, plotRect.width);
+    const nearBottom = info.pixelY >= plotRect.y + plotRect.height - 8;
+    const t = info.dataX;
+    const under = this.events.filter((e) => {
+      if (e.kind === 'manipulation' || e.end === undefined) {
+        return Math.abs(t - e.start) <= 4 * msPerPx;
+      }
+      if (e.kind === 'recording' && !nearBottom) return false;
+      return t >= e.start - 2 * msPerPx && t <= e.end + 2 * msPerPx;
+    });
+    if (under.length === 0) {
+      this.tooltipEl.style.display = 'none';
+      return false;
+    }
+    const kind = { stimulus: 'Stimulus', recording: 'Recording', manipulation: 'Synaptic change' };
+    this.tooltipEl.style.display = 'block';
+    this.tooltipEl.textContent = under
+      .slice(0, 6)
+      .map((e) => {
+        const when =
+          e.end === undefined
+            ? `from ${e.start.toFixed(1)} ms`
+            : `${e.start.toFixed(1)}–${e.end.toFixed(1)} ms`;
+        return [`${kind[e.kind]} ${e.name}`, when, e.detail].filter(Boolean).join(' · ');
+      })
+      .join('\n');
+    this.placeTooltip(info);
+    return true;
+  }
+
+  private placeTooltip(info: HoverInfo) {
     // Edge-aware placement: flip when tooltip would overflow container
     const container = this.glCanvas.parentElement;
     const cw = container?.clientWidth ?? 0;

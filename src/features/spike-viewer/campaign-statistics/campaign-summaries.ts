@@ -9,11 +9,13 @@ import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/cam
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { computeSpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
+import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 import type { SpikeTraceWorkerApi } from '@/features/spike-viewer/spike-trace.worker';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
 import type { WorkspaceContext } from '@/types/common';
@@ -24,7 +26,11 @@ import type { WorkspaceContext } from '@/types/common';
  */
 export const CAMPAIGN_SPIKES_LIMIT_BYTES = 200 * 1024 * 1024;
 
-/** One simulation's population, cell by cell: what its summaries are made from. */
+/**
+ * One simulation's population, cell by cell, over the run: what its summaries
+ * are made from. Its spikes are kept too, so a span of the run can be counted
+ * again without the file.
+ */
 export type CellStatistics = {
   /** Spikes per cell, by node index. */
   counts: Uint32Array;
@@ -32,6 +38,8 @@ export type CellStatistics = {
   cvs: Float32Array;
   /** The window the counts are over. */
   seconds: number;
+  /** The population's spikes, time-sorted. */
+  spikes: SpikePopulation;
 };
 
 /** One simulation's population, summed up: what the campaign's plots compare. */
@@ -66,6 +74,8 @@ type Options = {
   run: SimulationRun | null;
   /** The cells summed up, a flag per node index, as the table picks them; null for all. */
   cells: Uint8Array | null;
+  /** The span of the run summed up, such as the raster's window, in ms; null for all of it. */
+  timeWindow: [number, number] | null;
   enabled: boolean;
 };
 
@@ -88,6 +98,7 @@ export function useCampaignSummaries({
   cellCount,
   run,
   cells,
+  timeWindow,
   enabled,
 }: Options): CampaignSummaries {
   const queryClient = useQueryClient();
@@ -171,8 +182,8 @@ export function useCampaignSummaries({
 
   const loaded = statistics?.key === key ? statistics.byId : NO_STATISTICS;
   const summaries = useMemo(
-    () => new Map([...loaded].map(([id, s]) => [id, summarize(s, cells)] as const)),
-    [loaded, cells]
+    () => new Map([...loaded].map(([id, s]) => [id, summarize(s, cells, timeWindow)] as const)),
+    [loaded, cells, timeWindow]
   );
 
   if (!files) return { state: 'resolving' };
@@ -202,8 +213,8 @@ async function spikeAssetOf(
   return asset ? { resultId, entityType: result.type as TEntityTypeDict, asset } : null;
 }
 
-function cellStatisticsOf(
-  population: Parameters<typeof computeSpikeStatistics>[0],
+export function cellStatisticsOf(
+  population: SpikePopulation | undefined,
   cellCount: number,
   window: { min: number; max: number }
 ): CellStatistics {
@@ -212,6 +223,13 @@ function cellStatisticsOf(
     counts: Uint32Array.from(count),
     cvs: Float32Array.from(isiCv),
     seconds: (window.max - window.min) / 1000,
+    // Copies, so the rest of the file's buffers can go.
+    spikes: {
+      name: population?.name ?? '',
+      nodeIds: population ? population.nodeIds.slice() : new Float64Array(0),
+      timestamps: population ? population.timestamps.slice() : new Float32Array(0),
+      nodeIdRange: population?.nodeIdRange ?? { min: 0, max: 0 },
+    },
   };
 }
 
@@ -222,9 +240,28 @@ const NO_SUMMARY: SimulationSummary = {
   meanCv: Number.NaN,
 };
 
-/** A simulation's summary over the cells flagged in `cells`, or over all of them. */
+/**
+ * A simulation's summary over the cells flagged in `cells`, or over all of
+ * them, and over `timeWindow` of the run, counted again from its spikes, or
+ * over all of it.
+ */
 export function summarize(
-  { counts, cvs, seconds }: CellStatistics,
+  statistics: CellStatistics,
+  cells: Uint8Array | null,
+  timeWindow: [number, number] | null = null
+): SimulationSummary {
+  if (!timeWindow) return summarizeCells(statistics, cells);
+  const [from, to] = timeWindow;
+  const { count, isiCv } = computeSpikeStatistics(
+    spikesBetween(statistics.spikes, from, to),
+    statistics.counts.length,
+    { min: from, max: to }
+  );
+  return summarizeCells({ counts: count, cvs: isiCv, seconds: (to - from) / 1000 }, cells);
+}
+
+function summarizeCells(
+  { counts, cvs, seconds }: { counts: ArrayLike<number>; cvs: ArrayLike<number>; seconds: number },
   cells: Uint8Array | null
 ): SimulationSummary {
   let n = 0;

@@ -70,6 +70,8 @@ type Props = {
   run: SimulationRun | null;
   /** The cells the table picks, a flag per node index; null for all. */
   cells: Uint8Array | null;
+  /** The span of the run the raster is zoomed to, in ms; null for all of it. */
+  timeWindow: [number, number] | null;
 };
 
 /**
@@ -88,6 +90,7 @@ export function CampaignStatisticsView({
   cellCount,
   run,
   cells,
+  timeWindow,
 }: Props) {
   const context = useWorkspace();
   const summaries = useCampaignSummaries({
@@ -99,6 +102,7 @@ export function CampaignStatisticsView({
     cellCount,
     run,
     cells,
+    timeWindow,
     enabled: true,
   });
   const picked = useMemo(
@@ -193,7 +197,7 @@ export function CampaignStatisticsView({
           />
         )}
         <span className="whitespace-nowrap text-xs text-neutral-400">
-          {progressText(summaries, populationName, picked, cellCount)}
+          {progressText(summaries, populationName, picked, cellCount, timeWindow)}
         </span>
       </div>
       {summaries.state === 'too-large' ? (
@@ -223,7 +227,8 @@ function progressText(
   summaries: ReturnType<typeof useCampaignSummaries>,
   populationName: string | undefined,
   picked: number | null,
-  cellCount: number | undefined
+  cellCount: number | undefined,
+  timeWindow: [number, number] | null
 ): string {
   if (summaries.state === 'loading') {
     return `Reading spikes: ${summaries.loaded} of ${summaries.total} simulations`;
@@ -233,7 +238,8 @@ function progressText(
       picked === null
         ? ''
         : ` · ${picked.toLocaleString()} of ${(cellCount ?? 0).toLocaleString()} cells`;
-    return `${summaries.total} finished ${summaries.total === 1 ? 'simulation' : 'simulations'} · ${populationName ?? ''}${of}`;
+    const span = timeWindow ? ` · ${timeWindow[0].toFixed(1)}–${timeWindow[1].toFixed(1)} ms` : '';
+    return `${summaries.total} finished ${summaries.total === 1 ? 'simulation' : 'simulations'} · ${populationName ?? ''}${of}${span}`;
   }
   return '';
 }

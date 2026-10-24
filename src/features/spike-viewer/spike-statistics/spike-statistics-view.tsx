@@ -543,6 +543,8 @@ export function SpikeStatisticsView({
       name: s.column,
       headerName: narrow ? s.short : statisticLabel(s),
       headerTooltip: narrow ? statisticLabel(s) : undefined,
+      // The full label says it in brackets; a short one carries it after.
+      headerUnit: narrow ? s.unit : undefined,
       width,
       format: width < COMPACT_VALUES_WIDTH ? compactNumber : s.format,
       compact: narrow,
