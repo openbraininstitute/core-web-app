@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { createPortal } from 'react-dom';
 
 import { TIMELINE_COLORS } from '@/features/spike-viewer/renderer/axis-overlay';
+import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -33,7 +34,7 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
       style={{
         left: clientX,
         top: clientY,
-        width: columns * 250,
+        width: columns * 262,
         maxWidth: 'calc(100vw - 32px)',
         translate: `${flipX ? 'calc(-100% - 14px)' : '14px'} ${flipY ? 'calc(-100% - 14px)' : '14px'}`,
       }}
@@ -47,13 +48,13 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
         )}
       </div>
       <div
-        className="mt-2 grid gap-x-5 gap-y-3"
+        className={cn('mt-2 grid items-start', blocks.length > 1 ? 'gap-2' : 'gap-3')}
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
       >
         {blocks.map((event, i) => (
           // The same block can stand for several onsets at once, zoomed out.
           // biome-ignore lint/suspicious/noArrayIndexKey: blocks do not reorder under one marker
-          <BlockSection key={`${event.name}-${i}`} event={event} />
+          <BlockSection key={`${event.name}-${i}`} event={event} framed={blocks.length > 1} />
         ))}
       </div>
     </div>,
@@ -61,7 +62,8 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
   );
 }
 
-function BlockSection({ event }: { event: TimelineEvent }) {
+/** A block's section; framed in grey where several share the card, so each reads as one. */
+function BlockSection({ event, framed }: { event: TimelineEvent; framed: boolean }) {
   const span =
     event.end === undefined
       ? `from ${round(event.start)} ms`
@@ -69,7 +71,12 @@ function BlockSection({ event }: { event: TimelineEvent }) {
         ? `at ${round(event.start)} ms`
         : `${round(event.start)}–${round(event.end)} ms`;
   return (
-    <section className="min-w-0">
+    <section
+      className={cn(
+        'min-w-0',
+        framed && 'rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2'
+      )}
+    >
       <div className="flex items-center gap-1.5">
         <span className="size-2 shrink-0 rounded-full" style={{ background: COLOR[event.kind] }} />
         <span className="text-primary-9 truncate text-xs font-semibold">{event.name}</span>
