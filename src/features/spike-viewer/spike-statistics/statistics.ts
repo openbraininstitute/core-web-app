@@ -202,6 +202,38 @@ export function groupValues(
     .sort((a, b) => compareGroupNames(a.name, b.name));
 }
 
+/** Cells by node index, under the name of what they share. */
+export type CellGroup = { name: string; cells: Uint32Array };
+
+/**
+ * The cells split by a node property, for their time courses to be drawn a
+ * line each. `cells` narrows it to the ones on show; null means all `rowCount`
+ * of them. With no column, or a numeric one, there is one group, "All". Groups
+ * come in the order `compareGroupNames` gives.
+ */
+export function groupCells(
+  column: ColumnValues | null,
+  cells: Uint32Array | null,
+  rowCount: number
+): CellGroup[] {
+  const shown = cells ?? Uint32Array.from({ length: rowCount }, (_, i) => i);
+  if (!column || column.kind === 'numeric') {
+    return shown.length > 0 ? [{ name: 'All', cells: shown }] : [];
+  }
+  const byName = new Map<string, number[]>();
+  for (const cell of shown) {
+    const name =
+      column.kind === 'categorical' ? column.library[column.indices[cell]] : column.values[cell];
+    if (name === undefined) continue;
+    const members = byName.get(name);
+    if (members) members.push(cell);
+    else byName.set(name, [cell]);
+  }
+  return [...byName]
+    .map(([name, members]) => ({ name, cells: Uint32Array.from(members) }))
+    .sort((a, b) => compareGroupNames(a.name, b.name));
+}
+
 /**
  * Names that start with a number by that number, so "10" follows "9" and
  * layer "2/3" comes before "4", and ahead of everything else; the rest by

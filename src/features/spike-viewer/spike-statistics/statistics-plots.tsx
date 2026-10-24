@@ -11,7 +11,11 @@ import {
   scatterFigure,
   violinFigure,
 } from '@/features/spike-viewer/spike-statistics/figures';
-import { groupValues, statisticLabel } from '@/features/spike-viewer/spike-statistics/statistics';
+import {
+  groupCells,
+  groupValues,
+  statisticLabel,
+} from '@/features/spike-viewer/spike-statistics/statistics';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -19,7 +23,7 @@ import type { ReactNode } from 'react';
 import type { PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { AxisValues, Figure } from '@/features/spike-viewer/spike-statistics/figures';
-import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
+import type { CellGroup, CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 
 // Plotly is megabytes; it loads the first time the panel opens, not with the raster.
 const StatisticsPlot = dynamic(
@@ -34,7 +38,17 @@ const StatisticsPlot = dynamic(
   }
 );
 
-type PlotKind = 'violins' | 'densities' | 'scatter2d' | 'scatter3d' | 'sankey';
+type PlotKind = 'timeCourse' | 'violins' | 'densities' | 'scatter2d' | 'scatter3d' | 'sankey';
+
+/**
+ * A plot over time the host can draw from what it holds - the spikes' PSTHs, a
+ * report's mean - offered first and shown at first: a figure for the cells on
+ * show split as Group by splits them, or null while it is not ready.
+ */
+export type TimeCourse = {
+  label: string;
+  figure: (groups: CellGroup[], groupLabel: string | undefined) => Figure | null;
+};
 
 const PLOT_KINDS: { value: PlotKind; label: string }[] = [
   { value: 'violins', label: 'Violins' },
@@ -82,6 +96,7 @@ type PlotsProps = {
   summary?: ReactNode;
   /** Kept but not drawn, so the choices made over the plot outlast a spell out of view. */
   hidden?: boolean;
+  timeCourse?: TimeCourse;
 };
 
 /**
@@ -102,6 +117,7 @@ export function StatisticsPlots({
   initialStatistic,
   summary,
   hidden = false,
+  timeCourse,
 }: PlotsProps) {
   const [statisticKey, setStatisticKey] = useState(initialStatistic);
   const statistic = statistics.find((s) => s.key === statisticKey) ?? statistics[0];
@@ -141,8 +157,24 @@ export function StatisticsPlots({
 
   // Which figure: the statistic by group, or the cells themselves placed by
   // chosen columns - any statistic or numeric node property - and coloured by it.
-  const [plotKind, setPlotKind] = useState<PlotKind>('violins');
+  const [plotKind, setPlotKind] = useState<PlotKind>(timeCourse ? 'timeCourse' : 'violins');
   const scatter = plotKind === 'scatter2d' || plotKind === 'scatter3d';
+  const overTime = plotKind === 'timeCourse' && timeCourse !== undefined;
+  const plotKinds = useMemo(
+    () =>
+      timeCourse
+        ? [{ value: 'timeCourse' as PlotKind, label: timeCourse.label }, ...PLOT_KINDS]
+        : PLOT_KINDS,
+    [timeCourse]
+  );
+  // Over time it is the cells themselves that are split, not a statistic's values.
+  const rowCount = values ? (Object.values(values)[0]?.length ?? 0) : 0;
+  const cellGroups = useMemo(() => {
+    if (!overTime || !values || cells === undefined) return null;
+    if (groupBy === NO_GROUPING) return groupCells(null, cells, rowCount);
+    if (groupColumn?.session !== sessionKey || groupColumn.name !== groupBy) return null;
+    return groupCells(groupColumn.values, cells, rowCount);
+  }, [overTime, values, cells, rowCount, groupBy, groupColumn, sessionKey]);
   const axisOptions = useMemo(() => scatterAxisOptions(statistics, columns), [statistics, columns]);
   const [chosenAxes, setChosenAxes] = useState<string[]>([]);
   const axes = AXIS_NAMES.slice(0, plotKind === 'scatter3d' ? 3 : 2).map((_, i) =>
@@ -182,10 +214,17 @@ export function StatisticsPlots({
   }, [ready, axisKey, knownAxes, getColumn, sessionKey]);
 
   const binStep = statistic.step?.(spanMs);
-  const empty = !scatter && groups?.length === 0;
+  const empty = overTime ? cellGroups?.length === 0 : !scatter && groups?.length === 0;
   const figure = useMemo<Figure | null>(() => {
     const shown = values?.[statistic.key];
     if (!values || !shown || cells === undefined) return null;
+    // A column a host added, such as a neuron set's, goes by its label.
+    const groupLabel =
+      groupBy === NO_GROUPING
+        ? undefined
+        : (groupOptions.find((c) => c.name === groupBy)?.label ?? groupBy);
+    if (overTime)
+      return timeCourse && cellGroups ? timeCourse.figure(cellGroups, groupLabel) : null;
     const valueLabel = statisticLabel(statistic);
     if (scatter) {
       const resolved = axisKey
@@ -200,11 +239,6 @@ export function StatisticsPlots({
       );
     }
     if (!groups || groups.length === 0) return null;
-    // A column a host added, such as a neuron set's, goes by its label.
-    const groupLabel =
-      groupBy === NO_GROUPING
-        ? undefined
-        : (groupOptions.find((c) => c.name === groupBy)?.label ?? groupBy);
     if (plotKind === 'densities') {
       return densityFigure(groups, groupLabel, valueLabel, color, binStep, statistic.unit);
     }
@@ -225,6 +259,9 @@ export function StatisticsPlots({
     groupOptions,
     color,
     binStep,
+    overTime,
+    cellGroups,
+    timeCourse,
   ]);
 
   if (hidden) return null;
@@ -235,7 +272,7 @@ export function StatisticsPlots({
         <PillSelect
           label="Plot"
           value={plotKind}
-          options={PLOT_KINDS}
+          options={plotKinds}
           onChange={(v) => setPlotKind(v as PlotKind)}
         />
         {scatter &&
@@ -248,12 +285,14 @@ export function StatisticsPlots({
               onChange={(v) => setChosenAxes(axes.map((a, j) => (j === i ? v : a)))}
             />
           ))}
-        <PillSelect
-          label={scatter ? 'Colour' : 'Statistic'}
-          value={statistic.key}
-          options={statistics.map((s) => ({ value: s.key, label: statisticLabel(s) }))}
-          onChange={setStatisticKey}
-        />
+        {!overTime && (
+          <PillSelect
+            label={scatter ? 'Colour' : 'Statistic'}
+            value={statistic.key}
+            options={statistics.map((s) => ({ value: s.key, label: statisticLabel(s) }))}
+            onChange={setStatisticKey}
+          />
+        )}
         {!scatter && (
           <PillSelect
             label="Group by"

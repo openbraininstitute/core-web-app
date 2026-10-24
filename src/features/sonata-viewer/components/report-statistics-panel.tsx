@@ -16,7 +16,10 @@ import type { ComponentProps, ReactNode } from 'react';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
-import type { StatisticValues } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import type {
+  StatisticValues,
+  TimeCourse,
+} from '@/features/spike-viewer/spike-statistics/statistics-plots';
 
 type TableProps = Omit<
   ComponentProps<typeof ReportNodesTable>,
@@ -43,6 +46,8 @@ type Props = {
   table: TableProps;
   /** Only the table, where the campaign's statistics have the plots' place. */
   tableOnly?: boolean;
+  /** The plot over time shown at first: the cells' mean. */
+  timeCourse?: TimeCourse;
 };
 
 /**
@@ -63,6 +68,7 @@ export function ReportStatisticsPanel({
   summary,
   table,
   tableOnly = false,
+  timeCourse,
 }: Props) {
   const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
   const [chosenShare, setChosenShare] = useState<number | null>(null);
@@ -101,6 +107,7 @@ export function ReportStatisticsPanel({
           initialStatistic="mean"
           summary={values && summary}
           hidden={tableOnly}
+          timeCourse={timeCourse}
         />
       }
       table={

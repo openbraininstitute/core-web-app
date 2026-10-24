@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
+import { psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import {
   computeSpikeStatistics,
   SPIKE_STATISTICS,
@@ -27,6 +28,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
 import type { SpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
+import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const EMPTY_FILTER: FilterModel = {};
@@ -315,6 +317,23 @@ export function SpikeStatisticsView({
     return source.filter((cell) => windowCells[cell] === 1);
   }, [cellsOnShow, windowCells, rowCount]);
 
+  // Shown at first: each group's firing over time, over the raster's window where there is one.
+  const timeCourse = useMemo<TimeCourse>(
+    () => ({
+      label: 'PSTHs',
+      figure: (groups, groupLabel) =>
+        psthFigure(
+          groups,
+          recorded,
+          windowTime ?? [timeRange.min, timeRange.max],
+          rowCount,
+          groupLabel,
+          color
+        ),
+    }),
+    [recorded, windowTime, timeRange, rowCount, color]
+  );
+
   // The statistics share the table's right half between them.
   const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
   const [chosenShare, setChosenShare] = useState<number | null>(null);
@@ -430,6 +449,7 @@ export function SpikeStatisticsView({
           initialStatistic="rate"
           summary={summary}
           hidden={tableOnly}
+          timeCourse={timeCourse}
         />
       }
     />

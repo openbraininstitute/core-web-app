@@ -1,7 +1,9 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 
 import type { Data, Layout } from 'plotly.js-dist-min';
-import type { ValueGroup } from '@/features/spike-viewer/spike-statistics/statistics';
+import type { CellFrames } from '@/features/sonata-viewer/types';
+import type { CellGroup, ValueGroup } from '@/features/spike-viewer/spike-statistics/statistics';
+import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 /** What the statistics plot draws: Plotly's traces and layout, built here so they stay pure. */
 /** What a hover over a mark shows in place of Plotly's labels: a titled card of a few values. */
@@ -543,4 +545,166 @@ function stepBins(values: Float64Array, step: number) {
 function withAlpha(hex: string, alpha: number): string {
   const n = Number.parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+/** About this many bins across the span a PSTH covers. */
+const PSTH_BINS = 100;
+
+/** 1, 2 or 5 times a power of ten, nearest `target`: a bin width that reads as a number. */
+function roundStep(target: number): number {
+  const power = 10 ** Math.floor(Math.log10(target));
+  const scaled = target / power;
+  return (scaled < 1.5 ? 1 : scaled < 3.5 ? 2 : scaled < 7.5 ? 5 : 10) * power;
+}
+
+/**
+ * Each group's firing over time: its spikes per cell per second, in bins of a
+ * round width across `span` - the run, or the raster's window - a step line
+ * per group.
+ */
+export function psthFigure(
+  groups: CellGroup[],
+  spikes: SpikePopulation | undefined,
+  span: [number, number],
+  rowCount: number,
+  groupLabel: string | undefined,
+  color: string
+): Figure {
+  const [from, to] = span;
+  const width = roundStep(Math.max(to - from, 1e-6) / PSTH_BINS);
+  const bins = Math.max(1, Math.ceil((to - from) / width));
+  const groupOf = new Int32Array(rowCount).fill(-1);
+  groups.forEach((group, g) => {
+    for (const cell of group.cells) if (cell < rowCount) groupOf[cell] = g;
+  });
+  const counts = groups.map(() => new Float64Array(bins));
+  if (spikes) {
+    const { nodeIds, timestamps } = spikes;
+    for (let i = 0; i < nodeIds.length; i++) {
+      const t = timestamps[i];
+      const cell = nodeIds[i];
+      if (t < from || t >= to || !(cell >= 0 && cell < rowCount)) continue;
+      const g = groupOf[cell];
+      if (g >= 0) counts[g][Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
+    }
+  }
+  // Steps: each bin's rate from its start, held to the end of the last.
+  const x = Float64Array.from({ length: bins + 1 }, (_, b) => Math.min(to, from + b * width));
+  const seconds = width / 1000;
+  return timeCourseFigure(
+    groups.map((group, g) => {
+      const y = new Float64Array(bins + 1);
+      for (let b = 0; b < bins; b++) y[b] = counts[g][b] / (group.cells.length * seconds);
+      y[bins] = y[bins - 1];
+      return { name: group.name, cells: group.cells.length, y };
+    }),
+    x,
+    {
+      groupLabel,
+      color,
+      yLabel: 'Rate (Hz)',
+      steps: true,
+      fill: true,
+      note: `${Number(width.toPrecision(3))} ms bins`,
+    }
+  );
+}
+
+/** Each group's recorded cells averaged frame by frame: their mean over time, a line per group. */
+export function meanTraceFigure(
+  groups: CellGroup[],
+  frames: CellFrames,
+  groupLabel: string | undefined,
+  yLabel: string,
+  color: string
+): Figure {
+  const columns = frames.nodeIds.length;
+  const groupOfCell = new Map<number, number>();
+  groups.forEach((group, g) => {
+    for (const cell of group.cells) groupOfCell.set(cell, g);
+  });
+  const groupOfColumn = Int32Array.from(frames.nodeIds, (cell) => groupOfCell.get(cell) ?? -1);
+  const members = new Uint32Array(groups.length);
+  for (const g of groupOfColumn) if (g >= 0) members[g] += 1;
+  const sums = groups.map(() => new Float64Array(frames.times.length));
+  for (let f = 0; f < frames.times.length; f++) {
+    const row = f * columns;
+    for (let c = 0; c < columns; c++) {
+      const g = groupOfColumn[c];
+      if (g >= 0) sums[g][f] += frames.values[row + c];
+    }
+  }
+  return timeCourseFigure(
+    groups.flatMap((group, g) =>
+      members[g] > 0
+        ? [{ name: group.name, cells: members[g], y: sums[g].map((sum) => sum / members[g]) }]
+        : []
+    ),
+    frames.times,
+    { groupLabel, color, yLabel, steps: false, fill: false }
+  );
+}
+
+/** A line per group over time, coloured as the densities are, with a key once there are groups. */
+function timeCourseFigure(
+  series: { name: string; cells: number; y: ArrayLike<number> }[],
+  x: ArrayLike<number>,
+  {
+    groupLabel,
+    color,
+    yLabel,
+    steps,
+    fill,
+    note,
+  }: {
+    groupLabel: string | undefined;
+    color: string;
+    yLabel: string;
+    steps: boolean;
+    /** Down to zero under a lone line, where it hides nothing: a rate, not a voltage. */
+    fill: boolean;
+    note?: string;
+  }
+): Figure {
+  const data = series.map((s, index) => {
+    const hue = !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR;
+    return {
+      type: 'scattergl',
+      mode: 'lines',
+      name: s.name,
+      x,
+      y: s.y,
+      line: {
+        color: hue,
+        width: index < PICK_COLORS.length ? 1.5 : 1,
+        shape: steps ? 'hv' : 'linear',
+      },
+      fill: fill && !groupLabel ? 'tozeroy' : 'none',
+      fillcolor: withAlpha(color, 0.15),
+      showlegend: Boolean(groupLabel) && index < PICK_COLORS.length,
+      hovertemplate: `${s.name} · ${s.cells.toLocaleString()} ${s.cells === 1 ? 'cell' : 'cells'}<br>%{x:.1f} ms<br>${yLabel} %{y:.3g}<extra></extra>`,
+    };
+  });
+  return {
+    data: data as Data[],
+    layout: {
+      ...BASE_LAYOUT,
+      showlegend: Boolean(groupLabel),
+      legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
+      xaxis: {
+        title: axisTitle(note ? `Time (ms) · ${note}` : 'Time (ms)'),
+        automargin: true,
+        showgrid: false,
+        zeroline: false,
+        linecolor: GRID_COLOR,
+      },
+      yaxis: {
+        title: axisTitle(yLabel),
+        automargin: true,
+        gridcolor: GRID_COLOR,
+        zeroline: false,
+        ...(fill ? { rangemode: 'tozero' as const } : {}),
+      },
+    },
+  };
 }

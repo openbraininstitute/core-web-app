@@ -28,6 +28,7 @@ import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns'
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
+import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import {
   BOX_CLASS,
@@ -50,7 +51,10 @@ import type {
   SonataReportMetadata,
 } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
-import type { StatisticValues } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import type {
+  StatisticValues,
+  TimeCourse,
+} from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { WorkspaceContext } from '@/types/common';
 
 const ErrorFallback = SimpleErrorComponent as unknown as ComponentType<FallbackProps>;
@@ -205,8 +209,10 @@ export function SonataReportView({
     frames: CellFrames;
     range: [number, number];
   }>();
+  // The frames the scene plays, wanted too beside the statistics, whose mean is drawn from them.
+  const wantFrames = showScene || (docked && !campaignMode);
   useEffect(() => {
-    if (!showScene || !populationName || sceneData?.population === populationName) return;
+    if (!wantFrames || !populationName || sceneData?.population === populationName) return;
     let cancelled = false;
     Promise.all([
       worker.getCellFrames(populationName, SCENE_FRAMES),
@@ -219,7 +225,7 @@ export function SonataReportView({
     return () => {
       cancelled = true;
     };
-  }, [showScene, populationName, sceneData?.population, worker]);
+  }, [wantFrames, populationName, sceneData?.population, worker]);
   const sceneFrames = sceneData?.population === populationName ? sceneData : undefined;
   const sceneBoxRef = useRef<HTMLDivElement>(null);
   const [sceneHeight, setSceneHeight] = useState(DEFAULT_SCENE_HEIGHT);
@@ -450,6 +456,19 @@ export function SonataReportView({
       ? registeredStatistics
       : null;
 
+  // Shown at first beside the statistics: each group's mean over time.
+  const meanLabel = `${voltage ? 'Mean voltage' : `Mean ${variableName ?? 'value'}`} (${population?.dataUnits ?? ''})`;
+  const timeCourse = useMemo<TimeCourse>(
+    () => ({
+      label: 'Mean',
+      figure: (groups, groupLabel) =>
+        sceneFrames
+          ? meanTraceFigure(groups, sceneFrames.frames, groupLabel, meanLabel, CHART_LINE_COLOR)
+          : null,
+    }),
+    [sceneFrames, meanLabel]
+  );
+
   // The plots are over the ticked cells, else those the table's filter keeps.
   const plotCells = useMemo(() => {
     if (pickedCells.length > 0) {
@@ -648,6 +667,7 @@ export function SonataReportView({
           <ReportStatisticsPanel
             key={population.name}
             tableOnly={campaignMode}
+            timeCourse={timeCourse}
             statistics={statistics}
             values={statisticValues}
             cells={plotCells}
