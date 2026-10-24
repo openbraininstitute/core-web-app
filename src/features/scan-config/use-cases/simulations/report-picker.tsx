@@ -29,7 +29,7 @@ export function byReportKind(a: TAssetBackedFile, b: TAssetBackedFile): number {
 }
 
 /** What a report is, as the picker says it: "Spikes", "Voltage", named where voltages are several. */
-function kindOf(file: TAssetBackedFile, files: TAssetBackedFile[]): string {
+export function reportKind(file: TAssetBackedFile, files: TAssetBackedFile[]): string {
   const name = (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
   if (file.asset.label === AssetLabel.spike_report) return 'Spikes';
   if (file.asset.label === AssetLabel.voltage_report) {
@@ -60,7 +60,7 @@ export function ReportPicker({
   if (!selected) return null;
 
   const options = files.flatMap((file) => {
-    const kind = kindOf(file, files);
+    const kind = reportKind(file, files);
     const held = published[file.asset.path];
     return held && held.populations.length > 0
       ? held.populations.map((population) => ({

@@ -508,14 +508,15 @@ export function NodesGrid({
   // biome-ignore lint/correctness/useExhaustiveDependencies: new pinned values are a reason to page the rows in again
   useEffect(() => {
     const api = gridRef.current?.api;
-    if (!api) return;
+    if (!api || api.isDestroyed()) return;
     api.setGridOption('context', gridContext);
     api.refreshInfiniteCache();
   }, [gridContext, pinnedVersion]);
 
   useEffect(() => {
+    // A grid torn down under a column change, as its table is swapped, takes no more calls.
     const api = gridRef.current?.api;
-    if (!api) return;
+    if (!api || api.isDestroyed()) return;
     api.applyColumnState({
       state: orderedNames.map((colId) => ({ colId })),
       applyOrder: true,
