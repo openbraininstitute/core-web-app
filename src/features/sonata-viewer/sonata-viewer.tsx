@@ -24,6 +24,7 @@ import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/r
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
+import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
@@ -116,6 +117,7 @@ export default function SonataViewer({
       variableName={variableName}
       circuit={circuit}
       circuitConfig={circuitConfig}
+      reportPath={asset?.path}
     />
   );
 }
@@ -135,15 +137,23 @@ export function SonataReportView({
   variableName,
   circuit,
   circuitConfig,
+  reportPath,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
   variableName?: string;
   circuit: ICircuit | undefined;
   circuitConfig: ParsedCircuitConfig | undefined;
+  /** The report's path, by which the population chosen for it is shared with the picker over the statistics. */
+  reportPath?: string;
 }) {
   const { simulationPicker } = useSimulation();
-  const [chosenPopulation, setChosenPopulation] = useState<string>();
+  const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
+  const [chosenPopulation, setChosenPopulation] = useReportPopulation(
+    reportPath,
+    populationNames,
+    metadata.populations[0]?.name
+  );
   const population =
     metadata.populations.find((p) => p.name === chosenPopulation) ?? metadata.populations[0];
   const populationName = population?.name;
@@ -589,16 +599,8 @@ export function SonataReportView({
       // here, the plots over the table in the panel beside them.
       <div
         ref={setDockRoot}
-        className="flex h-full min-h-0 flex-col gap-[12px] pt-1.25 pr-3 pb-4 pl-4"
+        className="flex h-full min-h-0 flex-col gap-[12px] pt-3 pr-3 pb-4 pl-4"
       >
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <PopulationHeader
-            populations={metadata.populations}
-            population={population}
-            onChange={setChosenPopulation}
-          />
-          {groupSelect}
-        </div>
         {/* Each a box, as the statistics beside them are, the grab bar in the space between. */}
         {scene && (
           <div
@@ -615,7 +617,17 @@ export function SonataReportView({
             />
           </div>
         )}
-        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2')}>{traces}</div>
+        {/* The population is picked over the statistics; the traces' own controls sit with them. */}
+        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2')}>
+          <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
+            {groupSelect}
+            <span className="whitespace-nowrap text-xs text-neutral-400">
+              {population.nodeCount.toLocaleString()}{' '}
+              {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
+            </span>
+          </div>
+          {traces}
+        </div>
         {createPortal(
           <ReportStatisticsPanel
             key={population.name}

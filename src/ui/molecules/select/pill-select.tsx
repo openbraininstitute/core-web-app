@@ -44,7 +44,8 @@ export function PillSelect({
         )}
         icon={<RiArrowDownSLine className="size-4 shrink-0 opacity-100" />}
       >
-        <span className="shrink-0 text-neutral-400">{label}</span>
+        {/* Left out where the value says what it is. */}
+        {label && <span className="shrink-0 text-neutral-400">{label}</span>}
         {chosen?.color && <Dot color={chosen.color} />}
         <span className="truncate">{chosen?.label ?? '—'}</span>
       </SelectTrigger>

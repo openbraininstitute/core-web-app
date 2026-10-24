@@ -19,6 +19,7 @@ import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
+import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
@@ -102,7 +103,6 @@ interface SpikeReplayViewProps {
 export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
   const { simulationPicker, campaign: campaignInfo, run, timeline } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
-  const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(DEFAULT_SPEED);
@@ -146,10 +146,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // Derived rather than corrected in an effect: the default may move when the
   // circuit config arrives and names a replayable population, and the name on
   // show has to give way to it without a render in between showing neither.
-  const populationName =
-    populations.find((p) => p.name === chosenPopulationName)?.name ??
+  // The choice is the report's, shared with the picker over the statistics.
+  const populationNames = useMemo(() => populations.map((p) => p.name), [populations]);
+  const [populationName, setChosenPopulationName] = useReportPopulation(
+    reportPath,
+    populationNames,
     populations.find((p) => replayablePopulation(circuitConfig?.nodes, p.name))?.name ??
-    populations[0]?.name;
+      populations[0]?.name
+  );
   const recordedIndex = data.populations.findIndex((p) => p.name === populationName);
   const recorded = recordedIndex < 0 ? undefined : data.populations[recordedIndex];
 
@@ -216,7 +220,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
 
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
-  const view = subject && !campaignMode ? mode : MODES.Raster;
+  // Beside the statistics it is always the scene over the raster.
+  const view = subject && !campaignMode ? (dockedOpen ? MODES.Split : mode) : MODES.Raster;
   const showStatistics = !docked && view === MODES.Statistics && statisticsAvailable;
 
   // While the statistics are up, their table narrows the raster and the replay
@@ -549,6 +554,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       />
     ) : null;
 
+  const showHeader = !dockedOpen || campaignMode || (showScene && !replayable);
+
   // Play and the scrubber: under the panes, or beside the statistics in the raster's box.
   const transport = (boxed: boolean) => (
     <TransportBar
@@ -578,65 +585,72 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     // transport bar go with it; the scene is handed no fullscreen button of its own.
     <div ref={setRoot} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <FullscreenPortalScope root={root}>
-        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3">
-          {!campaignMode && (
-            <div className="flex items-center gap-2">
-              <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
-              <FullscreenButton target={root} />
-            </div>
-          )}
-          {populationName && (
-            <div className="flex min-w-0 items-center gap-2">
-              {recorded && (
-                <span
-                  className="size-2 shrink-0 rounded-full"
-                  style={{
-                    background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
-                  }}
-                />
-              )}
-              {populations.length > 1 ? (
-                <PopulationSelect
-                  variant="chrome"
-                  populations={populations}
-                  value={populationName}
-                  onChange={setChosenPopulationName}
-                />
-              ) : (
-                <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
-                  <span className="mr-1 font-normal text-neutral-400">Population</span>
-                  {populationName}
-                </span>
-              )}
-              {recorded && (
-                <span className="whitespace-nowrap text-xs text-neutral-400">
-                  {shownCells && `${shownSpikeCount.toLocaleString()} of `}
-                  {recorded.timestamps.length.toLocaleString()} spikes
-                </span>
-              )}
-            </div>
-          )}
-          {showScene && !replayable && (
-            <span role="status" className="text-xs text-amber-600">
-              {replayNotice(
-                recorded,
-                populationName,
-                circuitConfig?.nodes,
-                configLoading,
-                configError !== null
-              )}
-            </span>
-          )}
-          {campaignMode && <div className="ml-auto flex items-center">{simulationPicker}</div>}
-          {subject && (
-            <div
-              ref={setColorBySlot}
-              className={classNames('ml-auto flex shrink-0 items-center', !showScene && 'hidden')}
-            />
-          )}
-        </div>
+        {/* Beside the statistics the view is fixed, the population is picked over them and the
+          colour-by sits in the scene: the row is only for the campaign's picker or a notice. */}
+        {showHeader && (
+          <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3">
+            {!campaignMode && !dockedOpen && (
+              <div className="flex items-center gap-2">
+                <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
+                <FullscreenButton target={root} />
+              </div>
+            )}
+            {populationName && (!dockedOpen || campaignMode) && (
+              <div className="flex min-w-0 items-center gap-2">
+                {recorded && (
+                  <span
+                    className="size-2 shrink-0 rounded-full"
+                    style={{
+                      background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
+                    }}
+                  />
+                )}
+                {populations.length > 1 ? (
+                  <PopulationSelect
+                    variant="chrome"
+                    populations={populations}
+                    value={populationName}
+                    onChange={setChosenPopulationName}
+                  />
+                ) : (
+                  <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
+                    <span className="mr-1 font-normal text-neutral-400">Population</span>
+                    {populationName}
+                  </span>
+                )}
+                {recorded && (
+                  <span className="whitespace-nowrap text-xs text-neutral-400">
+                    {shownCells && `${shownSpikeCount.toLocaleString()} of `}
+                    {recorded.timestamps.length.toLocaleString()} spikes
+                  </span>
+                )}
+              </div>
+            )}
+            {showScene && !replayable && (
+              <span role="status" className="text-xs text-amber-600">
+                {replayNotice(
+                  recorded,
+                  populationName,
+                  circuitConfig?.nodes,
+                  configLoading,
+                  configError !== null
+                )}
+              </span>
+            )}
+            {campaignMode && <div className="ml-auto flex items-center">{simulationPicker}</div>}
+            {subject && !dockedOpen && (
+              <div
+                ref={setColorBySlot}
+                className={classNames('ml-auto flex shrink-0 items-center', !showScene && 'hidden')}
+              />
+            )}
+          </div>
+        )}
 
-        <div ref={containerRef} className="relative min-h-0 flex-1">
+        <div
+          ref={containerRef}
+          className={classNames('relative min-h-0 flex-1', !showHeader && 'mt-3')}
+        >
           {subject && (
             <div
               id="spike-replay-scene"
@@ -668,7 +682,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                   // and the spikes' cell indices are relative to it. The
                   // circuit's other populations are not drawn here.
                   showUnselectedPopulations={false}
-                  colorByTarget={colorBySlot}
+                  colorByTarget={dockedOpen ? undefined : colorBySlot}
                   // It colours the raster too, where every spike in one colour is uniform.
                   colorByNoneLabel="Uniform"
                   shownCells={sceneCells}
@@ -780,6 +794,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                         options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
                         onChange={(v) => setSpeed(Number(v))}
                       />
+                    )}
+                    {/* Beside the statistics, where the row above the scene is gone. */}
+                    {dockedOpen && !campaignMode && (
+                      <span className="whitespace-nowrap text-xs text-neutral-400">
+                        {shownCells && `${shownSpikeCount.toLocaleString()} of `}
+                        {recorded.timestamps.length.toLocaleString()} spikes
+                      </span>
                     )}
                   </div>
                 )}

@@ -28,7 +28,7 @@ type Props = {
   campaignId?: string;
   /** Beside the back arrow on the bar over an open side panel, such as a picker for which result is on show. */
   sidePanelBar?: ReactNode;
-  /** Offers, at the bar's far end, a region over the file and the panel comparing the campaign's results. */
+  /** Offers, right after the bar's pickers, a region over the file and the panel comparing the campaign's results. */
   campaignStatistics?: boolean;
 };
 
@@ -245,7 +245,7 @@ export function ResultsLayout({
             onClick={toggleCampaign}
             aria-pressed={campaign}
             className={cn(
-              'bg-primary-9 ml-auto inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-white',
+              'bg-primary-9 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-white',
               'hover:bg-primary-8 shadow-md transition-colors focus-visible:outline-none'
             )}
           >
