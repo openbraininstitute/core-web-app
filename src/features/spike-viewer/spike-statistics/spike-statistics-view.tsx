@@ -113,6 +113,8 @@ type Props = {
    * once worked out: the ticked rows, else those the filter keeps; null for all.
    */
   onShownCellsChange?: (cells: Uint32Array | null) => void;
+  /** Told the node index of the table row under the pointer, and null when it leaves. */
+  onHoveredCellChange?: (cell: number | null) => void;
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
@@ -142,6 +144,7 @@ export function SpikeStatisticsView({
   color,
   tableOnly = false,
   onShownCellsChange,
+  onHoveredCellChange,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -553,6 +556,7 @@ export function SpikeStatisticsView({
           pickColumn
           pickAll={{ state: tickAllState, onToggle: toggleTickAll }}
           reset={{ picked: ticked.size > 0, onReset: () => setTicks(undefined) }}
+          onRowHover={onHoveredCellChange}
         />
       )}
     </div>

@@ -18,6 +18,16 @@ export type PlotRect = {
 // between them, so the bottom and left bands hold one row of text each.
 export const MARGIN = { top: 36, right: 20, bottom: 28, left: 56 };
 
+/**
+ * How the y axis reads when its rows are not node ids: runs of rows under a
+ * label each, such as a layer, or a value at each row, such as a rate.
+ */
+export type RowAxis = {
+  title: string;
+  groups?: { label: string; start: number; end: number }[];
+  valueAt?: (row: number) => string;
+};
+
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
 function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
   const range = max - min;
@@ -59,7 +69,7 @@ export class AxisOverlay {
     this.ctx = ctx;
   }
 
-  draw(bounds: ViewBounds, plotRect: PlotRect) {
+  draw(bounds: ViewBounds, plotRect: PlotRect, rows?: RowAxis) {
     const ctx = this.ctx;
     const dpr = window.devicePixelRatio || 1;
 
@@ -74,8 +84,9 @@ export class AxisOverlay {
 
     this.drawBackground(ctx, plotRect);
     this.drawGrid(ctx, bounds, plotRect, xTicks);
-    this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks);
-    this.drawAxisTitles(ctx, plotRect);
+    this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks, rows);
+    // Groups label the axis all along, where the title would sit on them.
+    this.drawAxisTitles(ctx, plotRect, rows?.groups ? null : (rows?.title ?? 'Neuron ID'));
 
     ctx.restore();
   }
@@ -109,7 +120,8 @@ export class AxisOverlay {
     bounds: ViewBounds,
     rect: PlotRect,
     xTicks: number[],
-    yTicks: number[]
+    yTicks: number[],
+    rows: RowAxis | undefined
   ) {
     const xRange = bounds.xMax - bounds.xMin;
     const yRange = bounds.yMax - bounds.yMin;
@@ -147,6 +159,10 @@ export class AxisOverlay {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
 
+    if (rows?.groups) {
+      this.drawGroups(ctx, bounds, rect, rows.groups);
+      return;
+    }
     yTicks.forEach((v, i) => {
       const py = rect.y + rect.height - ((v - bounds.yMin) / yRange) * rect.height;
       ctx.beginPath();
@@ -154,13 +170,47 @@ export class AxisOverlay {
       ctx.lineTo(rect.x, py);
       ctx.stroke();
       if (i === 0 || i === yTicks.length - 1) {
-        ctx.fillText(formatTick(v, yStep), rect.x - 8, py);
+        ctx.fillText(rows?.valueAt ? rows.valueAt(v) : formatTick(v, yStep), rect.x - 8, py);
       }
     });
   }
 
+  /** A rule between groups of rows, and each group's label beside its middle where it fits. */
+  private drawGroups(
+    ctx: CanvasRenderingContext2D,
+    bounds: ViewBounds,
+    rect: PlotRect,
+    groups: NonNullable<RowAxis['groups']>
+  ) {
+    const yAt = (row: number) =>
+      rect.y + rect.height - ((row - bounds.yMin) / (bounds.yMax - bounds.yMin)) * rect.height;
+    const top = rect.y;
+    const bottom = rect.y + rect.height;
+
+    ctx.save();
+    ctx.strokeStyle = '#d4d4d4';
+    ctx.beginPath();
+    for (const group of groups.slice(1)) {
+      const py = Math.round(yAt(group.start - 0.5)) + 0.5;
+      if (py <= top || py >= bottom) continue;
+      ctx.moveTo(rect.x - 5, py);
+      ctx.lineTo(rect.x + rect.width, py);
+    }
+    ctx.stroke();
+
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, sans-serif';
+    const room = MARGIN.left - 12;
+    for (const group of groups) {
+      const from = Math.max(top, yAt(group.end - 0.5));
+      const to = Math.min(bottom, yAt(group.start - 0.5));
+      if (to - from < 11) continue;
+      ctx.fillText(fitted(ctx, group.label, room), rect.x - 8, (from + to) / 2);
+    }
+    ctx.restore();
+  }
+
   /** On the tick labels' own rows, midway between the two that are drawn. */
-  private drawAxisTitles(ctx: CanvasRenderingContext2D, rect: PlotRect) {
+  private drawAxisTitles(ctx: CanvasRenderingContext2D, rect: PlotRect, yTitle: string | null) {
     ctx.fillStyle = '#333333';
     ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
 
@@ -169,13 +219,22 @@ export class AxisOverlay {
     ctx.textBaseline = 'top';
     ctx.fillText('Time (ms)', rect.x + rect.width / 2, rect.y + rect.height + 8);
 
+    if (yTitle === null) return;
     // Y-axis title, rotated, flush with the end labels' right edge
     ctx.save();
     ctx.translate(rect.x - 8, rect.y + rect.height / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText('Neuron ID', 0, 0);
+    ctx.fillText(yTitle, 0, 0);
     ctx.restore();
   }
+}
+
+/** The text, cut short with an ellipsis where it is wider than `width`. */
+function fitted(ctx: CanvasRenderingContext2D, text: string, width: number): string {
+  if (ctx.measureText(text).width <= width) return text;
+  let end = text.length;
+  while (end > 1 && ctx.measureText(`${text.slice(0, end)}…`).width > width) end -= 1;
+  return `${text.slice(0, end)}…`;
 }

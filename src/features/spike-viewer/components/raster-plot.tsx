@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 
-import type { CellColors } from '@/features/spike-viewer/renderer/raster-renderer';
+import type { CellColors, RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 type RasterPlotProps = {
@@ -33,6 +33,10 @@ type RasterPlotProps = {
   onSeek?: (timeInMs: number) => void;
   /** Colours for that population's cells, such as the 3D replay's colour-by; omit for its own. */
   cellColors?: CellColors;
+  /** Rows for that population's cells in another order than their node ids. */
+  rowOrder?: RowOrder;
+  /** A cell of that population to point out, by node id, such as a table row under the pointer. */
+  highlightedCell?: number | null;
 };
 
 export default function RasterPlot({
@@ -43,6 +47,8 @@ export default function RasterPlot({
   playheadRef,
   onSeek,
   cellColors,
+  rowOrder,
+  highlightedCell,
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
@@ -51,7 +57,9 @@ export default function RasterPlot({
     populationName,
     cellCount,
     onSeek,
-    cellColors
+    cellColors,
+    rowOrder,
+    highlightedCell
   );
 
   useEffect(() => {

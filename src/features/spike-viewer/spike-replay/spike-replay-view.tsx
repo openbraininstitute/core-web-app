@@ -23,12 +23,14 @@ import { useResultsSidePanel } from '@/features/scan-config/components/shared/re
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
+import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
+import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
 import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen';
@@ -160,6 +162,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
   // An MEModel is one cell drawn from the model itself, with no node file.
   const cellCount = memodel === undefined ? countedCells : 1;
+  const rasterOrder = useRasterOrder({
+    circuit,
+    circuitConfig,
+    populationName,
+    cellCount,
+    recorded,
+    timeRange: data.timeRange,
+  });
 
   // Decided against the host's own copy of the circuit config — the same
   // query the scene resolves against — so the answer never lags the scene by
@@ -230,6 +240,19 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     () => (shownCells && populationName ? keepSpikesOf(data, populationName, shownCells) : data),
     [data, populationName, shownCells]
   );
+  // The table row under the pointer, pointed out in the raster and the scene.
+  const [hoveredCell, setHoveredCell] = useState<{ population: string; cell: number } | null>(null);
+  const handleHoveredCell = useCallback(
+    (cell: number | null) =>
+      setHoveredCell(
+        cell === null || !populationName ? null : { population: populationName, cell }
+      ),
+    [populationName]
+  );
+  const highlightedCell =
+    (dockedOpen || showStatistics) && hoveredCell?.population === populationName
+      ? hoveredCell.cell
+      : null;
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
   const spikes = useMemo(
@@ -380,6 +403,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         populationName={populationName}
         recorded={recorded}
         onShownCellsChange={handleShownCells}
+        onHoveredCellChange={handleHoveredCell}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
         tableOnly={campaignMode}
@@ -481,6 +505,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                   // It colours the raster too, where every spike in one colour is uniform.
                   colorByNoneLabel="Uniform"
                   shownCells={shownCells}
+                  highlightedCell={highlightedCell ?? undefined}
                   onNodeColorsChange={setSceneColors}
                   spikes={{
                     data: spikes ?? undefined,
@@ -534,12 +559,22 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 markerSize={markerSize}
                 playheadRef={isSplit ? playheadRef : undefined}
                 onSeek={canSeek ? handleSeek : undefined}
+                rowOrder={rasterOrder.order}
+                highlightedCell={highlightedCell}
               />
               {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and
                 the row above the panes is for what governs both. */}
               {recorded && recorded.timestamps.length > 0 && (
                 <div className="absolute right-0 top-0 z-10 flex items-center gap-2">
+                  {circuit && (
+                    <PillSelect
+                      label="Order by"
+                      value={rasterOrder.value}
+                      options={rasterOrder.options}
+                      onChange={rasterOrder.onChange}
+                    />
+                  )}
                   <RasterPlotControls
                     markerSize={markerSize}
                     onMarkerSizeChange={setMarkerSize}

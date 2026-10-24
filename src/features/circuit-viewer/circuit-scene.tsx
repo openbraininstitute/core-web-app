@@ -127,6 +127,12 @@ interface ICircuitSceneOptions {
    */
   shownCells?: Uint8Array;
   /**
+   * A cell of the population on show to point out, by node index, such as the
+   * table row under the pointer: highlighted where the scene draws
+   * morphologies, the rest faded where it draws somas.
+   */
+  highlightedCell?: number;
+  /**
    * Told the colour-by mapping of the population on show, or null with none, so
    * a host drawing the same cells elsewhere - spike replay's raster - can match.
    */
@@ -194,6 +200,7 @@ export function CircuitScene({
   colorByTarget,
   colorByNoneLabel,
   shownCells,
+  highlightedCell,
   onNodeColorsChange,
   spikes,
   dendrogram = false,
@@ -553,6 +560,7 @@ export function CircuitScene({
             populations={populations}
             hiddenPopulations={hiddenPopulations}
             shownCells={shownCells}
+            highlightedCell={highlightedCell}
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
@@ -586,6 +594,7 @@ export function CircuitScene({
               populations={populations}
               hiddenPopulations={hiddenPopulations}
               shownCells={shownCells}
+              highlightedCell={highlightedCell}
               nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
               recededColor={recededColor}

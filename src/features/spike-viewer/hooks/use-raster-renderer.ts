@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
-import type { CellColors } from '@/features/spike-viewer/renderer/raster-renderer';
+import type { CellColors, RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 export function useRasterRenderer(
@@ -15,7 +15,11 @@ export function useRasterRenderer(
   /** Called with a time in ms when the user clicks in the plot. */
   onSeek?: (timeInMs: number) => void,
   /** Colours for the cells of the population on show; undefined draws it in its own. */
-  cellColors?: CellColors
+  cellColors?: CellColors,
+  /** Rows for the cells of the population on show; undefined keeps them by node id. */
+  rowOrder?: RowOrder,
+  /** A cell of the population on show to point out, by node id. */
+  highlightedCell?: number | null
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
   // Held in a ref so a caller passing an inline handler does not tear the
@@ -69,6 +73,16 @@ export function useRasterRenderer(
     if (!rendererRef.current || !populationName) return;
     rendererRef.current.setCellColors(populationName, cellColors ?? null);
   }, [populationName, cellColors]);
+
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setRowOrder(populationName, rowOrder ?? null);
+  }, [populationName, rowOrder]);
+
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setHighlightedCell(populationName, highlightedCell ?? null);
+  }, [populationName, highlightedCell]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

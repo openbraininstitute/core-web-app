@@ -39,6 +39,7 @@ export class WebGLPoints {
   private populations: PopulationBuffer[] = [];
   private lastData: { populations: SpikePopulation[]; colors: string[] } | null = null;
   private lastSpikeColors = new Map<string, Uint8Array>();
+  private lastSpikeRows = new Map<string, Float32Array>();
   private contextLost = false;
 
   onRestored: (() => void) | null = null;
@@ -61,8 +62,9 @@ export class WebGLPoints {
 
   setData(populations: SpikePopulation[], colors: string[]) {
     this.lastData = { populations, colors };
-    // New spikes: colours made for the old ones no longer line up.
+    // New spikes: colours and rows made for the old ones no longer line up.
     this.lastSpikeColors.clear();
+    this.lastSpikeRows.clear();
     this.initBuffers(populations, colors);
   }
 
@@ -90,6 +92,22 @@ export class WebGLPoints {
       pop.colorBuffer = null;
     }
     gl.bindVertexArray(null);
+  }
+
+  /**
+   * Put a population's spikes on rows of their own: one y per spike, in the
+   * order the spikes were handed over. Null goes back to their node ids.
+   */
+  setSpikeRows(name: string, rows: Float32Array | null) {
+    const had = this.lastSpikeRows.has(name);
+    if (rows) this.lastSpikeRows.set(name, rows);
+    else this.lastSpikeRows.delete(name);
+    const pop = this.populations.find((p) => p.name === name);
+    if (!pop || this.contextLost || (!rows && !had)) return;
+    const ids = this.lastData?.populations.find((p) => p.name === name)?.nodeIds;
+    const { gl } = this;
+    gl.bindBuffer(gl.ARRAY_BUFFER, pop.yBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, rows ?? new Float32Array(ids ?? []), gl.STATIC_DRAW);
   }
 
   draw(bounds: { xMin: number; yMin: number; xMax: number; yMax: number }, pointSize: number) {
@@ -169,7 +187,11 @@ export class WebGLPoints {
       // The attribute is FLOAT, so the Float64 ids narrow here — the y axis is
       // a screen position, and sub-integer precision does not survive
       // rasterisation anyway. Exactness matters to the replay, not to this.
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pop.nodeIds), gl.STATIC_DRAW);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        this.lastSpikeRows.get(pop.name) ?? new Float32Array(pop.nodeIds),
+        gl.STATIC_DRAW
+      );
       gl.enableVertexAttribArray(1);
       gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 0, 0);
 

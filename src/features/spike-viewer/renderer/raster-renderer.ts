@@ -2,7 +2,7 @@ import { AxisOverlay, MARGIN } from '@/features/spike-viewer/renderer/axis-overl
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
 
-import type { PlotRect, ViewBounds } from '@/features/spike-viewer/renderer/axis-overlay';
+import type { PlotRect, RowAxis, ViewBounds } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { HoverInfo } from '@/features/spike-viewer/renderer/interaction';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
@@ -26,6 +26,16 @@ export const POPULATION_COLORS = [
 export type CellColors = { palette: readonly string[]; columnByNode: Uint16Array };
 
 /**
+ * Rows for a population's cells, in another order than their node ids: each
+ * cell's row by node id, and how the y axis then reads.
+ */
+export type RowOrder = { rows: Float32Array; axis: RowAxis };
+
+/** The pointed-out cell's spikes and the band along its row. */
+const HIGHLIGHT_COLOR = '#0050b3';
+const HIGHLIGHT_BAND = 'rgba(0, 80, 179, 0.12)';
+
+/**
  * A population plus whether it is on show. The arrays are the parser's own —
  * already time-sorted (see `sortSpikes` in `spike-trace.ts`), which is what
  * lets the hover lookup binary-search them without keeping a copy.
@@ -40,6 +50,8 @@ type PlottedPopulation = {
 export class RasterRenderer {
   private glCanvas: HTMLCanvasElement;
   private axisCanvas: HTMLCanvasElement;
+  private highlightCanvas: HTMLCanvasElement;
+  private highlightCtx: CanvasRenderingContext2D | null;
   private interactionLayer: HTMLDivElement;
   private playheadEl: HTMLDivElement;
   private tooltipEl: HTMLDivElement;
@@ -61,6 +73,8 @@ export class RasterRenderer {
   private hasData = false;
   private playhead: number | null = null;
   private cellColors: { name: string; colors: CellColors } | null = null;
+  private rowOrder: { name: string; order: RowOrder } | null = null;
+  private highlight: { name: string; cell: number } | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -75,6 +89,13 @@ export class RasterRenderer {
     this.glCanvas = document.createElement('canvas');
     this.glCanvas.style.cssText = 'position:absolute';
     container.appendChild(this.glCanvas);
+
+    // A cell pointed out from elsewhere, over the spikes and redrawn alone, so
+    // a pointer running down a table repaints one row rather than every spike.
+    this.highlightCanvas = document.createElement('canvas');
+    this.highlightCanvas.style.cssText = 'position:absolute;pointer-events:none';
+    container.appendChild(this.highlightCanvas);
+    this.highlightCtx = this.highlightCanvas.getContext('2d');
 
     // Playhead rule, above the plot: drawn with the axes it would sit behind
     // the WebGL canvas, and a dense population buries it.
@@ -140,7 +161,35 @@ export class RasterRenderer {
     this.visibleSpikes = populations.reduce((sum, p) => sum + p.timestamps.length, 0);
     this.hasData = true;
     this.applyCellColors();
+    this.applyRowOrder();
     this.scheduleRender();
+  }
+
+  /**
+   * Put one population's cells on rows in another order, kept across new
+   * data; null goes back to node ids. The spikes keep their times.
+   */
+  setRowOrder(name: string, order: RowOrder | null) {
+    this.rowOrder = order ? { name, order } : null;
+    this.applyRowOrder();
+    this.scheduleRender();
+  }
+
+  /** Point out one cell of a population, by node id, or none. */
+  setHighlightedCell(name: string, cell: number | null) {
+    this.highlight = cell === null ? null : { name, cell };
+    this.drawHighlight();
+  }
+
+  private rowsOf(name: string): Float32Array | null {
+    return this.rowOrder?.name === name ? this.rowOrder.order.rows : null;
+  }
+
+  private applyRowOrder() {
+    for (const pop of this.pops) {
+      const rows = this.rowsOf(pop.name);
+      this.webgl.setSpikeRows(pop.name, rows && spikeRows(pop.nodeIds, rows));
+    }
   }
 
   /**
@@ -238,8 +287,65 @@ export class RasterRenderer {
 
     const pointSize = this.computePointSize();
     this.webgl.draw(this.view, pointSize);
-    this.axis.draw(this.view, this.plotRect);
+    const visible = this.pops.find((p) => p.visible);
+    const rows =
+      visible && this.rowOrder?.name === visible.name ? this.rowOrder.order.axis : undefined;
+    this.axis.draw(this.view, this.plotRect, rows);
     this.positionPlayhead();
+    this.drawHighlight();
+  }
+
+  /** The pointed-out cell: a band along its row, and its spikes over the rest. */
+  private drawHighlight() {
+    const ctx = this.highlightCtx;
+    if (!ctx) return;
+    ctx.clearRect(0, 0, this.highlightCanvas.width, this.highlightCanvas.height);
+    const highlight = this.highlight;
+    const { view, plotRect } = this;
+    const pop = highlight && this.pops.find((p) => p.name === highlight.name && p.visible);
+    if (!highlight || !pop || !this.hasData) return;
+
+    const rows = this.rowsOf(pop.name);
+    const row = rows ? (rows[highlight.cell] ?? highlight.cell) : highlight.cell;
+    const yRange = view.yMax - view.yMin;
+    const xRange = view.xMax - view.xMin;
+    const py = (1 - (row - view.yMin) / yRange) * plotRect.height;
+    if (py < -8 || py > plotRect.height + 8) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    const band = Math.max(5, plotRect.height / yRange);
+    ctx.fillStyle = HIGHLIGHT_BAND;
+    ctx.fillRect(0, py - band / 2, plotRect.width, band);
+
+    const radius = Math.max(2.5, this.computePointSize() / 2 + 1);
+    ctx.fillStyle = HIGHLIGHT_COLOR;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < pop.nodeIds.length; i++) {
+      if (pop.nodeIds[i] !== highlight.cell) continue;
+      const t = pop.timestamps[i];
+      if (t < view.xMin || t > view.xMax) continue;
+      ctx.beginPath();
+      ctx.arc(((t - view.xMin) / xRange) * plotRect.width, py, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    // Its id at the start of the row, on white so the spikes under it do not muddle it.
+    ctx.font = '600 11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.textBaseline = 'middle';
+    const label = `${highlight.cell}`;
+    const width = ctx.measureText(label).width + 10;
+    const y = Math.min(plotRect.height - 9, Math.max(9, py));
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.beginPath();
+    ctx.roundRect(4, y - 8, width, 16, 8);
+    ctx.fill();
+    ctx.fillStyle = HIGHLIGHT_COLOR;
+    ctx.fillText(label, 9, y + 0.5);
+    ctx.restore();
   }
 
   /** Where the 3D replay currently is, so the two views read as one moment. */
@@ -294,7 +400,7 @@ export class RasterRenderer {
       ((nearest.time - this.view.xMin) / (this.view.xMax - this.view.xMin)) * this.plotRect.width;
     const pxY =
       this.plotRect.y +
-      (1 - (nearest.nodeId - this.view.yMin) / (this.view.yMax - this.view.yMin)) *
+      (1 - (nearest.row - this.view.yMin) / (this.view.yMax - this.view.yMin)) *
         this.plotRect.height;
     const dist = Math.hypot(info.pixelX - pxX, info.pixelY - pxY);
 
@@ -326,7 +432,7 @@ export class RasterRenderer {
   private findNearestPoint(
     dataX: number,
     dataY: number
-  ): { population: string; nodeId: number; time: number } | null {
+  ): { population: string; nodeId: number; row: number; time: number } | null {
     const xRange = this.view.xMax - this.view.xMin;
     const yRange = this.view.yMax - this.view.yMin;
     // Search threshold: 20px in data coordinates
@@ -334,27 +440,30 @@ export class RasterRenderer {
     const yThresh = (yRange * 20) / Math.max(1, this.plotRect.height);
 
     let bestDist = Infinity;
-    let bestResult: { population: string; nodeId: number; time: number } | null = null;
+    let bestResult: { population: string; nodeId: number; row: number; time: number } | null = null;
 
     for (const pop of this.pops) {
       if (!pop.visible || pop.timestamps.length === 0) continue;
+      const rows = this.rowsOf(pop.name);
 
       // Binary search for start of x window
       const lo = lowerBound(pop.timestamps, dataX - xThresh);
       const hi = upperBound(pop.timestamps, dataX + xThresh);
 
       for (let i = lo; i < hi; i++) {
-        const dy = Math.abs(pop.nodeIds[i] - dataY);
+        const nodeId = pop.nodeIds[i];
+        const row = rows ? (rows[nodeId] ?? nodeId) : nodeId;
+        const dy = Math.abs(row - dataY);
         if (dy > yThresh) continue;
 
         // Normalized distance for fair comparison across axes
         const dx = (pop.timestamps[i] - dataX) / xRange;
-        const dyNorm = (pop.nodeIds[i] - dataY) / yRange;
+        const dyNorm = (row - dataY) / yRange;
         const dist = dx * dx + dyNorm * dyNorm;
 
         if (dist < bestDist) {
           bestDist = dist;
-          bestResult = { population: pop.name, nodeId: pop.nodeIds[i], time: pop.timestamps[i] };
+          bestResult = { population: pop.name, nodeId, row, time: pop.timestamps[i] };
         }
       }
     }
@@ -386,6 +495,9 @@ export class RasterRenderer {
     this.glCanvas.width = this.plotRect.width * dpr;
     this.glCanvas.height = this.plotRect.height * dpr;
     this.webgl.resize(this.glCanvas.width, this.glCanvas.height);
+    this.highlightCanvas.style.cssText = `${this.glCanvas.style.cssText};pointer-events:none`;
+    this.highlightCanvas.width = this.glCanvas.width;
+    this.highlightCanvas.height = this.glCanvas.height;
 
     // Size axis canvas to full container
     this.axisCanvas.width = w * dpr;
@@ -405,6 +517,7 @@ export class RasterRenderer {
     this.webgl.destroy();
 
     this.glCanvas.remove();
+    this.highlightCanvas.remove();
     this.axisCanvas.remove();
     this.interactionLayer.remove();
     this.playheadEl.remove();
@@ -442,6 +555,13 @@ function spikeColors(nodeIds: Float64Array, colors: CellColors, own: string): Ui
     bytes[i * 4 + 3] = 255;
   }
   return bytes;
+}
+
+/** Each spike's row from its cell's; an id past the rows keeps itself. */
+function spikeRows(nodeIds: Float64Array, rows: Float32Array): Float32Array {
+  const out = new Float32Array(nodeIds.length);
+  for (let i = 0; i < nodeIds.length; i++) out[i] = rows[nodeIds[i]] ?? nodeIds[i];
+  return out;
 }
 
 /** `#rgb`, `#rrggbb` or `rgb(…)` as bytes; null for anything else. */

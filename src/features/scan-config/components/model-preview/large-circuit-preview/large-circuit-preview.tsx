@@ -38,6 +38,9 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
+/** What the rest of the population fades to while one of its somas is pointed out. */
+const FADED = '#d4d4d4';
+
 /** An empty palette: the viewer falls back to its own depth-shaded blue. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
   palette: [],
@@ -67,6 +70,8 @@ export interface LargeCircuitPreviewProps {
   hiddenPopulations?: readonly string[];
   /** One flag per cell of the population on show; a 0 takes that soma out the same way. */
   shownCells?: Uint8Array;
+  /** A soma of the population on show to point out, by node index: every other one of it fades. */
+  highlightedCell?: number;
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /** Colour for the somas of the populations that are not on show. */
@@ -119,6 +124,7 @@ export function LargeCircuitPreview({
   populations,
   hiddenPopulations,
   shownCells,
+  highlightedCell,
   nodeColors,
   recededColor,
   onPopulationClick,
@@ -238,7 +244,15 @@ export function LargeCircuitPreview({
   const cellColors = React.useMemo(() => {
     // Nothing to colour by, nothing receding and nothing hidden, so leave the
     // viewer to its own depth-shaded blue, as it draws today.
-    if (!nodeColors && !recede && hidden.size === 0 && !shownCells) return VIEWER_DEFAULT_PALETTE;
+    if (
+      !nodeColors &&
+      !recede &&
+      hidden.size === 0 &&
+      !shownCells &&
+      highlightedCell === undefined
+    ) {
+      return VIEWER_DEFAULT_PALETTE;
+    }
 
     const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
     // Three entries are added here beyond the mapping's own colours: the
@@ -252,6 +266,7 @@ export function LargeCircuitPreview({
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
     let hiddenColumn: number | undefined;
+    let fadedColumn: number | undefined;
 
     const columnByCell = new Uint16Array(positions.length / 3);
     let index = 0;
@@ -278,10 +293,32 @@ export function LargeCircuitPreview({
           columnByCell[index + i] = hiddenColumn;
         }
       }
+      if (
+        candidate.name === subjectName &&
+        highlightedCell !== undefined &&
+        highlightedCell < geometry.count &&
+        !hidden.has(candidate.name)
+      ) {
+        if (fadedColumn === undefined) fadedColumn = palette.push(recededColor ?? FADED) - 1;
+        for (let i = 0; i < geometry.count; i++) {
+          if (i === highlightedCell || columnByCell[index + i] === hiddenColumn) continue;
+          columnByCell[index + i] = fadedColumn;
+        }
+      }
       index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, positions.length, nodeColors, recede, hidden, shownCells]);
+  }, [
+    placed,
+    subjectName,
+    positions.length,
+    nodeColors,
+    recede,
+    hidden,
+    shownCells,
+    highlightedCell,
+    recededColor,
+  ]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
