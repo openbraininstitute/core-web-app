@@ -117,6 +117,8 @@ type Props = {
   onHoveredCellChange?: (cell: number | null) => void;
   /** A cell to bring into view in the table, such as one clicked in the scene; a new key asks again. */
   focusedCell?: { nodeId: number; key: number };
+  /** The cell clicked in the scene or the raster, whose row stays marked until it is let go. */
+  heldCell?: number | null;
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
@@ -163,6 +165,7 @@ export function SpikeStatisticsView({
   onShownCellsChange,
   onHoveredCellChange,
   focusedCell,
+  heldCell = null,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -579,6 +582,7 @@ export function SpikeStatisticsView({
           quickFilters={SPIKING_FILTER}
           focusRow={focusedCell}
           rowIndexOf={getRowIndex}
+          markedNodeId={heldCell}
         />
       )}
     </div>

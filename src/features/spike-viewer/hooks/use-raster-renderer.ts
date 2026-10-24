@@ -19,7 +19,9 @@ export function useRasterRenderer(
   /** Rows for the cells of the population on show; undefined keeps them by node id. */
   rowOrder?: RowOrder,
   /** A cell of the population on show to point out, by node id. */
-  highlightedCell?: number | null
+  highlightedCell?: number | null,
+  /** Called with the node id of a cell clicked in the plot. */
+  onCellClick?: (cell: number) => void
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
   // Held in a ref so a caller passing an inline handler does not tear the
@@ -29,6 +31,10 @@ export function useRasterRenderer(
   useEffect(() => {
     onSeekRef.current = onSeek;
   }, [onSeek]);
+  const onCellClickRef = useRef(onCellClick);
+  useEffect(() => {
+    onCellClickRef.current = onCellClick;
+  }, [onCellClick]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -36,6 +42,7 @@ export function useRasterRenderer(
 
     const renderer = new RasterRenderer(el);
     renderer.onSeek = (timeInMs) => onSeekRef.current?.(timeInMs);
+    renderer.onCellClick = (cell) => onCellClickRef.current?.(cell);
     rendererRef.current = renderer;
 
     return () => {

@@ -44,6 +44,8 @@ export class InteractionManager {
    * moved was the one gesture left unused.
    */
   onSeek: ((timeInMs: number) => void) | null = null;
+  /** The same click, where it landed, for what is under it; told with the seek. */
+  onClick: ((info: HoverInfo) => void) | null = null;
 
   constructor(element: HTMLElement) {
     this.element = element;
@@ -292,9 +294,19 @@ export class InteractionManager {
       // also move time: a double-click is two of these pairs, and both land
       // before the dblclick that cancels them.
       if (drag.mode === 'zoom-xy') {
-        const timeInMs = this.pixelToData(drag.lastClient.x, drag.lastClient.y).x;
+        const data = this.pixelToData(drag.lastClient.x, drag.lastClient.y);
+        const rect = this.element.getBoundingClientRect();
+        const info: HoverInfo = {
+          dataX: data.x,
+          dataY: data.y,
+          pixelX: drag.lastClient.x - rect.left,
+          pixelY: drag.lastClient.y - rect.top,
+        };
         window.clearTimeout(this.seekTimer);
-        this.seekTimer = window.setTimeout(() => this.onSeek?.(timeInMs), DBLCLICK_MS);
+        this.seekTimer = window.setTimeout(() => {
+          this.onSeek?.(data.x);
+          this.onClick?.(info);
+        }, DBLCLICK_MS);
       }
       return;
     }

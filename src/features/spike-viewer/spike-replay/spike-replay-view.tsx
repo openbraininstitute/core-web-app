@@ -249,17 +249,31 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       ),
     [populationName]
   );
-  const highlightedCell =
+  const hoveredRow =
     (dockedOpen || showStatistics) && hoveredCell?.population === populationName
       ? hoveredCell.cell
       : null;
-  // A cell clicked in the scene, which the table beside it scrolls to.
-  const [clickedCell, setClickedCell] = useState<{ nodeId: number; key: number }>();
-  const handleSceneCellClick = useCallback(
-    (cell: number) =>
-      setClickedCell((previous) => ({ nodeId: cell, key: (previous?.key ?? 0) + 1 })),
-    []
+  // A cell clicked in the scene or the raster: pointed out in both, and found
+  // in the table. A second click on it lets it go; a table row under the
+  // pointer takes its place while it is there.
+  const [clickedCell, setClickedCell] = useState<{
+    population: string;
+    nodeId: number;
+    key: number;
+  } | null>(null);
+  const handleCellClick = useCallback(
+    (cell: number) => {
+      if (!populationName) return;
+      setClickedCell((previous) =>
+        previous?.population === populationName && previous.nodeId === cell
+          ? null
+          : { population: populationName, nodeId: cell, key: (previous?.key ?? 0) + 1 }
+      );
+    },
+    [populationName]
   );
+  const focusedCell = clickedCell?.population === populationName ? clickedCell : null;
+  const highlightedCell = hoveredRow ?? focusedCell?.nodeId ?? null;
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
   const spikes = useMemo(
@@ -411,7 +425,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         recorded={recorded}
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
-        focusedCell={dockedOpen ? clickedCell : undefined}
+        focusedCell={dockedOpen ? (focusedCell ?? undefined) : undefined}
+        heldCell={focusedCell?.nodeId ?? null}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
         tableOnly={campaignMode}
@@ -514,7 +529,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                   colorByNoneLabel="Uniform"
                   shownCells={shownCells}
                   highlightedCell={highlightedCell ?? undefined}
-                  onCellClick={dockedOpen ? handleSceneCellClick : undefined}
+                  onCellClick={handleCellClick}
                   onNodeColorsChange={setSceneColors}
                   spikes={{
                     data: spikes ?? undefined,
@@ -570,6 +585,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 onSeek={canSeek ? handleSeek : undefined}
                 rowOrder={rasterOrder.order}
                 highlightedCell={highlightedCell}
+                onCellClick={circuit ? handleCellClick : undefined}
               />
               {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and

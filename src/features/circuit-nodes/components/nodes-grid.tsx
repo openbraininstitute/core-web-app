@@ -118,6 +118,8 @@ type Props = {
    */
   focusRow?: { nodeId: number; key: number };
   rowIndexOf?: (nodeId: number, sort: SortItem[], filter: FilterModel) => Promise<number>;
+  /** A row to keep marked, by node id, such as the cell picked in a view beside the table. */
+  markedNodeId?: number | null;
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
@@ -142,6 +144,7 @@ type GridContext = {
 
 const PICKED_ROW_CLASS = 'nodes-row-picked';
 const FLASHED_ROW_CLASS = 'nodes-row-flashed';
+const MARKED_ROW_CLASS = 'nodes-row-marked';
 /** As long as the flash's fade in the stylesheet. */
 const FLASH_MS = 1600;
 
@@ -322,6 +325,7 @@ export function NodesGrid({
   quickFilters,
   focusRow,
   rowIndexOf,
+  markedNodeId = null,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -395,15 +399,28 @@ export function NodesGrid({
     gridRef.current?.api?.refreshHeader();
   }, [pickAllState]);
   const flashedRef = useRef<number | null>(null);
+  const markedRef = useRef(markedNodeId);
   const rowClassRules = useMemo(
     () => ({
       [PICKED_ROW_CLASS]: (p: RowClassParams) => isPicked(nodeIdOf(p.data)),
       [FLASHED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === flashedRef.current,
+      [MARKED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === markedRef.current,
     }),
     [isPicked]
   );
   useEffect(() => {
-    const api = gridRef.current?.api;
+    if (markedRef.current === markedNodeId) return;
+    markedRef.current = markedNodeId;
+    gridRef.current?.api?.redrawRows();
+  }, [markedNodeId]);
+  // Asked again once the grid is up: a focus can arrive before it, with the table.
+  const [gridApi, setGridApi] = useState<GridApi | null>(null);
+  const shownCountRef = useRef(filteredCount ?? rowCount);
+  useEffect(() => {
+    shownCountRef.current = filteredCount ?? rowCount;
+  });
+  useEffect(() => {
+    const api = gridApi;
     if (!focusRow || !rowIndexOf || !api) return;
     let cancelled = false;
     const sort: SortItem[] = api
@@ -415,6 +432,8 @@ export function NodesGrid({
       .then((index) => {
         if (cancelled || index < 0) return;
         flashedRef.current = focusRow.nodeId;
+        // Rows past the pages read so far are not counted yet, so there is nowhere to scroll.
+        if (index >= api.getDisplayedRowCount()) api.setRowCount(shownCountRef.current, true);
         api.ensureIndexVisible(index, 'middle');
         api.redrawRows();
       })
@@ -427,7 +446,7 @@ export function NodesGrid({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [focusRow, rowIndexOf]);
+  }, [focusRow, rowIndexOf, gridApi]);
   useEffect(() => {
     selectedRef.current = selectedNodeIds;
     gridRef.current?.api?.redrawRows();
@@ -510,6 +529,7 @@ export function NodesGrid({
     // Before the datasource, so the first page asked for is already filtered.
     restoreFilters(e.api);
     e.api.setGridOption('datasource', datasource);
+    setGridApi(e.api);
   };
 
   const [filters, setFilters] = useState<FilterModel>({});

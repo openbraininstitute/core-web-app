@@ -37,6 +37,8 @@ type RasterPlotProps = {
   rowOrder?: RowOrder;
   /** A cell of that population to point out, by node id, such as a table row under the pointer. */
   highlightedCell?: number | null;
+  /** Called with the node id of a cell clicked in the plot: by its spike, or its row zoomed in. */
+  onCellClick?: (cell: number) => void;
 };
 
 export default function RasterPlot({
@@ -49,6 +51,7 @@ export default function RasterPlot({
   cellColors,
   rowOrder,
   highlightedCell,
+  onCellClick,
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
@@ -59,7 +62,8 @@ export default function RasterPlot({
     onSeek,
     cellColors,
     rowOrder,
-    highlightedCell
+    highlightedCell,
+    onCellClick
   );
 
   useEffect(() => {

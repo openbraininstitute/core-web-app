@@ -31,6 +31,11 @@ export type CellColors = { palette: readonly string[]; columnByNode: Uint16Array
  */
 export type RowOrder = { rows: Float32Array; axis: RowAxis };
 
+/** How near a spike a click has to land to pick its cell. */
+const CLICK_RADIUS_PX = 12;
+/** How tall rows have to be, zoomed in, before a click between spikes picks the row's cell. */
+const MIN_ROW_PX = 6;
+
 /** The pointed-out cell's spikes and the band along its row. */
 const HIGHLIGHT_COLOR = '#0050b3';
 const HIGHLIGHT_BAND = 'rgba(0, 80, 179, 0.12)';
@@ -73,8 +78,9 @@ export class RasterRenderer {
   private hasData = false;
   private playhead: number | null = null;
   private cellColors: { name: string; colors: CellColors } | null = null;
-  private rowOrder: { name: string; order: RowOrder } | null = null;
+  private rowOrder: { name: string; order: RowOrder; cellAtRow: Uint32Array } | null = null;
   private highlight: { name: string; cell: number } | null = null;
+  private cellClickHandler: ((cell: number) => void) | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -134,6 +140,7 @@ export class RasterRenderer {
     };
 
     this.interaction.onHover = (info) => this.handleHover(info);
+    this.interaction.onClick = (info) => this.handleClick(info);
 
     // handleResize runs inside the observer callback on purpose: ResizeObserver
     // fires after layout and before paint, so the callback can resize and
@@ -170,9 +177,50 @@ export class RasterRenderer {
    * data; null goes back to node ids. The spikes keep their times.
    */
   setRowOrder(name: string, order: RowOrder | null) {
-    this.rowOrder = order ? { name, order } : null;
+    if (order) {
+      const cellAtRow = new Uint32Array(order.rows.length);
+      order.rows.forEach((row, cell) => {
+        cellAtRow[row] = cell;
+      });
+      this.rowOrder = { name, order, cellAtRow };
+    } else {
+      this.rowOrder = null;
+    }
     this.applyRowOrder();
     this.scheduleRender();
+  }
+
+  /**
+   * Told the node id of a cell clicked in the plot: the one whose spike is
+   * under the pointer, or, zoomed in until rows are tall enough to aim at,
+   * the one whose row is.
+   */
+  set onCellClick(handler: ((cell: number) => void) | null) {
+    this.cellClickHandler = handler;
+  }
+
+  private handleClick(info: HoverInfo) {
+    const handler = this.cellClickHandler;
+    const pop = this.pops.find((p) => p.visible);
+    if (!handler || !pop || !this.hasData) return;
+    const { view, plotRect } = this;
+    const nearest = this.findNearestPoint(info.dataX, info.dataY);
+    if (nearest) {
+      const px =
+        plotRect.x + ((nearest.time - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
+      const py =
+        plotRect.y + (1 - (nearest.row - view.yMin) / (view.yMax - view.yMin)) * plotRect.height;
+      if (Math.hypot(info.pixelX - px, info.pixelY - py) <= CLICK_RADIUS_PX) {
+        handler(nearest.nodeId);
+        return;
+      }
+    }
+    if (plotRect.height / (view.yMax - view.yMin) < MIN_ROW_PX) return;
+    const row = Math.round(info.dataY);
+    const order = this.rowOrder?.name === pop.name ? this.rowOrder : null;
+    const count = order ? order.cellAtRow.length : this.dataBounds.yMax + 1;
+    if (row < 0 || row >= count) return;
+    handler(order ? order.cellAtRow[row] : row);
   }
 
   /** Point out one cell of a population, by node id, or none. */
