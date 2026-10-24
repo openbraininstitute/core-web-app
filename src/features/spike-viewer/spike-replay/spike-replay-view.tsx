@@ -24,6 +24,7 @@ import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-v
 import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
+import { BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -548,6 +549,30 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       />
     ) : null;
 
+  // Play and the scrubber: under the panes, or beside the statistics in the raster's box.
+  const transport = (boxed: boolean) => (
+    <TransportBar
+      playing={playing}
+      onPlayingChange={(next) => {
+        const at = liveTimeRef.current;
+        if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
+        setPlaying(next);
+      }}
+      axis={isSplit ? timeAxis : null}
+      clock={{ timeRef: liveTimeRef, moveRef: scrubberRef }}
+      timeInMs={readoutTimeInMs}
+      timeMinInMs={data.timeRange.min}
+      timeMaxInMs={data.timeRange.max}
+      onSeek={handleSeek}
+      speed={speed}
+      onSpeedChange={setSpeed}
+      afterglowInSeconds={afterglowInSeconds}
+      onAfterglowChange={setAfterglowInSeconds}
+      disabled={!replayable}
+      boxed={boxed}
+    />
+  );
+
   return (
     // This root goes fullscreen, not the 3D pane inside it, so the raster and
     // transport bar go with it; the scene is handed no fullscreen button of its own.
@@ -617,6 +642,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               id="spike-replay-scene"
               className={classNames(
                 'absolute left-0 right-0 top-0',
+                // Beside the statistics, a box of its own like theirs.
+                dockedOpen && `${BOX_CLASS} mx-3 overflow-hidden`,
                 !showScene && 'invisible pointer-events-none'
               )}
               style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
@@ -670,7 +697,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               'absolute left-0 right-0 bottom-0 mx-3 pb-3',
               // Two white panes meet along this edge, so without a rule they read
               // as one view with a gap in it. The grab bar rides on top of it.
-              isSplit && 'border-t border-neutral-2',
+              // Beside the statistics each is a box, which sets them apart instead.
+              isSplit && !dockedOpen && 'border-t border-neutral-2',
               !showRaster && 'invisible pointer-events-none'
             )}
             style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
@@ -687,68 +715,77 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 onResize={setRasterHeight}
               />
             )}
-            <div className="relative h-full min-h-0">
-              <RasterPlot
-                data={shownData}
-                cellColors={
-                  showScene && sceneColors?.population === populationName
-                    ? sceneColors.nodeColors
-                    : undefined
-                }
-                populationName={populationName}
-                cellCount={cellCount}
-                markerSize={markerSize}
-                playheadRef={isSplit ? playheadRef : undefined}
-                rowOrder={rasterOrder.order}
-                highlightedCell={highlightedCell}
-                onCellClick={circuit ? handleCellClick : undefined}
-                onWindowChange={handleWindowChange}
-                windowResetKey={windowResetKey}
-                onTimeAxisChange={setTimeAxis}
-                timeWindowRequest={timeWindowRequest}
-                events={timeline}
-              />
-              {/* Inside the pane it belongs to, the way the scene's chrome sits in
+            <div
+              className={classNames(
+                'flex h-full min-h-0 flex-col',
+                dockedOpen && `${BOX_CLASS} px-3 pt-2`
+              )}
+            >
+              <div className="relative min-h-0 flex-1">
+                <RasterPlot
+                  data={shownData}
+                  cellColors={
+                    showScene && sceneColors?.population === populationName
+                      ? sceneColors.nodeColors
+                      : undefined
+                  }
+                  populationName={populationName}
+                  cellCount={cellCount}
+                  markerSize={markerSize}
+                  playheadRef={isSplit ? playheadRef : undefined}
+                  rowOrder={rasterOrder.order}
+                  highlightedCell={highlightedCell}
+                  onCellClick={circuit ? handleCellClick : undefined}
+                  onWindowChange={handleWindowChange}
+                  windowResetKey={windowResetKey}
+                  onTimeAxisChange={setTimeAxis}
+                  timeWindowRequest={timeWindowRequest}
+                  events={timeline}
+                />
+                {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and
                 the row above the panes is for what governs both. */}
-              {recorded && recorded.timestamps.length > 0 && (
-                <div className="absolute left-0 top-0 z-10 flex items-center gap-2">
-                  <RasterPlotControls
-                    markerSize={markerSize}
-                    onMarkerSizeChange={setMarkerSize}
-                    afterglow={
-                      isSplit && replayable
-                        ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
-                        : undefined
-                    }
-                  />
-                  {circuit && (
-                    <PillSelect
-                      label="Order by"
-                      value={rasterOrder.value}
-                      options={rasterOrder.options}
-                      onChange={rasterOrder.onChange}
+                {recorded && recorded.timestamps.length > 0 && (
+                  <div className="absolute left-0 top-0 z-10 flex items-center gap-2">
+                    <RasterPlotControls
+                      markerSize={markerSize}
+                      onMarkerSizeChange={setMarkerSize}
+                      afterglow={
+                        isSplit && replayable
+                          ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
+                          : undefined
+                      }
                     />
-                  )}
-                  <TimeWindowFields
-                    from={currentWindow?.time?.[0] ?? data.timeRange.min}
-                    to={currentWindow?.time?.[1] ?? data.timeRange.max}
-                    min={data.timeRange.min}
-                    max={data.timeRange.max}
-                    zoomed={currentWindow !== null}
-                    onChange={requestTimeWindow}
-                    onReset={clearRasterWindow}
-                  />
-                  {isSplit && replayable && (
-                    <PillSelect
-                      label="Speed"
-                      value={String(speed)}
-                      options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
-                      onChange={(v) => setSpeed(Number(v))}
+                    {circuit && (
+                      <PillSelect
+                        label="Order by"
+                        value={rasterOrder.value}
+                        options={rasterOrder.options}
+                        onChange={rasterOrder.onChange}
+                      />
+                    )}
+                    <TimeWindowFields
+                      from={currentWindow?.time?.[0] ?? data.timeRange.min}
+                      to={currentWindow?.time?.[1] ?? data.timeRange.max}
+                      min={data.timeRange.min}
+                      max={data.timeRange.max}
+                      zoomed={currentWindow !== null}
+                      onChange={requestTimeWindow}
+                      onReset={clearRasterWindow}
                     />
-                  )}
-                </div>
-              )}
+                    {isSplit && replayable && (
+                      <PillSelect
+                        label="Speed"
+                        value={String(speed)}
+                        options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+                        onChange={(v) => setSpeed(Number(v))}
+                      />
+                    )}
+                  </div>
+                )}
+              </div>
+              {/* Beside the statistics the scrubber is in the raster's box, under its axis. */}
+              {dockedOpen && isSplit && showScene && transport(true)}
             </div>
           </div>
 
@@ -786,27 +823,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             sidePanel.campaignTarget
           )}
 
-        {showScene && (
-          <TransportBar
-            playing={playing}
-            onPlayingChange={(next) => {
-              const at = liveTimeRef.current;
-              if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
-              setPlaying(next);
-            }}
-            axis={isSplit ? timeAxis : null}
-            clock={{ timeRef: liveTimeRef, moveRef: scrubberRef }}
-            timeInMs={readoutTimeInMs}
-            timeMinInMs={data.timeRange.min}
-            timeMaxInMs={data.timeRange.max}
-            onSeek={handleSeek}
-            speed={speed}
-            onSpeedChange={setSpeed}
-            afterglowInSeconds={afterglowInSeconds}
-            onAfterglowChange={setAfterglowInSeconds}
-            disabled={!replayable}
-          />
-        )}
+        {showScene && !(dockedOpen && isSplit) && transport(false)}
       </FullscreenPortalScope>
     </div>
   );

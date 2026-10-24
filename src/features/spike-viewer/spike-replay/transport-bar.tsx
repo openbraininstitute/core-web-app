@@ -55,6 +55,8 @@ interface TransportBarProps {
     timeRef: React.RefObject<number>;
     moveRef: React.RefObject<((timeInMs: number) => void) | null>;
   };
+  /** In the raster's own box, which already insets and sets it apart: no rule, no inset. */
+  boxed?: boolean;
 }
 
 /** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
@@ -72,6 +74,7 @@ export function TransportBar({
   disabled = false,
   axis = null,
   clock,
+  boxed = false,
 }: TransportBarProps) {
   const duration = timeMaxInMs - timeMinInMs;
   // Sub-millisecond steps: a 20 ms recording would otherwise scrub in 5% jumps.
@@ -79,7 +82,10 @@ export function TransportBar({
 
   if (axis && clock) {
     return (
-      <div id="spike-replay-transport" className="border-t border-neutral-200 px-3">
+      <div
+        id="spike-replay-transport"
+        className={boxed ? undefined : 'border-t border-neutral-200 px-3'}
+      >
         {/* The raster's own frame: its container starts at this inset too. */}
         <div className="relative h-10">
           <div

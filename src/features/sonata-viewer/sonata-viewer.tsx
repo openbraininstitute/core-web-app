@@ -27,6 +27,10 @@ import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns'
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
+import {
+  BOX_CLASS,
+  TABLE_BOX_CLASS,
+} from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -501,6 +505,7 @@ export function SonataReportView({
         timeCursor={timeCursor}
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : undefined}
         onCellClick={handleSceneCellClick}
+        bare={docked}
       />
     ) : null;
 
@@ -591,10 +596,11 @@ export function SonataReportView({
           />
           {groupSelect}
         </div>
+        {/* Each a box, as the statistics beside them are. */}
         {scene && (
           <div
             ref={sceneBoxRef}
-            className="relative shrink-0"
+            className={cn(BOX_CLASS, 'relative shrink-0 px-2 pt-2')}
             style={{ height: dockedSceneHeight }}
           >
             {scene}
@@ -606,7 +612,7 @@ export function SonataReportView({
             />
           </div>
         )}
-        <div className="flex min-h-0 flex-1 flex-col">{traces}</div>
+        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2')}>{traces}</div>
         {createPortal(
           <ReportStatisticsPanel
             key={population.name}
@@ -704,7 +710,8 @@ export function SonataReportView({
       {table && (
         <div
           className={cn(
-            'border-neutral-2 flex flex-[2] flex-col border-t pt-2',
+            TABLE_BOX_CLASS,
+            'flex flex-[2] flex-col',
             showScene ? 'min-h-[220px]' : 'min-h-[180px]'
           )}
         >

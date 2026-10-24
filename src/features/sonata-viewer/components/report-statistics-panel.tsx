@@ -99,7 +99,7 @@ export function ReportStatisticsPanel({
         />
       }
       table={
-        <div ref={tableElement} className="flex h-full min-h-0 flex-col pb-3">
+        <div ref={tableElement} className="flex h-full min-h-0 flex-col">
           {values ? (
             <ReportNodesTable
               {...table}

@@ -1,6 +1,6 @@
 import { Empty } from 'antd';
 import Plotly from 'plotly.js-dist-min';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
@@ -333,44 +333,56 @@ function SharedTracesPlot({
 
   // react-plotly follows the window, not this box, which a scene opening above shrinks.
   const boxRef = useRef<HTMLDivElement>(null);
+
+  // The cursor, moved on the DOM: placed by the plot's own axis, so it follows a zoom,
+  // and placed again after every redraw, so a paused one fits a plot that has resized.
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const cursorTimeRef = useRef<number | null>(null);
+  const placeCursor = useCallback(() => {
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+    const timeInMs = cursorTimeRef.current;
+    const graph = boxRef.current?.querySelector('.js-plotly-plot') as
+      | (HTMLElement & { _fullLayout?: PlotlyLayoutInternals })
+      | null;
+    const layout = graph?._fullLayout;
+    if (timeInMs === null || !layout?.xaxis) {
+      cursor.style.display = 'none';
+      return;
+    }
+    const [from, to] = layout.xaxis.range;
+    if (timeInMs < from || timeInMs > to) {
+      cursor.style.display = 'none';
+      return;
+    }
+    const { l, t, h } = layout._size;
+    cursor.style.display = 'block';
+    cursor.style.left = `${l + layout.xaxis.l2p(timeInMs) - 0.75}px`;
+    cursor.style.top = `${t}px`;
+    cursor.style.height = `${h}px`;
+  }, []);
+  useEffect(() => {
+    if (!timeCursor) return;
+    return timeCursor.subscribe((timeInMs) => {
+      cursorTimeRef.current = timeInMs;
+      placeCursor();
+    });
+  }, [timeCursor, placeCursor]);
+
   useEffect(() => {
     const box = boxRef.current;
     if (!box) return;
     const observer = new ResizeObserver(() => {
       const graph = box.querySelector<HTMLElement>('.js-plotly-plot');
-      if (graph) Promise.resolve(Plotly.Plots.resize(graph)).catch(() => {});
+      if (graph) {
+        Promise.resolve(Plotly.Plots.resize(graph))
+          .then(placeCursor)
+          .catch(() => {});
+      }
     });
     observer.observe(box);
     return () => observer.disconnect();
-  }, []);
-
-  // The cursor, moved on the DOM: placed by the plot's own axis, so it follows a zoom.
-  const cursorRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!timeCursor) return;
-    return timeCursor.subscribe((timeInMs) => {
-      const cursor = cursorRef.current;
-      const graph = boxRef.current?.querySelector('.js-plotly-plot') as
-        | (HTMLElement & { _fullLayout?: PlotlyLayoutInternals })
-        | null;
-      const layout = graph?._fullLayout;
-      if (!cursor) return;
-      if (timeInMs === null || !layout?.xaxis) {
-        cursor.style.display = 'none';
-        return;
-      }
-      const [from, to] = layout.xaxis.range;
-      if (timeInMs < from || timeInMs > to) {
-        cursor.style.display = 'none';
-        return;
-      }
-      const { l, t, h } = layout._size;
-      cursor.style.display = 'block';
-      cursor.style.left = `${l + layout.xaxis.l2p(timeInMs) - 0.75}px`;
-      cursor.style.top = `${t}px`;
-      cursor.style.height = `${h}px`;
-    });
-  }, [timeCursor]);
+  }, [placeCursor]);
 
   return (
     <div ref={boxRef} className="relative min-h-0 flex-1">
@@ -380,8 +392,14 @@ function SharedTracesPlot({
         config={CONFIG}
         useResizeHandler
         style={{ width: '100%', height: '100%' }}
-        onInitialized={attachListeners}
-        onUpdate={attachListeners}
+        onInitialized={(figure, graph) => {
+          attachListeners(figure, graph);
+          placeCursor();
+        }}
+        onUpdate={(figure, graph) => {
+          attachListeners(figure, graph);
+          placeCursor();
+        }}
       />
       {timeCursor && (
         <div

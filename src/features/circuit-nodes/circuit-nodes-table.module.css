@@ -149,11 +149,10 @@
   cursor: pointer;
 }
 
-/* The host's pinned columns, the ones the table is up for: white like the file's, as on
-   the Data page's table, set apart by the rule at their edge. Transparent, so a hovered
-   or picked row still shows through. */
+/* The host's pinned columns, the ones the table is up for, tinted apart from the
+   file's. Translucent, so a hovered or picked row still shows through. */
 .pinned {
-  background-color: transparent;
+  background-color: rgb(0 0 0 / 0.035);
 }
 
 /* A narrow pinned column's cells and header (see `PinnedColumn.compact`): less padding, so

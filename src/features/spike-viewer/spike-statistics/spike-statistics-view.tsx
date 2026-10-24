@@ -353,7 +353,7 @@ export function SpikeStatisticsView({
   );
 
   const table = (
-    <div ref={tableElement} className="flex h-full min-h-0 flex-col pb-3">
+    <div ref={tableElement} className="flex h-full min-h-0 flex-col">
       {error ? (
         <Centered>
           <Empty description={`The nodes could not be read: ${error.message}`} />

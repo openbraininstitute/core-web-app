@@ -10,6 +10,7 @@ import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { SPEEDS } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { Button } from '@/ui/molecules/button';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -44,6 +45,8 @@ type Props = {
   highlightedCell?: number;
   /** Told the node index of a cell clicked in the scene. */
   onCellClick?: (nodeId: number) => void;
+  /** In a box of its own, which frames it: no border of its own. */
+  bare?: boolean;
 };
 
 /**
@@ -62,6 +65,7 @@ export function VoltageScene({
   timeCursor,
   highlightedCell,
   onCellClick,
+  bare = false,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -156,7 +160,12 @@ export function VoltageScene({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-neutral-200">
+      <div
+        className={cn(
+          'relative min-h-0 flex-1 overflow-hidden',
+          bare ? 'rounded-2xl' : 'rounded-xl border border-neutral-200'
+        )}
+      >
         <CircuitScene
           circuit={circuit}
           largeCircuit={!circuitDrawsMorphologies(circuit.scale)}

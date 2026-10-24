@@ -284,6 +284,16 @@ export function StatisticsPlots({
   );
 }
 
+/**
+ * A box of the statistics view, one per quadrant: the Data page's white card, rounded,
+ * with its faint navy ring and soft navy drop under a white top highlight.
+ */
+export const BOX_CLASS =
+  'rounded-3xl bg-white ring-1 ring-primary-9/5 shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]';
+
+/** The box a table sits in, with room inside so the table clears its corners. */
+export const TABLE_BOX_CLASS = `${BOX_CLASS} px-3 pt-1 pb-2`;
+
 /** The table's share of the view until its grab bar is dragged. */
 const DEFAULT_TABLE_SHARE = 0.6;
 const MIN_TABLE_HEIGHT = 160;
@@ -319,19 +329,21 @@ export function PlotsOverTable({
 
   return (
     <div ref={rootRef} className="flex h-full min-h-0 flex-col">
-      {plots}
-      {/* A margin, so the rule stops short of the sides, as the replay's does. */}
+      {/* Kept while the table has the view to itself, so the plots' choices outlast it. */}
       <div
-        className={cn(
-          'border-neutral-2 relative mx-3 pt-3',
-          tableOnly ? 'min-h-0 flex-1' : 'shrink-0 border-t'
-        )}
+        className={cn(BOX_CLASS, 'mx-3 mt-3 flex min-h-0 flex-1 flex-col', tableOnly && 'hidden')}
+      >
+        {plots}
+      </div>
+      {/* The table in its box, the grab bar over it. */}
+      <div
+        className={cn('relative mx-3 pt-3 pb-3', tableOnly ? 'min-h-0 flex-1' : 'shrink-0')}
         style={tableOnly ? undefined : { height: tableHeight }}
       >
         {!tableOnly && (
           <PaneResizeHandle containerRef={rootRef} minHeight={0} onResize={setChosenTableHeight} />
         )}
-        {table}
+        <div className={cn(TABLE_BOX_CLASS, 'h-full min-h-0')}>{table}</div>
       </div>
     </div>
   );
