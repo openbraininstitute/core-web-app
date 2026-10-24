@@ -3,8 +3,9 @@ import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 export type SpikeStatisticKey = 'count' | 'rate' | 'firstSpike' | 'meanIsi' | 'isiCv';
 
-export type SpikeStatistic = {
-  key: SpikeStatisticKey;
+/** A value worked out for every cell, as a column of the nodes table and a plot's value. */
+export type CellStatistic<Key extends string = string> = {
+  key: Key;
   /** The column's name in the nodes session, prefixed so it never meets a node attribute. */
   column: string;
   label: string;
@@ -15,6 +16,8 @@ export type SpikeStatistic = {
   /** The steps its values come in, given the run's span in ms: whole spikes, or one spike over the run. */
   step?: (windowMs: number) => number;
 };
+
+export type SpikeStatistic = CellStatistic<SpikeStatisticKey>;
 
 export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
@@ -59,7 +62,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   },
 ];
 
-export function statisticLabel(statistic: SpikeStatistic): string {
+export function statisticLabel(statistic: CellStatistic): string {
   return statistic.unit ? `${statistic.label} (${statistic.unit})` : statistic.label;
 }
 

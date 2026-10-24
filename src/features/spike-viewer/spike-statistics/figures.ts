@@ -116,6 +116,9 @@ export function violinFigure(
     y.set(g.values, cursor);
     cursor += g.values.length;
   }
+  // From zero for what cannot go below it - counts, rates, intervals - else over
+  // the values' own span, where a membrane's mean voltage sits far from zero.
+  const negative = y.some((v) => v < 0);
 
   return {
     data: [
@@ -152,7 +155,7 @@ export function violinFigure(
       },
       yaxis: {
         title: axisTitle(valueLabel),
-        rangemode: 'tozero',
+        rangemode: negative ? 'normal' : 'tozero',
         automargin: true,
         gridcolor: GRID_COLOR,
         zeroline: false,

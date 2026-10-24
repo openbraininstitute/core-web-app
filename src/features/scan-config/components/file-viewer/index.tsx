@@ -62,6 +62,14 @@ export function isSpikeFile(file: TAssetBackedFile): boolean {
   );
 }
 
+/** A SONATA compartment report, such as a soma's voltage, drawn by the report viewer. */
+export function isVoltageReportFile(file: TAssetBackedFile): boolean {
+  return (
+    file.asset.content_type === AssetContentType.h5 &&
+    file.asset.label === AssetLabel.voltage_report
+  );
+}
+
 /**
  * The viewer a file's content type calls for.
  *
@@ -138,9 +146,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   // preview does, so it lays out its own inset rather than being pushed off the corner
   const isSpikeReport = !!displayFile && isSpikeFile(displayFile);
   // the voltage viewer lays out its own inset too, to line its header up with the files column's
-  const isVoltageReport =
-    displayFile?.asset.content_type === AssetContentType.h5 &&
-    displayFile.asset.label === AssetLabel.voltage_report;
+  const isVoltageReport = !!displayFile && isVoltageReportFile(displayFile);
   const edgeToEdge = isCode || isImage || isDirectory || isPdf || isSpikeReport || isVoltageReport;
 
   const viewerContent = renderFileContent(displayFile, context);

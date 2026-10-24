@@ -7,6 +7,7 @@ import { resolveTraces } from './column-mapping';
 
 import type {
   CellFrames,
+  CellValueStatistics,
   DownsampleRequest,
   NodeTraceData,
   PopulationMetadata,
@@ -250,6 +251,66 @@ class SonataWorkerImpl {
       }
     }
     return transfer({ nodeIds, times, values }, [nodeIds.buffer, times.buffer, values.buffer]);
+  }
+
+  /**
+   * Each recorded cell's mean, standard deviation, lowest and highest value
+   * over the whole run, at the file's own resolution, and with a threshold its
+   * upward crossings of it: for a voltage, its spikes.
+   */
+  async getCellStatistics(
+    populationName: string,
+    spikeThreshold: number | null
+  ): Promise<CellValueStatistics> {
+    if (!this.metadata || !this.file) {
+      throw new Error('No file loaded. Call loadFile first.');
+    }
+    const pop = this.metadata.populations.find((p) => p.name === populationName);
+    const shape = this.shapes.get(populationName);
+    if (!pop || !shape) throw new Error(`Population "${populationName}" not found.`);
+    const { numTimesteps, numColumns } = shape;
+
+    // A cell's first column: the soma, in a compartment report.
+    const columnOf = new Map<number, number>();
+    pop.traces.forEach((trace, column) => {
+      if (!columnOf.has(trace.nodeId)) columnOf.set(trace.nodeId, column);
+    });
+    const nodeIds = Uint32Array.from(columnOf.keys());
+    const columns = Array.from(columnOf.values());
+    const cells = columns.length;
+
+    const flat = this.getPopulationData(populationName);
+    const sum = new Float64Array(cells);
+    const squares = new Float64Array(cells);
+    const min = new Float64Array(cells).fill(Number.POSITIVE_INFINITY);
+    const max = new Float64Array(cells).fill(Number.NEGATIVE_INFINITY);
+    const spikes = spikeThreshold === null ? null : new Float64Array(cells);
+    const above = new Uint8Array(cells);
+    // Row by row, the order the matrix is stored in.
+    for (let t = 0; t < numTimesteps; t += 1) {
+      const row = t * numColumns;
+      for (let c = 0; c < cells; c += 1) {
+        const v = flat[row + columns[c]];
+        sum[c] += v;
+        squares[c] += v * v;
+        if (v < min[c]) min[c] = v;
+        if (v > max[c]) max[c] = v;
+        if (spikes && spikeThreshold !== null) {
+          const now = v >= spikeThreshold ? 1 : 0;
+          if (now && !above[c] && t > 0) spikes[c] += 1;
+          above[c] = now;
+        }
+      }
+    }
+    const mean = new Float64Array(cells);
+    const sd = new Float64Array(cells);
+    for (let c = 0; c < cells; c += 1) {
+      mean[c] = sum[c] / numTimesteps;
+      sd[c] = Math.sqrt(Math.max(0, squares[c] / numTimesteps - mean[c] * mean[c]));
+    }
+    const buffers = [nodeIds.buffer, mean.buffer, sd.buffer, min.buffer, max.buffer];
+    if (spikes) buffers.push(spikes.buffer);
+    return transfer({ nodeIds, mean, sd, min, max, spikes }, buffers);
   }
 
   /** Shared by every column of a population. */

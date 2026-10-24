@@ -33,6 +33,20 @@ export type CellFrames = {
   values: Float32Array;
 };
 
+/**
+ * Each recorded cell's statistics over the run, in the order of `nodeIds`: of
+ * its first column, the soma in a compartment report. `spikes` counts upward
+ * crossings of a threshold, where one was given.
+ */
+export type CellValueStatistics = {
+  nodeIds: Uint32Array;
+  mean: Float64Array;
+  sd: Float64Array;
+  min: Float64Array;
+  max: Float64Array;
+  spikes: Float64Array | null;
+};
+
 export type TimeConfig = {
   startTime: number;
   endTime: number;

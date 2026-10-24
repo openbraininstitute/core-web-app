@@ -26,11 +26,11 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import { FileViewer } from '@/features/scan-config/components/file-viewer';
+import { FileViewer, isSpikeFile } from '@/features/scan-config/components/file-viewer';
 import { SimulationFiles } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
-import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
+import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
 import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulations/scan-parameter-picker';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
@@ -427,7 +427,13 @@ export default function SimulationsTab({
     <>
       <SimulationsResultsUiAdapter
         simulationPicker={simulationPicker}
-        campaignStatistics={campaign !== null}
+        // The campaign's statistics compare its spikes, so only a spike file offers them.
+        campaignStatistics={
+          campaign !== null &&
+          !!selectedFile &&
+          isAssetBackedFile(selectedFile) &&
+          isSpikeFile(selectedFile)
+        }
         campaignId={campaignId}
         loading={loading}
         simulations={simulations}

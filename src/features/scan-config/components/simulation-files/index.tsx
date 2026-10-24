@@ -5,7 +5,7 @@ import { useEffect, useMemo } from 'react';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { isSpikeFile } from '@/features/scan-config/components/file-viewer';
+import { isSpikeFile, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
@@ -155,12 +155,17 @@ export function SimulationFiles({
   // The model's files are the circuit's, not the simulation's.
   const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
   const circuitFiles = inputFilesWithLogs.filter(isCircuitFile);
-  // A spike file opens straight on its statistics, which keep its raster and replay beside them.
-  // They are listed against the circuit's node file, so only a circuit's simulation has them.
+  // A spike file or a voltage report opens straight on its statistics, which keep its raster
+  // or traces and its replay beside them. They are listed against the circuit's node file,
+  // so only a circuit's simulation has them.
   const sidePanel = useResultsSidePanel();
   const select = (file: TActivityCustomFile) => {
     onSelect(file);
-    if (circuitFiles.length > 0 && isAssetBackedFile(file) && isSpikeFile(file)) {
+    if (
+      circuitFiles.length > 0 &&
+      isAssetBackedFile(file) &&
+      (isSpikeFile(file) || isVoltageReportFile(file))
+    ) {
       sidePanel?.setOpen(true);
     }
   };

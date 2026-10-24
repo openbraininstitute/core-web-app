@@ -1,7 +1,8 @@
 import { RiBox3Line } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
@@ -9,14 +10,17 @@ import { PopulationSelect } from '@/features/circuit-nodes/components/population
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import ReportDetailsView, {
   sharedTracesHint,
 } from '@/features/sonata-viewer/components/report-details-view';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
+import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
 import SonataViewerSkeleton from '@/features/sonata-viewer/components/sonata-viewer-skeleton';
 import { VoltageScene } from '@/features/sonata-viewer/components/voltage-scene';
-import { PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
+import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
@@ -31,6 +35,7 @@ import type { ComponentType, ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { PickAllState } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type {
   CellFrames,
@@ -39,6 +44,7 @@ import type {
   SonataReportMetadata,
 } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
+import type { StatisticValues } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { WorkspaceContext } from '@/types/common';
 
 const ErrorFallback = SimpleErrorComponent as unknown as ComponentType<FallbackProps>;
@@ -54,6 +60,15 @@ const ALL = '__all__';
 
 /** Whether a voltage report is played in 3D above its traces: kept across the simulations shown. */
 const voltageSceneAtom = atom(false);
+/**
+ * The cells picked to draw, tagged with the cells they were picked from: they
+ * outlast a change of simulation, as the spike statistics' ticks do.
+ */
+const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
+/** The scene's share of the viewer beside the statistics, until its edge is dragged. */
+const DOCKED_SCENE_SHARE = 0.5;
+/** What the traces keep under the scene beside the statistics. */
+const MIN_DOCKED_TRACES = 260;
 /** Frames the scene's recording is thinned to: smooth enough to play, small enough to hold. */
 const SCENE_FRAMES = 2000;
 const DEFAULT_SCENE_HEIGHT = 280;
@@ -158,8 +173,13 @@ export function SonataReportView({
   );
   // A voltage report, played over the circuit above its traces, which mark where it is.
   const voltage = variableName === undefined && population?.dataUnits.toLowerCase() === 'mv';
+  // Inside a results layout the statistics open beside the viewer, as a spike
+  // report's do: the scene over the traces here, their plots over the table there.
+  const sidePanel = useResultsSidePanel();
+  const panelTarget = circuit !== undefined && sidePanel?.open ? sidePanel.target : null;
+  const docked = panelTarget !== null;
   const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
-  const showScene = sceneOn && voltage && circuit !== undefined && status === 'ready';
+  const showScene = (sceneOn || docked) && voltage && circuit !== undefined && status === 'ready';
   const timeCursor = useMemo(() => createTimeCursor(), []);
   const [sceneData, setSceneData] = useState<{
     population: string;
@@ -209,8 +229,9 @@ export function SonataReportView({
   // All tagged with their population, so switching it starts from all the cells.
   const [visible, setVisible] = useState<{ population: string; traces: number[] | null }>();
   const visibleTraces = visible?.population === populationName ? visible.traces : null;
-  const [picks, setPicks] = useState<{ population: string; cells: Pick[] }>();
-  const pickedCells = picks?.population === populationName ? picks.cells : NO_PICKS;
+  const pickKey = sessionKey || (populationName ?? '');
+  const [picks, setPicks] = useAtom(picksAtom);
+  const pickedCells = picks?.key === pickKey ? picks.cells : NO_PICKS;
 
   const handleVisibleTraces = useCallback(
     (traces: number[] | null) => {
@@ -223,18 +244,18 @@ export function SonataReportView({
   // so the others keep theirs.
   const togglePick = useCallback(
     (nodeId: number) => {
-      if (!populationName) return;
+      if (!pickKey) return;
       setPicks((previous) => {
-        const cells = previous?.population === populationName ? previous.cells : NO_PICKS;
+        const cells = previous?.key === pickKey ? previous.cells : NO_PICKS;
         if (cells.some((c) => c.nodeId === nodeId)) {
-          return { population: populationName, cells: cells.filter((c) => c.nodeId !== nodeId) };
+          return { key: pickKey, cells: cells.filter((c) => c.nodeId !== nodeId) };
         }
         const taken = new Set(cells.map((c) => c.slot));
         const slot = PICK_COLORS.findIndex((_, s) => !taken.has(s));
-        return { population: populationName, cells: [...cells, { nodeId, slot }] };
+        return { key: pickKey, cells: [...cells, { nodeId, slot }] };
       });
     },
-    [populationName]
+    [pickKey, setPicks]
   );
 
   const pickedTraces = useMemo<PickedTrace[]>(() => {
@@ -281,15 +302,15 @@ export function SonataReportView({
     return [...ids].sort((a, b) => a - b);
   }, [population, visibleTraces]);
   const tickedInTable = tableCells.filter((id) => selectedNodeIds.has(id)).length;
-  const pickAllState =
+  const pickAllState: PickAllState =
     tickedInTable === 0 ? 'none' : tickedInTable === tableCells.length ? 'all' : 'some';
   const togglePickAll = () => {
-    if (!populationName) return;
+    if (!pickKey) return;
     const inTable = new Set(tableCells);
     setPicks((previous) => {
-      const cells = previous?.population === populationName ? previous.cells : NO_PICKS;
+      const cells = previous?.key === pickKey ? previous.cells : NO_PICKS;
       if (pickAllState === 'all') {
-        return { population: populationName, cells: cells.filter((c) => !inTable.has(c.nodeId)) };
+        return { key: pickKey, cells: cells.filter((c) => !inTable.has(c.nodeId)) };
       }
       const next = [...cells];
       const have = new Set(next.map((c) => c.nodeId));
@@ -300,7 +321,7 @@ export function SonataReportView({
         taken.add(slot);
         next.push({ nodeId, slot });
       }
-      return { population: populationName, cells: next };
+      return { key: pickKey, cells: next };
     });
   };
 
@@ -338,8 +359,289 @@ export function SonataReportView({
     });
   }, [traceGroups, pickedTraces, hoveredTraces]);
 
+  // Each recorded cell's statistics, worked out once the panel is up and kept as
+  // columns of the session's, so the table sorts and filters by them.
+  const statistics = useMemo(
+    () => reportStatistics(population?.dataUnits ?? '', voltage ? null : (variableName ?? 'value')),
+    [population?.dataUnits, voltage, variableName]
+  );
+  const tableColumns = useMemo(
+    () => (columns ? [...neuronSetColumns, ...columns] : undefined),
+    [neuronSetColumns, columns]
+  );
+  const [cellStatistics, setCellStatistics] = useState<{
+    population: string;
+    rows: number;
+    values: StatisticValues;
+  }>();
+  const statisticsKnown =
+    cellStatistics?.population === populationName && cellStatistics?.rows === rowCount;
+  useEffect(() => {
+    if (!docked || !populationName || status !== 'ready' || statisticsKnown) return;
+    let cancelled = false;
+    worker
+      .getCellStatistics(populationName, voltage ? SPIKE_THRESHOLD_MV : null)
+      .then((found) => {
+        if (cancelled) return;
+        // A value per node index, as the session's columns hold them; none where nothing was recorded.
+        const perNode = (cellValues: Float64Array) => {
+          const values = new Float64Array(rowCount).fill(Number.NaN);
+          found.nodeIds.forEach((nodeId, i) => {
+            if (nodeId < rowCount) values[nodeId] = cellValues[i];
+          });
+          return values;
+        };
+        const values: Record<string, Float64Array> = {
+          mean: perNode(found.mean),
+          sd: perNode(found.sd),
+          min: perNode(found.min),
+          max: perNode(found.max),
+        };
+        if (found.spikes) values.spikes = perNode(found.spikes);
+        setCellStatistics({ population: populationName, rows: rowCount, values });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [docked, populationName, status, statisticsKnown, worker, voltage, rowCount]);
+  const [registeredStatistics, setRegisteredStatistics] = useState<StatisticValues | null>(null);
+  useEffect(() => {
+    if (!statisticsKnown || !cellStatistics || status !== 'ready') return;
+    const { values } = cellStatistics;
+    let cancelled = false;
+    setDerivedColumns(
+      'report-statistics',
+      statistics.flatMap((s) => {
+        const column = values[s.key];
+        return column ? [{ name: s.column, values: column.slice() }] : [];
+      })
+    )
+      .then(() => {
+        if (!cancelled) setRegisteredStatistics(values);
+      })
+      // The session closed underneath; its next ready state sets them again.
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [statisticsKnown, cellStatistics, status, statistics, setDerivedColumns]);
+  const statisticValues =
+    statisticsKnown && registeredStatistics === cellStatistics?.values
+      ? registeredStatistics
+      : null;
+
+  // The plots are over the ticked cells, else those the table's filter keeps.
+  const plotCells = useMemo(() => {
+    if (pickedCells.length > 0) {
+      return Uint32Array.from(pickedCells.map((c) => c.nodeId).sort((a, b) => a - b));
+    }
+    return visibleTraces ? Uint32Array.from(tableCells) : null;
+  }, [pickedCells, visibleTraces, tableCells]);
+
+  // A recorded cell clicked in the scene is picked, or let go, and its row brought into view.
+  const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
+  const recordedNodes = useMemo(
+    () => new Set(population?.traces.map((t) => t.nodeId)),
+    [population]
+  );
+  const handleSceneCellClick = useCallback(
+    (nodeId: number) => {
+      if (!recordedNodes.has(nodeId)) return;
+      togglePick(nodeId);
+      setFocusedRow({ nodeId, key: performance.now() });
+    },
+    [recordedNodes, togglePick]
+  );
+
+  // Beside the statistics the scene takes a share of the viewer, until its edge is dragged.
+  const [dockRoot, setDockRoot] = useState<HTMLDivElement | null>(null);
+  const [dockHeight, setDockHeight] = useState(0);
+  useLayoutEffect(() => {
+    if (!dockRoot) return;
+    setDockHeight(dockRoot.getBoundingClientRect().height);
+    const observer = new ResizeObserver(([entry]) => setDockHeight(entry.contentRect.height));
+    observer.observe(dockRoot);
+    return () => observer.disconnect();
+  }, [dockRoot]);
+  const [chosenDockedScene, setChosenDockedScene] = useState<number | null>(null);
+  const dockedSceneHeight = Math.max(
+    160,
+    Math.min(
+      chosenDockedScene ?? Math.round(dockHeight * DOCKED_SCENE_SHARE),
+      dockHeight - MIN_DOCKED_TRACES
+    )
+  );
+
   if (!population) {
     return <Empty className="p-2em" description="This report recorded no population" />;
+  }
+
+  const groupSelect = groupOptions.length > 0 && (
+    <PillSelect
+      label="Group by"
+      value={groupBy}
+      options={[
+        { value: ALL, label: 'All' },
+        ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
+      ]}
+      onChange={setChosenGroupBy}
+    />
+  );
+
+  const scene =
+    showScene && circuit && populationName ? (
+      <VoltageScene
+        circuit={circuit}
+        populationName={populationName}
+        cellCount={rowCount}
+        frames={sceneFrames?.frames ?? null}
+        valueRange={sceneFrames?.range ?? null}
+        units={population.dataUnits}
+        timeCursor={timeCursor}
+        highlightedCell={hovered?.population === populationName ? hovered.nodeId : undefined}
+        onCellClick={handleSceneCellClick}
+      />
+    ) : null;
+
+  const traces =
+    groupBy === ALL ? (
+      <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[metadata, population]}>
+        <ReportDetailsView
+          key={population.name}
+          population={population}
+          worker={worker}
+          visibleTraces={visibleTraces}
+          picked={pickedTraces}
+          hovered={hoveredTraces}
+          variableName={variableName}
+          timeCursor={showScene ? timeCursor : undefined}
+        />
+      </ErrorBoundary>
+    ) : shownGroups === null ? (
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <Spin />
+      </div>
+    ) : shownGroups.length === 0 ? (
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <Empty description="No recorded cell passes the table’s filter" />
+      </div>
+    ) : (
+      // A plot per group, one under another: the same axes throughout, so
+      // they compare at a glance, and each drawn only once it is near view.
+      <div className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
+        {shownGroups.map((group) => (
+          <section key={group.name} className="mb-2">
+            <div className="flex items-baseline gap-1.5 text-xs">
+              <span className="text-neutral-400">{groupLabel}</span>
+              <span className="text-primary-9 font-semibold">{group.name}</span>
+              <span className="text-neutral-400">
+                · {group.cells.toLocaleString()} {group.cells === 1 ? 'cell' : 'cells'}
+              </span>
+            </div>
+            <WhenNearView className="flex h-[240px] flex-col">
+              <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[metadata, population]}>
+                <ReportDetailsView
+                  key={`${population.name}:${groupBy}:${group.name}`}
+                  population={population}
+                  worker={worker}
+                  visibleTraces={group.traces}
+                  picked={group.picked}
+                  hovered={group.hovered}
+                  variableName={variableName}
+                  timeCursor={showScene ? timeCursor : undefined}
+                />
+              </ErrorBoundary>
+            </WhenNearView>
+          </section>
+        ))}
+      </div>
+    );
+
+  // The table of the recorded cells, wherever it goes: under the traces, or in the panel.
+  const table = circuit && {
+    circuit,
+    circuitConfig,
+    population,
+    onVisibleTracesChange: handleVisibleTraces,
+    onCellClick: togglePick,
+    selectedNodeIds,
+    pickAll: { state: pickAllState, onToggle: togglePickAll },
+    onCellHover: handleCellHover,
+    extraColumns: neuronSetColumns,
+    note:
+      groupBy === ALL
+        ? sharedTracesHint(pickedTraces.length, visibleTraces?.length ?? population.traces.length)
+        : pickedTraces.length > 0
+          ? null
+          : 'Tick rows in the table below to pick which cells to compare',
+  };
+
+  if (panelTarget && table) {
+    const plotted = plotCells ? plotCells.length : population.nodeCount;
+    return (
+      // The quadrants a spike report's statistics make: the scene over the traces
+      // here, the plots over the table in the panel beside them.
+      <div ref={setDockRoot} className="flex h-full min-h-0 flex-col gap-3 px-4 pt-1.25 pb-4">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <PopulationHeader
+            populations={metadata.populations}
+            population={population}
+            onChange={setChosenPopulation}
+          />
+          {groupSelect}
+        </div>
+        {scene && (
+          <div
+            ref={sceneBoxRef}
+            className="relative shrink-0"
+            style={{ height: dockedSceneHeight }}
+          >
+            {scene}
+            <PaneResizeHandle
+              containerRef={sceneBoxRef}
+              minHeight={160}
+              onResize={setChosenDockedScene}
+              edge="bottom"
+            />
+          </div>
+        )}
+        <div className="flex min-h-0 flex-1 flex-col">{traces}</div>
+        {createPortal(
+          <ReportStatisticsPanel
+            key={population.name}
+            statistics={statistics}
+            values={statisticValues}
+            cells={plotCells}
+            columns={tableColumns}
+            ready={status === 'ready'}
+            sessionKey={sessionKey}
+            getColumn={getColumn}
+            color={CHART_LINE_COLOR}
+            spanMs={population.timeConfig.endTime - population.timeConfig.startTime}
+            summary={
+              <span className="whitespace-nowrap text-xs text-neutral-400">
+                {plotted.toLocaleString()} {plotted === 1 ? 'cell' : 'cells'}
+                {pickedCells.length > 0
+                  ? ' ticked'
+                  : visibleTraces
+                    ? ' in the table’s filter'
+                    : ' recorded'}
+              </span>
+            }
+            table={{
+              ...table,
+              reset: {
+                picked: pickedCells.length > 0,
+                onReset: () => setPicks({ key: pickKey, cells: NO_PICKS }),
+              },
+              focusRow: focusedRow,
+            }}
+          />,
+          panelTarget
+        )}
+      </div>
+    );
   }
 
   return (
@@ -378,32 +680,14 @@ export function SonataReportView({
               3D
             </button>
           )}
-          {groupOptions.length > 0 && (
-            <PillSelect
-              label="Group by"
-              value={groupBy}
-              options={[
-                { value: ALL, label: 'All' },
-                ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
-              ]}
-              onChange={setChosenGroupBy}
-            />
-          )}
+          {groupSelect}
         </div>
         {simulationPicker}
       </div>
 
-      {showScene && circuit && populationName && (
+      {scene && (
         <div ref={sceneBoxRef} className="relative shrink-0" style={{ height: sceneHeight }}>
-          <VoltageScene
-            circuit={circuit}
-            populationName={populationName}
-            cellCount={rowCount}
-            frames={sceneFrames?.frames ?? null}
-            valueRange={sceneFrames?.range ?? null}
-            units={population.dataUnits}
-            timeCursor={timeCursor}
-          />
+          {scene}
           <PaneResizeHandle
             containerRef={sceneBoxRef}
             minHeight={160}
@@ -414,92 +698,17 @@ export function SonataReportView({
       )}
 
       <div className={cn('flex flex-[3] flex-col', showScene ? 'min-h-[200px]' : 'min-h-[240px]')}>
-        {groupBy === ALL ? (
-          <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[metadata, population]}>
-            <ReportDetailsView
-              key={population.name}
-              population={population}
-              worker={worker}
-              visibleTraces={visibleTraces}
-              picked={pickedTraces}
-              hovered={hoveredTraces}
-              variableName={variableName}
-              timeCursor={showScene ? timeCursor : undefined}
-            />
-          </ErrorBoundary>
-        ) : shownGroups === null ? (
-          <div className="flex min-h-0 flex-1 items-center justify-center">
-            <Spin />
-          </div>
-        ) : shownGroups.length === 0 ? (
-          <div className="flex min-h-0 flex-1 items-center justify-center">
-            <Empty description="No recorded cell passes the table’s filter" />
-          </div>
-        ) : (
-          // A plot per group, one under another: the same axes throughout, so
-          // they compare at a glance, and each drawn only once it is near view.
-          <div className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
-            {shownGroups.map((group) => (
-              <section key={group.name} className="mb-2">
-                <div className="flex items-baseline gap-1.5 text-xs">
-                  <span className="text-neutral-400">{groupLabel}</span>
-                  <span className="text-primary-9 font-semibold">{group.name}</span>
-                  <span className="text-neutral-400">
-                    · {group.cells.toLocaleString()} {group.cells === 1 ? 'cell' : 'cells'}
-                  </span>
-                </div>
-                <WhenNearView className="flex h-[240px] flex-col">
-                  <ErrorBoundary
-                    FallbackComponent={ErrorFallback}
-                    resetKeys={[metadata, population]}
-                  >
-                    <ReportDetailsView
-                      key={`${population.name}:${groupBy}:${group.name}`}
-                      population={population}
-                      worker={worker}
-                      visibleTraces={group.traces}
-                      picked={group.picked}
-                      hovered={group.hovered}
-                      variableName={variableName}
-                      timeCursor={showScene ? timeCursor : undefined}
-                    />
-                  </ErrorBoundary>
-                </WhenNearView>
-              </section>
-            ))}
-          </div>
-        )}
+        {traces}
       </div>
 
-      {circuit && (
+      {table && (
         <div
           className={cn(
             'border-neutral-2 flex flex-[2] flex-col border-t pt-2',
             showScene ? 'min-h-[220px]' : 'min-h-[180px]'
           )}
         >
-          <ReportNodesTable
-            key={population.name}
-            circuit={circuit}
-            circuitConfig={circuitConfig}
-            population={population}
-            onVisibleTracesChange={handleVisibleTraces}
-            onCellClick={togglePick}
-            selectedNodeIds={selectedNodeIds}
-            pickAll={{ state: pickAllState, onToggle: togglePickAll }}
-            onCellHover={handleCellHover}
-            extraColumns={neuronSetColumns}
-            note={
-              groupBy === ALL
-                ? sharedTracesHint(
-                    pickedTraces.length,
-                    visibleTraces?.length ?? population.traces.length
-                  )
-                : pickedTraces.length > 0
-                  ? null
-                  : 'Tick rows in the table below to pick which cells to compare'
-            }
-          />
+          <ReportNodesTable key={population.name} {...table} />
         </div>
       )}
     </div>

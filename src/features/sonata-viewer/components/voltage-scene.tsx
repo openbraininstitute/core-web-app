@@ -40,6 +40,10 @@ type Props = {
   units: string;
   /** Moved as the scene plays, for the traces under it to mark. */
   timeCursor: TimeCursor;
+  /** A cell to point out, by node index, such as the table row under the pointer. */
+  highlightedCell?: number;
+  /** Told the node index of a cell clicked in the scene. */
+  onCellClick?: (nodeId: number) => void;
 };
 
 /**
@@ -56,6 +60,8 @@ export function VoltageScene({
   valueRange,
   units,
   timeCursor,
+  highlightedCell,
+  onCellClick,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -158,6 +164,8 @@ export function VoltageScene({
           populationName={populationName}
           showUnselectedPopulations={false}
           nodeColorsOverride={nodeColors}
+          highlightedCell={highlightedCell}
+          onCellClick={onCellClick}
         />
         {!frames && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">

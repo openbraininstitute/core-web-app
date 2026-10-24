@@ -1,15 +1,25 @@
 'use client';
 
 import { Empty, Spin } from 'antd';
-import { useEffect, useMemo, useState } from 'react';
+import { atom, useAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { PickAllState } from '@/features/circuit-nodes/components/nodes-grid';
-import type { ColumnMeta, FilterModel, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
+import type {
+  PickAllState,
+  PinnedColumn,
+  QuickFilter,
+} from '@/features/circuit-nodes/components/nodes-grid';
+import type {
+  ColumnMeta,
+  FilterModel,
+  ParsedCircuitConfig,
+  SortItem,
+} from '@/features/circuit-nodes/types';
 import type { PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** This table's owner name in the shared nodes session, beside any spike statistics. */
@@ -23,6 +33,13 @@ const RECORDED_ONLY: FilterModel = {
 
 const NO_FILTER: FilterModel = {};
 const NO_EXTRA_COLUMNS: ColumnMeta[] = [];
+
+/**
+ * The filter, tagged with its session: every table over the same cells - the
+ * viewer's own, the one beside its statistics, the next simulation's - starts
+ * from it.
+ */
+const filterAtom = atom<{ session: string; model: FilterModel } | undefined>(undefined);
 
 type Props = {
   circuit: ICircuit;
@@ -42,6 +59,15 @@ type Props = {
   extraColumns?: ColumnMeta[];
   /** The cell under the pointer, by node id; null once it leaves the table. */
   onCellHover?: (nodeId: number | null) => void;
+  /** Statistics the host registered in the session, pinned against the table's right edge. */
+  pinnedColumns?: readonly PinnedColumn[];
+  /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
+  pinnedVersion?: unknown;
+  onPinnedResize?: (width: number) => void;
+  quickFilters?: readonly QuickFilter[];
+  reset?: { picked: boolean; onReset: () => void };
+  /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
+  focusRow?: { nodeId: number; key: number };
 };
 
 /**
@@ -64,6 +90,12 @@ export function ReportNodesTable({
   onCellHover,
   note,
   extraColumns = NO_EXTRA_COLUMNS,
+  pinnedColumns,
+  pinnedVersion,
+  onPinnedResize,
+  quickFilters,
+  reset,
+  focusRow,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === population.name);
   const sessionKey = nodePopulation
@@ -79,6 +111,7 @@ export function ReportNodesTable({
     progress,
     setDerivedColumns,
     getFilteredIndices,
+    getRowIndex,
   } = useNodesWorker({
     enabled: nodePopulation !== undefined,
     circuitId: circuit.id,
@@ -149,7 +182,7 @@ export function ReportNodesTable({
   }, [tableColumns]);
 
   // A population gets a grid of its own, whose filters start empty; so does this.
-  const [filter, setFilter] = useState<{ session: string; model: FilterModel }>();
+  const [filter, setFilter] = useAtom(filterAtom);
   const filterModel = filter?.session === sessionKey ? filter.model : NO_FILTER;
   const filtering = Object.keys(filterModel).length > 0;
 
@@ -180,6 +213,13 @@ export function ReportNodesTable({
     tracesOfNode,
     onVisibleTracesChange,
   ]);
+
+  // Where a cell falls among the recorded rows, not among the whole file's.
+  const rowAmongRecorded = useCallback(
+    (nodeId: number, sort: SortItem[], model: FilterModel) =>
+      getRowIndex(nodeId, sort, { ...model, ...RECORDED_ONLY }),
+    [getRowIndex]
+  );
 
   if (!circuitConfig) {
     return (
@@ -227,6 +267,14 @@ export function ReportNodesTable({
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
       onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
+      initialFilterModel={filterModel}
+      pinnedColumns={pinnedColumns}
+      pinnedVersion={pinnedVersion}
+      onPinnedResize={onPinnedResize}
+      quickFilters={quickFilters}
+      reset={reset}
+      focusRow={focusRow}
+      rowIndexOf={rowAmongRecorded}
       onRowClick={onCellClick}
       selectedNodeIds={selectedNodeIds}
       pickColumn
