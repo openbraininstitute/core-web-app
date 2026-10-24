@@ -27,7 +27,8 @@ import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
-import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
+import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
+import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
@@ -39,6 +40,7 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { RasterWindow, TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData, SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
@@ -71,6 +73,8 @@ const DEFAULT_MARKER_SIZE = 4;
 
 /** How often the readout and scrubber catch up with the viewer's clock. */
 const READOUT_INTERVAL_IN_MS = 100;
+/** How long the raster's zoom has to rest before the statistics follow it. */
+const WINDOW_SETTLE_MS = 150;
 
 /**
  * The population is chosen above both panes, so the scene's own way of choosing
@@ -240,6 +244,59 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     () => (shownCells && populationName ? keepSpikesOf(data, populationName, shownCells) : data),
     [data, populationName, shownCells]
   );
+
+  // What the raster is zoomed to, once it rests: the statistics are over its
+  // span of time and the cells of its rows, and the scene keeps only those.
+  // The raster itself is not cut by it, so a pan finds its spikes in place.
+  const [rasterWindow, setRasterWindow] = useState<{
+    population: string;
+    window: RasterWindow;
+  } | null>(null);
+  const settleTimer = useRef(0);
+  const handleWindowChange = useCallback(
+    (next: RasterWindow | null) => {
+      window.clearTimeout(settleTimer.current);
+      settleTimer.current = window.setTimeout(
+        () =>
+          setRasterWindow(
+            next && populationName ? { population: populationName, window: next } : null
+          ),
+        WINDOW_SETTLE_MS
+      );
+    },
+    [populationName]
+  );
+  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
+  const [windowResetKey, setWindowResetKey] = useState(0);
+  const clearRasterWindow = useCallback(() => setWindowResetKey((k) => k + 1), []);
+  const currentWindow = rasterWindow?.population === populationName ? rasterWindow.window : null;
+  const windowCells = useMemo(() => {
+    const rows = currentWindow?.rows;
+    if (!rows || cellCount === undefined) return null;
+    const order = rasterOrder.order?.rows;
+    const flags = new Uint8Array(cellCount);
+    for (let cell = 0; cell < cellCount; cell++) {
+      const row = order ? order[cell] : cell;
+      if (row >= rows[0] && row <= rows[1]) flags[cell] = 1;
+    }
+    return flags;
+  }, [currentWindow, cellCount, rasterOrder.order]);
+  const sceneCells = useMemo(() => {
+    if (!windowCells) return shownCells;
+    if (!shownCells) return windowCells;
+    const flags = new Uint8Array(windowCells.length);
+    for (let i = 0; i < flags.length; i++) flags[i] = windowCells[i] & shownCells[i];
+    return flags;
+  }, [windowCells, shownCells]);
+  const sceneData = useMemo(
+    () =>
+      sceneCells === shownCells
+        ? shownData
+        : sceneCells && populationName
+          ? keepSpikesOf(data, populationName, sceneCells)
+          : data,
+    [sceneCells, shownCells, shownData, data, populationName]
+  );
   // The table row under the pointer, pointed out in the raster and the scene.
   const [hoveredCell, setHoveredCell] = useState<{ population: string; cell: number } | null>(null);
   const handleHoveredCell = useCallback(
@@ -277,13 +334,22 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
   const spikes = useMemo(
-    () => (replayable ? spikesToViewer(shownData, populationName) : null),
-    [shownData, populationName, replayable]
+    () => (replayable ? spikesToViewer(sceneData, populationName) : null),
+    [sceneData, populationName, replayable]
   );
   const showScene = view === MODES.Replay || view === MODES.Split;
   const isSplit = view === MODES.Split;
   const showRaster = isSplit || (!showScene && !showStatistics);
-  const canSeek = isSplit && replayable;
+  // In the split, the scrubber lies under the raster's time axis, and the
+  // replay's speed and afterglow sit with the raster's own controls.
+  const [timeAxis, setTimeAxis] = useState<TimeAxis | null>(null);
+  const [timeWindowRequest, setTimeWindowRequest] = useState<{
+    from: number;
+    to: number;
+    key: number;
+  }>();
+  const requestTimeWindow = (from: number, to: number) =>
+    setTimeWindowRequest((previous) => ({ from, to, key: (previous?.key ?? 0) + 1 }));
 
   // Waits for a replay that works, so the last step never points at a disabled play button.
   useNextStepOnboarding({ condition: replayable && showScene, tour: spikeReplayTour });
@@ -317,10 +383,19 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // The viewer owns the clock and reports it on every painted frame. Straight
   // into the raster's imperative renderer; React only samples it for the
   // readout, ten times a second rather than sixty.
+  // A raster zoomed to a span of time plays that span: it stops at its end,
+  // and play from outside it, or at its end, starts again from its start.
+  const playFrom = currentWindow?.time?.[0] ?? data.timeRange.min;
+  const playTo = currentWindow?.time?.[1] ?? data.timeRange.max;
+  const playEndRef = useRef(playTo);
+  useEffect(() => {
+    playEndRef.current = playTo;
+  });
   const handleTimeChange = useCallback((timeInMs: number) => {
     liveTimeRef.current = timeInMs;
     playheadRef.current?.(timeInMs);
     setSceneLive(true);
+    if (timeInMs >= playEndRef.current) setPlaying(false);
   }, []);
 
   useEffect(() => {
@@ -426,6 +501,9 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
         focusedCell={dockedOpen ? (focusedCell ?? undefined) : undefined}
+        windowTime={currentWindow?.time ?? null}
+        windowCells={windowCells}
+        onClearWindow={clearRasterWindow}
         heldCell={focusedCell?.nodeId ?? null}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
@@ -527,7 +605,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                   colorByTarget={colorBySlot}
                   // It colours the raster too, where every spike in one colour is uniform.
                   colorByNoneLabel="Uniform"
-                  shownCells={shownCells}
+                  shownCells={sceneCells}
                   highlightedCell={highlightedCell ?? undefined}
                   onCellClick={handleCellClick}
                   onNodeColorsChange={setSceneColors}
@@ -582,16 +660,28 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 cellCount={cellCount}
                 markerSize={markerSize}
                 playheadRef={isSplit ? playheadRef : undefined}
-                onSeek={canSeek ? handleSeek : undefined}
                 rowOrder={rasterOrder.order}
                 highlightedCell={highlightedCell}
                 onCellClick={circuit ? handleCellClick : undefined}
+                onWindowChange={handleWindowChange}
+                windowResetKey={windowResetKey}
+                onTimeAxisChange={setTimeAxis}
+                timeWindowRequest={timeWindowRequest}
               />
               {/* Inside the pane it belongs to, the way the scene's chrome sits in
                 its own: in the split these controls are the raster's alone, and
                 the row above the panes is for what governs both. */}
               {recorded && recorded.timestamps.length > 0 && (
-                <div className="absolute right-0 top-0 z-10 flex items-center gap-2">
+                <div className="absolute left-0 top-0 z-10 flex items-center gap-2">
+                  <RasterPlotControls
+                    markerSize={markerSize}
+                    onMarkerSizeChange={setMarkerSize}
+                    afterglow={
+                      isSplit && replayable
+                        ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
+                        : undefined
+                    }
+                  />
                   {circuit && (
                     <PillSelect
                       label="Order by"
@@ -600,11 +690,23 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                       onChange={rasterOrder.onChange}
                     />
                   )}
-                  <RasterPlotControls
-                    markerSize={markerSize}
-                    onMarkerSizeChange={setMarkerSize}
-                    canSeek={canSeek}
+                  <TimeWindowFields
+                    from={currentWindow?.time?.[0] ?? data.timeRange.min}
+                    to={currentWindow?.time?.[1] ?? data.timeRange.max}
+                    min={data.timeRange.min}
+                    max={data.timeRange.max}
+                    zoomed={currentWindow !== null}
+                    onChange={requestTimeWindow}
+                    onReset={clearRasterWindow}
                   />
+                  {isSplit && replayable && (
+                    <PillSelect
+                      label="Speed"
+                      value={String(speed)}
+                      options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+                      onChange={(v) => setSpeed(Number(v))}
+                    />
+                  )}
                   {/* After the raster's own controls; gone while the panel is up,
                     which the bar over it shuts. */}
                   {statisticsAvailable && !dockedOpen && (
@@ -655,7 +757,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         {showScene && (
           <TransportBar
             playing={playing}
-            onPlayingChange={setPlaying}
+            onPlayingChange={(next) => {
+              const at = liveTimeRef.current;
+              if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
+              setPlaying(next);
+            }}
+            axis={isSplit ? timeAxis : null}
             timeInMs={readoutTimeInMs}
             timeMinInMs={data.timeRange.min}
             timeMaxInMs={data.timeRange.max}

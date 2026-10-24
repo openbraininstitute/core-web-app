@@ -6,7 +6,10 @@ import { Slider } from 'antd';
 
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
+
+import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
 
 /**
  * Playback rates, as simulated milliseconds per wall-clock second.
@@ -15,7 +18,7 @@ import { fullscreenPopupContainer } from '@/utils/fullscreen';
  * takes a millisecond to watch. Real recordings are milliseconds long, which is
  * why every preset below `1×` is the useful part of the range.
  */
-const SPEEDS = [
+export const SPEEDS = [
   { label: '1×', value: 1000 },
   { label: '0.5×', value: 500 },
   { label: '0.2×', value: 200 },
@@ -40,6 +43,13 @@ interface TransportBarProps {
   afterglowInSeconds: number;
   onAfterglowChange: (afterglowInSeconds: number) => void;
   disabled?: boolean;
+  /**
+   * The raster's time axis, for a scrubber laid out under it: the span it
+   * shows and where that sits. The bar is then play and scrubber alone; the
+   * time rides the raster's playhead, and speed and afterglow sit with the
+   * raster's own controls.
+   */
+  axis?: TimeAxis | null;
 }
 
 /** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
@@ -55,10 +65,50 @@ export function TransportBar({
   afterglowInSeconds,
   onAfterglowChange,
   disabled = false,
+  axis = null,
 }: TransportBarProps) {
   const duration = timeMaxInMs - timeMinInMs;
   // Sub-millisecond steps: a 20 ms recording would otherwise scrub in 5% jumps.
   const step = Math.max(duration / 1000, 1e-3);
+
+  if (axis) {
+    return (
+      <div id="spike-replay-transport" className="border-t border-neutral-200 px-3">
+        {/* The raster's own frame: its container starts at this inset too. */}
+        <div className="relative h-10">
+          <div
+            className="absolute inset-y-0 left-0 flex items-center justify-end pr-1.5"
+            style={{ width: axis.left }}
+          >
+            <Button
+              type="button"
+              variant="icon"
+              size="sm"
+              disabled={disabled}
+              aria-label={playing ? 'Pause spike replay' : 'Play spike replay'}
+              onClick={() => onPlayingChange(!playing)}
+            >
+              {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
+            </Button>
+          </div>
+          <Slider
+            className={cn('!absolute !m-0 top-1/2 -translate-y-1/2')}
+            style={{ left: axis.left, width: axis.right - axis.left }}
+            value={Math.min(axis.to, Math.max(axis.from, timeInMs))}
+            min={axis.from}
+            max={axis.to}
+            step={Math.max((axis.to - axis.from) / 1000, 1e-3)}
+            disabled={disabled}
+            onChange={onSeek}
+            tooltip={{
+              formatter: (value) => `${(value ?? 0).toFixed(1)} ms`,
+              getPopupContainer: fullscreenPopupContainer,
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

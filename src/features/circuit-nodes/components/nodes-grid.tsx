@@ -98,6 +98,8 @@ type Props = {
   onRowHover?: (nodeId: number | null) => void;
   /** Said beside the count above the rows, such as how to use them. */
   headerNote?: React.ReactNode;
+  /** Right after the count, before the quick filters: what else narrows the rows, say. */
+  headerExtra?: React.ReactNode;
   /** Makes the edge before the pinned columns draggable: told the width they should share. */
   onPinnedResize?: (width: number) => void;
   /**
@@ -320,6 +322,7 @@ export function NodesGrid({
   pickAll,
   onRowHover,
   headerNote,
+  headerExtra,
   onPinnedResize,
   reset,
   quickFilters,
@@ -613,6 +616,7 @@ export function NodesGrid({
               </>
             )}
           </span>
+          {headerExtra}
           {quickFilters?.map((quick) => {
             const on = isOn(quick);
             return (

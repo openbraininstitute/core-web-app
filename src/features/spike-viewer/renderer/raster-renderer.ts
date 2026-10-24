@@ -31,6 +31,19 @@ export type CellColors = { palette: readonly string[]; columnByNode: Uint16Array
  */
 export type RowOrder = { rows: Float32Array; axis: RowAxis };
 
+/**
+ * What the plot is zoomed to, where it is: a span of time and a span of rows
+ * (inclusive). Each is null while that axis shows all of it.
+ */
+export type RasterWindow = { time: [number, number] | null; rows: [number, number] | null };
+
+/**
+ * Where the visible span of time sits across the plot, in pixels from the
+ * container's left edge: `from` at `left`, `to` at `right`, of `width`.
+ * A scrubber laid out to match lines up with the raster above it.
+ */
+export type TimeAxis = { from: number; to: number; left: number; right: number; width: number };
+
 /** How near a spike a click has to land to pick its cell. */
 const CLICK_RADIUS_PX = 12;
 /** How tall rows have to be, zoomed in, before a click between spikes picks the row's cell. */
@@ -81,6 +94,10 @@ export class RasterRenderer {
   private rowOrder: { name: string; order: RowOrder; cellAtRow: Uint32Array } | null = null;
   private highlight: { name: string; cell: number } | null = null;
   private cellClickHandler: ((cell: number) => void) | null = null;
+  private windowHandler: ((window: RasterWindow | null) => void) | null = null;
+  private timeAxisHandler: ((axis: TimeAxis) => void) | null = null;
+  private lastTimeAxis = '';
+  private playheadLabel: HTMLSpanElement;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -109,6 +126,12 @@ export class RasterRenderer {
     this.playheadEl.style.cssText =
       'position:absolute;pointer-events:none;display:none;width:1.5px;background:#f5222d';
     container.appendChild(this.playheadEl);
+    // Its time, at its head: the scrubber below is laid out against the axis, with no room for it.
+    this.playheadLabel = document.createElement('span');
+    this.playheadLabel.style.cssText =
+      'position:absolute;top:2px;padding:0 4px;border-radius:4px;white-space:nowrap;' +
+      'background:rgba(255,255,255,0.9);color:#f5222d;font:600 10px/14px -apple-system,BlinkMacSystemFont,sans-serif';
+    this.playheadEl.appendChild(this.playheadLabel);
 
     // Interaction layer (full size, topmost)
     this.interactionLayer = document.createElement('div');
@@ -137,6 +160,7 @@ export class RasterRenderer {
     this.interaction.onViewChange = (bounds) => {
       this.view = bounds;
       this.scheduleRender();
+      this.reportWindow();
     };
 
     this.interaction.onHover = (info) => this.handleHover(info);
@@ -151,12 +175,18 @@ export class RasterRenderer {
   }
 
   setData(populations: SpikePopulation[], dataBounds: ViewBounds) {
+    // The same span again - the same spikes cut to fewer cells, say - keeps the
+    // zoom, which may be what cut them.
+    const sameSpan = this.hasData && sameBounds(this.dataBounds, dataBounds);
     this.dataBounds = dataBounds;
-    this.initialView = paddedView(dataBounds);
-    this.view = { ...this.initialView };
+    if (!sameSpan) {
+      this.initialView = paddedView(dataBounds);
+      this.view = { ...this.initialView };
+      this.interaction.setInitialView(this.initialView);
+      this.reportWindow();
+    }
 
     this.webgl.setData(populations, POPULATION_COLORS);
-    this.interaction.setInitialView(this.initialView);
 
     this.pops = populations.map((pop) => ({
       name: pop.name,
@@ -278,6 +308,71 @@ export class RasterRenderer {
     this.view = { ...this.initialView };
     this.interaction.setInitialView(this.initialView);
     this.scheduleRender();
+    this.reportWindow();
+  }
+
+  /** Told what the plot is zoomed to whenever that changes; null when it shows everything. */
+  set onWindowChange(handler: ((window: RasterWindow | null) => void) | null) {
+    this.windowHandler = handler;
+  }
+
+  /** Back to everything, as a double-click does. */
+  resetView() {
+    this.interaction.resetView('both');
+  }
+
+  /** Zoom the time axis to a span, keeping the rows; the whole run zooms back out. */
+  setTimeWindow(from: number, to: number) {
+    const all = from <= this.dataBounds.xMin && to >= this.dataBounds.xMax;
+    this.interaction.setView({
+      ...this.view,
+      xMin: all ? this.initialView.xMin : from,
+      xMax: all ? this.initialView.xMax : to,
+    });
+  }
+
+  /** Told where the time axis's visible span sits across the plot, whenever that moves. */
+  set onTimeAxisChange(handler: ((axis: TimeAxis) => void) | null) {
+    this.timeAxisHandler = handler;
+    this.lastTimeAxis = '';
+    this.reportTimeAxis();
+  }
+
+  private reportTimeAxis() {
+    const handler = this.timeAxisHandler;
+    const width = this.glCanvas.parentElement?.clientWidth ?? 0;
+    if (!handler || !this.hasData || width === 0) return;
+    const { view, plotRect, dataBounds } = this;
+    const from = Math.max(view.xMin, dataBounds.xMin);
+    const to = Math.min(view.xMax, dataBounds.xMax);
+    const at = (t: number) =>
+      plotRect.x + ((t - view.xMin) / (view.xMax - view.xMin)) * plotRect.width;
+    const axis = { from, to, left: at(from), right: at(to), width };
+    const key = `${axis.from}|${axis.to}|${axis.left.toFixed(2)}|${axis.right.toFixed(2)}|${width}`;
+    if (key === this.lastTimeAxis) return;
+    this.lastTimeAxis = key;
+    handler(axis);
+  }
+
+  private reportWindow() {
+    const { view, initialView, dataBounds } = this;
+    const near = (a: number, b: number, span: number) => Math.abs(a - b) <= span * 1e-6;
+    const xSpan = initialView.xMax - initialView.xMin;
+    const ySpan = initialView.yMax - initialView.yMin;
+    const allTime =
+      near(view.xMin, initialView.xMin, xSpan) && near(view.xMax, initialView.xMax, xSpan);
+    const allRows =
+      near(view.yMin, initialView.yMin, ySpan) && near(view.yMax, initialView.yMax, ySpan);
+    this.windowHandler?.(
+      allTime && allRows
+        ? null
+        : {
+            time: allTime
+              ? null
+              : [Math.max(dataBounds.xMin, view.xMin), Math.min(dataBounds.xMax, view.xMax)],
+            rows: allRows ? null : [view.yMin, view.yMax],
+          }
+    );
   }
 
   /**
@@ -295,11 +390,6 @@ export class RasterRenderer {
     // loop would redraw every spike and repaint the axes sixty times a second
     // for a rule that is on neither.
     this.positionPlayhead();
-  }
-
-  /** Called with a time in ms when the user clicks in the plot. */
-  set onSeek(handler: ((timeInMs: number) => void) | null) {
-    this.interaction.onSeek = handler;
   }
 
   setBaseSize(size: number) {
@@ -341,6 +431,7 @@ export class RasterRenderer {
     this.axis.draw(this.view, this.plotRect, rows);
     this.positionPlayhead();
     this.drawHighlight();
+    this.reportTimeAxis();
   }
 
   /** The pointed-out cell: a band along its row, and its spikes over the rest. */
@@ -410,6 +501,11 @@ export class RasterRenderer {
     this.playheadEl.style.left = `${px - 0.75}px`;
     this.playheadEl.style.top = `${plotRect.y}px`;
     this.playheadEl.style.height = `${plotRect.height}px`;
+    this.playheadLabel.textContent = `${playhead.toFixed(1)} ms`;
+    // Beside the rule, on whichever side has room for it.
+    const flip = px > plotRect.x + plotRect.width - 64;
+    this.playheadLabel.style.left = flip ? '' : '4px';
+    this.playheadLabel.style.right = flip ? '4px' : '';
   }
 
   private computePointSize(): number {
@@ -622,6 +718,10 @@ function rgbOf(color: string): [number, number, number] | null {
   }
   const rgb = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(color);
   return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
+}
+
+function sameBounds(a: ViewBounds, b: ViewBounds): boolean {
+  return a.xMin === b.xMin && a.xMax === b.xMax && a.yMin === b.yMin && a.yMax === b.yMax;
 }
 
 /** Data bounds plus the margin that keeps edge spikes off the plot border. */

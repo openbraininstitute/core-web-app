@@ -3,46 +3,73 @@ import { useCallback, useEffect, useRef } from 'react';
 import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
-import type { CellColors, RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
+import type {
+  CellColors,
+  RasterWindow,
+  RowOrder,
+  TimeAxis,
+} from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
+
+export type RasterRendererOptions = {
+  data: SpikeData | null;
+  /** The population on show; scales the y-axis to its own node-id range. */
+  populationName?: string;
+  cellCount?: number;
+  /** Colours for the cells of the population on show; undefined draws it in its own. */
+  cellColors?: CellColors;
+  /** Rows for the cells of the population on show; undefined keeps them by node id. */
+  rowOrder?: RowOrder;
+  /** A cell of the population on show to point out, by node id. */
+  highlightedCell?: number | null;
+  /** Called with the node id of a cell clicked in the plot. */
+  onCellClick?: (cell: number) => void;
+  /** Told what the plot is zoomed to, or null for everything, whenever that changes. */
+  onWindowChange?: (window: RasterWindow | null) => void;
+  /** Told where the time axis's visible span sits across the plot, whenever that moves. */
+  onTimeAxisChange?: (axis: TimeAxis) => void;
+  /** Zooms back out to everything whenever it changes. */
+  windowResetKey?: number;
+  /** Zooms the time axis to a span, whenever a new one is asked for. */
+  timeWindowRequest?: { from: number; to: number; key: number };
+};
 
 export function useRasterRenderer(
   containerRef: React.RefObject<HTMLDivElement | null>,
-  data: SpikeData | null,
-  /** The population on show; scales the y-axis to its own node-id range. */
-  populationName?: string,
-  cellCount?: number,
-  /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void,
-  /** Colours for the cells of the population on show; undefined draws it in its own. */
-  cellColors?: CellColors,
-  /** Rows for the cells of the population on show; undefined keeps them by node id. */
-  rowOrder?: RowOrder,
-  /** A cell of the population on show to point out, by node id. */
-  highlightedCell?: number | null,
-  /** Called with the node id of a cell clicked in the plot. */
-  onCellClick?: (cell: number) => void
+  {
+    data,
+    populationName,
+    cellCount,
+    cellColors,
+    rowOrder,
+    highlightedCell,
+    onCellClick,
+    onWindowChange,
+    onTimeAxisChange,
+    windowResetKey,
+    timeWindowRequest,
+  }: RasterRendererOptions
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
-  // Held in a ref so a caller passing an inline handler does not tear the
+  // Held in refs so a caller passing inline handlers does not tear the
   // renderer down and rebuild its WebGL context on every render.
-  const onSeekRef = useRef(onSeek);
-
-  useEffect(() => {
-    onSeekRef.current = onSeek;
-  }, [onSeek]);
   const onCellClickRef = useRef(onCellClick);
+  const onWindowChangeRef = useRef(onWindowChange);
+  const onTimeAxisChangeRef = useRef(onTimeAxisChange);
   useEffect(() => {
     onCellClickRef.current = onCellClick;
-  }, [onCellClick]);
+    onWindowChangeRef.current = onWindowChange;
+    onTimeAxisChangeRef.current = onTimeAxisChange;
+  });
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     const renderer = new RasterRenderer(el);
-    renderer.onSeek = (timeInMs) => onSeekRef.current?.(timeInMs);
     renderer.onCellClick = (cell) => onCellClickRef.current?.(cell);
+    renderer.onWindowChange = (window) => onWindowChangeRef.current?.(window);
+    renderer.onTimeAxisChange = (axis) => onTimeAxisChangeRef.current?.(axis);
     rendererRef.current = renderer;
 
     return () => {
@@ -90,6 +117,16 @@ export function useRasterRenderer(
     if (!rendererRef.current || !populationName) return;
     rendererRef.current.setHighlightedCell(populationName, highlightedCell ?? null);
   }, [populationName, highlightedCell]);
+
+  useEffect(() => {
+    if (windowResetKey) rendererRef.current?.resetView();
+  }, [windowResetKey]);
+
+  useEffect(() => {
+    if (timeWindowRequest) {
+      rendererRef.current?.setTimeWindow(timeWindowRequest.from, timeWindowRequest.to);
+    }
+  }, [timeWindowRequest]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

@@ -4,8 +4,8 @@ import type { PlotRect, ViewBounds } from '@/features/spike-viewer/renderer/axis
 
 const MIN_RANGE = 1e-6;
 const MIN_DRAG_PX = 5;
-// Long enough to cover a comfortable double-click, short enough that a seek
-// still feels like it answers the click.
+// Long enough to cover a comfortable double-click, short enough that a click
+// still feels answered.
 const DBLCLICK_MS = 300;
 
 export type HoverInfo = {
@@ -38,13 +38,10 @@ export class InteractionManager {
   onViewChange: ((bounds: ViewBounds) => void) | null = null;
   onHover: ((info: HoverInfo | null) => void) | null = null;
   /**
-   * A plain click inside the plot, as a time in ms.
-   *
+   * A plain click inside the plot, where it landed, for what is under it.
    * Drag already means zoom and shift-drag means pan, so a click that never
-   * moved was the one gesture left unused.
+   * moved was the one gesture left.
    */
-  onSeek: ((timeInMs: number) => void) | null = null;
-  /** The same click, where it landed, for what is under it; told with the seek. */
   onClick: ((info: HoverInfo) => void) | null = null;
 
   constructor(element: HTMLElement) {
@@ -85,6 +82,13 @@ export class InteractionManager {
   setInitialView(bounds: ViewBounds) {
     this.initialView = { ...bounds };
     this.view = { ...bounds };
+  }
+
+  /** Show these bounds, as a drag would, kept inside the data. */
+  setView(bounds: ViewBounds) {
+    this.view = { ...bounds };
+    this.clampView();
+    this.onViewChange?.(this.view);
   }
 
   setPlotRect(rect: PlotRect) {
@@ -291,7 +295,7 @@ export class InteractionManager {
           : dx >= MIN_DRAG_PX || dy >= MIN_DRAG_PX;
     if (!significant) {
       // Held for one double-click interval so that resetting the view does not
-      // also move time: a double-click is two of these pairs, and both land
+      // also pick a cell: a double-click is two of these pairs, and both land
       // before the dblclick that cancels them.
       if (drag.mode === 'zoom-xy') {
         const data = this.pixelToData(drag.lastClient.x, drag.lastClient.y);
@@ -303,10 +307,7 @@ export class InteractionManager {
           pixelY: drag.lastClient.y - rect.top,
         };
         window.clearTimeout(this.seekTimer);
-        this.seekTimer = window.setTimeout(() => {
-          this.onSeek?.(data.x);
-          this.onClick?.(info);
-        }, DBLCLICK_MS);
+        this.seekTimer = window.setTimeout(() => this.onClick?.(info), DBLCLICK_MS);
       }
       return;
     }

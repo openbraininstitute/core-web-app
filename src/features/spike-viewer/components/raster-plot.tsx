@@ -5,10 +5,10 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 
-import type { CellColors, RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
+import type { RasterRendererOptions } from '@/features/spike-viewer/hooks/use-raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
-type RasterPlotProps = {
+type RasterPlotProps = Omit<RasterRendererOptions, 'data' | 'populationName' | 'cellCount'> & {
   data: SpikeData;
   /**
    * The one population to plot.
@@ -29,16 +29,6 @@ type RasterPlotProps = {
    * move one line.
    */
   playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
-  /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void;
-  /** Colours for that population's cells, such as the 3D replay's colour-by; omit for its own. */
-  cellColors?: CellColors;
-  /** Rows for that population's cells in another order than their node ids. */
-  rowOrder?: RowOrder;
-  /** A cell of that population to point out, by node id, such as a table row under the pointer. */
-  highlightedCell?: number | null;
-  /** Called with the node id of a cell clicked in the plot: by its spike, or its row zoomed in. */
-  onCellClick?: (cell: number) => void;
 };
 
 export default function RasterPlot({
@@ -47,24 +37,15 @@ export default function RasterPlot({
   cellCount,
   markerSize,
   playheadRef,
-  onSeek,
-  cellColors,
-  rowOrder,
-  highlightedCell,
-  onCellClick,
+  ...options
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
-    containerRef,
+  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(containerRef, {
     data,
     populationName,
     cellCount,
-    onSeek,
-    cellColors,
-    rowOrder,
-    highlightedCell,
-    onCellClick
-  );
+    ...options,
+  });
 
   useEffect(() => {
     if (!playheadRef) return;

@@ -1,5 +1,6 @@
 'use client';
 
+import { RiCloseLine, RiZoomInLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
@@ -21,9 +22,11 @@ import {
   SPIKE_STATISTICS,
   statisticLabel,
 } from '@/features/spike-viewer/spike-statistics/statistics';
+import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
+import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { PinnedColumn, QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type {
@@ -31,6 +34,7 @@ import type {
   ColumnValues,
   FilterModel,
   ParsedCircuitConfig,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 import type { AxisValues, Figure } from '@/features/spike-viewer/spike-statistics/figures';
 import type {
@@ -119,6 +123,18 @@ type Props = {
   focusedCell?: { nodeId: number; key: number };
   /** The cell clicked in the scene or the raster, whose row stays marked until it is let go. */
   heldCell?: number | null;
+  /** The span of time the raster is zoomed to, which the statistics are then over; null for the run. */
+  windowTime?: [number, number] | null;
+  /** The cells of the rows the raster is zoomed to, a flag per node index, which the table keeps. */
+  windowCells?: Uint8Array | null;
+  /** Zooms the raster back out, for the table's own way back to everything. */
+  onClearWindow?: () => void;
+};
+
+/** The raster window's cells, as a column of the session's, filtered on out of sight. */
+const WINDOW_COLUMN = 'raster:window';
+const IN_WINDOW: FilterModel = {
+  [WINDOW_COLUMN]: { filterType: 'number', type: 'equals', filter: '1' },
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
@@ -166,6 +182,9 @@ export function SpikeStatisticsView({
   onHoveredCellChange,
   focusedCell,
   heldCell = null,
+  windowTime = null,
+  windowCells = null,
+  onClearWindow,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -192,10 +211,59 @@ export function SpikeStatisticsView({
   });
   const ready = status === 'ready';
 
-  const statistics = useMemo(
-    () => (ready ? computeSpikeStatistics(recorded, rowCount, timeRange) : null),
-    [ready, recorded, rowCount, timeRange]
+  // Over the raster's span of time where it is zoomed to one, else the run's.
+  const statistics = useMemo(() => {
+    if (!ready) return null;
+    if (!windowTime) return computeSpikeStatistics(recorded, rowCount, timeRange);
+    const [from, to] = windowTime;
+    const inWindow = recorded && spikesBetween(recorded, from, to);
+    return computeSpikeStatistics(inWindow, rowCount, { min: from, max: to });
+  }, [ready, recorded, rowCount, timeRange, windowTime]);
+
+  // The window's cells in the session, so the table can page only them.
+  const [windowRegistered, setWindowRegistered] = useState<Uint8Array | null>(null);
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    const derived = windowCells
+      ? [
+          {
+            name: WINDOW_COLUMN,
+            values: Float64Array.from(windowCells, (inside) => (inside ? 1 : Number.NaN)),
+          },
+        ]
+      : [];
+    setDerivedColumns('raster-window', derived)
+      .then(() => {
+        if (!cancelled) setWindowRegistered(windowCells);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, windowCells, setDerivedColumns]);
+  const windowReady = windowCells !== null && windowRegistered === windowCells;
+  const windowCount = useMemo(
+    () => (windowCells ? windowCells.reduce((n, inside) => n + inside, 0) : 0),
+    [windowCells]
   );
+  // Where a cell falls among the rows the window leaves the table, not among them all.
+  const rowInWindow = useCallback(
+    (nodeId: number, sort: SortItem[], filter: FilterModel) =>
+      getRowIndex(nodeId, sort, { ...filter, ...IN_WINDOW }),
+    [getRowIndex]
+  );
+  const tableSource = useMemo<IDatasource | null>(() => {
+    if (!datasource || !windowReady) return datasource;
+    return {
+      rowCount: windowCount,
+      getRows: (params) =>
+        datasource.getRows({
+          ...params,
+          filterModel: { ...(params.filterModel ?? {}), ...IN_WINDOW },
+        }),
+    };
+  }, [datasource, windowReady, windowCount]);
 
   // Handed over as copies: the transfer detaches them, and the plot reads these.
   const [registered, setRegistered] = useState<SpikeStatistics | null>(null);
@@ -304,7 +372,13 @@ export function SpikeStatisticsView({
     },
     [sessionKey, setTicks]
   );
-  const tableRows = currentRows?.indices;
+  // The rows the table shows: the filter's, within the raster window's cells.
+  const tableRows = useMemo(() => {
+    if (!currentRows) return undefined;
+    if (!windowCells) return currentRows.indices;
+    const source = currentRows.indices ?? Uint32Array.from({ length: rowCount }, (_, i) => i);
+    return source.filter((cell) => windowCells[cell] === 1);
+  }, [currentRows, windowCells, rowCount]);
   let tickedInTable = 0;
   if (tableRows) for (const row of tableRows) tickedInTable += ticked.has(row) ? 1 : 0;
   else for (const cell of ticked) tickedInTable += cell < rowCount ? 1 : 0;
@@ -331,15 +405,20 @@ export function SpikeStatisticsView({
     if (cellsOnShow !== undefined) onShownCellsChange?.(cellsOnShow);
   }, [cellsOnShow, onShownCellsChange]);
 
-  // The plots are over the same cells as the raster and replay: the ticked
-  // ones, else those the filter keeps.
+  // The plots are over the same cells as the raster and replay - the ticked
+  // ones, else those the filter keeps - within the raster window's.
+  const plotCells = useMemo(() => {
+    if (cellsOnShow === undefined || !windowCells) return cellsOnShow;
+    const source = cellsOnShow ?? Uint32Array.from({ length: rowCount }, (_, i) => i);
+    return source.filter((cell) => windowCells[cell] === 1);
+  }, [cellsOnShow, windowCells, rowCount]);
   const groups = useMemo(() => {
-    if (!statsReady || !registered || cellsOnShow === undefined) return null;
+    if (!statsReady || !registered || plotCells === undefined) return null;
     const values = registered[statistic.key];
-    if (groupBy === NO_GROUPING) return groupValues(values, null, cellsOnShow);
+    if (groupBy === NO_GROUPING) return groupValues(values, null, plotCells);
     if (groupColumn?.session !== sessionKey || groupColumn.name !== groupBy) return null;
-    return groupValues(values, groupColumn.values, cellsOnShow);
-  }, [statsReady, registered, cellsOnShow, groupBy, groupColumn, statistic, sessionKey]);
+    return groupValues(values, groupColumn.values, plotCells);
+  }, [statsReady, registered, plotCells, groupBy, groupColumn, statistic, sessionKey]);
 
   // Which figure: the statistic by group, or the cells themselves placed by
   // chosen columns - any statistic or numeric node property - and coloured by it.
@@ -386,7 +465,7 @@ export function SpikeStatisticsView({
   const binStep = statistic.step?.(timeRange.max - timeRange.min);
   const empty = !scatter && groups?.length === 0;
   const figure = useMemo<Figure | null>(() => {
-    if (!statsReady || !registered || cellsOnShow === undefined) return null;
+    if (!statsReady || !registered || plotCells === undefined) return null;
     const valueLabel = statisticLabel(statistic);
     if (scatter) {
       const resolved = axisKey.split('\n').map((axis) => resolveAxis(axis, registered, knownAxes));
@@ -394,7 +473,7 @@ export function SpikeStatisticsView({
       return scatterFigure(
         resolved as AxisValues[],
         { label: valueLabel, values: registered[statistic.key] },
-        cellsOnShow ?? null,
+        plotCells ?? null,
         `${plotKind}:${axisKey}`
       );
     }
@@ -413,7 +492,7 @@ export function SpikeStatisticsView({
   }, [
     statsReady,
     registered,
-    cellsOnShow,
+    plotCells,
     statistic,
     scatter,
     axisKey,
@@ -484,7 +563,8 @@ export function SpikeStatisticsView({
     );
   }
 
-  const shownCells = cellsOnShow ? cellsOnShow.length : rowCount;
+  const shownCells = plotCells ? plotCells.length : rowCount;
+  const windowOn = windowTime !== null || windowCells !== null;
 
   const controls = (
     <div className="flex shrink-0 flex-wrap items-center gap-2 px-3 pt-3 pb-1">
@@ -524,7 +604,13 @@ export function SpikeStatisticsView({
       {statsReady && (
         <span className="whitespace-nowrap text-xs text-neutral-400">
           {shownCells.toLocaleString()} {shownCells === 1 ? 'cell' : 'cells'}
-          {ticked.size > 0 ? ' ticked' : currentRows?.indices ? ' in the table’s filter' : ''}
+          {ticked.size > 0
+            ? ' ticked'
+            : currentRows?.indices
+              ? ' in the table’s filter'
+              : windowCells
+                ? ' in the raster window'
+                : ''}
         </span>
       )}
     </div>
@@ -552,7 +638,7 @@ export function SpikeStatisticsView({
         <Centered>
           <Empty description={`The nodes could not be read: ${error.message}`} />
         </Centered>
-      ) : !statsReady || !columns || !datasource ? (
+      ) : !statsReady || !columns || !tableSource ? (
         <Centered>
           <Spin tip={ready ? 'Computing statistics…' : 'Loading nodes…'}>
             <div className="size-12" />
@@ -561,9 +647,9 @@ export function SpikeStatisticsView({
       ) : (
         <NodesGrid
           columns={tableColumns ?? columns}
-          rowCount={rowCount}
-          filteredCount={filteredCount}
-          datasource={datasource}
+          rowCount={windowReady ? windowCount : rowCount}
+          filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
+          datasource={tableSource}
           visibleColumns={visibleColumns}
           onVisibleColumnsChange={setVisibleColumns}
           pinnedColumns={pinnedColumns}
@@ -577,11 +663,26 @@ export function SpikeStatisticsView({
           selectedNodeIds={ticked}
           pickColumn
           pickAll={{ state: tickAllState, onToggle: toggleTickAll }}
-          reset={{ picked: ticked.size > 0, onReset: () => setTicks(undefined) }}
+          reset={{
+            picked: ticked.size > 0 || windowOn,
+            onReset: () => {
+              setTicks(undefined);
+              if (windowOn) onClearWindow?.();
+            },
+          }}
+          headerExtra={
+            windowOn && (
+              <WindowChip
+                time={windowTime}
+                cells={windowCells ? windowCount : null}
+                onClear={onClearWindow}
+              />
+            )
+          }
           onRowHover={onHoveredCellChange}
           quickFilters={SPIKING_FILTER}
           focusRow={focusedCell}
-          rowIndexOf={getRowIndex}
+          rowIndexOf={windowReady ? rowInWindow : getRowIndex}
           markedNodeId={heldCell}
         />
       )}
@@ -672,6 +773,34 @@ function resolveAxis(
 function defaultGrouping(options: ColumnMeta[]): string {
   const names = new Set(options.map((c) => c.name));
   return PREFERRED_GROUPING.find((n) => names.has(n)) ?? options[0]?.name ?? NO_GROUPING;
+}
+
+/** What the raster's zoom narrows the table to, and a way back to everything. */
+function WindowChip({
+  time,
+  cells,
+  onClear,
+}: {
+  time: [number, number] | null;
+  cells: number | null;
+  onClear?: () => void;
+}) {
+  const parts = [
+    time && `${time[0].toFixed(1)}–${time[1].toFixed(1)} ms`,
+    cells !== null && `${cells.toLocaleString()} ${cells === 1 ? 'cell' : 'cells'}`,
+  ].filter(Boolean);
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      title="The raster's zoom, which the table and statistics follow: click to see everything again"
+      className="bg-primary-0 border-primary-2 text-primary-9 hover:border-primary-4 inline-flex h-5 items-center gap-1 rounded-full border px-2 text-xs leading-none font-medium whitespace-nowrap"
+    >
+      <RiZoomInLine className="size-3.5" />
+      Raster window · {parts.join(' · ')}
+      <RiCloseLine className="size-3.5 opacity-70" />
+    </button>
+  );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
