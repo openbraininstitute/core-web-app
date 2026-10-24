@@ -5,7 +5,9 @@ import { useEffect, useMemo } from 'react';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
+import { isSpikeFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
@@ -150,6 +152,18 @@ export function SimulationFiles({
 
   // The circuit's files, the simulation's and its result's, each as one pill that opens to list them.
   const [open, setOpen] = useAtom(openGroupsAtom);
+  // The model's files are the circuit's, not the simulation's.
+  const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
+  const circuitFiles = inputFilesWithLogs.filter(isCircuitFile);
+  // A spike file opens straight on its statistics, which keep its raster and replay beside them.
+  // They are listed against the circuit's node file, so only a circuit's simulation has them.
+  const sidePanel = useResultsSidePanel();
+  const select = (file: TActivityCustomFile) => {
+    onSelect(file);
+    if (circuitFiles.length > 0 && isAssetBackedFile(file) && isSpikeFile(file)) {
+      sidePanel?.setOpen(true);
+    }
+  };
   const isSelected = (file: TAssetBackedFile) =>
     file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath;
   const rows = (files: TAssetBackedFile[]) =>
@@ -160,7 +174,7 @@ export function SimulationFiles({
         key={file.id ?? file.asset.id}
         file={file}
         name={file.name}
-        onSelect={onSelect}
+        onSelect={select}
       />
     ));
   const group = (key: keyof typeof open, title: string, files: TAssetBackedFile[]) =>
@@ -176,9 +190,6 @@ export function SimulationFiles({
         {rows(files)}
       </TaskIOFileGroup>
     );
-  // The model's files are the circuit's, not the simulation's.
-  const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
-
   return (
     <IoLayout
       showOutput={outputAvailable || logStreamFiles.showOutput}
@@ -186,7 +197,7 @@ export function SimulationFiles({
       outputIsEmpty={outputFilesWithLogs.length === 0 && !outputLoading}
       inputItems={
         <>
-          {group('circuit', 'Circuit', inputFilesWithLogs.filter(isCircuitFile))}
+          {group('circuit', 'Circuit', circuitFiles)}
           {group(
             'simulation',
             'Simulation',

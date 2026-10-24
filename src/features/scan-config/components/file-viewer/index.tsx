@@ -54,6 +54,14 @@ function isCodeFile(file: TAssetBackedFile): boolean {
   );
 }
 
+/** A spike report, or a replay's input spikes: both drawn by the spike viewer. */
+export function isSpikeFile(file: TAssetBackedFile): boolean {
+  return (
+    file.asset.content_type === AssetContentType.h5 &&
+    (file.asset.label === AssetLabel.spike_report || file.asset.label === AssetLabel.replay_spikes)
+  );
+}
+
 /**
  * The viewer a file's content type calls for.
  *
@@ -128,10 +136,7 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     displayFile?.enforcedRenderType === AssetContentType.pdf;
   // the spike viewer fills its pane and floats its chrome over the plot the way the circuit
   // preview does, so it lays out its own inset rather than being pushed off the corner
-  const isSpikeReport =
-    displayFile?.asset.content_type === AssetContentType.h5 &&
-    (displayFile.asset.label === AssetLabel.spike_report ||
-      displayFile.asset.label === AssetLabel.replay_spikes);
+  const isSpikeReport = !!displayFile && isSpikeFile(displayFile);
   // the voltage viewer lays out its own inset too, to line its header up with the files column's
   const isVoltageReport =
     displayFile?.asset.content_type === AssetContentType.h5 &&

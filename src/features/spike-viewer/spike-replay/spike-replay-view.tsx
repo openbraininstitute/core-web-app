@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  RiArrowRightLine,
-  RiBarChart2Line,
-  RiBox3Line,
-  RiLayoutRowLine,
-  RiTableLine,
-} from '@remixicon/react';
+import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine, RiTableLine } from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -753,15 +747,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                       onChange={(v) => setSpeed(Number(v))}
                     />
                   )}
-                  {/* After the raster's own controls; gone while the panel is up,
-                    which the bar over it shuts. */}
-                  {statisticsAvailable && !dockedOpen && (
-                    <StatisticsButton
-                      onClick={() =>
-                        docked ? sidePanel?.setOpen(true) : setMode(MODES.Statistics)
-                      }
-                    />
-                  )}
                 </div>
               )}
             </div>
@@ -824,23 +809,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         )}
       </FullscreenPortalScope>
     </div>
-  );
-}
-
-/** Opens the statistics from the raster they summarise, in the app's dark blue. */
-function StatisticsButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={classNames(
-        'bg-primary-9 inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-white',
-        'hover:bg-primary-8 shadow-md transition-colors focus-visible:outline-none'
-      )}
-    >
-      Statistics
-      <RiArrowRightLine className="size-3.5" />
-    </button>
   );
 }
 
