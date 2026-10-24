@@ -32,7 +32,12 @@ import type {
   RowClickedEvent,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import type { ColumnMeta, FilterModel } from '@/features/circuit-nodes/types';
+import type {
+  ColumnMeta,
+  FilterModel,
+  SortDirection,
+  SortItem,
+} from '@/features/circuit-nodes/types';
 
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
@@ -105,6 +110,14 @@ type Props = {
    * leaving the other columns' filters as they are.
    */
   quickFilters?: readonly QuickFilter[];
+  /**
+   * A row to bring into view and flash, by node id, such as a cell clicked in
+   * a scene beside the table; a new `key` asks again for the same one.
+   * `rowIndexOf` says where that node falls among the rows the grid's sort and
+   * filter show, or -1 where the filter leaves it out.
+   */
+  focusRow?: { nodeId: number; key: number };
+  rowIndexOf?: (nodeId: number, sort: SortItem[], filter: FilterModel) => Promise<number>;
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
@@ -128,6 +141,9 @@ type GridContext = {
 };
 
 const PICKED_ROW_CLASS = 'nodes-row-picked';
+const FLASHED_ROW_CLASS = 'nodes-row-flashed';
+/** As long as the flash's fade in the stylesheet. */
+const FLASH_MS = 1600;
 
 function nodeIdOf(data: unknown): number {
   return Number((data as Record<string, unknown> | undefined)?.[NODE_ID_COLUMN]);
@@ -304,6 +320,8 @@ export function NodesGrid({
   onPinnedResize,
   reset,
   quickFilters,
+  focusRow,
+  rowIndexOf,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -376,10 +394,40 @@ export function NodesGrid({
   useEffect(() => {
     gridRef.current?.api?.refreshHeader();
   }, [pickAllState]);
+  const flashedRef = useRef<number | null>(null);
   const rowClassRules = useMemo(
-    () => ({ [PICKED_ROW_CLASS]: (p: RowClassParams) => isPicked(nodeIdOf(p.data)) }),
+    () => ({
+      [PICKED_ROW_CLASS]: (p: RowClassParams) => isPicked(nodeIdOf(p.data)),
+      [FLASHED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === flashedRef.current,
+    }),
     [isPicked]
   );
+  useEffect(() => {
+    const api = gridRef.current?.api;
+    if (!focusRow || !rowIndexOf || !api) return;
+    let cancelled = false;
+    const sort: SortItem[] = api
+      .getColumnState()
+      .filter((c) => c.sort)
+      .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+      .map((c) => ({ column: c.colId, direction: c.sort as SortDirection }));
+    rowIndexOf(focusRow.nodeId, sort, api.getFilterModel() as FilterModel)
+      .then((index) => {
+        if (cancelled || index < 0) return;
+        flashedRef.current = focusRow.nodeId;
+        api.ensureIndexVisible(index, 'middle');
+        api.redrawRows();
+      })
+      .catch(() => {});
+    const timer = setTimeout(() => {
+      flashedRef.current = null;
+      gridRef.current?.api?.redrawRows();
+    }, FLASH_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [focusRow, rowIndexOf]);
   useEffect(() => {
     selectedRef.current = selectedNodeIds;
     gridRef.current?.api?.redrawRows();

@@ -15,6 +15,7 @@ import type {
   NodeGeometryOptions,
   OpenRequest,
   OpenResponse,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 
 let session: NodesSession | null = null;
@@ -70,6 +71,11 @@ const api = {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     const indices = session.getFilteredIndices(filter);
     return indices ? Comlink.transfer(indices, [indices.buffer as ArrayBuffer]) : null;
+  },
+
+  async getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): Promise<number> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    return session.getRowIndex(nodeId, sort, filter);
   },
 
   async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {

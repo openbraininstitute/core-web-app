@@ -8,6 +8,8 @@ export type PlotListeners = {
   onRelayout?: (event: Readonly<PlotRelayoutEvent>) => void;
   onDoubleClick?: () => void;
   onClick?: (event: Readonly<PlotMouseEvent>) => void;
+  onHover?: (event: Readonly<PlotMouseEvent>) => void;
+  onUnhover?: () => void;
 };
 
 /**
@@ -33,5 +35,7 @@ export function usePlotListeners(listeners: PlotListeners) {
     gd.on('plotly_relayout', (event) => latest.current.onRelayout?.(event));
     gd.on('plotly_doubleclick', () => latest.current.onDoubleClick?.());
     gd.on('plotly_click', (event) => latest.current.onClick?.(event));
+    gd.on('plotly_hover', (event) => latest.current.onHover?.(event));
+    gd.on('plotly_unhover', () => latest.current.onUnhover?.());
   }, []);
 }

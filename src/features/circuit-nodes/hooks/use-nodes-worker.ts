@@ -17,6 +17,7 @@ import type {
   FilterModel,
   NodeGeometryOptions,
   NodePopulation,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -155,6 +156,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const getRowIndex = useCallback(
+    async (nodeId: number, sort: SortItem[], filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getRowIndex(key, nodeId, sort, filter);
+    },
+    [key]
+  );
+
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
   }, [key]);
@@ -168,6 +177,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     getGeometry,
     setDerivedColumns,
     getFilteredIndices,
+    getRowIndex,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

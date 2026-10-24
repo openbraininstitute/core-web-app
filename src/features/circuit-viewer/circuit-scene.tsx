@@ -132,6 +132,8 @@ interface ICircuitSceneOptions {
    * morphologies, the rest faded where it draws somas.
    */
   highlightedCell?: number;
+  /** Told the node index of a clicked cell of the population on show. */
+  onCellClick?: (index: number) => void;
   /**
    * Told the colour-by mapping of the population on show, or null with none, so
    * a host drawing the same cells elsewhere - spike replay's raster - can match.
@@ -201,6 +203,7 @@ export function CircuitScene({
   colorByNoneLabel,
   shownCells,
   highlightedCell,
+  onCellClick,
   onNodeColorsChange,
   spikes,
   dendrogram = false,
@@ -564,6 +567,7 @@ export function CircuitScene({
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
+            onSubjectCellClick={onCellClick}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
@@ -599,6 +603,7 @@ export function CircuitScene({
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}
+              onSubjectCellClick={onCellClick}
               {...sharedVizProps}
             />
           )

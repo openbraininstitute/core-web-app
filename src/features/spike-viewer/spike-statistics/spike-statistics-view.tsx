@@ -115,6 +115,8 @@ type Props = {
   onShownCellsChange?: (cells: Uint32Array | null) => void;
   /** Told the node index of the table row under the pointer, and null when it leaves. */
   onHoveredCellChange?: (cell: number | null) => void;
+  /** A cell to bring into view in the table, such as one clicked in the scene; a new key asks again. */
+  focusedCell?: { nodeId: number; key: number };
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
@@ -160,6 +162,7 @@ export function SpikeStatisticsView({
   tableOnly = false,
   onShownCellsChange,
   onHoveredCellChange,
+  focusedCell,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -177,6 +180,7 @@ export function SpikeStatisticsView({
     getColumn,
     setDerivedColumns,
     getFilteredIndices,
+    getRowIndex,
   } = useNodesWorker({
     enabled: nodePopulation !== undefined,
     circuitId: circuit.id,
@@ -573,6 +577,8 @@ export function SpikeStatisticsView({
           reset={{ picked: ticked.size > 0, onReset: () => setTicks(undefined) }}
           onRowHover={onHoveredCellChange}
           quickFilters={SPIKING_FILTER}
+          focusRow={focusedCell}
+          rowIndexOf={getRowIndex}
         />
       )}
     </div>

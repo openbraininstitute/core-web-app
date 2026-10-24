@@ -13,6 +13,7 @@ import type {
   NodeGeometry,
   NodeGeometryOptions,
   OpenRequest,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 import type { NodesWorkerApi } from '@/features/circuit-nodes/worker/nodes.worker';
 
@@ -167,6 +168,12 @@ class NodesWorkerRegistry {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.getFilteredIndices(filter);
+  }
+
+  getRowIndex(key: string, nodeId: number, sort: SortItem[], filter: FilterModel): Promise<number> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.getRowIndex(nodeId, sort, filter);
   }
 
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {

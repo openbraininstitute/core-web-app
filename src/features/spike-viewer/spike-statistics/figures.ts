@@ -4,7 +4,24 @@ import type { Data, Layout } from 'plotly.js-dist-min';
 import type { ValueGroup } from '@/features/spike-viewer/spike-statistics/statistics';
 
 /** What the statistics plot draws: Plotly's traces and layout, built here so they stay pure. */
-export type Figure = { data: Data[]; layout: Partial<Layout> };
+/** What a hover over a mark shows in place of Plotly's labels: a titled card of a few values. */
+export type PlotTooltip = {
+  title: string;
+  /** Beside the title, such as how many cells the mark is. */
+  note?: string;
+  /** Under the title, such as what the values measure. */
+  subtitle?: string;
+  /** The mark's colour, beside the title. */
+  swatch?: string;
+  rows: { label: string; value: string; strong?: boolean }[];
+};
+
+export type Figure = {
+  data: Data[];
+  layout: Partial<Layout>;
+  /** The card for the mark under the pointer, from Plotly's hover point; its traces hover with `hoverinfo: 'none'`. */
+  tooltip?: (point: { x?: unknown; y?: unknown }) => PlotTooltip | null;
+};
 
 /** One axis of a scatter: what it is called and a value per node. NaN is no value. */
 export type AxisValues = { label: string; values: ArrayLike<number> };
@@ -115,10 +132,11 @@ export function violinFigure(
         line: { color, width: 1.5 },
         fillcolor: withAlpha(color, 0.2),
         hoveron: 'violins',
-        // Each statistic and its value: the group is the axis label under it already.
-        hoverinfo: 'y',
+        // The card below, rather than a label per statistic.
+        hoverinfo: 'none',
       },
     ] as Data[],
+    tooltip: violinTooltip(groups, valueLabel, color),
     layout: {
       ...BASE_LAYOUT,
       xaxis: {
@@ -138,10 +156,52 @@ export function violinFigure(
         automargin: true,
         gridcolor: GRID_COLOR,
         zeroline: false,
-        hoverformat: '.3~g',
       },
     },
   };
+}
+
+/** A violin's card: its group, how many cells, and the statistics its box draws. */
+function violinTooltip(
+  groups: ValueGroup[],
+  valueLabel: string,
+  color: string
+): NonNullable<Figure['tooltip']> {
+  const summaries = new Map<string, PlotTooltip>();
+  for (const g of groups) {
+    const sorted = Float64Array.from(g.values).sort();
+    const n = sorted.length;
+    if (n === 0) continue;
+    const mean = sorted.reduce((sum, v) => sum + v, 0) / n;
+    summaries.set(g.name, {
+      title: g.name,
+      note: `${n.toLocaleString()} ${n === 1 ? 'cell' : 'cells'}`,
+      subtitle: valueLabel,
+      swatch: color,
+      rows: [
+        { label: 'Max', value: compact(sorted[n - 1]) },
+        { label: 'Q3', value: compact(boxQuantile(sorted, 0.75)) },
+        { label: 'Median', value: compact(boxQuantile(sorted, 0.5)), strong: true },
+        { label: 'Mean', value: compact(mean) },
+        { label: 'Q1', value: compact(boxQuantile(sorted, 0.25)) },
+        { label: 'Min', value: compact(sorted[0]) },
+      ],
+    });
+  }
+  return (point) => summaries.get(String(point.x)) ?? null;
+}
+
+/** As Plotly's `linear` quartiles interpolate, so the card's agree with the box drawn. */
+function boxQuantile(sorted: Float64Array, p: number): number {
+  const at = p * sorted.length - 0.5;
+  if (at < 0) return sorted[0];
+  if (at > sorted.length - 1) return sorted[sorted.length - 1];
+  const frac = at % 1;
+  return frac * sorted[Math.ceil(at)] + (1 - frac) * sorted[Math.floor(at)];
+}
+
+function compact(value: number): string {
+  return Number.isInteger(value) ? value.toLocaleString() : String(Number(value.toPrecision(3)));
 }
 
 /**

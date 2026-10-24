@@ -253,6 +253,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     (dockedOpen || showStatistics) && hoveredCell?.population === populationName
       ? hoveredCell.cell
       : null;
+  // A cell clicked in the scene, which the table beside it scrolls to.
+  const [clickedCell, setClickedCell] = useState<{ nodeId: number; key: number }>();
+  const handleSceneCellClick = useCallback(
+    (cell: number) =>
+      setClickedCell((previous) => ({ nodeId: cell, key: (previous?.key ?? 0) + 1 })),
+    []
+  );
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
   const spikes = useMemo(
@@ -404,6 +411,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         recorded={recorded}
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
+        focusedCell={dockedOpen ? clickedCell : undefined}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
         tableOnly={campaignMode}
@@ -506,6 +514,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                   colorByNoneLabel="Uniform"
                   shownCells={shownCells}
                   highlightedCell={highlightedCell ?? undefined}
+                  onCellClick={dockedOpen ? handleSceneCellClick : undefined}
                   onNodeColorsChange={setSceneColors}
                   spikes={{
                     data: spikes ?? undefined,

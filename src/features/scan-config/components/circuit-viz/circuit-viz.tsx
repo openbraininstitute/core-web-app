@@ -80,6 +80,8 @@ interface CircuitVizProps {
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** Called with the node index when a cell of the population on show is clicked. */
+  onSubjectCellClick?: (index: number) => void;
   showAxons: boolean;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
@@ -160,6 +162,7 @@ export function CircuitVisualization({
   highlightedCell,
   recededColor,
   onPopulationClick,
+  onSubjectCellClick,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -178,9 +181,11 @@ export function CircuitVisualization({
   const handleCellClick = useCallback(
     (cell: MorphoViewerSmallCircuitCell | undefined) => {
       const node = cell && parseNodeKey(cell.id);
-      if (node && node.population !== subjectName) onPopulationClick?.(node.population);
+      if (!node) return;
+      if (node.population !== subjectName) onPopulationClick?.(node.population);
+      else onSubjectCellClick?.(node.index);
     },
-    [subjectName, onPopulationClick]
+    [subjectName, onPopulationClick, onSubjectCellClick]
   );
   const pointedCellId =
     highlightedCell !== undefined && subjectName
@@ -192,7 +197,7 @@ export function CircuitVisualization({
     <CircuitVizView
       {...props}
       source={source}
-      onCellClick={onPopulationClick ? handleCellClick : undefined}
+      onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
       pointedCellId={pointedCellId}
     />
   );
@@ -211,6 +216,7 @@ type TCircuitVizViewProps = Omit<
   | 'highlightedCell'
   | 'recededColor'
   | 'onPopulationClick'
+  | 'onSubjectCellClick'
   | 'nodeColors'
   | 'defaultColor'
 > & {

@@ -165,3 +165,14 @@
 .grid :global(.ag-row.nodes-row-picked) {
   background-color: #eaf2fd;
 }
+
+/* A row brought into view from outside the table (see `focusRow`), which fades back. */
+.grid :global(.ag-row.nodes-row-flashed) {
+  animation: rowFlash 1.6s ease-out;
+}
+
+@keyframes rowFlash {
+  from {
+    background-color: #bfd8f7;
+  }
+}

@@ -72,6 +72,8 @@ export interface LargeCircuitPreviewProps {
   shownCells?: Uint8Array;
   /** A soma of the population on show to point out, by node index: every other one of it fades. */
   highlightedCell?: number;
+  /** Told the node index of a clicked soma of the population on show. */
+  onSubjectCellClick?: (index: number) => void;
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /** Colour for the somas of the populations that are not on show. */
@@ -125,6 +127,7 @@ export function LargeCircuitPreview({
   hiddenPopulations,
   shownCells,
   highlightedCell,
+  onSubjectCellClick,
   nodeColors,
   recededColor,
   onPopulationClick,
@@ -327,16 +330,18 @@ export function LargeCircuitPreview({
         end += geometry.count;
         if (index < end) {
           if (candidate.name !== subjectName) onPopulationClick?.(candidate.name);
+          else onSubjectCellClick?.(index - (end - geometry.count));
           return;
         }
       }
     },
-    [placed, subjectName, onPopulationClick]
+    [placed, subjectName, onPopulationClick, onSubjectCellClick]
   );
   // Only offered when there is something to select: the viewer builds its pick
   // buffer on the first click, which at region scale is a second copy of every
   // position.
-  const canPickPopulation = onPopulationClick !== undefined && hasContext;
+  const canPickPopulation =
+    (onPopulationClick !== undefined && hasContext) || onSubjectCellClick !== undefined;
 
   const morphoOverlays = React.useMemo(
     () =>
