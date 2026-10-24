@@ -798,7 +798,10 @@ function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter
       return true;
     };
   }
-  if (filter.filterType === 'text') return (row) => matchText(textAt(handle, data, row), filter);
+  if (filter.filterType === 'text') {
+    const test = textTest(filter);
+    return (row) => test(textAt(handle, data, row));
+  }
   if (data instanceof BigInt64Array || data instanceof BigUint64Array) {
     const test = integerTest(filter);
     if (test) return (row) => test(data[row]);
@@ -829,15 +832,24 @@ function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number
   return Number((data as string[])[row]);
 }
 
-function matchText(value: string, f: TextFilter): boolean {
-  const v = value.toLowerCase();
+/** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
+export function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
+  return text
+    .split(separator)
+    .map((v) => v.trim())
+    .filter((v) => v !== '');
+}
+
+function textTest(f: TextFilter): (value: string) => boolean {
   const q = (f.filter ?? '').toLowerCase();
+  // Text can hold spaces, so only commas part its values.
+  const any = new Set(listedValues(q, /,/));
   return match(f.type)
-    .with('contains', () => v.includes(q))
-    .with('equals', () => v === q)
-    .with('notEqual', () => v !== q)
-    .with('startsWith', () => v.startsWith(q))
-    .with('endsWith', () => v.endsWith(q))
+    .with('contains', () => (v: string) => v.toLowerCase().includes(q))
+    .with('equals', () => (v: string) => any.has(v.toLowerCase()))
+    .with('notEqual', () => (v: string) => v.toLowerCase() !== q)
+    .with('startsWith', () => (v: string) => v.toLowerCase().startsWith(q))
+    .with('endsWith', () => (v: string) => v.toLowerCase().endsWith(q))
     .exhaustive();
 }
 
@@ -846,8 +858,13 @@ function numberTest(f: NumberFilter): (v: number) => boolean {
   const q2 = Number(f.filterTo ?? f.filter);
   const lo = Math.min(q, q2);
   const hi = Math.max(q, q2);
+  const any = new Set(
+    listedValues(f.filter ?? '')
+      .map(Number)
+      .filter((v) => !Number.isNaN(v))
+  );
   return match(f.type)
-    .with('equals', () => (v: number) => v === q)
+    .with('equals', () => (v: number) => any.has(v))
     .with('notEqual', () => (v: number) => v !== q)
     .with('lessThan', () => (v: number) => v < q)
     .with('lessThanOrEqual', () => (v: number) => v <= q)
@@ -862,6 +879,15 @@ function numberTest(f: NumberFilter): (v: number) => boolean {
  * side of it, since as a number it would round. Null when a bound is not a decimal ("Infinity").
  */
 function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
+  if (f.type === 'equals') {
+    const bounds = listedValues(f.filter).map(wholeBounds);
+    if (bounds.length === 0 || bounds.some((b) => b === null)) return null;
+    // A value between two whole numbers is no id.
+    const ids = new Set(
+      (bounds as [bigint, bigint][]).filter(([lo, hi]) => lo === hi).map(([lo]) => lo)
+    );
+    return (v: bigint) => ids.has(v);
+  }
   const a = wholeBounds(f.filter);
   const b = wholeBounds(f.filterTo ?? f.filter);
   if (!a || !b) return null;

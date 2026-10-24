@@ -25,7 +25,7 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
+import type { PinnedColumn, QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type {
   ColumnMeta,
   ColumnValues,
@@ -118,6 +118,21 @@ type Props = {
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
+
+/** One click to the cells that fired at all. */
+const SPIKING_FILTER: readonly QuickFilter[] = [
+  {
+    label: 'Spiking neurons',
+    title: 'Only the cells with at least one spike',
+    model: {
+      [SPIKE_STATISTICS.find((s) => s.key === 'count')?.column ?? 'spikes:count']: {
+        filterType: 'number',
+        type: 'greaterThan',
+        filter: '0',
+      },
+    },
+  },
+];
 
 /**
  * The ticks and the filter outlive the view, tagged with their session: picking
@@ -557,6 +572,7 @@ export function SpikeStatisticsView({
           pickAll={{ state: tickAllState, onToggle: toggleTickAll }}
           reset={{ picked: ticked.size > 0, onReset: () => setTicks(undefined) }}
           onRowHover={onHoveredCellChange}
+          quickFilters={SPIKING_FILTER}
         />
       )}
     </div>

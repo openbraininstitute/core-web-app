@@ -4,7 +4,7 @@ import { Modal } from 'antd';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-import { RiCheckLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
+import { RiCheckLine, RiPulseLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -100,7 +100,17 @@ type Props = {
    * holds a pick to undo: it clears the filters and calls `onReset`.
    */
   reset?: { picked: boolean; onReset: () => void };
+  /**
+   * Filters a click puts on beside the count, and a second click takes off,
+   * leaving the other columns' filters as they are.
+   */
+  quickFilters?: readonly QuickFilter[];
 };
+
+export type QuickFilter = { label: string; title?: string; model: FilterModel };
+
+const CHIP =
+  'inline-flex h-5 items-center gap-1 rounded-full border px-2 text-xs leading-none font-medium transition-colors';
 
 /** File columns kept in view beside the pinned ones, however far their edge is dragged. */
 const MIN_FILE_COLUMNS_WIDTH = 120;
@@ -293,6 +303,7 @@ export function NodesGrid({
   headerNote,
   onPinnedResize,
   reset,
+  quickFilters,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
@@ -453,17 +464,29 @@ export function NodesGrid({
     e.api.setGridOption('datasource', datasource);
   };
 
-  const [filtering, setFiltering] = useState(false);
+  const [filters, setFilters] = useState<FilterModel>({});
+  const filtering = Object.keys(filters).length > 0;
   const onFilterChanged = (e: FilterChangedEvent) => {
     pendingFiltersRef.current = null;
     const model = e.api.getFilterModel() as FilterModel;
-    setFiltering(Object.keys(model).length > 0);
+    setFilters(model);
     onFilterModelChange?.(model);
   };
   const onResetClick = () => {
     pendingFiltersRef.current = null;
     gridRef.current?.api.setFilterModel(null);
     reset?.onReset();
+  };
+  const isOn = (quick: QuickFilter) =>
+    Object.entries(quick.model).every(([colId, f]) => isEqual(filters[colId], f));
+  const toggleQuickFilter = (quick: QuickFilter) => {
+    const api = gridRef.current?.api;
+    if (!api) return;
+    pendingFiltersRef.current = null;
+    const next: FilterModel = { ...(api.getFilterModel() as FilterModel) };
+    if (isOn(quick)) for (const colId of Object.keys(quick.model)) delete next[colId];
+    else Object.assign(next, quick.model);
+    api.setFilterModel(next);
   };
 
   const onRowClicked = (e: RowClickedEvent) => {
@@ -509,28 +532,57 @@ export function NodesGrid({
   return (
     <div className={styles.gridWrapper}>
       <div className={styles.gridHeader}>
-        <span className={styles.gridStat}>
-          {filteredCount === null ? (
-            <>{rowCount.toLocaleString()} nodes</>
-          ) : (
-            <>
-              <strong className={styles.gridStatHighlight}>{filteredCount.toLocaleString()}</strong>{' '}
-              of {rowCount.toLocaleString()} nodes
-            </>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className={styles.gridStat}>
+            {filteredCount === null ? (
+              <>{rowCount.toLocaleString()} nodes</>
+            ) : (
+              <>
+                <strong className={styles.gridStatHighlight}>
+                  {filteredCount.toLocaleString()}
+                </strong>{' '}
+                of {rowCount.toLocaleString()} nodes
+              </>
+            )}
+          </span>
+          {quickFilters?.map((quick) => {
+            const on = isOn(quick);
+            return (
+              <button
+                key={quick.label}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggleQuickFilter(quick)}
+                title={quick.title}
+                className={cn(
+                  CHIP,
+                  on
+                    ? 'bg-primary-9 border-primary-9 hover:bg-primary-8 text-white'
+                    : 'hover:text-primary-9 border-neutral-200 text-neutral-600 hover:border-neutral-300'
+                )}
+              >
+                <RiPulseLine className="size-3.5" />
+                {quick.label}
+              </button>
+            );
+          })}
+          {/* Last, so the buttons before it stay put as it comes and goes. */}
+          {reset && (filtering || reset.picked) && (
+            <button
+              type="button"
+              onClick={onResetClick}
+              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+              className={cn(
+                CHIP,
+                'hover:text-primary-9 border-neutral-200 text-neutral-600 hover:border-neutral-300'
+              )}
+            >
+              <RiResetLeftLine className="size-3.5" />
+              Reset
+            </button>
           )}
-        </span>
+        </div>
         {headerNote && <span className={styles.gridNote}>{headerNote}</span>}
-        {reset && (filtering || reset.picked) && (
-          <button
-            type="button"
-            onClick={onResetClick}
-            title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-            className="hover:text-primary-9 ml-auto inline-flex h-5 items-center gap-1 rounded-full border border-neutral-200 px-2 text-xs leading-none font-medium text-neutral-600 transition-colors hover:border-neutral-300"
-          >
-            <RiResetLeftLine className="size-3.5" />
-            Reset
-          </button>
-        )}
       </div>
       <div
         ref={gridBoxRef}
