@@ -17,6 +17,7 @@ import {
   PaneSideResizeHandle,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -244,12 +245,9 @@ export function ResultsLayout({
             type="button"
             onClick={toggleCampaign}
             aria-pressed={campaign}
-            className={cn(
-              'bg-primary-9 inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-white',
-              'hover:bg-primary-8 shadow-md transition-colors focus-visible:outline-none'
-            )}
+            className={cn(PILL_CLASS, 'shrink-0 gap-1.5')}
           >
-            <RiGridLine className="size-3.5" />
+            <RiGridLine className="size-4" />
             {campaign ? 'Simulation statistics' : 'Campaign statistics'}
           </button>
         )}

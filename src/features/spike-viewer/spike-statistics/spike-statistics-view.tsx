@@ -20,6 +20,7 @@ import {
   useElementWidth,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -454,11 +455,11 @@ function WindowChip({
       type="button"
       onClick={onClear}
       title="The raster's zoom, which the table and statistics follow: click to see everything again"
-      className="bg-primary-0 border-primary-2 text-primary-9 hover:border-primary-4 inline-flex h-5 items-center gap-1 rounded-full border px-2 text-xs leading-none font-medium whitespace-nowrap"
+      className={`${PILL_CLASS} whitespace-nowrap`}
     >
-      <RiZoomInLine className="size-3.5" />
+      <RiZoomInLine className="size-4" />
       Raster window · {parts.join(' · ')}
-      <RiCloseLine className="size-3.5 opacity-70" />
+      <RiCloseLine className="size-4 opacity-70" />
     </button>
   );
 }

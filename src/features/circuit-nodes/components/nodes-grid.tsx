@@ -16,6 +16,7 @@ import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filte
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import { PILL_CLASS, PILL_PRESSED_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -127,9 +128,6 @@ type Props = {
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
-
-const CHIP =
-  'inline-flex h-5 items-center gap-1 rounded-full border px-2 text-xs leading-none font-medium transition-colors';
 
 /** File columns kept in view beside the pinned ones, however far their edge is dragged. */
 const MIN_FILE_COLUMNS_WIDTH = 120;
@@ -634,14 +632,9 @@ export function NodesGrid({
                 aria-pressed={on}
                 onClick={() => toggleQuickFilter(quick)}
                 title={quick.title}
-                className={cn(
-                  CHIP,
-                  on
-                    ? 'bg-primary-9 border-primary-9 hover:bg-primary-8 text-white'
-                    : 'hover:text-primary-9 border-neutral-200 text-neutral-600 hover:border-neutral-300'
-                )}
+                className={cn(PILL_CLASS, on && PILL_PRESSED_CLASS)}
               >
-                <RiPulseLine className="size-3.5" />
+                <RiPulseLine className="size-4" />
                 {quick.label}
               </button>
             );
@@ -652,12 +645,9 @@ export function NodesGrid({
               type="button"
               onClick={onResetClick}
               title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              className={cn(
-                CHIP,
-                'hover:text-primary-9 border-neutral-200 text-neutral-600 hover:border-neutral-300'
-              )}
+              className={PILL_CLASS}
             >
-              <RiResetLeftLine className="size-3.5" />
+              <RiResetLeftLine className="size-4" />
               Reset
             </button>
           )}

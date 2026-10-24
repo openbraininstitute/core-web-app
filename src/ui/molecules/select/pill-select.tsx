@@ -15,6 +15,16 @@ export type PillSelectOption = {
   disabled?: boolean;
 };
 
+/** The raised white pill a PillSelect is drawn as: buttons beside one wear it too. */
+export const PILL_CLASS = cn(
+  // The height the select's trigger takes, so a button beside one stands as tall.
+  'inline-flex h-9 items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none',
+  'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
+);
+
+/** The same pill pressed, such as a filter that is on. */
+export const PILL_PRESSED_CLASS = 'bg-primary-9 text-white hover:bg-primary-8';
+
 /** A labelled pill select: the muted label, then what is chosen, on a raised white pill. */
 export function PillSelect({
   label,
@@ -37,11 +47,7 @@ export function PillSelect({
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         title={title}
-        className={cn(
-          'inline-flex h-auto min-w-0 max-w-full items-center gap-1 rounded-full border-0 px-3 py-1.5 text-sm font-semibold transition-colors focus-visible:outline-none',
-          'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50',
-          className
-        )}
+        className={cn(PILL_CLASS, 'h-auto min-w-0 max-w-full border-0', className)}
         icon={<RiArrowDownSLine className="size-4 shrink-0 opacity-100" />}
       >
         {/* Left out where the value says what it is. */}
