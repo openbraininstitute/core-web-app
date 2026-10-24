@@ -255,6 +255,12 @@ export class RasterRenderer {
   }
 
   private handleClick(info: HoverInfo) {
+    // A marker of the config's timings zooms the time axis to its blocks' window.
+    const marked = this.hasData ? this.markerGroupAt(info, false) : undefined;
+    if (marked) {
+      this.zoomToWindowOf(marked);
+      return;
+    }
     const handler = this.cellClickHandler;
     const pop = this.pops.find((p) => p.visible);
     if (!handler || !pop || !this.hasData) return;
@@ -652,22 +658,7 @@ export class RasterRenderer {
    * the host is told, to lay its card out.
    */
   private showEventsAt(info: HoverInfo): boolean {
-    const { plotRect } = this;
-    const x = info.pixelX - plotRect.x;
-    const inTop = info.pixelY <= plotRect.y + EVENT_TOP_ZONE_PX;
-    const inBottom = info.pixelY >= plotRect.y + plotRect.height - EVENT_BOTTOM_ZONE_PX;
-    const group =
-      this.markerGroups.find((g) => {
-        if (g.top ? !inTop : !inBottom) return false;
-        const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
-        return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
-      }) ??
-      this.markerGroups.find(
-        (g) =>
-          g.edge === 'start' &&
-          Math.abs(x - g.x) <= 4 &&
-          g.events.some((e) => e.kind === 'manipulation')
-      );
+    const group = this.markerGroupAt(info, true);
     this.tooltipEl.style.display = 'none';
     this.setHoveredEvents(group?.events ?? NO_EVENTS);
     const box = this.glCanvas.parentElement?.getBoundingClientRect();
@@ -677,6 +668,48 @@ export class RasterRenderer {
         : null
     );
     return group !== undefined;
+  }
+
+  /**
+   * The group of markers at a point: by its marker or name along the top or
+   * bottom, or - with `alongRules` - anywhere along a synaptic change's rule.
+   */
+  private markerGroupAt(info: HoverInfo, alongRules: boolean): MarkerGroup | undefined {
+    const { plotRect } = this;
+    const x = info.pixelX - plotRect.x;
+    const inTop = info.pixelY >= plotRect.y && info.pixelY <= plotRect.y + EVENT_TOP_ZONE_PX;
+    const inBottom =
+      info.pixelY <= plotRect.y + plotRect.height &&
+      info.pixelY >= plotRect.y + plotRect.height - EVENT_BOTTOM_ZONE_PX;
+    const marked = this.markerGroups.find((g) => {
+      if (g.top ? !inTop : !inBottom) return false;
+      const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
+      return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
+    });
+    if (marked || !alongRules) return marked;
+    return this.markerGroups.find(
+      (g) =>
+        g.edge === 'start' &&
+        Math.abs(x - g.x) <= 4 &&
+        g.events.some((e) => e.kind === 'manipulation')
+    );
+  }
+
+  /**
+   * Zoom the time axis to a group's blocks: from the first onset to the last
+   * offset, what holds on to the end of the run, and an instant with a little
+   * room either side, since a window needs a width.
+   */
+  private zoomToWindowOf(group: MarkerGroup) {
+    const { xMin, xMax } = this.dataBounds;
+    let from = Math.min(...group.events.map((e) => e.start));
+    let to = Math.max(...group.events.map((e) => e.end ?? xMax));
+    if (to - from < (xMax - xMin) * 0.002) {
+      const room = (xMax - xMin) * 0.025;
+      from -= room;
+      to += room;
+    }
+    this.setTimeWindow(Math.max(xMin, from), Math.min(xMax, to));
   }
 
   private placeTooltip(info: HoverInfo) {

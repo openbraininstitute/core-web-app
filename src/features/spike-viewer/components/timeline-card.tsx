@@ -57,6 +57,9 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
           <BlockSection key={`${event.name}-${i}`} event={event} framed={blocks.length > 1} />
         ))}
       </div>
+      <div className="mt-2 text-[10px] text-neutral-400">
+        Click to set the raster to {blocks.length > 1 ? 'their window' : 'this window'}
+      </div>
     </div>,
     fullscreenPopupContainer()
   );
