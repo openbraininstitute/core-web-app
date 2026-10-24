@@ -72,6 +72,8 @@ interface CircuitVizProps {
    * viewer only asks for the morphologies of cells it has been given.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 recedes that cell like another population's. */
+  shownCells?: Uint8Array;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */
@@ -152,6 +154,7 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
 export function CircuitVisualization({
   populations,
   hiddenPopulations,
+  shownCells,
   recededColor,
   onPopulationClick,
   ...props
@@ -161,6 +164,7 @@ export function CircuitVisualization({
     population: props.population,
     populations,
     hiddenPopulations,
+    shownCells,
     showAxons: props.showAxons,
     nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
@@ -193,6 +197,7 @@ type TCircuitVizViewProps = Omit<
   | 'population'
   | 'populations'
   | 'hiddenPopulations'
+  | 'shownCells'
   | 'recededColor'
   | 'onPopulationClick'
   | 'nodeColors'

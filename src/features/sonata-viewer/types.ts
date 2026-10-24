@@ -34,6 +34,12 @@ export type NodeTraceData = {
   y: number[];
 };
 
+/** A trace of a cell picked to draw, and the cell's colour slot (-1 past the palette). */
+export type PickedTrace = {
+  traceIndex: number;
+  slot: number;
+};
+
 export type ZoomRange = {
   xStart?: number;
   xEnd?: number;

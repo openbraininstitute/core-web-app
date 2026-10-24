@@ -132,7 +132,11 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
     displayFile?.asset.content_type === AssetContentType.h5 &&
     (displayFile.asset.label === AssetLabel.spike_report ||
       displayFile.asset.label === AssetLabel.replay_spikes);
-  const edgeToEdge = isCode || isImage || isDirectory || isPdf || isSpikeReport;
+  // the voltage viewer lays out its own inset too, to line its header up with the files column's
+  const isVoltageReport =
+    displayFile?.asset.content_type === AssetContentType.h5 &&
+    displayFile.asset.label === AssetLabel.voltage_report;
+  const edgeToEdge = isCode || isImage || isDirectory || isPdf || isSpikeReport || isVoltageReport;
 
   const viewerContent = renderFileContent(displayFile, context);
 

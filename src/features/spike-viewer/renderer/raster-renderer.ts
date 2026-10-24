@@ -20,6 +20,12 @@ export const POPULATION_COLORS = [
 ];
 
 /**
+ * Colours for a population's cells: a palette, and each cell's entry in it by
+ * node id. The 3D view's colour-by hands its mapping over in this shape.
+ */
+export type CellColors = { palette: readonly string[]; columnByNode: Uint16Array };
+
+/**
  * A population plus whether it is on show. The arrays are the parser's own —
  * already time-sorted (see `sortSpikes` in `spike-trace.ts`), which is what
  * lets the hover lookup binary-search them without keeping a copy.
@@ -54,6 +60,7 @@ export class RasterRenderer {
   private rafId: number | null = null;
   private hasData = false;
   private playhead: number | null = null;
+  private cellColors: { name: string; colors: CellColors } | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -132,7 +139,27 @@ export class RasterRenderer {
 
     this.visibleSpikes = populations.reduce((sum, p) => sum + p.timestamps.length, 0);
     this.hasData = true;
+    this.applyCellColors();
     this.scheduleRender();
+  }
+
+  /**
+   * Draw one population's spikes in their cells' colours, kept across new
+   * data; null goes back to the population's own colour. The view is left as
+   * it is: only the colour buffer is rewritten.
+   */
+  setCellColors(name: string, colors: CellColors | null) {
+    this.cellColors = colors ? { name, colors } : null;
+    this.applyCellColors();
+    this.scheduleRender();
+  }
+
+  private applyCellColors() {
+    this.pops.forEach((pop, index) => {
+      const colors = this.cellColors?.name === pop.name ? this.cellColors.colors : null;
+      const own = POPULATION_COLORS[index % POPULATION_COLORS.length];
+      this.webgl.setSpikeColors(pop.name, colors && spikeColors(pop.nodeIds, colors, own));
+    });
   }
 
   /**
@@ -398,6 +425,35 @@ function countFactor(n: number): number {
   if (n >= hi) return 0.5;
   const t = Math.log10(n / lo) / Math.log10(hi / lo);
   return 1.0 - 0.5 * t;
+}
+
+/** RGBA bytes per spike from its cell's colour; a cell with none keeps `own`. */
+function spikeColors(nodeIds: Float64Array, colors: CellColors, own: string): Uint8Array {
+  const fallback = rgbOf(own) ?? [0, 0, 0];
+  const palette = colors.palette.map((c) => rgbOf(c) ?? fallback);
+  const { columnByNode } = colors;
+  const bytes = new Uint8Array(nodeIds.length * 4);
+  for (let i = 0; i < nodeIds.length; i++) {
+    // An id that is no row index reads undefined here, and keeps the fallback.
+    const rgb = palette[columnByNode[nodeIds[i]]] ?? fallback;
+    bytes[i * 4] = rgb[0];
+    bytes[i * 4 + 1] = rgb[1];
+    bytes[i * 4 + 2] = rgb[2];
+    bytes[i * 4 + 3] = 255;
+  }
+  return bytes;
+}
+
+/** `#rgb`, `#rrggbb` or `rgb(…)` as bytes; null for anything else. */
+function rgbOf(color: string): [number, number, number] | null {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color)?.[1];
+  if (hex) {
+    const full = hex.length === 3 ? [...hex].map((c) => c + c).join('') : hex;
+    const n = Number.parseInt(full, 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  const rgb = /^rgba?\(\s*(\d+)[\s,]+(\d+)[\s,]+(\d+)/i.exec(color);
+  return rgb ? [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])] : null;
 }
 
 /** Data bounds plus the margin that keeps edge spikes off the plot border. */

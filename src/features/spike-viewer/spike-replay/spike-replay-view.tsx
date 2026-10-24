@@ -1,7 +1,14 @@
 'use client';
 
-import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine } from '@remixicon/react';
+import {
+  RiArrowRightLine,
+  RiBarChart2Line,
+  RiBox3Line,
+  RiLayoutRowLine,
+  RiTableLine,
+} from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
@@ -12,24 +19,31 @@ import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
+import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import { TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
+import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
+import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
-import { FullscreenPortalScope } from '@/utils/fullscreen';
+import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { SpikeData, SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
   Raster: 'raster',
   Replay: 'replay',
   Split: 'split',
+  Statistics: 'statistics',
 } as const;
 type ReplayMode = (typeof MODES)[keyof typeof MODES];
 
@@ -66,6 +80,8 @@ interface SpikeReplayViewProps {
   data: SpikeData;
   /** The circuit or MEModel to replay the spikes over; omit when there is none. */
   subject?: TSceneSubject;
+  /** The report's path, by which the campaign's other simulations' copies are found. */
+  reportPath?: string;
 }
 
 /**
@@ -80,7 +96,8 @@ interface SpikeReplayViewProps {
  * then on, so switching views never tears down the WebGL context and
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
-export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
+export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
+  const { simulationPicker, campaign: campaignInfo, run } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [chosenPopulationName, setChosenPopulationName] = useState<string>();
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
@@ -156,16 +173,72 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   const replayable =
     recorded !== undefined &&
     (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
-  const spikes = useMemo(
-    () => (replayable ? spikesToViewer(data, populationName) : null),
-    [data, populationName, replayable]
-  );
+  // The statistics are listed against the node file, which only a circuit has.
+  const statisticsAvailable = circuit !== undefined;
+  // Inside a results layout the statistics open beside the viewer: everything
+  // moves left a page and they come in where it was, so the raster and the
+  // replay stay in view beside them. Anywhere else - or in full screen, where
+  // nothing outside the viewer shows - they take the viewer's own panel as a
+  // fourth view.
+  const sidePanel = useResultsSidePanel();
+  const fullscreenElement = useFullscreenElement();
+  const docked =
+    statisticsAvailable &&
+    sidePanel?.target != null &&
+    (root === null || fullscreenElement !== root);
+  // The scene's colour-by control, raised into the header row beside the
+  // population, and its mapping, which the raster draws its spikes in too
+  // while the scene and its key are on show beside it.
+  const [colorBySlot, setColorBySlot] = useState<HTMLDivElement | null>(null);
+  const [sceneColors, setSceneColors] = useState<{
+    population: string;
+    nodeColors: NodeColors;
+  } | null>(null);
+  // Up or not is the layout's: it outlasts this file when another result is
+  // picked from the bar over the panel, and the next file's statistics take over.
+  const dockedOpen = docked && (sidePanel?.open ?? false);
+  // With the campaign's statistics up over it, this is the raster of the
+  // simulation on show, picked here, and the panel beside it only its table.
+  const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
+
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
-  const view = subject ? mode : MODES.Raster;
-  const showScene = view !== MODES.Raster;
+  const view = subject && !campaignMode ? mode : MODES.Raster;
+  const showStatistics = !docked && view === MODES.Statistics && statisticsAvailable;
+
+  // While the statistics are up, their table narrows the raster and the replay
+  // to the cells it ticks, else to those its filter keeps: one flag per cell of
+  // the node file, which the spikes are cut by and the scene draws by.
+  const [tableCells, setTableCells] = useState<{ population: string; cells: Uint32Array | null }>();
+  const handleShownCells = useCallback(
+    (cells: Uint32Array | null) => {
+      if (populationName) setTableCells({ population: populationName, cells });
+    },
+    [populationName]
+  );
+  const filteredCells =
+    (dockedOpen || showStatistics) && tableCells?.population === populationName
+      ? tableCells.cells
+      : null;
+  const shownCells = useMemo(() => {
+    if (!filteredCells || cellCount === undefined) return undefined;
+    const flags = new Uint8Array(cellCount);
+    for (const cell of filteredCells) if (cell < cellCount) flags[cell] = 1;
+    return flags;
+  }, [filteredCells, cellCount]);
+  const shownData = useMemo(
+    () => (shownCells && populationName ? keepSpikesOf(data, populationName, shownCells) : data),
+    [data, populationName, shownCells]
+  );
+  const shownSpikeCount =
+    recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
+  const spikes = useMemo(
+    () => (replayable ? spikesToViewer(shownData, populationName) : null),
+    [shownData, populationName, replayable]
+  );
+  const showScene = view === MODES.Replay || view === MODES.Split;
   const isSplit = view === MODES.Split;
-  const showRaster = !showScene || isSplit;
+  const showRaster = isSplit || (!showScene && !showStatistics);
   const canSeek = isSplit && replayable;
 
   // Waits for a replay that works, so the last step never points at a disabled play button.
@@ -176,6 +249,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   useEffect(() => {
     if (showScene) setSceneMounted(true);
   }, [showScene]);
+
+  // The same latch, so closing the statistics and opening them again keeps the
+  // table's sort and filters, and its plot.
+  const [statisticsMounted, setStatisticsMounted] = useState(false);
+  useEffect(() => {
+    if (showStatistics || dockedOpen) setStatisticsMounted(true);
+  }, [showStatistics, dockedOpen]);
 
   // A layout effect, seeded by hand: the observer's first report only lands a
   // frame after `observe`, and the split would size its raster pane off a
@@ -244,7 +324,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   // Nothing to animate for, and playing on would keep the render loop spinning
   // behind a pane nobody is looking at.
   useEffect(() => {
-    if (mode === MODES.Raster || !replayable) setPlaying(false);
+    if (mode === MODES.Raster || mode === MODES.Statistics || !replayable) setPlaying(false);
   }, [mode, replayable]);
 
   // The rule is otherwise only pushed by a painted frame, so entering the split
@@ -274,21 +354,50 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
           active: mode === MODES.Split,
           onSelect: () => setMode(MODES.Split),
         },
+        // docked, the statistics are a panel beside the views rather than one of them
+        ...(statisticsAvailable && !docked
+          ? [
+              {
+                label: 'Spike statistics',
+                icon: <RiTableLine className="size-4" />,
+                active: mode === MODES.Statistics,
+                onSelect: () => setMode(MODES.Statistics),
+              },
+            ]
+          : []),
       ]
     : [];
 
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
+
+  // One element for wherever the statistics go: the viewer's own panel, or the
+  // results layout's side panel.
+  const statistics =
+    circuit && statisticsMounted ? (
+      <SpikeStatisticsView
+        circuit={circuit}
+        circuitConfig={circuitConfig}
+        populationName={populationName}
+        recorded={recorded}
+        onShownCellsChange={handleShownCells}
+        timeRange={data.timeRange}
+        color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
+        tableOnly={campaignMode}
+      />
+    ) : null;
 
   return (
     // This root goes fullscreen, not the 3D pane inside it, so the raster and
     // transport bar go with it; the scene is handed no fullscreen button of its own.
     <div ref={setRoot} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <FullscreenPortalScope root={root}>
-        <div className="mb-2 flex items-center gap-3 px-3 pt-3">
-          <div className="flex items-center gap-2">
-            <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
-            <FullscreenButton target={root} />
-          </div>
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3">
+          {!campaignMode && (
+            <div className="flex items-center gap-2">
+              <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
+              <FullscreenButton target={root} />
+            </div>
+          )}
           {populationName && (
             <div className="flex min-w-0 items-center gap-2">
               {recorded && (
@@ -307,13 +416,14 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                   onChange={setChosenPopulationName}
                 />
               ) : (
-                <span className="text-primary-9 text-sm font-semibold">
+                <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
                   <span className="mr-1 font-normal text-neutral-400">Population</span>
                   {populationName}
                 </span>
               )}
               {recorded && (
                 <span className="whitespace-nowrap text-xs text-neutral-400">
+                  {shownCells && `${shownSpikeCount.toLocaleString()} of `}
                   {recorded.timestamps.length.toLocaleString()} spikes
                 </span>
               )}
@@ -329,6 +439,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                 configError !== null
               )}
             </span>
+          )}
+          {campaignMode && <div className="ml-auto flex items-center">{simulationPicker}</div>}
+          {subject && (
+            <div
+              ref={setColorBySlot}
+              className={classNames('ml-auto flex shrink-0 items-center', !showScene && 'hidden')}
+            />
           )}
         </div>
 
@@ -360,6 +477,11 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                   // and the spikes' cell indices are relative to it. The
                   // circuit's other populations are not drawn here.
                   showUnselectedPopulations={false}
+                  colorByTarget={colorBySlot}
+                  // It colours the raster too, where every spike in one colour is uniform.
+                  colorByNoneLabel="Uniform"
+                  shownCells={shownCells}
+                  onNodeColorsChange={setSceneColors}
                   spikes={{
                     data: spikes ?? undefined,
                     timeInMs: seekToMs,
@@ -401,7 +523,12 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
             )}
             <div className="relative h-full min-h-0">
               <RasterPlot
-                data={data}
+                data={shownData}
+                cellColors={
+                  showScene && sceneColors?.population === populationName
+                    ? sceneColors.nodeColors
+                    : undefined
+                }
                 populationName={populationName}
                 cellCount={cellCount}
                 markerSize={markerSize}
@@ -412,17 +539,58 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
                 its own: in the split these controls are the raster's alone, and
                 the row above the panes is for what governs both. */}
               {recorded && recorded.timestamps.length > 0 && (
-                <div className="absolute right-0 top-0 z-10">
+                <div className="absolute right-0 top-0 z-10 flex items-center gap-2">
                   <RasterPlotControls
                     markerSize={markerSize}
                     onMarkerSizeChange={setMarkerSize}
                     canSeek={canSeek}
                   />
+                  {/* After the raster's own controls; gone while the panel is up,
+                    which the bar over it shuts. */}
+                  {statisticsAvailable && !dockedOpen && (
+                    <StatisticsButton
+                      onClick={() =>
+                        docked ? sidePanel?.setOpen(true) : setMode(MODES.Statistics)
+                      }
+                    />
+                  )}
                 </div>
               )}
             </div>
           </div>
+
+          {!docked && statistics && (
+            <div
+              className={classNames(
+                'absolute inset-0',
+                !showStatistics && 'invisible pointer-events-none'
+              )}
+              aria-hidden={!showStatistics}
+              inert={!showStatistics || undefined}
+            >
+              {statistics}
+            </div>
+          )}
         </div>
+
+        {docked && statistics && sidePanel?.target && createPortal(statistics, sidePanel.target)}
+        {campaignMode &&
+          campaignInfo &&
+          sidePanel?.campaignTarget &&
+          createPortal(
+            <CampaignStatisticsView
+              simulations={campaignInfo.simulations}
+              statusMap={campaignInfo.statusMap}
+              activeSimulationId={campaignInfo.activeSimulationId}
+              onSelect={campaignInfo.onSelect}
+              reportPath={reportPath}
+              populationName={populationName}
+              cellCount={cellCount}
+              run={run}
+              cells={shownCells ?? null}
+            />,
+            sidePanel.campaignTarget
+          )}
 
         {showScene && (
           <TransportBar
@@ -441,6 +609,23 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
         )}
       </FullscreenPortalScope>
     </div>
+  );
+}
+
+/** Opens the statistics from the raster they summarise, in the app's dark blue. */
+function StatisticsButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={classNames(
+        'bg-primary-9 inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-white',
+        'hover:bg-primary-8 shadow-md transition-colors focus-visible:outline-none'
+      )}
+    >
+      Statistics
+      <RiArrowRightLine className="size-3.5" />
+    </button>
   );
 }
 

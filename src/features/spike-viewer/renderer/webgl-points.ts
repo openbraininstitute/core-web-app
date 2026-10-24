@@ -10,8 +10,13 @@ type PopulationBuffer = {
   vao: WebGLVertexArrayObject;
   xBuffer: WebGLBuffer;
   yBuffer: WebGLBuffer;
+  /** A colour per spike, when its cells have colours of their own. */
+  colorBuffer: WebGLBuffer | null;
   visible: boolean;
 };
+
+/** Attribute 2: read per spike from a colour buffer, or as the population's constant without one. */
+const COLOR_ATTRIBUTE = 2;
 
 function hexToGLColor(hex: string): [number, number, number, number] {
   const r = parseInt(hex.slice(1, 3), 16) / 255;
@@ -30,10 +35,10 @@ export class WebGLPoints {
   private gl: WebGL2RenderingContext;
   private program!: WebGLProgram;
   private uBounds!: WebGLUniformLocation;
-  private uColor!: WebGLUniformLocation;
   private uPointSize!: WebGLUniformLocation;
   private populations: PopulationBuffer[] = [];
   private lastData: { populations: SpikePopulation[]; colors: string[] } | null = null;
+  private lastSpikeColors = new Map<string, Uint8Array>();
   private contextLost = false;
 
   onRestored: (() => void) | null = null;
@@ -56,7 +61,35 @@ export class WebGLPoints {
 
   setData(populations: SpikePopulation[], colors: string[]) {
     this.lastData = { populations, colors };
+    // New spikes: colours made for the old ones no longer line up.
+    this.lastSpikeColors.clear();
     this.initBuffers(populations, colors);
+  }
+
+  /**
+   * Draw a population's spikes each in its own colour: RGBA bytes, four per
+   * spike in the order the spikes were handed over. Null goes back to the
+   * population's colour.
+   */
+  setSpikeColors(name: string, colors: Uint8Array | null) {
+    if (colors) this.lastSpikeColors.set(name, colors);
+    else this.lastSpikeColors.delete(name);
+    const pop = this.populations.find((p) => p.name === name);
+    if (!pop || this.contextLost) return;
+    const { gl } = this;
+    gl.bindVertexArray(pop.vao);
+    if (colors) {
+      if (!pop.colorBuffer) pop.colorBuffer = glRequire(gl.createBuffer(), 'colorBuffer');
+      gl.bindBuffer(gl.ARRAY_BUFFER, pop.colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, colors, gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(COLOR_ATTRIBUTE);
+      gl.vertexAttribPointer(COLOR_ATTRIBUTE, 4, gl.UNSIGNED_BYTE, true, 0, 0);
+    } else {
+      gl.disableVertexAttribArray(COLOR_ATTRIBUTE);
+      if (pop.colorBuffer) gl.deleteBuffer(pop.colorBuffer);
+      pop.colorBuffer = null;
+    }
+    gl.bindVertexArray(null);
   }
 
   draw(bounds: { xMin: number; yMin: number; xMax: number; yMax: number }, pointSize: number) {
@@ -73,8 +106,9 @@ export class WebGLPoints {
 
     for (const pop of this.populations) {
       if (!pop.visible || pop.count === 0) continue;
-      gl.uniform4fv(this.uColor, pop.color);
       gl.bindVertexArray(pop.vao);
+      // A disabled attribute reads the context's current value, set here.
+      if (!pop.colorBuffer) gl.vertexAttrib4fv(COLOR_ATTRIBUTE, pop.color);
       gl.drawArrays(gl.POINTS, 0, pop.count);
     }
 
@@ -102,7 +136,6 @@ export class WebGLPoints {
     const { gl } = this;
     this.program = this.createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     this.uBounds = glRequire(gl.getUniformLocation(this.program, 'u_bounds'), 'u_bounds');
-    this.uColor = glRequire(gl.getUniformLocation(this.program, 'u_color'), 'u_color');
     this.uPointSize = glRequire(gl.getUniformLocation(this.program, 'u_pointSize'), 'u_pointSize');
     gl.enable(gl.BLEND);
     // Separate blend for color vs alpha: standard "over" for colour, but
@@ -149,6 +182,7 @@ export class WebGLPoints {
         vao,
         xBuffer,
         yBuffer,
+        colorBuffer: null,
         visible: true,
       });
     }
@@ -163,6 +197,7 @@ export class WebGLPoints {
     this.contextLost = false;
     this.initGL();
     if (this.lastData) this.initBuffers(this.lastData.populations, this.lastData.colors);
+    for (const [name, colors] of [...this.lastSpikeColors]) this.setSpikeColors(name, colors);
     this.onRestored?.();
   };
 
@@ -207,6 +242,7 @@ export class WebGLPoints {
       gl.deleteVertexArray(pop.vao);
       gl.deleteBuffer(pop.xBuffer);
       gl.deleteBuffer(pop.yBuffer);
+      if (pop.colorBuffer) gl.deleteBuffer(pop.colorBuffer);
     }
     this.populations = [];
   }

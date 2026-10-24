@@ -198,6 +198,25 @@ class SonataWorkerImpl {
     return { x: downsampled.x, y: downsampled.y };
   }
 
+  /**
+   * The lowest and highest value any trace of a population takes: an axis every
+   * choice of its cells fits on, so picking cells never rescales it.
+   */
+  async getValueRange(populationName: string): Promise<[number, number]> {
+    if (!this.metadata || !this.file) {
+      throw new Error('No file loaded. Call loadFile first.');
+    }
+    const flat = this.getPopulationData(populationName);
+    let min = Number.POSITIVE_INFINITY;
+    let max = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i < flat.length; i += 1) {
+      const v = flat[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    return min <= max ? [min, max] : [0, 1];
+  }
+
   /** Shared by every column of a population. */
   private getTimeAxis(name: string, time: TimeConfig, numTimesteps: number): Float64Array {
     const cached = this.timeAxisCache.get(name);

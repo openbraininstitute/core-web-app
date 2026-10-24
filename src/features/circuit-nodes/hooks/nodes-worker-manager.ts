@@ -5,7 +5,9 @@ import { config } from '@/config';
 import type {
   ColumnMeta,
   ColumnValues,
+  DerivedColumn,
   DownloadProgress,
+  FilterModel,
   GetRowsRequest,
   GetRowsResponse,
   NodeGeometry,
@@ -141,6 +143,30 @@ class NodesWorkerRegistry {
     const session = this.sessions.get(key);
     if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
     return session.proxy.getColumn(name);
+  }
+
+  /**
+   * Hand the session one owner's columns computed outside the file, replacing
+   * that owner's previous ones. The arrays are transferred, so the caller gives
+   * up its copies. A reopened session starts without them, so a caller sets
+   * them again whenever the state turns ready.
+   */
+  setDerivedColumns(key: string, owner: string, columns: DerivedColumn[]): Promise<void> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.setDerivedColumns(
+      owner,
+      Comlink.transfer(
+        columns,
+        columns.map((c) => ('values' in c ? c.values : c.indices).buffer as ArrayBuffer)
+      )
+    );
+  }
+
+  getFilteredIndices(key: string, filter: FilterModel): Promise<Uint32Array | null> {
+    const session = this.sessions.get(key);
+    if (!session?.proxy) return Promise.reject(new Error('Nodes worker not ready'));
+    return session.proxy.getFilteredIndices(filter);
   }
 
   getGeometry(key: string, options?: NodeGeometryOptions): Promise<NodeGeometry> {

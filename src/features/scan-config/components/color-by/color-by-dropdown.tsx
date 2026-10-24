@@ -26,6 +26,11 @@ interface ColorByDropdownProps {
   onRetry?: () => void;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
+  /**
+   * What colouring by no property is called, on the trigger and in the menu,
+   * for a host it means something else to; "All", "All (blue)" in the menu, unless named.
+   */
+  noneLabel?: string;
   className?: string;
 }
 
@@ -38,6 +43,7 @@ export function ColorByDropdown({
   error,
   onRetry,
   theme,
+  noneLabel,
   className,
 }: ColorByDropdownProps) {
   const [open, setOpen] = useState(false);
@@ -45,7 +51,7 @@ export function ColorByDropdown({
   const prevValue = useRef(value);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const label = value ? labelForProperty(value) : 'All';
+  const label = value ? labelForProperty(value) : (noneLabel ?? 'All');
 
   useEffect(() => {
     if (prevValue.current !== value && value !== null) setRefreshSpin(true);
@@ -136,7 +142,7 @@ export function ColorByDropdown({
           >
             <Option
               id="color-by-dropdown-option-none"
-              label="All (blue)"
+              label={noneLabel ?? 'All (blue)'}
               selected={value === null}
               theme={theme}
               onClick={() => select(null)}

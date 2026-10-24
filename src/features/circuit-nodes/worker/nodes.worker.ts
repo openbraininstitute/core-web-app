@@ -6,7 +6,9 @@ import { fetchToFS, unlinkFromFS } from '@/utils/h5/fs';
 
 import type {
   ColumnValues,
+  DerivedColumn,
   DownloadProgress,
+  FilterModel,
   GetRowsRequest,
   GetRowsResponse,
   NodeGeometry,
@@ -57,6 +59,17 @@ const api = {
       return Comlink.transfer(column, [column.values.buffer as ArrayBuffer]);
     }
     return column;
+  },
+
+  async setDerivedColumns(owner: string, columns: DerivedColumn[]): Promise<void> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    session.setDerivedColumns(owner, columns);
+  },
+
+  async getFilteredIndices(filter: FilterModel): Promise<Uint32Array | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    const indices = session.getFilteredIndices(filter);
+    return indices ? Comlink.transfer(indices, [indices.buffer as ArrayBuffer]) : null;
   },
 
   async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {

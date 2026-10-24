@@ -42,7 +42,7 @@ function isPropertyFilterParam(value: unknown): value is TPropertyFilterParam {
  * - a named tuple of refs (e.g. EM synapse mapping neuron set)
  * - an array of either (flat multi-select or grouped scans)
  */
-function refsFromValue(value: unknown): TFromIdRef[] {
+export function refsFromValue(value: unknown): TFromIdRef[] {
   if (isFromIdRef(value)) {
     return [value];
   }
@@ -57,6 +57,21 @@ function refsFromValue(value: unknown): TFromIdRef[] {
     });
   }
   return [];
+}
+
+/**
+ * A scan param value as the badges below read it, in one line: model refs by
+ * name, a property filter as `property: values`, anything else as its text.
+ */
+export function scanParamValueText(value: unknown, nameById: ReadonlyMap<string, string>): string {
+  const refs = refsFromValue(value);
+  if (refs.length > 0) return refs.map((ref) => nameById.get(ref.id_str) ?? ref.id_str).join(', ');
+  if (isPropertyFilterParam(value)) {
+    return Object.entries(value.filter_dict)
+      .map(([property, values]) => `${property}: ${values.join(', ')}`)
+      .join('; ');
+  }
+  return String(value);
 }
 
 export function ScanParams({

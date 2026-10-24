@@ -13,8 +13,10 @@ export type PlotRect = {
 };
 
 // The top band is clearance for the controls floating in the pane's top-right:
-// an h-8 button and a little air, so the icons never sit on the spikes.
-export const MARGIN = { top: 36, right: 20, bottom: 60, left: 70 };
+// an h-8 button and a little air, so the icons never sit on the spikes. Only
+// each axis's two end ticks are labelled, and its title takes the space
+// between them, so the bottom and left bands hold one row of text each.
+export const MARGIN = { top: 36, right: 20, bottom: 28, left: 56 };
 
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
 function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
@@ -73,7 +75,7 @@ export class AxisOverlay {
     this.drawBackground(ctx, plotRect);
     this.drawGrid(ctx, bounds, plotRect, xTicks);
     this.drawAxes(ctx, bounds, plotRect, xTicks, yTicks);
-    this.drawAxisTitles(ctx, plotRect, ctx.canvas.height / dpr);
+    this.drawAxisTitles(ctx, plotRect);
 
     ctx.restore();
   }
@@ -130,45 +132,49 @@ export class AxisOverlay {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    for (const v of xTicks) {
+    xTicks.forEach((v, i) => {
       const px = rect.x + ((v - bounds.xMin) / xRange) * rect.width;
       ctx.beginPath();
       ctx.moveTo(px, rect.y + rect.height);
       ctx.lineTo(px, rect.y + rect.height + 5);
       ctx.stroke();
-      ctx.fillText(formatTick(v, xStep), px, rect.y + rect.height + 8);
-    }
+      if (i === 0 || i === xTicks.length - 1) {
+        ctx.fillText(formatTick(v, xStep), px, rect.y + rect.height + 8);
+      }
+    });
 
     // Y-axis ticks and labels
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
 
-    for (const v of yTicks) {
+    yTicks.forEach((v, i) => {
       const py = rect.y + rect.height - ((v - bounds.yMin) / yRange) * rect.height;
       ctx.beginPath();
       ctx.moveTo(rect.x - 5, py);
       ctx.lineTo(rect.x, py);
       ctx.stroke();
-      ctx.fillText(formatTick(v, yStep), rect.x - 8, py);
-    }
+      if (i === 0 || i === yTicks.length - 1) {
+        ctx.fillText(formatTick(v, yStep), rect.x - 8, py);
+      }
+    });
   }
 
-  private drawAxisTitles(ctx: CanvasRenderingContext2D, rect: PlotRect, canvasH: number) {
+  /** On the tick labels' own rows, midway between the two that are drawn. */
+  private drawAxisTitles(ctx: CanvasRenderingContext2D, rect: PlotRect) {
     ctx.fillStyle = '#333333';
     ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
 
-    // X-axis title
+    // X-axis title, level with the end labels
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText('Time (ms)', rect.x + rect.width / 2, canvasH - 4);
+    ctx.textBaseline = 'top';
+    ctx.fillText('Time (ms)', rect.x + rect.width / 2, rect.y + rect.height + 8);
 
-    // Y-axis title (rotated)
+    // Y-axis title, rotated, flush with the end labels' right edge
     ctx.save();
-    const yCenter = rect.y + rect.height / 2;
-    ctx.translate(14, yCenter);
+    ctx.translate(rect.x - 8, rect.y + rect.height / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textBaseline = 'bottom';
     ctx.fillText('Neuron ID', 0, 0);
     ctx.restore();
   }

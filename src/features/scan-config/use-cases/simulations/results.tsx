@@ -31,6 +31,7 @@ import { SimulationFiles } from '@/features/scan-config/components/simulation-fi
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
+import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulations/scan-parameter-picker';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
@@ -52,12 +53,15 @@ type SimulationTabProps = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
+  /** The neuron sets the campaign's config defines, which the output viewers list cells by. */
+  neuronSetNames?: string[];
 };
 
 export default function SimulationsTab({
   campaignId,
   campaignOriginAction,
   isCampaignIdChanged,
+  neuronSetNames,
 }: SimulationTabProps) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
@@ -133,6 +137,64 @@ export default function SimulationsTab({
     },
     enabled: !!activeSimulation && !!simConfigAsset,
   });
+
+  // The simulation's node sets file: the config's neuron sets resolved, which
+  // the output viewers list cells by, beside the circuit's own node sets.
+  const nodeSetsAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.custom_node_sets
+  );
+  const { data: nodeSets } = useQuery({
+    queryKey: [
+      'simulation-node-sets',
+      { simulationId: activeSimulation?.id, assetId: nodeSetsAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: nodeSetsAsset!.id,
+        asRawResponse: true,
+      });
+      return (await req.json()) as Record<string, unknown>;
+    },
+    enabled: !!activeSimulation && !!nodeSetsAsset,
+  });
+  // The simulation on show, picked by its scan parameters: in the bar over a
+  // results side panel, and in the header of the viewers that place it.
+  const simulationPicker =
+    activeSimulation && simulations.length > 1 ? (
+      <ScanParameterPicker
+        simulations={simulations}
+        activeSimulationId={activeSimulation.id}
+        statusMap={localStatusMap}
+        onChange={act.onActiveSimulationChange}
+      />
+    ) : null;
+
+  // The campaign itself, for a view comparing its simulations.
+  const campaign = useMemo(
+    () =>
+      activeSimulation && simulations.length > 1
+        ? {
+            simulations,
+            statusMap: localStatusMap,
+            activeSimulationId: activeSimulation.id,
+            onSelect: act.onActiveSimulationChange,
+          }
+        : null,
+    [activeSimulation, simulations, localStatusMap, act.onActiveSimulationChange]
+  );
+
+  // By their names' content: the template hands a new list every render.
+  const neuronSetKey = neuronSetNames?.join('\n');
+  const neuronSets = useMemo(() => {
+    if (!nodeSets || neuronSetKey === undefined) return null;
+    const names = neuronSetKey ? neuronSetKey.split('\n') : [];
+    return { names: names.filter((name) => name in nodeSets), nodeSets };
+  }, [nodeSets, neuronSetKey]);
 
   const {
     notifyLowCredits,
@@ -329,6 +391,8 @@ export default function SimulationsTab({
   return (
     <>
       <SimulationsResultsUiAdapter
+        simulationPicker={simulationPicker}
+        campaignStatistics={campaign !== null}
         campaignId={campaignId}
         loading={loading}
         simulations={simulations}
@@ -393,7 +457,13 @@ export default function SimulationsTab({
                 {/* The spike viewer replays over the circuit that was scanned and
                       spans its axis over the run window, neither of which is in the
                       file it is handed. Both already resolved above. */}
-                <SimulationProvider model={model} run={simConfig?.run}>
+                <SimulationProvider
+                  model={model}
+                  run={simConfig?.run}
+                  neuronSets={neuronSets}
+                  simulationPicker={simulationPicker}
+                  campaign={campaign}
+                >
                   <FileViewer
                     file={selectedFile}
                     className="h-full w-full"

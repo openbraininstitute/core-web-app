@@ -43,6 +43,7 @@ import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
@@ -112,6 +113,24 @@ interface ICircuitSceneOptions {
    * Omit to leave the button out.
    */
   fullscreen?: { target: HTMLElement | null };
+  /**
+   * Where the colour-by control goes instead of the scene's top-right corner,
+   * such as the host's header row; null while that element mounts.
+   */
+  colorByTarget?: HTMLElement | null;
+  /** What colouring by no property is called in the colour-by control, where "All" would mislead. */
+  colorByNoneLabel?: string;
+  /**
+   * One flag per cell of the population on show, 0 for a cell filtered out:
+   * left undrawn where the scene draws somas, receded where it draws
+   * morphologies. Either way it keeps its place, so spikes still find theirs.
+   */
+  shownCells?: Uint8Array;
+  /**
+   * Told the colour-by mapping of the population on show, or null with none, so
+   * a host drawing the same cells elsewhere - spike replay's raster - can match.
+   */
+  onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
@@ -172,6 +191,10 @@ export function CircuitScene({
   electrodes,
   modeToggle,
   fullscreen,
+  colorByTarget,
+  colorByNoneLabel,
+  shownCells,
+  onNodeColorsChange,
   spikes,
   dendrogram = false,
   populationName: hostPopulationName,
@@ -289,6 +312,20 @@ export function CircuitScene({
     population,
     subject: memodel,
   });
+
+  // A mapping with no column per node is colour-by off.
+  const populationOnShow = population?.name;
+  const handedColors =
+    enableColorBy && populationOnShow && nodeColors && nodeColors.columnByNode.length > 0
+      ? nodeColors
+      : undefined;
+  useEffect(() => {
+    onNodeColorsChange?.(
+      populationOnShow && handedColors
+        ? { population: populationOnShow, nodeColors: handedColors }
+        : null
+    );
+  }, [onNodeColorsChange, populationOnShow, handedColors]);
 
   // Offered only where the other populations are on screen to begin with, and
   // only where there is more than one: with a single population, hiding it is
@@ -446,8 +483,8 @@ export function CircuitScene({
       features: vizFeatures,
       spikes,
       // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn.
-      chromeTopRight: enableColorBy,
+      // synapse legend drops below it exactly when that toolbar is drawn there.
+      chromeTopRight: enableColorBy && colorByTarget === undefined,
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
@@ -472,6 +509,7 @@ export function CircuitScene({
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       enableColorBy,
+      colorByTarget,
       theme?.foreground,
       signals,
       styledOverlays,
@@ -514,6 +552,7 @@ export function CircuitScene({
             population={population}
             populations={populations}
             hiddenPopulations={hiddenPopulations}
+            shownCells={shownCells}
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
@@ -546,6 +585,7 @@ export function CircuitScene({
               population={population}
               populations={populations}
               hiddenPopulations={hiddenPopulations}
+              shownCells={shownCells}
               nodeColors={enableColorBy ? nodeColors : undefined}
               defaultColor={defaultColor}
               recededColor={recededColor}
@@ -562,6 +602,8 @@ export function CircuitScene({
         theme={theme}
         table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
         fullscreen={fullscreen}
+        colorByTarget={colorByTarget}
+        colorByNoneLabel={colorByNoneLabel}
         viz={{
           menu,
           onResetView,

@@ -20,6 +20,8 @@ type Props = CustomHeaderProps & {
   onReset?: () => void;
   isNumeric?: boolean;
   onOpenChooser?: () => void;
+  /** Shown over the label in place of its own text, for a short label that leaves something out. */
+  tooltip?: string;
 };
 
 export function ColumnHeader(props: Props) {
@@ -34,6 +36,7 @@ export function ColumnHeader(props: Props) {
     onReset,
     isNumeric,
     onOpenChooser,
+    tooltip,
   } = props;
 
   const [sort, setSortState] = useState(column.getSort());
@@ -54,7 +57,8 @@ export function ColumnHeader(props: Props) {
     column.addEventListener('filterChanged', onFilter);
     onSort();
     return () => {
-      api.removeEventListener('sortChanged', onSort);
+      // a grid unmounting with its table is destroyed before its headers' effects clean up
+      if (!api.isDestroyed()) api.removeEventListener('sortChanged', onSort);
       column.removeEventListener('filterChanged', onFilter);
     };
   }, [column, api]);
@@ -135,7 +139,7 @@ export function ColumnHeader(props: Props) {
       type="button"
       className={styles.label}
       onClick={onLabelClick}
-      title={displayName}
+      title={tooltip ?? displayName}
       disabled={!enableSorting}
     >
       {isNumeric && sortArrow}

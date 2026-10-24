@@ -81,7 +81,16 @@
   color: var(--color-dark);
 }
 
+/* Beside the count rather than across from it. */
+.gridNote {
+  margin-left: 0.75rem;
+  margin-right: auto;
+  font-size: 0.75rem;
+  color: #a3a3a3;
+}
+
 .grid {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
@@ -133,4 +142,26 @@
 .spinBox {
   width: 120px;
   height: 1px;
+}
+
+/* A host that acts on row clicks: the row slides a view to its cell, or picks it. */
+.clickableRow {
+  cursor: pointer;
+}
+
+/* The host's pinned columns, the ones the table is up for, tinted apart from the
+   file's. Translucent, so a hovered or picked row still shows through. */
+.pinned {
+  background-color: rgb(0 0 0 / 0.035);
+}
+
+/* A narrow pinned column's cells and header (see `PinnedColumn.compact`): less padding, so
+   its numbers fit. The grid pads both by this variable, read on the element itself. */
+.compact {
+  --ag-cell-horizontal-padding: 6px;
+}
+
+/* Rows the host holds as selected, through sorts and refilters (see `selectedNodeIds`). */
+.grid :global(.ag-row.nodes-row-picked) {
+  background-color: #eaf2fd;
 }

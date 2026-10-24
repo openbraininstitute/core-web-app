@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from 'react';
 
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 
+import type { CellColors } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 type RasterPlotProps = {
@@ -30,6 +31,8 @@ type RasterPlotProps = {
   playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
   /** Called with a time in ms when the user clicks in the plot. */
   onSeek?: (timeInMs: number) => void;
+  /** Colours for that population's cells, such as the 3D replay's colour-by; omit for its own. */
+  cellColors?: CellColors;
 };
 
 export default function RasterPlot({
@@ -39,6 +42,7 @@ export default function RasterPlot({
   markerSize,
   playheadRef,
   onSeek,
+  cellColors,
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
@@ -46,7 +50,8 @@ export default function RasterPlot({
     data,
     populationName,
     cellCount,
-    onSeek
+    onSeek,
+    cellColors
   );
 
   useEffect(() => {

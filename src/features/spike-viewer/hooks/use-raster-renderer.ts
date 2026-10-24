@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { nodeIdAxisRange } from '@/features/spike-viewer/node-id-range';
 import { RasterRenderer } from '@/features/spike-viewer/renderer/raster-renderer';
 
+import type { CellColors } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 export function useRasterRenderer(
@@ -12,7 +13,9 @@ export function useRasterRenderer(
   populationName?: string,
   cellCount?: number,
   /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void
+  onSeek?: (timeInMs: number) => void,
+  /** Colours for the cells of the population on show; undefined draws it in its own. */
+  cellColors?: CellColors
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
   // Held in a ref so a caller passing an inline handler does not tear the
@@ -60,6 +63,12 @@ export function useRasterRenderer(
     const { min, max } = nodeIdAxisRange(pop.nodeIdRange.max, cellCount);
     rendererRef.current.setYBounds(min, max);
   }, [data, populationName, cellCount]);
+
+  // The renderer keeps them across new data, so the upload above needs no re-run.
+  useEffect(() => {
+    if (!rendererRef.current || !populationName) return;
+    rendererRef.current.setCellColors(populationName, cellColors ?? null);
+  }, [populationName, cellColors]);
 
   const setVisiblePopulations = useCallback((names: Set<string>) => {
     rendererRef.current?.setVisiblePopulations(names);

@@ -57,6 +57,10 @@ type Props = {
   onRun: (simulationIds: string[]) => void;
   middle: ReactNode;
   right: ReactNode;
+  /** Picks the simulation by its scan parameters, where the list is out of view. */
+  simulationPicker?: ReactNode;
+  /** Offers the side panel's campaign statistics, for a campaign of more than one simulation. */
+  campaignStatistics?: boolean;
 };
 
 export function SimulationsResultsUiAdapter({
@@ -77,10 +81,15 @@ export function SimulationsResultsUiAdapter({
   onRun,
   middle,
   right,
+  simulationPicker,
+  campaignStatistics,
 }: Props) {
   return (
     <ResultsLayout
       campaignId={campaignId}
+      // With a side panel up the list is out of view, so the bar over it picks the simulation.
+      sidePanelBar={simulationPicker}
+      campaignStatistics={campaignStatistics}
       left={
         <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
           {loading ? (

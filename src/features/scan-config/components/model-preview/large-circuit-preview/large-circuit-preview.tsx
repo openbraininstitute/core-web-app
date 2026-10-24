@@ -65,6 +65,8 @@ export interface LargeCircuitPreviewProps {
    * camera.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 takes that soma out the same way. */
+  shownCells?: Uint8Array;
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /** Colour for the somas of the populations that are not on show. */
@@ -116,6 +118,7 @@ export function LargeCircuitPreview({
   population,
   populations,
   hiddenPopulations,
+  shownCells,
   nodeColors,
   recededColor,
   onPopulationClick,
@@ -235,7 +238,7 @@ export function LargeCircuitPreview({
   const cellColors = React.useMemo(() => {
     // Nothing to colour by, nothing receding and nothing hidden, so leave the
     // viewer to its own depth-shaded blue, as it draws today.
-    if (!nodeColors && !recede && hidden.size === 0) return VIEWER_DEFAULT_PALETTE;
+    if (!nodeColors && !recede && hidden.size === 0 && !shownCells) return VIEWER_DEFAULT_PALETTE;
 
     const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
     // Three entries are added here beyond the mapping's own colours: the
@@ -268,10 +271,17 @@ export function LargeCircuitPreview({
         if (ownRampColumn === undefined) ownRampColumn = palette.push(null) - 1;
         columnByCell.fill(ownRampColumn, index, index + geometry.count);
       }
+      if (candidate.name === subjectName && shownCells && !hidden.has(candidate.name)) {
+        for (let i = 0; i < geometry.count; i++) {
+          if (shownCells[i] === 1) continue;
+          if (hiddenColumn === undefined) hiddenColumn = palette.push(false) - 1;
+          columnByCell[index + i] = hiddenColumn;
+        }
+      }
       index += geometry.count;
     }
     return { palette, columnByCell };
-  }, [placed, subjectName, positions.length, nodeColors, recede, hidden]);
+  }, [placed, subjectName, positions.length, nodeColors, recede, hidden, shownCells]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
