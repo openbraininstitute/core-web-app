@@ -115,6 +115,8 @@ export function violinFigure(
         line: { color, width: 1.5 },
         fillcolor: withAlpha(color, 0.2),
         hoveron: 'violins',
+        // Each statistic and its value: the group is the axis label under it already.
+        hoverinfo: 'y',
       },
     ] as Data[],
     layout: {
@@ -136,6 +138,7 @@ export function violinFigure(
         automargin: true,
         gridcolor: GRID_COLOR,
         zeroline: false,
+        hoverformat: '.3~g',
       },
     },
   };
