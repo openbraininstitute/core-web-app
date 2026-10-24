@@ -16,16 +16,6 @@ function splitName(name: string | undefined): { head: string; tail: string } {
   return { head: name.slice(0, cut), tail: name.slice(cut) };
 }
 
-/** What a row calls its file: the name given, "Circuit directory" for a circuit's folder, else its own. */
-export function taskIOFileName(file: TActivityCustomFile, name?: string): string | undefined {
-  const asset = isAssetBackedFile(file) ? file.asset : undefined;
-  const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
-  const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
-  const isCircuitDirectory =
-    !!asset && isDirectoryAsset(asset) && asset.label === AssetLabel.sonata_circuit;
-  return name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
-}
-
 type Props = {
   id?: string;
   name?: string;
@@ -40,7 +30,8 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
   const assetPath = isAssetBackedFile(file) ? file.assetPath : undefined;
   const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
   const isDirectory = !!asset && isDirectoryAsset(asset);
-  const displayName = taskIOFileName(file, name);
+  const isCircuitDirectory = isDirectory && asset?.label === AssetLabel.sonata_circuit;
+  const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));
   const { head, tail } = splitName(displayName);

@@ -7,8 +7,8 @@ import type { ReactNode } from 'react';
 type Props = {
   title: string;
   count: number;
-  /** The file on show, when it is one of these: the pill names it while shut. */
-  selectedName?: string;
+  /** Whether the file on show is one of these. */
+  selected?: boolean;
   expanded: boolean;
   onToggle: () => void;
   /** The files, one row each, shown under the pill while it is open. */
@@ -18,17 +18,10 @@ type Props = {
 /**
  * Files that belong together - a simulation's, its result's - as one pill that
  * opens to list them. Shut over the file on show, it takes that file's
- * selected look and names it, so what is open is never hidden.
+ * selected look, so the open file's group always shows.
  */
-export function TaskIOFileGroup({
-  title,
-  count,
-  selectedName,
-  expanded,
-  onToggle,
-  children,
-}: Props) {
-  const holdsSelection = selectedName !== undefined && !expanded;
+export function TaskIOFileGroup({ title, count, selected, expanded, onToggle, children }: Props) {
+  const holdsSelection = selected && !expanded;
   return (
     <div className="flex flex-col gap-2">
       <button
@@ -48,19 +41,14 @@ export function TaskIOFileGroup({
             : 'border-[oklch(0.968_0.007_247.896)] bg-white hover:bg-[oklch(0.968_0.007_247.896)]'
         )}
       >
-        <div className="flex min-w-0 flex-1 flex-col items-start text-left">
-          <span
-            className={classNames(
-              'font-semibold whitespace-nowrap',
-              holdsSelection ? 'text-white' : 'text-primary-9'
-            )}
-          >
-            {title}
-          </span>
-          {holdsSelection && (
-            <span className="max-w-full truncate text-xs text-white/70">{selectedName}</span>
+        <span
+          className={classNames(
+            'min-w-0 flex-1 truncate text-left font-semibold',
+            holdsSelection ? 'text-white' : 'text-primary-9'
           )}
-        </div>
+        >
+          {title}
+        </span>
         <span
           className={classNames(
             'flex shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs uppercase',

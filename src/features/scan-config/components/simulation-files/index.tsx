@@ -7,10 +7,7 @@ import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/glob
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
-import {
-  TaskIOFileItem,
-  taskIOFileName,
-} from '@/features/scan-config/components/shared/task-io-file-item';
+import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
 import {
   ActivityCustomFileRenderer,
@@ -166,23 +163,19 @@ export function SimulationFiles({
         onSelect={onSelect}
       />
     ));
-  const group = (key: keyof typeof open, title: string, files: TAssetBackedFile[]) => {
-    const selected = files.find(isSelected);
-    return (
-      files.length > 0 && (
-        <TaskIOFileGroup
-          key={key}
-          title={title}
-          count={files.length}
-          selectedName={selected && taskIOFileName(selected, selected.name)}
-          expanded={open[key]}
-          onToggle={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
-        >
-          {rows(files)}
-        </TaskIOFileGroup>
-      )
+  const group = (key: keyof typeof open, title: string, files: TAssetBackedFile[]) =>
+    files.length > 0 && (
+      <TaskIOFileGroup
+        key={key}
+        title={title}
+        count={files.length}
+        selected={files.some(isSelected)}
+        expanded={open[key]}
+        onToggle={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
+      >
+        {rows(files)}
+      </TaskIOFileGroup>
     );
-  };
   // The model's files are the circuit's, not the simulation's.
   const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
 
