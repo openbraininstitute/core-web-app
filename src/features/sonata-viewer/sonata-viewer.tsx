@@ -587,7 +587,10 @@ export function SonataReportView({
     return (
       // The quadrants a spike report's statistics make: the scene over the traces
       // here, the plots over the table in the panel beside them.
-      <div ref={setDockRoot} className="flex h-full min-h-0 flex-col gap-3 px-4 pt-1.25 pb-4">
+      <div
+        ref={setDockRoot}
+        className="flex h-full min-h-0 flex-col gap-[12px] pt-1.25 pr-3 pb-4 pl-4"
+      >
         <div className="flex min-w-0 flex-wrap items-center gap-3">
           <PopulationHeader
             populations={metadata.populations}
@@ -596,14 +599,14 @@ export function SonataReportView({
           />
           {groupSelect}
         </div>
-        {/* Each a box, as the statistics beside them are. */}
+        {/* Each a box, as the statistics beside them are, the grab bar in the space between. */}
         {scene && (
           <div
             ref={sceneBoxRef}
-            className={cn(BOX_CLASS, 'relative shrink-0 px-2 pt-2')}
+            className="relative shrink-0 pb-[12px]"
             style={{ height: dockedSceneHeight }}
           >
-            {scene}
+            <div className={cn(BOX_CLASS, 'h-full px-2 pt-2')}>{scene}</div>
             <PaneResizeHandle
               containerRef={sceneBoxRef}
               minHeight={160}

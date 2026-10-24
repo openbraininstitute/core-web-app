@@ -284,7 +284,8 @@ export function ResultsLayout({
           marginTop: contentTop,
         }}
         className={cn(
-          'border-neutral-2 relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start border-l',
+          // No rule: the space between the file and the panel, and the grab bar in it, part them.
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
           slide,
           !open && 'pointer-events-none opacity-0'
         )}
@@ -295,7 +296,8 @@ export function ResultsLayout({
           onResize={(left) => setSplit(left / span)}
           onDragChange={setDragging}
         />
-        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0" />
+        {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
+        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0 pl-1" />
         {/* While the next file's panel is on its way, after a pick from the bar */}
         <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
           <Spin />

@@ -331,13 +331,17 @@ export function PlotsOverTable({
     <div ref={rootRef} className="flex h-full min-h-0 flex-col">
       {/* Kept while the table has the view to itself, so the plots' choices outlast it. */}
       <div
-        className={cn(BOX_CLASS, 'mx-3 mt-3 flex min-h-0 flex-1 flex-col', tableOnly && 'hidden')}
+        className={cn(
+          BOX_CLASS,
+          'mx-3 mt-3 mb-[12px] flex min-h-0 flex-1 flex-col',
+          tableOnly && 'hidden'
+        )}
       >
         {plots}
       </div>
-      {/* The table in its box, the grab bar over it. */}
+      {/* The table in its box, the grab bar in the space over it, as between the scene and the raster. */}
       <div
-        className={cn('relative mx-3 pt-3 pb-3', tableOnly ? 'min-h-0 flex-1' : 'shrink-0')}
+        className={cn('relative mx-3 pt-[12px] pb-3', tableOnly ? 'min-h-0 flex-1' : 'shrink-0')}
         style={tableOnly ? undefined : { height: tableHeight }}
       >
         {!tableOnly && (
