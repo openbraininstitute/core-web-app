@@ -33,6 +33,8 @@ export class InteractionManager {
   private selectionEl: HTMLDivElement;
 
   private drag: DragState | null = null;
+  /** A press outside the plot and its axes, which only a click can come of. */
+  private press: { x: number; y: number; pointerId: number } | null = null;
   private seekTimer = 0;
 
   onViewChange: ((bounds: ViewBounds) => void) | null = null;
@@ -215,7 +217,10 @@ export class InteractionManager {
     } else if (this.isInYAxisArea(e.clientX, e.clientY)) {
       mode = 'zoom-y';
     }
-    if (!mode) return;
+    if (!mode) {
+      this.press = { x: e.clientX, y: e.clientY, pointerId: e.pointerId };
+      return;
+    }
 
     e.preventDefault();
     this.drag = {
@@ -272,6 +277,14 @@ export class InteractionManager {
   };
 
   private readonly handlePointerUp = (e: PointerEvent) => {
+    const press = this.press;
+    this.press = null;
+    if (!this.drag && press?.pointerId === e.pointerId) {
+      if (Math.hypot(e.clientX - press.x, e.clientY - press.y) < MIN_DRAG_PX) {
+        this.clickAt(e.clientX, e.clientY);
+      }
+      return;
+    }
     if (!this.drag || this.drag.pointerId !== e.pointerId) return;
 
     const drag = this.drag;
@@ -297,18 +310,7 @@ export class InteractionManager {
       // Held for one double-click interval so that resetting the view does not
       // also pick a cell: a double-click is two of these pairs, and both land
       // before the dblclick that cancels them.
-      if (drag.mode === 'zoom-xy') {
-        const data = this.pixelToData(drag.lastClient.x, drag.lastClient.y);
-        const rect = this.element.getBoundingClientRect();
-        const info: HoverInfo = {
-          dataX: data.x,
-          dataY: data.y,
-          pixelX: drag.lastClient.x - rect.left,
-          pixelY: drag.lastClient.y - rect.top,
-        };
-        window.clearTimeout(this.seekTimer);
-        this.seekTimer = window.setTimeout(() => this.onClick?.(info), DBLCLICK_MS);
-      }
+      this.clickAt(drag.lastClient.x, drag.lastClient.y);
       return;
     }
 
@@ -337,6 +339,20 @@ export class InteractionManager {
     this.clampView();
     this.onViewChange?.(this.view);
   };
+
+  /** A click where it landed, told one double-click interval late so a double-click is not one. */
+  private clickAt(clientX: number, clientY: number) {
+    const data = this.pixelToData(clientX, clientY);
+    const rect = this.element.getBoundingClientRect();
+    const info: HoverInfo = {
+      dataX: data.x,
+      dataY: data.y,
+      pixelX: clientX - rect.left,
+      pixelY: clientY - rect.top,
+    };
+    window.clearTimeout(this.seekTimer);
+    this.seekTimer = window.setTimeout(() => this.onClick?.(info), DBLCLICK_MS);
+  }
 
   private readonly handlePointerLeave = () => {
     if (!this.drag) this.onHover?.(null);

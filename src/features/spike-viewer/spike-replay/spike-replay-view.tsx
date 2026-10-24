@@ -75,6 +75,8 @@ const DEFAULT_MARKER_SIZE = 4;
 const READOUT_INTERVAL_IN_MS = 100;
 /** How long the raster's zoom has to rest before the statistics follow it. */
 const WINDOW_SETTLE_MS = 150;
+/** How long the scene has to say a tap picked a cell before it counts as a tap on nothing. */
+const SCENE_PICK_WAIT_MS = 300;
 
 /**
  * The population is chosen above both panes, so the scene's own way of choosing
@@ -320,8 +322,33 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     nodeId: number;
     key: number;
   } | null>(null);
+  const lastCellClickRef = useRef(0);
+  // The scene says nothing for a tap on empty space, so a tap on its canvas
+  // that no cell click follows lets the clicked cell go. Read on capture: the
+  // viewers keep their own pointer events from bubbling.
+  const sceneTapRef = useRef<{ x: number; y: number; at: number } | null>(null);
+  const handleScenePointerDown = (e: React.PointerEvent) => {
+    sceneTapRef.current =
+      e.button === 0 && e.target instanceof HTMLCanvasElement
+        ? { x: e.clientX, y: e.clientY, at: performance.now() }
+        : null;
+  };
+  const handleScenePointerUp = (e: React.PointerEvent) => {
+    const tap = sceneTapRef.current;
+    sceneTapRef.current = null;
+    if (!tap || Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 5) return;
+    const at = performance.now();
+    window.setTimeout(() => {
+      if (lastCellClickRef.current < at) setClickedCell(null);
+    }, SCENE_PICK_WAIT_MS);
+  };
   const handleCellClick = useCallback(
-    (cell: number) => {
+    (cell: number | null) => {
+      lastCellClickRef.current = performance.now();
+      if (cell === null) {
+        setClickedCell(null);
+        return;
+      }
       if (!populationName) return;
       setClickedCell((previous) =>
         previous?.population === populationName && previous.nodeId === cell
@@ -601,6 +628,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
               aria-hidden={!showScene}
               inert={!showScene || undefined}
+              onPointerDownCapture={handleScenePointerDown}
+              onPointerUpCapture={handleScenePointerUp}
             >
               {sceneMounted && (
                 <CircuitScene

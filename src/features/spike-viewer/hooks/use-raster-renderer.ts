@@ -23,8 +23,8 @@ export type RasterRendererOptions = {
   rowOrder?: RowOrder;
   /** A cell of the population on show to point out, by node id. */
   highlightedCell?: number | null;
-  /** Called with the node id of a cell clicked in the plot. */
-  onCellClick?: (cell: number) => void;
+  /** Called with the node id of a cell clicked in the plot, or null for a click on nothing. */
+  onCellClick?: (cell: number | null) => void;
   /** Told what the plot is zoomed to, or null for everything, whenever that changes. */
   onWindowChange?: (window: RasterWindow | null) => void;
   /** Told where the time axis's visible span sits across the plot, whenever that moves. */

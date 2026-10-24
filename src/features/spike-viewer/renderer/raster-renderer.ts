@@ -100,7 +100,7 @@ export class RasterRenderer {
   private cellColors: { name: string; colors: CellColors } | null = null;
   private rowOrder: { name: string; order: RowOrder; cellAtRow: Uint32Array } | null = null;
   private highlight: { name: string; cell: number } | null = null;
-  private cellClickHandler: ((cell: number) => void) | null = null;
+  private cellClickHandler: ((cell: number | null) => void) | null = null;
   private windowHandler: ((window: RasterWindow | null) => void) | null = null;
   private timeAxisHandler: ((axis: TimeAxis) => void) | null = null;
   private lastTimeAxis = '';
@@ -231,9 +231,10 @@ export class RasterRenderer {
   /**
    * Told the node id of a cell clicked in the plot: the one whose spike is
    * under the pointer, or, zoomed in until rows are tall enough to aim at,
-   * the one whose row is.
+   * the one whose row is. A click on nothing - between spikes, or beside the
+   * plot - is told as null.
    */
-  set onCellClick(handler: ((cell: number) => void) | null) {
+  set onCellClick(handler: ((cell: number | null) => void) | null) {
     this.cellClickHandler = handler;
   }
 
@@ -242,6 +243,15 @@ export class RasterRenderer {
     const pop = this.pops.find((p) => p.visible);
     if (!handler || !pop || !this.hasData) return;
     const { view, plotRect } = this;
+    const inPlot =
+      info.pixelX >= plotRect.x &&
+      info.pixelX <= plotRect.x + plotRect.width &&
+      info.pixelY >= plotRect.y &&
+      info.pixelY <= plotRect.y + plotRect.height;
+    if (!inPlot) {
+      handler(null);
+      return;
+    }
     const nearest = this.findNearestPoint(info.dataX, info.dataY);
     if (nearest) {
       const px =
@@ -253,11 +263,14 @@ export class RasterRenderer {
         return;
       }
     }
-    if (plotRect.height / (view.yMax - view.yMin) < MIN_ROW_PX) return;
     const row = Math.round(info.dataY);
     const order = this.rowOrder?.name === pop.name ? this.rowOrder : null;
     const count = order ? order.cellAtRow.length : this.dataBounds.yMax + 1;
-    if (row < 0 || row >= count) return;
+    const aimable = plotRect.height / (view.yMax - view.yMin) >= MIN_ROW_PX;
+    if (!aimable || row < 0 || row >= count) {
+      handler(null);
+      return;
+    }
     handler(order ? order.cellAtRow[row] : row);
   }
 
