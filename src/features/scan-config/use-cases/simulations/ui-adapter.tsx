@@ -251,8 +251,8 @@ function SimulationListItem({
           } as CSSProperties & { '--card-color': string }
         }
       >
-        <div className="mb-2 flex min-h-18 w-full items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 overflow-hidden pt-1 text-left font-bold">
+        <div className="mb-2 flex min-h-18 w-full items-center justify-between gap-2 py-2">
+          <div className="min-w-0 flex-1 overflow-hidden text-left font-bold">
             {!execStatus ||
             ([ActivityStatus.CREATED, ActivityStatus.ERROR].includes(execStatus) &&
               canBeSelectedForSim) ? (
@@ -286,7 +286,7 @@ function SimulationListItem({
               </span>
             )}
           </div>
-          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5 pt-1">
+          <div className="ml-2 flex shrink-0 items-center justify-center gap-0.5">
             <div
               className={cn(
                 'flex items-center justify-center overflow-hidden transition-[width,opacity] duration-200',
