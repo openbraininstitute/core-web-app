@@ -1,4 +1,4 @@
-import { RiArrowLeftLine, RiGridLine } from '@remixicon/react';
+import { RiArrowLeftLine } from '@remixicon/react';
 import { Spin } from 'antd';
 import { atom, useSetAtom } from 'jotai';
 import {
@@ -29,6 +29,8 @@ type Props = {
   campaignId?: string;
   /** Beside the back arrow on the bar over an open side panel, such as a picker for which result is on show. */
   sidePanelBar?: ReactNode;
+  /** After it, and kept over the campaign's statistics too: such as which report they are of. */
+  sidePanelReport?: ReactNode;
   /** Offers, right after the bar's pickers, a region over the file and the panel comparing the campaign's results. */
   campaignStatistics?: boolean;
 };
@@ -88,6 +90,7 @@ export function ResultsLayout({
   right,
   campaignId,
   sidePanelBar,
+  sidePanelReport,
   campaignStatistics = false,
 }: Props) {
   const idBase = campaignId ? `scan-config-results-${campaignId}` : 'scan-config-results';
@@ -109,9 +112,10 @@ export function ResultsLayout({
     // A panel opens on the neurons, whatever it was showing when shut.
     if (!next) setCampaignChosen(false);
   }, []);
-  const toggleCampaign = () => {
+  const chooseCampaign = (on: boolean) => {
+    if (on === campaignChosen) return;
     setSliding(true);
-    setCampaignChosen((on) => !on);
+    setCampaignChosen(on);
   };
   const campaign = open && campaignStatistics && campaignChosen;
   // biome-ignore lint/correctness/useExhaustiveDependencies: open restarts the timer for a slide begun mid-slide
@@ -240,16 +244,31 @@ export function ResultsLayout({
         {sidePanelBar && !campaign && (
           <div className="flex min-w-0 items-center">{sidePanelBar}</div>
         )}
+        {sidePanelReport}
+        {/* What the statistics are over: the simulation on show, or the whole campaign. */}
         {campaignStatistics && (
-          <button
-            type="button"
-            onClick={toggleCampaign}
-            aria-pressed={campaign}
-            className={cn(PILL_CLASS, 'shrink-0 gap-1.5')}
-          >
-            <RiGridLine className="size-4" />
-            {campaign ? 'Simulation statistics' : 'Campaign statistics'}
-          </button>
+          <div className={cn(PILL_CLASS, 'shrink-0 gap-0.5 p-1 hover:bg-white')}>
+            {[
+              { on: false, label: 'Simulation', title: 'The statistics of the simulation on show' },
+              { on: true, label: 'Campaign', title: 'The statistics across the campaign' },
+            ].map((choice) => (
+              <button
+                key={choice.label}
+                type="button"
+                aria-pressed={campaign === choice.on}
+                title={choice.title}
+                onClick={() => chooseCampaign(choice.on)}
+                className={cn(
+                  'h-full cursor-pointer rounded-full px-3 transition-colors',
+                  campaign === choice.on
+                    ? 'bg-primary-9 text-white'
+                    : 'text-primary-9 hover:bg-neutral-100'
+                )}
+              >
+                {choice.label}
+              </button>
+            ))}
+          </div>
         )}
       </div>
       {/* The campaign's region, over the file and the panel, its height dragged by its edge */}

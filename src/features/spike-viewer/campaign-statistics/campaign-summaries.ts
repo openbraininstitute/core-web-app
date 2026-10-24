@@ -42,13 +42,14 @@ export type CellStatistics = {
   spikes: SpikePopulation;
 };
 
-/** One simulation's population, summed up: what the campaign's plots compare. */
-export type SimulationSummary = {
+/** One simulation's population, summed up, by measure: what the campaign's plots compare. */
+export type SimulationSummary = Readonly<Record<string, number>>;
+
+/** A simulation's spikes summed up: its rates, its active share (0 to 1) and its mean ISI CV. */
+type SpikeSummary = {
   meanRate: number;
   medianRate: number;
-  /** Share of the cells that fired at all, 0 to 1. */
   activeFraction: number;
-  /** Mean of the cells' ISI CVs, over those with one. */
   meanCv: number;
 };
 
@@ -110,7 +111,7 @@ export function useCampaignSummaries({
   const assets = useQueries({
     queries: finished.map((simulation) => ({
       queryKey: ['campaign-spike-asset', simulation.id, reportPath],
-      queryFn: () => spikeAssetOf(simulation.id, reportPath ?? '', context),
+      queryFn: () => reportAssetOf(simulation.id, reportPath ?? '', context),
       enabled: enabled && reportPath !== undefined,
       staleTime: 5 * 60 * 1000,
     })),
@@ -197,7 +198,7 @@ export function useCampaignSummaries({
 }
 
 /** A simulation's result entity and its asset at `path`, or null where it has none. */
-async function spikeAssetOf(
+export async function reportAssetOf(
   simulationId: string,
   path: string,
   context: WorkspaceContext
@@ -233,7 +234,7 @@ export function cellStatisticsOf(
   };
 }
 
-const NO_SUMMARY: SimulationSummary = {
+const NO_SUMMARY: SpikeSummary = {
   meanRate: Number.NaN,
   medianRate: Number.NaN,
   activeFraction: Number.NaN,
@@ -249,7 +250,7 @@ export function summarize(
   statistics: CellStatistics,
   cells: Uint8Array | null,
   timeWindow: [number, number] | null = null
-): SimulationSummary {
+): SpikeSummary {
   if (!timeWindow) return summarizeCells(statistics, cells);
   const [from, to] = timeWindow;
   const { count, isiCv } = computeSpikeStatistics(
@@ -263,7 +264,7 @@ export function summarize(
 function summarizeCells(
   { counts, cvs, seconds }: { counts: ArrayLike<number>; cvs: ArrayLike<number>; seconds: number },
   cells: Uint8Array | null
-): SimulationSummary {
+): SpikeSummary {
   let n = 0;
   let spikes = 0;
   let active = 0;

@@ -26,11 +26,7 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import {
-  FileViewer,
-  hasStatistics,
-  isSpikeFile,
-} from '@/features/scan-config/components/file-viewer';
+import { FileViewer, hasStatistics } from '@/features/scan-config/components/file-viewer';
 import {
   SimulationFiles,
   useSimulationResultFiles,
@@ -464,13 +460,8 @@ export default function SimulationsTab({
             onSelect={act.onSelectedFileChange}
           />
         }
-        // The campaign's statistics compare its spikes, so only a spike file offers them.
-        campaignStatistics={
-          campaign !== null &&
-          !!selectedFile &&
-          isAssetBackedFile(selectedFile) &&
-          isSpikeFile(selectedFile)
-        }
+        // The campaign's statistics compare its spikes or its voltages, so only those offer them.
+        campaignStatistics={campaign !== null && shownReport !== undefined}
         campaignId={campaignId}
         loading={loading}
         simulations={simulations}

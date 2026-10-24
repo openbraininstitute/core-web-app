@@ -12,9 +12,9 @@ import {
 } from '@/features/scan-config/components/scan-coordinates';
 import { scanParamValueText } from '@/features/scan-config/components/scan-params';
 import {
-  CAMPAIGN_METRICS,
   heatmapFigure,
   linesFigure,
+  SPIKE_CAMPAIGN_METRICS,
 } from '@/features/spike-viewer/campaign-statistics/campaign-figures';
 import {
   CAMPAIGN_SPIKES_LIMIT_BYTES,
@@ -27,9 +27,11 @@ import { cn } from '@/utils/css-class';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type {
+  CampaignMetric,
   GridCell,
   ScanAxis,
 } from '@/features/spike-viewer/campaign-statistics/campaign-figures';
+import type { CampaignSummaries } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
 
 // Plotly is megabytes, as in the statistics beside it.
@@ -75,10 +77,8 @@ type Props = {
 };
 
 /**
- * The campaign's simulations side by side: how a population fires across the
- * scan, as a heatmap per measure over two of its parameters - or lines - with
- * the rest held at the simulation on show. Every simulation is summed over the
- * cells the table picks. A click on a finished simulation's point shows it below.
+ * How a population fires across the campaign: its spikes in every finished
+ * simulation, summed over the cells the table picks and the raster's window.
  */
 export function CampaignStatisticsView({
   simulations,
@@ -109,7 +109,57 @@ export function CampaignStatisticsView({
     () => (cells ? cells.reduce((sum, flag) => sum + flag, 0) : null),
     [cells]
   );
+  const of =
+    picked === null
+      ? ''
+      : ` · ${picked.toLocaleString()} of ${(cellCount ?? 0).toLocaleString()} cells`;
+  const span = timeWindow ? ` · ${timeWindow[0].toFixed(1)}–${timeWindow[1].toFixed(1)} ms` : '';
+  return (
+    <CampaignPlots
+      simulations={simulations}
+      statusMap={statusMap}
+      activeSimulationId={activeSimulationId}
+      onSelect={onSelect}
+      summaries={summaries}
+      metrics={SPIKE_CAMPAIGN_METRICS}
+      reading="spikes"
+      files="spike files"
+      scope={`${populationName ?? ''}${of}${span}`}
+    />
+  );
+}
 
+type PlotsProps = {
+  simulations: ISimulation[];
+  statusMap: Map<string, ActivityStatus>;
+  activeSimulationId: string;
+  onSelect: (simulation: ISimulation) => void;
+  summaries: CampaignSummaries;
+  metrics: readonly CampaignMetric[];
+  /** What is read from each simulation, as the progress says it: "spikes", "voltages". */
+  reading: string;
+  /** Their files, as the notices say them: "spike files", "voltage reports". */
+  files: string;
+  /** What the summaries are over, after the count of simulations: the population, the cells. */
+  scope: string;
+};
+
+/**
+ * The campaign's simulations side by side: a heatmap per measure over two of
+ * its swept parameters - or lines - with the rest held at the simulation on
+ * show. A click on a finished simulation's point shows it below.
+ */
+export function CampaignPlots({
+  simulations,
+  statusMap,
+  activeSimulationId,
+  onSelect,
+  summaries,
+  metrics,
+  reading,
+  files,
+  scope,
+}: PlotsProps) {
   const swept = useMemo(() => sweptParameters(simulations), [simulations]);
   const active = simulations.find((s) => s.id === activeSimulationId);
   const [{ plotKind, x: chosenX, y: chosenY }, setPlot] = useAtom(campaignPlotAtom);
@@ -153,12 +203,23 @@ export function CampaignStatisticsView({
       }
       return { simulationId: simulation.id, summary: byId?.get(simulation.id) };
     };
-    return CAMPAIGN_METRICS.map((metric, i) =>
+    return metrics.map((metric, i) =>
       plotKind === 'heatmaps'
         ? heatmapFigure(metric, x, y, cellAt, activeSimulationId)
-        : linesFigure(metric, x, y, cellAt, activeSimulationId, i === CAMPAIGN_METRICS.length - 1)
+        : linesFigure(metric, x, y, cellAt, activeSimulationId, i === metrics.length - 1)
     );
-  }, [active, xKey, yKey, swept, summaries, simulations, statusMap, plotKind, activeSimulationId]);
+  }, [
+    active,
+    xKey,
+    yKey,
+    swept,
+    summaries,
+    simulations,
+    statusMap,
+    plotKind,
+    activeSimulationId,
+    metrics,
+  ]);
 
   const pick = (id: unknown) => {
     const simulation = simulations.find((s) => s.id === id);
@@ -197,23 +258,23 @@ export function CampaignStatisticsView({
           />
         )}
         <span className="whitespace-nowrap text-xs text-neutral-400">
-          {progressText(summaries, populationName, picked, cellCount, timeWindow)}
+          {progressText(summaries, reading, scope)}
         </span>
       </div>
       {summaries.state === 'too-large' ? (
-        <TooLarge bytes={summaries.bytes} count={summaries.count} />
+        <TooLarge bytes={summaries.bytes} count={summaries.count} files={files} />
       ) : swept.length === 0 ? (
         <Notice>This campaign sweeps no parameter, so there is nothing to compare.</Notice>
       ) : !figures || summaries.state === 'resolving' ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <Spin tip="Finding the simulations’ spike files…">
+          <Spin tip={`Finding the simulations’ ${files}…`}>
             <div className="size-12" />
           </Spin>
         </div>
       ) : (
         <div className="grid min-h-0 flex-1 auto-rows-fr grid-cols-2 gap-3 @4xl:grid-cols-4">
           {figures.map((figure, i) => (
-            <div key={CAMPAIGN_METRICS[i].key} className="min-h-0 min-w-0">
+            <div key={metrics[i].key} className="min-h-0 min-w-0">
               <StatisticsPlot figure={figure} onPointClick={pick} />
             </div>
           ))}
@@ -223,32 +284,21 @@ export function CampaignStatisticsView({
   );
 }
 
-function progressText(
-  summaries: ReturnType<typeof useCampaignSummaries>,
-  populationName: string | undefined,
-  picked: number | null,
-  cellCount: number | undefined,
-  timeWindow: [number, number] | null
-): string {
+function progressText(summaries: CampaignSummaries, reading: string, scope: string): string {
   if (summaries.state === 'loading') {
-    return `Reading spikes: ${summaries.loaded} of ${summaries.total} simulations`;
+    return `Reading ${reading}: ${summaries.loaded} of ${summaries.total} simulations`;
   }
   if (summaries.state === 'ready') {
-    const of =
-      picked === null
-        ? ''
-        : ` · ${picked.toLocaleString()} of ${(cellCount ?? 0).toLocaleString()} cells`;
-    const span = timeWindow ? ` · ${timeWindow[0].toFixed(1)}–${timeWindow[1].toFixed(1)} ms` : '';
-    return `${summaries.total} finished ${summaries.total === 1 ? 'simulation' : 'simulations'} · ${populationName ?? ''}${of}${span}`;
+    return `${summaries.total} finished ${summaries.total === 1 ? 'simulation' : 'simulations'} · ${scope}`;
   }
   return '';
 }
 
-/** Said where the campaign's spike files are more than the browser should fetch at once. */
-function TooLarge({ bytes, count }: { bytes: number; count: number }) {
+/** Said where the campaign's files are more than the browser should fetch at once. */
+function TooLarge({ bytes, count, files }: { bytes: number; count: number; files: string }) {
   return (
     <Notice title="Large campaigns are not yet supported">
-      Comparing this campaign would mean downloading the spike files of its {count} finished
+      Comparing this campaign would mean downloading the {files} of its {count} finished
       simulations, {formatBytes(bytes)} together, past the{' '}
       {formatBytes(CAMPAIGN_SPIKES_LIMIT_BYTES)} this view reads at a time.
     </Notice>

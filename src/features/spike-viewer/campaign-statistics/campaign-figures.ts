@@ -4,21 +4,23 @@ import type { Data, Layout } from 'plotly.js-dist-min';
 import type { SimulationSummary } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 
-/** One measure of a simulation's firing the campaign's plots compare. */
+/** One measure of a simulation the campaign's plots compare, by its key in the summaries. */
 export type CampaignMetric = {
-  key: keyof SimulationSummary;
+  key: string;
   label: string;
   /** Shown as, from the summary's own units: the active share as a percentage. */
   scale: number;
+  /** The least it can be, once scaled, where it has a least: a rate's 0, not a voltage. */
+  min?: number;
   /** The most it can be, once scaled, where it has a most. */
   max?: number;
 };
 
-export const CAMPAIGN_METRICS: readonly CampaignMetric[] = [
-  { key: 'meanRate', label: 'Mean rate (Hz)', scale: 1 },
-  { key: 'medianRate', label: 'Median rate (Hz)', scale: 1 },
-  { key: 'activeFraction', label: 'Active cells (%)', scale: 100, max: 100 },
-  { key: 'meanCv', label: 'Mean ISI CV', scale: 1 },
+export const SPIKE_CAMPAIGN_METRICS: readonly CampaignMetric[] = [
+  { key: 'meanRate', label: 'Mean rate (Hz)', scale: 1, min: 0 },
+  { key: 'medianRate', label: 'Median rate (Hz)', scale: 1, min: 0 },
+  { key: 'activeFraction', label: 'Active cells (%)', scale: 100, min: 0, max: 100 },
+  { key: 'meanCv', label: 'Mean ISI CV', scale: 1, min: 0 },
 ];
 
 /** A scan parameter as an axis: its name, and its values in order with their text. */
@@ -98,7 +100,7 @@ export function heatmapFigure(
   const pad = flat ? Math.abs(finite[0]) * 0.05 || 1 : 0;
   const zRange = flat
     ? {
-        zmin: Math.max(0, finite[0] - pad),
+        zmin: Math.max(metric.min ?? Number.NEGATIVE_INFINITY, finite[0] - pad),
         zmax: Math.min(metric.max ?? Number.POSITIVE_INFINITY, finite[0] + pad),
       }
     : {};

@@ -41,6 +41,8 @@ type Props = {
   summary: ReactNode;
   /** The table of the recorded cells, as the viewer drives it. */
   table: TableProps;
+  /** Only the table, where the campaign's statistics have the plots' place. */
+  tableOnly?: boolean;
 };
 
 /**
@@ -60,6 +62,7 @@ export function ReportStatisticsPanel({
   spanMs,
   summary,
   table,
+  tableOnly = false,
 }: Props) {
   const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
   const [chosenShare, setChosenShare] = useState<number | null>(null);
@@ -83,6 +86,7 @@ export function ReportStatisticsPanel({
 
   return (
     <PlotsOverTable
+      tableOnly={tableOnly}
       plots={
         <StatisticsPlots
           statistics={statistics}
@@ -96,6 +100,7 @@ export function ReportStatisticsPanel({
           spanMs={spanMs}
           initialStatistic="mean"
           summary={values && summary}
+          hidden={tableOnly}
         />
       }
       table={

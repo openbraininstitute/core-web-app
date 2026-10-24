@@ -11,6 +11,7 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
 import ReportDetailsView, {
   sharedTracesHint,
 } from '@/features/sonata-viewer/components/report-details-view';
@@ -147,7 +148,7 @@ export function SonataReportView({
   /** The report's path, by which the population chosen for it is shared with the picker over the statistics. */
   reportPath?: string;
 }) {
-  const { simulationPicker } = useSimulation();
+  const { simulationPicker, campaign: campaignInfo } = useSimulation();
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
   const [chosenPopulation, setChosenPopulation] = useReportPopulation(
     reportPath,
@@ -192,8 +193,12 @@ export function SonataReportView({
   const sidePanel = useResultsSidePanel();
   const panelTarget = circuit !== undefined && sidePanel?.open ? sidePanel.target : null;
   const docked = panelTarget !== null;
+  // With the campaign's statistics up over them, the traces of the simulation on
+  // show, picked here, and the panel beside them only its table.
+  const campaignMode = docked && (sidePanel?.campaign ?? false);
   const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
-  const showScene = (sceneOn || docked) && voltage && circuit !== undefined && status === 'ready';
+  const showScene =
+    (sceneOn || docked) && !campaignMode && voltage && circuit !== undefined && status === 'ready';
   const timeCursor = useMemo(() => createTimeCursor(), []);
   const [sceneData, setSceneData] = useState<{
     population: string;
@@ -453,6 +458,14 @@ export function SonataReportView({
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
 
+  // The campaign's statistics are over the same cells, as a flag per node index.
+  const campaignCells = useMemo(() => {
+    if (!plotCells || rowCount === 0) return null;
+    const flags = new Uint8Array(rowCount);
+    for (const id of plotCells) if (id < rowCount) flags[id] = 1;
+    return flags;
+  }, [plotCells, rowCount]);
+
   // A recorded cell clicked in the scene is picked, or let go, and its row brought into view.
   const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
   const recordedNodes = useMemo(
@@ -617,6 +630,9 @@ export function SonataReportView({
             />
           </div>
         )}
+        {campaignMode && (
+          <div className="flex shrink-0 items-center justify-end">{simulationPicker}</div>
+        )}
         {/* The population is picked over the statistics; the traces' own controls sit with them. */}
         <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2')}>
           <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
@@ -631,6 +647,7 @@ export function SonataReportView({
         {createPortal(
           <ReportStatisticsPanel
             key={population.name}
+            tableOnly={campaignMode}
             statistics={statistics}
             values={statisticValues}
             cells={plotCells}
@@ -661,6 +678,24 @@ export function SonataReportView({
           />,
           panelTarget
         )}
+        {campaignMode &&
+          campaignInfo &&
+          sidePanel?.campaignTarget &&
+          createPortal(
+            <ReportCampaignView
+              simulations={campaignInfo.simulations}
+              statusMap={campaignInfo.statusMap}
+              activeSimulationId={campaignInfo.activeSimulationId}
+              onSelect={campaignInfo.onSelect}
+              reportPath={reportPath}
+              populationName={populationName}
+              variable={voltage ? null : (variableName ?? 'value')}
+              units={population.dataUnits}
+              cells={campaignCells}
+              recordedCount={population.nodeCount}
+            />,
+            sidePanel.campaignTarget
+          )}
       </div>
     );
   }

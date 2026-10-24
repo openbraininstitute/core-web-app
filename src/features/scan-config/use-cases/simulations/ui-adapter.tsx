@@ -91,12 +91,8 @@ export function SimulationsResultsUiAdapter({
     <ResultsLayout
       campaignId={campaignId}
       // With a side panel up the list is out of view, so the bar over it picks the simulation.
-      sidePanelBar={
-        <div className="flex min-w-0 items-center gap-2">
-          {simulationPicker}
-          {reportPicker}
-        </div>
-      }
+      sidePanelBar={simulationPicker}
+      sidePanelReport={reportPicker}
       campaignStatistics={campaignStatistics}
       left={
         <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">

@@ -595,7 +595,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 <FullscreenButton target={root} />
               </div>
             )}
-            {populationName && (!dockedOpen || campaignMode) && (
+            {populationName && !dockedOpen && (
               <div className="flex min-w-0 items-center gap-2">
                 {recorded && (
                   <span
@@ -796,7 +796,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                       />
                     )}
                     {/* Beside the statistics, where the row above the scene is gone. */}
-                    {dockedOpen && !campaignMode && (
+                    {dockedOpen && (
                       <span className="whitespace-nowrap text-xs text-neutral-400">
                         {shownCells && `${shownSpikeCount.toLocaleString()} of `}
                         {recorded.timestamps.length.toLocaleString()} spikes
