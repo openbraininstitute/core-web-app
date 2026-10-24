@@ -135,6 +135,11 @@ interface ICircuitSceneOptions {
   /** Told the node index of a clicked cell of the population on show. */
   onCellClick?: (index: number) => void;
   /**
+   * Colours for the population's cells in place of the colour-by's, such as a
+   * recording's values as it plays; a host passing them turns colour-by off.
+   */
+  nodeColorsOverride?: NodeColors;
+  /**
    * Told the colour-by mapping of the population on show, or null with none, so
    * a host drawing the same cells elsewhere - spike replay's raster - can match.
    */
@@ -204,6 +209,7 @@ export function CircuitScene({
   shownCells,
   highlightedCell,
   onCellClick,
+  nodeColorsOverride,
   onNodeColorsChange,
   spikes,
   dendrogram = false,
@@ -564,7 +570,7 @@ export function CircuitScene({
             hiddenPopulations={hiddenPopulations}
             shownCells={shownCells}
             highlightedCell={highlightedCell}
-            nodeColors={enableColorBy ? nodeColors : undefined}
+            nodeColors={nodeColorsOverride ?? (enableColorBy ? nodeColors : undefined)}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
             onSubjectCellClick={onCellClick}
@@ -599,7 +605,7 @@ export function CircuitScene({
               hiddenPopulations={hiddenPopulations}
               shownCells={shownCells}
               highlightedCell={highlightedCell}
-              nodeColors={enableColorBy ? nodeColors : undefined}
+              nodeColors={nodeColorsOverride ?? (enableColorBy ? nodeColors : undefined)}
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}

@@ -1,4 +1,6 @@
+import { RiBox3Line } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
+import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -6,19 +8,23 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import ReportDetailsView, {
   sharedTracesHint,
 } from '@/features/sonata-viewer/components/report-details-view';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import SonataViewerSkeleton from '@/features/sonata-viewer/components/sonata-viewer-skeleton';
+import { VoltageScene } from '@/features/sonata-viewer/components/voltage-scene';
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
+import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { cn } from '@/utils/css-class';
 
 import type { Remote } from 'comlink';
 import type { ComponentType, ReactNode } from 'react';
@@ -27,6 +33,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { ColumnMeta, ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type {
+  CellFrames,
   PickedTrace,
   PopulationMetadata,
   SonataReportMetadata,
@@ -44,6 +51,12 @@ const NO_TRACES: number[] = [];
 
 /** Group by nothing: every trace on the one plot. */
 const ALL = '__all__';
+
+/** Whether a voltage report is played in 3D above its traces: kept across the simulations shown. */
+const voltageSceneAtom = atom(false);
+/** Frames the scene's recording is thinned to: smooth enough to play, small enough to hold. */
+const SCENE_FRAMES = 2000;
+const DEFAULT_SCENE_HEIGHT = 280;
 /** Past this many values a property is closer to an id than a group. */
 const MAX_GROUPS = 80;
 
@@ -143,6 +156,35 @@ export function SonataReportView({
     () => groupingColumns([...neuronSetColumns, ...(columns ?? [])]),
     [neuronSetColumns, columns]
   );
+  // A voltage report, played over the circuit above its traces, which mark where it is.
+  const voltage = variableName === undefined && population?.dataUnits.toLowerCase() === 'mv';
+  const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
+  const showScene = sceneOn && voltage && circuit !== undefined && status === 'ready';
+  const timeCursor = useMemo(() => createTimeCursor(), []);
+  const [sceneData, setSceneData] = useState<{
+    population: string;
+    frames: CellFrames;
+    range: [number, number];
+  }>();
+  useEffect(() => {
+    if (!showScene || !populationName || sceneData?.population === populationName) return;
+    let cancelled = false;
+    Promise.all([
+      worker.getCellFrames(populationName, SCENE_FRAMES),
+      worker.getValueRange(populationName),
+    ])
+      .then(([frames, range]) => {
+        if (!cancelled) setSceneData({ population: populationName, frames, range });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [showScene, populationName, sceneData?.population, worker]);
+  const sceneFrames = sceneData?.population === populationName ? sceneData : undefined;
+  const sceneBoxRef = useRef<HTMLDivElement>(null);
+  const [sceneHeight, setSceneHeight] = useState(DEFAULT_SCENE_HEIGHT);
+
   const [chosenGroupBy, setChosenGroupBy] = useState(ALL);
   const groupBy = groupOptions.some((c) => c.name === chosenGroupBy) ? chosenGroupBy : ALL;
   const groupLabel = groupOptions.find((c) => c.name === groupBy)?.label ?? groupBy;
@@ -304,7 +346,14 @@ export function SonataReportView({
     // Full height, so the plot and the table split the panel between them. The
     // file viewer hands this the bare pane: the inset is its own, so the header
     // row lines up with the files column's first heading.
-    <div className="@container flex h-full min-h-0 flex-col gap-3 px-4 pt-1.25 pb-4">
+    // With the scene above them, the traces and the table share less room;
+    // past their floors the pane scrolls rather than stacking them over each other.
+    <div
+      className={cn(
+        '@container flex h-full min-h-0 flex-col gap-3 px-4 pt-1.25 pb-4',
+        showScene && 'secondary-scrollbar overflow-y-auto'
+      )}
+    >
       {/* The campaign's own picker for the simulation on show, where there is one. */}
       {/* Wraps rather than squeezes: the simulation picker drops to a row of its own. */}
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -314,6 +363,21 @@ export function SonataReportView({
             population={population}
             onChange={setChosenPopulation}
           />
+          {voltage && circuit && (
+            <button
+              type="button"
+              aria-pressed={sceneOn}
+              onClick={() => setSceneOn(!sceneOn)}
+              title="Play the recording over the circuit, above its traces"
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-semibold shadow-md ring-1 ring-black/5 transition-colors',
+                sceneOn ? 'bg-primary-9 text-white' : 'text-primary-9 bg-white hover:bg-neutral-50'
+              )}
+            >
+              <RiBox3Line className="size-4" />
+              3D
+            </button>
+          )}
           {groupOptions.length > 0 && (
             <PillSelect
               label="Group by"
@@ -329,7 +393,27 @@ export function SonataReportView({
         {simulationPicker}
       </div>
 
-      <div className="flex min-h-[240px] flex-[3] flex-col">
+      {showScene && circuit && populationName && (
+        <div ref={sceneBoxRef} className="relative shrink-0" style={{ height: sceneHeight }}>
+          <VoltageScene
+            circuit={circuit}
+            populationName={populationName}
+            cellCount={rowCount}
+            frames={sceneFrames?.frames ?? null}
+            valueRange={sceneFrames?.range ?? null}
+            units={population.dataUnits}
+            timeCursor={timeCursor}
+          />
+          <PaneResizeHandle
+            containerRef={sceneBoxRef}
+            minHeight={160}
+            onResize={(height) => setSceneHeight(Math.min(height, 900))}
+            edge="bottom"
+          />
+        </div>
+      )}
+
+      <div className={cn('flex flex-[3] flex-col', showScene ? 'min-h-[200px]' : 'min-h-[240px]')}>
         {groupBy === ALL ? (
           <ErrorBoundary FallbackComponent={ErrorFallback} resetKeys={[metadata, population]}>
             <ReportDetailsView
@@ -340,6 +424,7 @@ export function SonataReportView({
               picked={pickedTraces}
               hovered={hoveredTraces}
               variableName={variableName}
+              timeCursor={showScene ? timeCursor : undefined}
             />
           </ErrorBoundary>
         ) : shownGroups === null ? (
@@ -376,6 +461,7 @@ export function SonataReportView({
                       picked={group.picked}
                       hovered={group.hovered}
                       variableName={variableName}
+                      timeCursor={showScene ? timeCursor : undefined}
                     />
                   </ErrorBoundary>
                 </WhenNearView>
@@ -386,7 +472,12 @@ export function SonataReportView({
       </div>
 
       {circuit && (
-        <div className="border-neutral-2 flex min-h-[180px] flex-[2] flex-col border-t pt-2">
+        <div
+          className={cn(
+            'border-neutral-2 flex flex-[2] flex-col border-t pt-2',
+            showScene ? 'min-h-[220px]' : 'min-h-[180px]'
+          )}
+        >
           <ReportNodesTable
             key={population.name}
             circuit={circuit}

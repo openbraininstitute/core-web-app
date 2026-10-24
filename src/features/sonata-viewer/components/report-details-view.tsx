@@ -1,6 +1,6 @@
 import { Empty } from 'antd';
 import Plotly from 'plotly.js-dist-min';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
@@ -9,6 +9,7 @@ import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listen
 import type { Remote } from 'comlink';
 import type { Config, Layout, PlotData } from 'plotly.js-dist-min';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type {
   NodeTraceData,
   PickedTrace,
@@ -85,9 +86,12 @@ export default function ReportDetailsView({
   picked,
   hovered,
   variableName,
+  timeCursor,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
+  /** A time to mark on the plot, such as a scene playing the recording above it. */
+  timeCursor?: TimeCursor;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -132,6 +136,7 @@ export default function ReportDetailsView({
         hovered={hovered}
         legend={picking}
         variableName={variableName}
+        timeCursor={timeCursor}
       />
     </div>
   );
@@ -144,9 +149,11 @@ function SharedTracesPlot({
   hovered,
   legend,
   variableName,
+  timeCursor,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
+  timeCursor?: TimeCursor;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -324,8 +331,49 @@ function SharedTracesPlot({
     onDoubleClick: () => setZoom(HOME),
   });
 
+  // react-plotly follows the window, not this box, which a scene opening above shrinks.
+  const boxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const observer = new ResizeObserver(() => {
+      const graph = box.querySelector<HTMLElement>('.js-plotly-plot');
+      if (graph) Promise.resolve(Plotly.Plots.resize(graph)).catch(() => {});
+    });
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
+
+  // The cursor, moved on the DOM: placed by the plot's own axis, so it follows a zoom.
+  const cursorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!timeCursor) return;
+    return timeCursor.subscribe((timeInMs) => {
+      const cursor = cursorRef.current;
+      const graph = boxRef.current?.querySelector('.js-plotly-plot') as
+        | (HTMLElement & { _fullLayout?: PlotlyLayoutInternals })
+        | null;
+      const layout = graph?._fullLayout;
+      if (!cursor) return;
+      if (timeInMs === null || !layout?.xaxis) {
+        cursor.style.display = 'none';
+        return;
+      }
+      const [from, to] = layout.xaxis.range;
+      if (timeInMs < from || timeInMs > to) {
+        cursor.style.display = 'none';
+        return;
+      }
+      const { l, t, h } = layout._size;
+      cursor.style.display = 'block';
+      cursor.style.left = `${l + layout.xaxis.l2p(timeInMs) - 0.75}px`;
+      cursor.style.top = `${t}px`;
+      cursor.style.height = `${h}px`;
+    });
+  }, [timeCursor]);
+
   return (
-    <div className="relative min-h-0 flex-1">
+    <div ref={boxRef} className="relative min-h-0 flex-1">
       <Plot
         data={data}
         layout={layout}
@@ -335,9 +383,22 @@ function SharedTracesPlot({
         onInitialized={attachListeners}
         onUpdate={attachListeners}
       />
+      {timeCursor && (
+        <div
+          ref={cursorRef}
+          // Over the WebGL traces, which sit on a canvas of their own.
+          className="pointer-events-none absolute z-10 hidden w-[1.5px] bg-[#f5222d]"
+        />
+      )}
     </div>
   );
 }
+
+/** The parts of Plotly's laid-out graph the cursor reads. */
+type PlotlyLayoutInternals = {
+  _size: { l: number; t: number; h: number };
+  xaxis?: { range: [number, number]; l2p: (value: number) => number };
+};
 
 /**
  * The zoom a relayout leaves, axis by axis: a range sets that axis, an

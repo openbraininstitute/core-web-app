@@ -1,4 +1,4 @@
-import { expose } from 'comlink';
+import { expose, transfer } from 'comlink';
 import { Dataset, File, Group, ready } from 'h5wasm';
 
 import { lttbDownsample } from '@/utils/lttb';
@@ -6,6 +6,7 @@ import { lttbDownsample } from '@/utils/lttb';
 import { resolveTraces } from './column-mapping';
 
 import type {
+  CellFrames,
   DownsampleRequest,
   NodeTraceData,
   PopulationMetadata,
@@ -215,6 +216,40 @@ class SonataWorkerImpl {
       if (v > max) max = v;
     }
     return min <= max ? [min, max] : [0, 1];
+  }
+
+  /** Each recorded cell's values over the run, as frames: for a scene to play them. */
+  async getCellFrames(populationName: string, maxFrames: number): Promise<CellFrames> {
+    if (!this.metadata || !this.file) {
+      throw new Error('No file loaded. Call loadFile first.');
+    }
+    const pop = this.metadata.populations.find((p) => p.name === populationName);
+    const shape = this.shapes.get(populationName);
+    if (!pop || !shape) throw new Error(`Population "${populationName}" not found.`);
+    const { numTimesteps, numColumns } = shape;
+
+    // A cell's first column: the soma, in a compartment report.
+    const columnOf = new Map<number, number>();
+    pop.traces.forEach((trace, column) => {
+      if (!columnOf.has(trace.nodeId)) columnOf.set(trace.nodeId, column);
+    });
+    const nodeIds = Uint32Array.from(columnOf.keys());
+    const columns = Array.from(columnOf.values());
+
+    const stride = Math.max(1, Math.ceil(numTimesteps / Math.max(1, maxFrames)));
+    const frames = Math.ceil(numTimesteps / stride);
+    const flat = this.getPopulationData(populationName);
+    const times = new Float64Array(frames);
+    const values = new Float32Array(frames * columns.length);
+    const { startTime, timeStep } = pop.timeConfig;
+    for (let f = 0; f < frames; f += 1) {
+      const row = f * stride;
+      times[f] = startTime + row * timeStep;
+      for (let c = 0; c < columns.length; c += 1) {
+        values[f * columns.length + c] = flat[row * numColumns + columns[c]];
+      }
+    }
+    return transfer({ nodeIds, times, values }, [nodeIds.buffer, times.buffer, values.buffer]);
   }
 
   /** Shared by every column of a population. */

@@ -22,6 +22,17 @@ export type PopulationMetadata = {
   dataUnits: string;
 };
 
+/**
+ * Each recorded cell's values over the run, thinned to at most a set number of
+ * frames: the cells' node ids, the frames' times, and a value per cell per
+ * frame, frame by frame. A cell recorded in several compartments gives its first.
+ */
+export type CellFrames = {
+  nodeIds: Uint32Array;
+  times: Float64Array;
+  values: Float32Array;
+};
+
 export type TimeConfig = {
   startTime: number;
   endTime: number;
