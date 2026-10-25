@@ -1,4 +1,5 @@
 overrides:
+  '@openbraininstitute/morphoviewer': file:vendor/openbraininstitute-morphoviewer-0.37.1.tgz
   # CodeMirror requires a single @codemirror/state instance across all packages.
   # Transitive deps pulled in both 6.6.0 and 6.7.x, which broke EditorState.create
   # with "Unrecognized extension value". Force one copy.
