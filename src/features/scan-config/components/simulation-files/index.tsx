@@ -7,7 +7,7 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import {
   isLfpReport,
   reportName,
@@ -280,6 +280,7 @@ export function SimulationFiles({
                 file={file}
                 name={name}
                 label={label}
+                interactive={hasStatistics(file)}
                 onSelect={() => {
                   if (population) {
                     setChosenPopulations((previous) => ({
@@ -394,11 +395,15 @@ export function useSimulationResultFiles(
   }, [simResult, simResultLoadable]);
 }
 
-/** A report's tag, its words over two lines where there are two. */
+/**
+ * A report's tag, its words over two lines where there are two: set a little
+ * tighter, reaching into the pill's side padding, so a long word such as
+ * "Extracellular" fits the narrow column.
+ */
 function tagOf(words: string[]): ReactNode {
   if (words.length < 2) return words[0];
   return (
-    <span className="block text-center leading-tight">
+    <span className="-mx-2 block text-center text-[10px] leading-tight tracking-tight">
       {words[0]}
       <br />
       {words.slice(1).join(' ')}
