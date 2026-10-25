@@ -30,7 +30,7 @@ import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-v
 import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
-import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { PANEL_FLOORS, StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -230,13 +230,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // table of the simulation on show, picked here, with the width to themselves.
   const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
   // Docked, the raster is over the table, and the panel beside them, once up,
-  // holds the statistics over the scene. Either column can be shut on its
+  // holds the 3D player over the statistics. Either column can be shut on its
   // side by the rule between them, and any of the four panes by its own bar.
   const shuts = sidePanel?.shuts;
   const beside = dockedOpen && !campaignMode;
   const rasterUp = !(beside && shuts?.columns === 'start') && shuts?.file !== 'start';
-  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
-  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
+  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
   // The split of the viewer's own panes, out of a results layout.
   const panes = useShuttingSplit({
     chosen: rasterHeight,
@@ -797,7 +797,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     );
 
   if (docked && sidePanel) {
-    const panelTitles = ['Statistics', '3D View'];
+    const panelTitles = ['3D Player', 'Statistics'];
     return (
       <div ref={setRoot} className="flex h-full min-h-0 flex-col">
         <FullscreenPortalScope root={root}>
@@ -834,17 +834,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               )
             }
           />
-          {/* The panel beside them: the statistics over the scene. */}
+          {/* The panel beside them: the 3D player over the statistics. */}
           {sidePanel.target &&
             createPortal(
               <StackedPanes
                 split="panel"
+                floors={PANEL_FLOORS}
                 top={{
-                  title: 'Statistics',
-                  content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
-                }}
-                bottom={{
-                  title: '3D View',
+                  title: '3D Player',
                   keepsSize: true,
                   boxClassName: 'overflow-hidden',
                   content: (
@@ -866,6 +863,10 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                       {showScene && !isSplit && transport(true)}
                     </div>
                   ),
+                }}
+                bottom={{
+                  title: 'Statistics',
+                  content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
                 }}
               />,
               sidePanel.target

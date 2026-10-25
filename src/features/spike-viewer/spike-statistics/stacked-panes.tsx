@@ -19,6 +19,8 @@ import type { ReactNode } from 'react';
 const GUTTER = 12;
 /** What each pane keeps while open, until dragged on under half of it: its box and the gutter. */
 const DEFAULT_FLOORS = [GUTTER + 200, GUTTER + 160] as const;
+/** The panel's: the 3D player over the statistics, whose plot needs room under its controls. */
+export const PANEL_FLOORS = [GUTTER + 200, GUTTER + 220] as const;
 
 /**
  * The bottom pane's room as last dragged, by split: kept for the next file, as

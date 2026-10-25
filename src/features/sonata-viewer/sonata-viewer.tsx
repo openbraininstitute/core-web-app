@@ -29,7 +29,7 @@ import { useReportPopulation } from '@/features/spike-viewer/report-populations'
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
-import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { PANEL_FLOORS, StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
@@ -205,8 +205,9 @@ export function SonataReportView({
   const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
   const beside = dockedOpen && !campaignMode;
   const shuts = sidePanel?.shuts;
-  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
-  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
+  // A voltage's panel has the 3D player over the statistics; another report's, only the statistics.
+  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const plotsUp = beside && shuts?.columns !== 'end' && (!voltage || shuts?.panel !== 'end');
   const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
   const showScene =
     (docked ? sceneUp : sceneOn) && voltage && circuit !== undefined && status === 'ready';
@@ -625,7 +626,11 @@ export function SonataReportView({
   if (docked && table && sidePanel) {
     const plotted = plotCells ? plotCells.length : population.nodeCount;
     const tracesTitle = voltage ? 'Voltage traces' : 'Traces';
-    const panelTitles = voltage ? ['Statistics', '3D View'] : ['Statistics'];
+    const plotsPane = {
+      title: 'Statistics',
+      content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+    };
+    const panelTitles = voltage ? ['3D Player', 'Statistics'] : ['Statistics'];
     return (
       <>
         {/* The traces over the table, and while the panel is not up its bar beside them. */}
@@ -707,20 +712,23 @@ export function SonataReportView({
             )
           }
         />
-        {/* The panel beside them: the statistics over the scene. */}
+        {/* The panel beside them: the 3D player over the statistics. */}
         {sidePanel.target &&
           createPortal(
             <StackedPanes
               split="panel"
-              top={{
-                title: 'Statistics',
-                content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
-              }}
-              bottom={
+              floors={PANEL_FLOORS}
+              top={
                 voltage
-                  ? { title: '3D View', keepsSize: true, boxClassName: 'px-2 pt-2', content: scene }
-                  : null
+                  ? {
+                      title: '3D Player',
+                      keepsSize: true,
+                      boxClassName: 'px-2 pt-2',
+                      content: scene,
+                    }
+                  : plotsPane
               }
+              bottom={voltage ? plotsPane : null}
             />,
             sidePanel.target
           )}
