@@ -16,6 +16,7 @@ import {
   coursesFigure,
   DASHES,
   heatmapFigure,
+  lineColor,
   linesFigure,
   SPIKE_CAMPAIGN_METRICS,
 } from '@/features/spike-viewer/campaign-statistics/campaign-figures';
@@ -298,12 +299,12 @@ export function CampaignPlots({
           ? metricRange(groups, summary)
           : null;
     return groups.map((group, i) => {
-      // Several plots of lines over time share the key over them, not one of their own.
+      // The heatmaps' colour bar on the first plot only; lines are keyed over the plots.
       const options = {
         title: grouped ? group.name : overTime?.label,
         group: grouped ? group.name : undefined,
         range,
-        key: grouped && overTime ? false : i === 0,
+        key: i === 0,
       };
       const at = cellAt(group);
       const figure = overTime
@@ -345,6 +346,44 @@ export function CampaignPlots({
         maxHeight: (y ? y.values.length : 1) * MAX_CELL + HEATMAP_ROOM.height,
       }
     : undefined;
+
+  // What the lines' colours and dashes stand for, over the plots: in a legend
+  // beside one, it took a third of the plot's width.
+  const keyParts: KeyPart[] | null = !x
+    ? null
+    : plotKind === 'course'
+      ? [
+          {
+            label: x.label,
+            items: x.values.map((v, i) => ({ id: v.id, text: v.text, color: courseColor(i) })),
+          },
+          ...(y
+            ? [
+                {
+                  label: y.label,
+                  items: y.values.map((v, i) => ({
+                    id: v.id,
+                    text: v.text,
+                    color: '#64748b',
+                    dash: DASH_ARRAYS[DASHES[i % DASHES.length]],
+                  })),
+                },
+              ]
+            : []),
+        ]
+      : plotKind === 'lines' && y
+        ? [
+            {
+              label: y.label,
+              items: y.values.map((v, i) => ({
+                id: v.id,
+                text: v.text,
+                color: lineColor(i),
+                marker: true,
+              })),
+            },
+          ]
+        : null;
 
   const pick = (id: unknown) => {
     const simulation = simulations.find((s) => s.id === id);
@@ -409,23 +448,28 @@ export function CampaignPlots({
         <Notice>This campaign sweeps no parameter, so there is nothing to compare.</Notice>
       ) : !figures || summaries.state === 'resolving' || grouping ? (
         <div className="flex min-h-0 flex-1 items-center justify-center">
-          <Spin tip={grouping ? 'Reading the cells’ groups…' : `Finding the simulations’ ${files}…`}>
+          <Spin
+            tip={grouping ? 'Reading the cells’ groups…' : `Finding the simulations’ ${files}…`}
+          >
             <div className="size-12" />
           </Spin>
         </div>
       ) : figures.length === 1 ? (
-        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
-          <div
-            className="h-full min-h-0 w-full min-w-0"
-            style={heatmaps ? heatmapBox : undefined}
-          >
-            <StatisticsPlot figure={figures[0].figure} onPointClick={pick} />
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          {keyParts && <LineKey parts={keyParts} />}
+          <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center">
+            <div
+              className="h-full min-h-0 w-full min-w-0"
+              style={heatmaps ? heatmapBox : undefined}
+            >
+              <StatisticsPlot figure={figures[0].figure} onPointClick={pick} />
+            </div>
           </div>
         </div>
       ) : (
         // A plot per group, as many to a row as fit, under one scale.
         <div className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
-          {plotKind === 'course' && x && <CourseKey x={x} y={y} />}
+          {keyParts && <LineKey parts={keyParts} />}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {figures.map(({ name, figure }) => (
               <div key={name} className={heatmaps ? 'aspect-square' : 'h-[240px]'}>
@@ -492,34 +536,37 @@ const DASH_ARRAYS: Record<(typeof DASHES)[number], string | undefined> = {
 };
 
 /** Over the groups' plots of the simulations over time: what a line's colour and its dashes say. */
-function CourseKey({ x, y }: { x: ScanAxis; y: ScanAxis | null }) {
-  const swatch = (color: string, dash: string | undefined) => (
-    <svg aria-hidden width="18" height="6" className="shrink-0">
-      <line x1="0" y1="3" x2="18" y2="3" stroke={color} strokeWidth="2" strokeDasharray={dash} />
-    </svg>
-  );
+/** A parameter the lines vary by, and the swatch each of its values is drawn with. */
+type KeyPart = {
+  label: string;
+  items: { id: string; text: string; color: string; dash?: string; marker?: boolean }[];
+};
+
+function LineKey({ parts }: { parts: KeyPart[] }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-neutral-500">
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-neutral-400">{x.label}</span>
-        {x.values.map((v, i) => (
-          <span key={v.id} className="flex items-center gap-1">
-            {swatch(courseColor(i), undefined)}
-            {v.text}
-          </span>
-        ))}
-      </span>
-      {y && (
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-neutral-400">{y.label}</span>
-          {y.values.map((v, i) => (
-            <span key={v.id} className="flex items-center gap-1">
-              {swatch('#64748b', DASH_ARRAYS[DASHES[i % DASHES.length]])}
-              {v.text}
+    <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 pb-2 text-[11px] text-neutral-500">
+      {parts.map((part) => (
+        <span key={part.label} className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-neutral-400">{part.label}</span>
+          {part.items.map((item) => (
+            <span key={item.id} className="flex items-center gap-1">
+              <svg aria-hidden="true" width="18" height="8" className="shrink-0">
+                <line
+                  x1="0"
+                  y1="4"
+                  x2="18"
+                  y2="4"
+                  stroke={item.color}
+                  strokeWidth="2"
+                  strokeDasharray={item.dash}
+                />
+                {item.marker && <circle cx="9" cy="4" r="3" fill={item.color} />}
+              </svg>
+              {item.text}
             </span>
           ))}
         </span>
-      )}
+      ))}
     </div>
   );
 }

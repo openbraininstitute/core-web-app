@@ -70,7 +70,7 @@ export type CampaignPlotOptions = {
   group?: string;
   /** The value range every group's plot is drawn on, so they compare; null for this plot's own. */
   range?: [number, number] | null;
-  /** The heatmap's colour bar, or the lines' legend: on the first of several plots only. */
+  /** The heatmap's colour bar: on the first of several plots only. Lines are keyed over the plots. */
   key?: boolean;
 };
 
@@ -273,11 +273,15 @@ export function heatmapFigure(
   };
 }
 
+/** A line's colour for the second parameter's value at `index`, in the lines plot: the pick palette's, then grey. */
+export function lineColor(index: number): string {
+  return index < PICK_COLORS.length ? PICK_COLORS[index] : '#cbd5e1';
+}
+
 /**
  * The same measure as lines: the first parameter across, a line per value of
  * the second, in the categorical palette. A point per simulation, which a
- * click can pick, the one on show ringed. `legend` keys the lines, for the
- * one plot of a row that carries it.
+ * click can pick, the one on show ringed.
  */
 export function linesFigure(
   metric: CampaignMetric,
@@ -285,7 +289,7 @@ export function linesFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const numeric = x.values.every((v) => typeof v.value === 'number');
@@ -302,7 +306,7 @@ export function linesFigure(
     });
     const on = points.find((p) => p.id === activeId && p.y !== null);
     if (on) rings.push({ x: on.x, y: on.y as number });
-    const color = yi < PICK_COLORS.length ? PICK_COLORS[yi] : '#cbd5e1';
+    const color = lineColor(yi);
     return {
       type: 'scatter',
       mode: 'lines+markers',
@@ -316,7 +320,7 @@ export function linesFigure(
       hoverinfo: 'none',
     };
   });
-  // A trace of its own, so the legend's markers stay plain; hovers and clicks pass through it.
+  // A trace of its own, which hovers and clicks pass through to the point under it.
   const ringTrace = rings.length
     ? [
         {
@@ -351,8 +355,6 @@ export function linesFigure(
     layout: {
       ...BASE_LAYOUT,
       title: title(plotTitle ?? metric.label),
-      showlegend: key && y !== null,
-      legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
       xaxis: {
         title: axisTitle(x.label),
         type: numeric ? 'linear' : 'category',
@@ -393,7 +395,7 @@ export function coursesFigure(
   activeId: string | undefined,
   label: string,
   steps: boolean,
-  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const lines: {
@@ -463,8 +465,6 @@ export function coursesFigure(
     layout: {
       ...BASE_LAYOUT,
       title: title(plotTitle ?? label),
-      showlegend: key,
-      legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
       xaxis: {
         title: axisTitle('Time (ms)'),
         automargin: true,
