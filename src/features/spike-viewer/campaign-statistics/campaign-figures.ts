@@ -1,11 +1,16 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { scaleColor } from '@/features/spike-viewer/spike-statistics/figures';
 
 import type { Data, Layout } from 'plotly.js-dist-min';
 import type {
   SimulationSummary,
   TimeCourseSeries,
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
-import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
+import type {
+  Figure,
+  HoverPoint,
+  PlotTooltip,
+} from '@/features/spike-viewer/spike-statistics/figures';
 
 /** One measure of a simulation the campaign's plots compare, by its key in the summaries. */
 export type CampaignMetric = {
@@ -61,6 +66,8 @@ const BASE_LAYOUT: Partial<Layout> = {
 export type CampaignPlotOptions = {
   /** Over the plot, in place of the measure's name: a group's. */
   title?: string;
+  /** The group of cells the plot sums up, which its cards name; none for all of them. */
+  group?: string;
   /** The value range every group's plot is drawn on, so they compare; null for this plot's own. */
   range?: [number, number] | null;
   /** The heatmap's colour bar, or the lines' legend: on the first of several plots only. */
@@ -76,6 +83,19 @@ const title = (text: string) => ({
 });
 const axisTitle = (text: string) => ({ text, font: { size: 11 } });
 
+const compact = (value: number) => String(Number(value.toPrecision(3)));
+
+/** A card's rows naming a simulation by where it sits in the scan. */
+function coordinateRows(x: ScanAxis, y: ScanAxis | null, xi: number, yi: number) {
+  const rows = [{ label: x.label, value: x.values[xi]?.text ?? '' }];
+  if (y) rows.push({ label: y.label, value: y.values[yi]?.text ?? '' });
+  return rows;
+}
+
+function showHint(simulationId: string, activeId: string | undefined): string {
+  return simulationId === activeId ? 'The simulation on show' : 'Click to show this simulation';
+}
+
 /**
  * One measure across the scan: a cell per simulation, the first parameter
  * across and the second down, the rest at the values of the simulation on
@@ -90,7 +110,7 @@ export function heatmapFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const z: (number | null)[][] = [];
@@ -122,7 +142,6 @@ export function heatmapFigure(
       : {};
   const yTexts = y ? y.values.map((v) => v.text) : [''];
   const xTexts = x.values.map((v) => v.text);
-  const where = `${x.label} %{x}${y ? `<br>${y.label} %{y}` : ''}`;
 
   // The unfinished, over the rest: a cell per status, in steps of one colour each.
   const statuses: { name: string; color: string }[] = [];
@@ -161,10 +180,37 @@ export function heatmapFigure(
             textfont: { size: 10 },
             xgap: 2,
             ygap: 2,
-            hovertemplate: `${where}<br>Status: %{text}<extra></extra>`,
+            hoverinfo: 'none',
           },
         ]
       : [];
+  // Where the colour scale runs, as Plotly runs it, for the card's swatch.
+  const low = zRange.zmin ?? Math.min(...finite);
+  const high = zRange.zmax ?? Math.max(...finite);
+  const tooltip = (point: HoverPoint): PlotTooltip | null => {
+    if (!Array.isArray(point.pointNumber)) return null;
+    const [yi, xi] = point.pointNumber;
+    const cell = cellAt(xi, yi);
+    if (!cell) return null;
+    const value = z[yi]?.[xi] ?? null;
+    const status = cell.status;
+    return {
+      title: metric.label,
+      note: group,
+      swatch:
+        status?.color ??
+        (value === null
+          ? undefined
+          : scaleColor(SEQUENTIAL, high > low ? (value - low) / (high - low) : 1)),
+      rows: [
+        ...coordinateRows(x, y, xi, yi),
+        status
+          ? { label: 'Status', value: statusText[yi][xi], strong: true }
+          : { label: 'Value', value: value === null ? '—' : compact(value), strong: true },
+      ],
+      hint: showHint(cell.simulationId, activeId),
+    };
+  };
 
   return {
     data: [
@@ -183,10 +229,11 @@ export function heatmapFigure(
         ygap: 2,
         showscale: key,
         colorbar: { thickness: 8, outlinewidth: 0, len: 0.9 },
-        hovertemplate: `${where}<br>${metric.label} %{z:.3g}<extra>click to show</extra>`,
+        hoverinfo: 'none',
       },
       ...statusTrace,
     ] as Data[],
+    tooltip,
     layout: {
       ...BASE_LAYOUT,
       title: title(plotTitle ?? metric.label),
@@ -238,7 +285,7 @@ export function linesFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const numeric = x.values.every((v) => typeof v.value === 'number');
@@ -266,7 +313,7 @@ export function linesFigure(
       connectgaps: false,
       line: { color, width: 2 },
       marker: { color, size: 8 },
-      hovertemplate: `${x.label} %{x}<br>${metric.label} %{y:.3g}<extra>%{fullData.name}</extra>`,
+      hoverinfo: 'none',
     };
   });
   // A trace of its own, so the legend's markers stay plain; hovers and clicks pass through it.
@@ -285,6 +332,22 @@ export function linesFigure(
     : [];
   return {
     data: [...data, ...ringTrace] as Data[],
+    tooltip: (point) => {
+      const yi = point.curveNumber ?? -1;
+      const xi = point.pointNumber;
+      const line = data[yi];
+      if (!line || typeof xi !== 'number' || typeof point.y !== 'number') return null;
+      return {
+        title: metric.label,
+        note: group,
+        swatch: line.line.color,
+        rows: [
+          ...coordinateRows(x, y, xi, yi),
+          { label: 'Value', value: compact(point.y), strong: true },
+        ],
+        hint: showHint(line.customdata[xi], activeId),
+      };
+    },
     layout: {
       ...BASE_LAYOUT,
       title: title(plotTitle ?? metric.label),
@@ -330,10 +393,17 @@ export function coursesFigure(
   activeId: string | undefined,
   label: string,
   steps: boolean,
-  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
-  const lines: (Data & { active: boolean })[] = [];
+  const lines: {
+    line: Data;
+    active: boolean;
+    xi: number;
+    yi: number;
+    course: TimeCourseSeries;
+    simulationId: string;
+  }[] = [];
   for (let yi = 0; yi < rows; yi++) {
     for (let xi = 0; xi < x.values.length; xi++) {
       const cell = cellAt(xi, yi);
@@ -341,7 +411,7 @@ export function coursesFigure(
       if (!cell || !course) continue;
       const active = cell.simulationId === activeId;
       const name = `${x.label} ${x.values[xi].text}${y ? ` · ${y.label} ${y.values[yi].text}` : ''}`;
-      lines.push({
+      const line = {
         type: 'scatter',
         mode: 'lines',
         name,
@@ -356,15 +426,40 @@ export function coursesFigure(
         opacity: active ? 1 : 0.75,
         // Each point names its simulation, so a click anywhere on the line picks it.
         customdata: Array.from({ length: course.x.length }, () => cell.simulationId),
-        hovertemplate: `${name}<br>%{x:.0f} ms · ${label} %{y:.3g}<extra>click to show</extra>`,
-        active,
-      } as Data & { active: boolean });
+        hoverinfo: 'none',
+      } as Data;
+      lines.push({ line, active, xi, yi, course, simulationId: cell.simulationId });
     }
   }
   // The simulation on show over the rest.
   lines.sort((a, b) => Number(a.active) - Number(b.active));
+  const time = (t: number) => String(Number(t.toFixed(1)));
   return {
-    data: lines.map(({ active: _active, ...line }) => line as Data),
+    data: lines.map((l) => l.line),
+    tooltip: (point) => {
+      const l = lines[point.curveNumber ?? -1];
+      let i = point.pointNumber;
+      if (!l || typeof i !== 'number') return null;
+      const { x: times, y: values } = l.course;
+      // Steps hold each bin's value from its start; the last point only ends the last bin.
+      if (steps && i === times.length - 1) i -= 1;
+      return {
+        title: label,
+        note: group,
+        swatch: courseColor(l.xi),
+        rows: [
+          ...coordinateRows(x, y, l.xi, l.yi),
+          {
+            label: 'Time',
+            value: steps
+              ? `${time(times[i])}–${time(times[i + 1] ?? times[i])} ms`
+              : `${time(times[i])} ms`,
+          },
+          { label: 'Value', value: compact(values[i]), strong: true },
+        ],
+        hint: showHint(l.simulationId, activeId),
+      };
+    },
     layout: {
       ...BASE_LAYOUT,
       title: title(plotTitle ?? label),

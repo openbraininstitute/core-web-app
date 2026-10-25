@@ -20,6 +20,16 @@ export type PlotRect = {
 // between them, so the bottom and left bands hold one row of text each.
 export const MARGIN = { top: 36, right: 20, bottom: 28, left: 56 };
 
+/** The axes' look, which the voltage traces' axes share. */
+export const AXIS_STYLE = {
+  line: '#888888',
+  grid: '#e8e8e8',
+  text: '#333333',
+  font: '-apple-system, BlinkMacSystemFont, sans-serif',
+  /** From the axis line to the tick labels, the tick's 5px included. */
+  labelGap: 8,
+};
+
 /**
  * How the y axis reads when its rows are not node ids: runs of rows under a
  * label each, such as a layer, or a value at each row, such as a rate.
@@ -40,7 +50,7 @@ export const TIMELINE_COLORS = {
 };
 
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
-function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
+export function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
   const range = max - min;
   if (range <= 0) return [min];
 
@@ -65,7 +75,7 @@ function computeTicks(min: number, max: number, targetCount: number, integer = f
 }
 
 /** Format a tick value to a reasonable number of decimal places. */
-function formatTick(value: number, step: number): string {
+export function formatTick(value: number, step: number): string {
   if (step >= 1) return Math.round(value).toString();
   const decimals = Math.max(0, -Math.floor(Math.log10(step)) + 1);
   return value.toFixed(decimals);
@@ -119,7 +129,7 @@ export class AxisOverlay {
     rect: PlotRect,
     xTicks: number[]
   ) {
-    ctx.strokeStyle = '#e8e8e8';
+    ctx.strokeStyle = AXIS_STYLE.grid;
     ctx.lineWidth = 1;
     ctx.beginPath();
 
@@ -146,7 +156,7 @@ export class AxisOverlay {
     const yStep = yTicks.length > 1 ? yTicks[1] - yTicks[0] : 1;
 
     // Axis lines
-    ctx.strokeStyle = '#888888';
+    ctx.strokeStyle = AXIS_STYLE.line;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(rect.x, rect.y + rect.height);
@@ -156,8 +166,8 @@ export class AxisOverlay {
     ctx.stroke();
 
     // X-axis ticks and labels
-    ctx.fillStyle = '#333333';
-    ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = AXIS_STYLE.text;
+    ctx.font = `11px ${AXIS_STYLE.font}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
@@ -168,7 +178,7 @@ export class AxisOverlay {
       ctx.lineTo(px, rect.y + rect.height + 5);
       ctx.stroke();
       if (i === 0 || i === xTicks.length - 1) {
-        ctx.fillText(formatTick(v, xStep), px, rect.y + rect.height + 8);
+        ctx.fillText(formatTick(v, xStep), px, rect.y + rect.height + AXIS_STYLE.labelGap);
       }
     });
 
@@ -188,7 +198,11 @@ export class AxisOverlay {
       ctx.lineTo(rect.x, py);
       ctx.stroke();
       if (i === 0 || i === yTicks.length - 1) {
-        ctx.fillText(rows?.valueAt ? rows.valueAt(v) : formatTick(v, yStep), rect.x - 8, py);
+        ctx.fillText(
+          rows?.valueAt ? rows.valueAt(v) : formatTick(v, yStep),
+          rect.x - AXIS_STYLE.labelGap,
+          py
+        );
       }
     });
   }
@@ -257,18 +271,18 @@ export class AxisOverlay {
 
   /** On the tick labels' own rows, midway between the two that are drawn. */
   private drawAxisTitles(ctx: CanvasRenderingContext2D, rect: PlotRect, yTitle: string | null) {
-    ctx.fillStyle = '#333333';
-    ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = AXIS_STYLE.text;
+    ctx.font = `12px ${AXIS_STYLE.font}`;
 
     // X-axis title, level with the end labels
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    ctx.fillText('Time (ms)', rect.x + rect.width / 2, rect.y + rect.height + 8);
+    ctx.fillText('Time (ms)', rect.x + rect.width / 2, rect.y + rect.height + AXIS_STYLE.labelGap);
 
     if (yTitle === null) return;
     // Y-axis title, rotated, flush with the end labels' right edge
     ctx.save();
-    ctx.translate(rect.x - 8, rect.y + rect.height / 2);
+    ctx.translate(rect.x - AXIS_STYLE.labelGap, rect.y + rect.height / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';

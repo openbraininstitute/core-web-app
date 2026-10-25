@@ -301,6 +301,7 @@ export function CampaignPlots({
       // Several plots of lines over time share the key over them, not one of their own.
       const options = {
         title: grouped ? group.name : overTime?.label,
+        group: grouped ? group.name : undefined,
         range,
         key: grouped && overTime ? false : i === 0,
       };

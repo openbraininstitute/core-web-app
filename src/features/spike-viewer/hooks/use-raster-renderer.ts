@@ -9,6 +9,7 @@ import type {
   EventsHover,
   RasterWindow,
   RowOrder,
+  SpikeHover,
   TimeAxis,
 } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
@@ -38,6 +39,8 @@ export type RasterRendererOptions = {
   events?: readonly TimelineEvent[];
   /** Told the group of those timings' markers under the pointer, for a card; null once it leaves. */
   onEventsHover?: (hover: EventsHover | null) => void;
+  /** Told the spike under the pointer, for a card of its cell; null once there is none. */
+  onSpikeHover?: (hover: SpikeHover | null) => void;
 };
 
 const NO_EVENTS: readonly TimelineEvent[] = [];
@@ -58,6 +61,7 @@ export function useRasterRenderer(
     timeWindowRequest,
     events = NO_EVENTS,
     onEventsHover,
+    onSpikeHover,
   }: RasterRendererOptions
 ) {
   const rendererRef = useRef<RasterRenderer | null>(null);
@@ -67,11 +71,13 @@ export function useRasterRenderer(
   const onWindowChangeRef = useRef(onWindowChange);
   const onTimeAxisChangeRef = useRef(onTimeAxisChange);
   const onEventsHoverRef = useRef(onEventsHover);
+  const onSpikeHoverRef = useRef(onSpikeHover);
   useEffect(() => {
     onCellClickRef.current = onCellClick;
     onWindowChangeRef.current = onWindowChange;
     onTimeAxisChangeRef.current = onTimeAxisChange;
     onEventsHoverRef.current = onEventsHover;
+    onSpikeHoverRef.current = onSpikeHover;
   });
 
   useEffect(() => {
@@ -83,6 +89,7 @@ export function useRasterRenderer(
     renderer.onWindowChange = (window) => onWindowChangeRef.current?.(window);
     renderer.onTimeAxisChange = (axis) => onTimeAxisChangeRef.current?.(axis);
     renderer.onEventsHover = (hover) => onEventsHoverRef.current?.(hover);
+    renderer.onSpikeHover = (hover) => onSpikeHoverRef.current?.(hover);
     rendererRef.current = renderer;
 
     return () => {

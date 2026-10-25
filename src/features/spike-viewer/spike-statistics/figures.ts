@@ -5,7 +5,6 @@ import type { CellFrames } from '@/features/sonata-viewer/types';
 import type { CellGroup, ValueGroup } from '@/features/spike-viewer/spike-statistics/statistics';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
-/** What the statistics plot draws: Plotly's traces and layout, built here so they stay pure. */
 /** What a hover over a mark shows in place of Plotly's labels: a titled card of a few values. */
 export type PlotTooltip = {
   title: string;
@@ -16,13 +15,34 @@ export type PlotTooltip = {
   /** The mark's colour, beside the title. */
   swatch?: string;
   rows: { label: string; value: string; strong?: boolean }[];
+  /** At the foot, such as what a click does. */
+  hint?: string;
 };
 
+/** The parts of Plotly's hover point the cards read: which trace and point, and its values. */
+export type HoverPoint = {
+  x?: unknown;
+  y?: unknown;
+  z?: unknown;
+  customdata?: unknown;
+  text?: unknown;
+  curveNumber?: number;
+  /** A heatmap's is its row and column. */
+  pointNumber?: number | number[];
+  /** A sankey node's or link's. */
+  label?: unknown;
+  value?: unknown;
+  /** A sankey link's ends. */
+  source?: { label?: string };
+  target?: { label?: string };
+};
+
+/** What the statistics plot draws: Plotly's traces and layout, built here so they stay pure. */
 export type Figure = {
   data: Data[];
   layout: Partial<Layout>;
-  /** The card for the mark under the pointer, from Plotly's hover point; its traces hover with `hoverinfo: 'none'`. */
-  tooltip?: (point: { x?: unknown; y?: unknown }) => PlotTooltip | null;
+  /** The card for the mark under the pointer; its traces hover with `hoverinfo: 'none'`. */
+  tooltip?: (point: HoverPoint) => PlotTooltip | null;
 };
 
 /** One axis of a scatter: what it is called and a value per node. NaN is no value. */
@@ -58,8 +78,8 @@ const BASE_LAYOUT: Partial<Layout> = {
 const axisTitle = (text: string) => ({ text, font: { size: 11 } });
 
 /**
- * A violin per group when the cells are grouped by a node property, a
- * histogram when they are not.
+ * A violin per group when the cells are grouped by a node property, and one of
+ * them all when they are not.
  *
  * One colour for every group: the groups are told apart by where they stand on
  * the axis, and dozens of hues - an mtype per violin - would say nothing the
@@ -69,51 +89,18 @@ export function violinFigure(
   groups: ValueGroup[],
   groupLabel: string | undefined,
   valueLabel: string,
-  color: string,
-  binStep: number | undefined
+  color: string
 ): Figure {
-  if (!groupLabel) {
-    const values = groups[0]?.values ?? new Float64Array(0);
-    const bins = binStep ? stepBins(values, binStep) : undefined;
-    return {
-      data: [
-        {
-          type: 'histogram',
-          x: values,
-          ...(bins ? { xbins: bins } : { nbinsx: MAX_BINS }),
-          // White bar edges keep neighbouring bins apart.
-          marker: { color, line: { color: '#ffffff', width: 1 } },
-          hovertemplate: `${valueLabel} %{x}<br>%{y} cells<extra></extra>`,
-        },
-      ] as Data[],
-      layout: {
-        ...BASE_LAYOUT,
-        bargap: 0,
-        xaxis: {
-          title: axisTitle(valueLabel),
-          automargin: true,
-          showgrid: false,
-          zeroline: false,
-          linecolor: GRID_COLOR,
-        },
-        yaxis: {
-          title: axisTitle('Cells'),
-          rangemode: 'tozero',
-          automargin: true,
-          gridcolor: GRID_COLOR,
-          zeroline: false,
-        },
-      },
-    };
-  }
+  // Ungrouped, the one violin is every cell's, named on the axis for what it is.
+  const violins = groupLabel ? groups : groups.map((g) => ({ ...g, name: groupName(g.name) }));
 
   // One trace with a category per value rather than a trace per group: one
   // colour, one legend-free series, and Plotly lays the violins out itself.
-  const total = groups.reduce((n, g) => n + g.values.length, 0);
+  const total = violins.reduce((n, g) => n + g.values.length, 0);
   const x = new Array<string>(total);
   const y = new Float64Array(total);
   let cursor = 0;
-  for (const g of groups) {
+  for (const g of violins) {
     x.fill(g.name, cursor, cursor + g.values.length);
     y.set(g.values, cursor);
     cursor += g.values.length;
@@ -141,15 +128,15 @@ export function violinFigure(
         hoverinfo: 'none',
       },
     ] as Data[],
-    tooltip: violinTooltip(groups, valueLabel, color),
+    tooltip: violinTooltip(violins, valueLabel, color),
     layout: {
       ...BASE_LAYOUT,
       xaxis: {
-        title: axisTitle(groupLabel),
+        title: axisTitle(groupLabel ?? ''),
         type: 'category',
         categoryorder: 'array',
-        categoryarray: groups.map((g) => g.name),
-        tickangle: groups.length > UPRIGHT_LABELS_MAX ? -45 : 0,
+        categoryarray: violins.map((g) => g.name),
+        tickangle: violins.length > UPRIGHT_LABELS_MAX ? -45 : 0,
         automargin: true,
         showgrid: false,
         zeroline: false,
@@ -209,6 +196,15 @@ function compact(value: number): string {
   return Number.isInteger(value) ? value.toLocaleString() : String(Number(value.toPrecision(3)));
 }
 
+/** A card's title for a group: the one with no property to group by is every cell. */
+function groupName(name: string): string {
+  return name === 'All' ? 'All cells' : name;
+}
+
+function cellCount(n: number): string {
+  return `${n.toLocaleString()} ${n === 1 ? 'cell' : 'cells'}`;
+}
+
 /**
  * A smoothed histogram per group, overlaid on one value axis: cells per bin,
  * over bins every group shares, with each count spread over its neighbours so
@@ -228,8 +224,10 @@ export function densityFigure(
   const centers = bins.counts.map((_, i) => bins.start + (i + 0.5) * bins.width);
   const perBin = `Cells per ${Number(bins.width.toPrecision(3))}${unit ? ` ${unit}` : ''}`;
 
+  const hues = groups.map((_, index) =>
+    !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR
+  );
   const data = groups.map((g, index) => {
-    const hue = !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR;
     const counts = new Float64Array(bins.counts.length);
     for (const v of g.values) {
       counts[Math.min(counts.length - 1, Math.floor((v - bins.start) / bins.width))] += 1;
@@ -240,17 +238,30 @@ export function densityFigure(
       name: g.name,
       x: centers,
       y: smoothCounts(counts),
-      line: { color: hue, width: index < PICK_COLORS.length ? 2 : 1, shape: 'spline' },
+      line: { color: hues[index], width: index < PICK_COLORS.length ? 2 : 1, shape: 'spline' },
       // Filled only alone, where one curve hides nothing.
       fill: groupLabel ? 'none' : 'tozeroy',
       fillcolor: withAlpha(color, 0.15),
       showlegend: Boolean(groupLabel) && index < PICK_COLORS.length,
-      hovertemplate: `${g.name}<br>${valueLabel} %{x:.3g}<br>%{y:.1f} cells<extra></extra>`,
+      hoverinfo: 'none',
     };
   });
 
   return {
     data: data as Data[],
+    tooltip: (point) => {
+      const g = groups[point.curveNumber ?? -1];
+      if (!g || typeof point.x !== 'number' || typeof point.y !== 'number') return null;
+      return {
+        title: groupName(g.name),
+        note: cellCount(g.values.length),
+        swatch: hues[point.curveNumber as number],
+        rows: [
+          { label: valueLabel, value: compact(point.x) },
+          { label: perBin, value: point.y.toFixed(1), strong: true },
+        ],
+      };
+    },
     layout: {
       ...BASE_LAYOUT,
       showlegend: Boolean(groupLabel),
@@ -315,10 +326,14 @@ export function scatterFigure(
   const [xAxis, yAxis, zAxis] = axes;
   const coordinates = (columns: number[][]) =>
     threeD ? { x: columns[0], y: columns[1], z: columns[2] } : { x: columns[0], y: columns[1] };
-  const where = threeD
-    ? `${xAxis.label} %{x:.4g}<br>${yAxis.label} %{y:.4g}<br>${zAxis.label} %{z:.4g}`
-    : `${xAxis.label} %{x:.4g}<br>${yAxis.label} %{y:.4g}`;
   const size = threeD ? 2.5 : 5;
+  // As the colour scale spans them, for the card's swatch.
+  let low = Number.POSITIVE_INFINITY;
+  let high = Number.NEGATIVE_INFINITY;
+  for (const tone of tones) {
+    if (tone < low) low = tone;
+    if (tone > high) high = tone;
+  }
 
   const data = [
     {
@@ -328,7 +343,7 @@ export function scatterFigure(
       ...coordinates(plain),
       customdata: plainIds,
       marker: { size, color: OTHER_COLOR },
-      hovertemplate: `Node %{customdata}<br>${where}<extra>no value</extra>`,
+      hoverinfo: 'none',
     },
     {
       type: threeD ? 'scatter3d' : 'scattergl',
@@ -343,9 +358,33 @@ export function scatterFigure(
         showscale: true,
         colorbar: { title: { text: colorBy.label, side: 'right' }, thickness: 10, outlinewidth: 0 },
       },
-      hovertemplate: `Node %{customdata}<br>${where}<br>${colorBy.label} %{marker.color:.4g}<extra></extra>`,
+      hoverinfo: 'none',
     },
   ];
+  const tooltip = (point: HoverPoint): PlotTooltip | null => {
+    const index = point.pointNumber;
+    if (typeof index !== 'number') return null;
+    const colouredPoint = point.curveNumber === 1;
+    const columns = colouredPoint ? coloured : plain;
+    const tone = colouredPoint ? tones[index] : undefined;
+    const node = (colouredPoint ? colouredIds : plainIds)[index];
+    if (node === undefined) return null;
+    return {
+      title: `Node ${node}`,
+      swatch:
+        tone === undefined
+          ? OTHER_COLOR
+          : sequentialColor(high > low ? (tone - low) / (high - low) : 1),
+      rows: [
+        ...axes.map((a, d) => ({ label: a.label, value: compact(columns[d][index]) })),
+        {
+          label: colorBy.label,
+          value: tone === undefined ? 'No value' : compact(tone),
+          strong: tone !== undefined,
+        },
+      ],
+    };
+  };
 
   const axis = (label: string) => ({
     title: axisTitle(label),
@@ -355,6 +394,7 @@ export function scatterFigure(
   });
   return {
     data: data as Data[],
+    tooltip,
     layout: {
       ...BASE_LAYOUT,
       // A new choice of columns starts the view afresh; new rows keep the zoom.
@@ -410,6 +450,8 @@ export function sankeyFigure(
     sequentialColor(bins === 1 ? 1 : b / (bins - 1))
   );
 
+  const groupColor = '#94a3b8';
+  const nodeColors = [...groups.map(() => groupColor), ...binColors];
   const source: number[] = [];
   const target: number[] = [];
   const value: number[] = [];
@@ -433,21 +475,47 @@ export function sankeyFigure(
         arrangement: 'snap',
         node: {
           label: [...groups.map((g) => g.name), ...binLabels],
-          color: [...groups.map(() => '#94a3b8'), ...binColors],
+          color: nodeColors,
           pad: 8,
           thickness: 12,
           line: { width: 0 },
-          hovertemplate: '%{label}<br>%{value} cells<extra></extra>',
+          hoverinfo: 'none',
         },
-        link: {
-          source,
-          target,
-          value,
-          color: linkColor,
-          hovertemplate: `%{source.label} → %{target.label}<br>%{value} cells<extra>${valueLabel}</extra>`,
-        },
+        link: { source, target, value, color: linkColor, hoverinfo: 'none' },
       },
     ] as Data[],
+    tooltip: (point) => {
+      if (typeof point.value !== 'number') return null;
+      const share = `${compact((100 * point.value) / Math.max(1, all.length))}%`;
+      if (point.source && point.target) {
+        // A flow: its group's cells in one quartile.
+        const bin = binLabels.indexOf(point.target.label ?? '');
+        const group = groups.find((g) => g.name === point.source?.label);
+        return {
+          title: point.source.label ?? '',
+          note: cellCount(point.value),
+          subtitle: `${valueLabel} ${point.target.label ?? ''}`,
+          swatch: bin >= 0 ? binColors[bin] : undefined,
+          rows: [
+            {
+              label: 'Of the group',
+              value: `${compact((100 * point.value) / Math.max(1, group?.values.length ?? 0))}%`,
+              strong: true,
+            },
+            { label: 'Of all cells', value: share },
+          ],
+        };
+      }
+      const label = String(point.label ?? '');
+      const bin = binLabels.indexOf(label);
+      return {
+        title: label,
+        note: cellCount(point.value),
+        subtitle: bin >= 0 ? `${valueLabel}, quartile ${bin + 1} of ${bins}` : undefined,
+        swatch: bin >= 0 ? binColors[bin] : groupColor,
+        rows: [{ label: 'Of all cells', value: share, strong: true }],
+      };
+    },
     layout: { ...BASE_LAYOUT, margin: { l: 8, r: 8, t: 8, b: 8 } },
   };
 }
@@ -516,30 +584,18 @@ function quantile(sorted: Float64Array, q: number): number {
 }
 
 function sequentialColor(t: number): string {
-  const stops = SEQUENTIAL.map(([, hex]) => Number.parseInt(hex.slice(1), 16));
+  return scaleColor(SEQUENTIAL, t);
+}
+
+/** The colour `t` of the way along a Plotly colour scale of hex stops evenly spaced. */
+export function scaleColor(scale: readonly [number, string][], t: number): string {
+  const stops = scale.map(([, hex]) => Number.parseInt(hex.slice(1), 16));
   const scaled = t * (stops.length - 1);
   const i = Math.min(stops.length - 2, Math.floor(scaled));
   const f = scaled - i;
   const channel = (shift: number) =>
     Math.round(((stops[i] >> shift) & 255) * (1 - f) + ((stops[i + 1] >> shift) & 255) * f);
   return `#${[16, 8, 0].map((s) => channel(s).toString(16).padStart(2, '0')).join('')}`;
-}
-
-/**
- * Bins a whole number of steps wide and centred on them. Values that come in
- * steps - whole spikes, rates of whole spikes over the run - otherwise land in
- * every other bin of a finer width, and the empty ones read as gaps in the data.
- */
-function stepBins(values: Float64Array, step: number) {
-  if (!(step > 0 && Number.isFinite(step)) || values.length === 0) return undefined;
-  let min = Number.POSITIVE_INFINITY;
-  let max = Number.NEGATIVE_INFINITY;
-  for (const v of values) {
-    if (v < min) min = v;
-    if (v > max) max = v;
-  }
-  const size = step * Math.max(1, Math.ceil((max - min) / step / MAX_BINS));
-  return { start: min - step / 2, end: max + step / 2, size };
 }
 
 function withAlpha(hex: string, alpha: number): string {
@@ -704,27 +760,48 @@ function timeCourseFigure(
     note?: string;
   }
 ): Figure {
-  const data = series.map((s, index) => {
-    const hue = !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR;
-    return {
-      type: 'scattergl',
-      mode: 'lines',
-      name: s.name,
-      x,
-      y: s.y,
-      line: {
-        color: hue,
-        width: index < PICK_COLORS.length ? 1.5 : 1,
-        shape: steps ? 'hv' : 'linear',
-      },
-      fill: fill && !groupLabel ? 'tozeroy' : 'none',
-      fillcolor: withAlpha(color, 0.15),
-      showlegend: Boolean(groupLabel) && index < PICK_COLORS.length,
-      hovertemplate: `${s.name} · ${s.cells.toLocaleString()} ${s.cells === 1 ? 'cell' : 'cells'}<br>%{x:.1f} ms<br>${yLabel} %{y:.3g}<extra></extra>`,
-    };
-  });
+  const hues = series.map((_, index) =>
+    !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR
+  );
+  const data = series.map((s, index) => ({
+    type: 'scattergl',
+    mode: 'lines',
+    name: s.name,
+    x,
+    y: s.y,
+    line: {
+      color: hues[index],
+      width: index < PICK_COLORS.length ? 1.5 : 1,
+      shape: steps ? 'hv' : 'linear',
+    },
+    fill: fill && !groupLabel ? 'tozeroy' : 'none',
+    fillcolor: withAlpha(color, 0.15),
+    showlegend: Boolean(groupLabel) && index < PICK_COLORS.length,
+    hoverinfo: 'none',
+  }));
   return {
     data: data as Data[],
+    tooltip: (point) => {
+      const s = series[point.curveNumber ?? -1];
+      let i = point.pointNumber;
+      if (!s || typeof i !== 'number') return null;
+      // Steps hold each bin's value from its start; the last point only ends the last bin.
+      if (steps && i === x.length - 1) i -= 1;
+      const time = (t: number) => String(Number(t.toFixed(1)));
+      return {
+        title: groupName(s.name),
+        note: cellCount(s.cells),
+        subtitle: note,
+        swatch: hues[point.curveNumber as number],
+        rows: [
+          {
+            label: 'Time',
+            value: steps ? `${time(x[i])}–${time(x[i + 1] ?? x[i])} ms` : `${time(x[i])} ms`,
+          },
+          { label: yLabel, value: compact(s.y[i]), strong: true },
+        ],
+      };
+    },
     layout: {
       ...BASE_LAYOUT,
       showlegend: Boolean(groupLabel),

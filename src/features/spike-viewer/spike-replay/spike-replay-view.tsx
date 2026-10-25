@@ -36,6 +36,7 @@ import {
   PANEL_FLOORS,
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -196,6 +197,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', nodePopulation.name)
       : '';
   const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
+  // A hovered spike's cell, as the table has it: the file's columns and the statistics it pins.
+  const cellRows = useMemo(
+    () =>
+      nodesSession
+        ? { session: nodesSession, columns: nodeColumns, statistics: SPIKE_STATISTICS }
+        : undefined,
+    [nodesSession, nodeColumns]
+  );
   // An MEModel is one cell drawn from the model itself, with no node file.
   const cellCount = memodel === undefined ? countedCells : 1;
   const rasterOrder = useRasterOrder({
@@ -709,6 +718,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         onTimeAxisChange={setTimeAxis}
         timeWindowRequest={timeWindowRequest}
         events={timeline}
+        cellRows={cellRows}
       />
       {/* Inside the pane it belongs to, the way the scene's chrome sits in
       its own: in the split these controls are the raster's alone, and

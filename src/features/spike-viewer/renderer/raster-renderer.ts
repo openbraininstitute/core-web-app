@@ -60,6 +60,16 @@ export type TimeAxis = { from: number; to: number; left: number; right: number; 
 /** The config's markers under the pointer, and where it is on screen. */
 export type EventsHover = { group: MarkerGroup; clientX: number; clientY: number };
 
+/** The spike under the pointer: its cell, time and colour, and where the pointer is on screen. */
+export type SpikeHover = {
+  population: string;
+  nodeId: number;
+  time: number;
+  color: string;
+  clientX: number;
+  clientY: number;
+};
+
 const NO_EVENTS: readonly TimelineEvent[] = [];
 
 /** How near a spike a click has to land to pick its cell. */
@@ -90,7 +100,6 @@ export class RasterRenderer {
   private highlightCtx: CanvasRenderingContext2D | null;
   private interactionLayer: HTMLDivElement;
   private playheadEl: HTMLDivElement;
-  private tooltipEl: HTMLDivElement;
 
   private webgl: WebGLPoints;
   private axis: AxisOverlay;
@@ -121,6 +130,7 @@ export class RasterRenderer {
   private hoveredEvents: readonly TimelineEvent[] = [];
   private markerGroups: MarkerGroup[] = [];
   private eventsHoverHandler: ((hover: EventsHover | null) => void) | null = null;
+  private spikeHoverHandler: ((hover: SpikeHover | null) => void) | null = null;
 
   constructor(container: HTMLElement) {
     container.style.position = 'relative';
@@ -161,14 +171,6 @@ export class RasterRenderer {
     this.interactionLayer = document.createElement('div');
     this.interactionLayer.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
     container.appendChild(this.interactionLayer);
-
-    // Tooltip
-    this.tooltipEl = document.createElement('div');
-    this.tooltipEl.style.cssText =
-      'position:absolute;pointer-events:none;display:none;' +
-      'background:rgba(0,0,0,0.8);color:#fff;padding:4px 8px;border-radius:4px;' +
-      'font:11px -apple-system,BlinkMacSystemFont,sans-serif;white-space:pre;z-index:10';
-    container.appendChild(this.tooltipEl);
 
     this.webgl = new WebGLPoints(this.glCanvas);
     this.webgl.onRestored = () => {
@@ -302,6 +304,11 @@ export class RasterRenderer {
    */
   set onEventsHover(handler: ((hover: EventsHover | null) => void) | null) {
     this.eventsHoverHandler = handler;
+  }
+
+  /** Told the spike under the pointer, for a card of its cell; null once there is none. */
+  set onSpikeHover(handler: ((hover: SpikeHover | null) => void) | null) {
+    this.spikeHoverHandler = handler;
   }
 
   /** The simulation config's timings, drawn behind the spikes and named on hover. */
@@ -603,7 +610,7 @@ export class RasterRenderer {
 
   private handleHover(info: HoverInfo | null) {
     if (!info) {
-      this.tooltipEl.style.display = 'none';
+      this.spikeHoverHandler?.(null);
       this.setHoveredEvents(NO_EVENTS);
       this.eventsHoverHandler?.(null);
       return;
@@ -635,11 +642,30 @@ export class RasterRenderer {
       return;
     }
 
-    this.tooltipEl.style.display = 'block';
-    this.tooltipEl.textContent = `${nearest.population}_${Math.round(nearest.nodeId)}: ${nearest.time.toFixed(2)} ms`;
-    this.placeTooltip(info);
+    const box = this.glCanvas.parentElement?.getBoundingClientRect();
+    const nodeId = Math.round(nearest.nodeId);
+    this.spikeHoverHandler?.(
+      box
+        ? {
+            population: nearest.population,
+            nodeId,
+            time: nearest.time,
+            color: this.spikeColor(nearest.population, nodeId),
+            clientX: box.left + info.pixelX,
+            clientY: box.top + info.pixelY,
+          }
+        : null
+    );
     this.setHoveredEvents(NO_EVENTS);
     this.eventsHoverHandler?.(null);
+  }
+
+  /** The colour a cell's spikes are drawn in: its own, or its population's. */
+  private spikeColor(population: string, nodeId: number): string {
+    const index = Math.max(0, this.pops.findIndex((pop) => pop.name === population));
+    const own = POPULATION_COLORS[index % POPULATION_COLORS.length];
+    const colors = this.cellColors?.name === population ? this.cellColors.colors : null;
+    return (colors && colors.palette[colors.columnByNode[nodeId]]) ?? own;
   }
 
   private setHoveredEvents(events: readonly TimelineEvent[]) {
@@ -659,7 +685,7 @@ export class RasterRenderer {
    */
   private showEventsAt(info: HoverInfo): boolean {
     const group = this.markerGroupAt(info, true);
-    this.tooltipEl.style.display = 'none';
+    this.spikeHoverHandler?.(null);
     this.setHoveredEvents(group?.events ?? NO_EVENTS);
     const box = this.glCanvas.parentElement?.getBoundingClientRect();
     this.eventsHoverHandler?.(
@@ -713,24 +739,6 @@ export class RasterRenderer {
       : Math.max(...group.events.map((e) => e.end ?? xMax));
     if (to <= from) return;
     this.setTimeWindow(Math.max(xMin, from), Math.min(xMax, to));
-  }
-
-  private placeTooltip(info: HoverInfo) {
-    // Edge-aware placement: flip when tooltip would overflow container
-    const container = this.glCanvas.parentElement;
-    const cw = container?.clientWidth ?? 0;
-    const ch = container?.clientHeight ?? 0;
-    const tw = this.tooltipEl.offsetWidth;
-    const th = this.tooltipEl.offsetHeight;
-    const gap = 12;
-
-    const flipsLeft = info.pixelX + gap + tw > cw;
-    const left = flipsLeft ? info.pixelX - gap - tw : info.pixelX + gap;
-    const flipsUp = info.pixelY - gap + th > ch;
-    const top = flipsUp ? info.pixelY - gap - th : info.pixelY - gap;
-
-    this.tooltipEl.style.left = `${left}px`;
-    this.tooltipEl.style.top = `${top}px`;
   }
 
   private findNearestPoint(
@@ -825,7 +833,6 @@ export class RasterRenderer {
     this.axisCanvas.remove();
     this.interactionLayer.remove();
     this.playheadEl.remove();
-    this.tooltipEl.remove();
   }
 }
 

@@ -5,10 +5,19 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import { useCellRow } from '@/features/spike-viewer/cell-row';
+import {
+  AXIS_STYLE,
+  computeTicks,
+  formatTick,
+  MARGIN,
+} from '@/features/spike-viewer/renderer/axis-overlay';
+import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
 import type { Remote } from 'comlink';
-import type { Config, Layout, PlotData } from 'plotly.js-dist-min';
+import type { Config, Layout, LayoutAxis, PlotData } from 'plotly.js-dist-min';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import type { CellRowSource } from '@/features/spike-viewer/cell-row';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type {
   NodeTraceData,
@@ -26,8 +35,6 @@ const REFETCH_DELAY_MS = 120;
 /** Headroom above and below the population's extremes, as a share of their span. */
 const VALUE_PADDING = 0.05;
 
-const AXIS_COLOR = '#cbd5e1';
-const GRID_COLOR = '#f1f5f9';
 /** Picks past the palette's end: drawn, hovered and named, but not given a hue. */
 const OTHER_COLOR = '#94a3b8';
 /** The lines a hovered one stands out from, when every cell is drawn. */
@@ -46,6 +53,80 @@ const CONFIG: Partial<Config> = {
 /** Either axis zoomed in by the user, or null for its home range. */
 type Zoom = { x: TimeRange | null; y: [number, number] | null };
 const HOME: Zoom = { x: null, y: null };
+
+/** The point of a line under the pointer, for its card, and where the pointer is on screen. */
+type TraceHover = {
+  traceIndex: number;
+  color: string;
+  time: number;
+  value: number;
+  clientX: number;
+  clientY: number;
+};
+
+/** As the raster's axes draw theirs: a line and outside ticks, with the labels in its font. */
+const AXIS: Partial<LayoutAxis> = {
+  showline: true,
+  linecolor: AXIS_STYLE.line,
+  linewidth: 1,
+  ticks: 'outside',
+  ticklen: 5,
+  tickwidth: 1,
+  tickcolor: AXIS_STYLE.line,
+  tickfont: { size: 11, color: AXIS_STYLE.text, family: AXIS_STYLE.font },
+  zeroline: false,
+};
+
+/**
+ * Ticks every round step across `range`, about one per `spacing` px of
+ * `length`, of which only the two at the ends are labelled: the raster's axes.
+ */
+function endLabelledTicks(
+  range: readonly [number, number],
+  length: number,
+  spacing: number
+): Partial<LayoutAxis> {
+  const ticks = computeTicks(range[0], range[1], Math.max(2, Math.floor(length / spacing)));
+  const step = ticks.length > 1 ? ticks[1] - ticks[0] : 1;
+  return {
+    tickmode: 'array',
+    tickvals: ticks,
+    ticktext: ticks.map((v, i) => (i === 0 || i === ticks.length - 1 ? formatTick(v, step) : '')),
+  };
+}
+
+/** An axis title placed as the raster places its own: on the tick labels' row, between the two. */
+function axisTitle(text: string, axis: 'x' | 'y'): Partial<Layout['annotations'][number]> {
+  const font = { size: 12, color: AXIS_STYLE.text, family: AXIS_STYLE.font };
+  return axis === 'x'
+    ? {
+        text,
+        font,
+        xref: 'paper',
+        yref: 'paper',
+        x: 0.5,
+        y: 0,
+        xanchor: 'center',
+        yanchor: 'top',
+        yshift: -AXIS_STYLE.labelGap,
+        showarrow: false,
+        borderpad: 0,
+      }
+    : {
+        text,
+        font,
+        xref: 'paper',
+        yref: 'paper',
+        x: 0,
+        y: 0.5,
+        xanchor: 'right',
+        yanchor: 'middle',
+        xshift: -AXIS_STYLE.labelGap,
+        textangle: '-90',
+        showarrow: false,
+        borderpad: 0,
+      };
+}
 
 /**
  * What to say about the plot's lines beside the table that picks them: how to
@@ -94,6 +175,7 @@ export default function ReportDetailsView({
   variableName,
   timeCursor,
   onTimeAxisChange,
+  cellRows,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
@@ -101,6 +183,8 @@ export default function ReportDetailsView({
   timeCursor?: TimeCursor;
   /** Told where the time axis lies whenever it is drawn, zoomed or resized. */
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
+  /** Where a hovered line's card reads its cell's row of the nodes table. */
+  cellRows?: CellRowSource;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -147,6 +231,7 @@ export default function ReportDetailsView({
         variableName={variableName}
         timeCursor={timeCursor}
         onTimeAxisChange={onTimeAxisChange}
+        cellRows={cellRows}
       />
     </div>
   );
@@ -161,11 +246,13 @@ function SharedTracesPlot({
   variableName,
   timeCursor,
   onTimeAxisChange,
+  cellRows,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   timeCursor?: TimeCursor;
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
+  cellRows?: CellRowSource;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -240,7 +327,8 @@ function SharedTracesPlot({
   const units = population.dataUnits;
   const timeUnits = population.timeConfig.units;
 
-  const data = useMemo<Partial<PlotData>[]>(() => {
+  // The lines in the order they are drawn, with the colour each is drawn in, for a hover to name.
+  const { data, drawn } = useMemo(() => {
     const hover = new Set(hovered);
     // A hovered cell stands out from the rest, drawn or one past the cap, so
     // every row reads alike. With cells picked, one not among them is only
@@ -254,7 +342,8 @@ function SharedTracesPlot({
       ...lines.filter((line) => !hover.has(line.traceIndex)),
       ...lines.filter((line) => hover.has(line.traceIndex)),
     ];
-    return ordered.flatMap((line) => {
+    const drawnLines: { traceIndex: number; color: string }[] = [];
+    const traces = ordered.flatMap((line): Partial<PlotData>[] => {
       const sampled = samples.get(line.traceIndex);
       if (!sampled) return [];
       const label = population.traces[line.traceIndex]?.label ?? String(line.traceIndex);
@@ -275,6 +364,7 @@ function SharedTracesPlot({
         opacity = 0.35;
       }
 
+      drawnLines.push({ traceIndex: line.traceIndex, color });
       return [
         {
           x: sampled.trace.x,
@@ -285,19 +375,27 @@ function SharedTracesPlot({
           showlegend: colored,
           line: { color, width: isHovered ? 2.5 : line.slot === null ? 1.25 : 1.5 },
           opacity,
-          hovertemplate: `<b>${label}</b>  %{y:.2f} ${units}<br>%{x:.2f} ${timeUnits}<extra></extra>`,
+          // The card below, rather than Plotly's label.
+          hoverinfo: 'none',
         },
       ];
     });
-  }, [lines, hovered, samples, population, units, timeUnits]);
+    return { data: traces, drawn: drawnLines };
+  }, [lines, hovered, samples, population]);
 
+  // The plot's own size, which sets how many ticks its axes get.
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const valueLabel = variableName ?? unitLabel(units);
   const x = zoom.x ?? homeX;
   const y = zoom.y ?? valueRange;
-  const layout = useMemo<Partial<Layout>>(
-    () => ({
+  const layout = useMemo<Partial<Layout>>(() => {
+    const width = (size?.width ?? 600) - MARGIN.left - MARGIN.right;
+    const height = (size?.height ?? 300) - MARGIN.top - MARGIN.bottom;
+    return {
       autosize: true,
-      // room for the legend kept either way, so ticking the first row does not shrink the plot
-      margin: { l: 64, r: 16, t: 36, b: 48 },
+      // The raster's margins, so the two line up; the top keeps room for the
+      // legend either way, so ticking the first row does not shrink the plot.
+      margin: { l: MARGIN.left, r: MARGIN.right, t: MARGIN.top, b: MARGIN.bottom },
       paper_bgcolor: 'rgba(0,0,0,0)',
       plot_bgcolor: 'rgba(0,0,0,0)',
       showlegend: legend,
@@ -311,40 +409,53 @@ function SharedTracesPlot({
       },
       hovermode: 'closest',
       dragmode: 'zoom',
-      font: { size: 11, color: '#64748b' },
-      hoverlabel: { bgcolor: '#ffffff', bordercolor: AXIS_COLOR, font: { size: 11 } },
+      font: { size: 11, color: AXIS_STYLE.text, family: AXIS_STYLE.font },
       xaxis: {
+        ...AXIS,
         // copies: Plotly writes a zoom into the arrays it is handed
         range: [x[0], x[1]],
-        title: { text: `Time (${timeUnits})`, standoff: 8 },
-        showline: true,
-        linecolor: AXIS_COLOR,
-        ticks: 'outside',
-        tickcolor: AXIS_COLOR,
+        ...endLabelledTicks(x, width, 80),
         showgrid: true,
-        gridcolor: GRID_COLOR,
-        zeroline: false,
+        gridcolor: AXIS_STYLE.grid,
       },
       yaxis: {
-        ...(y ? { range: [y[0], y[1]] } : { autorange: true }),
-        title: { text: `${variableName ?? unitLabel(units)} (${units})`, standoff: 10 },
-        showline: true,
-        linecolor: AXIS_COLOR,
-        ticks: 'outside',
-        tickcolor: AXIS_COLOR,
+        ...AXIS,
+        ...(y ? { range: [y[0], y[1]], ...endLabelledTicks(y, height, 30) } : { autorange: true }),
+        // Until the population's range is known, rather than labels it would take back.
+        showticklabels: y !== null,
         showgrid: false,
-        zeroline: false,
       },
-    }),
-    [x, y, legend, timeUnits, units, variableName]
-  );
+      annotations: [
+        axisTitle(`Time (${timeUnits})`, 'x'),
+        axisTitle(`${valueLabel} (${units})`, 'y'),
+      ],
+    };
+  }, [x, y, size, legend, timeUnits, units, valueLabel]);
 
+  const [tip, setTip] = useState<TraceHover>();
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       const next = zoomAfter(zoom, event as Readonly<Record<string, unknown>>);
       if (next) setZoom(next);
     },
     onDoubleClick: () => setZoom(HOME),
+    onHover: (event) => {
+      const point = event.points[0];
+      const line = point && drawn[point.curveNumber];
+      const mouse = event.event as MouseEvent | undefined;
+      if (!line || !mouse || typeof point.x !== 'number' || typeof point.y !== 'number') {
+        setTip(undefined);
+        return;
+      }
+      setTip({
+        ...line,
+        time: point.x,
+        value: point.y,
+        clientX: mouse.clientX,
+        clientY: mouse.clientY,
+      });
+    },
+    onUnhover: () => setTip(undefined),
   });
 
   // react-plotly follows the window, not this box, which a scene opening above shrinks.
@@ -403,7 +514,11 @@ function SharedTracesPlot({
   useEffect(() => {
     const box = boxRef.current;
     if (!box) return;
-    const observer = new ResizeObserver(() => {
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setSize((previous) =>
+        previous?.width === width && previous.height === height ? previous : { width, height }
+      );
       const graph = box.querySelector<HTMLElement>('.js-plotly-plot');
       if (graph) {
         Promise.resolve(Plotly.Plots.resize(graph))
@@ -444,7 +559,51 @@ function SharedTracesPlot({
           />
         </div>
       )}
+      {tip && (
+        <TraceCard
+          hover={tip}
+          population={population}
+          valueLabel={valueLabel}
+          cellRows={cellRows}
+        />
+      )}
     </div>
+  );
+}
+
+/** The point of a line under the pointer: when, its value, and its cell's row of the nodes table. */
+function TraceCard({
+  hover,
+  population,
+  valueLabel,
+  cellRows,
+}: {
+  hover: TraceHover;
+  population: PopulationMetadata;
+  valueLabel: string;
+  cellRows?: CellRowSource;
+}) {
+  const trace = population.traces[hover.traceIndex];
+  const row = useCellRow(cellRows, trace?.nodeId ?? null);
+  return (
+    <TooltipCard
+      clientX={hover.clientX}
+      clientY={hover.clientY}
+      card={{
+        title: `Node ${trace?.label ?? hover.traceIndex}`,
+        subtitle: population.name,
+        swatch: hover.color,
+        rows: [
+          { label: 'Time', value: `${hover.time.toFixed(2)} ${population.timeConfig.units}` },
+          {
+            label: valueLabel,
+            value: `${hover.value.toFixed(2)} ${population.dataUnits}`,
+            strong: true,
+          },
+          ...(row ?? []),
+        ],
+      }}
+    />
   );
 }
 

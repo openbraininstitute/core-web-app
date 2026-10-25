@@ -245,7 +245,7 @@ export function StatisticsPlots({
     }
     if (plotKind === 'sankey')
       return sankeyFigure(groups, valueLabel, statistic.format, statistic.unit);
-    return violinFigure(groups, groupLabel, valueLabel, color, binStep);
+    return violinFigure(groups, groupLabel, valueLabel, color);
   }, [
     values,
     cells,

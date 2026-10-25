@@ -416,6 +416,11 @@ export function SonataReportView({
     () => (columns ? [...neuronSetColumns, ...columns] : undefined),
     [neuronSetColumns, columns]
   );
+  // A hovered line's cell, as the table has it: the file's columns and the statistics it pins.
+  const cellRows = useMemo(
+    () => (sessionKey ? { session: sessionKey, columns, statistics } : undefined),
+    [sessionKey, columns, statistics]
+  );
   const [cellStatistics, setCellStatistics] = useState<{
     population: string;
     rows: number;
@@ -589,6 +594,7 @@ export function SonataReportView({
           variableName={variableName}
           timeCursor={showScene ? timeCursor : undefined}
           onTimeAxisChange={setTracesAxis}
+          cellRows={cellRows}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -623,6 +629,7 @@ export function SonataReportView({
                   hovered={group.hovered}
                   variableName={variableName}
                   timeCursor={showScene ? timeCursor : undefined}
+                  cellRows={cellRows}
                 />
               </ErrorBoundary>
             </WhenNearView>
