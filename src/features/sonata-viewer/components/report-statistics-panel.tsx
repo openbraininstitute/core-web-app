@@ -4,6 +4,7 @@ import { Spin } from 'antd';
 import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import {
   PINNED_SHARE,
@@ -127,11 +128,17 @@ export function ReportStatisticsPanel({
           quickFilters={quickFilters}
         />
       ) : (
-        <div className="flex h-full min-h-0 items-center justify-center">
-          <Spin tip="Computing statistics…">
-            <div className="size-12" />
-          </Spin>
-        </div>
+        // The table kept from the view before, over the same cells, until the statistics are in.
+        <KeptNodesGridPlaceholder
+          session={sessionKey}
+          fallback={
+            <div className="flex h-full min-h-0 items-center justify-center">
+              <Spin tip="Computing statistics…">
+                <div className="size-12" />
+              </Spin>
+            </div>
+          }
+        />
       )}
     </div>
   );

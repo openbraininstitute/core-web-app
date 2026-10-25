@@ -34,6 +34,7 @@ import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import {
+  LoadingFilePanes,
   OpenPanelButton,
   PANEL_FLOORS,
   StackedPanes,
@@ -110,6 +111,7 @@ export default function SonataViewer({
   const { model } = useSimulation();
   const circuit = replaySubject(model)?.circuit;
   const { config: circuitConfig } = useCircuitConfig(circuit);
+  const sidePanel = useResultsSidePanel();
 
   if (error) {
     return (
@@ -118,6 +120,15 @@ export default function SonataViewer({
   }
 
   if (isLoading || !metadata || !worker) {
+    // Docked, as the view will be, with the table of the report before still in place.
+    if (withStatistics && circuit && sidePanel?.target) {
+      return (
+        <LoadingFilePanes
+          title={variableName ? 'Traces' : 'Voltage traces'}
+          panelTitles={variableName ? ['Statistics'] : ['3D Player', 'Statistics']}
+        />
+      );
+    }
     return <SonataViewerSkeleton />;
   }
 

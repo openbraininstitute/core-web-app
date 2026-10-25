@@ -3,10 +3,12 @@ import { useMemo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
+import { LoadingFilePanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
@@ -27,6 +29,7 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   // it has always had and no toggle offers a view that cannot be drawn.
   const subject = replaySubject(model);
   const data = useMemo(() => spikes && withSimulationTimeWindow(spikes, run), [spikes, run]);
+  const sidePanel = useResultsSidePanel();
 
   if (error) {
     return (
@@ -37,6 +40,10 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   }
 
   if (!data) {
+    // Docked, as the view will be, with the table of the report before still in place.
+    if (sidePanel?.target && subject && 'circuit' in subject) {
+      return <LoadingFilePanes title="Raster" panelTitles={['3D Player', 'Statistics']} />;
+    }
     return (
       <div className="flex h-full items-center justify-center p-3">
         <Spin />

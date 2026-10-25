@@ -4,7 +4,10 @@ import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import {
+  KeptNodesGrid,
+  KeptNodesGridPlaceholder,
+} from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 
 import type { IDatasource } from 'ag-grid-community';
@@ -176,11 +179,6 @@ export function ReportNodesTable({
     [columns, extraColumns]
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    if (tableColumns) setVisibleColumns(defaultVisibleColumnSet(tableColumns));
-  }, [tableColumns]);
-
   // A population gets a grid of its own, whose filters start empty; so does this.
   const [filter, setFilter] = useAtom(filterAtom);
   const filterModel = filter?.session === sessionKey ? filter.model : NO_FILTER;
@@ -223,9 +221,13 @@ export function ReportNodesTable({
 
   if (!circuitConfig) {
     return (
-      <Centered>
-        <Spin />
-      </Centered>
+      <KeptNodesGridPlaceholder
+        fallback={
+          <Centered>
+            <Spin />
+          </Centered>
+        }
+      />
     );
   }
   if (!nodePopulation) {
@@ -249,23 +251,29 @@ export function ReportNodesTable({
       progress?.total && progress.total > 0
         ? ` ${Math.round((progress.received / progress.total) * 100)}%`
         : '';
+    // The table kept from the view before, over the same cells, until this one's is ready.
     return (
-      <Centered>
-        <Spin tip={`Loading the circuit’s nodes…${percent}`}>
-          <div className="size-12" />
-        </Spin>
-      </Centered>
+      <KeptNodesGridPlaceholder
+        session={sessionKey}
+        fallback={
+          <Centered>
+            <Spin tip={`Loading the circuit’s nodes…${percent}`}>
+              <div className="size-12" />
+            </Spin>
+          </Centered>
+        }
+      />
     );
   }
 
   return (
-    <NodesGrid
+    <KeptNodesGrid
+      session={sessionKey}
+      filterScope="voltage"
       columns={tableColumns ?? columns}
       rowCount={recordedCount}
       filteredCount={filtering ? filteredCount : null}
       datasource={recordedSource}
-      visibleColumns={visibleColumns}
-      onVisibleColumnsChange={setVisibleColumns}
       onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
       initialFilterModel={filterModel}
       pinnedColumns={pinnedColumns}

@@ -6,7 +6,10 @@ import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import {
+  KeptNodesGrid,
+  KeptNodesGridPlaceholder,
+} from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
@@ -240,11 +243,6 @@ export function SpikeStatisticsView({
     [columns, neuronSetColumns]
   );
 
-  const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    if (tableColumns) setVisibleColumns(defaultVisibleColumnSet(tableColumns));
-  }, [tableColumns]);
-
   // A new population gets a new grid, whose filters start empty; so does this.
   // The same cells again, in another simulation, get theirs back.
   const [filter, setFilter] = useAtom(filterAtom);
@@ -349,15 +347,22 @@ export function SpikeStatisticsView({
     [tableWidth, chosenShare]
   );
 
+  if (!circuitConfig) {
+    return (
+      <KeptNodesGridPlaceholder
+        fallback={
+          <Centered>
+            <Empty description="Reading the circuit’s node populations…" />
+          </Centered>
+        }
+      />
+    );
+  }
   if (!nodePopulation) {
     return (
       <Centered>
         <Empty
-          description={
-            circuitConfig
-              ? `This circuit has no nodes for “${populationName}”, so there are no cells to list.`
-              : 'Reading the circuit’s node populations…'
-          }
+          description={`This circuit has no nodes for “${populationName}”, so there are no cells to list.`}
         />
       </Centered>
     );
@@ -386,19 +391,25 @@ export function SpikeStatisticsView({
           <Empty description={`The nodes could not be read: ${error.message}`} />
         </Centered>
       ) : !statsReady || !columns || !tableSource ? (
-        <Centered>
-          <Spin tip={ready ? 'Computing statistics…' : 'Loading nodes…'}>
-            <div className="size-12" />
-          </Spin>
-        </Centered>
+        // The table kept from the view before, over the same cells, until this one's is ready.
+        <KeptNodesGridPlaceholder
+          session={sessionKey}
+          fallback={
+            <Centered>
+              <Spin tip={ready ? 'Computing statistics…' : 'Loading nodes…'}>
+                <div className="size-12" />
+              </Spin>
+            </Centered>
+          }
+        />
       ) : (
-        <NodesGrid
+        <KeptNodesGrid
+          session={sessionKey}
+          filterScope="spikes"
           columns={tableColumns ?? columns}
           rowCount={windowReady ? windowCount : rowCount}
           filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
           datasource={tableSource}
-          visibleColumns={visibleColumns}
-          onVisibleColumnsChange={setVisibleColumns}
           pinnedColumns={pinnedColumns}
           pinnedVersion={registered}
           onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}

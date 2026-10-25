@@ -17,6 +17,7 @@ import {
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
+import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { useFlag } from '@/features/feature-flags';
 import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
@@ -465,116 +466,119 @@ export default function SimulationsTab({
 
   return (
     // The viewers are remounted for each report and simulation: the cells they
-    // read stay open between them, so a population is read once.
+    // read stay open between them, so a population is read once, and the table
+    // over them stays up while the next view loads.
     <NodesSessionKeeper>
-      <SimulationsResultsUiAdapter
-        simulationPicker={simulationPicker}
-        reportPicker={
-          <ReportPicker
-            files={reportFiles}
-            selectedAssetId={shownReport?.asset.id}
-            onSelect={act.onSelectedFileChange}
-            reports={simConfig?.reports}
-          />
-        }
-        // The campaign's statistics compare its spikes or its voltages, so only those offer them.
-        campaignStatistics={campaign !== null && shownReport !== undefined}
-        campaignId={campaignId}
-        loading={loading}
-        simulations={simulations}
-        activeSimulationId={activeSimulation?.id}
-        selectedSimulationIds={resolvedSelectedSimulationIds}
-        selectableSimulationIds={selectableSimulationIds}
-        simRequestInProgress={simRequestInProgress}
-        context={context}
-        statusMap={localStatusMap}
-        launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
-        onToggleSelectAll={onToggleSelectAll}
-        onActiveSimulationChange={onActiveSimulationChange}
-        onSelectedForSimChange={onSelectedForSimChange}
-        onSimulationStatusLoad={onSimulationStatusLoad}
-        onRun={onLaunch}
-        middle={
-          <div className="h-full bg-white! w-full">
-            {loading ? (
-              <InOutFilesColumnSkeleton />
-            ) : (
-              !!activeSimulation &&
-              activeSimulationExecStatus && (
-                <SimulationFiles
-                  simulation={activeSimulation}
-                  execStatus={activeSimulationExecStatus}
-                  selectedFile={selectedFile}
-                  context={context}
-                  onSelect={act.onSelectedFileChange}
-                  onLoadingChange={setFilesLoading}
-                  jobId={activeJobId}
-                  reports={simConfig?.reports}
-                />
-              )
-            )}
-          </div>
-        }
-        right={
-          <>
-            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
-              <TaskConfigurationViewer
-                jobId={activeJobId}
-                workspace={context}
-                configId={activeSimulation?.id}
-                enabled={taskLogsViewerEnabled}
-                skipStream
-                campaignOriginAction={campaignOriginAction}
-                isCampaignIdChanged={isCampaignIdChanged}
-              />
-            )}
-            {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
-              <TaskLogsViewer
-                jobId={activeJobId}
-                workspace={context}
-                configId={activeSimulation?.id}
-                enabled={taskLogsViewerEnabled}
-                skipStream={taskLogsShouldReadSnapshot}
-                campaignOriginAction={campaignOriginAction}
-                isCampaignIdChanged={isCampaignIdChanged}
-              />
-            )}
-            {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
-              <SimulationReportsProvider reports={simConfig?.reports ?? null}>
-                {/* The spike viewer replays over the circuit that was scanned and
-                      spans its axis over the run window, neither of which is in the
-                      file it is handed. Both already resolved above. */}
-                <SimulationProvider
-                  model={model}
-                  run={simConfig?.run}
-                  neuronSets={neuronSets}
-                  simulationPicker={simulationPicker}
-                  campaign={campaign}
-                  timeline={timeline}
-                >
-                  <FileViewer
-                    file={selectedFile}
-                    className="h-full w-full"
+      <NodesTableKeeper>
+        <SimulationsResultsUiAdapter
+          simulationPicker={simulationPicker}
+          reportPicker={
+            <ReportPicker
+              files={reportFiles}
+              selectedAssetId={shownReport?.asset.id}
+              onSelect={act.onSelectedFileChange}
+              reports={simConfig?.reports}
+            />
+          }
+          // The campaign's statistics compare its spikes or its voltages, so only those offer them.
+          campaignStatistics={campaign !== null && shownReport !== undefined}
+          campaignId={campaignId}
+          loading={loading}
+          simulations={simulations}
+          activeSimulationId={activeSimulation?.id}
+          selectedSimulationIds={resolvedSelectedSimulationIds}
+          selectableSimulationIds={selectableSimulationIds}
+          simRequestInProgress={simRequestInProgress}
+          context={context}
+          statusMap={localStatusMap}
+          launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
+          onToggleSelectAll={onToggleSelectAll}
+          onActiveSimulationChange={onActiveSimulationChange}
+          onSelectedForSimChange={onSelectedForSimChange}
+          onSimulationStatusLoad={onSimulationStatusLoad}
+          onRun={onLaunch}
+          middle={
+            <div className="h-full bg-white! w-full">
+              {loading ? (
+                <InOutFilesColumnSkeleton />
+              ) : (
+                !!activeSimulation &&
+                activeSimulationExecStatus && (
+                  <SimulationFiles
+                    simulation={activeSimulation}
+                    execStatus={activeSimulationExecStatus}
+                    selectedFile={selectedFile}
                     context={context}
-                    loading={filesLoading}
+                    onSelect={act.onSelectedFileChange}
+                    onLoadingChange={setFilesLoading}
+                    jobId={activeJobId}
+                    reports={simConfig?.reports}
                   />
-                </SimulationProvider>
-              </SimulationReportsProvider>
-            )}
-          </>
-        }
-      />
+                )
+              )}
+            </div>
+          }
+          right={
+            <>
+              {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
+                <TaskConfigurationViewer
+                  jobId={activeJobId}
+                  workspace={context}
+                  configId={activeSimulation?.id}
+                  enabled={taskLogsViewerEnabled}
+                  skipStream
+                  campaignOriginAction={campaignOriginAction}
+                  isCampaignIdChanged={isCampaignIdChanged}
+                />
+              )}
+              {selectedFile?.renderer === ActivityCustomFileRenderer.TaskLogsViewer && (
+                <TaskLogsViewer
+                  jobId={activeJobId}
+                  workspace={context}
+                  configId={activeSimulation?.id}
+                  enabled={taskLogsViewerEnabled}
+                  skipStream={taskLogsShouldReadSnapshot}
+                  campaignOriginAction={campaignOriginAction}
+                  isCampaignIdChanged={isCampaignIdChanged}
+                />
+              )}
+              {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
+                <SimulationReportsProvider reports={simConfig?.reports ?? null}>
+                  {/* The spike viewer replays over the circuit that was scanned and
+                        spans its axis over the run window, neither of which is in the
+                        file it is handed. Both already resolved above. */}
+                  <SimulationProvider
+                    model={model}
+                    run={simConfig?.run}
+                    neuronSets={neuronSets}
+                    simulationPicker={simulationPicker}
+                    campaign={campaign}
+                    timeline={timeline}
+                  >
+                    <FileViewer
+                      file={selectedFile}
+                      className="h-full w-full"
+                      context={context}
+                      loading={filesLoading}
+                    />
+                  </SimulationProvider>
+                </SimulationReportsProvider>
+              )}
+            </>
+          }
+        />
 
-      <OfflineTokenConsentModal
-        open={offlineTokenConsentModal.open}
-        consentUrl={offlineTokenConsentModal.consentUrl}
-        onCancel={cancelOfflineTokenConsent}
-        onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
-      />
+        <OfflineTokenConsentModal
+          open={offlineTokenConsentModal.open}
+          consentUrl={offlineTokenConsentModal.consentUrl}
+          onCancel={cancelOfflineTokenConsent}
+          onOpenConsent={() => openConsentLink(offlineTokenConsentModal.consentUrl)}
+        />
 
-      {costConfirmationModal}
+        {costConfirmationModal}
 
-      {creditsModal}
+        {creditsModal}
+      </NodesTableKeeper>
     </NodesSessionKeeper>
   );
 }

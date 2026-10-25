@@ -82,6 +82,11 @@ type Props = {
    * back on once every column they name is in, unless the filters change first.
    */
   initialFilterModel?: FilterModel;
+  /**
+   * Whose filters these are, where views take the grid over in turn: a new
+   * scope's `initialFilterModel` replaces the last one's filters.
+   */
+  filterScope?: string;
   /** Called with a clicked row's node id. */
   onRowClick?: (nodeId: number) => void;
   /**
@@ -128,6 +133,9 @@ type Props = {
 };
 
 export type QuickFilter = { label: string; title?: string; model: FilterModel };
+
+/** How long a new filter scope waits for its columns before the grid's changes count again. */
+const SCOPE_SWITCH_MS = 2000;
 
 /** File columns kept in view beside the pinned ones, however far their edge is dragged. */
 const MIN_FILE_COLUMNS_WIDTH = 120;
@@ -322,6 +330,7 @@ export function NodesGrid({
   pinnedVersion,
   onFilterModelChange,
   initialFilterModel,
+  filterScope,
   onRowClick,
   selectedNodeIds = NO_SELECTION,
   pickColumn = false,
@@ -534,20 +543,60 @@ export function NodesGrid({
     api.setFilterModel(model);
   };
 
+  // One datasource for the grid's life, reading through to the host's latest:
+  // a new one pages the rows in again over the old ones rather than blanking them.
+  const datasourceRef = useRef(datasource);
+  const [gridSource] = useState<IDatasource>(() => ({
+    rowCount: datasource.rowCount,
+    getRows: (params) => datasourceRef.current.getRows(params),
+  }));
+  useEffect(() => {
+    if (datasourceRef.current === datasource) return;
+    datasourceRef.current = datasource;
+    const api = gridRef.current?.api;
+    if (!api || api.isDestroyed()) return;
+    // The count is found again from the pages, however many there were before.
+    api.setRowCount(api.getDisplayedRowCount(), false);
+    api.refreshInfiniteCache();
+  }, [datasource]);
+
   const onGridReady = (e: GridReadyEvent) => {
     e.api.setGridOption('context', gridContext);
     // Before the datasource, so the first page asked for is already filtered.
     restoreFilters(e.api);
-    e.api.setGridOption('datasource', datasource);
+    e.api.setGridOption('datasource', gridSource);
     setGridApi(e.api);
   };
+
+  // A new scope's filters, on their way: until they are on, the grid's changes -
+  // the last scope's filters coming off - are not its host's to hear about. A
+  // filter whose columns never come stops holding the grid's changes back.
+  const scopeRef = useRef(filterScope);
+  const switchingRef = useRef<{ model: FilterModel; until: number } | null>(null);
+  useEffect(() => {
+    if (scopeRef.current === filterScope) return;
+    scopeRef.current = filterScope;
+    const model = initialFilterModel ?? {};
+    pendingFiltersRef.current = Object.keys(model).length > 0 ? model : null;
+    const api = gridRef.current?.api;
+    if (!api || api.isDestroyed() || isEqual(api.getFilterModel(), model)) return;
+    switchingRef.current = { model, until: performance.now() + SCOPE_SWITCH_MS };
+    if (pendingFiltersRef.current) restoreFilters(api);
+    else api.setFilterModel(null);
+  });
 
   const [filters, setFilters] = useState<FilterModel>({});
   const filtering = Object.keys(filters).length > 0;
   const onFilterChanged = (e: FilterChangedEvent) => {
-    pendingFiltersRef.current = null;
     const model = e.api.getFilterModel() as FilterModel;
     setFilters(model);
+    const switching = switchingRef.current;
+    if (switching && performance.now() < switching.until) {
+      if (isEqual(model, switching.model)) switchingRef.current = null;
+      return;
+    }
+    switchingRef.current = null;
+    pendingFiltersRef.current = null;
     onFilterModelChange?.(model);
   };
   const onResetClick = () => {
@@ -584,12 +633,6 @@ export function NodesGrid({
     reportHover(Number.isFinite(nodeId) ? nodeId : null);
   };
 
-  useEffect(() => {
-    const api = gridRef.current?.api;
-    if (!api) return;
-    autoSizedKeyRef.current = '';
-    api.setGridOption('datasource', datasource);
-  }, [datasource]);
 
   const onModelUpdated = useCallback(() => {
     const api = gridRef.current?.api;

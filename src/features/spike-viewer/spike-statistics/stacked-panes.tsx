@@ -1,9 +1,11 @@
 'use client';
 
 import { RiArrowRightLine } from '@remixicon/react';
+import { Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useLayoutEffect, useRef, useState } from 'react';
 
+import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import {
   PaneResizeHandle,
   SHUT_BAR_SIZE,
@@ -13,6 +15,7 @@ import {
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -167,6 +170,53 @@ export function StackedPanes({
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * A results view's file column while its report loads, laid out as it will be:
+ * the plot's box waiting, and the nodes table the view before kept in its own,
+ * so a table over the same cells stays where it is.
+ */
+export function LoadingFilePanes({
+  title,
+  panelTitles,
+}: {
+  /** What the plot over the table is called, for its bar if it is shut. */
+  title: string;
+  panelTitles: readonly string[];
+}) {
+  const sidePanel = useResultsSidePanel();
+  return (
+    <StackedPanes
+      split="file"
+      header={
+        sidePanel &&
+        !sidePanel.open && (
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <Skeleton className="h-9 w-56 rounded-full" />
+            <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
+          </div>
+        )
+      }
+      top={{
+        title,
+        content: (
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <Spin />
+          </div>
+        ),
+      }}
+      bottom={{
+        title: 'Neuron Table',
+        boxClassName: 'px-3 pt-1 pb-2',
+        content: (
+          <KeptNodesGridPlaceholder
+            fallback={<Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />}
+          />
+        ),
+      }}
+    />
   );
 }
 
