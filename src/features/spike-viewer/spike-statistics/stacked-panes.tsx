@@ -12,8 +12,8 @@ import {
   ShutPaneBar,
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
-import { BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';

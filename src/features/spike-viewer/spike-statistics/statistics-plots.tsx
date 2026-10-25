@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import {
   densityFigure,
   sankeyFigure,
@@ -324,13 +325,6 @@ export function StatisticsPlots({
     </>
   );
 }
-
-/**
- * A box of the statistics view, one per quadrant: the Data page's white card, rounded,
- * with its faint navy ring and soft navy drop under a white top highlight.
- */
-export const BOX_CLASS =
-  'rounded-3xl bg-white ring-1 ring-primary-9/5 shadow-[inset_0_1px_0_rgb(255_255_255/0.9),0_4px_12px_-6px_rgb(0_39_102/0.08),0_1px_2px_rgb(0_39_102/0.04)]';
 
 /** The box a table sits in, with room inside so the table clears its corners. */
 export const TABLE_BOX_CLASS = `${BOX_CLASS} px-3 pt-1 pb-2`;

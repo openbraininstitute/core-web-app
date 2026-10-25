@@ -1,9 +1,13 @@
 'use client';
 
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { Right } from '@/features/scan-config/components/ui-columns';
+import { ScanConfigActivity } from '@/features/scan-config/types';
+import { cn } from '@/utils/css-class';
 
 import { LeftColumn, MiddleColumn } from './columns';
 
+import type { ReactNode } from 'react';
 import type { ScanConfigTemplateProps } from './types';
 import type { ScanConfigTemplateState } from './use-scan-config-template';
 
@@ -17,11 +21,12 @@ type Props = {
  * `1fr 1fr 2fr` grid.
  */
 export function DefaultConfigColumns({ props, state }: Props) {
+  const boxed = props.activity === ScanConfigActivity.Simulate;
   return (
     <>
       <LeftColumn props={props} state={state} />
       <MiddleColumn props={props} state={state} />
-      <div className="h-full min-h-0 min-w-0 overflow-hidden">
+      <PreviewColumn boxed={boxed}>
         <Right
           activity={props.activity}
           entityType={props.entityType}
@@ -33,9 +38,23 @@ export function DefaultConfigColumns({ props, state }: Props) {
           setConfig={state.setConfig}
           schema={props.schema}
           locked={state.editingLocked}
+          inset={boxed}
         />
-      </div>
+      </PreviewColumn>
     </>
+  );
+}
+
+/**
+ * The right column. A simulation's is boxed as its results' views are, so its
+ * Configuration and Simulations tabs read as one.
+ */
+export function PreviewColumn({ boxed, children }: { boxed: boolean; children: ReactNode }) {
+  if (!boxed) return <div className="h-full min-h-0 min-w-0 overflow-hidden">{children}</div>;
+  return (
+    <div className="h-full min-h-0 min-w-0 p-3">
+      <div className={cn(BOX_CLASS, 'h-full min-h-0 overflow-hidden')}>{children}</div>
+    </div>
   );
 }
 
