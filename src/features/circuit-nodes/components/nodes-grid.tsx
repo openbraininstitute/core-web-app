@@ -633,7 +633,6 @@ export function NodesGrid({
     reportHover(Number.isFinite(nodeId) ? nodeId : null);
   };
 
-
   const onModelUpdated = useCallback(() => {
     const api = gridRef.current?.api;
     if (!api) return;
@@ -667,6 +666,25 @@ export function NodesGrid({
             )}
           </span>
           {headerExtra}
+        </div>
+        {headerNote && (
+          <span className={styles.gridNote}>
+            <span>{headerNote}</span>
+          </span>
+        )}
+        <div className="flex shrink-0 items-center gap-2">
+          {/* First, so the switches after it stay put at the end as it comes and goes. */}
+          {reset && (filtering || reset.picked) && (
+            <button
+              type="button"
+              onClick={onResetClick}
+              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+              className={PILL_CLASS}
+            >
+              <RiResetLeftLine className="size-4" />
+              Reset
+            </button>
+          )}
           {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
           {quickFilters?.map((quick) => (
             <PillToggle
@@ -681,20 +699,7 @@ export function NodesGrid({
               ]}
             />
           ))}
-          {/* Last, so the buttons before it stay put as it comes and goes. */}
-          {reset && (filtering || reset.picked) && (
-            <button
-              type="button"
-              onClick={onResetClick}
-              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              className={PILL_CLASS}
-            >
-              <RiResetLeftLine className="size-4" />
-              Reset
-            </button>
-          )}
         </div>
-        {headerNote && <span className={styles.gridNote}>{headerNote}</span>}
       </div>
       <div
         ref={gridBoxRef}
