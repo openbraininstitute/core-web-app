@@ -63,7 +63,9 @@ export function TaskIOFileItem({ id, name, file, selected, label, onSelect }: Pr
       </div>
       <span
         className={classNames(
-          'min-w-0 max-w-[48%] truncate rounded-full border px-4 uppercase text-xs py-1',
+          // Its margins pulled in, a tag of two lines reaches into the row's padding
+          // rather than making the row taller; the name sets the row's height.
+          'min-w-0 max-w-[48%] truncate rounded-full border px-4 uppercase text-xs py-1 -my-2',
           'transition-[max-width] duration-200 ease-[cubic-bezier(0.2,0,0,1)] hover:max-w-[88%]',
           selected
             ? 'border-white text-primary-9 bg-white'
