@@ -230,9 +230,13 @@ function SharedTracesPlot({
 
   const data = useMemo<Partial<PlotData>[]>(() => {
     const hover = new Set(hovered);
-    // A drawn cell hovered stands out from the rest; a previewed one is only added,
-    // so the picked cells keep their look while rows are scanned.
-    const emphasis = lines.some((line) => hover.has(line.traceIndex) && !line.preview);
+    // A hovered cell stands out from the rest, drawn or one past the cap, so
+    // every row reads alike. With cells picked, one not among them is only
+    // added, so the picked cells keep their look while rows are scanned.
+    const picking = lines.some((line) => line.slot !== null);
+    const emphasis = lines.some(
+      (line) => hover.has(line.traceIndex) && (!line.preview || !picking)
+    );
     // the hovered cell last, so it is drawn over everything else
     const ordered = [
       ...lines.filter((line) => !hover.has(line.traceIndex)),
@@ -246,7 +250,7 @@ function SharedTracesPlot({
       const colored = line.slot !== null && line.slot >= 0;
 
       let color: string = CHART_LINE_COLOR;
-      if (line.preview) color = PREVIEW_COLOR;
+      if (line.preview) color = picking ? PREVIEW_COLOR : CHART_LINE_COLOR;
       else if (colored) color = PICK_COLORS[line.slot as number];
       else if (line.slot !== null) color = OTHER_COLOR;
       // every cell drawn in one colour: the hovered one keeps it, the rest step back
