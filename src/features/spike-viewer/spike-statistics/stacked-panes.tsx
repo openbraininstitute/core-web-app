@@ -19,6 +19,7 @@ import { Skeleton } from '@/ui/molecules/skeleton';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
+import type { PaneShut } from '@/features/circuit-viewer/pane-resize-handle';
 
 /** Either side of the grab bar between the panes. */
 const GUTTER = 12;
@@ -34,6 +35,7 @@ export const PANEL_FLOORS = [GUTTER + 200, GUTTER + 220] as const;
 const bottomRoomAtoms = {
   file: atom<number | null>(null),
   panel: atom<number | null>(null),
+  config: atom<number | null>(null),
 };
 
 export type StackedPane = {
@@ -54,6 +56,8 @@ export type StackedPane = {
  * the other either side of a grab bar. Dragged far enough, the bar shuts a box
  * into a bar naming it, which the layout keeps (`split` is its name there),
  * and the other takes the room. Without a bottom pane the top one has it all.
+ * The configuration's right column (`config`) has no results layout, and keeps
+ * which pane is shut itself.
  */
 export function StackedPanes({
   split,
@@ -63,7 +67,7 @@ export function StackedPanes({
   floors = DEFAULT_FLOORS,
   header,
 }: {
-  split: 'file' | 'panel';
+  split: 'file' | 'panel' | 'config';
   top: StackedPane;
   bottom?: StackedPane | null;
   /** The bottom pane's share of the room until the bar is dragged. */
@@ -87,11 +91,19 @@ export function StackedPanes({
     return () => observer.disconnect();
   }, []);
   const [chosen, setChosen] = useAtom(bottomRoomAtoms[split]);
+  const [ownShut, setOwnShut] = useState<PaneShut>(null);
+  const layoutSplit = split === 'config' ? null : split;
   const panes = useShuttingSplit({
     chosen,
     onChosenChange: setChosen,
-    shut: sidePanel?.shuts[split] ?? null,
-    onShutChange: sidePanel && bottom ? (shut) => sidePanel.setShut(split, shut) : undefined,
+    shut: layoutSplit ? (sidePanel?.shuts[layoutSplit] ?? null) : ownShut,
+    onShutChange: !bottom
+      ? undefined
+      : layoutSplit
+        ? sidePanel
+          ? (shut) => sidePanel.setShut(layoutSplit, shut)
+          : undefined
+        : setOwnShut,
     total: height,
     floors,
     preferred: Math.round(height * bottomShare),

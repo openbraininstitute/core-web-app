@@ -2,6 +2,7 @@ import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
@@ -36,6 +37,7 @@ import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use
 import { classNames } from '@/util/utils';
 
 import { PaneResizeHandle } from './pane-resize-handle';
+import { useSceneTablePane } from './scene-table-pane';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -235,6 +237,11 @@ export function CircuitScene({
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+  // Where the host lays the table out in a pane of its own, beside the view rather than over it.
+  const tablePane = useSceneTablePane();
+  const paneTable = enableNodesTable ? tablePane : null;
+  const claimPane = paneTable?.claim;
+  useEffect(() => claimPane?.(), [claimPane]);
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [tablePopulationName, setTablePopulationName] = useState<string | undefined>();
@@ -620,7 +627,13 @@ export function CircuitScene({
         modeToggle={modeToggle}
         vizActive={active}
         theme={theme}
-        table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+        table={
+          paneTable
+            ? { active: paneTable.open, onToggle: () => paneTable.onOpenChange(!paneTable.open) }
+            : enableNodesTable
+              ? { active: showTable, onToggle: handleToggleTable }
+              : undefined
+        }
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
@@ -637,7 +650,18 @@ export function CircuitScene({
         }}
       />
 
-      {showTable && circuit && tableHeight !== null && containerHeight > 0 && (
+      {paneTable?.open &&
+        paneTable.target &&
+        circuit &&
+        createPortal(
+          <CircuitNodesTable
+            circuit={circuit}
+            populationName={populationName}
+            onPopulationChange={setTablePopulationName}
+          />,
+          paneTable.target
+        )}
+      {!paneTable && showTable && circuit && tableHeight !== null && containerHeight > 0 && (
         <div
           className="pointer-events-auto absolute left-0 right-0 bottom-0 z-30 flex flex-col border-t border-neutral-200 bg-white"
           style={{ height: clampedHeight }}
