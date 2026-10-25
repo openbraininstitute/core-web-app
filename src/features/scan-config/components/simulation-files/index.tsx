@@ -58,7 +58,7 @@ type FileRow = {
 const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
   [AssetLabel.custom_node_sets]: 'Node sets',
   [AssetLabel.simulation_generation_config]: 'OBI-ONE Config',
-  [AssetLabel.sonata_simulation_config]: 'SONATA simulation config',
+  [AssetLabel.sonata_simulation_config]: 'SONATA Simulation Config',
 };
 
 /** Which of the groups are open: kept as the simulation on show changes. */
