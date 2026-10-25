@@ -57,6 +57,16 @@ const BASE_LAYOUT: Partial<Layout> = {
   hovermode: 'closest',
 };
 
+/** What a plot of a group of cells is drawn with: its name, and the scale it shares with the others. */
+export type CampaignPlotOptions = {
+  /** Over the plot, in place of the measure's name: a group's. */
+  title?: string;
+  /** The value range every group's plot is drawn on, so they compare; null for this plot's own. */
+  range?: [number, number] | null;
+  /** The heatmap's colour bar, or the lines' legend: on the first of several plots only. */
+  key?: boolean;
+};
+
 const title = (text: string) => ({
   text,
   font: { size: 12, color: '#0f172a' },
@@ -79,7 +89,8 @@ export function heatmapFigure(
   x: ScanAxis,
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
-  activeId: string | undefined
+  activeId: string | undefined,
+  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const z: (number | null)[][] = [];
@@ -101,12 +112,14 @@ export function heatmapFigure(
   const finite = z.flat().filter((v): v is number => v !== null);
   const flat = finite.length > 0 && finite.every((v) => v === finite[0]);
   const pad = flat ? Math.abs(finite[0]) * 0.05 || 1 : 0;
-  const zRange = flat
-    ? {
-        zmin: Math.max(metric.min ?? Number.NEGATIVE_INFINITY, finite[0] - pad),
-        zmax: Math.min(metric.max ?? Number.POSITIVE_INFINITY, finite[0] + pad),
-      }
-    : {};
+  const zRange = range
+    ? { zmin: range[0], zmax: range[1] }
+    : flat
+      ? {
+          zmin: Math.max(metric.min ?? Number.NEGATIVE_INFINITY, finite[0] - pad),
+          zmax: Math.min(metric.max ?? Number.POSITIVE_INFINITY, finite[0] + pad),
+        }
+      : {};
   const yTexts = y ? y.values.map((v) => v.text) : [''];
   const xTexts = x.values.map((v) => v.text);
   const where = `${x.label} %{x}${y ? `<br>${y.label} %{y}` : ''}`;
@@ -168,6 +181,7 @@ export function heatmapFigure(
         textfont: { size: 10 },
         xgap: 2,
         ygap: 2,
+        showscale: key,
         colorbar: { thickness: 8, outlinewidth: 0, len: 0.9 },
         hovertemplate: `${where}<br>${metric.label} %{z:.3g}<extra>click to show</extra>`,
       },
@@ -175,14 +189,24 @@ export function heatmapFigure(
     ] as Data[],
     layout: {
       ...BASE_LAYOUT,
-      title: title(metric.label),
-      xaxis: { title: axisTitle(x.label), type: 'category', automargin: true, showgrid: false },
+      title: title(plotTitle ?? metric.label),
+      // A simulation's cell square, however the plot's box is shaped.
+      xaxis: {
+        title: axisTitle(x.label),
+        type: 'category',
+        automargin: true,
+        showgrid: false,
+        constrain: 'domain',
+      },
       yaxis: {
         title: axisTitle(y?.label ?? ''),
         type: 'category',
         automargin: true,
         showgrid: false,
         showticklabels: y !== null,
+        scaleanchor: 'x',
+        scaleratio: 1,
+        constrain: 'domain',
       },
       shapes: active
         ? [
@@ -214,7 +238,7 @@ export function linesFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  legend: boolean
+  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const numeric = x.values.every((v) => typeof v.value === 'number');
@@ -263,8 +287,8 @@ export function linesFigure(
     data: [...data, ...ringTrace] as Data[],
     layout: {
       ...BASE_LAYOUT,
-      title: title(metric.label),
-      showlegend: legend && y !== null,
+      title: title(plotTitle ?? metric.label),
+      showlegend: key && y !== null,
       legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
       xaxis: {
         title: axisTitle(x.label),
@@ -273,192 +297,92 @@ export function linesFigure(
         showgrid: false,
         zeroline: false,
       },
-      yaxis: { automargin: true, gridcolor: GRID_COLOR, zeroline: false, rangemode: 'tozero' },
+      yaxis: {
+        automargin: true,
+        gridcolor: GRID_COLOR,
+        zeroline: false,
+        ...(range ? { range: [range[0], range[1]] } : { rangemode: 'tozero' }),
+      },
     },
   };
 }
 
+/** Line styles for the second parameter's values, the first's being the lines' colours. */
+export const DASHES = ['solid', 'dash', 'dot', 'dashdot', 'longdash', 'longdashdot'] as const;
+
+/** A line's colour for the first parameter's value at `index`: the pick palette's, then grey. */
+export function courseColor(index: number): string {
+  return index < PICK_COLORS.length ? PICK_COLORS[index] : '#94a3b8';
+}
+
 /**
- * Each simulation over time - its PSTH, or its mean - in the cell of the
- * scan's grid it stands at: the first parameter across, the second up, the
- * rest at the simulation on show, which is outlined. One scale throughout, so
- * the cells compare. An unfinished simulation is named in its cell, in its
- * status's colour, and a click on a line shows its simulation.
+ * Each simulation over time - its PSTH, or its mean - on one plot: a line per
+ * simulation across the scan, coloured by its value of the first parameter and
+ * dashed by its value of the second, the rest at the simulation on show, whose
+ * line is drawn thicker and on top. A click on a line shows its simulation.
+ * Those not finished have no line.
  */
-export function courseGridFigure(
+export function coursesFigure(
   x: ScanAxis,
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   courses: ReadonlyMap<string, TimeCourseSeries>,
   activeId: string | undefined,
   label: string,
-  steps: boolean
+  steps: boolean,
+  { title: plotTitle, range = null, key = true }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
-  const columns = x.values.length;
-  const gapX = Math.min(0.04, 0.3 / columns);
-  const gapY = Math.min(0.08, 0.4 / rows);
-  const data: Data[] = [];
-  const annotations: NonNullable<Layout['annotations']> = [];
-  const shapes: NonNullable<Layout['shapes']> = [];
-  const axes: Record<string, unknown> = {};
-  let k = 0;
+  const lines: (Data & { active: boolean })[] = [];
   for (let yi = 0; yi < rows; yi++) {
-    for (let xi = 0; xi < columns; xi++) {
-      const xDomain = [xi / columns + gapX / 2, (xi + 1) / columns - gapX / 2];
-      const yDomain = [yi / rows + gapY / 2, (yi + 1) / rows - gapY / 2];
+    for (let xi = 0; xi < x.values.length; xi++) {
       const cell = cellAt(xi, yi);
       const course = cell ? courses.get(cell.simulationId) : undefined;
-      // Axes only where there is a line: an empty one would stretch the shared scale.
-      if (cell && course) {
-        k += 1;
-        const suffix = k === 1 ? '' : String(k);
-        axes[`xaxis${suffix}`] = {
-          domain: xDomain,
-          anchor: `y${suffix}`,
-          ...(k > 1 ? { matches: 'x' } : {}),
-          showticklabels: yi === 0,
-          nticks: 4,
-          showgrid: false,
-          zeroline: false,
-          linecolor: GRID_COLOR,
-          tickfont: { size: 9 },
-        };
-        axes[`yaxis${suffix}`] = {
-          domain: yDomain,
-          anchor: `x${suffix}`,
-          ...(k > 1 ? { matches: 'y' } : {}),
-          showticklabels: xi === 0,
-          nticks: 4,
-          gridcolor: GRID_COLOR,
-          zeroline: false,
-          tickfont: { size: 9 },
-        };
-        const where = `${x.label} ${x.values[xi].text}${y ? ` · ${y.label} ${y.values[yi].text}` : ''}`;
-        data.push({
-          type: 'scatter',
-          mode: 'lines',
-          x: course.x,
-          y: course.y,
-          xaxis: `x${suffix}`,
-          yaxis: `y${suffix}`,
-          line: { color: PICK_COLORS[0], width: 1.2, shape: steps ? 'hv' : 'linear' },
-          // Each point names its simulation, so a click anywhere on the line picks it.
-          customdata: Array.from({ length: course.x.length }, () => cell.simulationId),
-          hovertemplate: `${where}<br>%{x:.0f} ms · ${label} %{y:.3g}<extra>click to show</extra>`,
-        } as Data);
-      } else if (cell?.status) {
-        // Named in its cell, on a wash of its status's colour.
-        shapes.push({
-          type: 'rect',
-          xref: 'paper',
-          yref: 'paper',
-          x0: xDomain[0],
-          x1: xDomain[1],
-          y0: yDomain[0],
-          y1: yDomain[1],
-          line: { width: 0 },
-          fillcolor: `${cell.status.color}14`,
-          layer: 'below',
-        });
-        annotations.push({
-          text: cell.status.name,
-          xref: 'paper',
-          yref: 'paper',
-          x: (xDomain[0] + xDomain[1]) / 2,
-          y: (yDomain[0] + yDomain[1]) / 2,
-          showarrow: false,
-          font: { size: 10, color: cell.status.color },
-        });
-      }
-      if (cell && cell.simulationId === activeId) {
-        shapes.push({
-          type: 'rect',
-          xref: 'paper',
-          yref: 'paper',
-          x0: xDomain[0],
-          x1: xDomain[1],
-          y0: yDomain[0],
-          y1: yDomain[1],
-          line: { color: '#0f172a', width: 1.5 },
-        });
-      }
+      if (!cell || !course) continue;
+      const active = cell.simulationId === activeId;
+      const name = `${x.label} ${x.values[xi].text}${y ? ` · ${y.label} ${y.values[yi].text}` : ''}`;
+      lines.push({
+        type: 'scatter',
+        mode: 'lines',
+        name,
+        x: course.x,
+        y: course.y,
+        line: {
+          color: courseColor(xi),
+          dash: DASHES[yi % DASHES.length],
+          width: active ? 2.5 : 1.25,
+          shape: steps ? 'hv' : 'linear',
+        },
+        opacity: active ? 1 : 0.75,
+        // Each point names its simulation, so a click anywhere on the line picks it.
+        customdata: Array.from({ length: course.x.length }, () => cell.simulationId),
+        hovertemplate: `${name}<br>%{x:.0f} ms · ${label} %{y:.3g}<extra>click to show</extra>`,
+        active,
+      } as Data & { active: boolean });
     }
   }
-  // The parameters' values over the columns and beside the rows, and their names.
-  x.values.forEach((v, xi) => {
-    annotations.push({
-      text: v.text,
-      xref: 'paper',
-      yref: 'paper',
-      x: (xi + 0.5) / columns,
-      y: 1,
-      yanchor: 'bottom',
-      showarrow: false,
-      font: { size: 10, color: AXIS_COLOR },
-    });
-  });
-  annotations.push({
-    text: `${x.label} →`,
-    xref: 'paper',
-    yref: 'paper',
-    x: 1,
-    xanchor: 'right',
-    y: 1,
-    yanchor: 'bottom',
-    yshift: 14,
-    showarrow: false,
-    font: { size: 10, color: AXIS_COLOR },
-  });
-  if (y) {
-    y.values.forEach((v, yi) => {
-      annotations.push({
-        text: v.text,
-        xref: 'paper',
-        yref: 'paper',
-        x: 0,
-        xanchor: 'right',
-        xshift: -30,
-        y: (yi + 0.5) / rows,
-        showarrow: false,
-        textangle: '-90',
-        font: { size: 10, color: AXIS_COLOR },
-      });
-    });
-    annotations.push({
-      text: `${y.label} →`,
-      xref: 'paper',
-      yref: 'paper',
-      x: 0,
-      xanchor: 'right',
-      xshift: -46,
-      y: 1,
-      yanchor: 'top',
-      showarrow: false,
-      textangle: '-90',
-      font: { size: 10, color: AXIS_COLOR },
-    });
-  }
-  annotations.push({
-    text: 'Time (ms)',
-    xref: 'paper',
-    yref: 'paper',
-    x: 0.5,
-    y: 0,
-    yanchor: 'top',
-    yshift: -18,
-    showarrow: false,
-    font: { size: 10, color: AXIS_COLOR },
-  });
+  // The simulation on show over the rest.
+  lines.sort((a, b) => Number(a.active) - Number(b.active));
   return {
-    data,
+    data: lines.map(({ active: _active, ...line }) => line as Data),
     layout: {
       ...BASE_LAYOUT,
-      title: title(label),
-      margin: { l: y ? 76 : 48, r: 8, t: 52, b: 36 },
-      ...axes,
-      annotations,
-      shapes,
+      title: title(plotTitle ?? label),
+      showlegend: key,
+      legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
+      xaxis: {
+        title: axisTitle('Time (ms)'),
+        automargin: true,
+        showgrid: false,
+        zeroline: false,
+      },
+      yaxis: {
+        title: axisTitle(label),
+        automargin: true,
+        gridcolor: GRID_COLOR,
+        zeroline: false,
+        ...(range ? { range: [range[0], range[1]] } : {}),
+      },
     } as Partial<Layout>,
   };
 }

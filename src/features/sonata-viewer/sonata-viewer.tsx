@@ -499,6 +499,14 @@ export function SonataReportView({
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
 
+  // The cells the report records, a flag per node index: what the campaign's groups can hold.
+  const recordedCells = useMemo(() => {
+    if (!population || rowCount === 0) return null;
+    const flags = new Uint8Array(rowCount);
+    for (const trace of population.traces) if (trace.nodeId < rowCount) flags[trace.nodeId] = 1;
+    return flags;
+  }, [population, rowCount]);
+
   // The campaign's statistics are over the same cells, as a flag per node index.
   const campaignCells = useMemo(() => {
     if (!plotCells || rowCount === 0) return null;
@@ -791,6 +799,11 @@ export function SonataReportView({
                     units={population.dataUnits}
                     cells={campaignCells}
                     recordedCount={population.nodeCount}
+                    rowCount={rowCount}
+                    recordedCells={recordedCells}
+                    groupColumns={groupOptions}
+                    getColumn={getColumn}
+                    sessionKey={sessionKey}
                   />
                 ),
               }}

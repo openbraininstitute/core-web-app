@@ -7,11 +7,17 @@ import {
   useReportCampaignSummaries,
 } from '@/features/sonata-viewer/report-campaign';
 import { SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
-import { CampaignPlots } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
+import { useCampaignGroups } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
+import {
+  CampaignPlots,
+  NO_GROUPS,
+  useCampaignGroupBy,
+} from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { CampaignCourse } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 
 type Props = {
@@ -29,6 +35,14 @@ type Props = {
   cells: Uint8Array | null;
   /** How many cells the report records, for what the picked ones are out of. */
   recordedCount: number;
+  /** Cells in the node population, recorded or not: how long a flag per node index is. */
+  rowCount: number;
+  /** The cells the report records, a flag per node index: what a group can hold. */
+  recordedCells: Uint8Array | null;
+  /** The node properties the plots can be grouped by, and how one's values are read. */
+  groupColumns: readonly ColumnMeta[];
+  getColumn?: (name: string) => Promise<ColumnValues>;
+  sessionKey: string;
 };
 
 /**
@@ -47,8 +61,22 @@ export function ReportCampaignView({
   units,
   cells,
   recordedCount,
+  rowCount,
+  recordedCells,
+  groupColumns,
+  getColumn,
+  sessionKey,
 }: Props) {
   const context = useWorkspace();
+  const groupBy = useCampaignGroupBy(groupColumns);
+  // Only recorded cells, so a group the report holds none of has no plot.
+  const groups = useCampaignGroups({
+    groupBy,
+    getColumn,
+    sessionKey,
+    cells: cells ?? recordedCells,
+    rowCount,
+  });
   const summaries = useReportCampaignSummaries({
     simulations,
     statusMap,
@@ -56,7 +84,7 @@ export function ReportCampaignView({
     reportPath,
     populationName,
     spikeThreshold: variable === null ? SPIKE_THRESHOLD_MV : null,
-    cells,
+    groups: groups ?? NO_GROUPS,
     enabled: true,
   });
   const metrics = useMemo(() => reportCampaignMetrics(variable, units), [variable, units]);
@@ -88,6 +116,8 @@ export function ReportCampaignView({
       files={variable === null ? 'voltage reports' : 'reports'}
       scope={`${populationName ?? ''}${of}`}
       course={course}
+      groupColumns={groupColumns}
+      grouping={groups === null}
     />
   );
 }

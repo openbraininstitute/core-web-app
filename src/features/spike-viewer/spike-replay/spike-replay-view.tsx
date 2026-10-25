@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom';
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import {
   PaneResizeHandle,
@@ -19,6 +19,7 @@ import { circuitDrawsMorphologies } from '@/features/scan-config/components/circ
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
@@ -176,12 +177,24 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // The spike file holds the cells that fired and says nothing about the rest,
   // so the axis span comes from the node file. This is the session the scene
   // and the nodes table share, so in the split it is already open.
-  const { rowCount, status: nodesStatus } = useNodesWorker({
+  const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
+  const {
+    rowCount,
+    status: nodesStatus,
+    columns: nodeColumns,
+    getColumn,
+  } = useNodesWorker({
     enabled: circuit !== undefined,
     circuitId: circuit?.id ?? '',
     circuitAssetId: circuitConfig?.circuitAssetId ?? '',
-    population: circuitConfig?.nodes.find((n) => n.name === populationName),
+    population: nodePopulation,
   });
+  // What the campaign's plots can be grouped by, read through the same session.
+  const campaignGroupColumns = useMemo(() => campaignGroupingColumns(nodeColumns), [nodeColumns]);
+  const nodesSession =
+    circuit && nodePopulation
+      ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', nodePopulation.name)
+      : '';
   const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
   // An MEModel is one cell drawn from the model itself, with no node file.
   const cellCount = memodel === undefined ? countedCells : 1;
@@ -801,6 +814,9 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               run={run}
               cells={sceneCells ?? null}
               timeWindow={currentWindow?.time ?? null}
+              groupColumns={campaignGroupColumns}
+              getColumn={getColumn}
+              sessionKey={nodesSession}
             />
           ),
         }}

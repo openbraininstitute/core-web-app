@@ -14,6 +14,7 @@ import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
+import type { CampaignGroup } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
@@ -59,14 +60,21 @@ type SpikeSummary = {
   meanCv: number;
 };
 
+/** One group of cells across the campaign: each simulation summed up over them, and over time. */
+export type CampaignGroupSummaries = {
+  name: string;
+  summaries: ReadonlyMap<string, SimulationSummary>;
+  /** Each simulation over time, over the same cells and span as its summary. */
+  courses: ReadonlyMap<string, TimeCourseSeries>;
+};
+
 export type CampaignSummaries =
   | { state: 'resolving' }
   | { state: 'too-large'; bytes: number; count: number }
   | {
       state: 'loading' | 'ready';
-      summaries: ReadonlyMap<string, SimulationSummary>;
-      /** Each simulation over time, over the same cells and span as its summary. */
-      courses: ReadonlyMap<string, TimeCourseSeries>;
+      /** A group per plot: the picked cells, or them split by a node property. */
+      groups: readonly CampaignGroupSummaries[];
       loaded: number;
       total: number;
     };
@@ -81,8 +89,8 @@ type Options = {
   cellCount: number | undefined;
   /** The run on show, whose window the rates are over in every simulation. */
   run: SimulationRun | null;
-  /** The cells summed up, a flag per node index, as the table picks them; null for all. */
-  cells: Uint8Array | null;
+  /** The cells summed up, a group per plot, each a flag per node index as the table picks them. */
+  groups: readonly CampaignGroup[];
   /** The span of the run summed up, such as the raster's window, in ms; null for all of it. */
   timeWindow: [number, number] | null;
   enabled: boolean;
@@ -106,7 +114,7 @@ export function useCampaignSummaries({
   populationName,
   cellCount,
   run,
-  cells,
+  groups,
   timeWindow,
   enabled,
 }: Options): CampaignSummaries {
@@ -190,35 +198,41 @@ export function useCampaignSummaries({
   }, [enabled, files, tooLarge, populationName, cellCount, run, context, queryClient, key]);
 
   const loaded = statistics?.key === key ? statistics.byId : NO_STATISTICS;
-  const summaries = useMemo(
-    () => new Map([...loaded].map(([id, s]) => [id, summarize(s, cells, timeWindow)] as const)),
-    [loaded, cells, timeWindow]
+  // Each simulation counted over the span once, then summed up group by group.
+  const windowed = useMemo(
+    () => new Map([...loaded].map(([id, s]) => [id, windowedCells(s, timeWindow)] as const)),
+    [loaded, timeWindow]
   );
-  const courses = useMemo(
+  const grouped = useMemo(
     () =>
-      new Map(
-        [...loaded].map(
-          ([id, s]) =>
-            [
-              id,
-              psthSeries(
-                s.spikes,
-                cells,
-                s.counts.length,
-                timeWindow ?? s.span ?? [0, s.seconds * 1000]
-              ),
-            ] as const
-        )
-      ),
-    [loaded, cells, timeWindow]
+      groups.map((group) => ({
+        name: group.name,
+        summaries: new Map(
+          [...windowed].map(([id, w]) => [id, summarizeCells(w, group.cells)] as const)
+        ),
+        courses: new Map(
+          [...loaded].map(
+            ([id, s]) =>
+              [
+                id,
+                psthSeries(
+                  s.spikes,
+                  group.cells,
+                  s.counts.length,
+                  timeWindow ?? s.span ?? [0, s.seconds * 1000]
+                ),
+              ] as const
+          )
+        ),
+      })),
+    [groups, windowed, loaded, timeWindow]
   );
 
   if (!files) return { state: 'resolving' };
   if (tooLarge) return { state: 'too-large', bytes, count: files.length };
   return {
     state: loaded.size >= files.length ? 'ready' : 'loading',
-    summaries,
-    courses,
+    groups: grouped,
     loaded: loaded.size,
     total: files.length,
   };
@@ -279,20 +293,24 @@ export function summarize(
   cells: Uint8Array | null,
   timeWindow: [number, number] | null = null
 ): SpikeSummary {
-  if (!timeWindow) return summarizeCells(statistics, cells);
+  return summarizeCells(windowedCells(statistics, timeWindow), cells);
+}
+
+/** Each cell's count and CV over `timeWindow` of the run, counted again from its spikes, or over all of it. */
+type WindowedCells = { counts: ArrayLike<number>; cvs: ArrayLike<number>; seconds: number };
+
+function windowedCells(statistics: CellStatistics, timeWindow: [number, number] | null): WindowedCells {
+  if (!timeWindow) return statistics;
   const [from, to] = timeWindow;
   const { count, isiCv } = computeSpikeStatistics(
     spikesBetween(statistics.spikes, from, to),
     statistics.counts.length,
     { min: from, max: to }
   );
-  return summarizeCells({ counts: count, cvs: isiCv, seconds: (to - from) / 1000 }, cells);
+  return { counts: count, cvs: isiCv, seconds: (to - from) / 1000 };
 }
 
-function summarizeCells(
-  { counts, cvs, seconds }: { counts: ArrayLike<number>; cvs: ArrayLike<number>; seconds: number },
-  cells: Uint8Array | null
-): SpikeSummary {
+function summarizeCells({ counts, cvs, seconds }: WindowedCells, cells: Uint8Array | null): SpikeSummary {
   let n = 0;
   let spikes = 0;
   let active = 0;

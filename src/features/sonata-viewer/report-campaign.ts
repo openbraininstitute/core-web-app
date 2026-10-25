@@ -15,6 +15,7 @@ import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { CellFrames, CellValueStatistics } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 import type { CampaignMetric } from '@/features/spike-viewer/campaign-statistics/campaign-figures';
+import type { CampaignGroup } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import type {
   CampaignSummaries,
   SimulationSummary,
@@ -63,8 +64,8 @@ type Options = {
   populationName: string | undefined;
   /** For a voltage, where an upward crossing counts as a spike; null for another variable. */
   spikeThreshold: number | null;
-  /** The cells summed up, a flag per node index; null for every recorded one. */
-  cells: Uint8Array | null;
+  /** The cells summed up, a group per plot, each a flag per node index; null for every recorded one. */
+  groups: readonly CampaignGroup[];
   enabled: boolean;
 };
 
@@ -84,7 +85,7 @@ export function useReportCampaignSummaries({
   reportPath,
   populationName,
   spikeThreshold,
-  cells,
+  groups,
   enabled,
 }: Options): CampaignSummaries {
   const queryClient = useQueryClient();
@@ -174,27 +175,28 @@ export function useReportCampaignSummaries({
   }, [enabled, files, tooLarge, populationName, spikeThreshold, context, queryClient, key]);
 
   const loaded = statistics?.key === key ? statistics.byId : NO_STATISTICS;
-  const summaries = useMemo(
-    () => new Map([...loaded].map(([id, s]) => [id, summarizeReport(s, cells)] as const)),
-    [loaded, cells]
-  );
-  const courses = useMemo(
+  const grouped = useMemo(
     () =>
-      new Map(
-        [...loaded].flatMap(([id, s]) => {
-          const course = s.frames && meanCourse(s.frames, cells);
-          return course ? [[id, course] as const] : [];
-        })
-      ),
-    [loaded, cells]
+      groups.map((group) => ({
+        name: group.name,
+        summaries: new Map(
+          [...loaded].map(([id, s]) => [id, summarizeReport(s, group.cells)] as const)
+        ),
+        courses: new Map(
+          [...loaded].flatMap(([id, s]) => {
+            const course = s.frames && meanCourse(s.frames, group.cells);
+            return course ? [[id, course] as const] : [];
+          })
+        ),
+      })),
+    [loaded, groups]
   );
 
   if (!files) return { state: 'resolving' };
   if (tooLarge) return { state: 'too-large', bytes, count: files.length };
   return {
     state: loaded.size >= files.length ? 'ready' : 'loading',
-    summaries,
-    courses,
+    groups: grouped,
     loaded: loaded.size,
     total: files.length,
   };
