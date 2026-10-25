@@ -12,7 +12,6 @@ import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker'
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import {
   PaneResizeHandle,
-  SHUT_BAR_SIZE,
   ShutPaneBar,
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
@@ -31,7 +30,7 @@ import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-v
 import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
-import { BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -64,8 +63,6 @@ const DEFAULT_RASTER_HEIGHT_RATIO = 0.4;
  * belonging to it rather than as two separate views.
  */
 const SPLIT_GUTTER_IN_PX = 12;
-/** The panes' inset from the panel's edges, `mx-3` and `pb-3`: 10.5 px at the app's 14 px rem. */
-const PANE_INSET_IN_PX = 10.5;
 /**
  * What each pane keeps of the split, its gutter included. In a panel too short
  * for two of them the bounds cross, and the divider stays live between them.
@@ -229,41 +226,38 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // Up or not is the layout's: it outlasts this file when another result is
   // picked from the bar over the panel, and the next file's statistics take over.
   const dockedOpen = docked && (sidePanel?.open ?? false);
-  // With the campaign's statistics up over it, this is the raster of the
-  // simulation on show, picked here, and the panel beside it only its table.
+  // With the campaign's statistics up over it, this is the raster and the
+  // table of the simulation on show, picked here, with the width to themselves.
   const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
-  // Beside the statistics the divider can shut either pane into a bar, which
-  // the layout keeps, as it keeps the panel up, across the files on show.
+  // Docked, the raster is over the table, and the panel beside them, once up,
+  // holds the statistics over the scene. Either column can be shut on its
+  // side by the rule between them, and any of the four panes by its own bar.
+  const shuts = sidePanel?.shuts;
+  const beside = dockedOpen && !campaignMode;
+  const rasterUp = !(beside && shuts?.columns === 'start') && shuts?.file !== 'start';
+  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
+  // The split of the viewer's own panes, out of a results layout.
   const panes = useShuttingSplit({
     chosen: rasterHeight,
     onChosenChange: setRasterHeight,
-    shut: sidePanel?.shuts.file ?? null,
-    onShutChange:
-      sidePanel && dockedOpen && !campaignMode && subject
-        ? (shut) => sidePanel.setShut('file', shut)
-        : undefined,
+    shut: null,
     total: containerHeight,
     floors: [PANE_FLOOR, PANE_FLOOR],
     preferred: Math.round(containerHeight * DEFAULT_RASTER_HEIGHT_RATIO),
   });
-  const sceneShut = panes.shut === 'start';
-  const rasterShut = panes.shut === 'end';
-  // The file shut on its side by the rule beside it.
-  const fileShut = dockedOpen && sidePanel?.shuts.columns === 'start';
 
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
-  // Beside the statistics it is the scene over the raster, or whichever of
-  // them the divider has left up.
-  const view =
-    subject && !campaignMode
-      ? dockedOpen
-        ? sceneShut
-          ? MODES.Raster
-          : rasterShut
-            ? MODES.Replay
-            : MODES.Split
-        : mode
+  // Docked it is whichever of the raster and the scene are up.
+  const view = docked
+    ? sceneUp
+      ? rasterUp
+        ? MODES.Split
+        : MODES.Replay
+      : MODES.Raster
+    : subject
+      ? mode
       : MODES.Raster;
   const showStatistics = !docked && view === MODES.Statistics && statisticsAvailable;
 
@@ -278,7 +272,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     [populationName]
   );
   const filteredCells =
-    (dockedOpen || showStatistics) && tableCells?.population === populationName
+    (docked || showStatistics) && tableCells?.population === populationName
       ? tableCells.cells
       : null;
   const shownCells = useMemo(() => {
@@ -354,7 +348,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     [populationName]
   );
   const hoveredRow =
-    (dockedOpen || showStatistics) && hoveredCell?.population === populationName
+    (docked || showStatistics) && hoveredCell?.population === populationName
       ? hoveredCell.cell
       : null;
   // A cell clicked in the scene or the raster: pointed out in both, and found
@@ -436,7 +430,11 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   };
 
   // Waits for a replay that works, so the last step never points at a disabled play button.
-  useNextStepOnboarding({ condition: replayable && showScene, tour: spikeReplayTour });
+  // Its steps are the viewer's own views, which docked are panes of the layout's.
+  useNextStepOnboarding({
+    condition: replayable && showScene && !docked,
+    tour: spikeReplayTour,
+  });
 
   // Latches on: see the note above about what unmounting would cost.
   const [sceneMounted, setSceneMounted] = useState(false);
@@ -448,8 +446,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // table's sort and filters, and its plot.
   const [statisticsMounted, setStatisticsMounted] = useState(false);
   useEffect(() => {
-    if (showStatistics || dockedOpen) setStatisticsMounted(true);
-  }, [showStatistics, dockedOpen]);
+    if (showStatistics || docked) setStatisticsMounted(true);
+  }, [showStatistics, docked]);
 
   // A layout effect, seeded by hand: the observer's first report only lands a
   // frame after `observe`, and the split would size its raster pane off a
@@ -529,9 +527,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // Nothing to animate for, and playing on would keep the render loop spinning
   // behind a pane nobody is looking at.
   useEffect(() => {
-    if (view === MODES.Raster || view === MODES.Statistics || fileShut || !replayable)
-      setPlaying(false);
-  }, [view, fileShut, replayable]);
+    if (view === MODES.Raster || view === MODES.Statistics || !replayable) setPlaying(false);
+  }, [view, replayable]);
 
   // The rule is otherwise only pushed by a painted frame, so entering the split
   // paused — which is every time, since leaving it stops playback — would show
@@ -574,19 +571,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       ]
     : [];
 
-  // The raster pane's height, its gutter over it included: shut, a pane is its
-  // bar, and the one it leaves takes the rest. A shut pane's view keeps its
-  // own size out of sight, so nothing in it is squeezed.
-  const splitHeight = sceneShut
-    ? containerHeight - (SHUT_BAR_SIZE + SPLIT_GUTTER_IN_PX)
-    : rasterShut
-      ? SPLIT_GUTTER_IN_PX + SHUT_BAR_SIZE + PANE_INSET_IN_PX
-      : panes.size;
-  // The divider is up whether or not it has shut a pane.
-  const divided = isSplit || panes.shut !== null;
+  const splitHeight = panes.size;
 
-  // One element for wherever the statistics go: the viewer's own panel, or the
-  // results layout's side panel.
+  // Docked, the panel's statistics box holds the plots, which the statistics
+  // view beside the raster portals in, so the two share one tree.
+  const [plotsSlot, setPlotsSlot] = useState<HTMLDivElement | null>(null);
+
+  // One element for wherever the statistics go: under the raster, or the viewer's own panel.
   const statistics =
     circuit && statisticsMounted ? (
       <SpikeStatisticsView
@@ -596,20 +587,20 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         recorded={recorded}
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
-        focusedCell={dockedOpen ? (focusedCell ?? undefined) : undefined}
+        focusedCell={docked ? (focusedCell ?? undefined) : undefined}
         windowTime={currentWindow?.time ?? null}
         windowCells={windowCells}
         onClearWindow={clearRasterWindow}
         heldCell={focusedCell?.nodeId ?? null}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
-        tableOnly={campaignMode}
+        tableOnly={docked ? !plotsUp : false}
+        plotsTarget={docked ? plotsSlot : undefined}
       />
     ) : null;
 
-  const showHeader = !dockedOpen || campaignMode || (showScene && !replayable);
-
-  // Play and the scrubber: under the panes, or beside the statistics in the raster's box.
+  // Play and the scrubber: under the panes, in the raster's box under its
+  // axis, or with the raster out of view, in the scene's.
   const transport = (boxed: boolean) => (
     <TransportBar
       playing={playing}
@@ -633,132 +624,310 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     />
   );
 
+  const spikeCount = recorded && (
+    <span className="whitespace-nowrap text-xs text-neutral-400">
+      {shownCells && `${shownSpikeCount.toLocaleString()} of `}
+      {recorded.timestamps.length.toLocaleString()} spikes
+    </span>
+  );
+
+  const population = populationName && (
+    <div className="flex min-w-0 items-center gap-2">
+      {recorded && (
+        <span
+          className="size-2 shrink-0 rounded-full"
+          style={{
+            background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
+          }}
+        />
+      )}
+      {populations.length > 1 ? (
+        <PopulationSelect
+          variant="chrome"
+          populations={populations}
+          value={populationName}
+          onChange={setChosenPopulationName}
+        />
+      ) : (
+        <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
+          <span className="mr-1 font-normal text-neutral-400">Population</span>
+          {populationName}
+        </span>
+      )}
+      {/* Docked it is with the raster's controls. */}
+      {!docked && spikeCount}
+    </div>
+  );
+
+  const notice = showScene && !replayable && (
+    <span role="status" className="text-xs text-amber-600">
+      {replayNotice(
+        recorded,
+        populationName,
+        circuitConfig?.nodes,
+        configLoading,
+        configError !== null
+      )}
+    </span>
+  );
+
+  const raster = (
+    <div className="relative min-h-0 flex-1">
+      <RasterPlot
+        data={shownData}
+        cellColors={
+          showScene && sceneColors?.population === populationName
+            ? sceneColors.nodeColors
+            : undefined
+        }
+        populationName={populationName}
+        cellCount={cellCount}
+        markerSize={markerSize}
+        playheadRef={isSplit ? playheadRef : undefined}
+        rowOrder={rasterOrder.order}
+        highlightedCell={highlightedCell}
+        onCellClick={circuit ? handleCellClick : undefined}
+        onWindowChange={handleWindowChange}
+        windowResetKey={windowResetKey}
+        onTimeAxisChange={setTimeAxis}
+        timeWindowRequest={timeWindowRequest}
+        events={timeline}
+      />
+      {/* Inside the pane it belongs to, the way the scene's chrome sits in
+      its own: in the split these controls are the raster's alone, and
+      the row above the panes is for what governs both. */}
+      {recorded && recorded.timestamps.length > 0 && (
+        <div className="absolute left-0 top-0 z-10 flex items-center gap-2">
+          <RasterPlotControls
+            markerSize={markerSize}
+            onMarkerSizeChange={setMarkerSize}
+            afterglow={
+              isSplit && replayable
+                ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
+                : undefined
+            }
+          />
+          {circuit && (
+            <PillSelect
+              label="Order by"
+              value={rasterOrder.value}
+              options={rasterOrder.options}
+              onChange={rasterOrder.onChange}
+            />
+          )}
+          <TimeWindowFields
+            from={currentWindow?.time?.[0] ?? data.timeRange.min}
+            to={currentWindow?.time?.[1] ?? data.timeRange.max}
+            min={data.timeRange.min}
+            max={data.timeRange.max}
+            zoomed={currentWindow !== null}
+            onChange={requestTimeWindow}
+            onReset={clearRasterWindow}
+          />
+          {isSplit && replayable && (
+            <PillSelect
+              label="Speed"
+              value={String(speed)}
+              options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+              onChange={(v) => setSpeed(Number(v))}
+            />
+          )}
+          {docked && spikeCount}
+        </div>
+      )}
+      {/* Under the campaign's statistics, the simulation on show is picked over its raster. */}
+      {campaignMode && <div className="absolute top-0 right-0 z-10">{simulationPicker}</div>}
+    </div>
+  );
+
+  // The scene's colour-by is in its corner docked, else in the header row.
+  const scene = sceneMounted && subject && (
+    <CircuitScene
+      {...subject}
+      largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+      active={showScene}
+      features={SCENE_FEATURES}
+      // Only a name the config backs with cells. A name the scene
+      // cannot draw would make it fall back on its own — with no name
+      // it falls back deliberately, to the same default, and the
+      // notice in the header explains what is on show. An MEModel
+      // resolves no populations, so the name means nothing to it.
+      populationName={replayable ? populationName : undefined}
+      // The population above the panes is the one being replayed,
+      // and the spikes' cell indices are relative to it. The
+      // circuit's other populations are not drawn here.
+      showUnselectedPopulations={false}
+      colorByTarget={docked ? undefined : colorBySlot}
+      // It colours the raster too, where every spike in one colour is uniform.
+      colorByNoneLabel="Uniform"
+      shownCells={sceneCells}
+      highlightedCell={highlightedCell ?? undefined}
+      onCellClick={handleCellClick}
+      onNodeColorsChange={setSceneColors}
+      spikes={{
+        data: spikes ?? undefined,
+        timeInMs: seekToMs,
+        onTimeChange: handleTimeChange,
+        playing,
+        onPlayingChange: setPlaying,
+        speed,
+        afterglowInSeconds,
+      }}
+    />
+  );
+
+  const campaignStatistics =
+    campaignMode &&
+    campaignInfo &&
+    sidePanel?.campaignTarget &&
+    createPortal(
+      <CampaignStatisticsView
+        simulations={campaignInfo.simulations}
+        statusMap={campaignInfo.statusMap}
+        activeSimulationId={campaignInfo.activeSimulationId}
+        onSelect={campaignInfo.onSelect}
+        reportPath={reportPath}
+        populationName={populationName}
+        cellCount={cellCount}
+        run={run}
+        cells={sceneCells ?? null}
+        timeWindow={currentWindow?.time ?? null}
+      />,
+      sidePanel.campaignTarget
+    );
+
+  if (docked && sidePanel) {
+    const panelTitles = ['Statistics', '3D View'];
+    return (
+      <div ref={setRoot} className="flex h-full min-h-0 flex-col">
+        <FullscreenPortalScope root={root}>
+          {/* The raster over the table, and while the panel is not up its bar beside them. */}
+          <StackedPanes
+            split="file"
+            header={
+              !dockedOpen && (
+                <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">{population}</div>
+              )
+            }
+            top={{
+              title: 'Raster',
+              keepsSize: true,
+              boxClassName: 'px-3 pt-2',
+              content: (
+                <>
+                  {raster}
+                  {/* The scrubber is under the raster's axis while the scene is up beside it. */}
+                  {isSplit && transport(true)}
+                </>
+              ),
+            }}
+            bottom={
+              statistics && {
+                title: 'Neuron Table',
+                boxClassName: 'px-3 pt-1 pb-2',
+                content: statistics,
+              }
+            }
+            aside={
+              !dockedOpen && (
+                <ShutPaneBar upright title={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
+              )
+            }
+          />
+          {/* The panel beside them: the statistics over the scene. */}
+          {sidePanel.target &&
+            createPortal(
+              <StackedPanes
+                split="panel"
+                top={{
+                  title: 'Statistics',
+                  content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+                }}
+                bottom={{
+                  title: '3D View',
+                  keepsSize: true,
+                  boxClassName: 'overflow-hidden',
+                  content: (
+                    <div
+                      id="spike-replay-scene"
+                      className="relative flex min-h-0 flex-1 flex-col"
+                      onPointerDownCapture={handleScenePointerDown}
+                      onPointerUpCapture={handleScenePointerUp}
+                    >
+                      <div className="relative min-h-0 flex-1">
+                        {scene}
+                        {notice && (
+                          <div className="pointer-events-none absolute top-3 left-14 right-3 z-10">
+                            {notice}
+                          </div>
+                        )}
+                      </div>
+                      {/* With the raster out of view, play and the scrubber are the scene's. */}
+                      {showScene && !isSplit && transport(true)}
+                    </div>
+                  ),
+                }}
+              />,
+              sidePanel.target
+            )}
+          {campaignStatistics}
+          {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
+          {sidePanel.fileStrip &&
+            createPortal(
+              <ShutPaneBar
+                upright
+                title={['Raster', 'Neuron Table']}
+                onOpen={sidePanel.openColumns}
+              />,
+              sidePanel.fileStrip
+            )}
+          {sidePanel.panelStrip &&
+            createPortal(
+              <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+              sidePanel.panelStrip
+            )}
+        </FullscreenPortalScope>
+      </div>
+    );
+  }
+
   return (
     // This root goes fullscreen, not the 3D pane inside it, so the raster and
     // transport bar go with it; the scene is handed no fullscreen button of its own.
     <div ref={setRoot} className="flex h-full min-h-0 flex-col [&:fullscreen]:bg-white">
       <FullscreenPortalScope root={root}>
-        {/* Beside the statistics the view is fixed, the population is picked over them and the
-          colour-by sits in the scene: the row is only for the campaign's picker or a notice. */}
-        {showHeader && (
-          <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3">
-            {!campaignMode && !dockedOpen && (
-              <div className="flex items-center gap-2">
-                <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
-                <FullscreenButton target={root} />
-              </div>
-            )}
-            {populationName && !dockedOpen && (
-              <div className="flex min-w-0 items-center gap-2">
-                {recorded && (
-                  <span
-                    className="size-2 shrink-0 rounded-full"
-                    style={{
-                      background: POPULATION_COLORS[recordedIndex % POPULATION_COLORS.length],
-                    }}
-                  />
-                )}
-                {populations.length > 1 ? (
-                  <PopulationSelect
-                    variant="chrome"
-                    populations={populations}
-                    value={populationName}
-                    onChange={setChosenPopulationName}
-                  />
-                ) : (
-                  <span className="text-primary-9 min-w-0 truncate text-sm font-semibold">
-                    <span className="mr-1 font-normal text-neutral-400">Population</span>
-                    {populationName}
-                  </span>
-                )}
-                {recorded && (
-                  <span className="whitespace-nowrap text-xs text-neutral-400">
-                    {shownCells && `${shownSpikeCount.toLocaleString()} of `}
-                    {recorded.timestamps.length.toLocaleString()} spikes
-                  </span>
-                )}
-              </div>
-            )}
-            {showScene && !replayable && (
-              <span role="status" className="text-xs text-amber-600">
-                {replayNotice(
-                  recorded,
-                  populationName,
-                  circuitConfig?.nodes,
-                  configLoading,
-                  configError !== null
-                )}
-              </span>
-            )}
-            {campaignMode && <div className="ml-auto flex items-center">{simulationPicker}</div>}
-            {subject && !dockedOpen && (
-              <div
-                ref={setColorBySlot}
-                className={classNames('ml-auto flex shrink-0 items-center', !showScene && 'hidden')}
-              />
-            )}
-          </div>
-        )}
+        <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 pt-3">
+          {subject && (
+            <div className="flex items-center gap-2">
+              <ModeToggle id="spike-replay-mode-toggle" options={modeOptions} />
+              <FullscreenButton target={root} />
+            </div>
+          )}
+          {population}
+          {notice}
+          {subject && (
+            <div
+              ref={setColorBySlot}
+              className={classNames('ml-auto flex shrink-0 items-center', !showScene && 'hidden')}
+            />
+          )}
+        </div>
 
-        <div
-          ref={containerRef}
-          className={classNames('relative min-h-0 flex-1', !showHeader && 'mt-3')}
-        >
+        <div ref={containerRef} className="relative min-h-0 flex-1">
           {subject && (
             <div
               id="spike-replay-scene"
               className={classNames(
-                'absolute left-0 right-0 top-0 flex flex-col',
-                // Beside the statistics, a box of its own like theirs.
-                dockedOpen && `${BOX_CLASS} mx-3 overflow-hidden`,
+                'absolute left-0 right-0 top-0',
                 !showScene && 'invisible pointer-events-none'
               )}
-              style={{
-                bottom: divided ? (sceneShut ? panes.size : splitHeight) + SPLIT_GUTTER_IN_PX : 0,
-              }}
+              style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
               aria-hidden={!showScene}
               inert={!showScene || undefined}
               onPointerDownCapture={handleScenePointerDown}
               onPointerUpCapture={handleScenePointerUp}
             >
-              <div className="relative min-h-0 flex-1">
-                {sceneMounted && (
-                  <CircuitScene
-                    {...subject}
-                    largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
-                    active={showScene}
-                    features={SCENE_FEATURES}
-                    // Only a name the config backs with cells. A name the scene
-                    // cannot draw would make it fall back on its own — with no name
-                    // it falls back deliberately, to the same default, and the
-                    // notice in the header explains what is on show. An MEModel
-                    // resolves no populations, so the name means nothing to it.
-                    populationName={replayable ? populationName : undefined}
-                    // The population above the panes is the one being replayed,
-                    // and the spikes' cell indices are relative to it. The
-                    // circuit's other populations are not drawn here.
-                    showUnselectedPopulations={false}
-                    colorByTarget={dockedOpen ? undefined : colorBySlot}
-                    // It colours the raster too, where every spike in one colour is uniform.
-                    colorByNoneLabel="Uniform"
-                    shownCells={sceneCells}
-                    highlightedCell={highlightedCell ?? undefined}
-                    onCellClick={handleCellClick}
-                    onNodeColorsChange={setSceneColors}
-                    spikes={{
-                      data: spikes ?? undefined,
-                      timeInMs: seekToMs,
-                      onTimeChange: handleTimeChange,
-                      playing,
-                      onPlayingChange: setPlaying,
-                      speed,
-                      afterglowInSeconds,
-                    }}
-                  />
-                )}
-              </div>
-              {/* With the raster shut, play and the scrubber are in the scene's box. */}
-              {dockedOpen && rasterShut && transport(true)}
+              {scene}
             </div>
           )}
 
@@ -770,132 +939,27 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               'absolute left-0 right-0 bottom-0 mx-3 pb-3',
               // Two white panes meet along this edge, so without a rule they read
               // as one view with a gap in it. The grab bar rides on top of it.
-              // Beside the statistics each is a box, which sets them apart instead.
-              isSplit && !dockedOpen && 'border-t border-neutral-2',
+              isSplit && 'border-t border-neutral-2',
               !showRaster && 'invisible pointer-events-none'
             )}
-            style={
-              divided
-                ? {
-                    height: rasterShut ? panes.size : splitHeight,
-                    paddingTop: SPLIT_GUTTER_IN_PX,
-                  }
-                : { top: 0 }
-            }
+            style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
             aria-hidden={!showRaster}
             inert={!showRaster || undefined}
           >
-            <div
-              className={classNames(
-                'flex h-full min-h-0 flex-col',
-                dockedOpen && `${BOX_CLASS} px-3 pt-2`
-              )}
-            >
-              <div className="relative min-h-0 flex-1">
-                <RasterPlot
-                  data={shownData}
-                  cellColors={
-                    showScene && sceneColors?.population === populationName
-                      ? sceneColors.nodeColors
-                      : undefined
-                  }
-                  populationName={populationName}
-                  cellCount={cellCount}
-                  markerSize={markerSize}
-                  playheadRef={isSplit ? playheadRef : undefined}
-                  rowOrder={rasterOrder.order}
-                  highlightedCell={highlightedCell}
-                  onCellClick={circuit ? handleCellClick : undefined}
-                  onWindowChange={handleWindowChange}
-                  windowResetKey={windowResetKey}
-                  onTimeAxisChange={setTimeAxis}
-                  timeWindowRequest={timeWindowRequest}
-                  events={timeline}
-                />
-                {/* Inside the pane it belongs to, the way the scene's chrome sits in
-                its own: in the split these controls are the raster's alone, and
-                the row above the panes is for what governs both. */}
-                {recorded && recorded.timestamps.length > 0 && (
-                  <div className="absolute left-0 top-0 z-10 flex items-center gap-2">
-                    <RasterPlotControls
-                      markerSize={markerSize}
-                      onMarkerSizeChange={setMarkerSize}
-                      afterglow={
-                        isSplit && replayable
-                          ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
-                          : undefined
-                      }
-                    />
-                    {circuit && (
-                      <PillSelect
-                        label="Order by"
-                        value={rasterOrder.value}
-                        options={rasterOrder.options}
-                        onChange={rasterOrder.onChange}
-                      />
-                    )}
-                    <TimeWindowFields
-                      from={currentWindow?.time?.[0] ?? data.timeRange.min}
-                      to={currentWindow?.time?.[1] ?? data.timeRange.max}
-                      min={data.timeRange.min}
-                      max={data.timeRange.max}
-                      zoomed={currentWindow !== null}
-                      onChange={requestTimeWindow}
-                      onReset={clearRasterWindow}
-                    />
-                    {isSplit && replayable && (
-                      <PillSelect
-                        label="Speed"
-                        value={String(speed)}
-                        options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
-                        onChange={(v) => setSpeed(Number(v))}
-                      />
-                    )}
-                    {/* Beside the statistics, where the row above the scene is gone. */}
-                    {dockedOpen && (
-                      <span className="whitespace-nowrap text-xs text-neutral-400">
-                        {shownCells && `${shownSpikeCount.toLocaleString()} of `}
-                        {recorded.timestamps.length.toLocaleString()} spikes
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              {/* Beside the statistics the scrubber is in the raster's box, under its axis. */}
-              {dockedOpen && isSplit && showScene && transport(true)}
-            </div>
-          </div>
-
-          {/* A shut pane's bar, in its place. */}
-          {sceneShut && (
-            <ShutPaneBar
-              title="3D View"
-              className="absolute top-0 right-3 left-3"
-              onOpen={panes.open}
-            />
-          )}
-          {rasterShut && (
-            <ShutPaneBar
-              title="Raster"
-              className="absolute right-3 bottom-3 left-3"
-              onOpen={panes.open}
-            />
-          )}
-          {divided && (
-            // Over the raster's pane, or its bar. The floors live in the split,
-            // which knows when the panel is too short to honour them; a floor
-            // here as well would stop the drag where the split relents.
-            <div className="absolute right-3 left-3" style={{ bottom: splitHeight }}>
+            {isSplit && (
+              // The floor lives in the split, which knows when the panel is too
+              // short to honour it. A floor here as well would stop the drag at
+              // exactly the heights where the split relents.
               <PaneResizeHandle
                 containerRef={containerRef}
                 minHeight={0}
                 onResize={panes.onResize}
-                onDragChange={panes.onDragChange}
               />
-            </div>
-          )}
+            )}
+            <div className="flex h-full min-h-0 flex-col">{raster}</div>
+          </div>
 
-          {!docked && statistics && (
+          {statistics && (
             <div
               className={classNames(
                 'absolute inset-0',
@@ -909,40 +973,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           )}
         </div>
 
-        {docked && statistics && sidePanel?.target && createPortal(statistics, sidePanel.target)}
-        {campaignMode &&
-          campaignInfo &&
-          sidePanel?.campaignTarget &&
-          createPortal(
-            <CampaignStatisticsView
-              simulations={campaignInfo.simulations}
-              statusMap={campaignInfo.statusMap}
-              activeSimulationId={campaignInfo.activeSimulationId}
-              onSelect={campaignInfo.onSelect}
-              reportPath={reportPath}
-              populationName={populationName}
-              cellCount={cellCount}
-              run={run}
-              cells={sceneCells ?? null}
-              timeWindow={currentWindow?.time ?? null}
-            />,
-            sidePanel.campaignTarget
-          )}
-
-        {/* Beside the statistics it is in the raster's box, or the scene's. */}
-        {showScene && !dockedOpen && transport(false)}
-
-        {/* With the rule shut over the file, one bar naming its panes, in the strip it leaves */}
-        {dockedOpen &&
-          sidePanel?.fileStrip &&
-          createPortal(
-            <ShutPaneBar
-              upright
-              title={campaignMode ? ['Raster'] : ['3D View', 'Raster']}
-              onOpen={sidePanel.openColumns}
-            />,
-            sidePanel.fileStrip
-          )}
+        {showScene && transport(false)}
       </FullscreenPortalScope>
     </div>
   );

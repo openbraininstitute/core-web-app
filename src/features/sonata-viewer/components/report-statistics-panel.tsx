@@ -2,6 +2,7 @@
 
 import { Spin } from 'antd';
 import { useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import {
@@ -44,16 +45,21 @@ type Props = {
   summary: ReactNode;
   /** The table of the recorded cells, as the viewer drives it. */
   table: TableProps;
-  /** Only the table, where the campaign's statistics have the plots' place. */
+  /** Only the table, where the campaign's statistics have the plots' place, or they are out of view. */
   tableOnly?: boolean;
+  /**
+   * Where the plots go when the host lays them out apart from the table, as
+   * the results layout's panel does; only the table renders in place then.
+   */
+  plotsTarget?: HTMLElement | null;
   /** The plot over time shown at first: the cells' mean. */
   timeCourse?: TimeCourse;
 };
 
 /**
- * A report's statistics in the results layout's side panel, beside its
- * traces: their distributions over the table of its recorded cells, each
- * cell's statistics pinned to the table's right.
+ * A report's statistics: their distributions, and the table of its recorded
+ * cells with each cell's statistics pinned to its right, the plots over the
+ * table or wherever the host puts them.
  */
 export function ReportStatisticsPanel({
   statistics,
@@ -68,6 +74,7 @@ export function ReportStatisticsPanel({
   summary,
   table,
   tableOnly = false,
+  plotsTarget,
   timeCourse,
 }: Props) {
   const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
@@ -90,47 +97,51 @@ export function ReportStatisticsPanel({
       : undefined;
   }, [statistics]);
 
-  return (
-    <PlotsOverTable
-      tableOnly={tableOnly}
-      plots={
-        <StatisticsPlots
-          statistics={statistics}
-          values={values}
-          cells={cells}
-          columns={columns}
-          ready={ready}
-          sessionKey={sessionKey}
-          getColumn={getColumn}
-          color={color}
-          spanMs={spanMs}
-          initialStatistic="mean"
-          summary={values && summary}
-          hidden={tableOnly}
-          timeCourse={timeCourse}
-        />
-      }
-      table={
-        <div ref={tableElement} className="flex h-full min-h-0 flex-col">
-          {values ? (
-            <ReportNodesTable
-              {...table}
-              pinnedColumns={pinnedColumns}
-              pinnedVersion={values}
-              onPinnedResize={(width) => {
-                if (tableWidth > 0) setChosenShare(width / tableWidth);
-              }}
-              quickFilters={quickFilters}
-            />
-          ) : (
-            <div className="flex h-full min-h-0 items-center justify-center">
-              <Spin tip="Computing statistics…">
-                <div className="size-12" />
-              </Spin>
-            </div>
-          )}
-        </div>
-      }
+  const plots = (
+    <StatisticsPlots
+      statistics={statistics}
+      values={values}
+      cells={cells}
+      columns={columns}
+      ready={ready}
+      sessionKey={sessionKey}
+      getColumn={getColumn}
+      color={color}
+      spanMs={spanMs}
+      initialStatistic="mean"
+      summary={values && summary}
+      hidden={tableOnly}
+      timeCourse={timeCourse}
     />
   );
+  const tableView = (
+    <div ref={tableElement} className="flex h-full min-h-0 flex-col">
+      {values ? (
+        <ReportNodesTable
+          {...table}
+          pinnedColumns={pinnedColumns}
+          pinnedVersion={values}
+          onPinnedResize={(width) => {
+            if (tableWidth > 0) setChosenShare(width / tableWidth);
+          }}
+          quickFilters={quickFilters}
+        />
+      ) : (
+        <div className="flex h-full min-h-0 items-center justify-center">
+          <Spin tip="Computing statistics…">
+            <div className="size-12" />
+          </Spin>
+        </div>
+      )}
+    </div>
+  );
+  if (plotsTarget !== undefined) {
+    return (
+      <>
+        {tableView}
+        {plotsTarget && createPortal(plots, plotsTarget)}
+      </>
+    );
+  }
+  return <PlotsOverTable tableOnly={tableOnly} plots={plots} table={tableView} />;
 }

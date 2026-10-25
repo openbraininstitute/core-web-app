@@ -53,7 +53,9 @@ export type ResultsSidePanel = {
   setOpen: (open: boolean) => void;
   /**
    * Whether the campaign's statistics are up, in a region of their own over
-   * the file and the panel, with `campaignTarget` to portal them into.
+   * the file, with `campaignTarget` to portal them into. The file then has the
+   * width under them: the panel's statistics are the simulation's, which the
+   * campaign's take the place of.
    */
   campaign: boolean;
   campaignTarget: HTMLElement | null;
@@ -240,14 +242,19 @@ export function ResultsLayout({
     floors: [MIN_SIDE_WIDTH, MIN_SIDE_WIDTH],
     preferred: span - (ownWidth + gap / 2),
   });
-  const fileShut = open && columns.shut === 'start';
-  const panelShut = open && columns.shut === 'end';
+  // The panel is beside the file while it is up, unless the campaign's statistics are.
+  const beside = open && !campaign;
+  const fileShut = beside && columns.shut === 'start';
+  const panelShut = beside && columns.shut === 'end';
   const openRule = span - columns.size;
-  const rule = fileShut
-    ? FILE_STRIP_WIDTH + gap / 2
-    : panelShut
-      ? span - PANEL_STRIP_WIDTH
-      : openRule;
+  // Where the file ends: past the span's end, with no panel beside it.
+  const rule = !beside
+    ? span + gap / 2
+    : fileShut
+      ? FILE_STRIP_WIDTH + gap / 2
+      : panelShut
+        ? span - PANEL_STRIP_WIDTH
+        : openRule;
   const slide = sliding && !dragging && SLIDE;
 
   const moved = { translate: open ? `${-page}px 0` : '0px 0' };
@@ -371,19 +378,19 @@ export function ResultsLayout({
           />
         )}
       </div>
-      {/* the panel; closed or shut, it waits past the span's end */}
+      {/* the panel; closed, shut or under the campaign's, it waits past the span's end */}
       <div
-        inert={!open || panelShut || undefined}
+        inert={!beside || panelShut || undefined}
         style={{
-          width: span - (panelShut ? openRule : rule),
-          translate: `${open && !panelShut ? rule : span + gap / 2}px 0`,
+          width: span - (beside && !panelShut ? rule : openRule),
+          translate: `${beside && !panelShut ? rule : span + gap / 2}px 0`,
           marginTop: contentTop,
         }}
         className={cn(
           // No rule: the space between the file and the panel, and the grab bar in it, part them.
           'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
           slide,
-          (!open || panelShut) && 'pointer-events-none opacity-0'
+          (!beside || panelShut) && 'pointer-events-none opacity-0'
         )}
       >
         {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
@@ -418,12 +425,12 @@ export function ResultsLayout({
       </div>
       {/* The rule's grab bar, on its own so it stays between whichever of the two is shut */}
       <div
-        inert={!open || undefined}
-        style={{ translate: `${open ? rule : span + gap / 2}px 0`, marginTop: contentTop }}
+        inert={!beside || undefined}
+        style={{ translate: `${rule}px 0`, marginTop: contentTop }}
         className={cn(
           'relative z-10 col-start-1 col-end-4 row-start-1 w-0 justify-self-start',
           slide,
-          !open && 'pointer-events-none opacity-0'
+          !beside && 'pointer-events-none opacity-0'
         )}
       >
         <PaneSideResizeHandle

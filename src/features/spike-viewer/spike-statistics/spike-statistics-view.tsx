@@ -4,6 +4,7 @@ import { RiCloseLine, RiZoomInLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
@@ -42,8 +43,13 @@ type Props = {
   /** The run's span, in ms, which the rates are over. */
   timeRange: { min: number; max: number };
   color: string;
-  /** Only the table, where something else - the campaign's statistics - has the plots' place. */
+  /** Only the table, where something else - the campaign's statistics - has the plots' place, or they are out of view. */
   tableOnly?: boolean;
+  /**
+   * Where the plots go when the host lays them out apart from the table, as
+   * the results layout's panel does; only the table renders in place then.
+   */
+  plotsTarget?: HTMLElement | null;
   /**
    * The cells a raster and replay beside the table should show, by node index,
    * once worked out: the ticked rows, else those the filter keeps; null for all.
@@ -110,6 +116,7 @@ export function SpikeStatisticsView({
   timeRange,
   color,
   tableOnly = false,
+  plotsTarget,
   onShownCellsChange,
   onHoveredCellChange,
   focusedCell,
@@ -429,31 +436,34 @@ export function SpikeStatisticsView({
     </div>
   );
 
-  // One tree either way, the plots only left out: rebuilt elsewhere, the table
-  // would lose its filters and its measured width.
-  return (
-    <PlotsOverTable
-      tableOnly={tableOnly}
-      table={table}
-      plots={
-        <StatisticsPlots
-          statistics={SPIKE_STATISTICS}
-          values={statsReady ? registered : null}
-          cells={plotCells}
-          columns={tableColumns}
-          ready={ready}
-          sessionKey={sessionKey}
-          getColumn={getColumn}
-          color={color}
-          spanMs={windowTime ? windowTime[1] - windowTime[0] : timeRange.max - timeRange.min}
-          initialStatistic="rate"
-          summary={summary}
-          hidden={tableOnly}
-          timeCourse={timeCourse}
-        />
-      }
+  const plots = (
+    <StatisticsPlots
+      statistics={SPIKE_STATISTICS}
+      values={statsReady ? registered : null}
+      cells={plotCells}
+      columns={tableColumns}
+      ready={ready}
+      sessionKey={sessionKey}
+      getColumn={getColumn}
+      color={color}
+      spanMs={windowTime ? windowTime[1] - windowTime[0] : timeRange.max - timeRange.min}
+      initialStatistic="rate"
+      summary={summary}
+      hidden={tableOnly}
+      timeCourse={timeCourse}
     />
   );
+  if (plotsTarget !== undefined) {
+    return (
+      <>
+        {table}
+        {plotsTarget && createPortal(plots, plotsTarget)}
+      </>
+    );
+  }
+  // One tree either way, the plots only left out: rebuilt elsewhere, the table
+  // would lose its filters and its measured width.
+  return <PlotsOverTable tableOnly={tableOnly} table={table} plots={plots} />;
 }
 
 /** What the raster's zoom narrows the table to, and a way back to everything. */

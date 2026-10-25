@@ -1,7 +1,7 @@
 import { RiBox3Line } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -9,12 +9,7 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import {
-  PaneResizeHandle,
-  SHUT_BAR_SIZE,
-  ShutPaneBar,
-  useShuttingSplit,
-} from '@/features/circuit-viewer/pane-resize-handle';
+import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
 import ReportDetailsView, {
@@ -34,11 +29,9 @@ import { useReportPopulation } from '@/features/spike-viewer/report-populations'
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
+import { StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
-import {
-  BOX_CLASS,
-  TABLE_BOX_CLASS,
-} from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -80,19 +73,6 @@ const voltageSceneAtom = atom(false);
  * outlast a change of simulation, as the spike statistics' ticks do.
  */
 const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
-/** The scene's share of the viewer beside the statistics, until its edge is dragged. */
-const DOCKED_SCENE_SHARE = 0.5;
-/** What the scene keeps beside the statistics, the space under it included. */
-const MIN_DOCKED_SCENE = 160;
-/** What the traces keep under the scene beside the statistics, the space over them included. */
-const MIN_DOCKED_TRACES = 260;
-/** Between the scene and the traces beside the statistics: the grab bar's half, and the gap's. */
-const DOCKED_GUTTER = 12;
-/**
- * The traces' room under the scene beside the statistics, as last dragged:
- * kept for the next file, as a pick from the bar mounts it anew.
- */
-const dockedTracesAtom = atom<number | null>(null);
 /** Frames the scene's recording is thinned to: smooth enough to play, small enough to hold. */
 const SCENE_FRAMES = 2000;
 const DEFAULT_SCENE_HEIGHT = 280;
@@ -103,10 +83,13 @@ export default function SonataViewer({
   entity,
   assetId,
   ctx,
+  withStatistics = false,
 }: {
   entity: ISimulationResult;
   assetId?: string;
   ctx?: WorkspaceContext;
+  /** Whether the report's statistics open beside it in a results layout, as a voltage report's do. */
+  withStatistics?: boolean;
 }) {
   const { metadata, worker, asset, error, isLoading } = useSonataReport({ entity, assetId, ctx });
 
@@ -137,6 +120,7 @@ export default function SonataViewer({
       circuit={circuit}
       circuitConfig={circuitConfig}
       reportPath={asset?.path}
+      withStatistics={withStatistics}
     />
   );
 }
@@ -157,6 +141,7 @@ export function SonataReportView({
   circuit,
   circuitConfig,
   reportPath,
+  withStatistics = false,
 }: {
   metadata: SonataReportMetadata;
   worker: Remote<SonataWorkerImpl>;
@@ -165,6 +150,8 @@ export function SonataReportView({
   circuitConfig: ParsedCircuitConfig | undefined;
   /** The report's path, by which the population chosen for it is shared with the picker over the statistics. */
   reportPath?: string;
+  /** Whether its statistics open beside it in a results layout. */
+  withStatistics?: boolean;
 }) {
   const { simulationPicker, campaign: campaignInfo } = useSimulation();
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
@@ -206,25 +193,36 @@ export function SonataReportView({
   );
   // A voltage report, played over the circuit above its traces, which mark where it is.
   const voltage = variableName === undefined && population?.dataUnits.toLowerCase() === 'mv';
-  // Inside a results layout the statistics open beside the viewer, as a spike
-  // report's do: the scene over the traces here, their plots over the table there.
+  // Inside a results layout the traces are over the table, as a spike report's
+  // raster is, and the panel beside them, once up, holds the statistics over
+  // the scene. Either column can be shut on its side by the rule between
+  // them, and any of the four panes by its own bar.
   const sidePanel = useResultsSidePanel();
-  const panelTarget = circuit !== undefined && sidePanel?.open ? sidePanel.target : null;
-  const docked = panelTarget !== null;
-  // With the campaign's statistics up over them, the traces of the simulation on
-  // show, picked here, and the panel beside them only its table.
-  const campaignMode = docked && (sidePanel?.campaign ?? false);
+  const docked = circuit !== undefined && withStatistics && sidePanel !== null;
+  const dockedOpen = docked && (sidePanel?.open ?? false);
+  // With the campaign's statistics up over them, the traces and the table of
+  // the simulation on show, picked here, with the width to themselves.
+  const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
+  const beside = dockedOpen && !campaignMode;
+  const shuts = sidePanel?.shuts;
+  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
   const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
   const showScene =
-    (sceneOn || docked) && !campaignMode && voltage && circuit !== undefined && status === 'ready';
+    (docked ? sceneUp : sceneOn) && voltage && circuit !== undefined && status === 'ready';
+  // Docked the scene stays once it has been up: building it again costs the circuit's download.
+  const [sceneMounted, setSceneMounted] = useState(false);
+  useEffect(() => {
+    if (showScene) setSceneMounted(true);
+  }, [showScene]);
   const timeCursor = useMemo(() => createTimeCursor(), []);
   const [sceneData, setSceneData] = useState<{
     population: string;
     frames: CellFrames;
     range: [number, number];
   }>();
-  // The frames the scene plays, wanted too beside the statistics, whose mean is drawn from them.
-  const wantFrames = showScene || (docked && !campaignMode);
+  // The frames the scene plays, wanted too by the statistics, whose mean is drawn from them.
+  const wantFrames = showScene || plotsUp;
   useEffect(() => {
     if (!wantFrames || !populationName || sceneData?.population === populationName) return;
     let cancelled = false;
@@ -514,43 +512,9 @@ export function SonataReportView({
     [recordedNodes, togglePick]
   );
 
-  // Beside the statistics the scene takes a share of the viewer, until its edge is dragged.
-  const [dockRoot, setDockRoot] = useState<HTMLDivElement | null>(null);
-  const [dockHeight, setDockHeight] = useState(0);
-  useLayoutEffect(() => {
-    if (!dockRoot) return;
-    setDockHeight(dockRoot.getBoundingClientRect().height);
-    const observer = new ResizeObserver(([entry]) => setDockHeight(entry.contentRect.height));
-    observer.observe(dockRoot);
-    return () => observer.disconnect();
-  }, [dockRoot]);
-  const [chosenDockedTraces, setChosenDockedTraces] = useAtom(dockedTracesAtom);
-  // The grab bar can shut either into a bar, which the layout keeps, as it
-  // keeps the panel up, across the files on show.
-  const panes = useShuttingSplit({
-    chosen: chosenDockedTraces,
-    onChosenChange: setChosenDockedTraces,
-    shut: sidePanel?.shuts.file ?? null,
-    onShutChange:
-      sidePanel && docked && showScene ? (shut) => sidePanel.setShut('file', shut) : undefined,
-    total: dockHeight,
-    floors: [MIN_DOCKED_SCENE, MIN_DOCKED_TRACES],
-    preferred: Math.round(dockHeight * (1 - DOCKED_SCENE_SHARE)),
-  });
-  const sceneShut = panes.shut === 'start';
-  const tracesShut = panes.shut === 'end';
-  // The file shut on its side by the rule beside it.
-  const fileShut = docked && sidePanel?.shuts.columns === 'start';
-  // The scene's room, the space under it included: shut, a pane is its bar,
-  // and the other takes the rest. The scene keeps its own size out of sight.
-  const openSceneHeight = dockHeight - panes.size;
-  const dockedSceneHeight = sceneShut
-    ? SHUT_BAR_SIZE + DOCKED_GUTTER
-    : tracesShut
-      ? dockHeight - (SHUT_BAR_SIZE + DOCKED_GUTTER)
-      : openSceneHeight;
-  // What the traces mark: where the scene is, while it is on show.
-  const sceneLive = showScene && !sceneShut;
+  // Docked, the panel's statistics box holds the plots, which the statistics
+  // under the traces portal in, so the two share one tree.
+  const [plotsSlot, setPlotsSlot] = useState<HTMLDivElement | null>(null);
 
   if (!population) {
     return <Empty className="p-2em" description="This report recorded no population" />;
@@ -569,7 +533,7 @@ export function SonataReportView({
   );
 
   const scene =
-    showScene && circuit && populationName ? (
+    (docked ? sceneMounted : showScene) && circuit && populationName ? (
       <VoltageScene
         circuit={circuit}
         populationName={populationName}
@@ -581,7 +545,7 @@ export function SonataReportView({
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : undefined}
         onCellClick={handleSceneCellClick}
         bare={docked}
-        active={sceneLive && !fileShut}
+        active={showScene}
       />
     ) : null;
 
@@ -596,7 +560,7 @@ export function SonataReportView({
           picked={pickedTraces}
           hovered={hoveredTraces}
           variableName={variableName}
-          timeCursor={sceneLive ? timeCursor : undefined}
+          timeCursor={showScene ? timeCursor : undefined}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -630,7 +594,7 @@ export function SonataReportView({
                   picked={group.picked}
                   hovered={group.hovered}
                   variableName={variableName}
-                  timeCursor={sceneLive ? timeCursor : undefined}
+                  timeCursor={showScene ? timeCursor : undefined}
                 />
               </ErrorBoundary>
             </WhenNearView>
@@ -658,107 +622,126 @@ export function SonataReportView({
           : 'Tick rows in the table below to pick which cells to compare',
   };
 
-  if (panelTarget && table) {
+  if (docked && table && sidePanel) {
     const plotted = plotCells ? plotCells.length : population.nodeCount;
     const tracesTitle = voltage ? 'Voltage traces' : 'Traces';
+    const panelTitles = voltage ? ['Statistics', '3D View'] : ['Statistics'];
     return (
-      // The quadrants a spike report's statistics make: the scene over the traces
-      // here, the plots over the table in the panel beside them.
-      <div
-        ref={setDockRoot}
-        className="flex h-full min-h-0 flex-col gap-[12px] pt-3 pr-3 pb-3 pl-4"
-      >
-        {/* Each a box, as the statistics beside them are, the grab bar in the space between. */}
-        {scene && (
-          <div
-            ref={sceneBoxRef}
-            className="relative shrink-0 pb-[12px]"
-            style={{ height: dockedSceneHeight }}
-          >
-            {sceneShut && <ShutPaneBar title="3D View" className="w-full" onOpen={panes.open} />}
-            {/* Shut, it keeps its size out of sight, so nothing in it is squeezed. */}
-            <div
-              className={cn(
-                BOX_CLASS,
-                'px-2 pt-2',
-                sceneShut ? 'invisible absolute inset-x-0 top-0' : 'h-full'
-              )}
-              style={sceneShut ? { height: openSceneHeight - DOCKED_GUTTER } : undefined}
-            >
-              {scene}
-            </div>
-            <PaneResizeHandle
-              containerRef={sceneBoxRef}
-              minHeight={0}
-              onResize={(sceneRoom) => panes.onResize(dockHeight - sceneRoom)}
-              onDragChange={panes.onDragChange}
-              edge="bottom"
-            />
-          </div>
-        )}
-        {campaignMode && (
-          <div className="flex shrink-0 items-center justify-end">{simulationPicker}</div>
-        )}
-        {tracesShut && <ShutPaneBar title={tracesTitle} className="w-full" onOpen={panes.open} />}
-        {/* The population is picked over the statistics; the traces' own controls sit with them. */}
-        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2', tracesShut && 'hidden')}>
-          <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
-            {groupSelect}
-            <span className="whitespace-nowrap text-xs text-neutral-400">
-              {population.nodeCount.toLocaleString()}{' '}
-              {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
-            </span>
-          </div>
-          {traces}
-        </div>
-        {createPortal(
-          <ReportStatisticsPanel
-            key={population.name}
-            tableOnly={campaignMode}
-            timeCourse={timeCourse}
-            statistics={statistics}
-            values={statisticValues}
-            cells={plotCells}
-            columns={tableColumns}
-            ready={status === 'ready'}
-            sessionKey={sessionKey}
-            getColumn={getColumn}
-            color={CHART_LINE_COLOR}
-            spanMs={population.timeConfig.endTime - population.timeConfig.startTime}
-            summary={
-              <span className="whitespace-nowrap text-xs text-neutral-400">
-                {plotted.toLocaleString()} {plotted === 1 ? 'cell' : 'cells'}
-                {pickedCells.length > 0
-                  ? ' ticked'
-                  : visibleTraces
-                    ? ' in the table’s filter'
-                    : ' recorded'}
-              </span>
-            }
-            table={{
-              ...table,
-              reset: {
-                picked: pickedCells.length > 0,
-                onReset: () => setPicks({ key: pickKey, cells: NO_PICKS }),
-              },
-              focusRow: focusedRow,
-            }}
-          />,
-          panelTarget
-        )}
-        {/* With the rule shut over the file, one bar naming its panes, in the strip it leaves */}
-        {sidePanel?.fileStrip &&
+      <>
+        {/* The traces over the table, and while the panel is not up its bar beside them. */}
+        <StackedPanes
+          split="file"
+          header={
+            !dockedOpen && (
+              <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
+                <PopulationHeader
+                  populations={metadata.populations}
+                  population={population}
+                  onChange={setChosenPopulation}
+                  counted={false}
+                />
+                {simulationPicker}
+              </div>
+            )
+          }
+          top={{
+            title: tracesTitle,
+            boxClassName: 'p-2',
+            content: (
+              <>
+                <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
+                  {groupSelect}
+                  <span className="whitespace-nowrap text-xs text-neutral-400">
+                    {population.nodeCount.toLocaleString()}{' '}
+                    {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
+                  </span>
+                  {/* Under the campaign's statistics, the simulation on show is picked over its traces. */}
+                  {campaignMode && <div className="ml-auto">{simulationPicker}</div>}
+                </div>
+                {traces}
+              </>
+            ),
+          }}
+          bottom={{
+            title: 'Neuron Table',
+            boxClassName: 'px-3 pt-1 pb-2',
+            content: (
+              <ReportStatisticsPanel
+                key={population.name}
+                tableOnly={!plotsUp}
+                plotsTarget={plotsSlot}
+                timeCourse={timeCourse}
+                statistics={statistics}
+                values={statisticValues}
+                cells={plotCells}
+                columns={tableColumns}
+                ready={status === 'ready'}
+                sessionKey={sessionKey}
+                getColumn={getColumn}
+                color={CHART_LINE_COLOR}
+                spanMs={population.timeConfig.endTime - population.timeConfig.startTime}
+                summary={
+                  <span className="whitespace-nowrap text-xs text-neutral-400">
+                    {plotted.toLocaleString()} {plotted === 1 ? 'cell' : 'cells'}
+                    {pickedCells.length > 0
+                      ? ' ticked'
+                      : visibleTraces
+                        ? ' in the table’s filter'
+                        : ' recorded'}
+                  </span>
+                }
+                table={{
+                  ...table,
+                  reset: {
+                    picked: pickedCells.length > 0,
+                    onReset: () => setPicks({ key: pickKey, cells: NO_PICKS }),
+                  },
+                  focusRow: focusedRow,
+                }}
+              />
+            ),
+          }}
+          aside={
+            !dockedOpen && (
+              <ShutPaneBar upright title={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
+            )
+          }
+        />
+        {/* The panel beside them: the statistics over the scene. */}
+        {sidePanel.target &&
+          createPortal(
+            <StackedPanes
+              split="panel"
+              top={{
+                title: 'Statistics',
+                content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+              }}
+              bottom={
+                voltage
+                  ? { title: '3D View', keepsSize: true, boxClassName: 'px-2 pt-2', content: scene }
+                  : null
+              }
+            />,
+            sidePanel.target
+          )}
+        {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
+        {sidePanel.fileStrip &&
           createPortal(
             <ShutPaneBar
               upright
-              title={scene ? ['3D View', tracesTitle] : [tracesTitle]}
+              title={[tracesTitle, 'Neuron Table']}
               onOpen={sidePanel.openColumns}
             />,
             sidePanel.fileStrip
           )}
+        {sidePanel.panelStrip &&
+          createPortal(
+            <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+            sidePanel.panelStrip
+          )}
         {campaignMode &&
           campaignInfo &&
-          sidePanel?.campaignTarget &&
+          sidePanel.campaignTarget &&
           createPortal(
             <ReportCampaignView
               simulations={campaignInfo.simulations}
@@ -774,7 +757,7 @@ export function SonataReportView({
             />,
             sidePanel.campaignTarget
           )}
-      </div>
+      </>
     );
   }
 
@@ -855,10 +838,13 @@ function PopulationHeader({
   populations,
   population,
   onChange,
+  counted = true,
 }: {
   populations: PopulationMetadata[];
   population: PopulationMetadata;
   onChange: (name: string) => void;
+  /** With how many cells it recorded, unless the traces say so themselves. */
+  counted?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -875,10 +861,12 @@ function PopulationHeader({
           {population.name}
         </span>
       )}
-      <span className="whitespace-nowrap text-xs text-neutral-400">
-        {population.nodeCount.toLocaleString()} {population.nodeCount === 1 ? 'cell' : 'cells'}{' '}
-        recorded
-      </span>
+      {counted && (
+        <span className="whitespace-nowrap text-xs text-neutral-400">
+          {population.nodeCount.toLocaleString()} {population.nodeCount === 1 ? 'cell' : 'cells'}{' '}
+          recorded
+        </span>
+      )}
     </div>
   );
 }

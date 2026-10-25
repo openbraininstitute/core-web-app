@@ -274,6 +274,7 @@ function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
       entity={entity as ISimulationResult}
       assetId={asset.id}
       ctx={context}
+      withStatistics={hasStatistics(file)}
     />
   );
 }
