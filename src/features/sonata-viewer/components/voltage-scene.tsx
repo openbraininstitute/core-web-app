@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { SPEEDS } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { Button } from '@/ui/molecules/button';
@@ -97,6 +98,8 @@ export function VoltageScene({
   const [playing, setPlaying] = useState(false);
   const [frame, setFrame] = useState(0);
   const recoloredAt = useRef(0);
+  const sceneTime = useSceneTime(timeRef);
+  const showSceneTime = sceneTime.show;
 
   const frameAt = useCallback(
     (timeInMs: number) =>
@@ -110,6 +113,7 @@ export function VoltageScene({
       timeRef.current = timeInMs;
       scrubberRef.current?.(timeInMs);
       timeCursor.set(timeInMs);
+      showSceneTime(timeInMs);
       if (readoutRef.current) readoutRef.current.textContent = `${timeInMs.toFixed(1)} ms`;
       const now = performance.now();
       if (recolorNow || now - recoloredAt.current >= RECOLOR_MS) {
@@ -117,7 +121,7 @@ export function VoltageScene({
         setFrame(frameAt(timeInMs));
       }
     },
-    [timeCursor, frameAt]
+    [timeCursor, frameAt, showSceneTime]
   );
   // The cursor leaves the traces with the scene.
   useEffect(() => () => timeCursor.set(null), [timeCursor]);
@@ -266,6 +270,7 @@ export function VoltageScene({
           </div>
         )}
         {valueRange && <RampLegend range={valueRange} units={units} />}
+        {frames && <SceneTime labelRef={sceneTime.ref} />}
       </div>
       {docked ? (
         transportTarget && active && createPortal(tracesTransport, transportTarget)

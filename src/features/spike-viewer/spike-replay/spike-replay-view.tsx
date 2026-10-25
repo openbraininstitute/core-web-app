@@ -23,6 +23,7 @@ import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statis
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
+import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
@@ -500,13 +501,20 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   useEffect(() => {
     playEndRef.current = playTo;
   });
-  const handleTimeChange = useCallback((timeInMs: number) => {
-    liveTimeRef.current = timeInMs;
-    playheadRef.current?.(timeInMs);
-    scrubberRef.current?.(timeInMs);
-    setSceneLive(true);
-    if (timeInMs >= playEndRef.current) setPlaying(false);
-  }, []);
+  // The time over the 3D view, moved on the DOM with the playhead.
+  const sceneTime = useSceneTime(liveTimeRef);
+  const showSceneTime = sceneTime.show;
+  const handleTimeChange = useCallback(
+    (timeInMs: number) => {
+      liveTimeRef.current = timeInMs;
+      playheadRef.current?.(timeInMs);
+      scrubberRef.current?.(timeInMs);
+      showSceneTime(timeInMs);
+      setSceneLive(true);
+      if (timeInMs >= playEndRef.current) setPlaying(false);
+    },
+    [showSceneTime]
+  );
 
   useEffect(() => {
     if (!playing) return;
@@ -536,8 +544,9 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       liveTimeRef.current = timeInMs;
       playheadRef.current?.(timeInMs);
       scrubberRef.current?.(timeInMs);
+      showSceneTime(timeInMs);
     },
-    [timeMinInMs, timeMaxInMs]
+    [timeMinInMs, timeMaxInMs, showSceneTime]
   );
 
   // One-shot, so that seeking twice to the same millisecond still seeks: held,
@@ -892,6 +901,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                     >
                       <div className="relative min-h-0 flex-1">
                         {scene}
+                        {replayable && <SceneTime labelRef={sceneTime.ref} />}
                         {notice && (
                           <div className="pointer-events-none absolute top-3 left-14 right-3 z-10">
                             {notice}
@@ -972,6 +982,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               onPointerUpCapture={handleScenePointerUp}
             >
               {scene}
+              {replayable && <SceneTime labelRef={sceneTime.ref} />}
             </div>
           )}
 
