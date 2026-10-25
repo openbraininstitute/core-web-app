@@ -117,7 +117,7 @@ interface SpikeReplayViewProps {
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
 export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
-  const { simulationPicker, campaign: campaignInfo, run, timeline } = useSimulation();
+  const { campaign: campaignInfo, run, timeline } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [playing, setPlaying] = useState(false);
@@ -238,7 +238,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // side by the rule between them, and any of the four panes by its own bar.
   const shuts = sidePanel?.shuts;
   const beside = dockedOpen && !campaignMode;
-  const rasterUp = !(beside && shuts?.columns === 'start') && shuts?.file !== 'start';
+  const rasterUp = !(dockedOpen && shuts?.columns === 'start') && shuts?.file !== 'start';
   const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
   const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
   // The split of the viewer's own panes, out of a results layout.
@@ -739,8 +739,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           {docked && spikeCount}
         </div>
       )}
-      {/* Under the campaign's statistics, the simulation on show is picked over its raster. */}
-      {campaignMode && <div className="absolute top-0 right-0 z-10">{simulationPicker}</div>}
     </div>
   );
 
@@ -785,17 +783,27 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     campaignInfo &&
     sidePanel?.campaignTarget &&
     createPortal(
-      <CampaignStatisticsView
-        simulations={campaignInfo.simulations}
-        statusMap={campaignInfo.statusMap}
-        activeSimulationId={campaignInfo.activeSimulationId}
-        onSelect={campaignInfo.onSelect}
-        reportPath={reportPath}
-        populationName={populationName}
-        cellCount={cellCount}
-        run={run}
-        cells={sceneCells ?? null}
-        timeWindow={currentWindow?.time ?? null}
+      // In the panel's place, a box like the panes beside it.
+      <StackedPanes
+        split="panel"
+        top={{
+          title: 'Campaign statistics',
+          boxClassName: 'p-2',
+          content: (
+            <CampaignStatisticsView
+              simulations={campaignInfo.simulations}
+              statusMap={campaignInfo.statusMap}
+              activeSimulationId={campaignInfo.activeSimulationId}
+              onSelect={campaignInfo.onSelect}
+              reportPath={reportPath}
+              populationName={populationName}
+              cellCount={cellCount}
+              run={run}
+              cells={sceneCells ?? null}
+              timeWindow={currentWindow?.time ?? null}
+            />
+          ),
+        }}
       />,
       sidePanel.campaignTarget
     );
@@ -888,7 +896,11 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             )}
           {sidePanel.panelStrip &&
             createPortal(
-              <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+              <ShutPaneBar
+                upright
+                title={campaignMode ? ['Campaign statistics'] : panelTitles}
+                onOpen={sidePanel.openColumns}
+              />,
               sidePanel.panelStrip
             )}
         </FullscreenPortalScope>

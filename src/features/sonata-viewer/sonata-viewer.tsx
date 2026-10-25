@@ -683,8 +683,6 @@ export function SonataReportView({
                   {showScene && (
                     <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
                   )}
-                  {/* Under the campaign's statistics, the simulation on show is picked over its traces. */}
-                  {campaignMode && <div className="ml-auto">{simulationPicker}</div>}
                 </div>
                 {traces}
                 {/* The 3D player's play and scrubber, while it is up. */}
@@ -764,24 +762,38 @@ export function SonataReportView({
           )}
         {sidePanel.panelStrip &&
           createPortal(
-            <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+            <ShutPaneBar
+              upright
+              title={campaignMode ? ['Campaign statistics'] : panelTitles}
+              onOpen={sidePanel.openColumns}
+            />,
             sidePanel.panelStrip
           )}
         {campaignMode &&
           campaignInfo &&
           sidePanel.campaignTarget &&
           createPortal(
-            <ReportCampaignView
-              simulations={campaignInfo.simulations}
-              statusMap={campaignInfo.statusMap}
-              activeSimulationId={campaignInfo.activeSimulationId}
-              onSelect={campaignInfo.onSelect}
-              reportPath={reportPath}
-              populationName={populationName}
-              variable={voltage ? null : (variableName ?? 'value')}
-              units={population.dataUnits}
-              cells={campaignCells}
-              recordedCount={population.nodeCount}
+            // In the panel's place, a box like the panes beside it.
+            <StackedPanes
+              split="panel"
+              top={{
+                title: 'Campaign statistics',
+                boxClassName: 'p-2',
+                content: (
+                  <ReportCampaignView
+                    simulations={campaignInfo.simulations}
+                    statusMap={campaignInfo.statusMap}
+                    activeSimulationId={campaignInfo.activeSimulationId}
+                    onSelect={campaignInfo.onSelect}
+                    reportPath={reportPath}
+                    populationName={populationName}
+                    variable={voltage ? null : (variableName ?? 'value')}
+                    units={population.dataUnits}
+                    cells={campaignCells}
+                    recordedCount={population.nodeCount}
+                  />
+                ),
+              }}
             />,
             sidePanel.campaignTarget
           )}

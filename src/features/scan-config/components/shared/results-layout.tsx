@@ -13,7 +13,6 @@ import {
 } from 'react';
 
 import {
-  PaneResizeHandle,
   PaneSideResizeHandle,
   SHUT_BAR_SIZE,
   useShuttingSplit,
@@ -53,9 +52,9 @@ export type ResultsSidePanel = {
   setOpen: (open: boolean) => void;
   /**
    * Whether the campaign's statistics are up, in a region of their own over
-   * the file, with `campaignTarget` to portal them into. The file then has the
-   * width under them: the panel's statistics are the simulation's, which the
-   * campaign's take the place of.
+   * the panel's place beside the file, with `campaignTarget` to portal them
+   * into: the panel's statistics are the simulation's, which the campaign's
+   * take the place of.
    */
   campaign: boolean;
   campaignTarget: HTMLElement | null;
@@ -104,12 +103,6 @@ const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
 const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
 /** What the bar takes, in px: what `mt-14` gave the file and the panel under it. */
 const BAR_ROOM = 56;
-/** Between the campaign's region and what drops below it. */
-const CAMPAIGN_GAP = 12;
-/** The campaign region's share of the height, until its edge is dragged; and its floors. */
-const CAMPAIGN_SHARE = 0.45;
-const MIN_CAMPAIGN_HEIGHT = 160;
-const MIN_BELOW_CAMPAIGN = 200;
 
 export function ResultsLayout({
   left,
@@ -205,7 +198,7 @@ export function ResultsLayout({
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
   const spanRef = useRef<HTMLDivElement>(null);
-  const [{ page, span, height }, setGeometry] = useState({ page: 0, span: 0, height: 0 });
+  const [{ page, span }, setGeometry] = useState({ page: 0, span: 0 });
   useLayoutEffect(() => {
     const leftColumn = leftRef.current;
     const rightColumn = rightRef.current;
@@ -215,7 +208,6 @@ export function ResultsLayout({
       setGeometry({
         page: rightColumn.offsetLeft - leftColumn.offsetLeft,
         span: spanned.offsetWidth,
-        height: spanned.offsetHeight,
       });
     measure();
     const observer = new ResizeObserver(measure);
@@ -242,37 +234,26 @@ export function ResultsLayout({
     floors: [MIN_SIDE_WIDTH, MIN_SIDE_WIDTH],
     preferred: span - (ownWidth + gap / 2),
   });
-  // The panel is beside the file while it is up, unless the campaign's statistics are.
-  const beside = open && !campaign;
-  const fileShut = beside && columns.shut === 'start';
-  const panelShut = beside && columns.shut === 'end';
+  // Beside the file while it is up: the panel, or the campaign's statistics in its place.
+  const fileShut = open && columns.shut === 'start';
+  const panelShut = open && columns.shut === 'end';
   const openRule = span - columns.size;
-  // Where the file ends: past the span's end, with no panel beside it.
-  const rule = !beside
+  // Where the file ends: past the span's end, with nothing beside it.
+  const rule = !open
     ? span + gap / 2
     : fileShut
       ? FILE_STRIP_WIDTH + gap / 2
       : panelShut
         ? span - PANEL_STRIP_WIDTH
         : openRule;
+  const panelUp = open && !campaign && !panelShut;
+  const campaignUp = open && campaign && !panelShut;
   const slide = sliding && !dragging && SLIDE;
 
   const moved = { translate: open ? `${-page}px 0` : '0px 0' };
-  // Open, what the bar spans drops below it - and below the campaign's region
-  // too, while that is up. The bar rides up into the grid's top padding, so
-  // the room it takes is little more than its own row.
-  const [chosenCampaignHeight, setChosenCampaignHeight] = useState<number | null>(null);
-  const campaignHeight = Math.round(
-    Math.max(
-      MIN_CAMPAIGN_HEIGHT,
-      Math.min(
-        height - BAR_ROOM - CAMPAIGN_GAP - MIN_BELOW_CAMPAIGN,
-        chosenCampaignHeight ?? height * CAMPAIGN_SHARE
-      )
-    )
-  );
-  const contentTop = open ? BAR_ROOM + (campaign ? campaignHeight + CAMPAIGN_GAP : 0) : 0;
-  const campaignRegionRef = useRef<HTMLDivElement>(null);
+  // Open, what the bar spans drops below it. The bar rides up into the grid's
+  // top padding, so the room it takes is little more than its own row.
+  const contentTop = open ? BAR_ROOM : 0;
   // The two left columns go out of view altogether.
   const away = open && 'opacity-0 pointer-events-none';
 
@@ -336,10 +317,7 @@ export function ResultsLayout({
         <ChromeButton label="Back to the results" onClick={() => setOpen(false)}>
           <RiArrowLeftLine className="size-4" />
         </ChromeButton>
-        {/* Campaign statistics take the picker down to the file they show. */}
-        {sidePanelBar && !campaign && (
-          <div className="flex min-w-0 items-center">{sidePanelBar}</div>
-        )}
+        {sidePanelBar && <div className="flex min-w-0 items-center">{sidePanelBar}</div>}
         {sidePanelReport}
         {/* What the statistics are over: the simulation on show, or the whole campaign. */}
         {campaignStatistics && (
@@ -357,40 +335,39 @@ export function ResultsLayout({
           />
         )}
       </div>
-      {/* The campaign's region, over the file and the panel, its height dragged by its edge */}
+      {/* The campaign's statistics in the panel's place; out of view, they wait past the span's end too */}
       <div
-        ref={campaignRegionRef}
-        inert={!campaign || undefined}
-        style={{ marginTop: BAR_ROOM, height: campaignHeight }}
+        inert={!campaignUp || undefined}
+        style={{
+          width: span - (campaignUp ? rule : openRule),
+          translate: `${campaignUp ? rule : span + gap / 2}px 0`,
+          marginTop: contentTop,
+        }}
         className={cn(
-          'border-neutral-2 relative col-start-1 col-end-4 row-start-1 z-[5] min-h-0 min-w-0 self-start border-b pb-3',
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
           slide,
-          campaign ? 'opacity-100' : 'pointer-events-none opacity-0'
+          !campaignUp && 'pointer-events-none opacity-0'
         )}
       >
-        <div ref={setCampaignTarget} data-results-campaign className="h-full min-h-0 min-w-0" />
-        {campaign && (
-          <PaneResizeHandle
-            containerRef={campaignRegionRef}
-            minHeight={MIN_CAMPAIGN_HEIGHT}
-            onResize={setChosenCampaignHeight}
-            edge="bottom"
-          />
-        )}
+        <div
+          ref={setCampaignTarget}
+          data-results-campaign
+          className="h-full min-h-0 min-w-0 pl-1"
+        />
       </div>
       {/* the panel; closed, shut or under the campaign's, it waits past the span's end */}
       <div
-        inert={!beside || panelShut || undefined}
+        inert={!panelUp || undefined}
         style={{
-          width: span - (beside && !panelShut ? rule : openRule),
-          translate: `${beside && !panelShut ? rule : span + gap / 2}px 0`,
+          width: span - (panelUp ? rule : openRule),
+          translate: `${panelUp ? rule : span + gap / 2}px 0`,
           marginTop: contentTop,
         }}
         className={cn(
           // No rule: the space between the file and the panel, and the grab bar in it, part them.
           'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
           slide,
-          (!beside || panelShut) && 'pointer-events-none opacity-0'
+          !panelUp && 'pointer-events-none opacity-0'
         )}
       >
         {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
@@ -425,12 +402,12 @@ export function ResultsLayout({
       </div>
       {/* The rule's grab bar, on its own so it stays between whichever of the two is shut */}
       <div
-        inert={!beside || undefined}
+        inert={!open || undefined}
         style={{ translate: `${rule}px 0`, marginTop: contentTop }}
         className={cn(
           'relative z-10 col-start-1 col-end-4 row-start-1 w-0 justify-self-start',
           slide,
-          !beside && 'pointer-events-none opacity-0'
+          !open && 'pointer-events-none opacity-0'
         )}
       >
         <PaneSideResizeHandle
