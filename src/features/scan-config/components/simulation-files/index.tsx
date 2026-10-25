@@ -32,6 +32,7 @@ import {
 import { useLastTruthyValue } from '@/hooks/hooks';
 import { createLoadableAtom } from '@/utils/jotai-loadable';
 
+import type { ReactNode } from 'react';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
@@ -42,7 +43,7 @@ type FileRow = {
   file: TAssetBackedFile;
   name: string | undefined;
   /** In place of the file's extension, such as what a report records. */
-  label?: string;
+  label?: ReactNode;
   population: string | undefined;
   selected: boolean;
 };
@@ -196,6 +197,18 @@ export function SimulationFiles({
   );
   const rowsOf = (files: TAssetBackedFile[]): FileRow[] =>
     files.flatMap((file): FileRow[] => {
+      // An input's spikes read as their file's name, tagged as what they are.
+      if (file.asset.label === AssetLabel.replay_spikes) {
+        return [
+          {
+            file,
+            name: stemOf(file),
+            label: twoLines('Input', 'spikes'),
+            population: undefined,
+            selected: isSelected(file),
+          },
+        ];
+      }
       if (file.asset.label !== AssetLabel.spike_report && !isVoltageReportFile(file)) {
         return [{ file, name: file.name, population: undefined, selected: isSelected(file) }];
       }
@@ -204,8 +217,8 @@ export function SimulationFiles({
       // A spike file reads as its populations, a voltage report as its name, its
       // tag in place of the extension saying what each records.
       const spikes = file.asset.label === AssetLabel.spike_report;
-      const stem = (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
-      const label = spikes ? 'Spikes' : recordingLabel(reports?.[stem]);
+      const stem = stemOf(file);
+      const label = spikes ? 'Spikes' : twoLines(...recordingLabel(reports?.[stem]));
       if (populations.length === 0) {
         return [{ file, name: stem, label, population: undefined, selected: isSelected(file) }];
       }
@@ -354,12 +367,28 @@ export function useSimulationResultFiles(
   }, [simResult, simResultLoadable]);
 }
 
+/** A result file's name without its extension. */
+function stemOf(file: TAssetBackedFile): string {
+  return (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
+}
+
+/** A tag in two words, one over the other. */
+function twoLines(first: string, second: string): ReactNode {
+  return (
+    <span className="block text-center leading-tight">
+      {first}
+      <br />
+      {second}
+    </span>
+  );
+}
+
 /**
- * What a compartment report records, from its entry in the SONATA config:
- * "Soma voltages", or another section's or variable's. Until the config is
- * read it is a voltage report all the same.
+ * What a compartment report records, from its entry in the SONATA config,
+ * where and what: "Soma" "voltages", or another section's or variable's.
+ * Until the config is read it is a voltage report all the same.
  */
-function recordingLabel(report: unknown): string {
+function recordingLabel(report: unknown): [string, string] {
   const entry = isPlainObject(report) ? report : {};
   const variable = typeof entry.variable_name === 'string' ? entry.variable_name : 'v';
   const sections = typeof entry.sections === 'string' ? entry.sections : 'soma';
@@ -371,7 +400,7 @@ function recordingLabel(report: unknown): string {
         : sections === 'all'
           ? 'Compartment'
           : sections.charAt(0).toUpperCase() + sections.slice(1);
-  return `${where} ${variable === 'v' ? 'voltages' : variable}`;
+  return [where, variable === 'v' ? 'voltages' : variable];
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
