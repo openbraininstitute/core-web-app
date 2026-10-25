@@ -531,8 +531,13 @@ function SharedTracesPlot({
     cursor.style.left = `${l + layout.xaxis.l2p(timeInMs) - 0.75}px`;
     cursor.style.top = `${t}px`;
     cursor.style.height = `${h}px`;
-    if (cursorLabelRef.current) {
-      cursorLabelRef.current.textContent = `${timeInMs.toFixed(1)} ${population.timeConfig.units}`;
+    const label = cursorLabelRef.current;
+    if (label) {
+      label.textContent = `${timeInMs.toFixed(1)} ${population.timeConfig.units}`;
+      // Beside the rule, on whichever side has room for it, as the raster's playhead label.
+      const flip = layout.xaxis.l2p(timeInMs) > layout._size.w - 64;
+      label.style.left = flip ? 'auto' : '';
+      label.style.right = flip ? '4px' : '';
     }
   }, [onTimeAxisChange, population.timeConfig.units]);
   useEffect(() => {
