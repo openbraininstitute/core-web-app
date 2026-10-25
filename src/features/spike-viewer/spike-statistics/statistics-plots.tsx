@@ -1,10 +1,17 @@
 'use client';
 
 import { Empty, Spin } from 'antd';
+import { atom, useAtom } from 'jotai';
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import {
+  PaneResizeHandle,
+  ShutPaneBar,
+  useShuttingSplit,
+} from '@/features/circuit-viewer/pane-resize-handle';
+import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import {
   densityFigure,
   sankeyFigure,
@@ -338,11 +345,16 @@ const DEFAULT_TABLE_SHARE = 0.6;
 const MIN_TABLE_HEIGHT = 160;
 /** What the plot keeps above the table: its own floor and the controls over it. */
 const MIN_PLOT_HEIGHT = 220;
+/** The table's height as last dragged: kept for the next file, as a pick from the bar mounts it anew. */
+const tableHeightAtom = atom<number | null>(null);
 
 /**
  * The plots over the table, either side of a grab bar, the table's height
  * measured from the bottom as the raster's is under the replay. With
  * `tableOnly` the table takes the whole height and there is no bar.
+ *
+ * In the results' side panel the bar can shut either into a bar of its own,
+ * and the rule beside the panel the two of them into a strip.
  */
 export function PlotsOverTable({
   plots,
@@ -363,31 +375,66 @@ export function PlotsOverTable({
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const [chosenTableHeight, setChosenTableHeight] = useState<number | null>(null);
-  const tableHeight = clampTableHeight(chosenTableHeight, rootHeight);
+  const sidePanel = useResultsSidePanel();
+  const [chosenTableHeight, setChosenTableHeight] = useAtom(tableHeightAtom);
+  const panes = useShuttingSplit({
+    chosen: chosenTableHeight,
+    onChosenChange: setChosenTableHeight,
+    shut: sidePanel?.shuts.panel ?? null,
+    onShutChange:
+      sidePanel?.open && !tableOnly ? (shut) => sidePanel.setShut('panel', shut) : undefined,
+    total: rootHeight,
+    floors: [MIN_PLOT_HEIGHT, MIN_TABLE_HEIGHT],
+    preferred: Math.round(rootHeight * DEFAULT_TABLE_SHARE),
+  });
+  const plotsShut = panes.shut === 'start';
+  const tableShut = panes.shut === 'end';
+  // Shut, the plots are their bar and the table takes the rest.
+  const tableFills = tableOnly || plotsShut;
 
   return (
     <div ref={rootRef} className="flex h-full min-h-0 flex-col">
+      {plotsShut && (
+        <ShutPaneBar title="Statistics" className="mx-3 mt-3 mb-[12px]" onOpen={panes.open} />
+      )}
       {/* Kept while the table has the view to itself, so the plots' choices outlast it. */}
       <div
         className={cn(
           BOX_CLASS,
           'mx-3 mt-3 mb-[12px] flex min-h-0 flex-1 flex-col',
-          tableOnly && 'hidden'
+          tableFills && 'hidden'
         )}
       >
         {plots}
       </div>
       {/* The table in its box, the grab bar in the space over it, as between the scene and the raster. */}
       <div
-        className={cn('relative mx-3 pt-[12px] pb-3', tableOnly ? 'min-h-0 flex-1' : 'shrink-0')}
-        style={tableOnly ? undefined : { height: tableHeight }}
+        className={cn('relative mx-3 pt-[12px] pb-3', tableFills ? 'min-h-0 flex-1' : 'shrink-0')}
+        // Shut, as tall as its bar and the space either side of it.
+        style={tableFills || tableShut ? undefined : { height: panes.size }}
       >
         {!tableOnly && (
-          <PaneResizeHandle containerRef={rootRef} minHeight={0} onResize={setChosenTableHeight} />
+          <PaneResizeHandle
+            containerRef={rootRef}
+            minHeight={0}
+            onResize={panes.onResize}
+            onDragChange={panes.onDragChange}
+          />
         )}
-        <div className={cn(TABLE_BOX_CLASS, 'h-full min-h-0')}>{table}</div>
+        {tableShut && <ShutPaneBar title="Neuron Table" className="w-full" onOpen={panes.open} />}
+        <div className={cn(TABLE_BOX_CLASS, 'h-full min-h-0', tableShut && 'hidden')}>{table}</div>
       </div>
+      {/* With the rule shut over the panel, one bar naming its panes, in the strip it leaves */}
+      {sidePanel?.open &&
+        sidePanel.panelStrip &&
+        createPortal(
+          <ShutPaneBar
+            upright
+            title={tableOnly ? ['Neuron Table'] : ['Statistics', 'Neuron Table']}
+            onOpen={sidePanel.openColumns}
+          />,
+          sidePanel.panelStrip
+        )}
     </div>
   );
 }
@@ -438,17 +485,6 @@ export function useElementWidth<T extends HTMLElement>(): [(el: T | null) => voi
     return () => observer.disconnect();
   }, [el]);
   return [setEl, width];
-}
-
-/**
- * Keep the plot and the table usable however far the grab bar is dragged; in a
- * view too short for both floors the bounds cross, and the bar stays live.
- */
-function clampTableHeight(chosen: number | null, rootHeight: number): number {
-  const preferred = chosen ?? Math.round(rootHeight * DEFAULT_TABLE_SHARE);
-  const lo = Math.max(0, Math.min(MIN_TABLE_HEIGHT, rootHeight - MIN_PLOT_HEIGHT));
-  const hi = Math.min(rootHeight, Math.max(MIN_TABLE_HEIGHT, rootHeight - MIN_PLOT_HEIGHT));
-  return Math.round(Math.min(hi, Math.max(lo, preferred)));
 }
 
 /** The node properties worth grouping by: categorical, with a manageable number of values. */

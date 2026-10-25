@@ -47,6 +47,8 @@ type Props = {
   onCellClick?: (nodeId: number) => void;
   /** In a box of its own, which frames it: no border of its own. */
   bare?: boolean;
+  /** Off while out of sight: it stops playing and drawing. */
+  active?: boolean;
 };
 
 /**
@@ -66,6 +68,7 @@ export function VoltageScene({
   highlightedCell,
   onCellClick,
   bare = false,
+  active = true,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -122,6 +125,10 @@ export function VoltageScene({
     return () => cancelAnimationFrame(raf);
   }, [playing, frames, end, speed, moveTo]);
 
+  useEffect(() => {
+    if (!active) setPlaying(false);
+  }, [active]);
+
   const play = () => {
     // Played through, it starts again.
     if (!playing && timeRef.current >= end) moveTo(start, true);
@@ -175,6 +182,7 @@ export function VoltageScene({
           nodeColorsOverride={nodeColors}
           highlightedCell={highlightedCell}
           onCellClick={onCellClick}
+          active={active}
         />
         {!frames && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">

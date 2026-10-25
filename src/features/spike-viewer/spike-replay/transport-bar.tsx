@@ -7,6 +7,7 @@ import { Slider } from 'antd';
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { classNames } from '@/util/utils';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
@@ -55,7 +56,7 @@ interface TransportBarProps {
     timeRef: React.RefObject<number>;
     moveRef: React.RefObject<((timeInMs: number) => void) | null>;
   };
-  /** In the raster's own box, which already insets and sets it apart: no rule, no inset. */
+  /** In a pane's own box, which already sets it apart: no rule, and under an axis no inset. */
   boxed?: boolean;
 }
 
@@ -121,7 +122,10 @@ export function TransportBar({
   return (
     <div
       id="spike-replay-transport"
-      className="flex items-center gap-3 border-t border-neutral-200 px-3 py-2"
+      className={classNames(
+        'flex items-center gap-3 px-3 py-2',
+        !boxed && 'border-t border-neutral-200'
+      )}
     >
       <Button
         type="button"

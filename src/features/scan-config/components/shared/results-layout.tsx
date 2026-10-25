@@ -15,12 +15,15 @@ import {
 import {
   PaneResizeHandle,
   PaneSideResizeHandle,
+  SHUT_BAR_SIZE,
+  useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { PillToggle } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
+import type { PaneShut } from '@/features/circuit-viewer/pane-resize-handle';
 
 type Props = {
   left: ReactNode;
@@ -54,6 +57,21 @@ export type ResultsSidePanel = {
    */
   campaign: boolean;
   campaignTarget: HTMLElement | null;
+  /**
+   * Which pane each split has shut, by the split's name: `file` for the
+   * file's own panes, `panel` for the panel's, `columns` for the rule between
+   * them. The layout's too, so a pick from the bar keeps them; closing the
+   * panel opens them all again.
+   */
+  shuts: Readonly<Record<string, PaneShut>>;
+  setShut: (split: string, shut: PaneShut) => void;
+  /**
+   * The strips the file and the panel shut into once the rule is dragged over
+   * them, for each to put the bar naming its panes in, which opens it again.
+   */
+  fileStrip: HTMLElement | null;
+  panelStrip: HTMLElement | null;
+  openColumns: () => void;
 };
 
 const ResultsSidePanelContext = createContext<ResultsSidePanel | null>(null);
@@ -75,6 +93,13 @@ const SLIDE_MS = 550;
 
 /** Room kept either side of the rule between the file and the panel. */
 const MIN_SIDE_WIDTH = 320;
+/**
+ * A shut column's strip: its bar as far in as the panes' boxes were, which is
+ * `mx-3` from either side of the file and `pl-1` more from the rule in the
+ * panel - 10.5 px and 14 px at the app's 14 px rem.
+ */
+const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
+const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
 /** What the bar takes, in px: what `mt-14` gave the file and the panel under it. */
 const BAR_ROOM = 56;
 /** Between the campaign's region and what drops below it. */
@@ -106,12 +131,28 @@ export function ResultsLayout({
   const [sliding, setSliding] = useState(false);
   const [campaignTarget, setCampaignTarget] = useState<HTMLDivElement | null>(null);
   const [campaignChosen, setCampaignChosen] = useState(false);
+  const [shuts, setShuts] = useState<Readonly<Record<string, PaneShut>>>({});
+  const [fileStrip, setFileStrip] = useState<HTMLDivElement | null>(null);
+  const [panelStrip, setPanelStrip] = useState<HTMLDivElement | null>(null);
   const setOpen = useCallback((next: boolean) => {
     setSliding(true);
     setOpenState(next);
-    // A panel opens on the neurons, whatever it was showing when shut.
-    if (!next) setCampaignChosen(false);
+    // A panel opens on the neurons with every pane up, whatever it was showing when shut.
+    if (!next) {
+      setCampaignChosen(false);
+      setShuts({});
+    }
   }, []);
+  // A drag reports on every move: only a change is a new state.
+  const setShut = useCallback((split: string, shut: PaneShut) => {
+    setShuts((previous) =>
+      (previous[split] ?? null) === shut ? previous : { ...previous, [split]: shut }
+    );
+  }, []);
+  const openColumns = useCallback(() => {
+    setSliding(true);
+    setShut('columns', null);
+  }, [setShut]);
   const chooseCampaign = (on: boolean) => {
     if (on === campaignChosen) return;
     setSliding(true);
@@ -125,8 +166,30 @@ export function ResultsLayout({
     return () => clearTimeout(timer);
   }, [sliding, open]);
   const sidePanel = useMemo(
-    () => ({ target, open, setOpen, campaign, campaignTarget }),
-    [target, open, setOpen, campaign, campaignTarget]
+    () => ({
+      target,
+      open,
+      setOpen,
+      campaign,
+      campaignTarget,
+      shuts,
+      setShut,
+      fileStrip,
+      panelStrip,
+      openColumns,
+    }),
+    [
+      target,
+      open,
+      setOpen,
+      campaign,
+      campaignTarget,
+      shuts,
+      setShut,
+      fileStrip,
+      panelStrip,
+      openColumns,
+    ]
   );
   const setPanelOpen = useSetAtom(resultsSidePanelOpenAtom);
   useEffect(() => {
@@ -159,13 +222,32 @@ export function ResultsLayout({
   }, []);
 
   // With the panel up the rule between it and the file sits mid-gap, where the
-  // file's own column ends until it is dragged; `split` is the rule's share of
+  // file's own column ends until it is dragged; `split` is the panel's share of
   // the span once it has been. While it follows the pointer nothing eases.
   const ownWidth = span - page;
   const gap = page - ownWidth;
   const [split, setSplit] = useState<number | null>(null);
   const [dragging, setDragging] = useState(false);
-  const rule = split === null ? ownWidth + gap / 2 : Math.round(split * span);
+  // Dragged far over the file or the panel, the rule shuts it into a strip of
+  // its panes' bars, and the other takes the room; a shut column keeps the
+  // width it had, out of view, so nothing in it is squeezed.
+  const columns = useShuttingSplit({
+    chosen: split === null ? null : split * span,
+    onChosenChange: (end) => setSplit(end === null ? null : end / span),
+    shut: shuts.columns ?? null,
+    onShutChange: (shut) => setShut('columns', shut),
+    total: span,
+    floors: [MIN_SIDE_WIDTH, MIN_SIDE_WIDTH],
+    preferred: span - (ownWidth + gap / 2),
+  });
+  const fileShut = open && columns.shut === 'start';
+  const panelShut = open && columns.shut === 'end';
+  const openRule = span - columns.size;
+  const rule = fileShut
+    ? FILE_STRIP_WIDTH + gap / 2
+    : panelShut
+      ? span - PANEL_STRIP_WIDTH
+      : openRule;
   const slide = sliding && !dragging && SLIDE;
 
   const moved = { translate: open ? `${-page}px 0` : '0px 0' };
@@ -221,10 +303,17 @@ export function ResultsLayout({
         ref={rightRef}
         id={rightId}
         data-testid="scan-config-file-view"
-        style={{ ...moved, width: open ? rule - gap / 2 : '100%', marginTop: contentTop }}
+        inert={fileShut || undefined}
+        style={{
+          // Shut, it waits off the span's start.
+          translate: open ? `${-page - (fileShut ? openRule : 0)}px 0` : '0px 0',
+          width: open ? (fileShut ? openRule : rule) - gap / 2 : '100%',
+          marginTop: contentTop,
+        }}
         className={cn(
           'col-start-3 row-start-1 relative secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
-          slide
+          slide,
+          fileShut && 'pointer-events-none opacity-0'
         )}
       >
         {right}
@@ -282,33 +371,70 @@ export function ResultsLayout({
           />
         )}
       </div>
-      {/* the panel, behind the rule and its grab bar; shut, it waits past the span's end */}
+      {/* the panel; closed or shut, it waits past the span's end */}
       <div
-        inert={!open || undefined}
+        inert={!open || panelShut || undefined}
         style={{
-          width: span - rule,
-          translate: `${open ? rule : span + gap / 2}px 0`,
+          width: span - (panelShut ? openRule : rule),
+          translate: `${open && !panelShut ? rule : span + gap / 2}px 0`,
           marginTop: contentTop,
         }}
         className={cn(
           // No rule: the space between the file and the panel, and the grab bar in it, part them.
           'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
           slide,
-          !open && 'pointer-events-none opacity-0'
+          (!open || panelShut) && 'pointer-events-none opacity-0'
         )}
       >
-        <PaneSideResizeHandle
-          containerRef={spanRef}
-          minWidth={MIN_SIDE_WIDTH}
-          onResize={(left) => setSplit(left / span)}
-          onDragChange={setDragging}
-        />
         {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
         <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0 pl-1" />
         {/* While the next file's panel is on its way, after a pick from the bar */}
         <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
           <Spin />
         </div>
+      </div>
+      {/* The strips a column shuts into, where it portals the bar naming its panes. */}
+      <div
+        inert={!fileShut || undefined}
+        style={{ width: FILE_STRIP_WIDTH, marginTop: contentTop }}
+        className={cn(
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start p-3',
+          slide,
+          !fileShut && 'pointer-events-none opacity-0'
+        )}
+      >
+        <div ref={setFileStrip} className="flex h-full min-h-0 flex-col *:flex-1" />
+      </div>
+      <div
+        inert={!panelShut || undefined}
+        style={{ width: PANEL_STRIP_WIDTH, marginTop: contentTop }}
+        className={cn(
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end py-3 pr-3 pl-4',
+          slide,
+          !panelShut && 'pointer-events-none opacity-0'
+        )}
+      >
+        <div ref={setPanelStrip} className="flex h-full min-h-0 flex-col *:flex-1" />
+      </div>
+      {/* The rule's grab bar, on its own so it stays between whichever of the two is shut */}
+      <div
+        inert={!open || undefined}
+        style={{ translate: `${open ? rule : span + gap / 2}px 0`, marginTop: contentTop }}
+        className={cn(
+          'relative z-10 col-start-1 col-end-4 row-start-1 w-0 justify-self-start',
+          slide,
+          !open && 'pointer-events-none opacity-0'
+        )}
+      >
+        <PaneSideResizeHandle
+          containerRef={spanRef}
+          minWidth={0}
+          onResize={(left) => columns.onResize(span - left)}
+          onDragChange={(next) => {
+            setDragging(next);
+            columns.onDragChange(next);
+          }}
+        />
       </div>
       <div
         ref={spanRef}

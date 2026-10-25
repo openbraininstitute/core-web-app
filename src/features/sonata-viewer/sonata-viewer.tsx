@@ -9,7 +9,12 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import {
+  PaneResizeHandle,
+  SHUT_BAR_SIZE,
+  ShutPaneBar,
+  useShuttingSplit,
+} from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
 import ReportDetailsView, {
@@ -77,8 +82,17 @@ const voltageSceneAtom = atom(false);
 const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
 /** The scene's share of the viewer beside the statistics, until its edge is dragged. */
 const DOCKED_SCENE_SHARE = 0.5;
-/** What the traces keep under the scene beside the statistics. */
+/** What the scene keeps beside the statistics, the space under it included. */
+const MIN_DOCKED_SCENE = 160;
+/** What the traces keep under the scene beside the statistics, the space over them included. */
 const MIN_DOCKED_TRACES = 260;
+/** Between the scene and the traces beside the statistics: the grab bar's half, and the gap's. */
+const DOCKED_GUTTER = 12;
+/**
+ * The traces' room under the scene beside the statistics, as last dragged:
+ * kept for the next file, as a pick from the bar mounts it anew.
+ */
+const dockedTracesAtom = atom<number | null>(null);
 /** Frames the scene's recording is thinned to: smooth enough to play, small enough to hold. */
 const SCENE_FRAMES = 2000;
 const DEFAULT_SCENE_HEIGHT = 280;
@@ -510,14 +524,33 @@ export function SonataReportView({
     observer.observe(dockRoot);
     return () => observer.disconnect();
   }, [dockRoot]);
-  const [chosenDockedScene, setChosenDockedScene] = useState<number | null>(null);
-  const dockedSceneHeight = Math.max(
-    160,
-    Math.min(
-      chosenDockedScene ?? Math.round(dockHeight * DOCKED_SCENE_SHARE),
-      dockHeight - MIN_DOCKED_TRACES
-    )
-  );
+  const [chosenDockedTraces, setChosenDockedTraces] = useAtom(dockedTracesAtom);
+  // The grab bar can shut either into a bar, which the layout keeps, as it
+  // keeps the panel up, across the files on show.
+  const panes = useShuttingSplit({
+    chosen: chosenDockedTraces,
+    onChosenChange: setChosenDockedTraces,
+    shut: sidePanel?.shuts.file ?? null,
+    onShutChange:
+      sidePanel && docked && showScene ? (shut) => sidePanel.setShut('file', shut) : undefined,
+    total: dockHeight,
+    floors: [MIN_DOCKED_SCENE, MIN_DOCKED_TRACES],
+    preferred: Math.round(dockHeight * (1 - DOCKED_SCENE_SHARE)),
+  });
+  const sceneShut = panes.shut === 'start';
+  const tracesShut = panes.shut === 'end';
+  // The file shut on its side by the rule beside it.
+  const fileShut = docked && sidePanel?.shuts.columns === 'start';
+  // The scene's room, the space under it included: shut, a pane is its bar,
+  // and the other takes the rest. The scene keeps its own size out of sight.
+  const openSceneHeight = dockHeight - panes.size;
+  const dockedSceneHeight = sceneShut
+    ? SHUT_BAR_SIZE + DOCKED_GUTTER
+    : tracesShut
+      ? dockHeight - (SHUT_BAR_SIZE + DOCKED_GUTTER)
+      : openSceneHeight;
+  // What the traces mark: where the scene is, while it is on show.
+  const sceneLive = showScene && !sceneShut;
 
   if (!population) {
     return <Empty className="p-2em" description="This report recorded no population" />;
@@ -548,6 +581,7 @@ export function SonataReportView({
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : undefined}
         onCellClick={handleSceneCellClick}
         bare={docked}
+        active={sceneLive && !fileShut}
       />
     ) : null;
 
@@ -562,7 +596,7 @@ export function SonataReportView({
           picked={pickedTraces}
           hovered={hoveredTraces}
           variableName={variableName}
-          timeCursor={showScene ? timeCursor : undefined}
+          timeCursor={sceneLive ? timeCursor : undefined}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -596,7 +630,7 @@ export function SonataReportView({
                   picked={group.picked}
                   hovered={group.hovered}
                   variableName={variableName}
-                  timeCursor={showScene ? timeCursor : undefined}
+                  timeCursor={sceneLive ? timeCursor : undefined}
                 />
               </ErrorBoundary>
             </WhenNearView>
@@ -626,12 +660,13 @@ export function SonataReportView({
 
   if (panelTarget && table) {
     const plotted = plotCells ? plotCells.length : population.nodeCount;
+    const tracesTitle = voltage ? 'Voltage traces' : 'Traces';
     return (
       // The quadrants a spike report's statistics make: the scene over the traces
       // here, the plots over the table in the panel beside them.
       <div
         ref={setDockRoot}
-        className="flex h-full min-h-0 flex-col gap-[12px] pt-3 pr-3 pb-4 pl-4"
+        className="flex h-full min-h-0 flex-col gap-[12px] pt-3 pr-3 pb-3 pl-4"
       >
         {/* Each a box, as the statistics beside them are, the grab bar in the space between. */}
         {scene && (
@@ -640,11 +675,23 @@ export function SonataReportView({
             className="relative shrink-0 pb-[12px]"
             style={{ height: dockedSceneHeight }}
           >
-            <div className={cn(BOX_CLASS, 'h-full px-2 pt-2')}>{scene}</div>
+            {sceneShut && <ShutPaneBar title="3D View" className="w-full" onOpen={panes.open} />}
+            {/* Shut, it keeps its size out of sight, so nothing in it is squeezed. */}
+            <div
+              className={cn(
+                BOX_CLASS,
+                'px-2 pt-2',
+                sceneShut ? 'invisible absolute inset-x-0 top-0' : 'h-full'
+              )}
+              style={sceneShut ? { height: openSceneHeight - DOCKED_GUTTER } : undefined}
+            >
+              {scene}
+            </div>
             <PaneResizeHandle
               containerRef={sceneBoxRef}
-              minHeight={160}
-              onResize={setChosenDockedScene}
+              minHeight={0}
+              onResize={(sceneRoom) => panes.onResize(dockHeight - sceneRoom)}
+              onDragChange={panes.onDragChange}
               edge="bottom"
             />
           </div>
@@ -652,8 +699,9 @@ export function SonataReportView({
         {campaignMode && (
           <div className="flex shrink-0 items-center justify-end">{simulationPicker}</div>
         )}
+        {tracesShut && <ShutPaneBar title={tracesTitle} className="w-full" onOpen={panes.open} />}
         {/* The population is picked over the statistics; the traces' own controls sit with them. */}
-        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2')}>
+        <div className={cn(BOX_CLASS, 'flex min-h-0 flex-1 flex-col p-2', tracesShut && 'hidden')}>
           <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
             {groupSelect}
             <span className="whitespace-nowrap text-xs text-neutral-400">
@@ -698,6 +746,16 @@ export function SonataReportView({
           />,
           panelTarget
         )}
+        {/* With the rule shut over the file, one bar naming its panes, in the strip it leaves */}
+        {sidePanel?.fileStrip &&
+          createPortal(
+            <ShutPaneBar
+              upright
+              title={scene ? ['3D View', tracesTitle] : [tracesTitle]}
+              onOpen={sidePanel.openColumns}
+            />,
+            sidePanel.fileStrip
+          )}
         {campaignMode &&
           campaignInfo &&
           sidePanel?.campaignTarget &&

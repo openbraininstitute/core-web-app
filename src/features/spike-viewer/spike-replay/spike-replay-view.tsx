@@ -1,6 +1,7 @@
 'use client';
 
 import { RiBarChart2Line, RiBox3Line, RiLayoutRowLine, RiTableLine } from '@remixicon/react';
+import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -9,7 +10,12 @@ import { PopulationSelect } from '@/features/circuit-nodes/components/population
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
+import {
+  PaneResizeHandle,
+  SHUT_BAR_SIZE,
+  ShutPaneBar,
+  useShuttingSplit,
+} from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
@@ -58,6 +64,15 @@ const DEFAULT_RASTER_HEIGHT_RATIO = 0.4;
  * belonging to it rather than as two separate views.
  */
 const SPLIT_GUTTER_IN_PX = 12;
+/** The panes' inset from the panel's edges, `mx-3` and `pb-3`: 10.5 px at the app's 14 px rem. */
+const PANE_INSET_IN_PX = 10.5;
+/**
+ * What each pane keeps of the split, its gutter included. In a panel too short
+ * for two of them the bounds cross, and the divider stays live between them.
+ */
+const PANE_FLOOR = MIN_PANE_HEIGHT + SPLIT_GUTTER_IN_PX;
+/** The raster pane's height as last dragged: kept for the next file, as a pick from the bar mounts it anew. */
+const rasterHeightAtom = atom<number | null>(null);
 
 /** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
 const DEFAULT_SPEED = 100;
@@ -112,7 +127,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // chunk, so for a while there is no child to receive anything.
   const [sceneLive, setSceneLive] = useState(false);
   const [readoutTimeInMs, setReadoutTimeInMs] = useState(data.timeRange.min);
-  const [rasterHeight, setRasterHeight] = useState<number | null>(null);
+  const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
   const [containerHeight, setContainerHeight] = useState(0);
 
   // State, not a ref: the button and the portal scope read it while rendering.
@@ -217,11 +232,39 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // With the campaign's statistics up over it, this is the raster of the
   // simulation on show, picked here, and the panel beside it only its table.
   const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
+  // Beside the statistics the divider can shut either pane into a bar, which
+  // the layout keeps, as it keeps the panel up, across the files on show.
+  const panes = useShuttingSplit({
+    chosen: rasterHeight,
+    onChosenChange: setRasterHeight,
+    shut: sidePanel?.shuts.file ?? null,
+    onShutChange:
+      sidePanel && dockedOpen && !campaignMode && subject
+        ? (shut) => sidePanel.setShut('file', shut)
+        : undefined,
+    total: containerHeight,
+    floors: [PANE_FLOOR, PANE_FLOOR],
+    preferred: Math.round(containerHeight * DEFAULT_RASTER_HEIGHT_RATIO),
+  });
+  const sceneShut = panes.shut === 'start';
+  const rasterShut = panes.shut === 'end';
+  // The file shut on its side by the rule beside it.
+  const fileShut = dockedOpen && sidePanel?.shuts.columns === 'start';
 
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
-  // Beside the statistics it is always the scene over the raster.
-  const view = subject && !campaignMode ? (dockedOpen ? MODES.Split : mode) : MODES.Raster;
+  // Beside the statistics it is the scene over the raster, or whichever of
+  // them the divider has left up.
+  const view =
+    subject && !campaignMode
+      ? dockedOpen
+        ? sceneShut
+          ? MODES.Raster
+          : rasterShut
+            ? MODES.Replay
+            : MODES.Split
+        : mode
+      : MODES.Raster;
   const showStatistics = !docked && view === MODES.Statistics && statisticsAvailable;
 
   // While the statistics are up, their table narrows the raster and the replay
@@ -486,8 +529,9 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // Nothing to animate for, and playing on would keep the render loop spinning
   // behind a pane nobody is looking at.
   useEffect(() => {
-    if (mode === MODES.Raster || mode === MODES.Statistics || !replayable) setPlaying(false);
-  }, [mode, replayable]);
+    if (view === MODES.Raster || view === MODES.Statistics || fileShut || !replayable)
+      setPlaying(false);
+  }, [view, fileShut, replayable]);
 
   // The rule is otherwise only pushed by a painted frame, so entering the split
   // paused — which is every time, since leaving it stops playback — would show
@@ -530,7 +574,16 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       ]
     : [];
 
-  const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
+  // The raster pane's height, its gutter over it included: shut, a pane is its
+  // bar, and the one it leaves takes the rest. A shut pane's view keeps its
+  // own size out of sight, so nothing in it is squeezed.
+  const splitHeight = sceneShut
+    ? containerHeight - (SHUT_BAR_SIZE + SPLIT_GUTTER_IN_PX)
+    : rasterShut
+      ? SPLIT_GUTTER_IN_PX + SHUT_BAR_SIZE + PANE_INSET_IN_PX
+      : panes.size;
+  // The divider is up whether or not it has shut a pane.
+  const divided = isSplit || panes.shut !== null;
 
   // One element for wherever the statistics go: the viewer's own panel, or the
   // results layout's side panel.
@@ -655,51 +708,57 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             <div
               id="spike-replay-scene"
               className={classNames(
-                'absolute left-0 right-0 top-0',
+                'absolute left-0 right-0 top-0 flex flex-col',
                 // Beside the statistics, a box of its own like theirs.
                 dockedOpen && `${BOX_CLASS} mx-3 overflow-hidden`,
                 !showScene && 'invisible pointer-events-none'
               )}
-              style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
+              style={{
+                bottom: divided ? (sceneShut ? panes.size : splitHeight) + SPLIT_GUTTER_IN_PX : 0,
+              }}
               aria-hidden={!showScene}
               inert={!showScene || undefined}
               onPointerDownCapture={handleScenePointerDown}
               onPointerUpCapture={handleScenePointerUp}
             >
-              {sceneMounted && (
-                <CircuitScene
-                  {...subject}
-                  largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
-                  active={showScene}
-                  features={SCENE_FEATURES}
-                  // Only a name the config backs with cells. A name the scene
-                  // cannot draw would make it fall back on its own — with no name
-                  // it falls back deliberately, to the same default, and the
-                  // notice in the header explains what is on show. An MEModel
-                  // resolves no populations, so the name means nothing to it.
-                  populationName={replayable ? populationName : undefined}
-                  // The population above the panes is the one being replayed,
-                  // and the spikes' cell indices are relative to it. The
-                  // circuit's other populations are not drawn here.
-                  showUnselectedPopulations={false}
-                  colorByTarget={dockedOpen ? undefined : colorBySlot}
-                  // It colours the raster too, where every spike in one colour is uniform.
-                  colorByNoneLabel="Uniform"
-                  shownCells={sceneCells}
-                  highlightedCell={highlightedCell ?? undefined}
-                  onCellClick={handleCellClick}
-                  onNodeColorsChange={setSceneColors}
-                  spikes={{
-                    data: spikes ?? undefined,
-                    timeInMs: seekToMs,
-                    onTimeChange: handleTimeChange,
-                    playing,
-                    onPlayingChange: setPlaying,
-                    speed,
-                    afterglowInSeconds,
-                  }}
-                />
-              )}
+              <div className="relative min-h-0 flex-1">
+                {sceneMounted && (
+                  <CircuitScene
+                    {...subject}
+                    largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+                    active={showScene}
+                    features={SCENE_FEATURES}
+                    // Only a name the config backs with cells. A name the scene
+                    // cannot draw would make it fall back on its own — with no name
+                    // it falls back deliberately, to the same default, and the
+                    // notice in the header explains what is on show. An MEModel
+                    // resolves no populations, so the name means nothing to it.
+                    populationName={replayable ? populationName : undefined}
+                    // The population above the panes is the one being replayed,
+                    // and the spikes' cell indices are relative to it. The
+                    // circuit's other populations are not drawn here.
+                    showUnselectedPopulations={false}
+                    colorByTarget={dockedOpen ? undefined : colorBySlot}
+                    // It colours the raster too, where every spike in one colour is uniform.
+                    colorByNoneLabel="Uniform"
+                    shownCells={sceneCells}
+                    highlightedCell={highlightedCell ?? undefined}
+                    onCellClick={handleCellClick}
+                    onNodeColorsChange={setSceneColors}
+                    spikes={{
+                      data: spikes ?? undefined,
+                      timeInMs: seekToMs,
+                      onTimeChange: handleTimeChange,
+                      playing,
+                      onPlayingChange: setPlaying,
+                      speed,
+                      afterglowInSeconds,
+                    }}
+                  />
+                )}
+              </div>
+              {/* With the raster shut, play and the scrubber are in the scene's box. */}
+              {dockedOpen && rasterShut && transport(true)}
             </div>
           )}
 
@@ -715,20 +774,17 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               isSplit && !dockedOpen && 'border-t border-neutral-2',
               !showRaster && 'invisible pointer-events-none'
             )}
-            style={isSplit ? { height: splitHeight, paddingTop: SPLIT_GUTTER_IN_PX } : { top: 0 }}
+            style={
+              divided
+                ? {
+                    height: rasterShut ? panes.size : splitHeight,
+                    paddingTop: SPLIT_GUTTER_IN_PX,
+                  }
+                : { top: 0 }
+            }
             aria-hidden={!showRaster}
             inert={!showRaster || undefined}
           >
-            {isSplit && (
-              // The floor lives in `clampSplitHeight`, which knows when the
-              // panel is too short to honour it. A floor here as well would
-              // stop the drag at exactly the heights where the clamp relents.
-              <PaneResizeHandle
-                containerRef={containerRef}
-                minHeight={0}
-                onResize={setRasterHeight}
-              />
-            )}
             <div
               className={classNames(
                 'flex h-full min-h-0 flex-col',
@@ -810,6 +866,35 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             </div>
           </div>
 
+          {/* A shut pane's bar, in its place. */}
+          {sceneShut && (
+            <ShutPaneBar
+              title="3D View"
+              className="absolute top-0 right-3 left-3"
+              onOpen={panes.open}
+            />
+          )}
+          {rasterShut && (
+            <ShutPaneBar
+              title="Raster"
+              className="absolute right-3 bottom-3 left-3"
+              onOpen={panes.open}
+            />
+          )}
+          {divided && (
+            // Over the raster's pane, or its bar. The floors live in the split,
+            // which knows when the panel is too short to honour them; a floor
+            // here as well would stop the drag where the split relents.
+            <div className="absolute right-3 left-3" style={{ bottom: splitHeight }}>
+              <PaneResizeHandle
+                containerRef={containerRef}
+                minHeight={0}
+                onResize={panes.onResize}
+                onDragChange={panes.onDragChange}
+              />
+            </div>
+          )}
+
           {!docked && statistics && (
             <div
               className={classNames(
@@ -844,7 +929,20 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             sidePanel.campaignTarget
           )}
 
-        {showScene && !(dockedOpen && isSplit) && transport(false)}
+        {/* Beside the statistics it is in the raster's box, or the scene's. */}
+        {showScene && !dockedOpen && transport(false)}
+
+        {/* With the rule shut over the file, one bar naming its panes, in the strip it leaves */}
+        {dockedOpen &&
+          sidePanel?.fileStrip &&
+          createPortal(
+            <ShutPaneBar
+              upright
+              title={campaignMode ? ['Raster'] : ['3D View', 'Raster']}
+              onOpen={sidePanel.openColumns}
+            />,
+            sidePanel.fileStrip
+          )}
       </FullscreenPortalScope>
     </div>
   );
@@ -875,20 +973,4 @@ function replayNotice(
   if (!nodes?.some((n) => n.name === name))
     return `This circuit has no nodes for “${name}”, so there is nothing to replay these spikes over.`;
   return `“${name}” is an input population — its spikes drive cells rather than fire in them, so there is nothing to light up.`;
-}
-
-/**
- * Keep both panes usable however far the divider is dragged.
- *
- * These are box heights, and each pane spends {@link SPLIT_GUTTER_IN_PX} of its
- * own on clearance, so the floor is the minimum plus a gutter. In a panel too
- * short for two floored panes the bounds cross — swapped, the divider stays
- * live there, where pinning to the middle would swallow the drag.
- */
-function clampSplitHeight(rasterHeight: number | null, containerHeight: number): number {
-  const preferred = rasterHeight ?? Math.round(containerHeight * DEFAULT_RASTER_HEIGHT_RATIO);
-  const floor = MIN_PANE_HEIGHT + SPLIT_GUTTER_IN_PX;
-  const lo = Math.max(0, Math.min(floor, containerHeight - floor));
-  const hi = Math.min(containerHeight, Math.max(floor, containerHeight - floor));
-  return Math.round(Math.min(hi, Math.max(lo, preferred)));
 }
