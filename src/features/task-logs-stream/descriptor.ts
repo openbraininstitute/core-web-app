@@ -48,7 +48,7 @@ export function makeLogStreamFileDescriptors({
     },
     output: {
       id: `${executionId}:task-logs`,
-      name: 'Task logs',
+      name: 'Task Log',
       path: 'logs.log',
       renderer: LogStreamFileRenderer.TaskLogs,
     },
