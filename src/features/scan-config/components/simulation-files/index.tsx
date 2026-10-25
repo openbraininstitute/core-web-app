@@ -18,7 +18,6 @@ import {
   type TActivityCustomFile,
   type TAssetBackedFile,
 } from '@/features/scan-config/types';
-import { reportKind } from '@/features/scan-config/use-cases/simulations/report-picker';
 import {
   chosenReportPopulationAtom,
   reportPopulationsAtom,
@@ -42,6 +41,8 @@ import type { WorkspaceContext } from '@/types/common';
 type FileRow = {
   file: TAssetBackedFile;
   name: string | undefined;
+  /** In place of the file's extension, such as what a report records. */
+  label?: string;
   population: string | undefined;
   selected: boolean;
 };
@@ -57,6 +58,8 @@ type SimulationFilesProps = {
   onLoadingChange: (loading: boolean) => void;
   context: WorkspaceContext;
   jobId?: string;
+  /** The SONATA config's reports, by name: what each of the result's reports records. */
+  reports?: Record<string, unknown> | null;
 };
 
 export function SimulationFiles({
@@ -67,6 +70,7 @@ export function SimulationFiles({
   onLoadingChange,
   context,
   jobId,
+  reports,
 }: SimulationFilesProps) {
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
@@ -197,14 +201,19 @@ export function SimulationFiles({
       }
       const known = published[file.asset.path];
       const populations = known?.populations ?? recordable;
-      const kind = reportKind(file, files);
+      // A spike file reads as its populations, a voltage report as its name, its
+      // tag in place of the extension saying what each records.
+      const spikes = file.asset.label === AssetLabel.spike_report;
+      const stem = (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
+      const label = spikes ? 'Spikes' : recordingLabel(reports?.[stem]);
       if (populations.length === 0) {
-        return [{ file, name: kind, population: undefined, selected: isSelected(file) }];
+        return [{ file, name: stem, label, population: undefined, selected: isSelected(file) }];
       }
       const shown = known?.current ?? chosenPopulations[file.asset.path] ?? populations[0];
       return populations.map((population) => ({
         file,
-        name: `${kind}: ${population}`,
+        name: spikes ? population : populations.length > 1 ? `${stem} · ${population}` : stem,
+        label,
         population,
         selected: isSelected(file) && population === shown,
       }));
@@ -221,7 +230,7 @@ export function SimulationFiles({
           expanded={open[key]}
           onToggle={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
         >
-          {rows.map(({ file, name, population, selected }) => {
+          {rows.map(({ file, name, label, population, selected }) => {
             const id = `${file.id ?? file.asset.id}${population ? `:${population}` : ''}`;
             return (
               <TaskIOFileItem
@@ -230,6 +239,7 @@ export function SimulationFiles({
                 selected={selected}
                 file={file}
                 name={name}
+                label={label}
                 onSelect={() => {
                   if (population) {
                     setChosenPopulations((previous) => ({
@@ -342,4 +352,28 @@ export function useSimulationResultFiles(
 
     return [loading, files];
   }, [simResult, simResultLoadable]);
+}
+
+/**
+ * What a compartment report records, from its entry in the SONATA config:
+ * "Soma voltages", or another section's or variable's. Until the config is
+ * read it is a voltage report all the same.
+ */
+function recordingLabel(report: unknown): string {
+  const entry = isPlainObject(report) ? report : {};
+  const variable = typeof entry.variable_name === 'string' ? entry.variable_name : 'v';
+  const sections = typeof entry.sections === 'string' ? entry.sections : 'soma';
+  const where =
+    entry.type === 'compartment_set'
+      ? 'Compartment'
+      : sections === 'soma'
+        ? 'Soma'
+        : sections === 'all'
+          ? 'Compartment'
+          : sections.charAt(0).toUpperCase() + sections.slice(1);
+  return `${where} ${variable === 'v' ? 'voltages' : variable}`;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

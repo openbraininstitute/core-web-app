@@ -492,6 +492,7 @@ export default function SimulationsTab({
                   onSelect={act.onSelectedFileChange}
                   onLoadingChange={setFilesLoading}
                   jobId={activeJobId}
+                  reports={simConfig?.reports}
                 />
               )
             )}
