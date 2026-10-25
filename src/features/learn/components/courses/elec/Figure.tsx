@@ -171,8 +171,8 @@ const poseFor = (step: ElecStep): Pose => ({
 const DONE = 6000;
 
 /** Charge, told by colour as everywhere on the site: positive red, negative blue; none grey. */
-const POS: RGB = [214, 50, 58];
-const NEG: RGB = [38, 98, 214];
+export const POS: RGB = [214, 50, 58];
+export const NEG: RGB = [38, 98, 214];
 const NEUTRAL: RGB = [140, 150, 165];
 /** Voltage and energy, where they are drawn: warm. */
 const VOLT: RGB = [217, 119, 6];

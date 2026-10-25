@@ -346,7 +346,7 @@ function SlideText({
     <>
       <h1
         data-typewriter-pending={pending || undefined}
-        className={`text-balance ${textStyle} ${wide ? '' : 'max-w-2xl'}`}
+        className={`text-balance whitespace-pre-line ${textStyle} ${wide ? '' : 'max-w-2xl'}`}
       >
         {typing ? (
           <Typed text={slide.say} shown={sayShown} caret={!done && count <= sayLength} />

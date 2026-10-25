@@ -8,7 +8,7 @@
  * do. A slide come back to starts at its finished picture.
  */
 
-import { useContext, useRef, useSyncExternalStore } from 'react';
+import { type ReactNode, useContext, useRef, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 import { useCanvasFrame } from '@/features/learn/components/basics/useCanvasFrame';
@@ -53,6 +53,7 @@ export default function StepCanvas<S extends string, P>({
   draw,
   done = 9000,
   blendMs = 1100,
+  below,
 }: {
   step: S;
   back: boolean;
@@ -62,6 +63,9 @@ export default function StepCanvas<S extends string, P>({
   /** When every step's picture is finished, ms: shown at once on a slide come back to. */
   done?: number;
   blendMs?: number;
+  /** What a step puts under the figure, such as its controls: in the room below it, moving it up only where that is
+   * too little. */
+  below?: ReactNode;
 }) {
   // over the page only within a course: outside one, it keeps to its box
   const embedded = useContext(Embedded);
@@ -122,7 +126,7 @@ export default function StepCanvas<S extends string, P>({
       ) : (
         <canvas ref={canvasRef} role="img" aria-label={label} className={boxClass} />
       )}
-      <div className="flex-1" />
+      <div className="flex-1">{below}</div>
     </div>
   );
 }
