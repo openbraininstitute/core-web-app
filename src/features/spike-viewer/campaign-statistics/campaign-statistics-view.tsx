@@ -62,21 +62,20 @@ const StatisticsPlot = dynamic(
 const NO_AXIS = '__none__';
 const NO_NAMES = new Map<string, string>();
 
-type PlotKind = 'heatmaps' | 'lines';
+/** Each simulation over time on one plot, or a summary as heatmaps or lines across the scan. */
+type PlotKind = 'course' | 'heatmaps' | 'lines';
 
 /**
  * The plot, its axes and its grouping, outside the view: picking a simulation
  * swaps the file underneath and remounts the viewer it is shown from.
  */
 const campaignPlotAtom = atom<{
-  plotKind: PlotKind;
-  measure?: string;
+  plotKind?: PlotKind;
+  statistic?: string;
   x?: string;
   y?: string;
   groupBy?: string;
-}>({
-  plotKind: 'heatmaps',
-});
+}>({});
 
 /** The node property the campaign's plots are grouped by, among those on offer; none at first. */
 export function useCampaignGroupBy(columns: readonly ColumnMeta[]): string {
@@ -88,9 +87,6 @@ export function useCampaignGroupBy(columns: readonly ColumnMeta[]): string {
 const MAX_CELL = 88;
 /** What a heatmap takes around its cells: the axes' titles and ticks, the title and the colour bar. */
 const HEATMAP_ROOM = { width: 150, height: 110 };
-
-/** The measure that is each simulation over time, beside the summaries' keys. */
-const COURSE = '__course__';
 
 /** Each simulation over time, as its own measure: its PSTH, or its mean. */
 type CampaignCourse = { label: string; yLabel: string; steps: boolean };
@@ -233,25 +229,29 @@ export function CampaignPlots({
 }: PlotsProps) {
   const swept = useMemo(() => sweptParameters(simulations), [simulations]);
   const active = simulations.find((s) => s.id === activeSimulationId);
-  const [{ plotKind, measure: chosenMeasure, x: chosenX, y: chosenY }, setPlot] =
+  const [{ plotKind: chosenKind, statistic: chosenStatistic, x: chosenX, y: chosenY }, setPlot] =
     useAtom(campaignPlotAtom);
-  const setPlotKind = (next: PlotKind) => setPlot((p) => ({ ...p, plotKind: next }));
-  const setMeasure = (next: string) => setPlot((p) => ({ ...p, measure: next }));
+  // The simulations over time first, where there is a way to show them; then a
+  // summary, as heatmaps or lines, of the statistic chosen.
+  const plotOptions = [
+    ...(course ? [{ value: 'course', label: course.label }] : []),
+    { value: 'heatmaps', label: 'Heatmaps' },
+    { value: 'lines', label: 'Lines' },
+  ];
+  const plotKind: PlotKind = plotOptions.some((o) => o.value === chosenKind)
+    ? (chosenKind as PlotKind)
+    : course
+      ? 'course'
+      : 'heatmaps';
+  const setPlotKind = (next: string) => setPlot((p) => ({ ...p, plotKind: next as PlotKind }));
+  const metric = metrics.find((m) => m.key === chosenStatistic) ?? metrics[0];
+  const setStatistic = (next: string) => setPlot((p) => ({ ...p, statistic: next }));
   const groupBy = useCampaignGroupBy(groupColumns);
   const setGroupBy = (next: string) => setPlot((p) => ({ ...p, groupBy: next }));
   const groupOptions = [
     { value: NO_GROUPING, label: 'None' },
     ...groupColumns.map((c) => ({ value: c.name, label: c.label ?? c.name })),
   ];
-  // One plot at a time: the simulations over time, or one of their summaries across the scan.
-  const measureOptions = [
-    ...(course ? [{ value: COURSE, label: course.label }] : []),
-    ...metrics.map((m) => ({ value: m.key, label: m.label })),
-  ];
-  const measure = measureOptions.some((o) => o.value === chosenMeasure)
-    ? (chosenMeasure as string)
-    : (measureOptions[0]?.value ?? '');
-  const metric = metrics.find((m) => m.key === measure);
   const setChosenX = (next: string) => setPlot((p) => ({ ...p, x: next }));
   const setChosenY = (next: string) => setPlot((p) => ({ ...p, y: next }));
   const xKey = swept.some((p) => p.key === chosenX) ? chosenX : swept[0]?.key;
@@ -286,7 +286,7 @@ export function CampaignPlots({
         return { simulationId: simulation.id, summary: group.summaries.get(simulation.id) };
       };
     const grouped = groupBy !== NO_GROUPING;
-    const overTime = course && measure === COURSE ? course : null;
+    const overTime = plotKind === 'course' && course ? course : null;
     const summary = overTime ? null : metric;
     if (!overTime && !summary) return null;
     // Several groups share one scale, so their plots compare.
@@ -334,10 +334,9 @@ export function CampaignPlots({
     plotKind,
     activeSimulationId,
     course,
-    measure,
     metric,
   ]);
-  const heatmaps = measure !== COURSE && plotKind === 'heatmaps';
+  const heatmaps = plotKind === 'heatmaps';
   // A heatmap's cells no larger than they need be, the plot in the middle of the panel.
   const heatmapBox = x
     ? {
@@ -361,7 +360,15 @@ export function CampaignPlots({
           summaries.state === 'too-large' && 'invisible'
         )}
       >
-        <PillSelect label="Show" value={measure} options={measureOptions} onChange={setMeasure} />
+        <PillSelect label="Plot" value={plotKind} options={plotOptions} onChange={setPlotKind} />
+        {plotKind !== 'course' && metric && (
+          <PillSelect
+            label="Statistic"
+            value={metric.key}
+            options={metrics.map((m) => ({ value: m.key, label: m.label }))}
+            onChange={setStatistic}
+          />
+        )}
         {groupColumns.length > 0 && (
           <PillSelect
             label="Group by"
@@ -370,22 +377,19 @@ export function CampaignPlots({
             onChange={setGroupBy}
           />
         )}
-        {/* Over time the simulations share one plot; a summary is a heatmap or lines. */}
-        {measure !== COURSE && (
-          <PillSelect
-            label="Plot"
-            value={plotKind}
-            options={[
-              { value: 'heatmaps', label: 'Heatmaps' },
-              { value: 'lines', label: 'Lines' },
-            ]}
-            onChange={(v) => setPlotKind(v as PlotKind)}
-          />
-        )}
-        {xKey && <PillSelect label="X" value={xKey} options={axisOptions} onChange={setChosenX} />}
+        {/* Over time the parameters set the lines' colour and dashes; lines of a statistic
+          have it for their y axis, the second parameter giving a line per value. */}
         {xKey && (
           <PillSelect
-            label="Y"
+            label={plotKind === 'course' ? 'Colour' : 'X'}
+            value={xKey}
+            options={axisOptions}
+            onChange={setChosenX}
+          />
+        )}
+        {xKey && plotKind !== 'lines' && (
+          <PillSelect
+            label={plotKind === 'course' ? 'Dash' : 'Y'}
             value={yKey}
             options={[
               ...axisOptions.filter((o) => o.value !== xKey),
@@ -420,7 +424,7 @@ export function CampaignPlots({
       ) : (
         // A plot per group, as many to a row as fit, under one scale.
         <div className="secondary-scrollbar min-h-0 flex-1 overflow-y-auto pr-1">
-          {measure === COURSE && x && <CourseKey x={x} y={y} />}
+          {plotKind === 'course' && x && <CourseKey x={x} y={y} />}
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {figures.map(({ name, figure }) => (
               <div key={name} className={heatmaps ? 'aspect-square' : 'h-[240px]'}>
