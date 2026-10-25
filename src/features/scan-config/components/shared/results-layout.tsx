@@ -362,6 +362,8 @@ export function ResultsLayout({
           <PillToggle
             value={campaign}
             onChange={chooseCampaign}
+            // The purple of the button that opens the panel.
+            chosenClassName="bg-purple-600 text-white"
             options={[
               {
                 value: false,

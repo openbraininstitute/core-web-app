@@ -33,11 +33,14 @@ export function PillToggle<Value extends string | boolean>({
   value,
   onChange,
   className,
+  chosenClassName = 'bg-primary-9 text-white',
 }: {
   options: { value: Value; label: string; title?: string }[];
   value: Value;
   onChange: (value: Value) => void;
   className?: string;
+  /** What the chosen one is filled with. */
+  chosenClassName?: string;
 }) {
   return (
     <div className={cn(PILL_CLASS, 'shrink-0 gap-0.5 p-1 hover:bg-white', className)}>
@@ -50,9 +53,7 @@ export function PillToggle<Value extends string | boolean>({
           onClick={() => onChange(option.value)}
           className={cn(
             'h-full cursor-pointer rounded-full px-3 transition-colors',
-            value === option.value
-              ? 'bg-primary-9 text-white'
-              : 'text-primary-9 hover:bg-neutral-100'
+            value === option.value ? chosenClassName : 'text-primary-9 hover:bg-neutral-100'
           )}
         >
           {option.label}
