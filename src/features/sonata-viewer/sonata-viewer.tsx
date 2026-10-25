@@ -232,10 +232,12 @@ export function SonataReportView({
   const showScene =
     (docked ? sceneUp : sceneOn) && voltage && circuit !== undefined && status === 'ready';
   // Docked the scene stays once it has been up: building it again costs the circuit's download.
+  // Not while the layout slides: building the scene would stall the slide.
+  const sliding = sidePanel?.sliding ?? false;
   const [sceneMounted, setSceneMounted] = useState(false);
   useEffect(() => {
-    if (showScene) setSceneMounted(true);
-  }, [showScene]);
+    if (showScene && !sliding) setSceneMounted(true);
+  }, [showScene, sliding]);
   const timeCursor = useMemo(() => createTimeCursor(), []);
   const [sceneData, setSceneData] = useState<{
     population: string;
@@ -243,7 +245,7 @@ export function SonataReportView({
     range: [number, number];
   }>();
   // The frames the scene plays, wanted too by the statistics, whose mean is drawn from them.
-  const wantFrames = showScene || plotsUp;
+  const wantFrames = (showScene || plotsUp) && !sliding;
   useEffect(() => {
     if (!wantFrames || !populationName || sceneData?.population === populationName) return;
     let cancelled = false;
@@ -741,7 +743,7 @@ export function SonataReportView({
             content: (
               <ReportStatisticsPanel
                 key={population.name}
-                tableOnly={!plotsUp}
+                tableOnly={!plotsUp || sliding}
                 plotsTarget={plotsSlot}
                 timeCourse={timeCourse}
                 statistics={statistics}

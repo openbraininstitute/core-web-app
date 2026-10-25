@@ -1,6 +1,7 @@
 import { RiArrowLeftLine } from '@remixicon/react';
 import { Spin } from 'antd';
 import { atom, useSetAtom } from 'jotai';
+import { useReducedMotion } from 'motion/react';
 import {
   createContext,
   useCallback,
@@ -73,6 +74,11 @@ export type ResultsSidePanel = {
   fileStrip: HTMLElement | null;
   panelStrip: HTMLElement | null;
   openColumns: () => void;
+  /**
+   * While the columns slide, opening or closing: what is heavy to start - a 3D
+   * scene, a plot - waits for the slide to end, so the main thread is free for it.
+   */
+  sliding: boolean;
 };
 
 const ResultsSidePanelContext = createContext<ResultsSidePanel | null>(null);
@@ -86,11 +92,12 @@ export function useResultsSidePanel(): ResultsSidePanel | null {
 }
 
 // `translate`, not `transform`: the property the columns are moved by. `width`
-// for the file, which takes back its own column's width as the panel goes, and
-// `margin` for what drops under the bar.
-const SLIDE = 'transition-[translate,opacity,width,margin] duration-500 ease-in-out';
+// for the file, which takes back its own column's width as the panel goes.
+const SLIDE = 'transition-[translate,opacity,width] duration-500 ease-in-out';
 /** Its length, and a little over, after which a change of size moves things at once again. */
 const SLIDE_MS = 550;
+/** What drops under the bar, moved there in the slide's own time (`duration-500 ease-in-out`). */
+const DROP = { id: 'results-drop', duration: 500, easing: 'cubic-bezier(0.4, 0, 0.2, 1)' };
 
 /** Room kept either side of the rule between the file and the panel. */
 const MIN_SIDE_WIDTH = 320;
@@ -101,8 +108,11 @@ const MIN_SIDE_WIDTH = 320;
  */
 const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
 const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
-/** What the bar takes, in px: what `mt-14` gave the file and the panel under it. */
-const BAR_ROOM = 56;
+/**
+ * What the bar takes, in px: the tabs rail's height, which folds away as the bar
+ * comes, so what it spans stays where it was and is not laid out again.
+ */
+const BAR_ROOM = 48;
 
 export function ResultsLayout({
   left,
@@ -172,6 +182,7 @@ export function ResultsLayout({
       fileStrip,
       panelStrip,
       openColumns,
+      sliding,
     }),
     [
       target,
@@ -184,10 +195,12 @@ export function ResultsLayout({
       fileStrip,
       panelStrip,
       openColumns,
+      sliding,
     ]
   );
   const setPanelOpen = useSetAtom(resultsSidePanelOpenAtom);
-  useEffect(() => {
+  // Before paint, so the rail folds from the same frame as the columns slide.
+  useLayoutEffect(() => {
     setPanelOpen(open);
     return () => setPanelOpen(false);
   }, [open, setPanelOpen]);
@@ -254,6 +267,27 @@ export function ResultsLayout({
   // Open, what the bar spans drops below it. The bar rides up into the grid's
   // top padding, so the room it takes is little more than its own row.
   const contentTop = open ? BAR_ROOM : 0;
+  // The drop is laid out at once and played as a move from where it was: eased
+  // as a margin, it laid the file and the panel out again on every frame.
+  const reduce = Boolean(useReducedMotion());
+  const laidTop = useRef(contentTop);
+  useLayoutEffect(() => {
+    const from = laidTop.current - contentTop;
+    laidTop.current = contentTop;
+    const grid = spanRef.current?.parentElement;
+    if (from === 0 || !grid || reduce) return;
+    for (const element of grid.querySelectorAll<HTMLElement>(':scope > [data-results-drop]')) {
+      // From wherever a drop still under way has got it to.
+      const under = new DOMMatrix(getComputedStyle(element).transform).m42;
+      for (const animation of element.getAnimations()) {
+        if (animation.id === DROP.id) animation.cancel();
+      }
+      element.animate(
+        [{ transform: `translateY(${from + under}px)` }, { transform: 'none' }],
+        DROP
+      );
+    }
+  }, [contentTop, reduce]);
   // The two left columns go out of view altogether.
   const away = open && 'opacity-0 pointer-events-none';
 
@@ -291,11 +325,15 @@ export function ResultsLayout({
         ref={rightRef}
         id={rightId}
         data-testid="scan-config-file-view"
+        data-results-drop
         inert={fileShut || undefined}
         style={{
           // Shut, it waits off the span's start.
           translate: open ? `${-page - (fileShut ? openRule : 0)}px 0` : '0px 0',
-          width: open ? (fileShut ? openRule : rule) - gap / 2 : '100%',
+          // Its own column's width until the rule is dragged, the panel up or
+          // not, so there is nothing to ease and lay out again on every frame.
+          width:
+            open && (panelShut || split !== null) ? (fileShut ? openRule : rule) - gap / 2 : '100%',
           marginTop: contentTop,
         }}
         className={cn(
@@ -338,6 +376,7 @@ export function ResultsLayout({
       {/* The campaign's statistics in the panel's place; out of view, they wait past the span's end too */}
       <div
         inert={!campaignUp || undefined}
+        data-results-drop
         style={{
           width: span - (campaignUp ? rule : openRule),
           translate: `${campaignUp ? rule : span + gap / 2}px 0`,
@@ -358,6 +397,7 @@ export function ResultsLayout({
       {/* the panel; closed, shut or under the campaign's, it waits past the span's end */}
       <div
         inert={!panelUp || undefined}
+        data-results-drop
         style={{
           width: span - (panelUp ? rule : openRule),
           translate: `${panelUp ? rule : span + gap / 2}px 0`,
@@ -380,6 +420,7 @@ export function ResultsLayout({
       {/* The strips a column shuts into, where it portals the bar naming its panes. */}
       <div
         inert={!fileShut || undefined}
+        data-results-drop
         style={{ width: FILE_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
           'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start p-3',
@@ -391,6 +432,7 @@ export function ResultsLayout({
       </div>
       <div
         inert={!panelShut || undefined}
+        data-results-drop
         style={{ width: PANEL_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
           'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end py-3 pr-3 pl-4',
@@ -403,6 +445,7 @@ export function ResultsLayout({
       {/* The rule's grab bar, on its own so it stays between whichever of the two is shut */}
       <div
         inert={!open || undefined}
+        data-results-drop
         style={{ translate: `${rule}px 0`, marginTop: contentTop }}
         className={cn(
           'relative z-10 col-start-1 col-end-4 row-start-1 w-0 justify-self-start',

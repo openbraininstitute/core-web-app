@@ -23,8 +23,8 @@ import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statis
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
-import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
+import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
@@ -236,13 +236,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // moves left a page and they come in where it was, so the raster and the
   // replay stay in view beside them. Anywhere else - or in full screen, where
   // nothing outside the viewer shows - they take the viewer's own panel as a
-  // fourth view.
+  // fourth view. Docked from the first render, before the layout's panel is
+  // there to portal into: else the scene would be built for a view not up.
   const sidePanel = useResultsSidePanel();
   const fullscreenElement = useFullscreenElement();
   const docked =
-    statisticsAvailable &&
-    sidePanel?.target != null &&
-    (root === null || fullscreenElement !== root);
+    statisticsAvailable && sidePanel !== null && (root === null || fullscreenElement !== root);
   // The scene's colour-by control, raised into the header row beside the
   // population, and its mapping, which the raster draws its spikes in too
   // while the scene and its key are on show beside it.
@@ -464,11 +463,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     tour: spikeReplayTour,
   });
 
-  // Latches on: see the note above about what unmounting would cost.
+  // Latches on: see the note above about what unmounting would cost. Not while
+  // the layout slides: building the scene would stall the slide.
+  const sliding = sidePanel?.sliding ?? false;
   const [sceneMounted, setSceneMounted] = useState(false);
   useEffect(() => {
-    if (showScene) setSceneMounted(true);
-  }, [showScene]);
+    if (showScene && !sliding) setSceneMounted(true);
+  }, [showScene, sliding]);
 
   // The same latch, so closing the statistics and opening them again keeps the
   // table's sort and filters, and its plot.
@@ -630,7 +631,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         heldCell={focusedCell?.nodeId ?? null}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
-        tableOnly={docked ? !plotsUp : false}
+        tableOnly={docked ? !plotsUp || sliding : false}
         plotsTarget={docked ? plotsSlot : undefined}
       />
     ) : null;

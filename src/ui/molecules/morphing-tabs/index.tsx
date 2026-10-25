@@ -90,8 +90,17 @@ const RAIL_GAP = 16;
 const SURFACE_EDGE = 0.5;
 /** Critically damped: the surface glides to the active tab and never rebounds. */
 const SPRING_GLIDE = { stiffness: 700, damping: 50, mass: 0.5 } as const;
-/** The rail folding away or back, timed to slide with whatever asked for it. */
-const FOLD = { duration: 0.5, ease: 'easeInOut' } as const;
+/**
+ * The rail folding away or back, timed to slide with whatever asked for it: in
+ * Tailwind's `ease-in-out`, a slide's own, so what drops as it goes keeps level.
+ */
+const FOLD = { duration: 0.5, ease: [0.4, 0, 0.2, 1] } as const;
+/** The panel's move as the rail folds: the fold's timing, played by the compositor. */
+const SHIFT = {
+  id: 'morphing-tabs-shift',
+  duration: FOLD.duration * 1000,
+  easing: `cubic-bezier(${FOLD.ease.join(', ')})`,
+};
 
 function safeId(value: string) {
   return value.replace(/[^a-zA-Z0-9_-]/g, '-');
@@ -275,15 +284,36 @@ export function MorphingTabs({
   const hasEnd = Boolean(railEnd);
   const uid = useId();
 
-  // 0 with the rail out, 1 folded away; the rail's height and the surface's
-  // top edge both follow it, so the panel rises as the rail goes.
+  // 0 with the rail out, 1 folded away; the rail's clip and the surface's top
+  // edge both follow it, and the panel rises with them. Nothing is laid out as
+  // it runs: the panel takes its new top at once and the compositor moves it
+  // there from the old one, in time with whatever asked however busy the page.
+  // Both start before paint, in the frame that asked.
   const fold = useMotionValue(railCollapsed ? 1 : 0);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const controls = animateValue(fold, railCollapsed ? 1 : 0, reduce ? { duration: 0 } : FOLD);
     return () => controls.stop();
   }, [railCollapsed, fold, reduce]);
-  const railHeight = useTransform(fold, [0, 1], [RAIL_HEIGHT, 0]);
+  // Unclipped at rest: a clip would make the rail a stacking context, under the panel.
+  const railClip = useTransform(fold, (folded) =>
+    folded > 0 ? `inset(0 0 ${folded * RAIL_HEIGHT}px 0)` : 'none'
+  );
   const railOpacity = useTransform(fold, [0, 0.6], [1, 0]);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const shifted = useRef(railCollapsed);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (shifted.current === railCollapsed || !panel) return;
+    shifted.current = railCollapsed;
+    if (reduce) return;
+    // From wherever a move still under way has got it to.
+    const under = new DOMMatrix(getComputedStyle(panel).transform).m42;
+    for (const animation of panel.getAnimations()) {
+      if (animation.id === SHIFT.id) animation.cancel();
+    }
+    const from = (railCollapsed ? RAIL_HEIGHT : -RAIL_HEIGHT) + under;
+    panel.animate([{ transform: `translateY(${from}px)` }, { transform: 'none' }], SHIFT);
+  }, [railCollapsed, reduce]);
 
   const [internalValue, setInternalValue] = useState<string | null>(
     defaultValue ?? items[0]?.id ?? null
@@ -426,8 +456,8 @@ export function MorphingTabs({
 
       {/* Clipped as it folds, so the panel's rising edge reads as covering it. */}
       <motion.div
-        className="relative shrink-0 overflow-hidden"
-        style={{ height: railHeight, opacity: railOpacity }}
+        className="absolute inset-x-0 top-0 overflow-hidden"
+        style={{ height: RAIL_HEIGHT, clipPath: railClip, opacity: railOpacity }}
         inert={railCollapsed || undefined}
       >
         <div
@@ -570,9 +600,11 @@ export function MorphingTabs({
       </motion.div>
 
       <div
+        ref={panelRef}
         id={`${uid}-panel`}
         role="tabpanel"
         aria-labelledby={`${uid}-tab-${safeId(activeId ?? 'empty')}`}
+        style={{ marginTop: railCollapsed ? 0 : RAIL_HEIGHT }}
         className={cn(
           'relative z-20 mx-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] text-[#181818]',
           classNames?.content
