@@ -10,6 +10,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
+import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
 import {
   listAllChildren as listAllSimulationChildren,
@@ -520,6 +521,12 @@ export default function SimulationsTab({
           }
           right={
             <>
+              {/* Arriving, nothing is on show until the result's files are in to pick from. */}
+              {!selectedFile && filesLoading && (
+                <div className="flex h-full w-full items-center justify-center">
+                  <Loader className="text-neutral-3" />
+                </div>
+              )}
               {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (
                 <TaskConfigurationViewer
                   jobId={activeJobId}

@@ -12,6 +12,7 @@ import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
+import { prioritizeOutputFiles } from '@/features/scan-config/components/simulation-files/output-order';
 import {
   ActivityCustomFileRenderer,
   isAssetBackedFile,
@@ -63,6 +64,8 @@ const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
 
 /** Which of the groups are open: kept as the simulation on show changes. */
 const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
+
+const NO_FILES: TAssetBackedFile[] = [];
 
 type SimulationFilesProps = {
   simulation: ISimulation;
@@ -154,36 +157,25 @@ export function SimulationFiles({
     });
   }, [inputFilesWithLogs, selectedAssetPath]);
 
-  const prioritizedOutputFiles = useMemo(() => {
-    const selectedPath = selectedAssetPath;
-
-    return [...outputFilesWithLogs].sort((a, b) => {
-      const aSelected = a.asset.path === selectedPath;
-      const bSelected = b.asset.path === selectedPath;
-      if (aSelected !== bSelected) return aSelected ? -1 : 1;
-
-      const aPreferred =
-        a.asset.label === AssetLabel.voltage_report &&
-        a.asset.content_type === AssetContentType.nwb;
-      const bPreferred =
-        b.asset.label === AssetLabel.voltage_report &&
-        b.asset.content_type === AssetContentType.nwb;
-      if (aPreferred !== bPreferred) return aPreferred ? -1 : 1;
-
-      return 0;
-    });
-  }, [outputFilesWithLogs, selectedAssetPath]);
+  const prioritizedOutputFiles = useMemo(
+    () => prioritizeOutputFiles(outputFilesWithLogs, selectedAssetPath),
+    [outputFilesWithLogs, selectedAssetPath]
+  );
 
   // Notify parent component about the loading state
   useEffect(() => {
     onLoadingChange(loading);
   }, [loading, onLoadingChange]);
 
+  // Nothing is picked while the result's files load: the logs row comes in ahead
+  // of them, and the pick is made once. Arriving, the tab opens on the spikes; a
+  // pick of another simulation keeps the file on show until its like is in.
+  const awaitingResult = outputAvailable && outputLoading;
   useAutoSelectFileOnConfigChange({
     configId: simulation.id,
     selectedFile,
-    inputFiles: prioritizedInputFiles,
-    outputFiles: prioritizedOutputFiles,
+    inputFiles: awaitingResult ? NO_FILES : prioritizedInputFiles,
+    outputFiles: awaitingResult ? NO_FILES : prioritizedOutputFiles,
     onSelect,
   });
 
