@@ -42,7 +42,7 @@ export function makeLogStreamFileDescriptors({
   return {
     input: {
       id: `${configId}:task-logs-configuration`,
-      name: 'Task configuration',
+      name: 'Launch configuration',
       path: 'logs-configuration.config',
       renderer: LogStreamFileRenderer.TaskConfiguration,
     },
