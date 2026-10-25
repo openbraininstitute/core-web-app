@@ -30,7 +30,11 @@ import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-v
 import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
-import { PANEL_FLOORS, StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import {
+  OpenPanelButton,
+  PANEL_FLOORS,
+  StackedPanes,
+} from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
@@ -801,12 +805,17 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     return (
       <div ref={setRoot} className="flex h-full min-h-0 flex-col">
         <FullscreenPortalScope root={root}>
-          {/* The raster over the table, and while the panel is not up its bar beside them. */}
+          {/* The raster over the table, and while the panel is not up a button over them opening it. */}
           <StackedPanes
             split="file"
             header={
               !dockedOpen && (
-                <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">{population}</div>
+                <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+                  {population}
+                  <div className="ml-auto">
+                    <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
+                  </div>
+                </div>
               )
             }
             top={{
@@ -827,11 +836,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                 boxClassName: 'px-3 pt-1 pb-2',
                 content: statistics,
               }
-            }
-            aside={
-              !dockedOpen && (
-                <ShutPaneBar upright title={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
-              )
             }
           />
           {/* The panel beside them: the 3D player over the statistics. */}

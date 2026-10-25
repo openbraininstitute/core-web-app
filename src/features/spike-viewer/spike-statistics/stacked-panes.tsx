@@ -1,5 +1,6 @@
 'use client';
 
+import { RiArrowRightLine } from '@remixicon/react';
 import { atom, useAtom } from 'jotai';
 import { useLayoutEffect, useRef, useState } from 'react';
 
@@ -11,6 +12,7 @@ import {
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -57,7 +59,6 @@ export function StackedPanes({
   bottomShare = 0.5,
   floors = DEFAULT_FLOORS,
   header,
-  aside,
 }: {
   split: 'file' | 'panel';
   top: StackedPane;
@@ -66,10 +67,8 @@ export function StackedPanes({
   bottomShare?: number;
   /** What the top pane and the bottom one keep while open, the gutter included. */
   floors?: readonly [number, number];
-  /** Over the panes, such as the campaign's picker for the simulation on show. */
+  /** Over the panes, such as the population on show and the button opening the panel. */
   header?: ReactNode;
-  /** Beside them on the right: the bar of a panel that is not up. */
-  aside?: ReactNode;
 }) {
   const sidePanel = useResultsSidePanel();
   // A layout effect, seeded by hand: the observer's first report only lands a
@@ -109,7 +108,7 @@ export function StackedPanes({
   return (
     <div className="flex h-full min-h-0 flex-col p-3">
       {header}
-      <div className="flex min-h-0 flex-1 gap-6">
+      <div className="flex min-h-0 flex-1">
         <div ref={areaRef} className="relative min-h-0 min-w-0 flex-1">
           <div
             className={cn(
@@ -166,8 +165,27 @@ export function StackedPanes({
             </div>
           )}
         </div>
-        {aside && <div className="flex w-[42px] shrink-0 flex-col *:flex-1">{aside}</div>}
       </div>
     </div>
+  );
+}
+
+/** Over a file's panes while the panel is not up: opens it, naming what it holds. */
+export function OpenPanelButton({
+  titles,
+  onOpen,
+}: {
+  titles: readonly string[];
+  onOpen: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      className={cn(PILL_CLASS, 'shrink-0 bg-purple-600 text-white hover:bg-purple-700')}
+    >
+      {titles.join(' · ')}
+      <RiArrowRightLine className="size-4" />
+    </button>
   );
 }

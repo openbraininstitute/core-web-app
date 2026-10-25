@@ -29,7 +29,11 @@ import { useReportPopulation } from '@/features/spike-viewer/report-populations'
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
-import { PANEL_FLOORS, StackedPanes } from '@/features/spike-viewer/spike-statistics/stacked-panes';
+import {
+  OpenPanelButton,
+  PANEL_FLOORS,
+  StackedPanes,
+} from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
@@ -633,7 +637,7 @@ export function SonataReportView({
     const panelTitles = voltage ? ['3D Player', 'Statistics'] : ['Statistics'];
     return (
       <>
-        {/* The traces over the table, and while the panel is not up its bar beside them. */}
+        {/* The traces over the table, and while the panel is not up a button over them opening it. */}
         <StackedPanes
           split="file"
           header={
@@ -645,7 +649,8 @@ export function SonataReportView({
                   onChange={setChosenPopulation}
                   counted={false}
                 />
-                {simulationPicker}
+                {/* The simulation on show is picked in the list beside it. */}
+                <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
               </div>
             )
           }
@@ -706,11 +711,6 @@ export function SonataReportView({
               />
             ),
           }}
-          aside={
-            !dockedOpen && (
-              <ShutPaneBar upright title={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
-            )
-          }
         />
         {/* The panel beside them: the 3D player over the statistics. */}
         {sidePanel.target &&
