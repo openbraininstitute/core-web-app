@@ -22,7 +22,7 @@ type Props = {
   file: TActivityCustomFile;
   selected?: boolean;
   label?: ReactNode;
-  /** Opens an interactive view, such as a report's statistics: its tag is edged in purple, as the button opening them is. */
+  /** Opens an interactive view, such as a report's statistics: its tag is white on purple, as the button opening them is. */
   interactive?: boolean;
   onSelect: (file: TActivityCustomFile) => void;
 };
@@ -73,7 +73,7 @@ export function TaskIOFileItem({ id, name, file, selected, label, interactive, o
           selected
             ? 'border-white text-primary-9 bg-white'
             : 'border-[oklch(0.968_0.007_247.896)] bg-[oklch(0.929_0.013_255.508)] text-neutral-5',
-          interactive && 'border-purple-500!'
+          interactive && 'border-purple-600! bg-purple-600! text-white!'
         )}
       >
         {badgeContent}
