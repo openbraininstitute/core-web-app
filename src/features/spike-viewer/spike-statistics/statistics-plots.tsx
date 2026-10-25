@@ -41,7 +41,15 @@ const StatisticsPlot = dynamic(
   }
 );
 
-type PlotKind = 'timeCourse' | 'violins' | 'densities' | 'scatter2d' | 'scatter3d' | 'sankey';
+/** The statistics' own plots, or one a host draws (`CellPlot.value`). */
+type PlotKind =
+  | 'timeCourse'
+  | 'violins'
+  | 'densities'
+  | 'scatter2d'
+  | 'scatter3d'
+  | 'sankey'
+  | (string & {});
 
 /**
  * A plot over time the host can draw from what it holds - the spikes' PSTHs, a
@@ -57,6 +65,42 @@ export type TimeCourse = {
   events?: readonly TimelineEvent[];
   /** The player's time, a red rule over the course. */
   timeCursor?: TimeCursor;
+};
+
+/**
+ * The cells on show as a host's plot is handed them: all of them, split by
+ * Group by, and split again by the plot's own Colour by where it has one.
+ */
+export type CellSplit = {
+  /** Every cell on show, by node index. */
+  cells: Uint32Array;
+  /** One group, "All", when nothing groups them. */
+  groups: CellGroup[];
+  groupLabel: string | undefined;
+  /** Without a Colour by of the plot's own, the groups again. */
+  colours: CellGroup[];
+  colourLabel: string | undefined;
+};
+
+/**
+ * A plot of the cells a host draws itself, offered after the statistics' own:
+ * handed the cells on show split by the grouping, as a time course is.
+ */
+export type CellPlot = {
+  value: string;
+  label: string;
+  /** Null when there is nothing to draw, such as too few cells. */
+  figure: (split: CellSplit) => Figure | null;
+  /** A Colour by of its own beside Group by, so its cells can be coloured by one property and grouped by another. */
+  colourBy?: boolean;
+  /** False when nothing it draws once grouped takes the colouring, which leaves Colour by out then. */
+  coloursWhenGrouped?: boolean;
+  /** Shown after the plot's select while it is up: what shapes it, such as its bins. */
+  controls?: ReactNode;
+  /** Shown after Group by while the cells are grouped: how the groups are drawn. */
+  groupControls?: ReactNode;
+  /** Said in the plot's place when there is nothing to draw. */
+  empty: string;
 };
 
 const PLOT_KINDS: { value: PlotKind; label: string }[] = [
@@ -107,6 +151,7 @@ type PlotsProps = {
   /** Kept but not drawn, so the choices made over the plot outlast a spell out of view. */
   hidden?: boolean;
   timeCourse?: TimeCourse;
+  cellPlots?: readonly CellPlot[];
 };
 
 /**
@@ -128,6 +173,7 @@ export function StatisticsPlots({
   summary,
   hidden = false,
   timeCourse,
+  cellPlots,
 }: PlotsProps) {
   const [statisticKey, setStatisticKey] = useState(initialStatistic);
   const statistic = statistics.find((s) => s.key === statisticKey) ?? statistics[0];
@@ -139,52 +185,66 @@ export function StatisticsPlots({
       ? (chosenGroupBy as string)
       : defaultGrouping(groupOptions);
 
-  const [groupColumn, setGroupColumn] = useState<{
-    session: string;
-    name: string;
-    values: ColumnValues;
-  }>();
-  useEffect(() => {
-    if (!ready || groupBy === NO_GROUPING) return;
-    let cancelled = false;
-    getColumn(groupBy)
-      .then((column) => {
-        if (!cancelled) setGroupColumn({ session: sessionKey, name: groupBy, values: column });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [ready, groupBy, getColumn, sessionKey]);
+  const groupColumn = useGroupingColumn(groupBy, ready, getColumn, sessionKey);
 
   const groups = useMemo(() => {
     const shown = values?.[statistic.key];
-    if (!shown || cells === undefined) return null;
-    if (groupBy === NO_GROUPING) return groupValues(shown, null, cells);
-    if (groupColumn?.session !== sessionKey || groupColumn.name !== groupBy) return null;
-    return groupValues(shown, groupColumn.values, cells);
-  }, [values, cells, groupBy, groupColumn, statistic, sessionKey]);
+    if (!shown || cells === undefined || groupColumn === undefined) return null;
+    return groupValues(shown, groupColumn, cells);
+  }, [values, cells, groupColumn, statistic]);
 
   // Which figure: the statistic by group, or the cells themselves placed by
   // chosen columns - any statistic or numeric node property - and coloured by it.
   const [plotKind, setPlotKind] = useState<PlotKind>(timeCourse ? 'timeCourse' : 'violins');
   const scatter = plotKind === 'scatter2d' || plotKind === 'scatter3d';
   const overTime = plotKind === 'timeCourse' && timeCourse !== undefined;
+  const hostPlot = cellPlots?.find((p) => p.value === plotKind);
+  // Over time, or in a host's plot, the cells themselves are split, not a statistic's values.
+  const overCells = overTime || hostPlot !== undefined;
   const plotKinds = useMemo(
-    () =>
-      timeCourse
-        ? [{ value: 'timeCourse' as PlotKind, label: timeCourse.label }, ...PLOT_KINDS]
-        : PLOT_KINDS,
-    [timeCourse]
+    () => [
+      ...(timeCourse ? [{ value: 'timeCourse' as PlotKind, label: timeCourse.label }] : []),
+      ...PLOT_KINDS,
+      ...(cellPlots ?? []).map((p) => ({ value: p.value, label: p.label })),
+    ],
+    [timeCourse, cellPlots]
   );
-  // Over time it is the cells themselves that are split, not a statistic's values.
   const rowCount = values ? (Object.values(values)[0]?.length ?? 0) : 0;
   const cellGroups = useMemo(() => {
-    if (!overTime || !values || cells === undefined) return null;
-    if (groupBy === NO_GROUPING) return groupCells(null, cells, rowCount);
-    if (groupColumn?.session !== sessionKey || groupColumn.name !== groupBy) return null;
-    return groupCells(groupColumn.values, cells, rowCount);
-  }, [overTime, values, cells, rowCount, groupBy, groupColumn, sessionKey]);
+    if (!overCells || !values || cells === undefined || groupColumn === undefined) return null;
+    return groupCells(groupColumn, cells, rowCount);
+  }, [overCells, values, cells, rowCount, groupColumn]);
+  const shownCells = useMemo(
+    () => (cells === null ? Uint32Array.from({ length: rowCount }, (_, i) => i) : cells),
+    [cells, rowCount]
+  );
+
+  // A host's plot with a Colour by of its own colours its cells as they are
+  // grouped until a colouring is chosen apart.
+  const colouring = hostPlot?.colourBy === true;
+  const [chosenColourBy, setChosenColourBy] = useState<string>();
+  const colourBy =
+    chosenColourBy === NO_GROUPING || groupOptions.some((c) => c.name === chosenColourBy)
+      ? (chosenColourBy as string)
+      : groupBy;
+  const ownColourColumn = useGroupingColumn(
+    colouring && colourBy !== groupBy ? colourBy : NO_GROUPING,
+    ready,
+    getColumn,
+    sessionKey
+  );
+  const colourColumn = colourBy === groupBy ? groupColumn : ownColourColumn;
+  const colourGroups = useMemo(() => {
+    if (!colouring || !values || cells === undefined || colourColumn === undefined) return null;
+    return groupCells(colourColumn, cells, rowCount);
+  }, [colouring, values, cells, rowCount, colourColumn]);
+  // A column a host added, such as a neuron set's, goes by its label.
+  const groupLabel = groupingLabel(groupOptions, groupBy);
+  const colourLabel = colouring ? groupingLabel(groupOptions, colourBy) : groupLabel;
+  const groupingOptions = [
+    ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
+    { value: NO_GROUPING, label: 'None' },
+  ];
   const axisOptions = useMemo(() => scatterAxisOptions(statistics, columns), [statistics, columns]);
   const [chosenAxes, setChosenAxes] = useState<string[]>([]);
   const axes = AXIS_NAMES.slice(0, plotKind === 'scatter3d' ? 3 : 2).map((_, i) =>
@@ -224,16 +284,22 @@ export function StatisticsPlots({
   }, [ready, axisKey, knownAxes, getColumn, sessionKey]);
 
   const binStep = statistic.step?.(spanMs);
-  const empty = overTime ? cellGroups?.length === 0 : !scatter && groups?.length === 0;
+  const empty = overCells ? cellGroups?.length === 0 : !scatter && groups?.length === 0;
   const figure = useMemo<Figure | null>(() => {
     const shown = values?.[statistic.key];
     // Nothing is drawn out of view, so nothing is worked out for it.
     if (hidden || !values || !shown || cells === undefined) return null;
-    // A column a host added, such as a neuron set's, goes by its label.
-    const groupLabel =
-      groupBy === NO_GROUPING
-        ? undefined
-        : (groupOptions.find((c) => c.name === groupBy)?.label ?? groupBy);
+    if (hostPlot) {
+      const colours = colouring ? colourGroups : cellGroups;
+      if (!cellGroups || !colours || !shownCells) return null;
+      return hostPlot.figure({
+        cells: shownCells,
+        groups: cellGroups,
+        groupLabel,
+        colours,
+        colourLabel,
+      });
+    }
     if (overTime)
       return timeCourse && cellGroups ? timeCourse.figure(cellGroups, groupLabel) : null;
     const valueLabel = statisticLabel(statistic);
@@ -266,15 +332,22 @@ export function StatisticsPlots({
     knownAxes,
     plotKind,
     groups,
-    groupBy,
-    groupOptions,
     color,
     binStep,
     overTime,
     cellGroups,
     timeCourse,
+    hostPlot,
     hidden,
+    groupLabel,
+    colourLabel,
+    colouring,
+    colourGroups,
+    shownCells,
   ]);
+  // A host's plot that had the cells and still drew nothing has said why.
+  const hostReady = cellGroups !== null && (!colouring || colourGroups !== null);
+  const hostEmpty = hostPlot !== undefined && hostReady && !empty && figure === null;
 
   if (hidden) return null;
 
@@ -288,6 +361,7 @@ export function StatisticsPlots({
           onChange={(v) => setPlotKind(v as PlotKind)}
         />
         {overTime && timeCourse.controls}
+        {hostPlot?.controls}
         {scatter &&
           axes.map((axis, i) => (
             <PillSelect
@@ -298,7 +372,7 @@ export function StatisticsPlots({
               onChange={(v) => setChosenAxes(axes.map((a, j) => (j === i ? v : a)))}
             />
           ))}
-        {!overTime && (
+        {!overCells && (
           <PillSelect
             label={scatter ? 'Colour' : 'Statistic'}
             value={statistic.key}
@@ -306,23 +380,33 @@ export function StatisticsPlots({
             onChange={setStatisticKey}
           />
         )}
+        {colouring && (groupBy === NO_GROUPING || hostPlot.coloursWhenGrouped !== false) && (
+          <PillSelect
+            label="Colour by"
+            value={colourBy}
+            options={groupingOptions}
+            onChange={setChosenColourBy}
+          />
+        )}
         {!scatter && (
           <PillSelect
             label="Group by"
             value={groupBy}
-            options={[
-              ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
-              { value: NO_GROUPING, label: 'None' },
-            ]}
+            options={groupingOptions}
             onChange={setChosenGroupBy}
           />
         )}
+        {groupBy !== NO_GROUPING && hostPlot?.groupControls}
         {summary}
       </div>
       <div className="relative min-h-0 flex-1 px-3 pb-3">
-        {empty ? (
+        {empty || hostEmpty ? (
           <Centered>
-            <Empty description={`No cell here has a ${statistic.label.toLowerCase()}`} />
+            <Empty
+              description={
+                hostEmpty ? hostPlot.empty : `No cell here has a ${statistic.label.toLowerCase()}`
+              }
+            />
           </Centered>
         ) : figure === null ? (
           <Centered>
@@ -512,6 +596,38 @@ function resolveAxis(
   }
   const column = nodeColumns?.get(axis);
   return column ? { label: axis, values: column } : null;
+}
+
+/** What a grouping goes by: a column a host added, such as a neuron set's, by its label. */
+function groupingLabel(options: ColumnMeta[], name: string): string | undefined {
+  return name === NO_GROUPING ? undefined : (options.find((c) => c.name === name)?.label ?? name);
+}
+
+/**
+ * A grouping property's values, read from the session once it is chosen: null
+ * for none, undefined until they come.
+ */
+function useGroupingColumn(
+  name: string,
+  ready: boolean,
+  getColumn: (name: string) => Promise<ColumnValues>,
+  sessionKey: string
+): ColumnValues | null | undefined {
+  const [read, setRead] = useState<{ session: string; name: string; values: ColumnValues }>();
+  useEffect(() => {
+    if (!ready || name === NO_GROUPING) return;
+    let cancelled = false;
+    getColumn(name)
+      .then((values) => {
+        if (!cancelled) setRead({ session: sessionKey, name, values });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, name, getColumn, sessionKey]);
+  if (name === NO_GROUPING) return null;
+  return read?.session === sessionKey && read.name === name ? read.values : undefined;
 }
 
 function defaultGrouping(options: ColumnMeta[]): string {

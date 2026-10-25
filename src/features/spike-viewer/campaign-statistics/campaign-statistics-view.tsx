@@ -31,7 +31,7 @@ import {
 import {
   PsthControls,
   psthOptionsAtom,
-} from '@/features/spike-viewer/spike-statistics/psth-controls';
+} from '@/features/spike-viewer/spike-statistics/plot-controls';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';

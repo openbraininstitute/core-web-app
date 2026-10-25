@@ -11,11 +11,18 @@ import {
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
-import { psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
+import { pcaFigure, psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
+import { cachedSpikePca } from '@/features/spike-viewer/spike-statistics/pca';
 import {
+  PcaControls,
+  PcaPointsControl,
+  PcaSpreadControl,
   PsthControls,
+  pcaBinAtom,
+  pcaPointsAtom,
+  pcaSpreadAtom,
   psthOptionsAtom,
-} from '@/features/spike-viewer/spike-statistics/psth-controls';
+} from '@/features/spike-viewer/spike-statistics/plot-controls';
 import {
   computeSpikeStatistics,
   SPIKE_STATISTICS,
@@ -37,7 +44,10 @@ import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circ
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
-import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import type {
+  CellPlot,
+  TimeCourse,
+} from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const EMPTY_FILTER: FilterModel = {};
@@ -354,6 +364,36 @@ export function SpikeStatisticsView({
     [recorded, windowTime, timeRange, rowCount, color, psth, events, timeCursor]
   );
 
+  // The cells' firing over time as points, placed by its principal components:
+  // one analysis over every cell on show, coloured and grouped without changing it.
+  const pcaBin = useAtomValue(pcaBinAtom);
+  const pcaSpread = useAtomValue(pcaSpreadAtom);
+  const pcaPoints = useAtomValue(pcaPointsAtom);
+  const cellPlots = useMemo<CellPlot[]>(() => {
+    const span: [number, number] = windowTime ?? [timeRange.min, timeRange.max];
+    const pca = (components: 2 | 3): CellPlot => ({
+      value: `pca${components}d`,
+      label: `${components}D PCA`,
+      figure: ({ cells, ...split }) => {
+        const found = cachedSpikePca(recorded, cells, rowCount, span, pcaBin, components);
+        const options = { ...split, spread: pcaSpread, points: pcaPoints };
+        return found && pcaFigure(found, rowCount, options, color);
+      },
+      colourBy: true,
+      // Grouped, the colours are the cells', so they go with them.
+      coloursWhenGrouped: pcaPoints,
+      controls: <PcaControls />,
+      groupControls: (
+        <>
+          <PcaSpreadControl threeD={components === 3} />
+          <PcaPointsControl />
+        </>
+      ),
+      empty: `Too few cells or bins with spikes for ${components} components`,
+    });
+    return [pca(2), pca(3)];
+  }, [recorded, windowTime, timeRange, rowCount, color, pcaBin, pcaSpread, pcaPoints]);
+
   // The statistics share the table's right half between them.
   const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
   const [chosenShare, setChosenShare] = useState<number | null>(null);
@@ -479,6 +519,7 @@ export function SpikeStatisticsView({
       summary={summary}
       hidden={tableOnly}
       timeCourse={timeCourse}
+      cellPlots={cellPlots}
     />
   );
   if (plotsTarget !== undefined) {
