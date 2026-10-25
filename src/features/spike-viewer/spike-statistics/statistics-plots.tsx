@@ -49,6 +49,8 @@ type PlotKind = 'timeCourse' | 'violins' | 'densities' | 'scatter2d' | 'scatter3
 export type TimeCourse = {
   label: string;
   figure: (groups: CellGroup[], groupLabel: string | undefined) => Figure | null;
+  /** Shown after the plot's select while the course is up: what shapes it, such as a PSTH's bins. */
+  controls?: ReactNode;
 };
 
 const PLOT_KINDS: { value: PlotKind; label: string }[] = [
@@ -278,6 +280,7 @@ export function StatisticsPlots({
           options={plotKinds}
           onChange={(v) => setPlotKind(v as PlotKind)}
         />
+        {overTime && timeCourse.controls}
         {scatter &&
           axes.map((axis, i) => (
             <PillSelect

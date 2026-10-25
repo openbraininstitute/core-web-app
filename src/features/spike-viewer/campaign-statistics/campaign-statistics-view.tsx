@@ -28,11 +28,16 @@ import {
   CAMPAIGN_SPIKES_LIMIT_BYTES,
   useCampaignSummaries,
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
+import {
+  PsthControls,
+  psthOptionsAtom,
+} from '@/features/spike-viewer/spike-statistics/psth-controls';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
+import type { ReactNode } from 'react';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type {
@@ -90,7 +95,13 @@ const MAX_CELL = 88;
 const HEATMAP_ROOM = { width: 150, height: 110 };
 
 /** Each simulation over time, as its own measure: its PSTH, or its mean. */
-type CampaignCourse = { label: string; yLabel: string; steps: boolean };
+type CampaignCourse = {
+  label: string;
+  yLabel: string;
+  steps: boolean;
+  /** Shown after the plot's select while the course is up: what shapes it, such as a PSTH's bins. */
+  controls?: ReactNode;
+};
 
 type Props = {
   simulations: ISimulation[];
@@ -141,6 +152,12 @@ export function CampaignStatisticsView({
     cells,
     rowCount: cellCount ?? 0,
   });
+  const psth = useAtomValue(psthOptionsAtom);
+  // Smoothed, a PSTH is a line through its bins rather than steps.
+  const course = useMemo(
+    () => ({ ...SPIKE_COURSE, steps: psth.sigmaMs === 0, controls: <PsthControls /> }),
+    [psth.sigmaMs]
+  );
   const summaries = useCampaignSummaries({
     simulations,
     statusMap,
@@ -151,6 +168,7 @@ export function CampaignStatisticsView({
     run,
     groups: groups ?? NO_GROUPS,
     timeWindow,
+    psth,
     enabled: true,
   });
   const picked = useMemo(
@@ -173,7 +191,7 @@ export function CampaignStatisticsView({
       reading="spikes"
       files="spike files"
       scope={`${populationName ?? ''}${of}${span}`}
-      course={SPIKE_COURSE}
+      course={course}
       groupColumns={groupColumns}
       grouping={groups === null}
     />
@@ -401,6 +419,7 @@ export function CampaignPlots({
         )}
       >
         <PillSelect label="Plot" value={plotKind} options={plotOptions} onChange={setPlotKind} />
+        {plotKind === 'course' && course?.controls}
         {plotKind !== 'course' && metric && (
           <PillSelect
             label="Statistic"

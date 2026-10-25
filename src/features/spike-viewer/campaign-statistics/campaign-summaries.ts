@@ -14,9 +14,10 @@ import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
-import type { CampaignGroup } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { CampaignGroup } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
+import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/figures';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 import type { SpikeTraceWorkerApi } from '@/features/spike-viewer/spike-trace.worker';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
@@ -93,6 +94,8 @@ type Options = {
   groups: readonly CampaignGroup[];
   /** The span of the run summed up, such as the raster's window, in ms; null for all of it. */
   timeWindow: [number, number] | null;
+  /** How the courses' PSTHs bin and smooth. */
+  psth: PsthOptions;
   enabled: boolean;
 };
 
@@ -116,6 +119,7 @@ export function useCampaignSummaries({
   run,
   groups,
   timeWindow,
+  psth,
   enabled,
 }: Options): CampaignSummaries {
   const queryClient = useQueryClient();
@@ -219,13 +223,14 @@ export function useCampaignSummaries({
                   s.spikes,
                   group.cells,
                   s.counts.length,
-                  timeWindow ?? s.span ?? [0, s.seconds * 1000]
+                  timeWindow ?? s.span ?? [0, s.seconds * 1000],
+                  psth
                 ),
               ] as const
           )
         ),
       })),
-    [groups, windowed, loaded, timeWindow]
+    [groups, windowed, loaded, timeWindow, psth]
   );
 
   if (!files) return { state: 'resolving' };
@@ -299,7 +304,10 @@ export function summarize(
 /** Each cell's count and CV over `timeWindow` of the run, counted again from its spikes, or over all of it. */
 type WindowedCells = { counts: ArrayLike<number>; cvs: ArrayLike<number>; seconds: number };
 
-function windowedCells(statistics: CellStatistics, timeWindow: [number, number] | null): WindowedCells {
+function windowedCells(
+  statistics: CellStatistics,
+  timeWindow: [number, number] | null
+): WindowedCells {
   if (!timeWindow) return statistics;
   const [from, to] = timeWindow;
   const { count, isiCv } = computeSpikeStatistics(
@@ -310,7 +318,10 @@ function windowedCells(statistics: CellStatistics, timeWindow: [number, number] 
   return { counts: count, cvs: isiCv, seconds: (to - from) / 1000 };
 }
 
-function summarizeCells({ counts, cvs, seconds }: WindowedCells, cells: Uint8Array | null): SpikeSummary {
+function summarizeCells(
+  { counts, cvs, seconds }: WindowedCells,
+  cells: Uint8Array | null
+): SpikeSummary {
   let n = 0;
   let spikes = 0;
   let active = 0;

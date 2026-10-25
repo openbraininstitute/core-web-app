@@ -603,8 +603,73 @@ function withAlpha(hex: string, alpha: number): string {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 }
 
-/** About this many bins across the span a PSTH covers. */
+/** About this many bins across the span a PSTH covers, unless a width is asked for. */
 const PSTH_BINS = 100;
+/** Past this many a plot of them is slow to draw: a finer bin over a long run is widened to it. */
+const MAX_PSTH_BINS = 5000;
+
+/**
+ * How a PSTH bins its spikes and smooths their rate: a bin's width in ms, null
+ * for about a hundred round ones over the span, and the σ in ms of a Gaussian
+ * the binned rate is run through, 0 for none.
+ */
+export type PsthOptions = { binMs: number | null; sigmaMs: number };
+export const DEFAULT_PSTH: PsthOptions = { binMs: null, sigmaMs: 0 };
+
+/** The bins over `span`: the width asked for, or a round one, within what can be drawn. */
+function psthBins([from, to]: [number, number], binMs: number | null) {
+  const length = Math.max(to - from, 1e-6);
+  const width = Math.max(binMs ?? roundStep(length / PSTH_BINS), length / MAX_PSTH_BINS);
+  return { width, bins: Math.max(1, Math.ceil(length / width)) };
+}
+
+/** A rate run through a Gaussian of `sigma` bins, each bin weighted by the part of it in range. */
+function smoothed(rate: Float64Array, sigma: number): Float64Array {
+  const radius = Math.ceil(3 * sigma);
+  const kernel = Float64Array.from({ length: 2 * radius + 1 }, (_, k) =>
+    Math.exp(-((k - radius) ** 2) / (2 * sigma * sigma))
+  );
+  const out = new Float64Array(rate.length);
+  for (let b = 0; b < rate.length; b++) {
+    let sum = 0;
+    let weight = 0;
+    for (let k = Math.max(-radius, -b); k <= Math.min(radius, rate.length - 1 - b); k++) {
+      sum += kernel[k + radius] * rate[b + k];
+      weight += kernel[k + radius];
+    }
+    out[b] = sum / weight;
+  }
+  return out;
+}
+
+/**
+ * A binned rate as the points of its line: steps, each bin's rate from its
+ * start and held to the end of the last; or smoothed, a line through the bins'
+ * middles.
+ */
+function psthPoints(rate: Float64Array, from: number, to: number, width: number, sigmaMs: number) {
+  if (sigmaMs > 0) {
+    return {
+      x: Float64Array.from({ length: rate.length }, (_, b) =>
+        Math.min(to, from + (b + 0.5) * width)
+      ),
+      y: smoothed(rate, sigmaMs / width),
+    };
+  }
+  const y = new Float64Array(rate.length + 1);
+  y.set(rate);
+  y[rate.length] = rate[rate.length - 1];
+  return {
+    x: Float64Array.from({ length: rate.length + 1 }, (_, b) => Math.min(to, from + b * width)),
+    y,
+  };
+}
+
+/** What a PSTH's note says of its bins: their width, and the smoothing over them. */
+function psthNote(width: number, sigmaMs: number): string {
+  const bins = `${Number(width.toPrecision(3))} ms bins`;
+  return sigmaMs > 0 ? `${bins} · Gaussian σ ${sigmaMs} ms` : bins;
+}
 
 /** 1, 2 or 5 times a power of ten, nearest `target`: a bin width that reads as a number. */
 function roundStep(target: number): number {
@@ -614,9 +679,9 @@ function roundStep(target: number): number {
 }
 
 /**
- * Each group's firing over time: its spikes per cell per second, in bins of a
- * round width across `span` - the run, or the raster's window - a step line
- * per group.
+ * Each group's firing over time: its spikes per cell per second, in bins
+ * across `span` - the run, or the raster's window - a line per group, in steps
+ * or smoothed.
  */
 export function psthFigure(
   groups: CellGroup[],
@@ -624,11 +689,11 @@ export function psthFigure(
   span: [number, number],
   rowCount: number,
   groupLabel: string | undefined,
-  color: string
+  color: string,
+  { binMs, sigmaMs }: PsthOptions = DEFAULT_PSTH
 ): Figure {
   const [from, to] = span;
-  const width = roundStep(Math.max(to - from, 1e-6) / PSTH_BINS);
-  const bins = Math.max(1, Math.ceil((to - from) / width));
+  const { width, bins } = psthBins(span, binMs);
   const groupOf = new Int32Array(rowCount).fill(-1);
   groups.forEach((group, g) => {
     for (const cell of group.cells) if (cell < rowCount) groupOf[cell] = g;
@@ -644,42 +709,45 @@ export function psthFigure(
       if (g >= 0) counts[g][Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
     }
   }
-  // Steps: each bin's rate from its start, held to the end of the last.
-  const x = Float64Array.from({ length: bins + 1 }, (_, b) => Math.min(to, from + b * width));
   const seconds = width / 1000;
+  const lines = groups.map((group, g) =>
+    psthPoints(
+      counts[g].map((count) => count / (group.cells.length * seconds)),
+      from,
+      to,
+      width,
+      sigmaMs
+    )
+  );
   return timeCourseFigure(
-    groups.map((group, g) => {
-      const y = new Float64Array(bins + 1);
-      for (let b = 0; b < bins; b++) y[b] = counts[g][b] / (group.cells.length * seconds);
-      y[bins] = y[bins - 1];
-      return { name: group.name, cells: group.cells.length, y };
-    }),
-    x,
+    groups.map((group, g) => ({ name: group.name, cells: group.cells.length, y: lines[g].y })),
+    lines[0]?.x ?? new Float64Array(0),
     {
       groupLabel,
       color,
       yLabel: 'Rate (Hz)',
-      steps: true,
+      steps: sigmaMs === 0,
       fill: true,
-      note: `${Number(width.toPrecision(3))} ms bins`,
+      note: psthNote(width, sigmaMs),
     }
   );
 }
 
 /**
  * One population's firing over time, over the cells flagged in `cells` or all
- * `cellCount` of them: spikes per cell per second, in the same round bins as a
- * PSTH figure's, as steps - each bin's rate from its start, held to the end.
+ * `cellCount` of them: spikes per cell per second, in the same bins as a PSTH
+ * figure's, as steps - each bin's rate from its start, held to the end - or
+ * smoothed the same way.
  */
 export function psthSeries(
   spikes: SpikePopulation | undefined,
   cells: Uint8Array | null,
   cellCount: number,
-  span: [number, number]
+  span: [number, number],
+  { binMs, sigmaMs }: PsthOptions = DEFAULT_PSTH
 ): { x: Float64Array; y: Float64Array } {
   const [from, to] = span;
-  const width = roundStep(Math.max(to - from, 1e-6) / PSTH_BINS);
-  const bins = Math.max(1, Math.ceil((to - from) / width));
+  const { width, bins } = psthBins(span, binMs);
   let n = cellCount;
   if (cells) {
     n = 0;
@@ -696,12 +764,14 @@ export function psthSeries(
       counts[Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
     }
   }
-  const x = Float64Array.from({ length: bins + 1 }, (_, b) => Math.min(to, from + b * width));
-  const y = new Float64Array(bins + 1);
   const seconds = width / 1000;
-  for (let b = 0; b < bins; b++) y[b] = n > 0 ? counts[b] / (n * seconds) : 0;
-  y[bins] = y[bins - 1];
-  return { x, y };
+  return psthPoints(
+    counts.map((count) => (n > 0 ? count / (n * seconds) : 0)),
+    from,
+    to,
+    width,
+    sigmaMs
+  );
 }
 
 /** Each group's recorded cells averaged frame by frame: their mean over time, a line per group. */

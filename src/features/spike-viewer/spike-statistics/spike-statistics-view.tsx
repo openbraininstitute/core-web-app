@@ -1,7 +1,7 @@
 'use client';
 
 import { Empty, Spin } from 'antd';
-import { atom, useAtom } from 'jotai';
+import { atom, useAtom, useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -12,6 +12,10 @@ import {
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
+import {
+  PsthControls,
+  psthOptionsAtom,
+} from '@/features/spike-viewer/spike-statistics/psth-controls';
 import {
   computeSpikeStatistics,
   SPIKE_STATISTICS,
@@ -322,6 +326,7 @@ export function SpikeStatisticsView({
   }, [cellsOnShow, windowCells, rowCount]);
 
   // Shown at first: each group's firing over time, over the raster's window where there is one.
+  const psth = useAtomValue(psthOptionsAtom);
   const timeCourse = useMemo<TimeCourse>(
     () => ({
       label: 'PSTHs',
@@ -332,10 +337,12 @@ export function SpikeStatisticsView({
           windowTime ?? [timeRange.min, timeRange.max],
           rowCount,
           groupLabel,
-          color
+          color,
+          psth
         ),
+      controls: <PsthControls />,
     }),
-    [recorded, windowTime, timeRange, rowCount, color]
+    [recorded, windowTime, timeRange, rowCount, color, psth]
   );
 
   // The statistics share the table's right half between them.
