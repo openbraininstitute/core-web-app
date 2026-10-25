@@ -1,12 +1,10 @@
 'use client';
 
-import { SettingOutlined } from '@ant-design/icons';
 import { RiPauseFill, RiPlayFill, RiRestartLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { Button } from '@/ui/molecules/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { classNames } from '@/util/utils';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
@@ -40,15 +38,12 @@ interface TransportBarProps {
   /** Simulated milliseconds per wall-clock second. */
   speed: number;
   onSpeedChange: (speed: number) => void;
-  /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
-  afterglowInSeconds: number;
-  onAfterglowChange: (afterglowInSeconds: number) => void;
   disabled?: boolean;
   /**
    * The raster's time axis, for a scrubber laid out under it: the span it
    * shows and where that sits. The bar is then play and scrubber alone; the
-   * time rides the raster's playhead, and speed and afterglow sit with the
-   * raster's own controls.
+   * time rides the raster's playhead, and speed sits with the raster's own
+   * controls.
    */
   axis?: TimeAxis | null;
   /** For the scrubber under the axis: the replay's clock, and where the replay moves its thumb from. */
@@ -60,7 +55,7 @@ interface TransportBarProps {
   boxed?: boolean;
 }
 
-/** Play / pause, scrubber, playback rate, and how long a spike stays lit. */
+/** Play / pause, scrubber and playback rate; how long a spike stays lit is in the scene's settings. */
 export function TransportBar({
   playing,
   onPlayingChange,
@@ -70,8 +65,6 @@ export function TransportBar({
   onSeek,
   speed,
   onSpeedChange,
-  afterglowInSeconds,
-  onAfterglowChange,
   disabled = false,
   axis = null,
   clock,
@@ -182,41 +175,6 @@ export function TransportBar({
           ))}
         </select>
       </label>
-
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="icon"
-            size="sm"
-            disabled={disabled}
-            aria-label="Open replay settings"
-          >
-            <SettingOutlined />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-64 border-neutral-2 bg-white shadow-lg">
-          <div className="flex select-none flex-col gap-2">
-            <div className="flex items-center justify-between text-xs text-gray-600">
-              <span>Spike afterglow</span>
-              <span className="tabular-nums">{afterglowInSeconds.toFixed(2)} s</span>
-            </div>
-            <Slider
-              value={afterglowInSeconds}
-              min={0.05}
-              max={1}
-              step={0.05}
-              disabled={disabled}
-              onChange={onAfterglowChange}
-              tooltip={{ formatter: null }}
-            />
-            <p className="text-[11px] leading-snug text-gray-500">
-              How long a spike stays lit on screen. Measured in real time, so a flash looks the same
-              at any playback speed.
-            </p>
-          </div>
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }

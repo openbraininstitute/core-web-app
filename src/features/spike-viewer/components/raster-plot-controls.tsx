@@ -12,8 +12,6 @@ type RasterPlotControlsProps = {
   onMarkerSizeChange: (size: number) => void;
   minSize?: number;
   maxSize?: number;
-  /** The replay's spike afterglow, set beside the marker size where a replay plays alongside. */
-  afterglow?: { seconds: number; onChange: (seconds: number) => void };
 };
 
 export default function RasterPlotControls({
@@ -21,7 +19,6 @@ export default function RasterPlotControls({
   onMarkerSizeChange,
   minSize = 1,
   maxSize = 10,
-  afterglow,
 }: RasterPlotControlsProps) {
   return (
     <div className="flex items-center gap-1">
@@ -45,26 +42,6 @@ export default function RasterPlotControls({
               onChange={onMarkerSizeChange}
               tooltip={{ formatter: null }}
             />
-            {afterglow && (
-              <>
-                <div className="mt-2 flex items-center justify-between text-xs text-gray-600">
-                  <span>Spike afterglow</span>
-                  <span className="tabular-nums">{afterglow.seconds.toFixed(2)} s</span>
-                </div>
-                <Slider
-                  value={afterglow.seconds}
-                  min={0.05}
-                  max={1}
-                  step={0.05}
-                  onChange={afterglow.onChange}
-                  tooltip={{ formatter: null }}
-                />
-                <p className="text-[11px] leading-snug text-gray-500">
-                  How long a spike stays lit in the 3D view. Measured in real time, so a flash looks
-                  the same at any playback speed.
-                </p>
-              </>
-            )}
           </div>
         </PopoverContent>
       </Popover>

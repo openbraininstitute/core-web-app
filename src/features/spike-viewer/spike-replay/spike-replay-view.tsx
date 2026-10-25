@@ -435,7 +435,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const isSplit = view === MODES.Split;
   const showRaster = isSplit || (!showScene && !showStatistics);
   // In the split, the scrubber lies under the raster's time axis, and the
-  // replay's speed and afterglow sit with the raster's own controls.
+  // replay's speed sits with the raster's own controls.
   const [timeAxis, setTimeAxis] = useState<TimeAxis | null>(null);
   const [timeWindowRequest, setTimeWindowRequest] = useState<{
     from: number;
@@ -663,8 +663,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       onSeek={handleSeek}
       speed={speed}
       onSpeedChange={setSpeed}
-      afterglowInSeconds={afterglowInSeconds}
-      onAfterglowChange={setAfterglowInSeconds}
       disabled={!replayable}
       boxed={boxed}
     />
@@ -745,15 +743,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       the row above the panes is for what governs both. */}
       {recorded && recorded.timestamps.length > 0 && (
         <CollapsingControls>
-          <RasterPlotControls
-            markerSize={markerSize}
-            onMarkerSizeChange={setMarkerSize}
-            afterglow={
-              isSplit && replayable
-                ? { seconds: afterglowInSeconds, onChange: setAfterglowInSeconds }
-                : undefined
-            }
-          />
+          <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
           {circuit && (
             <PillSelect
               label="Order by"
@@ -817,6 +807,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         onPlayingChange: setPlaying,
         speed,
         afterglowInSeconds,
+        onAfterglowChange: setAfterglowInSeconds,
       }}
     />
   );

@@ -636,7 +636,15 @@ export function CircuitScene({
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
         viz={{
-          menu,
+          // A replay's afterglow is set with the rest of how the scene is drawn.
+          menu:
+            spikes?.data && spikes.onAfterglowChange
+              ? {
+                  ...menu,
+                  spikeAfterglowInSeconds: spikes.afterglowInSeconds,
+                  onSpikeAfterglowChange: spikes.onAfterglowChange,
+                }
+              : menu,
           onResetView,
           colorBy: enableColorBy ? colorBy : undefined,
           populations: populationsControl,
