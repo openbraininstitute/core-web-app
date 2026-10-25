@@ -8,12 +8,6 @@ import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/glob
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
-import {
-  isLfpReport,
-  reportName,
-  reportStem,
-  reportTag,
-} from '@/features/scan-config/use-cases/simulations/report-picker';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
@@ -24,6 +18,12 @@ import {
   type TActivityCustomFile,
   type TAssetBackedFile,
 } from '@/features/scan-config/types';
+import {
+  isLfpReport,
+  reportName,
+  reportStem,
+  reportTag,
+} from '@/features/scan-config/use-cases/simulations/report-picker';
 import {
   chosenReportPopulationAtom,
   reportPopulationsAtom,
@@ -192,8 +192,12 @@ export function SimulationFiles({
   // The model's files are the circuit's, not the simulation's.
   const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
   const circuitFiles = inputFilesWithLogs.filter(isCircuitFile);
+  // By the path a row opens, as the selection is: the circuit's row is its
+  // directory asset opened at circuit_config.json.
   const isSelected = (file: TAssetBackedFile) =>
-    file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath;
+    file.id
+      ? file.id === selectedFile?.id
+      : (file.assetPath ?? file.asset.path) === selectedAssetPath;
   // A report reads as the picker over the statistics lists it, a row per population:
   // "Spikes: S1nonbarrel_neurons". Until it has been opened its populations are the
   // circuit's own that are not virtual, which are what a simulation records.
