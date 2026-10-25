@@ -176,6 +176,7 @@ export default function ReportDetailsView({
   timeCursor,
   onTimeAxisChange,
   cellRows,
+  onCellClick,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
@@ -185,6 +186,8 @@ export default function ReportDetailsView({
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   /** Where a hovered line's card reads its cell's row of the nodes table. */
   cellRows?: CellRowSource;
+  /** Told the node id of a line clicked. */
+  onCellClick?: (nodeId: number) => void;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -232,6 +235,7 @@ export default function ReportDetailsView({
         timeCursor={timeCursor}
         onTimeAxisChange={onTimeAxisChange}
         cellRows={cellRows}
+        onCellClick={onCellClick}
       />
     </div>
   );
@@ -247,12 +251,14 @@ function SharedTracesPlot({
   timeCursor,
   onTimeAxisChange,
   cellRows,
+  onCellClick,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   timeCursor?: TimeCursor;
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   cellRows?: CellRowSource;
+  onCellClick?: (nodeId: number) => void;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -439,6 +445,11 @@ function SharedTracesPlot({
       if (next) setZoom(next);
     },
     onDoubleClick: () => setZoom(HOME),
+    onClick: (event) => {
+      const line = drawn[event.points[0]?.curveNumber ?? -1];
+      const trace = line && population.traces[line.traceIndex];
+      if (trace) onCellClick?.(trace.nodeId);
+    },
     onHover: (event) => {
       const point = event.points[0];
       const line = point && drawn[point.curveNumber];
@@ -565,6 +576,7 @@ function SharedTracesPlot({
           population={population}
           valueLabel={valueLabel}
           cellRows={cellRows}
+          hint={onCellClick && clickHint(lines, population, tip.traceIndex)}
         />
       )}
     </div>
@@ -577,11 +589,13 @@ function TraceCard({
   population,
   valueLabel,
   cellRows,
+  hint,
 }: {
   hover: TraceHover;
   population: PopulationMetadata;
   valueLabel: string;
   cellRows?: CellRowSource;
+  hint?: string;
 }) {
   const trace = population.traces[hover.traceIndex];
   const row = useCellRow(cellRows, trace?.nodeId ?? null);
@@ -602,9 +616,19 @@ function TraceCard({
           },
           ...(row ?? []),
         ],
+        hint,
       }}
     />
   );
+}
+
+/** What a click on a line does: picks its cell alone, or lets it go where it is already that. */
+function clickHint(lines: Line[], population: PopulationMetadata, traceIndex: number): string {
+  const nodeId = population.traces[traceIndex]?.nodeId;
+  const picked = lines.filter((line) => line.slot !== null && !line.preview);
+  const alone =
+    picked.length > 0 && picked.every((line) => population.traces[line.traceIndex]?.nodeId === nodeId);
+  return alone ? 'Click to show every cell again' : 'Click to pick this cell alone';
 }
 
 /** The parts of Plotly's laid-out graph the cursor reads. */

@@ -534,6 +534,23 @@ export function SonataReportView({
     },
     [recordedNodes, togglePick]
   );
+  // A line clicked in the traces picks its cell alone, holds it out in the
+  // scene and brings its row into view; clicked again, it lets it go.
+  const [heldCell, setHeldCell] = useState<{ key: string; nodeId: number } | null>(null);
+  const handleTraceClick = useCallback(
+    (nodeId: number) => {
+      if (!pickKey) return;
+      const alone = pickedCells.length === 1 && pickedCells[0].nodeId === nodeId;
+      // It keeps its colour if it had one.
+      const slot = pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0;
+      setPicks({ key: pickKey, cells: alone ? NO_PICKS : [{ nodeId, slot }] });
+      setHeldCell(alone ? null : { key: pickKey, nodeId });
+      if (!alone) setFocusedRow({ nodeId, key: performance.now() });
+    },
+    [pickKey, pickedCells, setPicks]
+  );
+  const held =
+    heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
 
   // Docked, the panel's statistics box holds the plots, which the statistics
   // under the traces portal in, so the two share one tree.
@@ -570,7 +587,7 @@ export function SonataReportView({
         valueRange={sceneFrames?.range ?? null}
         units={population.dataUnits}
         timeCursor={timeCursor}
-        highlightedCell={hovered?.population === populationName ? hovered.nodeId : undefined}
+        highlightedCell={hovered?.population === populationName ? hovered.nodeId : held}
         onCellClick={handleSceneCellClick}
         bare={docked}
         active={showScene}
@@ -595,6 +612,7 @@ export function SonataReportView({
           timeCursor={showScene ? timeCursor : undefined}
           onTimeAxisChange={setTracesAxis}
           cellRows={cellRows}
+          onCellClick={handleTraceClick}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -630,6 +648,7 @@ export function SonataReportView({
                   variableName={variableName}
                   timeCursor={showScene ? timeCursor : undefined}
                   cellRows={cellRows}
+                  onCellClick={handleTraceClick}
                 />
               </ErrorBoundary>
             </WhenNearView>
