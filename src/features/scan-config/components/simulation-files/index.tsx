@@ -9,6 +9,7 @@ import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-con
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import {
+  isLfpReport,
   reportName,
   reportStem,
   reportTag,
@@ -56,7 +57,7 @@ type FileRow = {
 /** The simulation's own files, named for what they are rather than by their file names. */
 const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
   [AssetLabel.custom_node_sets]: 'Node sets',
-  [AssetLabel.simulation_generation_config]: 'Obi-one config',
+  [AssetLabel.simulation_generation_config]: 'OBI-ONE Config',
   [AssetLabel.sonata_simulation_config]: 'SONATA simulation config',
 };
 
@@ -209,8 +210,9 @@ export function SimulationFiles({
   );
   const rowsOf = (files: TAssetBackedFile[]): FileRow[] =>
     files.flatMap((file): FileRow[] => {
-      // An input's spikes read as their file's name, tagged as what they are.
-      if (file.asset.label === AssetLabel.replay_spikes) {
+      // An input's spikes, or an extracellular report, read as their file's
+      // name, tagged as what they are.
+      if (file.asset.label === AssetLabel.replay_spikes || isLfpReport(file, reports)) {
         return [
           {
             file,

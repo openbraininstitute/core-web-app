@@ -1,6 +1,6 @@
 import { useAtomValue, useSetAtom } from 'jotai';
 
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import {
   chosenReportPopulationAtom,
   reportPopulationsAtom,
@@ -48,11 +48,31 @@ export function reportName(
   return population && populations > 1 ? `${stem} · ${population}` : stem;
 }
 
+/** Its entry in the SONATA config's reports, found by its file's name. */
+function reportEntry(
+  file: TAssetBackedFile,
+  reports: Readonly<Record<string, unknown>> | null | undefined
+): Record<string, unknown> {
+  const report = reports?.[reportStem(file)];
+  return isPlainObject(report) ? report : {};
+}
+
+/** An extracellular report, by its label or its SONATA type: a field over electrodes, not cells. */
+export function isLfpReport(
+  file: TAssetBackedFile,
+  reports: Readonly<Record<string, unknown>> | null | undefined
+): boolean {
+  return (
+    (file.asset.label as string) === 'lfp_report' ||
+    (file.asset.content_type === AssetContentType.h5 && reportEntry(file, reports).type === 'lfp')
+  );
+}
+
 /**
  * What a report records, word by word, for the tag beside its name: "Spikes",
- * "Input spikes", or for a compartment report, from its entry in the SONATA
- * config, where and what: "Soma voltages". Until the config is read a voltage
- * report is one all the same.
+ * "Input spikes", "Extracellular Voltages", or for a compartment report, from
+ * its entry in the SONATA config, where and what: "Soma voltages". Until the
+ * config is read a voltage report is one all the same.
  */
 export function reportTag(
   file: TAssetBackedFile,
@@ -60,8 +80,8 @@ export function reportTag(
 ): string[] {
   if (file.asset.label === AssetLabel.spike_report) return ['Spikes'];
   if (file.asset.label === AssetLabel.replay_spikes) return ['Input', 'spikes'];
-  const report = reports?.[reportStem(file)];
-  const entry = isPlainObject(report) ? report : {};
+  if (isLfpReport(file, reports)) return ['Extracellular', 'Voltages'];
+  const entry = reportEntry(file, reports);
   const variable = typeof entry.variable_name === 'string' ? entry.variable_name : 'v';
   const sections = typeof entry.sections === 'string' ? entry.sections : 'soma';
   const where =
