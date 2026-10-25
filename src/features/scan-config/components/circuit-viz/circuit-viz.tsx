@@ -72,9 +72,12 @@ interface CircuitVizProps {
    * viewer only asks for the morphologies of cells it has been given.
    */
   hiddenPopulations?: readonly string[];
-  /** One flag per cell of the population on show; a 0 recedes that cell like another population's. */
+  /** One flag per cell of the population on show; a 0 hides that cell. */
   shownCells?: Uint8Array;
-  /** A cell of the population on show to highlight, by node index, as a hover on it would. */
+  /**
+   * A cell of the population on show to highlight, by node index, as a hover on it would,
+   * with the rest of the population hidden.
+   */
   highlightedCell?: number;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
@@ -171,6 +174,7 @@ export function CircuitVisualization({
     populations,
     hiddenPopulations,
     shownCells,
+    highlightedCell,
     showAxons: props.showAxons,
     nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,

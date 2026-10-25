@@ -636,16 +636,18 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       />
     ) : null;
 
+  // Played from the span's start when outside it, from the transport or the scene's corner.
+  const handlePlayingChange = (next: boolean) => {
+    const at = liveTimeRef.current;
+    if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
+    setPlaying(next);
+  };
   // Play and the scrubber: under the panes, in the raster's box under its
   // axis, or with the raster out of view, in the scene's.
   const transport = (boxed: boolean) => (
     <TransportBar
       playing={playing}
-      onPlayingChange={(next) => {
-        const at = liveTimeRef.current;
-        if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
-        setPlaying(next);
-      }}
+      onPlayingChange={handlePlayingChange}
       axis={isSplit ? timeAxis : null}
       clock={{ timeRef: liveTimeRef, moveRef: scrubberRef }}
       timeInMs={readoutTimeInMs}
@@ -902,7 +904,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
                     >
                       <div className="relative min-h-0 flex-1">
                         {scene}
-                        {replayable && <SceneTime labelRef={sceneTime.ref} />}
+                        {replayable && (
+                          <SceneTime
+                            labelRef={sceneTime.ref}
+                            playing={playing}
+                            onPlayingChange={handlePlayingChange}
+                          />
+                        )}
                         {notice && (
                           <div className="pointer-events-none absolute top-3 left-14 right-3 z-10">
                             {notice}
@@ -983,7 +991,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               onPointerUpCapture={handleScenePointerUp}
             >
               {scene}
-              {replayable && <SceneTime labelRef={sceneTime.ref} />}
+              {replayable && (
+                <SceneTime
+                  labelRef={sceneTime.ref}
+                  playing={playing}
+                  onPlayingChange={handlePlayingChange}
+                />
+              )}
             </div>
           )}
 

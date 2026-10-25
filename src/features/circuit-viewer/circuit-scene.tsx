@@ -124,14 +124,13 @@ interface ICircuitSceneOptions {
   colorByNoneLabel?: string;
   /**
    * One flag per cell of the population on show, 0 for a cell filtered out:
-   * left undrawn where the scene draws somas, receded where it draws
-   * morphologies. Either way it keeps its place, so spikes still find theirs.
+   * left undrawn, but kept in its place, so spikes still find theirs.
    */
   shownCells?: Uint8Array;
   /**
    * A cell of the population on show to point out, by node index, such as the
-   * table row under the pointer: highlighted where the scene draws
-   * morphologies, the rest faded where it draws somas.
+   * table row under the pointer: the rest faded where the scene draws somas,
+   * and where it draws morphologies, highlighted with the rest hidden.
    */
   highlightedCell?: number;
   /** Told the node index of a clicked cell of the population on show. */

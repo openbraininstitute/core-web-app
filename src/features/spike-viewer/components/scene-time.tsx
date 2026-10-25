@@ -1,6 +1,9 @@
 'use client';
 
+import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { useCallback, useRef } from 'react';
+
+import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
 
 import type { RefObject } from 'react';
 
@@ -28,14 +31,30 @@ export function useSceneTime(timeRef: RefObject<number>) {
 }
 
 /**
- * Where the time sits: in the view's top left corner, just right of the viewer's
- * settings button (28 px square, 11 px in) and level with it.
+ * Where the time sits: in the view's top left corner, beside the viewer's
+ * settings button (28 px square, 11 px in), after a play button of the same
+ * kind that plays and pauses the player.
  */
-export function SceneTime({ labelRef }: { labelRef: (element: HTMLSpanElement | null) => void }) {
+export function SceneTime({
+  labelRef,
+  playing,
+  onPlayingChange,
+}: {
+  labelRef: (element: HTMLSpanElement | null) => void;
+  playing: boolean;
+  onPlayingChange: (playing: boolean) => void;
+}) {
   return (
-    <span
-      ref={labelRef}
-      className="pointer-events-none absolute top-[25px] left-[47px] z-10 -translate-y-1/2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-[#f5222d] tabular-nums shadow-sm ring-1 ring-black/5"
-    />
+    <div className="pointer-events-none absolute top-[11px] left-[47px] z-10 flex items-center gap-2">
+      <span className="pointer-events-auto">
+        <ChromeButton label={playing ? 'Pause' : 'Play'} onClick={() => onPlayingChange(!playing)}>
+          {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
+        </ChromeButton>
+      </span>
+      <span
+        ref={labelRef}
+        className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-[#f5222d] tabular-nums shadow-sm ring-1 ring-black/5"
+      />
+    </div>
   );
 }

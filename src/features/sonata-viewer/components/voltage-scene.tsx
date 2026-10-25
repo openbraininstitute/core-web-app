@@ -47,6 +47,8 @@ type Props = {
   timeCursor: TimeCursor;
   /** A cell to point out, by node index, such as the table row under the pointer. */
   highlightedCell?: number;
+  /** One flag per cell, 0 for one left out: the picked cells, else those the table keeps. */
+  shownCells?: Uint8Array;
   /** Told the node index of a cell clicked in the scene. */
   onCellClick?: (nodeId: number) => void;
   /** In a box of its own, which frames it: no border of its own. */
@@ -80,6 +82,7 @@ export function VoltageScene({
   units,
   timeCursor,
   highlightedCell,
+  shownCells,
   onCellClick,
   bare = false,
   active = true,
@@ -259,6 +262,7 @@ export function VoltageScene({
           showUnselectedPopulations={false}
           nodeColorsOverride={nodeColors}
           highlightedCell={highlightedCell}
+          shownCells={shownCells}
           onCellClick={onCellClick}
           active={active}
         />
@@ -270,7 +274,7 @@ export function VoltageScene({
           </div>
         )}
         {valueRange && <RampLegend range={valueRange} units={units} />}
-        {frames && <SceneTime labelRef={sceneTime.ref} />}
+        {frames && <SceneTime labelRef={sceneTime.ref} playing={playing} onPlayingChange={play} />}
       </div>
       {docked ? (
         transportTarget && active && createPortal(tracesTransport, transportTarget)

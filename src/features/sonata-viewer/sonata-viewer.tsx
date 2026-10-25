@@ -525,7 +525,8 @@ export function SonataReportView({
     return flags;
   }, [population, rowCount]);
 
-  // The campaign's statistics are over the same cells, as a flag per node index.
+  // The campaign's statistics are over the same cells, as a flag per node index, and
+  // the scene shows those alone.
   const campaignCells = useMemo(() => {
     if (!plotCells || rowCount === 0) return null;
     const flags = new Uint8Array(rowCount);
@@ -533,19 +534,11 @@ export function SonataReportView({
     return flags;
   }, [plotCells, rowCount]);
 
-  // A recorded cell clicked in the scene is picked, or let go, and its row brought into view.
+  // The row a click elsewhere brings into view.
   const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
   const recordedNodes = useMemo(
     () => new Set(population?.traces.map((t) => t.nodeId)),
     [population]
-  );
-  const handleSceneCellClick = useCallback(
-    (nodeId: number) => {
-      if (!recordedNodes.has(nodeId)) return;
-      togglePick(nodeId);
-      setFocusedRow({ nodeId, key: performance.now() });
-    },
-    [recordedNodes, togglePick]
   );
   // A line clicked in the traces picks its cell alone, holds it out in the
   // scene and brings its row into view; clicked again, it lets it go.
@@ -564,6 +557,13 @@ export function SonataReportView({
   );
   const held =
     heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
+  // A recorded cell clicked in the scene, the same.
+  const handleSceneCellClick = useCallback(
+    (nodeId: number) => {
+      if (recordedNodes.has(nodeId)) handleTraceClick(nodeId);
+    },
+    [recordedNodes, handleTraceClick]
+  );
 
   // Docked, the panel's statistics box holds the plots, which the statistics
   // under the traces portal in, so the two share one tree.
@@ -601,6 +601,7 @@ export function SonataReportView({
         units={population.dataUnits}
         timeCursor={timeCursor}
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : held}
+        shownCells={campaignCells ?? undefined}
         onCellClick={handleSceneCellClick}
         bare={docked}
         active={showScene}
