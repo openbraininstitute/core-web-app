@@ -51,8 +51,8 @@ export function DefaultConfigColumns({ props, state }: Props) {
 /**
  * The right column. A simulation's is boxed as its results' views are, so its
  * Configuration and Simulations tabs read as one: the preview in a box, and the
- * 3D view's nodes table, while its button has it up, in one of its own under it,
- * either side of the same grab bar.
+ * 3D view's nodes table in one of its own under it, either side of the same
+ * grab bar, which shuts either one into a bar.
  */
 export function PreviewColumn({ boxed, children }: { boxed: boolean; children: ReactNode }) {
   const table = useSceneTablePaneHost();

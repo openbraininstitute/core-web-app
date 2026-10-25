@@ -237,7 +237,8 @@ export function CircuitScene({
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
-  // Where the host lays the table out in a pane of its own, beside the view rather than over it.
+  // Where the host lays the table out in a pane of its own, beside the view rather than over
+  // it: always there, so the view offers no button for it.
   const tablePane = useSceneTablePane();
   const paneTable = enableNodesTable ? tablePane : null;
   const claimPane = paneTable?.claim;
@@ -628,11 +629,9 @@ export function CircuitScene({
         vizActive={active}
         theme={theme}
         table={
-          paneTable
-            ? { active: paneTable.open, onToggle: () => paneTable.onOpenChange(!paneTable.open) }
-            : enableNodesTable
-              ? { active: showTable, onToggle: handleToggleTable }
-              : undefined
+          enableNodesTable && !paneTable
+            ? { active: showTable, onToggle: handleToggleTable }
+            : undefined
         }
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
@@ -650,8 +649,7 @@ export function CircuitScene({
         }}
       />
 
-      {paneTable?.open &&
-        paneTable.target &&
+      {paneTable?.target &&
         circuit &&
         createPortal(
           <CircuitNodesTable
