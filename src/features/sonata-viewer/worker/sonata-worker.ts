@@ -255,12 +255,13 @@ class SonataWorkerImpl {
 
   /**
    * Each recorded cell's mean, standard deviation, lowest and highest value
-   * over the whole run, at the file's own resolution, and with a threshold its
-   * upward crossings of it: for a voltage, its spikes.
+   * over the run, or the window of it asked for, at the file's own resolution,
+   * and with a threshold its upward crossings of it: for a voltage, its spikes.
    */
   async getCellStatistics(
     populationName: string,
-    spikeThreshold: number | null
+    spikeThreshold: number | null,
+    window: [number, number] | null = null
   ): Promise<CellValueStatistics> {
     if (!this.metadata || !this.file) {
       throw new Error('No file loaded. Call loadFile first.');
@@ -280,14 +281,27 @@ class SonataWorkerImpl {
     const cells = columns.length;
 
     const flat = this.getPopulationData(populationName);
+    // The rows whose times fall in the window: every one without.
+    const { startTime, timeStep } = pop.timeConfig;
+    const first = window ? Math.max(0, Math.ceil((window[0] - startTime) / timeStep - 1e-9)) : 0;
+    const last = window
+      ? Math.min(numTimesteps - 1, Math.floor((window[1] - startTime) / timeStep + 1e-9))
+      : numTimesteps - 1;
+    const steps = Math.max(0, last - first + 1);
     const sum = new Float64Array(cells);
     const squares = new Float64Array(cells);
     const min = new Float64Array(cells).fill(Number.POSITIVE_INFINITY);
     const max = new Float64Array(cells).fill(Number.NEGATIVE_INFINITY);
     const spikes = spikeThreshold === null ? null : new Float64Array(cells);
     const above = new Uint8Array(cells);
+    // A crossing on the window's first row counts against the row before it.
+    if (spikeThreshold !== null && first > 0) {
+      const row = (first - 1) * numColumns;
+      for (let c = 0; c < cells; c += 1)
+        above[c] = flat[row + columns[c]] >= spikeThreshold ? 1 : 0;
+    }
     // Row by row, the order the matrix is stored in.
-    for (let t = 0; t < numTimesteps; t += 1) {
+    for (let t = first; t <= last; t += 1) {
       const row = t * numColumns;
       for (let c = 0; c < cells; c += 1) {
         const v = flat[row + columns[c]];
@@ -305,8 +319,12 @@ class SonataWorkerImpl {
     const mean = new Float64Array(cells);
     const sd = new Float64Array(cells);
     for (let c = 0; c < cells; c += 1) {
-      mean[c] = sum[c] / numTimesteps;
-      sd[c] = Math.sqrt(Math.max(0, squares[c] / numTimesteps - mean[c] * mean[c]));
+      if (steps === 0) {
+        mean[c] = sd[c] = min[c] = max[c] = Number.NaN;
+        continue;
+      }
+      mean[c] = sum[c] / steps;
+      sd[c] = Math.sqrt(Math.max(0, squares[c] / steps - mean[c] * mean[c]));
     }
     const buffers = [nodeIds.buffer, mean.buffer, sd.buffer, min.buffer, max.buffer];
     if (spikes) buffers.push(spikes.buffer);

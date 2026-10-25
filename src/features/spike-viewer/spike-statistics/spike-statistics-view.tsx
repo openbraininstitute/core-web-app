@@ -1,6 +1,5 @@
 'use client';
 
-import { RiCloseLine, RiZoomInLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -24,8 +23,8 @@ import {
   StatisticsPlots,
   useElementWidth,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
-import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -431,6 +430,8 @@ export function SpikeStatisticsView({
           headerExtra={
             windowOn && (
               <WindowChip
+                name="Raster window"
+                title="The raster's zoom, which the table and statistics follow: click to see everything again"
                 time={windowTime}
                 cells={windowCells ? windowCount : null}
                 onClear={onClearWindow}
@@ -475,34 +476,6 @@ export function SpikeStatisticsView({
   // One tree either way, the plots only left out: rebuilt elsewhere, the table
   // would lose its filters and its measured width.
   return <PlotsOverTable tableOnly={tableOnly} table={table} plots={plots} />;
-}
-
-/** What the raster's zoom narrows the table to, and a way back to everything. */
-function WindowChip({
-  time,
-  cells,
-  onClear,
-}: {
-  time: [number, number] | null;
-  cells: number | null;
-  onClear?: () => void;
-}) {
-  const parts = [
-    time && `${time[0].toFixed(1)}–${time[1].toFixed(1)} ms`,
-    cells !== null && `${cells.toLocaleString()} ${cells === 1 ? 'cell' : 'cells'}`,
-  ].filter(Boolean);
-  return (
-    <button
-      type="button"
-      onClick={onClear}
-      title="The raster's zoom, which the table and statistics follow: click to see everything again"
-      className={`${PILL_CLASS} whitespace-nowrap`}
-    >
-      <RiZoomInLine className="size-4" />
-      Raster window · {parts.join(' · ')}
-      <RiCloseLine className="size-4 opacity-70" />
-    </button>
-  );
 }
 
 function Centered({ children }: { children: React.ReactNode }) {

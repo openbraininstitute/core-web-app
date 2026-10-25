@@ -41,6 +41,7 @@ import {
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -52,6 +53,7 @@ import type { ISimulationResult } from '@/api/entitycore/types/entities/simulati
 import type { PickAllState } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
+import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import type {
   CellFrames,
   PickedTrace,
@@ -434,18 +436,32 @@ export function SonataReportView({
     () => (sessionKey ? { session: sessionKey, columns, statistics } : undefined),
     [sessionKey, columns, statistics]
   );
+  // The traces' time window, shared by every plot of them: what the statistics are over.
+  const [traceWindow, setTraceWindow] = useState<{ population: string; range: TimeRange } | null>(
+    null
+  );
+  const timeWindow = traceWindow?.population === populationName ? traceWindow.range : null;
+  const handleTimeWindowChange = useCallback(
+    (range: TimeRange | null) => {
+      setTraceWindow(range && populationName ? { population: populationName, range } : null);
+    },
+    [populationName]
+  );
   const [cellStatistics, setCellStatistics] = useState<{
     population: string;
     rows: number;
+    window: TimeRange | null;
     values: StatisticValues;
   }>();
   const statisticsKnown =
-    cellStatistics?.population === populationName && cellStatistics?.rows === rowCount;
+    cellStatistics?.population === populationName &&
+    cellStatistics?.rows === rowCount &&
+    cellStatistics?.window === timeWindow;
   useEffect(() => {
     if (!docked || !populationName || status !== 'ready' || statisticsKnown) return;
     let cancelled = false;
     worker
-      .getCellStatistics(populationName, voltage ? SPIKE_THRESHOLD_MV : null)
+      .getCellStatistics(populationName, voltage ? SPIKE_THRESHOLD_MV : null, timeWindow)
       .then((found) => {
         if (cancelled) return;
         // A value per node index, as the session's columns hold them; none where nothing was recorded.
@@ -463,17 +479,26 @@ export function SonataReportView({
           max: perNode(found.max),
         };
         if (found.spikes) values.spikes = perNode(found.spikes);
-        setCellStatistics({ population: populationName, rows: rowCount, values });
+        setCellStatistics({
+          population: populationName,
+          rows: rowCount,
+          window: timeWindow,
+          values,
+        });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [docked, populationName, status, statisticsKnown, worker, voltage, rowCount]);
-  const [registeredStatistics, setRegisteredStatistics] = useState<StatisticValues | null>(null);
+  }, [docked, populationName, status, statisticsKnown, worker, voltage, rowCount, timeWindow]);
+  const [registeredStatistics, setRegisteredStatistics] = useState<{
+    population: string;
+    rows: number;
+    values: StatisticValues;
+  } | null>(null);
   useEffect(() => {
     if (!statisticsKnown || !cellStatistics || status !== 'ready') return;
-    const { values } = cellStatistics;
+    const { population: shown, rows, values } = cellStatistics;
     let cancelled = false;
     setDerivedColumns(
       'report-statistics',
@@ -483,7 +508,7 @@ export function SonataReportView({
       })
     )
       .then(() => {
-        if (!cancelled) setRegisteredStatistics(values);
+        if (!cancelled) setRegisteredStatistics({ population: shown, rows, values });
       })
       // The session closed underneath; its next ready state sets them again.
       .catch(() => {});
@@ -491,9 +516,10 @@ export function SonataReportView({
       cancelled = true;
     };
   }, [statisticsKnown, cellStatistics, status, statistics, setDerivedColumns]);
+  // The ones the session holds as columns: a new window's are worked out while the last stand.
   const statisticValues =
-    statisticsKnown && registeredStatistics === cellStatistics?.values
-      ? registeredStatistics
+    registeredStatistics?.population === populationName && registeredStatistics.rows === rowCount
+      ? registeredStatistics.values
       : null;
 
   // Shown at first beside the statistics: each group's mean over time.
@@ -503,10 +529,16 @@ export function SonataReportView({
       label: 'Mean',
       figure: (groups, groupLabel) =>
         sceneFrames
-          ? meanTraceFigure(groups, sceneFrames.frames, groupLabel, meanLabel, CHART_LINE_COLOR)
+          ? meanTraceFigure(
+              groups,
+              framesWithin(sceneFrames.frames, timeWindow),
+              groupLabel,
+              meanLabel,
+              CHART_LINE_COLOR
+            )
           : null,
     }),
-    [sceneFrames, meanLabel]
+    [sceneFrames, meanLabel, timeWindow]
   );
 
   // The plots are over the ticked cells, else those the table's filter keeps.
@@ -625,6 +657,8 @@ export function SonataReportView({
           variableName={variableName}
           timeCursor={showScene ? timeCursor : undefined}
           onTimeAxisChange={setTracesAxis}
+          timeWindow={timeWindow}
+          onTimeWindowChange={handleTimeWindowChange}
           cellRows={cellRows}
           onCellClick={handleTraceClick}
         />
@@ -661,6 +695,8 @@ export function SonataReportView({
                   hovered={group.hovered}
                   variableName={variableName}
                   timeCursor={showScene ? timeCursor : undefined}
+                  timeWindow={timeWindow}
+                  onTimeWindowChange={handleTimeWindowChange}
                   cellRows={cellRows}
                   onCellClick={handleTraceClick}
                 />
@@ -682,6 +718,15 @@ export function SonataReportView({
     pickAll: { state: pickAllState, onToggle: togglePickAll },
     onCellHover: handleCellHover,
     extraColumns: neuronSetColumns,
+    headerExtra: docked && timeWindow && (
+      <WindowChip
+        name="Trace window"
+        title="The traces' zoom, which the table's statistics and the plots follow: click to see the whole run again"
+        time={timeWindow}
+        cells={null}
+        onClear={() => handleTimeWindowChange(null)}
+      />
+    ),
     note:
       groupBy === ALL
         ? sharedTracesHint(pickedTraces.length, visibleTraces?.length ?? population.traces.length)
@@ -755,7 +800,11 @@ export function SonataReportView({
                 sessionKey={sessionKey}
                 getColumn={getColumn}
                 color={CHART_LINE_COLOR}
-                spanMs={population.timeConfig.endTime - population.timeConfig.startTime}
+                spanMs={
+                  timeWindow
+                    ? timeWindow[1] - timeWindow[0]
+                    : population.timeConfig.endTime - population.timeConfig.startTime
+                }
                 summary={
                   <span className="whitespace-nowrap text-xs text-neutral-400">
                     {plotted.toLocaleString()} {plotted === 1 ? 'cell' : 'cells'}
@@ -769,8 +818,11 @@ export function SonataReportView({
                 table={{
                   ...table,
                   reset: {
-                    picked: pickedCells.length > 0,
-                    onReset: () => setPicks({ key: pickKey, cells: NO_PICKS }),
+                    picked: pickedCells.length > 0 || timeWindow !== null,
+                    onReset: () => {
+                      setPicks({ key: pickKey, cells: NO_PICKS });
+                      handleTimeWindowChange(null);
+                    },
                   },
                   focusRow: focusedRow,
                 }}
@@ -995,4 +1047,19 @@ function WhenNearView({ className, children }: { className?: string; children: R
       {near ? children : null}
     </div>
   );
+}
+
+/** The frames within a window of the run: all of them without one. */
+function framesWithin(frames: CellFrames, window: TimeRange | null): CellFrames {
+  if (!window) return frames;
+  const columns = frames.nodeIds.length;
+  let first = 0;
+  while (first < frames.times.length && frames.times[first] < window[0]) first += 1;
+  let end = first;
+  while (end < frames.times.length && frames.times[end] <= window[1]) end += 1;
+  return {
+    nodeIds: frames.nodeIds,
+    times: frames.times.subarray(first, end),
+    values: frames.values.subarray(first * columns, end * columns),
+  };
 }

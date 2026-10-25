@@ -17,7 +17,6 @@ import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-toolt
 import type { Remote } from 'comlink';
 import type { Config, Layout, LayoutAxis, PlotData } from 'plotly.js-dist-min';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
-import type { CellRowSource } from '@/features/spike-viewer/cell-row';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type {
   NodeTraceData,
@@ -25,6 +24,7 @@ import type {
   PopulationMetadata,
 } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
+import type { CellRowSource } from '@/features/spike-viewer/cell-row';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -175,6 +175,8 @@ export default function ReportDetailsView({
   variableName,
   timeCursor,
   onTimeAxisChange,
+  timeWindow,
+  onTimeWindowChange,
   cellRows,
   onCellClick,
 }: {
@@ -182,6 +184,13 @@ export default function ReportDetailsView({
   worker: Remote<SonataWorkerImpl>;
   /** A time to mark on the plot, such as a scene playing the recording above it. */
   timeCursor?: TimeCursor;
+  /**
+   * The span of time shown, null for the whole run: the host's where it holds
+   * one, so its plots share it, else the plot's own.
+   */
+  timeWindow?: TimeRange | null;
+  /** Told the span of time a zoom leaves, null once it is back on the whole run. */
+  onTimeWindowChange?: (window: TimeRange | null) => void;
   /** Told where the time axis lies whenever it is drawn, zoomed or resized. */
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   /** Where a hovered line's card reads its cell's row of the nodes table. */
@@ -234,6 +243,8 @@ export default function ReportDetailsView({
         variableName={variableName}
         timeCursor={timeCursor}
         onTimeAxisChange={onTimeAxisChange}
+        timeWindow={timeWindow}
+        onTimeWindowChange={onTimeWindowChange}
         cellRows={cellRows}
         onCellClick={onCellClick}
       />
@@ -250,6 +261,8 @@ function SharedTracesPlot({
   variableName,
   timeCursor,
   onTimeAxisChange,
+  timeWindow,
+  onTimeWindowChange,
   cellRows,
   onCellClick,
 }: {
@@ -257,6 +270,8 @@ function SharedTracesPlot({
   worker: Remote<SonataWorkerImpl>;
   timeCursor?: TimeCursor;
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
+  timeWindow?: TimeRange | null;
+  onTimeWindowChange?: (window: TimeRange | null) => void;
   cellRows?: CellRowSource;
   onCellClick?: (nodeId: number) => void;
   lines: Line[];
@@ -266,11 +281,12 @@ function SharedTracesPlot({
   variableName?: string;
 }) {
   const [zoom, setZoom] = useState<Zoom>(HOME);
-  const [fetchRange, setFetchRange] = useState<TimeRange | null>(null);
+  const zoomX = timeWindow !== undefined ? timeWindow : zoom.x;
+  const [fetchRange, setFetchRange] = useState<TimeRange | null>(zoomX);
   useEffect(() => {
-    const timer = setTimeout(() => setFetchRange(zoom.x), REFETCH_DELAY_MS);
+    const timer = setTimeout(() => setFetchRange(zoomX), REFETCH_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [zoom.x]);
+  }, [zoomX]);
 
   // The home axes: the whole run, and every value any of the population's cells takes.
   const homeX = useMemo<TimeRange>(
@@ -392,7 +408,7 @@ function SharedTracesPlot({
   // The plot's own size, which sets how many ticks its axes get.
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const valueLabel = variableName ?? unitLabel(units);
-  const x = zoom.x ?? homeX;
+  const x = zoomX ?? homeX;
   const y = zoom.y ?? valueRange;
   const layout = useMemo<Partial<Layout>>(() => {
     const width = (size?.width ?? 600) - MARGIN.left - MARGIN.right;
@@ -441,10 +457,15 @@ function SharedTracesPlot({
   const [tip, setTip] = useState<TraceHover>();
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
-      const next = zoomAfter(zoom, event as Readonly<Record<string, unknown>>);
-      if (next) setZoom(next);
+      const next = zoomAfter({ x: zoomX, y: zoom.y }, event as Readonly<Record<string, unknown>>);
+      if (!next) return;
+      setZoom(next);
+      if (next.x !== zoomX) onTimeWindowChange?.(next.x);
     },
-    onDoubleClick: () => setZoom(HOME),
+    onDoubleClick: () => {
+      setZoom(HOME);
+      onTimeWindowChange?.(null);
+    },
     onClick: (event) => {
       const line = drawn[event.points[0]?.curveNumber ?? -1];
       const trace = line && population.traces[line.traceIndex];
@@ -627,7 +648,8 @@ function clickHint(lines: Line[], population: PopulationMetadata, traceIndex: nu
   const nodeId = population.traces[traceIndex]?.nodeId;
   const picked = lines.filter((line) => line.slot !== null && !line.preview);
   const alone =
-    picked.length > 0 && picked.every((line) => population.traces[line.traceIndex]?.nodeId === nodeId);
+    picked.length > 0 &&
+    picked.every((line) => population.traces[line.traceIndex]?.nodeId === nodeId);
   return alone ? 'Click to show every cell again' : 'Click to pick this cell alone';
 }
 

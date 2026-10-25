@@ -11,6 +11,7 @@ import {
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 
 import type { IDatasource } from 'ag-grid-community';
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type {
   PickAllState,
@@ -69,6 +70,8 @@ type Props = {
   onPinnedResize?: (width: number) => void;
   quickFilters?: readonly QuickFilter[];
   reset?: { picked: boolean; onReset: () => void };
+  /** Beside the count above the rows, such as the window the statistics are over. */
+  headerExtra?: ReactNode;
   /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
   focusRow?: { nodeId: number; key: number };
 };
@@ -98,6 +101,7 @@ export function ReportNodesTable({
   onPinnedResize,
   quickFilters,
   reset,
+  headerExtra,
   focusRow,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === population.name);
@@ -281,6 +285,7 @@ export function ReportNodesTable({
       onPinnedResize={onPinnedResize}
       quickFilters={quickFilters}
       reset={reset}
+      headerExtra={headerExtra}
       focusRow={focusRow}
       rowIndexOf={rowAmongRecorded}
       onRowClick={onCellClick}
