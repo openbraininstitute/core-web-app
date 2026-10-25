@@ -654,7 +654,20 @@ export function NodesGrid({
       <div className={styles.gridHeader}>
         <div className="flex min-w-0 items-center gap-2">
           <span className={styles.gridStat}>
-            {filteredCount === null ? (
+            {pickColumn ? (
+              // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
+              <>
+                Nodes:{' '}
+                <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
+                  {selectedNodeIds.size.toLocaleString()}
+                </span>
+                /{rowCount.toLocaleString()} selected,{' '}
+                <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
+                  {(filteredCount ?? rowCount).toLocaleString()}
+                </span>
+                /{rowCount.toLocaleString()} showing
+              </>
+            ) : filteredCount === null ? (
               <>{rowCount.toLocaleString()} nodes</>
             ) : (
               <>
