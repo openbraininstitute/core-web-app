@@ -17,6 +17,7 @@ import {
 } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
+import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { useFlag } from '@/features/feature-flags';
 import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
@@ -463,7 +464,9 @@ export default function SimulationsTab({
   const loading = simulationsLoading || modelLoading;
 
   return (
-    <>
+    // The viewers are remounted for each report and simulation: the cells they
+    // read stay open between them, so a population is read once.
+    <NodesSessionKeeper>
       <SimulationsResultsUiAdapter
         simulationPicker={simulationPicker}
         reportPicker={
@@ -572,6 +575,6 @@ export default function SimulationsTab({
       {costConfirmationModal}
 
       {creditsModal}
-    </>
+    </NodesSessionKeeper>
   );
 }

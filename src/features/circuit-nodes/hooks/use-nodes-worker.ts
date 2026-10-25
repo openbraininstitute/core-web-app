@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { useNodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import {
   IDLE_SESSION_STATE,
   type NodesOpenParams,
@@ -69,6 +70,7 @@ export function nodesOpenParams(
  */
 export function useNodesWorker({ enabled, circuitId, circuitAssetId, population }: Args) {
   const ctx = useWorkspace();
+  const keep = useNodesSessionKeeper();
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const [state, setState] = useState<NodesSessionState>(IDLE_SESSION_STATE);
 
@@ -83,7 +85,10 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
       return;
     }
 
-    nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
+    const params = nodesOpenParams(ctx, circuitId, circuitAssetId, population);
+    nodesWorkerRegistry.acquire(key, params);
+    // Held open past this reader too, where a page keeps the populations it reads.
+    keep?.(key, params);
     const sync = () => setState(nodesWorkerRegistry.getState(key));
     const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
     sync();
@@ -93,7 +98,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
       unsubscribe();
       nodesWorkerRegistry.release(key);
     };
-  }, [key, ctx, circuitId, circuitAssetId, population]);
+  }, [key, ctx, circuitId, circuitAssetId, population, keep]);
 
   const datasource = useMemo<IDatasource | null>(() => {
     if (!key || state.status !== 'ready' || !state.columns) return null;
