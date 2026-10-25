@@ -63,6 +63,12 @@ export function sharedTracesHint(pickedCount: number, keptCount: number): string
 }
 
 /**
+ * The span of time the plot shows and where it lies across the plot's box, in
+ * px, for a scrubber laid out under its time axis.
+ */
+export type TracesTimeAxis = { from: number; to: number; left: number; right: number };
+
+/**
  * One line on the plot: a trace, its cell's colour slot (null when no cell was
  * picked), and whether it is only there because its row is hovered.
  */
@@ -87,11 +93,14 @@ export default function ReportDetailsView({
   hovered,
   variableName,
   timeCursor,
+  onTimeAxisChange,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   /** A time to mark on the plot, such as a scene playing the recording above it. */
   timeCursor?: TimeCursor;
+  /** Told where the time axis lies whenever it is drawn, zoomed or resized. */
+  onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -137,6 +146,7 @@ export default function ReportDetailsView({
         legend={picking}
         variableName={variableName}
         timeCursor={timeCursor}
+        onTimeAxisChange={onTimeAxisChange}
       />
     </div>
   );
@@ -150,10 +160,12 @@ function SharedTracesPlot({
   legend,
   variableName,
   timeCursor,
+  onTimeAxisChange,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   timeCursor?: TimeCursor;
+  onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -340,16 +352,28 @@ function SharedTracesPlot({
 
   // The cursor, moved on the DOM: placed by the plot's own axis, so it follows a zoom,
   // and placed again after every redraw, so a paused one fits a plot that has resized.
+  // It carries the time at its foot. Where the axis lies goes to the host as well.
   const cursorRef = useRef<HTMLDivElement>(null);
+  const cursorLabelRef = useRef<HTMLSpanElement>(null);
   const cursorTimeRef = useRef<number | null>(null);
+  const reportedAxisRef = useRef('');
   const placeCursor = useCallback(() => {
-    const cursor = cursorRef.current;
-    if (!cursor) return;
-    const timeInMs = cursorTimeRef.current;
     const graph = boxRef.current?.querySelector('.js-plotly-plot') as
       | (HTMLElement & { _fullLayout?: PlotlyLayoutInternals })
       | null;
     const layout = graph?._fullLayout;
+    if (layout?.xaxis && onTimeAxisChange) {
+      const [from, to] = layout.xaxis.range;
+      const axis = { from, to, left: layout._size.l, right: layout._size.l + layout._size.w };
+      const key = `${axis.from}:${axis.to}:${axis.left}:${axis.right}`;
+      if (key !== reportedAxisRef.current) {
+        reportedAxisRef.current = key;
+        onTimeAxisChange(axis);
+      }
+    }
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+    const timeInMs = cursorTimeRef.current;
     if (timeInMs === null || !layout?.xaxis) {
       cursor.style.display = 'none';
       return;
@@ -364,7 +388,10 @@ function SharedTracesPlot({
     cursor.style.left = `${l + layout.xaxis.l2p(timeInMs) - 0.75}px`;
     cursor.style.top = `${t}px`;
     cursor.style.height = `${h}px`;
-  }, []);
+    if (cursorLabelRef.current) {
+      cursorLabelRef.current.textContent = `${timeInMs.toFixed(1)} ${population.timeConfig.units}`;
+    }
+  }, [onTimeAxisChange, population.timeConfig.units]);
   useEffect(() => {
     if (!timeCursor) return;
     return timeCursor.subscribe((timeInMs) => {
@@ -410,7 +437,12 @@ function SharedTracesPlot({
           ref={cursorRef}
           // Over the WebGL traces, which sit on a canvas of their own.
           className="pointer-events-none absolute z-10 hidden w-[1.5px] bg-[#f5222d]"
-        />
+        >
+          <span
+            ref={cursorLabelRef}
+            className="absolute bottom-1 left-1 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold text-[#f5222d] tabular-nums"
+          />
+        </div>
       )}
     </div>
   );
@@ -418,7 +450,7 @@ function SharedTracesPlot({
 
 /** The parts of Plotly's laid-out graph the cursor reads. */
 type PlotlyLayoutInternals = {
-  _size: { l: number; t: number; h: number };
+  _size: { l: number; t: number; w: number; h: number };
   xaxis?: { range: [number, number]; l2p: (value: number) => number };
 };
 

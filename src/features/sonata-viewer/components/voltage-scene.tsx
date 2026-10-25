@@ -3,6 +3,7 @@
 import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { Spin } from 'antd';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
@@ -15,6 +16,7 @@ import { cn } from '@/utils/css-class';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { CellFrames } from '@/features/sonata-viewer/types';
 
@@ -26,7 +28,8 @@ const RAMP = Array.from({ length: RAMP_STEPS }, (_, i) => mix(RAMP_STOPS, i / (R
 const UNRECORDED = '#e5e7eb';
 /** Colours change at most this often while playing; the clock itself moves every frame. */
 const RECOLOR_MS = 50;
-const DEFAULT_SPEED = 100;
+/** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
+export const DEFAULT_SCENE_SPEED = 100;
 
 const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false, colorBy: false };
 
@@ -49,6 +52,16 @@ type Props = {
   bare?: boolean;
   /** Off while out of sight: it stops playing and drawing. */
   active?: boolean;
+  /** Simulated milliseconds per wall-clock second, which the host keeps. */
+  speed: number;
+  onSpeedChange: (speed: number) => void;
+  /**
+   * Where play and the scrubber go when they sit under the traces rather than
+   * under the scene: the time is then on the traces' cursor, and the speed is
+   * the host's to show. With `timeAxis` the scrubber lies under their time axis.
+   */
+  transportTarget?: HTMLElement | null;
+  timeAxis?: TracesTimeAxis | null;
 };
 
 /**
@@ -69,6 +82,10 @@ export function VoltageScene({
   onCellClick,
   bare = false,
   active = true,
+  speed,
+  onSpeedChange,
+  transportTarget,
+  timeAxis = null,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -78,7 +95,6 @@ export function VoltageScene({
   const scrubberRef = useRef<((timeInMs: number) => void) | null>(null);
   const readoutRef = useRef<HTMLSpanElement>(null);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(DEFAULT_SPEED);
   const [frame, setFrame] = useState(0);
   const recoloredAt = useRef(0);
 
@@ -153,17 +169,75 @@ export function VoltageScene({
     return { palette: [...RAMP, UNRECORDED], columnByNode };
   }, [frames, valueRange, cellCount, frame]);
 
-  // The scrubber lies across its own box, measured.
-  const trackRef = useRef<HTMLDivElement>(null);
+  // The scrubber lies across its own track, measured, unless it is under the traces' axis.
+  const [track, setTrack] = useState<HTMLDivElement | null>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   useLayoutEffect(() => {
-    const track = trackRef.current;
     if (!track) return;
     const observer = new ResizeObserver(() => setTrackWidth(track.clientWidth));
     observer.observe(track);
     setTrackWidth(track.clientWidth);
     return () => observer.disconnect();
-  }, []);
+  }, [track]);
+
+  const playButton = (
+    <Button
+      type="button"
+      variant="icon"
+      size="sm"
+      disabled={!frames}
+      aria-label={playing ? 'Pause the recording' : 'Play the recording'}
+      onClick={play}
+    >
+      {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
+    </Button>
+  );
+  const seek = (timeInMs: number) => moveTo(Math.min(end, Math.max(start, timeInMs)), true);
+  // A scrubber over the run, across the track beside the play button.
+  const trackScrubber = (
+    <div ref={setTrack} className="relative h-6 min-w-0 flex-1">
+      {frames && trackWidth > 0 && (
+        <Scrubber
+          from={start}
+          to={end}
+          left={0}
+          right={trackWidth}
+          timeRef={timeRef}
+          moveRef={scrubberRef}
+          onSeek={seek}
+        />
+      )}
+    </div>
+  );
+  const docked = transportTarget !== undefined;
+  // Under the traces: play in the plot's margin and the scrubber across the span it shows,
+  // or, where their plots are several, beside each other over the run.
+  const tracesTransport = timeAxis ? (
+    <div className="relative h-10 shrink-0">
+      <div
+        className="absolute inset-y-0 left-0 flex items-center justify-end pr-1.5"
+        style={{ width: timeAxis.left }}
+      >
+        {playButton}
+      </div>
+      {frames && (
+        <Scrubber
+          from={timeAxis.from}
+          to={timeAxis.to}
+          left={timeAxis.left}
+          right={timeAxis.right}
+          timeRef={timeRef}
+          moveRef={scrubberRef}
+          onSeek={seek}
+        />
+      )}
+    </div>
+  ) : (
+    <div className="flex h-10 shrink-0 items-center gap-3">
+      {playButton}
+      {trackScrubber}
+    </div>
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -193,49 +267,45 @@ export function VoltageScene({
         )}
         {valueRange && <RampLegend range={valueRange} units={units} />}
       </div>
-      <div className="flex h-10 shrink-0 items-center gap-3">
-        <Button
-          type="button"
-          variant="icon"
-          size="sm"
-          disabled={!frames}
-          aria-label={playing ? 'Pause the recording' : 'Play the recording'}
-          onClick={play}
-        >
-          {playing ? <RiPauseFill className="size-4" /> : <RiPlayFill className="size-4" />}
-        </Button>
-        <div ref={trackRef} className="relative h-6 min-w-0 flex-1">
-          {frames && trackWidth > 0 && (
-            <Scrubber
-              from={start}
-              to={end}
-              left={0}
-              right={trackWidth}
-              timeRef={timeRef}
-              moveRef={scrubberRef}
-              onSeek={(timeInMs) => moveTo(timeInMs, true)}
-            />
-          )}
+      {docked ? (
+        transportTarget && active && createPortal(tracesTransport, transportTarget)
+      ) : (
+        <div className="flex h-10 shrink-0 items-center gap-3">
+          {playButton}
+          {trackScrubber}
+          <span
+            ref={readoutRef}
+            className="w-16 shrink-0 text-right text-xs text-neutral-500 tabular-nums"
+          />
+          <SceneSpeedSelect speed={speed} onSpeedChange={onSpeedChange} />
         </div>
-        <span
-          ref={readoutRef}
-          className="w-16 shrink-0 text-right text-xs text-neutral-500 tabular-nums"
-        />
-        <PillSelect
-          label="Speed"
-          value={String(speed)}
-          options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
-          onChange={(v) => setSpeed(Number(v))}
-        />
-      </div>
+      )}
     </div>
   );
 }
 
-/** The ramp and the values at its ends, in the scene's corner. */
+/** How fast the recording plays. */
+export function SceneSpeedSelect({
+  speed,
+  onSpeedChange,
+}: {
+  speed: number;
+  onSpeedChange: (speed: number) => void;
+}) {
+  return (
+    <PillSelect
+      label="Speed"
+      value={String(speed)}
+      options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+      onChange={(v) => onSpeedChange(Number(v))}
+    />
+  );
+}
+
+/** The ramp and the values at its ends, in the scene's top corner, clear of its axes. */
 function RampLegend({ range, units }: { range: [number, number]; units: string }) {
   return (
-    <div className="pointer-events-none absolute right-3 bottom-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
+    <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
       <div
         className="h-2 w-36 rounded-full"
         style={{ background: `linear-gradient(to right, ${RAMP_STOPS.join(', ')})` }}

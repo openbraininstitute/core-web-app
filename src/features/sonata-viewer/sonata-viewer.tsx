@@ -18,7 +18,11 @@ import ReportDetailsView, {
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
 import SonataViewerSkeleton from '@/features/sonata-viewer/components/sonata-viewer-skeleton';
-import { VoltageScene } from '@/features/sonata-viewer/components/voltage-scene';
+import {
+  DEFAULT_SCENE_SPEED,
+  SceneSpeedSelect,
+  VoltageScene,
+} from '@/features/sonata-viewer/components/voltage-scene';
 import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
@@ -46,6 +50,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { PickAllState } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
+import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type {
   CellFrames,
   PickedTrace,
@@ -520,6 +525,11 @@ export function SonataReportView({
   // Docked, the panel's statistics box holds the plots, which the statistics
   // under the traces portal in, so the two share one tree.
   const [plotsSlot, setPlotsSlot] = useState<HTMLDivElement | null>(null);
+  // Docked, the scene's play and scrubber are under the traces, the scrubber
+  // under their time axis, and its speed is with their controls.
+  const [sceneSpeed, setSceneSpeed] = useState(DEFAULT_SCENE_SPEED);
+  const [transportSlot, setTransportSlot] = useState<HTMLDivElement | null>(null);
+  const [tracesAxis, setTracesAxis] = useState<TracesTimeAxis | null>(null);
 
   if (!population) {
     return <Empty className="p-2em" description="This report recorded no population" />;
@@ -551,6 +561,10 @@ export function SonataReportView({
         onCellClick={handleSceneCellClick}
         bare={docked}
         active={showScene}
+        speed={sceneSpeed}
+        onSpeedChange={setSceneSpeed}
+        transportTarget={docked ? transportSlot : undefined}
+        timeAxis={groupBy === ALL ? tracesAxis : null}
       />
     ) : null;
 
@@ -566,6 +580,7 @@ export function SonataReportView({
           hovered={hoveredTraces}
           variableName={variableName}
           timeCursor={showScene ? timeCursor : undefined}
+          onTimeAxisChange={setTracesAxis}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -665,10 +680,15 @@ export function SonataReportView({
                     {population.nodeCount.toLocaleString()}{' '}
                     {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
                   </span>
+                  {showScene && (
+                    <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
+                  )}
                   {/* Under the campaign's statistics, the simulation on show is picked over its traces. */}
                   {campaignMode && <div className="ml-auto">{simulationPicker}</div>}
                 </div>
                 {traces}
+                {/* The 3D player's play and scrubber, while it is up. */}
+                <div ref={setTransportSlot} className="shrink-0" />
               </>
             ),
           }}
