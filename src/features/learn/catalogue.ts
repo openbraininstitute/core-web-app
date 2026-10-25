@@ -4,6 +4,7 @@ import { COMPARTMENTAL_NEURON_SLIDES } from '@/features/learn/slides/compartment
 import { CORTICAL_CELLS_SLIDES } from '@/features/learn/slides/cortical-cells';
 import { ELECTRICAL_PHYSICS_SLIDES } from '@/features/learn/slides/electrical-physics';
 import { ELECTRICAL_PHYSICS_FIRST_TAKE_SLIDES } from '@/features/learn/slides/electrical-physics-first-take';
+import { ELECTRICAL_TERMS } from '@/features/learn/slides/electrical-terms';
 import { ENTITYSDK_SLIDES } from '@/features/learn/slides/entitysdk';
 import { MEMBRANE_BASICS_SLIDES } from '@/features/learn/slides/membrane-basics';
 import { MISC_SLIDES } from '@/features/learn/slides/misc';
@@ -15,6 +16,7 @@ import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plast
 import { VALIDATION_SLIDES } from '@/features/learn/slides/validation';
 import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
 
+import type { SlideTerm } from '@/features/learn/components/walkthrough/Terms';
 import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough';
 
 type LearnLevel = 'Beginner' | 'Intermediate' | 'Advanced' | 'All levels';
@@ -31,6 +33,8 @@ export type LearnCourse = {
   rough?: boolean;
   /** The figure the Learn page shows of it, live: one of its slides' own. */
   preview: NonNullable<Slide['widget']>;
+  /** The terms its slides' titles explain, in pop-ups. */
+  terms?: SlideTerm[];
 };
 
 export const LEARN_COURSES: LearnCourse[] = [
@@ -63,6 +67,7 @@ export const LEARN_COURSES: LearnCourse[] = [
     slides: ELECTRICAL_PHYSICS_SLIDES,
     // slide 5's: ions bouncing off the membrane
     preview: 'physics2:barrier',
+    terms: ELECTRICAL_TERMS,
   },
   {
     id: 'validation',

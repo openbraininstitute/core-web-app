@@ -214,6 +214,28 @@ html:has(.learn-root) {
   }
 }
 
+/* A term's pop-up, from a slide's title: easing in below it. */
+@keyframes learn-term-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.learn-root .animate-term-in {
+  animation: learn-term-in 140ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .learn-root .animate-term-in {
+    animation: none;
+  }
+}
+
 /* TEMPORARY, the "Outer box" setting off: the page's grey box loses its fill and border in every
    look, its spacing kept so nothing moves */
 .learn-no-box.learn-no-box {

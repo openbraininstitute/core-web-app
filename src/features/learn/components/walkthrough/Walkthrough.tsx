@@ -25,6 +25,11 @@ import { isStage, type Stage } from '@/features/learn/components/heuristics/shar
 import NeuronWidget from '@/features/learn/components/NeuronWidget';
 import CalciumPlasticityWidget from '@/features/learn/components/synapse/CalciumPlasticityWidget';
 import TsodyksMarkramWidget from '@/features/learn/components/synapse/TsodyksMarkramWidget';
+import {
+  type SlideTerm,
+  TermText,
+  TypedWords,
+} from '@/features/learn/components/walkthrough/Terms';
 import { savedTypewriter, subscribe } from '@/features/learn/lib/settings';
 
 export interface Slide {
@@ -76,6 +81,7 @@ export default function Walkthrough({
   home,
   onSlide,
   ctaHref,
+  terms,
 }: {
   /** The slides to step through. */
   slides: Slide[];
@@ -92,6 +98,8 @@ export default function Walkthrough({
   onSlide?: (index: number) => void;
   /** Where a closing link goes: the course it names, or, naming none, the Learn page. */
   ctaHref?: (course?: string) => string;
+  /** The terms the slides' titles explain, each opening a pop-up: what it means, and the equations it is in. */
+  terms?: readonly SlideTerm[];
 }) {
   const first = Math.min(Math.max(0, startAt), slides.length - 1);
   const [i, setI] = useState(first);
@@ -217,6 +225,7 @@ export default function Walkthrough({
               typeNote={typewriter === true}
               pending={!!typewriter && typewriterOn === null}
               onFinisher={setFinisher}
+              terms={terms}
             />
 
             {s.widget === 'charge' && <ChargeWidget />}
@@ -292,6 +301,7 @@ function SlideText({
   typeNote,
   pending,
   onFinisher,
+  terms,
 }: {
   slide: Slide;
   wide: boolean;
@@ -300,6 +310,8 @@ function SlideText({
   /** Before hydration, with the setting not yet known: hidden by CSS if it turns out to be on. */
   pending: boolean;
   onFinisher: (finish: (() => void) | null) => void;
+  /** The terms the line explains: buttons, once it has typed. */
+  terms?: readonly SlideTerm[];
 }) {
   const chars = useMemo(
     () => Array.from(slide.say + (typeNote ? (slide.note ?? '') : '')),
@@ -348,10 +360,10 @@ function SlideText({
         data-typewriter-pending={pending || undefined}
         className={`text-balance whitespace-pre-line ${textStyle} ${wide ? '' : 'max-w-2xl'}`}
       >
-        {typing ? (
-          <Typed text={slide.say} shown={sayShown} caret={!done && count <= sayLength} />
+        {typing && !done && count <= sayLength ? (
+          <Typed text={slide.say} shown={sayShown} caret terms={terms} />
         ) : (
-          slide.say
+          <TermText text={slide.say} terms={terms} />
         )}
       </h1>
       {slide.note && (
@@ -377,17 +389,25 @@ function SlideText({
 /**
  * `text` with only its first `shown` characters visible. The rest is laid out
  * invisibly, so the lines already break where they will end up and nothing
- * reflows as it types; a screen reader gets all of it at once.
+ * reflows as it types; a screen reader gets all of it at once. Its `terms`
+ * look as they will once it has typed.
  */
-function Typed({ text, shown, caret }: { text: string; shown: number; caret: boolean }) {
-  const chars = Array.from(text);
+function Typed({
+  text,
+  shown,
+  caret,
+  terms,
+}: {
+  text: string;
+  shown: number;
+  caret: boolean;
+  terms?: readonly SlideTerm[];
+}) {
   return (
     <>
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
-        {chars.slice(0, shown).join('')}
-        {caret && <span className="typing-caret" />}
-        <span className="invisible">{chars.slice(shown).join('')}</span>
+        <TypedWords text={text} shown={shown} caret={caret} terms={terms} />
       </span>
     </>
   );

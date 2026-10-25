@@ -16,7 +16,8 @@ export function CourseDeck({
   home: string;
   startAt: number;
 }) {
-  const slides = getLearnCourse(courseId)?.slides ?? [];
+  const deck = getLearnCourse(courseId);
+  const slides = deck?.slides ?? [];
   const onSlide = useCallback(
     (index: number) => recordSlide(courseId, index, slides.length),
     [courseId, slides.length]
@@ -43,6 +44,7 @@ export function CourseDeck({
       home={home}
       onSlide={onSlide}
       ctaHref={ctaHref}
+      terms={deck?.terms}
     />
   );
 }
