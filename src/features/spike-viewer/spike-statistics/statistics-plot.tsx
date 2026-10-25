@@ -5,9 +5,12 @@ import { useEffect, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import { PlotTimeline } from '@/features/spike-viewer/components/plot-timeline';
 import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
 import type { Config } from 'plotly.js-dist-min';
+import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { Figure, HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
 import type { PlacedTooltip } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
@@ -29,16 +32,22 @@ const CONFIG: Partial<Config> = {
 
 /**
  * One of the statistics' figures, filling its box; see `figures.ts` for what
- * each draws. `onPointClick` is told the `customdata` of a point clicked.
+ * each draws. `onPointClick` is told the `customdata` of a point clicked. A
+ * figure over time can carry the config's timings and the player's time over it.
  */
 export default function StatisticsPlot({
   figure,
   onPointClick,
+  timeline,
 }: {
   figure: Figure;
   onPointClick?: (customdata: unknown) => void;
+  timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor };
 }) {
   const [tip, setTip] = useState<PlacedTooltip>();
+  const [graph, setGraph] = useState<HTMLElement | null>(null);
+  // A timing's card over the plot's own, which gives way to it.
+  const [timingHovered, setTimingHovered] = useState(false);
   // A 3D scene's hover says nothing of the pointer, so where it last was is kept.
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const attachListeners = usePlotListeners({
@@ -87,11 +96,22 @@ export default function StatisticsPlot({
         layout={figure.layout}
         config={CONFIG}
         useResizeHandler
-        onInitialized={attachListeners}
+        onInitialized={(drawn, graphDiv) => {
+          attachListeners(drawn, graphDiv);
+          setGraph(graphDiv);
+        }}
         onUpdate={attachListeners}
         style={{ width: '100%', height: '100%' }}
       />
-      {tip && figure.tooltip && <TooltipCard {...tip} />}
+      {timeline && (
+        <PlotTimeline
+          graph={graph}
+          events={timeline.events}
+          timeCursor={timeline.timeCursor}
+          onHoverChange={setTimingHovered}
+        />
+      )}
+      {tip && figure.tooltip && !timingHovered && <TooltipCard {...tip} />}
     </div>
   );
 }

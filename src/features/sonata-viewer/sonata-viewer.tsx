@@ -175,7 +175,7 @@ export function SonataReportView({
   /** Whether its statistics open beside it in a results layout. */
   withStatistics?: boolean;
 }) {
-  const { simulationPicker, campaign: campaignInfo } = useSimulation();
+  const { simulationPicker, campaign: campaignInfo, timeline } = useSimulation();
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
   const [chosenPopulation, setChosenPopulation] = useReportPopulation(
     reportPath,
@@ -537,8 +537,11 @@ export function SonataReportView({
               CHART_LINE_COLOR
             )
           : null,
+      // Marked over the mean as over the raster: the config's timings, and where the player is.
+      events: timeline,
+      timeCursor,
     }),
-    [sceneFrames, meanLabel, timeWindow]
+    [sceneFrames, meanLabel, timeWindow, timeline, timeCursor]
   );
 
   // The plots are over the ticked cells, else those the table's filter keeps.

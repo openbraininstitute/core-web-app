@@ -23,6 +23,8 @@ import { cn } from '@/utils/css-class';
 import type { ReactNode } from 'react';
 import type { PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
+import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { AxisValues, Figure } from '@/features/spike-viewer/spike-statistics/figures';
 import type { CellGroup, CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 
@@ -51,6 +53,10 @@ export type TimeCourse = {
   figure: (groups: CellGroup[], groupLabel: string | undefined) => Figure | null;
   /** Shown after the plot's select while the course is up: what shapes it, such as a PSTH's bins. */
   controls?: ReactNode;
+  /** The config's timings, marked over the course as over the raster. */
+  events?: readonly TimelineEvent[];
+  /** The player's time, a red rule over the course. */
+  timeCursor?: TimeCursor;
 };
 
 const PLOT_KINDS: { value: PlotKind; label: string }[] = [
@@ -68,6 +74,7 @@ const AXIS_NAMES = ['X', 'Y', 'Z'];
 const PREFERRED_AXES = ['x', 'y', 'z'];
 
 const NO_GROUPING = '__none__';
+const NO_EVENTS: readonly TimelineEvent[] = [];
 
 /** Past this many values a property is closer to an id than a group. */
 const MAX_GROUPS = 80;
@@ -322,7 +329,14 @@ export function StatisticsPlots({
             <Spin />
           </Centered>
         ) : (
-          <StatisticsPlot figure={figure} />
+          <StatisticsPlot
+            figure={figure}
+            timeline={
+              overTime && (timeCourse.events || timeCourse.timeCursor)
+                ? { events: timeCourse.events ?? NO_EVENTS, timeCursor: timeCourse.timeCursor }
+                : undefined
+            }
+          />
         )}
       </div>
     </>

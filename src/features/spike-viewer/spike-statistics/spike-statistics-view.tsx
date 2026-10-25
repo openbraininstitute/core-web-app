@@ -34,6 +34,8 @@ import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
+import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
 import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
@@ -73,6 +75,9 @@ type Props = {
   windowCells?: Uint8Array | null;
   /** Zooms the raster back out, for the table's own way back to everything. */
   onClearWindow?: () => void;
+  /** The config's timings and the player's time, marked over the PSTHs as over the raster. */
+  events?: readonly TimelineEvent[];
+  timeCursor?: TimeCursor;
 };
 
 /** The raster window's cells, as a column of the session's, filtered on out of sight. */
@@ -130,6 +135,8 @@ export function SpikeStatisticsView({
   windowTime = null,
   windowCells = null,
   onClearWindow,
+  events,
+  timeCursor,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -341,8 +348,10 @@ export function SpikeStatisticsView({
           psth
         ),
       controls: <PsthControls />,
+      events,
+      timeCursor,
     }),
-    [recorded, windowTime, timeRange, rowCount, color, psth]
+    [recorded, windowTime, timeRange, rowCount, color, psth, events, timeCursor]
   );
 
   // The statistics share the table's right half between them.

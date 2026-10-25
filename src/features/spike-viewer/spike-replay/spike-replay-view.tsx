@@ -19,6 +19,7 @@ import { circuitDrawsMorphologies } from '@/features/scan-config/components/circ
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
@@ -502,19 +503,22 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   useEffect(() => {
     playEndRef.current = playTo;
   });
-  // The time over the 3D view, moved on the DOM with the playhead.
+  // The time over the 3D view, moved on the DOM with the playhead, and pushed to
+  // the PSTHs, which mark it too.
   const sceneTime = useSceneTime(liveTimeRef);
   const showSceneTime = sceneTime.show;
+  const playheadCursor = useMemo(() => createTimeCursor(), []);
   const handleTimeChange = useCallback(
     (timeInMs: number) => {
       liveTimeRef.current = timeInMs;
       playheadRef.current?.(timeInMs);
       scrubberRef.current?.(timeInMs);
       showSceneTime(timeInMs);
+      playheadCursor.set(timeInMs);
       setSceneLive(true);
       if (timeInMs >= playEndRef.current) setPlaying(false);
     },
-    [showSceneTime]
+    [showSceneTime, playheadCursor]
   );
 
   useEffect(() => {
@@ -546,8 +550,9 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       playheadRef.current?.(timeInMs);
       scrubberRef.current?.(timeInMs);
       showSceneTime(timeInMs);
+      playheadCursor.set(timeInMs);
     },
-    [timeMinInMs, timeMaxInMs, showSceneTime]
+    [timeMinInMs, timeMaxInMs, showSceneTime, playheadCursor]
   );
 
   // One-shot, so that seeking twice to the same millisecond still seeks: held,
@@ -633,6 +638,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
         tableOnly={docked ? !plotsUp || sliding : false}
         plotsTarget={docked ? plotsSlot : undefined}
+        events={timeline}
+        timeCursor={playheadCursor}
       />
     ) : null;
 
