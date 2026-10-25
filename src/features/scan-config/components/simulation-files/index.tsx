@@ -53,6 +53,13 @@ type FileRow = {
   selected: boolean;
 };
 
+/** The simulation's own files, named for what they are rather than by their file names. */
+const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
+  [AssetLabel.custom_node_sets]: 'Node sets',
+  [AssetLabel.simulation_generation_config]: 'Obi-one config',
+  [AssetLabel.sonata_simulation_config]: 'SONATA simulation config',
+};
+
 /** Which of the groups are open: kept as the simulation on show changes. */
 const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
 
@@ -215,7 +222,14 @@ export function SimulationFiles({
         ];
       }
       if (file.asset.label !== AssetLabel.spike_report && !isVoltageReportFile(file)) {
-        return [{ file, name: file.name, population: undefined, selected: isSelected(file) }];
+        return [
+          {
+            file,
+            name: SIMULATION_FILE_NAMES[file.asset.label] ?? file.name,
+            population: undefined,
+            selected: isSelected(file),
+          },
+        ];
       }
       const known = published[file.asset.path];
       const populations = known?.populations ?? recordable;
