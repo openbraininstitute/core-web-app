@@ -149,7 +149,7 @@ function WorkflowTopBarSlots({
             label:
               selected.length === 1 ? selected[0].name : `Multiple entities (${selected.length})`,
             ...(selected.length === 1
-              ? { ellipsis: selected[0].name, copy: copyOf(selected[0]) }
+              ? { ellipsis: selected[0].name }
               : {
                   menu: selected.map((item) => ({
                     key: item.key,
