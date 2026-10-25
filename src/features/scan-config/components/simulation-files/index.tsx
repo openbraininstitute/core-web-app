@@ -7,9 +7,8 @@ import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
-import { hasStatistics, isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
-import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
 import { useAutoSelectFileOnConfigChange } from '@/features/scan-config/components/shared/use-auto-select';
@@ -175,16 +174,6 @@ export function SimulationFiles({
   // The model's files are the circuit's, not the simulation's.
   const isCircuitFile = (file: TAssetBackedFile) => file.entity.id === simulation.entity_id;
   const circuitFiles = inputFilesWithLogs.filter(isCircuitFile);
-  // A spike file or a voltage report opens straight on its statistics, which keep its raster
-  // or traces and its replay beside them. They are listed against the circuit's node file,
-  // so only a circuit's simulation has them.
-  const sidePanel = useResultsSidePanel();
-  const select = (file: TActivityCustomFile) => {
-    onSelect(file);
-    if (circuitFiles.length > 0 && isAssetBackedFile(file) && hasStatistics(file)) {
-      sidePanel?.setOpen(true);
-    }
-  };
   const isSelected = (file: TAssetBackedFile) =>
     file.id ? file.id === selectedFile?.id : file.asset.path === selectedAssetPath;
   // A report reads as the picker over the statistics lists it, a row per population:
@@ -248,7 +237,7 @@ export function SimulationFiles({
                       [file.asset.path]: population,
                     }));
                   }
-                  select(file);
+                  onSelect(file);
                 }}
               />
             );
