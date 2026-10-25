@@ -33,7 +33,11 @@ import {
 } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
-import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
+import {
+  ActivityCustomFileRenderer,
+  isAssetBackedFile,
+  type TAssetBackedFile,
+} from '@/features/scan-config/types';
 import {
   byReportKind,
   ReportPicker,
@@ -246,8 +250,8 @@ export default function SimulationsTab({
 
   const activeSimulationExecStatus = activeSimulation && localStatusMap.get(activeSimulation.id);
 
-  // The result's reports with statistics, to switch between from the bar over
-  // the open panel; an input's spikes on show among them.
+  // The result's reports with statistics and the inputs' spikes, to switch
+  // between from the bar over the open panel.
   const [, resultFiles] = useSimulationResultFiles(
     activeSimulation?.id ?? '',
     context,
@@ -259,11 +263,20 @@ export default function SimulationsTab({
       ? selectedFile
       : undefined;
   const reportFiles = useMemo(() => {
-    const reports = resultFiles.filter((f) => hasStatistics(f)).sort(byReportKind);
+    const inputs: TAssetBackedFile[] = activeSimulation
+      ? activeSimulation.assets
+          .filter((asset) => asset.label === AssetLabel.replay_spikes)
+          .map((asset) => ({
+            asset,
+            entity: activeSimulation,
+            renderer: ActivityCustomFileRenderer.Default,
+          }))
+      : [];
+    const reports = [...resultFiles.filter((f) => hasStatistics(f)), ...inputs].sort(byReportKind);
     return shownReport && !reports.some((f) => f.asset.id === shownReport.asset.id)
       ? [shownReport, ...reports]
       : reports;
-  }, [resultFiles, shownReport]);
+  }, [resultFiles, activeSimulation, shownReport]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
@@ -458,6 +471,7 @@ export default function SimulationsTab({
             files={reportFiles}
             selectedAssetId={shownReport?.asset.id}
             onSelect={act.onSelectedFileChange}
+            reports={simConfig?.reports}
           />
         }
         // The campaign's statistics compare its spikes or its voltages, so only those offer them.

@@ -28,31 +28,75 @@ export function byReportKind(a: TAssetBackedFile, b: TAssetBackedFile): number {
   return kind(a) - kind(b) || a.asset.path.localeCompare(b.asset.path);
 }
 
-/** What a report is, as the picker says it: "Spikes", "Voltage", named where voltages are several. */
-export function reportKind(file: TAssetBackedFile, files: TAssetBackedFile[]): string {
-  const name = (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
-  if (file.asset.label === AssetLabel.spike_report) return 'Spikes';
-  if (file.asset.label === AssetLabel.voltage_report) {
-    const voltages = files.filter((f) => f.asset.label === AssetLabel.voltage_report).length;
-    return voltages > 1 ? `Voltage (${name})` : 'Voltage';
-  }
-  return name;
+/** A report's file name without its extension. */
+export function reportStem(file: TAssetBackedFile): string {
+  return (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
 }
 
 /**
- * Switches what the open statistics show between a simulation's reports and
- * their populations - "Spikes: S1nonbarrel_neurons" - from the bar over them,
- * which stay up for the next. A report not yet opened is listed by its kind
- * alone, until it has been and its populations are known.
+ * How a report is named, by the files column and the picker: a spike file by
+ * the population, another by its file's name, with the population where it
+ * records several.
+ */
+export function reportName(
+  file: TAssetBackedFile,
+  population: string | undefined,
+  populations: number
+): string {
+  if (file.asset.label === AssetLabel.spike_report && population) return population;
+  const stem = reportStem(file);
+  return population && populations > 1 ? `${stem} · ${population}` : stem;
+}
+
+/**
+ * What a report records, word by word, for the tag beside its name: "Spikes",
+ * "Input spikes", or for a compartment report, from its entry in the SONATA
+ * config, where and what: "Soma voltages". Until the config is read a voltage
+ * report is one all the same.
+ */
+export function reportTag(
+  file: TAssetBackedFile,
+  reports: Readonly<Record<string, unknown>> | null | undefined
+): string[] {
+  if (file.asset.label === AssetLabel.spike_report) return ['Spikes'];
+  if (file.asset.label === AssetLabel.replay_spikes) return ['Input', 'spikes'];
+  const report = reports?.[reportStem(file)];
+  const entry = isPlainObject(report) ? report : {};
+  const variable = typeof entry.variable_name === 'string' ? entry.variable_name : 'v';
+  const sections = typeof entry.sections === 'string' ? entry.sections : 'soma';
+  const where =
+    entry.type === 'compartment_set'
+      ? 'Compartment'
+      : sections === 'soma'
+        ? 'Soma'
+        : sections === 'all'
+          ? 'Compartment'
+          : sections.charAt(0).toUpperCase() + sections.slice(1);
+  return [where, variable === 'v' ? 'voltages' : variable];
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Switches what the open statistics show between a simulation's reports, its
+ * inputs' spikes among them, and their populations, from the bar over them,
+ * which stay up for the next: each named as the files column names it, its
+ * kind tagged after. A report not yet opened is listed once, until it has been
+ * and its populations are known.
  */
 export function ReportPicker({
   files,
   selectedAssetId,
   onSelect,
+  reports,
 }: {
   files: TAssetBackedFile[];
   selectedAssetId: string | undefined;
   onSelect: (file: TAssetBackedFile) => void;
+  /** The SONATA config's reports, by name: what each records. */
+  reports?: Readonly<Record<string, unknown>> | null;
 }) {
   const published = useAtomValue(reportPopulationsAtom);
   const choose = useSetAtom(chosenReportPopulationAtom);
@@ -60,20 +104,21 @@ export function ReportPicker({
   if (!selected) return null;
 
   const options = files.flatMap((file) => {
-    const kind = reportKind(file, files);
-    const held = published[file.asset.path];
-    return held && held.populations.length > 0
-      ? held.populations.map((population) => ({
+    const tag = reportTag(file, reports).join(' ');
+    const populations = published[file.asset.path]?.populations ?? [];
+    return populations.length > 0
+      ? populations.map((population) => ({
           value: `${file.asset.id}${SEPARATOR}${population}`,
-          label: `${kind}: ${population}`,
+          label: reportName(file, population, populations.length),
+          tag,
         }))
-      : [{ value: `${file.asset.id}${SEPARATOR}`, label: kind }];
+      : [{ value: `${file.asset.id}${SEPARATOR}`, label: reportName(file, undefined, 0), tag }];
   });
   const shown = published[selected.asset.path];
 
   return (
     <PillSelect
-      // "Spikes: S1nonbarrel_neurons" says what it is.
+      // The name and its tag say what it is.
       label=""
       title="The report on show, and its population"
       value={`${selected.asset.id}${SEPARATOR}${shown?.current ?? ''}`}

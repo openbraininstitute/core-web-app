@@ -8,6 +8,11 @@ import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/glob
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { simResultBySimIdAtomFamily, useModelQuery } from '@/features/scan-config/components/atoms';
 import { isVoltageReportFile } from '@/features/scan-config/components/file-viewer';
+import {
+  reportName,
+  reportStem,
+  reportTag,
+} from '@/features/scan-config/use-cases/simulations/report-picker';
 import { IoLayout } from '@/features/scan-config/components/shared/io-layout';
 import { TaskIOFileGroup } from '@/features/scan-config/components/shared/task-io-file-group';
 import { TaskIOFileItem } from '@/features/scan-config/components/shared/task-io-file-item';
@@ -202,8 +207,8 @@ export function SimulationFiles({
         return [
           {
             file,
-            name: stemOf(file),
-            label: twoLines('Input', 'spikes'),
+            name: reportStem(file),
+            label: tagOf(reportTag(file, reports)),
             population: undefined,
             selected: isSelected(file),
           },
@@ -216,16 +221,22 @@ export function SimulationFiles({
       const populations = known?.populations ?? recordable;
       // A spike file reads as its populations, a voltage report as its name, its
       // tag in place of the extension saying what each records.
-      const spikes = file.asset.label === AssetLabel.spike_report;
-      const stem = stemOf(file);
-      const label = spikes ? 'Spikes' : twoLines(...recordingLabel(reports?.[stem]));
+      const label = tagOf(reportTag(file, reports));
       if (populations.length === 0) {
-        return [{ file, name: stem, label, population: undefined, selected: isSelected(file) }];
+        return [
+          {
+            file,
+            name: reportName(file, undefined, 0),
+            label,
+            population: undefined,
+            selected: isSelected(file),
+          },
+        ];
       }
       const shown = known?.current ?? chosenPopulations[file.asset.path] ?? populations[0];
       return populations.map((population) => ({
         file,
-        name: spikes ? population : populations.length > 1 ? `${stem} · ${population}` : stem,
+        name: reportName(file, population, populations.length),
         label,
         population,
         selected: isSelected(file) && population === shown,
@@ -367,42 +378,14 @@ export function useSimulationResultFiles(
   }, [simResult, simResultLoadable]);
 }
 
-/** A result file's name without its extension. */
-function stemOf(file: TAssetBackedFile): string {
-  return (file.asset.path.split('/').at(-1) ?? file.asset.path).replace(/\.h5$/i, '');
-}
-
-/** A tag in two words, one over the other. */
-function twoLines(first: string, second: string): ReactNode {
+/** A report's tag, its words over two lines where there are two. */
+function tagOf(words: string[]): ReactNode {
+  if (words.length < 2) return words[0];
   return (
     <span className="block text-center leading-tight">
-      {first}
+      {words[0]}
       <br />
-      {second}
+      {words.slice(1).join(' ')}
     </span>
   );
-}
-
-/**
- * What a compartment report records, from its entry in the SONATA config,
- * where and what: "Soma" "voltages", or another section's or variable's.
- * Until the config is read it is a voltage report all the same.
- */
-function recordingLabel(report: unknown): [string, string] {
-  const entry = isPlainObject(report) ? report : {};
-  const variable = typeof entry.variable_name === 'string' ? entry.variable_name : 'v';
-  const sections = typeof entry.sections === 'string' ? entry.sections : 'soma';
-  const where =
-    entry.type === 'compartment_set'
-      ? 'Compartment'
-      : sections === 'soma'
-        ? 'Soma'
-        : sections === 'all'
-          ? 'Compartment'
-          : sections.charAt(0).toUpperCase() + sections.slice(1);
-  return [where, variable === 'v' ? 'voltages' : variable];
-}
-
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

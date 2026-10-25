@@ -12,6 +12,8 @@ export type PillSelectOption = {
   color?: string;
   /** Muted after the label, saying what the colour means. */
   detail?: string;
+  /** A tag after the label, on the pill too, saying what kind of thing it names. */
+  tag?: string;
   disabled?: boolean;
 };
 
@@ -89,6 +91,7 @@ export function PillSelect({
         {label && <span className="shrink-0 text-neutral-400">{label}</span>}
         {chosen?.color && <Dot color={chosen.color} />}
         <span className="truncate">{chosen?.label ?? '—'}</span>
+        {chosen?.tag && <Tag>{chosen.tag}</Tag>}
       </SelectTrigger>
       <SelectContent className="rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl">
         {options.map((o) => (
@@ -100,11 +103,26 @@ export function PillSelect({
           >
             {o.color && <Dot color={o.color} />}
             {o.label}
+            {o.tag && <Tag className="ml-auto">{o.tag}</Tag>}
             {o.detail && <span className="ml-auto pl-3 text-xs text-neutral-400">{o.detail}</span>}
           </SelectItem>
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+/** The files column's kind of tag, small: grey, rounded, in capitals. */
+function Tag({ children, className }: { children: string; className?: string }) {
+  return (
+    <span
+      className={cn(
+        'shrink-0 rounded-full bg-[oklch(0.929_0.013_255.508)] px-2 py-0.5 text-[10px] font-medium text-neutral-500 uppercase',
+        className
+      )}
+    >
+      {children}
+    </span>
   );
 }
 
