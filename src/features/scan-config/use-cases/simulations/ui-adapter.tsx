@@ -312,7 +312,11 @@ function SimulationListItem({
               )}
             </div>
             {simulation.id && (
-              <WorkflowItemCopyIdButton value={simulation.id} onHoverChange={setCopyHovered} />
+              // Out of sight until the card is hovered, or the button is reached by keyboard;
+              // its room is kept, so nothing moves as the pointer passes over the list.
+              <div className="flex transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0">
+                <WorkflowItemCopyIdButton value={simulation.id} onHoverChange={setCopyHovered} />
+              </div>
             )}
             <div className="flex items-center justify-center">
               <RiArrowRightSLine className="size-5 shrink-0 text-gray-500" />
