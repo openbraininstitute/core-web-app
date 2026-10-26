@@ -17,17 +17,20 @@ export function useControlsCollapsed(): boolean {
 }
 
 /**
- * A plot's row of controls along its top, over the plot. Once the plot is too
- * narrow for the row, which would run past the box it sits in, the row becomes
- * one "Options" pill opening the same controls in a panel. What `trailing`
- * holds, such as the plot's help, stays at the right end either way.
+ * A plot's row of controls along its top, over the plot, or `inline`, in the
+ * flow above it. Once the plot is too narrow for the row, which would run past
+ * the box it sits in, the row becomes one "Options" pill opening the same
+ * controls in a panel. What `trailing` holds, such as the plot's help, stays at
+ * the right end either way.
  */
 export function CollapsingControls({
   children,
   trailing,
+  inline = false,
 }: {
   children: ReactNode;
   trailing?: ReactNode;
+  inline?: boolean;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const rowRef = useRef<HTMLDivElement>(null);
@@ -46,7 +49,12 @@ export function CollapsingControls({
 
   return (
     // Clicks between the controls reach the plot under them.
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start gap-2">
+    <div
+      className={cn(
+        'pointer-events-none flex items-start gap-2',
+        inline ? 'relative' : 'absolute inset-x-0 top-0 z-10'
+      )}
+    >
       <div ref={boxRef} className="relative min-w-0 flex-1">
         {/* The row at its own width, out of sight and out of reach, to know whether it fits. */}
         <div

@@ -27,6 +27,7 @@ import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
+import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
@@ -661,7 +662,7 @@ export function SonataReportView({
 
   // At the right end of the traces' controls: how many cells, then how the plot is worked.
   const countAndHelp = (
-    <div className="ml-auto flex items-center gap-2">
+    <>
       <span className="whitespace-nowrap text-xs text-neutral-400">
         {population.nodeCount.toLocaleString()} {population.nodeCount === 1 ? 'cell' : 'cells'}{' '}
         recorded
@@ -671,7 +672,7 @@ export function SonataReportView({
         Click a trace to pick its cell alone, again to show every cell · Hover a timing for its
         window
       </PlotHelp>
-    </div>
+    </>
   );
 
   // The traces' span of time, to read and to type, and the way back to the whole run.
@@ -849,13 +850,15 @@ export function SonataReportView({
             boxClassName: 'p-2',
             content: (
               <>
-                <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
-                  {groupSelect}
-                  {showScene && (
-                    <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
-                  )}
-                  {timeBar}
-                  {countAndHelp}
+                {/* Folded into one Options pill when the pane is too narrow for them. */}
+                <div className="shrink-0 px-1 pb-1">
+                  <CollapsingControls inline trailing={countAndHelp}>
+                    {groupSelect}
+                    {showScene && (
+                      <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
+                    )}
+                    {timeBar}
+                  </CollapsingControls>
                 </div>
                 {traces}
                 {/* The 3D player's play and scrubber, while it is up. */}
@@ -1028,7 +1031,7 @@ export function SonataReportView({
         </div>
         <div className="flex min-w-0 items-center gap-3">
           {simulationPicker}
-          {countAndHelp}
+          <div className="flex items-center gap-2">{countAndHelp}</div>
         </div>
       </div>
 
