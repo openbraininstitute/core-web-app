@@ -3,12 +3,12 @@
 import { atom, useAtom } from 'jotai';
 import { useId } from 'react';
 
-import { DEFAULT_PSTH } from '@/features/spike-viewer/spike-statistics/figures';
+import { DEFAULT_PSTH } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { Checkbox } from '@/ui/molecules/checkbox';
 import { PILL_CLASS, PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
-import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/figures';
+import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 
 /** How the PSTHs bin and smooth, the simulation's and the campaign's alike, kept across picks. */
 export const psthOptionsAtom = atom<PsthOptions>(DEFAULT_PSTH);

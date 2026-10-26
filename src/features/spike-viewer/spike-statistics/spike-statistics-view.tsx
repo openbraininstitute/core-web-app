@@ -11,8 +11,8 @@ import {
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
-import { pcaFigure, psthFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import { cachedSpikePca } from '@/features/spike-viewer/spike-statistics/pca';
+import { pcaFigure } from '@/features/spike-viewer/spike-statistics/pca-figure';
 import {
   PcaControls,
   PcaPointsControl,
@@ -32,6 +32,7 @@ import {
   pinnedStatisticColumns,
   StatisticsPlots,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { psthFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 

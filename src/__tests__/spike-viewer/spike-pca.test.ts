@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { spikePca } from '@/features/spike-viewer/spike-statistics/pca';
 import {
   cholesky,
   ellipse,
   pcaFigure,
   spreadOf,
-} from '@/features/spike-viewer/spike-statistics/figures';
-import { spikePca } from '@/features/spike-viewer/spike-statistics/pca';
+} from '@/features/spike-viewer/spike-statistics/pca-figure';
 
 import type { SpikePca } from '@/features/spike-viewer/spike-statistics/pca';
 import type { CellGroup } from '@/features/spike-viewer/spike-statistics/statistics';

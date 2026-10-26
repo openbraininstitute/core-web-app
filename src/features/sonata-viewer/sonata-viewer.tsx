@@ -37,7 +37,6 @@ import {
   TimeWindowFields,
   WindowResetButton,
 } from '@/features/spike-viewer/spike-replay/time-window-fields';
-import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import {
   LoadingFilePanes,
   OpenPanelButton,
@@ -46,6 +45,7 @@ import {
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
@@ -161,7 +161,7 @@ export default function SonataViewer({
  * is shown for as long as it is there. Without a circuit to list the cells
  * against there is no table, and the plot shows every trace.
  */
-function SonataReportView({
+export function SonataReportView({
   metadata,
   worker,
   variableName,

@@ -8,8 +8,8 @@ import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/campaign/simulation-execution';
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
-import { psthSeries } from '@/features/spike-viewer/spike-statistics/figures';
 import { computeSpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
+import { psthSeries } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
@@ -17,7 +17,7 @@ import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
 import type { CampaignGroup } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
-import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/figures';
+import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 import type { SpikeTraceWorkerApi } from '@/features/spike-viewer/spike-trace.worker';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
