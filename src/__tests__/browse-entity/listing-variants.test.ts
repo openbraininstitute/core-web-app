@@ -32,7 +32,7 @@ const CTX: IGridContext = {
 describe('circuit scale variants config', () => {
   it('has one sub-item per scale except single, in enum order, with the agreed labels', () => {
     expect(circuitScaleVariants.variants.map((o) => [o.slug, o.label])).toEqual([
-      ['pair', 'Paired neurons'],
+      ['pair', 'Paired neuron circuits'],
       ['small', 'Small microcircuits'],
       ['microcircuit', 'Microcircuits'],
       ['region', 'Region circuits'],
@@ -171,9 +171,11 @@ describe('scopeListing on the real circuit definition', () => {
 
 describe('resolveEntityVariant', () => {
   it('maps an entity to its scale variant; single and other types have none', () => {
-    expect(resolveEntityVariant(CIRCUIT, { scale: CircuitScaleDictionary.WholeBrain })?.slug).toBe(
-      'whole-brain'
-    );
+    expect(
+      resolveEntityVariant(CIRCUIT, {
+        scale: CircuitScaleDictionary.WholeBrain,
+      })?.slug
+    ).toBe('whole-brain');
     expect(resolveEntityVariant(CIRCUIT, { scale: CircuitScaleDictionary.Single })).toBeUndefined();
     expect(resolveEntityVariant('emodel', { scale: 'pair' })).toBeUndefined();
   });

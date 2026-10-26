@@ -808,7 +808,7 @@ export const circuitScaleVariants = defineFacetVariants({
   dataType: ExtendedEntitiesTypeDict.Circuit,
   field: 'scale',                              // the filter the variants own
   toParams: (scale) => ({ scale__in: [scale] }), // explicit wire param (see 5.1)
-  variants: [{ value: 'pair', label: 'Paired neurons' } /* ... */],
+  variants: [{ value: 'pair', label: 'Paired neuron circuits' } /* ... */],
 });
 ```
 

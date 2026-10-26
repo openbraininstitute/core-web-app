@@ -16,7 +16,7 @@ type TVariantScale = Exclude<TCircuitScaleDictionary, typeof CircuitScaleDiction
  * `Circuit.list` already excludes it.
  */
 const SCALE_LABELS = {
-  pair: 'Paired neurons',
+  pair: 'Paired neuron circuits',
   small: 'Small microcircuits',
   microcircuit: 'Microcircuits',
   region: 'Region circuits',
