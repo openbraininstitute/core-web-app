@@ -717,6 +717,7 @@ export function SonataReportView({
           onTimeWindowChange={handleTimeWindowChange}
           cellRows={cellRows}
           onCellClick={handleTraceClick}
+          events={timeline}
         />
       </ErrorBoundary>
     ) : shownGroups === null ? (
@@ -755,6 +756,7 @@ export function SonataReportView({
                   onTimeWindowChange={handleTimeWindowChange}
                   cellRows={cellRows}
                   onCellClick={handleTraceClick}
+                  events={timeline}
                 />
               </ErrorBoundary>
             </WhenNearView>

@@ -6,6 +6,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
+import { PlotTimeline } from '@/features/spike-viewer/components/plot-timeline';
 import {
   AXIS_STYLE,
   computeTicks,
@@ -25,6 +26,7 @@ import type {
 } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 import type { CellRowSource } from '@/features/spike-viewer/cell-row';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 
 const Plot = createPlotlyComponent(Plotly);
 
@@ -179,11 +181,14 @@ export default function ReportDetailsView({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  events,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   /** A time to mark on the plot, such as a scene playing the recording above it. */
   timeCursor?: TimeCursor;
+  /** The config's timings, marked over the traces as over the raster. */
+  events?: readonly TimelineEvent[];
   /**
    * The span of time shown, null for the whole run: the host's where it holds
    * one, so its plots share it, else the plot's own.
@@ -247,6 +252,7 @@ export default function ReportDetailsView({
         onTimeWindowChange={onTimeWindowChange}
         cellRows={cellRows}
         onCellClick={onCellClick}
+        events={events}
       />
     </div>
   );
@@ -265,10 +271,12 @@ function SharedTracesPlot({
   onTimeWindowChange,
   cellRows,
   onCellClick,
+  events,
 }: {
   population: PopulationMetadata;
   worker: Remote<SonataWorkerImpl>;
   timeCursor?: TimeCursor;
+  events?: readonly TimelineEvent[];
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   timeWindow?: TimeRange | null;
   onTimeWindowChange?: (window: TimeRange | null) => void;
@@ -455,6 +463,9 @@ function SharedTracesPlot({
   }, [x, y, size, legend, timeUnits, units, valueLabel]);
 
   const [tip, setTip] = useState<TraceHover>();
+  // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
+  const [graph, setGraph] = useState<HTMLElement | null>(null);
+  const [timingHovered, setTimingHovered] = useState(false);
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       const next = zoomAfter({ x: zoomX, y: zoom.y }, event as Readonly<Record<string, unknown>>);
@@ -575,12 +586,13 @@ function SharedTracesPlot({
         config={CONFIG}
         useResizeHandler
         style={{ width: '100%', height: '100%' }}
-        onInitialized={(figure, graph) => {
-          attachListeners(figure, graph);
+        onInitialized={(figure, drawn) => {
+          attachListeners(figure, drawn);
+          setGraph(drawn);
           placeCursor();
         }}
-        onUpdate={(figure, graph) => {
-          attachListeners(figure, graph);
+        onUpdate={(figure, drawn) => {
+          attachListeners(figure, drawn);
           placeCursor();
         }}
       />
@@ -596,7 +608,11 @@ function SharedTracesPlot({
           />
         </div>
       )}
-      {tip && (
+      {/* The player's time is the rule above, so the timings come without one of their own. */}
+      {events && events.length > 0 && (
+        <PlotTimeline graph={graph} events={events} onHoverChange={setTimingHovered} />
+      )}
+      {tip && !timingHovered && (
         <TraceCard
           hover={tip}
           population={population}
