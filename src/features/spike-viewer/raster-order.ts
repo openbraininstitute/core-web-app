@@ -17,7 +17,7 @@ import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes
 import type { RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
-export const NODE_ID_ORDER = '__node_id__';
+const NODE_ID_ORDER = '__node_id__';
 const STATISTIC_ORDER = 'spikes:';
 /** Past this many values a property is a scatter of labels, not groups of rows. */
 const MAX_GROUPS = 80;
@@ -121,7 +121,7 @@ function orderOf(column: ColumnValues, label: string): RowOrder | null {
 }
 
 /** Cells in runs by their value's group, in `compareGroupNames` order, by node id within each. */
-export function groupedOrder(library: string[], indices: Uint32Array, title: string): RowOrder {
+function groupedOrder(library: string[], indices: Uint32Array, title: string): RowOrder {
   const byName = library.map((_, i) => i).sort((a, b) => compareGroupNames(library[a], library[b]));
   const place = new Uint32Array(library.length);
   byName.forEach((entry, at) => {

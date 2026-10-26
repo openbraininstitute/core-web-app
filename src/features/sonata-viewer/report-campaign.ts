@@ -224,7 +224,7 @@ const NO_SUMMARY: SimulationSummary = {
  * recorded one: the cells' mean level, spread and extremes, averaged, and for a
  * voltage the share of them that spiked and their mean rate.
  */
-export function summarizeReport(
+function summarizeReport(
   { nodeIds, mean, sd, min, max, spikes, seconds }: ReportCellStatistics,
   cells: Uint8Array | null
 ): SimulationSummary {

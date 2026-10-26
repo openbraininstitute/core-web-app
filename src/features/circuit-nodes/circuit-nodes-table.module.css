@@ -84,32 +84,6 @@
   color: var(--color-dark);
 }
 
-/*
- * Beside the count rather than across from it, in the room up to the switches:
- * one line high, so when the note has no room for all of itself it wraps,
- * whole, past the zero-width space before it and out of view, rather than
- * running under the switches.
- */
-.gridNote {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 1.25em;
-  overflow: hidden;
-  margin-left: 0.75rem;
-  font-size: 0.75rem;
-  line-height: 1.25em;
-  color: #a3a3a3;
-}
-
-.gridNote::before {
-  content: "\200b";
-}
-
-.gridNote > span {
-  display: inline-block;
-  white-space: nowrap;
-}
-
 .grid {
   position: relative;
   flex: 1 1 auto;

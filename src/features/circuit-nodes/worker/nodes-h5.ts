@@ -842,7 +842,7 @@ function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number
 }
 
 /** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
-export function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
+function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
   return text
     .split(separator)
     .map((v) => v.trim())

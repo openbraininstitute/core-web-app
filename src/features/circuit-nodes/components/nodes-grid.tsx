@@ -105,8 +105,6 @@ type Props = {
   pickAll?: { state: PickAllState; onToggle: () => void };
   /** Called with the node id of the row under the pointer, once per row, and null when it leaves the grid. */
   onRowHover?: (nodeId: number | null) => void;
-  /** Said beside the count above the rows, such as how to use them. */
-  headerNote?: React.ReactNode;
   /** Right after the count, before the quick filters: what else narrows the rows, say. */
   headerExtra?: React.ReactNode;
   /**
@@ -372,7 +370,6 @@ export function NodesGrid({
   pickColumn = false,
   pickAll,
   onRowHover,
-  headerNote,
   headerExtra,
   reset,
   resetRequest,
@@ -781,11 +778,6 @@ export function NodesGrid({
           </span>
           {headerExtra}
         </div>
-        {headerNote && (
-          <span className={styles.gridNote}>
-            <span>{headerNote}</span>
-          </span>
-        )}
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {/* First, so the switches after it stay put at the end as it comes and goes. */}
           {reset && (filtering || reset.picked) && (

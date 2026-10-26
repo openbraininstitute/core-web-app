@@ -161,7 +161,7 @@ export default function SonataViewer({
  * is shown for as long as it is there. Without a circuit to list the cells
  * against there is no table, and the plot shows every trace.
  */
-export function SonataReportView({
+function SonataReportView({
   metadata,
   worker,
   variableName,

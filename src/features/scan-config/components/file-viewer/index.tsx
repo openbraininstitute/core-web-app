@@ -55,7 +55,7 @@ function isCodeFile(file: TAssetBackedFile): boolean {
 }
 
 /** A spike report, or a replay's input spikes: both drawn by the spike viewer. */
-export function isSpikeFile(file: TAssetBackedFile): boolean {
+function isSpikeFile(file: TAssetBackedFile): boolean {
   return (
     file.asset.content_type === AssetContentType.h5 &&
     (file.asset.label === AssetLabel.spike_report || file.asset.label === AssetLabel.replay_spikes)
