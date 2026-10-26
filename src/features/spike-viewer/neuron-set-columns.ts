@@ -91,7 +91,8 @@ export function useNeuronSetColumns({
           name: `${PREFIX}${name}`,
           kind: 'categorical',
           library: LIBRARY,
-          label: name,
+          // Named for the set first, and said to be whether a cell is in it.
+          label: `${name} (membership in)`,
         })),
       });
     })().catch(() => {});
