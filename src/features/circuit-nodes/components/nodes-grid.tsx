@@ -16,7 +16,7 @@ import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filte
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
-import { PILL_CLASS, PillToggle } from '@/ui/molecules/select/pill-select';
+import { PillToggle, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type {
@@ -786,10 +786,10 @@ export function NodesGrid({
               type="button"
               onClick={onResetClick}
               title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              className={PILL_CLASS}
+              aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+              className={ROUND_PILL_CLASS}
             >
               <RiResetLeftLine className="size-4" />
-              Reset
             </button>
           )}
           {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
