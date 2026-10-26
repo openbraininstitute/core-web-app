@@ -1,5 +1,5 @@
-/** The player's time where a view marks it: its rule and the time beside it, in green. */
-export const TIME_CURSOR_COLOR = '#22c55e';
+/** The player's time where a view marks it: its rule and the time beside it, in red. */
+export const TIME_CURSOR_COLOR = '#f5222d';
 
 /**
  * A time shared by views that each mark it - a scene playing a recording, and
