@@ -6,7 +6,6 @@ import { createPortal } from 'react-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import SimpleErrorComponent from '@/components/GenericErrorFallback';
-import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { NEURON_HEADING } from '@/features/circuit-nodes/types';
@@ -16,17 +15,29 @@ import { ReportCampaignView } from '@/features/sonata-viewer/components/report-c
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
+import {
+  framesWithin,
+  groupingColumns,
+  PopulationHeader,
+  WhenNearView,
+} from '@/features/sonata-viewer/components/report-view-parts';
 import SonataViewerSkeleton from '@/features/sonata-viewer/components/sonata-viewer-skeleton';
 import {
   DEFAULT_SCENE_SPEED,
   SceneSpeedSelect,
   VoltageScene,
 } from '@/features/sonata-viewer/components/voltage-scene';
-import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
+import { useReportCellStatistics } from '@/features/sonata-viewer/hooks/use-report-cell-statistics';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
-import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
+import { reportStatistics } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
+import {
+  colourGroupPicks,
+  traceGroupsOf,
+  useTracePicks,
+} from '@/features/sonata-viewer/trace-picks';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
@@ -43,7 +54,6 @@ import {
   PANEL_FLOORS,
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
-import { compareGroupNames } from '@/features/spike-viewer/spike-statistics/statistics';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
@@ -51,33 +61,20 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { Remote } from 'comlink';
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
-import type { PickAllState } from '@/features/circuit-nodes/components/nodes-grid';
-import type { ColumnMeta, ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
+import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
-import type {
-  CellFrames,
-  PickedTrace,
-  PopulationMetadata,
-  SonataReportMetadata,
-} from '@/features/sonata-viewer/types';
+import type { CellFrames, SonataReportMetadata } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
-import type {
-  StatisticValues,
-  TimeCourse,
-} from '@/features/spike-viewer/spike-statistics/statistics-plots';
+import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { WorkspaceContext } from '@/types/common';
 
 const ErrorFallback = SimpleErrorComponent as unknown as ComponentType<FallbackProps>;
 
-/** A cell picked to draw, and the colour slot it keeps while picked. */
-type Pick = { nodeId: number; slot: number };
-
-const NO_PICKS: Pick[] = [];
 const NO_TRACES: number[] = [];
 
 /** Group by nothing: every trace on the one plot. */
@@ -85,16 +82,9 @@ const ALL = '__all__';
 
 /** Whether a voltage report is played in 3D above its traces: kept across the simulations shown. */
 const voltageSceneAtom = atom(false);
-/**
- * The cells picked to draw, tagged with the cells they were picked from: they
- * outlast a change of simulation, as the spike statistics' ticks do.
- */
-const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
 /** Frames the scene's recording is thinned to: smooth enough to play, small enough to hold. */
 const SCENE_FRAMES = 2000;
 const DEFAULT_SCENE_HEIGHT = 280;
-/** Past this many values a property is closer to an id than a group. */
-const MAX_GROUPS = 80;
 
 export default function SonataViewer({
   entity,
@@ -297,8 +287,16 @@ export function SonataReportView({
   const [visible, setVisible] = useState<{ population: string; traces: number[] | null }>();
   const visibleTraces = visible?.population === populationName ? visible.traces : null;
   const pickKey = sessionKey || (populationName ?? '');
-  const [picks, setPicks] = useAtom(picksAtom);
-  const pickedCells = picks?.key === pickKey ? picks.cells : NO_PICKS;
+  const {
+    pickedCells,
+    pickedTraces,
+    selectedNodeIds,
+    tableCells,
+    togglePick,
+    pickAllState,
+    togglePickAll,
+    setPickedCells,
+  } = useTracePicks({ pickKey, population, visibleTraces });
 
   const handleVisibleTraces = useCallback(
     (traces: number[] | null) => {
@@ -306,35 +304,6 @@ export function SonataReportView({
     },
     [populationName]
   );
-
-  // A click ticks a row or unticks it. A new pick takes the first free colour,
-  // so the others keep theirs.
-  const togglePick = useCallback(
-    (nodeId: number) => {
-      if (!pickKey) return;
-      setPicks((previous) => {
-        const cells = previous?.key === pickKey ? previous.cells : NO_PICKS;
-        if (cells.some((c) => c.nodeId === nodeId)) {
-          return { key: pickKey, cells: cells.filter((c) => c.nodeId !== nodeId) };
-        }
-        const taken = new Set(cells.map((c) => c.slot));
-        let slot = 0;
-        while (taken.has(slot)) slot += 1;
-        return { key: pickKey, cells: [...cells, { nodeId, slot }] };
-      });
-    },
-    [pickKey, setPicks]
-  );
-
-  const pickedTraces = useMemo<PickedTrace[]>(() => {
-    const traces: PickedTrace[] = [];
-    for (const cell of pickedCells) {
-      population?.traces.forEach((trace, traceIndex) => {
-        if (trace.nodeId === cell.nodeId) traces.push({ traceIndex, slot: cell.slot });
-      });
-    }
-    return traces;
-  }, [population, pickedCells]);
 
   // The row under the pointer in the table, which the plot shows for as long as it is there.
   const [hovered, setHovered] = useState<{ population: string; nodeId: number } | null>(null);
@@ -355,68 +324,12 @@ export function SonataReportView({
     return traces;
   }, [population, populationName, hovered]);
 
-  const selectedNodeIds = useMemo<ReadonlySet<number>>(
-    () => new Set(pickedCells.map((c) => c.nodeId)),
-    [pickedCells]
-  );
-
-  // The tick atop the tick column, over the cells the table's filter keeps:
-  // ticks every one of them, in node order, or unticks them all.
-  const tableCells = useMemo(() => {
-    const ids = new Set<number>();
-    if (!population) return [];
-    if (visibleTraces) for (const t of visibleTraces) ids.add(population.traces[t].nodeId);
-    else for (const trace of population.traces) ids.add(trace.nodeId);
-    return [...ids].sort((a, b) => a - b);
-  }, [population, visibleTraces]);
-  const tickedInTable = tableCells.filter((id) => selectedNodeIds.has(id)).length;
-  const pickAllState: PickAllState =
-    tickedInTable === 0 ? 'none' : tickedInTable === tableCells.length ? 'all' : 'some';
-  const togglePickAll = () => {
-    if (!pickKey) return;
-    const inTable = new Set(tableCells);
-    setPicks((previous) => {
-      const cells = previous?.key === pickKey ? previous.cells : NO_PICKS;
-      if (pickAllState === 'all') {
-        return { key: pickKey, cells: cells.filter((c) => !inTable.has(c.nodeId)) };
-      }
-      const next = [...cells];
-      const have = new Set(next.map((c) => c.nodeId));
-      const taken = new Set(next.map((c) => c.slot));
-      let slot = 0;
-      for (const nodeId of tableCells) {
-        if (have.has(nodeId)) continue;
-        while (taken.has(slot)) slot += 1;
-        taken.add(slot);
-        next.push({ nodeId, slot });
-      }
-      return { key: pickKey, cells: next };
-    });
-  };
-
   // The traces the table's filter keeps, split by the group-by column, in the
   // statistics' order. While cells are ticked only groups holding some show.
   const traceGroups = useMemo(() => {
     if (groupBy === ALL || !population) return null;
     if (groupColumn?.session !== sessionKey || groupColumn.name !== groupBy) return null;
-    const values = groupColumn.values;
-    if (values.kind !== 'categorical') return null;
-    const kept = visibleTraces ? new Set(visibleTraces) : null;
-    const byName = new Map<string, number[]>();
-    population.traces.forEach((trace, traceIndex) => {
-      if (kept && !kept.has(traceIndex)) return;
-      const name = values.library[values.indices[trace.nodeId]] ?? '';
-      const traces = byName.get(name);
-      if (traces) traces.push(traceIndex);
-      else byName.set(name, [traceIndex]);
-    });
-    return [...byName]
-      .map(([name, traces]) => ({
-        name,
-        traces,
-        cells: new Set(traces.map((t) => population.traces[t].nodeId)).size,
-      }))
-      .sort((a, b) => compareGroupNames(a.name, b.name));
+    return traceGroupsOf(population, groupColumn.values, visibleTraces);
   }, [groupBy, population, groupColumn, sessionKey, visibleTraces]);
   const shownGroups = useMemo(() => {
     if (!traceGroups) return null;
@@ -424,30 +337,10 @@ export function SonataReportView({
       const inGroup = new Set(group.traces);
       const picked = pickedTraces.filter((p) => inGroup.has(p.traceIndex));
       if (pickedTraces.length > 0 && picked.length === 0) return [];
-      // A cell keeps its colour where no cell before it in the group wears the
-      // same, and the rest take the colours the group leaves free: on a plot of
-      // its own, a group's lines differ as far as the colours go round.
-      const worn = new Set<number>();
-      const slotOf = new Map<number, number>();
-      const nodeOf = (p: PickedTrace) => population?.traces[p.traceIndex]?.nodeId ?? p.traceIndex;
-      for (const p of picked) {
-        const nodeId = nodeOf(p);
-        const colour = p.slot % TRACE_COLORS.length;
-        if (slotOf.has(nodeId) || worn.has(colour)) continue;
-        worn.add(colour);
-        slotOf.set(nodeId, p.slot);
-      }
-      let free = 0;
-      const coloured = picked.map((p) => {
-        const nodeId = nodeOf(p);
-        if (!slotOf.has(nodeId)) {
-          while (worn.has(free)) free += 1;
-          const slot = free < TRACE_COLORS.length ? free : p.slot;
-          worn.add(slot % TRACE_COLORS.length);
-          slotOf.set(nodeId, slot);
-        }
-        return { ...p, slot: slotOf.get(nodeId) ?? p.slot };
-      });
+      const coloured = colourGroupPicks(
+        picked,
+        (p) => population?.traces[p.traceIndex]?.nodeId ?? p.traceIndex
+      );
       return [{ ...group, picked: coloured, hovered: hoveredTraces.filter((t) => inGroup.has(t)) }];
     });
   }, [traceGroups, pickedTraces, hoveredTraces, population]);
@@ -478,80 +371,17 @@ export function SonataReportView({
     },
     [populationName]
   );
-  const [cellStatistics, setCellStatistics] = useState<{
-    population: string;
-    rows: number;
-    window: TimeRange | null;
-    values: StatisticValues;
-  }>();
-  const statisticsKnown =
-    cellStatistics?.population === populationName &&
-    cellStatistics?.rows === rowCount &&
-    cellStatistics?.window === timeWindow;
-  useEffect(() => {
-    if (!docked || !populationName || status !== 'ready' || statisticsKnown) return;
-    let cancelled = false;
-    worker
-      .getCellStatistics(populationName, voltage ? SPIKE_THRESHOLD_MV : null, timeWindow)
-      .then((found) => {
-        if (cancelled) return;
-        // A value per node index, as the session's columns hold them; none where nothing was recorded.
-        const perNode = (cellValues: Float64Array) => {
-          const values = new Float64Array(rowCount).fill(Number.NaN);
-          found.nodeIds.forEach((nodeId, i) => {
-            if (nodeId < rowCount) values[nodeId] = cellValues[i];
-          });
-          return values;
-        };
-        const values: Record<string, Float64Array> = {
-          mean: perNode(found.mean),
-          sd: perNode(found.sd),
-          min: perNode(found.min),
-          max: perNode(found.max),
-        };
-        if (found.spikes) values.spikes = perNode(found.spikes);
-        setCellStatistics({
-          population: populationName,
-          rows: rowCount,
-          window: timeWindow,
-          values,
-        });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [docked, populationName, status, statisticsKnown, worker, voltage, rowCount, timeWindow]);
-  const [registeredStatistics, setRegisteredStatistics] = useState<{
-    population: string;
-    rows: number;
-    values: StatisticValues;
-  } | null>(null);
-  useEffect(() => {
-    if (!statisticsKnown || !cellStatistics || status !== 'ready') return;
-    const { population: shown, rows, values } = cellStatistics;
-    let cancelled = false;
-    setDerivedColumns(
-      'report-statistics',
-      statistics.flatMap((s) => {
-        const column = values[s.key];
-        return column ? [{ name: s.column, values: column.slice() }] : [];
-      })
-    )
-      .then(() => {
-        if (!cancelled) setRegisteredStatistics({ population: shown, rows, values });
-      })
-      // The session closed underneath; its next ready state sets them again.
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [statisticsKnown, cellStatistics, status, statistics, setDerivedColumns]);
-  // The ones the session holds as columns: a new window's are worked out while the last stand.
-  const statisticValues =
-    registeredStatistics?.population === populationName && registeredStatistics.rows === rowCount
-      ? registeredStatistics.values
-      : null;
+  const statisticValues = useReportCellStatistics({
+    enabled: docked,
+    worker,
+    populationName,
+    ready: status === 'ready',
+    rowCount,
+    timeWindow,
+    voltage,
+    statistics,
+    setDerivedColumns,
+  });
 
   // Shown at first beside the statistics: each group's mean over time.
   const meanLabel = `${voltage ? 'Mean voltage' : `Mean ${variableName ?? 'value'}`} (${population?.dataUnits ?? ''})`;
@@ -615,11 +445,11 @@ export function SonataReportView({
       const alone = pickedCells.length === 1 && pickedCells[0].nodeId === nodeId;
       // It keeps its colour if it had one.
       const slot = pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0;
-      setPicks({ key: pickKey, cells: alone ? NO_PICKS : [{ nodeId, slot }] });
+      setPickedCells(alone ? [] : [{ nodeId, slot }]);
       setHeldCell(alone ? null : { key: pickKey, nodeId });
       if (!alone) setFocusedRow({ nodeId, key: performance.now() });
     },
-    [pickKey, pickedCells, setPicks]
+    [pickKey, pickedCells, setPickedCells]
   );
   const held =
     heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
@@ -903,7 +733,7 @@ export function SonataReportView({
                   reset: {
                     picked: pickedCells.length > 0 || timeWindow !== null,
                     onReset: () => {
-                      setPicks({ key: pickKey, cells: NO_PICKS });
+                      setPickedCells([]);
                       handleTimeWindowChange(null);
                     },
                   },
@@ -1064,81 +894,4 @@ export function SonataReportView({
       )}
     </div>
   );
-}
-
-/** The population the plot and the table are showing, and the switch between populations. */
-function PopulationHeader({
-  populations,
-  population,
-  onChange,
-}: {
-  populations: PopulationMetadata[];
-  population: PopulationMetadata;
-  onChange: (name: string) => void;
-}) {
-  return (
-    <div className="flex min-w-0 items-center gap-2">
-      {populations.length > 1 ? (
-        <PopulationSelect
-          variant="chrome"
-          populations={populations}
-          value={population.name}
-          onChange={onChange}
-        />
-      ) : (
-        <span className="text-primary-9 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-md ring-1 ring-black/5">
-          <span className="mr-1 font-normal text-neutral-400">Population</span>
-          {population.name}
-        </span>
-      )}
-    </div>
-  );
-}
-
-/** The node properties worth grouping by: categorical, with a manageable number of values. */
-function groupingColumns(columns: ColumnMeta[]): ColumnMeta[] {
-  return columns.filter(
-    (c) =>
-      c.kind === 'categorical' &&
-      (c.library?.length ?? 0) > 1 &&
-      (c.library?.length ?? 0) <= MAX_GROUPS
-  );
-}
-
-/** Mounts what it holds once it scrolls near view, then keeps it: a long list costs what is seen. */
-function WhenNearView({ className, children }: { className?: string; children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || near) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setNear(true);
-      },
-      { rootMargin: '300px' }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [near]);
-  return (
-    <div ref={ref} className={className}>
-      {near ? children : null}
-    </div>
-  );
-}
-
-/** The frames within a window of the run: all of them without one. */
-function framesWithin(frames: CellFrames, window: TimeRange | null): CellFrames {
-  if (!window) return frames;
-  const columns = frames.nodeIds.length;
-  let first = 0;
-  while (first < frames.times.length && frames.times[first] < window[0]) first += 1;
-  let end = first;
-  while (end < frames.times.length && frames.times[end] <= window[1]) end += 1;
-  return {
-    nodeIds: frames.nodeIds,
-    times: frames.times.subarray(first, end),
-    values: frames.values.subarray(first * columns, end * columns),
-  };
 }
