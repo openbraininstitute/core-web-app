@@ -42,11 +42,14 @@ export const keyBuilder = {
     hierarchyId,
     extendedEntityType,
     scope,
+    variantSlug,
   }: WorkspaceContext & {
     brainRegionId?: string;
     hierarchyId?: string;
     scope: TWorkspaceScope;
     extendedEntityType?: TExtendedEntitiesTypeDict;
+    /** listing variant; the head stays per-type so prefix invalidation still hits it */
+    variantSlug?: string;
   }) => [
     `${prefix}-entity-count-${extendedEntityType}`,
     {
@@ -56,6 +59,7 @@ export const keyBuilder = {
       brainRegionId: brainRegionId ?? '',
       hierarchyId: hierarchyId ?? '',
       scope,
+      variantSlug: variantSlug ?? '',
     },
   ],
   userSimulationsCount: ({

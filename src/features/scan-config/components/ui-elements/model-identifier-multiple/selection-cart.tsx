@@ -14,6 +14,7 @@ import { useId } from 'react';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { countSelectedEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
+import { SelectionCapHint } from '@/features/scan-config/workflow/selection-cap-ui';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -36,8 +37,6 @@ type Props = {
   className?: string;
   /** optional selection cap; shows an `n / max` hint above the confirm action */
   maxSelections?: number;
-  /** whether the selection cap has been reached; emphasizes the hint */
-  capReached?: boolean;
 };
 
 /**
@@ -58,7 +57,6 @@ export function ModelIdentifierSelectionCart({
   onCancel,
   className,
   maxSelections,
-  capReached,
 }: Props) {
   const instanceId = useId();
   const selectedCount = countSelectedEntities(selectionsByType);
@@ -121,14 +119,11 @@ export function ModelIdentifierSelectionCart({
 
       <div className="mt-auto w-full min-w-0 px-2">
         {typeof maxSelections === 'number' ? (
-          <p
-            className={cn(
-              'pb-2 text-center text-sm tabular-nums',
-              capReached ? 'font-medium text-amber-600' : 'text-gray-500'
-            )}
-          >
-            {selectedCount} / {maxSelections} selected (max {maxSelections} allowed)
-          </p>
+          <SelectionCapHint
+            className="block pb-2 text-center"
+            selectedCount={selectedCount}
+            maxSelections={maxSelections}
+          />
         ) : null}
         <SelectionConfirmActions
           selectedCount={selectedCount}

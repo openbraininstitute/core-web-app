@@ -72,15 +72,9 @@ export function pickBreadcrumbCandidates(sources: {
   return live ?? [stored, fromCampaign, primary].find((list) => list.length > 0) ?? [];
 }
 
-const copyOf = (entity: { id: string; name: string }) => ({
-  value: entity.id,
-  label: `Copy ${entity.name}`,
-});
-
 /**
  * Fills the scan-config top bar's start for `/workflows/{activity}/configure/…`: the breadcrumb
- * (activity › workflow › what it was pointed at). The picked entity carries its own copy button
- * (several: a dropdown with one per entity). The tabs take the end, inside the template.
+ * (activity › workflow › what it was pointed at). Several picked entities become a dropdown. The tabs take the end, inside the template.
  */
 export function ScanConfigWorkflowTopBar({ children }: { children: ReactNode }) {
   const context = useScanConfigWorkflowOptional();
@@ -149,13 +143,12 @@ function WorkflowTopBarSlots({
             label:
               selected.length === 1 ? selected[0].name : `Multiple entities (${selected.length})`,
             ...(selected.length === 1
-              ? { ellipsis: selected[0].name, copy: copyOf(selected[0]) }
+              ? { ellipsis: selected[0].name }
               : {
                   menu: selected.map((item) => ({
                     key: item.key,
                     label: item.name,
                     hint: getEntityTypeTagLabel(item.type),
-                    copy: copyOf(item),
                   })),
                 }),
           },

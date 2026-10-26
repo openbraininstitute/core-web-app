@@ -38,6 +38,7 @@ import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
+import { EModelValidationResult } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -46,6 +47,7 @@ import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulatio
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
+import { EModelValidationCampaign } from '@/entity-configuration/domain/validation/emodel-validation-campaign';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -99,6 +101,7 @@ const EntityCoreSimulationConfiguration = {
   IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
+  EModelValidationResult,
 };
 
 const EntityCoreExtractionConfiguration = {
@@ -114,6 +117,10 @@ const EntityCoreOptimizationConfiguration = {
   EModelOptimizationCampaign,
 };
 
+const EntityCoreValidationConfiguration = {
+  EModelValidationCampaign,
+};
+
 export const EntityCoreConfiguration = {
   ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
@@ -122,6 +129,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreExtractionConfiguration,
   ...EntityCoreProcessingConfiguration,
   ...EntityCoreOptimizationConfiguration,
+  ...EntityCoreValidationConfiguration,
   AnalysisNotebookTemplate,
   AnalysisNotebookResult,
 } as const;
@@ -132,3 +140,5 @@ export type TEntityCoreConfigurationItem =
 type InnerEntityType<T> = T extends EntityCoreTypeConfig<infer U> ? U : never;
 
 export type EntityTypeValue = InnerEntityType<TEntityCoreConfigurationItem>;
+
+export { protocolTypeFilter } from '@/entity-configuration/domain/model/synthesized-morphology';

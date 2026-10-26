@@ -8,8 +8,8 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
 import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
+import { resolveTaskResultCampaignId } from '@/entity-configuration/domain/simulation/task-result-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
-import { Task } from '@/entity-configuration/domain/task-functions';
 
 import type { ITaskResult, ITaskResultFilter } from '@/api/entitycore/types/entities/task-result';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -36,13 +36,14 @@ async function one(params: { id: string; context?: WorkspaceContext | null }) {
   return await getTaskResult(params);
 }
 
-/** the e-feature extraction campaign a result came from; `null` when it cannot be traced */
+/**
+ * A task result has no FK to its campaign, so walk provenance: result → `__execution` activity →
+ * config → campaign (`task_config_generator_id`, else the `__config_generation` activity).
+ */
 export async function resolveEFeatureExtractionCampaignId(id: string, context: WorkspaceContext) {
-  return await Task.campaignIdOf({
-    id,
-    executionType: TaskActivityType.EFeatureExtractionExecution,
-    configGenerationType: TaskActivityType.EFeatureExtractionConfigGeneration,
-    context,
+  return await resolveTaskResultCampaignId(id, context, {
+    execution: TaskActivityType.EFeatureExtractionExecution,
+    configGeneration: TaskActivityType.EFeatureExtractionConfigGeneration,
   });
 }
 
