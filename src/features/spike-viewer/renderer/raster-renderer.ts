@@ -671,7 +671,7 @@ export class RasterRenderer {
     );
     const own = POPULATION_COLORS[index % POPULATION_COLORS.length];
     const colors = this.cellColors?.name === population ? this.cellColors.colors : null;
-    return (colors && colors.palette[colors.columnByNode[nodeId]]) ?? own;
+    return colors?.palette[colors.columnByNode[nodeId]] ?? own;
   }
 
   private setHoveredEvents(events: readonly TimelineEvent[]) {

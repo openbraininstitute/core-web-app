@@ -61,7 +61,9 @@ export function NodesTableKeeper({ children }: { children: ReactNode }) {
   return (
     <KeeperContext.Provider value={keeper}>
       {children}
-      {node && shown && createPortal(<GridWithColumns key={shown.session} {...shown.props} />, node)}
+      {node &&
+        shown &&
+        createPortal(<GridWithColumns key={shown.session} {...shown.props} />, node)}
     </KeeperContext.Provider>
   );
 }

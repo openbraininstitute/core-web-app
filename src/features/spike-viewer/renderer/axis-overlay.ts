@@ -50,7 +50,12 @@ export const TIMELINE_COLORS = {
 };
 
 /** Compute nice tick values for an axis range. When integer is true, step is constrained to an integer >= 1. */
-export function computeTicks(min: number, max: number, targetCount: number, integer = false): number[] {
+export function computeTicks(
+  min: number,
+  max: number,
+  targetCount: number,
+  integer = false
+): number[] {
   const range = max - min;
   if (range <= 0) return [min];
 

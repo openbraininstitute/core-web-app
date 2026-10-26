@@ -63,7 +63,12 @@ export function PreviewColumn({ boxed, children }: { boxed: boolean; children: R
         <StackedPanes
           split="config"
           bottomShare={0.4}
-          top={{ title: '3D View', keepsSize: true, boxClassName: 'overflow-hidden', content: children }}
+          top={{
+            title: '3D View',
+            keepsSize: true,
+            boxClassName: 'overflow-hidden',
+            content: children,
+          }}
           bottom={
             table.shown
               ? {

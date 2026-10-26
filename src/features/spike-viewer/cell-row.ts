@@ -29,7 +29,10 @@ export type CellRow = { label: string; value: string }[];
  * A cell's row of the nodes table, by node id, as a card's rows: what it is,
  * where it is and its statistics. Null while it is read, and for no cell.
  */
-export function useCellRow(source: CellRowSource | undefined, nodeId: number | null): CellRow | null {
+export function useCellRow(
+  source: CellRowSource | undefined,
+  nodeId: number | null
+): CellRow | null {
   const key = source?.session && nodeId !== null ? `${source.session}\n${nodeId}` : '';
   const [read, setRead] = useState<{ key: string; row: CellRow }>();
   useEffect(() => {
