@@ -1,6 +1,6 @@
 'use client';
 
-import { RiEqualizerLine, RiQuestionMark } from '@remixicon/react';
+import { RiEqualizerLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
 import { useControlsCollapsed } from '@/features/spike-viewer/components/collapsing-controls';
@@ -65,7 +65,8 @@ export function PlotHelp({ children }: { children: ReactNode }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <button type="button" aria-label="Show chart controls help" className={ROUND_PILL_CLASS}>
-          <RiQuestionMark className="size-4" />
+          {/* In the pills' own bold navy, rather than an icon's drawing of one. */}
+          <span className="text-base leading-none font-bold">?</span>
         </button>
       </TooltipTrigger>
       <TooltipContent
