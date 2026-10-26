@@ -248,6 +248,33 @@ export function SpikeStatisticsView({
   }, [statistics, setDerivedColumns]);
   const statsReady = statistics !== null && registered === statistics;
 
+  // The table moves to a new raster window in one step, its rows and their
+  // statistics together. The two are registered apart, and a table showing
+  // the window's rows with the run's statistics, or the table from before
+  // while they were worked out, read as its values flicking back. Until both
+  // are in, the last settled table stands; only a session's first load waits
+  // on the table kept from the view before.
+  const settled =
+    statsReady && registered !== null && tableSource !== null && (!windowCells || windowReady);
+  const [shownTable, setShownTable] = useState<{
+    session: string;
+    source: IDatasource;
+    rowCount: number;
+    version: SpikeStatistics;
+    windowed: boolean;
+  }>();
+  useEffect(() => {
+    if (!settled || !registered || !tableSource) return;
+    setShownTable({
+      session: sessionKey,
+      source: tableSource,
+      rowCount: windowReady ? windowCount : rowCount,
+      version: registered,
+      windowed: windowReady,
+    });
+  }, [settled, registered, tableSource, sessionKey, windowReady, windowCount, rowCount]);
+  const tableShown = shownTable?.session === sessionKey ? shownTable : null;
+
   // The config's neuron sets as columns of their own, ahead of the file's, so
   // they list right after its preferred ones, and offered to group by.
   const neuronSetColumns = useNeuronSetColumns({
@@ -438,7 +465,7 @@ export function SpikeStatisticsView({
         <Centered>
           <Empty description={`The nodes could not be read: ${error.message}`} />
         </Centered>
-      ) : !statsReady || !columns || !tableSource ? (
+      ) : !tableShown || !columns ? (
         // The table kept from the view before, over the same cells, until this one's is ready.
         <KeptNodesGridPlaceholder
           session={sessionKey}
@@ -455,11 +482,11 @@ export function SpikeStatisticsView({
           session={sessionKey}
           filterScope="spikes"
           columns={tableColumns ?? columns}
-          rowCount={windowReady ? windowCount : rowCount}
+          rowCount={tableShown.rowCount}
           filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
-          datasource={tableSource}
+          datasource={tableShown.source}
           pinnedColumns={PINNED_COLUMNS}
-          pinnedVersion={registered}
+          pinnedVersion={tableShown.version}
           onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
           initialFilterModel={filterModel}
           onRowClick={toggleTick}
@@ -487,7 +514,7 @@ export function SpikeStatisticsView({
           onRowHover={onHoveredCellChange}
           quickFilters={SPIKING_FILTER}
           focusRow={focusedCell}
-          rowIndexOf={windowReady ? rowInWindow : getRowIndex}
+          rowIndexOf={tableShown.windowed ? rowInWindow : getRowIndex}
           markedNodeId={heldCell}
         />
       )}

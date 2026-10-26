@@ -618,12 +618,30 @@ export function NodesGrid({
     api.setFilterModel(model);
   };
 
+  // The total the rows on show were asked against: the count line moves with
+  // the rows rather than ahead of them, a new total landing with its first page.
+  const rowCountRef = useRef(rowCount);
+  useEffect(() => {
+    rowCountRef.current = rowCount;
+  });
+  const [landedTotal, setLandedTotal] = useState<number | null>(null);
+  const total = landedTotal ?? rowCount;
+
   // One datasource for the grid's life, reading through to the host's latest:
   // a new one pages the rows in again over the old ones rather than blanking them.
   const datasourceRef = useRef(datasource);
   const [gridSource] = useState<IDatasource>(() => ({
     rowCount: datasource.rowCount,
-    getRows: (params) => datasourceRef.current.getRows(params),
+    getRows: (params) => {
+      const askedOf = rowCountRef.current;
+      datasourceRef.current.getRows({
+        ...params,
+        successCallback: (rows, lastRow) => {
+          params.successCallback(rows, lastRow);
+          setLandedTotal(askedOf);
+        },
+      });
+    },
   }));
   useEffect(() => {
     if (datasourceRef.current === datasource) return;
@@ -737,20 +755,20 @@ export function NodesGrid({
                 <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
                   {selectedNodeIds.size.toLocaleString()}
                 </span>
-                /{rowCount.toLocaleString()} selected,{' '}
+                /{total.toLocaleString()} selected,{' '}
                 <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
-                  {(filteredCount ?? rowCount).toLocaleString()}
+                  {(filteredCount ?? total).toLocaleString()}
                 </span>
-                /{rowCount.toLocaleString()} showing
+                /{total.toLocaleString()} showing
               </>
             ) : filteredCount === null ? (
-              <>{rowCount.toLocaleString()} nodes</>
+              <>{total.toLocaleString()} nodes</>
             ) : (
               <>
                 <strong className={styles.gridStatHighlight}>
                   {filteredCount.toLocaleString()}
                 </strong>{' '}
-                of {rowCount.toLocaleString()} nodes
+                of {total.toLocaleString()} nodes
               </>
             )}
           </span>
