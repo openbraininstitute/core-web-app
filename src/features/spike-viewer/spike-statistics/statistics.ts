@@ -23,8 +23,8 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'count',
     column: 'spikes:count',
-    label: 'Spikes',
-    short: 'Spikes',
+    label: 'Spike count',
+    short: 'Count',
     format: (v) => v.toLocaleString(),
     step: () => 1,
   },

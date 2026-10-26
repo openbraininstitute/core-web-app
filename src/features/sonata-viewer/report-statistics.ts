@@ -61,8 +61,8 @@ export function reportStatistics(
     statistics.push({
       key: 'spikes',
       column: 'report:spikes',
-      label: 'Spikes',
-      short: 'Spikes',
+      label: 'Spike count',
+      short: 'Count',
       format: (v) => v.toLocaleString(),
       step: () => 1,
     });
