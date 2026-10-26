@@ -4,24 +4,25 @@ import { RiResetLeftLine } from '@remixicon/react';
 import { InputNumber } from 'antd';
 import { useEffect, useState } from 'react';
 
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { cn } from '@/utils/css-class';
+
 type Props = {
-  /** The span of time the raster shows, in ms. */
+  /** The span of time the plot shows, in ms. */
   from: number;
   to: number;
   /** The run's, which a typed span is kept inside. */
   min: number;
   max: number;
-  /** Whether the raster is zoomed at all, in time or in rows: what the reset undoes. */
-  zoomed: boolean;
   onChange: (from: number, to: number) => void;
-  onReset: () => void;
 };
 
 /**
- * The raster's span of time, to read and to type: what a drag selects shows
- * up here, and a span typed here zooms the raster to it.
+ * A plot's span of time, to read and to type: what a zoom selects shows up
+ * here, and a span typed here zooms the plot to it. The way back to the whole
+ * run is the {@link WindowResetButton} beside it.
  */
-export function TimeWindowFields({ from, to, min, max, zoomed, onChange, onReset }: Props) {
+export function TimeWindowFields({ from, to, min, max, onChange }: Props) {
   const [start, setStart] = useState<number | null>(from);
   const [end, setEnd] = useState<number | null>(to);
   // A field being typed in keeps what is typed: committing the other one
@@ -59,26 +60,48 @@ export function TimeWindowFields({ from, to, min, max, zoomed, onChange, onReset
         onBlur={commit}
         onPressEnter={commit}
         className="w-14 [&_input]:!px-0.5 [&_input]:!text-xs [&_input]:font-semibold [&_input]:!text-primary-9 tabular-nums"
-        aria-label={`${label} of the raster window, in ms`}
+        aria-label={`${label} of the time window, in ms`}
       />
     </span>
   );
 
   return (
-    <div className="flex h-8 items-center gap-1.5 rounded-full bg-white pr-1.5 pl-3 text-sm shadow-md ring-1 ring-black/5">
+    <div className="flex h-8 items-center gap-1.5 rounded-full bg-white pr-3 pl-3 text-sm shadow-md ring-1 ring-black/5">
       {field('Start', start, setStart)}
       {field('End', end, setEnd)}
       <span className="text-xs text-neutral-400">ms</span>
-      <button
-        type="button"
-        onClick={onReset}
-        disabled={!zoomed}
-        title="Back to the whole run and every cell"
-        aria-label="Reset the raster window"
-        className="hover:text-primary-9 flex size-6 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 disabled:pointer-events-none disabled:opacity-30"
-      >
-        <RiResetLeftLine className="size-3.5" />
-      </button>
     </div>
+  );
+}
+
+/**
+ * Back to the whole run, as a round button of its own beside the time bar:
+ * always there, so the controls after it stay put, and live only while a zoom
+ * is on.
+ */
+export function WindowResetButton({
+  zoomed,
+  title,
+  onReset,
+}: {
+  zoomed: boolean;
+  /** What it undoes, such as the raster's zoom in time and in rows. */
+  title: string;
+  onReset: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onReset}
+      disabled={!zoomed}
+      title={title}
+      aria-label={title}
+      className={cn(
+        PILL_CLASS,
+        'size-9 shrink-0 justify-center px-0 py-0 disabled:pointer-events-none disabled:opacity-40'
+      )}
+    >
+      <RiResetLeftLine className="size-4" />
+    </button>
   );
 }

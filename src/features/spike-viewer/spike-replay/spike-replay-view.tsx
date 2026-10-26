@@ -31,7 +31,10 @@ import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-rende
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
-import { TimeWindowFields } from '@/features/spike-viewer/spike-replay/time-window-fields';
+import {
+  TimeWindowFields,
+  WindowResetButton,
+} from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { SPEEDS, TransportBar } from '@/features/spike-viewer/spike-replay/transport-bar';
 import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/spike-statistics-view';
 import {
@@ -746,7 +749,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
           {circuit && (
             <PillSelect
-              label="Order by"
+              label="Order/group by"
               value={rasterOrder.value}
               options={rasterOrder.options}
               onChange={rasterOrder.onChange}
@@ -757,8 +760,11 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             to={currentWindow?.time?.[1] ?? data.timeRange.max}
             min={data.timeRange.min}
             max={data.timeRange.max}
-            zoomed={currentWindow !== null}
             onChange={requestTimeWindow}
+          />
+          <WindowResetButton
+            zoomed={currentWindow !== null}
+            title="Back to the whole run and every cell"
             onReset={clearRasterWindow}
           />
           {isSplit && replayable && (
