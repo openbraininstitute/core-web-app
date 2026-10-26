@@ -1,10 +1,8 @@
 /*
  * Learn's courses (src/features/learn). Everything hangs off the course page's root, `.learn-root`, or off `.learn-figure`, round a course's figure shown on the
- * Learn page, so none of it reaches the rest of the platform.
+ * Learn page, so none of it reaches the rest of the platform. It is imported by Learn's two routes, the Learn page and a
+ * course, so nothing else downloads it; its quiet-notes variant is in globals.css, where Tailwind needs it.
  */
-
-/* The "quieter notes" setting: quiet-notes:… classes apply while the root has data-notes="quiet". */
-@custom-variant quiet-notes (&:where([data-notes="quiet"] *));
 
 /* The courses are sized in rems of 16px; the platform's are 14px. */
 html:has(.learn-root) {

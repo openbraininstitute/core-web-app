@@ -8,12 +8,18 @@
 
 @import "./tailwind-preflight.css";
 @import "./diff-highlights.css";
-@import "./learn.css";
 
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";
 
 @source "../../node_modules/streamdown/dist/*.js";
+
+/*
+  Learn's "quieter notes" setting: quiet-notes:… classes apply while a course's root has
+  data-notes="quiet". Tailwind needs the variant here; Learn's other styles, in learn.css, load
+  with its two routes only.
+*/
+@custom-variant quiet-notes (&:where([data-notes="quiet"] *));
 
 /* @import './tailwind-preflight.css' layer(base); */
 

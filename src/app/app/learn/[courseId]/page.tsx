@@ -13,6 +13,8 @@ import { CourseDeck } from '@/features/learn/ui/course-deck';
 
 import type { Metadata } from 'next';
 
+import '@/styles/learn.css';
+
 type Props = {
   params: Promise<{ courseId: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

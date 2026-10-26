@@ -41,7 +41,9 @@ The other platform changes Learn tries out are feature flags of their own, off b
 ## How the courses are drawn
 
 - A course's settings and theme live on its root (`[data-learn-root]`), not on `<html>`, and OBI's
-  look is the default. `src/styles/learn.css` styles that root and nothing outside it.
+  look is the default. `src/styles/learn.css` styles that root and nothing outside it. Only Learn's
+  two routes import it, so the rest of the platform never downloads it; its `quiet-notes` variant
+  is in `globals.css`, where Tailwind needs it.
 - The figures' full-page canvases are portalled into the root, which stacks its own layers.
 - A figure shown outside its course, inside `Embedded` (`components/embedded.ts`), keeps to its box
   whatever the spill setting, and leaves the arrow keys to the page. `.learn-figure` styles it in

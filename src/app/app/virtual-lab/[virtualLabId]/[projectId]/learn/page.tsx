@@ -17,6 +17,8 @@ import { getClient } from '@/services/sanity/client';
 import { type TTutorial, TutorialQuery } from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 
+import '@/styles/learn.css';
+
 export default async function Page({
   params,
 }: {
