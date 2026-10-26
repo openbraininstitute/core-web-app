@@ -1,11 +1,13 @@
 import { RiCloseLine, RiZoomInLine } from '@remixicon/react';
 
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { cn } from '@/utils/css-class';
 
 /**
  * A plot's zoom that a table and its statistics follow, beside the table's
  * count: its span, and the cells in it where the zoom picks some. A click lets
- * it go.
+ * it go. Short of room it gives way, its words cut short before its ×; its
+ * name, "Raster window", is in its hover.
  */
 export function WindowChip({
   name,
@@ -30,12 +32,13 @@ export function WindowChip({
     <button
       type="button"
       onClick={onClear}
-      title={title}
-      className={`${PILL_CLASS} whitespace-nowrap`}
+      title={`${name} · ${parts.join(' · ')}: ${title}`}
+      className={cn(PILL_CLASS, 'min-w-0 whitespace-nowrap')}
     >
-      <RiZoomInLine className="size-4" />
-      {name} · {parts.join(' · ')}
-      <RiCloseLine className="size-4 opacity-70" />
+      <RiZoomInLine className="size-4 shrink-0" />
+      {/* Its span first, so cut short it still says it; which window it is is in the hover. */}
+      <span className="min-w-0 truncate">{parts.join(' · ')}</span>
+      <RiCloseLine className="size-4 shrink-0 opacity-70" />
     </button>
   );
 }

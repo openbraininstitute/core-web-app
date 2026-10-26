@@ -746,8 +746,8 @@ export function NodesGrid({
   return (
     <div className={styles.gridWrapper}>
       <div className={styles.gridHeader}>
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className={styles.gridStat}>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <span className={cn(styles.gridStat, 'shrink-0')}>
             {pickColumn ? (
               // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
               <>
