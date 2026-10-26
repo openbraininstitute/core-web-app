@@ -3,6 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
@@ -311,10 +312,10 @@ export function CircuitViewerChrome({
                 loading={colorBy.propertiesLoading}
                 error={colorBy.propertiesError}
                 onRetry={colorBy.onRetryProperties}
-                theme={theme}
                 noneLabel={colorByNoneLabel}
               />
               {showLegendToggle && (
+                // A round pill as tall as the dropdown's, in its look.
                 <button
                   type="button"
                   id="color-mapping-panel-toggle"
@@ -323,13 +324,10 @@ export function CircuitViewerChrome({
                   aria-expanded={legendOpen}
                   aria-controls="color-mapping-panel"
                   onClick={() => setLegendOpen((open) => !open)}
-                  style={panel}
                   className={cn(
+                    PILL_CLASS,
                     styles.legendToggle,
-                    'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
-                    theme
-                      ? 'hover:brightness-110'
-                      : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
+                    'ml-1 size-9 shrink-0 justify-center px-0 py-0'
                   )}
                 >
                   <RiArrowDownSLine
