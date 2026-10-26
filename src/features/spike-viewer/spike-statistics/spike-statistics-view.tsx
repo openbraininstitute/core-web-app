@@ -28,11 +28,9 @@ import {
   SPIKE_STATISTICS,
 } from '@/features/spike-viewer/spike-statistics/statistics';
 import {
-  PINNED_SHARE,
   PlotsOverTable,
   pinnedStatisticColumns,
   StatisticsPlots,
-  useElementWidth,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
@@ -97,6 +95,9 @@ const IN_WINDOW: FilterModel = {
 };
 
 const NO_TICKS: ReadonlySet<number> = new Set();
+
+/** The statistics, held against the table's right edge. */
+const PINNED_COLUMNS = pinnedStatisticColumns(SPIKE_STATISTICS);
 
 /** One click to the cells that fired at all. */
 const SPIKING_FILTER: readonly QuickFilter[] = [
@@ -394,14 +395,6 @@ export function SpikeStatisticsView({
     return [pca(2), pca(3)];
   }, [recorded, windowTime, timeRange, rowCount, color, pcaBin, pcaSpread, pcaPoints]);
 
-  // The statistics share the table's right half between them.
-  const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
-  const [chosenShare, setChosenShare] = useState<number | null>(null);
-  const pinnedColumns = useMemo(
-    () => pinnedStatisticColumns(SPIKE_STATISTICS, tableWidth, chosenShare ?? PINNED_SHARE),
-    [tableWidth, chosenShare]
-  );
-
   if (!circuitConfig) {
     return (
       <KeptNodesGridPlaceholder
@@ -440,7 +433,7 @@ export function SpikeStatisticsView({
   );
 
   const table = (
-    <div ref={tableElement} className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {error ? (
         <Centered>
           <Empty description={`The nodes could not be read: ${error.message}`} />
@@ -465,13 +458,10 @@ export function SpikeStatisticsView({
           rowCount={windowReady ? windowCount : rowCount}
           filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
           datasource={tableSource}
-          pinnedColumns={pinnedColumns}
+          pinnedColumns={PINNED_COLUMNS}
           pinnedVersion={registered}
           onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
           initialFilterModel={filterModel}
-          onPinnedResize={(width) => {
-            if (tableWidth > 0) setChosenShare(width / tableWidth);
-          }}
           onRowClick={toggleTick}
           selectedNodeIds={ticked}
           pickColumn

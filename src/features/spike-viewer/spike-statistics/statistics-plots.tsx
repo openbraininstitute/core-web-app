@@ -489,52 +489,17 @@ export function PlotsOverTable({
   );
 }
 
-/** Share of the table the statistics take, against its right edge, until their edge is dragged. */
-export const PINNED_SHARE = 0.5;
-/** Room a statistic's column needs for its full label; with less it goes by its short one. */
-const PINNED_LABEL_WIDTH = 128;
-/**
- * Narrowest a statistic's column goes, short label and all: little enough that
- * their edge drags well over to the right, giving the file's columns the room,
- * at the cost of values cut short there.
- */
-const PINNED_MIN_WIDTH = 36;
-/** Under this a statistic's values drop to three significant digits, so more of them fit. */
-const COMPACT_VALUES_WIDTH = 52;
-
-/** The statistics as the table's pinned columns, sharing `share` of its width between them. */
-export function pinnedStatisticColumns(
-  statistics: readonly CellStatistic[],
-  tableWidth: number,
-  share: number
-): PinnedColumn[] {
-  const each = Math.floor((tableWidth * share) / statistics.length);
-  const width = Math.max(PINNED_MIN_WIDTH, each);
-  const narrow = each < PINNED_LABEL_WIDTH;
+/** The statistics as the table's pinned columns, which the table sizes. */
+export function pinnedStatisticColumns(statistics: readonly CellStatistic[]): PinnedColumn[] {
   return statistics.map((s) => ({
     name: s.column,
-    headerName: narrow ? s.short : statisticLabel(s),
-    headerTooltip: narrow ? statisticLabel(s) : undefined,
+    headerName: statisticLabel(s),
     // The full label says it in brackets; a short one carries it after.
-    headerUnit: narrow ? s.unit : undefined,
-    width,
-    format: width < COMPACT_VALUES_WIDTH ? compactNumber : s.format,
-    compact: narrow,
+    short: { headerName: s.short, unit: s.unit },
+    format: s.format,
+    // Three significant digits in a narrow column, so more of them fit.
+    compactFormat: compactNumber,
   }));
-}
-
-/** An element's width, kept as it resizes: hand the callback to the element as its ref. */
-export function useElementWidth<T extends HTMLElement>(): [(el: T | null) => void, number] {
-  const [el, setEl] = useState<T | null>(null);
-  const [width, setWidth] = useState(0);
-  useLayoutEffect(() => {
-    if (!el) return;
-    setWidth(el.getBoundingClientRect().width);
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [el]);
-  return [setEl, width];
 }
 
 /**

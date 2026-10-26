@@ -67,7 +67,6 @@ type Props = {
   pinnedColumns?: readonly PinnedColumn[];
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
   pinnedVersion?: unknown;
-  onPinnedResize?: (width: number) => void;
   quickFilters?: readonly QuickFilter[];
   reset?: { picked: boolean; onReset: () => void };
   /** Beside the count above the rows, such as the window the statistics are over. */
@@ -98,7 +97,6 @@ export function ReportNodesTable({
   extraColumns = NO_EXTRA_COLUMNS,
   pinnedColumns,
   pinnedVersion,
-  onPinnedResize,
   quickFilters,
   reset,
   headerExtra,
@@ -282,7 +280,6 @@ export function ReportNodesTable({
       initialFilterModel={filterModel}
       pinnedColumns={pinnedColumns}
       pinnedVersion={pinnedVersion}
-      onPinnedResize={onPinnedResize}
       quickFilters={quickFilters}
       reset={reset}
       headerExtra={headerExtra}

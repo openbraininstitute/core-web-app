@@ -49,21 +49,22 @@ import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 /**
  * A numeric column held against the grid's right edge, such as a spike
  * statistic. Always shown and left out of the column chooser: it is what the
- * host put the table up for, not one of the file's columns.
+ * host put the table up for, not one of the file's columns. The grid sizes
+ * them, sharing part of its width between them as it resizes.
  */
 export type PinnedColumn = {
   /** The column's name in the nodes session. */
   name: string;
   headerName: string;
-  /** Shown over the header, for a short header that leaves something out. */
-  headerTooltip?: string;
-  /** What the values are in, small and muted after a short header. */
-  headerUnit?: string;
-  width?: number;
+  /**
+   * The header in a column too narrow for `headerName`, which is then shown
+   * over it, with what the values are in small and muted after it.
+   */
+  short?: { headerName: string; unit?: string };
   /** Text for a value; `NaN` renders blank without asking. */
   format?: (value: number) => string;
-  /** Tighter padding, for a narrow column whose numbers would otherwise be cut. */
-  compact?: boolean;
+  /** Text for a value in a column too narrow for `format`'s. */
+  compactFormat?: (value: number) => string;
 };
 
 type Props = {
@@ -108,8 +109,6 @@ type Props = {
   headerNote?: React.ReactNode;
   /** Right after the count, before the quick filters: what else narrows the rows, say. */
   headerExtra?: React.ReactNode;
-  /** Makes the edge before the pinned columns draggable: told the width they should share. */
-  onPinnedResize?: (width: number) => void;
   /**
    * A Reset above the rows while a filter is on, or while `picked` says the host
    * holds a pick to undo: it clears the filters and calls `onReset`.
@@ -139,6 +138,35 @@ const SCOPE_SWITCH_MS = 2000;
 
 /** File columns kept in view beside the pinned ones, however far their edge is dragged. */
 const MIN_FILE_COLUMNS_WIDTH = 120;
+
+/** Share of the grid the pinned columns take, against its right edge, until their edge is dragged. */
+const PINNED_SHARE = 0.5;
+/** Room a pinned column needs for its full header; with less it goes by its short one. */
+const PINNED_LABEL_WIDTH = 128;
+/**
+ * Narrowest a pinned column goes, short header and all: little enough that
+ * their edge drags well over to the right, giving the file's columns the room,
+ * at the cost of values cut short there.
+ */
+const PINNED_MIN_WIDTH = 36;
+/** Under this a pinned column's values go by its compact format, so more of them fit. */
+const COMPACT_VALUES_WIDTH = 52;
+
+/** How the pinned columns read at the width they have: by short headers, by compact values. */
+type PinnedLook = { narrow: boolean; compactValues: boolean };
+
+const WIDE: PinnedLook = { narrow: false, compactValues: false };
+
+/** Each of `count` pinned columns' width in a grid `width` wide, at `share` of it, and how it reads there. */
+function pinnedFit(width: number, share: number, count: number) {
+  const each = Math.floor((width * share) / count);
+  const columnWidth = Math.max(PINNED_MIN_WIDTH, each);
+  const look: PinnedLook = {
+    narrow: each < PINNED_LABEL_WIDTH,
+    compactValues: columnWidth < COMPACT_VALUES_WIDTH,
+  };
+  return { width: columnWidth, look };
+}
 
 /** The synthetic row-index column, which names a clicked row. */
 const NODE_ID_COLUMN = 'node_id';
@@ -229,6 +257,7 @@ type BuildArgs = {
   orderedColumns: ColumnMeta[];
   visible: Set<string>;
   pinned: readonly PinnedColumn[];
+  pinnedLook: PinnedLook;
   onReset: () => void;
   onOpenChooser: () => void;
 };
@@ -243,6 +272,7 @@ function buildColumnDefs({
   orderedColumns,
   visible,
   pinned,
+  pinnedLook,
   onReset,
   onOpenChooser,
 }: BuildArgs): ColDef[] {
@@ -276,29 +306,33 @@ function buildColumnDefs({
     } satisfies ColDef;
   });
 
+  const { narrow, compactValues } = pinnedLook;
   const pinnedColumns = pinned.map((p) => {
-    const format = p.format ?? formatNumber;
+    const short = narrow ? p.short : undefined;
+    const format = (compactValues ? p.compactFormat : undefined) ?? p.format ?? formatNumber;
     return {
       field: p.name,
-      headerName: p.headerName,
+      headerName: short?.headerName ?? p.headerName,
       headerComponent: ColumnHeader,
       headerComponentParams: {
         onReset,
         isNumeric: true,
         onOpenChooser,
-        tooltip: p.headerTooltip,
-        unit: p.headerUnit,
+        tooltip: short ? p.headerName : undefined,
+        unit: short?.unit,
       },
-      headerClass: p.compact ? [styles.pinned, styles.compact] : styles.pinned,
+      // Tighter padding when narrow, so the numbers fit.
+      headerClass: narrow ? [styles.pinned, styles.compact] : styles.pinned,
       sortable: true,
       resizable: true,
       pinned: 'right',
       lockPinned: true,
       filter: NumericFilter,
       suppressHeaderMenuButton: true,
-      minWidth: 36,
-      width: p.width ?? 110,
-      cellClass: p.compact
+      minWidth: PINNED_MIN_WIDTH,
+      // Only until the grid fits them to its width, which it keeps doing as it resizes.
+      initialWidth: PINNED_LABEL_WIDTH,
+      cellClass: narrow
         ? ['ag-right-aligned-cell', styles.pinned, styles.compact]
         : ['ag-right-aligned-cell', styles.pinned],
       valueFormatter: (params: ValueFormatterParams) => {
@@ -338,7 +372,6 @@ export function NodesGrid({
   onRowHover,
   headerNote,
   headerExtra,
-  onPinnedResize,
   reset,
   quickFilters,
   focusRow,
@@ -347,18 +380,48 @@ export function NodesGrid({
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
 
+  // The pinned columns' widths are set on the grid itself, from their share of
+  // its width, on each resize and each move of their edge. Handed down in the
+  // column definitions they were applied in an effect, and on every frame of a
+  // drag each was an update nested in the last, a run React stops as a loop.
+  // Only how they read is state, which changes at a few widths.
+  const gridBoxRef = useRef<HTMLDivElement>(null);
+  const shareRef = useRef(PINNED_SHARE);
+  const pinnedCountRef = useRef(pinnedColumns.length);
+  useLayoutEffect(() => {
+    pinnedCountRef.current = pinnedColumns.length;
+  });
+  const [pinnedLook, setPinnedLook] = useState(WIDE);
+  const fitPinned = useCallback(() => {
+    const box = gridBoxRef.current;
+    const count = pinnedCountRef.current;
+    if (!box || count === 0) return;
+    const { width, look } = pinnedFit(box.getBoundingClientRect().width, shareRef.current, count);
+    setPinnedLook((previous) =>
+      previous.narrow === look.narrow && previous.compactValues === look.compactValues
+        ? previous
+        : look
+    );
+    const api = gridRef.current?.api;
+    if (!api || api.isDestroyed()) return;
+    const resized = api.getDisplayedRightColumns().filter((c) => c.getActualWidth() !== width);
+    if (resized.length > 0) api.setColumnWidths(resized.map((c) => ({ key: c, newWidth: width })));
+  }, []);
+
   // Where the pinned columns start and end across the grid, read back off it:
   // the grid lays them out, with its scrollbar beside them, and builds their
   // header only once it is ready, so it is looked for until it is there.
-  const gridBoxRef = useRef<HTMLDivElement>(null);
   const [pinnedSpan, setPinnedSpan] = useState<{ left: number; right: number } | null>(null);
-  const pinnedResizable = onPinnedResize !== undefined && pinnedColumns.length > 0;
+  const hasPinned = pinnedColumns.length > 0;
   useLayoutEffect(() => {
     const box = gridBoxRef.current;
-    if (!pinnedResizable || !box) return;
+    if (!hasPinned || !box) return;
     let frame = 0;
     let watched: Element | null = null;
-    const observer = new ResizeObserver(() => measure());
+    const observer = new ResizeObserver(() => {
+      fitPinned();
+      measure();
+    });
     function measure() {
       if (!box) return;
       const pinned = box.querySelector('.ag-pinned-right-header');
@@ -377,17 +440,18 @@ export function NodesGrid({
       );
     }
     observer.observe(box);
+    fitPinned();
     measure();
     return () => {
       observer.disconnect();
       cancelAnimationFrame(frame);
     };
-  }, [pinnedResizable]);
+  }, [hasPinned, fitPinned]);
   const autoSizedKeyRef = useRef<string>('');
 
   // What the datasource reads per page: the chosen file columns and the pinned
-  // ones. Keyed on the pinned names, not the array, which a host rebuilds
-  // whenever it resizes them - and each new array would page every row again.
+  // ones. Keyed on the pinned names, not the array, which a host may build
+  // anew for the same columns - and each new array would page every row again.
   // A clicked or selected row is named by its node id, so that is read even
   // when hidden.
   const pinnedNames = pinnedColumns.map((p) => p.name).join('\n');
@@ -490,20 +554,31 @@ export function NodesGrid({
   const resetAll = useCallback(() => {
     const api = gridRef.current?.api;
     if (api) api.resetColumnState();
+    // The reset puts the pinned columns back at their first widths, not their share.
+    fitPinned();
     setOrderedNames(defaultColumnOrder(columns));
     onVisibleColumnsChange(defaultVisibleColumnSet(columns));
-  }, [columns, onVisibleColumnsChange]);
+  }, [columns, onVisibleColumnsChange, fitPinned]);
 
   const columnDefs = useMemo(() => {
     const defs = buildColumnDefs({
       orderedColumns,
       visible: visibleColumns,
       pinned: pinnedColumns,
+      pinnedLook,
       onReset: resetAll,
       onOpenChooser: openChooser,
     });
     return pickColumn ? [PICK_COLUMN, ...defs] : defs;
-  }, [orderedColumns, visibleColumns, pinnedColumns, resetAll, openChooser, pickColumn]);
+  }, [
+    orderedColumns,
+    visibleColumns,
+    pinnedColumns,
+    pinnedLook,
+    resetAll,
+    openChooser,
+    pickColumn,
+  ]);
 
   const onColumnMoved = (e: ColumnMovedEvent) => {
     if (!e.finished) return;
@@ -566,6 +641,7 @@ export function NodesGrid({
     restoreFilters(e.api);
     e.api.setGridOption('datasource', gridSource);
     setGridApi(e.api);
+    fitPinned();
   };
 
   // A new scope's filters, on their way: until they are on, the grid's changes -
@@ -735,6 +811,8 @@ export function NodesGrid({
           headerHeight={60}
           onGridReady={onGridReady}
           onNewColumnsLoaded={(e) => restoreFilters(e.api)}
+          // New pinned columns come in at their first width, and are fitted at once.
+          onDisplayedColumnsChanged={fitPinned}
           onColumnMoved={onColumnMoved}
           onModelUpdated={onModelUpdated}
           onFilterChanged={onFilterChanged}
@@ -744,12 +822,16 @@ export function NodesGrid({
           rowClass={clickable ? styles.clickableRow : undefined}
           context={gridContext}
         />
-        {pinnedResizable && pinnedSpan && (
+        {hasPinned && pinnedSpan && (
           <div className="absolute inset-y-0 z-10 w-0" style={{ left: pinnedSpan.left }}>
             <PaneSideResizeHandle
               containerRef={gridBoxRef}
               minWidth={MIN_FILE_COLUMNS_WIDTH}
-              onResize={(left) => onPinnedResize?.(pinnedSpan.right - left)}
+              onResize={(left) => {
+                const width = gridBoxRef.current?.getBoundingClientRect().width ?? 0;
+                if (width > 0) shareRef.current = (pinnedSpan.right - left) / width;
+                fitPinned();
+              }}
             />
           </div>
         )}

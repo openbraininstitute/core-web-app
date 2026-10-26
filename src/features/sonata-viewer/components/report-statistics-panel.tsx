@@ -1,17 +1,15 @@
 'use client';
 
 import { Spin } from 'antd';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { createPortal } from 'react-dom';
 
 import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import {
-  PINNED_SHARE,
   PlotsOverTable,
   pinnedStatisticColumns,
   StatisticsPlots,
-  useElementWidth,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 
 import type { ComponentProps, ReactNode } from 'react';
@@ -25,7 +23,7 @@ import type {
 
 type TableProps = Omit<
   ComponentProps<typeof ReportNodesTable>,
-  'pinnedColumns' | 'pinnedVersion' | 'onPinnedResize' | 'quickFilters'
+  'pinnedColumns' | 'pinnedVersion' | 'quickFilters'
 >;
 
 type Props = {
@@ -78,12 +76,7 @@ export function ReportStatisticsPanel({
   plotsTarget,
   timeCourse,
 }: Props) {
-  const [tableElement, tableWidth] = useElementWidth<HTMLDivElement>();
-  const [chosenShare, setChosenShare] = useState<number | null>(null);
-  const pinnedColumns = useMemo(
-    () => pinnedStatisticColumns(statistics, tableWidth, chosenShare ?? PINNED_SHARE),
-    [statistics, tableWidth, chosenShare]
-  );
+  const pinnedColumns = useMemo(() => pinnedStatisticColumns(statistics), [statistics]);
   // One click to the cells whose voltage crossed the spike threshold at all.
   const quickFilters = useMemo<QuickFilter[] | undefined>(() => {
     const spikes = statistics.find((s) => s.key === 'spikes');
@@ -116,15 +109,12 @@ export function ReportStatisticsPanel({
     />
   );
   const tableView = (
-    <div ref={tableElement} className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {values ? (
         <ReportNodesTable
           {...table}
           pinnedColumns={pinnedColumns}
           pinnedVersion={values}
-          onPinnedResize={(width) => {
-            if (tableWidth > 0) setChosenShare(width / tableWidth);
-          }}
           quickFilters={quickFilters}
         />
       ) : (
