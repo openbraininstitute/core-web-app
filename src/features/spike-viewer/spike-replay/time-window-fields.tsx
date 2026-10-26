@@ -4,7 +4,7 @@ import { RiResetLeftLine } from '@remixicon/react';
 import { InputNumber } from 'antd';
 import { useEffect, useState } from 'react';
 
-import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -59,14 +59,17 @@ export function TimeWindowFields({ from, to, min, max, onChange }: Props) {
         onFocus={() => setEditing(label)}
         onBlur={commit}
         onPressEnter={commit}
-        className="w-14 [&_input]:!px-0.5 [&_input]:!text-xs [&_input]:font-semibold [&_input]:!text-primary-9 tabular-nums"
+        // As wide as its number, so short times leave no gap before what follows.
+        style={{ width: `${Math.max(3, (value ?? 0).toFixed(1).length) + 0.5}ch` }}
+        className="[&_input]:!px-0.5 [&_input]:!text-sm [&_input]:font-semibold [&_input]:!text-primary-9 tabular-nums"
         aria-label={`${label} of the time window, in ms`}
       />
     </span>
   );
 
   return (
-    <div className="flex h-8 items-center gap-1.5 rounded-full bg-white pr-3 pl-3 text-sm shadow-md ring-1 ring-black/5">
+    // The dropdowns' pill, as tall and in their type, with fields in place of a value.
+    <div className={cn(PILL_CLASS, 'gap-1 hover:bg-white')}>
       {field('Start', start, setStart)}
       {field('End', end, setEnd)}
       <span className="text-xs text-neutral-400">ms</span>
