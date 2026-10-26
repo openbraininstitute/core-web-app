@@ -3,7 +3,12 @@ import * as THREE from 'three/webgpu';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 import { logError } from '@/utils/logger';
 
-import { type ArenaDrawing, type CircuitMaterials, CircuitView } from '../circuit-view';
+import {
+  type ArenaDrawing,
+  type CircuitMaterials,
+  CircuitView,
+  type PickWindow,
+} from '../circuit-view';
 import { pixelSpan, SEGMENT_BUDGET } from '../detail';
 import { GLOW_SWELL } from '../soma-cloud';
 import { type ArenaStorage, arenaOnGpu, arenaStorage } from './arena-gpu';
@@ -45,7 +50,6 @@ interface GpuArena extends ReturnType<typeof arenaMaterials> {
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
-  protected readonly rowsUp = false;
   private renderer: THREE.WebGPURenderer;
   private device: GPUDevice;
   private gpu: GpuUniforms;
@@ -467,16 +471,14 @@ export class CircuitMorphologyGPU extends CircuitView {
     return pixelSpan(camera.projectionMatrix, this.height) * away;
   }
 
-  protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
+  protected override readPick(scene: THREE.Scene, at: PickWindow): Promise<Uint8Array> {
     const { renderer } = this;
     const target = this.pickTarget();
     const side = target.width;
     this.gpu.sync();
-    // The segments seen were culled for the frame last drawn, which the view may have moved from.
+    // The segments seen were culled for the frame last drawn, which the view may have moved from; with the whole view.
     if (this.framePending) this.cull(this.restOf(this.drawnMoving));
-    renderer.setRenderTarget(target);
-    renderer.render(scene, this.camera);
-    renderer.setRenderTarget(null);
+    this.drawPick(renderer, target, scene, at);
     return renderer
       .readRenderTargetPixelsAsync(target, 0, 0, side, side)
       .then((read) => packed(read as Uint8Array, side));

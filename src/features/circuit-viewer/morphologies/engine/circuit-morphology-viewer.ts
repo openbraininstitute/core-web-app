@@ -4,11 +4,26 @@ import { GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-tim
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
-import { type CircuitMaterials, CircuitView, type FrameTiming } from './circuit-view';
+import {
+  type CircuitMaterials,
+  CircuitView,
+  type FrameTiming,
+  type PickWindow,
+} from './circuit-view';
 import { SEGMENT_BUDGET } from './detail';
 import { electrodeMaterial } from './electrodes';
 import { idMaterial, impostor } from './impostors';
 import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
+
+/** `pixels`, a square `side` wide read from WebGL bottom row first, top row first. */
+function topDown(pixels: Uint8Array, side: number): Uint8Array {
+  const rows = new Uint8Array(pixels.length);
+  const stride = 4 * side;
+  for (let row = 0; row < side; row++) {
+    rows.set(pixels.subarray(row * stride, (row + 1) * stride), (side - 1 - row) * stride);
+  }
+  return rows;
+}
 
 /**
  * The circuit's morphologies on WebGL 2 (`CircuitView`), the fallback where WebGPU is missing. Frames go straight to
@@ -17,7 +32,6 @@ import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
  */
 export class CircuitMorphologyViewer extends CircuitView {
   protected materials: CircuitMaterials;
-  protected readonly rowsUp = true;
   private renderer: THREE.WebGLRenderer;
   private idTarget: THREE.WebGLRenderTarget | null = null;
   /**
@@ -118,17 +132,15 @@ export class CircuitMorphologyViewer extends CircuitView {
     this.invalidate();
   };
 
-  protected override readPick(scene: THREE.Scene): Promise<Uint8Array> {
+  protected override readPick(scene: THREE.Scene, at: PickWindow): Promise<Uint8Array> {
     const { renderer } = this;
     const target = this.pickTarget();
     const side = target.width;
-    renderer.setRenderTarget(target);
-    renderer.render(scene, this.camera);
-    renderer.setRenderTarget(null);
+    this.drawPick(renderer, target, scene, at);
     const pixels = new Uint8Array(4 * side * side);
     return renderer
       .readRenderTargetPixelsAsync(target, 0, 0, side, side, pixels)
-      .then(() => pixels);
+      .then(() => topDown(pixels, side));
   }
 
   /** Built for the pick's target: three builds a program for the colour space and tone mapping of where it draws. */

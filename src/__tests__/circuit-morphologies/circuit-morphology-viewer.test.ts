@@ -515,25 +515,49 @@ describe('the circuit morphology viewer', () => {
           : 'back to the canvas'
       )
     );
-    renderer.render.mockImplementation((scene: THREE.Scene) =>
-      steps.push(scene === inner.ids ? 'draw the numbers' : 'draw the scene')
-    );
+    renderer.render.mockImplementation((scene: THREE.Scene, camera: THREE.PerspectiveCamera) => {
+      const view = camera.view?.enabled ? camera.view : null;
+      const shown = view && [view.fullWidth, view.fullHeight, view.offsetX, view.offsetY];
+      steps.push(`${scene === inner.ids ? 'draw the numbers' : 'draw the scene'}, in ${shown}`);
+    });
     renderer.readRenderTargetPixelsAsync.mockImplementation(async (_target, x, y, w, h, pixels) => {
       steps.push(`read ${[x, y, w, h]}`);
       // Cell 2, in the middle pixel of 17 by 17.
       new DataView(pixels.buffer).setUint32(4 * (8 * 17 + 8), 3, true);
       return pixels;
     });
-
-    // 100.4 CSS pixels across is device pixel 200, and 50 down is 100: row 499 from the bottom of 600.
+    // 100.4 CSS pixels across is device pixel 200, and 50 down is 100: the window's corner 8 short of each.
     await expect(viewer.pick(100.4, 50)).resolves.toBe(2);
 
     expect(steps).toEqual([
-      'into 17x17, the view at -192,-491,800,600',
-      'draw the numbers',
+      'into 17x17, the view at 0,0,17,17',
+      'draw the numbers, in 800,600,192,92',
       'back to the canvas',
       'read 0,0,17,17',
     ]);
+    expect((inner.camera as THREE.PerspectiveCamera).view?.enabled).toBe(false);
+  });
+
+  it.each([
+    // 1 CSS pixel from the left: the window's first 6 columns are past the view.
+    ['left', 1, 50, [8, 5], [8, 12]],
+    // 1 CSS pixel from the top: its first 6 rows are, read from WebGL bottom row first.
+    ['top', 100.4, 1, [16 - 5, 8], [16 - 12, 8]],
+  ])('picks no cell drawn past the view at its %s edge', async (_, x, y, past, within) => {
+    const { viewer, inner } = make(2);
+    inner.renderer.domElement.width = 800;
+    inner.renderer.domElement.height = 600;
+    viewer.setData(circuit());
+    inner.renderer.readRenderTargetPixelsAsync.mockImplementation(
+      async (_target, _x, _y, _w, _h, pixels: Uint8Array) => {
+        const view = new DataView(pixels.buffer);
+        // Cell 5, 3 pixels from the middle, and cell 3, 4 from it.
+        view.setUint32(4 * (past[0] * 17 + past[1]), 6, true);
+        view.setUint32(4 * (within[0] * 17 + within[1]), 4, true);
+        return pixels;
+      }
+    );
+    await expect(viewer.pick(x, y)).resolves.toBe(3);
   });
 
   it('picks with the camera where it is, drawn there yet or not', async () => {

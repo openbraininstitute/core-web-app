@@ -161,6 +161,34 @@ export interface FrameTiming {
   motion: MotionQuality;
 }
 
+/** The pick's window of the view: the whole view's size and the window's top left corner, device pixels, y down. */
+export interface PickWindow {
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+}
+
+/** Either tier's renderer, as the pick draws with it into a target `T`. */
+interface PickRenderer<T> {
+  setRenderTarget(target: T | null): void;
+  render(scene: THREE.Scene, camera: THREE.Camera): void;
+}
+
+/** `pixels` of the pick's window `at`, rows top down, with those past the view's edges cleared: the pick draws past them. */
+function inView(pixels: Uint8Array, side: number, at: PickWindow): Uint8Array {
+  for (let row = 0; row < side; row++) {
+    for (let column = 0; column < side; column++) {
+      const x = at.left + column;
+      const y = at.top + row;
+      if (x < 0 || y < 0 || x >= at.width || y >= at.height) {
+        pixels.fill(0, 4 * (row * side + column), 4 * (row * side + column + 1));
+      }
+    }
+  }
+  return pixels;
+}
+
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
   segment: THREE.Material[];
@@ -295,8 +323,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** The look, of which the tier takes the material's shading and the lights, which ride on the camera. */
   protected look: Look;
   protected abstract materials: CircuitMaterials;
-  /** Whether the tier's targets count their rows up, as WebGL's do, or down, as WebGPU's do. */
-  protected abstract readonly rowsUp: boolean;
   /** The pick's target's side, in device pixels. */
   protected readonly pickSide: number;
   /** The segments' quads. */
@@ -518,8 +544,30 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** The target a pick is drawn into, `pickSide` square. */
   protected abstract pickTarget(): THREE.RenderTarget;
 
-  /** Draw `scene` into the pick's target, as its viewport places it, and read the target's pixels, a row after another. */
-  protected abstract readPick(scene: THREE.Scene): Promise<Uint8Array>;
+  /** Draw `scene` into the pick's target (`drawPick`) for `at`, and read the target's pixels, rows top down. */
+  protected abstract readPick(scene: THREE.Scene, at: PickWindow): Promise<Uint8Array>;
+
+  /**
+   * `scene` drawn by `renderer` into `target`, the whole of which is the pick's window `at` of the view: a viewport
+   * larger than the target, as the view at an offset would be, makes Safari 27 drop the pass.
+   */
+  protected drawPick<T>(
+    renderer: PickRenderer<T>,
+    target: T,
+    scene: THREE.Scene,
+    at: PickWindow
+  ): void {
+    const { camera } = this;
+    const side = this.pickSide;
+    camera.setViewOffset(at.width, at.height, at.left, at.top, side, side);
+    try {
+      renderer.setRenderTarget(target);
+      renderer.render(scene, camera);
+    } finally {
+      renderer.setRenderTarget(null);
+      camera.clearViewOffset();
+    }
+  }
 
   /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
   protected abstract compile(scene: THREE.Scene): void;
@@ -537,21 +585,17 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const side = this.pickSide;
     const middle = (side - 1) / 2;
     const ratio = this.pixelRatio;
-    const row = Math.floor(y * ratio);
-    // The whole view, placed so that the pixel asked for is the target's middle one; at full resolution, where a moving
-    // frame was drawn at less.
-    const width = Math.floor(this.width * ratio);
-    const height = Math.floor(this.height * ratio);
-    this.pickTarget().viewport.set(
-      middle - Math.floor(x * ratio),
-      middle - (this.rowsUp ? height - 1 - row : row),
-      width,
-      height
-    );
+    // The pixel asked for at the target's middle; at full resolution, where a moving frame was drawn at less.
+    const at = {
+      width: Math.floor(this.width * ratio),
+      height: Math.floor(this.height * ratio),
+      left: Math.floor(x * ratio) - middle,
+      top: Math.floor(y * ratio) - middle,
+    };
     // No frame may have been drawn since the camera last moved.
     this.readyCamera();
-    return this.readPick(scene).then(
-      (pixels) => cellNearMiddle(pixels, side),
+    return this.readPick(scene, at).then(
+      (pixels) => cellNearMiddle(inView(pixels, side, at), side),
       () => null
     );
   }
