@@ -77,7 +77,9 @@ export function CollapsingControls({
           <div className="pointer-events-auto flex w-max items-center gap-2">{children}</div>
         )}
       </div>
-      {trailing && <div className="pointer-events-auto flex shrink-0 items-center">{trailing}</div>}
+      {trailing && (
+        <div className="pointer-events-auto flex shrink-0 items-center gap-2">{trailing}</div>
+      )}
     </div>
   );
 }

@@ -703,8 +703,8 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           {populationName}
         </span>
       )}
-      {/* Docked it is with the raster's controls. */}
-      {!docked && spikeCount}
+      {/* Beside the raster's help while the raster is on show. */}
+      {!showRaster && spikeCount}
     </div>
   );
 
@@ -747,7 +747,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       its own: in the split these controls are the raster's alone, and
       the row above the panes is for what governs both. */}
       {recorded && recorded.timestamps.length > 0 && (
-        <CollapsingControls trailing={<RasterHelp />}>
+        <CollapsingControls
+          trailing={
+            <>
+              {spikeCount}
+              <RasterHelp />
+            </>
+          }
+        >
           <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
           {circuit && (
             <PillSelect
@@ -755,6 +762,14 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               value={rasterOrder.value}
               options={rasterOrder.options}
               onChange={rasterOrder.onChange}
+            />
+          )}
+          {isSplit && replayable && (
+            <PillSelect
+              label="Speed"
+              value={String(speed)}
+              options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
+              onChange={(v) => setSpeed(Number(v))}
             />
           )}
           <TimeWindowFields
@@ -769,15 +784,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             title="Back to the whole run and every cell"
             onReset={clearRasterWindow}
           />
-          {isSplit && replayable && (
-            <PillSelect
-              label="Speed"
-              value={String(speed)}
-              options={SPEEDS.map((s) => ({ value: String(s.value), label: s.label }))}
-              onChange={(v) => setSpeed(Number(v))}
-            />
-          )}
-          {docked && spikeCount}
         </CollapsingControls>
       )}
     </div>

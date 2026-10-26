@@ -5,6 +5,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
 import { PlotTimeline } from '@/features/spike-viewer/components/plot-timeline';
 import {
@@ -128,21 +129,6 @@ function axisTitle(text: string, axis: 'x' | 'y'): Partial<Layout['annotations']
         showarrow: false,
         borderpad: 0,
       };
-}
-
-/**
- * What to say about the plot's lines beside the table that picks them: how to
- * pick, and how many are left out past what one plot can hold.
- */
-export function sharedTracesHint(pickedCount: number, keptCount: number): string | null {
-  if (pickedCount > MAX_SHARED_TRACES) {
-    return `Showing the first ${MAX_SHARED_TRACES} of ${pickedCount} picked cells`;
-  }
-  if (pickedCount > 0) return null;
-  if (keptCount > MAX_SHARED_TRACES) {
-    return `Showing ${MAX_SHARED_TRACES} of ${keptCount} cells: tick rows in the table below to pick which to compare`;
-  }
-  return 'Tick rows in the table below to pick which cells to compare';
 }
 
 /**
@@ -600,11 +586,13 @@ function SharedTracesPlot({
         <div
           ref={cursorRef}
           // Over the WebGL traces, which sit on a canvas of their own.
-          className="pointer-events-none absolute z-10 hidden w-[1.5px] bg-[#f5222d]"
+          className="pointer-events-none absolute z-10 hidden w-[1.5px]"
+          style={{ background: TIME_CURSOR_COLOR }}
         >
           <span
             ref={cursorLabelRef}
-            className="absolute bottom-1 left-1 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold text-[#f5222d] tabular-nums"
+            className="absolute bottom-1 left-1 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold tabular-nums"
+            style={{ color: TIME_CURSOR_COLOR }}
           />
         </div>
       )}

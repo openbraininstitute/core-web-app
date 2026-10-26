@@ -57,8 +57,6 @@ type Props = {
   selectedNodeIds: ReadonlySet<number>;
   /** The tick atop the tick column, for every row the table shows at once. */
   pickAll?: { state: PickAllState; onToggle: () => void };
-  /** Said beside the count above the rows. */
-  note?: string | null;
   /** Columns the host registered in the session, listed ahead of the file's. */
   extraColumns?: ColumnMeta[];
   /** The cell under the pointer, by node id; null once it leaves the table. */
@@ -93,7 +91,6 @@ export function ReportNodesTable({
   selectedNodeIds,
   pickAll,
   onCellHover,
-  note,
   extraColumns = NO_EXTRA_COLUMNS,
   pinnedColumns,
   pinnedVersion,
@@ -290,7 +287,6 @@ export function ReportNodesTable({
       pickColumn
       pickAll={pickAll}
       onRowHover={onCellHover}
-      headerNote={note}
     />
   );
 }

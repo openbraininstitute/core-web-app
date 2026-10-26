@@ -13,9 +13,7 @@ import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
-import ReportDetailsView, {
-  sharedTracesHint,
-} from '@/features/sonata-viewer/components/report-details-view';
+import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
 import SonataViewerSkeleton from '@/features/sonata-viewer/components/sonata-viewer-skeleton';
@@ -29,6 +27,7 @@ import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
+import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
@@ -644,6 +643,21 @@ export function SonataReportView({
     return <Empty className="p-2em" description="This report recorded no population" />;
   }
 
+  // At the right end of the traces' controls: how many cells, then how the plot is worked.
+  const countAndHelp = (
+    <div className="ml-auto flex items-center gap-2">
+      <span className="whitespace-nowrap text-xs text-neutral-400">
+        {population.nodeCount.toLocaleString()} {population.nodeCount === 1 ? 'cell' : 'cells'}{' '}
+        recorded
+      </span>
+      <PlotHelp>
+        Drag to zoom: the time bar and the statistics follow the window · Double-click to reset ·
+        Click a trace to pick its cell alone, again to show every cell · Hover a timing for its
+        window
+      </PlotHelp>
+    </div>
+  );
+
   // The traces' span of time, to read and to type, and the way back to the whole run.
   const timeBar = (
     <>
@@ -785,12 +799,6 @@ export function SonataReportView({
         onClear={() => handleTimeWindowChange(null)}
       />
     ),
-    note:
-      groupBy === ALL
-        ? sharedTracesHint(pickedTraces.length, visibleTraces?.length ?? population.traces.length)
-        : pickedTraces.length > 0
-          ? null
-          : 'Tick rows in the table below to pick which cells to compare',
   };
 
   if (docked && table && sidePanel) {
@@ -813,7 +821,6 @@ export function SonataReportView({
                   populations={metadata.populations}
                   population={population}
                   onChange={setChosenPopulation}
-                  counted={false}
                 />
                 {/* The simulation on show is picked in the list beside it. */}
                 <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
@@ -827,14 +834,11 @@ export function SonataReportView({
               <>
                 <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-1">
                   {groupSelect}
-                  <span className="whitespace-nowrap text-xs text-neutral-400">
-                    {population.nodeCount.toLocaleString()}{' '}
-                    {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
-                  </span>
-                  {timeBar}
                   {showScene && (
                     <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
                   )}
+                  {timeBar}
+                  {countAndHelp}
                 </div>
                 {traces}
                 {/* The 3D player's play and scrubber, while it is up. */}
@@ -1004,7 +1008,10 @@ export function SonataReportView({
           {groupSelect}
           {timeBar}
         </div>
-        {simulationPicker}
+        <div className="flex min-w-0 items-center gap-3">
+          {simulationPicker}
+          {countAndHelp}
+        </div>
       </div>
 
       {scene && (
@@ -1043,13 +1050,10 @@ function PopulationHeader({
   populations,
   population,
   onChange,
-  counted = true,
 }: {
   populations: PopulationMetadata[];
   population: PopulationMetadata;
   onChange: (name: string) => void;
-  /** With how many cells it recorded, unless the traces say so themselves. */
-  counted?: boolean;
 }) {
   return (
     <div className="flex min-w-0 items-center gap-2">
@@ -1064,12 +1068,6 @@ function PopulationHeader({
         <span className="text-primary-9 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-md ring-1 ring-black/5">
           <span className="mr-1 font-normal text-neutral-400">Population</span>
           {population.name}
-        </span>
-      )}
-      {counted && (
-        <span className="whitespace-nowrap text-xs text-neutral-400">
-          {population.nodeCount.toLocaleString()} {population.nodeCount === 1 ? 'cell' : 'cells'}{' '}
-          recorded
         </span>
       )}
     </div>

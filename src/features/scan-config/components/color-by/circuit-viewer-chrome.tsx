@@ -3,7 +3,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
-import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
@@ -324,11 +324,7 @@ export function CircuitViewerChrome({
                   aria-expanded={legendOpen}
                   aria-controls="color-mapping-panel"
                   onClick={() => setLegendOpen((open) => !open)}
-                  className={cn(
-                    PILL_CLASS,
-                    styles.legendToggle,
-                    'ml-1 size-9 shrink-0 justify-center px-0 py-0'
-                  )}
+                  className={cn(ROUND_PILL_CLASS, styles.legendToggle, 'ml-1')}
                 >
                   <RiArrowDownSLine
                     className={cn(

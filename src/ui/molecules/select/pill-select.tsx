@@ -39,6 +39,9 @@ export const PILL_CLASS = cn(
   'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
 );
 
+/** The same pill made round, for a button that is an icon alone, as tall as the pills beside it. */
+export const ROUND_PILL_CLASS = cn(PILL_CLASS, 'size-9 shrink-0 justify-center px-0 py-0');
+
 /**
  * Two or more choices on one pill, the chosen one filled: a switch with the
  * dropdowns' look, such as All | Spiking.

@@ -4,7 +4,7 @@ import { RiResetLeftLine } from '@remixicon/react';
 import { InputNumber } from 'antd';
 import { useEffect, useState } from 'react';
 
-import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 type Props = {
@@ -96,10 +96,7 @@ export function WindowResetButton({
       disabled={!zoomed}
       title={title}
       aria-label={title}
-      className={cn(
-        PILL_CLASS,
-        'size-9 shrink-0 justify-center px-0 py-0 disabled:pointer-events-none disabled:opacity-40'
-      )}
+      className={cn(ROUND_PILL_CLASS, 'disabled:pointer-events-none disabled:opacity-40')}
     >
       <RiResetLeftLine className="size-4" />
     </button>

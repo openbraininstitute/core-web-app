@@ -1,13 +1,14 @@
 'use client';
 
-import { QuestionCircleOutlined } from '@ant-design/icons';
-import { RiEqualizerLine } from '@remixicon/react';
+import { RiEqualizerLine, RiQuestionLine } from '@remixicon/react';
 import { Slider } from 'antd';
 
 import { useControlsCollapsed } from '@/features/spike-viewer/components/collapsing-controls';
-import { Button } from '@/ui/molecules/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
+
+import type { ReactNode } from 'react';
 
 type RasterPlotControlsProps = {
   markerSize: number;
@@ -47,9 +48,9 @@ export default function RasterPlotControls({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button type="button" variant="icon" size="sm" aria-label="Open chart settings">
+        <button type="button" aria-label="Open chart settings" className={ROUND_PILL_CLASS}>
           <RiEqualizerLine className="size-4" />
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-64 border-neutral-2 bg-white shadow-lg">
         {slider}
@@ -58,14 +59,14 @@ export default function RasterPlotControls({
   );
 }
 
-/** How the raster is zoomed, panned and picked from: kept at the row's right end, never folded away. */
-export function RasterHelp() {
+/** A plot's help, a question mark at the top right of its controls, never folded away. */
+export function PlotHelp({ children }: { children: ReactNode }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button type="button" variant="icon" size="sm" aria-label="Show chart controls help">
-          <QuestionCircleOutlined />
-        </Button>
+        <button type="button" aria-label="Show chart controls help" className={ROUND_PILL_CLASS}>
+          <RiQuestionLine className="size-4" />
+        </button>
       </TooltipTrigger>
       <TooltipContent
         side="bottom"
@@ -73,9 +74,18 @@ export function RasterHelp() {
         showArrow={false}
         className="bg-white text-primary-9 shadow-md"
       >
-        Drag to zoom: the statistics and the 3D view follow the window · Shift+drag to pan ·
-        Double-click to reset · Click a spike to pick its cell
+        {children}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+/** How the raster is zoomed, panned and picked from. */
+export function RasterHelp() {
+  return (
+    <PlotHelp>
+      Drag to zoom: the statistics and the 3D view follow the window · Shift+drag to pan ·
+      Double-click to reset · Click a spike to pick its cell
+    </PlotHelp>
   );
 }
