@@ -75,8 +75,8 @@ interface CircuitVizProps {
   /** One flag per cell of the population on show; a 0 hides that cell. */
   shownCells?: Uint8Array;
   /**
-   * A cell of the population on show to highlight, by node index, as a hover on it would,
-   * with the rest of the population hidden.
+   * A cell of the population on show to point out, by node index: shown in its own
+   * colour, with the rest of the population hidden.
    */
   highlightedCell?: number;
   /** Colour for the populations that are not on show. */
@@ -227,7 +227,7 @@ type TCircuitVizViewProps = Omit<
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
-  /** A cell pointed out from outside the scene, highlighted beside the one hovered in it. */
+  /** A cell pointed out from outside the scene, shown alone: neither it nor a hover is lit. */
   pointedCellId?: string;
 };
 
@@ -327,11 +327,13 @@ function CircuitVizView({
     draggingOverlayRef.current = false;
   };
 
-  const highlightedCellIds = useMemo(() => {
-    const ids = enableCellHover ? [highlightedCellId] : [];
-    if (pointedCellId) ids.push(pointedCellId);
-    return ids;
-  }, [enableCellHover, highlightedCellId, pointedCellId]);
+  // A cell pointed out is shown alone, in the colour it was picked by: lit as a
+  // hover lights one, it would lose it, and with nothing else drawn there is
+  // nothing to pick it out from. A hover lights its cell while all are drawn.
+  const highlightedCellIds = useMemo(
+    () => (pointedCellId || !enableCellHover ? [] : [highlightedCellId]),
+    [enableCellHover, highlightedCellId, pointedCellId]
+  );
 
   // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.
   const prevAxonRef = useRef(showAxons);
