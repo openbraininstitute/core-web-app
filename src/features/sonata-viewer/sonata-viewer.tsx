@@ -421,9 +421,9 @@ export function SonataReportView({
     return flags;
   }, [population, rowCount]);
 
-  // The campaign's statistics are over the same cells, as a flag per node index, and
-  // the scene shows those alone.
-  const campaignCells = useMemo(() => {
+  // The plots' cells as a flag per node index: the scene shows those alone, and
+  // the campaign's statistics are over the same.
+  const sceneCells = useMemo(() => {
     if (!plotCells || rowCount === 0) return null;
     const flags = new Uint8Array(rowCount);
     for (const id of plotCells) if (id < rowCount) flags[id] = 1;
@@ -550,7 +550,7 @@ export function SonataReportView({
         units={population.dataUnits}
         timeCursor={timeCursor}
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : held}
-        shownCells={campaignCells ?? undefined}
+        shownCells={sceneCells ?? undefined}
         selection={sceneSelection}
         onCellClick={handleSceneCellClick}
         bare={docked}
@@ -803,7 +803,7 @@ export function SonataReportView({
                     populationName={populationName}
                     variable={voltage ? null : (variableName ?? 'value')}
                     units={population.dataUnits}
-                    cells={campaignCells}
+                    cells={sceneCells}
                     recordedCount={population.nodeCount}
                     rowCount={rowCount}
                     recordedCells={recordedCells}
