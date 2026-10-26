@@ -7,7 +7,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import {
+  barFigure,
   densityFigure,
+  histogramFigure,
   sankeyFigure,
   scatterFigure,
   violinFigure,
@@ -45,6 +47,8 @@ const StatisticsPlot = dynamic(
 type PlotKind =
   | 'timeCourse'
   | 'violins'
+  | 'bars'
+  | 'histograms'
   | 'densities'
   | 'scatter2d'
   | 'scatter3d'
@@ -106,6 +110,8 @@ export type CellPlot = {
 
 const PLOT_KINDS: { value: PlotKind; label: string }[] = [
   { value: 'violins', label: 'Violins' },
+  { value: 'bars', label: 'Bars' },
+  { value: 'histograms', label: 'Histograms' },
   { value: 'densities', label: 'Densities' },
   { value: 'scatter2d', label: '2D scatter' },
   { value: 'scatter3d', label: '3D scatter' },
@@ -158,9 +164,9 @@ type PlotsProps = {
 };
 
 /**
- * Per-cell statistics as distributions: by a node property, as violins,
- * densities or a Sankey, or the cells themselves placed by any statistic or
- * numeric property and coloured by one.
+ * Per-cell statistics as distributions: by a node property, as violins, bars,
+ * histograms, densities or a Sankey, or the cells themselves placed by any
+ * statistic or numeric property and coloured by one.
  */
 export function StatisticsPlots({
   statistics,
@@ -330,6 +336,10 @@ export function StatisticsPlots({
     if (plotKind === 'densities') {
       return densityFigure(groups, groupLabel, valueLabel, color, binStep, statistic.unit);
     }
+    if (plotKind === 'histograms') {
+      return histogramFigure(groups, groupLabel, valueLabel, color, binStep, statistic.unit);
+    }
+    if (plotKind === 'bars') return barFigure(groups, groupLabel, valueLabel, color);
     if (plotKind === 'sankey')
       return sankeyFigure(groups, valueLabel, statistic.format, statistic.unit);
     return violinFigure(groups, groupLabel, valueLabel, color);

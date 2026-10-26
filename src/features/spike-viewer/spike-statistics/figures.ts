@@ -287,6 +287,172 @@ export function densityFigure(
 }
 
 /**
+ * Cells per bin, over the bins the densities take: one histogram in the
+ * population's colour, or, grouped, each bin a stack of its groups' cells in
+ * the categorical palette, grey past its end, so the stack is every cell's.
+ */
+export function histogramFigure(
+  groups: ValueGroup[],
+  groupLabel: string | undefined,
+  valueLabel: string,
+  color: string,
+  binStep: number | undefined,
+  unit: string | undefined
+): Figure {
+  const bins = sharedBins(groups, binStep);
+  const centers = bins.counts.map((_, i) => bins.start + (i + 0.5) * bins.width);
+  const perBin = `Cells per ${Number(bins.width.toPrecision(3))}${unit ? ` ${unit}` : ''}`;
+
+  const hues = groups.map((_, index) =>
+    !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR
+  );
+  const data = groups.map((g, index) => {
+    const counts = new Float64Array(bins.counts.length);
+    for (const v of g.values) {
+      counts[Math.min(counts.length - 1, Math.floor((v - bins.start) / bins.width))] += 1;
+    }
+    return {
+      type: 'bar',
+      name: g.name,
+      x: centers,
+      y: counts,
+      width: bins.width,
+      // A hairline of the surface between neighbouring bars and stacked groups.
+      marker: { color: hues[index], line: { color: '#ffffff', width: 1 } },
+      showlegend: Boolean(groupLabel) && index < PICK_COLORS.length,
+      hoverinfo: 'none',
+    };
+  });
+
+  return {
+    data: data as Data[],
+    tooltip: (point) => {
+      const g = groups[point.curveNumber ?? -1];
+      if (!g || typeof point.x !== 'number' || typeof point.y !== 'number') return null;
+      const from = point.x - bins.width / 2;
+      return {
+        title: groupName(g.name),
+        note: cellCount(g.values.length),
+        swatch: hues[point.curveNumber as number],
+        rows: [
+          { label: valueLabel, value: `${compact(from)} to ${compact(from + bins.width)}` },
+          { label: 'Cells', value: point.y.toLocaleString(), strong: true },
+        ],
+      };
+    },
+    layout: {
+      ...BASE_LAYOUT,
+      barmode: 'stack',
+      showlegend: Boolean(groupLabel),
+      legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, font: { size: 10 } },
+      xaxis: {
+        title: axisTitle(valueLabel),
+        automargin: true,
+        showgrid: false,
+        zeroline: false,
+        linecolor: GRID_COLOR,
+      },
+      yaxis: {
+        title: axisTitle(perBin),
+        rangemode: 'tozero',
+        automargin: true,
+        gridcolor: GRID_COLOR,
+        zeroline: false,
+      },
+    },
+  };
+}
+
+/**
+ * A bar per group at its cells' mean, the standard error of that mean either
+ * side, and one bar of them all when they are not grouped. One colour, as the
+ * violins have: the groups are told apart by where they stand on the axis.
+ */
+export function barFigure(
+  groups: ValueGroup[],
+  groupLabel: string | undefined,
+  valueLabel: string,
+  color: string
+): Figure {
+  const bars = groupLabel ? groups : groups.map((g) => ({ ...g, name: groupName(g.name) }));
+  const summaries = bars.map((g) => meanAndError(g.values));
+  const trace = {
+    type: 'bar',
+    x: bars.map((g) => g.name),
+    y: summaries.map((s) => s.mean),
+    error_y: {
+      type: 'data',
+      array: summaries.map((s) => s.sem),
+      visible: true,
+      color: MEAN_INK,
+      thickness: 1.5,
+      width: 4,
+    },
+    marker: { color, cornerradius: 4 },
+    hoverinfo: 'none',
+  };
+
+  return {
+    data: [trace] as Data[],
+    tooltip: (point) => {
+      const at = bars.findIndex((g) => g.name === String(point.x));
+      const s = summaries[at];
+      if (!s) return null;
+      return {
+        title: bars[at].name,
+        note: cellCount(s.n),
+        subtitle: valueLabel,
+        swatch: color,
+        rows: [
+          { label: 'Mean', value: compact(s.mean), strong: true },
+          { label: 'SEM', value: compact(s.sem) },
+          { label: 'SD', value: compact(s.sd) },
+        ],
+      };
+    },
+    layout: {
+      ...BASE_LAYOUT,
+      bargap: 0.35,
+      xaxis: {
+        title: axisTitle(groupLabel ?? ''),
+        type: 'category',
+        categoryorder: 'array',
+        categoryarray: bars.map((g) => g.name),
+        tickangle: bars.length > UPRIGHT_LABELS_MAX ? -45 : 0,
+        automargin: true,
+        showgrid: false,
+        zeroline: false,
+        linecolor: GRID_COLOR,
+      },
+      yaxis: {
+        title: axisTitle(`${valueLabel}, mean ± SEM`),
+        automargin: true,
+        gridcolor: GRID_COLOR,
+        zeroline: true,
+        zerolinecolor: GRID_COLOR,
+      },
+    },
+  };
+}
+
+/** The mean of `values`, their standard deviation, and the mean's standard error; one value has no spread. */
+export function meanAndError(values: Float64Array): {
+  n: number;
+  mean: number;
+  sd: number;
+  sem: number;
+} {
+  const n = values.length;
+  let sum = 0;
+  for (const v of values) sum += v;
+  const mean = n > 0 ? sum / n : Number.NaN;
+  let squares = 0;
+  for (const v of values) squares += (v - mean) ** 2;
+  const sd = n > 1 ? Math.sqrt(squares / (n - 1)) : 0;
+  return { n, mean, sd, sem: n > 1 ? sd / Math.sqrt(n) : 0 };
+}
+
+/**
  * Every cell as a point placed by two or three columns and coloured by a
  * statistic, light to dark. `rows` narrows it to the cells the table keeps.
  * A cell missing a coordinate has no place and is left out; one missing the
