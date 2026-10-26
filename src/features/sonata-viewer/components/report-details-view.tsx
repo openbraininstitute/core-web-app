@@ -3,7 +3,7 @@ import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
 
-import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
 import {
@@ -374,7 +374,7 @@ function SharedTracesPlot({
 
       let color: string = CHART_LINE_COLOR;
       if (line.preview) color = picking ? PREVIEW_COLOR : CHART_LINE_COLOR;
-      else if (colored) color = PICK_COLORS[line.slot as number];
+      else if (colored) color = TRACE_COLORS[(line.slot as number) % TRACE_COLORS.length];
       else if (line.slot !== null) color = OTHER_COLOR;
       // every cell drawn in one colour: the hovered one keeps it, the rest step back
       else if (emphasis && !isHovered) color = MUTED_COLOR;

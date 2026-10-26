@@ -9,6 +9,7 @@ import SimpleErrorComponent from '@/components/GenericErrorFallback';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
@@ -23,7 +24,7 @@ import {
   SceneSpeedSelect,
   VoltageScene,
 } from '@/features/sonata-viewer/components/voltage-scene';
-import { CHART_LINE_COLOR, PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { CHART_LINE_COLOR, TRACE_COLORS } from '@/features/sonata-viewer/constants';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { reportStatistics, SPIKE_THRESHOLD_MV } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
@@ -32,6 +33,10 @@ import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns'
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import { replaySubject } from '@/features/spike-viewer/spike-replay/replay-subject';
+import {
+  TimeWindowFields,
+  WindowResetButton,
+} from '@/features/spike-viewer/spike-replay/time-window-fields';
 import { meanTraceFigure } from '@/features/spike-viewer/spike-statistics/figures';
 import {
   LoadingFilePanes,
@@ -313,7 +318,8 @@ export function SonataReportView({
           return { key: pickKey, cells: cells.filter((c) => c.nodeId !== nodeId) };
         }
         const taken = new Set(cells.map((c) => c.slot));
-        const slot = PICK_COLORS.findIndex((_, s) => !taken.has(s));
+        let slot = 0;
+        while (taken.has(slot)) slot += 1;
         return { key: pickKey, cells: [...cells, { nodeId, slot }] };
       });
     },
@@ -377,9 +383,10 @@ export function SonataReportView({
       const next = [...cells];
       const have = new Set(next.map((c) => c.nodeId));
       const taken = new Set(next.map((c) => c.slot));
+      let slot = 0;
       for (const nodeId of tableCells) {
         if (have.has(nodeId)) continue;
-        const slot = PICK_COLORS.findIndex((_, s) => !taken.has(s));
+        while (taken.has(slot)) slot += 1;
         taken.add(slot);
         next.push({ nodeId, slot });
       }
@@ -417,17 +424,29 @@ export function SonataReportView({
       const inGroup = new Set(group.traces);
       const picked = pickedTraces.filter((p) => inGroup.has(p.traceIndex));
       if (pickedTraces.length > 0 && picked.length === 0) return [];
-      // Cells picked past the palette take the colours the rest of their group
-      // leaves free: on a plot of its own, a group names as many of its cells
-      // as the palette holds, wherever the table's picks ran out of colours.
-      const taken = new Set(picked.map((p) => p.slot));
-      const free = PICK_COLORS.map((_, slot) => slot).filter((slot) => !taken.has(slot));
-      const given = new Map<number, number>();
+      // A cell keeps its colour where no cell before it in the group wears the
+      // same, and the rest take the colours the group leaves free: on a plot of
+      // its own, a group's lines differ as far as the colours go round.
+      const worn = new Set<number>();
+      const slotOf = new Map<number, number>();
+      const nodeOf = (p: PickedTrace) => population?.traces[p.traceIndex]?.nodeId ?? p.traceIndex;
+      for (const p of picked) {
+        const nodeId = nodeOf(p);
+        const colour = p.slot % TRACE_COLORS.length;
+        if (slotOf.has(nodeId) || worn.has(colour)) continue;
+        worn.add(colour);
+        slotOf.set(nodeId, p.slot);
+      }
+      let free = 0;
       const coloured = picked.map((p) => {
-        if (p.slot >= 0) return p;
-        const nodeId = population?.traces[p.traceIndex]?.nodeId ?? p.traceIndex;
-        if (!given.has(nodeId) && given.size < free.length) given.set(nodeId, free[given.size]);
-        return { ...p, slot: given.get(nodeId) ?? p.slot };
+        const nodeId = nodeOf(p);
+        if (!slotOf.has(nodeId)) {
+          while (worn.has(free)) free += 1;
+          const slot = free < TRACE_COLORS.length ? free : p.slot;
+          worn.add(slot % TRACE_COLORS.length);
+          slotOf.set(nodeId, slot);
+        }
+        return { ...p, slot: slotOf.get(nodeId) ?? p.slot };
       });
       return [{ ...group, picked: coloured, hovered: hoveredTraces.filter((t) => inGroup.has(t)) }];
     });
@@ -594,8 +613,8 @@ export function SonataReportView({
     (nodeId: number) => {
       if (!pickKey) return;
       const alone = pickedCells.length === 1 && pickedCells[0].nodeId === nodeId;
-      // It keeps its colour if it had one; alone, one past the palette takes the first.
-      const slot = Math.max(0, pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0);
+      // It keeps its colour if it had one.
+      const slot = pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0;
       setPicks({ key: pickKey, cells: alone ? NO_PICKS : [{ nodeId, slot }] });
       setHeldCell(alone ? null : { key: pickKey, nodeId });
       if (!alone) setFocusedRow({ nodeId, key: performance.now() });
@@ -625,13 +644,35 @@ export function SonataReportView({
     return <Empty className="p-2em" description="This report recorded no population" />;
   }
 
+  // The traces' span of time, to read and to type, and the way back to the whole run.
+  const timeBar = (
+    <>
+      <TimeWindowFields
+        from={timeWindow?.[0] ?? population.timeConfig.startTime}
+        to={timeWindow?.[1] ?? population.timeConfig.endTime}
+        min={population.timeConfig.startTime}
+        max={population.timeConfig.endTime}
+        onChange={(from, to) => handleTimeWindowChange([from, to])}
+      />
+      <WindowResetButton
+        zoomed={timeWindow !== null}
+        title="Back to the whole run"
+        onReset={() => handleTimeWindowChange(null)}
+      />
+    </>
+  );
+
   const groupSelect = groupOptions.length > 0 && (
     <PillSelect
       label="Group by"
       value={groupBy}
       options={[
         { value: ALL, label: 'All' },
-        ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
+        ...groupOptions.map((c) => ({
+          value: c.name,
+          label: c.label ?? c.name,
+          heading: NEURON_HEADING,
+        })),
       ]}
       onChange={setChosenGroupBy}
     />
@@ -788,6 +829,7 @@ export function SonataReportView({
                     {population.nodeCount.toLocaleString()}{' '}
                     {population.nodeCount === 1 ? 'cell' : 'cells'} recorded
                   </span>
+                  {timeBar}
                   {showScene && (
                     <SceneSpeedSelect speed={sceneSpeed} onSpeedChange={setSceneSpeed} />
                   )}
@@ -958,6 +1000,7 @@ export function SonataReportView({
             </button>
           )}
           {groupSelect}
+          {timeBar}
         </div>
         {simulationPicker}
       </div>
