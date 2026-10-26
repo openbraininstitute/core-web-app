@@ -1,5 +1,3 @@
-import * as THREE from 'three/webgpu';
-
 import { logError } from '@/utils/logger';
 
 import { MIN_RADIUS, quadGeometry } from '../impostors';
@@ -7,9 +5,10 @@ import { BLOCK } from '../segment-arena';
 import { ARGS, BLOCKS, SEGMENTS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
 import { scoped } from './error-scope';
-import { shareBuffer } from './three-hooks';
+import { IndirectDraws } from './indirect-draws';
 import { COPY_DST, COPY_SRC, INDIRECT, MAP_READ, READ, STORAGE } from './usage';
 
+import type * as THREE from 'three/webgpu';
 import type { CullRead } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
 
@@ -50,15 +49,16 @@ interface Bound {
  * and handed to `counted`, and null once the culling failed.
  */
 export class Culling {
-  readonly draws: THREE.IndirectStorageBufferAttribute;
   private device: GPUDevice;
   private storage: ArenaStorage;
   private counted: (read: CullRead | null) => void;
+  /** The draws' arguments the tests count into, copied to `indirect`'s and read back; drawn from by none. */
   private drawsBuffer: GPUBuffer;
+  private indirect: IndirectDraws;
   private counters: GPUBuffer;
   private dispatch: GPUBuffer;
   private pyramid: DepthPyramid;
-  private allDraws = NO_DRAWS.slice(DRAWS.seenFlat / 4);
+  private allDraws = NO_DRAWS.slice();
   private pipelines: Pipelines | null = null;
   private arena: ArenaBuffers | null = null;
   private bound: Bound | null = null;
@@ -84,11 +84,10 @@ export class Culling {
     this.counted = counted;
     const buffer = (size: number, usage: number, label: string) =>
       device.createBuffer({ size, usage, label });
-    this.drawsBuffer = buffer(DRAWS_BYTES, STORAGE | INDIRECT | COPY_DST | COPY_SRC, 'cull draws');
+    this.drawsBuffer = buffer(DRAWS_BYTES, STORAGE | COPY_DST | COPY_SRC, 'cull draws');
+    this.indirect = new IndirectDraws(renderer, device, Object.values(DRAWS), 'cull draw');
     this.counters = buffer(COUNTS_BYTES, STORAGE | COPY_DST | COPY_SRC, 'cull counters');
     this.dispatch = buffer(16, STORAGE | INDIRECT, 'cull dispatch');
-    this.draws = new THREE.IndirectStorageBufferAttribute(new Uint32Array(DRAWS_BYTES / 4), 1);
-    shareBuffer(renderer, this.draws, this.drawsBuffer);
     this.pyramid = new DepthPyramid(renderer, device, 'cull', (error) => this.fail(error));
   }
 
@@ -121,7 +120,7 @@ export class Culling {
 
   /** Quads drawn by the draw at `offset` (`DRAWS`). */
   quads(offset: number): THREE.InstancedBufferGeometry {
-    return quadGeometry(Infinity).setIndirect(this.draws, offset);
+    return quadGeometry(Infinity).setIndirect(this.indirect.of(offset));
   }
 
   /** What the kept segments are drawn into before the tests, `width` by `height` device pixels. */
@@ -167,7 +166,7 @@ export class Culling {
     // The segments' materials read it too.
     if (farthest) this.storage.farthest.value = farthest;
     const bound = this.bindings(pipelines, levels, arena);
-    this.drawNone();
+    device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
     const run = (pipeline: GPUComputePipeline, group: GPUBindGroup, x: number) => {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, group);
@@ -179,6 +178,7 @@ export class Culling {
     pass.setBindGroup(0, bound.segments);
     pass.dispatchWorkgroupsIndirect(this.dispatch, 0);
     pass.end();
+    this.indirect.copy(encoder, this.drawsBuffer);
     this.rest = rest;
     this.submit(encoder, arena.marked);
     return true;
@@ -190,20 +190,19 @@ export class Culling {
    */
   drawAll(end: number): void {
     this.unread = false;
-    this.allDraws[INSTANCES] = end;
-    this.allDraws[(DRAWS.seenTubes - DRAWS.seenFlat) / 4 + INSTANCES] = end;
-    this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.seenFlat, this.allDraws);
-    this.device.queue.writeBuffer(this.drawsBuffer, DRAWS.keptFlat, this.allDraws);
+    for (const offset of Object.values(DRAWS)) this.allDraws[offset / 4 + INSTANCES] = end;
+    this.indirect.write(this.device.queue, this.allDraws);
   }
 
   /** None drawn, kept or seen. */
   drawNone(): void {
     this.unread = false;
-    this.device.queue.writeBuffer(this.drawsBuffer, 0, NO_DRAWS);
+    this.indirect.write(this.device.queue, NO_DRAWS);
   }
 
   dispose(): void {
     for (const buffer of [this.drawsBuffer, this.counters, this.dispatch]) buffer.destroy();
+    this.indirect.destroy();
     this.dropReads();
     this.pyramid.dispose();
   }

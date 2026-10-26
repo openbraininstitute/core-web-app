@@ -8,9 +8,10 @@ import { typed } from './cells-wgsl';
 import { SOMAS } from './culling-wgsl';
 import { bindGroup, computePipeline, DepthPyramid, type Levels, LIBRARY } from './depth-pyramid';
 import { scoped } from './error-scope';
+import { IndirectDraws } from './indirect-draws';
 import { type SomaSource, somaCloudMaterials } from './soma-cloud-gpu';
 import { gpuTexture, shareBuffer } from './three-hooks';
-import { COPY_DST, INDIRECT, STORAGE } from './usage';
+import { COPY_DST, COPY_SRC, STORAGE } from './usage';
 
 import type { GpuUniforms } from './gpu-uniforms';
 
@@ -52,6 +53,7 @@ export class SomaCulling {
   private keptList: GPUBuffer;
   private seenList: GPUBuffer;
   private drawsBuffer: GPUBuffer;
+  private indirect: IndirectDraws;
   /** Draws of none, kept or seen. */
   private none: Uint32Array;
   private kept = new THREE.Scene();
@@ -96,7 +98,8 @@ export class SomaCulling {
           positions: buffer(positions.byteLength, STORAGE, 'soma cull positions'),
           kept: buffer(4 * this.count, STORAGE, 'soma cull kept'),
           seen: buffer(4 * this.count, STORAGE, 'soma cull seen'),
-          draws: buffer(DRAWS_BYTES, STORAGE | INDIRECT, 'soma cull draws'),
+          draws: buffer(DRAWS_BYTES, STORAGE | COPY_SRC, 'soma cull draws'),
+          indirect: new IndirectDraws(renderer, device, Object.values(DRAWS), 'soma cull draw'),
         };
       },
       (error) => this.fail(error)
@@ -105,6 +108,7 @@ export class SomaCulling {
     this.keptList = buffers.kept;
     this.seenList = buffers.seen;
     this.drawsBuffer = buffers.draws;
+    this.indirect = buffers.indirect;
     device.queue.writeBuffer(this.positions, 0, positions);
 
     // Of any length: the buffers here are bound in place of the attributes'.
@@ -120,13 +124,11 @@ export class SomaCulling {
       const at = (k: number) => typed<'float'>(centres.element(cell.mul(uint(3)).add(uint(k))));
       return { cell, centre: vec3(at(0), at(1), at(2)) };
     };
-    const draws = shareBuffer(
-      renderer,
-      new THREE.IndirectStorageBufferAttribute(new Uint32Array(DRAWS_BYTES / 4), 1),
-      this.drawsBuffer
-    );
     const drawn = (offset: number, material: THREE.Material) => {
-      const mesh = new THREE.Mesh(fanGeometry(Infinity).setIndirect(draws, offset), material);
+      const mesh = new THREE.Mesh(
+        fanGeometry(Infinity).setIndirect(this.indirect.of(offset)),
+        material
+      );
       mesh.frustumCulled = false;
       return mesh;
     };
@@ -142,7 +144,7 @@ export class SomaCulling {
     this.seen.name = 'somas';
     const indices = this.seen.geometry.index?.count ?? 0;
     this.none = new Uint32Array([indices, 0, 0, 0, 0, indices, 0, 0, 0, 0]);
-    device.queue.writeBuffer(this.drawsBuffer, 0, this.none);
+    this.indirect.write(device.queue, this.none);
     for (const geometry of pieces) this.seeds.add(new THREE.Mesh(geometry, seedMaterial));
     this.pyramid = new DepthPyramid(renderer, device, 'soma cull', (error) => this.fail(error));
   }
@@ -193,6 +195,7 @@ export class SomaCulling {
     const x = Math.min(groups, MOST_GROUPS);
     pass.dispatchWorkgroups(x, Math.ceil(groups / x));
     pass.end();
+    this.indirect.copy(encoder, this.drawsBuffer);
     device.queue.submit([encoder.finish()]);
     this.seeded = true;
     return true;
@@ -220,6 +223,7 @@ export class SomaCulling {
     for (const buffer of [this.positions, this.keptList, this.seenList, this.drawsBuffer]) {
       buffer.destroy();
     }
+    this.indirect.destroy();
     this.pyramid.dispose();
   }
 

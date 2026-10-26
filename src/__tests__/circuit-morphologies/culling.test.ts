@@ -70,6 +70,13 @@ describe("the culling's counts and its failures", () => {
     expect(counted).toHaveBeenCalledOnce();
   });
 
+  it('draws each list from a buffer of its own', () => {
+    const { culling } = cullingOn();
+    const drawn = Object.values(DRAWS).map((offset) => culling.quads(offset));
+    expect(new Set(drawn.map((quads) => quads.indirect)).size).toBe(4);
+    expect(drawn.every((quads) => quads.indirectOffset === 0)).toBe(true);
+  });
+
   it('lets go of its targets with its arena', () => {
     const { culling } = cullingOn();
     const target = culling.targetOf(16, 8);

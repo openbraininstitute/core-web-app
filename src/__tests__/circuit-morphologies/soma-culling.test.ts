@@ -67,8 +67,8 @@ describe("the somas' culling", () => {
     expect(seeds.every((mesh, k) => mesh.geometry === pieces[k])).toBe(true);
     run();
     const [kept] = drawnBy(render, 1);
-    expect(kept.geometry.indirect).toBe(culling.seen.geometry.indirect);
-    expect([kept.geometry.indirectOffset, culling.seen.geometry.indirectOffset]).toEqual([0, 20]);
+    expect(kept.geometry.indirect).not.toBe(culling.seen.geometry.indirect);
+    expect([kept.geometry.indirectOffset, culling.seen.geometry.indirectOffset]).toEqual([0, 0]);
     for (const k of [0, 1]) {
       expect((drawnBy(render, k)[0].material as THREE.Material).colorWrite).toBe(false);
     }
