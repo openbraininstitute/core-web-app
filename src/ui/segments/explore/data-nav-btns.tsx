@@ -19,7 +19,7 @@ import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
-import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -59,39 +59,34 @@ export function DataBreadcrumb({
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
 
-  const { dataKey } = makeDataKey({
-    virtualLabId,
-    projectId,
-    section: WorkspaceSection.Data,
-    dataType: type,
-    scope,
-  });
+  // the listing is keyed by the base type (a whole brain lists under circuit)
+  const listingType = resolveBaseEntityType(type);
+  const keyFor = (variantOfListing?: IListingVariant) =>
+    makeDataKey({
+      virtualLabId,
+      projectId,
+      section: WorkspaceSection.Data,
+      dataType: listingType,
+      scope,
+      id: listingInstanceId(undefined, variantOfListing),
+    }).dataKey;
+  const dataKey = keyFor();
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
     dataKey,
-    dataType: type,
+    dataType: listingType,
     section: WorkspaceSection.Data,
   });
 
+  // a crumb = fresh listing, so clear the grid's transient session slice (filters/sort/page/
+  // search) of the listing it opens only; the durable column-layout slice is left intact
   const onLinkClick = () => {
-    if (isBrowser()) {
-      runStorageReset();
-      // breadcrumb = fresh listing, so clear the grid's transient session slice
-      // (filters/sort/page/search); the durable column-layout slice is left intact
-      createSessionStatePersistence().clear?.(dataKey);
-      if (variant) {
-        createSessionStatePersistence().clear?.(
-          makeDataKey({
-            virtualLabId,
-            projectId,
-            section: WorkspaceSection.Data,
-            dataType: type,
-            scope,
-            id: listingInstanceId(undefined, variant),
-          }).dataKey
-        );
-      }
-    }
+    if (!isBrowser()) return;
+    runStorageReset();
+    createSessionStatePersistence().clear?.(dataKey);
+  };
+  const onVariantLinkClick = () => {
+    if (isBrowser()) createSessionStatePersistence().clear?.(keyFor(variant));
   };
 
   const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
@@ -129,7 +124,7 @@ export function DataBreadcrumb({
                   key: 'variant',
                   label: variant.label,
                   href: withQuery(`${typeHome}/${variant.slug}`, listingQuery),
-                  onClick: onLinkClick,
+                  onClick: onVariantLinkClick,
                 },
               ]
             : []),

@@ -28,7 +28,7 @@ import {
   listActivities,
 } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
-import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -86,7 +86,8 @@ export async function DataViewLayout({
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
   // a split type (circuit scales) closes back to the sub-item the entity belongs to
-  const variant = resolveEntityVariant(type, entity);
+  // resolved on the base type: a whole-brain opened as `whole_brain` is still a circuit
+  const variant = resolveEntityVariant(resolveBaseEntityType(type), entity);
   const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}&scope=${scope}`;
 
   // a traceable e-feature extraction result renders its campaign's scan config (see Overview)

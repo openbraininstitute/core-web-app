@@ -32,7 +32,7 @@ import { cn } from '@/utils/css-class';
 import { getWorkspaceScopeFilters } from '@/utils/workspace-scope';
 import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
 import type { IListingVariant } from '@/features/views/listing/variants/types';
@@ -62,7 +62,7 @@ type BrowseLinkContentProps = {
   /** whether this row is the current listing */
   active: boolean;
   testIdKey: string;
-  onNavigate?: () => void;
+  onNavigate?: (event: MouseEvent<HTMLElement>) => void;
 };
 
 export function BrowseLinkContent({
@@ -88,8 +88,8 @@ export function BrowseLinkContent({
       sessionId: crypto.randomUUID(),
     });
 
-  const onClick = () => {
-    onNavigate?.();
+  const onClick = (event: MouseEvent<HTMLElement>) => {
+    onNavigate?.(event);
     userJourneyTracker.registerArtifactClick(title);
   };
 
@@ -131,7 +131,7 @@ export function BrowseLinkContent({
               >
                 {isLoading ? (
                   <div
-                    data-testid={`entity-link-counter-loading-${extendedType}`}
+                    data-testid={`entity-link-counter-loading-${testIdKey}`}
                     className="flex items-center justify-center gap-1"
                   >
                     <Skeleton className="h-3 w-5 rounded-full" />
@@ -187,7 +187,7 @@ type Props = {
   /** renders this row as a variant of `extendedType` */
   variant?: IListingVariant;
   /** runs synchronously on click, before navigation */
-  onClick?: () => void;
+  onClick?: (event: MouseEvent<HTMLElement>) => void;
 };
 
 function buildQuery({
@@ -274,6 +274,7 @@ export function BrowseLink({
 
   const entity = getEntityByExtendedType({ type: extendedType });
   const href = buildDataUrl({ virtualLabId, projectId, extendedType, variant });
+  const testIdKey = variant ? `${extendedType}-${variant.slug}` : extendedType;
 
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType && variantSlug === variant?.slug;
@@ -283,7 +284,8 @@ export function BrowseLink({
     scope,
     workspace: { virtualLabId, projectId },
     isActiveEntity,
-    // must match the grid's `id` segment so both read the same dataKey
+    // must match the grid's `id` segment so both read the same dataKey. No listing route passes
+    // a base `id` today; if one does, thread it here too or the active row shows the fallback count.
     instanceId: listingInstanceId(undefined, variant),
   });
 
@@ -377,7 +379,7 @@ export function BrowseLink({
         <span className="font-bold">
           {count ?? (
             <Skeleton
-              data-testid={`entity-link-counter-loading-current-${extendedType}`}
+              data-testid={`entity-link-counter-loading-current-${testIdKey}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
             />
           )}
@@ -386,7 +388,7 @@ export function BrowseLink({
         <span className="font-bold">
           {root ?? (
             <Skeleton
-              data-testid={`entity-link-counter-loading-root-${extendedType}`}
+              data-testid={`entity-link-counter-loading-root-${testIdKey}`}
               className="inline-block h-3 w-5 rounded-full align-middle"
             />
           )}
@@ -407,7 +409,7 @@ export function BrowseLink({
           isLoading,
           active: isActiveEntity,
           onNavigate: onClick,
-          testIdKey: variant ? `${extendedType}-${variant.slug}` : extendedType,
+          testIdKey,
           isUploadable: entity?.isContributable && !variant,
           title: variant?.label ?? entity?.title,
           legacy: entity?.legacy,

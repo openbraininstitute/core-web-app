@@ -8,10 +8,13 @@ import { useState } from 'react';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
 import { getEntityTypeFromUrlOnEntityScope } from '@/ui/segments/explore/helpers';
 
-import type { ComponentProps } from 'react';
+import type { ComponentProps, MouseEvent } from 'react';
 import type { IListingVariantGroup } from '@/features/views/listing/variants/types';
 
 type TSharedLinkProps = Omit<ComponentProps<typeof BrowseLink>, 'variant' | 'onClick'>;
+
+const isPlainLeftClick = (event: MouseEvent) =>
+  event.button === 0 && !(event.metaKey || event.ctrlKey || event.shiftKey || event.altKey);
 
 /**
  * A listing's nav row plus its variants (see `features/views/listing/variants`).
@@ -35,7 +38,13 @@ export function BrowseLinkGroup({
 
   return (
     <>
-      <BrowseLink {...linkProps} onClick={() => setClickedFrom(pathname)} />
+      <BrowseLink
+        {...linkProps}
+        onClick={(event) => {
+          // a new-tab / new-window click leaves this page where it is, so do not expand
+          if (isPlainLeftClick(event)) setClickedFrom(pathname);
+        }}
+      />
       {/* unmounted on exit, so a collapsed menu still fires no count requests */}
       <AnimatePresence initial={false}>
         {open && (
