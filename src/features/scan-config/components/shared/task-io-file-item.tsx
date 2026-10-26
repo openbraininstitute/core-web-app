@@ -6,6 +6,12 @@ import { classNames } from '@/util/utils';
 import type { ReactNode } from 'react';
 import type { TActivityCustomFile } from '@/features/scan-config/types';
 
+/**
+ * The single config obi-one writes for every simulation or task of a campaign,
+ * whatever the workflow and its asset's label: named alike in every one.
+ */
+const OBI_ONE_CONFIG_FILE = 'obi_one_coordinate.json';
+
 function splitName(name: string | undefined): { head: string; tail: string } {
   const MAX_TAIL = 12;
   if (!name || name.length <= MAX_TAIL * 2) return { head: name ?? '', tail: '' };
@@ -33,7 +39,13 @@ export function TaskIOFileItem({ id, name, file, selected, label, interactive, o
   const fileName = assetPath?.split('/').at(-1) ?? asset?.path.split('/').at(-1);
   const isDirectory = !!asset && isDirectoryAsset(asset);
   const isCircuitDirectory = isDirectory && asset?.label === AssetLabel.sonata_circuit;
-  const displayName = name ?? (isCircuitDirectory ? 'Circuit directory' : fileName);
+  const displayName =
+    name ??
+    (isCircuitDirectory
+      ? 'Circuit directory'
+      : fileName === OBI_ONE_CONFIG_FILE
+        ? 'OBI-ONE Config'
+        : fileName);
   // a directory asset has no extension to fall back on, and "figures" is not a format
   const badgeContent = label ?? (isDirectory ? 'folder' : fileName?.split('.').at(-1));
   const { head, tail } = splitName(displayName);

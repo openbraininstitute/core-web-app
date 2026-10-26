@@ -55,10 +55,12 @@ type FileRow = {
   selected: boolean;
 };
 
-/** The simulation's own files, named for what they are rather than by their file names. */
+/**
+ * The simulation's own files, named for what they are rather than by their file
+ * names; its OBI-ONE config is named so by the file row, in every workflow.
+ */
 const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
   [AssetLabel.custom_node_sets]: 'Node sets',
-  [AssetLabel.simulation_generation_config]: 'OBI-ONE Config',
   [AssetLabel.sonata_simulation_config]: 'SONATA Simulation Config',
 };
 
