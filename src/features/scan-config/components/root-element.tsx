@@ -22,6 +22,7 @@ import {
 } from '@/features/scan-config/types';
 import { useAIConfig } from '@/services/ai-agent';
 import { expandedRootElementsAtom } from '@/state/config-highlights';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -229,7 +230,7 @@ export function RootElement({
           )}
           arrowClassName="bg-primary-8"
         >
-          {rootElementSchema.description}
+          <MarkdownDescription dark>{rootElementSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
 

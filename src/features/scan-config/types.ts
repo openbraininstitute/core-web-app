@@ -47,6 +47,7 @@ export const ScanConfigActivity = {
   Process: 'process',
   Build: 'build',
   Optimize: 'optimize',
+  Validate: 'validate',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -83,12 +84,18 @@ export type TOptimizeScanConfigTabs = {
   __activity: 'optimize';
 };
 
+export type TValidateScanConfigTabs = {
+  id: keyof typeof ValidateScanConfigTabs;
+  __activity: 'validate';
+};
+
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
   | Prettify<TProcessScanConfigTabs>
   | Prettify<TBuildScanConfigTabs>
-  | Prettify<TOptimizeScanConfigTabs>;
+  | Prettify<TOptimizeScanConfigTabs>
+  | Prettify<TValidateScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
@@ -110,12 +117,18 @@ export const OptimizeScanConfigTabs = {
   optimizations: 'optimizations',
 } as const;
 
+export const ValidateScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  validations: 'validations',
+} as const;
+
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
   [ScanConfigActivity.Process]: ProcessScanConfigTabs,
   [ScanConfigActivity.Build]: BuildScanConfigTabs,
   [ScanConfigActivity.Optimize]: OptimizeScanConfigTabs,
+  [ScanConfigActivity.Validate]: ValidateScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -148,6 +161,8 @@ export const SchemaNameDict = {
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
   // optimization
   EModelOptimizationScanConfig: 'EModelOptimizationScanConfig',
+  // validation
+  EModelValidationScanConfig: 'EModelValidationScanConfig',
 } as const;
 
 export type SchemaName = (typeof SchemaNameDict)[keyof typeof SchemaNameDict];

@@ -9,7 +9,9 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { resolveEModelValidationResultCampaign } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
+import { resolveEntityVariant } from '@/features/views/listing/variants/registry';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import { TopBar } from '@/ui/molecules/top-bar';
 import ActionMenu from '@/ui/segments/action-menu';
@@ -27,11 +29,22 @@ import {
   listActivities,
 } from '@/ui/segments/workflows/config';
 import { cn } from '@/utils/css-class';
-import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
+
+/** task results that open as the scan config of the campaign they came from (see Overview) */
+const CampaignResultResolvers: Partial<
+  Record<
+    TExtendedEntitiesTypeDict,
+    (id: string, virtualLabId: string, projectId: string) => Promise<unknown>
+  >
+> = {
+  [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: resolveEFeatureExtractionResultCampaign,
+  [ExtendedEntitiesTypeDict.EModelValidationResult]: resolveEModelValidationResultCampaign,
+};
 
 const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
@@ -51,6 +64,7 @@ const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
+  ExtendedEntitiesTypeDict.EModelValidationCampaign,
 ] as const;
 
 export async function DataViewLayout({
@@ -85,14 +99,16 @@ export async function DataViewLayout({
 
   const isPublicEntity = entity.authorized_public;
   const scope = isPublicEntity ? WorkspaceScope.Public : WorkspaceScope.Project;
-  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}?group=${entityType.group}&scope=${scope}`;
+  // a split type (circuit scales) closes back to the sub-item the entity belongs to
+  // resolved on the base type: a whole-brain opened as `whole_brain` is still a circuit
+  const variant = resolveEntityVariant(resolveBaseEntityType(type), entity);
+  const parentLink = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}${variant ? `/${variant.slug}` : ''}?group=${entityType.group}&scope=${scope}`;
 
-  // a traceable e-feature extraction result renders its campaign's scan config (see Overview)
+  // a traceable task result renders its campaign's scan config (see Overview)
+  const resolveResultCampaign = CampaignResultResolvers[type];
   const opensAsCampaign =
-    type === ExtendedEntitiesTypeDict.EFeatureExtractionResult &&
-    Boolean(
-      (await tryCatch(resolveEFeatureExtractionResultCampaign(id, virtualLabId, projectId))).data
-    );
+    resolveResultCampaign !== undefined &&
+    Boolean((await tryCatch(resolveResultCampaign(id, virtualLabId, projectId))).data);
   const rendersFullPageWorkflowUi =
     Boolean(findScanConfigRegistryByTargetType(type)) ||
     type === ExtendedEntitiesTypeDict.IonChannelModelingCampaign ||
@@ -110,7 +126,13 @@ export async function DataViewLayout({
     origin === 'workflows' ? (
       <WorkflowsOriginBreadcrumb type={type} entity={entity} context={context} />
     ) : (
-      <DataBreadcrumb title={entityType.title} type={type} group={entityType.group} scope={scope} />
+      <DataBreadcrumb
+        title={entityType.title}
+        type={type}
+        group={entityType.group}
+        scope={scope}
+        variant={variant}
+      />
     );
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =

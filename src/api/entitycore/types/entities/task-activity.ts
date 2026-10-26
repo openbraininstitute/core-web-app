@@ -50,6 +50,8 @@ export const TaskActivityType = {
   BuildSynaptomeExecution: 'circuit_single_build__execution',
   EModelOptimizationConfigGeneration: 'emodel_optimization__config_generation',
   EModelOptimizationExecution: 'emodel_optimization__execution',
+  EModelValidationConfigGeneration: 'optimized_emodel_analysis_validation__config_generation',
+  EModelValidationExecution: 'optimized_emodel_analysis_validation__execution',
   CircuitSynapticPhysiologyConfigGeneration:
     'circuit_synaptic_physiology_assignment__config_generation',
   CircuitSynapticPhysiologyExecution: 'circuit_synaptic_physiology_assignment__execution',

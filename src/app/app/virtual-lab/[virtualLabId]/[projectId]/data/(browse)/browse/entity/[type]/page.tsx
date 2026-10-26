@@ -4,9 +4,11 @@ import { match, P } from 'ts-pattern';
 
 import { WorkspaceScope, WorkspaceSection } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { SelectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities } from '@/features/views/listing/data-browse-entities';
+import {
+  DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities,
+  DATA_BROWSE_LISTING_PROPS,
+} from '@/features/views/listing/data-browse-entities';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TWorkspaceScope } from '@/constants';
@@ -40,12 +42,7 @@ export default async function Page({
           <BrowseEntityScope
             section={WorkspaceSection.Data}
             dataType={dataType}
-            mainTableProps={{
-              selectionType: 'checkbox',
-              selectionScope: SelectionScope.Shared,
-            }}
-            allowDownload
-            allowDelete
+            {...DATA_BROWSE_LISTING_PROPS}
           />
         );
       }

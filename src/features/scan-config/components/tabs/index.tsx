@@ -17,6 +17,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
 
@@ -42,7 +43,8 @@ function isResultsTab(id: string) {
     id === ExtractScanConfigTabs.extractions ||
     id === ProcessScanConfigTabs.skeletonizations ||
     id === BuildScanConfigTabs.results ||
-    id === OptimizeScanConfigTabs.optimizations
+    id === OptimizeScanConfigTabs.optimizations ||
+    id === ValidateScanConfigTabs.validations
   );
 }
 
@@ -64,6 +66,11 @@ export function toScanConfigTab(activity: TScanConfigActivity, id: string): TSca
       return {
         __activity: ScanConfigActivity.Optimize,
         id: id as keyof typeof OptimizeScanConfigTabs,
+      };
+    case ScanConfigActivity.Validate:
+      return {
+        __activity: ScanConfigActivity.Validate,
+        id: id as keyof typeof ValidateScanConfigTabs,
       };
     default:
       return {
@@ -89,7 +96,7 @@ function LegacyConfigurationTooltip() {
   );
 }
 
-export default function ScanConfigTabsPanel({
+export function ScanConfigTabsPanel({
   className,
   tab,
   setTab,
@@ -135,3 +142,5 @@ export default function ScanConfigTabsPanel({
     />
   );
 }
+
+export default ScanConfigTabsPanel;

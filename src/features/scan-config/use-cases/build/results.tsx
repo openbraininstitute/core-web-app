@@ -1,9 +1,7 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
-import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ViewVariant, WorkspaceSection } from '@/constants';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
@@ -21,17 +19,8 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
-import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
-
-const IonChannelFigureViewer = dynamic(
-  () =>
-    import('@/features/scan-config/components/model-preview/ion-channel-figure-viewer').then(
-      (m) => m.IonChannelFigureViewer
-    ),
-  { ssr: false }
-);
 
 /** Campaign metadata shape shared by build workflows (only `scan_parameters` is read here). */
 type TBuildCampaignMeta = { scan_parameters?: Record<string, unknown> };
@@ -176,17 +165,13 @@ export function BuildTab({
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
               <div className="h-full w-full">
-                {selectedFile.entity.type === EntityTypeDict.IonChannelModel ? (
-                  <IonChannelFigureViewer entity={selectedFile.entity as IonChannelModel} />
-                ) : (
-                  <MiniDetailViewRenderer
-                    section={WorkspaceSection.Data}
-                    record={selectedFile.entity as EntityCoreObjectTypes}
-                    dataType={selectedFile.dataType}
-                    theme={ViewVariant.Light}
-                    enableAnimation={false}
-                  />
-                )}
+                <MiniDetailViewRenderer
+                  section={WorkspaceSection.Data}
+                  record={selectedFile.entity as EntityCoreObjectTypes}
+                  dataType={selectedFile.dataType}
+                  theme={ViewVariant.Light}
+                  enableAnimation={false}
+                />
               </div>
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.TaskConfigurationViewer && (

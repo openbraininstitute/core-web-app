@@ -1,6 +1,5 @@
 'use client';
 
-import { WarningFilled } from '@ant-design/icons';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { Input, InputNumber, Select } from 'antd';
 import { useAtom } from 'jotai';
@@ -14,6 +13,7 @@ import {
 import { getSpecies } from '@/api/entitycore/queries/general/species';
 import { getStrains } from '@/api/entitycore/queries/general/strain';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { useAppNotification } from '@/components/notification';
 import { flattenTreeAsObject } from '@/components/tree/elements/helpers';
 import {
   useFieldError,
@@ -23,7 +23,6 @@ import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -84,7 +83,6 @@ function Row({
   overridden,
   differ,
   derivedNote,
-  warning,
   disabled,
   onReset,
   children,
@@ -93,7 +91,6 @@ function Row({
   overridden: boolean;
   differ: boolean;
   derivedNote?: string;
-  warning?: string;
   disabled: boolean;
   onReset: () => void;
   children: React.ReactNode;
@@ -112,23 +109,7 @@ function Row({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-primary-9 flex items-center gap-2 text-sm font-semibold">
-        {label}
-        {warning && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <WarningFilled aria-label={warning} className="text-yellow-400!" />
-            </TooltipTrigger>
-            <TooltipContent
-              side="top"
-              className="bg-primary-8 shadow-bnb max-w-2xs rounded-md px-4 py-2 text-sm text-wrap text-white"
-              arrowClassName="bg-primary-8"
-            >
-              {warning}
-            </TooltipContent>
-          </Tooltip>
-        )}
-      </span>
+      <span className="text-primary-9 text-sm font-semibold">{label}</span>
       {children}
       {note && <span className="text-xs text-neutral-500">{note}</span>}
     </div>
@@ -319,11 +300,10 @@ function ModelPropertiesCheck({
 }) {
   const path = `${root}.${propertyKey}`;
   const { block, value } = readProperties(config, root, propertyKey);
-  const { loaded, failed, missing, differ, temperatureOptions, regionRootId } = useModelProperties(
-    value,
-    recordingIdsOf(block)
-  );
+  const { loaded, failed, missing, differ, temperatureOptions, firstHasTemperature, regionRootId } =
+    useModelProperties(value, recordingIdsOf(block));
   const [preselected, setPreselected] = usePreselectedTemperature();
+  const notification = useAppNotification();
   const untouched = value.temperature == null || value.temperature === preselected;
   const target = differ.temperature ? (temperatureOptions[0]?.value ?? null) : null;
   const rootRegion = differ.brain_region && !value.brain_region ? regionRootId : undefined;
@@ -332,16 +312,28 @@ function ModelPropertiesCheck({
     if (locked || !loaded || !untouched || value.temperature === target) return;
     setPreselected(target);
     setConfig((previous) => withProperties(previous, root, propertyKey, { temperature: target }));
+    if (target == null) return;
+    const source = firstHasTemperature
+      ? `The first recording's ${target} °C`
+      : `${target} °C, from the first recording that has one,`;
+    notification.info({
+      key: 'ion-channel-temperatures-differ',
+      duration: 6,
+      message: 'The recordings were measured at different temperatures',
+      description: `${source} is preselected - check the model's temperature.`,
+    });
   }, [
     locked,
     loaded,
     untouched,
     value.temperature,
     target,
+    firstHasTemperature,
     root,
     propertyKey,
     setPreselected,
     setConfig,
+    notification,
   ]);
 
   useEffect(() => {
@@ -411,7 +403,6 @@ export function IonChannelModelProperties({
     nameInvalid,
     sharedTemperature,
     temperatureOptions,
-    firstHasTemperature,
     regionsDiffer,
     regionLoading,
     regionOptions,
@@ -419,7 +410,7 @@ export function IonChannelModelProperties({
     speciesId,
     sharedStrain,
   } = useModelProperties(value, recordingIds);
-  const [preselectedTemperature, setPreselectedTemperature] = usePreselectedTemperature();
+  const [, setPreselectedTemperature] = usePreselectedTemperature();
   const [customTemperature, setCustomTemperature] = useState(false);
   const [nameCleared, setNameCleared] = useState(false);
 
@@ -447,9 +438,6 @@ export function IonChannelModelProperties({
     customTemperature ||
     (currentTemperature != null &&
       !temperatureOptions.some((option) => option.value === currentTemperature));
-  const temperaturePreselected =
-    currentTemperature != null &&
-    (value.temperature == null || value.temperature === preselectedTemperature);
   const pickTemperature = (next: number | null) => {
     setPreselectedTemperature(null);
     // the recordings' shared value is the default, not an override
@@ -493,17 +481,6 @@ export function IonChannelModelProperties({
         overridden={!differ.temperature && value.temperature != null}
         differ={differ.temperature && currentTemperature == null}
         derivedNote={sharedTemperature == null ? undefined : 'From the recordings'}
-        warning={(() => {
-          if (!differ.temperature) return undefined;
-          const warning =
-            "The selected recordings were measured at different temperatures - check the model's temperature.";
-          if (disabled || !temperaturePreselected) return warning;
-          return `${warning} ${
-            firstHasTemperature
-              ? `The first recording's ${currentTemperature} °C is preselected.`
-              : `${currentTemperature} °C, from the first recording that has one, is preselected.`
-          }`;
-        })()}
         disabled={disabled}
         onReset={() => {
           setCustomTemperature(false);

@@ -54,6 +54,8 @@ export type BrowseEntityScopeProps = {
   scope?: TWorkspaceScope;
   defaultBrainRegion?: string;
   dataType: TExtendedEntitiesTypeDict;
+  /** Selects a listing variant of `dataType`; see `./variants`. */
+  variantSlug?: string;
   /** Replaces the entity's grid schema/definition for this one listing. */
   gridDefinitionOverride?: TAnyEntityGridDefinition;
   mainTableProps?: ListingTableProps;

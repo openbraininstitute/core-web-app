@@ -19,6 +19,7 @@ import {
   ScanConfigCampaignOriginActionDict,
 } from '@/features/scan-config/helpers';
 import { useScanConfigEditingLocked } from '@/features/scan-config/hooks/use-config-editing-locked';
+import { useDefaultValidationTargets } from '@/features/scan-config/hooks/use-default-validation-targets';
 import { useScanConfigTab } from '@/features/scan-config/hooks/use-scan-config-tab';
 import {
   type Config,
@@ -92,10 +93,14 @@ export function useScanConfigTemplate({
     resolveFromIdType: resolveSessionFromIdType,
     seed,
   });
-
+  useDefaultValidationTargets({ schemaName, config, setConfig });
   const allEntries = useEntries({ config, schema });
   const errors = useValidateSchema({ initialConfig, config, schema });
-  const editingLocked = useScanConfigEditingLocked({ campaignId, loading, readOnly });
+  const editingLocked = useScanConfigEditingLocked({
+    campaignId,
+    loading,
+    readOnly,
+  });
   const setExpandedRootElements = useSetAtom(expandedRootElementsAtom);
 
   const createEntry = useCallback(
@@ -107,7 +112,10 @@ export function useScanConfigTemplate({
         (previous) =>
           ({
             ...previous,
-            [rootElement]: { ...(previous[rootElement] as object), [entry]: block },
+            [rootElement]: {
+              ...(previous[rootElement] as object),
+              [entry]: block,
+            },
           }) as Config
       );
 
