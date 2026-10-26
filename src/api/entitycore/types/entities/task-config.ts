@@ -31,6 +31,8 @@ export const TaskConfigType = {
   EFeatureExtractionConfig: 'efeature_extraction__config',
   EModelOptimizationCampaign: 'emodel_optimization__campaign',
   EModelOptimizationConfig: 'emodel_optimization__config',
+  EModelValidationCampaign: 'optimized_emodel_analysis_validation__campaign',
+  EModelValidationConfig: 'optimized_emodel_analysis_validation__config',
   IonChannelModelingCampaign: 'ion_channel_modeling__campaign',
   IonChannelModelingConfig: 'ion_channel_modeling__config',
   SkeletonizationCampaign: 'skeletonization__campaign',

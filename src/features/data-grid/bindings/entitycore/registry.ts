@@ -9,6 +9,7 @@ import { electricalCellRecordingGridDefinition } from '@/features/data-grid/bind
 import { emCellMeshGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/em-cell-mesh';
 import { emodelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/emodel';
 import { emodelOptimizationCampaignGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/emodel-optimization-campaign';
+import { emodelValidationResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/emodel-validation-result';
 import { experimentalBoutonDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-bouton-density';
 import { experimentalNeuronDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-neuron-density';
 import { experimentalSynapsesPerConnectionGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-synapses-per-connection';
@@ -77,6 +78,7 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [analysisNotebookResultGridDefinition.dataType]: analysisNotebookResultGridDefinition,
   [efeatureExtractionResultGridDefinition.dataType]: efeatureExtractionResultGridDefinition,
   [emodelOptimizationCampaignGridDefinition.dataType]: emodelOptimizationCampaignGridDefinition,
+  [emodelValidationResultGridDefinition.dataType]: emodelValidationResultGridDefinition,
   [extracellularRecordingArrayGridDefinition.dataType]: extracellularRecordingArrayGridDefinition,
   [singleNeuronSimulationGridDefinition.dataType]: singleNeuronSimulationGridDefinition,
   [singleNeuronSynaptomeSimulationGridDefinition.dataType]:

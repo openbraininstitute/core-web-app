@@ -182,6 +182,7 @@ describe('data navigation naming', () => {
       'Region circuit',
       'Whole brain circuit',
       'E-model optimisation',
+      'E-model validation',
       'Intracellular e-feature extraction',
       'Single neuron (legacy)',
       'Synaptome (legacy)',

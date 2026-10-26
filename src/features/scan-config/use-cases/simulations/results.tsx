@@ -78,7 +78,7 @@ type SimulationTabProps = {
   configSchema?: TimelineSchema;
 };
 
-export default function SimulationsTab({
+export function SimulationsTab({
   campaignId,
   campaignOriginAction,
   isCampaignIdChanged,
@@ -595,3 +595,5 @@ export default function SimulationsTab({
     </NodesSessionKeeper>
   );
 }
+
+export default SimulationsTab;

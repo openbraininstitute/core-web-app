@@ -36,6 +36,8 @@ export const EntityTypeDict = {
   EModelOptimizationCampaign: 'emodel_optimization_campaign',
   EModelOptimizationConfig: 'emodel_optimization_config',
   EModelOptimizationResult: 'emodel_optimization_result',
+  EModelValidationCampaign: 'emodel_validation_campaign',
+  EModelValidationResult: 'emodel_validation_result',
   TaskResult: 'task_result',
   EmSynapseMappingCampaign: 'em_synapse_mapping_campaign',
   EmSynapseMappingConfig: 'em_synapse_mapping_config',
