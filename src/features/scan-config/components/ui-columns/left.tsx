@@ -13,9 +13,9 @@ import {
 import { useAIConfig } from '@/services/ai-agent';
 import { pendingRestoreConfigAtom, restorePreviewActiveAtom } from '@/state/config-highlights';
 
-import CopyCampaignButton from '../copy-campaign-button';
 import { EditWithChatButton } from '../edit-with-chat-button';
 import GenerateConfigButton from '../generate-config-button';
+import GenerateNewCampaignButton from '../generate-new-campaign-button';
 
 import type { ErrorObject } from 'ajv';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -187,7 +187,7 @@ export default function Left({
 
       {readOnly && !!campaignId && (
         <div className="mt-auto w-full pr-4 pt-2">
-          <CopyCampaignButton campaignId={campaignId} activity={activity} />
+          <GenerateNewCampaignButton campaignId={campaignId} activity={activity} />
         </div>
       )}
     </div>
