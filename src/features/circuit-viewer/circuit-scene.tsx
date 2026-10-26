@@ -14,7 +14,10 @@ import {
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
-import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  fadedNeuronColor,
+  recedeMarkerColor,
+} from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
@@ -141,6 +144,11 @@ interface ICircuitSceneOptions {
    */
   nodeColorsOverride?: NodeColors;
   /**
+   * A column of `nodeColorsOverride` whose cells are drawn faint, in a colour
+   * that follows the background: such as the cells a report did not record.
+   */
+  fadedColumn?: number;
+  /**
    * Told the colour-by mapping of the population on show, or null with none, so
    * a host drawing the same cells elsewhere - spike replay's raster - can match.
    */
@@ -211,6 +219,7 @@ export function CircuitScene({
   highlightedCell,
   onCellClick,
   nodeColorsOverride,
+  fadedColumn,
   onNodeColorsChange,
   spikes,
   dendrogram = false,
@@ -335,6 +344,14 @@ export function CircuitScene({
     population,
     subject: memodel,
   });
+
+  // The override's faint column painted for the background on show.
+  const overrideColors = useMemo(() => {
+    if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
+    const palette = [...nodeColorsOverride.palette];
+    palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
+    return { ...nodeColorsOverride, palette };
+  }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
 
   // A mapping with no column per node is colour-by off.
   const populationOnShow = population?.name;
@@ -577,7 +594,7 @@ export function CircuitScene({
             hiddenPopulations={hiddenPopulations}
             shownCells={shownCells}
             highlightedCell={highlightedCell}
-            nodeColors={nodeColorsOverride ?? (enableColorBy ? nodeColors : undefined)}
+            nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
             onSubjectCellClick={onCellClick}
@@ -612,7 +629,7 @@ export function CircuitScene({
               hiddenPopulations={hiddenPopulations}
               shownCells={shownCells}
               highlightedCell={highlightedCell}
-              nodeColors={nodeColorsOverride ?? (enableColorBy ? nodeColors : undefined)}
+              nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}

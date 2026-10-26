@@ -25,7 +25,7 @@ import type { CellFrames } from '@/features/sonata-viewer/types';
 const RAMP_STOPS = ['#0d0887', '#5c01a6', '#9c179e', '#cc4778', '#ed7953', '#fdb42f', '#f0f921'];
 const RAMP_STEPS = 32;
 const RAMP = Array.from({ length: RAMP_STEPS }, (_, i) => mix(RAMP_STOPS, i / (RAMP_STEPS - 1)));
-/** The population's cells the report did not record. */
+/** The population's cells the report did not record: drawn faint, in the scene's ghost colour. */
 const UNRECORDED = '#e5e7eb';
 /** Colours change at most this often while playing; the clock itself moves every frame. */
 const RECOLOR_MS = 50;
@@ -261,6 +261,7 @@ export function VoltageScene({
           populationName={populationName}
           showUnselectedPopulations={false}
           nodeColorsOverride={nodeColors}
+          fadedColumn={RAMP_STEPS}
           highlightedCell={highlightedCell}
           shownCells={shownCells}
           onCellClick={onCellClick}
