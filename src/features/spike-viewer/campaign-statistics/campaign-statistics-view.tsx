@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import {
   nearestSimulation,
+  scanValueId,
   sweptParameters,
 } from '@/features/scan-config/components/scan-coordinates';
 import { scanParamValueText } from '@/features/scan-config/components/scan-params';
@@ -24,6 +25,17 @@ import {
   NO_GROUPING,
   useCampaignGroups,
 } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
+import {
+  axisOrder,
+  combinations,
+  EACH,
+  isSeedParameter,
+  MEAN,
+  meanCourse,
+  meanSummary,
+  parameterLabel,
+  simulationsMatching,
+} from '@/features/spike-viewer/campaign-statistics/campaign-slices';
 import {
   CAMPAIGN_SPIKES_LIMIT_BYTES,
   useCampaignSummaries,
@@ -48,6 +60,8 @@ import type {
 import type {
   CampaignGroupSummaries,
   CampaignSummaries,
+  SimulationSummary,
+  TimeCourseSeries,
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
 import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
@@ -81,6 +95,8 @@ const campaignPlotAtom = atom<{
   x?: string;
   y?: string;
   groupBy?: string;
+  /** Where the plots stand on each parameter on neither axis, by its key: a value's id, MEAN or EACH. */
+  slices?: Readonly<Record<string, string>>;
 }>({});
 
 /** The node property the campaign's plots are grouped by, among those on offer; none at first. */
@@ -226,9 +242,11 @@ type PlotsProps = {
 /**
  * The campaign's simulations side by side, one measure at a time: each over
  * time on one plot, or a summary as a heatmap of square cells over two of its
- * swept parameters, or as lines, the rest held at the simulation on show. Group
- * by splits the cells into a plot per value of a node property, all on one
- * scale. A click on a finished simulation's point or line shows it.
+ * swept parameters, or as lines. Each parameter on neither axis is held at a
+ * value - the simulation on show's, until another is picked - averaged over,
+ * as a seed is at first, or given a plot per value. Group by splits the cells
+ * into a plot per value of a node property; several plots share one scale. A
+ * click on a finished simulation's point or line shows it.
  */
 export type { CampaignCourse };
 
@@ -247,9 +265,17 @@ export function CampaignPlots({
   grouping,
 }: PlotsProps) {
   const swept = useMemo(() => sweptParameters(simulations), [simulations]);
+  const labels = useMemo(() => {
+    const keys = swept.map((p) => p.key);
+    return new Map(keys.map((key) => [key, parameterLabel(key, keys)]));
+  }, [swept]);
+  // Seeds last: they run a simulation again, so at first they are averaged, not an axis.
+  const ordered = useMemo(() => axisOrder(swept), [swept]);
   const active = simulations.find((s) => s.id === activeSimulationId);
-  const [{ plotKind: chosenKind, statistic: chosenStatistic, x: chosenX, y: chosenY }, setPlot] =
-    useAtom(campaignPlotAtom);
+  const [
+    { plotKind: chosenKind, statistic: chosenStatistic, x: chosenX, y: chosenY, slices },
+    setPlot,
+  ] = useAtom(campaignPlotAtom);
   // The simulations over time first, where there is a way to show them; then a
   // summary, as heatmaps or lines, of the statistic chosen.
   const plotOptions = [
@@ -273,74 +299,153 @@ export function CampaignPlots({
   ];
   const setChosenX = (next: string) => setPlot((p) => ({ ...p, x: next }));
   const setChosenY = (next: string) => setPlot((p) => ({ ...p, y: next }));
-  const xKey = swept.some((p) => p.key === chosenX) ? chosenX : swept[0]?.key;
+  const xKey = swept.some((p) => p.key === chosenX) ? chosenX : ordered[0]?.key;
   const yKey =
     chosenY === NO_AXIS
       ? NO_AXIS
       : swept.some((p) => p.key === chosenY && p.key !== xKey)
         ? (chosenY as string)
-        : (swept.find((p) => p.key !== xKey)?.key ?? NO_AXIS);
+        : (ordered.find((p) => p.key !== xKey)?.key ?? NO_AXIS);
+
+  // The parameters on neither axis, and where the plots stand on each: held at a
+  // value picked, or at the simulation on show's until one is; averaged over; or
+  // a plot for each value.
+  const slicing = useMemo(() => {
+    const held: Record<string, string> = {};
+    const following: Record<string, string> = {};
+    const averaged: SweptParameter[] = [];
+    const each: SweptParameter[] = [];
+    const rows: { label: string; value: string }[] = [];
+    const pills: { parameter: SweptParameter; value: string }[] = [];
+    for (const parameter of swept) {
+      if (parameter.key === xKey || parameter.key === yKey) continue;
+      const chosen = slices?.[parameter.key];
+      const mode =
+        chosen === MEAN || chosen === EACH || parameter.values.some((v) => v.id === chosen)
+          ? chosen
+          : isSeedParameter(parameter.key)
+            ? MEAN
+            : undefined;
+      if (mode === MEAN) averaged.push(parameter);
+      else if (mode === EACH) each.push(parameter);
+      else {
+        const id = mode ?? scanValueId(active?.scan_parameters?.[parameter.key]);
+        if (mode) held[parameter.key] = id;
+        else following[parameter.key] = id;
+        const value = parameter.values.find((v) => v.id === id)?.value;
+        rows.push({ label: labels.get(parameter.key) ?? parameter.key, value: valueText(value) });
+      }
+      pills.push({ parameter, value: mode ?? following[parameter.key] });
+    }
+    return { held, following, averaged, each, rows, pills };
+  }, [swept, xKey, yKey, slices, labels, active]);
+  const setSlice = (key: string, next: string) =>
+    setPlot((p) => ({ ...p, slices: { ...p.slices, [key]: next } }));
 
   const groups =
     summaries.state === 'loading' || summaries.state === 'ready' ? summaries.groups : NO_SUMMARIES;
-  const x = useMemo(() => (xKey ? axisOf(swept, xKey) : null), [swept, xKey]);
-  const y = useMemo(() => (yKey === NO_AXIS ? null : axisOf(swept, yKey)), [swept, yKey]);
+  const x = useMemo(() => (xKey ? axisOf(swept, xKey, labels) : null), [swept, xKey, labels]);
+  const y = useMemo(
+    () => (yKey === NO_AXIS ? null : axisOf(swept, yKey, labels)),
+    [swept, yKey, labels]
+  );
   const figures = useMemo<{ name: string; figure: Figure }[] | null>(() => {
     if (!active || !x || !xKey) return null;
-    const cellAt =
-      (group: CampaignGroupSummaries) =>
-      (xi: number, yi: number): GridCell => {
-        const fixed: Record<string, string> = { [xKey]: x.values[xi].id };
-        if (y) fixed[yKey] = y.values[yi].id;
-        const simulation = nearestSimulation(simulations, active, fixed);
-        if (!simulation) return null;
-        const status = statusMap.get(simulation.id) ?? ActivityStatus.CREATED;
-        if (status !== ActivityStatus.DONE) {
-          return {
-            simulationId: simulation.id,
-            summary: undefined,
-            status: { name: status, color: executionStatusColorMap[status] },
-          };
-        }
-        return { simulationId: simulation.id, summary: group.summaries.get(simulation.id) };
-      };
     const grouped = groupBy !== NO_GROUPING;
     const overTime = plotKind === 'course' && course ? course : null;
     const summary = overTime ? null : metric;
     if (!overTime && !summary) return null;
-    // Several groups share one scale, so their plots compare.
-    const range = !grouped
-      ? null
-      : overTime
-        ? courseRange(groups, overTime.steps)
-        : summary
-          ? metricRange(groups, summary)
-          : null;
-    return groups.map((group, i) => {
-      // The heatmaps' colour bar on the first plot only; lines are keyed over the plots.
-      const options = {
-        title: grouped ? group.name : overTime?.label,
-        group: grouped ? group.name : undefined,
-        range,
-        key: i === 0,
+    const { held, following, averaged, each, rows } = slicing;
+    const cellOf = (simulation: ISimulation, group: CampaignGroupSummaries): GridCell => {
+      const status = statusMap.get(simulation.id) ?? ActivityStatus.CREATED;
+      if (status !== ActivityStatus.DONE) {
+        return {
+          simulationId: simulation.id,
+          summary: undefined,
+          status: { name: status, color: executionStatusColorMap[status] },
+        };
+      }
+      return { simulationId: simulation.id, summary: group.summaries.get(simulation.id) };
+    };
+    const cellAt =
+      (group: CampaignGroupSummaries, at: Record<string, string>) =>
+      (xi: number, yi: number): GridCell => {
+        const fixed: Record<string, string> = { ...at, [xKey]: x.values[xi].id };
+        if (y) fixed[yKey] = y.values[yi].id;
+        if (averaged.length === 0) {
+          // The rest as the simulation on show has them, or as near as the scan comes.
+          const simulation = nearestSimulation(simulations, active, fixed);
+          return simulation ? cellOf(simulation, group) : null;
+        }
+        // The mean of those finished, over every value of the averaged parameters.
+        const members = simulationsMatching(simulations, { ...following, ...fixed });
+        const summed = members.filter(
+          (s) => statusMap.get(s.id) === ActivityStatus.DONE && group.summaries.has(s.id)
+        );
+        if (summed.length === 0) {
+          const simulation =
+            members.find((s) => statusMap.get(s.id) === ActivityStatus.DONE) ??
+            nearestSimulation(simulations, active, { ...following, ...fixed });
+          return simulation ? cellOf(simulation, group) : null;
+        }
+        // A click shows the one on show, where it is one of them.
+        const shown = summed.find((s) => s.id === activeSimulationId) ?? summed[0];
+        return {
+          simulationId: shown.id,
+          summary: meanSummary(summed.map((s) => group.summaries.get(s.id) as SimulationSummary)),
+          course: overTime
+            ? meanCourse(summed.flatMap((s) => group.courses.get(s.id) ?? NO_COURSES))
+            : undefined,
+          memberIds: members.map((s) => s.id),
+          rows: [meanRow(averaged, summed, members, labels)],
+        };
       };
-      const at = cellAt(group);
-      const figure = overTime
-        ? coursesFigure(
-            x,
-            y,
-            at,
-            group.courses,
-            activeSimulationId,
-            overTime.yLabel,
-            overTime.steps,
-            options
-          )
-        : plotKind === 'heatmaps'
-          ? heatmapFigure(summary as CampaignMetric, x, y, at, activeSimulationId, options)
-          : linesFigure(summary as CampaignMetric, x, y, at, activeSimulationId, options);
-      return { name: group.name, figure };
-    });
+    const combos = combinations(each);
+    // Several plots share one scale, so they compare.
+    const range =
+      !grouped && combos.length === 1
+        ? null
+        : overTime
+          ? courseRange(groups, overTime.steps)
+          : summary
+            ? metricRange(groups, summary)
+            : null;
+    return groups.flatMap((group, gi) =>
+      combos.map((combo, ci) => {
+        const facetRows = each.map((p) => ({
+          label: labels.get(p.key) ?? p.key,
+          value: valueText(p.values.find((v) => v.id === combo[p.key])?.value),
+        }));
+        const titled = [
+          ...(grouped ? [group.name] : []),
+          ...facetRows.map((r) => `${r.label} ${r.value}`),
+        ];
+        const options = {
+          title: titled.length > 0 ? titled.join(' · ') : overTime?.label,
+          group: grouped ? group.name : undefined,
+          range,
+          // The heatmaps' colour bar on the first plot only; lines are keyed over the plots.
+          key: gi === 0 && ci === 0,
+          rows: [...rows, ...facetRows],
+        };
+        const at = cellAt(group, { ...held, ...combo });
+        const figure = overTime
+          ? coursesFigure(
+              x,
+              y,
+              at,
+              group.courses,
+              activeSimulationId,
+              overTime.yLabel,
+              overTime.steps,
+              options
+            )
+          : plotKind === 'heatmaps'
+            ? heatmapFigure(summary as CampaignMetric, x, y, at, activeSimulationId, options)
+            : linesFigure(summary as CampaignMetric, x, y, at, activeSimulationId, options);
+        return { name: `${group.name}\n${ci}`, figure };
+      })
+    );
   }, [
     active,
     x,
@@ -355,6 +460,8 @@ export function CampaignPlots({
     activeSimulationId,
     course,
     metric,
+    slicing,
+    labels,
   ]);
   const heatmaps = plotKind === 'heatmaps';
   // A heatmap's cells no larger than they need be, the plot in the middle of the panel.
@@ -407,7 +514,7 @@ export function CampaignPlots({
     const simulation = simulations.find((s) => s.id === id);
     if (simulation && statusMap.get(simulation.id) === ActivityStatus.DONE) onSelect(simulation);
   };
-  const axisOptions = swept.map((p) => ({ value: p.key, label: p.key.split('.').at(-1) ?? p.key }));
+  const axisOptions = swept.map((p) => ({ value: p.key, label: labels.get(p.key) ?? p.key }));
 
   return (
     <div className="@container flex h-full min-h-0 flex-col px-1">
@@ -457,6 +564,20 @@ export function CampaignPlots({
             onChange={setChosenY}
           />
         )}
+        {slicing.pills.map(({ parameter, value }) => (
+          <PillSelect
+            key={parameter.key}
+            label={labels.get(parameter.key) ?? parameter.key}
+            title="Where the plots stand on this parameter: at one of its values, the mean over them, or a plot for each"
+            value={value}
+            options={[
+              ...parameter.values.map((v) => ({ value: v.id, label: valueText(v.value) })),
+              { value: MEAN, label: 'Mean' },
+              { value: EACH, label: 'Each' },
+            ]}
+            onChange={(next) => setSlice(parameter.key, next)}
+          />
+        ))}
         <span className="whitespace-nowrap text-xs text-neutral-400">
           {progressText(summaries, reading, scope)}
         </span>
@@ -590,16 +711,51 @@ function LineKey({ parts }: { parts: KeyPart[] }) {
   );
 }
 
-/** A swept parameter as an axis: its name's last part, and its values with their text. */
-function axisOf(swept: ReturnType<typeof sweptParameters>, key: string): ScanAxis {
+type SweptParameter = ReturnType<typeof sweptParameters>[number];
+
+const NO_COURSES: readonly TimeCourseSeries[] = [];
+
+/** A scan value as the plots write it. */
+function valueText(value: unknown): string {
+  return scanParamValueText(value, NO_NAMES);
+}
+
+/** A swept parameter as an axis: its name, and its values with their text. */
+function axisOf(
+  swept: readonly SweptParameter[],
+  key: string,
+  labels: ReadonlyMap<string, string>
+): ScanAxis {
   return {
-    label: key.split('.').at(-1) ?? key,
+    label: labels.get(key) ?? key,
     values: (swept.find((p) => p.key === key)?.values ?? []).map((v) => ({
       id: v.id,
       value: v.value,
-      text: scanParamValueText(v.value, NO_NAMES),
+      text: valueText(v.value),
     })),
   };
+}
+
+/** A mean's row on its card: what it is the mean of, and how many of them have finished. */
+function meanRow(
+  averaged: readonly SweptParameter[],
+  summed: readonly ISimulation[],
+  members: readonly ISimulation[],
+  labels: ReadonlyMap<string, string>
+): { label: string; value: string } {
+  const finished =
+    summed.length < members.length ? ` (${summed.length} of ${members.length} finished)` : '';
+  if (averaged.length === 1) {
+    const [parameter] = averaged;
+    const texts = parameter.values
+      .filter((v) => summed.some((s) => scanValueId(s.scan_parameters?.[parameter.key]) === v.id))
+      .map((v) => valueText(v.value));
+    return {
+      label: labels.get(parameter.key) ?? parameter.key,
+      value: `mean of ${texts.join(', ')}${finished}`,
+    };
+  }
+  return { label: 'Mean of', value: `${summed.length} simulations${finished}` };
 }
 
 /** Every group's values of the measure, as drawn, within what the measure can be. */

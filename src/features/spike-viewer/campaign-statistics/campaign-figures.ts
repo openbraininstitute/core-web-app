@@ -42,7 +42,29 @@ export type GridCell = {
   simulationId: string;
   summary: SimulationSummary | undefined;
   status?: { name: string; color: string };
+  /**
+   * For a point that is a mean over parameters on neither axis: every
+   * simulation it stands for, the mean of their courses over time, and what
+   * its card says of them. `simulationId` is then the one a click shows.
+   */
+  memberIds?: readonly string[];
+  course?: TimeCourseSeries;
+  rows?: readonly CardRow[];
 } | null;
+
+/** A row of a point's card. */
+type CardRow = { label: string; value: string };
+
+const NO_ROWS: readonly CardRow[] = [];
+
+/** Whether a point is the simulation on show, or a mean over it. */
+function holds(cell: GridCell, activeId: string | undefined): boolean {
+  return (
+    !!cell &&
+    activeId !== undefined &&
+    (cell.simulationId === activeId || !!cell.memberIds?.includes(activeId))
+  );
+}
 
 const AXIS_COLOR = '#64748b';
 const GRID_COLOR = '#f1f5f9';
@@ -72,6 +94,8 @@ export type CampaignPlotOptions = {
   range?: [number, number] | null;
   /** The heatmap's colour bar: on the first of several plots only. Lines are keyed over the plots. */
   key?: boolean;
+  /** Where the plot stands on the parameters on neither axis, which its cards say. */
+  rows?: readonly CardRow[];
 };
 
 const title = (text: string) => ({
@@ -85,11 +109,18 @@ const axisTitle = (text: string) => ({ text, font: { size: 11 } });
 
 const compact = (value: number) => String(Number(value.toPrecision(3)));
 
-/** A card's rows naming a simulation by where it sits in the scan. */
-function coordinateRows(x: ScanAxis, y: ScanAxis | null, xi: number, yi: number) {
+/** A card's rows naming a simulation by where it sits in the scan, on the axes and off them. */
+function coordinateRows(
+  x: ScanAxis,
+  y: ScanAxis | null,
+  xi: number,
+  yi: number,
+  cell: GridCell,
+  plotRows: readonly CardRow[]
+): CardRow[] {
   const rows = [{ label: x.label, value: x.values[xi]?.text ?? '' }];
   if (y) rows.push({ label: y.label, value: y.values[yi]?.text ?? '' });
-  return rows;
+  return [...rows, ...plotRows, ...(cell?.rows ?? NO_ROWS)];
 }
 
 function showHint(simulationId: string, activeId: string | undefined): string {
@@ -97,12 +128,13 @@ function showHint(simulationId: string, activeId: string | undefined): string {
 }
 
 /**
- * One measure across the scan: a cell per simulation, the first parameter
- * across and the second down, the rest at the values of the simulation on
- * show, which is outlined. A simulation that has not finished fills its cell
- * in its status's colour and is named in it, since some of those colours are
- * the scale's; one still loading stays blank. Each cell carries its
- * simulation's id, so a click on it can pick it.
+ * One measure across the scan: a cell per simulation, or per mean of several,
+ * the first parameter across and the second down, the rest where `cellAt`
+ * stands on them; the simulation on show is outlined, or the mean over it. A
+ * simulation that has not finished fills its cell in its status's colour and
+ * is named in it, since some of those colours are the scale's; one still
+ * loading stays blank. Each cell carries its simulation's id, so a click on it
+ * can pick it.
  */
 export function heatmapFigure(
   metric: CampaignMetric,
@@ -110,7 +142,13 @@ export function heatmapFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  { title: plotTitle, group, range = null, key = true }: CampaignPlotOptions = {}
+  {
+    title: plotTitle,
+    group,
+    range = null,
+    key = true,
+    rows: plotRows = NO_ROWS,
+  }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const z: (number | null)[][] = [];
@@ -124,7 +162,7 @@ export function heatmapFigure(
       const value = cell?.summary?.[metric.key];
       z[yi].push(value === undefined || Number.isNaN(value) ? null : value * metric.scale);
       ids[yi].push(cell?.simulationId ?? '');
-      if (cell && cell.simulationId === activeId) active = [xi, yi];
+      if (holds(cell, activeId)) active = [xi, yi];
     }
   }
   // One value everywhere - often so for a few ticked cells - gets a little range
@@ -203,7 +241,7 @@ export function heatmapFigure(
           ? undefined
           : scaleColor(SEQUENTIAL, high > low ? (value - low) / (high - low) : 1)),
       rows: [
-        ...coordinateRows(x, y, xi, yi),
+        ...coordinateRows(x, y, xi, yi, cell, plotRows),
         status
           ? { label: 'Status', value: statusText[yi][xi], strong: true }
           : { label: 'Value', value: value === null ? '—' : compact(value), strong: true },
@@ -289,22 +327,24 @@ export function linesFigure(
   y: ScanAxis | null,
   cellAt: (xi: number, yi: number) => GridCell,
   activeId: string | undefined,
-  { title: plotTitle, group, range = null }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null, rows: plotRows = NO_ROWS }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const numeric = x.values.every((v) => typeof v.value === 'number');
   const rings: { x: number | string; y: number }[] = [];
+  const cells = Array.from({ length: rows }, (_, yi) => x.values.map((_v, xi) => cellAt(xi, yi)));
   const data = Array.from({ length: rows }, (_, yi) => {
     const points = x.values.map((v, xi) => {
-      const cell = cellAt(xi, yi);
+      const cell = cells[yi][xi];
       const value = cell?.summary?.[metric.key];
       return {
         x: numeric ? (v.value as number) : v.text,
         y: value === undefined || Number.isNaN(value) ? null : value * metric.scale,
         id: cell?.simulationId ?? '',
+        cell,
       };
     });
-    const on = points.find((p) => p.id === activeId && p.y !== null);
+    const on = points.find((p) => holds(p.cell, activeId) && p.y !== null);
     if (on) rings.push({ x: on.x, y: on.y as number });
     const color = lineColor(yi);
     return {
@@ -346,7 +386,7 @@ export function linesFigure(
         note: group,
         swatch: line.line.color,
         rows: [
-          ...coordinateRows(x, y, xi, yi),
+          ...coordinateRows(x, y, xi, yi, cells[yi][xi], plotRows),
           { label: 'Value', value: compact(point.y), strong: true },
         ],
         hint: showHint(line.customdata[xi], activeId),
@@ -382,10 +422,11 @@ export function courseColor(index: number): string {
 
 /**
  * Each simulation over time - its PSTH, or its mean - on one plot: a line per
- * simulation across the scan, coloured by its value of the first parameter and
- * dashed by its value of the second, the rest at the simulation on show, whose
- * line is drawn thicker and on top. A click on a line shows its simulation.
- * Those not finished have no line.
+ * simulation across the scan, or per mean of several, coloured by its value of
+ * the first parameter and dashed by its value of the second, the rest where
+ * `cellAt` stands on them. The simulation on show's line, or the mean over it,
+ * is drawn thicker and on top. A click on a line shows its simulation. Those
+ * not finished have no line.
  */
 export function coursesFigure(
   x: ScanAxis,
@@ -395,7 +436,7 @@ export function coursesFigure(
   activeId: string | undefined,
   label: string,
   steps: boolean,
-  { title: plotTitle, group, range = null }: CampaignPlotOptions = {}
+  { title: plotTitle, group, range = null, rows: plotRows = NO_ROWS }: CampaignPlotOptions = {}
 ): Figure {
   const rows = y ? y.values.length : 1;
   const lines: {
@@ -405,13 +446,14 @@ export function coursesFigure(
     yi: number;
     course: TimeCourseSeries;
     simulationId: string;
+    cell: GridCell;
   }[] = [];
   for (let yi = 0; yi < rows; yi++) {
     for (let xi = 0; xi < x.values.length; xi++) {
       const cell = cellAt(xi, yi);
-      const course = cell ? courses.get(cell.simulationId) : undefined;
+      const course = cell ? (cell.course ?? courses.get(cell.simulationId)) : undefined;
       if (!cell || !course) continue;
-      const active = cell.simulationId === activeId;
+      const active = holds(cell, activeId);
       const name = `${x.label} ${x.values[xi].text}${y ? ` · ${y.label} ${y.values[yi].text}` : ''}`;
       const line = {
         type: 'scatter',
@@ -430,7 +472,7 @@ export function coursesFigure(
         customdata: Array.from({ length: course.x.length }, () => cell.simulationId),
         hoverinfo: 'none',
       } as Data;
-      lines.push({ line, active, xi, yi, course, simulationId: cell.simulationId });
+      lines.push({ line, active, xi, yi, course, simulationId: cell.simulationId, cell });
     }
   }
   // The simulation on show over the rest.
@@ -450,7 +492,7 @@ export function coursesFigure(
         note: group,
         swatch: courseColor(l.xi),
         rows: [
-          ...coordinateRows(x, y, l.xi, l.yi),
+          ...coordinateRows(x, y, l.xi, l.yi, l.cell, plotRows),
           {
             label: 'Time',
             value: steps
