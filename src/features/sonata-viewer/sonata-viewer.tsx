@@ -11,6 +11,7 @@ import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/
 import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { ReportCampaignView } from '@/features/sonata-viewer/components/report-campaign-view';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
 import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
@@ -169,7 +170,7 @@ export function SonataReportView({
   /** Whether its statistics open beside it in a results layout. */
   withStatistics?: boolean;
 }) {
-  const { simulationPicker, timeline } = useSimulation();
+  const { simulationPicker, campaign: campaignInfo, timeline } = useSimulation();
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
   const [chosenPopulation, setChosenPopulation] = useReportPopulation(
     reportPath,
@@ -216,10 +217,14 @@ export function SonataReportView({
   const sidePanel = useResultsSidePanel();
   const docked = circuit !== undefined && withStatistics && sidePanel !== null;
   const dockedOpen = docked && (sidePanel?.open ?? false);
+  // With the campaign's statistics up over them, the traces and the table of
+  // the simulation on show, picked here, with the width to themselves.
+  const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
+  const beside = dockedOpen && !campaignMode;
   const shuts = sidePanel?.shuts;
   // A voltage's panel has the 3D player over the statistics; another report's, only the statistics.
-  const sceneUp = dockedOpen && shuts?.columns !== 'end' && shuts?.panel !== 'start';
-  const plotsUp = dockedOpen && shuts?.columns !== 'end' && (!voltage || shuts?.panel !== 'end');
+  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const plotsUp = beside && shuts?.columns !== 'end' && (!voltage || shuts?.panel !== 'end');
   const [sceneOn, setSceneOn] = useAtom(voltageSceneAtom);
   const showScene =
     (docked ? sceneUp : sceneOn) && voltage && circuit !== undefined && status === 'ready';
@@ -408,7 +413,16 @@ export function SonataReportView({
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
 
-  // The plots' cells as a flag per node index: the scene shows those alone.
+  // The cells the report records, a flag per node index: what the campaign's groups can hold.
+  const recordedCells = useMemo(() => {
+    if (!population || rowCount === 0) return null;
+    const flags = new Uint8Array(rowCount);
+    for (const trace of population.traces) if (trace.nodeId < rowCount) flags[trace.nodeId] = 1;
+    return flags;
+  }, [population, rowCount]);
+
+  // The plots' cells as a flag per node index: the scene shows those alone, and
+  // the campaign's statistics are over the same.
   const sceneCells = useMemo(() => {
     if (!plotCells || rowCount === 0) return null;
     const flags = new Uint8Array(rowCount);
@@ -762,8 +776,45 @@ export function SonataReportView({
           )}
         {sidePanel.panelStrip &&
           createPortal(
-            <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+            <ShutPaneBar
+              upright
+              title={campaignMode ? ['Campaign statistics'] : panelTitles}
+              onOpen={sidePanel.openColumns}
+            />,
             sidePanel.panelStrip
+          )}
+        {campaignMode &&
+          campaignInfo &&
+          sidePanel.campaignTarget &&
+          createPortal(
+            // In the panel's place, a box like the panes beside it.
+            <StackedPanes
+              split="panel"
+              top={{
+                title: 'Campaign statistics',
+                boxClassName: 'p-2',
+                content: (
+                  <ReportCampaignView
+                    simulations={campaignInfo.simulations}
+                    statusMap={campaignInfo.statusMap}
+                    activeSimulationId={campaignInfo.activeSimulationId}
+                    onSelect={campaignInfo.onSelect}
+                    reportPath={reportPath}
+                    populationName={populationName}
+                    variable={voltage ? null : (variableName ?? 'value')}
+                    units={population.dataUnits}
+                    cells={sceneCells}
+                    recordedCount={population.nodeCount}
+                    rowCount={rowCount}
+                    recordedCells={recordedCells}
+                    groupColumns={groupOptions}
+                    getColumn={getColumn}
+                    sessionKey={sessionKey}
+                  />
+                ),
+              }}
+            />,
+            sidePanel.campaignTarget
           )}
       </>
     );
