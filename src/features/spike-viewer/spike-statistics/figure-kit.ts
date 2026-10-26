@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js-dist-min';
 
 /** What the statistics' figures share: their colours, their layout, and how they word a value. */
 
-export const AXIS_COLOR = '#64748b';
+const AXIS_COLOR = '#64748b';
 export const GRID_COLOR = '#f1f5f9';
 /** Groups past the categorical palette: drawn and named on hover, but not given a hue. */
 export const OTHER_COLOR = '#cbd5e1';

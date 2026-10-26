@@ -23,7 +23,7 @@ const NO_PICKS: Pick[] = [];
 const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
 
 /** The picks with a cell ticked or unticked: a new pick takes the first slot free, so the others keep theirs. */
-export function togglePickIn(cells: readonly Pick[], nodeId: number): Pick[] {
+function togglePickIn(cells: readonly Pick[], nodeId: number): Pick[] {
   if (cells.some((c) => c.nodeId === nodeId)) return cells.filter((c) => c.nodeId !== nodeId);
   const taken = new Set(cells.map((c) => c.slot));
   let slot = 0;
@@ -32,7 +32,7 @@ export function togglePickIn(cells: readonly Pick[], nodeId: number): Pick[] {
 }
 
 /** Every cell of `table` ticked, in node order, each taking the next slot free; or, all ticked, unticked. */
-export function togglePicksOf(
+function togglePicksOf(
   cells: readonly Pick[],
   table: readonly number[],
   allTicked: boolean

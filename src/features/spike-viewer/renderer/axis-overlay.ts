@@ -362,7 +362,7 @@ function markerGroups(
 }
 
 /** What a group's name says: its block's, or "Multi" for several. */
-export function groupName(group: MarkerGroup): string {
+function groupName(group: MarkerGroup): string {
   const names = new Set(group.events.map((e) => e.name));
   return names.size === 1 ? group.events[0].name : 'Multi';
 }
