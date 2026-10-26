@@ -48,19 +48,19 @@ vi.mock('@/ui/segments/workflows/browse/workflow-breadcrumb-context', () => ({
   useWorkflowBreadcrumbState: () => ({ setBreadcrumbState: () => {} }),
 }));
 
-function recordingsSchema(maxItems?: number) {
+function meshesSchema(maxItems?: number) {
   return {
     properties: {
       initialize: {
         ui_element: ScanConfigUIElementDict.BlockSingle,
         properties: {
-          recordings: {
+          meshes: {
             ui_element: ScanConfigUIElementDict.ModelIdentifierMultiple,
             type: 'array',
             ...(maxItems === undefined ? {} : { maxItems }),
             items: {
               properties: {
-                type: { type: 'string', const: ScanConfigFromIdType.IonChannelRecordingFromID },
+                type: { type: 'string', const: ScanConfigFromIdType.EMCellMeshFromID },
               },
             },
           },
@@ -70,22 +70,22 @@ function recordingsSchema(maxItems?: number) {
   } as unknown as ConfigSchema;
 }
 
-function recording(id: string) {
+function mesh(id: string) {
   return {
     id,
     name: id,
-    type: ExtendedEntitiesTypeDict.IonChannelRecording,
+    type: ExtendedEntitiesTypeDict.EMCellMesh,
     legacy_id: null,
     lifecycle_status: EntityLifecycleStatus.Active,
   } as EntityCoreIdentifiableNamed;
 }
 
-async function renderIonChannelBuildBrowse() {
-  const Page = createWorkflowNewRoutePage('build', WorkspaceSection.GeneralWorkflow);
+async function renderSkeletonizationBrowse() {
+  const Page = createWorkflowNewRoutePage('process', WorkspaceSection.GeneralWorkflow);
   const params = Promise.resolve({
     virtualLabId: 'lab',
     projectId: 'project',
-    type: 'ion-channel-build-campaign',
+    type: 'skeletonization-campaign',
   });
   await act(async () => {
     render(
@@ -97,7 +97,7 @@ async function renderIonChannelBuildBrowse() {
 }
 
 function selectRows(ids: string[]) {
-  act(() => tableState.props?.onRowsSelected?.(ids.map(recording)));
+  act(() => tableState.props?.onRowsSelected?.(ids.map(mesh)));
 }
 
 function selectionButton() {
@@ -110,8 +110,8 @@ describe('workflow browse selection cap from the schema maxItems', () => {
   });
 
   it('stops picks at the cap but keeps picked rows unpickable', async () => {
-    schemaState.schema = recordingsSchema(3);
-    await renderIonChannelBuildBrowse();
+    schemaState.schema = meshesSchema(3);
+    await renderSkeletonizationBrowse();
 
     expect(tableState.props?.hideSelectAll).toBe(true);
     expect(screen.getByTestId('workflow-browse-selection-cap')).toHaveTextContent(
@@ -121,14 +121,14 @@ describe('workflow browse selection cap from the schema maxItems', () => {
     selectRows(['a', 'b', 'c']);
 
     expect(screen.getByTestId('workflow-browse-selection-cap')).toHaveTextContent('3 / 3 selected');
-    expect(tableState.props?.isRowSelectable?.(recording('d'))).toBe(false);
-    expect(tableState.props?.isRowSelectable?.(recording('a'))).toBe(true);
+    expect(tableState.props?.isRowSelectable?.(mesh('d'))).toBe(false);
+    expect(tableState.props?.isRowSelectable?.(mesh('a'))).toBe(true);
     expect(selectionButton()).toBeEnabled();
   });
 
   it('drops picks past the cap when a shift-click range arrives in one batch', async () => {
-    schemaState.schema = recordingsSchema(3);
-    await renderIonChannelBuildBrowse();
+    schemaState.schema = meshesSchema(3);
+    await renderSkeletonizationBrowse();
 
     selectRows(['a']);
     selectRows(['a', 'b', 'c', 'd', 'e']);
@@ -139,8 +139,8 @@ describe('workflow browse selection cap from the schema maxItems', () => {
   });
 
   it('leaves the selection uncapped when the field has no maxItems', async () => {
-    schemaState.schema = recordingsSchema();
-    await renderIonChannelBuildBrowse();
+    schemaState.schema = meshesSchema();
+    await renderSkeletonizationBrowse();
 
     selectRows(['a', 'b', 'c', 'd']);
 
