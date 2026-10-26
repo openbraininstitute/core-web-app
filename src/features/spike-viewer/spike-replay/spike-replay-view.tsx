@@ -5,7 +5,6 @@ import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
@@ -19,7 +18,6 @@ import { circuitDrawsMorphologies } from '@/features/scan-config/components/circ
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
-import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
@@ -27,11 +25,18 @@ import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls, {
   RasterHelp,
 } from '@/features/spike-viewer/components/raster-plot-controls';
-import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
+import { SceneTime } from '@/features/spike-viewer/components/scene-time';
+import { useCellFocus } from '@/features/spike-viewer/hooks/use-cell-focus';
+import { useRasterWindow } from '@/features/spike-viewer/hooks/use-raster-window';
+import { useReplayClock } from '@/features/spike-viewer/hooks/use-replay-clock';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
+import {
+  replayablePopulation,
+  replayNotice,
+} from '@/features/spike-viewer/spike-replay/replay-notice';
 import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import {
   TimeWindowFields,
@@ -52,11 +57,10 @@ import { classNames } from '@/util/utils';
 import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
-import type { RasterWindow, TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
-import type { SpikeData, SpikePopulation } from '@/features/spike-viewer/spike-trace';
+import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
+import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
   Raster: 'raster',
@@ -85,20 +89,8 @@ const PANE_FLOOR = MIN_PANE_HEIGHT + SPLIT_GUTTER_IN_PX;
 /** The raster pane's height as last dragged: kept for the next file, as a pick from the bar mounts it anew. */
 const rasterHeightAtom = atom<number | null>(null);
 
-/** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
-const DEFAULT_SPEED = 100;
-/** Wall-clock seconds for a spike to fade to `1/e`. */
-const DEFAULT_AFTERGLOW_IN_SECONDS = 0.25;
-
 /** Radius in pixels of a raster marker. */
 const DEFAULT_MARKER_SIZE = 4;
-
-/** How often the readout and scrubber catch up with the viewer's clock. */
-const READOUT_INTERVAL_IN_MS = 100;
-/** How long the raster's zoom has to rest before the statistics follow it. */
-const WINDOW_SETTLE_MS = 150;
-/** How long the scene has to say a tap picked a cell before it counts as a tap on nothing. */
-const SCENE_PICK_WAIT_MS = 300;
 
 /**
  * The population is chosen above both panes, so the scene's own way of choosing
@@ -130,24 +122,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const { campaign: campaignInfo, run, timeline } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
-  const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(DEFAULT_SPEED);
-  const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_AFTERGLOW_IN_SECONDS);
-  const [seekToMs, setSeekToMs] = useState<number | undefined>();
-  // False until the viewer has painted a frame. It arrives on a dynamic
-  // chunk, so for a while there is no child to receive anything.
-  const [sceneLive, setSceneLive] = useState(false);
-  const [readoutTimeInMs, setReadoutTimeInMs] = useState(data.timeRange.min);
   const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
   const [containerHeight, setContainerHeight] = useState(0);
 
   // State, not a ref: the button and the portal scope read it while rendering.
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const playheadRef = useRef<((timeInMs: number | null) => void) | null>(null);
-  const liveTimeRef = useRef(data.timeRange.min);
-  // The scrubber under the raster's axis, moved like the playhead: every frame.
-  const scrubberRef = useRef<((timeInMs: number) => void) | null>(null);
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
@@ -321,40 +301,15 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
 
   // What the raster is zoomed to, once it rests: the statistics are over its
   // span of time and the cells of its rows, and the scene keeps only those.
-  // The raster itself is not cut by it, so a pan finds its spikes in place.
-  const [rasterWindow, setRasterWindow] = useState<{
-    population: string;
-    window: RasterWindow;
-  } | null>(null);
-  const settleTimer = useRef(0);
-  const handleWindowChange = useCallback(
-    (next: RasterWindow | null) => {
-      window.clearTimeout(settleTimer.current);
-      settleTimer.current = window.setTimeout(
-        () =>
-          setRasterWindow(
-            next && populationName ? { population: populationName, window: next } : null
-          ),
-        WINDOW_SETTLE_MS
-      );
-    },
-    [populationName]
-  );
-  useEffect(() => () => window.clearTimeout(settleTimer.current), []);
-  const [windowResetKey, setWindowResetKey] = useState(0);
-  const clearRasterWindow = useCallback(() => setWindowResetKey((k) => k + 1), []);
-  const currentWindow = rasterWindow?.population === populationName ? rasterWindow.window : null;
-  const windowCells = useMemo(() => {
-    const rows = currentWindow?.rows;
-    if (!rows || cellCount === undefined) return null;
-    const order = rasterOrder.order?.rows;
-    const flags = new Uint8Array(cellCount);
-    for (let cell = 0; cell < cellCount; cell++) {
-      const row = order ? order[cell] : cell;
-      if (row >= rows[0] && row <= rows[1]) flags[cell] = 1;
-    }
-    return flags;
-  }, [currentWindow, cellCount, rasterOrder.order]);
+  const {
+    currentWindow,
+    windowCells,
+    handleWindowChange,
+    windowResetKey,
+    clearRasterWindow,
+    timeWindowRequest,
+    requestTimeWindow,
+  } = useRasterWindow({ populationName, cellCount, rowOrder: rasterOrder.order });
   const sceneCells = useMemo(() => {
     if (!windowCells) return shownCells;
     if (!shownCells) return windowCells;
@@ -371,65 +326,17 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           : data,
     [sceneCells, shownCells, shownData, data, populationName]
   );
-  // The table row under the pointer, pointed out in the raster and the scene.
-  const [hoveredCell, setHoveredCell] = useState<{ population: string; cell: number } | null>(null);
-  const handleHoveredCell = useCallback(
-    (cell: number | null) =>
-      setHoveredCell(
-        cell === null || !populationName ? null : { population: populationName, cell }
-      ),
-    [populationName]
-  );
-  const hoveredRow =
-    (docked || showStatistics) && hoveredCell?.population === populationName
-      ? hoveredCell.cell
-      : null;
-  // A cell clicked in the scene or the raster: pointed out in both, and found
-  // in the table. A second click on it lets it go; a table row under the
-  // pointer takes its place while it is there.
-  const [clickedCell, setClickedCell] = useState<{
-    population: string;
-    nodeId: number;
-    key: number;
-  } | null>(null);
-  const lastCellClickRef = useRef(0);
-  // The scene says nothing for a tap on empty space, so a tap on its canvas
-  // that no cell click follows lets the clicked cell go. Read on capture: the
-  // viewers keep their own pointer events from bubbling.
-  const sceneTapRef = useRef<{ x: number; y: number; at: number } | null>(null);
-  const handleScenePointerDown = (e: React.PointerEvent) => {
-    sceneTapRef.current =
-      e.button === 0 && e.target instanceof HTMLCanvasElement
-        ? { x: e.clientX, y: e.clientY, at: performance.now() }
-        : null;
-  };
-  const handleScenePointerUp = (e: React.PointerEvent) => {
-    const tap = sceneTapRef.current;
-    sceneTapRef.current = null;
-    if (!tap || Math.hypot(e.clientX - tap.x, e.clientY - tap.y) > 5) return;
-    const at = performance.now();
-    window.setTimeout(() => {
-      if (lastCellClickRef.current < at) setClickedCell(null);
-    }, SCENE_PICK_WAIT_MS);
-  };
-  const handleCellClick = useCallback(
-    (cell: number | null) => {
-      lastCellClickRef.current = performance.now();
-      if (cell === null) {
-        setClickedCell(null);
-        return;
-      }
-      if (!populationName) return;
-      setClickedCell((previous) =>
-        previous?.population === populationName && previous.nodeId === cell
-          ? null
-          : { population: populationName, nodeId: cell, key: (previous?.key ?? 0) + 1 }
-      );
-    },
-    [populationName]
-  );
-  const focusedCell = clickedCell?.population === populationName ? clickedCell : null;
-  const highlightedCell = hoveredRow ?? focusedCell?.nodeId ?? null;
+  // The table row under the pointer, else the cell clicked in the scene or the
+  // raster: pointed out in both, and found in the table.
+  const {
+    handleHoveredCell,
+    handleCellClick,
+    handleScenePointerDown,
+    handleScenePointerUp,
+    focusedCell,
+    highlightedCell,
+    releaseCell,
+  } = useCellFocus({ populationName, tableShown: docked || showStatistics });
 
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
@@ -447,7 +354,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           count: selectedCount,
           total: cellCount,
           onReset: () => {
-            setClickedCell(null);
+            releaseCell();
             clearRasterWindow();
             // The table's own reset: its filters and ticks, and the raster's window.
             setResetRequest((n) => n + 1);
@@ -466,25 +373,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // In the split, the scrubber lies under the raster's time axis, and the
   // replay's speed sits with the raster's own controls.
   const [timeAxis, setTimeAxis] = useState<TimeAxis | null>(null);
-  const [timeWindowRequest, setTimeWindowRequest] = useState<{
-    from: number;
-    to: number;
-    key: number;
-  }>();
-  // A typed span applies at once, ahead of the raster's settled report of it,
-  // so a second field committed straight after builds on it.
-  const requestTimeWindow = (from: number, to: number) => {
-    setTimeWindowRequest((previous) => ({ from, to, key: (previous?.key ?? 0) + 1 }));
-    if (populationName) {
-      setRasterWindow((previous) => ({
-        population: populationName,
-        window: {
-          time: [from, to],
-          rows: previous?.population === populationName ? previous.window.rows : null,
-        },
-      }));
-    }
-  };
 
   // Waits for a replay that works, so the last step never points at a disabled play button.
   // Its steps are the viewer's own views, which docked are panes of the layout's.
@@ -521,92 +409,42 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     return () => observer.disconnect();
   }, []);
 
-  // The viewer owns the clock and reports it on every painted frame. Straight
-  // into the raster's imperative renderer; React only samples it for the
-  // readout, ten times a second rather than sixty.
-  // A raster zoomed to a span of time plays that span: it stops at its end,
-  // and play from outside it, or at its end, starts again from its start.
-  const playFrom = currentWindow?.time?.[0] ?? data.timeRange.min;
-  const playTo = currentWindow?.time?.[1] ?? data.timeRange.max;
-  const playEndRef = useRef(playTo);
-  useEffect(() => {
-    playEndRef.current = playTo;
+  // A raster zoomed to a span of time plays that span.
+  const {
+    playing,
+    setPlaying,
+    handlePlayingChange,
+    speed,
+    setSpeed,
+    afterglowInSeconds,
+    setAfterglowInSeconds,
+    seekToMs,
+    readoutTimeInMs,
+    liveTimeRef,
+    playheadRef,
+    scrubberRef,
+    sceneTime,
+    playheadCursor,
+    handleTimeChange,
+    handleSeek,
+  } = useReplayClock({
+    timeRange: data.timeRange,
+    playFrom: currentWindow?.time?.[0] ?? data.timeRange.min,
+    playTo: currentWindow?.time?.[1] ?? data.timeRange.max,
   });
-  // The time over the 3D view, moved on the DOM with the playhead, and pushed to
-  // the PSTHs, which mark it too.
-  const sceneTime = useSceneTime(liveTimeRef);
-  const showSceneTime = sceneTime.show;
-  const playheadCursor = useMemo(() => createTimeCursor(), []);
-  const handleTimeChange = useCallback(
-    (timeInMs: number) => {
-      liveTimeRef.current = timeInMs;
-      playheadRef.current?.(timeInMs);
-      scrubberRef.current?.(timeInMs);
-      showSceneTime(timeInMs);
-      playheadCursor.set(timeInMs);
-      setSceneLive(true);
-      if (timeInMs >= playEndRef.current) setPlaying(false);
-    },
-    [showSceneTime, playheadCursor]
-  );
-
-  useEffect(() => {
-    if (!playing) return;
-
-    const interval = window.setInterval(
-      () => setReadoutTimeInMs(liveTimeRef.current),
-      READOUT_INTERVAL_IN_MS
-    );
-    // Cleanup settles on the exact frame playback stopped at, which the sampler
-    // will have missed by up to its own interval.
-    return () => {
-      window.clearInterval(interval);
-      setReadoutTimeInMs(liveTimeRef.current);
-    };
-  }, [playing]);
-
-  // Clamped because the raster pads its initial view either side of the data,
-  // so a click well inside the plot area can name a time the recording never
-  // reached - which the transport would print and the 3D viewer, clamping
-  // internally, would refuse to follow.
-  const { min: timeMinInMs, max: timeMaxInMs } = data.timeRange;
-  const handleSeek = useCallback(
-    (rawTimeInMs: number) => {
-      const timeInMs = Math.min(timeMaxInMs, Math.max(timeMinInMs, rawTimeInMs));
-      setSeekToMs(timeInMs);
-      setReadoutTimeInMs(timeInMs);
-      liveTimeRef.current = timeInMs;
-      playheadRef.current?.(timeInMs);
-      scrubberRef.current?.(timeInMs);
-      showSceneTime(timeInMs);
-      playheadCursor.set(timeInMs);
-    },
-    [timeMinInMs, timeMaxInMs, showSceneTime, playheadCursor]
-  );
-
-  // One-shot, so that seeking twice to the same millisecond still seeks: held,
-  // the second Restart during playback would be no state change, hence no
-  // re-seek, and the button would go dead. "Children's effects run first"
-  // only covers a child that exists — until the viewer's chunk has loaded and
-  // reported a frame, clearing here would throw the seek away and play would
-  // start from `timeMin`.
-  useEffect(() => {
-    if (seekToMs === undefined || !sceneLive) return;
-    setSeekToMs(undefined);
-  }, [seekToMs, sceneLive]);
 
   // Nothing to animate for, and playing on would keep the render loop spinning
   // behind a pane nobody is looking at.
   useEffect(() => {
     if (view === MODES.Raster || view === MODES.Statistics || !replayable) setPlaying(false);
-  }, [view, replayable]);
+  }, [view, replayable, setPlaying]);
 
   // The rule is otherwise only pushed by a painted frame, so entering the split
   // paused — which is every time, since leaving it stops playback — would show
   // a raster with no playhead on it. The child has attached by now.
   useEffect(() => {
     if (isSplit) playheadRef.current?.(liveTimeRef.current);
-  }, [isSplit]);
+  }, [isSplit, playheadRef, liveTimeRef]);
 
   const modeOptions = subject
     ? [
@@ -673,12 +511,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       />
     ) : null;
 
-  // Played from the span's start when outside it, from the transport or the scene's corner.
-  const handlePlayingChange = (next: boolean) => {
-    const at = liveTimeRef.current;
-    if (next && (at < playFrom || at >= playTo)) handleSeek(playFrom);
-    setPlaying(next);
-  };
   // Play and the scrubber: under the panes, in the raster's box under its
   // axis, or with the raster out of view, in the scene's.
   const transport = (boxed: boolean) => (
@@ -1085,31 +917,4 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       </FullscreenPortalScope>
     </div>
   );
-}
-
-/** The circuit lists the population and backs it with cells to light up. */
-function replayablePopulation(
-  nodes: NodePopulation[] | undefined,
-  name: string | undefined
-): boolean {
-  const listed = name === undefined ? undefined : nodes?.find((n) => n.name === name);
-  return listed !== undefined && listed.type !== NodePopulationType.Virtual;
-}
-
-/** Why what is on show cannot be replayed. */
-function replayNotice(
-  recorded: SpikePopulation | undefined,
-  name: string | undefined,
-  nodes: NodePopulation[] | undefined,
-  loading: boolean,
-  failed: boolean
-): string {
-  if (recorded === undefined)
-    return 'This simulation recorded no spikes, so there is nothing to replay.';
-  if (loading) return 'Reading the circuit’s node populations…';
-  if (failed)
-    return 'The circuit’s node populations could not be read, so there is nothing to replay these spikes over.';
-  if (!nodes?.some((n) => n.name === name))
-    return `This circuit has no nodes for “${name}”, so there is nothing to replay these spikes over.`;
-  return `“${name}” is an input population — its spikes drive cells rather than fire in them, so there is nothing to light up.`;
 }
