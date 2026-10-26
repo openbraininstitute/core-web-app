@@ -24,7 +24,9 @@ import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statis
 import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
-import RasterPlotControls from '@/features/spike-viewer/components/raster-plot-controls';
+import RasterPlotControls, {
+  RasterHelp,
+} from '@/features/spike-viewer/components/raster-plot-controls';
 import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
@@ -745,7 +747,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       its own: in the split these controls are the raster's alone, and
       the row above the panes is for what governs both. */}
       {recorded && recorded.timestamps.length > 0 && (
-        <CollapsingControls>
+        <CollapsingControls trailing={<RasterHelp />}>
           <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
           {circuit && (
             <PillSelect

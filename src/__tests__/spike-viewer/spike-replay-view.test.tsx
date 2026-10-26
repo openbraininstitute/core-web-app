@@ -5,7 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 // reaches for a canvas on mount. Neither runs under jsdom.
 vi.mock('@/features/circuit-viewer/circuit-scene', () => ({ CircuitScene: () => null }));
 vi.mock('@/features/spike-viewer/components/raster-plot', () => ({ default: () => null }));
-vi.mock('@/features/spike-viewer/components/raster-plot-controls', () => ({ default: () => null }));
+vi.mock('@/features/spike-viewer/components/raster-plot-controls', () => ({
+  default: () => null,
+  RasterHelp: () => null,
+}));
 // The nodes session behind the raster's axis span reads the workspace off the route.
 vi.mock('next/navigation', () => ({ useParams: () => ({}) }));
 vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
