@@ -114,6 +114,8 @@ type Props = {
    * holds a pick to undo: it clears the filters and calls `onReset`.
    */
   reset?: { picked: boolean; onReset: () => void };
+  /** A reset asked for from outside the table, such as a 3D view's: a new number each time. */
+  resetRequest?: number;
   /**
    * Filters a click puts on beside the count, and a second click takes off,
    * leaving the other columns' filters as they are.
@@ -373,6 +375,7 @@ export function NodesGrid({
   headerNote,
   headerExtra,
   reset,
+  resetRequest,
   quickFilters,
   focusRow,
   rowIndexOf,
@@ -698,6 +701,10 @@ export function NodesGrid({
     gridRef.current?.api.setFilterModel(null);
     reset?.onReset();
   };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new request resets, with the reset as it stands
+  useEffect(() => {
+    if (resetRequest) onResetClick();
+  }, [resetRequest]);
   const isOn = (quick: QuickFilter) =>
     Object.entries(quick.model).every(([colId, f]) => isEqual(filters[colId], f));
   const toggleQuickFilter = (quick: QuickFilter) => {

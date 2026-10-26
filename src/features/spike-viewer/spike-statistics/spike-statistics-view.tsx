@@ -83,6 +83,8 @@ type Props = {
   windowCells?: Uint8Array | null;
   /** Zooms the raster back out, for the table's own way back to everything. */
   onClearWindow?: () => void;
+  /** A reset asked for from outside the table, such as the 3D view's: a new number each time. */
+  resetRequest?: number;
   /** The config's timings and the player's time, marked over the PSTHs as over the raster. */
   events?: readonly TimelineEvent[];
   timeCursor?: TimeCursor;
@@ -146,6 +148,7 @@ export function SpikeStatisticsView({
   windowTime = null,
   windowCells = null,
   onClearWindow,
+  resetRequest,
   events,
   timeCursor,
 }: Props) {
@@ -516,6 +519,7 @@ export function SpikeStatisticsView({
           focusRow={focusedCell}
           rowIndexOf={tableShown.windowed ? rowInWindow : getRowIndex}
           markedNodeId={heldCell}
+          resetRequest={resetRequest}
         />
       )}
     </div>

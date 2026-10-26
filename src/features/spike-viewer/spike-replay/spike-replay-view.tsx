@@ -430,6 +430,30 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   );
   const focusedCell = clickedCell?.population === populationName ? clickedCell : null;
   const highlightedCell = hoveredRow ?? focusedCell?.nodeId ?? null;
+
+  // What the scene is narrowed to, said over it with the way back to every
+  // cell: the cell clicked, else those the table and the raster's window keep.
+  const [resetRequest, setResetRequest] = useState(0);
+  const selectedCount = useMemo(() => {
+    if (focusedCell) return 1;
+    if (!sceneCells) return null;
+    let n = 0;
+    for (const flag of sceneCells) n += flag;
+    return n;
+  }, [focusedCell, sceneCells]);
+  const sceneSelection =
+    selectedCount !== null && cellCount !== undefined
+      ? {
+          count: selectedCount,
+          total: cellCount,
+          onReset: () => {
+            setClickedCell(null);
+            clearRasterWindow();
+            // The table's own reset: its filters and ticks, and the raster's window.
+            setResetRequest((n) => n + 1);
+          },
+        }
+      : undefined;
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
   const spikes = useMemo(
@@ -638,6 +662,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         windowTime={currentWindow?.time ?? null}
         windowCells={windowCells}
         onClearWindow={clearRasterWindow}
+        resetRequest={resetRequest}
         heldCell={focusedCell?.nodeId ?? null}
         timeRange={data.timeRange}
         color={POPULATION_COLORS[Math.max(0, recordedIndex) % POPULATION_COLORS.length]}
@@ -811,6 +836,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       colorByNoneLabel="Uniform"
       shownCells={sceneCells}
       highlightedCell={highlightedCell ?? undefined}
+      selection={sceneSelection}
       onCellClick={handleCellClick}
       onNodeColorsChange={setSceneColors}
       spikes={{

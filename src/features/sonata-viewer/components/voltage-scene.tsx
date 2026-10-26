@@ -14,6 +14,7 @@ import { Button } from '@/ui/molecules/button';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
+import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
@@ -51,6 +52,8 @@ type Props = {
   shownCells?: Uint8Array;
   /** Told the node index of a cell clicked in the scene. */
   onCellClick?: (nodeId: number) => void;
+  /** How many recorded cells are selected, said with a reset at the scene's top centre. */
+  selection?: ComponentProps<typeof CircuitScene>['selection'];
   /** In a box of its own, which frames it: no border of its own. */
   bare?: boolean;
   /** Off while out of sight: it stops playing and drawing. */
@@ -84,6 +87,7 @@ export function VoltageScene({
   highlightedCell,
   shownCells,
   onCellClick,
+  selection,
   bare = false,
   active = true,
   speed,
@@ -265,6 +269,7 @@ export function VoltageScene({
           highlightedCell={highlightedCell}
           shownCells={shownCells}
           onCellClick={onCellClick}
+          selection={selection}
           active={active}
         />
         {!frames && (

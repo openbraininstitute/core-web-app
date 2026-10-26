@@ -622,6 +622,22 @@ export function SonataReportView({
   );
   const held =
     heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
+  // What the scene is narrowed to among the recorded cells, said over it with
+  // the way back to them all: the table's own reset, its filters and ticks and
+  // the traces' window, and the cell held with them.
+  const [resetRequest, setResetRequest] = useState(0);
+  const sceneSelection =
+    plotCells && population
+      ? {
+          count: plotCells.length,
+          total: population.nodeCount,
+          onReset: () => {
+            setHeldCell(null);
+            setResetRequest((n) => n + 1);
+          },
+        }
+      : undefined;
+
   // A recorded cell clicked in the scene, the same.
   const handleSceneCellClick = useCallback(
     (nodeId: number) => {
@@ -704,6 +720,7 @@ export function SonataReportView({
         timeCursor={timeCursor}
         highlightedCell={hovered?.population === populationName ? hovered.nodeId : held}
         shownCells={campaignCells ?? undefined}
+        selection={sceneSelection}
         onCellClick={handleSceneCellClick}
         bare={docked}
         active={showScene}
@@ -888,6 +905,7 @@ export function SonataReportView({
                     },
                   },
                   focusRow: focusedRow,
+                  resetRequest,
                 }}
               />
             ),

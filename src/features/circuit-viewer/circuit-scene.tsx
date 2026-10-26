@@ -47,6 +47,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
@@ -143,6 +144,8 @@ interface ICircuitSceneOptions {
    * recording's values as it plays; a host passing them turns colour-by off.
    */
   nodeColorsOverride?: NodeColors;
+  /** How many of the population's cells are selected, said with a reset at the top centre. */
+  selection?: ICircuitViewerChromeProps['selection'];
   /**
    * A column of `nodeColorsOverride` whose cells are drawn faint, in a colour
    * that follows the background: such as the cells a report did not record.
@@ -220,6 +223,7 @@ export function CircuitScene({
   onCellClick,
   nodeColorsOverride,
   fadedColumn,
+  selection,
   onNodeColorsChange,
   spikes,
   dendrogram = false,
@@ -676,6 +680,7 @@ export function CircuitScene({
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
+        selection={selection}
         viz={{
           // A replay's afterglow is set with the rest of how the scene is drawn.
           menu:

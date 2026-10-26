@@ -1,9 +1,15 @@
-import { RiAlertLine, RiArrowDownSLine, RiFocus3Line, RiTableLine } from '@remixicon/react';
+import {
+  RiAlertLine,
+  RiArrowDownSLine,
+  RiFocus3Line,
+  RiResetLeftLine,
+  RiTableLine,
+} from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
-import { ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
@@ -73,6 +79,11 @@ export interface ICircuitViewerChromeProps {
   colorByTarget?: HTMLElement | null;
   /** What colouring by no property is called; see `ColorByDropdown`'s `noneLabel`. */
   colorByNoneLabel?: string;
+  /**
+   * How many cells of the population on show are selected, of how many, and
+   * the way back to them all: said at the top centre while some are.
+   */
+  selection?: { count: number; total: number; onReset: () => void };
 }
 
 /**
@@ -90,6 +101,7 @@ export function CircuitViewerChrome({
   viz,
   colorByTarget,
   colorByNoneLabel,
+  selection,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
   const populations = viz?.populations;
@@ -255,6 +267,31 @@ export function CircuitViewerChrome({
           </div>
         )}
       </div>
+      {showVizChrome && selection && (
+        <div className="pointer-events-auto absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
+          <span
+            className={cn(
+              PILL_CLASS,
+              'font-normal whitespace-nowrap text-neutral-500 hover:bg-white'
+            )}
+          >
+            <strong className="text-primary-9 font-semibold">
+              {selection.count.toLocaleString()}
+            </strong>
+            of {selection.total.toLocaleString()} {selection.total === 1 ? 'neuron' : 'neurons'}{' '}
+            selected
+          </span>
+          <button
+            type="button"
+            onClick={selection.onReset}
+            title="Show every neuron again"
+            aria-label="Show every neuron again"
+            className={ROUND_PILL_CLASS}
+          >
+            <RiResetLeftLine className="size-4" />
+          </button>
+        </div>
+      )}
       {/* Below the left column: in its row it overlapped the Populations pill on narrow screens. */}
       {showVizChrome && populations && hiddenSubject !== undefined && (
         <div

@@ -66,6 +66,8 @@ type Props = {
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
   pinnedVersion?: unknown;
   quickFilters?: readonly QuickFilter[];
+  /** A reset asked for from outside the table, such as the 3D view's: a new number each time. */
+  resetRequest?: number;
   reset?: { picked: boolean; onReset: () => void };
   /** Beside the count above the rows, such as the window the statistics are over. */
   headerExtra?: ReactNode;
@@ -95,6 +97,7 @@ export function ReportNodesTable({
   pinnedColumns,
   pinnedVersion,
   quickFilters,
+  resetRequest,
   reset,
   headerExtra,
   focusRow,
@@ -278,6 +281,7 @@ export function ReportNodesTable({
       pinnedColumns={pinnedColumns}
       pinnedVersion={pinnedVersion}
       quickFilters={quickFilters}
+      resetRequest={resetRequest}
       reset={reset}
       headerExtra={headerExtra}
       focusRow={focusRow}
