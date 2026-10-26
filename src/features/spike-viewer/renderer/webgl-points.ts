@@ -147,6 +147,9 @@ export class WebGLPoints {
     if (!this.contextLost) this.gl.deleteProgram(this.program);
     this.canvas.removeEventListener('webglcontextlost', this.handleContextLost);
     this.canvas.removeEventListener('webglcontextrestored', this.handleContextRestored);
+    // Handed back now rather than at the next collection: a page has only so
+    // many, and when they run out the browser takes the oldest, the 3D view's.
+    this.gl.getExtension('WEBGL_lose_context')?.loseContext();
     this.lastData = null;
   }
 

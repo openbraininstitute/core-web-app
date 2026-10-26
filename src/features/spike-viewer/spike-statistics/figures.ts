@@ -1300,8 +1300,10 @@ function timeCourseFigure(
   const hues = series.map((_, index) =>
     !groupLabel ? color : index < PICK_COLORS.length ? PICK_COLORS[index] : OTHER_COLOR
   );
+  // In SVG: a WebGL plot takes one of the few contexts a page has, and when
+  // they run out the browser takes the oldest, often the 3D view's.
   const data = series.map((s, index) => ({
-    type: 'scattergl',
+    type: 'scatter',
     mode: 'lines',
     name: s.name,
     x,

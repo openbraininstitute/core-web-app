@@ -1,7 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
@@ -345,6 +345,29 @@ export function CircuitScene({
     subject: memodel,
   });
 
+  // A viewer whose WebGL context the browser took back - it takes the oldest
+  // when a page asks for more than it allows - is drawn black from then on:
+  // built anew, it draws again. Caught on the way down, since the loss does
+  // not bubble up from its canvas.
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const [rebuilds, setRebuilds] = useState(0);
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    const onLost = (event: Event) => {
+      if (event.target instanceof HTMLCanvasElement) setRebuilds((n) => n + 1);
+    };
+    scene.addEventListener('webglcontextlost', onLost, true);
+    return () => {
+      scene.removeEventListener('webglcontextlost', onLost, true);
+      // Handed back on the way out rather than at the next collection.
+      for (const canvas of scene.querySelectorAll('canvas')) {
+        const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      }
+    };
+  }, []);
+
   // The override's faint column painted for the background on show.
   const overrideColors = useMemo(() => {
     if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
@@ -577,6 +600,7 @@ export function CircuitScene({
       className="pointer-events-none relative h-full min-h-0 overflow-hidden"
     >
       <div
+        ref={sceneRef}
         data-testid="viewer-scene"
         className={classNames(
           'absolute inset-0',
@@ -587,7 +611,7 @@ export function CircuitScene({
       >
         {largeCircuit && circuit ? (
           <LargeCircuitPreview
-            key={circuit.id}
+            key={`${circuit.id}:${rebuilds}`}
             circuit={circuit}
             population={population}
             populations={populations}
@@ -614,7 +638,7 @@ export function CircuitScene({
           />
         ) : memodel ? (
           <MemodelVisualization
-            key={memodel.id}
+            key={`${memodel.id}:${rebuilds}`}
             memodelId={memodel.id}
             dendrogram={dendrogram}
             {...sharedVizProps}
@@ -622,7 +646,7 @@ export function CircuitScene({
         ) : (
           circuit && (
             <CircuitVisualization
-              key={circuit.id}
+              key={`${circuit.id}:${rebuilds}`}
               circuit={circuit}
               population={population}
               populations={populations}
