@@ -1,3 +1,6 @@
+/** The player's time where a view marks it: its rule and the time beside it, a darkish green. */
+export const TIME_CURSOR_COLOR = '#15803d';
+
 /**
  * A time shared by views that each mark it - a scene playing a recording, and
  * the plots of its traces - pushed to them as it moves rather than through

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import {
   drawEventMarks,
@@ -214,11 +215,13 @@ export function PlotTimeline({
       <canvas ref={canvasRef} className="pointer-events-none absolute hidden" />
       <div
         ref={cursorRef}
-        className="pointer-events-none absolute z-10 hidden w-[1.5px] bg-[#f5222d]"
+        className="pointer-events-none absolute z-10 hidden w-[1.5px]"
+        style={{ background: TIME_CURSOR_COLOR }}
       >
         <span
           ref={cursorLabelRef}
-          className="absolute bottom-1 left-1 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold text-[#f5222d] tabular-nums"
+          className="absolute bottom-1 left-1 whitespace-nowrap rounded bg-white/85 px-1 text-[10px] font-semibold tabular-nums"
+          style={{ color: TIME_CURSOR_COLOR }}
         />
       </div>
       {hover && <TimelineCard hover={hover} />}

@@ -4,6 +4,7 @@ import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { useCallback, useRef } from 'react';
 
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 
 import type { RefObject } from 'react';
 
@@ -53,7 +54,8 @@ export function SceneTime({
       </span>
       <span
         ref={labelRef}
-        className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-[#f5222d] tabular-nums shadow-sm ring-1 ring-black/5"
+        className="rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold tabular-nums shadow-sm ring-1 ring-black/5"
+        style={{ color: TIME_CURSOR_COLOR }}
       />
     </div>
   );

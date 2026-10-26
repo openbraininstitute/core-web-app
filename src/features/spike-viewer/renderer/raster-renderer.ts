@@ -1,3 +1,4 @@
+import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import {
   AxisOverlay,
   drawEventMarks,
@@ -156,15 +157,14 @@ export class RasterRenderer {
     // Playhead rule, above the plot: drawn with the axes it would sit behind
     // the WebGL canvas, and a dense population buries it.
     this.playheadEl = document.createElement('div');
-    this.playheadEl.style.cssText =
-      'position:absolute;pointer-events:none;display:none;width:1.5px;background:#f5222d';
+    this.playheadEl.style.cssText = `position:absolute;pointer-events:none;display:none;width:1.5px;background:${TIME_CURSOR_COLOR}`;
     container.appendChild(this.playheadEl);
     // Its time, at its foot: the scrubber below is laid out against the axis,
     // with no room for it, and the config's markers hold the top.
     this.playheadLabel = document.createElement('span');
     this.playheadLabel.style.cssText =
       'position:absolute;bottom:6px;padding:0 4px;border-radius:4px;white-space:nowrap;' +
-      'background:rgba(255,255,255,0.9);color:#f5222d;font:600 10px/14px -apple-system,BlinkMacSystemFont,sans-serif';
+      `background:rgba(255,255,255,0.9);color:${TIME_CURSOR_COLOR};font:600 10px/14px -apple-system,BlinkMacSystemFont,sans-serif`;
     this.playheadEl.appendChild(this.playheadLabel);
 
     // Interaction layer (full size, topmost)
@@ -662,7 +662,10 @@ export class RasterRenderer {
 
   /** The colour a cell's spikes are drawn in: its own, or its population's. */
   private spikeColor(population: string, nodeId: number): string {
-    const index = Math.max(0, this.pops.findIndex((pop) => pop.name === population));
+    const index = Math.max(
+      0,
+      this.pops.findIndex((pop) => pop.name === population)
+    );
     const own = POPULATION_COLORS[index % POPULATION_COLORS.length];
     const colors = this.cellColors?.name === population ? this.cellColors.colors : null;
     return (colors && colors.palette[colors.columnByNode[nodeId]]) ?? own;
