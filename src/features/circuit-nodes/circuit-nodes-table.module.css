@@ -61,10 +61,14 @@
   min-height: 0;
 }
 
+/* Wraps rather than overlaps: narrow, what is beside the count goes under it,
+   and the switches to a line of their own, still at the right. */
 .gridHeader {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 0.375rem 0.5rem;
   padding: 0.375rem 0;
   font-size: 0.8125rem;
   color: var(--color-label);
@@ -74,6 +78,7 @@
 
 .gridStat {
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .gridStatHighlight {

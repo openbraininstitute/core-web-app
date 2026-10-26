@@ -746,7 +746,7 @@ export function NodesGrid({
   return (
     <div className={styles.gridWrapper}>
       <div className={styles.gridHeader}>
-        <div className="flex min-w-0 items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <span className={styles.gridStat}>
             {pickColumn ? (
               // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
@@ -779,7 +779,7 @@ export function NodesGrid({
             <span>{headerNote}</span>
           </span>
         )}
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2">
           {/* First, so the switches after it stay put at the end as it comes and goes. */}
           {reset && (filtering || reset.picked) && (
             <button
