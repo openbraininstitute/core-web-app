@@ -417,9 +417,21 @@ export function SonataReportView({
       const inGroup = new Set(group.traces);
       const picked = pickedTraces.filter((p) => inGroup.has(p.traceIndex));
       if (pickedTraces.length > 0 && picked.length === 0) return [];
-      return [{ ...group, picked, hovered: hoveredTraces.filter((t) => inGroup.has(t)) }];
+      // Cells picked past the palette take the colours the rest of their group
+      // leaves free: on a plot of its own, a group names as many of its cells
+      // as the palette holds, wherever the table's picks ran out of colours.
+      const taken = new Set(picked.map((p) => p.slot));
+      const free = PICK_COLORS.map((_, slot) => slot).filter((slot) => !taken.has(slot));
+      const given = new Map<number, number>();
+      const coloured = picked.map((p) => {
+        if (p.slot >= 0) return p;
+        const nodeId = population?.traces[p.traceIndex]?.nodeId ?? p.traceIndex;
+        if (!given.has(nodeId) && given.size < free.length) given.set(nodeId, free[given.size]);
+        return { ...p, slot: given.get(nodeId) ?? p.slot };
+      });
+      return [{ ...group, picked: coloured, hovered: hoveredTraces.filter((t) => inGroup.has(t)) }];
     });
-  }, [traceGroups, pickedTraces, hoveredTraces]);
+  }, [traceGroups, pickedTraces, hoveredTraces, population]);
 
   // Each recorded cell's statistics, worked out once the panel is up and kept as
   // columns of the session's, so the table sorts and filters by them.
@@ -582,8 +594,8 @@ export function SonataReportView({
     (nodeId: number) => {
       if (!pickKey) return;
       const alone = pickedCells.length === 1 && pickedCells[0].nodeId === nodeId;
-      // It keeps its colour if it had one.
-      const slot = pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0;
+      // It keeps its colour if it had one; alone, one past the palette takes the first.
+      const slot = Math.max(0, pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0);
       setPicks({ key: pickKey, cells: alone ? NO_PICKS : [{ nodeId, slot }] });
       setHeldCell(alone ? null : { key: pickKey, nodeId });
       if (!alone) setFocusedRow({ nodeId, key: performance.now() });
