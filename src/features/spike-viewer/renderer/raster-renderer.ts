@@ -77,6 +77,8 @@ const NO_EVENTS: readonly TimelineEvent[] = [];
 const CLICK_RADIUS_PX = 12;
 /** How tall rows have to be, zoomed in, before a click between spikes picks the row's cell. */
 const MIN_ROW_PX = 6;
+/** How far past a spike's dot the pointer may be and still be on it, in px. */
+const HOVER_SLACK_PX = 1.5;
 
 /** The pointed-out cell's spikes and the band along its row. */
 const HIGHLIGHT_COLOR = '#0050b3';
@@ -628,7 +630,7 @@ export class RasterRenderer {
       return;
     }
 
-    // Check pixel distance threshold
+    // Only a spike the pointer is on - its dot, and a hair around it - not the nearest one about.
     const pxX =
       this.plotRect.x +
       ((nearest.time - this.view.xMin) / (this.view.xMax - this.view.xMin)) * this.plotRect.width;
@@ -636,8 +638,9 @@ export class RasterRenderer {
       this.plotRect.y +
       ((nearest.row - this.view.yMin) / (this.view.yMax - this.view.yMin)) * this.plotRect.height;
     const dist = Math.hypot(info.pixelX - pxX, info.pixelY - pxY);
+    const onDot = Math.max(3, this.computePointSize() / 2 + HOVER_SLACK_PX);
 
-    if (dist > 20) {
+    if (dist > onDot) {
       this.showEventsAt(info);
       return;
     }
@@ -771,10 +774,10 @@ export class RasterRenderer {
         const dy = Math.abs(row - dataY);
         if (dy > yThresh) continue;
 
-        // Normalized distance for fair comparison across axes
-        const dx = (pop.timestamps[i] - dataX) / xRange;
-        const dyNorm = (row - dataY) / yRange;
-        const dist = dx * dx + dyNorm * dyNorm;
+        // On screen, in px squared: the axes' scales differ, and so does the plot's width from its height.
+        const dxPx = ((pop.timestamps[i] - dataX) / xRange) * this.plotRect.width;
+        const dyPx = ((row - dataY) / yRange) * this.plotRect.height;
+        const dist = dxPx * dxPx + dyPx * dyPx;
 
         if (dist < bestDist) {
           bestDist = dist;
