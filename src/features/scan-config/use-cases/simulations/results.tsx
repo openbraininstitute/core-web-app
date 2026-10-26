@@ -21,7 +21,10 @@ import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/sim
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { useFlag } from '@/features/feature-flags';
-import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
+import {
+  campaignStatisticsFlag,
+  smallScalesViaLaunchSystemFlag,
+} from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -106,6 +109,7 @@ export default function SimulationsTab({
   });
 
   const smallScalesViaLaunchSystem = !!useFlag(smallScalesViaLaunchSystemFlag.key);
+  const campaignStatisticsEnabled = !!useFlag(campaignStatisticsFlag.key);
   const launchTarget = resolveSimulationLaunchTarget({
     entityType: entityType ?? null,
     scale: get(model, 'scale', null),
@@ -482,7 +486,9 @@ export default function SimulationsTab({
             />
           }
           // The campaign's statistics compare its spikes or its voltages, so only those offer them.
-          campaignStatistics={campaign !== null && shownReport !== undefined}
+          campaignStatistics={
+            campaignStatisticsEnabled && campaign !== null && shownReport !== undefined
+          }
           campaignId={campaignId}
           loading={loading}
           simulations={simulations}
