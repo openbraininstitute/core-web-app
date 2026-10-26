@@ -142,27 +142,31 @@ export function groupedOrder(library: string[], indices: Uint32Array, title: str
   return { rows, axis: { title, groups } };
 }
 
-/** Cells from the lowest value up, those without one at the top, node id breaking ties. */
+/**
+ * Cells from the highest value at the top down, as a y axis reads, those
+ * without one below them all, node id breaking ties. Rows run down from the
+ * top, so the highest value takes the first.
+ */
 export function rankedOrder(
   values: ArrayLike<number>,
   title: string,
   format: (value: number) => string
 ): RowOrder {
   const n = values.length;
-  const byValue = Uint32Array.from({ length: n }, (_, i) => i).sort((a, b) => {
+  const byRow = Uint32Array.from({ length: n }, (_, i) => i).sort((a, b) => {
     const x = values[a];
     const y = values[b];
     const xMissing = Number.isNaN(x);
     const yMissing = Number.isNaN(y);
     if (xMissing || yMissing) return xMissing === yMissing ? a - b : xMissing ? 1 : -1;
-    return x - y || a - b;
+    return y - x || a - b;
   });
   const rows = new Float32Array(n);
-  byValue.forEach((cell, row) => {
+  byRow.forEach((cell, row) => {
     rows[cell] = row;
   });
   const valueAt = (row: number) => {
-    const cell = byValue[Math.min(n - 1, Math.max(0, Math.round(row)))];
+    const cell = byRow[Math.min(n - 1, Math.max(0, Math.round(row)))];
     const value = cell === undefined ? Number.NaN : values[cell];
     return Number.isNaN(value) ? '–' : format(value);
   };
