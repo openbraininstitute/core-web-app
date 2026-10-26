@@ -120,7 +120,12 @@ const BASE_ENTITY_TYPE_FALLBACK: Partial<
   [ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign]: ExtendedEntitiesTypeDict.Circuit,
 };
 
+/** The type whose listing an entity of `extendedType` belongs to (e.g. a whole brain → circuit). */
+export function resolveBaseEntityType(extendedType: TExtendedEntitiesTypeDict) {
+  return BASE_ENTITY_TYPE_FALLBACK[extendedType] ?? extendedType;
+}
+
 export function resolveConcreteEntityPathParam(extendedType?: TExtendedEntitiesTypeDict) {
   if (!extendedType) return '';
-  return kebabCase(BASE_ENTITY_TYPE_FALLBACK[extendedType] ?? extendedType);
+  return kebabCase(resolveBaseEntityType(extendedType));
 }
