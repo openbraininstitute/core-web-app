@@ -749,7 +749,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
           <RasterPlotControls markerSize={markerSize} onMarkerSizeChange={setMarkerSize} />
           {circuit && (
             <PillSelect
-              label="Order/group by"
+              label="Order by"
               value={rasterOrder.value}
               options={rasterOrder.options}
               onChange={rasterOrder.onChange}
