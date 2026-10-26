@@ -4,6 +4,7 @@ import { Empty, Spin } from 'antd';
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import {
@@ -29,6 +30,7 @@ import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { AxisValues, Figure } from '@/features/spike-viewer/spike-statistics/figures';
 import type { CellGroup, CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
+import type { PillSelectOption } from '@/ui/molecules/select/pill-select';
 
 // Plotly is megabytes; it loads the first time the panel opens, not with the raster.
 const StatisticsPlot = dynamic(
@@ -259,8 +261,12 @@ export function StatisticsPlots({
   const groupLabel = groupingLabel(groupOptions, groupBy);
   const colourLabel = colouring ? groupingLabel(groupOptions, colourBy) : groupLabel;
   const groupingOptions = [
-    ...groupOptions.map((c) => ({ value: c.name, label: c.label ?? c.name })),
     { value: NO_GROUPING, label: 'None' },
+    ...groupOptions.map((c) => ({
+      value: c.name,
+      label: c.label ?? c.name,
+      heading: NEURON_HEADING,
+    })),
   ];
   const axisOptions = useMemo(() => scatterAxisOptions(statistics, columns), [statistics, columns]);
   const [chosenAxes, setChosenAxes] = useState<string[]>([]);
@@ -397,7 +403,11 @@ export function StatisticsPlots({
           <PillSelect
             label={scatter ? 'Colour' : 'Statistic'}
             value={statistic.key}
-            options={statistics.map((s) => ({ value: s.key, label: statisticLabel(s) }))}
+            options={statistics.map((s) => ({
+              value: s.key,
+              label: statisticLabel(s),
+              heading: s.heading,
+            }))}
             onChange={setStatisticKey}
           />
         )}
@@ -553,12 +563,16 @@ function compactNumber(value: number): string {
 function scatterAxisOptions(
   statistics: readonly CellStatistic[],
   columns: ColumnMeta[] | undefined
-): { value: string; label: string }[] {
+): PillSelectOption[] {
   return [
-    ...statistics.map((s) => ({ value: `${STAT_AXIS}${s.key}`, label: statisticLabel(s) })),
+    ...statistics.map((s) => ({
+      value: `${STAT_AXIS}${s.key}`,
+      label: statisticLabel(s),
+      heading: s.heading,
+    })),
     ...(columns ?? [])
       .filter((c) => c.kind === 'numeric' && c.name !== 'node_id')
-      .map((c) => ({ value: c.name, label: c.name })),
+      .map((c) => ({ value: c.name, label: c.name, heading: NEURON_HEADING })),
   ];
 }
 

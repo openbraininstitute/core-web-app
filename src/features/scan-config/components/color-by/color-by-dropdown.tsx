@@ -1,8 +1,13 @@
 import { RiArrowDownSLine, RiCheckLine, RiRefreshLine } from '@remixicon/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
-import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
+import {
+  MENU_HEADING_CLASS,
+  MENU_INSET_CLASS,
+  PILL_CLASS,
+} from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import { labelForProperty } from './properties';
@@ -105,12 +110,15 @@ export function ColorByDropdown({
               selected={value === null}
               onClick={() => select(null)}
             />
+            {/* The cells' own properties, headed as in the other menus. */}
+            {properties.length > 0 && <li className={MENU_HEADING_CLASS}>{NEURON_HEADING}</li>}
             {properties.map((p) => (
               <Option
                 id={`color-by-dropdown-option-${p.name}`}
                 key={p.name}
                 label={p.label}
                 selected={value === p.name}
+                inset
                 onClick={() => select(p.name)}
               />
             ))}
@@ -144,10 +152,13 @@ export function ColorByDropdown({
 function Option({
   label,
   selected,
+  inset = false,
   onClick,
 }: {
   label: string;
   selected: boolean;
+  /** Under a heading, set in from it. */
+  inset?: boolean;
   onClick: () => void;
 } & React.ComponentPropsWithoutRef<'button'>) {
   return (
@@ -157,7 +168,8 @@ function Option({
         onClick={onClick}
         className={cn(
           'flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm transition-colors hover:bg-neutral-100',
-          selected ? 'text-primary-9 font-semibold' : 'text-neutral-700'
+          selected ? 'text-primary-9 font-semibold' : 'text-neutral-700',
+          inset && MENU_INSET_CLASS
         )}
       >
         {label}

@@ -10,6 +10,7 @@ import {
   CAMPAIGN_SPIKES_LIMIT_BYTES,
   reportAssetOf,
 } from '@/features/spike-viewer/campaign-statistics/campaign-summaries';
+import { SPIKING_HEADING } from '@/features/spike-viewer/spike-statistics/statistics';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { CellFrames, CellValueStatistics } from '@/features/sonata-viewer/types';
@@ -34,10 +35,17 @@ const COURSE_FRAMES = 400;
 
 /** What a campaign is compared by for a voltage: its level, its spread and its spiking. */
 const VOLTAGE_CAMPAIGN_METRICS: readonly CampaignMetric[] = [
-  { key: 'mean', label: 'Mean voltage (mV)', scale: 1 },
-  { key: 'sd', label: 'Voltage SD (mV)', scale: 1, min: 0 },
-  { key: 'spikingFraction', label: 'Spiking cells (%)', scale: 100, min: 0, max: 100 },
-  { key: 'rate', label: 'Mean rate (Hz)', scale: 1, min: 0 },
+  { key: 'mean', label: 'Mean voltage (mV)', scale: 1, heading: 'Voltage' },
+  { key: 'sd', label: 'Voltage SD (mV)', scale: 1, min: 0, heading: 'Voltage' },
+  {
+    key: 'spikingFraction',
+    label: 'Spiking cells (%)',
+    scale: 100,
+    min: 0,
+    max: 100,
+    heading: SPIKING_HEADING,
+  },
+  { key: 'rate', label: 'Mean rate (Hz)', scale: 1, min: 0, heading: SPIKING_HEADING },
 ];
 
 /** For a voltage, its measures; for another variable, its level, spread and extremes. */
@@ -48,10 +56,10 @@ export function reportCampaignMetrics(
   if (variable === null) return VOLTAGE_CAMPAIGN_METRICS;
   const unit = units ? ` (${units})` : '';
   return [
-    { key: 'mean', label: `Mean ${variable}${unit}`, scale: 1 },
-    { key: 'sd', label: `${variable} SD${unit}`, scale: 1, min: 0 },
-    { key: 'min', label: `Lowest ${variable}${unit}`, scale: 1 },
-    { key: 'max', label: `Highest ${variable}${unit}`, scale: 1 },
+    { key: 'mean', label: `Mean ${variable}${unit}`, scale: 1, heading: variable },
+    { key: 'sd', label: `${variable} SD${unit}`, scale: 1, min: 0, heading: variable },
+    { key: 'min', label: `Lowest ${variable}${unit}`, scale: 1, heading: variable },
+    { key: 'max', label: `Highest ${variable}${unit}`, scale: 1, heading: variable },
   ];
 }
 

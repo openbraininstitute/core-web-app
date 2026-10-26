@@ -2,7 +2,14 @@
 
 import { RiArrowDownSLine } from '@remixicon/react';
 
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/ui/molecules/select';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+} from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
 export type PillSelectOption = {
@@ -15,7 +22,15 @@ export type PillSelectOption = {
   /** A tag after the label, on the pill too, saying what kind of thing it names. */
   tag?: string;
   disabled?: boolean;
+  /** The heading it is listed under, with the options next to it that share it, such as Spiking. */
+  heading?: string;
 };
+
+/** A heading over a run of a menu's options: a tinted band in bold capitals, which the options sit in from. */
+export const MENU_HEADING_CLASS =
+  'mt-1 mb-0.5 rounded-lg bg-neutral-100 px-2 py-1 text-[11px] font-bold tracking-wider text-primary-9 uppercase';
+/** An option under a heading, set in from it. */
+export const MENU_INSET_CLASS = 'pl-5';
 
 /** The raised white pill a PillSelect is drawn as: buttons beside one wear it too. */
 export const PILL_CLASS = cn(
@@ -95,22 +110,49 @@ export function PillSelect({
         {chosen?.tag && <Tag>{chosen.tag}</Tag>}
       </SelectTrigger>
       <SelectContent className="rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl">
-        {options.map((o) => (
-          <SelectItem
-            key={o.value}
-            value={o.value}
-            disabled={o.disabled}
-            className="rounded-xl text-sm data-[state=checked]:font-semibold"
-          >
-            {o.color && <Dot color={o.color} />}
-            {o.label}
-            {o.tag && <Tag className="ml-auto">{o.tag}</Tag>}
-            {o.detail && <span className="ml-auto pl-3 text-xs text-neutral-400">{o.detail}</span>}
-          </SelectItem>
-        ))}
+        {headedRuns(options).map(({ heading, items }) =>
+          heading ? (
+            <SelectGroup key={`${heading}:${items[0].value}`}>
+              <SelectLabel className={MENU_HEADING_CLASS}>{heading}</SelectLabel>
+              {items.map((o) => menuItem(o, true))}
+            </SelectGroup>
+          ) : (
+            items.map((o) => menuItem(o, false))
+          )
+        )}
       </SelectContent>
     </Select>
   );
+}
+
+function menuItem(o: PillSelectOption, inset: boolean) {
+  return (
+    <SelectItem
+      key={o.value}
+      value={o.value}
+      disabled={o.disabled}
+      className={cn(
+        'rounded-xl text-sm data-[state=checked]:font-semibold',
+        inset && MENU_INSET_CLASS
+      )}
+    >
+      {o.color && <Dot color={o.color} />}
+      {o.label}
+      {o.tag && <Tag className="ml-auto">{o.tag}</Tag>}
+      {o.detail && <span className="ml-auto pl-3 text-xs text-neutral-400">{o.detail}</span>}
+    </SelectItem>
+  );
+}
+
+/** The options in runs that share a heading, in the order given; those without one stand under none. */
+function headedRuns(options: PillSelectOption[]) {
+  const runs: { heading?: string; items: PillSelectOption[] }[] = [];
+  for (const option of options) {
+    const last = runs.at(-1);
+    if (last && last.heading === option.heading) last.items.push(option);
+    else runs.push({ heading: option.heading, items: [option] });
+  }
+  return runs;
 }
 
 /** The files column's kind of tag, small: grey, rounded, in capitals. */

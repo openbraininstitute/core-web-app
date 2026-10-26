@@ -4,6 +4,7 @@ import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import {
   compareGroupNames,
   computeSpikeStatistics,
@@ -56,13 +57,15 @@ export function useRasterOrder({
     population: nodePopulation,
   });
 
+  // The spikes' statistics under their heading, then the cells' own properties under theirs.
   const options = useMemo(
     () => [
-      { value: NODE_ID_ORDER, label: 'Node id' },
       ...SPIKE_STATISTICS.map((s) => ({
         value: `${STATISTIC_ORDER}${s.key}`,
         label: statisticLabel(s),
+        heading: s.heading,
       })),
+      { value: NODE_ID_ORDER, label: 'Node id', heading: NEURON_HEADING },
       ...(columns ?? [])
         .filter(
           (c) =>
@@ -71,7 +74,7 @@ export function useRasterOrder({
               (c.library?.length ?? 0) <= MAX_GROUPS) ||
             (c.kind === 'numeric' && c.name !== 'node_id')
         )
-        .map((c) => ({ value: c.name, label: c.label ?? c.name })),
+        .map((c) => ({ value: c.name, label: c.label ?? c.name, heading: NEURON_HEADING })),
     ],
     [columns]
   );

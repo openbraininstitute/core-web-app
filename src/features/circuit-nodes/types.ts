@@ -9,6 +9,9 @@ export const ColumnKindDict = {
 
 export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
 
+/** What a menu lists a node's own properties under, its neuron sets among them. */
+export const NEURON_HEADING = 'Neuron';
+
 export type ColumnMeta = {
   name: string;
   kind: ColumnKind;

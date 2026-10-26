@@ -1,3 +1,5 @@
+import { SPIKING_HEADING } from '@/features/spike-viewer/spike-statistics/statistics';
+
 import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 
 export type ReportStatisticKey = 'mean' | 'sd' | 'min' | 'max' | 'spikes';
@@ -23,10 +25,12 @@ export function reportStatistics(
 ): CellStatistic<ReportStatisticKey>[] {
   const noun = variable ?? 'voltage';
   const unit = units || undefined;
+  const heading = variable ?? 'Voltage';
   const statistics: CellStatistic<ReportStatisticKey>[] = [
     {
       key: 'mean',
       column: 'report:mean',
+      heading,
       label: `Mean ${noun}`,
       short: 'Mean',
       unit,
@@ -35,6 +39,7 @@ export function reportStatistics(
     {
       key: 'sd',
       column: 'report:sd',
+      heading,
       label: `${variable ?? 'Voltage'} SD`,
       short: 'SD',
       unit,
@@ -43,6 +48,7 @@ export function reportStatistics(
     {
       key: 'min',
       column: 'report:min',
+      heading,
       label: `Lowest ${noun}`,
       short: 'Min',
       unit,
@@ -51,6 +57,7 @@ export function reportStatistics(
     {
       key: 'max',
       column: 'report:max',
+      heading,
       label: `Highest ${noun}`,
       short: 'Max',
       unit,
@@ -61,6 +68,7 @@ export function reportStatistics(
     statistics.push({
       key: 'spikes',
       column: 'report:spikes',
+      heading: SPIKING_HEADING,
       label: 'Spike count',
       short: 'Count',
       format: (v) => v.toLocaleString(),

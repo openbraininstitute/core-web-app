@@ -1,5 +1,6 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import { scaleColor } from '@/features/spike-viewer/spike-statistics/figures';
+import { SPIKING_HEADING } from '@/features/spike-viewer/spike-statistics/statistics';
 
 import type { Data, Layout } from 'plotly.js-dist-min';
 import type {
@@ -22,13 +23,22 @@ export type CampaignMetric = {
   min?: number;
   /** The most it can be, once scaled, where it has a most. */
   max?: number;
+  /** What the menus list it under: Spiking, or what a report recorded. */
+  heading: string;
 };
 
 export const SPIKE_CAMPAIGN_METRICS: readonly CampaignMetric[] = [
-  { key: 'meanRate', label: 'Mean rate (Hz)', scale: 1, min: 0 },
-  { key: 'medianRate', label: 'Median rate (Hz)', scale: 1, min: 0 },
-  { key: 'activeFraction', label: 'Active cells (%)', scale: 100, min: 0, max: 100 },
-  { key: 'meanCv', label: 'Mean ISI CV', scale: 1, min: 0 },
+  { key: 'meanRate', label: 'Mean rate (Hz)', scale: 1, min: 0, heading: SPIKING_HEADING },
+  { key: 'medianRate', label: 'Median rate (Hz)', scale: 1, min: 0, heading: SPIKING_HEADING },
+  {
+    key: 'activeFraction',
+    label: 'Active cells (%)',
+    scale: 100,
+    min: 0,
+    max: 100,
+    heading: SPIKING_HEADING,
+  },
+  { key: 'meanCv', label: 'Mean ISI CV', scale: 1, min: 0, heading: SPIKING_HEADING },
 ];
 
 /** A scan parameter as an axis: its name, and its values in order with their text. */

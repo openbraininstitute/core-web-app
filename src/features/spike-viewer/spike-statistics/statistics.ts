@@ -15,7 +15,12 @@ export type CellStatistic<Key extends string = string> = {
   format: (value: number) => string;
   /** The steps its values come in, given the run's span in ms: whole spikes, or one spike over the run. */
   step?: (windowMs: number) => number;
+  /** What the menus list it under: Spiking, or what a report recorded. */
+  heading: string;
 };
+
+/** What a menu lists what a cell's spikes say under. */
+export const SPIKING_HEADING = 'Spiking';
 
 export type SpikeStatistic = CellStatistic<SpikeStatisticKey>;
 
@@ -23,6 +28,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'count',
     column: 'spikes:count',
+    heading: SPIKING_HEADING,
     label: 'Spike count',
     short: 'Count',
     format: (v) => v.toLocaleString(),
@@ -31,6 +37,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'rate',
     column: 'spikes:rate',
+    heading: SPIKING_HEADING,
     label: 'Firing rate',
     short: 'Rate',
     unit: 'Hz',
@@ -40,6 +47,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'firstSpike',
     column: 'spikes:first_spike',
+    heading: SPIKING_HEADING,
     label: 'First spike',
     short: 'First',
     unit: 'ms',
@@ -48,6 +56,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'meanIsi',
     column: 'spikes:mean_isi',
+    heading: SPIKING_HEADING,
     label: 'Mean ISI',
     short: 'ISI',
     unit: 'ms',
@@ -56,6 +65,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
   {
     key: 'isiCv',
     column: 'spikes:isi_cv',
+    heading: SPIKING_HEADING,
     label: 'ISI CV',
     short: 'CV',
     format: (v) => v.toFixed(2),

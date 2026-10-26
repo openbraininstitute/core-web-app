@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import {
   nearestSimulation,
   scanValueId,
@@ -295,7 +296,11 @@ export function CampaignPlots({
   const setGroupBy = (next: string) => setPlot((p) => ({ ...p, groupBy: next }));
   const groupOptions = [
     { value: NO_GROUPING, label: 'None' },
-    ...groupColumns.map((c) => ({ value: c.name, label: c.label ?? c.name })),
+    ...groupColumns.map((c) => ({
+      value: c.name,
+      label: c.label ?? c.name,
+      heading: NEURON_HEADING,
+    })),
   ];
   const setChosenX = (next: string) => setPlot((p) => ({ ...p, x: next }));
   const setChosenY = (next: string) => setPlot((p) => ({ ...p, y: next }));
@@ -531,7 +536,7 @@ export function CampaignPlots({
           <PillSelect
             label="Statistic"
             value={metric.key}
-            options={metrics.map((m) => ({ value: m.key, label: m.label }))}
+            options={metrics.map((m) => ({ value: m.key, label: m.label, heading: m.heading }))}
             onChange={setStatistic}
           />
         )}
