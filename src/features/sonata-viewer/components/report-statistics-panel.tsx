@@ -44,7 +44,7 @@ type Props = {
   summary: ReactNode;
   /** The table of the recorded cells, as the viewer drives it. */
   table: TableProps;
-  /** Only the table, where the campaign's statistics have the plots' place, or they are out of view. */
+  /** Only the table, where the plots are out of view. */
   tableOnly?: boolean;
   /**
    * Where the plots go when the host lays them out apart from the table, as

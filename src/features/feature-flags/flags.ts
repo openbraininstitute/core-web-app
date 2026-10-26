@@ -72,15 +72,6 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The simulation results' Simulation/Campaign toggle, and the statistics across the campaign it brings up. */
-export const campaignStatisticsFlag = defineFlag<boolean>({
-  key: 'campaign-statistics',
-  defaultValue: false,
-  values: [true, false],
-  description: 'Campaign statistics in simulation results',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -90,7 +81,6 @@ export const flags = [
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
-  campaignStatisticsFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

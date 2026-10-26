@@ -18,8 +18,6 @@ import { circuitDrawsMorphologies } from '@/features/scan-config/components/circ
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
-import { campaignGroupingColumns } from '@/features/spike-viewer/campaign-statistics/campaign-groups';
-import { CampaignStatisticsView } from '@/features/spike-viewer/campaign-statistics/campaign-statistics-view';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import RasterPlot from '@/features/spike-viewer/components/raster-plot';
 import RasterPlotControls, {
@@ -119,7 +117,7 @@ interface SpikeReplayViewProps {
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
 export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
-  const { campaign: campaignInfo, run, timeline } = useSimulation();
+  const { timeline } = useSimulation();
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
@@ -171,15 +169,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     rowCount,
     status: nodesStatus,
     columns: nodeColumns,
-    getColumn,
   } = useNodesWorker({
     enabled: circuit !== undefined,
     circuitId: circuit?.id ?? '',
     circuitAssetId: circuitConfig?.circuitAssetId ?? '',
     population: nodePopulation,
   });
-  // What the campaign's plots can be grouped by, read through the same session.
-  const campaignGroupColumns = useMemo(() => campaignGroupingColumns(nodeColumns), [nodeColumns]);
   const nodesSession =
     circuit && nodePopulation
       ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', nodePopulation.name)
@@ -239,17 +234,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // Up or not is the layout's: it outlasts this file when another result is
   // picked from the bar over the panel, and the next file's statistics take over.
   const dockedOpen = docked && (sidePanel?.open ?? false);
-  // With the campaign's statistics up over it, this is the raster and the
-  // table of the simulation on show, picked here, with the width to themselves.
-  const campaignMode = dockedOpen && (sidePanel?.campaign ?? false);
   // Docked, the raster is over the table, and the panel beside them, once up,
   // holds the 3D player over the statistics. Either column can be shut on its
   // side by the rule between them, and any of the four panes by its own bar.
   const shuts = sidePanel?.shuts;
-  const beside = dockedOpen && !campaignMode;
   const rasterUp = !(dockedOpen && shuts?.columns === 'start') && shuts?.file !== 'start';
-  const sceneUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'start';
-  const plotsUp = beside && shuts?.columns !== 'end' && shuts?.panel !== 'end';
+  const sceneUp = dockedOpen && shuts?.columns !== 'end' && shuts?.panel !== 'start';
+  const plotsUp = dockedOpen && shuts?.columns !== 'end' && shuts?.panel !== 'end';
   // The split of the viewer's own panes, out of a results layout.
   const panes = useShuttingSplit({
     chosen: rasterHeight,
@@ -684,39 +675,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     />
   );
 
-  const campaignStatistics =
-    campaignMode &&
-    campaignInfo &&
-    sidePanel?.campaignTarget &&
-    createPortal(
-      // In the panel's place, a box like the panes beside it.
-      <StackedPanes
-        split="panel"
-        top={{
-          title: 'Campaign statistics',
-          boxClassName: 'p-2',
-          content: (
-            <CampaignStatisticsView
-              simulations={campaignInfo.simulations}
-              statusMap={campaignInfo.statusMap}
-              activeSimulationId={campaignInfo.activeSimulationId}
-              onSelect={campaignInfo.onSelect}
-              reportPath={reportPath}
-              populationName={populationName}
-              cellCount={cellCount}
-              run={run}
-              cells={sceneCells ?? null}
-              timeWindow={currentWindow?.time ?? null}
-              groupColumns={campaignGroupColumns}
-              getColumn={getColumn}
-              sessionKey={nodesSession}
-            />
-          ),
-        }}
-      />,
-      sidePanel.campaignTarget
-    );
-
   if (docked && sidePanel) {
     const panelTitles = ['3D Player', 'Statistics'];
     return (
@@ -799,7 +757,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
               />,
               sidePanel.target
             )}
-          {campaignStatistics}
           {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
           {sidePanel.fileStrip &&
             createPortal(
@@ -812,11 +769,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
             )}
           {sidePanel.panelStrip &&
             createPortal(
-              <ShutPaneBar
-                upright
-                title={campaignMode ? ['Campaign statistics'] : panelTitles}
-                onOpen={sidePanel.openColumns}
-              />,
+              <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
               sidePanel.panelStrip
             )}
         </FullscreenPortalScope>

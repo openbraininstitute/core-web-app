@@ -3,8 +3,6 @@
 import { createContext, useContext, useMemo } from 'react';
 
 import type { ReactNode } from 'react';
-import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
-import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
@@ -19,21 +17,12 @@ export type SimulationNeuronSets = {
   nodeSets: Record<string, unknown>;
 };
 
-/** The campaign a file came from, for a view comparing its simulations. */
-export type SimulationCampaign = {
-  simulations: ISimulation[];
-  statusMap: Map<string, ActivityStatus>;
-  activeSimulationId: string;
-  onSelect: (simulation: ISimulation) => void;
-};
-
 type SimulationContextValue = {
   model: TSupportedEntitiesForScanConfiguration | null;
   run: SimulationRun | null;
   neuronSets: SimulationNeuronSets | null;
   /** Picks which of the campaign's simulations is on show, for a viewer's header. */
   simulationPicker: ReactNode;
-  campaign: SimulationCampaign | null;
   /** When the simulation's stimuli, recordings and synaptic changes happen, from its config. */
   timeline: readonly TimelineEvent[];
 };
@@ -59,7 +48,6 @@ const SimulationContext = createContext<SimulationContextValue>({
   run: null,
   neuronSets: null,
   simulationPicker: null,
-  campaign: null,
   timeline: NO_TIMELINE,
 });
 
@@ -68,7 +56,6 @@ export function SimulationProvider({
   run,
   neuronSets,
   simulationPicker = null,
-  campaign = null,
   timeline = NO_TIMELINE,
   children,
 }: {
@@ -76,7 +63,6 @@ export function SimulationProvider({
   run: SimulationRun | null | undefined;
   neuronSets?: SimulationNeuronSets | null;
   simulationPicker?: ReactNode;
-  campaign?: SimulationCampaign | null;
   timeline?: readonly TimelineEvent[];
   children: ReactNode;
 }) {
@@ -86,10 +72,9 @@ export function SimulationProvider({
       run: run ?? null,
       neuronSets: neuronSets ?? null,
       simulationPicker,
-      campaign,
       timeline,
     }),
-    [model, run, neuronSets, simulationPicker, campaign, timeline]
+    [model, run, neuronSets, simulationPicker, timeline]
   );
 
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;

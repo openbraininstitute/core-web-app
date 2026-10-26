@@ -60,7 +60,7 @@ type Props = {
   /** The run's span, in ms, which the rates are over. */
   timeRange: { min: number; max: number };
   color: string;
-  /** Only the table, where something else - the campaign's statistics - has the plots' place, or they are out of view. */
+  /** Only the table, where the plots are out of view. */
   tableOnly?: boolean;
   /**
    * Where the plots go when the host lays them out apart from the table, as

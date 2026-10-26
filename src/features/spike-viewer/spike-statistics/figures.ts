@@ -734,7 +734,7 @@ function sequentialColor(t: number): string {
 }
 
 /** The colour `t` of the way along a Plotly colour scale of hex stops evenly spaced. */
-export function scaleColor(scale: readonly [number, string][], t: number): string {
+function scaleColor(scale: readonly [number, string][], t: number): string {
   const stops = scale.map(([, hex]) => Number.parseInt(hex.slice(1), 16));
   const scaled = t * (stops.length - 1);
   const i = Math.min(stops.length - 2, Math.floor(scaled));

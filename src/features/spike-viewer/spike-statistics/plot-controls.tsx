@@ -10,7 +10,7 @@ import { cn } from '@/utils/css-class';
 
 import type { PsthOptions } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 
-/** How the PSTHs bin and smooth, the simulation's and the campaign's alike, kept across picks. */
+/** How the PSTHs bin and smooth, kept across picks. */
 export const psthOptionsAtom = atom<PsthOptions>(DEFAULT_PSTH);
 
 const AUTO = 'auto';
