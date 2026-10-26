@@ -53,8 +53,9 @@ type PlotKind =
 
 /**
  * A plot over time the host can draw from what it holds - the spikes' PSTHs, a
- * report's mean - offered first and shown at first: a figure for the cells on
- * show split as Group by splits them, or null while it is not ready.
+ * report's mean - offered first, and shown at first unless the host picks
+ * another: a figure for the cells on show split as Group by splits them, or
+ * null while it is not ready.
  */
 export type TimeCourse = {
   label: string;
@@ -146,6 +147,8 @@ type PlotsProps = {
   spanMs: number;
   /** The statistic shown at first. */
   initialStatistic: string;
+  /** The plot shown at first: the time course, where there is one, unless the host says otherwise. */
+  initialPlot?: PlotKind;
   /** Said after the controls, such as how many cells the plot is over. */
   summary?: ReactNode;
   /** Kept but not drawn, so the choices made over the plot outlast a spell out of view. */
@@ -170,6 +173,7 @@ export function StatisticsPlots({
   color,
   spanMs,
   initialStatistic,
+  initialPlot,
   summary,
   hidden = false,
   timeCourse,
@@ -178,12 +182,23 @@ export function StatisticsPlots({
   const [statisticKey, setStatisticKey] = useState(initialStatistic);
   const statistic = statistics.find((s) => s.key === statisticKey) ?? statistics[0];
 
+  // Which figure: the statistic by group, or the cells themselves placed by
+  // chosen columns - any statistic or numeric node property - and coloured by it.
+  const [plotKind, setPlotKind] = useState<PlotKind>(
+    initialPlot ?? (timeCourse ? 'timeCourse' : 'violins')
+  );
+  const overTime = plotKind === 'timeCourse' && timeCourse !== undefined;
+
+  // Until a grouping is chosen, the cells over time go ungrouped and their
+  // statistics' distributions by the property a circuit is usually read by.
   const groupOptions = useMemo(() => groupingColumns(columns), [columns]);
   const [chosenGroupBy, setChosenGroupBy] = useState<string>();
   const groupBy =
     chosenGroupBy === NO_GROUPING || groupOptions.some((c) => c.name === chosenGroupBy)
       ? (chosenGroupBy as string)
-      : defaultGrouping(groupOptions);
+      : overTime
+        ? NO_GROUPING
+        : defaultGrouping(groupOptions);
 
   const groupColumn = useGroupingColumn(groupBy, ready, getColumn, sessionKey);
 
@@ -193,11 +208,7 @@ export function StatisticsPlots({
     return groupValues(shown, groupColumn, cells);
   }, [values, cells, groupColumn, statistic]);
 
-  // Which figure: the statistic by group, or the cells themselves placed by
-  // chosen columns - any statistic or numeric node property - and coloured by it.
-  const [plotKind, setPlotKind] = useState<PlotKind>(timeCourse ? 'timeCourse' : 'violins');
   const scatter = plotKind === 'scatter2d' || plotKind === 'scatter3d';
-  const overTime = plotKind === 'timeCourse' && timeCourse !== undefined;
   const hostPlot = cellPlots?.find((p) => p.value === plotKind);
   // Over time, or in a host's plot, the cells themselves are split, not a statistic's values.
   const overCells = overTime || hostPlot !== undefined;

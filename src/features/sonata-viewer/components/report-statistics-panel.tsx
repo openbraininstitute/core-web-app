@@ -103,6 +103,8 @@ export function ReportStatisticsPanel({
       color={color}
       spanMs={spanMs}
       initialStatistic="mean"
+      // The cells' voltages by property first; their mean over time is a pick away.
+      initialPlot="violins"
       summary={values && summary}
       hidden={tableOnly}
       timeCourse={timeCourse}
