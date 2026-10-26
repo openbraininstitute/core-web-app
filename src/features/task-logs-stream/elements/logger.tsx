@@ -489,7 +489,10 @@ export function LogsViewer({
   if (!enabled) return null;
 
   return (
-    <div id="job-logs" className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 pb-4">
+    <div
+      id="job-logs"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 pb-4"
+    >
       <div className="sticky top-0 z-10 bg-neutral-50">
         <LogsActions
           entries={entries}
