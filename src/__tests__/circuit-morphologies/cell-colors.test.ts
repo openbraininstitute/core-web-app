@@ -71,4 +71,36 @@ describe("the cells' colours", () => {
       )
     ).toEqual(['#123456']);
   });
+
+  it('take out the cells of the population on show that are filtered out', () => {
+    const colors = cellColorsOf({
+      populations: POPULATIONS,
+      subject: 'cortex',
+      receded: '#cccccc',
+      hidden: NONE,
+      shownCells: Uint8Array.of(1, 0, 1),
+    });
+    expect(columns(colors)).toEqual([null, false, null, '#cccccc', '#cccccc', '#cccccc']);
+  });
+
+  it('fade the rest of the population on show behind a cell pointed out, which shows filtered or not', () => {
+    const pointedOut = {
+      populations: POPULATIONS,
+      subject: 'cortex',
+      nodeColors: { palette: ['#111111'], columnByNode: Uint16Array.of(0, 0, 0) },
+      hidden: new Set(['inputs']),
+      shownCells: Uint8Array.of(1, 0, 0),
+      highlightedCell: 2,
+    };
+    expect(columns(cellColorsOf({ ...pointedOut, fadedColor: '#d4d4d4' }))).toEqual([
+      '#d4d4d4',
+      false,
+      '#111111',
+      null,
+      null,
+      false,
+    ]);
+    // Without a colour to fade to, the cell pointed out is shown alone.
+    expect(columns(cellColorsOf(pointedOut))).toEqual([false, false, '#111111', null, null, false]);
+  });
 });

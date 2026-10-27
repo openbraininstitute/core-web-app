@@ -40,6 +40,8 @@ export interface NodeColors {
   palette: string[];
   /** palette index per node, aligned by node index. Empty when mode === 'none' */
   columnByNode: Uint16Array;
+  /** Palette columns drawn in their colour alone, without the viewer's depth shading: a backdrop's, one even shade. */
+  flatColumns?: readonly number[];
 }
 
 /**

@@ -39,7 +39,7 @@ export function usePlacedScene({
 }: Options) {
   const { config, error: configError } = useCircuitConfig(circuit);
   // Nothing is reported placed until everything is, so anything placed at all means the whole scene can be built.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
+  const { placed, failures, positionless, settled, download } = usePopulationsPlacement({
     circuit,
     populations,
     withMorphologies,
@@ -111,14 +111,18 @@ export function usePlacedScene({
 
   // Only where something recedes: this colour follows the background, and a single-population scene should not
   // repaint when the background changes. Hiding the population on show is not the exception it looks like: nothing on
-  // screen is the selection then either. With the population on show unplaceable there is no selection on screen to
-  // recede behind, and receding everything would grey the whole circuit out.
-  const receded = hasContext && subject ? recededColor : undefined;
+  // screen is the selection then either. The rest recede behind a population on show with no positions too, which the
+  // chrome explains; any other failure to place it goes unexplained, and receding everything would grey the circuit out.
+  const receded =
+    hasContext && (subject || (subjectName !== undefined && positionless.has(subjectName)))
+      ? recededColor
+      : undefined;
 
   return {
     config,
     placed,
     settled,
+    positionless,
     download,
     subject,
     anchor,

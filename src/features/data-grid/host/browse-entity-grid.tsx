@@ -44,6 +44,7 @@ import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
   DataGrid,
+  FACETS_STALE_MS,
   layoutKeyFor,
   selectionKeyFor,
   useGridStateSlice,
@@ -86,12 +87,15 @@ import type {
   IExpandColumnConfig,
 } from '@/features/data-grid/react';
 import type { BrowseEntityScopeProps } from '@/features/views/listing/types';
+import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 /** Module-level so the slice subscription's reader identity stays stable. */
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
 
 export interface IBrowseEntityGridProps extends BrowseEntityScopeProps {
   definition: TAnyEntityGridDefinition;
+  /** the resolved variant, when the listing is one (plugin bodies adapt to it) */
+  variant?: IListingVariant;
 }
 
 /**
@@ -425,6 +429,11 @@ export function EntityDataGrid({
         context: { virtualLabId, projectId },
       }),
     enabled: enabled && Boolean(facetsQueryFn),
+    // The buckets of a listing change when data is registered, not on every mount or
+    // focus: the facet call is entitycore's most expensive request, so a listing
+    // reopened within the window reuses the last answer.
+    staleTime: FACETS_STALE_MS,
+    refetchOnWindowFocus: false,
   });
   const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;
 

@@ -64,13 +64,19 @@ export interface MorphingTabsProps {
   railCenter?: ReactNode;
   /** Rail-level trailing content after the tabs (e.g. a close button). */
   railEnd?: ReactNode;
+  /**
+   * Folds the rail away, tabs and slots with it, so the panel takes the whole
+   * surface: for a view inside that wants the room. Animated either way.
+   */
+  railCollapsed?: boolean;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
 }
 
-// The design width of a tab, and the narrowest it may shrink to before the
-// label stops reading. See `tabWidth` in MorphingTabs.
+// The widest a tab may be, and the narrowest it may shrink to before the label
+// stops reading. Within them a tab is as wide as the longest label needs. See
+// `tabWidth` in MorphingTabs.
 const MAX_TAB_WIDTH = 232;
 const MIN_TAB_WIDTH = 132;
 const TAB_HEIGHT = 48;
@@ -84,44 +90,72 @@ const RAIL_GAP = 16;
 const SURFACE_EDGE = 0.5;
 /** Critically damped: the surface glides to the active tab and never rebounds. */
 const SPRING_GLIDE = { stiffness: 700, damping: 50, mass: 0.5 } as const;
+/**
+ * The rail folding away or back, timed to slide with whatever asked for it: in
+ * Tailwind's `ease-in-out`, a slide's own, so what drops as it goes keeps level.
+ */
+const FOLD = { duration: 0.5, ease: [0.4, 0, 0.2, 1] } as const;
+/** The panel's move as the rail folds: the fold's timing, played by the compositor. */
+const SHIFT = {
+  id: 'morphing-tabs-shift',
+  duration: FOLD.duration * 1000,
+  easing: `cubic-bezier(${FOLD.ease.join(', ')})`,
+};
 
 function safeId(value: string) {
   return value.replace(/[^a-zA-Z0-9_-]/g, '-');
 }
 
+/**
+ * `fold` runs from 0, the rail out, to 1, folded away: the panel's top edge
+ * rises with the rail, the notch sinks into it, and the top corners round out
+ * to the panel's own radius once there is no tab beside them.
+ */
 function liquidTabPath(
   tabLeft: number,
   surfaceWidth: number,
   surfaceHeight: number,
-  tabWidth: number
+  tabWidth: number,
+  fold = 0
 ) {
+  const open = 1 - fold;
   const panelLeft = SURFACE_INSET;
   const panelRight = surfaceWidth - SURFACE_INSET;
   const panelBottom = Math.max(RAIL_HEIGHT + PANEL_RADIUS * 2, surfaceHeight - SURFACE_EDGE);
   const left = Math.max(panelLeft, Math.min(panelRight - tabWidth, tabLeft));
   const right = left + tabWidth;
-  const top = Math.max(SURFACE_EDGE, RAIL_HEIGHT - TAB_HEIGHT);
-  const bottom = RAIL_HEIGHT;
+  const bottom = SURFACE_EDGE + (RAIL_HEIGHT - SURFACE_EDGE) * open;
+  const restingTop = Math.max(SURFACE_EDGE, RAIL_HEIGHT - TAB_HEIGHT);
+  const top = bottom + (restingTop - bottom) * open;
+  const tabRadius = TAB_RADIUS * open;
   const leftJoin = Math.max(panelLeft, left - LIQUID_JOIN);
   const rightJoin = Math.min(panelRight, right + LIQUID_JOIN);
-  const leftDepth = Math.min(LIQUID_JOIN, left - leftJoin);
-  const rightDepth = Math.min(LIQUID_JOIN, rightJoin - right);
+  const leftDepth = Math.min(LIQUID_JOIN, left - leftJoin) * open;
+  const rightDepth = Math.min(LIQUID_JOIN, rightJoin - right) * open;
   const leftControl = leftDepth * 0.55;
   const rightControl = rightDepth * 0.55;
-  const leftPanelRadius = Math.min(PANEL_RADIUS, leftJoin - panelLeft);
-  const rightPanelRadius = Math.min(PANEL_RADIUS, panelRight - rightJoin);
+  const leftResting = Math.min(PANEL_RADIUS, leftJoin - panelLeft);
+  const rightResting = Math.min(PANEL_RADIUS, panelRight - rightJoin);
+  const leftPanelRadius = leftResting + (PANEL_RADIUS - leftResting) * fold;
+  const rightPanelRadius = rightResting + (PANEL_RADIUS - rightResting) * fold;
+  // The notch kept between the top corners' arcs: folding rounds out a corner
+  // the tab sat in, and the notch, flattening into the edge, would otherwise
+  // run on past the curve and stick out of it. At rest it lies there already.
+  const lo = panelLeft + leftPanelRadius;
+  const hi = panelRight - rightPanelRadius;
+  const x = (value: number) => Math.min(hi, Math.max(lo, value));
 
   return [
     `M${panelLeft} ${bottom + leftPanelRadius}`,
     `Q${panelLeft} ${bottom} ${panelLeft + leftPanelRadius} ${bottom}`,
-    `H${leftJoin}`,
-    `C${leftJoin + leftControl} ${bottom} ${left} ${bottom - leftDepth + leftControl} ${left} ${bottom - leftDepth}`,
-    `V${top + TAB_RADIUS}`,
-    `Q${left} ${top} ${left + TAB_RADIUS} ${top}`,
-    `H${right - TAB_RADIUS}`,
-    `Q${right} ${top} ${right} ${top + TAB_RADIUS}`,
+    `H${x(leftJoin)}`,
+    `C${x(leftJoin + leftControl)} ${bottom} ${x(left)} ${bottom - leftDepth + leftControl} ${x(left)} ${bottom - leftDepth}`,
+    `V${top + tabRadius}`,
+    `Q${x(left)} ${top} ${x(left + tabRadius)} ${top}`,
+    `H${x(right - tabRadius)}`,
+    `Q${x(right)} ${top} ${x(right)} ${top + tabRadius}`,
     `V${bottom - rightDepth}`,
-    `C${right} ${bottom - rightDepth + rightControl} ${rightJoin - rightControl} ${bottom} ${rightJoin} ${bottom}`,
+    `C${x(right)} ${bottom - rightDepth + rightControl} ${x(rightJoin - rightControl)} ${bottom} ${x(rightJoin)} ${bottom}`,
     `H${panelRight - rightPanelRadius}`,
     `Q${panelRight} ${bottom} ${panelRight} ${bottom + rightPanelRadius}`,
     `V${panelBottom - PANEL_RADIUS}`,
@@ -132,22 +166,24 @@ function liquidTabPath(
   ].join(' ');
 }
 
-/** The panel and the notch of the active tab, as one shape that follows `left`. */
+/** The panel and the notch of the active tab, as one shape that follows `left` and `fold`. */
 function LiquidSurface({
   left,
+  fold,
   surfaceWidth,
   surfaceHeight,
   tabWidth,
   className,
 }: {
   left: MotionValue<number>;
+  fold: MotionValue<number>;
   surfaceWidth: number;
   surfaceHeight: number;
   tabWidth: number;
   className?: string;
 }) {
-  const path = useTransform(left, (value) =>
-    liquidTabPath(value, surfaceWidth, surfaceHeight, tabWidth)
+  const path = useTransform([left, fold], ([value, folded]: number[]) =>
+    liquidTabPath(value, surfaceWidth, surfaceHeight, tabWidth, folded)
   );
   return (
     <svg
@@ -202,22 +238,32 @@ function TabTooltip({
 /**
  * The narrowest layout that fits: the rail cannot scroll (the surface is one continuous shape, its
  * notch has to stay over the tab that cut it), so slots shrink in this order of sacrifice:
- *   1. the design width, down to a floor where a truncated label still reads;
+ *   1. the width the longest label needs, down to a floor where a truncated label still reads;
  *   2. the gap between slots, so the floor survives one panel narrower;
  *   3. the floor itself — a cramped tab is still tappable, a clipped one is not reachable.
  */
-function fitTabs(count: number, inner: number, gap: number) {
-  if (inner <= 0 || count === 0) return { tabWidth: MAX_TAB_WIDTH, slotGap: gap };
+function fitTabs(count: number, inner: number, gap: number, widest: number) {
+  const floor = Math.min(MIN_TAB_WIDTH, widest);
+  if (inner <= 0 || count === 0) return { tabWidth: widest, slotGap: gap };
   const widthAt = (g: number) => Math.floor((inner - g * (count - 1)) / count);
 
-  if (widthAt(gap) >= MIN_TAB_WIDTH) {
-    return { tabWidth: Math.min(MAX_TAB_WIDTH, widthAt(gap)), slotGap: gap };
+  if (widthAt(gap) >= floor) {
+    return { tabWidth: Math.min(widest, widthAt(gap)), slotGap: gap };
   }
-  if (count > 1 && widthAt(0) >= MIN_TAB_WIDTH) {
-    const fitted = Math.floor((inner - MIN_TAB_WIDTH * count) / (count - 1));
-    return { tabWidth: MIN_TAB_WIDTH, slotGap: Math.max(0, fitted) };
+  if (count > 1 && widthAt(0) >= floor) {
+    const fitted = Math.floor((inner - floor * count) / (count - 1));
+    return { tabWidth: floor, slotGap: Math.max(0, fitted) };
   }
   return { tabWidth: Math.max(0, widthAt(0)), slotGap: 0 };
+}
+
+/**
+ * What a tab needs to show its label in full: everything before the label, the label at its own
+ * width (`scrollWidth`, which a truncated label still reports in full), and the padding after it.
+ */
+function labelledWidth(button: HTMLElement, label: HTMLElement) {
+  const after = Number.parseFloat(getComputedStyle(button).paddingRight) || 0;
+  return Math.ceil(label.offsetLeft + label.scrollWidth + after);
 }
 
 export function MorphingTabs({
@@ -229,6 +275,7 @@ export function MorphingTabs({
   railStart,
   railCenter,
   railEnd,
+  railCollapsed = false,
   ariaLabel = 'Tabs',
   className,
   classNames,
@@ -236,6 +283,37 @@ export function MorphingTabs({
   const reduce = Boolean(useReducedMotion());
   const hasEnd = Boolean(railEnd);
   const uid = useId();
+
+  // 0 with the rail out, 1 folded away; the rail's clip and the surface's top
+  // edge both follow it, and the panel rises with them. Nothing is laid out as
+  // it runs: the panel takes its new top at once and the compositor moves it
+  // there from the old one, in time with whatever asked however busy the page.
+  // Both start before paint, in the frame that asked.
+  const fold = useMotionValue(railCollapsed ? 1 : 0);
+  useLayoutEffect(() => {
+    const controls = animateValue(fold, railCollapsed ? 1 : 0, reduce ? { duration: 0 } : FOLD);
+    return () => controls.stop();
+  }, [railCollapsed, fold, reduce]);
+  // Unclipped at rest: a clip would make the rail a stacking context, under the panel.
+  const railClip = useTransform(fold, (folded) =>
+    folded > 0 ? `inset(0 0 ${folded * RAIL_HEIGHT}px 0)` : 'none'
+  );
+  const railOpacity = useTransform(fold, [0, 0.6], [1, 0]);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const shifted = useRef(railCollapsed);
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (shifted.current === railCollapsed || !panel) return;
+    shifted.current = railCollapsed;
+    if (reduce) return;
+    // From wherever a move still under way has got it to.
+    const under = new DOMMatrix(getComputedStyle(panel).transform).m42;
+    for (const animation of panel.getAnimations()) {
+      if (animation.id === SHIFT.id) animation.cancel();
+    }
+    const from = (railCollapsed ? RAIL_HEIGHT : -RAIL_HEIGHT) + under;
+    panel.animate([{ transform: `translateY(${from}px)` }, { transform: 'none' }], SHIFT);
+  }, [railCollapsed, reduce]);
 
   const [internalValue, setInternalValue] = useState<string | null>(
     defaultValue ?? items[0]?.id ?? null
@@ -247,7 +325,9 @@ export function MorphingTabs({
   const railRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const tabButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
-  const [surface, setSurface] = useState({ width: 0, height: 0, gap: 12, end: 0 });
+  const tabLabelRefs = useRef<Record<string, HTMLSpanElement | null>>({});
+  // `labelled`: the widest any tab needs for its label, 0 until measured
+  const [surface, setSurface] = useState({ width: 0, height: 0, gap: 12, end: 0, labelled: 0 });
   const [placed, setPlaced] = useState(false);
   const surfaceLeft = useMotionValue(SURFACE_INSET);
 
@@ -260,7 +340,8 @@ export function MorphingTabs({
   const { tabWidth, slotGap } = fitTabs(
     items.length,
     surface.width - SURFACE_INSET * 2 - endReserve,
-    surface.gap
+    surface.gap,
+    surface.labelled > 0 ? Math.min(MAX_TAB_WIDTH, surface.labelled) : MAX_TAB_WIDTH
   );
   const tabsWidth = items.length * tabWidth + Math.max(0, items.length - 1) * slotGap;
   // tabs hug the end of the rail (before the end slot) when aligned there
@@ -276,6 +357,9 @@ export function MorphingTabs({
       ? surface.width - slotStart + RAIL_GAP
       : SURFACE_INSET + endReserve;
 
+  const labelKey = items.map((item) => item.label).join('\n');
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a renamed tab is measured again
   useLayoutEffect(() => {
     const root = rootRef.current;
     const rail = railRef.current;
@@ -283,11 +367,17 @@ export function MorphingTabs({
 
     const measure = () => {
       const gap = Number.parseFloat(getComputedStyle(rail).columnGap);
+      let labelled = 0;
+      for (const [id, label] of Object.entries(tabLabelRefs.current)) {
+        const button = tabButtonRefs.current[id];
+        if (button && label) labelled = Math.max(labelled, labelledWidth(button, label));
+      }
       setSurface({
         width: root.clientWidth,
         height: root.clientHeight,
         gap: Number.isFinite(gap) ? gap : 12,
         end: hasEnd ? (endRef.current?.offsetWidth ?? 0) : 0,
+        labelled,
       });
     };
 
@@ -295,8 +385,12 @@ export function MorphingTabs({
     const observer = new ResizeObserver(measure);
     observer.observe(root);
     if (endRef.current) observer.observe(endRef.current);
+    // a label resizes when its web font arrives
+    for (const label of Object.values(tabLabelRefs.current)) {
+      if (label) observer.observe(label);
+    }
     return () => observer.disconnect();
-  }, [hasEnd]);
+  }, [hasEnd, labelKey]);
 
   const setActive = useCallback(
     (id: string | null) => {
@@ -352,6 +446,7 @@ export function MorphingTabs({
       {placed && surface.width > SURFACE_INSET * 2 ? (
         <LiquidSurface
           left={surfaceLeft}
+          fold={fold}
           surfaceWidth={surface.width}
           surfaceHeight={surface.height}
           tabWidth={tabWidth}
@@ -359,7 +454,12 @@ export function MorphingTabs({
         />
       ) : null}
 
-      <div className="relative h-12 shrink-0">
+      {/* Clipped as it folds, so the panel's rising edge reads as covering it. */}
+      <motion.div
+        className="absolute inset-x-0 top-0 overflow-hidden"
+        style={{ height: RAIL_HEIGHT, clipPath: railClip, opacity: railOpacity }}
+        inert={railCollapsed || undefined}
+      >
         <div
           ref={railRef}
           role="tablist"
@@ -446,6 +546,9 @@ export function MorphingTabs({
                         </span>
                       ) : null}
                       <span
+                        ref={(node) => {
+                          tabLabelRefs.current[item.id] = node;
+                        }}
                         className={cn(
                           'min-w-0 truncate whitespace-nowrap text-lg font-medium leading-[normal] tracking-[-0.01em]',
                           classNames?.label
@@ -494,12 +597,14 @@ export function MorphingTabs({
             </div>
           ) : null}
         </div>
-      </div>
+      </motion.div>
 
       <div
+        ref={panelRef}
         id={`${uid}-panel`}
         role="tabpanel"
         aria-labelledby={`${uid}-tab-${safeId(activeId ?? 'empty')}`}
+        style={{ marginTop: railCollapsed ? 0 : RAIL_HEIGHT }}
         className={cn(
           'relative z-20 mx-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] text-[#181818]',
           classNames?.content

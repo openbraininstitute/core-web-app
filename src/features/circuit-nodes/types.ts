@@ -9,11 +9,18 @@ export const ColumnKindDict = {
 
 export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
 
+export const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
+
+/** What a menu lists a node's own properties under, its neuron sets among them. */
+export const NEURON_HEADING = 'Neuron';
+
 export type ColumnMeta = {
   name: string;
   kind: ColumnKind;
   dtype?: string;
   library?: string[];
+  /** What a header calls it, for a column a host added; the file's go by their names. */
+  label?: string;
 };
 
 export type SortDirection = 'asc' | 'desc';
@@ -114,6 +121,17 @@ export type ColumnValues =
   | { kind: 'numeric'; values: Float32Array | Float64Array | Uint32Array }
   | { kind: 'categorical'; library: string[]; indices: Uint32Array }
   | { kind: 'string'; values: string[] };
+
+/**
+ * A per-node column computed outside the node file, in node-index order: a
+ * number per node, such as a simulation's spike statistics, `NaN` where a node
+ * has none; or, given a library, an index into it per node, such as whether a
+ * node is in one of the simulation's neuron sets. The second pages, sorts and
+ * filters like a categorical column of the file's own.
+ */
+export type DerivedColumn =
+  | { name: string; values: Float64Array }
+  | { name: string; library: string[]; indices: Uint32Array };
 
 /**
  * Everything a 3D viewer needs from a node population, in one read.

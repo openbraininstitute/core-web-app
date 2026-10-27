@@ -1,5 +1,6 @@
 'use client';
 
+import { capitalize } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
@@ -23,12 +24,17 @@ import type { TTaskConfigMeta } from '@/entity-configuration/domain/optimization
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
+/** What a run of this tab is called in its launch button, notifications and cost modal. */
+export type TTaskNoun = { singular: string; plural: string };
+
 type Props = {
   campaignId: string;
   campaignOriginAction: TScanConfigCampaignOriginActionDict;
   isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this optimization workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
+  /** wording for the run (optimization or validation); the tab is shared */
+  noun: TTaskNoun;
 };
 
 export function OptimizationTab({
@@ -36,6 +42,7 @@ export function OptimizationTab({
   campaignId,
   isCampaignIdChanged,
   taskTypeBindings,
+  noun,
 }: Props) {
   const context = useWorkspace();
 
@@ -44,9 +51,9 @@ export function OptimizationTab({
       context,
       obiOneTaskType: taskTypeBindings.obiOne,
       executionActivityType: taskTypeBindings.execution,
-      notificationKey: 'optimization-config-error',
-      failureMessage: 'We ran into a problem launching your optimization. Please try again later.',
-      logTopic: 'Optimization',
+      notificationKey: `${noun.singular}-config-error`,
+      failureMessage: `We ran into a problem launching your ${noun.singular}. Please try again later.`,
+      logTopic: capitalize(noun.singular),
       requiresConsent: true,
     }
   );
@@ -100,7 +107,7 @@ export function OptimizationTab({
   const { openModal, modal: costConfirmationModal } = useCostConfirmation({
     items: costModalItems,
     taskType: taskTypeBindings.obiOne,
-    workflowLabel: 'optimizations',
+    workflowLabel: noun.plural,
     context,
     onConfirm: onRun,
   });
@@ -135,7 +142,7 @@ export function OptimizationTab({
               onExecutionLoad={act.onExecutionLoad}
             />
             <TaskLaunchButton
-              label="Launch optimizations"
+              label={`Launch ${noun.plural}`}
               countLabel={launchBtnLabelPrefix}
               pending={runOptimizationPending}
               disabled={runOptimizationPending || resolvedSelectedConfigIds.length === 0}

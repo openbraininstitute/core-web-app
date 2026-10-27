@@ -33,4 +33,8 @@ export interface ISpikeReplayBinding {
   afterglowInSeconds?: number;
   /** Whether spiking cells give off light, where the viewer can draw it. */
   glow?: boolean;
+  /** Set from the scene's settings; omit to leave the slider out. */
+  onAfterglowChange?(afterglowInSeconds: number): void;
+  /** Set from the scene's settings; omit to leave the switch out. */
+  onGlowChange?(glow: boolean): void;
 }

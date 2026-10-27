@@ -4,7 +4,6 @@ import { LoadingOutlined } from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import { ArrowReturnRight } from '@/components/icons/ArrowReturnRight';
 import { OperatorId } from '@/features/data-grid/core';
 import { InMemoryGrid } from '@/features/data-grid/presets/in-memory-grid';
 import { cn } from '@/utils/css-class';
@@ -120,11 +119,12 @@ export function SubcircuitsDetail({
   label?: string;
 }) {
   return (
-    // Nested wrappers are DOM-nested, so this indent step compounds per level; the left
-    // border is the tree guide line.
-    <div className="border-neutral-3 ml-5 flex w-full flex-col items-start gap-3 border-l-2 py-3 pl-4">
-      <div className="flex flex-row items-center gap-2">
-        <ArrowReturnRight className="text-neutral-4 text-2xl" />
+    <div className="border-neutral-3 ml-5 flex w-full flex-col items-start gap-3 border-l-2 py-3 pl-6">
+      <div className="relative flex flex-row items-center">
+        <span
+          aria-hidden
+          className="border-neutral-3 pointer-events-none absolute bottom-[calc(50%-1px)] -left-6.5 h-3 w-5.5 rounded-bl-xl border-b-2 border-l-2"
+        />
         <div className="text-neutral-4 text-base font-semibold uppercase">{label}</div>
       </div>
       <div className="w-full">{children}</div>

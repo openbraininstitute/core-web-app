@@ -22,6 +22,7 @@ import { readFieldMaxItems } from '@/features/scan-config/workflow/selection-cap
 const scanConfigFromIdTypeToEntityType = {
   [ScanConfigFromIdType.CellMorphologyFromID]: ExtendedEntitiesTypeDict.UniversalCellMorphology,
   [ScanConfigFromIdType.MEModelFromID]: ExtendedEntitiesTypeDict.Memodel,
+  [ScanConfigFromIdType.EModelFromID]: ExtendedEntitiesTypeDict.Emodel,
   [ScanConfigFromIdType.CircuitFromID]: ExtendedEntitiesTypeDict.Circuit,
   [ScanConfigFromIdType.EMCellMeshFromID]: ExtendedEntitiesTypeDict.EMCellMesh,
   [ScanConfigFromIdType.MEModelWithSynapsesCircuitFromID]:

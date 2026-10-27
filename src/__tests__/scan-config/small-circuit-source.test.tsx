@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 
@@ -57,10 +58,13 @@ const fixtures = vi.hoisted(() => ({
     },
   } as unknown,
   configError: null as Error | null,
-  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
-    typeof usePopulationsPlacement
-  >,
+  placement: { placed: [], failures: new Map(), settled: true, download: null } as Placement,
+  noNames: new Set<string>() as ReadonlySet<string>,
 }));
+
+// `positionless` is left out where a test has none, as most do.
+type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless'> &
+  Partial<Pick<ReturnType<typeof usePopulationsPlacement>, 'positionless'>>;
 
 vi.mock('@/ui/hooks/use-workspace', () => {
   const useWorkspace = () => ({ virtualLabId: 'lab', projectId: 'project' });
@@ -77,7 +81,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
 }));
 
 vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
-  usePopulationsPlacement: () => fixtures.placement,
+  usePopulationsPlacement: () => ({ positionless: fixtures.noNames, ...fixtures.placement }),
 }));
 
 vi.mock('@/api/one/circuit-visualization', () => ({
@@ -239,7 +243,7 @@ describe('useSmallCircuitSource', () => {
   it('draws on when a population cannot be placed, nothing receding behind the one on show', () => {
     fixtures.placement = {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
-      failures: new Map([['inputs', new Error('no x/y/z columns')]]),
+      failures: new Map([['inputs', new Error('inputs.h5 could not be opened')]]),
       settled: true,
       download: null,
     };
@@ -247,8 +251,24 @@ describe('useSmallCircuitSource', () => {
 
     expect(result.current.error).toBeNull();
     expect(result.current.tree?.somas.populations).toEqual([{ name: 'default', cells: 1 }]);
-    // No colour of its own anywhere: every cell in the view's.
+    // Painted, not receded: nothing says why the population on show is missing.
     expect(result.current.cellColors.palette).toEqual([]);
+    expect(result.current.positionless).toEqual(new Set());
+  });
+
+  it('recedes the rest behind a population on show with no positions, and reports it', () => {
+    fixtures.placement = {
+      placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
+      failures: new Map([['inputs', new PopulationWithoutPositionsError('inputs')]]),
+      positionless: new Set(['inputs']),
+      settled: true,
+      download: null,
+    };
+    const { result } = render([DEFAULT, INPUTS], INPUTS);
+
+    expect(result.current.error).toBeNull();
+    expect(colorsOf(result.current.cellColors)[0]).toBe('#cccccc');
+    expect(result.current.positionless).toEqual(new Set(['inputs']));
   });
 
   it('fails only once no population at all could be placed', () => {

@@ -458,6 +458,22 @@ export function recededNeuronColor(background: string): string {
   }
 }
 
+/**
+ * Colour for cells drawn only as the scene around the ones that matter, such
+ * as those a report did not record: one neutral grey taken most of the way to
+ * the background, light on a light one. Opaque still, since the viewer draws
+ * somas without blending, and drawn flat (`NodeColors.flatColumns`), so every
+ * such cell is the same shade.
+ */
+export function fadedNeuronColor(background: string): string {
+  try {
+    const step = backgroundIsDark(background) ? 0.4 : 0.7;
+    return chroma.mix('#808080', background, step, 'oklab').hex();
+  } catch {
+    return DEFAULT_NEURON_COLOR;
+  }
+}
+
 /** Colour for a block's morphology-location markers. */
 export function morphologyLocationsColor(entry: string): string {
   return categoricalColor(blockPaletteIndex(entry, MORPHOLOGY_LOCATION_COLOR_SLOTS));

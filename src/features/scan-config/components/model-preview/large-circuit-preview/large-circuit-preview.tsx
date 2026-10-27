@@ -3,7 +3,7 @@ import { useSetAtom } from 'jotai';
 import React from 'react';
 
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-import { cellColorsOf, populationAt } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import {
@@ -42,6 +42,9 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
+/** What the rest of the population fades to while one of its somas is pointed out. */
+const FADED = '#d4d4d4';
+
 export interface LargeCircuitPreviewProps {
   className?: string;
   circuit: ICircuit;
@@ -63,6 +66,12 @@ export interface LargeCircuitPreviewProps {
    * camera.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 takes that soma out the same way. */
+  shownCells?: Uint8Array;
+  /** A soma of the population on show to point out, by node index: every other one of it fades. */
+  highlightedCell?: number;
+  /** Told the node index of a clicked soma of the population on show. */
+  onSubjectCellClick?: (index: number) => void;
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /**
@@ -74,6 +83,8 @@ export interface LargeCircuitPreviewProps {
   recededColor?: string;
   /** Called with the population name when one of those cells is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** @see CircuitVizProps.onPositionlessPopulationsChange */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   backgroundColor: string;
   /** Draw the scalebar down the side of the canvas. */
   showScalebar?: boolean;
@@ -136,10 +147,14 @@ export function LargeCircuitPreview({
   population,
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
+  onSubjectCellClick,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
   recededColor,
   onPopulationClick,
+  onPositionlessPopulationsChange,
   backgroundColor,
   showScalebar = true,
   spin,
@@ -167,9 +182,23 @@ export function LargeCircuitPreview({
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  const { placed, download, subject, anchor, hidden, hasContext, error, somas, receded } =
-    usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
+  const {
+    placed,
+    positionless,
+    download,
+    subject,
+    anchor,
+    hidden,
+    hasContext,
+    error,
+    somas,
+    receded,
+  } = usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
   const subjectName = population?.name;
+  // Before paint: see CircuitVisualization.
+  React.useLayoutEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
 
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
@@ -203,19 +232,34 @@ export function LargeCircuitPreview({
         nodeColors,
         receded,
         hidden,
+        shownCells,
+        highlightedCell,
+        fadedColor: recededColor ?? FADED,
       }),
-    [somas.populations, subjectName, nodeColors, receded, hidden]
+    [
+      somas.populations,
+      subjectName,
+      nodeColors,
+      receded,
+      hidden,
+      shownCells,
+      highlightedCell,
+      recededColor,
+    ]
   );
 
   const handleCellClick = React.useCallback(
     (index: number) => {
-      const name = populationAt(somas.populations, index);
-      if (name !== undefined && name !== subjectName) onPopulationClick?.(name);
+      const range = populationRanges(somas.populations).find(({ end }) => index < end);
+      if (!range) return;
+      if (range.name !== subjectName) onPopulationClick?.(range.name);
+      else onSubjectCellClick?.(index - range.first);
     },
-    [somas.populations, subjectName, onPopulationClick]
+    [somas.populations, subjectName, onPopulationClick, onSubjectCellClick]
   );
   // Only offered when there is something to select.
-  const canPickPopulation = onPopulationClick !== undefined && hasContext;
+  const canPickPopulation =
+    (onPopulationClick !== undefined && hasContext) || onSubjectCellClick !== undefined;
 
   const wantsMorphologies = representation === 'morphologies';
   const drawable = placed.length > 0 && !error;

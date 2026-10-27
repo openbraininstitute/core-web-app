@@ -15,7 +15,7 @@ describe('NumericFilter', () => {
     const onModelChange = vi.fn();
     render(<NumericFilter {...({ model: null, onModelChange } as unknown as Props)} />);
 
-    const input = screen.getByPlaceholderText('Value');
+    const input = screen.getByPlaceholderText('Values, e.g. 3, 7');
     fireEvent.change(input, { target: { value: '720575940620980304' } });
     fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', keyCode: 13 });
 
@@ -23,6 +23,21 @@ describe('NumericFilter', () => {
       filterType: 'number',
       type: 'equals',
       filter: '720575940620980304',
+    });
+  });
+
+  it('takes several values for Equals, leaving out what is not a number', () => {
+    const onModelChange = vi.fn();
+    render(<NumericFilter {...({ model: null, onModelChange } as unknown as Props)} />);
+
+    const input = screen.getByPlaceholderText('Values, e.g. 3, 7');
+    fireEvent.change(input, { target: { value: '3, 5 x 9,' } });
+    fireEvent.keyDown(input, { key: 'Enter', code: 'Enter', keyCode: 13 });
+
+    expect(onModelChange).toHaveBeenLastCalledWith({
+      filterType: 'number',
+      type: 'equals',
+      filter: '3, 5, 9',
     });
   });
 });

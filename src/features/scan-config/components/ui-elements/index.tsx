@@ -5,6 +5,7 @@ import { match, P } from 'ts-pattern';
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import { AxonModifier } from '@/features/scan-config/components/ui-elements/axon-modifier';
 import BooleanInput from '@/features/scan-config/components/ui-elements/boolean-input';
+import { DefaultTargetLookup } from '@/features/scan-config/components/ui-elements/default-target-lookup';
 import { DiscreteProbabilities } from '@/features/scan-config/components/ui-elements/discrete-probabilities';
 import {
   DistanceFunctionField,
@@ -61,6 +62,7 @@ import {
 } from '@/features/scan-config/components/ui-elements/voltage-duration';
 import { isPlainObject, numericSchemaBounds } from '@/features/scan-config/components/utils';
 import {
+  isFromIdRef,
   resolveEntityQueryFilters,
   resolveNeuronFilterProperties,
   type TEntityQuery,
@@ -654,17 +656,19 @@ export function UIElementRender({
           return null;
         }
         return (
-          <EntitySelectorSingle
-            entityType={resolvedType as unknown as TEntityTypeDict}
-            resolveAsType={resolvedType}
-            disabled={disabled}
-            value={value}
-            state={state}
-            fieldKey={k}
-            paramSchema={paramSchema as unknown as Record<string, unknown>}
-            valueType={paramSchema.properties?.type?.const}
-            onChange={setState}
-          />
+          <DefaultTargetLookup fieldPath={errorPathPrefix} hasValue={isFromIdRef(value)}>
+            <EntitySelectorSingle
+              entityType={resolvedType as unknown as TEntityTypeDict}
+              resolveAsType={resolvedType}
+              disabled={disabled}
+              value={value}
+              state={state}
+              fieldKey={k}
+              paramSchema={paramSchema as unknown as Record<string, unknown>}
+              valueType={paramSchema.properties?.type?.const}
+              onChange={setState}
+            />
+          </DefaultTargetLookup>
         );
       }
     )

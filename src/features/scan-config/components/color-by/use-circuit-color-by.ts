@@ -82,6 +82,8 @@ export interface PopulationsControls {
   selected?: string;
   /** Put another population on show. Absent where the host pins that choice. */
   onSelect?: (name: string) => void;
+  /** The ones whose nodes carry no x/y/z, by name: listed, never drawn. */
+  positionless?: ReadonlySet<string>;
 }
 
 /**

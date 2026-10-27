@@ -1,6 +1,8 @@
 import { InfoCircleFilled } from '@ant-design/icons';
+import { useAtomValue } from 'jotai';
 
 import { ConfigurationIcon, ResultsIcon } from '@/components/icons';
+import { resultsSidePanelOpenAtom } from '@/features/scan-config/components/shared/results-layout';
 import { useScanConfigTopBarSlots } from '@/features/scan-config/components/top-bar/context';
 import {
   LEGACY_SIMULATION_ERROR_CODE,
@@ -17,6 +19,7 @@ import {
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
 
@@ -42,7 +45,8 @@ function isResultsTab(id: string) {
     id === ExtractScanConfigTabs.extractions ||
     id === ProcessScanConfigTabs.skeletonizations ||
     id === BuildScanConfigTabs.results ||
-    id === OptimizeScanConfigTabs.optimizations
+    id === OptimizeScanConfigTabs.optimizations ||
+    id === ValidateScanConfigTabs.validations
   );
 }
 
@@ -64,6 +68,11 @@ export function toScanConfigTab(activity: TScanConfigActivity, id: string): TSca
       return {
         __activity: ScanConfigActivity.Optimize,
         id: id as keyof typeof OptimizeScanConfigTabs,
+      };
+    case ScanConfigActivity.Validate:
+      return {
+        __activity: ScanConfigActivity.Validate,
+        id: id as keyof typeof ValidateScanConfigTabs,
       };
     default:
       return {
@@ -89,7 +98,7 @@ function LegacyConfigurationTooltip() {
   );
 }
 
-export default function ScanConfigTabsPanel({
+export function ScanConfigTabsPanel({
   className,
   tab,
   setTab,
@@ -102,6 +111,8 @@ export default function ScanConfigTabsPanel({
 }: ScanConfigTabsPanelProps) {
   // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
   const { start, end } = useScanConfigTopBarSlots();
+  // a results view's side panel takes the whole surface, rail and all
+  const railCollapsed = useAtomValue(resultsSidePanelOpenAtom);
   // not memoised: `configuration` and `results` are fresh nodes on every render
   const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
     const isConfiguration = id === BaseScanConfigTabs.configuration;
@@ -126,6 +137,7 @@ export default function ScanConfigTabsPanel({
       railStart={start}
       railCenter={railCenter}
       railEnd={end}
+      railCollapsed={railCollapsed}
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}
@@ -135,3 +147,5 @@ export default function ScanConfigTabsPanel({
     />
   );
 }
+
+export default ScanConfigTabsPanel;

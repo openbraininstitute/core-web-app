@@ -36,4 +36,6 @@ export type TSmallCircuitSource = {
    * that population's nodes are placed.
    */
   anchor: [x: number, y: number, z: number] | null;
+  /** Populations whose nodes carry no x/y/z, by name, so they are not drawn. */
+  positionless: ReadonlySet<string>;
 };

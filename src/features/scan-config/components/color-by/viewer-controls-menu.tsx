@@ -4,6 +4,7 @@ import {
   RiLoopRightLine,
   RiNodeTree,
   RiResetLeftLine,
+  RiSunLine,
 } from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
@@ -39,6 +40,12 @@ export interface ViewerControlsMenuProps {
   /** multiplier on the soma radius; omit for viewers that draw morphologies */
   somaSizeScale?: number;
   onSomaSizeScaleChange?: (value: number) => void;
+  /** how long a replayed spike stays lit, in wall-clock seconds; omit without a replay */
+  spikeAfterglowInSeconds?: number;
+  onSpikeAfterglowChange?: (seconds: number) => void;
+  /** whether replayed spikes give off light; omit without a replay */
+  spikeGlow?: boolean;
+  onToggleSpikeGlow?: (value: boolean) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -83,6 +90,10 @@ export function ViewerControlsMenu({
   onNeuronOpacityChange,
   somaSizeScale,
   onSomaSizeScaleChange,
+  spikeAfterglowInSeconds,
+  onSpikeAfterglowChange,
+  spikeGlow,
+  onToggleSpikeGlow,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -223,6 +234,38 @@ export function ViewerControlsMenu({
               format={(scale) => `${scale.toFixed(1)}×`}
               onChange={onSomaSizeScaleChange}
             />
+          )}
+          {onSpikeAfterglowChange && spikeAfterglowInSeconds !== undefined && (
+            <MenuSlider
+              label={
+                <span title="Measured in real time, so a flash looks the same at any playback speed">
+                  Spike afterglow
+                </span>
+              }
+              testId="viewer-slider-spike-afterglow"
+              min={0.05}
+              max={1}
+              step={0.05}
+              value={spikeAfterglowInSeconds}
+              format={(seconds) => `${seconds.toFixed(2)} s`}
+              onChange={onSpikeAfterglowChange}
+            />
+          )}
+          {onToggleSpikeGlow && (
+            <MenuRow
+              label={
+                <span title="Spiking cells give off a soft light on a dark background, and a tint of their colour on a light one. Shown with morphologies on WebGPU; turn it off on a slow graphics card">
+                  Spike glow
+                </span>
+              }
+              icon={<RiSunLine className="size-4 shrink-0" />}
+            >
+              <ViewerSwitch
+                testId="viewer-toggle-spike-glow"
+                checked={!!spikeGlow}
+                onChange={onToggleSpikeGlow}
+              />
+            </MenuRow>
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />

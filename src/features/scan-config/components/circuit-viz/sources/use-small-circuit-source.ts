@@ -30,6 +30,10 @@ type TOptions = {
   populations: readonly NodePopulation[];
   /** Populations taken out of the scene, by name. Memoise it: another is read as another setting. */
   hiddenPopulations?: readonly string[];
+  /** @see CircuitVizProps.shownCells */
+  shownCells?: Uint8Array;
+  /** @see CircuitVizProps.highlightedCell */
+  highlightedCell?: number;
   nodeColors?: NodeColors;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
@@ -59,6 +63,8 @@ export function useSmallCircuitSource({
   population,
   populations,
   hiddenPopulations = NOTHING_HIDDEN,
+  shownCells,
+  highlightedCell,
   nodeColors,
   recededColor,
   withSynapses = false,
@@ -73,6 +79,7 @@ export function useSmallCircuitSource({
   const {
     config,
     placed,
+    positionless,
     settled,
     download,
     subject,
@@ -149,8 +156,11 @@ export function useSmallCircuitSource({
         own: subject?.count === 1 ? SECTION_TYPE_COLORS : null,
         receded,
         hidden,
+        // The cell pointed out is shown alone.
+        shownCells,
+        highlightedCell,
       }),
-    [tree, populationName, nodeColors, subject, receded, hidden]
+    [tree, populationName, nodeColors, subject, receded, hidden, shownCells, highlightedCell]
   );
 
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
@@ -198,5 +208,6 @@ export function useSmallCircuitSource({
     error,
     synapses,
     anchor,
+    positionless,
   };
 }

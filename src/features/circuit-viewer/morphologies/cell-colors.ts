@@ -33,6 +33,12 @@ export interface CellColorsOptions {
   /** What the other populations' cells are in; the view's own colour without it. */
   receded?: string;
   hidden: ReadonlySet<string>;
+  /** One flag per cell of the population on show; a 0 takes that cell out as a hidden population's are. */
+  shownCells?: Uint8Array;
+  /** A cell of the population on show to point out, by its index in it: drawn whatever `shownCells` says. */
+  highlightedCell?: number;
+  /** What the rest of the population on show is in while a cell is pointed out; false takes it out. */
+  fadedColor?: string | false;
 }
 
 /**
@@ -48,8 +54,20 @@ export function cellColorsOf({
   own = null,
   receded,
   hidden,
+  shownCells,
+  highlightedCell,
+  fadedColor = false,
 }: CellColorsOptions): CellColors {
-  if (!nodeColors && own === null && !receded && hidden.size === 0) return NO_CELL_COLORS;
+  if (
+    !nodeColors &&
+    own === null &&
+    !receded &&
+    hidden.size === 0 &&
+    !shownCells &&
+    highlightedCell === undefined
+  ) {
+    return NO_CELL_COLORS;
+  }
 
   const palette: CellColors['palette'] = nodeColors ? [...nodeColors.palette] : [];
   const columns = new Map<CellColors['palette'][number], number>();
@@ -70,6 +88,14 @@ export function cellColorsOf({
       const mapped = Math.min(end - first, nodeColors?.columnByNode.length ?? 0);
       if (nodeColors) columnByCell.set(nodeColors.columnByNode.subarray(0, mapped), first);
       if (first + mapped < end) columnByCell.fill(columnOf(own), first + mapped, end);
+      if (shownCells || highlightedCell !== undefined) {
+        const faded = highlightedCell === undefined ? undefined : columnOf(fadedColor);
+        for (let i = 0; i < end - first; i++) {
+          if (i === highlightedCell) continue;
+          if (shownCells && shownCells[i] !== 1) columnByCell[first + i] = columnOf(false);
+          else if (faded !== undefined) columnByCell[first + i] = faded;
+        }
+      }
     } else {
       columnByCell.fill(columnOf(receded ?? null), first, end);
     }

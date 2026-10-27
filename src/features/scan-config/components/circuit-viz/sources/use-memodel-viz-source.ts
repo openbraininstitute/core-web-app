@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { memodelMorphologyPath } from '@/api/one/circuit-visualization';
+import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 import useWorkspace from '@/ui/hooks/use-workspace';
 
@@ -42,5 +43,6 @@ export function useMemodelVisualizationSource({
     locationCells: THE_CELL,
     error: null,
     anchor: ORIGIN,
+    positionless: NO_NAMES,
   };
 }
