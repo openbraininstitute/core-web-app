@@ -2,16 +2,20 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Empty } from 'antd';
+import { useMemo } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getTaskResult } from '@/api/entitycore/queries/task';
 import { getAsset } from '@/api/entitycore/selectors/assets';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { Align } from '@/features/data-grid/core';
+import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 
 import type { ITaskResult } from '@/api/entitycore/types/entities/task-result';
+import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 
 /**
  * The `extracted_features.json` asset BluePyEModel writes: the fitness-calculator configuration,
@@ -54,6 +58,8 @@ type ProtocolGroup = {
 };
 
 type ProtocolRow = {
+  /** unique across the table: a protocol with several stimuli produces several rows */
+  id: string;
   protocol: string;
   validation: boolean;
   /** the raw stimulus fields (field set varies by protocol type); null when there's none */
@@ -75,12 +81,17 @@ function formatNumber(value: number | null | undefined): string {
  * several stimuli gets several rows; one with none still gets a row, with no stimulus fields).
  */
 function summarizeProtocols(protocols: ExtractedFeatures['protocols']): ProtocolRow[] {
+  let rowIndex = 0;
   return protocols.flatMap((protocol): ProtocolRow[] => {
     const validation = protocol.validation ?? false;
     const stimuli = protocol.stimuli ?? [];
-    return stimuli.length > 0
-      ? stimuli.map((stimulus) => ({ protocol: protocol.name, validation, stimulus }))
-      : [{ protocol: protocol.name, validation, stimulus: null }];
+    const toRow = (stimulus: Record<string, number | null> | null) => ({
+      id: `${protocol.name}-${rowIndex++}`,
+      protocol: protocol.name,
+      validation,
+      stimulus,
+    });
+    return stimuli.length > 0 ? stimuli.map(toRow) : [toRow(null)];
   });
 }
 
@@ -133,6 +144,37 @@ function groupByProtocol({ efeatures, protocols }: ExtractedFeatures): ProtocolG
     });
 }
 
+const FEATURE_COLUMNS: ISimpleColumn<FeatureRow>[] = [
+  {
+    id: 'feature',
+    header: 'Feature',
+    renderCell: (row) => (
+      <span className="text-primary-9">
+        {row.name}
+        {row.recording && row.recording !== 'soma.v' && (
+          <span className="text-gray-400"> · {row.recording}</span>
+        )}
+      </span>
+    ),
+  },
+  {
+    id: 'mean',
+    header: 'Mean',
+    align: Align.Right,
+    renderCell: (row) => (
+      <span className="tabular-nums text-gray-700">{formatNumber(row.mean)}</span>
+    ),
+  },
+  {
+    id: 'std',
+    header: 'Std',
+    align: Align.Right,
+    renderCell: (row) => (
+      <span className="tabular-nums text-gray-500">{formatNumber(row.std)}</span>
+    ),
+  },
+];
+
 /** Read-only view of the target e-features a result holds, grouped by their protocol. */
 export function EFeatureExtractionResultPreview({ record }: { record: ITaskResult }) {
   const context = useWorkspace();
@@ -164,7 +206,32 @@ export function EFeatureExtractionResultPreview({ record }: { record: ITaskResul
   });
   const groups = data?.groups;
   const protocols = data?.protocols;
-  const stimulusCols = protocols ? stimulusColumns(protocols) : [];
+  const stimulusCols = useMemo(() => (protocols ? stimulusColumns(protocols) : []), [protocols]);
+  const protocolColumns = useMemo<ISimpleColumn<ProtocolRow>[]>(
+    () => [
+      {
+        id: 'protocol',
+        header: 'Protocol',
+        renderCell: (row) => (
+          <span className="text-primary-9">
+            {row.protocol}
+            {row.validation && <span className="font-light text-gray-500"> · validation</span>}
+          </span>
+        ),
+      },
+      ...stimulusCols.map((key) => ({
+        id: key,
+        header: humanizeKey(key),
+        align: Align.Right,
+        renderCell: (row: ProtocolRow) => (
+          <span className="tabular-nums text-gray-700">
+            {formatNumber(row.stimulus?.[key] ?? null)}
+          </span>
+        ),
+      })),
+    ],
+    [stimulusCols]
+  );
 
   if (isLoading) {
     return (
@@ -216,33 +283,11 @@ export function EFeatureExtractionResultPreview({ record }: { record: ITaskResul
               )}
             </div>
 
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-left text-gray-500">
-                  <th className="px-3 py-1.5 font-medium">Feature</th>
-                  <th className="px-3 py-1.5 text-right font-medium">Mean</th>
-                  <th className="px-3 py-1.5 text-right font-medium">Std</th>
-                </tr>
-              </thead>
-              <tbody>
-                {protocol.features.map((feature) => (
-                  <tr key={feature.name} className="border-neutral-1 border-t">
-                    <td className="text-primary-9 px-3 py-1.5">
-                      {feature.name}
-                      {feature.recording && feature.recording !== 'soma.v' && (
-                        <span className="text-gray-400"> · {feature.recording}</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
-                      {formatNumber(feature.mean)}
-                    </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-500">
-                      {formatNumber(feature.std)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <SimpleGrid<FeatureRow>
+              columns={FEATURE_COLUMNS}
+              rows={protocol.features}
+              getRowId={(row) => row.name}
+            />
           </li>
         ))}
       </ul>
@@ -251,35 +296,11 @@ export function EFeatureExtractionResultPreview({ record }: { record: ITaskResul
         <>
           <div className="text-label mt-2 text-base font-light">Stimulation protocols</div>
           <div className="border-neutral-2 overflow-hidden rounded-lg border bg-white">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="text-left text-gray-500">
-                  <th className="px-3 py-1.5 font-medium">Protocol</th>
-                  {stimulusCols.map((key) => (
-                    <th key={key} className="px-3 py-1.5 text-right font-medium">
-                      {humanizeKey(key)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {protocols.map((row, index) => (
-                  <tr key={`${row.protocol}-${index}`} className="border-neutral-1 border-t">
-                    <td className="text-primary-9 px-3 py-1.5">
-                      {row.protocol}
-                      {row.validation && (
-                        <span className="font-light text-gray-500"> · validation</span>
-                      )}
-                    </td>
-                    {stimulusCols.map((key) => (
-                      <td key={key} className="px-3 py-1.5 text-right tabular-nums text-gray-700">
-                        {formatNumber(row.stimulus?.[key] ?? null)}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <SimpleGrid<ProtocolRow>
+              columns={protocolColumns}
+              rows={protocols}
+              getRowId={(row) => row.id}
+            />
           </div>
         </>
       )}
