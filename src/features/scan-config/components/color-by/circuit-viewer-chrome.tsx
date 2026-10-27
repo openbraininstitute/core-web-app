@@ -116,17 +116,25 @@ export function CircuitViewerChrome({
   // than in the viewers: the chrome is the one layer over both of them, and it
   // already holds the way back.
   const hiddenNames = new Set(populations?.hidden);
+  // A population with no positions is never drawn, so it is neither hidden nor
+  // shown, and counts for neither state.
+  const positionless = populations?.positionless;
+  const drawable = populations?.populations.filter((p) => !positionless?.has(p.name)) ?? [];
   // Nothing drawn at all. Asked of a non-empty list, so a circuit declaring no
   // populations does not read as a scene the user emptied.
-  const allHidden =
-    !!populations?.populations.length &&
-    populations.populations.every((p) => hiddenNames.has(p.name));
+  const allHidden = drawable.length > 0 && drawable.every((p) => hiddenNames.has(p.name));
   // The population being coloured and listed in the nodes table is not among
   // what is drawn. Not worth saying when nothing is: the empty state says it of
   // every population at once.
+  const selected = populations?.selected;
+  const unplaceableSubject =
+    selected !== undefined && positionless?.has(selected) ? selected : undefined;
   const hiddenSubject =
-    populations?.selected !== undefined && hiddenNames.has(populations.selected) && !allHidden
-      ? populations.selected
+    selected !== undefined &&
+    unplaceableSubject === undefined &&
+    hiddenNames.has(selected) &&
+    !allHidden
+      ? selected
       : undefined;
   // Keep viz chrome mounted across view switches; only hide it.
   const showVizChrome = viz != null && vizActive;
@@ -240,6 +248,7 @@ export function CircuitViewerChrome({
                   onChange={populations.onChange}
                   selected={populations.selected}
                   onSelect={populations.onSelect}
+                  positionless={populations.positionless}
                   theme={theme}
                   autoOpen={showVizChrome}
                 />
@@ -309,6 +318,13 @@ export function CircuitViewerChrome({
             className="px-3 py-1.5 text-xs"
           >
             “{hiddenSubject}” is selected but hidden
+          </ChromeNotice>
+        </div>
+      )}
+      {showVizChrome && unplaceableSubject !== undefined && (
+        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: belowLeft }}>
+          <ChromeNotice theme={theme} warning style={panel} className="px-3 py-1.5 text-xs">
+            “{unplaceableSubject}” has no positions (x/y/z), so it can’t be drawn in 3D
           </ChromeNotice>
         </div>
       )}
@@ -421,14 +437,18 @@ function ChromeNotice({
   className,
 }: {
   children: React.ReactNode;
-  /** Label of the button that undoes what the notice reports. */
-  action: string;
-  onAction: () => void;
   theme?: ViewerTheme | null;
   warning?: boolean;
   style?: React.CSSProperties;
   className?: string;
-}) {
+} & (
+  | {
+      /** Label of the button that undoes what the notice reports. Omit both where nothing can. */
+      action: string;
+      onAction: () => void;
+    }
+  | { action?: never; onAction?: never }
+)) {
   // Themed panels ring with a box-shadow in `style`, the fixed light one with a Tailwind ring.
   const ringStyle = warning && theme ? { boxShadow: '0 0 0 1px var(--color-warning)' } : undefined;
   return (
@@ -444,13 +464,15 @@ function ChromeNotice({
     >
       {warning && <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />}
       <span>{children}</span>
-      <button
-        type="button"
-        onClick={onAction}
-        className={cn('font-semibold hover:underline', !theme && 'text-primary-9')}
-      >
-        {action}
-      </button>
+      {action && (
+        <button
+          type="button"
+          onClick={onAction}
+          className={cn('font-semibold hover:underline', !theme && 'text-primary-9')}
+        >
+          {action}
+        </button>
+      )}
     </div>
   );
 }

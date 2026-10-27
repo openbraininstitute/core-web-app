@@ -59,7 +59,7 @@ export function FloatInput({
         onInput={setRawInput}
         onBlur={() => setRawInput('')}
         onChange={onChange}
-        className="w-full"
+        className="w-full!"
       />
 
       {errorMessage && <span className="text-red-500">{errorMessage}</span>}

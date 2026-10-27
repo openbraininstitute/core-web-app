@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { nodesSessionKey } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type {
@@ -10,6 +11,7 @@ import type {
   NodesSessionStatus,
 } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import type {
+  ColumnMeta,
   NodeGeometry,
   NodeGeometryOptions,
   NodePopulation,
@@ -75,10 +77,15 @@ const registry = vi.hoisted(() => {
         : Promise.reject(new Error('no x/y/z columns; nothing to place in 3D'));
     },
     /** Test control: move a session on and tell its listeners. */
-    settle(key: string, status: NodesSessionStatus, geometry: NodeGeometry | null = null) {
+    settle(
+      key: string,
+      status: NodesSessionStatus,
+      geometry: NodeGeometry | null = null,
+      columns?: ColumnMeta[]
+    ) {
       const target = session(key);
       // The registry drops the byte count when a session leaves its download.
-      target.state = { ...target.state, status, progress: null };
+      target.state = { ...target.state, status, progress: null, columns };
       target.geometry = geometry;
       for (const listener of target.listeners) listener();
     },
@@ -182,6 +189,37 @@ describe('usePopulationsPlacement', () => {
     ]);
     expect(result.current.placed.map((entry) => entry.geometry.count)).toEqual([2, 3]);
     expect(result.current.failures.get('inputs')?.message).toContain('nothing to place');
+  });
+
+  it('settles a population whose columns lack x/y/z without reading its geometry', async () => {
+    const { result } = render([CORTEX, INPUTS]);
+    const withoutZ: ColumnMeta[] = [
+      { name: 'x', kind: 'numeric' },
+      { name: 'y', kind: 'numeric' },
+      { name: 'model_type', kind: 'categorical' },
+    ];
+
+    act(() => {
+      registry.settle(key(CORTEX), 'ready', geometry(2));
+      registry.settle(key(INPUTS), 'ready', null, withoutZ);
+    });
+
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.failures.get('inputs')).toBeInstanceOf(PopulationWithoutPositionsError);
+    expect(result.current.positionless).toEqual(new Set(['inputs']));
+    expect(registry.geometryAsked).not.toContain(key(INPUTS));
+    expect(registry.released).toContain(key(INPUTS));
+  });
+
+  it('reads the geometry of a population whose columns carry numeric x/y/z', async () => {
+    const { result } = render([INPUTS]);
+    const positioned: ColumnMeta[] = ['x', 'y', 'z'].map((name) => ({ name, kind: 'numeric' }));
+
+    act(() => registry.settle(key(INPUTS), 'ready', geometry(4), positioned));
+
+    await waitFor(() => expect(result.current.settled).toBe(true));
+    expect(result.current.placed.map((entry) => entry.geometry.count)).toEqual([4]);
+    expect(registry.geometryAsked).toContain(key(INPUTS));
   });
 
   it('gives up on a population whose file does not open', async () => {
@@ -333,6 +371,7 @@ describe('usePopulationsPlacement', () => {
     expect(result.current).toEqual({
       placed: [],
       failures: new Map(),
+      positionless: new Set(),
       settled: true,
       download: null,
     });

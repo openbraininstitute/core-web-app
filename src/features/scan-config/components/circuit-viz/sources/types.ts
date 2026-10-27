@@ -58,4 +58,6 @@ export type TSmallCircuitSource = {
    * populations that would pull it away from the cells being recorded.
    */
   anchor: [x: number, y: number, z: number] | null;
+  /** Populations whose nodes carry no x/y/z, by name, so they are not drawn. */
+  positionless: ReadonlySet<string>;
 };
