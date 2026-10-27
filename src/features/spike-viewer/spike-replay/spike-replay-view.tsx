@@ -7,6 +7,7 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { hasPositions } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { PaneResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
@@ -122,11 +123,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
     [data, circuitConfig]
   );
   // Derived rather than corrected in an effect: the default may move when the
-  // circuit config arrives and names a replayable population, and the name on
+  // circuit config arrives and names a population of cells, and the name on
   // show has to give way to it without a render in between showing neither.
+  // Input populations can be replayed too, but only once picked: the circuit's
+  // own cells are what a simulation is opened to see.
   const populationName =
     populations.find((p) => p.name === chosenPopulationName)?.name ??
-    populations.find((p) => replayablePopulation(circuitConfig?.nodes, p.name))?.name ??
+    populations.find((p) => listedCellPopulation(circuitConfig?.nodes, p.name))?.name ??
     populations[0]?.name;
   const recordedIndex = data.populations.findIndex((p) => p.name === populationName);
   const recorded = recordedIndex < 0 ? undefined : data.populations[recordedIndex];
@@ -134,35 +137,53 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   // The spike file holds the cells that fired and says nothing about the rest,
   // so the axis span comes from the node file. This is the session the scene
   // and the nodes table share, so in the split it is already open.
-  const { rowCount, status: nodesStatus } = useNodesWorker({
+  const listed = circuitConfig?.nodes.find((n) => n.name === populationName);
+  const {
+    rowCount,
+    columns,
+    status: nodesStatus,
+  } = useNodesWorker({
     enabled: circuit !== undefined,
     circuitId: circuit?.id ?? '',
     circuitAssetId: circuitConfig?.circuitAssetId ?? '',
-    population: circuitConfig?.nodes.find((n) => n.name === populationName),
+    population: listed,
   });
   const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
   // An MEModel is one cell drawn from the model itself, with no node file.
   const cellCount = memodel === undefined ? countedCells : 1;
 
+  // Read off the same nodes session. Unknown until it is ready, and replayed in
+  // the meantime: switching population mid-play should not pause on a download.
+  const positioned = nodesStatus === 'ready' && columns ? hasPositions(columns) : undefined;
+  // The per-cell viewer cannot light an input population yet: it draws one as
+  // a cloud of somas with no brightness of their own.
+  const drawsEachCell = circuit !== undefined && circuitDrawsMorphologies(circuit.scale);
+  // Where the 3D view has nothing to show for these spikes at all, it drops
+  // away and the raster has the panel, the way it does with no subject.
+  const rasterOnly =
+    recorded === undefined ? undefined : rasterOnlyReason(listed, positioned, drawsEachCell);
+  const offers3D = !!subject && rasterOnly === undefined;
+
   // Decided against the host's own copy of the circuit config — the same
   // query the scene resolves against — so the answer never lags the scene by
   // a render: switching populations mid-play used to trip the pause effect
-  // below on exactly that lag. A population the config does not list, or
-  // lists as virtual, has no cells to light; the scene then draws its own
-  // default and the notice in the header says why.
+  // below on exactly that lag. A population the config does not list has no
+  // cells to light; the scene then draws its own default and the notice in the
+  // header says why.
   //
   // Nothing recorded is nothing to replay. Past that, an MEModel is drawn from
   // the model itself and has one cell, so there is no config to ask.
   const replayable =
     recorded !== undefined &&
-    (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
+    (memodel !== undefined || (listed !== undefined && rasterOnly === undefined));
   const spikes = useMemo(
     () => (replayable ? spikesToViewer(data, populationName) : null),
     [data, populationName, replayable]
   );
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
-  const view = subject ? mode : MODES.Raster;
+  // The mode itself is kept, for when another population brings the 3D back.
+  const view = offers3D ? mode : MODES.Raster;
   const showScene = view !== MODES.Raster;
   const isSplit = view === MODES.Split;
   const showRaster = !showScene || isSplit;
@@ -254,7 +275,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
     if (isSplit) playheadRef.current?.(liveTimeRef.current);
   }, [isSplit]);
 
-  const modeOptions = subject
+  const modeOptions = offers3D
     ? [
         {
           label: 'Raster plot',
@@ -276,6 +297,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
         },
       ]
     : [];
+
+  const notice =
+    rasterOnly !== undefined
+      ? rasterOnlyNote(rasterOnly, populationName)
+      : showScene && !replayable
+        ? replayNotice(recorded, populationName, configLoading, configError !== null)
+        : undefined;
 
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
 
@@ -319,15 +347,15 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               )}
             </div>
           )}
-          {showScene && !replayable && (
-            <span role="status" className="text-xs text-amber-600">
-              {replayNotice(
-                recorded,
-                populationName,
-                circuitConfig?.nodes,
-                configLoading,
-                configError !== null
+          {notice && (
+            <span
+              role="status"
+              className={classNames(
+                'text-xs',
+                rasterOnly !== undefined ? 'text-neutral-500' : 'text-amber-600'
               )}
+            >
+              {notice}
             </span>
           )}
         </div>
@@ -347,7 +375,7 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               {sceneMounted && (
                 <CircuitScene
                   {...subject}
-                  largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+                  largeCircuit={circuit !== undefined && !drawsEachCell}
                   active={showScene}
                   features={SCENE_FEATURES}
                   // Only a name the config backs with cells. A name the scene
@@ -444,8 +472,11 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   );
 }
 
-/** The circuit lists the population and backs it with cells to light up. */
-function replayablePopulation(
+/** Why the 3D view has nothing to show for the population chosen. */
+type RasterOnlyReason = 'no-positions' | 'per-cell-input';
+
+/** The circuit lists the population as cells of its own rather than as an input. */
+function listedCellPopulation(
   nodes: NodePopulation[] | undefined,
   name: string | undefined
 ): boolean {
@@ -453,11 +484,27 @@ function replayablePopulation(
   return listed !== undefined && listed.type !== NodePopulationType.Virtual;
 }
 
+function rasterOnlyReason(
+  listed: NodePopulation | undefined,
+  positioned: boolean | undefined,
+  drawsEachCell: boolean
+): RasterOnlyReason | undefined {
+  if (listed === undefined) return undefined;
+  if (positioned === false) return 'no-positions';
+  if (listed.type === NodePopulationType.Virtual && drawsEachCell) return 'per-cell-input';
+  return undefined;
+}
+
+function rasterOnlyNote(reason: RasterOnlyReason, name: string | undefined): string {
+  if (reason === 'per-cell-input')
+    return '3D replay of input populations isn’t available for small circuits yet.';
+  return `“${name}” has no positions (x/y/z), so its spikes can’t be shown in 3D.`;
+}
+
 /** Why what is on show cannot be replayed. */
 function replayNotice(
   recorded: SpikePopulation | undefined,
   name: string | undefined,
-  nodes: NodePopulation[] | undefined,
   loading: boolean,
   failed: boolean
 ): string {
@@ -466,9 +513,7 @@ function replayNotice(
   if (loading) return 'Reading the circuit’s node populations…';
   if (failed)
     return 'The circuit’s node populations could not be read, so there is nothing to replay these spikes over.';
-  if (!nodes?.some((n) => n.name === name))
-    return `This circuit has no nodes for “${name}”, so there is nothing to replay these spikes over.`;
-  return `“${name}” is an input population — its spikes drive cells rather than fire in them, so there is nothing to light up.`;
+  return `This circuit has no nodes for “${name}”, so there is nothing to replay these spikes over.`;
 }
 
 /**

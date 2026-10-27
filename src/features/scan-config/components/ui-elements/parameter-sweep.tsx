@@ -9,6 +9,7 @@ import {
   scanValueSelectionAtom,
   selectScanValueAtom,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { FULL_WIDTH } from '@/features/scan-config/components/ui-elements/full-width';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { cn } from '@/utils/css-class';
 
@@ -177,7 +178,8 @@ export default function ParameterSweep({
             onChange(v);
           }}
           // room for the floating add button so long values never run under it
-          className="w-full [&_input]:pr-9"
+          className="[&_input]:pr-9"
+          style={FULL_WIDTH}
         />
 
         {errorMessage && <span className="text-red-500">{errorMessage}</span>}

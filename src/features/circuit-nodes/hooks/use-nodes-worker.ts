@@ -67,21 +67,32 @@ export function nodesOpenParams(
 export function useNodesWorker({ enabled, circuitId, circuitAssetId, population }: Args) {
   const ctx = useWorkspace();
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
-  const [state, setState] = useState<NodesSessionState>(IDLE_SESSION_STATE);
-
   const key =
     enabled && population && circuitAssetId && circuitId
       ? nodesSessionKey(circuitId, circuitAssetId, population.name)
       : null;
 
+  // Kept with its key: in the render a new key arrives in, the last key's state
+  // would otherwise describe the new population's file. The registry's own
+  // state stands in until the effect below subscribes.
+  const [synced, setSynced] = useState<{ key: string; state: NodesSessionState } | null>(null);
+  const state =
+    synced?.key === key
+      ? synced.state
+      : key
+        ? nodesWorkerRegistry.getState(key)
+        : IDLE_SESSION_STATE;
+
   useEffect(() => {
-    if (!key || !population) {
-      setState(IDLE_SESSION_STATE);
-      return;
-    }
+    if (!key || !population) return;
 
     nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
-    const sync = () => setState(nodesWorkerRegistry.getState(key));
+    const sync = () => {
+      const next = nodesWorkerRegistry.getState(key);
+      setSynced((previous) =>
+        previous?.key === key && previous.state === next ? previous : { key, state: next }
+      );
+    };
     const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
     sync();
     setFilteredCount(null);

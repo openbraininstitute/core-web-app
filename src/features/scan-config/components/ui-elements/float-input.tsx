@@ -2,6 +2,7 @@ import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useState } from 'react';
 
+import { FULL_WIDTH } from '@/features/scan-config/components/ui-elements/full-width';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 /**
@@ -59,7 +60,7 @@ export function FloatInput({
         onInput={setRawInput}
         onBlur={() => setRawInput('')}
         onChange={onChange}
-        className="w-full"
+        style={FULL_WIDTH}
       />
 
       {errorMessage && <span className="text-red-500">{errorMessage}</span>}

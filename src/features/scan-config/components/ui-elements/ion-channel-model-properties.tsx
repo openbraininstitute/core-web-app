@@ -19,6 +19,7 @@ import {
   useFieldError,
   useFieldErrorsSessionKey,
 } from '@/features/scan-config/components/hooks/field-errors';
+import { FULL_WIDTH } from '@/features/scan-config/components/ui-elements/full-width';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
@@ -507,7 +508,7 @@ export function IonChannelModelProperties({
         />
         {showCustomTemperature && (
           <InputNumber
-            className="w-full"
+            style={FULL_WIDTH}
             controls={false}
             disabled={disabled}
             placeholder="Temperature in °C"

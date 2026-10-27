@@ -11,6 +11,7 @@ import {
   morphologyLocationsHintHoveredAtom,
   readLocationRows,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import { FULL_WIDTH } from '@/features/scan-config/components/ui-elements/full-width';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 import type { IMorphologyLocationSelection as MorphologyLocationSelectionSchema } from '@/features/scan-config/types';
@@ -100,7 +101,8 @@ export default function MorphologyLocationSelection({
               data-testid="scan-config-location-section"
               id={`${fieldId}-section-${index}`}
               // `!` because antd's disabled colour is a more specific selector.
-              className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
+              className="[&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
+              style={FULL_WIDTH}
               variant="filled"
               controls={false}
               disabled
@@ -114,7 +116,7 @@ export default function MorphologyLocationSelection({
             <InputNumber
               data-testid="scan-config-location-offset"
               id={`${fieldId}-offset-${index}`}
-              className="w-full"
+              style={FULL_WIDTH}
               disabled={disabled}
               min={offsetSchema?.minimum ?? 0}
               max={offsetSchema?.maximum ?? 1}

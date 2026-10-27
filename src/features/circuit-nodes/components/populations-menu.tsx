@@ -1,6 +1,7 @@
 import { RiArrowDownSLine, RiEyeLine } from '@remixicon/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
 import { cn } from '@/utils/css-class';
 
@@ -24,6 +25,11 @@ interface PopulationsMenuProps {
   selected?: string;
   /** Put another population on show. Absent where the host pins that choice. */
   onSelect?: (name: string) => void;
+  /**
+   * The ones whose nodes carry no x/y/z, by name. Listed, so they can still be
+   * put on show for the nodes table, but never drawn, so never counted.
+   */
+  positionless?: ReadonlySet<string>;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
   /**
@@ -55,6 +61,7 @@ export function PopulationsMenu({
   onChange,
   selected,
   onSelect,
+  positionless = NO_NAMES,
   theme,
   autoOpen = false,
   className,
@@ -65,6 +72,11 @@ export function PopulationsMenu({
   /** Whether this opening is the introduction rather than a click. */
   const introducing = useRef(false);
 
+  const hiddenSet = new Set(hidden);
+  const drawable = populations.filter((p) => !positionless.has(p.name));
+  const shownCount = drawable.filter((p) => !hiddenSet.has(p.name)).length;
+  const missingCount = drawable.length - shownCount;
+
   // The pill counts what is on screen without saying that the populations
   // missing from it were left out by default, or that a click brings them back.
   // The panel says so itself, once, and only where something is missing.
@@ -72,7 +84,7 @@ export function PopulationsMenu({
   // Statements rather than `||` and `?.`: React Compiler will not lower a
   // conditional inside a try, and drops the whole component when it cannot.
   useEffect(() => {
-    if (!autoOpen || hidden.length === 0) return;
+    if (!autoOpen || missingCount === 0) return;
 
     try {
       const storage = globalThis.localStorage;
@@ -86,7 +98,7 @@ export function PopulationsMenu({
     }
     introducing.current = true;
     setOpen(true);
-  }, [autoOpen, hidden.length]);
+  }, [autoOpen, missingCount]);
 
   useEffect(() => {
     if (!open) return;
@@ -111,14 +123,9 @@ export function PopulationsMenu({
     return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
   }, [open]);
 
-  const hiddenSet = new Set(hidden);
-  const shownCount = populations.filter((p) => !hiddenSet.has(p.name)).length;
   // Worth spelling out as a fraction only once something is missing; "4 of 4"
   // is a number the user has to read twice to learn nothing.
-  const label =
-    shownCount === populations.length
-      ? `${populations.length}`
-      : `${shownCount} of ${populations.length}`;
+  const label = missingCount === 0 ? `${drawable.length}` : `${shownCount} of ${drawable.length}`;
 
   const panelStyle = theme
     ? {
@@ -199,7 +206,7 @@ export function PopulationsMenu({
           <button
             type="button"
             data-testid="populations-menu-show-all"
-            disabled={hidden.length === 0}
+            disabled={missingCount === 0}
             onClick={() => onChange([])}
             className={cn(
               'text-sm font-medium enabled:hover:underline disabled:opacity-40',
@@ -212,10 +219,23 @@ export function PopulationsMenu({
         <ul className="max-h-72 overflow-y-auto">
           {populations.map((population) => {
             const { name } = population;
-            const isHidden = hiddenSet.has(name);
+            const unplaceable = positionless.has(name);
+            const isHidden = unplaceable || hiddenSet.has(name);
+            // In place of the type: the row truncates, and both would cut the tag off.
+            const tag = unplaceable ? 'no positions' : onSelect && population.type;
+            const tagElement = tag && (
+              <span className={cn('ml-1', !theme && 'text-neutral-400')} style={mutedStyle}>
+                {tag}
+              </span>
+            );
             return (
               <li
                 key={name}
+                title={
+                  unplaceable
+                    ? 'This population has no positions (x/y/z), so it can’t be drawn in 3D'
+                    : undefined
+                }
                 className={cn(
                   'group/row flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors',
                   hoverClass
@@ -225,12 +245,13 @@ export function PopulationsMenu({
                   <input
                     type="checkbox"
                     checked={!isHidden}
+                    disabled={unplaceable}
                     onChange={(e) =>
                       onChange(
                         e.target.checked ? hidden.filter((n) => n !== name) : [...hidden, name]
                       )
                     }
-                    className="size-4 cursor-pointer accent-current"
+                    className="size-4 cursor-pointer accent-current disabled:cursor-not-allowed"
                   />
                   <span className="sr-only">Show {name}</span>
                 </label>
@@ -247,11 +268,7 @@ export function PopulationsMenu({
                     )}
                   >
                     {name}
-                    {population.type && (
-                      <span className={cn('ml-1', !theme && 'text-neutral-400')} style={mutedStyle}>
-                        {population.type}
-                      </span>
-                    )}
+                    {tagElement}
                   </button>
                 ) : (
                   <span
@@ -262,32 +279,36 @@ export function PopulationsMenu({
                     )}
                   >
                     {name}
+                    {tagElement}
                   </span>
                 )}
                 {/* Revealed on hover so a row reads as a name and not a row of buttons.
-                    Focusable throughout, or it would be a gesture only a mouse could make. */}
-                <button
-                  type="button"
-                  aria-label={`Show only ${name}`}
-                  onClick={() => {
-                    onChange(populations.map((p) => p.name).filter((n) => n !== name));
-                    // The one population left in the scene is the one to put
-                    // on show. Leaving the selection where it was would draw
-                    // the only thing on screen receded, with the nodes table
-                    // listing a population that is not drawn at all. Ticking
-                    // a checkbox is the other case, and stays as it was: it
-                    // says which populations are drawn and nothing about
-                    // which one is on show.
-                    onSelect?.(name);
-                  }}
-                  className={cn(
-                    'shrink-0 text-xs font-medium opacity-0 transition-opacity',
-                    'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
-                    !theme && 'text-primary-9'
-                  )}
-                >
-                  Only
-                </button>
+                    Focusable throughout, or it would be a gesture only a mouse could make.
+                    Not offered where it would leave nothing drawn at all. */}
+                {!unplaceable && (
+                  <button
+                    type="button"
+                    aria-label={`Show only ${name}`}
+                    onClick={() => {
+                      onChange(populations.map((p) => p.name).filter((n) => n !== name));
+                      // The one population left in the scene is the one to put
+                      // on show. Leaving the selection where it was would draw
+                      // the only thing on screen receded, with the nodes table
+                      // listing a population that is not drawn at all. Ticking
+                      // a checkbox is the other case, and stays as it was: it
+                      // says which populations are drawn and nothing about
+                      // which one is on show.
+                      onSelect?.(name);
+                    }}
+                    className={cn(
+                      'shrink-0 text-xs font-medium opacity-0 transition-opacity',
+                      'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
+                      !theme && 'text-primary-9'
+                    )}
+                  >
+                    Only
+                  </button>
+                )}
               </li>
             );
           })}

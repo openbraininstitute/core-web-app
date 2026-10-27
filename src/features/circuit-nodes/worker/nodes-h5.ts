@@ -12,13 +12,13 @@ import {
   type NodeGeometry,
   type NodeGeometryOptions,
   type NumberFilter,
+  POSITION_COLUMNS,
   type SortItem,
   type TextFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
 
-const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
 const ORIENTATION_COLUMNS = [
   'orientation_x',
   'orientation_y',

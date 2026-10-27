@@ -1,6 +1,7 @@
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
+import { ColumnKindDict, POSITION_COLUMNS } from '@/features/circuit-nodes/types';
 
-import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { ColumnMeta, NodePopulation } from '@/features/circuit-nodes/types';
 
 /**
  * Prefer a biophysical population; otherwise fall back to the first entry.
@@ -26,4 +27,13 @@ export function resolvePopulation(
   if (populations.length === 0) return undefined;
   const current = name ? populations.find((p) => p.name === name) : undefined;
   return current ?? pickDefaultPopulation(populations);
+}
+
+export const NO_NAMES: ReadonlySet<string> = new Set();
+
+/** The worker's `getGeometry` test, answered from a ready session's column list. */
+export function hasPositions(columns: readonly ColumnMeta[]): boolean {
+  return POSITION_COLUMNS.every((name) =>
+    columns.some((column) => column.name === name && column.kind === ColumnKindDict.Numeric)
+  );
 }

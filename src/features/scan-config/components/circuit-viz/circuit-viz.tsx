@@ -1,6 +1,7 @@
 import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
@@ -76,6 +77,8 @@ interface CircuitVizProps {
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** Called with the populations whose nodes carry no x/y/z, whenever that set changes. */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   showAxons: boolean;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
@@ -154,6 +157,7 @@ export function CircuitVisualization({
   hiddenPopulations,
   recededColor,
   onPopulationClick,
+  onPositionlessPopulationsChange,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -167,6 +171,11 @@ export function CircuitVisualization({
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
   });
+  const positionless = source.positionless ?? NO_NAMES;
+  useEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
+
   const subjectName = props.population?.name;
   const handleCellClick = useCallback(
     (cell: MorphoViewerSmallCircuitCell | undefined) => {
@@ -195,6 +204,7 @@ type TCircuitVizViewProps = Omit<
   | 'hiddenPopulations'
   | 'recededColor'
   | 'onPopulationClick'
+  | 'onPositionlessPopulationsChange'
   | 'nodeColors'
   | 'defaultColor'
 > & {

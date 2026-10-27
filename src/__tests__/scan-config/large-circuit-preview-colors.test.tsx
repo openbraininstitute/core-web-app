@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
 import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewer';
@@ -33,12 +34,15 @@ function asNodeColors(byNode: string[]): NodeColors {
 // Hoisted so the module factories below, which run before the test body, can
 // read them.
 const fixtures = vi.hoisted(() => ({
-  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
-    typeof usePopulationsPlacement
-  >,
+  placement: { placed: [], failures: new Map(), settled: true, download: null } as Placement,
+  noNames: new Set<string>() as ReadonlySet<string>,
   /** Every set of props the viewer has been rendered with, in order. */
   rendered: [] as MorphoViewerSomasOnlyProps[],
 }));
+
+// `positionless` is left out where a test has none, as most do.
+type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless'> &
+  Partial<Pick<ReturnType<typeof usePopulationsPlacement>, 'positionless'>>;
 
 // The real one is a `next/dynamic` import of a WebGL renderer. What the
 // preview hands it is the thing under test.
@@ -57,8 +61,9 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
   }),
 }));
 
-vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
-  usePopulationsPlacement: () => fixtures.placement,
+vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  usePopulationsPlacement: () => ({ positionless: fixtures.noNames, ...fixtures.placement }),
 }));
 
 const circuit = { id: 'circuit-id', name: 'Circuit' } as ICircuit;
@@ -69,7 +74,10 @@ type TProps = {
   nodeColors?: NodeColors;
   recededColor?: string;
   onPopulationClick?: (name: string) => void;
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   somaSizeScale?: number;
+  populations?: NodePopulation[];
+  spikes?: React.ComponentProps<typeof LargeCircuitPreview>['spikes'];
 };
 
 /** The element, so a rerender can vary one prop without restating the rest. */
@@ -228,26 +236,71 @@ describe('LargeCircuitPreview colours', () => {
   // checklist should not take the circuit off the screen: it is context that
   // goes undrawn, as a failure of any other population already is. The error
   // panel unmounts the viewer, and with it the WebGL context and the camera.
-  it('draws the rest of the circuit when the population on show has no positions', () => {
+  it('draws the rest of the circuit receded when the population on show has no positions', () => {
     fixtures.placement = {
       placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
-      failures: new Map([['vpm', new Error('no x/y/z columns; nothing to place in 3D')]]),
+      failures: new Map([['vpm', new PopulationWithoutPositionsError('vpm')]]),
+      positionless: new Set(['vpm']),
       settled: true,
       download: null,
     };
+    const onPositionlessPopulationsChange = vi.fn();
     const { container } = draw({
       population: VPM,
       recededColor: '#ccc',
       onPopulationClick: vi.fn(),
+      onPositionlessPopulationsChange,
     });
 
     expect(lastRender().positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
-    // Nothing on screen is the selection, so there is nothing for the rest to
-    // recede behind: the viewer keeps its own ramp.
-    expect(lastRender().cellColors?.palette).toEqual([]);
+    // The chrome says why the selection is missing, and the rest receding
+    // keeps it from passing for the selection.
+    expect(paints(lastRender())).toEqual(['#ccc', '#ccc']);
+    expect(onPositionlessPopulationsChange).toHaveBeenLastCalledWith(new Set(['vpm']));
     // And a click is still the way back to a population that can be drawn.
     expect(lastRender().onCellClick).toBeDefined();
     expect(container.textContent).not.toContain('Unable to load');
+  });
+
+  it('keeps the rest in its own colours when the population on show fails for another reason', () => {
+    fixtures.placement = {
+      placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
+      failures: new Map([['vpm', new Error('inputs.h5 could not be opened')]]),
+      settled: true,
+      download: null,
+    };
+    const onPositionlessPopulationsChange = vi.fn();
+    draw({
+      population: VPM,
+      recededColor: '#ccc',
+      onPopulationClick: vi.fn(),
+      onPositionlessPopulationsChange,
+    });
+
+    // Nothing would say why the circuit went grey.
+    expect(lastRender().cellColors?.palette).toEqual([]);
+    expect(onPositionlessPopulationsChange).toHaveBeenLastCalledWith(new Set());
+  });
+
+  // Spike replay places the population it replays and nothing else, so a
+  // spike's node id is the index of the soma it lights, an input's included.
+  it('lights an input population placed alone by node id', () => {
+    fixtures.placement = {
+      placed: [{ population: VPM, geometry: placement([0, 0, 0, 1, 1, 1]) }],
+      failures: new Map(),
+      settled: true,
+      download: null,
+    };
+    const data = {
+      cellIndices: new Uint32Array([1]),
+      times: new Float32Array([2]),
+      timeMinInMs: 0,
+      timeMaxInMs: 10,
+    };
+    draw({ population: VPM, populations: [VPM], spikes: { data } });
+
+    expect(lastRender().positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
+    expect(lastRender().spikes).toBe(data);
   });
 
   it('covers the canvas only once no population at all could be placed', () => {

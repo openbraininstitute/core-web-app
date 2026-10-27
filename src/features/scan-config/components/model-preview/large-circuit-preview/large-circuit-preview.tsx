@@ -71,6 +71,8 @@ export interface LargeCircuitPreviewProps {
   recededColor?: string;
   /** Called with the population name when one of those somas is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** @see CircuitVizProps.onPositionlessPopulationsChange */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
   scalebarColor?: string;
@@ -119,6 +121,7 @@ export function LargeCircuitPreview({
   nodeColors,
   recededColor,
   onPopulationClick,
+  onPositionlessPopulationsChange,
   backgroundColor,
   scalebarColor,
   showScalebar = true,
@@ -140,13 +143,16 @@ export function LargeCircuitPreview({
   // recolours the somas in place and the camera stays where the user left it.
   // Nothing is reported placed until everything is, so anything placed at all
   // means the whole scene can be built.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
+  const { placed, failures, positionless, settled, download } = usePopulationsPlacement({
     circuit,
     populations,
   });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
+  React.useEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
   // Context is what is on screen beside the subject, so a hidden population is
   // not it: there is nothing to recede behind the subject and nothing a click
   // could land on.
@@ -224,9 +230,12 @@ export function LargeCircuitPreview({
   // nothing on screen is the selection then either, and the viewer's own ramp
   // would say the opposite, lighting the whole rest of the circuit up the
   // moment the user takes the selection out of it.
-  // With the population on show unplaceable there is no selection on screen to
-  // recede behind, and receding everything would grey the whole circuit out.
-  const recede = hasContext && subject ? recededColor : undefined;
+  // The same holds for a population on show with no positions, which the chrome
+  // explains; any other failure to place it goes unexplained, so nothing recedes.
+  const recede =
+    hasContext && (subject || (subjectName !== undefined && positionless.has(subjectName)))
+      ? recededColor
+      : undefined;
 
   // The mapping already arrives as a palette and a column per soma. This memo
   // writes the subject's columns at its offset in the scene and appends a
