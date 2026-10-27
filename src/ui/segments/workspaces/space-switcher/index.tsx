@@ -26,6 +26,7 @@ import {
 } from '@/ui/segments/workspaces/space-manager/event';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
 import { Item } from '@/ui/segments/workspaces/space-switcher/item';
+import { isInsideContentModal } from '@/ui/segments/workspaces/space-switcher/outside-click';
 import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
@@ -308,13 +309,11 @@ export function SpaceSwitcher({ className }: Props) {
 
   // Auto-collapse the panel when the user clicks outside of it. When a content
   // modal is open, a single outside click closes both the modal and the panel.
-  // Clicks inside the modal *dialog* (#modal-dialog) are ignored so the user can
-  // interact with it, but clicks on the dimmed mask (#modal-overlay) count as
-  // "outside" and dismiss both surfaces at once.
-  const ignoreOutsideClick = useCallback((event: Event) => {
-    const target = event.target as HTMLElement | null;
-    return Boolean(target?.closest('#modal-dialog'));
-  }, []);
+  // Clicks inside the modal *dialog* (#modal-dialog), or in a popup one of its
+  // controls opened (portalled to <body>, outside the dialog), are ignored so the
+  // user can interact with it, but clicks on the dimmed mask (#modal-overlay)
+  // count as "outside" and dismiss both surfaces at once.
+  const ignoreOutsideClick = useCallback((event: Event) => isInsideContentModal(event.target), []);
   useOnClickOutside(
     dropdownRef,
     () => {
