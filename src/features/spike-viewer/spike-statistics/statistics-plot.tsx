@@ -53,11 +53,12 @@ export default function StatisticsPlot({
   const [timingHovered, setTimingHovered] = useState(false);
   // A 3D scene's hover says nothing of the pointer, so where it last was is kept.
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
-  const [hintUp, zoomed] = useZoomHint('statistics');
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('statistics');
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       if (setsAxisRange(event as Readonly<Record<string, unknown>>)) zoomed();
     },
+    onDoubleClick: zoomedOut,
     onClick: (event) => onPointClick?.(event.points[0]?.customdata),
     onHover: (event) => {
       const point = event.points[0] as HoverPoint | undefined;

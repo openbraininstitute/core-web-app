@@ -56,7 +56,7 @@ export default function RasterPlot({
   const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
   const [spikeHover, setSpikeHover] = useState<SpikeHover | null>(null);
   // A double-click zooms back out, as on the statistics' plots.
-  const [hintUp, zoomed] = useZoomHint('raster');
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('raster');
   const { onWindowChange } = options;
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(containerRef, {
     data,
@@ -65,6 +65,7 @@ export default function RasterPlot({
     ...options,
     onWindowChange: (window) => {
       if (window) zoomed();
+      else zoomedOut();
       onWindowChange?.(window);
     },
     onEventsHover: setEventsHover,
