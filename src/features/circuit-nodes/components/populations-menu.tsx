@@ -1,5 +1,5 @@
 import { RiArrowDownSLine, RiEyeLine } from '@remixicon/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
@@ -13,6 +13,8 @@ import type { ViewerTheme } from '@/features/scan-config/components/color-by/con
  * Per browser rather than per circuit: the control has to be found once.
  */
 export const POPULATIONS_MENU_INTRODUCED_KEY = 'obi:circuit-viewer-populations-menu:v1';
+
+const NO_POSITIONS_REASON = 'This population has no positions (x/y/z), so it can’t be drawn in 3D';
 
 interface PopulationsMenuProps {
   /** Every population the circuit declares, in declared order. */
@@ -69,6 +71,7 @@ export function PopulationsMenu({
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const reasonId = useId();
   /** Whether this opening is the introduction rather than a click. */
   const introducing = useRef(false);
 
@@ -217,7 +220,7 @@ export function PopulationsMenu({
           </button>
         </div>
         <ul className="max-h-72 overflow-y-auto">
-          {populations.map((population) => {
+          {populations.map((population, index) => {
             const { name } = population;
             const unplaceable = positionless.has(name);
             const isHidden = unplaceable || hiddenSet.has(name);
@@ -231,11 +234,7 @@ export function PopulationsMenu({
             return (
               <li
                 key={name}
-                title={
-                  unplaceable
-                    ? 'This population has no positions (x/y/z), so it can’t be drawn in 3D'
-                    : undefined
-                }
+                title={unplaceable ? NO_POSITIONS_REASON : undefined}
                 className={cn(
                   'group/row flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors',
                   hoverClass
@@ -246,6 +245,7 @@ export function PopulationsMenu({
                     type="checkbox"
                     checked={!isHidden}
                     disabled={unplaceable}
+                    aria-describedby={unplaceable ? `${reasonId}-${index}` : undefined}
                     onChange={(e) =>
                       onChange(
                         e.target.checked ? hidden.filter((n) => n !== name) : [...hidden, name]
@@ -255,6 +255,11 @@ export function PopulationsMenu({
                   />
                   <span className="sr-only">Show {name}</span>
                 </label>
+                {unplaceable && (
+                  <span id={`${reasonId}-${index}`} className="sr-only">
+                    {NO_POSITIONS_REASON}
+                  </span>
+                )}
                 {onSelect ? (
                   <button
                     type="button"

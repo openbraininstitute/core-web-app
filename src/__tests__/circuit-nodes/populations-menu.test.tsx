@@ -265,6 +265,9 @@ describe('PopulationsMenu with a population that has no positions', () => {
 
     expect(checkbox('vpm')).toBeDisabled();
     expect(checkbox('vpm').checked).toBe(false);
+    expect(checkbox('vpm')).toHaveAccessibleDescription(
+      expect.stringContaining('no positions (x/y/z)')
+    );
     expect(screen.getByRole('button', { name: /^vpm/ })).toHaveTextContent('no positions');
     expect(screen.getByRole('button', { name: /^vpm/ }).closest('li')).toHaveAttribute(
       'title',

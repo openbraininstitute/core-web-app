@@ -1,7 +1,6 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
 import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
@@ -171,8 +170,9 @@ export function CircuitVisualization({
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
   });
-  const positionless = source.positionless ?? NO_NAMES;
-  useEffect(() => {
+  const { positionless } = source;
+  // Before paint, so the checklist and colour-by never show a frame that still counts them.
+  useLayoutEffect(() => {
     onPositionlessPopulationsChange?.(positionless);
   }, [positionless, onPositionlessPopulationsChange]);
 

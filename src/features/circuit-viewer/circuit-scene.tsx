@@ -1,5 +1,6 @@
 import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
+import { isEqual } from 'es-toolkit';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -220,8 +221,7 @@ export function CircuitScene({
       // mounts, and an equal one on every unrelated retry.
       setReportedPositionless((previous) => {
         const current = previous?.circuitId === circuitId ? previous.names : NO_NAMES;
-        const same = current.size === names.size && [...names].every((n) => current.has(n));
-        return same ? previous : { circuitId, names };
+        return isEqual(current, names) ? previous : { circuitId, names };
       });
     },
     [circuitId]

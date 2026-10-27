@@ -161,7 +161,9 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
   // Where the 3D view has nothing to show for these spikes at all, it drops
   // away and the raster has the panel, the way it does with no subject.
   const rasterOnly =
-    recorded === undefined ? undefined : rasterOnlyReason(listed, positioned, drawsEachCell);
+    recorded === undefined
+      ? undefined
+      : rasterOnlyReason(listed, nodesStatus === 'error', positioned, drawsEachCell);
   const offers3D = !!subject && rasterOnly === undefined;
 
   // Decided against the host's own copy of the circuit config — the same
@@ -298,12 +300,13 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
       ]
     : [];
 
-  const notice =
-    rasterOnly !== undefined
-      ? rasterOnlyNote(rasterOnly, populationName)
-      : showScene && !replayable
-        ? replayNotice(recorded, populationName, configLoading, configError !== null)
-        : undefined;
+  let notice: Notice | undefined;
+  if (rasterOnly !== undefined) notice = rasterOnlyNote(rasterOnly, populationName);
+  else if (showScene && !replayable)
+    notice = {
+      text: replayNotice(recorded, populationName, configLoading, configError !== null),
+      warning: true,
+    };
 
   const splitHeight = clampSplitHeight(rasterHeight, containerHeight);
 
@@ -352,10 +355,10 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
               role="status"
               className={classNames(
                 'text-xs',
-                rasterOnly !== undefined ? 'text-neutral-500' : 'text-amber-600'
+                notice.warning ? 'text-amber-600' : 'text-neutral-500'
               )}
             >
-              {notice}
+              {notice.text}
             </span>
           )}
         </div>
@@ -473,7 +476,9 @@ export function SpikeReplayView({ data, subject }: SpikeReplayViewProps) {
 }
 
 /** Why the 3D view has nothing to show for the population chosen. */
-type RasterOnlyReason = 'no-positions' | 'per-cell-input';
+type RasterOnlyReason = 'nodes-error' | 'no-positions' | 'per-cell-input';
+
+type Notice = { text: string; warning: boolean };
 
 /** The circuit lists the population as cells of its own rather than as an input. */
 function listedCellPopulation(
@@ -486,19 +491,34 @@ function listedCellPopulation(
 
 function rasterOnlyReason(
   listed: NodePopulation | undefined,
+  nodesFailed: boolean,
   positioned: boolean | undefined,
   drawsEachCell: boolean
 ): RasterOnlyReason | undefined {
   if (listed === undefined) return undefined;
   if (positioned === false) return 'no-positions';
-  if (listed.type === NodePopulationType.Virtual && drawsEachCell) return 'per-cell-input';
+  if (listed.type !== NodePopulationType.Virtual) return undefined;
+  // The scene's error panel would be about an input it may never have drawn.
+  if (nodesFailed) return 'nodes-error';
+  if (drawsEachCell) return 'per-cell-input';
   return undefined;
 }
 
-function rasterOnlyNote(reason: RasterOnlyReason, name: string | undefined): string {
+function rasterOnlyNote(reason: RasterOnlyReason, name: string | undefined): Notice {
+  if (reason === 'nodes-error')
+    return {
+      text: `The nodes of “${name}” could not be read, so its spikes can’t be shown in 3D.`,
+      warning: true,
+    };
   if (reason === 'per-cell-input')
-    return '3D replay of input populations isn’t available for small circuits yet.';
-  return `“${name}” has no positions (x/y/z), so its spikes can’t be shown in 3D.`;
+    return {
+      text: '3D replay of input populations isn’t available for small circuits yet.',
+      warning: false,
+    };
+  return {
+    text: `“${name}” has no positions (x/y/z), so its spikes can’t be shown in 3D.`,
+    warning: false,
+  };
 }
 
 /** Why what is on show cannot be replayed. */

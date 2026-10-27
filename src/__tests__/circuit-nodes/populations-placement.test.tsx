@@ -2,10 +2,8 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { nodesSessionKey } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import {
-  PopulationWithoutPositionsError,
-  usePopulationsPlacement,
-} from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type {

@@ -150,7 +150,8 @@ export function LargeCircuitPreview({
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
-  React.useEffect(() => {
+  // Before paint: see CircuitVisualization.
+  React.useLayoutEffect(() => {
     onPositionlessPopulationsChange?.(positionless);
   }, [positionless, onPositionlessPopulationsChange]);
   // Context is what is on screen beside the subject, so a hidden population is

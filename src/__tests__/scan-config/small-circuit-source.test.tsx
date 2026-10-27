@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/hooks/use-populations-placement';
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
@@ -81,8 +81,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
   useCircuitConfig: () => ({ config: fixtures.config, error: fixtures.configError }),
 }));
 
-vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', async (importOriginal) => ({
-  ...(await importOriginal<object>()),
+vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
   usePopulationsPlacement: () => ({ positionless: fixtures.noNames, ...fixtures.placement }),
 }));
 

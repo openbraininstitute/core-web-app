@@ -191,4 +191,23 @@ describe('SpikeReplayView with input spikes', () => {
     expect(lastScene().populationName).toBe('VPM');
     expect(screen.queryByRole('status')).toBeNull();
   });
+
+  it('shows only the raster for a population whose nodes could not be read', () => {
+    fixtures.session = { status: 'error', columns: undefined };
+    render(<SpikeReplayView data={spikes('VPM')} subject={LARGE} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'The nodes of “VPM” could not be read, so its spikes can’t be shown in 3D.'
+    );
+    expect(screen.queryByRole('button', { name: 'Play spike replay' })).toBeNull();
+  });
+
+  // The scene's error panel is about the circuit's own cells, and offers a retry.
+  it('leaves a population of cells whose nodes could not be read to the scene', () => {
+    fixtures.session = { status: 'error', columns: undefined };
+    render(<SpikeReplayView data={spikes('cortex')} subject={LARGE} />);
+
+    expect(lastScene().populationName).toBe('cortex');
+    expect(screen.queryByRole('status')).toBeNull();
+  });
 });

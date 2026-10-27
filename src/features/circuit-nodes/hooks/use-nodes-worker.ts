@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   IDLE_SESSION_STATE,
   type NodesOpenParams,
-  type NodesSessionState,
   nodesWorkerRegistry,
 } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -66,42 +65,31 @@ export function nodesOpenParams(
  */
 export function useNodesWorker({ enabled, circuitId, circuitAssetId, population }: Args) {
   const ctx = useWorkspace();
-  const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const key =
     enabled && population && circuitAssetId && circuitId
       ? nodesSessionKey(circuitId, circuitAssetId, population.name)
       : null;
 
-  // Kept with its key: in the render a new key arrives in, the last key's state
-  // would otherwise describe the new population's file. The registry's own
-  // state stands in until the effect below subscribes.
-  const [synced, setSynced] = useState<{ key: string; state: NodesSessionState } | null>(null);
-  const state =
-    synced?.key === key
-      ? synced.state
-      : key
-        ? nodesWorkerRegistry.getState(key)
-        : IDLE_SESSION_STATE;
+  // Acquired here: the registry has no session to subscribe to until then.
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      if (!key || !population) return () => {};
+      nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
+      const unsubscribe = nodesWorkerRegistry.subscribe(key, onChange);
+      return () => {
+        unsubscribe();
+        nodesWorkerRegistry.release(key);
+      };
+    },
+    [key, ctx, circuitId, circuitAssetId, population]
+  );
+  const state = useSyncExternalStore(subscribe, () =>
+    key ? nodesWorkerRegistry.getState(key) : IDLE_SESSION_STATE
+  );
 
-  useEffect(() => {
-    if (!key || !population) return;
-
-    nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
-    const sync = () => {
-      const next = nodesWorkerRegistry.getState(key);
-      setSynced((previous) =>
-        previous?.key === key && previous.state === next ? previous : { key, state: next }
-      );
-    };
-    const unsubscribe = nodesWorkerRegistry.subscribe(key, sync);
-    sync();
-    setFilteredCount(null);
-
-    return () => {
-      unsubscribe();
-      nodesWorkerRegistry.release(key);
-    };
-  }, [key, ctx, circuitId, circuitAssetId, population]);
+  // Kept with its key, like `state`, so a new population never shows the last one's count.
+  const [filtered, setFiltered] = useState<{ key: string; count: number | null } | null>(null);
+  const filteredCount = filtered && filtered.key === key ? filtered.count : null;
 
   const datasource = useMemo<IDatasource | null>(() => {
     if (!key || state.status !== 'ready' || !state.columns) return null;
@@ -122,8 +110,10 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
           })
           .then((res) => {
             const hasFilter = !!params.filterModel && Object.keys(params.filterModel).length > 0;
-            const next = hasFilter ? res.total : null;
-            setFilteredCount((prev) => (prev === next ? prev : next));
+            const count = hasFilter ? res.total : null;
+            setFiltered((previous) =>
+              previous?.key === key && previous.count === count ? previous : { key, count }
+            );
             const lastRow = res.total <= params.endRow ? res.total : undefined;
             params.successCallback(res.rows, lastRow);
           })

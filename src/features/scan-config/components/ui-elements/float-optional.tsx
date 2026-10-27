@@ -3,7 +3,6 @@ import { InputNumber } from 'antd';
 import { isNil } from 'es-toolkit/compat';
 import { useCallback } from 'react';
 
-import { FULL_WIDTH } from '@/features/scan-config/components/ui-elements/full-width';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 
 const UNSET_PLACEHOLDER = 'Not set';
@@ -60,7 +59,7 @@ export function FloatOptional({
         value={value}
         placeholder={UNSET_PLACEHOLDER}
         onChange={onChange}
-        style={FULL_WIDTH}
+        className="w-full!"
       />
 
       {errorMessage && <span className="text-red-500">{errorMessage}</span>}

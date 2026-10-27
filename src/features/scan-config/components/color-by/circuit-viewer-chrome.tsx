@@ -271,10 +271,7 @@ export function CircuitViewerChrome({
         </div>
       )}
       {showVizChrome && unplaceableSubject !== undefined && (
-        <div
-          className="pointer-events-auto absolute left-1/2 -translate-x-1/2"
-          style={{ top: belowLeft }}
-        >
+        <div className="absolute left-1/2 -translate-x-1/2" style={{ top: belowLeft }}>
           <ChromeNotice theme={theme} warning style={panel} className="px-3 py-1.5 text-xs">
             “{unplaceableSubject}” has no positions (x/y/z), so it can’t be drawn in 3D
           </ChromeNotice>
@@ -378,14 +375,18 @@ function ChromeNotice({
   className,
 }: {
   children: React.ReactNode;
-  /** Label of the button that undoes what the notice reports. Omit where nothing can. */
-  action?: string;
-  onAction?: () => void;
   theme?: ViewerTheme | null;
   warning?: boolean;
   style?: React.CSSProperties;
   className?: string;
-}) {
+} & (
+  | {
+      /** Label of the button that undoes what the notice reports. Omit both where nothing can. */
+      action: string;
+      onAction: () => void;
+    }
+  | { action?: never; onAction?: never }
+)) {
   // Themed panels ring with a box-shadow in `style`, the fixed light one with a Tailwind ring.
   const ringStyle = warning && theme ? { boxShadow: '0 0 0 1px var(--color-warning)' } : undefined;
   return (

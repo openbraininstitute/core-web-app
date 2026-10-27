@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { nodesWorkerRegistry } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesOpenParams, nodesSessionKey } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { hasPositions, isBiophysical, NO_NAMES } from '@/features/circuit-nodes/population-utils';
+import {
+  hasPositions,
+  isBiophysical,
+  NO_NAMES,
+  PopulationWithoutPositionsError,
+} from '@/features/circuit-nodes/population-utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -22,20 +27,6 @@ type Args = {
   /** @see NodeGeometryOptions.withOrientations */
   withOrientations?: boolean;
 };
-
-/**
- * The population's nodes carry no x/y/z, so there is nowhere to draw them.
- *
- * Raised here rather than by the worker: an error loses its class crossing the
- * worker boundary, and a viewer has to tell this apart from a file that would
- * not open.
- */
-export class PopulationWithoutPositionsError extends Error {
-  constructor(populationName: string) {
-    super(`Population '${populationName}' has no x/y/z columns; nothing to place in 3D`);
-    this.name = 'PopulationWithoutPositionsError';
-  }
-}
 
 export type PlacedPopulation = {
   population: NodePopulation;
