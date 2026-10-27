@@ -8,18 +8,16 @@ describe('buildRunTargets', () => {
     expect(buildRunTargets('staging').map((t) => t.key)).toEqual(['default']);
   });
 
-  it('adds the single-pod AWS/Azure targets on dev/preview/local deployments', () => {
+  it('adds the single-pod AWS target on dev/preview/local deployments', () => {
     for (const env of ['local', 'preview', 'development']) {
-      expect(buildRunTargets(env).map((t) => t.key)).toEqual(['default', 'aws-dev', 'azure-dev']);
+      expect(buildRunTargets(env).map((t) => t.key)).toEqual(['default', 'aws-dev']);
     }
   });
 
   it('dev targets carry their cloud override and a brand icon', () => {
-    const [, aws, azure] = buildRunTargets('development');
+    const [, aws] = buildRunTargets('development');
     expect(aws).toMatchObject({ key: 'aws-dev', cloud: 'aws' });
-    expect(azure).toMatchObject({ key: 'azure-dev', cloud: 'azure' });
     expect(typeof aws.Icon).toBe('function');
-    expect(typeof azure.Icon).toBe('function');
   });
 
   it('the default target has no cloud override', () => {
