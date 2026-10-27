@@ -44,6 +44,7 @@ import { gridQueryKey } from '@/features/data-grid/listing-queries';
 import {
   createDefaultPersistence,
   DataGrid,
+  FACETS_STALE_MS,
   layoutKeyFor,
   selectionKeyFor,
   useGridStateSlice,
@@ -428,6 +429,11 @@ export function EntityDataGrid({
         context: { virtualLabId, projectId },
       }),
     enabled: enabled && Boolean(facetsQueryFn),
+    // The buckets of a listing change when data is registered, not on every mount or
+    // focus: the facet call is entitycore's most expensive request, so a listing
+    // reopened within the window reuses the last answer.
+    staleTime: FACETS_STALE_MS,
+    refetchOnWindowFocus: false,
   });
   const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;
 
