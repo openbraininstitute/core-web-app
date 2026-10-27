@@ -77,12 +77,13 @@ function useMEModelCompatibility(config: Config) {
     staleTime: Infinity,
   });
 
-  // the name decides the unbuildable block, so the check isn't done until it is known
+  // the name decides the unbuildable block, so wait for it, but a failed lookup falls back to the
+  // simulator's answer
   const compatibility = deriveCompatibilityState(
     selectionComplete,
     {
       isFetching: compatibilityCheck.isFetching || emodelName.isLoading,
-      isError: compatibilityCheck.isError || emodelName.isError,
+      isError: compatibilityCheck.isError,
       data: compatibilityCheck.data,
     },
     emodelName.data
@@ -91,10 +92,7 @@ function useMEModelCompatibility(config: Config) {
   return {
     selectionComplete,
     compatibility,
-    retry: () => {
-      compatibilityCheck.refetch();
-      if (emodelName.isError) emodelName.refetch();
-    },
+    retry: () => compatibilityCheck.refetch(),
   };
 }
 
