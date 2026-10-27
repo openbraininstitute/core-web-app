@@ -22,6 +22,12 @@ export type TDataGridQueryOptions<Row> = Omit<
   'queryKey' | 'queryFn'
 >;
 
+/**
+ * How long a facet answer is reused before the buckets are asked for again.
+ * One value for both facet queries, the grid's own and the host's.
+ */
+export const FACETS_STALE_MS = 5 * 60 * 1000;
+
 export interface IUseDataGridArgs<Row> {
   controller: GridController<Row>;
   dataSource: IGridDataSource<Row>;
@@ -85,14 +91,18 @@ export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResul
   });
 
   // Facets ride their own request so the rows never wait on them, and are keyed WITHOUT
-  // page/sort: those change what is shown, never which buckets exist, and refetching
-  // per page is exactly the cost this split removes.
+  // page/sort/search: those change what is shown, never which buckets exist, and
+  // refetching per page or per keystroke is exactly the cost this split removes. A
+  // facet call is the most expensive request entitycore serves (7 s on average, up to
+  // 37 s on the synthesized-morphology listing, measured 27 Oct 2026), and the host's
+  // own facets request in browse-entity-grid already ignores the search term.
   const fetchFacets = dataSource.fetchFacets;
   const facetsQuery: IGridQuery = {
     ...query,
     page: 1,
     pageSize: 0,
     sort: [],
+    freeTextSearch: undefined,
   };
   // Only the error-shaped options carry over: the rest of `queryOptions` (`select`,
   // `placeholderData`, every `refetchOn*` predicate) is generic over the ROW page and
@@ -103,6 +113,9 @@ export function useDataGrid<Row>(args: IUseDataGridArgs<Row>): IUseDataGridResul
     retry,
     retryDelay,
     placeholderData: keepPrevious ? keepPreviousData : undefined,
+    // Buckets change when data is registered, not when a user looks away and back.
+    staleTime: FACETS_STALE_MS,
+    refetchOnWindowFocus: false,
     queryKey: [...queryKey, 'facets', facetsQuery],
     queryFn: ({ signal }) => fetchFacets?.(facetsQuery, signal) ?? Promise.resolve(undefined),
     enabled: enabled && Boolean(fetchFacets),
