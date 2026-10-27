@@ -22,8 +22,11 @@ export type TDataGridQueryOptions<Row> = Omit<
   'queryKey' | 'queryFn'
 >;
 
-/** How long a facet answer is reused before the buckets are asked for again. */
-const FACETS_STALE_MS = 5 * 60 * 1000;
+/**
+ * How long a facet answer is reused before the buckets are asked for again.
+ * One value for both facet queries, the grid's own and the host's.
+ */
+export const FACETS_STALE_MS = 5 * 60 * 1000;
 
 export interface IUseDataGridArgs<Row> {
   controller: GridController<Row>;
