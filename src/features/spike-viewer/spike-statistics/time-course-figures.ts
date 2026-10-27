@@ -32,11 +32,15 @@ const PARTIAL_BIN_FILL = 'rgba(148, 163, 184, 0.25)';
 export type PsthOptions = { binMs: number | null; sigmaMs: number };
 export const DEFAULT_PSTH: PsthOptions = { binMs: null, sigmaMs: 0 };
 
-/** The bins over `span`: the width asked for, or a round one, within what can be drawn. */
+/**
+ * The bins over `span`: the width asked for, or a round one, within what can be
+ * drawn. A hair over a whole number of bins is float error in `to - from`, not
+ * a bin more.
+ */
 function psthBins([from, to]: [number, number], binMs: number | null) {
   const length = Math.max(to - from, 1e-6);
   const width = Math.max(binMs ?? roundStep(length / PSTH_BINS), length / MAX_PSTH_BINS);
-  return { width, bins: Math.max(1, Math.ceil(length / width)) };
+  return { width, bins: Math.max(1, Math.ceil(length / width - 1e-9)) };
 }
 
 /** A rate run through a Gaussian of `sigma` bins, each bin weighted by the part of it in range. */
@@ -98,8 +102,9 @@ function roundStep(target: number): number {
 /**
  * Each group's firing over time: its spikes per cell per second, in bins
  * across `span` - the run, or the raster's window - a line per group, in steps
- * or smoothed. A last bin the span's end cuts short is counted over the whole
- * width as the others are, so it reads low: it is marked, with its width.
+ * or smoothed. A last bin the span's end cuts short is rated over its own
+ * width, so it reads like the others and smoothing carries no dip into them;
+ * it is banded, with its width, as a note that it is shorter.
  */
 export function psthFigure(
   groups: CellGroup[],
@@ -130,10 +135,11 @@ export function psthFigure(
       if (g >= 0) counts[g][Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
     }
   }
-  const seconds = width / 1000;
+  const seconds = (bin: number) =>
+    (bin === bins - 1 && partialMs !== null ? partialMs : width) / 1000;
   const lines = groups.map((group, g) =>
     psthPoints(
-      counts[g].map((count) => count / (group.cells.length * seconds)),
+      counts[g].map((count, bin) => count / (group.cells.length * seconds(bin))),
       from,
       to,
       width,

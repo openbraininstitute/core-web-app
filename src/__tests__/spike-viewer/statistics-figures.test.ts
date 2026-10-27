@@ -85,6 +85,23 @@ describe('psthFigure', () => {
     expect(before?.rows.some((row) => row.label === 'Partial bin')).toBe(false);
   });
 
+  it('rates a last bin the span cuts short over its own width, smoothed or not', () => {
+    // Two spikes from two cells: 200 Hz over the last 5 ms, where the 10 ms the others span says 100.
+    const rates = (sigmaMs: number) => {
+      const figure = psthFigure(all, spikes, [0, 145], 2, undefined, '#000', {
+        binMs: 10,
+        sigmaMs,
+      });
+      return (figure.data as { y: Float64Array }[])[0].y;
+    };
+    const steps = rates(0);
+    expect(steps[1]).toBeCloseTo(50);
+    expect(steps[14]).toBeCloseTo(200);
+    // Smoothed, the cut-short bin no longer drags the bins before it down.
+    const smooth = rates(10);
+    expect(smooth[14]).toBeGreaterThan(smooth[12]);
+  });
+
   it('leaves a span the bins fit unbanded', () => {
     const figure = psthFigure(all, spikes, [0, 150], 2, undefined, '#000', {
       binMs: 10,
@@ -92,5 +109,15 @@ describe('psthFigure', () => {
     });
     expect(figure.layout.shapes).toBeUndefined();
     expect(JSON.stringify(figure.layout.xaxis?.title)).not.toContain('the last');
+  });
+
+  it('adds no empty last bin where the span’s length is a whole number of bins give or take float error', () => {
+    // 512.2 - 12.2 is 500.00000000000006.
+    const figure = psthFigure(all, spikes, [12.2, 512.2], 2, undefined, '#000', {
+      binMs: 5,
+      sigmaMs: 0,
+    });
+    expect(figure.layout.shapes).toBeUndefined();
+    expect((figure.data as { y: Float64Array }[])[0].y).toHaveLength(101);
   });
 });
