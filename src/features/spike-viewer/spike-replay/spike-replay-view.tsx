@@ -15,7 +15,6 @@ import {
   ShutPaneBar,
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
-import { DEFAULT_SPIKE_GLOW } from '@/features/circuit-viewer/spike-clock';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
@@ -136,7 +135,6 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   const spikeSession = session ?? ownSession;
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
-  const [glow, setGlow] = useState(DEFAULT_SPIKE_GLOW);
   const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
   const [containerHeight, setContainerHeight] = useState(0);
 
@@ -440,6 +438,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
     setSpeed,
     afterglowInSeconds,
     setAfterglowInSeconds,
+    glow,
+    setGlow,
     seekToMs,
     readoutTimeInMs,
     liveTimeRef,

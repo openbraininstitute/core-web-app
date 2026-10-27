@@ -88,7 +88,11 @@ const LARGE = circuitOf('microcircuit');
 const SMALL = circuitOf('small');
 
 /** The props the 3D scene was last rendered with. */
-function lastScene(): { populationName?: string; spikes: { data?: unknown } } {
+function lastScene(): {
+  populationName?: string;
+  largeCircuit?: boolean;
+  spikes: { data?: unknown };
+} {
   return fixtures.scene.mock.calls.at(-1)?.[0];
 }
 
@@ -151,7 +155,7 @@ describe('SpikeReplayView', () => {
     } as unknown as TSceneSubject;
     render(<SpikeReplayView data={spikes('points')} subject={small} />);
 
-    expect(fixtures.scene.mock.calls.at(-1)?.[0]).toMatchObject({ largeCircuit: large });
+    expect(lastScene()).toMatchObject({ largeCircuit: large });
   });
 
   it('holds the announcement back when there is nothing to replay over', () => {

@@ -3,7 +3,7 @@ import { useSetAtom } from 'jotai';
 import React from 'react';
 
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellAt, cellColorsOf } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import {
@@ -182,23 +182,16 @@ export function LargeCircuitPreview({
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  const {
-    placed,
-    positionless,
-    download,
-    subject,
-    anchor,
-    hidden,
-    hasContext,
-    error,
-    somas,
-    receded,
-  } = usePlacedScene({ circuit, population, populations, hiddenPopulations, recededColor });
+  const { placed, download, subject, anchor, hidden, hasContext, error, somas, receded } =
+    usePlacedScene({
+      circuit,
+      population,
+      populations,
+      hiddenPopulations,
+      recededColor,
+      onPositionlessPopulationsChange,
+    });
   const subjectName = population?.name;
-  // Before paint: see CircuitVisualization.
-  React.useLayoutEffect(() => {
-    onPositionlessPopulationsChange?.(positionless);
-  }, [positionless, onPositionlessPopulationsChange]);
 
   const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
   React.useEffect(() => {
@@ -224,6 +217,8 @@ export function LargeCircuitPreview({
 
   // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
   // colour of ours would flatten an uncoloured cloud to a single hue.
+  // Only while a cell is pointed out, so the background alone repaints no more than before.
+  const fadedColor = highlightedCell === undefined ? false : (recededColor ?? FADED);
   const cellColors = React.useMemo(
     () =>
       cellColorsOf({
@@ -234,7 +229,7 @@ export function LargeCircuitPreview({
         hidden,
         shownCells,
         highlightedCell,
-        fadedColor: recededColor ?? FADED,
+        fadedColor,
       }),
     [
       somas.populations,
@@ -244,16 +239,16 @@ export function LargeCircuitPreview({
       hidden,
       shownCells,
       highlightedCell,
-      recededColor,
+      fadedColor,
     ]
   );
 
   const handleCellClick = React.useCallback(
     (index: number) => {
-      const range = populationRanges(somas.populations).find(({ end }) => index < end);
-      if (!range) return;
-      if (range.name !== subjectName) onPopulationClick?.(range.name);
-      else onSubjectCellClick?.(index - range.first);
+      const at = cellAt(somas.populations, index);
+      if (!at) return;
+      if (at.name !== subjectName) onPopulationClick?.(at.name);
+      else onSubjectCellClick?.(at.index);
     },
     [somas.populations, subjectName, onPopulationClick, onSubjectCellClick]
   );

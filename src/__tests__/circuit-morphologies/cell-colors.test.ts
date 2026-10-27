@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { cellColorsOf, NO_CELL_COLORS } from '@/features/circuit-viewer/morphologies/cell-colors';
+import {
+  cellAt,
+  cellColorsOf,
+  NO_CELL_COLORS,
+} from '@/features/circuit-viewer/morphologies/cell-colors';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 
 const POPULATIONS = [
@@ -102,5 +106,30 @@ describe("the cells' colours", () => {
     ]);
     // Without a colour to fade to, the cell pointed out is shown alone.
     expect(columns(cellColorsOf(pointedOut))).toEqual([false, false, '#111111', null, null, false]);
+  });
+
+  it('point nothing out for a cell out of the population on show', () => {
+    for (const highlightedCell of [-1, 3]) {
+      expect(
+        columns(
+          cellColorsOf({
+            populations: POPULATIONS,
+            subject: 'thalamus',
+            receded: '#cccccc',
+            hidden: NONE,
+            highlightedCell,
+            fadedColor: '#d4d4d4',
+          })
+        )
+      ).toEqual(['#cccccc', '#cccccc', '#cccccc', null, null, '#cccccc']);
+    }
+  });
+});
+
+describe('a cell by its number', () => {
+  it('is of the population its number falls in, at its index there', () => {
+    expect(cellAt(POPULATIONS, 0)).toEqual({ name: 'cortex', index: 0 });
+    expect(cellAt(POPULATIONS, 4)).toEqual({ name: 'thalamus', index: 1 });
+    expect(cellAt(POPULATIONS, 6)).toBeUndefined();
   });
 });

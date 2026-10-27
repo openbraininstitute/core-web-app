@@ -16,9 +16,13 @@ export function populationRanges(
   });
 }
 
-/** The population the cell numbered `cell` is of; undefined past the last. */
-export function populationAt(populations: readonly Population[], cell: number): string | undefined {
-  return populationRanges(populations).find(({ end }) => cell < end)?.name;
+/** The population the cell numbered `cell` is of, and its index in it; undefined past the last. */
+export function cellAt(
+  populations: readonly Population[],
+  cell: number
+): { name: string; index: number } | undefined {
+  const range = populationRanges(populations).find(({ end }) => cell < end);
+  return range && { name: range.name, index: cell - range.first };
 }
 
 export interface CellColorsOptions {
@@ -86,13 +90,26 @@ export function cellColorsOf({
       columnByCell.fill(columnOf(false), first, end);
     } else if (name === subject) {
       const mapped = Math.min(end - first, nodeColors?.columnByNode.length ?? 0);
+      // A cell out of the population points nothing out.
+      const pointed =
+        highlightedCell !== undefined && highlightedCell >= 0 && highlightedCell < end - first
+          ? highlightedCell
+          : undefined;
+      if (pointed !== undefined && !shownCells) {
+        // Every other cell fades, so none of the mapping is copied but the one pointed out's.
+        columnByCell.fill(columnOf(fadedColor), first, end);
+        columnByCell[first + pointed] =
+          nodeColors && pointed < mapped ? nodeColors.columnByNode[pointed] : columnOf(own);
+        continue;
+      }
       if (nodeColors) columnByCell.set(nodeColors.columnByNode.subarray(0, mapped), first);
       if (first + mapped < end) columnByCell.fill(columnOf(own), first + mapped, end);
-      if (shownCells || highlightedCell !== undefined) {
-        const faded = highlightedCell === undefined ? undefined : columnOf(fadedColor);
+      if (shownCells) {
+        const off = columnOf(false);
+        const faded = pointed === undefined ? undefined : columnOf(fadedColor);
         for (let i = 0; i < end - first; i++) {
-          if (i === highlightedCell) continue;
-          if (shownCells && shownCells[i] !== 1) columnByCell[first + i] = columnOf(false);
+          if (i === pointed) continue;
+          if (shownCells[i] !== 1) columnByCell[first + i] = off;
           else if (faded !== undefined) columnByCell[first + i] = faded;
         }
       }

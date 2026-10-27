@@ -34,6 +34,8 @@ type TOptions = {
   shownCells?: Uint8Array;
   /** @see CircuitVizProps.highlightedCell */
   highlightedCell?: number;
+  /** @see CircuitVizProps.onPositionlessPopulationsChange */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   nodeColors?: NodeColors;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
@@ -65,6 +67,7 @@ export function useSmallCircuitSource({
   hiddenPopulations = NOTHING_HIDDEN,
   shownCells,
   highlightedCell,
+  onPositionlessPopulationsChange,
   nodeColors,
   recededColor,
   withSynapses = false,
@@ -79,7 +82,6 @@ export function useSmallCircuitSource({
   const {
     config,
     placed,
-    positionless,
     settled,
     download,
     subject,
@@ -96,6 +98,7 @@ export function useSmallCircuitSource({
     hiddenPopulations,
     recededColor,
     withMorphologies: true,
+    onPositionlessPopulationsChange,
   });
 
   // Resolved once per population rather than per cell: every node of a population draws from the same directory or
@@ -156,8 +159,8 @@ export function useSmallCircuitSource({
         own: subject?.count === 1 ? SECTION_TYPE_COLORS : null,
         receded,
         hidden,
-        // The cell pointed out is shown alone.
         shownCells,
+        // Shown alone: with no faded colour, the rest of its population is not drawn.
         highlightedCell,
       }),
     [tree, populationName, nodeColors, subject, receded, hidden, shownCells, highlightedCell]
@@ -208,6 +211,5 @@ export function useSmallCircuitSource({
     error,
     synapses,
     anchor,
-    positionless,
   };
 }

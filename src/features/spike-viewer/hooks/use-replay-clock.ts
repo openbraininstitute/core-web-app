@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  DEFAULT_SPIKE_GLOW,
   DEFAULT_SPIKE_SPEED,
 } from '@/features/circuit-viewer/spike-clock';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
@@ -31,6 +32,7 @@ export function useReplayClock({
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(DEFAULT_SPIKE_SPEED);
   const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS);
+  const [glow, setGlow] = useState(DEFAULT_SPIKE_GLOW);
   const [seekToMs, setSeekToMs] = useState<number | undefined>();
   // False until the viewer has painted a frame. It arrives on a dynamic
   // chunk, so for a while there is no child to receive anything.
@@ -124,6 +126,8 @@ export function useReplayClock({
     setSpeed,
     afterglowInSeconds,
     setAfterglowInSeconds,
+    glow,
+    setGlow,
     seekToMs,
     readoutTimeInMs,
     liveTimeRef,

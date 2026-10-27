@@ -1,7 +1,7 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellAt } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { useTreeMorphologies } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
@@ -162,21 +162,17 @@ export function CircuitVisualization({
     nodeColors,
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
+    onPositionlessPopulationsChange,
   });
-  const { positionless } = source;
-  // Before paint, so the checklist and colour-by never show a frame that still counts them.
-  useLayoutEffect(() => {
-    onPositionlessPopulationsChange?.(positionless);
-  }, [positionless, onPositionlessPopulationsChange]);
 
   const subjectName = props.population?.name;
   const counted = source.tree?.somas.populations;
   const handleCellClick = useCallback(
     (cell: number) => {
-      const range = populationRanges(counted ?? []).find(({ end }) => cell < end);
-      if (!range) return;
-      if (range.name !== subjectName) onPopulationClick?.(range.name);
-      else onSubjectCellClick?.(cell - range.first);
+      const at = cellAt(counted ?? [], cell);
+      if (!at) return;
+      if (at.name !== subjectName) onPopulationClick?.(at.name);
+      else onSubjectCellClick?.(at.index);
     },
     [counted, subjectName, onPopulationClick, onSubjectCellClick]
   );
@@ -184,8 +180,8 @@ export function CircuitVisualization({
     <CircuitVizView
       {...props}
       source={source}
+      highlightedCell={highlightedCell}
       onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
-      cellPointed={highlightedCell !== undefined}
     />
   );
 }
@@ -198,7 +194,6 @@ type TCircuitVizViewProps = Omit<
   | 'populations'
   | 'hiddenPopulations'
   | 'shownCells'
-  | 'highlightedCell'
   | 'recededColor'
   | 'onPopulationClick'
   | 'onSubjectCellClick'
@@ -208,8 +203,6 @@ type TCircuitVizViewProps = Omit<
   source: SmallCircuitSource;
   /** Whole-cell clicks, by the cell's number in the source's scene. */
   onCellClick?: (cell: number) => void;
-  /** A cell is pointed out from outside the scene, shown alone: neither it nor a hover is lit. */
-  cellPointed?: boolean;
 };
 
 function CircuitVizView({
@@ -233,7 +226,7 @@ function CircuitVizView({
   chromeTopRight = false,
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
-  cellPointed = false,
+  highlightedCell,
 }: TCircuitVizViewProps) {
   const { tree, cellColors, hidden, locationCells, error, synapses, anchor, download } = source;
   const morphologies = useTreeMorphologies(tree, { axons: showAxons, hidden });
@@ -283,7 +276,8 @@ function CircuitVizView({
           dendrogram={dendrogram}
           cellColors={cellColors}
           defaultColor={defaultColor}
-          cellHover={!cellPointed && (features?.cellHover ?? true)}
+          // A cell pointed out is shown alone, and a hover lit beside it would lose it.
+          cellHover={highlightedCell === undefined && (features?.cellHover ?? true)}
           // Not while a location is being placed: a tap meant for a neurite would also put another population on show,
           // recolouring the scene and swapping the nodes table under the user. The checklist still changes population.
           onCellClick={pickMode ? undefined : onCellClick}

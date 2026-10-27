@@ -60,6 +60,7 @@ const fixtures = vi.hoisted(() => ({
   configError: null as Error | null,
   placement: { placed: [], failures: new Map(), settled: true, download: null } as Placement,
   noNames: new Set<string>() as ReadonlySet<string>,
+  onPositionless: vi.fn(),
 }));
 
 // `positionless` is left out where a test has none, as most do.
@@ -111,6 +112,7 @@ function render(
         ...props,
         populations: props.populations ?? [props.population],
         recededColor: props.recededColor ?? '#cccccc',
+        onPositionlessPopulationsChange: fixtures.onPositionless,
       }),
     { initialProps }
   );
@@ -131,6 +133,7 @@ function placed(...entries: [NodePopulation, NodeGeometry][]) {
 
 describe('useSmallCircuitSource', () => {
   beforeEach(() => {
+    fixtures.onPositionless.mockClear();
     fixtures.configError = null;
     placed([DEFAULT, placement([0, 0, 0], ['morph-a'])]);
   });
@@ -253,7 +256,7 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.tree?.somas.populations).toEqual([{ name: 'default', cells: 1 }]);
     // Painted, not receded: nothing says why the population on show is missing.
     expect(result.current.cellColors.palette).toEqual([]);
-    expect(result.current.positionless).toEqual(new Set());
+    expect(fixtures.onPositionless).toHaveBeenLastCalledWith(new Set());
   });
 
   it('recedes the rest behind a population on show with no positions, and reports it', () => {
@@ -268,7 +271,7 @@ describe('useSmallCircuitSource', () => {
 
     expect(result.current.error).toBeNull();
     expect(colorsOf(result.current.cellColors)[0]).toBe('#cccccc');
-    expect(result.current.positionless).toEqual(new Set(['inputs']));
+    expect(fixtures.onPositionless).toHaveBeenLastCalledWith(new Set(['inputs']));
   });
 
   it('fails only once no population at all could be placed', () => {

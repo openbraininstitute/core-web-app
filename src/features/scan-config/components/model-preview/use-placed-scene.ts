@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo } from 'react';
 
 import { centroidOf } from '@/features/circuit-nodes/geometry-utils';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
@@ -22,6 +22,8 @@ interface Options {
   recededColor?: string;
   /** Read each node's morphology and orientation too, to draw its morphology; `orientations` is null without. */
   withMorphologies?: boolean;
+  /** Called with the populations whose nodes carry no x/y/z, whenever that set changes. */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
 }
 
 /**
@@ -36,6 +38,7 @@ export function usePlacedScene({
   hiddenPopulations = NOTHING_HIDDEN,
   recededColor,
   withMorphologies = false,
+  onPositionlessPopulationsChange,
 }: Options) {
   const { config, error: configError } = useCircuitConfig(circuit);
   // Nothing is reported placed until everything is, so anything placed at all means the whole scene can be built.
@@ -45,6 +48,10 @@ export function usePlacedScene({
     withMorphologies,
     withOrientations: withMorphologies,
   });
+  // Before paint, so the checklist and colour-by never show a frame that still counts them.
+  useLayoutEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
 
   const subjectName = population?.name;
   const subject = useMemo(
@@ -122,7 +129,6 @@ export function usePlacedScene({
     config,
     placed,
     settled,
-    positionless,
     download,
     subject,
     anchor,

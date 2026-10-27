@@ -73,7 +73,6 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
     locationCells: [],
     error: null,
     anchor: null,
-    positionless: new Set(),
     ...overrides,
   };
 }
