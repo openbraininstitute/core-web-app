@@ -13,11 +13,7 @@ import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/
 import type { IDatasource } from 'ag-grid-community';
 import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type {
-  PickAllState,
-  PinnedColumn,
-  QuickFilter,
-} from '@/features/circuit-nodes/components/nodes-grid';
+import type { PickAllState, PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
 import type {
   ColumnMeta,
   FilterModel,
@@ -30,7 +26,7 @@ import type { PopulationMetadata } from '@/features/sonata-viewer/types';
 const OWNER = 'voltage-report';
 const RECORDED_COLUMN = 'report:recorded';
 
-/** Merged into every read, so the grid only ever pages the cells the report recorded. */
+/** Merged into every read but All's, so the grid pages the cells the report recorded. */
 const RECORDED_ONLY: FilterModel = {
   [RECORDED_COLUMN]: { filterType: 'number', type: 'equals', filter: '1' },
 };
@@ -44,6 +40,23 @@ const NO_EXTRA_COLUMNS: ColumnMeta[] = [];
  * from it.
  */
 const filterAtom = atom<{ session: string; model: FilterModel } | undefined>(undefined);
+
+/** Which of the population's cells the table lists: the recorded ones, or every one. */
+export type ReportScope = 'recorded' | 'all';
+
+/** The scope, tagged with its session as the filter is: the next simulation's table starts from it. */
+const scopeAtom = atom<{ session: string; scope: ReportScope } | undefined>(undefined);
+
+/** The table's scope over a session's cells, the recorded ones at first, and a way to change it. */
+export function useReportScope(sessionKey: string): [ReportScope, (scope: ReportScope) => void] {
+  const [stored, setStored] = useAtom(scopeAtom);
+  const scope = stored?.session === sessionKey ? stored.scope : 'recorded';
+  const setScope = useCallback(
+    (next: ReportScope) => setStored({ session: sessionKey, scope: next }),
+    [sessionKey, setStored]
+  );
+  return [scope, setScope];
+}
 
 type Props = {
   circuit: ICircuit;
@@ -65,7 +78,12 @@ type Props = {
   pinnedColumns?: readonly PinnedColumn[];
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
   pinnedVersion?: unknown;
-  quickFilters?: readonly QuickFilter[];
+  /** Which cells it lists, the recorded ones where not said. */
+  scope?: ReportScope;
+  /** Offers the scope as a switch over the rows: Recorded | All. */
+  onScopeChange?: (scope: ReportScope) => void;
+  /** The rows' cells by node id, recorded or not; null while the table lists every cell of the population. */
+  onRowsChange?: (nodeIds: Uint32Array | null) => void;
   /** A reset asked for from outside the table, such as the 3D view's: a new number each time. */
   resetRequest?: number;
   reset?: { picked: boolean; onReset: () => void };
@@ -77,7 +95,7 @@ type Props = {
 
 /**
  * The report's recorded cells as rows of the circuit's nodes table, every node
- * property alongside.
+ * property alongside; or, as its scope says, every cell of the population.
  *
  * Filtering it is how the plot above chooses its cells, and clicking a row
  * ticks one to draw. The rows come from the circuit's own node file, through
@@ -96,7 +114,9 @@ export function ReportNodesTable({
   extraColumns = NO_EXTRA_COLUMNS,
   pinnedColumns,
   pinnedVersion,
-  quickFilters,
+  scope = 'recorded',
+  onScopeChange,
+  onRowsChange,
   resetRequest,
   reset,
   headerExtra,
@@ -136,11 +156,14 @@ export function ReportNodesTable({
     return map;
   }, [population]);
 
-  const recordedCount = useMemo(() => {
-    let n = 0;
-    for (const nodeId of tracesOfNode.keys()) if (nodeId >= 0 && nodeId < rowCount) n += 1;
-    return n;
-  }, [tracesOfNode, rowCount]);
+  // The recorded cells by node id, in order: the rows while nothing else narrows them.
+  const recordedNodeIds = useMemo(
+    () =>
+      Uint32Array.from([...tracesOfNode.keys()].filter((id) => id >= 0 && id < rowCount)).sort(),
+    [tracesOfNode, rowCount]
+  );
+  const recordedCount = recordedNodeIds.length;
+  const scopeModel = scope === 'all' ? NO_FILTER : RECORDED_ONLY;
 
   const registration = `${sessionKey}:${rowCount}`;
   const [registered, setRegistered] = useState<string>();
@@ -163,17 +186,14 @@ export function ReportNodesTable({
   }, [ready, rowCount, tracesOfNode, setDerivedColumns, registration]);
   const recordedReady = ready && registered === registration;
 
-  const recordedSource = useMemo<IDatasource | null>(() => {
+  const listedSource = useMemo<IDatasource | null>(() => {
     if (!datasource || !recordedReady) return null;
     return {
-      rowCount: recordedCount,
+      rowCount: scope === 'all' ? rowCount : recordedCount,
       getRows: (params) =>
-        datasource.getRows({
-          ...params,
-          filterModel: { ...(params.filterModel ?? {}), ...RECORDED_ONLY },
-        }),
+        datasource.getRows({ ...params, filterModel: { ...params.filterModel, ...scopeModel } }),
     };
-  }, [datasource, recordedReady, recordedCount]);
+  }, [datasource, recordedReady, scope, rowCount, recordedCount, scopeModel]);
 
   // Columns the host added - the config's neuron sets - ahead of the file's.
   const tableColumns = useMemo(
@@ -186,20 +206,31 @@ export function ReportNodesTable({
   const filterModel = filter?.session === sessionKey ? filter.model : NO_FILTER;
   const filtering = Object.keys(filterModel).length > 0;
 
+  // The rows, and their traces: the scope and the filter both narrow them. The
+  // statistics move with the traces' window, and a filter on them with it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: new pinned values are a reason to ask again
   useEffect(() => {
     if (!recordedReady) return;
     if (!filtering) {
       onVisibleTracesChange(null);
+      onRowsChange?.(scope === 'all' ? null : recordedNodeIds);
       return;
     }
     let cancelled = false;
-    getFilteredIndices({ ...filterModel, ...RECORDED_ONLY })
+    getFilteredIndices({ ...filterModel, ...scopeModel })
       .then((nodeIds) => {
         if (cancelled) return;
+        // None of the filters is on a column the session knows: every row stands.
+        if (!nodeIds) {
+          onVisibleTracesChange(null);
+          onRowsChange?.(scope === 'all' ? null : recordedNodeIds);
+          return;
+        }
         const traces: number[] = [];
-        for (const nodeId of nodeIds ?? []) traces.push(...(tracesOfNode.get(nodeId) ?? []));
+        for (const nodeId of nodeIds) traces.push(...(tracesOfNode.get(nodeId) ?? []));
         traces.sort((a, b) => a - b);
         onVisibleTracesChange(traces);
+        onRowsChange?.(nodeIds);
       })
       .catch(() => {});
     return () => {
@@ -209,16 +240,38 @@ export function ReportNodesTable({
     recordedReady,
     filtering,
     filterModel,
+    scope,
+    scopeModel,
     getFilteredIndices,
     tracesOfNode,
+    recordedNodeIds,
     onVisibleTracesChange,
+    onRowsChange,
+    pinnedVersion,
   ]);
 
-  // Where a cell falls among the recorded rows, not among the whole file's.
-  const rowAmongRecorded = useCallback(
+  // Where a cell falls among the rows the scope lists, not among the whole file's.
+  const rowAmongListed = useCallback(
     (nodeId: number, sort: SortItem[], model: FilterModel) =>
-      getRowIndex(nodeId, sort, { ...model, ...RECORDED_ONLY }),
-    [getRowIndex]
+      getRowIndex(nodeId, sort, { ...model, ...scopeModel }),
+    [getRowIndex, scopeModel]
+  );
+
+  const scopeSwitch = useMemo(
+    () =>
+      onScopeChange && {
+        value: scope,
+        options: [
+          { value: 'recorded', label: 'Recorded', title: 'The cells the report recorded' },
+          {
+            value: 'all',
+            label: 'All',
+            title: 'Every cell of the population, those not recorded drawn faint in 3D',
+          },
+        ],
+        onChange: (value: string) => onScopeChange(value as ReportScope),
+      },
+    [onScopeChange, scope]
   );
 
   if (!circuitConfig) {
@@ -248,7 +301,7 @@ export function ReportNodesTable({
       </Centered>
     );
   }
-  if (!recordedSource || !columns) {
+  if (!listedSource || !columns) {
     const percent =
       progress?.total && progress.total > 0
         ? ` ${Math.round((progress.received / progress.total) * 100)}%`
@@ -273,19 +326,19 @@ export function ReportNodesTable({
       session={sessionKey}
       filterScope="voltage"
       columns={tableColumns ?? columns}
-      rowCount={recordedCount}
+      rowCount={scope === 'all' ? rowCount : recordedCount}
       filteredCount={filtering ? filteredCount : null}
-      datasource={recordedSource}
+      datasource={listedSource}
       onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
       initialFilterModel={filterModel}
       pinnedColumns={pinnedColumns}
       pinnedVersion={pinnedVersion}
-      quickFilters={quickFilters}
+      scope={scopeSwitch}
       resetRequest={resetRequest}
       reset={reset}
       headerExtra={headerExtra}
       focusRow={focusRow}
-      rowIndexOf={rowAmongRecorded}
+      rowIndexOf={rowAmongListed}
       onRowClick={onCellClick}
       selectedNodeIds={selectedNodeIds}
       pickColumn

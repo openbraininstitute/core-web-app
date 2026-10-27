@@ -12,7 +12,10 @@ import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
-import { ReportNodesTable } from '@/features/sonata-viewer/components/report-nodes-table';
+import {
+  ReportNodesTable,
+  useReportScope,
+} from '@/features/sonata-viewer/components/report-nodes-table';
 import { ReportStatisticsPanel } from '@/features/sonata-viewer/components/report-statistics-panel';
 import {
   framesWithin,
@@ -281,6 +284,10 @@ export function SonataReportView({
   // All tagged with their population, so switching it starts from all the cells.
   const [visible, setVisible] = useState<{ population: string; traces: number[] | null }>();
   const visibleTraces = visible?.population === populationName ? visible.traces : null;
+  // Which cells the table lists - the recorded ones, or every one - and the
+  // rows it holds, which the scene shows.
+  const [scope, setScope] = useReportScope(sessionKey);
+  const [rows, setRows] = useState<{ population: string; cells: Uint32Array | null }>();
   const pickKey = sessionKey || (populationName ?? '');
   const {
     pickedCells,
@@ -296,6 +303,12 @@ export function SonataReportView({
   const handleVisibleTraces = useCallback(
     (traces: number[] | null) => {
       if (populationName) setVisible({ population: populationName, traces });
+    },
+    [populationName]
+  );
+  const handleRows = useCallback(
+    (cells: Uint32Array | null) => {
+      if (populationName) setRows({ population: populationName, cells });
     },
     [populationName]
   );
@@ -408,20 +421,30 @@ export function SonataReportView({
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
 
-  // The plots' cells as a flag per node index: the scene shows those alone.
-  const sceneCells = useMemo(() => {
-    if (!plotCells || rowCount === 0) return null;
-    const flags = new Uint8Array(rowCount);
-    for (const id of plotCells) if (id < rowCount) flags[id] = 1;
-    return flags;
-  }, [plotCells, rowCount]);
-
-  // The row a click elsewhere brings into view.
-  const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
   const recordedNodes = useMemo(
     () => new Set(population?.traces.map((t) => t.nodeId)),
     [population]
   );
+  // The scene shows the ticked cells, else the table's rows, as a flag per node
+  // index: every cell, those not recorded faint, while the table lists them all.
+  // Until the table says, what its scope lists unfiltered.
+  const tableRows =
+    rows?.population === populationName ? rows.cells : scope === 'all' ? null : recordedNodes;
+  const sceneCells = useMemo(() => {
+    const ids = pickedCells.length > 0 ? pickedCells.map((c) => c.nodeId) : tableRows;
+    if (!ids || rowCount === 0) return null;
+    const flags = new Uint8Array(rowCount);
+    for (const id of ids) if (id < rowCount) flags[id] = 1;
+    return flags;
+  }, [pickedCells, tableRows, rowCount]);
+  const sceneCount = useMemo(() => {
+    let n = 0;
+    for (const flag of sceneCells ?? []) n += flag;
+    return n;
+  }, [sceneCells]);
+
+  // The row a click elsewhere brings into view.
+  const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
   // A line clicked in the traces picks its cell alone, holds it out in the
   // scene and brings its row into view; clicked again, it lets it go.
   const [heldCell, setHeldCell] = useState<{ key: string; nodeId: number } | null>(null);
@@ -439,15 +462,15 @@ export function SonataReportView({
   );
   const held =
     heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
-  // What the scene is narrowed to among the recorded cells, said over it with
-  // the way back to them all: the table's own reset, its filters and ticks and
-  // the traces' window, and the cell held with them.
+  // What the scene is narrowed to within the table's scope, by ticks or a
+  // filter, said over it with the way back: the table's own reset, its filters
+  // and ticks and the traces' window, and the cell held with them.
   const [resetRequest, setResetRequest] = useState(0);
   const sceneSelection =
     plotCells && population
       ? {
-          count: plotCells.length,
-          total: population.nodeCount,
+          count: sceneCount,
+          total: scope === 'all' ? rowCount : population.nodeCount,
           onReset: () => {
             setHeldCell(null);
             setResetRequest((n) => n + 1);
@@ -613,12 +636,15 @@ export function SonataReportView({
       </div>
     );
 
-  // The table of the recorded cells, wherever it goes: under the traces, or in the panel.
+  // The table of the cells, wherever it goes: under the traces, or in the panel.
   const table = circuit && {
     circuit,
     circuitConfig,
     population,
     onVisibleTracesChange: handleVisibleTraces,
+    scope,
+    onScopeChange: setScope,
+    onRowsChange: handleRows,
     onCellClick: togglePick,
     selectedNodeIds,
     pickAll: { state: pickAllState, onToggle: togglePickAll },
@@ -710,7 +736,7 @@ export function SonataReportView({
                     {pickedCells.length > 0
                       ? ' ticked'
                       : visibleTraces
-                        ? ' in the table’s filter'
+                        ? ' in the table'
                         : ' recorded'}
                   </span>
                 }
