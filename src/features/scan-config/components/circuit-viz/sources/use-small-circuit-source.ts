@@ -55,6 +55,10 @@ type TOptions = {
   populations: readonly NodePopulation[];
   /** @see CircuitVizProps.hiddenPopulations */
   hiddenPopulations?: readonly string[];
+  /** @see CircuitVizProps.shownCells */
+  shownCells?: Uint8Array;
+  /** @see CircuitVizProps.highlightedCell */
+  highlightedCell?: number;
   showAxons: boolean;
   nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
@@ -95,6 +99,8 @@ export function useSmallCircuitSource({
   population,
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
   showAxons,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
@@ -235,6 +241,14 @@ export function useSmallCircuitSource({
             : IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
           color: onShow ? (palette[columnByNode[i]] ?? flat) : flat,
+          // A cell the host filtered out, or every other while one is pointed
+          // out, is hidden in place rather than dropped: a spike names its cell
+          // by this array's index. The cell pointed out shows, filtered or not.
+          hidden:
+            onShow &&
+            (highlightedCell !== undefined
+              ? i !== highlightedCell
+              : shownCells !== undefined && shownCells[i] !== 1),
           // Told to the viewer, not left for it to discover by asking: it counts the cells it
           // is waiting on, and a scene where most of them will never answer would otherwise
           // report itself nearly loaded before the first morphology arrived.
@@ -258,6 +272,8 @@ export function useSmallCircuitSource({
     nodeColors,
     defaultColor,
     recededColor,
+    shownCells,
+    highlightedCell,
   ]);
 
   // A config that loads but names no node population would otherwise leave the

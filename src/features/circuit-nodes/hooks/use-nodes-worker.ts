@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
+import { useNodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import {
   IDLE_SESSION_STATE,
   type NodesOpenParams,
@@ -12,8 +13,11 @@ import { useWorkspace } from '@/ui/hooks/use-workspace';
 import type { IDatasource } from 'ag-grid-community';
 import type {
   ColumnMeta,
+  DerivedColumn,
+  FilterModel,
   NodeGeometryOptions,
   NodePopulation,
+  SortItem,
 } from '@/features/circuit-nodes/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -65,6 +69,7 @@ export function nodesOpenParams(
  */
 export function useNodesWorker({ enabled, circuitId, circuitAssetId, population }: Args) {
   const ctx = useWorkspace();
+  const keep = useNodesSessionKeeper();
   const key =
     enabled && population && circuitAssetId && circuitId
       ? nodesSessionKey(circuitId, circuitAssetId, population.name)
@@ -74,14 +79,17 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
   const subscribe = useCallback(
     (onChange: () => void) => {
       if (!key || !population) return () => {};
-      nodesWorkerRegistry.acquire(key, nodesOpenParams(ctx, circuitId, circuitAssetId, population));
+      const params = nodesOpenParams(ctx, circuitId, circuitAssetId, population);
+      nodesWorkerRegistry.acquire(key, params);
+      // Held open past this reader too, where a page keeps the populations it reads.
+      keep?.(key, params);
       const unsubscribe = nodesWorkerRegistry.subscribe(key, onChange);
       return () => {
         unsubscribe();
         nodesWorkerRegistry.release(key);
       };
     },
-    [key, ctx, circuitId, circuitAssetId, population]
+    [key, ctx, circuitId, circuitAssetId, population, keep]
   );
   const state = useSyncExternalStore(subscribe, () =>
     key ? nodesWorkerRegistry.getState(key) : IDLE_SESSION_STATE
@@ -138,6 +146,30 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const setDerivedColumns = useCallback(
+    async (owner: string, derived: DerivedColumn[]) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.setDerivedColumns(key, owner, derived);
+    },
+    [key]
+  );
+
+  const getFilteredIndices = useCallback(
+    async (filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getFilteredIndices(key, filter);
+    },
+    [key]
+  );
+
+  const getRowIndex = useCallback(
+    async (nodeId: number, sort: SortItem[], filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getRowIndex(key, nodeId, sort, filter);
+    },
+    [key]
+  );
+
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
   }, [key]);
@@ -149,6 +181,9 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     datasource,
     getColumn,
     getGeometry,
+    setDerivedColumns,
+    getFilteredIndices,
+    getRowIndex,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

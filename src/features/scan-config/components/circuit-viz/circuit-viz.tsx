@@ -16,7 +16,7 @@ import {
   useMemodelVisualizationSource,
   useSmallCircuitSource,
 } from './sources';
-import { parseNodeKey } from './sources/node-key';
+import { makeNodeKey, makeVizCellId, parseNodeKey } from './sources/node-key';
 import { SynapseLegend } from './synapse-legend';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -72,10 +72,19 @@ interface CircuitVizProps {
    * viewer only asks for the morphologies of cells it has been given.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 hides that cell. */
+  shownCells?: Uint8Array;
+  /**
+   * A cell of the population on show to point out, by node index: shown in its own
+   * colour, with the rest of the population hidden.
+   */
+  highlightedCell?: number;
   /** Colour for the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** Called with the node index when a cell of the population on show is clicked. */
+  onSubjectCellClick?: (index: number) => void;
   /** Called with the populations whose nodes carry no x/y/z, whenever that set changes. */
   onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   showAxons: boolean;
@@ -154,8 +163,11 @@ export interface IMorphologyLocationsBinding extends IFormBindingOptions {
 export function CircuitVisualization({
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
   recededColor,
   onPopulationClick,
+  onSubjectCellClick,
   onPositionlessPopulationsChange,
   ...props
 }: CircuitVizProps) {
@@ -164,6 +176,8 @@ export function CircuitVisualization({
     population: props.population,
     populations,
     hiddenPopulations,
+    shownCells,
+    highlightedCell,
     showAxons: props.showAxons,
     nodeColors: props.nodeColors,
     defaultColor: props.defaultColor,
@@ -180,15 +194,24 @@ export function CircuitVisualization({
   const handleCellClick = useCallback(
     (cell: MorphoViewerSmallCircuitCell | undefined) => {
       const node = cell && parseNodeKey(cell.id);
-      if (node && node.population !== subjectName) onPopulationClick?.(node.population);
+      if (!node) return;
+      if (node.population !== subjectName) onPopulationClick?.(node.population);
+      else onSubjectCellClick?.(node.index);
     },
-    [subjectName, onPopulationClick]
+    [subjectName, onPopulationClick, onSubjectCellClick]
   );
+  const pointedCellId =
+    highlightedCell !== undefined && subjectName
+      ? makeVizCellId(makeNodeKey(props.circuit.id, subjectName, highlightedCell), {
+          showAxons: props.showAxons,
+        })
+      : undefined;
   return (
     <CircuitVizView
       {...props}
       source={source}
-      onCellClick={onPopulationClick ? handleCellClick : undefined}
+      onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
+      pointedCellId={pointedCellId}
     />
   );
 }
@@ -202,8 +225,11 @@ type TCircuitVizViewProps = Omit<
   | 'population'
   | 'populations'
   | 'hiddenPopulations'
+  | 'shownCells'
+  | 'highlightedCell'
   | 'recededColor'
   | 'onPopulationClick'
+  | 'onSubjectCellClick'
   | 'onPositionlessPopulationsChange'
   | 'nodeColors'
   | 'defaultColor'
@@ -211,6 +237,8 @@ type TCircuitVizViewProps = Omit<
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
+  /** A cell pointed out from outside the scene, shown alone: neither it nor a hover is lit. */
+  pointedCellId?: string;
 };
 
 function CircuitVizView({
@@ -233,6 +261,7 @@ function CircuitVizView({
   spikes,
   chromeTopRight = false,
   onCellClick,
+  pointedCellId,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -308,9 +337,12 @@ function CircuitVizView({
     draggingOverlayRef.current = false;
   };
 
+  // A cell pointed out is shown alone, in the colour it was picked by: lit as a
+  // hover lights one, it would lose it, and with nothing else drawn there is
+  // nothing to pick it out from. A hover lights its cell while all are drawn.
   const highlightedCellIds = useMemo(
-    () => (enableCellHover ? [highlightedCellId] : []),
-    [enableCellHover, highlightedCellId]
+    () => (pointedCellId || !enableCellHover ? [] : [highlightedCellId]),
+    [enableCellHover, highlightedCellId, pointedCellId]
   );
 
   // OBI-One axon toggle remounts morph keys — clear the sequential morphology cache.

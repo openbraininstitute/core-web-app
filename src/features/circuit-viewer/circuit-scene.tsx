@@ -2,7 +2,8 @@ import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
 import { isEqual } from 'es-toolkit';
 import { useAtomValue } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
@@ -14,7 +15,10 @@ import {
 } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import { CircuitViewerChrome } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import { adaptColorToBackground } from '@/features/scan-config/components/color-by/contrast';
-import { recedeMarkerColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  fadedNeuronColor,
+  recedeMarkerColor,
+} from '@/features/scan-config/components/color-by/palette';
 import { useCircuitColorBy } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import { applyElectrodeOverlayTransform } from '@/features/scan-config/components/model-preview/apply-electrode-overlay-transform';
 import {
@@ -37,13 +41,16 @@ import { useViewerZoom } from '@/features/scan-config/components/zoom-slider/use
 import { classNames } from '@/util/utils';
 
 import { PaneResizeHandle } from './pane-resize-handle';
+import { useSceneTablePane } from './scene-table-pane';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { PopulationsControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { TElectrodeArrayEntity } from '@/features/scan-config/components/model-preview/use-electrode-overlays';
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
@@ -113,6 +120,43 @@ interface ICircuitSceneOptions {
    * Omit to leave the button out.
    */
   fullscreen?: { target: HTMLElement | null };
+  /**
+   * Where the colour-by control goes instead of the scene's top-right corner,
+   * such as the host's header row; null while that element mounts.
+   */
+  colorByTarget?: HTMLElement | null;
+  /** What colouring by no property is called in the colour-by control, where "All" would mislead. */
+  colorByNoneLabel?: string;
+  /**
+   * One flag per cell of the population on show, 0 for a cell filtered out:
+   * left undrawn, but kept in its place, so spikes still find theirs.
+   */
+  shownCells?: Uint8Array;
+  /**
+   * A cell of the population on show to point out, by node index, such as the
+   * table row under the pointer: the rest faded where the scene draws somas,
+   * and where it draws morphologies, highlighted with the rest hidden.
+   */
+  highlightedCell?: number;
+  /** Told the node index of a clicked cell of the population on show. */
+  onCellClick?: (index: number) => void;
+  /**
+   * Colours for the population's cells in place of the colour-by's, such as a
+   * recording's values as it plays; a host passing them turns colour-by off.
+   */
+  nodeColorsOverride?: NodeColors;
+  /** How many of the population's cells are selected, said with a reset at the top centre. */
+  selection?: ICircuitViewerChromeProps['selection'];
+  /**
+   * A column of `nodeColorsOverride` whose cells are drawn faint, in a colour
+   * that follows the background: such as the cells a report did not record.
+   */
+  fadedColumn?: number;
+  /**
+   * Told the colour-by mapping of the population on show, or null with none, so
+   * a host drawing the same cells elsewhere - spike replay's raster - can match.
+   */
+  onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
@@ -173,6 +217,15 @@ export function CircuitScene({
   electrodes,
   modeToggle,
   fullscreen,
+  colorByTarget,
+  colorByNoneLabel,
+  shownCells,
+  highlightedCell,
+  onCellClick,
+  nodeColorsOverride,
+  fadedColumn,
+  selection,
+  onNodeColorsChange,
   spikes,
   dendrogram = false,
   populationName: hostPopulationName,
@@ -197,6 +250,12 @@ export function CircuitScene({
   const [showTable, setShowTable] = useState(false);
   const [tableHeight, setTableHeight] = useState<number | null>(null);
   const [containerHeight, setContainerHeight] = useState<number>(0);
+  // Where the host lays the table out in a pane of its own, beside the view rather than over
+  // it: always there, so the view offers no button for it.
+  const tablePane = useSceneTablePane();
+  const paneTable = enableNodesTable ? tablePane : null;
+  const claimPane = paneTable?.claim;
+  useEffect(() => claimPane?.(), [claimPane]);
 
   const { config: circuitConfig } = useCircuitConfig(circuit);
   const [tablePopulationName, setTablePopulationName] = useState<string | undefined>();
@@ -315,6 +374,52 @@ export function CircuitScene({
     population,
     subject: memodel,
   });
+
+  // A viewer whose WebGL context the browser took back - it takes the oldest
+  // when a page asks for more than it allows - is drawn black from then on:
+  // built anew, it draws again. Caught on the way down, since the loss does
+  // not bubble up from its canvas.
+  const sceneRef = useRef<HTMLDivElement>(null);
+  const [rebuilds, setRebuilds] = useState(0);
+  useEffect(() => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+    const onLost = (event: Event) => {
+      if (event.target instanceof HTMLCanvasElement) setRebuilds((n) => n + 1);
+    };
+    scene.addEventListener('webglcontextlost', onLost, true);
+    return () => {
+      scene.removeEventListener('webglcontextlost', onLost, true);
+      // Handed back on the way out rather than at the next collection.
+      for (const canvas of scene.querySelectorAll('canvas')) {
+        const gl = canvas.getContext('webgl2') ?? canvas.getContext('webgl');
+        gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      }
+    };
+  }, []);
+
+  // The override's faint column painted for the background on show, and drawn
+  // flat, so every cell in it is the one shade.
+  const overrideColors = useMemo(() => {
+    if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
+    const palette = [...nodeColorsOverride.palette];
+    palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
+    return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
+  }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
+
+  // A mapping with no column per node is colour-by off.
+  const populationOnShow = population?.name;
+  const handedColors =
+    enableColorBy && populationOnShow && nodeColors && nodeColors.columnByNode.length > 0
+      ? nodeColors
+      : undefined;
+  useEffect(() => {
+    onNodeColorsChange?.(
+      populationOnShow && handedColors
+        ? { population: populationOnShow, nodeColors: handedColors }
+        : null
+    );
+  }, [onNodeColorsChange, populationOnShow, handedColors]);
 
   // Offered only where the other populations are on screen to begin with, and
   // only where there is more than one: with a single population, hiding it is
@@ -474,8 +579,8 @@ export function CircuitScene({
       features: vizFeatures,
       spikes,
       // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn.
-      chromeTopRight: enableColorBy,
+      // synapse legend drops below it exactly when that toolbar is drawn there.
+      chromeTopRight: enableColorBy && colorByTarget === undefined,
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
@@ -500,6 +605,7 @@ export function CircuitScene({
       config.showMorphologyLocationLabels,
       config.showZoomSlider,
       enableColorBy,
+      colorByTarget,
       theme?.foreground,
       signals,
       styledOverlays,
@@ -527,6 +633,7 @@ export function CircuitScene({
       className="pointer-events-none relative h-full min-h-0 overflow-hidden"
     >
       <div
+        ref={sceneRef}
         data-testid="viewer-scene"
         className={classNames(
           'absolute inset-0',
@@ -537,14 +644,17 @@ export function CircuitScene({
       >
         {largeCircuit && circuit ? (
           <LargeCircuitPreview
-            key={circuit.id}
+            key={`${circuit.id}:${rebuilds}`}
             circuit={circuit}
             population={population}
             populations={populations}
             hiddenPopulations={hiddenPopulations}
-            nodeColors={enableColorBy ? nodeColors : undefined}
+            shownCells={shownCells}
+            highlightedCell={highlightedCell}
+            nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
+            onSubjectCellClick={onCellClick}
             onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
@@ -562,7 +672,7 @@ export function CircuitScene({
           />
         ) : memodel ? (
           <MemodelVisualization
-            key={memodel.id}
+            key={`${memodel.id}:${rebuilds}`}
             memodelId={memodel.id}
             dendrogram={dendrogram}
             {...sharedVizProps}
@@ -570,15 +680,18 @@ export function CircuitScene({
         ) : (
           circuit && (
             <CircuitVisualization
-              key={circuit.id}
+              key={`${circuit.id}:${rebuilds}`}
               circuit={circuit}
               population={population}
               populations={populations}
               hiddenPopulations={hiddenPopulations}
-              nodeColors={enableColorBy ? nodeColors : undefined}
+              shownCells={shownCells}
+              highlightedCell={highlightedCell}
+              nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}
+              onSubjectCellClick={onCellClick}
               onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
               {...sharedVizProps}
             />
@@ -590,10 +703,25 @@ export function CircuitScene({
         modeToggle={modeToggle}
         vizActive={active}
         theme={theme}
-        table={enableNodesTable ? { active: showTable, onToggle: handleToggleTable } : undefined}
+        table={
+          enableNodesTable && !paneTable
+            ? { active: showTable, onToggle: handleToggleTable }
+            : undefined
+        }
         fullscreen={fullscreen}
+        colorByTarget={colorByTarget}
+        colorByNoneLabel={colorByNoneLabel}
+        selection={selection}
         viz={{
-          menu,
+          // A replay's afterglow is set with the rest of how the scene is drawn.
+          menu:
+            spikes?.data && spikes.onAfterglowChange
+              ? {
+                  ...menu,
+                  spikeAfterglowInSeconds: spikes.afterglowInSeconds,
+                  onSpikeAfterglowChange: spikes.onAfterglowChange,
+                }
+              : menu,
           onResetView,
           // Nothing of the population on show is drawn to colour.
           colorBy: enableColorBy && !subjectUnplaceable ? colorBy : undefined,
@@ -606,7 +734,17 @@ export function CircuitScene({
         }}
       />
 
-      {showTable && circuit && tableHeight !== null && containerHeight > 0 && (
+      {paneTable?.target &&
+        circuit &&
+        createPortal(
+          <CircuitNodesTable
+            circuit={circuit}
+            populationName={populationName}
+            onPopulationChange={setTablePopulationName}
+          />,
+          paneTable.target
+        )}
+      {!paneTable && showTable && circuit && tableHeight !== null && containerHeight > 0 && (
         <div
           className="pointer-events-auto absolute left-0 right-0 bottom-0 z-30 flex flex-col border-t border-neutral-200 bg-white"
           style={{ height: clampedHeight }}

@@ -1,6 +1,6 @@
 #version 300 es
 precision mediump float;
-uniform vec4 u_color;
+in vec4 v_color;
 uniform float u_pointSize;
 out vec4 fragColor;
 
@@ -16,5 +16,5 @@ void main() {
   float inner = 1.0 - 2.0 * feather;
   float alpha = 1.0 - smoothstep(inner * inner, 1.0, distSq);
   if (alpha < 1.0 / 255.0) discard;
-  fragColor = vec4(u_color.rgb, u_color.a * alpha);
+  fragColor = vec4(v_color.rgb, v_color.a * alpha);
 }

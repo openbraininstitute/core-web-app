@@ -1,16 +1,18 @@
 import { RiArrowDownSLine, RiCheckLine, RiRefreshLine } from '@remixicon/react';
 import { useEffect, useRef, useState } from 'react';
 
+import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/ui/molecules/popover';
+import {
+  MENU_HEADING_CLASS,
+  MENU_INSET_CLASS,
+  PILL_CLASS,
+} from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
-import { mutedStyle, panelStyle } from './contrast';
 import { labelForProperty } from './properties';
 
-import type { ViewerTheme } from './contrast';
 import type { ColorByProperty } from './types';
-
-import styles from './chrome-animations.module.css';
 
 interface ColorByDropdownProps {
   /** currently selected property name, or null for the default (blue). */
@@ -24,12 +26,18 @@ interface ColorByDropdownProps {
   error?: boolean;
   /** retry loading the column list after an error. */
   onRetry?: () => void;
-  /** background-derived theme (adaptive mode); null → fixed light styling. */
-  theme?: ViewerTheme | null;
+  /**
+   * What colouring by no property is called, on the trigger and in the menu,
+   * for a host it means something else to; "All", "All (blue)" in the menu, unless named.
+   */
+  noneLabel?: string;
   className?: string;
 }
 
-/** "by {property} ▾" selector shown at the top-right of the circuit viewer. */
+/**
+ * "Colour by {property} ▾" selector shown at the top-right of the circuit
+ * viewer, drawn as the app's other dropdowns are whatever the canvas behind it.
+ */
 export function ColorByDropdown({
   value,
   onChange,
@@ -37,20 +45,13 @@ export function ColorByDropdown({
   loading,
   error,
   onRetry,
-  theme,
+  noneLabel,
   className,
 }: ColorByDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [refreshSpin, setRefreshSpin] = useState(false);
-  const prevValue = useRef(value);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const label = value ? labelForProperty(value) : 'All';
-
-  useEffect(() => {
-    if (prevValue.current !== value && value !== null) setRefreshSpin(true);
-    prevValue.current = value;
-  }, [value]);
+  const label = value ? labelForProperty(value) : (noneLabel ?? 'All');
 
   useEffect(() => {
     if (!open) return;
@@ -78,55 +79,24 @@ export function ColorByDropdown({
     setOpen(false);
   };
 
-  const panel = theme ? panelStyle(theme) : undefined;
-  const muted = theme ? mutedStyle(theme) : undefined;
-
   return (
     <Popover data-testid="color-by-dropdown" open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         ref={triggerRef}
         id="color-by-dropdown-trigger"
         data-testid="color-by-dropdown-trigger"
-        style={panel}
-        className={cn(
-          styles.trigger,
-          'group inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold',
-          'backdrop-blur-sm transition-colors focus-visible:outline-none',
-          theme
-            ? 'hover:brightness-110'
-            : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50',
-          className
-        )}
+        className={cn(PILL_CLASS, 'min-w-0 max-w-full', className)}
       >
-        <span className={cn(!theme && 'text-neutral-400')} style={muted}>
-          Colour by
-        </span>
-        <span>{label}</span>
-        {value ? (
-          <RiRefreshLine
-            className={cn(
-              styles.refreshIcon,
-              refreshSpin && styles.refreshIconSpin,
-              'size-4',
-              !theme && 'text-neutral-400'
-            )}
-            style={muted}
-            onAnimationEnd={() => setRefreshSpin(false)}
-          />
-        ) : (
-          <RiArrowDownSLine className={cn('size-4', !theme && 'text-neutral-400')} style={muted} />
-        )}
+        <span className="shrink-0 text-neutral-400">Colour by</span>
+        <span className="truncate">{label}</span>
+        <RiArrowDownSLine className="size-4 shrink-0" />
       </PopoverTrigger>
       <PopoverContent
         data-testid="color-by-dropdown-content"
         id="color-by-dropdown-content"
         align="end"
         sideOffset={6}
-        style={panel}
-        className={cn(
-          'w-52 rounded-xl border-gray-100 p-1 shadow-xl backdrop-blur-xl',
-          !theme && 'bg-white ring-1 ring-black/5'
-        )}
+        className="w-52 rounded-xl border-gray-100 bg-white p-1 shadow-xl ring-1 ring-black/5 backdrop-blur-xl"
       >
         <div ref={contentRef}>
           <ul
@@ -136,32 +106,30 @@ export function ColorByDropdown({
           >
             <Option
               id="color-by-dropdown-option-none"
-              label="All (blue)"
+              label={noneLabel ?? 'All (blue)'}
               selected={value === null}
-              theme={theme}
               onClick={() => select(null)}
             />
+            {/* The cells' own properties, headed as in the other menus. */}
+            {properties.length > 0 && <li className={MENU_HEADING_CLASS}>{NEURON_HEADING}</li>}
             {properties.map((p) => (
               <Option
                 id={`color-by-dropdown-option-${p.name}`}
                 key={p.name}
                 label={p.label}
                 selected={value === p.name}
-                theme={theme}
+                inset
                 onClick={() => select(p.name)}
               />
             ))}
             {error && properties.length === 0 ? (
-              <li className="px-2 py-1.5 text-sm">
-                <div style={muted}>Couldn&apos;t load properties.</div>
+              <li className="px-2 py-1.5 text-sm text-neutral-500">
+                <div>Couldn&apos;t load properties.</div>
                 {onRetry && (
                   <button
                     type="button"
                     onClick={onRetry}
-                    className={cn(
-                      'mt-1 inline-flex items-center gap-1 font-medium hover:underline',
-                      !theme && 'text-primary-9'
-                    )}
+                    className="text-primary-9 mt-1 inline-flex items-center gap-1 font-medium hover:underline"
                   >
                     <RiRefreshLine className="size-3.5" />
                     Retry
@@ -171,9 +139,7 @@ export function ColorByDropdown({
             ) : (
               loading &&
               properties.length === 0 && (
-                <li className="px-2 py-1.5 text-sm" style={muted}>
-                  Loading properties…
-                </li>
+                <li className="px-2 py-1.5 text-sm text-neutral-500">Loading properties…</li>
               )
             )}
           </ul>
@@ -186,34 +152,28 @@ export function ColorByDropdown({
 function Option({
   label,
   selected,
-  theme,
+  inset = false,
   onClick,
 }: {
   label: string;
   selected: boolean;
-  theme?: ViewerTheme | null;
+  /** Under a heading, set in from it. */
+  inset?: boolean;
   onClick: () => void;
 } & React.ComponentPropsWithoutRef<'button'>) {
-  const hoverClass = theme
-    ? theme.isDark
-      ? 'hover:bg-white/15'
-      : 'hover:bg-black/6'
-    : 'hover:bg-neutral-100';
-
   return (
     <li>
       <button
         type="button"
         onClick={onClick}
         className={cn(
-          'flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm transition-colors',
-          hoverClass,
-          selected && 'font-semibold',
-          !theme && (selected ? 'text-primary-9' : 'text-neutral-700')
+          'flex w-full items-center justify-between gap-2 rounded-xl px-2 py-1.5 text-left text-sm transition-colors hover:bg-neutral-100',
+          selected ? 'text-primary-9 font-semibold' : 'text-neutral-700',
+          inset && MENU_INSET_CLASS
         )}
       >
         {label}
-        {selected && <RiCheckLine className={cn('size-4', !theme && 'text-primary-9')} />}
+        {selected && <RiCheckLine className="text-primary-9 size-4" />}
       </button>
     </li>
   );

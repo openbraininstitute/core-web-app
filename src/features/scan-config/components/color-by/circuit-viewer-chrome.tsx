@@ -1,7 +1,15 @@
-import { RiAlertLine, RiArrowDownSLine, RiFocus3Line, RiTableLine } from '@remixicon/react';
+import {
+  RiAlertLine,
+  RiArrowDownSLine,
+  RiFocus3Line,
+  RiResetLeftLine,
+  RiTableLine,
+} from '@remixicon/react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
@@ -63,6 +71,19 @@ export interface ICircuitViewerChromeProps {
     /** Camera zoom and a way to set it; omit to leave the zoom slider out. */
     zoom?: { value: number; onChange: (zoom: number) => void };
   };
+  /**
+   * Where the color-by dropdown goes instead of the top-right corner, such as
+   * the end of the host's header row; its key stays in the corner. Null while
+   * that element mounts, when the dropdown waits rather than flash in the corner.
+   */
+  colorByTarget?: HTMLElement | null;
+  /** What colouring by no property is called; see `ColorByDropdown`'s `noneLabel`. */
+  colorByNoneLabel?: string;
+  /**
+   * How many cells of the population on show are selected, of how many, and
+   * the way back to them all: said at the top centre while some are.
+   */
+  selection?: { count: number; total: number; onReset: () => void };
 }
 
 /**
@@ -78,6 +99,9 @@ export function CircuitViewerChrome({
   table,
   fullscreen,
   viz,
+  colorByTarget,
+  colorByNoneLabel,
+  selection,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
   const populations = viz?.populations;
@@ -129,6 +153,8 @@ export function CircuitViewerChrome({
     if (width) setToolbarWidth(width);
   }, []);
 
+  // Again when the toolbar moves into a host's slot, which remounts it.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: colorByTarget is that move
   useLayoutEffect(() => {
     const el = toolbarRef.current;
     if (!el) return;
@@ -137,7 +163,7 @@ export function CircuitViewerChrome({
     const observer = new ResizeObserver(syncToolbarWidth);
     observer.observe(el);
     return () => observer.disconnect();
-  }, [syncToolbarWidth]);
+  }, [syncToolbarWidth, colorByTarget]);
 
   useLayoutEffect(() => {
     const el = leftRef.current;
@@ -250,6 +276,31 @@ export function CircuitViewerChrome({
           </div>
         )}
       </div>
+      {showVizChrome && selection && (
+        <div className="pointer-events-auto absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
+          <span
+            className={cn(
+              PILL_CLASS,
+              'font-normal whitespace-nowrap text-neutral-500 hover:bg-white'
+            )}
+          >
+            <strong className="text-primary-9 font-semibold">
+              {selection.count.toLocaleString()}
+            </strong>
+            of {selection.total.toLocaleString()} {selection.total === 1 ? 'neuron' : 'neurons'}{' '}
+            selected
+          </span>
+          <button
+            type="button"
+            onClick={selection.onReset}
+            title="Show every neuron again"
+            aria-label="Show every neuron again"
+            className={ROUND_PILL_CLASS}
+          >
+            <RiResetLeftLine className="size-4" />
+          </button>
+        </div>
+      )}
       {/* Below the left column: in its row it overlapped the Populations pill on narrow screens. */}
       {showVizChrome && populations && hiddenSubject !== undefined && (
         <div
@@ -293,41 +344,52 @@ export function CircuitViewerChrome({
           }
         >
           {/* Measured here rather than on the column, which holds the key that
-              is being sized from it. */}
-          <div ref={toolbarRef} data-testid="color-by-toolbar" className="flex items-center gap-1">
-            <ColorByDropdown
-              value={colorBy.selectedProperty}
-              onChange={colorBy.onSelectProperty}
-              properties={colorBy.properties}
-              loading={colorBy.propertiesLoading}
-              error={colorBy.propertiesError}
-              onRetry={colorBy.onRetryProperties}
-              theme={theme}
-            />
-            {showLegendToggle && (
-              <button
-                type="button"
-                id="color-mapping-panel-toggle"
-                data-slot="color-mapping-panel-toggle"
-                aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
-                aria-expanded={legendOpen}
-                aria-controls="color-mapping-panel"
-                onClick={() => setLegendOpen((open) => !open)}
-                style={panel}
-                className={cn(
-                  styles.legendToggle,
-                  'inline-flex size-8 ml-1 shrink-0 items-center justify-center rounded-full backdrop-blur-sm transition-colors focus-visible:outline-none',
-                  theme
-                    ? 'hover:brightness-110'
-                    : 'bg-white text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-50'
-                )}
-              >
-                <RiArrowDownSLine
-                  className={cn(styles.chevronIcon, 'size-4', legendOpen && styles.chevronIconOpen)}
-                />
-              </button>
-            )}
-          </div>
+              is being sized from it. Raised into a host's slot it leaves the key
+              behind in this corner, so it carries its own hidden state there. */}
+          <Placed target={colorByTarget}>
+            <div
+              ref={toolbarRef}
+              data-testid="color-by-toolbar"
+              className={cn(
+                'flex items-center gap-1',
+                colorByTarget !== undefined &&
+                  (showVizChrome ? 'pointer-events-auto' : 'invisible pointer-events-none')
+              )}
+              aria-hidden={colorByTarget !== undefined && !showVizChrome}
+              inert={(colorByTarget !== undefined && !showVizChrome) || undefined}
+            >
+              <ColorByDropdown
+                value={colorBy.selectedProperty}
+                onChange={colorBy.onSelectProperty}
+                properties={colorBy.properties}
+                loading={colorBy.propertiesLoading}
+                error={colorBy.propertiesError}
+                onRetry={colorBy.onRetryProperties}
+                noneLabel={colorByNoneLabel}
+              />
+              {showLegendToggle && (
+                // A round pill as tall as the dropdown's, in its look.
+                <button
+                  type="button"
+                  id="color-mapping-panel-toggle"
+                  data-slot="color-mapping-panel-toggle"
+                  aria-label={legendOpen ? 'Hide color mapping' : 'Show color mapping'}
+                  aria-expanded={legendOpen}
+                  aria-controls="color-mapping-panel"
+                  onClick={() => setLegendOpen((open) => !open)}
+                  className={cn(ROUND_PILL_CLASS, styles.legendToggle, 'ml-1')}
+                >
+                  <RiArrowDownSLine
+                    className={cn(
+                      styles.chevronIcon,
+                      'size-4',
+                      legendOpen && styles.chevronIconOpen
+                    )}
+                  />
+                </button>
+              )}
+            </div>
+          </Placed>
           {showKey && legendOpen && colorBy.mapping && (
             <div
               className={cn(styles.panelReveal, 'min-w-0')}
@@ -413,4 +475,16 @@ function ChromeNotice({
       )}
     </div>
   );
+}
+
+/** In place without a target, in the target once it is there, and nowhere until then. */
+function Placed({
+  target,
+  children,
+}: {
+  target: HTMLElement | null | undefined;
+  children: React.ReactNode;
+}) {
+  if (target === undefined) return children;
+  return target ? createPortal(children, target) : null;
 }

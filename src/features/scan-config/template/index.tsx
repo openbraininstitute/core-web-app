@@ -193,6 +193,8 @@ function ScanConfigResults({
           campaignId={state.campaignId}
           campaignOriginAction={props.campaignOriginAction}
           isCampaignIdChanged={state.isCampaignIdChanged}
+          neuronSetNames={neuronSetNamesOf(props.initialConfig, state.config)}
+          configSchema={props.schema}
         />
       </Suspense>
     ))
@@ -248,4 +250,18 @@ function ScanConfigResults({
     .otherwise(() => {
       throw new Error(`${props.activity} is not supported yet`);
     });
+}
+
+/**
+ * The neuron sets the campaign's config defines, by name: the loaded config's
+ * and any the form has added since. The output viewers keep only those the
+ * simulation's node sets file holds, so a name it never ran with drops out.
+ */
+function neuronSetNamesOf(...configs: unknown[]): string[] {
+  const names = new Set<string>();
+  for (const config of configs) {
+    const sets = get(config, 'neuron_sets');
+    if (sets && typeof sets === 'object') for (const name of Object.keys(sets)) names.add(name);
+  }
+  return [...names];
 }

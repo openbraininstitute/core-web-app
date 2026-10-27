@@ -1,6 +1,12 @@
 'use client';
 
-import { RiArrowDownLine, RiArrowUpLine, RiCheckLine, RiFileCopyLine } from '@remixicon/react';
+import {
+  RiArrowDownLine,
+  RiArrowDownSLine,
+  RiArrowUpLine,
+  RiCheckLine,
+  RiFileCopyLine,
+} from '@remixicon/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { LogsActions } from '@/features/task-logs-stream/elements/actions';
@@ -12,7 +18,12 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import type { PointerEvent, ReactNode } from 'react';
-import type { IHighlightRange, ILogEntry, IMatchLocation } from '@/features/task-logs-stream/types';
+import type {
+  IHighlightRange,
+  ILogEntry,
+  IMatchLocation,
+  TLogTypeKey,
+} from '@/features/task-logs-stream/types';
 
 const USER_SCROLL_INTENT_WINDOW_MS = 750;
 
@@ -63,80 +74,173 @@ function highlightText({
   return nodes;
 }
 
-function LogsGroups({
-  groupedEntries,
-  highlightById,
-  activeMatchId,
-  onCopyEntry,
-  copiedEntryId,
+/** Lines of one type in a row, read as one block until the type changes. */
+type LogRun = { type: TLogTypeKey; entries: ILogEntry[] };
+
+function runsOf(entries: ILogEntry[]): LogRun[] {
+  const runs: LogRun[] = [];
+  for (const entry of entries) {
+    const last = runs.at(-1);
+    if (last?.type === entry.type) last.entries.push(entry);
+    else runs.push({ type: entry.type, entries: [entry] });
+  }
+  return runs;
+}
+
+function CopyButton({
+  copied,
+  label,
+  onClick,
+  className,
 }: {
-  groupedEntries: Array<[string | null, ILogEntry[]]>;
-  highlightById: Map<string, IHighlightRange[]>;
-  activeMatchId?: string;
-  onCopyEntry: (entry: ILogEntry) => void;
-  copiedEntryId: string | null;
+  copied: boolean;
+  label: string;
+  onClick: () => void;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-4 pb-4">
-      {groupedEntries.map(([timestampLabel, logsForTimestamp]) => (
-        <div key={`${timestampLabel ?? 'no-timestamp'}-${logsForTimestamp[0]?.id ?? 'empty'}`}>
-          {timestampLabel && (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className={cn(
+        'flex size-5 shrink-0 items-center justify-center rounded text-neutral-400 transition-opacity',
+        'opacity-0 hover:bg-gray-100 hover:text-neutral-700 focus-visible:opacity-100',
+        className
+      )}
+    >
+      {copied ? (
+        <RiCheckLine className="size-3.5 text-green-600" />
+      ) : (
+        <RiFileCopyLine className="size-3.5" />
+      )}
+    </button>
+  );
+}
+
+/**
+ * Each run of one type as one block: its badge, span and line count over its
+ * lines - held in view while they scroll, and folding them away on a click -
+ * with the time in a gutter wherever it moves on. A folded block opens while
+ * it holds the search match on show.
+ */
+function LogRuns({
+  runs,
+  highlightById,
+  activeMatchId,
+  activeEntryId,
+  collapsed,
+  onToggle,
+  onCopy,
+  copiedId,
+}: {
+  runs: LogRun[];
+  highlightById: Map<string, IHighlightRange[]>;
+  activeMatchId?: string;
+  activeEntryId?: string;
+  collapsed: ReadonlySet<string>;
+  onToggle: (runId: string) => void;
+  onCopy: (id: string, text: string) => void;
+  copiedId: string | null;
+}) {
+  return (
+    <div className="flex flex-col gap-3 pb-4">
+      {runs.map((run) => {
+        const config = getLogTypeConfig({ type: run.type });
+        const first = run.entries[0];
+        const from = first.timestampGroupLabel;
+        const to = run.entries[run.entries.length - 1].timestampGroupLabel;
+        const runId = `run-${first.id}`;
+        const open =
+          !collapsed.has(runId) || run.entries.some((entry) => entry.id === activeEntryId);
+        return (
+          <section
+            key={runId}
+            className="mx-1 rounded-xl border border-gray-200 bg-white shadow-sm"
+          >
             <div
-              className="mb-2 text-sm font-semibold text-gray-500"
-              title={new Date(logsForTimestamp[0].timestamp ?? '').toLocaleString()}
+              className={cn(
+                'group/run sticky top-0 z-1 flex items-center gap-2 bg-white px-3 py-2',
+                open ? 'rounded-t-xl border-b border-gray-100' : 'rounded-xl'
+              )}
             >
-              {timestampLabel}
-            </div>
-          )}
-          <div className="flex flex-col gap-2">
-            {logsForTimestamp.map((entry) => (
-              <div
-                key={entry.id}
-                className={cn(
-                  'group rounded-xl flex flex-row gap-2 items-start border',
-                  'border-gray-200 bg-white p-3 shadow-sm mx-1 hover:bg-gray-50'
-                )}
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => onToggle(runId)}
+                title={open ? 'Fold these lines away' : 'Show these lines'}
+                className="flex min-w-0 cursor-pointer items-center gap-2 text-left"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 items-start gap-2">
-                    <Badge rounded className={getLogTypeConfig({ type: entry.type }).badgeClass}>
-                      {getLogTypeConfig({ type: entry.type }).label}
-                    </Badge>
-                    <pre className="min-w-0 flex-1 whitespace-pre-wrap wrap-break-word text-xs text-neutral-800">
-                      {highlightText({
-                        value: entry.message,
-                        ranges: highlightById.get(entry.id) ?? [],
-                        entryId: entry.id,
-                        activeMatchId,
-                      })}
-                    </pre>
-                  </div>
-                </div>
-                <Button
-                  rounded
-                  type="button"
-                  variant="icon"
-                  size="sm"
-                  onClick={() => onCopyEntry(entry)}
+                <RiArrowDownSLine
                   className={cn(
-                    'ml-auto self-start border border-neutral-300 bg-transparent text-neutral-500',
-                    'opacity-0 transition-opacity group-hover:opacity-100',
-                    'hover:bg-transparent hover:text-neutral-700'
+                    'size-4 shrink-0 text-gray-400 transition-transform',
+                    !open && '-rotate-90'
                   )}
-                  aria-label="Copy log message"
-                  title="Copy log message"
-                >
-                  {copiedEntryId === entry.id ? (
-                    <RiCheckLine className="size-4 text-green-600" />
-                  ) : (
-                    <RiFileCopyLine className="size-4" />
-                  )}
-                </Button>
+                />
+                <Badge rounded className={config.badgeClass}>
+                  {config.label}
+                </Badge>
+                {from && (
+                  <span className="text-xs text-gray-500 tabular-nums">
+                    {to && to !== from ? `${from} – ${to}` : from}
+                  </span>
+                )}
+                {run.entries.length > 1 && (
+                  <span className="text-xs text-gray-400">{run.entries.length} lines</span>
+                )}
+              </button>
+              <CopyButton
+                copied={copiedId === runId}
+                label="Copy these lines"
+                onClick={() => onCopy(runId, run.entries.map((e) => e.message).join('\n'))}
+                className="group-hover/run:opacity-100"
+              />
+            </div>
+            {open && (
+              <div className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-3 py-1.5">
+                {run.entries.map((entry, i) => {
+                  const marker =
+                    i === 0 || entry.timestampGroupLabel !== run.entries[i - 1].timestampGroupLabel
+                      ? entry.timestampGroupLabel
+                      : null;
+                  return (
+                    <div
+                      key={entry.id}
+                      className="group/line relative col-span-2 grid grid-cols-subgrid px-3 hover:bg-gray-50"
+                    >
+                      <span
+                        className="text-[10px] leading-5 text-gray-400 tabular-nums"
+                        title={
+                          marker && entry.timestamp
+                            ? new Date(entry.timestamp).toLocaleString()
+                            : undefined
+                        }
+                      >
+                        {marker}
+                      </span>
+                      <pre className="min-w-0 whitespace-pre-wrap wrap-break-word pr-6 text-xs leading-5 text-neutral-800">
+                        {highlightText({
+                          value: entry.message,
+                          ranges: highlightById.get(entry.id) ?? [],
+                          entryId: entry.id,
+                          activeMatchId,
+                        })}
+                      </pre>
+                      <CopyButton
+                        copied={copiedId === entry.id}
+                        label="Copy log message"
+                        onClick={() => onCopy(entry.id, entry.message)}
+                        className="absolute top-0 right-2 group-hover/line:opacity-100"
+                      />
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </div>
-      ))}
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
@@ -155,7 +259,8 @@ export function LogsViewer({
   const [isScrollable, setIsScrollable] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [isAtTop, setIsAtTop] = useState(true);
-  const [copiedEntryId, setCopiedEntryId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [collapsedRuns, setCollapsedRuns] = useState<ReadonlySet<string>>(() => new Set());
   const shouldStickToBottomRef = useRef(true);
   const hasSettledInitialScrollRef = useRef(false);
   const lastUserScrollIntentAtRef = useRef(0);
@@ -169,15 +274,7 @@ export function LogsViewer({
   });
   const hasLogs = searchedEntries.length > 0;
 
-  const groupedEntries = useMemo(() => {
-    const groups = new Map<string | null, ILogEntry[]>();
-    for (const entry of searchedEntries) {
-      const existing = groups.get(entry.timestampGroupLabel) ?? [];
-      existing.push(entry);
-      groups.set(entry.timestampGroupLabel, existing);
-    }
-    return Array.from(groups.entries());
-  }, [searchedEntries]);
+  const runs = useMemo(() => runsOf(searchedEntries), [searchedEntries]);
 
   const matches = useMemo(() => {
     const ordered: IMatchLocation[] = [];
@@ -369,11 +466,19 @@ export function LogsViewer({
     scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const copyEntry = useCallback(async (entry: ILogEntry) => {
-    await navigator.clipboard.writeText(entry.message);
-    setCopiedEntryId(entry.id);
+  const toggleRun = useCallback((runId: string) => {
+    setCollapsedRuns((current) => {
+      const next = new Set(current);
+      if (!next.delete(runId)) next.add(runId);
+      return next;
+    });
+  }, []);
+
+  const copyText = useCallback(async (id: string, text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(id);
     window.setTimeout(() => {
-      setCopiedEntryId((current) => (current === entry.id ? null : current));
+      setCopiedId((current) => (current === id ? null : current));
     }, 2000);
   }, []);
 
@@ -384,7 +489,10 @@ export function LogsViewer({
   if (!enabled) return null;
 
   return (
-    <div id="job-logs" className="flex h-full min-h-0 flex-col overflow-hidden bg-neutral-50 pb-4">
+    <div
+      id="job-logs"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-neutral-50 pb-4"
+    >
       <div className="sticky top-0 z-10 bg-neutral-50">
         <LogsActions
           entries={entries}
@@ -436,14 +544,17 @@ export function LogsViewer({
             </div>
           )}
 
-          {groupedEntries.length > 0 && (
+          {runs.length > 0 && (
             <div ref={logsContentRef} className="flex flex-col gap-4 mr-1 h-full">
-              <LogsGroups
-                groupedEntries={groupedEntries}
+              <LogRuns
+                runs={runs}
                 highlightById={highlightById}
                 activeMatchId={activeMatch?.matchId}
-                onCopyEntry={copyEntry}
-                copiedEntryId={copiedEntryId}
+                activeEntryId={activeMatch?.entryId}
+                collapsed={collapsedRuns}
+                onToggle={toggleRun}
+                onCopy={copyText}
+                copiedId={copiedId}
               />
               <div />
             </div>

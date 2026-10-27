@@ -4,7 +4,7 @@ import { ActivityStatus, type TActivityStatus } from '@/api/entitycore/types/sha
 
 export const executionStatusColorMap = {
   [ActivityStatus.CREATED]: '#004793',
-  [ActivityStatus.PENDING]: '#a24fcc',
+  [ActivityStatus.PENDING]: '#0f766e',
   [ActivityStatus.RUNNING]: '#1890ff',
   [ActivityStatus.ERROR]: '#e81f1f',
   [ActivityStatus.DONE]: '#389e0d',

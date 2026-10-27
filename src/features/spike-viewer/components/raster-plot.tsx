@@ -1,13 +1,23 @@
 'use client';
 
 import { Empty } from 'antd';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { useCellRow } from '@/features/spike-viewer/cell-row';
+import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import { useZoomHint, ZoomHint } from '@/features/spike-viewer/components/zoom-hint';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
+import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
+import type { CellRowSource } from '@/features/spike-viewer/cell-row';
+import type { RasterRendererOptions } from '@/features/spike-viewer/hooks/use-raster-renderer';
+import type { EventsHover, SpikeHover } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
-type RasterPlotProps = {
+type RasterPlotProps = Omit<
+  RasterRendererOptions,
+  'data' | 'populationName' | 'cellCount' | 'onEventsHover' | 'onSpikeHover'
+> & {
   data: SpikeData;
   /**
    * The one population to plot.
@@ -28,8 +38,8 @@ type RasterPlotProps = {
    * move one line.
    */
   playheadRef?: React.RefObject<((timeInMs: number | null) => void) | null>;
-  /** Called with a time in ms when the user clicks in the plot. */
-  onSeek?: (timeInMs: number) => void;
+  /** Where a hovered spike's card reads its cell's row of the nodes table. */
+  cellRows?: CellRowSource;
 };
 
 export default function RasterPlot({
@@ -38,16 +48,29 @@ export default function RasterPlot({
   cellCount,
   markerSize,
   playheadRef,
-  onSeek,
+  cellRows,
+  ...options
 }: RasterPlotProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(
-    containerRef,
+  // What is under the pointer, carded here: the renderer draws only canvases.
+  const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
+  const [spikeHover, setSpikeHover] = useState<SpikeHover | null>(null);
+  // A double-click zooms back out, as on the statistics' plots.
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('raster');
+  const { onWindowChange } = options;
+  const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(containerRef, {
     data,
     populationName,
     cellCount,
-    onSeek
-  );
+    ...options,
+    onWindowChange: (window) => {
+      if (window) zoomed();
+      else zoomedOut();
+      onWindowChange?.(window);
+    },
+    onEventsHover: setEventsHover,
+    onSpikeHover: setSpikeHover,
+  });
 
   useEffect(() => {
     if (!playheadRef) return;
@@ -95,6 +118,30 @@ export default function RasterPlot({
           />
         </div>
       )}
+      {eventsHover && <TimelineCard hover={eventsHover} />}
+      {spikeHover && <SpikeCard hover={spikeHover} cellRows={cellRows} />}
+      {/* Under the raster's controls, which sit over its top. */}
+      <ZoomHint visible={hintUp} className="top-12" />
     </div>
+  );
+}
+
+/** The spike under the pointer: when it fired, and its cell's row of the nodes table. */
+function SpikeCard({ hover, cellRows }: { hover: SpikeHover; cellRows?: CellRowSource }) {
+  const row = useCellRow(cellRows, hover.nodeId);
+  return (
+    <TooltipCard
+      clientX={hover.clientX}
+      clientY={hover.clientY}
+      card={{
+        title: `Node ${hover.nodeId}`,
+        subtitle: hover.population,
+        swatch: hover.color,
+        rows: [
+          { label: 'Spike time', value: `${hover.time.toFixed(2)} ms`, strong: true },
+          ...(row ?? []),
+        ],
+      }}
+    />
   );
 }

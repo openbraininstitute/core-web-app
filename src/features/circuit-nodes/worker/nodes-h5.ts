@@ -7,6 +7,8 @@ import {
   ColumnKindDict,
   type ColumnMeta,
   type ColumnValues,
+  type DerivedColumn,
+  type FilterModel,
   type GetRowsRequest,
   type GetRowsResponse,
   type NodeGeometry,
@@ -58,7 +60,29 @@ type SyntheticNodeIdHandle = {
   name: string;
 };
 
-type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | SyntheticNodeIdHandle;
+/** A column handed in whole rather than read from the file; see {@link NodesSession.setDerivedColumns}. */
+type DerivedHandle = {
+  kind: 'derived';
+  name: string;
+  values: Float64Array;
+};
+
+/** The same, as an index per node into a library of its own. */
+type DerivedCategoricalHandle = {
+  kind: 'derived-categorical';
+  name: string;
+  indices: Uint32Array;
+  library: string[];
+  librarySortRank: Uint32Array;
+};
+
+type ColumnHandle =
+  | CategoricalHandle
+  | NumericHandle
+  | StringHandle
+  | SyntheticNodeIdHandle
+  | DerivedHandle
+  | DerivedCategoricalHandle;
 
 type NumericColumn = Float32Array | Float64Array | BigInt64Array | BigUint64Array;
 
@@ -125,6 +149,7 @@ export class NodesSession {
   private columnIndex: Map<string, ColumnHandle>;
   private loaded: LruMap<string, LoadedColumn>;
   private viewCache: LruMap<string, Uint32Array>;
+  private derivedByOwner = new Map<string, string[]>();
 
   constructor(filename: string, populationKey: string) {
     this.filename = filename;
@@ -242,6 +267,62 @@ export class NodesSession {
     this.viewCache.clear();
   }
 
+  /**
+   * Replace one owner's columns computed outside the file, which page, sort and
+   * filter like the file's own once set.
+   *
+   * By owner, because the session is shared: a simulation's spike statistics
+   * and a report's recorded cells can both be on one population, and neither
+   * may clear the other's. They live in the column index rather than the LRU,
+   * so the table's reads can never evict values nothing could load again, and
+   * they stay out of `columns`, which the nodes table elsewhere lists. A name
+   * the file or another owner already has is skipped, so a derived column
+   * never shadows anything.
+   */
+  setDerivedColumns(owner: string, columns: DerivedColumn[]): void {
+    for (const name of this.derivedByOwner.get(owner) ?? []) this.columnIndex.delete(name);
+    const names: string[] = [];
+    for (const column of columns) {
+      const { name } = column;
+      const length = 'values' in column ? column.values.length : column.indices.length;
+      if (this.columnIndex.has(name) || length !== this.rowCount) continue;
+      this.columnIndex.set(
+        name,
+        'values' in column
+          ? { kind: 'derived', name, values: column.values }
+          : {
+              kind: 'derived-categorical',
+              name,
+              indices: column.indices,
+              library: column.library,
+              librarySortRank: alphabeticRank(column.library),
+            }
+      );
+      names.push(name);
+    }
+    this.derivedByOwner.set(owner, names);
+    // A view sorted or filtered by the old values would page the wrong rows.
+    this.viewCache.clear();
+  }
+
+  /** The rows a filter model keeps, in node order, or null when it keeps them all. */
+  getFilteredIndices(filter: FilterModel): Uint32Array | null {
+    const entries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey([], entries);
+    if (viewKey === null) return null;
+    // A copy, so the caller can transfer it without detaching the cached view.
+    return this.resolveView(viewKey, [], entries).slice();
+  }
+
+  /** Where a node falls among the rows a sort and filter show; -1 where the filter leaves it out. */
+  getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): number {
+    const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    if (viewKey === null) return nodeId >= 0 && nodeId < this.rowCount ? nodeId : -1;
+    return this.resolveView(viewKey, sortItems, filterEntries).indexOf(nodeId);
+  }
+
   getRows(req: GetRowsRequest): GetRowsResponse {
     const { start, end, sort, filter, columns } = req;
     const sortItems = (sort ?? []).filter((s) => this.columnIndex.has(s.column));
@@ -332,7 +413,7 @@ export class NodesSession {
       const data = this.loadColumn(col);
       if (f.filterType === 'set') {
         // Set filter is meaningful only on categorical columns; ignore otherwise.
-        if (handle.kind !== 'categorical') return [];
+        if (handle.kind !== 'categorical' && handle.kind !== 'derived-categorical') return [];
         const mask = new Uint8Array(handle.library.length);
         const allowed = new Set(f.values);
         for (let i = 0; i < handle.library.length; i++) {
@@ -373,6 +454,10 @@ export class NodesSession {
     const sorted = indices.slice();
     sorted.sort((a, b) => {
       for (const c of compiled) {
+        // Blanks last whichever way the column runs: a cell that never fired
+        // has no first spike, which is not the same as the earliest one.
+        const blank = blankOrder(c.data, a, b);
+        if (blank !== 0) return blank;
         const cmp = compareAt(c.handle, c.data, a, b);
         if (cmp !== 0) return c.direction === 'asc' ? cmp : -cmp;
       }
@@ -463,6 +548,8 @@ export class NodesSession {
       this.loaded.set(name, arr);
       return arr;
     }
+    if (handle.kind === 'derived') return handle.values;
+    if (handle.kind === 'derived-categorical') return handle.indices;
 
     const raw = handle.dataset.value;
     let loaded: LoadedColumn;
@@ -493,6 +580,19 @@ export class NodesSession {
         for (let i = 0; i < indices.length; i++) out[i] = (indices as Uint32Array)[i];
       } else {
         for (let i = 0; i < indices.length; i++) out[i] = sliceStart + i;
+      }
+      return out;
+    }
+
+    if (handle.kind === 'derived') {
+      const out = new Array<number>(indices.length);
+      for (let i = 0; i < indices.length; i++) out[i] = handle.values[indices[i]];
+      return out;
+    }
+    if (handle.kind === 'derived-categorical') {
+      const out = new Array<string>(indices.length);
+      for (let i = 0; i < indices.length; i++) {
+        out[i] = handle.library[handle.indices[indices[i]]] ?? '';
       }
       return out;
     }
@@ -545,6 +645,16 @@ export class NodesSession {
 
     if (handle.kind === ColumnKindDict.SyntheticNodeId) {
       return { kind: ColumnKindDict.Numeric, values: identityIndices(this.rowCount) };
+    }
+    if (handle.kind === 'derived') {
+      return { kind: ColumnKindDict.Numeric, values: handle.values.slice() };
+    }
+    if (handle.kind === 'derived-categorical') {
+      return {
+        kind: ColumnKindDict.Categorical,
+        library: handle.library,
+        indices: handle.indices.slice(),
+      };
     }
 
     const data = this.loadColumn(name);
@@ -651,13 +761,22 @@ function ensureStringArray(raw: unknown): string[] {
   return [];
 }
 
+/** A missing value (`NaN`) after a present one; anything else is the column's to order. */
+function blankOrder(data: LoadedColumn, a: number, b: number): number {
+  if (!(data instanceof Float64Array || data instanceof Float32Array)) return 0;
+  const blankA = Number.isNaN(data[a]);
+  const blankB = Number.isNaN(data[b]);
+  if (blankA === blankB) return 0;
+  return blankA ? 1 : -1;
+}
+
 function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: number): number {
-  if (handle.kind === 'categorical') {
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
     const arr = data as Uint32Array;
     const rank = handle.librarySortRank;
     return rank[arr[a]] - rank[arr[b]];
   }
-  if (handle.kind === 'numeric') {
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
     const arr = data as NumericColumn;
     const va = arr[a];
     const vb = arr[b];
@@ -688,7 +807,10 @@ function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter
       return true;
     };
   }
-  if (filter.filterType === 'text') return (row) => matchText(textAt(handle, data, row), filter);
+  if (filter.filterType === 'text') {
+    const test = textTest(filter);
+    return (row) => test(textAt(handle, data, row));
+  }
   if (data instanceof BigInt64Array || data instanceof BigUint64Array) {
     const test = integerTest(filter);
     if (test) return (row) => test(data[row]);
@@ -698,28 +820,45 @@ function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter
 }
 
 function textAt(handle: ColumnHandle, data: LoadedColumn, row: number): string {
-  if (handle.kind === 'categorical') return handle.library[(data as Uint32Array)[row]] ?? '';
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
+    return handle.library[(data as Uint32Array)[row]] ?? '';
+  }
   if (handle.kind === 'string') return (data as string[])[row] ?? '';
-  if (handle.kind === 'numeric') return String((data as NumericColumn)[row]);
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
+    return String((data as NumericColumn)[row]);
+  }
   return String(row);
 }
 
 function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number {
-  if (handle.kind === 'numeric') return Number((data as NumericColumn)[row]);
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
+    return Number((data as NumericColumn)[row]);
+  }
   if (handle.kind === 'synthetic-node-id') return row;
-  if (handle.kind === 'categorical') return (data as Uint32Array)[row];
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
+    return (data as Uint32Array)[row];
+  }
   return Number((data as string[])[row]);
 }
 
-function matchText(value: string, f: TextFilter): boolean {
-  const v = value.toLowerCase();
+/** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
+function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
+  return text
+    .split(separator)
+    .map((v) => v.trim())
+    .filter((v) => v !== '');
+}
+
+function textTest(f: TextFilter): (value: string) => boolean {
   const q = (f.filter ?? '').toLowerCase();
+  // Text can hold spaces, so only commas part its values.
+  const any = new Set(listedValues(q, /,/));
   return match(f.type)
-    .with('contains', () => v.includes(q))
-    .with('equals', () => v === q)
-    .with('notEqual', () => v !== q)
-    .with('startsWith', () => v.startsWith(q))
-    .with('endsWith', () => v.endsWith(q))
+    .with('contains', () => (v: string) => v.toLowerCase().includes(q))
+    .with('equals', () => (v: string) => any.has(v.toLowerCase()))
+    .with('notEqual', () => (v: string) => v.toLowerCase() !== q)
+    .with('startsWith', () => (v: string) => v.toLowerCase().startsWith(q))
+    .with('endsWith', () => (v: string) => v.toLowerCase().endsWith(q))
     .exhaustive();
 }
 
@@ -728,8 +867,13 @@ function numberTest(f: NumberFilter): (v: number) => boolean {
   const q2 = Number(f.filterTo ?? f.filter);
   const lo = Math.min(q, q2);
   const hi = Math.max(q, q2);
+  const any = new Set(
+    listedValues(f.filter ?? '')
+      .map(Number)
+      .filter((v) => !Number.isNaN(v))
+  );
   return match(f.type)
-    .with('equals', () => (v: number) => v === q)
+    .with('equals', () => (v: number) => any.has(v))
     .with('notEqual', () => (v: number) => v !== q)
     .with('lessThan', () => (v: number) => v < q)
     .with('lessThanOrEqual', () => (v: number) => v <= q)
@@ -744,6 +888,15 @@ function numberTest(f: NumberFilter): (v: number) => boolean {
  * side of it, since as a number it would round. Null when a bound is not a decimal ("Infinity").
  */
 function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
+  if (f.type === 'equals') {
+    const bounds = listedValues(f.filter).map(wholeBounds);
+    if (bounds.length === 0 || bounds.some((b) => b === null)) return null;
+    // A value between two whole numbers is no id.
+    const ids = new Set(
+      (bounds as [bigint, bigint][]).filter(([lo, hi]) => lo === hi).map(([lo]) => lo)
+    );
+    return (v: bigint) => ids.has(v);
+  }
   const a = wholeBounds(f.filter);
   const b = wholeBounds(f.filterTo ?? f.filter);
   if (!a || !b) return null;
@@ -751,7 +904,6 @@ function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
   const lo = a[1] < b[1] ? a[1] : b[1];
   const hi = a[0] > b[0] ? a[0] : b[0];
   return match(f.type)
-    .with('equals', () => (floor === ceil ? (v: bigint) => v === floor : () => false))
     .with('notEqual', () => (floor === ceil ? (v: bigint) => v !== floor : () => true))
     .with('lessThan', () => (v: bigint) => v < ceil)
     .with('lessThanOrEqual', () => (v: bigint) => v <= floor)
