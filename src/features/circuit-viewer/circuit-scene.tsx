@@ -372,12 +372,13 @@ export function CircuitScene({
     };
   }, []);
 
-  // The override's faint column painted for the background on show.
+  // The override's faint column painted for the background on show, and drawn
+  // flat, so every cell in it is the one shade.
   const overrideColors = useMemo(() => {
     if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
     const palette = [...nodeColorsOverride.palette];
     palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
-    return { ...nodeColorsOverride, palette };
+    return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
   }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
 
   // A mapping with no column per node is colour-by off.

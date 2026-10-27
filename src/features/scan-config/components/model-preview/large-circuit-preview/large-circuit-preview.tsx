@@ -310,7 +310,8 @@ export function LargeCircuitPreview({
       }
       index += geometry.count;
     }
-    return { palette, columnByCell };
+    // The mapping's columns stand at its own indices, so its flat ones carry over.
+    return { palette, columnByCell, flatColumns: nodeColors?.flatColumns };
   }, [
     placed,
     subjectName,
