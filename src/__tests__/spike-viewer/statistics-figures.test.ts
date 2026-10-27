@@ -85,21 +85,29 @@ describe('psthFigure', () => {
     expect(before?.rows.some((row) => row.label === 'Partial bin')).toBe(false);
   });
 
-  it('rates a last bin the span cuts short over its own width, smoothed or not', () => {
+  it('rates a last bin the span cuts short over its own width', () => {
     // Two spikes from two cells: 200 Hz over the last 5 ms, where the 10 ms the others span says 100.
-    const rates = (sigmaMs: number) => {
-      const figure = psthFigure(all, spikes, [0, 145], 2, undefined, '#000', {
-        binMs: 10,
-        sigmaMs,
-      });
-      return (figure.data as { y: Float64Array }[])[0].y;
-    };
-    const steps = rates(0);
-    expect(steps[1]).toBeCloseTo(50);
-    expect(steps[14]).toBeCloseTo(200);
-    // Smoothed, the cut-short bin no longer drags the bins before it down.
-    const smooth = rates(10);
-    expect(smooth[14]).toBeGreaterThan(smooth[12]);
+    const figure = psthFigure(all, spikes, [0, 145], 2, undefined, '#000', {
+      binMs: 10,
+      sigmaMs: 0,
+    });
+    const [{ y }] = figure.data as { y: Float64Array }[];
+    expect(y[1]).toBeCloseTo(50);
+    expect(y[14]).toBeCloseTo(200);
+  });
+
+  it('leaves a last bin the span cuts short out of the smoothing, banded and said so', () => {
+    const figure = psthFigure(all, spikes, [0, 145], 2, undefined, '#000', {
+      binMs: 10,
+      sigmaMs: 10,
+    });
+    const [{ x, y }] = figure.data as { x: Float64Array; y: Float64Array }[];
+    // The line stops at the last whole bin, and its two spikes pull nothing before them.
+    expect(x).toHaveLength(14);
+    expect(x.at(-1)).toBeCloseTo(135);
+    expect(y.at(-1)).toBeCloseTo(0, 6);
+    expect(figure.layout.shapes?.[0]).toMatchObject({ x0: 140, x1: 145 });
+    expect(JSON.stringify(figure.layout.xaxis?.title)).toContain('the last 5.0 ms left out');
   });
 
   it('leaves a span the bins fit unbanded', () => {

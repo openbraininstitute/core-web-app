@@ -65,15 +65,23 @@ function smoothed(rate: Float64Array, sigma: number): Float64Array {
 /**
  * A binned rate as the points of its line: steps, each bin's rate from its
  * start and held to the end of the last; or smoothed, a line through the bins'
- * middles.
+ * middles, without the last bin where `dropLast`.
  */
-function psthPoints(rate: Float64Array, from: number, to: number, width: number, sigmaMs: number) {
+function psthPoints(
+  rate: Float64Array,
+  from: number,
+  to: number,
+  width: number,
+  sigmaMs: number,
+  dropLast: boolean
+) {
   if (sigmaMs > 0) {
+    const kept = dropLast ? rate.subarray(0, rate.length - 1) : rate;
     return {
-      x: Float64Array.from({ length: rate.length }, (_, b) =>
+      x: Float64Array.from({ length: kept.length }, (_, b) =>
         Math.min(to, from + (b + 0.5) * width)
       ),
-      y: smoothed(rate, sigmaMs / width),
+      y: smoothed(kept, sigmaMs / width),
     };
   }
   const y = new Float64Array(rate.length + 1);
@@ -86,8 +94,14 @@ function psthPoints(rate: Float64Array, from: number, to: number, width: number,
 }
 
 /** What a PSTH's note says of its bins: their width, a last one cut short, and the smoothing over them. */
-function psthNote(width: number, sigmaMs: number, partialMs: number | null): string {
-  const last = partialMs === null ? '' : `, the last ${partialMs.toFixed(1)} ms`;
+function psthNote(
+  width: number,
+  sigmaMs: number,
+  partialMs: number | null,
+  leftOut: boolean
+): string {
+  const last =
+    partialMs === null ? '' : `, the last ${partialMs.toFixed(1)} ms${leftOut ? ' left out' : ''}`;
   const bins = `${Number(width.toPrecision(3))} ms bins${last}`;
   return sigmaMs > 0 ? `${bins} · Gaussian σ ${sigmaMs} ms` : bins;
 }
@@ -103,8 +117,9 @@ function roundStep(target: number): number {
  * Each group's firing over time: its spikes per cell per second, in bins
  * across `span` - the run, or the raster's window - a line per group, in steps
  * or smoothed. A last bin the span's end cuts short is rated over its own
- * width, so it reads like the others and smoothing carries no dip into them;
- * it is banded, with its width, as a note that it is shorter.
+ * width; smoothed, it is left out, since its few spikes over a short time
+ * would pull the bins before it. Either way it is banded, with its width, as a
+ * note that it is shorter.
  */
 export function psthFigure(
   groups: CellGroup[],
@@ -137,13 +152,16 @@ export function psthFigure(
   }
   const seconds = (bin: number) =>
     (bin === bins - 1 && partialMs !== null ? partialMs : width) / 1000;
+  // A lone bin is all there is to smooth, cut short or not.
+  const dropLast = partialMs !== null && sigmaMs > 0 && bins > 1;
   const lines = groups.map((group, g) =>
     psthPoints(
       counts[g].map((count, bin) => count / (group.cells.length * seconds(bin))),
       from,
       to,
       width,
-      sigmaMs
+      sigmaMs,
+      dropLast
     )
   );
   return timeCourseFigure(
@@ -155,7 +173,7 @@ export function psthFigure(
       yLabel: 'Rate (Hz)',
       steps: sigmaMs === 0,
       fill: true,
-      note: psthNote(width, sigmaMs, partialMs),
+      note: psthNote(width, sigmaMs, partialMs, dropLast),
       partial:
         partialMs === null
           ? undefined
