@@ -3,7 +3,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { nodesWorkerRegistry } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesOpenParams, nodesSessionKey } from '@/features/circuit-nodes/hooks/use-nodes-worker';
-import { isBiophysical } from '@/features/circuit-nodes/population-utils';
+import {
+  hasPositions,
+  isBiophysical,
+  NO_NAMES,
+  PopulationWithoutPositionsError,
+} from '@/features/circuit-nodes/population-utils';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -37,6 +42,8 @@ type Result = {
   placed: PlacedPopulation[];
   /** Why a population could not be placed, by name. */
   failures: ReadonlyMap<string, Error>;
+  /** The names in `failures` that failed for want of x/y/z. */
+  positionless: ReadonlySet<string>;
   /** Every population has either been placed or given up on. */
   settled: boolean;
   /**
@@ -73,7 +80,8 @@ type Result = {
  * also reaches the viewer.
  *
  * A population whose file will not open, or whose nodes carry no positions
- * (typically an input population), lands in `failures` instead of throwing.
+ * (typically an input population, as a {@link PopulationWithoutPositionsError}),
+ * lands in `failures` instead of throwing.
  * Only the caller knows which population's failure is fatal and which is
  * context that can go undrawn.
  *
@@ -176,6 +184,11 @@ export function usePopulationsPlacement({
           forget(population);
         } else if (state.status === 'ready' && !reading) {
           reading = true;
+          if (state.columns && !hasPositions(state.columns)) {
+            settle(population, new PopulationWithoutPositionsError(population.name));
+            close(population);
+            return;
+          }
           const biophysical = isBiophysical(population);
           nodesWorkerRegistry
             .getGeometry(key, {
@@ -247,18 +260,25 @@ export function usePopulationsPlacement({
   }, [downloads]);
 
   const placement = useMemo(() => {
-    if (populations.length === 0) return { placed: [], failures: EMPTY_FAILURES, settled: true };
+    if (populations.length === 0)
+      return { placed: [], failures: EMPTY_FAILURES, positionless: NO_NAMES, settled: true };
     if (!circuitAssetId) return UNSETTLED;
 
     const placed: PlacedPopulation[] = [];
     const failures = new Map<string, Error>();
+    let positionless: Set<string> | undefined;
     for (const population of populations) {
       const outcome = outcomes.get(nodesSessionKey(circuitId, circuitAssetId, population.name));
       if (outcome === undefined) return UNSETTLED;
-      if (outcome instanceof Error) failures.set(population.name, outcome);
-      else placed.push({ population, geometry: outcome });
+      if (outcome instanceof Error) {
+        failures.set(population.name, outcome);
+        if (outcome instanceof PopulationWithoutPositionsError) {
+          positionless ??= new Set();
+          positionless.add(population.name);
+        }
+      } else placed.push({ population, geometry: outcome });
     }
-    return { placed, failures, settled: true };
+    return { placed, failures, positionless: positionless ?? NO_NAMES, settled: true };
   }, [populations, outcomes, circuitId, circuitAssetId]);
 
   return useMemo(
@@ -272,4 +292,4 @@ export function usePopulationsPlacement({
 const EMPTY_OUTCOMES: ReadonlyMap<string, NodeGeometry | Error> = new Map();
 const EMPTY_DOWNLOADS: ReadonlyMap<string, DownloadProgress> = new Map();
 const EMPTY_FAILURES: ReadonlyMap<string, Error> = new Map();
-const UNSETTLED = { placed: [], failures: EMPTY_FAILURES, settled: false };
+const UNSETTLED = { placed: [], failures: EMPTY_FAILURES, positionless: NO_NAMES, settled: false };

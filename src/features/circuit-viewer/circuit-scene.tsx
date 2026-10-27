@@ -1,12 +1,13 @@
 import { RiCloseLine } from '@remixicon/react';
 import chroma from 'chroma-js';
+import { isEqual } from 'es-toolkit';
 import { useAtomValue } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
-import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -206,6 +207,31 @@ export function CircuitScene({
     [circuitConfig, populationName]
   );
 
+  // Reported by whichever viewer draws the circuit, and kept with the circuit it
+  // came from so another circuit's report never applies to this one.
+  const [reportedPositionless, setReportedPositionless] = useState<{
+    circuitId: string;
+    names: ReadonlySet<string>;
+  } | null>(null);
+  const circuitId = circuit?.id;
+  const handlePositionlessPopulationsChange = useCallback(
+    (names: ReadonlySet<string>) => {
+      if (!circuitId) return;
+      // Kept as it was when the names are: a viewer reports an empty set as it
+      // mounts, and an equal one on every unrelated retry.
+      setReportedPositionless((previous) => {
+        const current = previous?.circuitId === circuitId ? previous.names : NO_NAMES;
+        return isEqual(current, names) ? previous : { circuitId, names };
+      });
+    },
+    [circuitId]
+  );
+  const positionless =
+    reportedPositionless && reportedPositionless.circuitId === circuitId
+      ? reportedPositionless.names
+      : NO_NAMES;
+  const subjectUnplaceable = population !== undefined && positionless.has(population.name);
+
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
@@ -331,6 +357,7 @@ export function CircuitScene({
       // that is the one on show.
       selected: population?.name,
       onSelect: handlePopulationClick,
+      positionless,
     };
   }, [
     hasPopulationsChecklist,
@@ -339,6 +366,7 @@ export function CircuitScene({
     onHiddenPopulationsChange,
     population?.name,
     handlePopulationClick,
+    positionless,
   ]);
 
   // Selecting the block an overlay came from highlights it, whichever root
@@ -517,6 +545,7 @@ export function CircuitScene({
             nodeColors={enableColorBy ? nodeColors : undefined}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
+            onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
@@ -550,6 +579,7 @@ export function CircuitScene({
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}
+              onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
               {...sharedVizProps}
             />
           )
@@ -565,7 +595,8 @@ export function CircuitScene({
         viz={{
           menu,
           onResetView,
-          colorBy: enableColorBy ? colorBy : undefined,
+          // Nothing of the population on show is drawn to colour.
+          colorBy: enableColorBy && !subjectUnplaceable ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,

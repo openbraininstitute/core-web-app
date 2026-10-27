@@ -9,6 +9,8 @@ export const ColumnKindDict = {
 
 export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
 
+export const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
+
 export type ColumnMeta = {
   name: string;
   kind: ColumnKind;
