@@ -12,7 +12,7 @@ import { refsFromValue, scanParamValueText } from '@/features/scan-config/compon
 import { useResolvedModelIdentifierEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/use-resolved-entities';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 
@@ -25,9 +25,10 @@ type Props = {
 
 /**
  * The simulation on show, picked by its place in the scan: a select per
- * parameter the campaign sweeps, labelled as the simulations list labels it.
- * Each value is in the status colour of the simulation it leads to, and only a
- * finished one, the only kind with results to show, can be picked.
+ * parameter the campaign sweeps, labelled as the simulations list labels it,
+ * joined on one pill where there are several. Each value is in the status
+ * colour of the simulation it leads to, and only a finished one, the only kind
+ * with results to show, can be picked.
  */
 export function ScanParameterPicker({
   simulations,
@@ -54,33 +55,37 @@ export function ScanParameterPicker({
   const swept = useMemo(() => sweptParameters(simulations), [simulations]);
   if (!active) return null;
 
-  return (
-    <div className="flex min-w-0 items-center gap-2">
-      {swept.map(({ key, values }) => {
-        const options = values.map(({ id, value }) => {
-          const target = nearestSimulation(simulations, active, { [key]: id }) ?? active;
-          const status = statusMap.get(target.id) ?? ActivityStatus.CREATED;
-          return {
-            value: id,
-            label: scanParamValueText(value, nameById),
-            color: executionStatusColorMap[status],
-            detail: status,
-            disabled: status !== ActivityStatus.DONE && target.id !== active.id,
-          };
-        });
-        return (
-          <PillSelect
-            key={key}
-            label={key.split('.').at(-1) ?? key}
-            title={key}
-            value={scanValueId(active.scan_parameters?.[key])}
-            options={options}
-            onChange={(id) =>
-              onChange(nearestSimulation(simulations, active, { [key]: id }) ?? active)
-            }
-          />
-        );
-      })}
-    </div>
+  const joined = swept.length > 1;
+  const selects = swept.map(({ key, values }) => {
+    const options = values.map(({ id, value }) => {
+      const target = nearestSimulation(simulations, active, { [key]: id }) ?? active;
+      const status = statusMap.get(target.id) ?? ActivityStatus.CREATED;
+      return {
+        value: id,
+        label: scanParamValueText(value, nameById),
+        color: executionStatusColorMap[status],
+        detail: status,
+        disabled: status !== ActivityStatus.DONE && target.id !== active.id,
+      };
+    });
+    return (
+      <PillSelect
+        key={key}
+        label={key.split('.').at(-1) ?? key}
+        title={key}
+        value={scanValueId(active.scan_parameters?.[key])}
+        options={options}
+        onChange={(id) => onChange(nearestSimulation(simulations, active, { [key]: id }) ?? active)}
+        segment={joined}
+      />
+    );
+  });
+  // One status for them all: the simulation's they pick together.
+  return joined ? (
+    <PillGroup color={executionStatusColorMap[statusMap.get(active.id) ?? ActivityStatus.CREATED]}>
+      {selects}
+    </PillGroup>
+  ) : (
+    <div className="flex min-w-0 items-center gap-2">{selects}</div>
   );
 }

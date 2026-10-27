@@ -1,6 +1,7 @@
 'use client';
 
 import { RiArrowDownSLine } from '@remixicon/react';
+import { Children } from 'react';
 
 import {
   Select,
@@ -11,6 +12,8 @@ import {
   SelectTrigger,
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
+
+import type { ReactNode } from 'react';
 
 export type PillSelectOption = {
   value: string;
@@ -41,6 +44,34 @@ export const PILL_CLASS = cn(
 
 /** The same pill made round, for a button that is an icon alone, as tall as the pills beside it. */
 export const ROUND_PILL_CLASS = cn(PILL_CLASS, 'size-9 shrink-0 justify-center px-0 py-0');
+
+/** A PillSelect that is a part of a PillGroup: no pill of its own, its hover a band inside the group's. */
+const SEGMENT_CLASS =
+  'h-7 min-w-0 max-w-full gap-1 rounded-full border-0 bg-transparent px-2.5 py-0 font-semibold text-primary-9 shadow-none transition-colors hover:bg-neutral-100 data-[size=default]:h-7';
+
+/**
+ * PillSelects joined on one pill, a rule between each: one control with a
+ * menu per part, such as a simulation's coordinates in its scan. Each part is
+ * a PillSelect with `segment` set, and `color` a dot first that stands for
+ * what they pick together.
+ */
+export function PillGroup({ children, color }: { children: ReactNode; color?: string }) {
+  return (
+    <div className={cn(PILL_CLASS, 'min-w-0 gap-0 p-1 hover:bg-white')}>
+      {color && (
+        <span className="ml-2 mr-0.5 flex shrink-0">
+          <Dot color={color} />
+        </span>
+      )}
+      {Children.map(children, (child, index) => (
+        <>
+          {index > 0 && <span aria-hidden className="mx-0.5 h-4 w-px shrink-0 bg-neutral-200" />}
+          {child}
+        </>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Two or more choices on one pill, the chosen one filled: a switch with the
@@ -88,6 +119,7 @@ export function PillSelect({
   onChange,
   title,
   className,
+  segment = false,
 }: {
   label: string;
   /** Over the pill, for a label that is short for something longer. */
@@ -96,18 +128,23 @@ export function PillSelect({
   options: PillSelectOption[];
   onChange: (value: string) => void;
   className?: string;
+  /** A part of a PillGroup, whose own dot stands for the chosen one's. */
+  segment?: boolean;
 }) {
   const chosen = options.find((o) => o.value === value);
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger
         title={title}
-        className={cn(PILL_CLASS, 'h-auto min-w-0 max-w-full border-0', className)}
+        className={cn(
+          segment ? SEGMENT_CLASS : cn(PILL_CLASS, 'h-auto min-w-0 max-w-full border-0'),
+          className
+        )}
         icon={<RiArrowDownSLine className="size-4 shrink-0 opacity-100" />}
       >
         {/* Left out where the value says what it is. */}
         {label && <span className="shrink-0 text-neutral-400">{label}</span>}
-        {chosen?.color && <Dot color={chosen.color} />}
+        {chosen?.color && !segment && <Dot color={chosen.color} />}
         <span className="truncate">{chosen?.label ?? '—'}</span>
         {chosen?.tag && <Tag>{chosen.tag}</Tag>}
       </SelectTrigger>
