@@ -1,6 +1,18 @@
 import { describe, expect, it } from 'vitest';
 
-import { sortSpikes } from '@/features/spike-viewer/spike-trace';
+import { sortSpikes, spikesByCell } from '@/features/spike-viewer/spike-trace';
+
+describe('spikesByCell', () => {
+  it('lists each cell’s spikes in time order, leaving out ids that name no cell', () => {
+    // Spike 1 fires at a fractional id and spike 3 at a negative one: neither is a row.
+    const { starts, spikes } = spikesByCell(Float64Array.from([2, 1.5, 0, -1, 2]));
+    const of = (cell: number) => Array.from(spikes.subarray(starts[cell], starts[cell + 1]));
+    expect(starts).toHaveLength(4);
+    expect(of(0)).toEqual([2]);
+    expect(of(1)).toEqual([]);
+    expect(of(2)).toEqual([0, 4]);
+  });
+});
 
 describe('sortSpikes', () => {
   it('returns the arrays themselves when the file is already in order', () => {

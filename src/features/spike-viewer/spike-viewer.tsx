@@ -23,7 +23,7 @@ type SpikeViewerProps = {
 };
 
 export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeViewerProps) {
-  const [spikes, error] = useSpikeTrace({ entityId, entityType, asset, ctx });
+  const [spikes, error, session] = useSpikeTrace({ entityId, entityType, asset, ctx });
   const { model, run } = useSimulation();
   // An ion-channel campaign has no cells to replay over, so it keeps the raster
   // it has always had and no toggle offers a view that cannot be drawn.
@@ -56,7 +56,7 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   // where the circuit preview's does.
   return (
     <ErrorBoundary FallbackComponent={SimpleErrorComponent} resetKeys={[data]}>
-      <SpikeReplayView data={data} subject={subject} reportPath={asset.path} />
+      <SpikeReplayView data={data} subject={subject} reportPath={asset.path} session={session} />
     </ErrorBoundary>
   );
 }

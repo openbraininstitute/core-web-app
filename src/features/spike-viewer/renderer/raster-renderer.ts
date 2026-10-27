@@ -9,6 +9,7 @@ import {
 } from '@/features/spike-viewer/renderer/axis-overlay';
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
+import { spikesByCell } from '@/features/spike-viewer/spike-trace';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
@@ -18,7 +19,7 @@ import type {
   ViewBounds,
 } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { HoverInfo } from '@/features/spike-viewer/renderer/interaction';
-import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
+import type { SpikePopulation, SpikesByCell } from '@/features/spike-viewer/spike-trace';
 
 export const POPULATION_COLORS = [
   '#1f77b4',
@@ -97,25 +98,6 @@ type PlottedPopulation = {
   /** Each cell's spikes, built the first time one is highlighted; see {@link spikesByCell}. */
   byCell?: SpikesByCell;
 };
-
-/** Each cell's spikes, by node id: `spikes[starts[id]]` to `spikes[starts[id + 1]]`, indices into the population's arrays, in time order. */
-type SpikesByCell = { starts: Uint32Array; spikes: Uint32Array };
-
-/**
- * The spikes of every cell, so pointing one out goes over its own spikes
- * rather than every spike of the population: two passes, once per data.
- */
-function spikesByCell(nodeIds: Float64Array): SpikesByCell {
-  let cells = 0;
-  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= cells) cells = nodeIds[i] + 1;
-  const starts = new Uint32Array(cells + 1);
-  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= 0) starts[nodeIds[i] + 1] += 1;
-  for (let cell = 0; cell < cells; cell++) starts[cell + 1] += starts[cell];
-  const filled = starts.slice(0, cells);
-  const spikes = new Uint32Array(starts[cells]);
-  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= 0) spikes[filled[nodeIds[i]]++] = i;
-  return { starts, spikes };
-}
 
 export class RasterRenderer {
   private glCanvas: HTMLCanvasElement;

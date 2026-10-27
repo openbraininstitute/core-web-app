@@ -128,8 +128,34 @@ export function psthFigure(
   rowCount: number,
   groupLabel: string | undefined,
   color: string,
-  { binMs, sigmaMs }: PsthOptions = DEFAULT_PSTH
+  options: PsthOptions = DEFAULT_PSTH
 ): Figure {
+  const series = psthSeries(groups, spikes, span, rowCount, options);
+  return psthSeriesFigure(groups, series, span, groupLabel, color, options);
+}
+
+/** The lines of a PSTH before they are drawn: worked out where the spikes are, drawn where the page is. */
+export type PsthSeries = {
+  /** The lines' times, which they share. */
+  x: Float64Array;
+  /** A line per group, in the groups' order. */
+  ys: Float64Array[];
+  width: number;
+  bins: number;
+  /** How long a last bin the span's end cuts short is, in ms; null where the bins fit the span. */
+  partialMs: number | null;
+  /** Whether that bin is left out of the lines, as it is smoothed where there are others. */
+  dropLast: boolean;
+};
+
+/** The lines {@link psthFigure} draws. */
+export function psthSeries(
+  groups: CellGroup[],
+  spikes: SpikePopulation | undefined,
+  span: [number, number],
+  rowCount: number,
+  { binMs, sigmaMs }: PsthOptions = DEFAULT_PSTH
+): PsthSeries {
   const [from, to] = span;
   const { width, bins } = psthBins(span, binMs);
   const lastFrom = from + (bins - 1) * width;
@@ -164,9 +190,28 @@ export function psthFigure(
       dropLast
     )
   );
+  return {
+    x: lines[0]?.x ?? new Float64Array(0),
+    ys: lines.map((line) => line.y),
+    width,
+    bins,
+    partialMs,
+    dropLast,
+  };
+}
+
+/** {@link psthFigure}'s figure, from lines worked out elsewhere for the same groups. */
+export function psthSeriesFigure(
+  groups: CellGroup[],
+  { x, ys, width, bins, partialMs, dropLast }: PsthSeries,
+  [from, to]: [number, number],
+  groupLabel: string | undefined,
+  color: string,
+  { sigmaMs }: PsthOptions = DEFAULT_PSTH
+): Figure {
   return timeCourseFigure(
-    groups.map((group, g) => ({ name: group.name, cells: group.cells.length, y: lines[g].y })),
-    lines[0]?.x ?? new Float64Array(0),
+    groups.map((group, g) => ({ name: group.name, cells: group.cells.length, y: ys[g] })),
+    x,
     {
       groupLabel,
       color,
@@ -177,7 +222,7 @@ export function psthFigure(
       partial:
         partialMs === null
           ? undefined
-          : { bin: bins - 1, from: lastFrom, to, ms: partialMs, width },
+          : { bin: bins - 1, from: from + (bins - 1) * width, to, ms: partialMs, width },
     }
   );
 }

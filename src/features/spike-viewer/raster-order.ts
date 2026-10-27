@@ -7,15 +7,14 @@ import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker'
 import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import {
   compareGroupNames,
-  computeSpikeStatistics,
   SPIKE_STATISTICS,
   statisticLabel,
 } from '@/features/spike-viewer/spike-statistics/statistics';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
+import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { RowOrder } from '@/features/spike-viewer/renderer/raster-renderer';
-import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const NODE_ID_ORDER = '__node_id__';
 const STATISTIC_ORDER = 'spikes:';
@@ -30,8 +29,8 @@ type Args = {
   circuitConfig: ParsedCircuitConfig | undefined;
   populationName: string | undefined;
   cellCount: number | undefined;
-  /** The population's spikes, for ordering by a statistic of them. */
-  recorded: SpikePopulation | undefined;
+  /** The file's worker, which works out the statistics the rows can be ordered by. */
+  spikes: SpikeSession | null;
   timeRange: { min: number; max: number };
 };
 
@@ -46,7 +45,7 @@ export function useRasterOrder({
   circuitConfig,
   populationName,
   cellCount,
-  recorded,
+  spikes,
   timeRange,
 }: Args) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
@@ -83,34 +82,54 @@ export function useRasterOrder({
   // A property this population's file lacks reads as node id, and comes back with one that has it.
   const value = options.some((o) => o.value === chosen) ? chosen : NODE_ID_ORDER;
 
-  const [order, setOrder] = useState<{ key: string; order: RowOrder }>();
+  // An order by a statistic is kept with the spikes it ranked, so another file's never stands in.
+  const [order, setOrder] = useState<{
+    key: string;
+    spikes: SpikeSession | null;
+    order: RowOrder;
+  }>();
   const key = `${populationName}\n${cellCount}\n${value}`;
+  const byStatistic = value.startsWith(STATISTIC_ORDER);
   useEffect(() => {
     if (value === NODE_ID_ORDER || cellCount === undefined) return;
     const label = options.find((o) => o.value === value)?.label ?? value;
     let cancelled = false;
     (async () => {
       let next: RowOrder | null = null;
-      if (value.startsWith(STATISTIC_ORDER)) {
+      if (byStatistic) {
         const statistic = SPIKE_STATISTICS.find((s) => `${STATISTIC_ORDER}${s.key}` === value);
-        if (!statistic) return;
-        const values = computeSpikeStatistics(recorded, cellCount, timeRange)[statistic.key];
+        if (!statistic || !spikes || !populationName) return;
+        const values = (await spikes.statistics(populationName, cellCount, timeRange))[
+          statistic.key
+        ];
         next = rankedOrder(values, label, statistic.format);
       } else if (status === 'ready') {
         next = orderOf(await getColumn(value), label);
       }
-      if (next && !cancelled) setOrder({ key, order: next });
+      if (next && !cancelled) setOrder({ key, spikes, order: next });
     })().catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [value, cellCount, options, recorded, timeRange, status, getColumn, key]);
+  }, [
+    value,
+    byStatistic,
+    cellCount,
+    options,
+    spikes,
+    populationName,
+    timeRange,
+    status,
+    getColumn,
+    key,
+  ]);
 
+  const current = order?.key === key && (!byStatistic || order.spikes === spikes);
   return {
     options,
     value,
     onChange: setChosen,
-    order: value !== NODE_ID_ORDER && order?.key === key ? order.order : undefined,
+    order: value !== NODE_ID_ORDER && current ? order?.order : undefined,
   };
 }
 

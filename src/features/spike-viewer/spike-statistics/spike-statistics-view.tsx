@@ -11,7 +11,7 @@ import {
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
-import { cachedSpikePca, pcaBins } from '@/features/spike-viewer/spike-statistics/pca';
+import { pcaBins } from '@/features/spike-viewer/spike-statistics/pca';
 import { pcaFigure } from '@/features/spike-viewer/spike-statistics/pca-figure';
 import {
   PcaControls,
@@ -25,18 +25,14 @@ import {
   pcaSpreadAtom,
   psthOptionsAtom,
 } from '@/features/spike-viewer/spike-statistics/plot-controls';
-import {
-  computeSpikeStatistics,
-  SPIKE_STATISTICS,
-} from '@/features/spike-viewer/spike-statistics/statistics';
+import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
 import {
   PlotsOverTable,
   pinnedStatisticColumns,
   StatisticsPlots,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
-import { psthFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
+import { psthSeriesFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
-import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -44,12 +40,12 @@ import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid
 import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
+import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { SpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
 import type {
   CellPlot,
   TimeCourse,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
-import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 const EMPTY_FILTER: FilterModel = {};
 
@@ -57,8 +53,8 @@ type Props = {
   circuit: ICircuit;
   circuitConfig: ParsedCircuitConfig | undefined;
   populationName: string | undefined;
-  /** The population's spikes; undefined when it recorded none. */
-  recorded: SpikePopulation | undefined;
+  /** The file's worker, which works out the population's statistics, PSTHs and PCAs from its spikes. */
+  spikes: SpikeSession | null;
   /** The run's span, in ms, which the rates are over. */
   timeRange: { min: number; max: number };
   color: string;
@@ -139,7 +135,7 @@ export function SpikeStatisticsView({
   circuit,
   circuitConfig,
   populationName,
-  recorded,
+  spikes,
   timeRange,
   color,
   tableOnly = false,
@@ -180,14 +176,48 @@ export function SpikeStatisticsView({
   });
   const ready = status === 'ready';
 
-  // Over the raster's span of time where it is zoomed to one, else the run's.
-  const statistics = useMemo(() => {
-    if (!ready) return null;
-    if (!windowTime) return computeSpikeStatistics(recorded, rowCount, timeRange);
-    const [from, to] = windowTime;
-    const inWindow = recorded && spikesBetween(recorded, from, to);
-    return computeSpikeStatistics(inWindow, rowCount, { min: from, max: to });
-  }, [ready, recorded, rowCount, timeRange, windowTime]);
+  // Over the raster's span of time where it is zoomed to one, else the run's,
+  // worked out by the file's worker and kept with what they were worked out for.
+  const windowMin = windowTime ? windowTime[0] : timeRange.min;
+  const windowMax = windowTime ? windowTime[1] : timeRange.max;
+  const [worked, setWorked] = useState<{
+    spikes: SpikeSession;
+    name: string;
+    rowCount: number;
+    min: number;
+    max: number;
+    statistics: SpikeStatistics;
+  }>();
+  useEffect(() => {
+    if (!ready || !spikes || !populationName) return;
+    let cancelled = false;
+    spikes
+      .statistics(populationName, rowCount, { min: windowMin, max: windowMax })
+      .then((found) => {
+        if (cancelled) return;
+        setWorked({
+          spikes,
+          name: populationName,
+          rowCount,
+          min: windowMin,
+          max: windowMax,
+          statistics: found,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, spikes, populationName, rowCount, windowMin, windowMax]);
+  const statistics =
+    ready &&
+    worked?.spikes === spikes &&
+    worked.name === populationName &&
+    worked.rowCount === rowCount &&
+    worked.min === windowMin &&
+    worked.max === windowMax
+      ? worked.statistics
+      : null;
 
   // The window's cells in the session, so the table can page only them.
   const [windowRegistered, setWindowRegistered] = useState<Uint8Array | null>(null);
@@ -378,25 +408,22 @@ export function SpikeStatisticsView({
 
   // Shown at first: each group's firing over time, over the raster's window where there is one.
   const psth = useAtomValue(psthOptionsAtom);
-  const timeCourse = useMemo<TimeCourse>(
-    () => ({
+  // Binned by the file's worker, drawn here.
+  const timeCourse = useMemo<TimeCourse>(() => {
+    const span: [number, number] = windowTime ?? [timeRange.min, timeRange.max];
+    return {
       label: 'PSTHs',
       figure: (groups, groupLabel) =>
-        psthFigure(
-          groups,
-          recorded,
-          windowTime ?? [timeRange.min, timeRange.max],
-          rowCount,
-          groupLabel,
-          color,
-          psth
-        ),
+        spikes && populationName
+          ? spikes
+              .psth(populationName, groups, span, rowCount, psth)
+              .then((series) => psthSeriesFigure(groups, series, span, groupLabel, color, psth))
+          : null,
       controls: <PsthControls />,
       events,
       timeCursor,
-    }),
-    [recorded, windowTime, timeRange, rowCount, color, psth, events, timeCursor]
-  );
+    };
+  }, [spikes, populationName, windowTime, timeRange, rowCount, color, psth, events, timeCursor]);
 
   // The cells' firing over time as points, placed by its principal components:
   // one analysis over every cell on show, coloured and grouped without changing it.
@@ -410,18 +437,13 @@ export function SpikeStatisticsView({
     const pca = (components: 2 | 3): CellPlot => ({
       value: `pca${components}d`,
       label: `${components}D PCA`,
+      // Found by the file's worker, which keeps the last few, so regrouping asks it again for nothing.
       figure: ({ cells, ...split }) => {
-        const found = cachedSpikePca(
-          recorded,
-          cells,
-          rowCount,
-          span,
-          pcaBin,
-          components,
-          pcaPartial
-        );
+        if (!spikes || !populationName) return null;
         const options = { ...split, spread: pcaSpread, points: pcaPoints };
-        return found && pcaFigure(found, rowCount, options, color);
+        return spikes
+          .pca(populationName, cells, rowCount, span, pcaBin, components, pcaPartial)
+          .then((found) => found && pcaFigure(found, rowCount, options, color));
       },
       colourBy: true,
       // Grouped, the colours are the cells', so they go with them.
@@ -437,7 +459,18 @@ export function SpikeStatisticsView({
       empty: `Too few cells or bins with spikes for ${components} components`,
     });
     return [pca(2), pca(3)];
-  }, [recorded, windowTime, timeRange, rowCount, color, pcaBin, pcaPartial, pcaSpread, pcaPoints]);
+  }, [
+    spikes,
+    populationName,
+    windowTime,
+    timeRange,
+    rowCount,
+    color,
+    pcaBin,
+    pcaPartial,
+    pcaSpread,
+    pcaPoints,
+  ]);
 
   if (!circuitConfig) {
     return (

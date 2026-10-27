@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { NodesSessionStatus } from '@/features/circuit-nodes/hooks/nodes-worker-manager';
@@ -143,13 +143,16 @@ describe('SpikeReplayView with input spikes', () => {
     expect(lastScene().populationName).toBe('cortex');
   });
 
-  it('lights an input population’s own somas on the somas-only viewer', () => {
+  it('lights an input population’s own somas on the somas-only viewer', async () => {
     render(<SpikeReplayView data={spikes('VPM')} subject={LARGE} />);
 
     expect(screen.getByRole('button', { name: 'Play spike replay' })).toBeEnabled();
     expect(screen.queryByRole('status')).toBeNull();
     expect(lastScene().populationName).toBe('VPM');
-    expect(lastScene().spikes.data).toMatchObject({ cellIndices: new Uint32Array([1]) });
+    // Worked out off the page's thread, so they come a moment after.
+    await waitFor(() =>
+      expect(lastScene().spikes.data).toMatchObject({ cellIndices: new Uint32Array([1]) })
+    );
   });
 
   it('shows only the raster for an input population on the per-cell viewer', () => {

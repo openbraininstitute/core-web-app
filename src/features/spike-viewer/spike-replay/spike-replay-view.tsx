@@ -28,6 +28,8 @@ import { SceneTime } from '@/features/spike-viewer/components/scene-time';
 import { useCellFocus } from '@/features/spike-viewer/hooks/use-cell-focus';
 import { useRasterWindow } from '@/features/spike-viewer/hooks/use-raster-window';
 import { useReplayClock } from '@/features/spike-viewer/hooks/use-replay-clock';
+import { useKeptSpikes, useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spikes';
+import { useSpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
@@ -38,7 +40,6 @@ import {
   rasterOnlyReason,
   replayNotice,
 } from '@/features/spike-viewer/spike-replay/replay-notice';
-import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import {
   TimeWindowFields,
   WindowResetButton,
@@ -51,7 +52,7 @@ import {
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
-import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
+import { withKeptSpikes } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
@@ -60,6 +61,7 @@ import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen'
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { Notice } from '@/features/spike-viewer/spike-replay/replay-notice';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
@@ -106,6 +108,11 @@ interface SpikeReplayViewProps {
   subject?: TSceneSubject;
   /** The report's path, by which the campaign's other simulations' copies are found. */
   reportPath?: string;
+  /**
+   * The worker that parsed `data` and holds a copy of it, to cut and count the
+   * spikes off this thread. Omit it to have the view start one of its own.
+   */
+  session?: SpikeSession | null;
 }
 
 /**
@@ -120,8 +127,12 @@ interface SpikeReplayViewProps {
  * then on, so switching views never tears down the WebGL context and
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
-export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
+export function SpikeReplayView({ data, subject, reportPath, session }: SpikeReplayViewProps) {
   const { timeline } = useSimulation();
+  // Every pass over the spikes - the cells on show, the replay's arrays, the
+  // statistics - is the file's worker's, so none of them holds up the page.
+  const ownSession = useSpikeSession(session === undefined ? data : null);
+  const spikeSession = session ?? ownSession;
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
@@ -201,7 +212,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     circuitConfig,
     populationName,
     cellCount,
-    recorded,
+    spikes: spikeSession,
     timeRange: data.timeRange,
   });
 
@@ -306,9 +317,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     for (const cell of filteredCells) if (cell < cellCount) flags[cell] = 1;
     return flags;
   }, [filteredCells, cellCount]);
+  // The raster's spikes, cut to those cells by the worker; all of them until it has.
+  const shownSpikes = useKeptSpikes(spikeSession, populationName, shownCells ?? null);
   const shownData = useMemo(
-    () => (shownCells && populationName ? keepSpikesOf(data, populationName, shownCells) : data),
-    [data, populationName, shownCells]
+    () =>
+      shownSpikes && populationName ? withKeptSpikes(data, populationName, shownSpikes) : data,
+    [data, populationName, shownSpikes]
   );
 
   // What the raster is zoomed to, once it rests: the statistics are over its
@@ -329,15 +343,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     for (let i = 0; i < flags.length; i++) flags[i] = windowCells[i] & shownCells[i];
     return flags;
   }, [windowCells, shownCells]);
-  const sceneData = useMemo(
-    () =>
-      sceneCells === shownCells
-        ? shownData
-        : sceneCells && populationName
-          ? keepSpikesOf(data, populationName, sceneCells)
-          : data,
-    [sceneCells, shownCells, shownData, data, populationName]
-  );
   // The table row under the pointer, else the cell clicked in the scene or the
   // raster: pointed out in both, and found in the table.
   const {
@@ -375,9 +380,11 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       : undefined;
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
-  const spikes = useMemo(
-    () => (replayable ? spikesToViewer(sceneData, populationName) : null),
-    [sceneData, populationName, replayable]
+  const spikes = useViewerSpikes(
+    spikeSession,
+    replayable ? populationName : undefined,
+    sceneCells,
+    data.timeRange
   );
   const showScene = view === MODES.Replay || view === MODES.Split;
   const isSplit = view === MODES.Split;
@@ -505,7 +512,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         circuit={circuit}
         circuitConfig={circuitConfig}
         populationName={populationName}
-        recorded={recorded}
+        spikes={spikeSession}
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
         focusedCell={docked ? (focusedCell ?? undefined) : undefined}
