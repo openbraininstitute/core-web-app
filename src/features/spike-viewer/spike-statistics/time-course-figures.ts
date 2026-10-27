@@ -9,6 +9,7 @@ import {
   OTHER_COLOR,
   withAlpha,
 } from '@/features/spike-viewer/spike-statistics/figure-kit';
+import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 
 import type { Data } from 'plotly.js-dist-min';
 import type { CellFrames } from '@/features/sonata-viewer/types';
@@ -20,6 +21,8 @@ import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 const PSTH_BINS = 100;
 /** Past this many a plot of them is slow to draw: a finer bin over a long run is widened to it. */
 const MAX_PSTH_BINS = 5000;
+/** The band over a last bin the span's end cuts short. */
+const PARTIAL_BIN_FILL = 'rgba(148, 163, 184, 0.25)';
 
 /**
  * How a PSTH bins its spikes and smooths their rate: a bin's width in ms, null
@@ -78,9 +81,10 @@ function psthPoints(rate: Float64Array, from: number, to: number, width: number,
   };
 }
 
-/** What a PSTH's note says of its bins: their width, and the smoothing over them. */
-function psthNote(width: number, sigmaMs: number): string {
-  const bins = `${Number(width.toPrecision(3))} ms bins`;
+/** What a PSTH's note says of its bins: their width, a last one cut short, and the smoothing over them. */
+function psthNote(width: number, sigmaMs: number, partialMs: number | null): string {
+  const last = partialMs === null ? '' : `, the last ${partialMs.toFixed(1)} ms`;
+  const bins = `${Number(width.toPrecision(3))} ms bins${last}`;
   return sigmaMs > 0 ? `${bins} · Gaussian σ ${sigmaMs} ms` : bins;
 }
 
@@ -94,7 +98,8 @@ function roundStep(target: number): number {
 /**
  * Each group's firing over time: its spikes per cell per second, in bins
  * across `span` - the run, or the raster's window - a line per group, in steps
- * or smoothed.
+ * or smoothed. A last bin the span's end cuts short is counted over the whole
+ * width as the others are, so it reads low: it is marked, with its width.
  */
 export function psthFigure(
   groups: CellGroup[],
@@ -107,13 +112,16 @@ export function psthFigure(
 ): Figure {
   const [from, to] = span;
   const { width, bins } = psthBins(span, binMs);
+  const lastFrom = from + (bins - 1) * width;
+  const partialMs = to - lastFrom < width * (1 - 1e-9) ? to - lastFrom : null;
   const groupOf = new Int32Array(rowCount).fill(-1);
   groups.forEach((group, g) => {
     for (const cell of group.cells) if (cell < rowCount) groupOf[cell] = g;
   });
   const counts = groups.map(() => new Float64Array(bins));
   if (spikes) {
-    const { nodeIds, timestamps } = spikes;
+    // The spikes are time-sorted, so only the span's are gone over.
+    const { nodeIds, timestamps } = spikesBetween(spikes, from, to);
     for (let i = 0; i < nodeIds.length; i++) {
       const t = timestamps[i];
       const cell = nodeIds[i];
@@ -141,7 +149,11 @@ export function psthFigure(
       yLabel: 'Rate (Hz)',
       steps: sigmaMs === 0,
       fill: true,
-      note: psthNote(width, sigmaMs),
+      note: psthNote(width, sigmaMs, partialMs),
+      partial:
+        partialMs === null
+          ? undefined
+          : { bin: bins - 1, from: lastFrom, to, ms: partialMs, width },
     }
   );
 }
@@ -192,6 +204,7 @@ function timeCourseFigure(
     steps,
     fill,
     note,
+    partial,
   }: {
     groupLabel: string | undefined;
     color: string;
@@ -200,6 +213,8 @@ function timeCourseFigure(
     /** Down to zero under a lone line, where it hides nothing: a rate, not a voltage. */
     fill: boolean;
     note?: string;
+    /** A last bin cut short, by its index and span: banded, and said so over its value. */
+    partial?: { bin: number; from: number; to: number; ms: number; width: number };
   }
 ): Figure {
   const hues = series.map((_, index) =>
@@ -243,6 +258,14 @@ function timeCourseFigure(
             value: steps ? `${time(x[i])}–${time(x[i + 1] ?? x[i])} ms` : `${time(x[i])} ms`,
           },
           { label: yLabel, value: compact(s.y[i]), strong: true },
+          ...(partial && i === partial.bin
+            ? [
+                {
+                  label: 'Partial bin',
+                  value: `${partial.ms.toFixed(1)} of ${Number(partial.width.toPrecision(3))} ms`,
+                },
+              ]
+            : []),
         ],
       };
     },
@@ -264,6 +287,22 @@ function timeCourseFigure(
         zeroline: false,
         ...(fill ? { rangemode: 'tozero' as const } : {}),
       },
+      shapes: partial
+        ? [
+            {
+              type: 'rect' as const,
+              xref: 'x' as const,
+              yref: 'paper' as const,
+              x0: partial.from,
+              x1: partial.to,
+              y0: 0,
+              y1: 1,
+              fillcolor: PARTIAL_BIN_FILL,
+              line: { width: 0 },
+              layer: 'below' as const,
+            },
+          ]
+        : undefined,
     },
   };
 }
