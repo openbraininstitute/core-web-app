@@ -65,7 +65,7 @@ const LaunchersByTaskType: Partial<
   },
 };
 
-function pickLauncher(
+export function pickLauncher(
   taskType: TObiOneTaskType,
   flags: ReturnType<typeof useFlags>
 ): TTaskLauncher {
