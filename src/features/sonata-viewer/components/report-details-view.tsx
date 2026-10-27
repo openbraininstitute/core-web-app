@@ -426,7 +426,8 @@ function SharedTracesPlot({
         yanchor: 'bottom',
         font: { size: 11, color: '#0f172a' },
       },
-      hovermode: 'closest',
+      // The line under the pointer is found here, by `lineAt`, not by Plotly.
+      hovermode: false,
       dragmode: 'zoom',
       font: { size: 11, color: AXIS_STYLE.text, family: AXIS_STYLE.font },
       xaxis: {
@@ -455,7 +456,7 @@ function SharedTracesPlot({
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);
-  const [hintUp, zoomed] = useZoomHint('traces');
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('traces');
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       const next = zoomAfter({ x: zoomX, y: zoom.y }, event as Readonly<Record<string, unknown>>);
@@ -467,30 +468,24 @@ function SharedTracesPlot({
     onDoubleClick: () => {
       setZoom(HOME);
       onTimeWindowChange?.(null);
+      zoomedOut();
     },
-    onClick: (event) => {
-      const line = drawn[event.points[0]?.curveNumber ?? -1];
-      const trace = line && population.traces[line.traceIndex];
-      if (trace) onCellClick?.(trace.nodeId);
-    },
-    onHover: (event) => {
-      const point = event.points[0];
-      const line = point && drawn[point.curveNumber];
-      const mouse = event.event as MouseEvent | undefined;
-      if (!line || !mouse || typeof point.x !== 'number' || typeof point.y !== 'number') {
-        setTip(undefined);
-        return;
-      }
-      setTip({
-        ...line,
-        time: point.x,
-        value: point.y,
-        clientX: mouse.clientX,
-        clientY: mouse.clientY,
-      });
-    },
-    onUnhover: () => setTip(undefined),
   });
+  // The line under the pointer, and where on it: only on a line, not near one.
+  const lineUnder = (clientX: number, clientY: number) => {
+    const layout = (graph as (HTMLElement & { _fullLayout?: PlotlyLayoutInternals }) | null)
+      ?._fullLayout;
+    if (!graph || !layout) return null;
+    const box = graph.getBoundingClientRect();
+    const hit = lineAt(
+      data,
+      layout,
+      clientX - box.left - layout._size.l,
+      clientY - box.top - layout._size.t
+    );
+    const line = hit && drawn[hit.curve];
+    return line ? { ...line, time: hit.time, value: hit.value } : null;
+  };
 
   // react-plotly follows the window, not this box, which a scene opening above shrinks.
   const boxRef = useRef<HTMLDivElement>(null);
@@ -570,7 +565,25 @@ function SharedTracesPlot({
   }, [placeCursor]);
 
   return (
-    <div ref={boxRef} className="relative min-h-0 flex-1">
+    // biome-ignore lint/a11y/useKeyWithClickEvents: a line picked with the pointer; the table's rows pick cells from the keyboard
+    <div
+      ref={boxRef}
+      className="relative min-h-0 flex-1"
+      onPointerMove={(e) => {
+        const line = lineUnder(e.clientX, e.clientY);
+        setTip(line ? { ...line, clientX: e.clientX, clientY: e.clientY } : undefined);
+      }}
+      // Not while a zoom is dragged out, which Plotly follows over a cover of its own.
+      onPointerDown={() => setTip(undefined)}
+      onPointerLeave={() => setTip(undefined)}
+      onClick={(e) => {
+        // A click on the plot itself, which Plotly passes on when nothing was dragged.
+        if (!(e.target instanceof Element) || !e.target.closest('.nsewdrag')) return;
+        const line = lineUnder(e.clientX, e.clientY);
+        const trace = line && population.traces[line.traceIndex];
+        if (trace) onCellClick?.(trace.nodeId);
+      }}
+    >
       <Plot
         data={data}
         layout={layout}
@@ -671,8 +684,77 @@ function clickHint(lines: Line[], population: PopulationMetadata, traceIndex: nu
 /** The parts of Plotly's laid-out graph the cursor reads. */
 type PlotlyLayoutInternals = {
   _size: { l: number; t: number; w: number; h: number };
-  xaxis?: { range: [number, number]; l2p: (value: number) => number };
+  xaxis?: {
+    range: [number, number];
+    l2p: (value: number) => number;
+    p2l: (pixel: number) => number;
+  };
+  yaxis?: { l2p: (value: number) => number };
 };
+
+/** How near the pointer has to come to a line, in px, for it to be the line under it. */
+const LINE_HIT_PX = 4;
+
+/** A line's segment under the pointer: which curve, and the time and value there. */
+type LineHit = { curve: number; time: number; value: number };
+
+/**
+ * The line under a point of the plot area, in its pixels: the nearest drawn
+ * segment within `LINE_HIT_PX`, the line drawn later winning a tie, as it is
+ * on top. Plotly's own hover takes the nearest sample within 20 px, on a line
+ * or beside it, and misses a spike's upstroke between its two samples.
+ */
+function lineAt(
+  traces: readonly Partial<PlotData>[],
+  layout: PlotlyLayoutInternals,
+  x: number,
+  y: number
+): LineHit | null {
+  const { xaxis, yaxis, _size: size } = layout;
+  if (!xaxis || !yaxis || x < 0 || y < 0 || x > size.w || y > size.h) return null;
+  const from = xaxis.p2l(x - LINE_HIT_PX);
+  const to = xaxis.p2l(x + LINE_HIT_PX);
+  let hit: LineHit | null = null;
+  let nearest = LINE_HIT_PX;
+  for (let curve = 0; curve < traces.length; curve++) {
+    const times = traces[curve].x as ArrayLike<number> | undefined;
+    const values = traces[curve].y as ArrayLike<number> | undefined;
+    if (!times || !values) continue;
+    // From the segment reaching into the pointer's span to the last starting in it.
+    const first = Math.max(0, firstAtOrAfter(times, from) - 1);
+    for (let k = first; k < times.length - 1 && times[k] <= to; k++) {
+      const ax = xaxis.l2p(times[k]);
+      const ay = yaxis.l2p(values[k]);
+      const dx = xaxis.l2p(times[k + 1]) - ax;
+      const dy = yaxis.l2p(values[k + 1]) - ay;
+      const length2 = dx * dx + dy * dy;
+      const along =
+        length2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / length2)) : 0;
+      const distance = Math.hypot(x - ax - along * dx, y - ay - along * dy);
+      if (distance <= nearest) {
+        nearest = distance;
+        hit = {
+          curve,
+          time: times[k] + along * (times[k + 1] - times[k]),
+          value: values[k] + along * (values[k + 1] - values[k]),
+        };
+      }
+    }
+  }
+  return hit;
+}
+
+/** Where `value` falls in ascending `sorted`: the index of the first at or after it. */
+function firstAtOrAfter(sorted: ArrayLike<number>, value: number): number {
+  let low = 0;
+  let high = sorted.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (sorted[mid] < value) low = mid + 1;
+    else high = mid;
+  }
+  return low;
+}
 
 /**
  * The zoom a relayout leaves, axis by axis: a range sets that axis, an
