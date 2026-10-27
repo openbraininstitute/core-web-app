@@ -8,6 +8,7 @@ import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listen
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { useCellRow } from '@/features/spike-viewer/cell-row';
 import { PlotTimeline } from '@/features/spike-viewer/components/plot-timeline';
+import { setsAxisRange, useZoomHint, ZoomHint } from '@/features/spike-viewer/components/zoom-hint';
 import {
   AXIS_STYLE,
   computeTicks,
@@ -51,6 +52,8 @@ const CONFIG: Partial<Config> = {
   displayModeBar: 'hover',
   // a double click resets through `setZoom`, which also refetches the whole run
   doubleClick: false,
+  // Its zoom-out tip is ours, over the plot zoomed.
+  showTips: false,
 };
 
 /** Either axis zoomed in by the user, or null for its home range. */
@@ -452,10 +455,12 @@ function SharedTracesPlot({
   // The graph once drawn, for the timings over it; a timing's card over a line's, which gives way.
   const [graph, setGraph] = useState<HTMLElement | null>(null);
   const [timingHovered, setTimingHovered] = useState(false);
+  const [hintUp, zoomed] = useZoomHint('traces');
   const attachListeners = usePlotListeners({
     onRelayout: (event) => {
       const next = zoomAfter({ x: zoomX, y: zoom.y }, event as Readonly<Record<string, unknown>>);
       if (!next) return;
+      if (setsAxisRange(event as Readonly<Record<string, unknown>>)) zoomed();
       setZoom(next);
       if (next.x !== zoomX) onTimeWindowChange?.(next.x);
     },
@@ -609,6 +614,7 @@ function SharedTracesPlot({
           hint={onCellClick && clickHint(lines, population, tip.traceIndex)}
         />
       )}
+      <ZoomHint visible={hintUp} />
     </div>
   );
 }
