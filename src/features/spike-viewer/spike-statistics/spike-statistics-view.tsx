@@ -11,7 +11,7 @@ import {
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
-import { cachedSpikePca } from '@/features/spike-viewer/spike-statistics/pca';
+import { cachedSpikePca, pcaBins } from '@/features/spike-viewer/spike-statistics/pca';
 import { pcaFigure } from '@/features/spike-viewer/spike-statistics/pca-figure';
 import {
   PcaControls,
@@ -19,6 +19,7 @@ import {
   PcaSpreadControl,
   PsthControls,
   pcaBinAtom,
+  pcaPartialBinAtom,
   pcaPointsAtom,
   pcaSpreadAtom,
   psthOptionsAtom,
@@ -399,22 +400,32 @@ export function SpikeStatisticsView({
   // The cells' firing over time as points, placed by its principal components:
   // one analysis over every cell on show, coloured and grouped without changing it.
   const pcaBin = useAtomValue(pcaBinAtom);
+  const pcaPartial = useAtomValue(pcaPartialBinAtom);
   const pcaSpread = useAtomValue(pcaSpreadAtom);
   const pcaPoints = useAtomValue(pcaPointsAtom);
   const cellPlots = useMemo<CellPlot[]>(() => {
     const span: [number, number] = windowTime ?? [timeRange.min, timeRange.max];
+    const { partialMs } = pcaBins(span, pcaBin);
     const pca = (components: 2 | 3): CellPlot => ({
       value: `pca${components}d`,
       label: `${components}D PCA`,
       figure: ({ cells, ...split }) => {
-        const found = cachedSpikePca(recorded, cells, rowCount, span, pcaBin, components);
+        const found = cachedSpikePca(
+          recorded,
+          cells,
+          rowCount,
+          span,
+          pcaBin,
+          components,
+          pcaPartial
+        );
         const options = { ...split, spread: pcaSpread, points: pcaPoints };
         return found && pcaFigure(found, rowCount, options, color);
       },
       colourBy: true,
       // Grouped, the colours are the cells', so they go with them.
       coloursWhenGrouped: pcaPoints,
-      controls: <PcaControls />,
+      controls: <PcaControls partialMs={partialMs} />,
       groupControls: (
         <>
           <PcaSpreadControl threeD={components === 3} />
@@ -424,7 +435,7 @@ export function SpikeStatisticsView({
       empty: `Too few cells or bins with spikes for ${components} components`,
     });
     return [pca(2), pca(3)];
-  }, [recorded, windowTime, timeRange, rowCount, color, pcaBin, pcaSpread, pcaPoints]);
+  }, [recorded, windowTime, timeRange, rowCount, color, pcaBin, pcaPartial, pcaSpread, pcaPoints]);
 
   if (!circuitConfig) {
     return (

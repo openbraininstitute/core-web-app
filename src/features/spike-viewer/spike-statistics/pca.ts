@@ -1,3 +1,5 @@
+import { spikesBetween } from '@/features/spike-viewer/spike-trace';
+
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 /**
@@ -32,10 +34,26 @@ function roundStep(target: number): number {
 }
 
 /**
+ * The bins across `span`: the width asked for, or a round one, within
+ * {@link MAX_BINS}; and how much of a last one the span's end leaves, in ms,
+ * or null where the bins fit the span.
+ */
+export function pcaBins([from, to]: [number, number], binMs: number | null) {
+  const length = Math.max(to - from, 1e-6);
+  const width = Math.max(binMs ?? roundStep(length / AUTO_BINS), length / MAX_BINS);
+  const bins = Math.max(1, Math.ceil(length / width));
+  const lastMs = length - (bins - 1) * width;
+  return { width, bins, partialMs: lastMs < width * (1 - 1e-9) ? lastMs : null };
+}
+
+/**
  * The principal components of `cells`' spike counts in bins across `span`,
  * `components` of them; null with too few cells or bins to find them. Found by
  * orthogonal iteration over the counts as a sparse matrix, centred on the fly,
  * so the silent bins of a large circuit cost nothing.
+ *
+ * A last bin the span's end cuts short holds fewer spikes for want of time,
+ * not of firing, so it is left out, its spikes with it, unless `includePartial`.
  */
 export function spikePca(
   spikes: SpikePopulation | undefined,
@@ -43,12 +61,14 @@ export function spikePca(
   rowCount: number,
   span: [number, number],
   binMs: number | null,
-  components: number
+  components: number,
+  includePartial = false
 ): SpikePca | null {
-  const [from, to] = span;
-  const length = Math.max(to - from, 1e-6);
-  const width = Math.max(binMs ?? roundStep(length / AUTO_BINS), length / MAX_BINS);
-  const bins = Math.max(1, Math.ceil(length / width));
+  const from = span[0];
+  const { width, partialMs, ...all } = pcaBins(span, binMs);
+  const dropLast = partialMs !== null && !includePartial && all.bins > 1;
+  const bins = dropLast ? all.bins - 1 : all.bins;
+  const to = dropLast ? from + bins * width : span[1];
   const n = cells.length;
   const k = Math.min(components, bins, n - 1);
   if (k < components) return null;
@@ -59,8 +79,10 @@ export function spikePca(
     if (cell < rowCount) rowOf[cell] = row;
   });
   const starts = new Uint32Array(n + 1);
-  const nodeIds = spikes?.nodeIds ?? [];
-  const timestamps = spikes?.timestamps ?? [];
+  // The spikes are time-sorted, so only the span's are gone over.
+  const within = spikes && spikesBetween(spikes, from, to);
+  const nodeIds = within?.nodeIds ?? [];
+  const timestamps = within?.timestamps ?? [];
   const rowOfSpike = (i: number) => {
     const t = timestamps[i];
     const cell = nodeIds[i];
@@ -224,16 +246,19 @@ export function cachedSpikePca(
   rowCount: number,
   span: [number, number],
   binMs: number | null,
-  components: number
+  components: number,
+  includePartial = false
 ): SpikePca | null {
-  if (!spikes) return spikePca(spikes, cells, rowCount, span, binMs, components);
+  if (!spikes) {
+    return spikePca(spikes, cells, rowCount, span, binMs, components, includePartial);
+  }
   let hash = 2166136261;
   for (let i = 0; i < cells.length; i++) hash = Math.imul(hash ^ cells[i], 16777619) >>> 0;
-  const key = `${cells.length}:${hash}:${rowCount}:${span[0]}:${span[1]}:${binMs}:${components}`;
+  const key = `${cells.length}:${hash}:${rowCount}:${span[0]}:${span[1]}:${binMs}:${components}:${includePartial}`;
   const known = cache.get(spikes) ?? new Map<string, SpikePca | null>();
   cache.set(spikes, known);
   if (known.has(key)) return known.get(key) ?? null;
-  const pca = spikePca(spikes, cells, rowCount, span, binMs, components);
+  const pca = spikePca(spikes, cells, rowCount, span, binMs, components, includePartial);
   if (known.size >= CACHED) known.delete(known.keys().next().value as string);
   known.set(key, pca);
   return pca;

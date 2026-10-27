@@ -68,15 +68,40 @@ export function PsthControls() {
 /** The bins the cells' firing is counted in for its principal components; Auto at first. */
 export const pcaBinAtom = atom<number | null>(null);
 
-/** The PCA's bin size, beside its plot: apart from the PSTHs', which suit finer bins. */
-export function PcaControls() {
+/** Whether the PCA counts a last bin the span's end cuts short; at first it leaves it out. */
+export const pcaPartialBinAtom = atom(false);
+
+/**
+ * The PCA's bin size, beside its plot: apart from the PSTHs', which suit finer
+ * bins. Where the span ends inside a bin, `partialMs` long, whether to count it.
+ */
+export function PcaControls({ partialMs }: { partialMs: number | null }) {
   const [binMs, setBinMs] = useAtom(pcaBinAtom);
+  const [includePartial, setIncludePartial] = useAtom(pcaPartialBinAtom);
+  const id = useId();
   return (
-    <BinSizeSelect
-      title="The width of the bins each cell's spikes are counted in: Auto takes about a hundred round ones over the span"
-      binMs={binMs}
-      onChange={setBinMs}
-    />
+    <>
+      <BinSizeSelect
+        title="The width of the bins each cell's spikes are counted in: Auto takes about a hundred round ones over the span"
+        binMs={binMs}
+        onChange={setBinMs}
+      />
+      {partialMs !== null && (
+        <div
+          className={cn(PILL_CLASS, 'gap-2')}
+          title="The span ends inside the last bin, which then holds fewer spikes for want of time, not of firing"
+        >
+          <Checkbox
+            id={id}
+            checked={includePartial}
+            onCheckedChange={(checked) => setIncludePartial(checked === true)}
+          />
+          <label htmlFor={id} className="cursor-pointer select-none">
+            Include partial ({partialMs.toFixed(1)} ms) final bin
+          </label>
+        </div>
+      )}
+    </>
   );
 }
 
