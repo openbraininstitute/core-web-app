@@ -5,7 +5,10 @@ import {
   getCircuitHierarchyByDerivation,
   getCircuits,
 } from '@/api/entitycore/queries/model/circuit';
-import { DerivationTypeDictionary } from '@/api/entitycore/types/entities/derivation';
+import {
+  CircuitDerivationColumnExpand,
+  DerivationTypeDictionary,
+} from '@/api/entitycore/types/entities/derivation';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
 import { circuitScaleFilter } from '@/entity-configuration/domain/model/circuit';
@@ -117,14 +120,14 @@ export function createCircuitDataSource(
             withFacets: false,
             virtualLabId,
             projectId,
-            expand: 'generated_from_derivations',
+            expand: CircuitDerivationColumnExpand,
             ...circuitScaleFilter,
           }),
           queryFn: () =>
             getCircuits({
               withFacets: false,
               context: virtualLabId && projectId ? workspace : undefined,
-              expand: 'generated_from_derivations',
+              expand: CircuitDerivationColumnExpand,
               filters: {
                 page: 1,
                 page_size: DEFAULT_PAGE_SIZE,
