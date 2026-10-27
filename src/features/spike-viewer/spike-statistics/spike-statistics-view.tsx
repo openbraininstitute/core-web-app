@@ -15,6 +15,7 @@ import { cachedSpikePca, pcaBins } from '@/features/spike-viewer/spike-statistic
 import { pcaFigure } from '@/features/spike-viewer/spike-statistics/pca-figure';
 import {
   PcaControls,
+  PcaPartialBinControl,
   PcaPointsControl,
   PcaSpreadControl,
   PsthControls,
@@ -425,7 +426,8 @@ export function SpikeStatisticsView({
       colourBy: true,
       // Grouped, the colours are the cells', so they go with them.
       coloursWhenGrouped: pcaPoints,
-      controls: <PcaControls partialMs={partialMs} />,
+      controls: <PcaControls />,
+      trailingControls: partialMs !== null && <PcaPartialBinControl />,
       groupControls: (
         <>
           <PcaSpreadControl threeD={components === 3} />

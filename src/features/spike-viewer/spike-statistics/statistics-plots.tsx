@@ -106,6 +106,8 @@ export type CellPlot = {
   controls?: ReactNode;
   /** Shown after Group by while the cells are grouped: how the groups are drawn. */
   groupControls?: ReactNode;
+  /** Shown last of all: an option apart from the rest, such as whether a partial end bin counts. */
+  trailingControls?: ReactNode;
   /** Said in the plot's place when there is nothing to draw. */
   empty: string;
 };
@@ -428,6 +430,7 @@ export function StatisticsPlots({
           />
         )}
         {groupBy !== NO_GROUPING && hostPlot?.groupControls}
+        {hostPlot?.trailingControls}
         {summary}
       </div>
       <div className="relative min-h-0 flex-1 px-3 pb-3">
