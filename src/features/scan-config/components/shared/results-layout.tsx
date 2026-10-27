@@ -29,9 +29,9 @@ type Props = {
   middle: ReactNode;
   right: ReactNode;
   campaignId?: string;
-  /** After the report, such as a picker for which result is on show. */
+  /** Beside the back arrow on the bar over an open side panel, such as a picker for which result is on show. */
   sidePanelBar?: ReactNode;
-  /** Beside the back arrow on the bar over an open side panel: which report the statistics are of. */
+  /** After it: such as which report the statistics are of. */
   sidePanelReport?: ReactNode;
 };
 
@@ -317,8 +317,8 @@ export function ResultsLayout({
         <ChromeButton label="Back to the results" onClick={() => setOpen(false)}>
           <RiArrowLeftLine className="size-4" />
         </ChromeButton>
-        {sidePanelReport}
         {sidePanelBar && <div className="flex min-w-0 items-center">{sidePanelBar}</div>}
+        {sidePanelReport}
       </div>
       {/* the panel; closed or shut, it waits past the span's end */}
       <div
