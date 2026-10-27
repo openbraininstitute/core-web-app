@@ -485,6 +485,13 @@ export function SonataReportView({
     },
     [recordedNodes, handleTraceClick]
   );
+  // A tap on the scene's empty space lets the held cell go, as clicking it again
+  // does: picked alone, it gives back every cell; among ticks, it keeps them.
+  const handleSceneEmptyClick = useCallback(() => {
+    if (held === undefined) return;
+    if (pickedCells.length === 1 && pickedCells[0].nodeId === held) setPickedCells([]);
+    setHeldCell(null);
+  }, [held, pickedCells, setPickedCells]);
 
   // Docked, the panel's statistics box holds the plots, which the statistics
   // under the traces portal in, so the two share one tree.
@@ -562,6 +569,7 @@ export function SonataReportView({
         shownCells={sceneCells ?? undefined}
         selection={sceneSelection}
         onCellClick={handleSceneCellClick}
+        onEmptyClick={handleSceneEmptyClick}
         bare={docked}
         active={showScene}
         speed={sceneSpeed}
