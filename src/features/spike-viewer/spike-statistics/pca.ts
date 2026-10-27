@@ -36,12 +36,13 @@ function roundStep(target: number): number {
 /**
  * The bins across `span`: the width asked for, or a round one, within
  * {@link MAX_BINS}; and how much of a last one the span's end leaves, in ms,
- * or null where the bins fit the span.
+ * or null where the bins fit the span. A hair over a whole number of bins is
+ * float error in `to - from`, not a bin more.
  */
 export function pcaBins([from, to]: [number, number], binMs: number | null) {
   const length = Math.max(to - from, 1e-6);
   const width = Math.max(binMs ?? roundStep(length / AUTO_BINS), length / MAX_BINS);
-  const bins = Math.max(1, Math.ceil(length / width));
+  const bins = Math.max(1, Math.ceil(length / width - 1e-9));
   const lastMs = length - (bins - 1) * width;
   return { width, bins, partialMs: lastMs < width * (1 - 1e-9) ? lastMs : null };
 }

@@ -110,6 +110,8 @@ describe('spikePca', () => {
     }
     expect(pcaBins([0, 1050], 100)).toEqual({ width: 100, bins: 11, partialMs: 50 });
     expect(pcaBins([0, 1000], 100).partialMs).toBeNull();
+    // 512.2 - 12.2 is 500.00000000000006: float error, not a 0 ms bin to offer.
+    expect(pcaBins([12.2, 512.2], 5)).toMatchObject({ bins: 100, partialMs: null });
     expect(spikePca(population(pairs), range(10), 10, [0, 1050], 100, 2)).toBeNull();
     const counted = spikePca(population(pairs), range(10), 10, [0, 1050], 100, 2, true);
     expect(counted?.explained[0]).toBeCloseTo(1, 9);
