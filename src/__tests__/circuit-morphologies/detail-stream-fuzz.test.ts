@@ -90,27 +90,32 @@ describe('DetailStream, over a long run of views', () => {
       // Every segment drawn is of one level of its box, and each box drawn is whole.
       const words = geometry.getAttribute('aCell').array as Uint32Array;
       const drawn = new Map<number, { level: number; n: number }>();
-      // A base in the room kept for it, and no other level there.
-      const misplaced: number[] = [];
+      const faults: string[] = [];
       for (let i = 0; i < geometry.instanceCount; i++) {
         if (words[i] >>> TYPE_SHIFT === HOLE) continue;
         const cell = words[i] & CELL_MASK;
         const box = Math.floor(cell / 10);
         const level = cell % 10;
         const was = drawn.get(box);
-        if (was) expect(was.level).toBe(level);
-        else expect(i % BLOCK).toBe(0);
-        if (i < arena.baseRoom !== (withBase && level === 2)) misplaced.push(i);
+        if (was && was.level !== level)
+          faults.push(`box ${box} at levels ${was.level} and ${level}`);
+        if (!was && i % BLOCK !== 0) faults.push(`box ${box} starts at ${i}, inside a block`);
+        // A base in the room kept for it, and no other level there.
+        if (i < arena.baseRoom !== (withBase && level === 2)) faults.push(`level ${level} at ${i}`);
         drawn.set(box, { level, n: (was?.n ?? 0) + 1 });
       }
-      expect(misplaced).toEqual([]);
       for (const [box, { level, n }] of drawn) {
-        expect(n).toBe(levels[level].segments[box]);
-        expect(arena.sizeOf(box)).toBe(withBase && level === 2 ? undefined : n);
+        if (n !== levels[level].segments[box]) faults.push(`box ${box} with ${n} segments`);
+        if (arena.sizeOf(box) !== (withBase && level === 2 ? undefined : n)) {
+          faults.push(`box ${box} sized ${arena.sizeOf(box)}`);
+        }
       }
       if (withBase && step > 20) {
-        expect(levels[2].segments.every((n, box) => n === 0 || drawn.has(box))).toBe(true);
+        levels[2].segments.forEach((n, box) => {
+          if (n > 0 && !drawn.has(box)) faults.push(`box ${box} without its base`);
+        });
       }
+      expect(faults, `step ${step}`).toEqual([]);
     }
   });
 });
