@@ -478,12 +478,14 @@ export function SonataReportView({
         }
       : undefined;
 
-  // A recorded cell clicked in the scene, the same.
+  // A cell clicked in the scene, the same. One the report did not record has a
+  // row only under All, so the table goes there to bring it into view.
   const handleSceneCellClick = useCallback(
     (nodeId: number) => {
-      if (recordedNodes.has(nodeId)) handleTraceClick(nodeId);
+      if (!recordedNodes.has(nodeId) && scope !== 'all') setScope('all');
+      handleTraceClick(nodeId);
     },
-    [recordedNodes, handleTraceClick]
+    [recordedNodes, scope, setScope, handleTraceClick]
   );
   // A tap on the scene's empty space lets the held cell go, as clicking it again
   // does: picked alone, it gives back every cell; among ticks, it keeps them.
