@@ -329,6 +329,8 @@ function buildColumnDefs({
         onOpenChooser,
         tooltip: short ? p.headerName : undefined,
         unit: short?.unit,
+        // Only a label of two words, such as Spike Count, can take a second line.
+        wrapLabel: short !== undefined && /\s/.test(short.headerName),
       },
       // Tighter padding when narrow, so the numbers fit.
       headerClass: narrow ? [styles.pinned, styles.compact] : styles.pinned,

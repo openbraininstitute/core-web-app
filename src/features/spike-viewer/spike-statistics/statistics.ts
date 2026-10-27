@@ -9,7 +9,7 @@ export type CellStatistic<Key extends string = string> = {
   /** The column's name in the nodes session, prefixed so it never meets a node attribute. */
   column: string;
   label: string;
-  /** The column header where the table is narrow; the full label is its tooltip. */
+  /** The column header where the table is narrow, on two lines at most; the full label is its tooltip. */
   short: string;
   unit?: string;
   format: (value: number) => string;
@@ -30,7 +30,7 @@ export const SPIKE_STATISTICS: readonly SpikeStatistic[] = [
     column: 'spikes:count',
     heading: SPIKING_HEADING,
     label: 'Spike count',
-    short: 'Count',
+    short: 'Spike Count',
     format: (v) => v.toLocaleString(),
     step: () => 1,
   },

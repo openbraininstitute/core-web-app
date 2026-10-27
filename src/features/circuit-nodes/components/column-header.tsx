@@ -24,6 +24,8 @@ type Props = CustomHeaderProps & {
   tooltip?: string;
   /** Muted after the label, small: what the values are in, where the label is too short to say. */
   unit?: string;
+  /** The label on two lines rather than cut short, for a narrow column: "Spike Count". */
+  wrapLabel?: boolean;
 };
 
 export function ColumnHeader(props: Props) {
@@ -40,6 +42,7 @@ export function ColumnHeader(props: Props) {
     onOpenChooser,
     tooltip,
     unit,
+    wrapLabel,
   } = props;
 
   const [sort, setSortState] = useState(column.getSort());
@@ -146,7 +149,7 @@ export function ColumnHeader(props: Props) {
       disabled={!enableSorting}
     >
       {isNumeric && sortArrow}
-      <span className={styles.labelText}>{displayName}</span>
+      <span className={cn(styles.labelText, wrapLabel && styles.labelTextWrap)}>{displayName}</span>
       {unit && <span className={styles.unit}>{unit}</span>}
       {!isNumeric && sortArrow}
     </button>
@@ -180,7 +183,9 @@ export function ColumnHeader(props: Props) {
   );
 
   return (
-    <div className={cn(styles.header, isNumeric && styles.headerRight)}>
+    <div
+      className={cn(styles.header, isNumeric && styles.headerRight, wrapLabel && styles.wrapped)}
+    >
       <div className={styles.actions}>
         {filterBtn}
         {menuBtn}
