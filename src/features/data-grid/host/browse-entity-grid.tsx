@@ -428,6 +428,11 @@ export function EntityDataGrid({
         context: { virtualLabId, projectId },
       }),
     enabled: enabled && Boolean(facetsQueryFn),
+    // The buckets of a listing change when data is registered, not on every mount or
+    // focus: the facet call is entitycore's most expensive request, so a listing
+    // reopened within five minutes reuses the last answer.
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const externalFacets = facetsQueryFn ? (facetsQuery.data as TFacets | undefined) : undefined;
 
