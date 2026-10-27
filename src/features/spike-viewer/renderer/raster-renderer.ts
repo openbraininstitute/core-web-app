@@ -94,7 +94,28 @@ type PlottedPopulation = {
   timestamps: Float32Array;
   nodeIds: Float64Array;
   visible: boolean;
+  /** Each cell's spikes, built the first time one is highlighted; see {@link spikesByCell}. */
+  byCell?: SpikesByCell;
 };
+
+/** Each cell's spikes, by node id: `spikes[starts[id]]` to `spikes[starts[id + 1]]`, indices into the population's arrays, in time order. */
+type SpikesByCell = { starts: Uint32Array; spikes: Uint32Array };
+
+/**
+ * The spikes of every cell, so pointing one out goes over its own spikes
+ * rather than every spike of the population: two passes, once per data.
+ */
+function spikesByCell(nodeIds: Float64Array): SpikesByCell {
+  let cells = 0;
+  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= cells) cells = nodeIds[i] + 1;
+  const starts = new Uint32Array(cells + 1);
+  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= 0) starts[nodeIds[i] + 1] += 1;
+  for (let cell = 0; cell < cells; cell++) starts[cell + 1] += starts[cell];
+  const filled = starts.slice(0, cells);
+  const spikes = new Uint32Array(starts[cells]);
+  for (let i = 0; i < nodeIds.length; i++) if (nodeIds[i] >= 0) spikes[filled[nodeIds[i]]++] = i;
+  return { starts, spikes };
+}
 
 export class RasterRenderer {
   private glCanvas: HTMLCanvasElement;
@@ -546,9 +567,12 @@ export class RasterRenderer {
     ctx.fillStyle = HIGHLIGHT_COLOR;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
-    for (let i = 0; i < pop.nodeIds.length; i++) {
-      if (pop.nodeIds[i] !== highlight.cell) continue;
-      const t = pop.timestamps[i];
+    pop.byCell ??= spikesByCell(pop.nodeIds);
+    const { starts, spikes } = pop.byCell;
+    const cell = highlight.cell;
+    const end = cell >= 0 && cell + 1 < starts.length ? starts[cell + 1] : 0;
+    for (let s = end > 0 ? starts[cell] : 0; s < end; s++) {
+      const t = pop.timestamps[spikes[s]];
       if (t < view.xMin || t > view.xMax) continue;
       ctx.beginPath();
       ctx.arc(((t - view.xMin) / xRange) * plotRect.width, py, radius, 0, Math.PI * 2);
