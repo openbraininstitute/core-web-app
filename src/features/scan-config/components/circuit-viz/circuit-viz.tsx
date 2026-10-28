@@ -1,5 +1,5 @@
 import { useSetAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import { useMorphologyLocationSelection } from '@/features/scan-config/components/hooks/use-morphology-location-selection';
@@ -85,6 +85,8 @@ interface CircuitVizProps {
   onPopulationClick?: (populationName: string) => void;
   /** Called with the node index when a cell of the population on show is clicked. */
   onSubjectCellClick?: (index: number) => void;
+  /** Called with the populations whose nodes carry no x/y/z, whenever that set changes. */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   showAxons: boolean;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default. */
@@ -166,6 +168,7 @@ export function CircuitVisualization({
   recededColor,
   onPopulationClick,
   onSubjectCellClick,
+  onPositionlessPopulationsChange,
   ...props
 }: CircuitVizProps) {
   const source = useSmallCircuitSource({
@@ -181,6 +184,12 @@ export function CircuitVisualization({
     recededColor,
     withSynapses: circuitDrawsSynapses(props.circuit.scale),
   });
+  const { positionless } = source;
+  // Before paint, so the checklist and colour-by never show a frame that still counts them.
+  useLayoutEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
+
   const subjectName = props.population?.name;
   const handleCellClick = useCallback(
     (cell: MorphoViewerSmallCircuitCell | undefined) => {
@@ -221,6 +230,7 @@ type TCircuitVizViewProps = Omit<
   | 'recededColor'
   | 'onPopulationClick'
   | 'onSubjectCellClick'
+  | 'onPositionlessPopulationsChange'
   | 'nodeColors'
   | 'defaultColor'
 > & {

@@ -175,15 +175,12 @@ const extracellularRecordingArrayBrowseConfig = circuitBuildBrowseConfig({
 export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
   {
     ...WorkflowBrowseDefaults,
-    ...WorkflowStagePresets.ScanConfig,
+    ...WorkflowStagePresets.ScanConfigInEditorSelection,
     sourceType: ExtendedEntitiesTypeDict.IonChannelRecording,
     targetType: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
     label: 'Ion channel',
     breadcrumb: {
       root: 'Ion channel build',
-      steps: {
-        selection: 'Select ion channel recordings',
-      },
     },
     scanConfig: {
       definition: buildIonChannelWorkflow,
@@ -191,8 +188,6 @@ export const BuildWorkflows: readonly IWorkflowDescriptor[] = [
       configureBinding: buildIonChannelConfigureBinding(),
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.IonChannelRecording }],
-    requireFilters: false,
-    requireSpecies: false,
     order: 1,
     disabled: false,
   },

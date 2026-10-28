@@ -191,18 +191,12 @@ export function sortSpikes(
   return { timestamps: sortedTimestamps, nodeIds: sortedNodeIds };
 }
 
-/**
- * One population's spikes cut to the cells `keep` flags, by node id; every
- * other population as it was. The order is the parser's, so the result stays
- * time-sorted, and an id past the flags' end has no cell to keep.
- */
-/** A population's spikes from `fromMs` to `toMs`, as views of its own time-sorted arrays. */
-export function spikesBetween(
-  population: SpikePopulation,
+/** Where the spikes from `fromMs` to `toMs` start and end in time-sorted `timestamps`. */
+export function spikeBounds(
+  timestamps: ArrayLike<number>,
   fromMs: number,
   toMs: number
-): SpikePopulation {
-  const { timestamps } = population;
+): [number, number] {
   const at = (t: number, after: boolean) => {
     let lo = 0;
     let hi = timestamps.length;
@@ -213,33 +207,60 @@ export function spikesBetween(
     }
     return lo;
   };
-  const start = at(fromMs, false);
-  const end = at(toMs, true);
+  return [at(fromMs, false), at(toMs, true)];
+}
+
+/** A population's spikes from `fromMs` to `toMs`, as views of its own time-sorted arrays. */
+export function spikesBetween(
+  population: SpikePopulation,
+  fromMs: number,
+  toMs: number
+): SpikePopulation {
+  const [start, end] = spikeBounds(population.timestamps, fromMs, toMs);
   return {
     ...population,
     nodeIds: population.nodeIds.subarray(start, end),
-    timestamps: timestamps.subarray(start, end),
+    timestamps: population.timestamps.subarray(start, end),
   };
 }
 
-export function keepSpikesOf(data: SpikeData, populationName: string, keep: Uint8Array): SpikeData {
+/** `data` with `name`'s spikes in place of a cut of them, such as the cells on show; the rest as they were. */
+export function withKeptSpikes(
+  data: SpikeData,
+  name: string,
+  kept: Pick<SpikePopulation, 'nodeIds' | 'timestamps'>
+): SpikeData {
   return {
     ...data,
-    populations: data.populations.map((population) => {
-      if (population.name !== populationName) return population;
-      const { nodeIds, timestamps } = population;
-      let kept = 0;
-      for (let i = 0; i < nodeIds.length; i++) if (keep[nodeIds[i]] === 1) kept += 1;
-      const keptNodeIds = new Float64Array(kept);
-      const keptTimestamps = new Float32Array(kept);
-      let n = 0;
-      for (let i = 0; i < nodeIds.length; i++) {
-        if (keep[nodeIds[i]] !== 1) continue;
-        keptNodeIds[n] = nodeIds[i];
-        keptTimestamps[n] = timestamps[i];
-        n += 1;
-      }
-      return { ...population, nodeIds: keptNodeIds, timestamps: keptTimestamps };
-    }),
+    populations: data.populations.map((p) => (p.name === name ? { ...p, ...kept } : p)),
   };
+}
+
+/** Every cell's spikes, by node id: cell `c`'s are `spikes[starts[c]]` up to `spikes[starts[c + 1]]`. */
+export type SpikesByCell = {
+  starts: Uint32Array;
+  /** Indices into the population's arrays, a cell's in time order. */
+  spikes: Uint32Array;
+};
+
+/**
+ * Every cell's spikes, so the spikes of a few cells cost as much as those
+ * spikes rather than the whole population: two passes, once per data. An id
+ * that is not a whole number at or above 0 names no cell, and is left out.
+ */
+export function spikesByCell(nodeIds: Float64Array): SpikesByCell {
+  const isCell = (id: number) => id >= 0 && Number.isInteger(id);
+  let cells = 0;
+  for (let i = 0; i < nodeIds.length; i++) {
+    if (isCell(nodeIds[i]) && nodeIds[i] >= cells) cells = nodeIds[i] + 1;
+  }
+  const starts = new Uint32Array(cells + 1);
+  for (let i = 0; i < nodeIds.length; i++) if (isCell(nodeIds[i])) starts[nodeIds[i] + 1] += 1;
+  for (let cell = 0; cell < cells; cell++) starts[cell + 1] += starts[cell];
+  const filled = starts.slice(0, cells);
+  const spikes = new Uint32Array(starts[cells]);
+  for (let i = 0; i < nodeIds.length; i++) {
+    if (isCell(nodeIds[i])) spikes[filled[nodeIds[i]]++] = i;
+  }
+  return { starts, spikes };
 }

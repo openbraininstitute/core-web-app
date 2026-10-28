@@ -507,7 +507,7 @@ export function IonChannelModelProperties({
         />
         {showCustomTemperature && (
           <InputNumber
-            className="w-full"
+            className="w-full!"
             controls={false}
             disabled={disabled}
             placeholder="Temperature in °C"

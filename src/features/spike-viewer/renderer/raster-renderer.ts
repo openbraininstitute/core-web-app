@@ -9,6 +9,7 @@ import {
 } from '@/features/spike-viewer/renderer/axis-overlay';
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
+import { spikesByCell } from '@/features/spike-viewer/spike-trace';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
@@ -18,7 +19,7 @@ import type {
   ViewBounds,
 } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { HoverInfo } from '@/features/spike-viewer/renderer/interaction';
-import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
+import type { SpikePopulation, SpikesByCell } from '@/features/spike-viewer/spike-trace';
 
 export const POPULATION_COLORS = [
   '#1f77b4',
@@ -94,6 +95,8 @@ type PlottedPopulation = {
   timestamps: Float32Array;
   nodeIds: Float64Array;
   visible: boolean;
+  /** Each cell's spikes, built the first time one is highlighted; see {@link spikesByCell}. */
+  byCell?: SpikesByCell;
 };
 
 export class RasterRenderer {
@@ -546,9 +549,12 @@ export class RasterRenderer {
     ctx.fillStyle = HIGHLIGHT_COLOR;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
-    for (let i = 0; i < pop.nodeIds.length; i++) {
-      if (pop.nodeIds[i] !== highlight.cell) continue;
-      const t = pop.timestamps[i];
+    pop.byCell ??= spikesByCell(pop.nodeIds);
+    const { starts, spikes } = pop.byCell;
+    const cell = highlight.cell;
+    const end = cell >= 0 && cell + 1 < starts.length ? starts[cell + 1] : 0;
+    for (let s = end > 0 ? starts[cell] : 0; s < end; s++) {
+      const t = pop.timestamps[spikes[s]];
       if (t < view.xMin || t > view.xMax) continue;
       ctx.beginPath();
       ctx.arc(((t - view.xMin) / xRange) * plotRect.width, py, radius, 0, Math.PI * 2);

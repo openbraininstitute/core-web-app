@@ -68,6 +68,9 @@ export function PsthControls() {
 /** The bins the cells' firing is counted in for its principal components; Auto at first. */
 export const pcaBinAtom = atom<number | null>(null);
 
+/** Whether the PCA counts a last bin the span's end cuts short; at first it leaves it out. */
+export const pcaPartialBinAtom = atom(false);
+
 /** The PCA's bin size, beside its plot: apart from the PSTHs', which suit finer bins. */
 export function PcaControls() {
   const [binMs, setBinMs] = useAtom(pcaBinAtom);
@@ -77,6 +80,27 @@ export function PcaControls() {
       binMs={binMs}
       onChange={setBinMs}
     />
+  );
+}
+
+/** Last of the PCA's options, where the span ends inside a bin: whether to count that bin. */
+export function PcaPartialBinControl() {
+  const [includePartial, setIncludePartial] = useAtom(pcaPartialBinAtom);
+  const id = useId();
+  return (
+    <div
+      className={cn(PILL_CLASS, 'gap-2')}
+      title="The span ends inside the last bin, which then holds fewer spikes for want of time, not of firing"
+    >
+      <Checkbox
+        id={id}
+        checked={includePartial}
+        onCheckedChange={(checked) => setIncludePartial(checked === true)}
+      />
+      <label htmlFor={id} className="cursor-pointer select-none">
+        Include partial end bin
+      </label>
+    </div>
   );
 }
 

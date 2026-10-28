@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
-import { spikePca } from '@/features/spike-viewer/spike-statistics/pca';
+import { pcaBins, spikePca } from '@/features/spike-viewer/spike-statistics/pca';
 import {
   cholesky,
   ellipse,
@@ -99,6 +99,22 @@ describe('spikePca', () => {
 
   it('gives nothing for too few cells to find the components', () => {
     expect(spikePca(population([[10, 0]]), range(2), 2, [0, 100], 10, 2)).toBeNull();
+  });
+
+  it('leaves out a last bin the span cuts short, unless asked to count it', () => {
+    // Ten cells alike but for the last 50 ms of a span ten and a half bins long.
+    const pairs: [number, number][] = [];
+    for (let id = 0; id < 10; id++) {
+      pairs.push([50, id]);
+      for (let k = 0; k < id % 3; k++) pairs.push([1010 + k, id]);
+    }
+    expect(pcaBins([0, 1050], 100)).toEqual({ width: 100, bins: 11, partialMs: 50 });
+    expect(pcaBins([0, 1000], 100).partialMs).toBeNull();
+    // 512.2 - 12.2 is 500.00000000000006: float error, not a 0 ms bin to offer.
+    expect(pcaBins([12.2, 512.2], 5)).toMatchObject({ bins: 100, partialMs: null });
+    expect(spikePca(population(pairs), range(10), 10, [0, 1050], 100, 2)).toBeNull();
+    const counted = spikePca(population(pairs), range(10), 10, [0, 1050], 100, 2, true);
+    expect(counted?.explained[0]).toBeCloseTo(1, 9);
   });
 });
 

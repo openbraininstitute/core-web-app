@@ -45,6 +45,9 @@ const StatisticsPlot = dynamic(
   }
 );
 
+/** A figure as a host hands it over: at once, or once a worker has worked it out. */
+type FigureAnswer = Figure | null | Promise<Figure | null>;
+
 /** The statistics' own plots, or one a host draws (`CellPlot.value`). */
 type PlotKind =
   | 'timeCourse'
@@ -61,11 +64,11 @@ type PlotKind =
  * A plot over time the host can draw from what it holds - the spikes' PSTHs, a
  * report's mean - offered first, and shown at first unless the host picks
  * another: a figure for the cells on show split as Group by splits them, or
- * null while it is not ready.
+ * null while it is not ready; a promise of one where a worker works it out.
  */
 export type TimeCourse = {
   label: string;
-  figure: (groups: CellGroup[], groupLabel: string | undefined) => Figure | null;
+  figure: (groups: CellGroup[], groupLabel: string | undefined) => FigureAnswer;
   /** Shown after the plot's select while the course is up: what shapes it, such as a PSTH's bins. */
   controls?: ReactNode;
   /** The config's timings, marked over the course as over the raster. */
@@ -96,8 +99,8 @@ export type CellSplit = {
 export type CellPlot = {
   value: string;
   label: string;
-  /** Null when there is nothing to draw, such as too few cells. */
-  figure: (split: CellSplit) => Figure | null;
+  /** Null when there is nothing to draw, such as too few cells; a promise of it where a worker works it out. */
+  figure: (split: CellSplit) => FigureAnswer;
   /** A Colour by of its own beside Group by, so its cells can be coloured by one property and grouped by another. */
   colourBy?: boolean;
   /** False when nothing it draws once grouped takes the colouring, which leaves Colour by out then. */
@@ -106,6 +109,8 @@ export type CellPlot = {
   controls?: ReactNode;
   /** Shown after Group by while the cells are grouped: how the groups are drawn. */
   groupControls?: ReactNode;
+  /** Shown last of all: an option apart from the rest, such as whether a partial end bin counts. */
+  trailingControls?: ReactNode;
   /** Said in the plot's place when there is nothing to draw. */
   empty: string;
 };
@@ -308,7 +313,7 @@ export function StatisticsPlots({
 
   const binStep = statistic.step?.(spanMs);
   const empty = overCells ? cellGroups?.length === 0 : !scatter && groups?.length === 0;
-  const figure = useMemo<Figure | null>(() => {
+  const answer = useMemo<FigureAnswer>(() => {
     const shown = values?.[statistic.key];
     // Nothing is drawn out of view, so nothing is worked out for it.
     if (hidden || !values || !shown || cells === undefined) return null;
@@ -372,9 +377,34 @@ export function StatisticsPlots({
     colourGroups,
     shownCells,
   ]);
+  // A figure worked out elsewhere arrives later: the last of the same plot
+  // stands meanwhile, so a change of window or grouping redraws rather than blinks.
+  const [settled, setSettled] = useState<{
+    answer: Promise<Figure | null>;
+    kind: PlotKind;
+    figure: Figure | null;
+  }>();
+  useEffect(() => {
+    if (!(answer instanceof Promise)) return;
+    let cancelled = false;
+    const settle = (found: Figure | null) => {
+      if (!cancelled) setSettled({ answer, kind: plotKind, figure: found });
+    };
+    answer.then(settle, () => settle(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [answer, plotKind]);
+  const pending = answer instanceof Promise && settled?.answer !== answer;
+  const figure =
+    answer instanceof Promise
+      ? settled && (!pending || settled.kind === plotKind)
+        ? settled.figure
+        : null
+      : answer;
   // A host's plot that had the cells and still drew nothing has said why.
   const hostReady = cellGroups !== null && (!colouring || colourGroups !== null);
-  const hostEmpty = hostPlot !== undefined && hostReady && !empty && figure === null;
+  const hostEmpty = hostPlot !== undefined && hostReady && !empty && !pending && figure === null;
 
   if (hidden) return null;
 
@@ -428,6 +458,7 @@ export function StatisticsPlots({
           />
         )}
         {groupBy !== NO_GROUPING && hostPlot?.groupControls}
+        {hostPlot?.trailingControls}
         {summary}
       </div>
       <div className="relative min-h-0 flex-1 px-3 pb-3">

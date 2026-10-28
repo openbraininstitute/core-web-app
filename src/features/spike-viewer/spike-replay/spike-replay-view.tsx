@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 import { PopulationSelect } from '@/features/circuit-nodes/components/population-select';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { hasPositions } from '@/features/circuit-nodes/population-utils';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import {
   PaneResizeHandle,
@@ -29,15 +30,18 @@ import { SceneTime } from '@/features/spike-viewer/components/scene-time';
 import { useCellFocus } from '@/features/spike-viewer/hooks/use-cell-focus';
 import { useRasterWindow } from '@/features/spike-viewer/hooks/use-raster-window';
 import { useReplayClock } from '@/features/spike-viewer/hooks/use-replay-clock';
+import { useKeptSpikes, useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spikes';
+import { useSpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import { useRasterOrder } from '@/features/spike-viewer/raster-order';
 import { POPULATION_COLORS } from '@/features/spike-viewer/renderer/raster-renderer';
 import { useReportPopulation } from '@/features/spike-viewer/report-populations';
 import { useSimulation } from '@/features/spike-viewer/simulation-context';
 import {
-  replayablePopulation,
+  listedCellPopulation,
+  rasterOnlyNote,
+  rasterOnlyReason,
   replayNotice,
 } from '@/features/spike-viewer/spike-replay/replay-notice';
-import { spikesToViewer } from '@/features/spike-viewer/spike-replay/spikes-to-viewer';
 import {
   TimeWindowFields,
   WindowResetButton,
@@ -50,7 +54,7 @@ import {
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
-import { keepSpikesOf } from '@/features/spike-viewer/spike-trace';
+import { withKeptSpikes } from '@/features/spike-viewer/spike-trace';
 import { PillSelect } from '@/ui/molecules/select/pill-select';
 import { spikeReplayTour, useNextStepOnboarding } from '@/ui/segments/app-setup/discover-app';
 import { classNames } from '@/util/utils';
@@ -59,7 +63,9 @@ import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen'
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
+import type { Notice } from '@/features/spike-viewer/spike-replay/replay-notice';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
 
 const MODES = {
@@ -104,6 +110,11 @@ interface SpikeReplayViewProps {
   subject?: TSceneSubject;
   /** The report's path, by which the campaign's other simulations' copies are found. */
   reportPath?: string;
+  /**
+   * The worker that parsed `data` and holds a copy of it, to cut and count the
+   * spikes off this thread. Omit it to have the view start one of its own.
+   */
+  session?: SpikeSession | null;
 }
 
 /**
@@ -118,8 +129,12 @@ interface SpikeReplayViewProps {
  * then on, so switching views never tears down the WebGL context and
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
-export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewProps) {
+export function SpikeReplayView({ data, subject, reportPath, session }: SpikeReplayViewProps) {
   const { campaign: campaignInfo, run, timeline } = useSimulation();
+  // Every pass over the spikes - the cells on show, the replay's arrays, the
+  // statistics - is the file's worker's, so none of them holds up the page.
+  const ownSession = useSpikeSession(session === undefined ? data : null);
+  const spikeSession = session ?? ownSession;
   const [mode, setMode] = useState<ReplayMode>(MODES.Split);
   const [markerSize, setMarkerSize] = useState(DEFAULT_MARKER_SIZE);
   const [rasterHeight, setRasterHeight] = useAtom(rasterHeightAtom);
@@ -150,14 +165,16 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     [data, circuitConfig]
   );
   // Derived rather than corrected in an effect: the default may move when the
-  // circuit config arrives and names a replayable population, and the name on
+  // circuit config arrives and names a population of cells, and the name on
   // show has to give way to it without a render in between showing neither.
   // The choice is the report's, shared with the picker over the statistics.
+  // Input populations can be replayed too, but only once picked: the circuit's
+  // own cells are what a simulation is opened to see.
   const populationNames = useMemo(() => populations.map((p) => p.name), [populations]);
   const [populationName, setChosenPopulationName] = useReportPopulation(
     reportPath,
     populationNames,
-    populations.find((p) => replayablePopulation(circuitConfig?.nodes, p.name))?.name ??
+    populations.find((p) => listedCellPopulation(circuitConfig?.nodes, p.name))?.name ??
       populations[0]?.name
   );
   const recordedIndex = data.populations.findIndex((p) => p.name === populationName);
@@ -166,7 +183,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   // The spike file holds the cells that fired and says nothing about the rest,
   // so the axis span comes from the node file. This is the session the scene
   // and the nodes table share, so in the split it is already open.
-  const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
+  const listed = circuitConfig?.nodes.find((n) => n.name === populationName);
   const {
     rowCount,
     status: nodesStatus,
@@ -176,13 +193,13 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     enabled: circuit !== undefined,
     circuitId: circuit?.id ?? '',
     circuitAssetId: circuitConfig?.circuitAssetId ?? '',
-    population: nodePopulation,
+    population: listed,
   });
   // What the campaign's plots can be grouped by, read through the same session.
   const campaignGroupColumns = useMemo(() => campaignGroupingColumns(nodeColumns), [nodeColumns]);
   const nodesSession =
-    circuit && nodePopulation
-      ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', nodePopulation.name)
+    circuit && listed
+      ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', listed.name)
       : '';
   const countedCells = nodesStatus === 'ready' ? rowCount : undefined;
   // A hovered spike's cell, as the table has it: the file's columns and the statistics it pins.
@@ -200,22 +217,36 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     circuitConfig,
     populationName,
     cellCount,
-    recorded,
+    spikes: spikeSession,
     timeRange: data.timeRange,
   });
+
+  // Read off the same nodes session. Unknown until it is ready, and replayed in
+  // the meantime: switching population mid-play should not pause on a download.
+  const positioned = nodesStatus === 'ready' && nodeColumns ? hasPositions(nodeColumns) : undefined;
+  // The per-cell viewer cannot light an input population yet: it draws one as
+  // a cloud of somas with no brightness of their own.
+  const drawsEachCell = circuit !== undefined && circuitDrawsMorphologies(circuit.scale);
+  // Where the 3D view has nothing to show for these spikes at all, it drops
+  // away and the raster has the panel, the way it does with no subject.
+  const rasterOnly =
+    recorded === undefined
+      ? undefined
+      : rasterOnlyReason(listed, nodesStatus === 'error', positioned, drawsEachCell);
+  const offers3D = !!subject && rasterOnly === undefined;
 
   // Decided against the host's own copy of the circuit config — the same
   // query the scene resolves against — so the answer never lags the scene by
   // a render: switching populations mid-play used to trip the pause effect
-  // below on exactly that lag. A population the config does not list, or
-  // lists as virtual, has no cells to light; the scene then draws its own
-  // default and the notice in the header says why.
+  // below on exactly that lag. A population the config does not list has no
+  // cells to light; the scene then draws its own default and the notice in the
+  // header says why.
   //
   // Nothing recorded is nothing to replay. Past that, an MEModel is drawn from
   // the model itself and has one cell, so there is no config to ask.
   const replayable =
     recorded !== undefined &&
-    (memodel !== undefined || replayablePopulation(circuitConfig?.nodes, populationName));
+    (memodel !== undefined || (listed !== undefined && rasterOnly === undefined));
   // The statistics are listed against the node file, which only a circuit has.
   const statisticsAvailable = circuit !== undefined;
   // Inside a results layout the statistics open beside the viewer: everything
@@ -262,14 +293,15 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
 
   // With nothing to replay over the raster is the only view, whatever the mode
   // says: a split would show an empty pane and a playhead nothing can move.
+  // The mode itself is kept, for when another population brings the 3D back.
   // Docked it is whichever of the raster and the scene are up.
   const view = docked
-    ? sceneUp
+    ? sceneUp && offers3D
       ? rasterUp
         ? MODES.Split
         : MODES.Replay
       : MODES.Raster
-    : subject
+    : offers3D
       ? mode
       : MODES.Raster;
   const showStatistics = !docked && view === MODES.Statistics && statisticsAvailable;
@@ -294,9 +326,12 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     for (const cell of filteredCells) if (cell < cellCount) flags[cell] = 1;
     return flags;
   }, [filteredCells, cellCount]);
+  // The raster's spikes, cut to those cells by the worker; all of them until it has.
+  const shownSpikes = useKeptSpikes(spikeSession, populationName, shownCells ?? null);
   const shownData = useMemo(
-    () => (shownCells && populationName ? keepSpikesOf(data, populationName, shownCells) : data),
-    [data, populationName, shownCells]
+    () =>
+      shownSpikes && populationName ? withKeptSpikes(data, populationName, shownSpikes) : data,
+    [data, populationName, shownSpikes]
   );
 
   // What the raster is zoomed to, once it rests: the statistics are over its
@@ -317,15 +352,6 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     for (let i = 0; i < flags.length; i++) flags[i] = windowCells[i] & shownCells[i];
     return flags;
   }, [windowCells, shownCells]);
-  const sceneData = useMemo(
-    () =>
-      sceneCells === shownCells
-        ? shownData
-        : sceneCells && populationName
-          ? keepSpikesOf(data, populationName, sceneCells)
-          : data,
-    [sceneCells, shownCells, shownData, data, populationName]
-  );
   // The table row under the pointer, else the cell clicked in the scene or the
   // raster: pointed out in both, and found in the table.
   const {
@@ -363,9 +389,11 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
       : undefined;
   const shownSpikeCount =
     recordedIndex < 0 ? 0 : (shownData.populations[recordedIndex]?.timestamps.length ?? 0);
-  const spikes = useMemo(
-    () => (replayable ? spikesToViewer(sceneData, populationName) : null),
-    [sceneData, populationName, replayable]
+  const spikes = useViewerSpikes(
+    spikeSession,
+    replayable ? populationName : undefined,
+    sceneCells,
+    data.timeRange
   );
   const showScene = view === MODES.Replay || view === MODES.Split;
   const isSplit = view === MODES.Split;
@@ -446,7 +474,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     if (isSplit) playheadRef.current?.(liveTimeRef.current);
   }, [isSplit, playheadRef, liveTimeRef]);
 
-  const modeOptions = subject
+  const modeOptions = offers3D
     ? [
         {
           label: 'Raster plot',
@@ -493,7 +521,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
         circuit={circuit}
         circuitConfig={circuitConfig}
         populationName={populationName}
-        recorded={recorded}
+        spikes={spikeSession}
         onShownCellsChange={handleShownCells}
         onHoveredCellChange={handleHoveredCell}
         focusedCell={docked ? (focusedCell ?? undefined) : undefined}
@@ -565,15 +593,19 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
     </div>
   );
 
-  const notice = showScene && !replayable && (
-    <span role="status" className="text-xs text-amber-600">
-      {replayNotice(
-        recorded,
-        populationName,
-        circuitConfig?.nodes,
-        configLoading,
-        configError !== null
-      )}
+  let note: Notice | undefined;
+  if (rasterOnly !== undefined) note = rasterOnlyNote(rasterOnly, populationName);
+  else if (showScene && !replayable)
+    note = {
+      text: replayNotice(recorded, populationName, configLoading, configError !== null),
+      warning: true,
+    };
+  const notice = note && (
+    <span
+      role="status"
+      className={classNames('text-xs', note.warning ? 'text-amber-600' : 'text-neutral-500')}
+    >
+      {note.text}
     </span>
   );
 
@@ -650,7 +682,7 @@ export function SpikeReplayView({ data, subject, reportPath }: SpikeReplayViewPr
   const scene = sceneMounted && subject && (
     <CircuitScene
       {...subject}
-      largeCircuit={circuit !== undefined && !circuitDrawsMorphologies(circuit.scale)}
+      largeCircuit={circuit !== undefined && !drawsEachCell}
       active={showScene}
       features={SCENE_FEATURES}
       // Only a name the config backs with cells. A name the scene

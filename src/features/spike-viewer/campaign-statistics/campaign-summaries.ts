@@ -9,7 +9,7 @@ import { getSimulationExecutions } from '@/api/entitycore/queries/simulation/cam
 import { getSimulationResult } from '@/api/entitycore/queries/simulation/campaign/simulation-result';
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { computeSpikeStatistics } from '@/features/spike-viewer/spike-statistics/statistics';
-import { psthSeries } from '@/features/spike-viewer/spike-statistics/time-course-figures';
+import { psthCourse } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { spikesBetween } from '@/features/spike-viewer/spike-trace';
 import { withSimulationTimeWindow } from '@/features/spike-viewer/time-window';
 
@@ -219,7 +219,7 @@ export function useCampaignSummaries({
             ([id, s]) =>
               [
                 id,
-                psthSeries(
+                psthCourse(
                   s.spikes,
                   group.cells,
                   s.counts.length,

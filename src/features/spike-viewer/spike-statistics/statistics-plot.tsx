@@ -6,6 +6,7 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 
 import { usePlotListeners } from '@/features/sonata-viewer/hooks/use-plot-listeners';
 import { PlotTimeline } from '@/features/spike-viewer/components/plot-timeline';
+import { setsAxisRange, useZoomHint, ZoomHint } from '@/features/spike-viewer/components/zoom-hint';
 import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
 import type { Config } from 'plotly.js-dist-min';
@@ -20,6 +21,8 @@ const CONFIG: Partial<Config> = {
   displaylogo: false,
   responsive: true,
   displayModeBar: 'hover',
+  // Its zoom-out tip is ours, over the plot zoomed.
+  showTips: false,
   modeBarButtonsToRemove: [
     'select2d',
     'lasso2d',
@@ -50,7 +53,12 @@ export default function StatisticsPlot({
   const [timingHovered, setTimingHovered] = useState(false);
   // A 3D scene's hover says nothing of the pointer, so where it last was is kept.
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('statistics');
   const attachListeners = usePlotListeners({
+    onRelayout: (event) => {
+      if (setsAxisRange(event as Readonly<Record<string, unknown>>)) zoomed();
+    },
+    onDoubleClick: zoomedOut,
     onClick: (event) => onPointClick?.(event.points[0]?.customdata),
     onHover: (event) => {
       const point = event.points[0] as HoverPoint | undefined;
@@ -112,6 +120,7 @@ export default function StatisticsPlot({
         />
       )}
       {tip && figure.tooltip && !timingHovered && <TooltipCard {...tip} />}
+      <ZoomHint visible={hintUp} />
     </div>
   );
 }

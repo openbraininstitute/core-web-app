@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useCellRow } from '@/features/spike-viewer/cell-row';
 import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import { useZoomHint, ZoomHint } from '@/features/spike-viewer/components/zoom-hint';
 import { useRasterRenderer } from '@/features/spike-viewer/hooks/use-raster-renderer';
 import { TooltipCard } from '@/features/spike-viewer/spike-statistics/plot-tooltip';
 
@@ -54,11 +55,19 @@ export default function RasterPlot({
   // What is under the pointer, carded here: the renderer draws only canvases.
   const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
   const [spikeHover, setSpikeHover] = useState<SpikeHover | null>(null);
+  // A double-click zooms back out, as on the statistics' plots.
+  const [hintUp, zoomed, zoomedOut] = useZoomHint('raster');
+  const { onWindowChange } = options;
   const { setVisiblePopulations, setBaseSize, setPlayhead } = useRasterRenderer(containerRef, {
     data,
     populationName,
     cellCount,
     ...options,
+    onWindowChange: (window) => {
+      if (window) zoomed();
+      else zoomedOut();
+      onWindowChange?.(window);
+    },
     onEventsHover: setEventsHover,
     onSpikeHover: setSpikeHover,
   });
@@ -111,6 +120,8 @@ export default function RasterPlot({
       )}
       {eventsHover && <TimelineCard hover={eventsHover} />}
       {spikeHover && <SpikeCard hover={spikeHover} cellRows={cellRows} />}
+      {/* Under the raster's controls, which sit over its top. */}
+      <ZoomHint visible={hintUp} className="top-12" />
     </div>
   );
 }

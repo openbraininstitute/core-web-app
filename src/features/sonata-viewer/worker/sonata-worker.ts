@@ -16,6 +16,10 @@ import type {
 } from '../types';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB
+/** Values a read of the data matrix takes at most, rows at a time: about 16 MB. */
+const ROW_BLOCK_VALUES = 4_000_000;
+/** Values the frames handed to a scene come to at most, so a large report plays fewer of them: about 80 MB. */
+const MAX_FRAME_VALUES = 20_000_000;
 
 class SonataWorkerImpl {
   private file: File | null = null;
@@ -138,23 +142,53 @@ class SonataWorkerImpl {
     return this.metadata;
   }
 
+  private getDataset(populationName: string): Dataset {
+    if (!this.file) throw new Error('No file loaded.');
+    const dataset = this.file.get(`report/${populationName}/data`);
+    if (!(dataset instanceof Dataset)) {
+      throw new Error(`Dataset not found for population "${populationName}".`);
+    }
+    return dataset;
+  }
+
+  /** The whole data matrix, kept: the traces read one column at a time, which a slice of it makes slow. */
   private getPopulationData(populationName: string): Float32Array {
     const cached = this.populationDataCache.get(populationName);
     if (cached) return cached;
 
-    if (!this.file) throw new Error('No file loaded.');
-
-    const dataDataset = this.file.get(`report/${populationName}/data`);
-    if (!(dataDataset instanceof Dataset)) {
-      throw new Error(`Dataset not found for population "${populationName}".`);
-    }
-
-    const rawData = dataDataset.value;
-    const flat =
-      rawData instanceof Float32Array ? rawData : Float32Array.from(rawData as ArrayLike<number>);
-
+    const flat = asFloat32(this.getDataset(populationName).value);
     this.populationDataCache.set(populationName, flat);
     return flat;
+  }
+
+  /**
+   * The data matrix's rows from `first` to `last`, every `stride`th, a block of
+   * them at a time with `dataset.slice`, each handed to `visit` with the first
+   * row in it: a pass over the rows that never holds the whole matrix.
+   */
+  private forEachRowBlock(
+    populationName: string,
+    first: number,
+    last: number,
+    stride: number,
+    visit: (block: Float32Array, firstRow: number) => void
+  ) {
+    const shape = this.shapes.get(populationName);
+    if (!shape || last < first) return;
+    const dataset = this.getDataset(populationName);
+    const rowsPerBlock = Math.max(1, Math.floor(ROW_BLOCK_VALUES / Math.max(1, shape.numColumns)));
+    for (let start = first; start <= last; start += rowsPerBlock * stride) {
+      const stop = Math.min(last + 1, start + rowsPerBlock * stride);
+      visit(
+        asFloat32(
+          dataset.slice([
+            [start, stop, stride],
+            [0, shape.numColumns],
+          ])
+        ),
+        start
+      );
+    }
   }
 
   async getNodeTrace(req: DownsampleRequest): Promise<NodeTraceData> {
@@ -208,18 +242,25 @@ class SonataWorkerImpl {
     if (!this.metadata || !this.file) {
       throw new Error('No file loaded. Call loadFile first.');
     }
-    const flat = this.getPopulationData(populationName);
+    const shape = this.shapes.get(populationName);
+    if (!shape) throw new Error(`Population "${populationName}" not found.`);
     let min = Number.POSITIVE_INFINITY;
     let max = Number.NEGATIVE_INFINITY;
-    for (let i = 0; i < flat.length; i += 1) {
-      const v = flat[i];
-      if (v < min) min = v;
-      if (v > max) max = v;
-    }
+    this.forEachRowBlock(populationName, 0, shape.numTimesteps - 1, 1, (block) => {
+      for (let i = 0; i < block.length; i += 1) {
+        const v = block[i];
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+    });
     return min <= max ? [min, max] : [0, 1];
   }
 
-  /** Each recorded cell's values over the run, as frames: for a scene to play them. */
+  /**
+   * Each recorded cell's values over the run, as frames: for a scene to play
+   * them. Every so many rows of the matrix, read as such, and fewer frames the
+   * more cells there are, so the frames stay within {@link MAX_FRAME_VALUES}.
+   */
   async getCellFrames(populationName: string, maxFrames: number): Promise<CellFrames> {
     if (!this.metadata || !this.file) {
       throw new Error('No file loaded. Call loadFile first.');
@@ -237,19 +278,22 @@ class SonataWorkerImpl {
     const nodeIds = Uint32Array.from(columnOf.keys());
     const columns = Array.from(columnOf.values());
 
-    const stride = Math.max(1, Math.ceil(numTimesteps / Math.max(1, maxFrames)));
+    const budget = Math.max(2, Math.floor(MAX_FRAME_VALUES / Math.max(1, columns.length)));
+    const stride = Math.max(1, Math.ceil(numTimesteps / Math.max(1, Math.min(maxFrames, budget))));
     const frames = Math.ceil(numTimesteps / stride);
-    const flat = this.getPopulationData(populationName);
     const times = new Float64Array(frames);
     const values = new Float32Array(frames * columns.length);
     const { startTime, timeStep } = pop.timeConfig;
-    for (let f = 0; f < frames; f += 1) {
-      const row = f * stride;
-      times[f] = startTime + row * timeStep;
-      for (let c = 0; c < columns.length; c += 1) {
-        values[f * columns.length + c] = flat[row * numColumns + columns[c]];
+    this.forEachRowBlock(populationName, 0, numTimesteps - 1, stride, (block, firstRow) => {
+      const rows = block.length / numColumns;
+      for (let r = 0; r < rows; r += 1) {
+        const f = (firstRow + r * stride) / stride;
+        times[f] = startTime + f * stride * timeStep;
+        for (let c = 0; c < columns.length; c += 1) {
+          values[f * columns.length + c] = block[r * numColumns + columns[c]];
+        }
       }
-    }
+    });
     return transfer({ nodeIds, times, values }, [nodeIds.buffer, times.buffer, values.buffer]);
   }
 
@@ -280,7 +324,6 @@ class SonataWorkerImpl {
     const columns = Array.from(columnOf.values());
     const cells = columns.length;
 
-    const flat = this.getPopulationData(populationName);
     // The rows whose times fall in the window: every one without.
     const { startTime, timeStep } = pop.timeConfig;
     const first = window ? Math.max(0, Math.ceil((window[0] - startTime) / timeStep - 1e-9)) : 0;
@@ -296,26 +339,30 @@ class SonataWorkerImpl {
     const above = new Uint8Array(cells);
     // A crossing on the window's first row counts against the row before it.
     if (spikeThreshold !== null && first > 0) {
-      const row = (first - 1) * numColumns;
-      for (let c = 0; c < cells; c += 1)
-        above[c] = flat[row + columns[c]] >= spikeThreshold ? 1 : 0;
+      this.forEachRowBlock(populationName, first - 1, first - 1, 1, (block) => {
+        for (let c = 0; c < cells; c += 1) above[c] = block[columns[c]] >= spikeThreshold ? 1 : 0;
+      });
     }
-    // Row by row, the order the matrix is stored in.
-    for (let t = first; t <= last; t += 1) {
-      const row = t * numColumns;
-      for (let c = 0; c < cells; c += 1) {
-        const v = flat[row + columns[c]];
-        sum[c] += v;
-        squares[c] += v * v;
-        if (v < min[c]) min[c] = v;
-        if (v > max[c]) max[c] = v;
-        if (spikes && spikeThreshold !== null) {
-          const now = v >= spikeThreshold ? 1 : 0;
-          if (now && !above[c] && t > 0) spikes[c] += 1;
-          above[c] = now;
+    // Row by row, the order the matrix is stored in, a block of rows at a time.
+    this.forEachRowBlock(populationName, first, last, 1, (block, firstRow) => {
+      const rows = block.length / numColumns;
+      for (let r = 0; r < rows; r += 1) {
+        const t = firstRow + r;
+        const row = r * numColumns;
+        for (let c = 0; c < cells; c += 1) {
+          const v = block[row + columns[c]];
+          sum[c] += v;
+          squares[c] += v * v;
+          if (v < min[c]) min[c] = v;
+          if (v > max[c]) max[c] = v;
+          if (spikes && spikeThreshold !== null) {
+            const now = v >= spikeThreshold ? 1 : 0;
+            if (now && !above[c] && t > 0) spikes[c] += 1;
+            above[c] = now;
+          }
         }
       }
-    }
+    });
     const mean = new Float64Array(cells);
     const sd = new Float64Array(cells);
     for (let c = 0; c < cells; c += 1) {
@@ -363,6 +410,11 @@ class SonataWorkerImpl {
       });
     }
   }
+}
+
+/** A slice or a dataset's value as 32-bit floats, copied only when they are not already. */
+function asFloat32(raw: unknown): Float32Array {
+  return raw instanceof Float32Array ? raw : Float32Array.from(raw as ArrayLike<number>);
 }
 
 const worker = new SonataWorkerImpl();

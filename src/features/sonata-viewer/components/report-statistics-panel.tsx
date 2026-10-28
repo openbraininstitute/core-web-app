@@ -13,7 +13,6 @@ import {
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 
 import type { ComponentProps, ReactNode } from 'react';
-import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { CellStatistic } from '@/features/spike-viewer/spike-statistics/statistics';
 import type {
@@ -21,10 +20,7 @@ import type {
   TimeCourse,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 
-type TableProps = Omit<
-  ComponentProps<typeof ReportNodesTable>,
-  'pinnedColumns' | 'pinnedVersion' | 'quickFilters'
->;
+type TableProps = Omit<ComponentProps<typeof ReportNodesTable>, 'pinnedColumns' | 'pinnedVersion'>;
 
 type Props = {
   statistics: readonly CellStatistic[];
@@ -77,19 +73,6 @@ export function ReportStatisticsPanel({
   timeCourse,
 }: Props) {
   const pinnedColumns = useMemo(() => pinnedStatisticColumns(statistics), [statistics]);
-  // One click to the cells whose voltage crossed the spike threshold at all.
-  const quickFilters = useMemo<QuickFilter[] | undefined>(() => {
-    const spikes = statistics.find((s) => s.key === 'spikes');
-    return spikes
-      ? [
-          {
-            label: 'Spiking',
-            title: 'Only the cells whose voltage crossed −20 mV',
-            model: { [spikes.column]: { filterType: 'number', type: 'greaterThan', filter: '0' } },
-          },
-        ]
-      : undefined;
-  }, [statistics]);
 
   const plots = (
     <StatisticsPlots
@@ -113,12 +96,7 @@ export function ReportStatisticsPanel({
   const tableView = (
     <div className="flex h-full min-h-0 flex-col">
       {values ? (
-        <ReportNodesTable
-          {...table}
-          pinnedColumns={pinnedColumns}
-          pinnedVersion={values}
-          quickFilters={quickFilters}
-        />
+        <ReportNodesTable {...table} pinnedColumns={pinnedColumns} pinnedVersion={values} />
       ) : (
         // The table kept from the view before, over the same cells, until the statistics are in.
         <KeptNodesGridPlaceholder

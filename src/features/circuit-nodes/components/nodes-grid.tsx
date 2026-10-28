@@ -120,6 +120,15 @@ type Props = {
    */
   quickFilters?: readonly QuickFilter[];
   /**
+   * A switch over which of its cells the host lists, such as Recorded | All,
+   * after the quick filters: the host applies it to the rows it serves.
+   */
+  scope?: {
+    value: string;
+    options: { value: string; label: string; title?: string }[];
+    onChange: (value: string) => void;
+  };
+  /**
    * A row to bring into view and flash, by node id, such as a cell clicked in
    * a scene beside the table; a new `key` asks again for the same one.
    * `rowIndexOf` says where that node falls among the rows the grid's sort and
@@ -320,6 +329,8 @@ function buildColumnDefs({
         onOpenChooser,
         tooltip: short ? p.headerName : undefined,
         unit: short?.unit,
+        // Only a label of two words, such as Spike Count, can take a second line.
+        wrapLabel: short !== undefined && /\s/.test(short.headerName),
       },
       // Tighter padding when narrow, so the numbers fit.
       headerClass: narrow ? [styles.pinned, styles.compact] : styles.pinned,
@@ -374,6 +385,7 @@ export function NodesGrid({
   reset,
   resetRequest,
   quickFilters,
+  scope,
   focusRow,
   rowIndexOf,
   markedNodeId = null,
@@ -805,6 +817,9 @@ export function NodesGrid({
               ]}
             />
           ))}
+          {scope && (
+            <PillToggle value={scope.value} options={scope.options} onChange={scope.onChange} />
+          )}
         </div>
       </div>
       <div

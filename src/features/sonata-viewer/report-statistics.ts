@@ -70,7 +70,7 @@ export function reportStatistics(
       column: 'report:spikes',
       heading: SPIKING_HEADING,
       label: 'Spike count',
-      short: 'Count',
+      short: 'Spike Count',
       format: (v) => v.toLocaleString(),
       step: () => 1,
     });

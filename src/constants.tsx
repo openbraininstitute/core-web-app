@@ -68,6 +68,7 @@ export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof Workspace
 
 /** Top-level project pages shown in workspace navigation (Data, Workflows, etc.). */
 export const WorkspaceMainPages = {
+  Learn: 'learn',
   Data: WorkspaceSection.Data,
   Workflows: WorkspaceSection.GeneralWorkflow,
   Notebooks: WorkspaceSection.Notebooks,

@@ -9,6 +9,8 @@ export const ColumnKindDict = {
 
 export type ColumnKind = (typeof ColumnKindDict)[keyof typeof ColumnKindDict];
 
+export const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
+
 /** What a menu lists a node's own properties under, its neuron sets among them. */
 export const NEURON_HEADING = 'Neuron';
 
