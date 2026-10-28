@@ -73,14 +73,14 @@
   background: #f8fafc;
 }
 .homepage .site-header {
-  position: absolute;
-  width: 92%;
+  position: fixed;
+  width: 85%;
   inset: 24px 0 auto;
-  z-index: 5;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
+  padding: 14px 24px;
   border: 1px solid #ffffffb3;
   border-radius: 12px;
   background: linear-gradient(135deg, #ffffffad, #e5edf680);
@@ -89,6 +89,11 @@
     inset 0 1px 0 #ffffffcc,
     0 10px 32px #102c6026;
   backdrop-filter: blur(24px) saturate(150%);
+  transition:
+    width 0.24s ease,
+    inset-block-start 0.24s ease,
+    border-radius 0.24s ease,
+    padding 0.24s ease;
 }
 .homepage .site-header .wordmark img {
   filter: brightness(0) saturate(100%);
@@ -184,9 +189,10 @@
   display: flex;
   align-items: center;
   min-height: max(720px, 100svh);
-  width: min(1320px, calc(100% - 96px));
+  width: 85%;
   margin-inline: auto;
   padding-block: 160px 70px;
+  padding-inline: 25px;
   pointer-events: none;
 }
 .homepage .hero-copy {
@@ -216,13 +222,13 @@
   max-width: 430px;
 }
 .homepage .hero-label {
-  font-size: 16px;
+  font-family: var(--font-gabarito), sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.4;
   letter-spacing: 0.025em;
   margin: 0 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #365479;
+  color: var(--blue);
 }
 .homepage h1 {
   font:
@@ -254,6 +260,7 @@
   display: flex;
   align-items: center;
   gap: 24px;
+  margin-top: 32px;
 }
 .homepage .reassurance {
   font-size: 11px;
@@ -987,7 +994,7 @@
 /* Keep the message and account action readable over every carousel frame. */
 @media (max-width: 1100px) {
   .homepage .hero {
-    width: calc(100% - 64px);
+    width: calc(100% - 56px);
   }
   .homepage .hero-copy {
     width: 52%;
@@ -997,13 +1004,14 @@
   .homepage .site-header {
     width: calc(100% - 32px);
     inset-block-start: 16px;
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
   .homepage .hero {
     width: calc(100% - 40px);
     min-height: 1060px;
     align-items: flex-start;
     padding-block: 150px 320px;
+    padding-inline: 0;
   }
   .homepage .hero-copy {
     width: min(520px, 100%);
@@ -1013,7 +1021,8 @@
     font-size: 17px;
   }
   .homepage .hero-label {
-    margin-bottom: 18px;
+    font-size: 18px;
+    margin-bottom: 20px;
   }
   .homepage .tour-caption {
     min-height: 144px;
@@ -1021,6 +1030,24 @@
   .homepage .hero-actions .button {
     min-height: 52px;
     font-size: 15px;
+  }
+}
+.homepage .site-header.docked {
+  width: 100%;
+  inset-block-start: 0;
+  padding: 14px 32px;
+  border-inline: 0;
+  border-radius: 0;
+  background: linear-gradient(135deg, #ffffffed, #e5edf6eb);
+}
+@media (max-width: 800px) {
+  .homepage .site-header.docked {
+    padding: 12px 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .homepage .site-header {
+    transition: none;
   }
 }
 @media (prefers-reduced-transparency: reduce) {

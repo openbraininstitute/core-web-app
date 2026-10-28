@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import PlatformTour, { SLIDES } from './platform-tour';
 
@@ -18,10 +18,32 @@ export default function Homepage({
   isAuthenticated?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [headerDocked, setHeaderDocked] = useState(false);
   const [tourIndex, setTourIndex] = useState(0);
   const tourSlide = SLIDES[tourIndex];
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
   const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Try it out';
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    const updateHeader = () => setHeaderDocked(hero.getBoundingClientRect().bottom <= 0);
+    updateHeader();
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(updateHeader, { threshold: 0 });
+      observer.observe(hero);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener('scroll', updateHeader, { passive: true });
+    window.addEventListener('resize', updateHeader);
+    return () => {
+      window.removeEventListener('scroll', updateHeader);
+      window.removeEventListener('resize', updateHeader);
+    };
+  }, []);
 
   function closeMenuOnEscape(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape') {
@@ -36,59 +58,56 @@ export default function Homepage({
         Skip to content
       </a>
 
+      <header
+        className={`${styles['site-header']} ${styles.wrap} ${headerDocked ? styles.docked : ''}`}
+        data-testid="site-header"
+        data-docked={headerDocked}
+      >
+        <Link href="/" className={styles.wordmark} aria-label="Open Brain Institute home">
+          <Image src="/images/obi_logo.svg" alt="Open Brain Institute" width={177} height={57} />
+        </Link>
+        <nav
+          aria-label="Main navigation"
+          id="homepage-navigation"
+          className={menuOpen ? styles.open : undefined}
+          onClick={() => setMenuOpen(false)}
+          onKeyDown={closeMenuOnEscape}
+        >
+          <Link href="/features">Features</Link>
+          <Link href="/pricing">Pricing</Link>
+          <Link href="/news">News</Link>
+          <Link href="/about">About</Link>
+          <Link href="/contact">Contact</Link>
+          <Link
+            className={`${styles.button} ${styles.small} ${styles.white}`}
+            href="/app/virtual-lab/sync"
+            prefetch={false}
+            data-testid="header-desktop-link-app-virtual-lab"
+          >
+            {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'}
+          </Link>
+        </nav>
+        <button
+          className={styles['menu-toggle']}
+          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+          aria-expanded={menuOpen}
+          type="button"
+          aria-controls="homepage-navigation"
+          onClick={() => setMenuOpen(!menuOpen)}
+          ref={menuButtonRef}
+        >
+          Menu <span>＋</span>
+        </button>
+      </header>
+
       <main id="main">
-        <div className={styles['blue-world']}>
+        <div className={styles['blue-world']} ref={heroRef}>
           <PlatformTour activeIndex={tourIndex} onIndexChange={setTourIndex} showCaption={false} />
-          <header className={`${styles['site-header']} ${styles.wrap}`} data-testid="site-header">
-            <Link href="/" className={styles.wordmark} aria-label="Open Brain Institute home">
-              <Image
-                src="/images/obi_logo.svg"
-                alt="Open Brain Institute"
-                width={177}
-                height={57}
-              />
-            </Link>
-            <nav
-              aria-label="Main navigation"
-              id="homepage-navigation"
-              className={menuOpen ? styles.open : undefined}
-              onClick={() => setMenuOpen(false)}
-              onKeyDown={closeMenuOnEscape}
-            >
-              <Link href="/features">Features</Link>
-              <Link href="/pricing">Pricing</Link>
-              <Link href="/news">News</Link>
-              <Link href="/about">About</Link>
-              <Link href="/contact">Contact</Link>
-              <Link
-                className={`${styles.button} ${styles.small} ${styles.white}`}
-                href="/app/virtual-lab/sync"
-                prefetch={false}
-                data-testid="header-desktop-link-app-virtual-lab"
-              >
-                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'}
-              </Link>
-            </nav>
-            <button
-              className={styles['menu-toggle']}
-              aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
-              aria-expanded={menuOpen}
-              type="button"
-              aria-controls="homepage-navigation"
-              onClick={() => setMenuOpen(!menuOpen)}
-              ref={menuButtonRef}
-            >
-              Menu <span>＋</span>
-            </button>
-          </header>
+
           <section className={styles.hero} aria-labelledby="hero-title">
             <div className={styles['hero-copy']}>
               <div className={styles['hero-heading']}>
-                <p className={styles['hero-label']}>
-                  {isAuthenticated
-                    ? 'Welcome back. Continue your research.'
-                    : 'Neuroscience at the speed of thought'}
-                </p>
+                <p className={styles['hero-label']}>Neuroscience at the speed of thought</p>
                 <h1
                   id="hero-title"
                   data-testid="home-hero-heading"
@@ -121,7 +140,7 @@ export default function Homepage({
                 </div>
                 <p className={styles.reassurance}>
                   {isAuthenticated
-                    ? 'Your data, models, and experiments in one workspace.'
+                    ? 'Welcome back. Continue your research.'
                     : '100 initial credits included'}
                 </p>
               </div>

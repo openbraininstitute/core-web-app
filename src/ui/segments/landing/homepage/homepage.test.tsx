@@ -1,9 +1,45 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import Homepage from './homepage';
 
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
 describe('public homepage', () => {
+  it('docks after the hero leaves the screen and floats again when it returns', () => {
+    let heroBottom = 720;
+    const callbacks = new Map<Element, IntersectionObserverCallback>();
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      () => ({ bottom: heroBottom }) as DOMRect
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(private callback: IntersectionObserverCallback) {}
+        observe(target: Element) {
+          callbacks.set(target, this.callback);
+        }
+        disconnect() {}
+      }
+    );
+    render(<Homepage year={2026} />);
+    const header = screen.getByTestId('site-header');
+    const hero = document.querySelector('main > div')!;
+    expect(header).toHaveAttribute('data-docked', 'false');
+
+    heroBottom = -1;
+    act(() => callbacks.get(hero)?.([], {} as IntersectionObserver));
+    expect(header).toHaveAttribute('data-docked', 'true');
+
+    heroBottom = 300;
+    act(() => callbacks.get(hero)?.([], {} as IntersectionObserver));
+    expect(header).toHaveAttribute('data-docked', 'false');
+  });
+
   it('keeps the original logo and routes every account action through the existing platform entry', () => {
     render(<Homepage year={2026} />);
 
@@ -51,6 +87,7 @@ describe('public homepage', () => {
     expect(screen.queryByText(/100 initial credits included/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Open your Virtual Lab' })).toBeInTheDocument();
     expect(screen.getByText('Welcome back. Continue your research.')).toBeInTheDocument();
+    expect(screen.getByText('Neuroscience at the speed of thought')).toBeInTheDocument();
 
     rerender(<Homepage year={2026} isAuthenticated={false} />);
     expect(screen.getAllByRole('link', { name: 'Try it out' })).toHaveLength(2);
@@ -62,6 +99,7 @@ describe('public homepage', () => {
       '/app/virtual-lab/sync'
     );
     expect(screen.queryByText('Sign in or create a free account')).not.toBeInTheDocument();
+    expect(screen.getByText('Neuroscience at the speed of thought')).toBeInTheDocument();
   });
 
   it('opens the mobile menu and closes it with Escape or a section link', () => {
