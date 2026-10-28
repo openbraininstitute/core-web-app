@@ -11,6 +11,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 import type { TWorkspaceScope } from '@/constants';
+import type { TSavedListingFilters } from '@/features/data-grid/saved-listing-filters';
 import type { WorkspaceContext } from '@/types/common';
 
 const prefix = 'data';
@@ -43,6 +44,7 @@ export const keyBuilder = {
     extendedEntityType,
     scope,
     variantSlug,
+    savedFilters,
   }: WorkspaceContext & {
     brainRegionId?: string;
     hierarchyId?: string;
@@ -50,6 +52,8 @@ export const keyBuilder = {
     extendedEntityType?: TExtendedEntitiesTypeDict;
     /** listing variant; the head stays per-type so prefix invalidation still hits it */
     variantSlug?: string;
+    /** the listing's saved filters/search the count applies */
+    savedFilters?: TSavedListingFilters | null;
   }) => [
     `${prefix}-entity-count-${extendedEntityType}`,
     {
@@ -60,6 +64,7 @@ export const keyBuilder = {
       hierarchyId: hierarchyId ?? '',
       scope,
       variantSlug: variantSlug ?? '',
+      savedFilters: savedFilters ?? null,
     },
   ],
   userSimulationsCount: ({

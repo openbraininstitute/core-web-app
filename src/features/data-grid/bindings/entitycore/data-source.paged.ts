@@ -33,6 +33,13 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
   transformParams?: (params: TEntitycoreParams) => TEntitycoreParams;
 }
 
+/** How an entity's free-text search maps to the API, from its domain config. */
+export function entitySearchMode(dataType: TExtendedEntitiesTypeDict): 'ilike' | 'plain' {
+  return getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled
+    ? 'ilike'
+    : 'plain';
+}
+
 /**
  * The default {@link IGridDataSource}: one server page per request, delegating to the
  * entity's domain config (`api.query.list`), which owns endpoint, `narrowFilters`,
@@ -43,7 +50,7 @@ export function createEntitycorePagedDataSource<Row>(
 ): IGridDataSource<Row> {
   const { dataType, schema, context, listQueryFn, withFacets = true, transformParams } = options;
   const entity = getEntityByExtendedType({ type: dataType });
-  const searchMode: 'ilike' | 'plain' = entity?.api?.config?.ilikeSearchEnabled ? 'ilike' : 'plain';
+  const searchMode = entitySearchMode(dataType);
 
   const paramsFor = (query: IGridQuery): TEntitycoreParams => {
     const serialized = serializeQuery(query, schema, { searchMode });

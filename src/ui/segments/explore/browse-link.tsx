@@ -19,6 +19,10 @@ import { WorkspaceScope } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { speciesSelectionModeAtom } from '@/features/brain-region-hierarchy/context';
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
+import {
+  savedListingParams,
+  useSavedListingFilters,
+} from '@/features/data-grid/saved-listing-filters';
 import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useTableQueryCount } from '@/ui/hooks/use-table-query-count';
@@ -35,6 +39,7 @@ import { HydrateWrapper } from '@/wrappers/hydrate-wrapper';
 import type { MouseEvent, ReactNode } from 'react';
 import type { EntityCoreResponse } from '@/api/entitycore/types/shared/response';
 import type { TWorkspaceScope } from '@/constants';
+import type { TSavedListingFilters } from '@/features/data-grid/saved-listing-filters';
 import type { IListingVariant } from '@/features/views/listing/variants/types';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -199,6 +204,7 @@ function buildQuery({
   extendedType,
   applyBrainRegionFilter,
   variant,
+  savedFilters,
 }: WorkspaceContext & {
   hierarchyId: string;
   brainRegionId: string;
@@ -206,6 +212,7 @@ function buildQuery({
   extendedType: TExtendedEntitiesTypeDict;
   applyBrainRegionFilter: boolean;
   variant?: IListingVariant;
+  savedFilters?: TSavedListingFilters | null;
 }) {
   const brainRegionQuery =
     applyBrainRegionFilter && brainRegionId
@@ -238,19 +245,27 @@ function buildQuery({
     hierarchyId,
     scope,
     variantSlug: variant?.slug,
+    savedFilters,
   });
 
   return { query, queryKey };
 }
 
 async function resolveEntityCount({
-  query,
+  query: baseQuery,
   entity,
+  extendedType,
+  savedFilters,
 }: {
   query: ReturnType<typeof buildQuery>['query'];
   entity: ReturnType<typeof getEntityByExtendedType>;
+  extendedType: TExtendedEntitiesTypeDict;
+  savedFilters?: TSavedListingFilters | null;
 }) {
   if (!entity) return undefined;
+  const saved = await savedListingParams(extendedType, savedFilters);
+  // the pinned params win over the user's, as in the grid's request
+  const query = { ...baseQuery, filters: { ...saved, ...baseQuery.filters } };
   if (entity.api.query.count) return entity.api.query.count(query);
   const response = await entity.api.query.list?.(query);
   return (response as EntityCoreResponse<unknown> | undefined)?.pagination?.total_items;
@@ -279,7 +294,7 @@ export function BrowseLink({
   const activeEntityType = snakeCase(type ?? getEntityTypeFromUrlOnEntityScope(pathname) ?? '');
   const isActiveEntity = activeEntityType === extendedType && variantSlug === variant?.slug;
 
-  const { count: tableCount } = useTableQueryCount({
+  const { dataKey, count: tableCount } = useTableQueryCount({
     extendedType,
     scope,
     workspace: { virtualLabId, projectId },
@@ -288,6 +303,9 @@ export function BrowseLink({
     // a base `id` today; if one does, thread it here too or the active row shows the fallback count.
     instanceId: listingInstanceId(undefined, variant),
   });
+
+  // the listing's filters outlive its grid, so the count must not drop them on navigation
+  const savedFilters = useSavedListingFilters(dataKey);
 
   const scopesListingByBrainRegion = dataBrowseListingUsesBrainRegionHierarchy(extendedType);
 
@@ -301,6 +319,7 @@ export function BrowseLink({
     extendedType,
     applyBrainRegionFilter: scopesListingByBrainRegion,
     variant,
+    savedFilters,
   });
 
   // root count query: always fetch results (unfiltered total)
@@ -326,8 +345,14 @@ export function BrowseLink({
     isError: isFallbackError,
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
-    queryFn: () => resolveEntityCount({ query: fallbackQuery.query, entity }),
-    enabled: enabled && brainRegionDependentFetch && (!isActiveEntity || tableCount == null),
+    queryFn: () =>
+      resolveEntityCount({ query: fallbackQuery.query, entity, extendedType, savedFilters }),
+    // waits for storage to be read: an unfiltered count fetched during hydration is thrown away
+    enabled:
+      enabled &&
+      savedFilters !== undefined &&
+      brainRegionDependentFetch &&
+      (!isActiveEntity || tableCount == null),
     staleTime: Infinity,
   });
 
@@ -337,7 +362,7 @@ export function BrowseLink({
     isError: isRootError,
   } = useQuery<number | undefined>({
     queryKey: rootQuery.queryKey,
-    queryFn: () => resolveEntityCount({ query: rootQuery.query, entity }),
+    queryFn: () => resolveEntityCount({ query: rootQuery.query, entity, extendedType }),
     enabled: enabled && brainRegionDependentRootFetch,
     staleTime: Infinity,
   });
