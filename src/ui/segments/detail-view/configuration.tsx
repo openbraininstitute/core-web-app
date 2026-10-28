@@ -10,9 +10,11 @@ import SimulationConfigurationTab from '@/components/simulate/SimulationDetails/
 import { resolveEFeatureExtractionResultCampaign } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import {
   applyEntityExpansions,
+  circuitTypes,
   getEntityByExtendedType,
 } from '@/entity-configuration/domain/helpers';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
+import { resolveCircuitWorkflow } from '@/entity-configuration/domain/optimization/resolve-circuit-campaign';
 import { resolveEModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/resolve-emodel-campaign';
 import { resolveIonChannelModelingCampaign } from '@/entity-configuration/domain/optimization/resolve-ion-channel-model-campaign';
 import { resolveMEModelBuildCampaign } from '@/entity-configuration/domain/optimization/resolve-memodel-campaign';
@@ -301,6 +303,53 @@ export default async function Configuration({
     return (
       <div className="flex h-full w-full items-center justify-center">
         No configuration found for this ion channel model.
+      </div>
+    );
+  }
+
+  if (
+    circuitTypes.includes(extendedType) ||
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit
+  ) {
+    // the workflow tab is the scan config of whichever build/extract campaign generated this
+    // circuit; render the same read-only editor as that campaign's own detail page when traceable
+    const { data: circuitWorkflow } = await tryCatch(
+      resolveCircuitWorkflow(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = circuitWorkflow
+      ? findScanConfigRegistryByTargetType(circuitWorkflow.extendedType)
+      : undefined;
+
+    if (circuitWorkflow && scanConfig) {
+      const { data: generations } = await getTaskActivities({
+        context,
+        filters: {
+          used__id: circuitWorkflow.campaignId,
+          task_activity_type: circuitWorkflow.workflow.taskTypeBindings.configGeneration,
+          page_size: 1,
+        },
+      });
+      return (
+        <ScanConfiguration
+          entityId={circuitWorkflow.entityId ?? undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={circuitWorkflow.campaignId}
+          initialConfig={circuitWorkflow.form}
+          readOnly
+          hideTabs={generations.length === 0}
+          defaultTab={circuitWorkflow.workflow.editor?.defaultTab}
+          activity={circuitWorkflow.workflow.activity}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={circuitWorkflow.workflow.taskTypeBindings}
+        />
+      );
+    }
+
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this circuit.
       </div>
     );
   }
