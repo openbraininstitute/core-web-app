@@ -107,8 +107,18 @@
   text-decoration: underline;
   text-underline-offset: 7px;
 }
-.homepage .login {
-  margin-left: 14px;
+.homepage .account-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+.homepage .account-hint {
+  margin: 0;
+  color: #e0e8fa;
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: center;
 }
 .homepage .button {
   border: 0;
@@ -598,9 +608,6 @@
   .homepage .site-header nav {
     gap: 17px;
     font-size: 11px;
-  }
-  .homepage .login {
-    margin-left: 0;
   }
   .homepage .wordmark {
     min-width: 155px;

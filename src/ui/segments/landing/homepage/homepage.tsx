@@ -19,7 +19,7 @@ export default function Homepage({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const accountAction = isAuthenticated ? 'Open Virtual Labs' : 'Create free account';
+  const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Start your research for free';
 
   function closeMenuOnEscape(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape') {
@@ -55,24 +55,22 @@ export default function Homepage({
               <a href="#research">What you can do</a>
               <Link href="#preview">See the platform</Link>
               <a href="#getting-started">Getting started</a>
-              {!isAuthenticated && (
+              <div className={styles['account-entry']}>
                 <Link
-                  className={styles.login}
-                  href="/app/virtual-lab"
+                  className={`${styles.button} ${styles.small} ${styles.white}`}
+                  href="/app/virtual-lab/sync"
                   prefetch={false}
                   data-testid="header-desktop-link-app-virtual-lab"
+                  aria-describedby={!isAuthenticated ? 'homepage-account-hint' : undefined}
                 >
-                  Log in ↗
+                  Open Virtual Labs <span>↗</span>
                 </Link>
-              )}
-              <Link
-                className={`${styles.button} ${styles.small} ${styles.white}`}
-                href="/app/virtual-lab/sync"
-                prefetch={false}
-                data-testid={isAuthenticated ? 'header-desktop-link-app-virtual-lab' : undefined}
-              >
-                {accountAction} <span>↗</span>
-              </Link>
+                {!isAuthenticated && (
+                  <p id="homepage-account-hint" className={styles['account-hint']}>
+                    Sign in or create a free account
+                  </p>
+                )}
+              </div>
             </nav>
             <button
               className={styles['menu-toggle']}
@@ -112,7 +110,7 @@ export default function Homepage({
                   prefetch={false}
                   data-testid="virtual-labs-link"
                 >
-                  {accountAction} <span>↗</span>
+                  {researchAction} <span>↗</span>
                 </Link>
                 <Link className={styles['demo-link']} href="#preview">
                   <span className={styles.play}>▷</span> See the platform
@@ -239,7 +237,7 @@ export default function Homepage({
                 href="/app/virtual-lab/sync"
                 prefetch={false}
               >
-                {accountAction} <span>↗</span>
+                {researchAction} <span>↗</span>
               </Link>
               <p className={styles['start-note']}>
                 {!isAuthenticated && <>100 initial credits to get started. </>}

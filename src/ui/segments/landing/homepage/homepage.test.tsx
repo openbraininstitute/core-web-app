@@ -12,16 +12,22 @@ describe('public homepage', () => {
       'src',
       '/images/obi_logo.svg'
     );
-    expect(screen.getByRole('link', { name: 'Log in ↗' })).toHaveAttribute(
-      'href',
-      '/app/virtual-lab'
-    );
-    const accountActions = screen.getAllByRole('link', { name: 'Create free account ↗' });
-    expect(accountActions).toHaveLength(3);
+    const headerEntry = within(header).getByRole('link', { name: 'Open Virtual Labs ↗' });
+    expect(headerEntry).toHaveAttribute('href', '/app/virtual-lab/sync');
+    expect(headerEntry).toHaveAccessibleDescription('Sign in or create a free account');
+    expect(within(header).queryByRole('link', { name: 'Log in ↗' })).not.toBeInTheDocument();
+    expect(
+      within(header).queryByRole('link', { name: 'Create free account ↗' })
+    ).not.toBeInTheDocument();
+    const accountActions = screen.getAllByRole('link', { name: 'Start your research for free ↗' });
+    expect(accountActions).toHaveLength(2);
     for (const action of accountActions) {
       expect(action).toHaveAttribute('href', '/app/virtual-lab/sync');
     }
-    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Open Virtual Labs ↗' })).toHaveLength(1);
+    expect(screen.getByTestId('virtual-labs-link')).toHaveTextContent(
+      'Start your research for free'
+    );
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -37,14 +43,18 @@ describe('public homepage', () => {
       within(screen.getByTestId('site-header')).getByTestId('header-desktop-link-app-virtual-lab')
     ).toHaveAttribute('href', '/app/virtual-lab/sync');
     expect(screen.queryByRole('link', { name: 'Create free account ↗' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: 'Start your research for free ↗' })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Sign in or create a free account')).not.toBeInTheDocument();
     expect(screen.queryByText(/100 initial credits included/)).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Open your Virtual Lab' })).toBeInTheDocument();
     expect(screen.getByText('Welcome back. Continue your research.')).toBeInTheDocument();
 
     rerender(<Homepage year={2026} isAuthenticated={false} />);
-    expect(screen.getAllByRole('link', { name: 'Create free account ↗' })).toHaveLength(3);
-    expect(screen.getByRole('link', { name: 'Log in ↗' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Start your research for free ↗' })).toHaveLength(2);
+    expect(screen.getAllByRole('link', { name: 'Open Virtual Labs ↗' })).toHaveLength(1);
+    expect(screen.getByText('Sign in or create a free account')).toBeInTheDocument();
   });
 
   it('opens the mobile menu and closes it with Escape or a section link', () => {
