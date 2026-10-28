@@ -16,14 +16,35 @@ describe('public homepage', () => {
       'href',
       '/app/virtual-lab'
     );
-    for (const name of [
-      'Start free ↗',
-      'Start your research for free ↗',
-      'Create your free account ↗',
-    ]) {
-      expect(screen.getByRole('link', { name })).toHaveAttribute('href', '/app/virtual-lab/sync');
+    const accountActions = screen.getAllByRole('link', { name: 'Create free account ↗' });
+    expect(accountActions).toHaveLength(3);
+    for (const action of accountActions) {
+      expect(action).toHaveAttribute('href', '/app/virtual-lab/sync');
     }
+    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('takes signed-in users back to Virtual Labs without prompting them to register or log in', () => {
+    const { rerender } = render(<Homepage year={2026} isAuthenticated />);
+    const accountActions = screen.getAllByRole('link', { name: 'Open Virtual Labs ↗' });
+    expect(accountActions).toHaveLength(3);
+    for (const action of accountActions) {
+      expect(action).toHaveAttribute('href', '/app/virtual-lab/sync');
+    }
+    expect(screen.queryByRole('link', { name: 'Log in ↗' })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('site-header')).getByTestId('header-desktop-link-app-virtual-lab')
+    ).toHaveAttribute('href', '/app/virtual-lab/sync');
+    expect(screen.queryByRole('link', { name: 'Create free account ↗' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/100 initial credits included/)).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Open your Virtual Lab' })).toBeInTheDocument();
+    expect(screen.getByText('Welcome back. Continue your research.')).toBeInTheDocument();
+
+    rerender(<Homepage year={2026} isAuthenticated={false} />);
+    expect(screen.getAllByRole('link', { name: 'Create free account ↗' })).toHaveLength(3);
+    expect(screen.getByRole('link', { name: 'Log in ↗' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
   });
 
   it('opens the mobile menu and closes it with Escape or a section link', () => {

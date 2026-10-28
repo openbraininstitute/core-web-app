@@ -10,9 +10,16 @@ import type { KeyboardEvent } from 'react';
 
 import styles from './homepage.module.css';
 
-export default function Homepage({ year }: { year: number }) {
+export default function Homepage({
+  year,
+  isAuthenticated = false,
+}: {
+  year: number;
+  isAuthenticated?: boolean;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const accountAction = isAuthenticated ? 'Open Virtual Labs' : 'Create free account';
 
   function closeMenuOnEscape(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape') {
@@ -48,20 +55,23 @@ export default function Homepage({ year }: { year: number }) {
               <a href="#research">What you can do</a>
               <Link href="#preview">See the platform</Link>
               <a href="#getting-started">Getting started</a>
-              <Link
-                className={styles.login}
-                href="/app/virtual-lab"
-                prefetch={false}
-                data-testid="header-desktop-link-app-virtual-lab"
-              >
-                Log in ↗
-              </Link>
+              {!isAuthenticated && (
+                <Link
+                  className={styles.login}
+                  href="/app/virtual-lab"
+                  prefetch={false}
+                  data-testid="header-desktop-link-app-virtual-lab"
+                >
+                  Log in ↗
+                </Link>
+              )}
               <Link
                 className={`${styles.button} ${styles.small} ${styles.white}`}
                 href="/app/virtual-lab/sync"
                 prefetch={false}
+                data-testid={isAuthenticated ? 'header-desktop-link-app-virtual-lab' : undefined}
               >
-                Start free <span>↗</span>
+                {accountAction} <span>↗</span>
               </Link>
             </nav>
             <button
@@ -79,7 +89,10 @@ export default function Homepage({ year }: { year: number }) {
           <section className={`${styles.hero} ${styles.wrap}`} aria-labelledby="hero-title">
             <div className={styles['hero-copy']}>
               <p className={styles['hero-label']}>
-                <span className={styles['status-dot']}></span> Your research. A new workspace.
+                <span className={styles['status-dot']}></span>{' '}
+                {isAuthenticated
+                  ? 'Welcome back. Continue your research.'
+                  : 'Your research. A new workspace.'}
               </p>
               <h1 id="hero-title" data-testid="home-hero-heading">
                 Explore brain data.
@@ -99,14 +112,21 @@ export default function Homepage({ year }: { year: number }) {
                   prefetch={false}
                   data-testid="virtual-labs-link"
                 >
-                  Start your research for free <span>↗</span>
+                  {accountAction} <span>↗</span>
                 </Link>
                 <Link className={styles['demo-link']} href="#preview">
                   <span className={styles.play}>▷</span> See the platform
                 </Link>
               </div>
               <p className={styles.reassurance}>
-                <span>✓</span> Free account <i>·</i> 100 initial credits included
+                <span>✓</span>{' '}
+                {isAuthenticated ? (
+                  'Your data, models, and experiments in one workspace.'
+                ) : (
+                  <>
+                    Free account <i>·</i> 100 initial credits included
+                  </>
+                )}
               </p>
             </div>
             <PlatformTour />
@@ -210,18 +230,19 @@ export default function Homepage({ year }: { year: number }) {
                 your next discovery.
               </h2>
               <p>
-                A Virtual Lab brings your research team, data, models, and experiments together.
-                Start with a free account and explore at your own pace.
+                {isAuthenticated
+                  ? 'Return to your Virtual Lab to continue working with your team, data, models, and experiments.'
+                  : 'A Virtual Lab brings your research team, data, models, and experiments together. Start with a free account and explore at your own pace.'}
               </p>
               <Link
                 className={`${styles.button} ${styles.blue}`}
                 href="/app/virtual-lab/sync"
                 prefetch={false}
               >
-                Create your free account <span>↗</span>
+                {accountAction} <span>↗</span>
               </Link>
               <p className={styles['start-note']}>
-                100 initial credits to get started.{' '}
+                {!isAuthenticated && <>100 initial credits to get started. </>}
                 <Link href="/pricing">See plans and credit costs ↗</Link>
               </p>
             </div>
@@ -229,8 +250,12 @@ export default function Homepage({ year }: { year: number }) {
               <div>
                 <span>1</span>
                 <section>
-                  <h3>Create your account</h3>
-                  <p>Sign up with Google, Microsoft, or GitHub.</p>
+                  <h3>{isAuthenticated ? 'Open your Virtual Lab' : 'Create your account'}</h3>
+                  <p>
+                    {isAuthenticated
+                      ? 'Continue in your existing workspace.'
+                      : 'Sign up with Google, Microsoft, or GitHub.'}
+                  </p>
                 </section>
               </div>
               <div>
