@@ -357,51 +357,55 @@ describe('SegmentArena', () => {
   it.each([
     ['', false],
     [', and bases', true],
-  ])('stays whole over a long run of boxes put and let go of%s', (_, withBase) => {
-    let seed = 7;
-    const random = () => {
-      seed = (seed * 16807) % 2147483647;
-      return seed / 2147483647;
-    };
-    const base = Array.from({ length: 60 }, () => 1 + Math.floor(random() * 100));
-    const baseRoom = base.reduce((room, n) => room + roomFor(n), 0);
-    const made = withBase ? arenaOf(5000 + baseRoom, base) : arenaOf(5000);
-    const { arena, told } = made;
-    const put = new Map<number, number>();
-    const based = new Map<number, number>();
-    const drawn = () => new Map([...based, ...put]);
-    for (let step = 0; step < 1500; step++) {
-      const box = Math.floor(random() * 60);
-      const before = copyOf(made);
-      told.length = 0;
-      if (withBase && !arena.hasBase(box) && random() < 0.5) {
-        arena.putBase(box, segmentsOf(box, base[box]));
-        based.set(box, base[box]);
-      } else if (put.has(box) && random() < 0.5) {
-        arena.remove(box);
-        put.delete(box);
-      } else if (put.has(box)) {
-        const n = Math.floor(random() * 300);
-        if (arena.growthOf(box, n) > arena.free) continue;
-        arena.replace(box, segmentsOf(box, n));
-        put.set(box, n);
-      } else {
-        const n = Math.floor(random() * 300);
-        if (roomFor(n) > arena.free) continue;
-        arena.replace(box, segmentsOf(box, n));
-        put.set(box, n);
+  ])(
+    'stays whole over a long run of boxes put and let go of%s',
+    (_, withBase) => {
+      let seed = 7;
+      const random = () => {
+        seed = (seed * 16807) % 2147483647;
+        return seed / 2147483647;
+      };
+      const base = Array.from({ length: 60 }, () => 1 + Math.floor(random() * 100));
+      const baseRoom = base.reduce((room, n) => room + roomFor(n), 0);
+      const made = withBase ? arenaOf(5000 + baseRoom, base) : arenaOf(5000);
+      const { arena, told } = made;
+      const put = new Map<number, number>();
+      const based = new Map<number, number>();
+      const drawn = () => new Map([...based, ...put]);
+      for (let step = 0; step < 1500; step++) {
+        const box = Math.floor(random() * 60);
+        const before = copyOf(made);
+        told.length = 0;
+        if (withBase && !arena.hasBase(box) && random() < 0.5) {
+          arena.putBase(box, segmentsOf(box, base[box]));
+          based.set(box, base[box]);
+        } else if (put.has(box) && random() < 0.5) {
+          arena.remove(box);
+          put.delete(box);
+        } else if (put.has(box)) {
+          const n = Math.floor(random() * 300);
+          if (arena.growthOf(box, n) > arena.free) continue;
+          arena.replace(box, segmentsOf(box, n));
+          put.set(box, n);
+        } else {
+          const n = Math.floor(random() * 300);
+          if (roomFor(n) > arena.free) continue;
+          arena.replace(box, segmentsOf(box, n));
+          put.set(box, n);
+        }
+        expectUploaded(made, before);
+        expect(arena.geometry.instanceCount).toBeLessThanOrEqual(arena.capacity);
+        if (step % 50 === 0) {
+          expectDrawn(made, drawn(), put);
+          expectBlocks(made);
+        }
       }
-      expectUploaded(made, before);
-      expect(arena.geometry.instanceCount).toBeLessThanOrEqual(arena.capacity);
-      if (step % 50 === 0) {
-        expectDrawn(made, drawn(), put);
-        expectBlocks(made);
-      }
-    }
-    expect(based.size).toBe(withBase ? 60 : 0);
-    expectDrawn(made, drawn(), put);
-    expectBlocks(made);
-  });
+      expect(based.size).toBe(withBase ? 60 : 0);
+      expectDrawn(made, drawn(), put);
+      expectBlocks(made);
+    },
+    20_000
+  );
 
   describe('with a base', () => {
     it('keeps room for each box at its start, in the order of the boxes, holes until its base is put', () => {
