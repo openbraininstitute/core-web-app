@@ -1,6 +1,5 @@
-import LandingPage from '@/ui/segments/landing';
+import HomePage from '@/ui/segments/landing/homepage';
 import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
-import { EnumSection } from '@/ui/segments/landing/sections/sections';
 
 import type { Metadata } from 'next';
 
@@ -22,8 +21,7 @@ export default async function RootPage({
 }) {
   const searchParams = await promisedParams;
   return (
-    <LandingPage
-      section={EnumSection.Home}
+    <HomePage
       error={{
         errorcode: searchParams.errorcode,
         originalCode: searchParams.original_code,
