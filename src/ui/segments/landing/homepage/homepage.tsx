@@ -87,17 +87,24 @@ export default function Homepage({
                     ? 'Welcome back. Continue your research.'
                     : 'Your research. A new workspace.'}
                 </p>
-                <h1 id="hero-title" data-testid="home-hero-heading">
-                  Explore brain data.
-                  <br />
-                  Build models.
-                  <br />
-                  <em>Run simulations.</em>
+                <h1
+                  id="hero-title"
+                  data-testid="home-hero-heading"
+                  aria-label={tourSlide.title}
+                  key={tourSlide.id}
+                  className={tourIndex === 0 ? undefined : styles['slide-heading']}
+                >
+                  {tourSlide.titleLines
+                    ? tourSlide.titleLines.map((line) => (
+                        <span className={styles['title-line']} key={line}>
+                          {line === 'Run simulations.' ? <em>{line}</em> : line}
+                        </span>
+                      ))
+                    : tourSlide.title}
                 </h1>
               </div>
               <div className={styles['hero-intro']}>
                 <div id="tour-caption" className={styles['tour-caption']}>
-                  <h2>{tourSlide.title}</h2>
                   <p className={styles['hero-description']}>{tourSlide.description}</p>
                 </div>
                 <div className={styles['hero-actions']}>

@@ -8,6 +8,15 @@ import type { KeyboardEvent, PointerEvent } from 'react';
 import styles from './platform-tour.module.css';
 
 const INTERVAL = 8000;
+const VIDEOS = {
+  models: {
+    src: '/images/homepage/models-overview.mp4',
+    poster: '/images/homepage/models-overview-poster.jpg',
+    width: 1440,
+    height: 810,
+    duration: 14500,
+  },
+};
 const ANIMATIONS = {
   flywire: {
     src: '/images/homepage/flywire-3d.webp',
@@ -53,15 +62,26 @@ const SOURCES = {
 type Slide = {
   id: string;
   title: string;
+  titleLines?: readonly string[];
   description: string;
   alt: string;
 } & (
+  | { kind: 'video'; source: keyof typeof VIDEOS }
   | { kind: 'animation'; source: keyof typeof ANIMATIONS }
   | { kind: 'screenshot'; source: keyof typeof SOURCES }
   | { kind: 'image'; source: keyof typeof SOURCES; crop: { x: number; y: number; width: number } }
 );
 
 export const SLIDES: readonly Slide[] = [
+  {
+    id: 'models',
+    kind: 'video',
+    source: 'models',
+    title: 'Explore brain data. Build models. Run simulations.',
+    titleLines: ['Explore brain data.', 'Build models.', 'Run simulations.'],
+    description: 'Explore the data, models, and tools available in Virtual Labs.',
+    alt: 'Animated overview of brain models expanding into a montage of neuroscience models.',
+  },
   {
     id: 'voltages',
     kind: 'image',
@@ -145,11 +165,11 @@ export default function PlatformTour({
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const slide = SLIDES[index];
   const animation = slide.kind === 'animation' ? ANIMATIONS[slide.source] : null;
-  const screenshot = slide.kind === 'screenshot' ? SOURCES[slide.source] : null;
+  const video = slide.kind === 'video' ? VIDEOS[slide.source] : null;
   const suspended = !inView || !pageVisible;
   const playing = !reducedMotion;
   const animate = playing && !suspended;
-  const delay = animation?.duration ?? INTERVAL;
+  const delay = video?.duration ?? animation?.duration ?? INTERVAL;
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -231,63 +251,96 @@ export default function PlatformTour({
           pointerStart.current = null;
         }}
       >
-        {animation && (
-          <Image
-            key={slide.id}
-            src={animate ? animation.src : animation.poster}
-            alt={slide.alt}
-            width={animation.width}
-            height={animation.height}
-            unoptimized
-            className={styles.animation}
-            loading="eager"
-          />
-        )}
-        {screenshot && (
-          <div className={styles.screenshotFrame}>
-            <Image
-              src={screenshot.src}
-              alt={slide.alt}
-              width={screenshot.width}
-              height={screenshot.height}
-              className={styles.screenshot}
-              sizes="100vw"
-            />
-            <a
-              href={screenshot.src}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.expand}
-            >
-              <span aria-hidden="true">↗</span>
-              <span className="sr-only">View AI chat example at full size</span>
-            </a>
-          </div>
-        )}
-        {Object.entries(SOURCES).map(([key, source]) => {
-          const active = slide.kind === 'image' && slide.source === key;
-          const defaultSlide = SLIDES.find((item) => item.kind === 'image' && item.source === key);
-          if (!defaultSlide || defaultSlide.kind !== 'image') return null;
-          const crop = slide.kind === 'image' && active ? slide.crop : defaultSlide.crop;
-          const scale = source.width / crop.width;
+        {SLIDES.map((item, position) => {
+          const active = position === index;
+          const animationSource = item.kind === 'animation' ? ANIMATIONS[item.source] : null;
+          const videoSource = item.kind === 'video' ? VIDEOS[item.source] : null;
+          const imageSource =
+            item.kind === 'image' || item.kind === 'screenshot' ? SOURCES[item.source] : null;
           return (
-            <Image
-              key={key}
-              src={source.src}
-              alt={active ? slide.alt : ''}
+            <div
+              key={item.id}
+              className={`${styles.layer} ${active ? styles.visible : ''}`}
               aria-hidden={!active}
-              width={source.width}
-              height={source.height}
-              className={`${styles.image} ${active ? styles.active : ''}`}
-              style={{
-                transform: `scale(${scale}) translate(${(-crop.x / source.width) * 100}%, ${(-crop.y / source.height) * 100}%)`,
-              }}
-              sizes="220vw"
-              loading="eager"
-            />
+              inert={!active}
+            >
+              {videoSource &&
+                (active && animate ? (
+                  <video
+                    className={styles.animation}
+                    src={videoSource.src}
+                    poster={videoSource.poster}
+                    width={videoSource.width}
+                    height={videoSource.height}
+                    aria-label={item.alt}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                  />
+                ) : (
+                  <Image
+                    src={videoSource.poster}
+                    alt={active ? item.alt : ''}
+                    width={videoSource.width}
+                    height={videoSource.height}
+                    unoptimized
+                    className={styles.animation}
+                    loading="eager"
+                  />
+                ))}
+              {animationSource && (
+                <Image
+                  src={active && animate ? animationSource.src : animationSource.poster}
+                  alt={active ? item.alt : ''}
+                  width={animationSource.width}
+                  height={animationSource.height}
+                  unoptimized
+                  className={styles.animation}
+                  loading="eager"
+                />
+              )}
+              {imageSource && item.kind === 'screenshot' && (
+                <div className={styles.screenshotFrame}>
+                  <Image
+                    src={imageSource.src}
+                    alt={active ? item.alt : ''}
+                    width={imageSource.width}
+                    height={imageSource.height}
+                    className={styles.screenshot}
+                    sizes="100vw"
+                  />
+                  {active && (
+                    <a
+                      href={imageSource.src}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.expand}
+                    >
+                      <span aria-hidden="true">↗</span>
+                      <span className="sr-only">View AI chat example at full size</span>
+                    </a>
+                  )}
+                </div>
+              )}
+              {imageSource && item.kind === 'image' && (
+                <Image
+                  src={imageSource.src}
+                  alt={active ? item.alt : ''}
+                  width={imageSource.width}
+                  height={imageSource.height}
+                  className={styles.image}
+                  style={{
+                    transform: `scale(${imageSource.width / item.crop.width}) translate(${(-item.crop.x / imageSource.width) * 100}%, ${(-item.crop.y / imageSource.height) * 100}%)`,
+                  }}
+                  sizes="220vw"
+                  loading="eager"
+                />
+              )}
+            </div>
           );
         })}
-        {slide.kind === 'image' && <span className={styles.detailBadge}>Detail view</span>}
       </div>
 
       <button

@@ -23,18 +23,19 @@ function next(times = 1) {
 describe('platform tour', () => {
   it('rotates through slides and restarts the timer after manual navigation', () => {
     render(<PlatformTour />);
-    expectSlide('Follow the electrical response.');
+    expectSlide('Explore brain data. Build models. Run simulations.');
     expect(
       screen.queryByRole('group', { name: 'Choose a platform detail' })
     ).not.toBeInTheDocument();
     for (const [duration, title] of [
+      [14500, 'Follow the electrical response.'],
       [8000, 'Discover patterns in firing.'],
       [8000, 'See extracellular fields evolve.'],
       [12000, 'Skeletonize electron microscopy data.'],
       [16000, 'Explore a Drosophila brain in 3D.'],
       [4000, 'Compare activity across cell types.'],
       [8000, 'Use the platform through chat.'],
-      [8000, 'Follow the electrical response.'],
+      [8000, 'Explore brain data. Build models. Run simulations.'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
       expectSlide(title);
@@ -55,7 +56,7 @@ describe('platform tour', () => {
         ).toHaveAttribute('href', '/images/homepage/ai-chat-platform.png');
       }
     }
-    next();
+    next(2);
     act(() => vi.advanceTimersByTime(7999));
     expectSlide('Discover patterns in firing.');
     act(() => vi.advanceTimersByTime(1));
@@ -72,7 +73,7 @@ describe('platform tour', () => {
     });
     expectSlide('Use the platform through chat.');
     fireEvent.keyDown(screen.getByRole('button', { name: 'Next detail' }), { key: 'ArrowRight' });
-    expectSlide('Follow the electrical response.');
+    expectSlide('Explore brain data. Build models. Run simulations.');
   });
 
   it('swipes between details without turning vertical scrolling into navigation', () => {
@@ -86,10 +87,10 @@ describe('platform tour', () => {
       });
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 150, 105));
-    expectSlide('Discover patterns in firing.');
+    expectSlide('Follow the electrical response.');
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 240, 220));
-    expectSlide('Discover patterns in firing.');
+    expectSlide('Follow the electrical response.');
   });
 
   it('does not start an automatic tour when reduced motion is requested', () => {
@@ -97,8 +98,13 @@ describe('platform tour', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ ...media, matches: true });
     render(<PlatformTour />);
     act(() => vi.advanceTimersByTime(24000));
-    expectSlide('Follow the electrical response.');
-    next(3);
+    expectSlide('Explore brain data. Build models. Run simulations.');
+    expect(screen.getByRole('img', { name: /Animated overview of brain models/ })).toHaveAttribute(
+      'src',
+      '/images/homepage/models-overview-poster.jpg'
+    );
+    expect(document.querySelector('video')).not.toBeInTheDocument();
+    next(4);
     expect(
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
     ).toHaveAttribute('src', '/images/homepage/em-cell-mesh-poster.png');
@@ -119,13 +125,13 @@ describe('platform tour', () => {
       screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' })
     );
     fireEvent.focus(screen.getByRole('button', { name: 'Previous detail' }));
-    act(() => vi.advanceTimersByTime(8000));
-    expectSlide('Discover patterns in firing.');
+    act(() => vi.advanceTimersByTime(14500));
+    expectSlide('Follow the electrical response.');
     fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
     fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
     expectSlide('Use the platform through chat.');
     act(() => vi.advanceTimersByTime(8000));
-    expectSlide('Follow the electrical response.');
+    expectSlide('Explore brain data. Build models. Run simulations.');
   });
 
   it('suspends automatic movement when the browser tab is hidden', () => {
@@ -133,6 +139,6 @@ describe('platform tour', () => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
     fireEvent(document, new Event('visibilitychange'));
     act(() => vi.advanceTimersByTime(24000));
-    expectSlide('Follow the electrical response.');
+    expectSlide('Explore brain data. Build models. Run simulations.');
   });
 });

@@ -75,13 +75,22 @@ describe('public homepage', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('starts with voltage traces and keeps the EM animation available', () => {
+  it('starts with Models and replaces the main headline as the carousel advances', () => {
     render(<Homepage year={2026} />);
+    const models = screen.getByLabelText(/Animated overview of brain models/);
+    expect(models.tagName).toBe('VIDEO');
+    expect(models).toHaveAttribute('src', '/images/homepage/models-overview.mp4');
+    expect(models).toHaveAttribute('autoplay');
+    expect(models).toHaveAttribute('playsinline');
+    expect(models).not.toHaveAttribute('controls');
     expect(
-      screen.getByRole('img', { name: /Close-up of membrane voltage traces/ })
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Explore brain data. Build models. Run simulations.',
+      })
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Show cells detail' })).not.toBeInTheDocument();
-    for (let count = 0; count < 3; count += 1) {
+    for (let count = 0; count < 4; count += 1) {
       fireEvent.click(screen.getByRole('button', { name: 'Next detail' }));
     }
     expect(
@@ -95,8 +104,11 @@ describe('public homepage', () => {
     expect(within(tour).queryByRole('heading')).not.toBeInTheDocument();
     const caption = document.getElementById('tour-caption');
     expect(
-      within(caption!).getByRole('heading', { name: 'Skeletonize electron microscopy data.' })
+      screen.getByRole('heading', { level: 1, name: 'Skeletonize electron microscopy data.' })
     ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Explore brain data. Build models. Run simulations.' })
+    ).not.toBeInTheDocument();
     expect(
       within(caption!).getByText(
         'Turn detailed cell meshes into neuronal skeletons for analysis and modeling.'

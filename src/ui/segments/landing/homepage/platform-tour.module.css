@@ -16,18 +16,21 @@
   background: linear-gradient(
     90deg,
     #f8fafc 0%,
-    #f8fafcf5 24%,
-    #f8fafcdb 40%,
-    #f8fafc30 64%,
-    #f8fafc00 82%
+    #f8fafcfb 18%,
+    #f8fafceb 34%,
+    #f8fafcb8 49%,
+    #f8fafc66 65%,
+    #f8fafc1f 83%,
+    #f8fafc00 100%
   );
   mask-image: linear-gradient(
     180deg,
     transparent 0,
-    transparent 116px,
-    #000 176px,
-    #000 calc(100% - 100px),
-    transparent 100%
+    #00000059 48px,
+    #000000cc 100px,
+    #000000f0 160px,
+    #000 240px,
+    #000 100%
   );
 }
 .viewport {
@@ -39,6 +42,19 @@
   touch-action: pan-y;
 }
 
+.layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: #f8fafc;
+  transition: opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.layer.visible {
+  z-index: 1;
+  opacity: 1;
+  pointer-events: auto;
+}
 .image {
   position: absolute;
   inset: 0 auto auto 0;
@@ -47,15 +63,8 @@
   max-width: none;
   height: auto;
   transform-origin: 0 0;
-  opacity: 0;
-  transition:
-    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 250ms ease-out;
   user-select: none;
   pointer-events: none;
-}
-.active {
-  opacity: 1;
 }
 .animation {
   position: absolute;
@@ -68,18 +77,6 @@
   background: #f8fafc;
   user-select: none;
   pointer-events: none;
-}
-
-.detailBadge {
-  position: absolute;
-  left: 12px;
-  bottom: 10px;
-  padding: 4px 7px;
-  border: 1px solid #dce3ee;
-  border-radius: 3px;
-  background: #fffffff0;
-  color: #49627f;
-  font-size: 9px;
 }
 
 .screenshotFrame {
@@ -214,7 +211,8 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .image {
+  .image,
+  .layer {
     transition: none;
   }
 }
