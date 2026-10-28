@@ -1,4 +1,5 @@
 import { isNil } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { getSingleNeuronSynaptome } from '@/api/entitycore/queries/model/single-neuron-synaptome';
@@ -22,7 +23,6 @@ import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
@@ -36,8 +36,14 @@ import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definit
 import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
-import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
+import {
+  detailViewLinkClass,
+  detailViewValueClass,
+  detailViewVariantFromGroup,
+} from '@/ui/segments/detail-view/variant-styles';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
+import { cn } from '@/utils/css-class';
+import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type {
   IMEModel,
@@ -355,6 +361,9 @@ export default async function Configuration({
   }
 
   if (extendedType === 'single_neuron_synaptome') {
+    // a synaptome has no generating task-activity of its own: it's built directly on an
+    // ME-model, so the closest thing to "its workflow" is the build campaign of that ME-model
+    const synaptome = entity as ISingleNeuronSynaptome;
     let data: AwaitedType<ReturnType<typeof loadExpandedSingleNeuronSynaptome>>;
     try {
       data = await loadExpandedSingleNeuronSynaptome({
@@ -366,15 +375,55 @@ export default async function Configuration({
       notFound();
     }
 
-    return (
-      <div className="flex w-full flex-col gap-4">
-        <SynaptomeConfig
-          memodel={data.memodel}
+    const { data: build } = await tryCatch(
+      resolveMEModelBuildCampaign(synaptome.me_model.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.MEModelBuildCampaign
+    );
+
+    const workflow =
+      build && scanConfig ? (
+        <ScanConfiguration
+          entityId={build.sourceEntityId ?? undefined}
+          scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          variant={fieldVariant}
+          origin={build.campaign.id}
+          initialConfig={build.config?.form}
+          readOnly
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Build}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={buildMEModelWorkflow.taskTypeBindings}
         />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          No configuration found for this synaptome.
+        </div>
+      );
 
+    return (
+      <div className="flex w-full flex-col gap-4">
+        {build && (
+          <div className={cn('flex items-center gap-2', detailViewValueClass(fieldVariant))}>
+            Synapses added to ME-model{' '}
+            <Link
+              href={`${resolveExploreDetailsPageUrl({
+                ctx: context,
+                dataType: ExtendedEntitiesTypeDict.Memodel,
+                entityId: synaptome.me_model.id,
+              })}/workflow`}
+              className={detailViewLinkClass(fieldVariant)}
+            >
+              {synaptome.me_model.name}
+            </Link>
+          </div>
+        )}
+        {workflow}
         <div className="mt-10">
           <SynapseGroupList config={data.config} variant={fieldVariant} />
         </div>

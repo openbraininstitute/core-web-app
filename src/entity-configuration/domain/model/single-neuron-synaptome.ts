@@ -48,7 +48,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Workflow,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isBookmarkable: true,
