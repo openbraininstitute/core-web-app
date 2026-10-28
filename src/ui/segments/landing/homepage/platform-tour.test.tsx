@@ -9,33 +9,43 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function expectAction(name: string) {
+  const actions = screen.getAllByTestId('tour-platform-action');
+  expect(actions).toHaveLength(1);
+  expect(actions[0]).toHaveAccessibleName(name);
+  expect(actions[0]).toHaveAttribute('href', '/app/virtual-lab/sync');
+}
+
+function next(times = 1) {
+  for (let count = 0; count < times; count += 1) {
+    fireEvent.click(screen.getByRole('button', { name: 'Next detail' }));
+  }
+}
+
 describe('platform tour', () => {
-  it('rotates through the requested order and restarts the timer after manual navigation', () => {
+  it('rotates through contextual platform actions and restarts the timer after manual navigation', () => {
     render(<PlatformTour />);
-    expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    for (const [duration, label] of [
-      [8000, 'spikes'],
-      [8000, 'l4 field'],
-      [12000, 'em mesh'],
-      [16000, 'flywire'],
-      [4000, 'analysis'],
-      [8000, 'ai chat'],
-      [8000, 'voltages'],
+    expectAction('Try a voltage simulation');
+    expect(
+      screen.queryByRole('group', { name: 'Choose a platform detail' })
+    ).not.toBeInTheDocument();
+    for (const [duration, action] of [
+      [8000, 'Explore spike activity'],
+      [8000, 'Explore extracellular fields'],
+      [12000, 'Skeletonize EM data'],
+      [16000, 'Try the FlyWire model'],
+      [4000, 'Analyze simulation results'],
+      [8000, 'Try the platform through chat'],
+      [8000, 'Try a voltage simulation'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
-      expect(screen.getByRole('button', { name: `Show ${label} detail` })).toHaveAttribute(
-        'aria-pressed',
-        'true'
-      );
-      if (label === 'flywire') {
+      expectAction(action);
+      if (action === 'Try the FlyWire model') {
         expect(
           screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
         ).toHaveAttribute('src', '/images/homepage/flywire-3d.webp');
       }
-      if (label === 'ai chat') {
+      if (action === 'Try the platform through chat') {
         expect(
           screen.getByRole('heading', { name: 'Use the platform through chat.' })
         ).toBeInTheDocument();
@@ -47,33 +57,22 @@ describe('platform tour', () => {
         ).toHaveAttribute('href', '/images/homepage/ai-chat-platform.png');
       }
     }
-    fireEvent.click(screen.getByRole('button', { name: 'Show spikes detail' }));
+    next();
     act(() => vi.advanceTimersByTime(7999));
-    expect(
-      screen.getByRole('heading', { name: 'Discover patterns in firing.' })
-    ).toBeInTheDocument();
+    expectAction('Explore spike activity');
     act(() => vi.advanceTimersByTime(1));
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces.gif');
+    expectAction('Explore extracellular fields');
   });
 
   it('supports arrow keys and wraps through every detail', () => {
     render(<PlatformTour />);
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Show voltages detail' }), {
-      key: 'ArrowLeft',
-    });
-    expect(screen.getByRole('button', { name: 'Show ai chat detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Show ai chat detail' }), {
-      key: 'ArrowRight',
-    });
-    expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    fireEvent.keyDown(screen.getByTestId('tour-platform-action'), { key: 'ArrowLeft' });
+    expectAction('Try the platform through chat');
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Next detail' }), { key: 'ArrowRight' });
+    expectAction('Try a voltage simulation');
   });
 
   it('swipes between details without turning vertical scrolling into navigation', () => {
@@ -87,16 +86,10 @@ describe('platform tour', () => {
       });
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 150, 105));
-    expect(screen.getByRole('button', { name: 'Show spikes detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expectAction('Explore spike activity');
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 240, 220));
-    expect(screen.getByRole('button', { name: 'Show spikes detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expectAction('Explore spike activity');
   });
 
   it('does not start an automatic tour when reduced motion is requested', () => {
@@ -104,22 +97,20 @@ describe('platform tour', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ ...media, matches: true });
     render(<PlatformTour />);
     act(() => vi.advanceTimersByTime(24000));
-    expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Show em mesh detail' }));
+    expectAction('Try a voltage simulation');
+    next(3);
     expect(
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
     ).toHaveAttribute('src', '/images/homepage/em-cell-mesh-poster.png');
-    fireEvent.click(screen.getByRole('button', { name: 'Show l4 field detail' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces-poster.png');
-    fireEvent.click(screen.getByRole('button', { name: 'Show flywire detail' }));
+    next(2);
     expect(
       screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
     ).toHaveAttribute('src', '/images/homepage/flywire-3d-poster.png');
+    expectAction('Try the FlyWire model');
   });
 
   it('keeps rotating after pointer interaction and wraps from the last slide to the first', () => {
@@ -127,18 +118,14 @@ describe('platform tour', () => {
     fireEvent.mouseEnter(
       screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' })
     );
-    fireEvent.focus(screen.getByRole('button', { name: 'Show voltages detail' }));
+    fireEvent.focus(screen.getByTestId('tour-platform-action'));
     act(() => vi.advanceTimersByTime(8000));
-    expect(screen.getByRole('button', { name: 'Show spikes detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
-    fireEvent.click(screen.getByRole('button', { name: 'Show ai chat detail' }));
+    expectAction('Explore spike activity');
+    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
+    expectAction('Try the platform through chat');
     act(() => vi.advanceTimersByTime(8000));
-    expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expectAction('Try a voltage simulation');
   });
 
   it('suspends automatic movement when the browser tab is hidden', () => {
@@ -146,9 +133,6 @@ describe('platform tour', () => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
     fireEvent(document, new Event('visibilitychange'));
     act(() => vi.advanceTimersByTime(24000));
-    expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
-      'aria-pressed',
-      'true'
-    );
+    expectAction('Try a voltage simulation');
   });
 });

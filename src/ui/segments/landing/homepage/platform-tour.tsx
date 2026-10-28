@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import type { KeyboardEvent, PointerEvent } from 'react';
@@ -52,7 +53,7 @@ const SOURCES = {
 
 type Slide = {
   id: string;
-  label: string;
+  action: string;
   title: string;
   description: string;
   alt: string;
@@ -66,7 +67,7 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'voltages',
     kind: 'image',
-    label: 'Voltages',
+    action: 'Try a voltage simulation',
     title: 'Follow the electrical response.',
     description: 'Compare membrane voltage traces across recorded neurons.',
     alt: 'Close-up of membrane voltage traces and their time axis in the simulation results.',
@@ -76,7 +77,7 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'spikes',
     kind: 'image',
-    label: 'Spikes',
+    action: 'Explore spike activity',
     title: 'Discover patterns in firing.',
     description: 'Inspect when individual neurons spike over the course of a simulation.',
     alt: 'Close-up of the spike raster, showing neuronal firing times and stimulus markers.',
@@ -85,7 +86,7 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'lfp',
-    label: 'L4 field',
+    action: 'Explore extracellular fields',
     title: 'See extracellular fields evolve.',
     description:
       'Watch extracellular field changes alongside the neurons’ synchronized voltage traces.',
@@ -95,7 +96,7 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'em',
-    label: 'EM mesh',
+    action: 'Skeletonize EM data',
     title: 'Skeletonize electron microscopy data.',
     description: 'Turn detailed cell meshes into neuronal skeletons for analysis and modeling.',
     alt: 'Animated electron microscopy cell mesh showing the neuron’s surface and branching structure.',
@@ -104,7 +105,7 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'flywire',
-    label: 'FlyWire',
+    action: 'Try the FlyWire model',
     title: 'Explore a Drosophila brain in 3D.',
     description:
       'View the FlyWire Drosophila model from different angles in the platform’s 3D viewer.',
@@ -115,7 +116,7 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'analysis',
     kind: 'image',
-    label: 'Analysis',
+    action: 'Analyze simulation results',
     title: 'Compare activity across cell types.',
     description: 'Explore distributions of mean membrane voltage for different neuron groups.',
     alt: 'Close-up of colored mean membrane voltage distributions grouped by neuron type.',
@@ -125,7 +126,7 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'ai-chat',
     kind: 'screenshot',
-    label: 'AI chat',
+    action: 'Try the platform through chat',
     title: 'Use the platform through chat.',
     description:
       'Connect a compatible AI assistant to explore data, run simulations, and analyze results through conversation.',
@@ -307,21 +308,15 @@ export default function PlatformTour() {
         >
           <span aria-hidden="true">←</span>
         </button>
-        <fieldset className={styles.sceneButtons} aria-label="Choose a platform detail">
-          {SLIDES.map((item, position) => (
-            <button
-              key={item.id}
-              type="button"
-              className={styles.sceneButton}
-              aria-label={`Show ${item.label.toLowerCase()} detail`}
-              aria-pressed={index === position}
-              onClick={() => selectSlide(position)}
-              onKeyDown={handleKeys}
-            >
-              {item.label}
-            </button>
-          ))}
-        </fieldset>
+        <Link
+          className={styles.action}
+          href="/app/virtual-lab/sync"
+          prefetch={false}
+          onKeyDown={handleKeys}
+          data-testid="tour-platform-action"
+        >
+          {slide.action} <span aria-hidden="true">↗</span>
+        </Link>
         <button
           type="button"
           className={styles.arrow}

@@ -125,8 +125,9 @@
 }
 
 .controls {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: stretch;
   gap: 10px;
   padding: 2px 16px 15px;
 }
@@ -144,42 +145,36 @@
 .arrow:hover {
   background: #e4ecf8;
 }
-.sceneButtons {
-  margin: 0;
-  padding: 0;
-  border: 0;
+.tour .action {
   display: flex;
-  flex: 1;
-  justify-content: space-evenly;
-  min-width: 0;
-  gap: 3px;
-}
-.sceneButton {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   min-height: 44px;
-  padding: 7px;
+  padding: 10px 14px;
   border-radius: 4px;
-  background: transparent;
-  font-size: 11px;
-  color: #536983;
-  white-space: nowrap;
-}
-.sceneButton[aria-pressed="true"] {
-  color: #fff;
   background: #183f8b;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
 }
-.sceneButton:hover:not([aria-pressed="true"]) {
-  background: #edf2f9;
+.tour .action span {
+  flex-shrink: 0;
+}
+.tour .action:hover {
+  background: #102e69;
+  color: #fff;
+}
+.tour .action:focus-visible,
+.arrow:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 3px;
 }
 
 @media (max-width: 1200px) and (min-width: 801px) {
-  .controls {
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  .sceneButtons {
-    order: -1;
-    flex-basis: 100%;
-  }
   .captionTitle h2 {
     font-size: 18px;
   }
@@ -196,21 +191,14 @@
     font-size: 13px;
   }
   .controls {
+    grid-template-columns: 48px minmax(0, 1fr) 48px;
     gap: 8px;
-    flex-wrap: wrap;
-    justify-content: space-between;
     padding: 0 12px 12px;
   }
-  .sceneButtons {
-    order: -1;
-    flex-basis: 100%;
-    gap: 3px;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-  .sceneButton {
-    padding-inline: 8px;
-    font-size: 12px;
+  .tour .action {
+    font-size: 13px;
+    padding-inline: 10px;
+    gap: 8px;
   }
   .arrow {
     min-width: 48px;
@@ -219,12 +207,5 @@
 @media (prefers-reduced-motion: reduce) {
   .image {
     transition: none;
-  }
-}
-
-@media (max-width: 360px) {
-  .sceneButtons {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

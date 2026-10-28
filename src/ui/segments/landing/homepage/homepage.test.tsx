@@ -81,7 +81,9 @@ describe('public homepage', () => {
       screen.getByRole('img', { name: /Close-up of membrane voltage traces/ })
     ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Show cells detail' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show em mesh detail' }));
+    for (let count = 0; count < 3; count += 1) {
+      fireEvent.click(screen.getByRole('button', { name: 'Next detail' }));
+    }
     expect(
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
     ).toHaveAttribute('src', '/images/homepage/em-cell-mesh.webp');
@@ -89,7 +91,10 @@ describe('public homepage', () => {
     expect(document.querySelector('video')).not.toBeInTheDocument();
     const tour = screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' });
     expect(within(tour).queryByText('Take a closer look')).not.toBeInTheDocument();
-    expect(within(tour).queryByRole('link')).not.toBeInTheDocument();
+    expect(within(tour).getByRole('link', { name: 'Skeletonize EM data' })).toHaveAttribute(
+      'href',
+      '/app/virtual-lab/sync'
+    );
     expect(
       within(tour).queryByRole('button', { name: /Play platform tour|Pause platform tour/ })
     ).not.toBeInTheDocument();
