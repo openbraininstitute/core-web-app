@@ -53,7 +53,6 @@ export default function Homepage({
               onKeyDown={closeMenuOnEscape}
             >
               <a href="#research">What you can do</a>
-              <Link href="#preview">See the platform</Link>
               <a href="#getting-started">Getting started</a>
               <Link
                 className={`${styles.button} ${styles.small} ${styles.white}`}
@@ -103,9 +102,6 @@ export default function Homepage({
                   data-testid="virtual-labs-link"
                 >
                   {researchAction} <span>↗</span>
-                </Link>
-                <Link className={styles['demo-link']} href="#preview">
-                  <span className={styles.play}>▷</span> See the platform
                 </Link>
               </div>
               <p className={styles.reassurance}>
