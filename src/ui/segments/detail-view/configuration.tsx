@@ -471,5 +471,15 @@ export default async function Configuration({
     );
   }
 
+  if (extendedType === ExtendedEntitiesTypeDict.SynthesizedCellMorphology) {
+    // no backend task-activity/task-config type exists for morphology synthesis, so this can
+    // never be traced to a generating workflow
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this morphology.
+      </div>
+    );
+  }
+
   notFound();
 }

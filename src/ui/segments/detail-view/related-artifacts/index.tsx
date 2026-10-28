@@ -11,9 +11,11 @@ import { RelatedEntities as EmodelRelatedEntities } from '@/ui/segments/detail-v
 import { ICMRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/index';
 import { RelatedEntities as MEModelRelatedEntities } from '@/ui/segments/detail-view/related-artifacts/me-model';
 import { RelatedEntities as SynaptomeRelatedEntities } from '@/ui/segments/detail-view/related-artifacts/single-neuron-synaptome';
+import { RelatedEntities as SynthesizedMorphologyRelatedEntities } from '@/ui/segments/detail-view/related-artifacts/synthesized-morphology';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
 
+import type { ICellMorphology } from '@/api/entitycore/types/entities/cell-morphology';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
@@ -79,5 +81,14 @@ export default async function RelatedArtifacts({
     .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.Emodel } }, () => (
       <EmodelRelatedEntities emodel={entity as IEModel} variant={fieldVariant} />
     ))
+    .with(
+      { entityConfig: { extendedType: ExtendedEntitiesTypeDict.SynthesizedCellMorphology } },
+      () => (
+        <SynthesizedMorphologyRelatedEntities
+          morphology={entity as ICellMorphology}
+          variant={fieldVariant}
+        />
+      )
+    )
     .otherwise(() => notFound());
 }

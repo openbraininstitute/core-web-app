@@ -61,7 +61,11 @@ export const SynthesizedCellMorphology: EntityCoreTypeConfig<
   },
   asset: { extension: 'application/swc' },
   viewDefinition: ViewsDefinitionRegistry[ExtendedEntitiesTypeDict.CellMorphology],
-  detailViewSections: [DetailViewSectionsDict.Overview],
+  detailViewSections: [
+    DetailViewSectionsDict.Overview,
+    DetailViewSectionsDict.Workflow,
+    DetailViewSectionsDict.RelatedArtifacts,
+  ],
   isDownloadable: true,
   isBookmarkable: true,
   isCopyable: true,
