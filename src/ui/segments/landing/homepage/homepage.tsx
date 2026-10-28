@@ -66,7 +66,7 @@ export default function Homepage({
                 prefetch={false}
                 data-testid="header-desktop-link-app-virtual-lab"
               >
-                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'} <span>↗</span>
+                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'}
               </Link>
             </nav>
             <button
