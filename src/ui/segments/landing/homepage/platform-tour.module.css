@@ -13,9 +13,22 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background:
-    linear-gradient(90deg, #f8fafc 0%, #f8fafcf5 24%, #f8fafcdb 40%, #f8fafc30 64%, #f8fafc00 82%),
-    linear-gradient(0deg, #f8fafcf2 0%, #f8fafc00 30%);
+  background: linear-gradient(
+    90deg,
+    #f8fafc 0%,
+    #f8fafcf5 24%,
+    #f8fafcdb 40%,
+    #f8fafc30 64%,
+    #f8fafc00 82%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    transparent 116px,
+    #000 176px,
+    #000 calc(100% - 100px),
+    transparent 100%
+  );
 }
 .viewport {
   position: absolute;
@@ -112,9 +125,11 @@
   border: 1px solid #ffffffb3;
   border-radius: 12px;
   color: #102c60;
-  background: #ffffff6b;
-  box-shadow: 0 8px 30px #102c6012;
-  backdrop-filter: blur(18px);
+  background: linear-gradient(135deg, #ffffffad, #e5edf680);
+  box-shadow:
+    inset 0 1px 0 #ffffffcc,
+    0 10px 32px #102c6026;
+  backdrop-filter: blur(24px) saturate(150%);
 }
 .captionTitle {
   display: flex;
@@ -129,11 +144,6 @@
   line-height: 1.3;
   font-weight: 400;
   letter-spacing: normal;
-}
-.captionTitle > span {
-  font-size: 11px;
-  color: #49627f;
-  flex-shrink: 0;
 }
 .caption p {
   min-height: 46px;
@@ -150,21 +160,31 @@
   right: 48px;
   bottom: 48px;
   width: min(420px, 36%);
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  align-items: stretch;
-  gap: 8px;
+  display: block;
 }
-.arrow {
+.tour .arrow {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  transform: translateY(-50%);
   display: grid;
   place-items: center;
-  min-width: 38px;
-  min-height: 44px;
-  padding: 6px;
-  border-radius: 4px;
-  background: #f2f5fa;
+  width: 44px;
+  min-height: 64px;
+  padding: 0;
+  border: 1px solid #ffffff80;
+  border-radius: 8px;
+  background: #ffffff73;
+  backdrop-filter: blur(12px);
   color: #183f8b;
-  font-size: 20px;
+  font-size: 38px;
+  line-height: 1;
+}
+.previous {
+  left: 6px;
+}
+.next {
+  right: 6px;
 }
 .arrow:hover {
   background: #e4ecf8;
@@ -214,9 +234,8 @@
     top: 420px;
   }
   .tour::after {
-    background:
-      linear-gradient(180deg, #f8fafc 0%, #f8fafc 38%, #f8fafce8 49%, #f8fafc00 70%),
-      linear-gradient(0deg, #f8fafc 0%, #f8fafc00 35%);
+    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 38%, #f8fafce8 49%, #f8fafc00 70%);
+    mask-image: none;
   }
   .caption,
   .controls {
@@ -237,15 +256,15 @@
   }
   .controls {
     bottom: 30px;
-    grid-template-columns: 48px minmax(0, 1fr) 48px;
   }
   .tour .action {
     font-size: 13px;
     padding-inline: 10px;
     gap: 8px;
   }
-  .arrow {
-    min-width: 48px;
+  .tour .arrow {
+    top: 65%;
+    min-height: 56px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

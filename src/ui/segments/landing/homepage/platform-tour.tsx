@@ -280,26 +280,33 @@ export default function PlatformTour() {
         {slide.kind === 'image' && <span className={styles.detailBadge}>Detail view</span>}
       </div>
 
+      <button
+        type="button"
+        className={`${styles.arrow} ${styles.previous}`}
+        aria-label="Previous detail"
+        onKeyDown={handleKeys}
+        onClick={() => selectSlide(index - 1)}
+      >
+        <span aria-hidden="true">‹</span>
+      </button>
+      <button
+        type="button"
+        className={`${styles.arrow} ${styles.next}`}
+        aria-label="Next detail"
+        onKeyDown={handleKeys}
+        onClick={() => selectSlide(index + 1)}
+      >
+        <span aria-hidden="true">›</span>
+      </button>
+
       <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
         <div className={styles.captionTitle}>
           <h2>{slide.title}</h2>
-          <span>
-            {index + 1} / {SLIDES.length}
-          </span>
         </div>
         <p>{slide.description}</p>
       </div>
 
       <div className={styles.controls}>
-        <button
-          type="button"
-          className={styles.arrow}
-          aria-label="Previous detail"
-          onKeyDown={handleKeys}
-          onClick={() => selectSlide(index - 1)}
-        >
-          <span aria-hidden="true">←</span>
-        </button>
         <Link
           className={styles.action}
           href="/app/virtual-lab/sync"
@@ -309,15 +316,6 @@ export default function PlatformTour() {
         >
           Try out yourself <span aria-hidden="true">↗</span>
         </Link>
-        <button
-          type="button"
-          className={styles.arrow}
-          aria-label="Next detail"
-          onKeyDown={handleKeys}
-          onClick={() => selectSlide(index + 1)}
-        >
-          <span aria-hidden="true">→</span>
-        </button>
       </div>
     </section>
   );
