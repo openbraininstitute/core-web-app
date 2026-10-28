@@ -55,22 +55,14 @@ export default function Homepage({
               <a href="#research">What you can do</a>
               <Link href="#preview">See the platform</Link>
               <a href="#getting-started">Getting started</a>
-              <div className={styles['account-entry']}>
-                <Link
-                  className={`${styles.button} ${styles.small} ${styles.white}`}
-                  href="/app/virtual-lab/sync"
-                  prefetch={false}
-                  data-testid="header-desktop-link-app-virtual-lab"
-                  aria-describedby={!isAuthenticated ? 'homepage-account-hint' : undefined}
-                >
-                  Open Virtual Labs <span>↗</span>
-                </Link>
-                {!isAuthenticated && (
-                  <p id="homepage-account-hint" className={styles['account-hint']}>
-                    Sign in or create a free account
-                  </p>
-                )}
-              </div>
+              <Link
+                className={`${styles.button} ${styles.small} ${styles.white}`}
+                href="/app/virtual-lab/sync"
+                prefetch={false}
+                data-testid="header-desktop-link-app-virtual-lab"
+              >
+                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up for free'} <span>↗</span>
+              </Link>
             </nav>
             <button
               className={styles['menu-toggle']}

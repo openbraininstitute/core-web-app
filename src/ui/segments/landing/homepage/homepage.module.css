@@ -107,19 +107,6 @@
   text-decoration: underline;
   text-underline-offset: 7px;
 }
-.homepage .account-entry {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 5px;
-}
-.homepage .account-hint {
-  margin: 0;
-  color: #e0e8fa;
-  font-size: 11px;
-  line-height: 1.4;
-  text-align: center;
-}
 .homepage .button {
   border: 0;
   border-radius: 5px;
