@@ -108,9 +108,10 @@
   right: 48px;
   bottom: 108px;
   width: min(420px, 36%);
-  padding: 18px 20px;
+  padding: 18px 24px;
   border: 1px solid #ffffffb3;
-  border-radius: 8px;
+  border-radius: 12px;
+  color: #102c60;
   background: #ffffff6b;
   box-shadow: 0 8px 30px #102c6012;
   backdrop-filter: blur(18px);
