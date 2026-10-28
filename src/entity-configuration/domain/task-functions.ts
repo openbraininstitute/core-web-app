@@ -1,15 +1,20 @@
 import { sortBy } from 'es-toolkit/compat';
 
+import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { getTaskConfig, getTaskConfigs } from '@/api/entitycore/queries/task/task-config';
 import { discardBrainRegionQueryParams } from '@/api/entitycore/transformers';
 import { ActivityStatus } from '@/api/entitycore/types/entities/task-activity';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import {
   listTaskActivitiesByUsedIdsAnyType,
   listTaskConfigsByGeneratorIdAnyType,
   listTaskConfigsByGeneratorIdsAnyType,
 } from '@/features/task-runner/functions';
 
-import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
+import type {
+  ITaskActivity,
+  TTaskActivityType,
+} from '@/api/entitycore/types/entities/task-activity';
 import type {
   ITaskConfig,
   ITaskConfigFilter,
@@ -121,7 +126,52 @@ export function getTaskCampaignStatusCountMap<T extends TTaskCampaignExecutionRo
   return map;
 }
 
+/** id of the task config an activity of `type` used to generate entity `id` */
+export async function usedTaskConfigId(
+  id: string,
+  type: TTaskActivityType,
+  context: WorkspaceContext | undefined
+) {
+  const { data } = await getTaskActivities({
+    context,
+    filters: { generated__id: id, task_activity_type: type },
+  });
+  return (
+    data
+      .flatMap((activity) => activity.used)
+      // a ref's type may be absent; executions and generations only use task configs anyway
+      .find((entity) => (entity.type ?? EntityTypeDict.TaskConfig) === EntityTypeDict.TaskConfig)
+      ?.id ?? null
+  );
+}
+
 export namespace Task {
+  /**
+   * Campaign id of an entity a task generated (an e-model, an e-feature result, ...); `null` when
+   * it cannot be traced. Generated entities have no FK to their campaign, so walk provenance:
+   * entity → `executionType` activity → the config it used → campaign
+   * (`task_config_generator_id`, else the `configGenerationType` activity).
+   */
+  export async function campaignIdOf({
+    id,
+    executionType,
+    configGenerationType,
+    context,
+  }: {
+    id: string;
+    executionType: TTaskActivityType;
+    configGenerationType: TTaskActivityType;
+    context: WorkspaceContext | undefined;
+  }) {
+    const configId = await usedTaskConfigId(id, executionType, context);
+    if (!configId) return null;
+
+    const config = await getTaskConfig({ id: configId, context });
+    return (
+      config.task_config_generator_id ??
+      (await usedTaskConfigId(configId, configGenerationType, context))
+    );
+  }
   export async function many<TMeta extends Record<string, unknown> = Record<string, unknown>>({
     withFacets,
     context,

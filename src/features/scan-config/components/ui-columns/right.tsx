@@ -116,7 +116,7 @@ function useHostNeuronOpacity(): number | undefined {
 }
 
 /** Browse-selection overlay: loaded mini-detail or loading skeleton. */
-function EntityPreviewPane({
+export function EntityPreviewPane({
   dataType,
   record,
   pinned,
@@ -145,6 +145,8 @@ function EntityPreviewPane({
           theme={ViewVariant.Light}
           enableAnimation={false}
           hideUseModelAction
+          // leaving the page would lose the config being viewed or edited
+          openDetailsInNewTab
           interactive
           onClose={pinned ? undefined : () => setEntityPreview(null)}
         />

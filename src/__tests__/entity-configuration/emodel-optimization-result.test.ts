@@ -4,7 +4,6 @@ import {
   dataBrowseListingUsesBrainRegionHierarchy,
   ExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
 import { getViewDefinitionByExtendedType } from '@/entity-configuration/definitions/view-defs';
 import { EntityCoreConfiguration } from '@/entity-configuration/domain';
 import { DATA_BROWSE_ALLOWED_ENTITIES } from '@/features/views/listing/data-browse-entities';
@@ -32,7 +31,10 @@ describe('e-model optimisation result entity is removed', () => {
 });
 
 describe('e-model optimisation campaign', () => {
-  it('is registered under simulations with the display title', () => {
+  // The campaign is no longer browsable on its own: it is unlisted from Data > Simulations, but
+  // its domain config (and `resolve()`) stays registered because an e-model's own Configuration
+  // tab still traces back to the campaign that produced it (resolveEModelOptimizationCampaign).
+  it('is registered with the display title, but not listed under simulations', () => {
     const config = EntityCoreConfiguration.EModelOptimizationCampaign;
 
     expect(config.extendedType).toBe(ExtendedEntitiesTypeDict.EModelOptimizationCampaign);
@@ -40,36 +42,21 @@ describe('e-model optimisation campaign', () => {
     expect(config.title).toBe('E-model optimisation');
   });
 
-  it('is listed in Data > Simulations and its browse route', () => {
+  it('is not listed in Data > Simulations nor its browse route', () => {
     const simulations = Object.values(SimulationDataExtendedTypes).map(
       (entry) => entry.extendedType
     );
 
-    expect(simulations).toContain(ExtendedEntitiesTypeDict.EModelOptimizationCampaign);
-    expect(DATA_BROWSE_ALLOWED_ENTITIES).toContain(
+    expect(simulations).not.toContain(ExtendedEntitiesTypeDict.EModelOptimizationCampaign);
+    expect(DATA_BROWSE_ALLOWED_ENTITIES).not.toContain(
       ExtendedEntitiesTypeDict.EModelOptimizationCampaign
     );
   });
 
-  it('shows only the fields a campaign carries', () => {
-    const viewDef = getViewDefinitionByExtendedType(
-      ExtendedEntitiesTypeDict.EModelOptimizationCampaign
-    );
-
-    expect(viewDef?.columns).toEqual([
-      EntityCoreFields.Name,
-      EntityCoreFields.Description,
-      EntityCoreFields.RegistrationDate,
-    ]);
-
-    const displayed = [
-      ...(viewDef?.columns ?? []),
-      ...(viewDef?.summaryViewFields ?? []).map((entry) => entry.field),
-      ...(viewDef?.miniDetailView ?? []).map((entry) => entry.field),
-    ];
-    expect(displayed).not.toContain(EntityCoreFields.EType);
-    expect(displayed).not.toContain(EntityCoreFields.BrainRegion);
-    expect(displayed).not.toContain(EntityCoreFields.SpeciesName);
+  it('no longer has a browse-listing view definition', () => {
+    expect(
+      getViewDefinitionByExtendedType(ExtendedEntitiesTypeDict.EModelOptimizationCampaign)
+    ).toBeNull();
   });
 
   it('opts out of brain-region hierarchy scoping', () => {

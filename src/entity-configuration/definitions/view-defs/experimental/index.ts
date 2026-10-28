@@ -1,5 +1,6 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
+import { viewDefForEFeatureExtractionResult } from '@/entity-configuration/definitions/view-defs/experimental/efeature-extraction-result';
 import { viewDefForElectricalCellRecording } from '@/entity-configuration/definitions/view-defs/experimental/electrical-cell-recording';
 import { viewDefForEMCellMesh } from '@/entity-configuration/definitions/view-defs/experimental/em-cell-mesh';
 import { viewDefForExperimentalBoutonDensity } from '@/entity-configuration/definitions/view-defs/experimental/experimental-bouton-density';
@@ -20,4 +21,5 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
   [ExtendedEntitiesTypeDict.ExperimentalSynapsesPerConnection]:
     viewDefForExperimentalSynapsesPerConnection,
   [ExtendedEntitiesTypeDict.EMCellMesh]: viewDefForEMCellMesh,
+  [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: viewDefForEFeatureExtractionResult,
 };

@@ -208,7 +208,12 @@ export function AsyncSelect<R extends Partial<PaginationFilter & SearchFilter>, 
           <div
             id={`async-select-label-${id}`}
             className={cn('line-clamp-1 w-full truncate text-left', clsx?.label, {
-              'text-neutral-2 placeholder:text-sm': !selectedOptionFromProps?.label,
+              // grey "placeholder" styling only when nothing is selected. A `selectedValue` not
+              // yet in `selectedOptionFromProps` just means its page hasn't loaded yet (options
+              // are paginated); the caller's `placeholder` already carries its resolved label in
+              // that case (see ETypeSelector), so it's safe to show it as a real selection.
+              'text-neutral-2 placeholder:text-sm':
+                !selectedOptionFromProps?.label && !selectedValue,
             })}
           >
             {selectedOptionFromProps?.label || placeholder}
