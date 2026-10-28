@@ -91,9 +91,10 @@ export interface ICircuitViewerChromeProps {
   colorByNoneLabel?: string;
   /**
    * How many cells of the population on show are selected, of how many, and
-   * the way back to them all: said at the top centre while some are.
+   * the way back to them all: said at the top centre while some are. With a
+   * cell `held`, the way back lets that one go first.
    */
-  selection?: { count: number; total: number; onReset: () => void };
+  selection?: { count: number; total: number; onReset: () => void; held?: boolean };
 }
 
 /**
@@ -304,8 +305,8 @@ export function CircuitViewerChrome({
           <button
             type="button"
             onClick={selection.onReset}
-            title="Show every neuron again"
-            aria-label="Show every neuron again"
+            title={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
+            aria-label={selection.held ? 'Let the neuron go' : 'Show every neuron again'}
             className={ROUND_PILL_CLASS}
           >
             <RiResetLeftLine className="size-4" />

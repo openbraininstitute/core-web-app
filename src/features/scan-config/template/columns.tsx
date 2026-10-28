@@ -1,5 +1,10 @@
 'use client';
 
+import {
+  checksMEModelCompatibility,
+  MEMODEL_INPUTS_BLOCK,
+  MEModelCompatibilityResult,
+} from '@/features/scan-config/components/memodel-compatibility';
 import { Left, Middle } from '@/features/scan-config/components/ui-columns';
 import { cn } from '@/utils/css-class';
 
@@ -56,32 +61,38 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
   const { selectedSchema } = state;
   if (!state.editing || selectedSchema === undefined) return null;
 
+  const showsMEModelCompatibility =
+    checksMEModelCompatibility(props) && state.selectedRootElement === MEMODEL_INPUTS_BLOCK;
+
   return (
-    <Middle
-      key={`${props.schemaName}_${state.selectedRootElement}_${state.selectedEntry}_${state.selectedMechanismsTab}`}
-      schema={props.schema}
-      selectedRootElement={state.selectedRootElement}
-      editing={state.editing}
-      selectedEntry={state.selectedEntry}
-      setSelectedEntry={state.setSelectedEntry}
-      campaignId={state.campaignId}
-      loading={state.loading}
-      config={state.config}
-      setConfig={state.setConfig}
-      entity={props.entity}
-      allEntries={state.allEntries}
-      onNewBlockClick={() => {
-        state.setNewKey('');
-        state.setIsEditingKey(false);
-      }}
-      selectedSchema={selectedSchema}
-      schemaMappingConfig={props.schemaMappingConfig}
-      entityType={props.entityType}
-      selectedMechanismsTab={state.selectedMechanismsTab}
-      selectedRegionChoice={state.selectedRegionChoice}
-      setSelectedRegionChoice={state.setSelectedRegionChoice}
-      errors={state.errors}
-    />
+    <>
+      <Middle
+        key={`${props.schemaName}_${state.selectedRootElement}_${state.selectedEntry}_${state.selectedMechanismsTab}`}
+        schema={props.schema}
+        selectedRootElement={state.selectedRootElement}
+        editing={state.editing}
+        selectedEntry={state.selectedEntry}
+        setSelectedEntry={state.setSelectedEntry}
+        campaignId={state.campaignId}
+        loading={state.loading}
+        config={state.config}
+        setConfig={state.setConfig}
+        entity={props.entity}
+        allEntries={state.allEntries}
+        onNewBlockClick={() => {
+          state.setNewKey('');
+          state.setIsEditingKey(false);
+        }}
+        selectedSchema={selectedSchema}
+        schemaMappingConfig={props.schemaMappingConfig}
+        entityType={props.entityType}
+        selectedMechanismsTab={state.selectedMechanismsTab}
+        selectedRegionChoice={state.selectedRegionChoice}
+        setSelectedRegionChoice={state.setSelectedRegionChoice}
+        errors={state.errors}
+      />
+      {showsMEModelCompatibility && <MEModelCompatibilityResult config={state.config} />}
+    </>
   );
 }
 

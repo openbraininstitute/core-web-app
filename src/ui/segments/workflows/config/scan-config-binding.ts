@@ -37,6 +37,7 @@ export const ScanConfigGeneratedApiPath = {
   EModelValidation: 'e-model-validation-scan-config-generate-grid',
   SynapseParameterization: 'synapse-parameterization-scan-config-generate-grid',
   IonChannelFitting: 'ion-channel-fitting-scan-config-generate-grid',
+  MEModelBuild: 'me-model-build-scan-config-generate-grid',
 } as const;
 
 /** Maps browse/session entity types to scan-config API, schema, and FromID wiring. */
@@ -271,6 +272,15 @@ export function buildIonChannelConfigureBinding(): TScanConfigConfigureBinding {
     },
     generatedApiPath: ScanConfigGeneratedApiPath.IonChannelFitting,
     pinEntityPreview: true,
+  };
+}
+
+export function buildMEModelConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.Memodel,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
+    fromIdTypeByBrowseType: {},
+    generatedApiPath: ScanConfigGeneratedApiPath.MEModelBuild,
   };
 }
 

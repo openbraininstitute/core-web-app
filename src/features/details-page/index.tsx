@@ -47,11 +47,15 @@ export function detailPageSectionRenderer({
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
       return <Analysis entity={entity} extendedType={entityType.extendedType} />;
     })
-    .with({ section: DetailViewSectionsDict.Configuration }, () => {
-      return (
-        <Configuration entity={entity} extendedType={entityType.extendedType} context={context} />
-      );
-    })
+    .with(
+      { section: DetailViewSectionsDict.Configuration },
+      { section: DetailViewSectionsDict.Workflow },
+      () => {
+        return (
+          <Configuration entity={entity} extendedType={entityType.extendedType} context={context} />
+        );
+      }
+    )
     .with({ section: DetailViewSectionsDict.RelatedPublications }, () => {
       return <RelatedPublications entity={entity} extendedType={entityType.extendedType} />;
     })

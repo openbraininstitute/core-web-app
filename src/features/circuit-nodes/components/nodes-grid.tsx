@@ -95,7 +95,7 @@ type Props = {
    * grid: the infinite row model drops selection with every page it reloads,
    * and a host picking cells wants them kept through sorts and filters.
    */
-  selectedNodeIds?: ReadonlySet<number>;
+  selectedNodeIds?: PickedRows;
   /** Adds a tick column, for hosts whose clicks pick several rows at once. */
   pickColumn?: boolean;
   /**
@@ -181,6 +181,8 @@ function pinnedFit(width: number, share: number, count: number) {
 const NODE_ID_COLUMN = 'node_id';
 
 export type PickAllState = 'all' | 'some' | 'none';
+/** Picked rows by node id: a set, or what answers as one without holding every id. */
+export type PickedRows = Pick<ReadonlySet<number>, 'has' | 'size'>;
 
 /** What the cell renderers, row classes and the tick column's header read off the grid's context. */
 type GridContext = {
@@ -260,7 +262,7 @@ const PICK_COLUMN: ColDef = {
   cellRenderer: PickCell,
 };
 
-const NO_SELECTION: ReadonlySet<number> = new Set();
+const NO_SELECTION: PickedRows = new Set<number>();
 
 type BuildArgs = {
   orderedColumns: ColumnMeta[];

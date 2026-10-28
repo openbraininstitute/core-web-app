@@ -26,6 +26,7 @@ export const ExtendedEntitiesTypeDict = {
   ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
   BuildSynaptomeCampaign: 'build_synaptome_campaign',
   IonChannelBuildCampaign: 'ion_channel_build_campaign',
+  MEModelBuildCampaign: 'memodel_build_campaign',
   CircuitSynapticPhysiologyCampaign: 'circuit_synaptic_physiology_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',

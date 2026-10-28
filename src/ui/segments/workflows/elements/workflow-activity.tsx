@@ -56,7 +56,7 @@ export function WorkflowActivity() {
           shallow: true,
         })
         .withDefault(
-          ExtendedEntitiesTypeDict.Memodel
+          ExtendedEntitiesTypeDict.MEModelBuildCampaign
         ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
     },
     {
@@ -70,7 +70,7 @@ export function WorkflowActivity() {
   const resolvedActivityType: TActivityValue =
     activityType ?? (ActivityValues.Build as TActivityValue);
   const resolvedEntityType: TExtendedEntitiesTypeDict =
-    entityType ?? ExtendedEntitiesTypeDict.Memodel;
+    entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 

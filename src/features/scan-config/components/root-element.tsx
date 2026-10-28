@@ -1,9 +1,8 @@
 import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
-import { lowerCase, upperFirst } from 'es-toolkit/compat';
 import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
-import { Chevron, LeftMenuTab } from '@/features/scan-config/components/components';
+import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/components/components';
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
@@ -184,19 +183,7 @@ export function RootElement({
                 />
               </span>
               <div className="flex items-center gap-3">
-                {entryCount ? (
-                  <span
-                    className={cn(
-                      // 1em box: the same height as the status mark beside it
-                      'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
-                      isSelected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
-                    )}
-                  >
-                    <span className="text-[0.7em] leading-none font-semibold tabular-nums">
-                      {entryCount}
-                    </span>
-                  </span>
-                ) : null}
+                {entryCount ? <CountBadge count={entryCount} selected={isSelected} /> : null}
 
                 {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
                 hasFieldErrors ? (
@@ -244,6 +231,7 @@ export function RootElement({
             setSelectedMechanismsTab(key);
             setEditing(true);
           }}
+          value={config[rootElement]}
           errors={errors}
         />
       )}
@@ -296,8 +284,7 @@ function SelectedUnionVariantLabel({
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
-    return upperFirst(lowerCase(fallbackTitle));
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -317,5 +304,5 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return upperFirst(lowerCase(selectedVariant?.title ?? fallbackTitle));
+  return selectedVariant?.title ?? fallbackTitle;
 }

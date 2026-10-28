@@ -430,6 +430,19 @@ const cases: TCase[] = [
     href: `${base}/build/configure/ion-channel-build-campaign/{session}?origin=${ENTITY_ID}`,
   },
   {
+    name: 'ME-model build task config → build editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.CellMorphology },
+      taskConfigType: TaskConfigType.MEModelBuildCampaign,
+    },
+    covers: {
+      activity: build,
+      targetType: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    },
+    href: `${base}/build/configure/memodel-build-campaign/{session}?origin=${ENTITY_ID}`,
+  },
+  {
     name: 'circuit synaptic physiology task config → build editor',
     fixture: {
       entity: { type: EntityTypeDict.TaskConfig },
@@ -466,7 +479,6 @@ const cases: TCase[] = [
  * reached from the workflows page, not from an entity link
  */
 const UNREACHABLE_FROM_AN_ENTITY_ID: ReadonlySet<string> = new Set([
-  `${build}/${ExtendedEntitiesTypeDict.Memodel}`,
   `${build}/${ExtendedEntitiesTypeDict.SingleNeuronSynaptome}`,
 ]);
 

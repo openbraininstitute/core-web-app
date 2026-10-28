@@ -236,7 +236,7 @@ export type TEntityQuery = {
 };
 
 /** reads the entity uuid from a config value (FromID ref, `{id}`/`{id_str}`, or bare string). */
-function extractConfigValueId(source: unknown): string | undefined {
+export function extractConfigValueId(source: unknown): string | undefined {
   if (isFromIdRef(source)) {
     return source.id_str;
   }
