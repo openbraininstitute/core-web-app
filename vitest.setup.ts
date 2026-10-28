@@ -2,10 +2,23 @@
 // vitest's `expect`, and cleans up the DOM between tests.
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterAll, afterEach, vi } from 'vitest';
 
 afterEach(() => {
   cleanup();
+});
+
+// Files in the `shared` project (vitest.config.ts) reuse one worker, so undo the
+// global state a file can leave behind before the next file runs there.
+afterAll(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+  if (typeof window !== 'undefined') {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }
 });
 
 // jsdom is missing a few browser APIs that Radix UI primitives (Select, Tooltip)
