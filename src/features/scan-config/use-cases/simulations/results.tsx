@@ -21,7 +21,10 @@ import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/sim
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
 import { useFlag } from '@/features/feature-flags';
-import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
+import {
+  campaignStatisticsFlag,
+  smallScalesViaLaunchSystemFlag,
+} from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -106,6 +109,7 @@ export function SimulationsTab({
   });
 
   const smallScalesViaLaunchSystem = !!useFlag(smallScalesViaLaunchSystemFlag.key);
+  const campaignStatisticsEnabled = !!useFlag(campaignStatisticsFlag.key);
   const launchTarget = resolveSimulationLaunchTarget({
     entityType: entityType ?? null,
     scale: get(model, 'scale', null),
@@ -222,6 +226,20 @@ export function SimulationsTab({
         onChange={act.onActiveSimulationChange}
       />
     ) : null;
+
+  // The campaign itself, for a view comparing its simulations.
+  const campaign = useMemo(
+    () =>
+      activeSimulation && simulations.length > 1
+        ? {
+            simulations,
+            statusMap: localStatusMap,
+            activeSimulationId: activeSimulation.id,
+            onSelect: act.onActiveSimulationChange,
+          }
+        : null,
+    [activeSimulation, simulations, localStatusMap, act.onActiveSimulationChange]
+  );
 
   // By their names' content: the template hands a new list every render.
   const neuronSetKey = neuronSetNames?.join('\n');
@@ -467,6 +485,10 @@ export function SimulationsTab({
               reports={simConfig?.reports}
             />
           }
+          // The campaign's statistics compare its spikes or its voltages, so only those offer them.
+          campaignStatistics={
+            campaignStatisticsEnabled && campaign !== null && shownReport !== undefined
+          }
           campaignId={campaignId}
           loading={loading}
           simulations={simulations}
@@ -543,6 +565,7 @@ export function SimulationsTab({
                     run={simConfig?.run}
                     neuronSets={neuronSets}
                     simulationPicker={simulationPicker}
+                    campaign={campaign}
                     timeline={timeline}
                   >
                     <FileViewer

@@ -62,6 +62,12 @@ function smoothed(rate: Float64Array, sigma: number): Float64Array {
   return out;
 }
 
+/** How long a last bin the span's end cuts short is, in ms; null where the bins fit the span. */
+function partialBinMs([from, to]: [number, number], width: number, bins: number) {
+  const lastFrom = from + (bins - 1) * width;
+  return to - lastFrom < width * (1 - 1e-9) ? to - lastFrom : null;
+}
+
 /**
  * A binned rate as the points of its line: steps, each bin's rate from its
  * start and held to the end of the last; or smoothed, a line through the bins'
@@ -158,8 +164,7 @@ export function psthSeries(
 ): PsthSeries {
   const [from, to] = span;
   const { width, bins } = psthBins(span, binMs);
-  const lastFrom = from + (bins - 1) * width;
-  const partialMs = to - lastFrom < width * (1 - 1e-9) ? to - lastFrom : null;
+  const partialMs = partialBinMs(span, width, bins);
   const groupOf = new Int32Array(rowCount).fill(-1);
   groups.forEach((group, g) => {
     for (const cell of group.cells) if (cell < rowCount) groupOf[cell] = g;
@@ -224,6 +229,50 @@ export function psthSeriesFigure(
           ? undefined
           : { bin: bins - 1, from: from + (bins - 1) * width, to, ms: partialMs, width },
     }
+  );
+}
+
+/**
+ * One population's firing over time, over the cells flagged in `cells` or all
+ * `cellCount` of them: spikes per cell per second, in the same bins as a PSTH
+ * figure's, as steps - each bin's rate from its start, held to the end - or
+ * smoothed the same way, a last bin cut short rated and left out as there.
+ */
+export function psthCourse(
+  spikes: SpikePopulation | undefined,
+  cells: Uint8Array | null,
+  cellCount: number,
+  span: [number, number],
+  { binMs, sigmaMs }: PsthOptions = DEFAULT_PSTH
+): { x: Float64Array; y: Float64Array } {
+  const [from, to] = span;
+  const { width, bins } = psthBins(span, binMs);
+  const partialMs = partialBinMs(span, width, bins);
+  let n = cellCount;
+  if (cells) {
+    n = 0;
+    for (let i = 0; i < cellCount; i++) n += cells[i] ? 1 : 0;
+  }
+  const counts = new Float64Array(bins);
+  if (spikes && n > 0) {
+    const { nodeIds, timestamps } = spikesBetween(spikes, from, to);
+    for (let i = 0; i < nodeIds.length; i++) {
+      const t = timestamps[i];
+      const cell = nodeIds[i];
+      if (t < from || t >= to || !(cell >= 0 && cell < cellCount)) continue;
+      if (cells && !cells[cell]) continue;
+      counts[Math.min(bins - 1, Math.floor((t - from) / width))] += 1;
+    }
+  }
+  const seconds = (bin: number) =>
+    (bin === bins - 1 && partialMs !== null ? partialMs : width) / 1000;
+  return psthPoints(
+    counts.map((count, bin) => (n > 0 ? count / (n * seconds(bin)) : 0)),
+    from,
+    to,
+    width,
+    sigmaMs,
+    partialMs !== null && sigmaMs > 0 && bins > 1
   );
 }
 

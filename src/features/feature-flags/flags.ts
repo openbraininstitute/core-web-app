@@ -72,6 +72,15 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** The simulation results' Simulation/Campaign toggle, and the statistics across the campaign it brings up. */
+export const campaignStatisticsFlag = defineFlag<boolean>({
+  key: 'campaign-statistics',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Campaign statistics in simulation results',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
  * unless switched on. */
 export const learnFlag = defineFlag<boolean>({
@@ -132,6 +141,7 @@ export const flags = [
   courseToolbarFlag,
   greyMenuPillsFlag,
   hideHelpFlag,
+  campaignStatisticsFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

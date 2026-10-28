@@ -19,6 +19,7 @@ import {
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { PillToggle } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -31,8 +32,10 @@ type Props = {
   campaignId?: string;
   /** Beside the back arrow on the bar over an open side panel, such as a picker for which result is on show. */
   sidePanelBar?: ReactNode;
-  /** After it: such as which report the statistics are of. */
+  /** After it, and kept over the campaign's statistics too: such as which report they are of. */
   sidePanelReport?: ReactNode;
+  /** Offers, right after the bar's pickers, a region over the file and the panel comparing the campaign's results. */
+  campaignStatistics?: boolean;
 };
 
 /**
@@ -48,6 +51,14 @@ export type ResultsSidePanel = {
   target: HTMLElement | null;
   open: boolean;
   setOpen: (open: boolean) => void;
+  /**
+   * Whether the campaign's statistics are up, in a region of their own over
+   * the panel's place beside the file, with `campaignTarget` to portal them
+   * into: the panel's statistics are the simulation's, which the campaign's
+   * take the place of.
+   */
+  campaign: boolean;
+  campaignTarget: HTMLElement | null;
   /**
    * Which pane each split has shut, by the split's name: `file` for the
    * file's own panes, `panel` for the panel's, `columns` for the rule between
@@ -110,6 +121,7 @@ export function ResultsLayout({
   campaignId,
   sidePanelBar,
   sidePanelReport,
+  campaignStatistics = false,
 }: Props) {
   const idBase = campaignId ? `scan-config-results-${campaignId}` : 'scan-config-results';
   const leftId = `${idBase}-left-column`;
@@ -122,14 +134,19 @@ export function ResultsLayout({
   // assistant panel opening beside the results, a window drag - moves the
   // columns at once: eased, they trailed every resize by the slide's length.
   const [sliding, setSliding] = useState(false);
+  const [campaignTarget, setCampaignTarget] = useState<HTMLDivElement | null>(null);
+  const [campaignChosen, setCampaignChosen] = useState(false);
   const [shuts, setShuts] = useState<Readonly<Record<string, PaneShut>>>({});
   const [fileStrip, setFileStrip] = useState<HTMLDivElement | null>(null);
   const [panelStrip, setPanelStrip] = useState<HTMLDivElement | null>(null);
   const setOpen = useCallback((next: boolean) => {
     setSliding(true);
     setOpenState(next);
-    // A panel opens with every pane up, whatever was shut when it closed.
-    if (!next) setShuts({});
+    // A panel opens on the neurons with every pane up, whatever it was showing when shut.
+    if (!next) {
+      setCampaignChosen(false);
+      setShuts({});
+    }
   }, []);
   // A drag reports on every move: only a change is a new state.
   const setShut = useCallback((split: string, shut: PaneShut) => {
@@ -141,6 +158,12 @@ export function ResultsLayout({
     setSliding(true);
     setShut('columns', null);
   }, [setShut]);
+  const chooseCampaign = (on: boolean) => {
+    if (on === campaignChosen) return;
+    setSliding(true);
+    setCampaignChosen(on);
+  };
+  const campaign = open && campaignStatistics && campaignChosen;
   // biome-ignore lint/correctness/useExhaustiveDependencies: open restarts the timer for a slide begun mid-slide
   useEffect(() => {
     if (!sliding) return;
@@ -152,6 +175,8 @@ export function ResultsLayout({
       target,
       open,
       setOpen,
+      campaign,
+      campaignTarget,
       shuts,
       setShut,
       fileStrip,
@@ -159,7 +184,19 @@ export function ResultsLayout({
       openColumns,
       sliding,
     }),
-    [target, open, setOpen, shuts, setShut, fileStrip, panelStrip, openColumns, sliding]
+    [
+      target,
+      open,
+      setOpen,
+      campaign,
+      campaignTarget,
+      shuts,
+      setShut,
+      fileStrip,
+      panelStrip,
+      openColumns,
+      sliding,
+    ]
   );
   const setPanelOpen = useSetAtom(resultsSidePanelOpenAtom);
   // Before paint, so the rail folds from the same frame as the columns slide.
@@ -210,7 +247,7 @@ export function ResultsLayout({
     floors: [MIN_SIDE_WIDTH, MIN_SIDE_WIDTH],
     preferred: span - (ownWidth + gap / 2),
   });
-  // Beside the file while it is up: the panel.
+  // Beside the file while it is up: the panel, or the campaign's statistics in its place.
   const fileShut = open && columns.shut === 'start';
   const panelShut = open && columns.shut === 'end';
   const openRule = span - columns.size;
@@ -222,7 +259,8 @@ export function ResultsLayout({
       : panelShut
         ? span - PANEL_STRIP_WIDTH
         : openRule;
-  const panelUp = open && !panelShut;
+  const panelUp = open && !campaign && !panelShut;
+  const campaignUp = open && campaign && !panelShut;
   const slide = sliding && !dragging && SLIDE;
 
   const moved = { translate: open ? `${-page}px 0` : '0px 0' };
@@ -319,8 +357,46 @@ export function ResultsLayout({
         </ChromeButton>
         {sidePanelBar && <div className="flex min-w-0 items-center">{sidePanelBar}</div>}
         {sidePanelReport}
+        {/* What the statistics are over: the simulation on show, or the whole campaign. */}
+        {campaignStatistics && (
+          <PillToggle
+            value={campaign}
+            onChange={chooseCampaign}
+            // The purple of the button that opens the panel.
+            chosenClassName="bg-purple-600 text-white"
+            options={[
+              {
+                value: false,
+                label: 'Simulation',
+                title: 'The statistics of the simulation on show',
+              },
+              { value: true, label: 'Campaign', title: 'The statistics across the campaign' },
+            ]}
+          />
+        )}
       </div>
-      {/* the panel; closed or shut, it waits past the span's end */}
+      {/* The campaign's statistics in the panel's place; out of view, they wait past the span's end too */}
+      <div
+        inert={!campaignUp || undefined}
+        data-results-drop
+        style={{
+          width: span - (campaignUp ? rule : openRule),
+          translate: `${campaignUp ? rule : span + gap / 2}px 0`,
+          marginTop: contentTop,
+        }}
+        className={cn(
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 min-w-0 justify-self-start',
+          slide,
+          !campaignUp && 'pointer-events-none opacity-0'
+        )}
+      >
+        <div
+          ref={setCampaignTarget}
+          data-results-campaign
+          className="h-full min-h-0 min-w-0 pl-1"
+        />
+      </div>
+      {/* the panel; closed, shut or under the campaign's, it waits past the span's end */}
       <div
         inert={!panelUp || undefined}
         data-results-drop
