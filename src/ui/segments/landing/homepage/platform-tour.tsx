@@ -16,15 +16,29 @@ const VIDEOS = {
     height: 810,
     duration: 14500,
   },
-};
-const ANIMATIONS = {
   flywire: {
-    src: '/images/homepage/flywire-3d.webp',
-    poster: '/images/homepage/flywire-3d-poster.png',
-    width: 960,
-    height: 540,
+    src: '/images/homepage/flywire-platform.mp4',
+    poster: '/images/homepage/flywire-platform-poster.jpg',
+    width: 1440,
+    height: 810,
     duration: 4000,
   },
+  microcircuit: {
+    src: '/images/homepage/small-microcircuit.mp4',
+    poster: '/images/homepage/small-microcircuit-poster.jpg',
+    width: 1440,
+    height: 810,
+    duration: 8500,
+  },
+  education: {
+    src: '/images/homepage/education.mp4',
+    poster: '/images/homepage/education-poster.jpg',
+    width: 1440,
+    height: 810,
+    duration: 10000,
+  },
+};
+const ANIMATIONS = {
   em: {
     src: '/images/homepage/em-cell-mesh.webp',
     poster: '/images/homepage/em-cell-mesh-poster.png',
@@ -120,11 +134,18 @@ export const SLIDES: readonly Slide[] = [
   {
     id: 'flywire',
     title: 'Explore a Drosophila brain in 3D.',
-    description:
-      'View the FlyWire Drosophila model from different angles in the platform’s 3D viewer.',
-    alt: 'Animated 3D FlyWire Drosophila model, cropped to the model viewer.',
-    kind: 'animation',
+    description: 'Explore the FlyWire Drosophila model in the platform’s 3D viewer.',
+    alt: 'Animated 3D FlyWire Drosophila model in the platform.',
+    kind: 'video',
     source: 'flywire',
+  },
+  {
+    id: 'microcircuit',
+    kind: 'video',
+    source: 'microcircuit',
+    title: 'Bring a microcircuit to life.',
+    description: 'Run a digital brain circuit and explore its activity in 3D.',
+    alt: 'Small microcircuit simulation showing neurons in 3D alongside their spike activity.',
   },
   {
     id: 'analysis',
@@ -134,6 +155,14 @@ export const SLIDES: readonly Slide[] = [
     alt: 'Close-up of colored mean membrane voltage distributions grouped by neuron type.',
     source: 'voltage',
     crop: { x: 1248, y: 750, width: 1210 },
+  },
+  {
+    id: 'education',
+    kind: 'video',
+    source: 'education',
+    title: 'Learn neuroscience by doing.',
+    description: 'Explore brain models and simulations through hands-on learning.',
+    alt: 'Students exploring neuroscience models and simulations during a classroom workshop.',
   },
   {
     id: 'ai-chat',

@@ -33,16 +33,30 @@ describe('platform tour', () => {
       [8000, 'See extracellular fields evolve.'],
       [12000, 'Skeletonize electron microscopy data.'],
       [16000, 'Explore a Drosophila brain in 3D.'],
-      [4000, 'Compare activity across cell types.'],
-      [8000, 'Use the platform through chat.'],
+      [4000, 'Bring a microcircuit to life.'],
+      [8500, 'Compare activity across cell types.'],
+      [8000, 'Learn neuroscience by doing.'],
+      [10000, 'Use the platform through chat.'],
       [8000, 'Explore brain data. Build models. Run simulations.'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
       expectSlide(title);
       if (title === 'Explore a Drosophila brain in 3D.') {
-        expect(
-          screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
-        ).toHaveAttribute('src', '/images/homepage/flywire-3d.webp');
+        expect(screen.getByLabelText(/Animated 3D FlyWire Drosophila model/)).toHaveAttribute(
+          'src',
+          '/images/homepage/flywire-platform.mp4'
+        );
+      }
+      if (title === 'Bring a microcircuit to life.' || title === 'Learn neuroscience by doing.') {
+        const label =
+          title === 'Bring a microcircuit to life.'
+            ? /Small microcircuit simulation/
+            : /Students exploring neuroscience/;
+        const video = screen.getByLabelText(label);
+        expect(video.tagName).toBe('VIDEO');
+        expect(video).toHaveAttribute('autoplay');
+        expect(video).toHaveAttribute('playsinline');
+        expect(video).not.toHaveAttribute('controls');
       }
       if (title === 'Use the platform through chat.') {
         expect(
@@ -115,8 +129,19 @@ describe('platform tour', () => {
     next(2);
     expect(
       screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
-    ).toHaveAttribute('src', '/images/homepage/flywire-3d-poster.png');
+    ).toHaveAttribute('src', '/images/homepage/flywire-platform-poster.jpg');
     expectSlide('Explore a Drosophila brain in 3D.');
+    next();
+    expect(screen.getByRole('img', { name: /Small microcircuit simulation/ })).toHaveAttribute(
+      'src',
+      '/images/homepage/small-microcircuit-poster.jpg'
+    );
+    next(2);
+    expect(screen.getByRole('img', { name: /Students exploring neuroscience/ })).toHaveAttribute(
+      'src',
+      '/images/homepage/education-poster.jpg'
+    );
+    expect(document.querySelector('video')).not.toBeInTheDocument();
   });
 
   it('keeps rotating after pointer interaction and wraps from the last slide to the first', () => {
