@@ -176,9 +176,12 @@
   gap: 12px;
   min-height: 44px;
   padding: 10px 14px;
-  border-radius: 4px;
-  background: #183f8b;
-  color: #fff;
+  border: 1px solid #183f8b40;
+  border-radius: 8px;
+  background: #ffffff80;
+  color: #153b81;
+  box-shadow: 0 3px 14px #102c600d;
+  backdrop-filter: blur(18px);
   font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
@@ -189,8 +192,9 @@
   flex-shrink: 0;
 }
 .tour .action:hover {
-  background: #102e69;
-  color: #fff;
+  background: #ffffffd9;
+  border-color: #183f8b73;
+  color: #102c60;
 }
 .tour .action:focus-visible,
 .arrow:focus-visible {
@@ -250,7 +254,8 @@
   }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .caption {
+  .caption,
+  .tour .action {
     background: #fff;
     backdrop-filter: none;
   }
