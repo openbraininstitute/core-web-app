@@ -262,7 +262,6 @@ export function CircuitViewerChrome({
                   onSelect={populations.onSelect}
                   positionless={populations.positionless}
                   theme={theme}
-                  autoOpen={showVizChrome}
                 />
               )}
               {viz.menu.onToggleElectrodes &&

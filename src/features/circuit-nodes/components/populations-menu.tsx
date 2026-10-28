@@ -8,12 +8,6 @@ import { cn } from '@/utils/css-class';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
-/**
- * Set once the checklist has opened itself, and read so it never does again.
- * Per browser rather than per circuit: the control has to be found once.
- */
-export const POPULATIONS_MENU_INTRODUCED_KEY = 'obi:circuit-viewer-populations-menu:v1';
-
 const NO_POSITIONS_REASON = 'This population has no positions (x/y/z), so it can’t be drawn in 3D';
 
 interface PopulationsMenuProps {
@@ -34,12 +28,6 @@ interface PopulationsMenuProps {
   positionless?: ReadonlySet<string>;
   /** background-derived theme (adaptive mode); null → fixed light styling. */
   theme?: ViewerTheme | null;
-  /**
-   * Whether the checklist may open itself, which it does once and never again
-   * ({@link POPULATIONS_MENU_INTRODUCED_KEY}). The host says when, since the
-   * chrome stays mounted behind the views it is not on.
-   */
-  autoOpen?: boolean;
   className?: string;
 }
 
@@ -65,43 +53,17 @@ export function PopulationsMenu({
   onSelect,
   positionless = NO_NAMES,
   theme,
-  autoOpen = false,
   className,
 }: PopulationsMenuProps) {
   const [open, setOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const reasonId = useId();
-  /** Whether this opening is the introduction rather than a click. */
-  const introducing = useRef(false);
 
   const hiddenSet = new Set(hidden);
   const drawable = populations.filter((p) => !positionless.has(p.name));
   const shownCount = drawable.filter((p) => !hiddenSet.has(p.name)).length;
   const missingCount = drawable.length - shownCount;
-
-  // The pill counts what is on screen without saying that the populations
-  // missing from it were left out by default, or that a click brings them back.
-  // The panel says so itself, once, and only where something is missing.
-  //
-  // Statements rather than `||` and `?.`: React Compiler will not lower a
-  // conditional inside a try, and drops the whole component when it cannot.
-  useEffect(() => {
-    if (!autoOpen || missingCount === 0) return;
-
-    try {
-      const storage = globalThis.localStorage;
-      if (!storage) return;
-      if (storage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)) return;
-      storage.setItem(POPULATIONS_MENU_INTRODUCED_KEY, '1');
-    } catch {
-      // Storage blocked or full. An introduction we cannot record is one given
-      // on every visit, which is worse than none.
-      return;
-    }
-    introducing.current = true;
-    setOpen(true);
-  }, [autoOpen, missingCount]);
 
   useEffect(() => {
     if (!open) return;
@@ -181,15 +143,10 @@ export function PopulationsMenu({
         ref={contentRef}
         data-testid="populations-menu-content"
         onOpenAutoFocus={(event) => {
-          // Radix focuses the first control, "Show all": a ring on a panel
-          // nobody opened, and one Enter from putting back every population the
-          // user has hidden. The panel takes the focus instead, so Tab still
-          // walks the rows from here.
+          // Radix focuses the first control, "Show all": one Enter from putting
+          // back every population the user has hidden. The panel takes the
+          // focus instead, so Tab still walks the rows from here.
           event.preventDefault();
-          if (introducing.current) {
-            introducing.current = false;
-            return;
-          }
           contentRef.current?.focus();
         }}
         // Opens under the pill's left edge, which is the one that stays put:

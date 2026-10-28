@@ -1,12 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import {
-  POPULATIONS_MENU_INTRODUCED_KEY,
-  PopulationsMenu,
-} from '@/features/circuit-nodes/components/populations-menu';
-
-import { installLocalStorage } from '../auth-manager/install-local-storage';
+import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
 
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 
@@ -171,89 +166,13 @@ describe('PopulationsMenu', () => {
     // nothing about which ones are drawn around it.
     expect(checkbox('cortex')).toBeInTheDocument();
   });
-});
 
-describe('PopulationsMenu introduction', () => {
-  // `localStorage` is Node's own global from Node 24 on, undefined without a
-  // flag. A fresh one each time is also the no-previous-visit case, the only
-  // one the checklist opens itself in.
-  beforeEach(() => installLocalStorage());
-
-  function introduce(autoOpen: boolean, hidden: string[] = ['vpm']) {
-    return (
-      <PopulationsMenu
-        populations={POPULATIONS}
-        hidden={hidden}
-        onChange={vi.fn()}
-        autoOpen={autoOpen}
-      />
-    );
-  }
-
-  it('opens itself the first time a user is shown it', () => {
-    render(introduce(true));
-
-    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
-    expect(checkbox('vpm').checked).toBe(false);
-  });
-
-  /*
-   * The introduction opens on the viewer's clock, so the user is elsewhere by
-   * then — often in a dropdown that closes as soon as it loses focus. Left to
-   * Radix the focus would land on "Show all", one Enter from putting every
-   * population back; taking it to the panel is no better, since the dropdown is
-   * dismissed either way.
-   */
-  it('leaves the focus where the user left it', () => {
-    const elsewhere = document.createElement('button');
-    document.body.append(elsewhere);
-    elsewhere.focus();
-
-    render(introduce(true));
-
-    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
-    expect(elsewhere).toHaveFocus();
-    elsewhere.remove();
-  });
-
-  // Opened by hand it is the thing the user is looking at, so it does take the
-  // focus — just not onto "Show all".
-  it('takes the focus itself when the user opens it', () => {
-    render(introduce(false));
-
-    fireEvent.click(screen.getByTestId('populations-menu-trigger'));
+  // Not onto "Show all", one Enter from putting every population back.
+  it('takes the focus itself when opened', () => {
+    open();
 
     expect(screen.getByTestId('populations-menu-content')).toHaveFocus();
     expect(screen.getByTestId('populations-menu-show-all')).not.toHaveFocus();
-  });
-
-  it('leaves itself shut for a user who has already met it', () => {
-    const { unmount } = render(introduce(true));
-    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
-    unmount();
-
-    render(introduce(true));
-    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
-  });
-
-  // The panel opens itself to say what is missing from the scene. With nothing
-  // missing, the one introduction is better kept for a circuit that has some.
-  it('keeps the introduction back on a circuit that hides nothing', () => {
-    render(introduce(true, []));
-
-    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
-    expect(localStorage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)).toBeNull();
-  });
-
-  // The host holds it back while the checklist is mounted but off screen,
-  // where the one introduction would be seen by nobody.
-  it('waits for the host rather than spending the introduction unseen', () => {
-    const { rerender } = render(introduce(false));
-    expect(screen.queryByTestId('populations-menu-content')).toBeNull();
-    expect(localStorage.getItem(POPULATIONS_MENU_INTRODUCED_KEY)).toBeNull();
-
-    rerender(introduce(true));
-    expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
   });
 });
 
