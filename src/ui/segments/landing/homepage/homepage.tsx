@@ -118,7 +118,6 @@ export default function Homepage({
                   </Link>
                 </div>
                 <p className={styles.reassurance}>
-                  <span>✓</span>{' '}
                   {isAuthenticated
                     ? 'Your data, models, and experiments in one workspace.'
                     : '100 initial credits included'}

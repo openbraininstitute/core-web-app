@@ -225,10 +225,10 @@
 }
 .homepage h1 {
   font:
-    400 clamp(44px, 4.4vw, 68px) / 1.12 var(--font-DMSerifText),
-    Georgia,
-    serif;
-  letter-spacing: normal;
+    400 clamp(44px, 4.4vw, 68px) / 1.1 var(--font-homepage-headline, system-ui),
+    system-ui,
+    sans-serif;
+  letter-spacing: -0.03em;
   margin: 0 0 24px;
 }
 .homepage h1 em {
@@ -258,10 +258,6 @@
   font-size: 11px;
   color: #49627f;
   margin-top: 17px;
-}
-.homepage .reassurance > span {
-  color: #217f86;
-  margin-right: 5px;
 }
 
 .homepage input[type="range"] {
