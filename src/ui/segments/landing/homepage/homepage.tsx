@@ -114,7 +114,7 @@ export default function Homepage({
                     prefetch={false}
                     data-testid="virtual-labs-link"
                   >
-                    {researchAction} <span>↗</span>
+                    {researchAction}
                   </Link>
                 </div>
                 <p className={styles.reassurance}>
@@ -238,7 +238,7 @@ export default function Homepage({
                 href="/app/virtual-lab/sync"
                 prefetch={false}
               >
-                {researchAction} <span>↗</span>
+                {researchAction}
               </Link>
               <p className={styles['start-note']}>
                 {!isAuthenticated && <>100 initial credits to get started. </>}

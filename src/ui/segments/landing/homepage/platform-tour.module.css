@@ -13,24 +13,14 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
+  background: radial-gradient(
+    ellipse 65% 76% at 18% 53%,
     #f8fafc 0%,
-    #f8fafcfb 18%,
-    #f8fafceb 34%,
-    #f8fafcb8 49%,
-    #f8fafc66 65%,
-    #f8fafc1f 83%,
+    #f8fafcf7 24%,
+    #f8fafcdb 42%,
+    #f8fafc8c 60%,
+    #f8fafc38 78%,
     #f8fafc00 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    transparent 0,
-    #00000059 48px,
-    #000000cc 100px,
-    #000000f0 160px,
-    #000 240px,
-    #000 100%
   );
 }
 .viewport {
@@ -183,12 +173,16 @@
   }
 }
 @media (max-width: 800px) {
-  .viewport {
-    top: 420px;
-  }
   .tour::after {
-    background: linear-gradient(180deg, #f8fafc 0%, #f8fafc 38%, #f8fafce8 49%, #f8fafc00 70%);
-    mask-image: none;
+    background: radial-gradient(
+      ellipse 130% 62% at 42% 29%,
+      #f8fafc 0%,
+      #f8fafcf7 32%,
+      #f8fafcd9 50%,
+      #f8fafc8c 66%,
+      #f8fafc33 84%,
+      #f8fafc00 100%
+    );
   }
   .caption {
     right: 20px;

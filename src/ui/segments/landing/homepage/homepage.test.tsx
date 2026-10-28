@@ -20,12 +20,14 @@ describe('public homepage', () => {
     expect(
       within(header).queryByRole('link', { name: 'Create free account ↗' })
     ).not.toBeInTheDocument();
-    const accountActions = screen.getAllByRole('link', { name: 'Start your research for free ↗' });
+    const accountActions = screen.getAllByRole('link', { name: 'Start your research for free' });
     expect(accountActions).toHaveLength(2);
     for (const action of accountActions) {
       expect(action).toHaveAttribute('href', '/app/virtual-lab/sync');
     }
-    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /^Open Virtual Labs(?: ↗)?$/ })
+    ).not.toBeInTheDocument();
     expect(screen.getByTestId('virtual-labs-link')).toHaveTextContent(
       'Start your research for free'
     );
@@ -34,7 +36,7 @@ describe('public homepage', () => {
 
   it('takes signed-in users back to Virtual Labs without prompting them to register or log in', () => {
     const { rerender } = render(<Homepage year={2026} isAuthenticated />);
-    const accountActions = screen.getAllByRole('link', { name: 'Open Virtual Labs ↗' });
+    const accountActions = screen.getAllByRole('link', { name: /^Open Virtual Labs(?: ↗)?$/ });
     expect(accountActions).toHaveLength(3);
     for (const action of accountActions) {
       expect(action).toHaveAttribute('href', '/app/virtual-lab/sync');
@@ -45,7 +47,7 @@ describe('public homepage', () => {
     ).toHaveAttribute('href', '/app/virtual-lab/sync');
     expect(screen.queryByRole('link', { name: 'Sign up for free ↗' })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('link', { name: 'Start your research for free ↗' })
+      screen.queryByRole('link', { name: 'Start your research for free' })
     ).not.toBeInTheDocument();
     expect(screen.queryByText('Sign in or create a free account')).not.toBeInTheDocument();
     expect(screen.queryByText(/100 initial credits included/)).not.toBeInTheDocument();
@@ -53,8 +55,10 @@ describe('public homepage', () => {
     expect(screen.getByText('Welcome back. Continue your research.')).toBeInTheDocument();
 
     rerender(<Homepage year={2026} isAuthenticated={false} />);
-    expect(screen.getAllByRole('link', { name: 'Start your research for free ↗' })).toHaveLength(2);
-    expect(screen.queryByRole('link', { name: 'Open Virtual Labs ↗' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Start your research for free' })).toHaveLength(2);
+    expect(
+      screen.queryByRole('link', { name: /^Open Virtual Labs(?: ↗)?$/ })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Sign up for free ↗' })).toHaveAttribute(
       'href',
       '/app/virtual-lab/sync'

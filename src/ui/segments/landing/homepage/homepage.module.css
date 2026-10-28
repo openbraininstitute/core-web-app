@@ -151,12 +151,19 @@
   font-size: 12px;
   gap: 25px;
 }
-.homepage .blue {
+.homepage .button.blue {
+  min-height: 52px;
+  padding: 14px 28px;
+  border: 1px solid var(--blue);
+  border-radius: 999px;
   background: var(--blue);
   color: white;
+  font-size: 16px;
+  font-weight: 500;
 }
-.homepage .blue:hover {
-  background: #0c2b68;
+.homepage .button.blue:hover {
+  background: #ffffffd9;
+  color: var(--blue);
 }
 .homepage .menu-toggle {
   display: none;
@@ -1019,8 +1026,8 @@
     min-height: 132px;
   }
   .homepage .hero-actions .button {
-    min-height: 48px;
-    font-size: 13px;
+    min-height: 52px;
+    font-size: 15px;
   }
 }
 @media (prefers-reduced-transparency: reduce) {
