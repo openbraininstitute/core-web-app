@@ -314,7 +314,7 @@ export default function PlatformTour() {
           onKeyDown={handleKeys}
           data-testid="tour-platform-action"
         >
-          Try out yourself
+          Try out
         </Link>
       </div>
     </section>

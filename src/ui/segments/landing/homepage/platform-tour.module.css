@@ -160,7 +160,8 @@
   right: 48px;
   bottom: 48px;
   width: min(420px, 36%);
-  display: block;
+  display: flex;
+  justify-content: flex-end;
 }
 .tour .arrow {
   position: absolute;
@@ -194,8 +195,10 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  min-height: 48px;
-  padding: 12px 22px;
+  width: fit-content;
+  min-width: 136px;
+  min-height: 44px;
+  padding: 10px 24px;
   border: 1px solid #bcd9fb99;
   border-radius: 999px;
   background: linear-gradient(135deg, #153b81d9, #153b81cc);
