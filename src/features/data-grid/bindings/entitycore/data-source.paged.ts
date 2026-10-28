@@ -33,11 +33,17 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
   transformParams?: (params: TEntitycoreParams) => TEntitycoreParams;
 }
 
-/** How an entity's free-text search maps to the API, from its domain config. */
-export function entitySearchMode(dataType: TExtendedEntitiesTypeDict): 'ilike' | 'plain' {
-  return getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled
-    ? 'ilike'
-    : 'plain';
+/**
+ * The entitycore params this source sends for `query`, before the host's `transformParams`.
+ * Shared with the Data/Notebooks sidebar counts so both build the same request.
+ */
+export function serializeEntitycoreQuery<Row>(
+  dataType: TExtendedEntitiesTypeDict,
+  schema: IGridSchema<Row>,
+  query: IGridQuery
+): TEntitycoreParams {
+  const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
+  return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
 }
 
 /**
@@ -50,10 +56,9 @@ export function createEntitycorePagedDataSource<Row>(
 ): IGridDataSource<Row> {
   const { dataType, schema, context, listQueryFn, withFacets = true, transformParams } = options;
   const entity = getEntityByExtendedType({ type: dataType });
-  const searchMode = entitySearchMode(dataType);
 
   const paramsFor = (query: IGridQuery): TEntitycoreParams => {
-    const serialized = serializeQuery(query, schema, { searchMode });
+    const serialized = serializeEntitycoreQuery(dataType, schema, query);
     return transformParams ? transformParams(serialized) : serialized;
   };
   const run = (args: Parameters<TListQueryFn<Row>>[0]) =>

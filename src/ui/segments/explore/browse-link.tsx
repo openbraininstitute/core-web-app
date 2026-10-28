@@ -256,14 +256,16 @@ async function resolveEntityCount({
   entity,
   extendedType,
   savedFilters,
+  variant,
 }: {
   query: ReturnType<typeof buildQuery>['query'];
   entity: ReturnType<typeof getEntityByExtendedType>;
   extendedType: TExtendedEntitiesTypeDict;
   savedFilters?: TSavedListingFilters | null;
+  variant?: IListingVariant;
 }) {
   if (!entity) return undefined;
-  const saved = await savedListingParams(extendedType, savedFilters);
+  const saved = await savedListingParams(extendedType, savedFilters, variant);
   // the pinned params win over the user's, as in the grid's request
   const query = { ...baseQuery, filters: { ...saved, ...baseQuery.filters } };
   if (entity.api.query.count) return entity.api.query.count(query);
@@ -346,7 +348,13 @@ export function BrowseLink({
   } = useQuery<number | undefined>({
     queryKey: fallbackQuery.queryKey,
     queryFn: () =>
-      resolveEntityCount({ query: fallbackQuery.query, entity, extendedType, savedFilters }),
+      resolveEntityCount({
+        query: fallbackQuery.query,
+        entity,
+        extendedType,
+        savedFilters,
+        variant,
+      }),
     // waits for storage to be read: an unfiltered count fetched during hydration is thrown away
     enabled:
       enabled &&

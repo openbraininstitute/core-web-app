@@ -1,5 +1,6 @@
 'use client';
 
+import { WarningOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 
 import { useNotebookCount } from '@/features/notebooks/hooks/use-notebook-count';
@@ -23,7 +24,11 @@ export function NotebookCountLink({
   scope: TWorkspaceScope;
   isActive: boolean;
 }) {
-  const { filtered, total, isLoading } = useNotebookCount({ extendedType, scope, isActive });
+  const { filtered, total, isLoading, isError } = useNotebookCount({
+    extendedType,
+    scope,
+    isActive,
+  });
 
   return (
     <Button
@@ -46,7 +51,10 @@ export function NotebookCountLink({
             'font-bold text-white': isActive,
           })}
         >
-          {isLoading ? (
+          {isError ? (
+            // as `BrowseLink`: a failed count must not read as "0 of n"
+            <WarningOutlined className="text-warning" />
+          ) : isLoading ? (
             <span className="flex items-center justify-center gap-1">
               <Skeleton className="h-3 w-5 rounded-full" />
               <span className="text-neutral-2 font-light">of</span>

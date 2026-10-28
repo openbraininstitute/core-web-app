@@ -63,17 +63,38 @@ export function useNotebookCount({
     staleTime: 60 * 60 * 1000, // 1 hour
   });
 
-  const { data: total, isLoading } = useQuery({
+  // a mounted grid publishes the number itself
+  const live = isActive ? liveCount : undefined;
+  // `filtered` shows the saved-filters count; `undefined` saved filters = storage not read yet
+  // (hydration), which waits rather than flashing the unfiltered total
+  const showsSavedCount = live == null && savedFilters !== null;
+
+  const {
+    data: total,
+    isLoading,
+    isError,
+  } = useQuery({
     ...countQuery(),
     enabled: Boolean(entity),
   });
-  const { data: savedCount, isLoading: isSavedLoading } = useQuery({
+  const {
+    data: savedCount,
+    isLoading: isSavedLoading,
+    isError: isSavedError,
+  } = useQuery({
     ...countQuery(savedFilters),
-    // a mounted grid already publishes this number
-    enabled: Boolean(entity) && Boolean(savedFilters) && !(isActive && liveCount != null),
+    enabled: Boolean(entity) && Boolean(savedFilters) && live == null,
   });
 
-  const filtered = (isActive ? liveCount : undefined) ?? (savedFilters ? savedCount : total);
+  // with filters unread the saved query is keyed like the total's, so its data is the total
+  const savedValue = savedFilters ? savedCount : undefined;
 
-  return { filtered, total, isLoading: isLoading || isSavedLoading };
+  // loading and error follow the count `filtered` shows: a request left in flight after the
+  // grid published its total must not hold the skeleton
+  return {
+    filtered: live ?? (showsSavedCount ? savedValue : total),
+    total,
+    isLoading: isLoading || (showsSavedCount && (savedFilters === undefined || isSavedLoading)),
+    isError: isError || (showsSavedCount && isSavedError),
+  };
 }

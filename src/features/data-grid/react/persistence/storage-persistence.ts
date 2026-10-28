@@ -22,22 +22,14 @@ const LOCAL_KEYS = [
   'columnWidths',
 ] as const satisfies ReadonlyArray<keyof IGridState>;
 
-const SESSION_NAMESPACE = 'data-grid:v2:s:';
+/** sessionStorage key prefix of the session slice; the full key appends the `instanceKey`. */
+export const SESSION_NAMESPACE = 'data-grid:v2:s:';
 
 /**
  * Same-tab sessionStorage change event, as `useSessionStorage` dispatches it: the `storage`
- * event only fires in other tabs.
+ * event only fires in other tabs. Its `key` is the full storage key.
  */
 export const SESSION_STORAGE_EVENT = 'session-storage';
-
-/** A listing's raw session slice, or `null`. A string, so it is a stable `useSyncExternalStore` snapshot. */
-export function readSessionState(key: string): string | null {
-  try {
-    return window.sessionStorage.getItem(`${SESSION_NAMESPACE}${key}`);
-  } catch {
-    return null;
-  }
-}
 
 function pick(state: IGridState, keys: ReadonlyArray<keyof IGridState>): Partial<IGridState> {
   const out: Partial<IGridState> = {};
