@@ -1,23 +1,28 @@
 .tour {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  width: 100%;
-  min-width: 0;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   overflow: hidden;
-  border-radius: 10px;
-  background: #fff;
+  background: #f8fafc;
   color: #172c4a;
-  box-shadow: 0 20px 60px #081c483d;
   scroll-margin-top: 24px;
 }
-
+.tour::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #f8fafc 0%, #f8fafcf5 24%, #f8fafcdb 40%, #f8fafc30 64%, #f8fafc00 82%),
+    linear-gradient(0deg, #f8fafcf2 0%, #f8fafc00 30%);
+}
 .viewport {
-  grid-column: 1 / -1;
-  position: relative;
-  aspect-ratio: 16 / 9;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   isolation: isolate;
-  background: #fafbfc;
+  background: #f8fafc;
   touch-action: pan-y;
 }
 
@@ -45,8 +50,9 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  background: #000;
+  object-fit: cover;
+  object-position: 65% center;
+  background: #f8fafc;
   user-select: none;
   pointer-events: none;
 }
@@ -79,8 +85,9 @@
 }
 .expand {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 140px;
+  right: 48px;
+  z-index: 3;
   display: grid;
   place-items: center;
   width: 44px;
@@ -96,8 +103,16 @@
 }
 
 .caption {
-  padding: 20px 24px;
-  border-top: 1px solid #e5eaf2;
+  position: absolute;
+  z-index: 3;
+  right: 48px;
+  bottom: 108px;
+  width: min(420px, 36%);
+  padding: 18px 20px;
+  border: 1px solid #dce3ee;
+  border-radius: 8px;
+  background: #ffffffed;
+  backdrop-filter: blur(12px);
 }
 .captionTitle {
   display: flex;
@@ -108,7 +123,7 @@
 .captionTitle h2 {
   margin: 0;
   font-family: var(--font-DMSerifText), serif;
-  font-size: 24px;
+  font-size: 22px;
   line-height: 1.3;
   font-weight: 400;
   letter-spacing: normal;
@@ -128,12 +143,15 @@
 }
 
 .controls {
+  position: absolute;
+  z-index: 3;
+  right: 48px;
+  bottom: 48px;
+  width: min(420px, 36%);
   display: grid;
-  grid-template-columns: 44px minmax(220px, 300px) 44px;
-  align-items: center;
-  gap: 10px;
-  padding: 20px 24px 20px 0;
-  border-top: 1px solid #e5eaf2;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: stretch;
+  gap: 8px;
 }
 .arrow {
   display: grid;
@@ -178,34 +196,42 @@
   outline-offset: 3px;
 }
 
-@media (max-width: 1100px) {
-  .tour {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .caption {
-    padding-bottom: 10px;
-  }
+@media (max-width: 1100px) and (min-width: 801px) {
+  .caption,
   .controls {
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    border-top: 0;
-    padding: 2px 20px 18px;
+    right: 32px;
+    width: 37%;
   }
 }
-@media (max-width: 480px) {
+@media (max-width: 800px) {
+  .viewport {
+    top: 420px;
+  }
+  .tour::after {
+    background:
+      linear-gradient(180deg, #f8fafc 0%, #f8fafc 38%, #f8fafce8 49%, #f8fafc00 70%),
+      linear-gradient(0deg, #f8fafc 0%, #f8fafc00 35%);
+  }
+  .caption,
+  .controls {
+    right: 20px;
+    left: 20px;
+    width: auto;
+  }
   .caption {
-    padding: 15px 14px 9px;
+    bottom: 102px;
+    padding: 15px 16px;
   }
   .captionTitle h2 {
     font-size: 20px;
   }
   .caption p {
-    min-height: 60px;
+    min-height: 44px;
     font-size: 13px;
   }
   .controls {
+    bottom: 30px;
     grid-template-columns: 48px minmax(0, 1fr) 48px;
-    gap: 8px;
-    padding: 0 12px 12px;
   }
   .tour .action {
     font-size: 13px;
@@ -219,5 +245,11 @@
 @media (prefers-reduced-motion: reduce) {
   .image {
     transition: none;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .caption {
+    background: #fff;
+    backdrop-filter: none;
   }
 }

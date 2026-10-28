@@ -241,7 +241,7 @@ export default function PlatformTour() {
               width={screenshot.width}
               height={screenshot.height}
               className={styles.screenshot}
-              sizes="(max-width: 1864px) 100vw, 1800px"
+              sizes="100vw"
             />
             <a
               href={screenshot.src}
@@ -272,7 +272,7 @@ export default function PlatformTour() {
               style={{
                 transform: `scale(${scale}) translate(${(-crop.x / source.width) * 100}%, ${(-crop.y / source.height) * 100}%)`,
               }}
-              sizes="(max-width: 1864px) 220vw, 3960px"
+              sizes="220vw"
               loading="eager"
             />
           );

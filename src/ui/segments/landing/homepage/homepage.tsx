@@ -36,6 +36,7 @@ export default function Homepage({
 
       <main id="main">
         <div className={styles['blue-world']}>
+          <PlatformTour />
           <header className={`${styles['site-header']} ${styles.wrap}`} data-testid="site-header">
             <Link href="/" className={styles.wordmark} aria-label="Open Brain Institute home">
               <Image
@@ -99,7 +100,7 @@ export default function Homepage({
                 </p>
                 <div className={styles['hero-actions']}>
                   <Link
-                    className={`${styles.button} ${styles.white}`}
+                    className={`${styles.button} ${styles.blue}`}
                     href="/app/virtual-lab/sync"
                     prefetch={false}
                     data-testid="virtual-labs-link"
@@ -119,7 +120,6 @@ export default function Homepage({
                 </p>
               </div>
             </div>
-            <PlatformTour />
           </section>
         </div>
         <section
