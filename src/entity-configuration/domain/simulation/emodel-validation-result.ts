@@ -10,6 +10,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { resolveTaskResultCampaignId } from '@/entity-configuration/domain/simulation/task-result-campaign';
 import { EntitySlug } from '@/entity-configuration/domain/slug';
 import { EModelValidationCampaign } from '@/entity-configuration/domain/validation/emodel-validation-campaign';
+import { emodelValidationFlag } from '@/features/feature-flags/flags';
 
 import type { ITaskResult, ITaskResultFilter } from '@/api/entitycore/types/entities/task-result';
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
@@ -62,6 +63,7 @@ export const EModelValidationResult: EntityCoreTypeConfig<TEModelValidationResul
   group: EntityTypeGroup.Simulations,
   title: 'E-model validation',
   extendedType: ExtendedEntitiesTypeDict.EModelValidationResult,
+  requiredFeatures: [emodelValidationFlag.key],
   type: EntityTypeDict.TaskResult,
   slug: EntitySlug.EModelValidationResult,
   api: {
