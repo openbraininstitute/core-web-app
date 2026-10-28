@@ -10,6 +10,7 @@ import {
   KeptNodesGridPlaceholder,
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
 import { pcaBins } from '@/features/spike-viewer/spike-statistics/pca';
 import { pcaFigure } from '@/features/spike-viewer/spike-statistics/pca-figure';
@@ -37,6 +38,7 @@ import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip
 import type { IDatasource } from 'ag-grid-community';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
+import type { ScopedFilter, ScopedTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
 import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -46,8 +48,6 @@ import type {
   CellPlot,
   TimeCourse,
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
-
-const EMPTY_FILTER: FilterModel = {};
 
 type Props = {
   circuit: ICircuit;
@@ -95,8 +95,6 @@ const IN_WINDOW: FilterModel = {
   [WINDOW_COLUMN]: { filterType: 'number', type: 'equals', filter: '1' },
 };
 
-const NO_TICKS: ReadonlySet<number> = new Set();
-
 /** The statistics, held against the table's right edge. */
 const PINNED_COLUMNS = pinnedStatisticColumns(SPIKE_STATISTICS);
 
@@ -119,8 +117,8 @@ const SPIKING_FILTER: readonly QuickFilter[] = [
  * The ticks and the filter outlive the view, tagged with their session: picking
  * another simulation of the campaign mounts it anew over the same cells.
  */
-const ticksAtom = atom<{ session: string; cells: ReadonlySet<number> } | undefined>(undefined);
-const filterAtom = atom<{ session: string; model: FilterModel } | undefined>(undefined);
+const ticksAtom = atom<ScopedTicks | undefined>(undefined);
+const filterAtom = atom<ScopedFilter | undefined>(undefined);
 
 /**
  * A population's spiking, cell by cell: distributions grouped by a node
@@ -328,72 +326,32 @@ export function SpikeStatisticsView({
   );
 
   // A new population gets a new grid, whose filters start empty; so does this.
-  // The same cells again, in another simulation, get theirs back.
-  const [filter, setFilter] = useAtom(filterAtom);
-  const filterModel = filter?.session === sessionKey ? filter.model : EMPTY_FILTER;
-  const [rows, setRows] = useState<{
-    session: string;
-    filter: FilterModel;
-    indices: Uint32Array | null;
-  }>();
-  useEffect(() => {
-    if (!statsReady) return;
-    let cancelled = false;
-    getFilteredIndices(filterModel)
-      .then((indices) => {
-        if (!cancelled) setRows({ session: sessionKey, filter: filterModel, indices });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [statsReady, filterModel, getFilteredIndices, sessionKey]);
-  const currentRows = rows?.session === sessionKey && rows.filter === filterModel ? rows : null;
-
-  // Ticked rows, as in the voltage viewer's table: a click ticks a row or
-  // unticks it, and the tick atop the column takes every row the filter keeps.
-  const [ticks, setTicks] = useAtom(ticksAtom);
-  const ticked = ticks?.session === sessionKey ? ticks.cells : NO_TICKS;
-  const toggleTick = useCallback(
-    (nodeId: number) => {
-      setTicks((previous) => {
-        const cells = new Set(previous?.session === sessionKey ? previous.cells : NO_TICKS);
-        if (cells.has(nodeId)) cells.delete(nodeId);
-        else cells.add(nodeId);
-        return { session: sessionKey, cells };
-      });
-    },
-    [sessionKey, setTicks]
-  );
-  // The rows the table shows: the filter's, within the raster window's cells.
-  const tableRows = useMemo(() => {
-    if (!currentRows) return undefined;
-    if (!windowCells) return currentRows.indices;
-    const source = currentRows.indices ?? Uint32Array.from({ length: rowCount }, (_, i) => i);
-    return source.filter((cell) => windowCells[cell] === 1);
-  }, [currentRows, windowCells, rowCount]);
-  let tickedInTable = 0;
-  if (tableRows) for (const row of tableRows) tickedInTable += ticked.has(row) ? 1 : 0;
-  else for (const cell of ticked) tickedInTable += cell < rowCount ? 1 : 0;
-  const rowsInTable = tableRows ? tableRows.length : rowCount;
-  const tickAllState =
-    tickedInTable === 0 ? 'none' : tickedInTable === rowsInTable ? 'all' : 'some';
-  const toggleTickAll = () => {
-    setTicks((previous) => {
-      const cells = new Set(previous?.session === sessionKey ? previous.cells : NO_TICKS);
-      const every = tableRows ?? Array.from({ length: rowCount }, (_, i) => i);
-      if (tickAllState === 'all') for (const row of every) cells.delete(row);
-      else for (const row of every) cells.add(row);
-      return { session: sessionKey, cells };
-    });
-  };
-
-  // What a raster and replay beside the table show: the ticked cells, else the
-  // filter's. Only settled rows: between a filter and its rows, the last stands.
-  const cellsOnShow = useMemo(() => {
-    if (ticked.size > 0) return Uint32Array.from([...ticked].sort((a, b) => a - b));
-    return currentRows ? currentRows.indices : undefined;
-  }, [ticked, currentRows]);
+  // The same cells again, in another simulation, get theirs back. A click ticks
+  // a row or unticks it, and the tick atop the column takes every row the table
+  // lists: the filter's, within the raster window's cells.
+  const ticksState = useAtom(ticksAtom);
+  const filterState = useAtom(filterAtom);
+  const {
+    filterModel,
+    setFilterModel,
+    filterRows,
+    filterError,
+    ticked,
+    toggleTick,
+    pickAll,
+    clearTicks,
+    // What a raster and replay beside the table show: the ticked cells, else
+    // the filter's. Only settled rows: between a filter and its rows, the last stands.
+    shown: cellsOnShow,
+  } = useTableTicks({
+    scope: sessionKey,
+    ready: statsReady,
+    rowCount,
+    getFilteredIndices,
+    within: windowCells,
+    ticksState,
+    filterState,
+  });
   useEffect(() => {
     if (cellsOnShow !== undefined) onShownCellsChange?.(cellsOnShow);
   }, [cellsOnShow, onShownCellsChange]);
@@ -501,11 +459,17 @@ export function SpikeStatisticsView({
       {shownCells.toLocaleString()} {shownCells === 1 ? 'cell' : 'cells'}
       {ticked.size > 0
         ? ' ticked'
-        : currentRows?.indices
+        : filterRows
           ? ' in the table’s filter'
           : windowCells
             ? ' in the raster window'
             : ''}
+      {filterError && (
+        <span className="text-amber-700" title={filterError.message}>
+          {' '}
+          (the table’s filter could not be applied)
+        </span>
+      )}
     </span>
   );
 
@@ -537,16 +501,16 @@ export function SpikeStatisticsView({
           datasource={tableShown.source}
           pinnedColumns={PINNED_COLUMNS}
           pinnedVersion={tableShown.version}
-          onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
+          onFilterModelChange={setFilterModel}
           initialFilterModel={filterModel}
           onRowClick={toggleTick}
           selectedNodeIds={ticked}
           pickColumn
-          pickAll={{ state: tickAllState, onToggle: toggleTickAll }}
+          pickAll={pickAll}
           reset={{
             picked: ticked.size > 0 || windowOn,
             onReset: () => {
-              setTicks(undefined);
+              clearTicks();
               if (windowOn) onClearWindow?.();
             },
           }}

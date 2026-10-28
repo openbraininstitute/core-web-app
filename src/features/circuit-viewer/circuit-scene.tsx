@@ -302,31 +302,42 @@ export function CircuitScene({
   // cell, and a cell clicked marks its row and brings it into view. A host that
   // says any of this itself is listened to instead.
   const tableDriven = Boolean(paneTable) && circuit !== undefined;
-  const focus = useCellFocus({ populationName: population?.name ?? '', tableShown: tableDriven });
+  // Kept with the circuit as well as the population, as the positionless
+  // populations are: another circuit's population of the same name is other cells.
+  const focus = useCellFocus({
+    scope: circuit && population ? `${circuit.id}/${population.name}` : '',
+    tableShown: tableDriven,
+  });
   const [tableCells, setTableCells] = useState<{
+    circuitId: string;
     population: string;
     cells: Uint32Array | null;
     rowCount: number;
   }>();
   const [tableResetRequest, setTableResetRequest] = useState(0);
-  const narrowed = tableDriven && tableCells?.population === population?.name ? tableCells : null;
+  const narrowed =
+    tableDriven &&
+    tableCells?.circuitId === circuit?.id &&
+    tableCells?.population === population?.name
+      ? tableCells
+      : null;
   const tableShownCells = useMemo(() => {
     if (!narrowed?.cells) return undefined;
     const flags = new Uint8Array(narrowed.rowCount);
     for (const cell of narrowed.cells) if (cell < flags.length) flags[cell] = 1;
     return flags;
   }, [narrowed]);
-  const selectedCount = focus.focusedCell ? 1 : (narrowed?.cells?.length ?? null);
+  const held = focus.focusedCell !== null;
+  const selectedCount = held ? 1 : (narrowed?.cells?.length ?? null);
+  // The chip's reset undoes what its count says: the cell held first, then the
+  // table's own filters and ticks.
   const tableSelection =
     narrowed && selectedCount !== null
       ? {
           count: selectedCount,
           total: narrowed.rowCount,
-          onReset: () => {
-            focus.releaseCell();
-            // The table's own reset: its filters and ticks.
-            setTableResetRequest((n) => n + 1);
-          },
+          held,
+          onReset: held ? focus.releaseCell : () => setTableResetRequest((n) => n + 1),
         }
       : undefined;
   const sceneShownCells = shownCells ?? (tableDriven ? tableShownCells : undefined);

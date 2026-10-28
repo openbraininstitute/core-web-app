@@ -353,7 +353,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
     focusedCell,
     highlightedCell,
     releaseCell,
-  } = useCellFocus({ populationName, tableShown: docked || showStatistics });
+  } = useCellFocus({ scope: populationName, tableShown: docked || showStatistics });
 
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
@@ -370,12 +370,15 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       ? {
           count: selectedCount,
           total: cellCount,
-          onReset: () => {
-            releaseCell();
-            clearRasterWindow();
-            // The table's own reset: its filters and ticks, and the raster's window.
-            setResetRequest((n) => n + 1);
-          },
+          held: focusedCell !== null,
+          // Undoes what the count says: the cell held first, then the table's
+          // own filters and ticks, and the raster's window.
+          onReset: focusedCell
+            ? releaseCell
+            : () => {
+                clearRasterWindow();
+                setResetRequest((n) => n + 1);
+              },
         }
       : undefined;
   const shownSpikeCount =
