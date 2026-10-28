@@ -22,6 +22,8 @@ interface PointerOptions {
   hover: boolean;
   /** Called with the cell that is clicked. */
   onClick?: (cell: number) => void;
+  /** Called on a click on no cell, nor on what `taken` answers for. */
+  onEmptyClick?: () => void;
   /** Whether a point of the element, in CSS pixels, is something else's to answer for: no cell is looked for there. */
   taken?: (x: number, y: number) => boolean;
   locations?: LocationOptions;
@@ -33,8 +35,8 @@ export type Point = { x: number; y: number };
 export const clicks = (from: Point, to: Point) =>
   Math.hypot(to.x - from.x, to.y - from.y) <= CLICK_REACH;
 /**
- * Tell `view` which cell the pointer over `element` is over, and `onClick` which one it clicks, as against drags;
- * with `locations`, also the morphology location's marker or the point of a section it is over and clicks. Returns
+ * Tell `view` which cell the pointer over `element` is over, and `onClick` which one it clicks, as against drags, or
+ * `onEmptyClick` that it clicks none; with `locations`, also the morphology location's marker or the point of a section it is over and clicks. Returns
  * what stops it.
  */
 export function trackPointer(
@@ -43,7 +45,7 @@ export function trackPointer(
     CircuitMorphologyView,
     'pick' | 'setHighlight' | 'moving' | 'pickSection' | 'markerAt' | 'onViewChange'
   >,
-  { hover, onClick, taken, locations }: PointerOptions
+  { hover, onClick, onEmptyClick, taken, locations }: PointerOptions
 ): () => void {
   const off = new AbortController();
   // On the page, as the events have them: the view is measured only for a pick.
@@ -168,11 +170,18 @@ export function trackPointer(
     // A click left the view where it was: one pick answers for the highlight and the click.
     forget();
     const asked = changes;
-    if (hover || onClick) {
-      void pickAt(point).then((cell) => {
+    if (hover || onClick || onEmptyClick) {
+      // Null where the point is something else's or the pick failed: no click on a cell, nor on empty space.
+      const p = inElement(point);
+      const picked = p
+        ? tried(() => view.pick(p.x, p.y).then((cell) => ({ cell })))
+        : Promise.resolve(null);
+      void picked.then((got) => {
         if (off.signal.aborted) return;
+        const cell = got?.cell ?? null;
         if (hover && asked === changes) view.setHighlight(cell);
         if (cell !== null) onClick?.(cell);
+        else if (got) onEmptyClick?.();
       });
     }
     const onPick = locations?.onPick;

@@ -158,8 +158,8 @@ export function useCircuitColorBy(
   // snapshot, and let the viewer components listen for the captured image.
   const signals = useCircuitViewerSignals();
   const captureImage = useCallback(async () => {
-    const image = await signals.snapshot.dispatch(undefined).catch(() => null);
-    if (image) downloadCircuitImage(image, shown?.name ?? '', config.backgroundColor);
+    const frame = await signals.snapshot.dispatch().catch(() => null);
+    if (frame) downloadCircuitImage(frame, shown?.name ?? '', config.backgroundColor);
   }, [signals, shown?.name, config.backgroundColor]);
 
   // Merged inside the update rather than from the rendered config, so two

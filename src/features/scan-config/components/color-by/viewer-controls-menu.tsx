@@ -254,7 +254,7 @@ export function ViewerControlsMenu({
           {onToggleSpikeGlow && (
             <MenuRow
               label={
-                <span title="Spiking cells give off a soft light on a dark background, and a tint of their colour on a light one. Shown with morphologies on WebGPU; turn it off on a slow graphics card">
+                <span title="Spiking cells give off a soft light on a dark background, and a tint of their colour on a light one. Turn it off on a slow graphics card">
                   Spike glow
                 </span>
               }

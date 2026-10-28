@@ -50,34 +50,18 @@ function triggerDownload(url: string, filename: string): void {
 }
 
 /**
- * download a viewer-captured image (from `onCapture`) as a watermarked PNG. The
- * captured image is redrawn onto a 2D canvas so the "Open Brain Institute"
- * watermark can be composited on top; object URLs we create are revoked after
- * the download starts.
+ * Download the viewer's frame, a 2D canvas of its own, as a PNG with the "Open Brain Institute" watermark drawn on
+ * it; the object URL is revoked after the download starts.
  */
 export function downloadCircuitImage(
-  image: HTMLImageElement,
+  frame: HTMLCanvasElement,
   name: string,
   backgroundColor: string
 ): void {
   const filename = `${(name || 'circuit').replace(/[^\w.-]+/g, '_')}.png`;
-  const width = image.naturalWidth || image.width;
-  const height = image.naturalHeight || image.height;
-  const ctx = width && height ? document.createElement('canvas').getContext('2d') : null;
-  if (!ctx) {
-    // fall back to the raw capture if a 2D context isn't available
-    triggerDownload(image.src, filename);
-    setTimeout(() => URL.revokeObjectURL(image.src), 10_000);
-    return;
-  }
-
-  ctx.canvas.width = width;
-  ctx.canvas.height = height;
-  ctx.drawImage(image, 0, 0, width, height);
-  drawWatermark(ctx, width, height, watermarkColor(backgroundColor));
-  URL.revokeObjectURL(image.src);
-
-  ctx.canvas.toBlob((blob) => {
+  const ctx = frame.getContext('2d');
+  if (ctx) drawWatermark(ctx, frame.width, frame.height, watermarkColor(backgroundColor));
+  frame.toBlob((blob) => {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
     triggerDownload(url, filename);

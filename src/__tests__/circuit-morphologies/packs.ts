@@ -72,8 +72,7 @@ export async function readPack(bytes: Uint8Array, levelNumber = 0): Promise<Circ
   for (let box = 0; box < level.segments.length; box++) {
     parts.push(await pack.readBox(levelNumber, box));
   }
-  const { toleranceUm, pruneUm } = level;
-  return { ...pack.data, ...joined(parts), level: { toleranceUm, pruneUm } };
+  return { ...pack.data, ...joined(parts) };
 }
 
 export function withIndex(bytes: Uint8Array, change: (index: Index) => void): Uint8Array {

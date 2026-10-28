@@ -160,17 +160,17 @@ describe("an arena on the page's GPU buffers", () => {
         asBytes(arrays.blocks, (8 * end) / BLOCK)
       );
     };
-    arena.put(0, segmentsOf(0, 70));
-    arena.put(1, segmentsOf(1, 10));
-    arena.put(2, segmentsOf(2, 64));
+    arena.replace(0, segmentsOf(0, 70));
+    arena.replace(1, segmentsOf(1, 10));
+    arena.replace(2, segmentsOf(2, 64));
     expectSame();
     arena.remove(0);
     expectSame();
-    arena.put(3, segmentsOf(3, 100));
+    arena.replace(3, segmentsOf(3, 100));
     arena.remove(1);
     expectSame();
     // No hole and no room at the end hold three blocks: every box is moved down.
-    arena.put(4, segmentsOf(4, 150));
+    arena.replace(4, segmentsOf(4, 150));
     expectSame();
     arena.remove(4);
     arena.remove(2);

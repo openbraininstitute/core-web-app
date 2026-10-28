@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-import { GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-timer';
+import { GpuTimer } from '@/features/viewer-3d/engine/gpu-timer';
 import { EXPOSURE } from '@/features/viewer-3d/engine/looks';
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 
@@ -28,7 +28,7 @@ function topDown(pixels: Uint8Array, side: number): Uint8Array {
 /**
  * The circuit's morphologies on WebGL 2 (`CircuitView`), the fallback where WebGPU is missing. Frames go straight to
  * the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. They are timed on the GPU
- * (`GpuTimer`) where the view asks. After a lost context three uploads the arrays again.
+ * (`GpuTimer`) where the view asks. Its context lost, it draws no more, and `onLost` is told, to make the view anew.
  */
 export class CircuitMorphologyViewer extends CircuitView {
   protected materials: CircuitMaterials;
@@ -41,7 +41,10 @@ export class CircuitMorphologyViewer extends CircuitView {
   private timer: GpuTimer | null | undefined;
   private timed: FrameTiming | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(
+    container: HTMLElement,
+    private onLost: (() => void) | null = null
+  ) {
     // Transparent canvas over the container's background.
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -55,7 +58,7 @@ export class CircuitMorphologyViewer extends CircuitView {
     renderer.toneMappingExposure = EXPOSURE;
     super(container, renderer.domElement, renderer.getPixelRatio(), SEGMENT_BUDGET.webgl);
     this.renderer = renderer;
-    renderer.domElement.addEventListener('webglcontextrestored', this.onContextRestored);
+    renderer.domElement.addEventListener('webglcontextlost', this.onContextLost);
     const { uniforms, cloudUniforms, spotUniforms, pixelRatio } = this;
     // The look's own material draws the segments; the somas have a copy of it.
     const look = this.look.material;
@@ -63,6 +66,7 @@ export class CircuitMorphologyViewer extends CircuitView {
       segment: [impostor(look, 'segment', uniforms)],
       soma: impostor(look.clone(), 'soma', uniforms),
       cloud: somaCloudMaterial(uniforms, cloudUniforms),
+      wholeCloud: somaCloudMaterial(uniforms, cloudUniforms, { whole: true }),
       ids: {
         segment: [idMaterial('segment', uniforms)],
         soma: idMaterial('soma', uniforms),
@@ -80,7 +84,7 @@ export class CircuitMorphologyViewer extends CircuitView {
   }
 
   protected override disposeStage(): void {
-    this.renderer.domElement.removeEventListener('webglcontextrestored', this.onContextRestored);
+    this.renderer.domElement.removeEventListener('webglcontextlost', this.onContextLost);
     this.idTarget?.dispose();
     this.timer?.dispose();
     this.renderer.dispose();
@@ -125,11 +129,11 @@ export class CircuitMorphologyViewer extends CircuitView {
     return this.timer;
   }
 
-  private onContextRestored = (): void => {
-    // Its queries went with the context.
-    this.timer?.dispose();
-    this.timer = undefined;
-    this.invalidate();
+  /** Told once: the browser took the context back, most often the oldest where a page asks for more than it allows. */
+  private onContextLost = (): void => {
+    const told = this.onLost;
+    this.onLost = null;
+    told?.();
   };
 
   protected override readPick(scene: THREE.Scene, at: PickWindow): Promise<Uint8Array> {
@@ -151,7 +155,8 @@ export class CircuitMorphologyViewer extends CircuitView {
     renderer.setRenderTarget(null);
   }
 
-  protected override pickTarget(): THREE.WebGLRenderTarget {
+  /** The target a pick is drawn into, `pickSide` square. */
+  private pickTarget(): THREE.WebGLRenderTarget {
     this.idTarget ??= new THREE.WebGLRenderTarget(this.pickSide, this.pickSide);
     return this.idTarget;
   }

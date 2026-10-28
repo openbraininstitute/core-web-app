@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
@@ -19,6 +20,7 @@ const SOMA = {
 const MINUTE = 60 * 1000;
 
 // The sections are kept between tests, so each test reads a path of its own.
+const client = new QueryClient();
 const request = (path: string) => ({ path, virtualLabId: 'lab', projectId: 'project' });
 
 beforeEach(() => vi.useFakeTimers());
@@ -31,8 +33,8 @@ describe("a morphology's sections", () => {
   it('are read once and parsed once, then served as they were', async () => {
     h.fetchCircuitViz.mockResolvedValue([SOMA]);
 
-    const first = await loadSections(request('once'));
-    const second = await loadSections(request('once'));
+    const first = await loadSections(client, request('once'));
+    const second = await loadSections(client, request('once'));
 
     expect(first).toEqual([SOMA]);
     expect(second).toBe(first);
@@ -47,8 +49,8 @@ describe("a morphology's sections", () => {
     h.fetchCircuitViz.mockResolvedValue([SOMA]);
 
     const [first, second] = await Promise.all([
-      loadSections(request('shared')),
-      loadSections(request('shared')),
+      loadSections(client, request('shared')),
+      loadSections(client, request('shared')),
     ]);
 
     expect(second).toBe(first);
@@ -58,8 +60,8 @@ describe("a morphology's sections", () => {
   it('are read again in another workspace', async () => {
     h.fetchCircuitViz.mockResolvedValue([SOMA]);
 
-    await loadSections(request('workspaces'));
-    await loadSections({ ...request('workspaces'), projectId: 'another' });
+    await loadSections(client, request('workspaces'));
+    await loadSections(client, { ...request('workspaces'), projectId: 'another' });
 
     expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
     expect(h.fetchCircuitViz).toHaveBeenLastCalledWith('workspaces', {
@@ -75,23 +77,21 @@ describe("a morphology's sections", () => {
     h.fetchCircuitViz.mockImplementationOnce(failure).mockResolvedValue([SOMA]);
     const path = `again: ${what}`;
 
-    await expect(loadSections(request(path))).rejects.toThrow();
-    await expect(loadSections(request(path))).resolves.toEqual([SOMA]);
+    await expect(loadSections(client, request(path))).rejects.toThrow();
+    await expect(loadSections(client, request(path))).resolves.toEqual([SOMA]);
     expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
   });
 
-  it('are kept an hour from the last time they were asked for', async () => {
+  it('are kept an hour once read', async () => {
     h.fetchCircuitViz.mockResolvedValue([SOMA]);
 
-    await loadSections(request('kept'));
+    await loadSections(client, request('kept'));
     vi.advanceTimersByTime(50 * MINUTE);
-    await loadSections(request('kept'));
-    vi.advanceTimersByTime(50 * MINUTE);
-    await loadSections(request('kept'));
+    await loadSections(client, request('kept'));
     expect(h.fetchCircuitViz).toHaveBeenCalledTimes(1);
 
-    vi.advanceTimersByTime(60 * MINUTE);
-    await loadSections(request('kept'));
+    vi.advanceTimersByTime(20 * MINUTE);
+    await loadSections(client, request('kept'));
     expect(h.fetchCircuitViz).toHaveBeenCalledTimes(2);
   });
 });

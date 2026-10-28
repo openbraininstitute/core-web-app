@@ -135,8 +135,8 @@ flowchart TD
 
 ## Frames while the view moves
 
-- Frames are timed on the GPU ([engine/gpu-timer.ts](engine/gpu-timer.ts)): with timer queries in Chrome and Edge on desktop, with a fence elsewhere. A moving frame is timed from the third after a pause, and only where the frame before drew the same mesh, cut down the same way: a GPU waking up draws its first frames slowly.
-- One over the budget, 22 ms (45 frames a second), is cut down a step (`MotionQuality` in [engine/motion-quality.ts](engine/motion-quality.ts)): first the ambient occlusion is left out, then half the pixels a step, down to a quarter of the resolution. Frames cut to fewer pixels, or set to draw without antialiasing, go through a second composer, made the first time one is, and are scaled up onto the canvas.
+- Frames are timed on the GPU ([gpu-timer.ts](../../../viewer-3d/engine/gpu-timer.ts)): with timer queries in Chrome and Edge on desktop, with a fence elsewhere. A moving frame is timed from the third after a pause, and only where the frame before drew the same mesh, cut down the same way: a GPU waking up draws its first frames slowly.
+- One over the budget, 22 ms (45 frames a second), is cut down a step (`MotionQuality` in [motion-quality.ts](../../../viewer-3d/engine/motion-quality.ts)): first the ambient occlusion is left out, then half the pixels a step, down to a quarter of the resolution. Frames cut to fewer pixels, or set to draw without antialiasing, go through a second composer, made the first time one is, and are scaled up onto the canvas.
 - They step back up a step at a time where they would keep within 80 % of the budget, and all the way up as soon as the view stops, where a full frame does.
 - The budget and the stand-in's 32 ms let a turn run somewhat slower than 60 frames a second, to keep the full mesh on screen.
 - The still frame, once the view stops, is drawn in full: with the occlusion where it is on, at full resolution, antialiased.

@@ -4,6 +4,26 @@ import type { CellColors, Population, SectionColors } from './types';
 /** No cell has a colour of its own: each is in the view's own colour. */
 export const NO_CELL_COLORS: CellColors = { palette: [], columnByCell: new Uint16Array(0) };
 
+/** What the rest of the population fades to while one of its somas is pointed out. */
+const FADED = '#d4d4d4';
+
+/**
+ * How the rest of the population on show is drawn while one of its cells is pointed out: faded where somas are drawn,
+ * the cell standing out among them; taken out where morphologies are, whose tangle would hide it, and no hover lit
+ * beside it there.
+ */
+export function pointingOut(
+  highlightedCell: number | undefined,
+  drawsMorphologies: boolean,
+  recededColor?: string
+): { fadedColor: string | false; hover: boolean } {
+  const pointing = highlightedCell !== undefined;
+  return {
+    fadedColor: pointing && !drawsMorphologies ? (recededColor ?? FADED) : false,
+    hover: !(pointing && drawsMorphologies),
+  };
+}
+
 /** Each population's cells in the page's numbering, from its first to the one after its last. */
 export function populationRanges(
   populations: readonly Population[]

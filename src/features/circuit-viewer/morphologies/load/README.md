@@ -74,7 +74,7 @@ The somas view shades each soma by how crowded its neighbourhood is, the sum of 
 For a single cell, an ME-model, and a pair or small circuit without a pack:
 
 - `useSmallCircuitSource` and `useMemodelVisualizationSource` (in `scan-config/components/circuit-viz/sources/`) give a `TreeSource`: each cell's place and turn, and its morphology's path on OBI-One. The source is made once every population is placed, as a new source is a new scene, read and framed again.
-- `TreeLoader` ([../use-tree-morphologies.ts](../use-tree-morphologies.ts)) reads the cells one at a time, in order, on the main thread, skipping hidden populations. `loadSections` ([read-sections.ts](read-sections.ts)) asks OBI-One for the sections, kept an hour in memory.
+- `TreeLoader` ([../use-tree-morphologies.ts](../use-tree-morphologies.ts)) reads the cells one at a time, in order, on the main thread, skipping hidden populations. `loadSections` ([read-sections.ts](read-sections.ts)) asks OBI-One for the sections, kept an hour in the page's React Query client. The cells are drawn anew at most every 100 ms as their morphologies come in, each drawing placing every cell.
 - `treeOf` ([tree.ts](tree.ts)) makes the sections segments, a segment between each two traced points, keeping each one's section for picking a location. A stem keeps one radius from the soma out, so a neurite doesn't grow out of the soma as a cone. `placeTrees` ([place-trees.ts](place-trees.ts)) turns and moves them into the circuit.
 - An ME-model also gets its dendrogram ([dendrogram.ts](dendrogram.ts)), scaled to the cell's own size, so that the view stays framed as it morphs between the two.
 - The listeners hear once a task, not once a cell. Hiding or showing the axons reads every cell again, each kept on show until its new one comes. A cell that fails stays a soma, and Try again reads the failed ones again.
@@ -93,7 +93,7 @@ morton.ts             a box's segments in Morton order
 crowding.ts           how crowded each soma is, on a grid
 crowding.worker.ts    worker entry: the crowding, terminated after
 load-crowding.ts      the crowding in its worker, aborted with the somas
-read-sections.ts      one cell's sections from OBI-One, kept an hour
+read-sections.ts      one cell's sections from OBI-One, kept an hour by React Query
 tree.ts               a cell's sections as segments, each with its section, and its soma
 place-trees.ts        the cells placed in the circuit
 dendrogram.ts         an ME-model's dendrogram

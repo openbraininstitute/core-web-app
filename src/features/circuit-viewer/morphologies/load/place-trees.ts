@@ -113,7 +113,6 @@ export function placeTrees(
     populations,
     centre,
     bounds: { min: [0, 0, 0], max: [0, 0, 0] },
-    level: { toleranceUm: 0, pruneUm: 0 },
     trees: { morphologies, firstSegments },
     chart,
   };

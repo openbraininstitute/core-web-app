@@ -4,6 +4,7 @@ import {
   cellAt,
   cellColorsOf,
   NO_CELL_COLORS,
+  pointingOut,
 } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
 
@@ -123,6 +124,19 @@ describe("the cells' colours", () => {
         )
       ).toEqual(['#cccccc', '#cccccc', '#cccccc', null, null, '#cccccc']);
     }
+  });
+});
+
+describe('a cell pointed out', () => {
+  it('fades the rest among somas and takes it out among morphologies, with no hover there', () => {
+    expect(pointingOut(2, false)).toEqual({ fadedColor: '#d4d4d4', hover: true });
+    expect(pointingOut(2, false, '#cccccc')).toEqual({ fadedColor: '#cccccc', hover: true });
+    expect(pointingOut(2, true)).toEqual({ fadedColor: false, hover: false });
+  });
+
+  it('changes nothing where none is', () => {
+    expect(pointingOut(undefined, true)).toEqual({ fadedColor: false, hover: true });
+    expect(pointingOut(undefined, false)).toEqual({ fadedColor: false, hover: true });
   });
 });
 

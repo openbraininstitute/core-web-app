@@ -16,6 +16,16 @@ const HALF_CROWDED = 128;
 /** The glow kept is the glow to this power: held near full, then let go. */
 export const GLOW_POWER = 0.4;
 
+/**
+ * Writes rows of `texture`, a byte a cell, from `texels` straight to the GPU where it can, in place of three uploading
+ * the whole: false where it cannot.
+ */
+export type GlowRowsWriter = (
+  texture: THREE.DataTexture,
+  texels: Uint8Array,
+  rows: readonly number[]
+) => boolean;
+
 /** Each cell's soma (`CircuitMorphologyData.somas`) laid out as the cell table: x, y and z, and w 1 where it has a place. */
 export function somaTexture(somas: Float32Array): THREE.DataTexture {
   const cells = Math.floor(somas.length / 4);
@@ -48,7 +58,10 @@ export class CellTable {
   /** What the cells in section colours were last painted in; null where none is. */
   sectionColors: SectionColors | null = null;
 
-  constructor(readonly cells: number) {
+  constructor(
+    readonly cells: number,
+    private readonly writeGlowRows?: GlowRowsWriter
+  ) {
     const rows = Math.max(1, Math.ceil(cells / ROW));
     this.texels = new Uint8Array(4 * ROW * rows);
     this.texture = new THREE.DataTexture(this.texels, ROW, rows, THREE.RGBAFormat);
@@ -74,25 +87,31 @@ export class CellTable {
 
   /**
    * How brightly each cell glows, from 0 to 1, by its number, kept as the somas view shapes it: held near full, then let
-   * go. Only the cells of `lit` glow, so only they and those that glowed before are looked at. True where that changed
-   * a cell.
+   * go. Only the cells of `lit` glow, so only they and those that glowed before are looked at, and only the rows they
+   * are in uploaded. True where that changed a cell.
    */
   glow(glow: Readonly<Float32Array>, lit: readonly number[]): boolean {
-    let changed = false;
+    const rows = new Set<number>();
     for (const cell of this.lit) {
       if (glow[cell] > 0 || this.glowTexels[cell] === 0) continue;
       this.glowTexels[cell] = 0;
-      changed = true;
+      rows.add(cell >> ROW_BITS);
     }
     for (const cell of lit) {
       const byte = Math.round(255 * glow[cell] ** GLOW_POWER);
       if (byte === this.glowTexels[cell]) continue;
       this.glowTexels[cell] = byte;
-      changed = true;
+      rows.add(cell >> ROW_BITS);
     }
     this.lit = lit;
-    if (changed) this.glowTexture.needsUpdate = true;
-    return changed;
+    if (rows.size === 0) return false;
+    const changed = [...rows];
+    if (!this.writeGlowRows?.(this.glowTexture, this.glowTexels, changed)) {
+      // three counts a range in four components a texel, whatever the texture's format.
+      for (const row of changed) this.glowTexture.addUpdateRange(4 * row * ROW, 4 * ROW);
+      this.glowTexture.needsUpdate = true;
+    }
+    return true;
   }
 
   /** How crowded each cell's neighbourhood is, from 0 to 255 by its number; null takes every cell as half crowded. */

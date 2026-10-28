@@ -1,6 +1,7 @@
+import { WAKE_FRAMES } from '@/features/viewer-3d/engine/motion-quality';
 import { VIEW_HELP } from '@/features/viewer-3d/help/view-help';
 
-import { COLD, FULL_ABOVE_PX, STAND_IN_BELOW_PX, WAKE_FRAMES } from '../engine/mesh-choice';
+import { COLD, FULL_ABOVE_PX, STAND_IN_BELOW_PX } from '../engine/mesh-choice';
 import { DEFAULT_MOTION } from '../engine/motion-quality';
 
 import type { HelpText } from '@/features/viewer-3d/help/help-button';

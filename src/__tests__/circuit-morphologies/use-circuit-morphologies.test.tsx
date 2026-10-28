@@ -158,7 +158,7 @@ describe('useCircuitMorphologies', () => {
     await act(async () => load.resolve(loadedOf(loaded, false, Promise.reject(error))));
     await ready(result);
 
-    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+    await waitFor(() => expect(result.current.stopped).toBe('cut'));
     expect(h.logError).toHaveBeenCalledWith(
       'Could not load the whole of the circuit morphologies',
       error
@@ -171,7 +171,7 @@ describe('useCircuitMorphologies', () => {
     const { result } = render();
     const first = await started();
     await act(async () => first.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
-    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+    await waitFor(() => expect(result.current.stopped).toBe('cut'));
 
     act(() => result.current.retry());
 
@@ -186,7 +186,7 @@ describe('useCircuitMorphologies', () => {
     const { result, rerender } = render();
     const load = await started();
     await act(async () => load.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
-    await waitFor(() => expect(result.current.stopped).toEqual({ kind: 'cut' }));
+    await waitFor(() => expect(result.current.stopped).toBe('cut'));
 
     rerender({ source: null });
 
@@ -218,7 +218,7 @@ describe('useCircuitMorphologies', () => {
     await act(async () => load.reject(error));
 
     expect(result.current.load).toEqual({ status: 'idle' });
-    expect(result.current.stopped).toEqual({ kind: 'failed' });
+    expect(result.current.stopped).toBe('failed');
     expect(onStopped).toHaveBeenCalledTimes(1);
     expect(h.logError).toHaveBeenCalledWith('Could not load the circuit morphologies', error);
 
@@ -232,7 +232,7 @@ describe('useCircuitMorphologies', () => {
     await act(async () => first.reject(new Error('Download failed (HTTP 500)')));
 
     rerender({ source: null });
-    expect(result.current.stopped).toEqual({ kind: 'failed' });
+    expect(result.current.stopped).toBe('failed');
 
     rerender({ source: SOURCE });
     expect(result.current.stopped).toBeNull();

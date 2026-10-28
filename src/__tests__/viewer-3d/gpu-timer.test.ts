@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { GIVE_UP_MS, GpuTimer } from '@/features/entities/em-cell-mesh/viewer/engine/gpu-timer';
+import { GIVE_UP_MS, GpuTimer } from '@/features/viewer-3d/engine/gpu-timer';
 
 const QUERY_RESULT = 1;
 const QUERY_RESULT_AVAILABLE = 2;

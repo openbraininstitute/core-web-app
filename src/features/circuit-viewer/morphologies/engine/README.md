@@ -41,6 +41,8 @@ Once drawing, a WebGPU view can give out:
 | The somas' culling cannot run | The cloud is drawn by pieces, as on WebGL 2 |
 | The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow |
 
+A WebGL 2 view whose context the browser takes back, most often the oldest where a page asks for more than it allows, tells `onLost` too, and is made again on WebGL 2, the cells it was given handed to the new one.
+
 ## Detail
 
 A pack holds three levels; each box of space is drawn at one of them, or not at all. `chooseDetail` ([detail.ts](detail.ts)) chooses, box by box:
@@ -112,8 +114,8 @@ WebGL 2 has no culling of its own: three culls the cloud's pieces by their bound
 
 The cloud ([soma-cloud.ts](soma-cloud.ts)) draws a soma as a low hexagonal pyramid shaded as a sphere, or as a flat quad once under 3 px across (back to pyramids over 3.6 px).
 
-- It is cut into pieces of nearby somas in Morton order, at most 512 pieces, so that three culls those out of view and draws the near ones first.
-- Translucent, it is drawn whole, in the page's order, so that blending does not follow the pieces.
+- It is cut into pieces of nearby somas in Morton order, at most 512 pieces, so that three culls those out of view and draws the near ones first. Past 100,000 somas the order is worked out in a worker (`loadMortonSorted`), and the pieces are made once it is in, the cloud drawn whole meanwhile.
+- Translucent, it is drawn whole, in the page's order, so that blending does not follow the pieces: each soma is the cell of its instance, and the mesh, made the first time, is kept hidden while the somas are opaque.
 
 With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impostors.ts)).
 
@@ -129,7 +131,7 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 ## Picking, cells and spikes
 
 - **Pick** (`numberAround` in [circuit-view.ts](circuit-view.ts)): the cells are drawn as ids, `cell + 1` across a pixel's bytes, into a small target round the pointer, and read back asynchronously; the id nearest the middle wins. Of morphologies read a cell at a time, the same read gives the segment, so the section and its offset.
-- **The cell table** ([cell-table.ts](cell-table.ts)): a texel a cell, in rows of 2,048, the widest texture WebGL 2 promises. Its colour, or none for hidden, or by section; a glow texture rewritten each frame of a replay for the cells lit; the crowding. A segment's word keeps the cell in 24 bits (`CELL_MASK`), so a view takes 16.7M cells at most.
+- **The cell table** ([cell-table.ts](cell-table.ts)): a texel a cell, in rows of 2,048, the widest texture WebGL 2 promises. Its colour, or none for hidden, or by section; a glow texture rewritten each frame of a replay for the cells lit, only the rows they are in uploaded (on WebGPU written to three's texture straight, as three would upload it whole); the crowding. A segment's word keeps the cell in 24 bits (`CELL_MASK`), so a view takes 16.7M cells at most.
 - **Spikes** ([spike-light.ts](spike-light.ts)): the time since a cell's last spike is read back from its glow, which falls by e every afterglow. From it, a band runs out from the soma along the fibres at 400 µm a second of the wall clock, the whole cell kept a quarter lit behind it. In the cloud, a soma swells and is drawn opaque. On WebGL 2 the band is always drawn on the morphologies. On WebGPU it is drawn while the scene settings' Spike glow switch is on, with a bloom and a line drawn through the cells in front of a lit one.
 - **Electrodes, synapses and markers** ([electrodes.ts](electrodes.ts)): discs with a ring, drawn over the cells; synapses depth-tested among them. Their hits are tested on the page, not on the GPU.
 

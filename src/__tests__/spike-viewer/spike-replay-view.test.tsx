@@ -192,31 +192,18 @@ describe('SpikeReplayView with input spikes', () => {
     );
   });
 
-  it('shows only the raster for an input population on the per-cell viewer', () => {
-    render(<SpikeReplayView data={spikes('VPM')} subject={SMALL} />);
-
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '3D replay of input populations isn’t available for small circuits yet.'
-    );
-    expect(screen.queryByRole('button', { name: 'Play spike replay' })).toBeNull();
-    expect(screen.queryByRole('button', { name: '3D spike replay' })).toBeNull();
-  });
-
-  it('brings the 3D back, in the mode left, when the circuit’s cells are picked again', () => {
+  it('lights an input population’s own somas on the per-cell viewer too', () => {
     render(<SpikeReplayView data={spikes('cortex', 'VPM')} subject={SMALL} />);
     fireEvent.click(screen.getByRole('button', { name: '3D spike replay' }));
 
     choose('VPM');
-    expect(screen.queryByRole('button', { name: 'Play spike replay' })).toBeNull();
-    expect(screen.queryByRole('button', { name: '3D spike replay' })).toBeNull();
-
-    choose('cortex');
     expect(screen.getByRole('button', { name: 'Play spike replay' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '3D spike replay' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
     expect(screen.queryByRole('status')).toBeNull();
+    expect(lastScene().populationName).toBe('VPM');
   });
 
   it('shows only the raster for a population with no positions', () => {

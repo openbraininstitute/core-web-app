@@ -12,7 +12,7 @@ const GAVE_OUT: Record<Lost, string> = {
   reset: 'Drawn with WebGL 2 after the graphics were reset',
   memory: 'Drawn with WebGL 2: the graphics ran out of memory',
 };
-const STOPPED: Record<MorphologiesStop['kind'], string> = {
+const STOPPED: Record<MorphologiesStop, string> = {
   failed: 'The morphologies could not be loaded',
   cut: 'Not all of the morphologies could be loaded',
 };
@@ -59,7 +59,7 @@ export function MorphologiesStatus({
     pill = busy(load);
   } else if (stopped) {
     pill = (
-      <StatusPill text={STOPPED[stopped.kind]} kind="warning" theme={theme} place={place}>
+      <StatusPill text={STOPPED[stopped]} kind="warning" theme={theme} place={place}>
         <StatusAction onClick={onRetry}>Try again</StatusAction>
         <StatusAction onClick={onDismiss}>Dismiss</StatusAction>
       </StatusPill>

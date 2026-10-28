@@ -42,7 +42,7 @@ function nextScalar(current: unknown, next: number): ConfigValue {
 /**
  * Apply the viewer's electrode drag/rotate back into scan-config.
  *
- * How: called from `CircuitPreview` only on `event.phase === 'end'` so mid-drag
+ * How: the viewer reports a drag only once it ends, so mid-drag
  * React updates do not fight the live WebGL buffers. Only updates `origin_*` /
  * `rotation_*` keys that already exist on the block.
  * Why: Linear probes expose Rx/Rz only; planar arrays may also have Ry — never

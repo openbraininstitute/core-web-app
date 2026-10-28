@@ -191,7 +191,6 @@ describe('the electrodes over the morphologies', () => {
       id: 'A',
       origin: { x: 20, y: 40, z: 30 },
       rotation: { x: 0, y: 0, z: 0 },
-      phase: 'end',
     });
     expect(heard).toEqual(CELLS_ONLY);
   });

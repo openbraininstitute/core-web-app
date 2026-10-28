@@ -49,6 +49,5 @@ export function loadedData(
     populations,
     centre,
     bounds: { min: [-5, -5, -5], max: [11, 5, 5] },
-    level: { toleranceUm: 0.125, pruneUm: 0 },
   };
 }

@@ -490,7 +490,6 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     const placed = hasPosition(somas, i);
     for (let k = 0; k < 3; k++) somas[i + k] = placed ? somas[i + k] - centre[k] : NaN;
   }
-  const { toleranceUm, pruneUm } = index.levels[0];
   const data: CircuitMorphologyData = {
     segments: new Float32Array(0),
     segmentCells: new Uint32Array(0),
@@ -512,7 +511,6 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
       : undefined,
     centre,
     bounds: { min: around(box.min), max: around(box.max) },
-    level: { toleranceUm, pruneUm },
   };
 
   const { corners, inBox } = gatherBoxes(index);

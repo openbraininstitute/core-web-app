@@ -1,11 +1,11 @@
 import { saveAs } from 'file-saver';
-import { useSetAtom } from 'jotai';
 import React from 'react';
 
 import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-import { cellAt, cellColorsOf } from '@/features/circuit-viewer/morphologies/cell-colors';
+import { cellColorsOf, pointingOut } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
+import { useCellClick } from '@/features/circuit-viewer/morphologies/use-cell-click';
 import {
   storedPackOf,
   useCircuitMorphologies,
@@ -16,7 +16,7 @@ import {
   DEFAULT_ELECTRODE_RADIUS,
   DEFAULT_SOMA_SIZE_SCALE,
 } from '@/features/scan-config/components/color-by/use-viewer-config';
-import { circuitSceneAnchorAtom } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
+import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { Button } from '@/ui/molecules/button';
@@ -24,92 +24,22 @@ import { cn } from '@/utils/css-class';
 
 import { useSomaRadius } from './hooks';
 
-import type { ICircuit } from '@/api/entitycore/types';
-import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { Fallback } from '@/features/circuit-viewer/morphologies/engine/create-view';
-import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
-import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
-import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
-  CircuitRepresentation,
-  NodeColors,
-} from '@/features/scan-config/components/color-by/types';
-import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+  CircuitCellsHostProps,
+  CircuitViewerHostProps,
+} from '@/features/circuit-viewer/host-props';
+import type { Fallback } from '@/features/circuit-viewer/morphologies/engine/create-view';
+import type { CircuitRepresentation } from '@/features/scan-config/components/color-by/types';
 
 import styles from './large-circuit-preview.module.css';
 
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
-/** What the rest of the population fades to while one of its somas is pointed out. */
-const FADED = '#d4d4d4';
-
-export interface LargeCircuitPreviewProps {
+export interface LargeCircuitPreviewProps extends CircuitViewerHostProps, CircuitCellsHostProps {
   className?: string;
-  circuit: ICircuit;
-  /**
-   * Host-owned, so `nodeColors` is indexed against the cells it colours.
-   *
-   * Required but nullable: undefined is the honest value while
-   * `circuit_config.json` is still loading, but a caller that leaves it out
-   * altogether would land on "this circuit declares no node populations" — a
-   * message blaming the data for a bug in the call.
-   */
-  population: NodePopulation | undefined;
-  /** @see CircuitVizProps.populations */
-  populations: readonly NodePopulation[];
-  /**
-   * Populations taken out of the scene, by name. Their somas keep their place
-   * in `positions` and take a palette column that draws nothing. That array is
-   * what the viewer reads as the scene, and rebuilding it would refit the
-   * camera.
-   */
-  hiddenPopulations?: readonly string[];
-  /** One flag per cell of the population on show; a 0 takes that soma out the same way. */
-  shownCells?: Uint8Array;
-  /** A soma of the population on show to point out, by node index: every other one of it fades. */
-  highlightedCell?: number;
-  /** Told the node index of a clicked soma of the population on show. */
-  onSubjectCellClick?: (index: number) => void;
-  /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
-  nodeColors?: NodeColors;
-  /**
-   * Colour for a morphology with none of its own. The somas have the viewer's
-   * depth-shaded blue instead.
-   */
-  defaultColor?: string;
-  /** Colour for the cells of the populations that are not on show. */
-  recededColor?: string;
-  /** Called with the population name when one of those cells is clicked. */
-  onPopulationClick?: (populationName: string) => void;
-  /** @see CircuitVizProps.onPositionlessPopulationsChange */
-  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
-  backgroundColor: string;
-  /** Draw the scalebar down the side of the canvas. */
-  showScalebar?: boolean;
-  spin?: boolean;
-  /** The viewer's bus: camera reset, snapshot and zoom. */
-  signals: CircuitViewerSignals;
-  /** Told the view's zoom whenever it changes, the user's own scrolling included. */
-  onZoomChange?: (zoom: number) => void;
-  /**
-   * World-coordinate electrode overlays (same pipeline as CircuitViz), drawn
-   * and moved alike over the somas and over the morphologies.
-   */
-  overlays?: ICircuitOverlayGroup[];
-  /** Enable left-drag / right-drag on electrode overlays when form can write back. */
-  overlaysInteractive?: boolean;
-  /** Gesture-end transform → host `applyElectrodeOverlayTransform`. */
-  onOverlayTransform?: (event: ElectrodeTransform) => void;
-  /** Form-selected electrode block name → highlight in the 3D view. */
-  highlightedOverlayId?: string | null;
-  /** Soma paint opacity (0–1); electrodes stay fully opaque independently. */
-  neuronOpacity?: number;
   /** Multiplier on the per-species soma radius. */
   somaSizeScale?: number;
-  /** Draw the morphologies' axons; drawn when omitted. */
-  showAxons?: boolean;
   /** Frame the view on the morphologies as they come, until the user moves it. */
   followMorphologies?: boolean;
   /**
@@ -126,19 +56,6 @@ export interface LargeCircuitPreviewProps {
   onMorphologiesStopped?: () => void;
   /** Where the morphologies' status goes, clear of the host's chrome. Top-centre when omitted. */
   statusPlace?: React.CSSProperties;
-  /** Electrode marker radius (world units). */
-  electrodeRadius?: number;
-  /**
-   * Viewer feature flags from domain `viewer` (via host). With `cellHover`
-   * the soma or morphology under the pointer is highlighted.
-   */
-  features?: Partial<Pick<IEntityViewerFeatures, 'cellHover'>>;
-  /**
-   * Spikes to replay over the cells, somas or morphologies, and the transport
-   * driving them. One viewer draws both, so a switch between the two keeps the
-   * replay's moment and whether it plays.
-   */
-  spikes?: ISpikeReplayBinding;
 }
 
 export function LargeCircuitPreview({
@@ -175,6 +92,8 @@ export function LargeCircuitPreview({
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
   features,
   spikes,
+  onGlowAvailableChange,
+  onEmptyClick,
 }: LargeCircuitPreviewProps) {
   const debugMode = useCircuitViewerDebugMode();
   const speciesRadius = useSomaRadius(circuit);
@@ -193,10 +112,7 @@ export function LargeCircuitPreview({
     });
   const subjectName = population?.name;
 
-  const setCircuitSceneAnchor = useSetAtom(circuitSceneAnchorAtom);
-  React.useEffect(() => {
-    if (anchor) setCircuitSceneAnchor(anchor);
-  }, [anchor, setCircuitSceneAnchor]);
+  usePublishAnchor(anchor);
   const handleDownload = () => {
     if (!subject) return;
     const { count, positions: coords } = subject;
@@ -215,42 +131,11 @@ export function LargeCircuitPreview({
     saveAs(new Blob(parts, { type: 'application/json' }), `${circuit.id}.json`);
   };
 
-  // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
-  // colour of ours would flatten an uncoloured cloud to a single hue.
-  // Only while a cell is pointed out, so the background alone repaints no more than before.
-  const fadedColor = highlightedCell === undefined ? false : (recededColor ?? FADED);
-  const cellColors = React.useMemo(
-    () =>
-      cellColorsOf({
-        populations: somas.populations,
-        subject: subjectName,
-        nodeColors,
-        receded,
-        hidden,
-        shownCells,
-        highlightedCell,
-        fadedColor,
-      }),
-    [
-      somas.populations,
-      subjectName,
-      nodeColors,
-      receded,
-      hidden,
-      shownCells,
-      highlightedCell,
-      fadedColor,
-    ]
-  );
-
-  const handleCellClick = React.useCallback(
-    (index: number) => {
-      const at = cellAt(somas.populations, index);
-      if (!at) return;
-      if (at.name !== subjectName) onPopulationClick?.(at.name);
-      else onSubjectCellClick?.(at.index);
-    },
-    [somas.populations, subjectName, onPopulationClick, onSubjectCellClick]
+  const handleCellClick = useCellClick(
+    somas.populations,
+    subjectName,
+    onPopulationClick,
+    onSubjectCellClick
   );
   // Only offered when there is something to select.
   const canPickPopulation =
@@ -290,6 +175,35 @@ export function LargeCircuitPreview({
   const [leftOut, setLeftOut] = React.useState(false);
   const [fallback, setFallback] = React.useState<Fallback | null>(null);
 
+  // `null`, the soma's own colour, leaves it to the viewer's ramp, where a
+  // colour of ours would flatten an uncoloured cloud to a single hue.
+  // Only while a cell is pointed out, so the background alone repaints no more than before.
+  const pointed = pointingOut(highlightedCell, shown !== null, recededColor);
+  const { fadedColor } = pointed;
+  const cellColors = React.useMemo(
+    () =>
+      cellColorsOf({
+        populations: somas.populations,
+        subject: subjectName,
+        nodeColors,
+        receded,
+        hidden,
+        shownCells,
+        highlightedCell,
+        fadedColor,
+      }),
+    [
+      somas.populations,
+      subjectName,
+      nodeColors,
+      receded,
+      hidden,
+      shownCells,
+      highlightedCell,
+      fadedColor,
+    ]
+  );
+
   return (
     <div className={cn(className, 'relative h-full w-full', styles.largeCircuitPreview)}>
       {placed.length === 0 && !error && <VisualizationLoadingIndicator download={download} />}
@@ -311,13 +225,15 @@ export function LargeCircuitPreview({
           axons={showAxons}
           cellColors={cellColors}
           defaultColor={defaultColor}
-          cellHover={features?.cellHover ?? true}
+          cellHover={pointed.hover && (features?.cellHover ?? true)}
           onCellClick={canPickPopulation ? handleCellClick : undefined}
           electrodes={overlays}
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}
           spikes={spikes}
+          onGlowAvailable={onGlowAvailableChange}
+          onEmptyClick={onEmptyClick}
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           spin={spin}

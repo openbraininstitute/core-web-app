@@ -331,6 +331,29 @@ describe('the pointer over the morphologies', () => {
     expect(onClick).not.toHaveBeenCalled();
   });
 
+  it("tells of a click on no cell, but not on a cell nor on what is something else's", async () => {
+    const onClick = vi.fn();
+    const onEmptyClick = vi.fn();
+    // Left of 55 in the view, say an electrode.
+    const view = track({ hover: false, onClick, onEmptyClick, taken: (x) => x < 55 });
+    click([160, 90]);
+    await answer(view, null);
+    expect(onEmptyClick).toHaveBeenCalledTimes(1);
+
+    click([160, 90]);
+    await answer(view, 7);
+    click([150, 90]);
+    await settle();
+    expect(onEmptyClick).toHaveBeenCalledTimes(1);
+    expect(onClick).toHaveBeenCalledExactlyOnceWith(7);
+
+    // A pick that fails tells of no click at all.
+    view.pick.mockRejectedValueOnce(new Error('Locked'));
+    click([160, 90]);
+    await settle();
+    expect(onEmptyClick).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     ['a drag', () => press([150, 90]), [155, 90]],
     [

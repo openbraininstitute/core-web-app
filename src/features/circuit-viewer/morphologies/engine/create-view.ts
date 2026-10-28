@@ -30,14 +30,20 @@ const REASONS: Record<Fallback, string> = {
 /** How a WebGPU view gave out, once one did: WebGL 2 for the rest of the page's life. */
 let lost: Lost | null = null;
 
-function onWebGL(host: HTMLElement, reason: string, fallback: Fallback | null = null): CreatedView {
-  return { view: new CircuitMorphologyViewer(host), tier: 'webgl', reason, fallback };
+function onWebGL(
+  host: HTMLElement,
+  onLost: () => void,
+  reason: string,
+  fallback: Fallback | null = null
+): CreatedView {
+  return { view: new CircuitMorphologyViewer(host, onLost), tier: 'webgl', reason, fallback };
 }
 
 /**
  * A view of a circuit in `host`, drawn with WebGPU where the browser grants a device fit for it, else with WebGL 2: at
  * once where WebGPU is out of the question, once the device is asked for where it is not. Should the view give out, its
- * device lost or out of memory, `onLost` is told, and every view made after draws with WebGL 2. Aborted (`signal`)
+ * device lost or out of memory, `onLost` is told, and every view made after draws with WebGL 2; it is told too where
+ * a WebGL 2 view's context is lost, the next made alike. Aborted (`signal`)
  * while the device is asked for, no view is made, and the promise rejects with the signal's reason.
  */
 export function createCircuitView(
@@ -46,10 +52,10 @@ export function createCircuitView(
   onLost: () => void,
   signal?: AbortSignal
 ): CreatedView | Promise<CreatedView> {
-  if (choice === 'webgl') return onWebGL(host, 'chosen in the debug tools');
-  if (lost) return onWebGL(host, REASONS[lost], lost);
+  if (choice === 'webgl') return onWebGL(host, onLost, 'chosen in the debug tools');
+  if (lost) return onWebGL(host, onLost, REASONS[lost], lost);
   const gpu = globalThis.navigator?.gpu;
-  if (!gpu) return onWebGL(host, REASONS.missing, 'missing');
+  if (!gpu) return onWebGL(host, onLost, REASONS.missing, 'missing');
   // Fetched while the device is asked for.
   const engine = import('./webgpu/circuit-morphology-gpu');
   engine.catch(() => {});
@@ -58,7 +64,7 @@ export function createCircuitView(
       if ('device' in probed) probed.device.destroy();
       throw signal.reason;
     }
-    if ('reason' in probed) return onWebGL(host, probed.reason);
+    if ('reason' in probed) return onWebGL(host, onLost, probed.reason);
     const { device } = probed;
     try {
       const { CircuitMorphologyGPU } = await engine;
@@ -76,7 +82,7 @@ export function createCircuitView(
       device.destroy();
       if (signal?.aborted) throw signal.reason;
       logError('Could not start the WebGPU circuit view', e);
-      return onWebGL(host, e instanceof Unfit ? e.message : 'WebGPU could not start');
+      return onWebGL(host, onLost, e instanceof Unfit ? e.message : 'WebGPU could not start');
     }
   });
 }

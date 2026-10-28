@@ -2,6 +2,7 @@ import type { ICircuitOverlayGroup } from '@/features/scan-config/components/mod
 import type { ViewControls } from '@/features/viewer-3d/engine/scene-view';
 import type { SectionType } from '../section-type';
 import type { CircuitSpikes } from '../types';
+import type { MortonSorted } from './load/morton';
 import type { TreeMorphology } from './load/tree';
 import type { LocationOptions } from './pointer';
 
@@ -40,8 +41,6 @@ export interface CircuitMorphologyData {
    * that type.
    */
   boxes?: Record<string, Record<string, Box>>;
-  /** What the level left out: end branches shorter than `pruneUm`, then points within `toleranceUm` of the path. */
-  level: { toleranceUm: number; pruneUm: number };
   /**
    * Where each cell's morphology was read whole, as for a small circuit: that morphology, null for a cell drawn as its
    * soma alone, and where its segments start in `segments`, in their order there.
@@ -65,8 +64,11 @@ export type MorphologySegments = Pick<
   'segments' | 'segmentCells' | 'segmentTypes'
 >;
 
-/** A level of a pack: what it left out, as `CircuitMorphologyData.level` says, and its segments in each box. */
-export interface PackLevel {
+/**
+ * A level of a pack: what it left out, end branches shorter than `pruneUm`, then points within `toleranceUm` of the
+ * path, and its segments in each box.
+ */
+interface PackLevel {
   toleranceUm: number;
   pruneUm: number;
   segments: Uint32Array;
@@ -208,7 +210,6 @@ export interface ElectrodeTransform {
   id: string;
   origin: { x: number; y: number; z: number };
   rotation: { x: number; y: number; z: number };
-  phase: 'end';
 }
 
 /** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */
@@ -282,7 +283,11 @@ export interface CircuitMorphologyView extends ViewControls {
    * framed on them unless the populations on show before, or these, take in the others. The positions are kept, not
    * copied.
    */
-  setSomas(somas: CircuitSomas | null, colors?: CellColors | null): void;
+  setSomas(
+    somas: CircuitSomas | null,
+    colors?: CellColors | null,
+    ordered?: Promise<MortonSorted>
+  ): void;
   /** A soma's radius, µm. */
   setSomaRadius(radius: number): void;
   /** How opaque the somas are, from 0 to 1; a spiking soma is opaque all the same. */

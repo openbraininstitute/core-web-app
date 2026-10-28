@@ -41,7 +41,7 @@ interface Bound {
 }
 
 /**
- * The culling of an arena's segments on the GPU, the bench's on blocks of 64 (`culling-wgsl.ts`): each frame, the
+ * The culling of an arena's segments on the GPU, on blocks of 64 (`culling-wgsl.ts`): each frame, the
  * segments kept the frame before are drawn to depth (`targetOf`, by three), and then the passes here, on `device`'s
  * queue before three draws the frame: that depth's pyramid (`DepthPyramid`), the blocks' test, the segments' test into
  * the lists, flat and tubes, of those kept and those seen, and the draws' arguments, which three's quads are drawn by

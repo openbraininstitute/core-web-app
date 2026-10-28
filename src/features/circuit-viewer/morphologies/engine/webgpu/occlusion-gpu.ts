@@ -271,7 +271,7 @@ class SurfaceGTAONode extends GTAONode {
 }
 
 /**
- * The circuit drawn with ambient occlusion, as the bench measured it from the main draw: the scene into a target of its
+ * The circuit drawn with ambient occlusion, apart from the main draw: the scene into a target of its
  * own, its surfaces' normals and depth beside the colour (`surfaceOf`); of the four pixels under each of the
  * occlusion's, the one most covered; three's GTAO on those (`SurfaceGTAONode`), smoothed; and the colour darkened by it
  * onto the canvas. The colours the materials write are in sRGB, so the occlusion is taken to a gamma of 2.2, as if it

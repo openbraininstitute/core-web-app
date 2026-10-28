@@ -1,3 +1,4 @@
+import { attribute, instanceIndex } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
@@ -25,8 +26,9 @@ import {
 import { AO_RADIUS_CSS, Occlusion } from './occlusion-gpu';
 import { somaCloudMaterials } from './soma-cloud-gpu';
 import { SomaCulling } from './soma-culling';
-import { checkHooks, FrameTimes, threeLoop, trackTimestamps } from './three-hooks';
+import { checkHooks, FrameTimes, gpuTexture, threeLoop, trackTimestamps } from './three-hooks';
 
+import type { GlowRowsWriter } from '../cell-table';
 import type { Lost } from '../create-view';
 
 /** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
@@ -137,11 +139,19 @@ export class CircuitMorphologyGPU extends CircuitView {
       if (overWhite) this.gpu.overWhite = OVER_WHITE;
       this.gpu.throughHalfPx.value = (THROUGH_LINE_CSS_PX / 2) * this.pixelRatio;
       const cloud = somaCloudMaterials(this.gpu);
+      // Drawn whole, the somas are in the page's order, each the cell of its number.
+      const whole = somaCloudMaterials(this.gpu, {
+        cell: instanceIndex,
+        centre: attribute('aPosition', 'vec3'),
+      });
+      whole.id.dispose();
+      whole.cloud.transparent = true;
       const impostors = impostorMaterials(this.gpu, this.look);
       this.materials = {
         segment: impostors.segment,
         soma: impostors.soma,
         cloud: cloud.cloud,
+        wholeCloud: whole.cloud,
         ids: { ...impostors.ids, cloud: cloud.id },
         spots: impostors.spots,
         through: impostors.through,
@@ -492,7 +502,25 @@ export class CircuitMorphologyGPU extends CircuitView {
     renderer.setRenderTarget(null);
   }
 
-  protected override pickTarget(): THREE.RenderTarget {
+  /** Rows of the glow written to three's own texture once it has made one: three's WebGPU uploads a texture whole. */
+  protected override glowRowsWriter(): GlowRowsWriter {
+    return (texture, texels, rows) => {
+      const gpu = gpuTexture(this.renderer, texture);
+      if (!gpu) return false;
+      for (const row of rows) {
+        this.device.queue.writeTexture(
+          { texture: gpu, origin: { x: 0, y: row } },
+          texels,
+          { offset: row * texture.image.width, bytesPerRow: texture.image.width },
+          { width: texture.image.width, height: 1 }
+        );
+      }
+      return true;
+    };
+  }
+
+  /** The target a pick is drawn into, `pickSide` square. */
+  private pickTarget(): THREE.RenderTarget {
     this.idTarget ??= new THREE.RenderTarget(this.pickSide, this.pickSide);
     return this.idTarget;
   }

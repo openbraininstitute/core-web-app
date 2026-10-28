@@ -113,7 +113,6 @@ describe('a small circuit placed', () => {
     const given = cells();
     const data = placeTrees(given, [morphology()], [0, 0, 0]);
     expect(data.bounds).toEqual({ min: [95, -8, -8], max: [308, 58, 8] });
-    expect(data.level).toEqual({ toleranceUm: 0, pruneUm: 0 });
     expect(data.populations).toBe(given.somas.populations);
   });
 });

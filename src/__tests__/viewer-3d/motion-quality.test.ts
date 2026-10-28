@@ -7,7 +7,7 @@ import {
   type MotionOptions,
   MotionQuality,
   motionRungs,
-} from '@/features/entities/em-cell-mesh/viewer/engine/motion-quality';
+} from '@/features/viewer-3d/engine/motion-quality';
 
 const BUDGET = DEFAULT_MOTION.budgetMs;
 const TOP = { ao: true, scale: 1, antialias: true };

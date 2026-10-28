@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -114,9 +115,15 @@ function render(
         recededColor: props.recededColor ?? '#cccccc',
         onPositionlessPopulationsChange: fixtures.onPositionless,
       }),
-    { initialProps }
+    { initialProps, wrapper: withClient(new QueryClient()) }
   );
 }
+
+const withClient =
+  (client: QueryClient) =>
+  ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+  );
 
 /** Each cell's colour, through its column. */
 const colorsOf = ({ palette, columnByCell }: CellColors) =>

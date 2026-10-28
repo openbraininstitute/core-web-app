@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from 'react';
 
 import { logError } from '@/utils/logger';
@@ -45,6 +46,12 @@ export interface TreeLoad {
 
 const NO_PROGRESS: Progress = { version: 0, loaded: 0, total: 0, failed: 0 };
 
+/**
+ * The least time between two tellings, ms: each has every cell placed and drawn again, so a telling per morphology in
+ * would grow with the square of them.
+ */
+const TELL_MS = 100;
+
 /** A cell's morphology as read, null where it could not be, and whether it was read with its axon. */
 interface Read {
   tree: TreeMorphology | null;
@@ -63,12 +70,13 @@ export class TreeLoader {
   private stopRun: (() => void) | null = null;
   private progress: Progress = NO_PROGRESS;
   private telling: ReturnType<typeof setTimeout> | undefined;
+  private toldAt = Number.NEGATIVE_INFINITY;
   private placed: { version: number; data: CircuitMorphologyData } | null = null;
   private readonly centre: Vec3;
 
   constructor(
     private readonly source: TreeSource,
-    private readonly read: (request: SectionsRequest) => Promise<Sections> = loadSections
+    private readonly read: (request: SectionsRequest) => Promise<Sections>
   ) {
     // As the view centres the somas it frames.
     this.centre = extentOf(source.somas.positions)?.mean ?? [0, 0, 0];
@@ -141,7 +149,10 @@ export class TreeLoader {
     this.stopRun = null;
   }
 
-  /** The progress counted again, and with `read`, a morphology in; told on the next task, once for a run of them. */
+  /**
+   * The progress counted again, and with `read`, a morphology in; told on the next task, once for a run of them, and no
+   * sooner than `TELL_MS` after the last telling.
+   */
   private changed(read = false): void {
     const done = this.wanted.flatMap((cell) => {
       const reading = this.reads[cell];
@@ -154,10 +165,12 @@ export class TreeLoader {
       failed: done.filter((reading) => reading.tree === null).length,
     };
     if (this.telling !== undefined) return;
+    const wait = Math.max(0, this.toldAt + TELL_MS - performance.now());
     this.telling = setTimeout(() => {
       this.telling = undefined;
+      this.toldAt = performance.now();
       for (const listener of this.listeners) listener();
-    }, 0);
+    }, wait);
   }
 }
 
@@ -172,7 +185,11 @@ export function useTreeMorphologies(
   source: TreeSource | null,
   { axons, hidden }: { axons: boolean; hidden: readonly string[] }
 ): TreeLoad {
-  const loader = useMemo(() => (source ? new TreeLoader(source) : null), [source]);
+  const queryClient = useQueryClient();
+  const loader = useMemo(
+    () => (source ? new TreeLoader(source, (request) => loadSections(queryClient, request)) : null),
+    [source, queryClient]
+  );
   useEffect(() => {
     if (!loader) return;
     loader.load(axons, hidden);

@@ -280,7 +280,6 @@ export function trackElectrodes(
         id: d.id,
         origin: vector(d.pose.origin),
         rotation: d.pose.rotation,
-        phase: 'end',
       });
       hold(d);
     } else if (was && !settled(was)) {

@@ -36,4 +36,6 @@ export type TSmallCircuitSource = {
    * that population's nodes are placed.
    */
   anchor: [x: number, y: number, z: number] | null;
+  /** Whether a hover may light cells: not beside a cell pointed out alone. Always where absent. */
+  hover?: boolean;
 };

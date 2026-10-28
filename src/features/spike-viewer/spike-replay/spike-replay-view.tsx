@@ -220,15 +220,13 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // Read off the same nodes session. Unknown until it is ready, and replayed in
   // the meantime: switching population mid-play should not pause on a download.
   const positioned = nodesStatus === 'ready' && nodeColumns ? hasPositions(nodeColumns) : undefined;
-  // The per-cell viewer cannot light an input population yet: it draws one as
-  // a cloud of somas with no brightness of their own.
   const drawsEachCell = circuit !== undefined && drawsEachCellOf(circuit);
   // Where the 3D view has nothing to show for these spikes at all, it drops
   // away and the raster has the panel, the way it does with no subject.
   const rasterOnly =
     recorded === undefined
       ? undefined
-      : rasterOnlyReason(listed, nodesStatus === 'error', positioned, drawsEachCell);
+      : rasterOnlyReason(listed, nodesStatus === 'error', positioned);
   const offers3D = !!subject && rasterOnly === undefined;
 
   // Decided against the host's own copy of the circuit config — the same
@@ -346,15 +344,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   }, [windowCells, shownCells]);
   // The table row under the pointer, else the cell clicked in the scene or the
   // raster: pointed out in both, and found in the table.
-  const {
-    handleHoveredCell,
-    handleCellClick,
-    handleScenePointerDown,
-    handleScenePointerUp,
-    focusedCell,
-    highlightedCell,
-    releaseCell,
-  } = useCellFocus({ populationName, tableShown: docked || showStatistics });
+  const { handleHoveredCell, handleCellClick, focusedCell, highlightedCell, releaseCell } =
+    useCellFocus({ populationName, tableShown: docked || showStatistics });
 
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
@@ -696,6 +687,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       highlightedCell={highlightedCell ?? undefined}
       selection={sceneSelection}
       onCellClick={handleCellClick}
+      onEmptyClick={releaseCell}
       onNodeColorsChange={setSceneColors}
       spikes={{
         data: spikes ?? undefined,
@@ -761,12 +753,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                   keepsSize: true,
                   boxClassName: 'overflow-hidden',
                   content: (
-                    <div
-                      id="spike-replay-scene"
-                      className="relative flex min-h-0 flex-1 flex-col"
-                      onPointerDownCapture={handleScenePointerDown}
-                      onPointerUpCapture={handleScenePointerUp}
-                    >
+                    <div id="spike-replay-scene" className="relative flex min-h-0 flex-1 flex-col">
                       <div className="relative min-h-0 flex-1">
                         {scene}
                         {replayable && (
@@ -847,8 +834,6 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
               style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
               aria-hidden={!showScene}
               inert={!showScene || undefined}
-              onPointerDownCapture={handleScenePointerDown}
-              onPointerUpCapture={handleScenePointerUp}
             >
               {scene}
               {replayable && (

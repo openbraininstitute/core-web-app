@@ -129,6 +129,8 @@ const h = vi.hoisted(() => {
       resolve(bytes: Uint8Array | null): void;
       reject(e: unknown): void;
     }[],
+    /** Every Morton order asked for, never answered. */
+    orders: [] as { positions: Float32Array; signal: AbortSignal }[],
     logError: vi.fn(),
   };
   return state;
@@ -142,6 +144,10 @@ vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer
 vi.mock('@/features/circuit-viewer/morphologies/load/load-crowding', () => ({
   loadCrowding: (positions: Float32Array, signal: AbortSignal) =>
     new Promise((resolve, reject) => h.crowdings.push({ positions, signal, resolve, reject })),
+  loadMortonSorted: (positions: Float32Array, signal: AbortSignal) => {
+    h.orders.push({ positions, signal });
+    return new Promise(() => {});
+  },
 }));
 
 vi.mock('@/utils/logger', () => ({ logError: h.logError }));
@@ -245,6 +251,7 @@ const DEBUG = '@openbraininstitute/morphoviewer:debug';
 afterEach(() => {
   h.viewers = [];
   h.crowdings = [];
+  h.orders = [];
   h.logError.mockClear();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
@@ -256,7 +263,7 @@ describe('CircuitCells', () => {
 
     expect(h.viewers).toHaveLength(1);
     expect(viewer.host.parentElement).toBe(screen.getByTestId('circuit-cells'));
-    expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS);
+    expect(viewer.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS, undefined);
     expect(viewer.setSomaRadius).toHaveBeenCalledExactlyOnceWith(15);
     expect(viewer.setSomaOpacity).toHaveBeenCalledExactlyOnceWith(0.2);
     expect(viewer.setData).toHaveBeenCalledExactlyOnceWith(DATA, false);
@@ -283,8 +290,20 @@ describe('CircuitCells', () => {
     const theirs: CellColors = { palette: ['#00ff00'], columnByCell: Uint16Array.of(0, 0) };
 
     update({ somas: others, cellColors: theirs });
-    expect(viewer.setSomas).toHaveBeenLastCalledWith(others, theirs);
+    expect(viewer.setSomas).toHaveBeenLastCalledWith(others, theirs, undefined);
     expect(calledAt(viewer.setSomas, 1)).toBeLessThan(calledAt(viewer.setCellColors, 1));
+  });
+
+  it('has many somas ordered off the page, for these somas only, and a few here', () => {
+    const many = { ...SOMAS, positions: new Float32Array(3 * 100_001) };
+    const { viewer, update } = view({ somas: many });
+    expect(h.orders.map(({ positions }) => positions)).toEqual([many.positions]);
+    expect(viewer.setSomas).toHaveBeenLastCalledWith(many, COLORS, expect.any(Promise));
+    const [first] = h.orders;
+    update({ somas: SOMAS });
+    expect(first.signal.aborted).toBe(true);
+    expect(h.orders).toHaveLength(1);
+    expect(viewer.setSomas).toHaveBeenLastCalledWith(SOMAS, COLORS, undefined);
   });
 
   it('takes a radius, an opacity and morphologies without handing the somas over again', () => {
@@ -431,6 +450,17 @@ describe('CircuitCells', () => {
     expect(onLeftOut.mock.calls).toEqual([[false], [true], [false], [false]]);
   });
 
+  it('tells that no spike glow can be drawn on WebGL 2, morphologies or not', () => {
+    const onGlowAvailable = vi.fn();
+    const { update, unmount } = view({ onGlowAvailable });
+    expect(onGlowAvailable.mock.calls).toEqual([[false]]);
+    update({ data: null });
+    expect(onGlowAvailable.mock.calls).toEqual([[false]]);
+    // Gone, it says so.
+    unmount();
+    expect(onGlowAvailable.mock.calls).toEqual([[false], [false]]);
+  });
+
   it('shows nothing of what the engine draws outside the debug tools', () => {
     const { viewer } = view();
     tellDetail(viewer, { ...DETAIL, leftOut: 2 });
@@ -477,7 +507,7 @@ describe('CircuitCells', () => {
       expect(viewer.dispose).toHaveBeenCalledTimes(1);
       const again = h.viewers.at(-1) as InstanceType<typeof h.FakeViewer>;
       expect(again).not.toBe(viewer);
-      expect(again.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS);
+      expect(again.setSomas).toHaveBeenCalledExactlyOnceWith(SOMAS, COLORS, undefined);
       expect(again.setData).toHaveBeenCalledExactlyOnceWith(DATA, false);
       expect(screen.getByTestId('renderer').textContent).toBe(
         'Drawn with WebGL 2: chosen in the debug tools'
@@ -603,7 +633,6 @@ describe('CircuitCells', () => {
       id: 'A',
       origin: { x: 11, y: 12, z: 3 },
       rotation: { x: 0, y: 0, z: 0 },
-      phase: 'end',
     });
 
     update({ onElectrodeTransform: second });
@@ -747,41 +776,18 @@ describe('CircuitCells', () => {
     expect(viewer.resetView).toHaveBeenCalledTimes(1);
   });
 
-  it("answers the snapshot signal with the engine's frame as an image of the kind asked for", async () => {
+  it("answers the snapshot signal with the engine's frame", async () => {
     const { viewer, signals } = view();
-    const blob = new Blob(['png']);
     const canvas = document.createElement('canvas');
-    const toBlob = vi.spyOn(canvas, 'toBlob').mockImplementation((done) => done(blob));
     viewer.snapshot.mockReturnValue(canvas);
-    const createObjectURL = vi.fn((_: Blob) => 'blob:shot');
-    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL: vi.fn() });
-    // jsdom loads no image, so one that has loaded as soon as it has a source.
-    vi.stubGlobal(
-      'Image',
-      class {
-        onload: (() => void) | null = null;
-        private source = '';
-        get src() {
-          return this.source;
-        }
-        set src(value: string) {
-          this.source = value;
-          queueMicrotask(() => this.onload?.());
-        }
-      }
-    );
 
-    const image = await signals.snapshot.dispatch({ type: 'image/jpeg', quality: 0.8 });
-
-    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), 'image/jpeg', 0.8);
-    expect(createObjectURL).toHaveBeenCalledWith(blob);
-    expect(image?.src).toBe('blob:shot');
+    expect(await signals.snapshot.dispatch()).toBe(canvas);
   });
 
   it('answers the snapshot signal with nothing where the engine has no frame to give', async () => {
     const { signals } = view();
 
-    expect(await signals.snapshot.dispatch(undefined)).toBeNull();
+    expect(await signals.snapshot.dispatch()).toBeNull();
   });
 
   it('frees the engine and leaves the signals unanswered when it goes', async () => {
@@ -791,7 +797,7 @@ describe('CircuitCells', () => {
 
     expect(viewer.dispose).toHaveBeenCalledTimes(1);
     await expect(signals.cameraReset.dispatch(undefined)).rejects.toThrow('no handler');
-    await expect(signals.snapshot.dispatch(undefined)).rejects.toThrow('no handler');
+    await expect(signals.snapshot.dispatch()).rejects.toThrow('no handler');
     await expect(signals.setZoom.dispatch(2)).rejects.toThrow('no handler');
   });
 });

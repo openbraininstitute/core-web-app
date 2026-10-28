@@ -1,7 +1,6 @@
 /**
- * The culling's passes, the bench's (`docs/circuit-morphology-bench/src/cull/wgsl.js`) on the arena's segments and in
- * µm from the eye, so that the same holds in perspective, and the bench's of the somas drawn alone
- * (`docs/circuit-morphology-bench/web/soma-cull.js`). Each pass is put together with the impostors' own WGSL
+ * The culling's passes, on the arena's segments and in µm from the eye, so that the same holds in perspective, and on
+ * the somas drawn alone. Each pass is put together with the impostors' own WGSL
  * (`depth-pyramid.ts`), whose `segmentEnds` places a segment as its draw does.
  */
 
@@ -10,11 +9,11 @@ import { QUAD_REACH } from '../impostors';
 /** How much nearer a segment is taken to be than it is, µm and a share of its distance: the arithmetic's rounding. */
 export const NEAR_UM = 0.02;
 export const NEAR_SHARE = 1e-6;
-/** How far behind what hides it a segment is still kept, µm, to hide others the next frame: the bench's. */
+/** How far behind what hides it a segment is still kept, µm, to hide others the next frame. */
 export const KEEP_UM = 10;
 /**
  * The texels a side a block's box is tested on, and the rows a segment is walked over pixel by pixel; past them, a
- * coarser level of the pyramid. The bench's: 4 rows was the fastest while the whole brain turned.
+ * coarser level of the pyramid. 4 rows was the fastest while the whole brain turned.
  */
 const BLOCK_TEXELS = 8;
 const ROWS = 4;

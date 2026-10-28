@@ -26,9 +26,13 @@ function placement(positions: number[]): NodeGeometry {
 }
 
 const h = vi.hoisted(() => ({
-  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
-    typeof usePopulationsPlacement
-  >,
+  placement: {
+    placed: [],
+    failures: new Map(),
+    positionless: new Set(),
+    settled: true,
+    download: null,
+  } as ReturnType<typeof usePopulationsPlacement>,
   /** What the viewer was last rendered with, and how many times it was mounted. */
   cells: null as CircuitCellsProps | null,
   mounts: 0,
@@ -155,6 +159,7 @@ describe('LargeCircuitPreview morphologies', () => {
         { population: VPM, geometry: placement([9, 9, 9]) },
       ],
       failures: new Map(),
+      positionless: new Set(),
       settled: true,
       download: null,
     };
@@ -566,7 +571,13 @@ describe('LargeCircuitPreview morphologies', () => {
   });
 
   it('waits for the cells to be placed before it asks for their morphologies', async () => {
-    h.placement = { placed: [], failures: new Map(), settled: false, download: null };
+    h.placement = {
+      placed: [],
+      failures: new Map(),
+      positionless: new Set(),
+      settled: false,
+      download: null,
+    };
     const { rerender } = render(<Hosted start="morphologies" />);
     await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
     expect(loads).toHaveLength(0);
@@ -574,6 +585,7 @@ describe('LargeCircuitPreview morphologies', () => {
     h.placement = {
       placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
       failures: new Map(),
+      positionless: new Set(),
       settled: true,
       download: null,
     };

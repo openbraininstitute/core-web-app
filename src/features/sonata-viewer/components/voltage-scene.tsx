@@ -6,7 +6,6 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { useEmptySceneTap } from '@/features/circuit-viewer/use-empty-scene-tap';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
@@ -167,17 +166,6 @@ export function VoltageScene({
     setPlaying(!playing);
   };
 
-  // A tap on empty space is told apart from one on a cell, which the scene reports.
-  const sceneTap = useEmptySceneTap(() => onEmptyClick?.());
-  const { cellClicked } = sceneTap;
-  const handleCellClick = useCallback(
-    (nodeId: number) => {
-      cellClicked();
-      onCellClick?.(nodeId);
-    },
-    [cellClicked, onCellClick]
-  );
-
   const nodeColors = useMemo<NodeColors | undefined>(() => {
     if (!frames || !valueRange) return undefined;
     const [low, high] = valueRange;
@@ -273,8 +261,6 @@ export function VoltageScene({
           'relative min-h-0 flex-1 overflow-hidden',
           bare ? 'rounded-2xl' : 'rounded-xl border border-neutral-200'
         )}
-        onPointerDownCapture={sceneTap.onPointerDownCapture}
-        onPointerUpCapture={sceneTap.onPointerUpCapture}
       >
         <CircuitScene
           circuit={circuit}
@@ -286,7 +272,8 @@ export function VoltageScene({
           fadedColumn={RAMP_STEPS}
           highlightedCell={highlightedCell}
           shownCells={shownCells}
-          onCellClick={handleCellClick}
+          onCellClick={onCellClick}
+          onEmptyClick={onEmptyClick}
           selection={selection}
           active={active}
         />

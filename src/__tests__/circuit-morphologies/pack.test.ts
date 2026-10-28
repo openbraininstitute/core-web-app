@@ -111,15 +111,12 @@ describe('a level read box by box', () => {
       const data = await readPack(pack('small'), number);
       // Boxes are numbered by the first level's chunks, so another level's may come in another order.
       expect(sorted(everySegment(data, want))).toEqual(sorted(level.segments));
-      expect(data.level).toEqual({ toleranceUm: level.toleranceUm, pruneUm: level.pruneUm });
       expect(data.populations).toEqual(want.populations);
       expect(data.centre).toEqual(centre);
     }
   });
 
-  it('reads the first level unless another is asked for', async () => {
-    const data = await readPack(pack('small'));
-    expect(data.level).toEqual({ toleranceUm: 0.125, pruneUm: 0 });
+  it('reads no level the pack does not have', async () => {
     await expect(readPack(pack('small'), 3)).rejects.toThrow('without a level 3');
   });
 
@@ -270,7 +267,7 @@ describe('openPack', () => {
     expect(opened.data.somas).toEqual(whole.somas);
     expect(opened.data.centre).toEqual(whole.centre);
     expect(opened.data.bounds).toEqual(whole.bounds);
-    const levelOf = ({ toleranceUm, pruneUm }: CircuitMorphologyData['level']) => ({
+    const levelOf = ({ toleranceUm, pruneUm }: { toleranceUm: number; pruneUm: number }) => ({
       toleranceUm,
       pruneUm,
     });

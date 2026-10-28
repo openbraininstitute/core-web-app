@@ -12,6 +12,10 @@ import {
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { BLOCK, roomFor } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 import { NEON } from '@/features/circuit-viewer/morphologies/engine/spike-light';
+import {
+  type MortonSorted,
+  mortonSorted,
+} from '@/features/circuit-viewer/morphologies/load/morton';
 import { placeTrees } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { pointAtOffset } from '@/features/circuit-viewer/morphologies/sections';
@@ -108,6 +112,7 @@ interface Internals {
     segment: THREE.Material[];
     soma: THREE.Material;
     cloud: THREE.ShaderMaterial;
+    wholeCloud: THREE.ShaderMaterial;
     ids: {
       segment: THREE.ShaderMaterial[];
       soma: THREE.ShaderMaterial;
@@ -118,6 +123,7 @@ interface Internals {
     marker: THREE.ShaderMaterial;
   };
   cloud: {
+    somas: CircuitSomas;
     pieces: { pyramids: Quads; flat: Quads; small: boolean; ids: Quads; reach: number }[];
     whole: Quads | null;
     shown: boolean;
@@ -172,7 +178,6 @@ function circuit(): CircuitMorphologyData {
     populations: [{ name: 'neurons', cells: 3 }],
     centre: [100, 200, 300],
     bounds: { min: [-5, -5, -5], max: [15, 30, 5] },
-    level: { toleranceUm: 0.125, pruneUm: 0 },
   };
 }
 
@@ -907,6 +912,24 @@ describe('the circuit morphology viewer', () => {
     for (const dispose of freed) expect(dispose).toHaveBeenCalledTimes(1);
   });
 
+  it('tells once that its context was lost, to be made anew, and not when it lets the context go itself', () => {
+    const host = document.body.appendChild(document.createElement('div'));
+    const onLost = vi.fn();
+    const viewer = new CircuitMorphologyViewer(host, onLost);
+    const canvas = host.querySelector('canvas') as HTMLCanvasElement;
+    canvas.dispatchEvent(new Event('webglcontextlost'));
+    canvas.dispatchEvent(new Event('webglcontextlost'));
+    expect(onLost).toHaveBeenCalledTimes(1);
+
+    const kept = vi.fn();
+    const other = new CircuitMorphologyViewer(host, kept);
+    const its = host.querySelectorAll('canvas')[1];
+    other.dispose();
+    its.dispatchEvent(new Event('webglcontextlost'));
+    viewer.dispose();
+    expect(kept).not.toHaveBeenCalled();
+  });
+
   it('frees the somas and the shade when it is disposed of', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
@@ -1447,7 +1470,7 @@ describe('the somas, before any morphology is in', () => {
     expect(set).toHaveBeenCalledTimes(2);
   });
 
-  it('draws translucent somas whole, in the page’s order, in place of the pieces, and lets go of them opaque', () => {
+  it('draws translucent somas whole, in the page’s order, in place of the pieces, and hides them opaque', () => {
     const { viewer, inner } = make();
     const given = somas();
     viewer.setSomas(given);
@@ -1456,12 +1479,15 @@ describe('the somas, before any morphology is in', () => {
     const whole = inner.cloud?.whole as Quads;
     expect([whole.parent, whole.material, whole.frustumCulled, whole.visible]).toEqual([
       inner.surfaces,
-      inner.materials.cloud,
+      inner.materials.wholeCloud,
       false,
       true,
     ]);
     expect(whole.geometry.getAttribute('aPosition').array).toBe(given.positions);
-    expect([...whole.geometry.getAttribute('aCell').array]).toEqual([0, 1, 2]);
+    // Each soma the cell of its instance.
+    expect(whole.geometry.getAttribute('aCell')).toBeUndefined();
+    expect(whole.geometry.instanceCount).toBe(3);
+    expect(inner.materials.wholeCloud.defines).toHaveProperty('WHOLE');
     const { pyramids, flat, ids } = pieceOf(inner);
     frames(inner);
     expect([pyramids.visible, flat.visible, ids.visible]).toEqual([false, false, true]);
@@ -1473,14 +1499,67 @@ describe('the somas, before any morphology is in', () => {
 
     const freed = vi.spyOn(whole.geometry, 'dispose');
     viewer.setSomaOpacity(1);
-    expect(inner.cloud?.whole).toBeNull();
-    expect(whole.parent).toBeNull();
-    expect(freed).toHaveBeenCalledTimes(1);
+    expect(inner.cloud?.whole).toBe(whole);
+    expect(whole.visible).toBe(false);
+    expect(freed).not.toHaveBeenCalled();
     expect(pyramids.visible || flat.visible).toBe(true);
-    // Somas that come in translucent.
     viewer.setSomaOpacity(0.5);
+    expect(inner.cloud?.whole).toBe(whole);
+    expect(whole.visible).toBe(true);
+    // Somas that come in translucent.
     viewer.setSomas(somas());
+    expect(freed).toHaveBeenCalledTimes(1);
     expect(inner.cloud?.whole?.visible).toBe(true);
+  });
+
+  it('cuts the cloud once the order worked out off the page is in, for these somas only', async () => {
+    const { viewer, inner } = make();
+    const given = somas();
+    let answer: (sorted: MortonSorted) => void = () => {};
+    viewer.setSomas(given, null, new Promise((resolve) => (answer = resolve)));
+    expect(inner.cloud?.pieces).toEqual([]);
+    expect(inner.cloud?.somas).toBe(given);
+    // Drawn whole meanwhile.
+    const whole = inner.cloud?.whole as Quads;
+    expect(whole.visible).toBe(true);
+
+    answer(mortonSorted(given.positions));
+    await Promise.resolve();
+    expect(inner.cloud?.pieces).toHaveLength(1);
+    expect(pieceOf(inner).pyramids.parent).toBe(inner.surfaces);
+    expect(whole.visible).toBe(false);
+
+    let late: (sorted: MortonSorted) => void = () => {};
+    viewer.setSomas(given, null, new Promise((resolve) => (late = resolve)));
+    viewer.setSomas(somas());
+    const kept = inner.cloud?.pieces;
+    late(mortonSorted(given.positions));
+    await Promise.resolve();
+    expect(inner.cloud?.pieces).toBe(kept);
+  });
+
+  it('takes no order asked for these somas before they were set again', async () => {
+    const { viewer, inner } = make();
+    const given = somas();
+    const aborted = Promise.reject(new Error('aborted'));
+    viewer.setSomas(given, null, aborted);
+    let answer: (sorted: MortonSorted) => void = () => {};
+    viewer.setSomas(given, null, new Promise((resolve) => (answer = resolve)));
+    await aborted.catch(() => {});
+    await Promise.resolve();
+    expect(inner.cloud?.pieces).toEqual([]);
+    answer(mortonSorted(given.positions));
+    await Promise.resolve();
+    expect(inner.cloud?.pieces).toHaveLength(1);
+    expect(inner.surfaces.children.filter((mesh) => mesh.name === 'somas')).toHaveLength(3);
+  });
+
+  it('cuts the cloud here where the order could not be worked out off the page', async () => {
+    const { viewer, inner } = make();
+    viewer.setSomas(somas(), null, Promise.reject(new Error('no worker')));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(inner.cloud?.pieces).toHaveLength(1);
   });
 
   it('takes how crowded each soma is, for these somas only', () => {

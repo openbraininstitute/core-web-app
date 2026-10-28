@@ -47,7 +47,7 @@ export type MorphologiesLoad =
  * Why a load stopped: it failed, with nothing to show; or the rest of the pack did not come in, what had shown kept
  * (`cut`).
  */
-export type MorphologiesStop = { kind: 'failed' } | { kind: 'cut' };
+export type MorphologiesStop = 'failed' | 'cut';
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
@@ -101,7 +101,7 @@ export function useCircuitMorphologies(
   useEffect(() => {
     // The rest of a pack no longer shown is nothing to say.
     if (!source) {
-      setStopped((was) => (was?.kind === 'cut' ? null : was));
+      setStopped((was) => (was === 'cut' ? null : was));
       return;
     }
     const controller = new AbortController();
@@ -145,7 +145,7 @@ export function useCircuitMorphologies(
         .catch((e: unknown) => {
           if (signal.aborted) return;
           logError('Could not load the whole of the circuit morphologies', e);
-          setStopped({ kind: 'cut' });
+          setStopped('cut');
         })
         .finally(() => {
           if (!signal.aborted) show(data, null);
@@ -157,7 +157,7 @@ export function useCircuitMorphologies(
       run().catch((e: unknown) => {
         if (signal.aborted) return;
         logError('Could not load the circuit morphologies', e);
-        stop({ kind: 'failed' });
+        stop('failed');
         // A pack loaded but not shown lets go of its worker.
         controller.abort();
       });

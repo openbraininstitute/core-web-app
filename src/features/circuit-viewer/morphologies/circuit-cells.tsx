@@ -25,10 +25,10 @@ import {
   type Fallback,
   type TierChoice,
 } from './engine/create-view';
-import { loadCrowding } from './load/load-crowding';
+import { loadCrowding, loadMortonSorted } from './load/load-crowding';
 import { trackPointer } from './pointer';
 
-import type { CircuitViewerSignals, SnapshotOptions } from '@/features/circuit-viewer/signals';
+import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type {
   CellColors,
@@ -70,6 +70,8 @@ export interface CircuitCellsProps {
   cellHover?: boolean;
   /** Called with the cell that is clicked. */
   onCellClick?: (cell: number) => void;
+  /** Called on a click on none, nor on an electrode. */
+  onEmptyClick?: () => void;
   /** Electrode arrays drawn in front of the cells, in the colours the host gives them. */
   electrodes?: readonly ElectrodeGroup[];
   /** A contact's radius, in µm. */
@@ -95,30 +97,12 @@ export interface CircuitCellsProps {
   onLeftOut?: (leftOut: boolean) => void;
   /** Told why WebGL 2 draws the view where WebGPU was asked for, null where it was not, whenever a view is made. */
   onFallback?: (fallback: Fallback | null) => void;
+  /** Told whether spiking cells can give off light here: drawn as morphologies, on WebGPU. */
+  onGlowAvailable?: (available: boolean) => void;
 }
 
-/** The canvas as an image whose `src` is an object URL, which is what the snapshot signal hands on. */
-function imageOf(
-  canvas: HTMLCanvasElement,
-  options?: SnapshotOptions
-): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return resolve(null);
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => {
-          URL.revokeObjectURL(image.src);
-          resolve(null);
-        };
-        image.src = URL.createObjectURL(blob);
-      },
-      options?.type,
-      options?.quality
-    );
-  });
-}
+/** Up to this many somas are put in their Morton order on the page: a worker would take longer to start. */
+const SORTED_HERE_CELLS = 100_000;
 
 /**
  * A circuit's cells in one three.js view: the somas as the page placed them, and their morphologies in their place
@@ -137,6 +121,7 @@ export function CircuitCells({
   defaultColor,
   cellHover = false,
   onCellClick,
+  onEmptyClick,
   electrodes = NO_ELECTRODES,
   electrodeRadius,
   selectedElectrode = null,
@@ -151,9 +136,10 @@ export function CircuitCells({
   onZoomChange,
   onLeftOut,
   onFallback,
+  onGlowAvailable,
 }: CircuitCellsProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  /** What the view is made for: a new one, made again on WebGL 2, once the GPU device is lost. */
+  /** What the view is made for: a new one, made again once the graphics give out, on WebGL 2 after WebGPU. */
   const [making, setMaking] = useState<{ choice: TierChoice }>({ choice: 'auto' });
   const [created, setCreated] = useState<CreatedView | null>(null);
   const viewer = created?.view ?? null;
@@ -218,7 +204,17 @@ export function CircuitCells({
     );
     return () => controller.abort();
   }, [viewer, somas, crowding]);
-  useEffect(() => viewer?.setSomas(somas, colors.current), [viewer, somas, colors]);
+  useEffect(() => {
+    if (!viewer) return;
+    // Cut into pieces once their Morton order is worked out off the page, where there are enough to take a while.
+    const controller = new AbortController();
+    const ordered =
+      somas.positions.length / 3 > SORTED_HERE_CELLS
+        ? loadMortonSorted(somas.positions, controller.signal)
+        : undefined;
+    viewer.setSomas(somas, colors.current, ordered);
+    return () => controller.abort();
+  }, [viewer, somas, colors]);
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   const following = useLatest(follow);
   useEffect(() => viewer?.setAxons(axons), [viewer, axons]);
@@ -294,15 +290,19 @@ export function CircuitCells({
 
   const clicked = useLatest(onCellClick);
   const clickable = onCellClick !== undefined;
+  const clickedEmpty = useLatest(onEmptyClick);
+  const emptyHeard = onEmptyClick !== undefined;
   const located = useLatest(locations);
   const previewing = locations?.onHover !== undefined;
   const picking = locations?.onPick !== undefined;
   useEffect(() => {
     const host = hostRef.current;
-    if (!viewer || !host || !(cellHover || clickable || previewing || picking)) return;
+    if (!viewer || !host || !(cellHover || clickable || emptyHeard || previewing || picking))
+      return;
     return trackPointer(host, viewer, {
       hover: cellHover,
       onClick: clickable ? (cell) => clicked.current?.(cell) : undefined,
+      onEmptyClick: emptyHeard ? () => clickedEmpty.current?.() : undefined,
       // An electrode the pointer can take hold of is what it rests on, not the cell behind.
       taken: movable ? (x, y) => viewer.electrodeAt(x, y) !== null : undefined,
       locations:
@@ -314,13 +314,30 @@ export function CircuitCells({
             }
           : undefined,
     });
-  }, [viewer, cellHover, clickable, clicked, movable, previewing, picking, located]);
+  }, [
+    viewer,
+    cellHover,
+    clickable,
+    clicked,
+    emptyHeard,
+    clickedEmpty,
+    movable,
+    previewing,
+    picking,
+    located,
+  ]);
 
   const leftOutChanged = useLatest(onLeftOut);
   useEffect(
     () => viewer?.onDetail((detail) => leftOutChanged.current?.((detail?.leftOut ?? 0) > 0)),
     [viewer, leftOutChanged]
   );
+
+  const glowHeard = useLatest(onGlowAvailable);
+  const glowAvailable = created?.tier === 'webgpu' && data != null;
+  useEffect(() => glowHeard.current?.(glowAvailable), [glowHeard, glowAvailable]);
+  // Gone, it draws no glow.
+  useEffect(() => () => glowHeard.current?.(false), [glowHeard]);
 
   const zoomChanged = useLatest(onZoomChange);
   const zoomHeard = onZoomChange !== undefined;
@@ -334,10 +351,7 @@ export function CircuitCells({
   useEffect(() => {
     if (!viewer) return;
     const offReset = signals.cameraReset.register(() => viewer.resetView());
-    const offSnapshot = signals.snapshot.register(async (options) => {
-      const canvas = viewer.snapshot();
-      return canvas && imageOf(canvas, options);
-    });
+    const offSnapshot = signals.snapshot.register(() => viewer.snapshot());
     const offZoom = signals.setZoom.register((zoom) => viewer.setZoom(clampZoom(zoom)));
     const offNudge = signals.nudgeMorphology.register(() => viewer.nudge());
     return () => {

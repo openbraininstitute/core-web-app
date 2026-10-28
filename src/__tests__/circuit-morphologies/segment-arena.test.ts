@@ -165,8 +165,8 @@ describe('SegmentArena', () => {
   it('puts each box at the start of a block, its last block filled out with holes', () => {
     const made = arenaOf(4 * BLOCK);
     const { arena, words, told } = made;
-    expect(arena.put(1, segmentsOf(1, 3))).toBe(BLOCK);
-    expect(arena.put(2, segmentsOf(2, 70))).toBe(2 * BLOCK);
+    expect(arena.replace(1, segmentsOf(1, 3))).toBe(BLOCK);
+    expect(arena.replace(2, segmentsOf(2, 70))).toBe(2 * BLOCK);
 
     expect(told).toEqual([
       [0, BLOCK, false],
@@ -192,7 +192,7 @@ describe('SegmentArena', () => {
     // Every segment a point at the origin but the first, whose ends are the first block's least and greatest.
     const segments = { ...segmentsOf(2, 70), segments: new Float32Array(8 * 70) };
     segments.segments.set([-10, -20, -30, 2, 500, 600, 700, 4]);
-    arena.put(2, segments);
+    arena.replace(2, segments);
 
     const near = [-10, -20, -30].map((v) => Math.fround(v - 1.15 * 2));
     const far = [500, 600, 700].map((v) => Math.fround(v + 1.15 * 4));
@@ -209,8 +209,8 @@ describe('SegmentArena', () => {
   it('leaves a hole where a box is let go of, uploading its words alone, its blocks emptied', () => {
     const made = arenaOf(4 * BLOCK);
     const { arena, words, told } = made;
-    arena.put(1, segmentsOf(1, 5));
-    arena.put(2, segmentsOf(2, 6));
+    arena.replace(1, segmentsOf(1, 5));
+    arena.replace(2, segmentsOf(2, 6));
     told.length = 0;
     expect(arena.remove(1)).toBe(1);
 
@@ -232,16 +232,16 @@ describe('SegmentArena', () => {
       [4, 10],
       [5, 200],
     ]) {
-      arena.put(box, segmentsOf(box, n));
+      arena.replace(box, segmentsOf(box, n));
     }
     arena.remove(1);
     arena.remove(3);
     told.length = 0;
-    arena.put(6, segmentsOf(6, 100));
+    arena.replace(6, segmentsOf(6, 100));
 
     // Into the hole of 3 blocks at the sixth, not the one of 5 at the first.
     expect(told).toEqual([[6 * BLOCK, 2 * BLOCK, false]]);
-    arena.put(7, segmentsOf(7, 400));
+    arena.replace(7, segmentsOf(7, 400));
     expect(told.at(-1)).toEqual([14 * BLOCK, 7 * BLOCK, false]);
     expect(arena.geometry.instanceCount).toBe(21 * BLOCK);
   });
@@ -249,9 +249,9 @@ describe('SegmentArena', () => {
   it('draws only up to the last box, and less once it goes, the holes before it with it, uploading nothing past it', () => {
     const made = arenaOf(4 * BLOCK);
     const { arena, told } = made;
-    arena.put(1, segmentsOf(1, 3));
-    arena.put(2, segmentsOf(2, 3));
-    arena.put(3, segmentsOf(3, 3));
+    arena.replace(1, segmentsOf(1, 3));
+    arena.replace(2, segmentsOf(2, 3));
+    arena.replace(3, segmentsOf(3, 3));
     arena.remove(2);
     expect(arena.geometry.instanceCount).toBe(3 * BLOCK);
     told.length = 0;
@@ -259,22 +259,22 @@ describe('SegmentArena', () => {
     expect(arena.geometry.instanceCount).toBe(BLOCK);
     expect(told).toEqual([]);
     expectBlocks(made);
-    arena.put(4, segmentsOf(4, 2));
+    arena.replace(4, segmentsOf(4, 2));
     expect(told).toEqual([[BLOCK, BLOCK, false]]);
   });
 
   it('closes the holes where a box fits neither in one nor after the last, uploading every box, its blocks with it', () => {
     const made = arenaOf(3 * BLOCK);
     const { arena, told } = made;
-    arena.put(1, segmentsOf(1, 3));
-    arena.put(2, segmentsOf(2, 3));
-    arena.put(3, segmentsOf(3, 3));
+    arena.replace(1, segmentsOf(1, 3));
+    arena.replace(2, segmentsOf(2, 3));
+    arena.replace(3, segmentsOf(3, 3));
     arena.remove(1);
     arena.remove(3);
     expect(arena.geometry.instanceCount).toBe(2 * BLOCK);
     told.length = 0;
 
-    expect(arena.put(4, segmentsOf(4, 70))).toBe(2 * BLOCK + BLOCK);
+    expect(arena.replace(4, segmentsOf(4, 70))).toBe(2 * BLOCK + BLOCK);
     expect(told).toEqual([
       [0, BLOCK, false],
       [BLOCK, 2 * BLOCK, false],
@@ -293,10 +293,10 @@ describe('SegmentArena', () => {
   it('tells the boxes drawn with a block marked, a bit a block', () => {
     const { arena } = arenaOf(40 * BLOCK);
     // Blocks 0 and 1, block 2, none, and blocks 3 to 32.
-    arena.put(1, segmentsOf(1, BLOCK + 6));
-    arena.put(2, segmentsOf(2, 10));
-    arena.put(3, segmentsOf(3, 0));
-    arena.put(4, segmentsOf(4, 30 * BLOCK));
+    arena.replace(1, segmentsOf(1, BLOCK + 6));
+    arena.replace(2, segmentsOf(2, 10));
+    arena.replace(3, segmentsOf(3, 0));
+    arena.replace(4, segmentsOf(4, 30 * BLOCK));
     expect(arena.boxesMarked(marked())).toEqual([]);
     expect(arena.boxesMarked(marked(1, 32))).toEqual([1, 4]);
     expect(arena.boxesMarked(marked(2, 3, 4))).toEqual([2, 4]);
@@ -307,7 +307,7 @@ describe('SegmentArena', () => {
   it('moves nothing for a box not drawn, nor one with no segments', () => {
     const { arena, told } = arenaOf(BLOCK);
     expect(arena.remove(9)).toBe(0);
-    expect(arena.put(1, segmentsOf(1, 0))).toBe(0);
+    expect(arena.replace(1, segmentsOf(1, 0))).toBe(0);
     expect(arena.sizeOf(1)).toBe(0);
     expect(arena.free).toBe(BLOCK);
     expect(arena.remove(1)).toBe(0);
@@ -331,8 +331,8 @@ describe('SegmentArena', () => {
     const { geometry } = arena;
     const ends = (geometry.getAttribute('aA') as THREE.InterleavedBufferAttribute).data;
     const words = geometry.getAttribute('aCell') as THREE.InstancedBufferAttribute;
-    arena.put(1, segmentsOf(1, 3));
-    arena.put(2, segmentsOf(2, 3));
+    arena.replace(1, segmentsOf(1, 3));
+    arena.replace(2, segmentsOf(2, 3));
     arena.remove(1);
 
     expect(ends.updateRanges).toEqual([
@@ -348,11 +348,10 @@ describe('SegmentArena', () => {
     expect(words.array[BLOCK] & CELL_MASK).toBe(2000);
   });
 
-  it('refuses a box drawn already, or one that does not fit', () => {
+  it('refuses a box that does not fit', () => {
     const { arena } = arenaOf(BLOCK);
-    arena.put(1, segmentsOf(1, 3));
-    expect(() => arena.put(1, segmentsOf(1, 1))).toThrow('drawn already');
-    expect(() => arena.put(2, segmentsOf(2, 2))).toThrow(RangeError);
+    arena.replace(1, segmentsOf(1, 3));
+    expect(() => arena.replace(2, segmentsOf(2, 2))).toThrow(RangeError);
   });
 
   it.each([
@@ -389,7 +388,7 @@ describe('SegmentArena', () => {
       } else {
         const n = Math.floor(random() * 300);
         if (roomFor(n) > arena.free) continue;
-        arena.put(box, segmentsOf(box, n));
+        arena.replace(box, segmentsOf(box, n));
         put.set(box, n);
       }
       expectUploaded(made, before);
@@ -420,7 +419,7 @@ describe('SegmentArena', () => {
       expect(arena.putBase(1, segmentsOf(1, 70))).toBe(70);
       expect(told).toEqual([[BLOCK, 70, false]]);
       // Box 2's base has no segments.
-      arena.put(2, segmentsOf(2, 10));
+      arena.replace(2, segmentsOf(2, 10));
       expect(told.at(-1)).toEqual([4 * BLOCK, BLOCK, false]);
       expectDrawn(
         made,
@@ -441,10 +440,10 @@ describe('SegmentArena', () => {
       told.length = 0;
 
       // Its room, and its base's words.
-      expect(arena.put(1, segmentsOf(1, 10))).toBe(BLOCK + Math.ceil((4 * 70) / 36));
+      expect(arena.replace(1, segmentsOf(1, 10))).toBe(BLOCK + Math.ceil((4 * 70) / 36));
       expect(told).toEqual([
-        [3 * BLOCK, BLOCK, false],
         [BLOCK, 70, true],
+        [3 * BLOCK, BLOCK, false],
       ]);
       const put = new Map([[1, 10]]);
       expectDrawn(made, new Map([[0, 3], ...put]), put);
@@ -470,7 +469,7 @@ describe('SegmentArena', () => {
       const made = arenaOf(10 * BLOCK, [70]);
       const { arena, told } = made;
       arena.putBase(0, segmentsOf(0, 70));
-      arena.put(0, segmentsOf(0, 10));
+      arena.replace(0, segmentsOf(0, 10));
       told.length = 0;
 
       // The box was the last: its words past the end once it goes, and the new ones in its place.
@@ -485,15 +484,15 @@ describe('SegmentArena', () => {
       const made = arenaOf(4 * BLOCK, [3, 0, 0, 0, 0, 0]);
       const { arena } = made;
       arena.putBase(0, segmentsOf(0, 3));
-      arena.put(1, segmentsOf(1, 3));
-      arena.put(2, segmentsOf(2, 3));
+      arena.replace(1, segmentsOf(1, 3));
+      arena.replace(2, segmentsOf(2, 3));
       arena.remove(1);
       arena.remove(2);
-      arena.put(3, segmentsOf(3, 3));
-      arena.put(4, segmentsOf(4, 3));
+      arena.replace(3, segmentsOf(3, 3));
+      arena.replace(4, segmentsOf(4, 3));
       arena.remove(3);
 
-      expect(arena.put(5, segmentsOf(5, 70))).toBe(BLOCK + 2 * BLOCK);
+      expect(arena.replace(5, segmentsOf(5, 70))).toBe(BLOCK + 2 * BLOCK);
       const put = new Map([
         [4, 3],
         [5, 70],
@@ -508,7 +507,7 @@ describe('SegmentArena', () => {
       arena.putBase(1, segmentsOf(1, 70));
       expect(arena.boxesMarked(marked(0))).toEqual([0]);
       expect(arena.boxesMarked(marked(1, 2))).toEqual([1]);
-      arena.put(1, segmentsOf(1, 10));
+      arena.replace(1, segmentsOf(1, 10));
       // Marked before it was put, a frame or two late.
       expect(arena.boxesMarked(marked(2))).toEqual([1]);
       expect(arena.boxesMarked(marked(0, 3))).toEqual([1, 0]);

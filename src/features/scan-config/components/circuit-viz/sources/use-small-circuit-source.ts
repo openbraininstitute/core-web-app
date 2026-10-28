@@ -1,7 +1,12 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
-import { cellColorsOf, populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
+import {
+  cellColorsOf,
+  pointingOut,
+  populationRanges,
+} from '@/features/circuit-viewer/morphologies/cell-colors';
 import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { treeOf } from '@/features/circuit-viewer/morphologies/load/tree';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
@@ -73,6 +78,7 @@ export function useSmallCircuitSource({
   withSynapses = false,
 }: TOptions): TSmallCircuitSource {
   const { virtualLabId, projectId } = useWorkspace();
+  const queryClient = useQueryClient();
   const circuitId = circuit.id;
   const populationName = population?.name;
   const hasPopulation = population !== undefined;
@@ -148,24 +154,6 @@ export function useSmallCircuitSource({
   const tree = built ?? (error ? null : shown);
   if (tree !== shown) setShown(tree);
 
-  const cellColors = useMemo(
-    () =>
-      cellColorsOf({
-        populations: tree?.somas.populations ?? [],
-        subject: populationName,
-        nodeColors,
-        // Colour-by wins where it has an opinion; failing that a lone cell reads by section type, because telling its
-        // dendrites from its axon is the whole point of drawing one. A crowd keeps a flat colour per cell instead.
-        own: subject?.count === 1 ? SECTION_TYPE_COLORS : null,
-        receded,
-        hidden,
-        shownCells,
-        // Shown alone: with no faded colour, the rest of its population is not drawn.
-        highlightedCell,
-      }),
-    [tree, populationName, nodeColors, subject, receded, hidden, shownCells, highlightedCell]
-  );
-
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
   // sections number the same way. None while it is hidden, whose cells are not drawn.
   const locationCells = useMemo(() => {
@@ -178,6 +166,35 @@ export function useSmallCircuitSource({
     );
   }, [tree, populationName, hidden]);
 
+  const pointed = pointingOut(highlightedCell, locationCells.length > 0, recededColor);
+  const cellColors = useMemo(
+    () =>
+      cellColorsOf({
+        populations: tree?.somas.populations ?? [],
+        subject: populationName,
+        nodeColors,
+        // Colour-by wins where it has an opinion; failing that a lone cell reads by section type, because telling its
+        // dendrites from its axon is the whole point of drawing one. A crowd keeps a flat colour per cell instead.
+        own: subject?.count === 1 ? SECTION_TYPE_COLORS : null,
+        receded,
+        hidden,
+        shownCells,
+        highlightedCell,
+        fadedColor: pointed.fadedColor,
+      }),
+    [
+      tree,
+      populationName,
+      nodeColors,
+      subject,
+      receded,
+      hidden,
+      shownCells,
+      highlightedCell,
+      pointed.fadedColor,
+    ]
+  );
+
   /** Population the afferent synapses target: the first one with morphologies, whatever is on show. */
   const synapseTarget = useMemo(
     () => placed.find((entry) => locations.get(entry.population.name) != null) ?? null,
@@ -188,9 +205,9 @@ export function useSmallCircuitSource({
   const loadTree = useCallback(
     async (index: number) => {
       const request = synapseTarget && sectionsRequest(synapseTarget, index);
-      return request ? treeOf(await loadSections(request), { axons: true }) : null;
+      return request ? treeOf(await loadSections(queryClient, request), { axons: true }) : null;
     },
-    [sectionsRequest, synapseTarget]
+    [queryClient, sectionsRequest, synapseTarget]
   );
 
   const synapses = useAfferentSynapses({
@@ -211,5 +228,6 @@ export function useSmallCircuitSource({
     error,
     synapses,
     anchor,
+    hover: pointed.hover,
   };
 }

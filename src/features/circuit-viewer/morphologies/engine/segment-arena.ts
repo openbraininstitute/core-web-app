@@ -287,15 +287,9 @@ export class SegmentArena {
   }
 
   /**
-   * `box`'s segments drawn, its base hidden; it must not be drawn already, and they must fit. What was uploaded, in
+   * `box`'s segments drawn in place of what it has, its base hidden all along; they must fit. What was uploaded, in
    * segments: their room, every box's where the holes had to be closed, and its base's words.
    */
-  put(box: number, segments: MorphologySegments): number {
-    if (this.places.has(box)) throw new Error(`box ${box} is drawn already`);
-    return this.place(box, segments) + this.hideBase(box);
-  }
-
-  /** `box`'s segments drawn in place of what it has, its base hidden all along; they must fit. What was uploaded. */
   replace(box: number, segments: MorphologySegments): number {
     const was = this.places.has(box) ? this.unplace(box) : this.hideBase(box);
     return was + this.place(box, segments);

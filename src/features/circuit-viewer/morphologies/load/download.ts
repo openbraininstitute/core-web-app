@@ -1,7 +1,15 @@
 /**
  * The bytes of a pack stored as the circuit's asset as they come in, from entitycore, which sends the request on to S3.
  */
+import {
+  type OnProgress,
+  type ThrottledProgress,
+  throttledProgress,
+} from '@/features/viewer-3d/load/progress';
+
 import { Arriving } from './arriving';
+
+export type { OnProgress };
 
 export interface PackRequest {
   url: string;
@@ -19,12 +27,6 @@ export interface Download {
   whole: Promise<Uint8Array>;
 }
 
-/** `total` is the asset's size. */
-export type OnProgress = (received: number, total: number) => void;
-
-/** Progress at most this often, ms: a message to the page per network chunk would be hundreds. */
-const PROGRESS_MS = 100;
-
 /** Answers once the response has come, with the body still coming. */
 export async function downloadPack(
   request: PackRequest,
@@ -34,30 +36,11 @@ export async function downloadPack(
   if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status})`);
   const { size } = request.stored;
   const file = new Arriving(size);
-  const whole = fill(file, response, size, progressOf(size, onProgress));
+  const whole = fill(file, response, size, throttledProgress(size, onProgress));
   // A cut short or failed download is told the page's reads through `file`; `whole` may then go unheard.
   whole.catch(() => {});
   return { file, whole };
 }
-
-function progressOf(total: number, onProgress?: OnProgress) {
-  let reportedAt = 0;
-  let reported = 0;
-  return {
-    report(received: number) {
-      const now = performance.now();
-      if (now - reportedAt < PROGRESS_MS) return;
-      reportedAt = now;
-      reported = received;
-      onProgress?.(received, total);
-    },
-    last(received: number) {
-      if (reported !== received) onProgress?.(received, total);
-    },
-  };
-}
-
-type Progress = ReturnType<typeof progressOf>;
 
 /**
  * The body into `file`. A pack of `size` cut short is asked once more from where it stopped, of the URL the request
@@ -68,7 +51,7 @@ async function fill(
   file: Arriving,
   response: Response,
   size: number,
-  progress: Progress
+  progress: ThrottledProgress
 ): Promise<Uint8Array> {
   let cause = await readInto(file, response.body as ReadableStream<Uint8Array>, progress);
   if (file.in < size) cause = await resume(file, response.url, size, progress);
@@ -85,7 +68,7 @@ async function resume(
   file: Arriving,
   url: string,
   size: number,
-  progress: Progress
+  progress: ThrottledProgress
 ): Promise<unknown> {
   const rest = await fetch(url, { headers: { Range: `bytes=${file.in}-` } }).catch(
     (e: unknown) => e
@@ -106,7 +89,7 @@ async function resume(
 async function readInto(
   file: Arriving,
   body: ReadableStream<Uint8Array>,
-  progress: Progress
+  progress: ThrottledProgress
 ): Promise<unknown> {
   const reader = body.getReader();
   try {

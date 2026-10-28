@@ -60,6 +60,22 @@ export function mortonPermutation(points: Float32Array): Uint32Array {
   return order;
 }
 
+/** Points in the Morton order (`mortonPermutation`): where each comes from, and their positions in that order. */
+export interface MortonSorted {
+  order: Uint32Array;
+  sorted: Float32Array;
+}
+
+/** `points`, three floats each, in the Morton order of their positions. */
+export function mortonSorted(points: Float32Array): MortonSorted {
+  const order = mortonPermutation(points);
+  const sorted = new Float32Array(3 * order.length);
+  for (let to = 0; to < order.length; to++) {
+    for (let k = 0; k < 3; k++) sorted[3 * to + k] = points[3 * order[to] + k];
+  }
+  return { order, sorted };
+}
+
 /**
  * The segments in the Morton order of their midpoints over the box they span, those of one code in the order they came:
  * the WebGPU tier's culling tests blocks of 64 segments, one after another, by the box around them, which this keeps

@@ -13,6 +13,7 @@ import {
   openEntry,
   writeEntry,
 } from '@/features/viewer-3d/load/asset-cache';
+import { throttledProgress } from '@/features/viewer-3d/load/progress';
 
 import { type MeshHeader, meshHeader, readGlbJson } from './glb';
 
@@ -43,9 +44,6 @@ export type Download =
 type Read =
   | { kind: 'stopped'; header: MeshHeader }
   | { kind: 'read'; bytes: Uint8Array; header: MeshHeader | null };
-
-/** Progress at most this often, ms: a message to the page per network chunk would be thousands. */
-const PROGRESS_MS = 100;
 
 export async function downloadGlb(
   request: DownloadRequest,
@@ -137,8 +135,7 @@ async function readBody(
   let bytes = new Uint8Array(total);
   let received = 0;
   let header: MeshHeader | null = null;
-  let reportedAt = 0;
-  let reported = 0;
+  const progress = throttledProgress(total, hooks.onProgress);
   const reader = body.getReader();
   for (;;) {
     const { done, value } = await reader.read();
@@ -159,14 +156,9 @@ async function readBody(
         return { kind: 'stopped', header };
       }
     }
-    const now = performance.now();
-    if (now - reportedAt >= PROGRESS_MS) {
-      reportedAt = now;
-      reported = received;
-      hooks.onProgress?.(received, total);
-    }
+    progress.report(received);
   }
-  if (reported !== received) hooks.onProgress?.(received, total);
+  progress.last(received);
   return { kind: 'read', bytes: bytes.subarray(0, received), header };
 }
 

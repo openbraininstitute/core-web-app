@@ -16,7 +16,7 @@ import chroma from 'chroma-js';
 import * as THREE from 'three';
 
 import { extentOf } from '../extent';
-import { mortonPermutation } from '../load/morton';
+import { type MortonSorted, mortonSorted } from '../load/morton';
 import { CELL_GLSL, GLOW_RIM_COLOR, instancedGeometry, LIFTED } from './impostors';
 
 import type { ImpostorUniforms } from './impostors';
@@ -89,16 +89,14 @@ export interface CloudPiece {
 }
 
 /**
- * The somas in the Morton order of their positions, cut into pieces of neighbours, each drawn by meshes of its own: three
- * leaves out those out of view and draws the nearer first.
+ * The somas in the Morton order of their positions, as `ordered` has them where it is given, cut into pieces of
+ * neighbours, each drawn by meshes of its own: three leaves out those out of view and draws the nearer first.
  */
-export function cloudPieces(positions: Float32Array): CloudPiece[] {
-  const order = mortonPermutation(positions);
+export function cloudPieces(
+  positions: Float32Array,
+  { order, sorted }: MortonSorted = mortonSorted(positions)
+): CloudPiece[] {
   const n = order.length;
-  const sorted = new Float32Array(3 * n);
-  for (let to = 0; to < n; to++) {
-    for (let k = 0; k < 3; k++) sorted[3 * to + k] = positions[3 * order[to] + k];
-  }
   const size = Math.max(PIECE_CELLS, Math.ceil(n / MOST_PIECES));
   const pieces: CloudPiece[] = [];
   for (let first = 0; first < n; first += size) {
@@ -123,12 +121,19 @@ uniform highp sampler2D uCells;
 uniform vec3 uOffset;
 uniform float uRadius;
 in vec3 aPosition;
+#ifndef WHOLE
 in uint aCell;
+#endif
 
 ${CELL_GLSL}
 ${LIFTED}
+// Drawn whole, the somas are in the page's order, each the cell of its number.
 uint cellOf() {
+#ifdef WHOLE
+	return uint( gl_InstanceID );
+#else
 	return aCell;
+#endif
 }
 // The pyramid's corner, its tip a radius nearer.
 vec4 cornerAt( float radius ) {
@@ -239,12 +244,21 @@ type Shared = Pick<
   'uCells' | 'uGlow' | 'uHighlighted' | 'uHighlight' | 'uGlowRim'
 >;
 
-/** The cloud's material. Translucent below an opacity of 1, it blends, and still writes its depth, unsorted. */
-export function somaCloudMaterial(shared: Shared, own: SomaCloudUniforms): THREE.ShaderMaterial {
+/**
+ * The cloud's material. Translucent below an opacity of 1, it blends, and still writes its depth, unsorted. `whole`,
+ * for the somas drawn whole in the page's order, it reads each one's cell from its instance, and is translucent.
+ */
+export function somaCloudMaterial(
+  shared: Shared,
+  own: SomaCloudUniforms,
+  { whole = false }: { whole?: boolean } = {}
+): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     uniforms: { ...shared, ...own },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
+    defines: whole ? { WHOLE: '' } : {},
+    transparent: whole,
   });
 }
 

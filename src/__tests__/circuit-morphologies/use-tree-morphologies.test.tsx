@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -93,6 +94,11 @@ function reads() {
   };
   return { read, pending, settle };
 }
+
+const client = new QueryClient();
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <QueryClientProvider client={client}>{children}</QueryClientProvider>
+);
 
 const segmentsOf = (loader: TreeLoader) => loader.dataAt(loader.getSnapshot().version).segmentCells;
 const somaRadii = (loader: TreeLoader) => {
@@ -229,6 +235,31 @@ describe("a small circuit's morphologies, read one at a time", () => {
     expect(heard).toHaveBeenCalledTimes(1);
   });
 
+  it('tells its listeners no more often than every tenth of a second, whatever comes in between', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'performance'] });
+    try {
+      const { read, pending } = reads();
+      const loader = new TreeLoader(source(), read);
+      const heard = vi.fn();
+      loader.subscribe(heard);
+      loader.load(false, []);
+      await vi.advanceTimersByTimeAsync(0);
+      expect(heard).toHaveBeenCalledTimes(1);
+
+      // Two morphologies, each in a task of its own, within the tenth of a second.
+      pending.shift()?.resolve(SECTIONS);
+      await vi.advanceTimersByTimeAsync(10);
+      pending.shift()?.resolve(SECTIONS);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(loader.getSnapshot()).toMatchObject({ loaded: 2 });
+      expect(heard).toHaveBeenCalledTimes(1);
+      await vi.advanceTimersByTimeAsync(100);
+      expect(heard).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('centres the cells on their mean, as the view centres the somas it frames', () => {
     const loader = new TreeLoader(source(), reads().read);
     expect(loader.dataAt(0).centre).toEqual([60, 60, 0]);
@@ -240,8 +271,9 @@ describe('the hook over the loader', () => {
     h.loadSections.mockResolvedValue(SECTIONS);
     const given = source();
     const hidden: string[] = [];
-    const { result, unmount } = renderHook(() =>
-      useTreeMorphologies(given, { axons: false, hidden })
+    const { result, unmount } = renderHook(
+      () => useTreeMorphologies(given, { axons: false, hidden }),
+      { wrapper }
     );
     expect(result.current.data?.somas).toHaveLength(20);
     await waitFor(() => expect(result.current).toMatchObject({ loaded: 3, total: 3 }));
@@ -252,7 +284,9 @@ describe('the hook over the loader', () => {
 
   it('has nothing without a source', () => {
     const hidden: string[] = [];
-    const { result } = renderHook(() => useTreeMorphologies(null, { axons: false, hidden }));
+    const { result } = renderHook(() => useTreeMorphologies(null, { axons: false, hidden }), {
+      wrapper,
+    });
     expect(result.current).toMatchObject({ data: null, loaded: 0, total: 0 });
     act(() => result.current.retry());
   });

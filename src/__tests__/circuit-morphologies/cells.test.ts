@@ -33,7 +33,6 @@ function data(): CircuitMorphologyData {
     populations: PACKED,
     centre: [0, 0, 0],
     bounds: { min: [0, 0, 0], max: [4, 14, 24] },
-    level: { toleranceUm: 0.125, pruneUm: 0 },
   };
 }
 

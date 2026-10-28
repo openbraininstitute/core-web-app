@@ -1,3 +1,5 @@
+import { upperBound } from '@/utils/sorted';
+
 import type { CircuitSpikes } from './types';
 
 /** Simulated ms a second of the replay. */
@@ -167,18 +169,6 @@ export class SpikeClock {
       glow[cellIndex] = intensity;
     }
   }
-}
-
-/** The index of the first value above `value`, in ascending values. */
-function upperBound(values: Float32Array, value: number): number {
-  let low = 0;
-  let high = values.length;
-  while (low < high) {
-    const mid = (low + high) >>> 1;
-    if (values[mid] <= value) low = mid + 1;
-    else high = mid;
-  }
-  return low;
 }
 
 function clamp(value: number, min: number, max: number): number {

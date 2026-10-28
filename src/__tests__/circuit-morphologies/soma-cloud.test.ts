@@ -40,6 +40,15 @@ describe('the somas drawn as the somas view drew them', () => {
     }
   });
 
+  it('reads each cell from its instance, drawn whole, and blends', () => {
+    const whole = somaCloudMaterial(shared, own, { whole: true });
+    expect(whole.defines).toEqual({ WHOLE: '' });
+    expect(whole.transparent).toBe(true);
+    expect(whole.vertexShader).toContain('#ifdef WHOLE\n\treturn uint( gl_InstanceID );');
+    expect(cloud.defines).toEqual({});
+    expect(cloud.transparent).toBe(false);
+  });
+
   it('draws a pyramid a cell, its tip a radius nearer over its centre, and writes no depth of its own', () => {
     const corners = fanGeometry(5).getAttribute('position');
     const reach = 1 / Math.cos(Math.PI / 6);

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { mortonOrder } from '@/features/circuit-viewer/morphologies/load/morton';
+import {
+  mortonOrder,
+  mortonPermutation,
+  mortonSorted,
+} from '@/features/circuit-viewer/morphologies/load/morton';
 
 import type { MorphologySegments } from '@/features/circuit-viewer/morphologies/types';
 
@@ -60,5 +64,18 @@ describe('mortonOrder', () => {
   it('leaves a single segment as it is', () => {
     const one = segmentsFrom([[1, 2, 3]]);
     expect(mortonOrder(one)).toBe(one);
+  });
+});
+
+describe('points in the Morton order', () => {
+  it('are where the permutation says each comes from, with their positions in that order', () => {
+    const points = Float32Array.of(10, 10, 10, 0, 0, 0, 10, 0, 0, 0, 10, 0);
+    const { order, sorted } = mortonSorted(points);
+    expect([...order]).toEqual([...mortonPermutation(points)]);
+    for (let to = 0; to < order.length; to++) {
+      expect([...sorted.subarray(3 * to, 3 * to + 3)]).toEqual([
+        ...points.subarray(3 * order[to], 3 * order[to] + 3),
+      ]);
+    }
   });
 });

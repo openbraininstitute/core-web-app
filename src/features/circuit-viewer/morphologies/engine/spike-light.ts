@@ -9,11 +9,11 @@ import { GLOW_POWER } from './cell-table';
 import type { ThemeColors } from '@/features/viewer-3d/engine/looks';
 
 /** How fast the band runs out from the soma, µm a second of the wall clock, how wide its front is and its tail, µm. */
-export const PULSE_UM_PER_S = 400;
-export const PULSE_WIDTH_UM = 30;
-export const PULSE_TAIL_UM = 120;
+const PULSE_UM_PER_S = 400;
+const PULSE_WIDTH_UM = 30;
+const PULSE_TAIL_UM = 120;
 /** How lit the whole cell stays while it glows, a share of the glow. */
-export const PULSE_FLOOR = 0.25;
+const PULSE_FLOOR = 0.25;
 /** How much a lit cell's colour is brightened, and how bright the line along the middle is, on each background. */
 export const NEON: Record<keyof ThemeColors, [number, number]> = {
   light: [1.5, 0.6],

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import * as THREE from 'three';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { CellTable, somaTexture } from '@/features/circuit-viewer/morphologies/engine/cell-table';
 
@@ -115,6 +115,25 @@ describe('the cell table', () => {
 
     expect(table.glow(Float32Array.of(0, 0.5, 1), [1, 2])).toBe(false);
     expect(table.glowTexture.version).toBe(glow + 1);
+  });
+
+  it('uploads only the rows of the cells whose glow changed, in the components three counts', () => {
+    const table = new CellTable(3 * 2048);
+    table.glow(new Float32Array(3 * 2048).fill(1), [5, 2 * 2048 + 7]);
+    expect(table.glowTexture.updateRanges).toEqual([
+      { start: 0, count: 4 * 2048 },
+      { start: 4 * 2 * 2048, count: 4 * 2048 },
+    ]);
+  });
+
+  it('has the tier write the rows that changed where it can, three uploading nothing', () => {
+    const write = vi.fn(() => true);
+    const table = new CellTable(2 * 2048, write);
+    const { version } = table.glowTexture;
+    expect(table.glow(new Float32Array(2 * 2048).fill(1), [2048 + 1])).toBe(true);
+    expect(write).toHaveBeenCalledExactlyOnceWith(table.glowTexture, expect.any(Uint8Array), [1]);
+    expect(table.glowTexture.version).toBe(version);
+    expect(table.glowTexture.updateRanges).toEqual([]);
   });
 
   it('darkens the cells that glowed and glow no longer, and looks at no other', () => {
