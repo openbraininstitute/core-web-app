@@ -3,10 +3,7 @@ import { RedirectType, redirect } from 'next/navigation';
 import { tryCatch } from '@/api/utils';
 import { activateEnrolment } from '@/api/virtual-lab-svc/queries/course';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
-import {
-  getUserGroups,
-  getWorkspaceHierarchySpeciesPreference,
-} from '@/api/virtual-lab-svc/queries/user';
+import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { config } from '@/config';
 import { makeRoles } from '@/hooks/use-user-membership';
@@ -15,7 +12,6 @@ import { ProjectRootLayout } from '@/ui/layouts/project-root-layout';
 import { Container as AiContainer } from '@/ui/segments/ai/container';
 import { SpaceManagerContainer } from '@/ui/segments/workspaces/space-manager';
 import { WorkspaceTopMenu } from '@/ui/segments/workspaces/top-menu';
-import { keyBuilderHierarchy } from '@/ui/use-query-keys/atlas';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { ReactNode } from 'react';
@@ -66,20 +62,7 @@ export default async function Layout({ children, params: promisedParams }: Props
     }
   }
 
-  // The atlas list, the hierarchy list and the default region tree are not
-  // prefetched here: this layout does not dehydrate its query client, so the
-  // browser fetched each of them again and the server's copy was thrown away
-  // (about 880 server requests and 25 MB per E2E run, one of each per page
-  // render). The components that need them fetch them with `useQuery`, keep
-  // them for the session (`staleTime: Infinity`), and revalidate them with
-  // entitycore's ETag on a reload. Prefetch here only together with
-  // `HydrateClient` (`@/query-provider/server`).
-
-  queryClient.prefetchQuery({
-    queryKey: keyBuilderHierarchy.hierarchyPreference(),
-    queryFn: () => getWorkspaceHierarchySpeciesPreference(),
-    staleTime: Infinity,
-  });
+  // Prefetch here only together with `HydrateClient` (`@/query-provider/server`).
 
   return (
     <div className="h-screen w-full">
