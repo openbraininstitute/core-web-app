@@ -314,7 +314,7 @@ export default function PlatformTour() {
           onKeyDown={handleKeys}
           data-testid="tour-platform-action"
         >
-          Try out yourself <span aria-hidden="true">↗</span>
+          Try out yourself
         </Link>
       </div>
     </section>

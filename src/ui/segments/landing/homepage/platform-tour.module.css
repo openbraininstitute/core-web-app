@@ -196,13 +196,13 @@
   gap: 12px;
   min-height: 48px;
   padding: 12px 22px;
-  border: 1px solid #6d9cde80;
+  border: 1px solid #bcd9fb99;
   border-radius: 999px;
-  background: linear-gradient(135deg, #e7f2ffb3, #bcd9fb99);
-  color: #153b81;
+  background: linear-gradient(135deg, #153b81d9, #153b81cc);
+  color: #e7f2ff;
   box-shadow:
-    inset 0 1px 0 #ffffffcc,
-    0 5px 18px #183f8b14;
+    inset 0 1px 0 #e7f2ff66,
+    0 5px 18px #183f8b26;
   backdrop-filter: blur(20px) saturate(150%);
   font-size: 14px;
   font-weight: 600;
@@ -210,13 +210,10 @@
   text-align: center;
   text-decoration: none;
 }
-.tour .action span {
-  flex-shrink: 0;
-}
 .tour .action:hover {
-  background: linear-gradient(135deg, #edf6ffe6, #c8e1ffc4);
-  border-color: #5187d5b3;
-  color: #102c60;
+  background: linear-gradient(135deg, #173f8be6, #153b81d9);
+  border-color: #d5e8ffcc;
+  color: #eff7ff;
 }
 .tour .action:focus-visible,
 .arrow:focus-visible {
@@ -281,6 +278,6 @@
     backdrop-filter: none;
   }
   .tour .action {
-    background: #e0edff;
+    background: #153b81;
   }
 }
