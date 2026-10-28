@@ -85,10 +85,9 @@ export default function Homepage({
             <div className={styles['hero-copy']}>
               <div className={styles['hero-heading']}>
                 <p className={styles['hero-label']}>
-                  <span className={styles['status-dot']}></span>{' '}
                   {isAuthenticated
                     ? 'Welcome back. Continue your research.'
-                    : 'Neuroscience at the speed of thought.'}
+                    : 'Neuroscience at the speed of thought'}
                 </p>
                 <h1
                   id="hero-title"
