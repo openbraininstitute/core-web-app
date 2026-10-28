@@ -3,8 +3,8 @@ import { useCallback, useState } from 'react';
 import { useEmptySceneTap } from '@/features/circuit-viewer/use-empty-scene-tap';
 
 /**
- * The cell pointed out in the raster and the scene: a table row under the
- * pointer while the table is on show, else the cell last clicked in either.
+ * The cell pointed out in the scene, and in a raster beside it: a table row
+ * under the pointer while the table is on show, else the cell last clicked.
  */
 export function useCellFocus({
   populationName,
@@ -13,7 +13,7 @@ export function useCellFocus({
   populationName: string;
   tableShown: boolean;
 }) {
-  // The table row under the pointer, pointed out in the raster and the scene.
+  // The table row under the pointer, pointed out in the scene and any raster.
   const [hoveredCell, setHoveredCell] = useState<{ population: string; cell: number } | null>(null);
   const handleHoveredCell = useCallback(
     (cell: number | null) =>
@@ -24,7 +24,7 @@ export function useCellFocus({
   );
   const hoveredRow =
     tableShown && hoveredCell?.population === populationName ? hoveredCell.cell : null;
-  // A cell clicked in the scene or the raster: pointed out in both, and found
+  // A cell clicked in the scene or a raster: pointed out in both, and found
   // in the table. A second click on it lets it go; a table row under the
   // pointer takes its place while it is there.
   const [clickedCell, setClickedCell] = useState<{

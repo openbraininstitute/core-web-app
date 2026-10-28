@@ -15,6 +15,7 @@ import {
   ShutPaneBar,
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
+import { useCellFocus } from '@/features/circuit-viewer/use-cell-focus';
 import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
@@ -25,7 +26,6 @@ import RasterPlotControls, {
   RasterHelp,
 } from '@/features/spike-viewer/components/raster-plot-controls';
 import { SceneTime } from '@/features/spike-viewer/components/scene-time';
-import { useCellFocus } from '@/features/spike-viewer/hooks/use-cell-focus';
 import { useRasterWindow } from '@/features/spike-viewer/hooks/use-raster-window';
 import { useReplayClock } from '@/features/spike-viewer/hooks/use-replay-clock';
 import { useKeptSpikes, useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spikes';
