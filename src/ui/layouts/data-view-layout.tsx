@@ -34,6 +34,26 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
 
+/**
+ * Entity types whose Workflow tab renders a campaign's scan-config editor (or its "no
+ * configuration found" fallback), so it gets the light page background instead of the blue
+ * detail panel, same as e-model's.
+ */
+const WORKFLOW_TAB_PLAIN_CONTENT_TYPES = [
+  ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.EFeatureExtractionResult,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.Circuit,
+  ExtendedEntitiesTypeDict.Microcircuit,
+  ExtendedEntitiesTypeDict.SmallMicrocircuit,
+  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
+  ExtendedEntitiesTypeDict.WholeBrain,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
+  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
+] as const;
+
 const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
   ExtendedEntitiesTypeDict.MicrocircuitSimulation,
@@ -188,12 +208,9 @@ export async function DataViewLayout({
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
       <DetailViewBody
-        // an e-model's/e-feature extraction result's Workflow tab is the campaign's scan-config
-        // editor, styled for a light page background rather than the blue detail panel
-        plainContentSection={
-          type === ExtendedEntitiesTypeDict.Emodel ||
-          type === ExtendedEntitiesTypeDict.EFeatureExtractionResult
-        }
+        // the Workflow tab is a campaign's scan-config editor (or its fallback message), styled
+        // for a light page background rather than the blue detail panel
+        plainContentSection={includes(WORKFLOW_TAB_PLAIN_CONTENT_TYPES, type)}
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}
