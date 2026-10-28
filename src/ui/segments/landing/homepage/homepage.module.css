@@ -218,6 +218,21 @@
   color: #36506f;
   margin: 0 0 30px;
 }
+.homepage .tour-caption {
+  min-height: 154px;
+  padding-bottom: 24px;
+}
+.homepage .tour-caption h2 {
+  margin: 0 0 8px;
+  font:
+    400 22px / 1.3 var(--font-DMSerifText),
+    Georgia,
+    serif;
+  color: var(--navy);
+}
+.homepage .tour-caption .hero-description {
+  margin: 0;
+}
 .homepage .hero-actions {
   display: flex;
   align-items: center;
@@ -992,7 +1007,7 @@
     width: calc(100% - 40px);
     min-height: 1060px;
     align-items: flex-start;
-    padding-block: 150px 400px;
+    padding-block: 150px 320px;
   }
   .homepage .hero-copy {
     width: min(520px, 100%);
@@ -1003,6 +1018,9 @@
   }
   .homepage .hero-label {
     margin-bottom: 18px;
+  }
+  .homepage .tour-caption {
+    min-height: 184px;
   }
   .homepage .hero-actions .button {
     min-height: 48px;

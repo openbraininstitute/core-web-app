@@ -10,10 +10,7 @@ afterEach(() => {
 });
 
 function expectSlide(title: string) {
-  const actions = screen.getAllByTestId('tour-platform-action');
-  expect(actions).toHaveLength(1);
-  expect(actions[0]).toHaveAccessibleName('Try it out');
-  expect(actions[0]).toHaveAttribute('href', '/app/virtual-lab/sync');
+  expect(screen.queryByRole('link', { name: 'Try it out' })).not.toBeInTheDocument();
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
 }
 
@@ -24,7 +21,7 @@ function next(times = 1) {
 }
 
 describe('platform tour', () => {
-  it('rotates through slides with one platform action and restarts the timer after manual navigation', () => {
+  it('rotates through slides and restarts the timer after manual navigation', () => {
     render(<PlatformTour />);
     expectSlide('Follow the electrical response.');
     expect(
@@ -70,7 +67,9 @@ describe('platform tour', () => {
 
   it('supports arrow keys and wraps through every detail', () => {
     render(<PlatformTour />);
-    fireEvent.keyDown(screen.getByTestId('tour-platform-action'), { key: 'ArrowLeft' });
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Previous detail' }), {
+      key: 'ArrowLeft',
+    });
     expectSlide('Use the platform through chat.');
     fireEvent.keyDown(screen.getByRole('button', { name: 'Next detail' }), { key: 'ArrowRight' });
     expectSlide('Follow the electrical response.');
@@ -119,7 +118,7 @@ describe('platform tour', () => {
     fireEvent.mouseEnter(
       screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' })
     );
-    fireEvent.focus(screen.getByTestId('tour-platform-action'));
+    fireEvent.focus(screen.getByRole('button', { name: 'Previous detail' }));
     act(() => vi.advanceTimersByTime(8000));
     expectSlide('Discover patterns in firing.');
     fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));

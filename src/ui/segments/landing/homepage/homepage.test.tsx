@@ -91,10 +91,18 @@ describe('public homepage', () => {
     expect(document.querySelector('video')).not.toBeInTheDocument();
     const tour = screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' });
     expect(within(tour).queryByText('Take a closer look')).not.toBeInTheDocument();
-    expect(within(tour).getByRole('link', { name: 'Try it out' })).toHaveAttribute(
-      'href',
-      '/app/virtual-lab/sync'
-    );
+    expect(screen.queryByRole('link', { name: 'Try it out' })).not.toBeInTheDocument();
+    expect(within(tour).queryByRole('heading')).not.toBeInTheDocument();
+    const caption = document.getElementById('tour-caption');
+    expect(
+      within(caption!).getByRole('heading', { name: 'Skeletonize electron microscopy data.' })
+    ).toBeInTheDocument();
+    expect(
+      within(caption!).getByText(
+        'Turn detailed cell meshes into neuronal skeletons for analysis and modeling.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/Bring your next neuroscience question/)).not.toBeInTheDocument();
     expect(
       within(tour).queryByRole('button', { name: /Play platform tour|Pause platform tour/ })
     ).not.toBeInTheDocument();

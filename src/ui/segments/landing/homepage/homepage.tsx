@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 
-import PlatformTour from './platform-tour';
+import PlatformTour, { SLIDES } from './platform-tour';
 
 import type { KeyboardEvent } from 'react';
 
@@ -18,6 +18,8 @@ export default function Homepage({
   isAuthenticated?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [tourIndex, setTourIndex] = useState(0);
+  const tourSlide = SLIDES[tourIndex];
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Start your research for free';
 
@@ -36,7 +38,7 @@ export default function Homepage({
 
       <main id="main">
         <div className={styles['blue-world']}>
-          <PlatformTour />
+          <PlatformTour activeIndex={tourIndex} onIndexChange={setTourIndex} showCaption={false} />
           <header className={`${styles['site-header']} ${styles.wrap}`} data-testid="site-header">
             <Link href="/" className={styles.wordmark} aria-label="Open Brain Institute home">
               <Image
@@ -94,10 +96,10 @@ export default function Homepage({
                 </h1>
               </div>
               <div className={styles['hero-intro']}>
-                <p className={styles['hero-description']}>
-                  Bring your next neuroscience question to life with curated data, computational
-                  models, and tools to experiment. All in one online workspace.
-                </p>
+                <div id="tour-caption" className={styles['tour-caption']}>
+                  <h2>{tourSlide.title}</h2>
+                  <p className={styles['hero-description']}>{tourSlide.description}</p>
+                </div>
                 <div className={styles['hero-actions']}>
                   <Link
                     className={`${styles.button} ${styles.blue}`}

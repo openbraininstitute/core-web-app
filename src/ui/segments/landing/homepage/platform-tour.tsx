@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
 import type { KeyboardEvent, PointerEvent } from 'react';
@@ -62,7 +61,7 @@ type Slide = {
   | { kind: 'image'; source: keyof typeof SOURCES; crop: { x: number; y: number; width: number } }
 );
 
-const SLIDES: readonly Slide[] = [
+export const SLIDES: readonly Slide[] = [
   {
     id: 'voltages',
     kind: 'image',
@@ -127,8 +126,18 @@ const SLIDES: readonly Slide[] = [
   },
 ];
 
-export default function PlatformTour() {
-  const [index, setIndex] = useState(0);
+export default function PlatformTour({
+  activeIndex,
+  onIndexChange,
+  showCaption = true,
+}: {
+  activeIndex?: number;
+  onIndexChange?: (index: number) => void;
+  showCaption?: boolean;
+} = {}) {
+  const [internalIndex, setInternalIndex] = useState(0);
+  const index = activeIndex ?? internalIndex;
+  const setIndex = onIndexChange ?? setInternalIndex;
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -174,7 +183,7 @@ export default function PlatformTour() {
     if (!playing || suspended) return;
     const timer = window.setTimeout(() => setIndex((index + 1) % SLIDES.length), delay);
     return () => window.clearTimeout(timer);
-  }, [index, playing, suspended, delay]);
+  }, [index, playing, suspended, delay, setIndex]);
 
   function selectSlide(next: number) {
     setIndex((next + SLIDES.length) % SLIDES.length);
@@ -208,6 +217,7 @@ export default function PlatformTour() {
       className={styles.tour}
       aria-label="Inside Virtual Labs: platform tour"
       aria-roledescription="carousel"
+      aria-describedby={showCaption ? undefined : 'tour-caption'}
     >
       <div
         className={styles.viewport}
@@ -299,24 +309,14 @@ export default function PlatformTour() {
         <span aria-hidden="true">›</span>
       </button>
 
-      <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
-        <div className={styles.captionTitle}>
-          <h2>{slide.title}</h2>
+      {showCaption && (
+        <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
+          <div className={styles.captionTitle}>
+            <h2>{slide.title}</h2>
+          </div>
+          <p>{slide.description}</p>
         </div>
-        <p>{slide.description}</p>
-      </div>
-
-      <div className={styles.controls}>
-        <Link
-          className={styles.action}
-          href="/app/virtual-lab/sync"
-          prefetch={false}
-          onKeyDown={handleKeys}
-          data-testid="tour-platform-action"
-        >
-          Try it out
-        </Link>
-      </div>
+      )}
     </section>
   );
 }
