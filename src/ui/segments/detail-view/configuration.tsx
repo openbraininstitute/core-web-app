@@ -14,20 +14,22 @@ import {
 } from '@/entity-configuration/domain/helpers';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { resolveEModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/resolve-emodel-campaign';
+import { resolveMEModelBuildCampaign } from '@/entity-configuration/domain/optimization/resolve-memodel-campaign';
 import {
   singleNeuronSimulationApiQueryExpand,
   singleNeuronSynaptomeSimulationApiQueryExpand,
 } from '@/entity-configuration/domain/simulation';
-import MEModelConfig from '@/features/entities/me-model/detail-view/configuration';
 import SynaptomeConfig from '@/features/entities/single-neuron-synaptome/detail-view/configuration';
 import SynapseGroupList from '@/features/entities/single-neuron-synaptome/detail-view/elements/list-synapses-configuration';
 import { ScanConfiguration } from '@/features/scan-config';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
+  BuildScanConfigTabs,
   ExtractScanConfigTabs,
   OptimizeScanConfigTabs,
   ScanConfigActivity,
 } from '@/features/scan-config/types';
+import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
@@ -154,7 +156,7 @@ export default async function Configuration({
 
     return (
       <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this e-model.
+        No configuration found for this ME-model.
       </div>
     );
   }
@@ -207,7 +209,50 @@ export default async function Configuration({
   }
 
   if (extendedType === 'memodel') {
-    return <MEModelConfig model={entity as IMEModel} variant={fieldVariant} />;
+    // the workflow tab is the scan config of the build campaign that produced this ME-model;
+    // render the same read-only editor as the campaign's own detail page when traceable
+    const { data: build } = await tryCatch(
+      resolveMEModelBuildCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.MEModelBuildCampaign
+    );
+
+    if (build && scanConfig) {
+      const { data: generations } = await getTaskActivities({
+        context,
+        filters: {
+          used__id: build.campaign.id,
+          task_activity_type: TaskActivityType.MEModelBuildConfigGeneration,
+          page_size: 1,
+        },
+      });
+      return (
+        <ScanConfiguration
+          entityId={build.sourceEntityId ?? undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={build.campaign.id}
+          initialConfig={build.config?.form}
+          readOnly
+          hideTabs={generations.length === 0}
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Build}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={buildMEModelWorkflow.taskTypeBindings}
+        />
+      );
+    }
+
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this e-model.
+      </div>
+    );
   }
 
   if (extendedType === 'single_neuron_synaptome') {
