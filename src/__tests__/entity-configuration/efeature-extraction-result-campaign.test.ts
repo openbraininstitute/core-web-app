@@ -2,11 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getTaskActivities, getTaskConfig } from '@/api/entitycore/queries/task';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { resolveEFeatureExtractionCampaignId } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { resolveEFeatureExtractionCampaignId } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 
-vi.mock('@/api/entitycore/queries/task', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/api/entitycore/queries/task')>()),
+vi.mock('@/api/entitycore/queries/task/task-activity', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/entitycore/queries/task/task-activity')>()),
   getTaskActivities: vi.fn(),
+}));
+vi.mock('@/api/entitycore/queries/task/task-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/entitycore/queries/task/task-config')>()),
   getTaskConfig: vi.fn(),
 }));
 

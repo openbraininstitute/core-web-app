@@ -2,6 +2,7 @@ import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-n
 import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
@@ -23,6 +24,7 @@ import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
+import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memodel-build-campaign';
 import { Microcircuit } from '@/entity-configuration/domain/model/microcircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -37,7 +39,6 @@ import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { EFeatureExtractionResult } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
 import { EModelValidationResult } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
@@ -80,6 +81,7 @@ export const EntityCoreModelConfiguration = {
   IonChannelModel,
   IonChannelModelingCampaign,
   IonChannelBuildCampaign,
+  MEModelBuildCampaign,
   EmSynapseMappingCampaign,
   ExtracellularRecordingArray,
   ExtracellularRecordingArrayCampaign,

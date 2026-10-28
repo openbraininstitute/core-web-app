@@ -116,14 +116,18 @@ describe('packMesh', () => {
   });
 
   it('bounds each chunk, and duplicates only a few vertices on the borders', () => {
+    // Counted, then asserted once: an expect per coordinate (about 490,000) ran past the
+    // test's 5 s timeout under coverage on CI.
+    let outside = 0;
     for (const chunk of packed.chunks) {
       for (let i = 0; i < chunk.positions.length; i += 4) {
         for (let k = 0; k < 3; k++) {
-          expect(chunk.positions[i + k]).toBeGreaterThanOrEqual(chunk.bounds[k]);
-          expect(chunk.positions[i + k]).toBeLessThanOrEqual(chunk.bounds[k + 3]);
+          const p = chunk.positions[i + k];
+          if (p < chunk.bounds[k] || p > chunk.bounds[k + 3]) outside += 1;
         }
       }
     }
+    expect(outside).toBe(0);
     const ratio = packed.vertices / (big.positions.length / 3);
     expect(ratio).toBeGreaterThan(1);
     expect(ratio).toBeLessThan(1.05);

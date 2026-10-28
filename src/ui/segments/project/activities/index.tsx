@@ -47,7 +47,7 @@ export function ProjectActivities({
   // `entityType` is the Type (the target entity the activity produces).
   const [activity, setActivity] = useState<TActivityValue>(ActivityValues.Build as TActivityValue);
   const [entityType, setEntityType] = useState<TExtendedEntitiesTypeDict>(
-    ExtendedEntitiesTypeDict.Memodel
+    ExtendedEntitiesTypeDict.MEModelBuildCampaign
   );
 
   const entity = getEntityByExtendedType({ type: entityType });

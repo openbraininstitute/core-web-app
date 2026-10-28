@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { compact, includes } from 'es-toolkit/compat';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { hasAssets } from '@/api/entitycore/guards';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
@@ -77,7 +77,7 @@ function findAssetByLabel(assets: readonly IAsset[], label: AssetLabel): IAsset 
   return getAsset({ assets, label }).getOneOrNull();
 }
 
-function makeEntityMiniDetailFile(entity: BuiltEntityWithAssets): TActivityCustomFile {
+function makeEntityMiniDetailFile(entity: BuiltEntity): TActivityCustomFile {
   return {
     id: entity.id,
     entity,
@@ -101,7 +101,8 @@ function makeAssetOutputFiles(
 }
 
 function makeBuiltOutputFiles(entity: BuiltEntity | null | undefined): TActivityCustomFile[] {
-  if (!entity || !hasAssets(entity)) return [];
+  if (!entity) return [];
+  if (!hasAssets(entity)) return [makeEntityMiniDetailFile(entity)];
 
   if (shouldListAssetsAsOutputs(entity.type)) {
     return [makeEntityMiniDetailFile(entity), ...makeAssetOutputFiles(entity)];
@@ -120,15 +121,16 @@ function isSingleNeuronCircuit(entity: TActivityCustomFile['entity']): boolean {
   return (entity as ICircuit).scale === CircuitScaleDictionary.Single;
 }
 
+function getOutputEntityType(entity: TActivityCustomFile['entity']): TExtendedEntitiesTypeDict {
+  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome
+  return isSingleNeuronCircuit(entity)
+    ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
+    : (entity.type as TExtendedEntitiesTypeDict);
+}
+
 function getOutputEntityLabel(file: TActivityCustomFile): string | null {
   if (file.renderer !== ActivityCustomFileRenderer.MiniDetailView) return null;
-
-  // EM synapse-mapping outputs a single-scale circuit, labeled Synaptome
-  const entityType = isSingleNeuronCircuit(file.entity)
-    ? ExtendedEntitiesTypeDict.SingleNeuronCircuit
-    : (file.entity.type as TExtendedEntitiesTypeDict);
-
-  return getEntityTypeTagLabel(entityType);
+  return getEntityTypeTagLabel(getOutputEntityType(file.entity));
 }
 
 function shouldPollForCircuitVisualization(query: {
@@ -175,7 +177,11 @@ export function InOutFiles({
   const shouldPollVisualization =
     isCircuitBuild && campaignOrigin !== ScanConfigCampaignOriginActionDict.View;
 
-  const { data: builtEntity, isLoading } = useQuery({
+  const {
+    data: builtEntity,
+    isLoading,
+    refetch: refetchBuiltEntity,
+  } = useQuery({
     queryKey: keyBuilder.entity({
       id: generatedId ?? '',
       context,
@@ -245,11 +251,45 @@ export function InOutFiles({
     files: builtOutputFiles,
   });
 
+  // a task can link what it builds before it is done with it, so fetch that and its preview
+  // again once the run seen running here ends
+  const executionId = execution?.id;
+  const runningExecutionId = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (!outputAvailable || !builtEntity || !isCircuitBuild) return;
+    if (!execStatus || !executionId) return;
+    if (!outputAvailable) {
+      runningExecutionId.current = executionId;
+      return;
+    }
+    if (runningExecutionId.current !== executionId) return;
+    runningExecutionId.current = undefined;
+    if (!generatedId || !generatedType) return;
+    refetchBuiltEntity();
+    queryClient.invalidateQueries({
+      queryKey: keyBuilder.preview(context, { entityId: generatedId }),
+    });
+  }, [
+    execStatus,
+    executionId,
+    outputAvailable,
+    generatedId,
+    generatedType,
+    refetchBuiltEntity,
+    queryClient,
+    context,
+  ]);
 
-    invalidateEntityListings(queryClient, ExtendedEntitiesTypeDict.SingleNeuronCircuit);
-  }, [outputAvailable, builtEntity, isCircuitBuild, queryClient]);
+  useEffect(() => {
+    if (builtEntity && selectedFile?.id === builtEntity.id && selectedFile.entity !== builtEntity) {
+      onSelect(makeEntityMiniDetailFile(builtEntity));
+    }
+  }, [builtEntity, selectedFile, onSelect]);
+
+  const builtListingType = builtEntity ? getOutputEntityType(builtEntity) : undefined;
+  useEffect(() => {
+    if (outputAvailable && builtListingType)
+      invalidateEntityListings(queryClient, builtListingType);
+  }, [outputAvailable, builtListingType, queryClient]);
 
   useAutoSelectFileOnConfigChange({
     configId: config.id,
@@ -261,7 +301,7 @@ export function InOutFiles({
 
   return (
     <IoLayout
-      showOutput={outputAvailable || logStreamFiles.showOutput}
+      showOutput={outputAvailable || logStreamFiles.showOutput || builtOutputFiles.length > 0}
       inputIsEmpty={inputFilesWithLogs.length === 0}
       outputIsEmpty={builtOutputFiles.length === 0 && !isLoading && !logStreamFiles.output}
       inputItems={inputFilesWithLogs.map((file) => (

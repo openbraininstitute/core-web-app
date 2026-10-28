@@ -47,6 +47,7 @@ export function DataBreadcrumb({
   title,
   group,
   scope,
+  name,
   variant,
 }: {
   /** the listing variant the entity belongs to (e.g. its circuit scale): adds a crumb after the type */
@@ -55,6 +56,8 @@ export function DataBreadcrumb({
   group: TEntityTypeGroup;
   scope: TWorkspaceScope;
   title: string;
+  /** The entity's own name, trailing the trail as plain (non-clickable) text. */
+  name: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const queryParams = useSearchParams();
@@ -128,6 +131,8 @@ export function DataBreadcrumb({
                 },
               ]
             : []),
+          // the entity itself is plain text: it has no listing of its own to link back to
+          { key: 'entity', label: name, ellipsis: name },
         ]}
       />
     </BreadcrumbChip>

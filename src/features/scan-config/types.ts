@@ -153,6 +153,7 @@ export const SchemaNameDict = {
   BuildSynaptomeScanConfig: 'MEModelSynapticModelPlacementScanConfig',
   SynapseParameterizationScanConfig: 'SynapseParameterizationScanConfig',
   IonChannelFittingScanConfig: 'IonChannelFittingScanConfig',
+  MEModelBuildScanConfig: 'MEModelBuildScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
   // optimization

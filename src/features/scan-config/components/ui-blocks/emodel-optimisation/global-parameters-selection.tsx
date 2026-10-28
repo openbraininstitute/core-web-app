@@ -23,6 +23,9 @@ type Props = {
   errors: readonly ErrorObject[];
 };
 
+/** The keys this tab renders; any other key in a stored `global_parameters` dict stays hidden. */
+export const GLOBAL_PARAMETER_KEYS = ['v_init', 'celsius'] as const;
+
 /**
  * "Global Parameters" tab (step 4) of the E-Model optimisation parameters: the simulation
  * conditions (`v_init`, `celsius`), always present and never removable.

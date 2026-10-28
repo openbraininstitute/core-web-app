@@ -35,6 +35,8 @@ export const TaskConfigType = {
   EModelValidationConfig: 'optimized_emodel_analysis_validation__config',
   IonChannelModelingCampaign: 'ion_channel_modeling__campaign',
   IonChannelModelingConfig: 'ion_channel_modeling__config',
+  MEModelBuildCampaign: 'memodel_build__campaign',
+  MEModelBuildConfig: 'memodel_build__config',
   SkeletonizationCampaign: 'skeletonization__campaign',
   SkeletonizationConfig: 'skeletonization__config',
   IonChannelSimulationCampaign: 'ion_channel_simulation__campaign',

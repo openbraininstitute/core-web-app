@@ -34,6 +34,8 @@ export const TaskActivityType = {
   EFeatureExtractionExecution: 'efeature_extraction__execution',
   IonChannelModelingConfigGeneration: 'ion_channel_modeling__config_generation',
   IonChannelModelingExecution: 'ion_channel_modeling__execution',
+  MEModelBuildConfigGeneration: 'memodel_build__config_generation',
+  MEModelBuildExecution: 'memodel_build__execution',
   SkeletonizationConfigGeneration: 'skeletonization__config_generation',
   SkeletonizationExecution: 'skeletonization__execution',
   IonChannelSimulationConfigGeneration: 'ion_channel_simulation__config_generation',

@@ -876,7 +876,10 @@ export function InMemoryGrid<Row>({
           fullWidthCellRenderer={InMemoryDetailCell}
           getRowHeight={(p) => (isDetailRow(p.data) ? initialDetailHeight : rowHeight)}
           getRowClass={(p) =>
-            !isDetailRow(p.data) && getRowClass ? getRowClass(p.data as Row) : undefined
+            cn(
+              !isDetailRow(p.data) && getRowClass && getRowClass(p.data as Row),
+              !isDetailRow(p.data) && onRowClick && 'cursor-pointer'
+            )
           }
           rowSelection={agRowSelection}
           onSelectionChanged={rowSelection ? onSelectionChanged : undefined}

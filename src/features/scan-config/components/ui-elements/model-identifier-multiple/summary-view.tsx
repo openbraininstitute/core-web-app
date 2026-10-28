@@ -321,6 +321,12 @@ export function ModelIdentifierSummaryView({
         'rounded-2xl border border-neutral-2 bg-white p-4'
       )}
     >
+      <span
+        data-testid="model-identifier-selected-count"
+        className="text-sm font-medium text-gray-500 tabular-nums"
+      >
+        {parsedValue.items.length} selected
+      </span>
       <ScrollableList itemCount={parsedValue.items.length} visibleItemCount={visibleItemCount}>
         {renderEntityCards(parsedValue.items)}
       </ScrollableList>

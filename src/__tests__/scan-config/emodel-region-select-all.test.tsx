@@ -98,3 +98,26 @@ describe('IonChannelModelsPanel select all', () => {
     expect(next.mechanisms.mechanism_regions).not.toHaveProperty('somatic');
   });
 });
+
+describe('IonChannelModelsPanel read-only', () => {
+  it('lists only the assigned models, without checkboxes or select all', () => {
+    render(
+      <IonChannelModelsPanel
+        choiceName="somatic"
+        choiceLabel="Somatic"
+        choiceDescription=""
+        rootSchema={rootSchema}
+        value={partlyAssigned()}
+        onChange={vi.fn()}
+        errors={[]}
+        disabled
+      />
+    );
+
+    expect(screen.getByTestId(`scan-config-emodel-assign-${A}`)).toBeInTheDocument();
+    expect(screen.queryByTestId(`scan-config-emodel-assign-${B}`)).not.toBeInTheDocument();
+    expect(screen.queryByTestId(`scan-config-emodel-assign-${C}`)).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0);
+    expect(screen.queryByText('Select all')).not.toBeInTheDocument();
+  });
+});

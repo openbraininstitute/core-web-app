@@ -54,6 +54,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     label: 'Single neuron',
     title: 'Single neuron',
   },
+  [ExtendedEntitiesTypeDict.MEModelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Single neuron',
+  },
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
     group: EntityGroupDict.Cellular,

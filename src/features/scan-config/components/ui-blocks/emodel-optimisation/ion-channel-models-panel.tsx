@@ -37,7 +37,7 @@ type Props = {
   value: ConfigValue;
   /** writes the next value back to the `emodel_optimisation_parameters` config key */
   onChange: (next: ConfigValue) => void;
-  /** read-only mode: disables the assignment checkboxes */
+  /** read-only mode: lists only the assigned models, without checkboxes or "Select all" */
   disabled?: boolean;
   /** ajv errors inside `value` (paths relative to it), without the parameter errors (Parameters Selection flags those) */
   errors: readonly ErrorObject[];
@@ -90,6 +90,8 @@ export function IonChannelModelsPanel({
   });
 
   const assignedCount = refs.filter((ref) => assignedIds.has(ref.id_str)).length;
+  // read-only: only what is assigned matters, and there is nothing to check or uncheck
+  const shownRefs = disabled ? refs.filter((ref) => assignedIds.has(ref.id_str)) : refs;
 
   const toggleModel = (idStr: string, checked: boolean) => {
     const entries = readRegionEntries(mechanisms, choiceName);
@@ -125,23 +127,24 @@ export function IonChannelModelsPanel({
       <h3 className="text-primary-9 text-lg font-bold">{choiceLabel}</h3>
       <p className="text-sm text-gray-500">{choiceDescription || 'Ion channel models'}</p>
 
-      {refs.length === 0 ? (
+      {shownRefs.length === 0 ? (
         <p className="mt-2 text-sm text-gray-400 italic">
           No ion channel models selected. Add them in the Mechanism Selection tab.
         </p>
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
-          <li className="flex items-center justify-between gap-3 border border-transparent px-3">
-            <span className="text-sm text-gray-500">Select all</span>
-            <Checkbox
-              aria-label="Select all ion channel models"
-              checked={assignedCount === refs.length}
-              indeterminate={assignedCount > 0 && assignedCount < refs.length}
-              disabled={disabled}
-              onChange={(e) => toggleAll(e.target.checked)}
-            />
-          </li>
-          {refs.map((ref) => {
+          {!disabled && (
+            <li className="flex items-center justify-between gap-3 border border-transparent px-3">
+              <span className="text-sm text-gray-500">Select all</span>
+              <Checkbox
+                aria-label="Select all ion channel models"
+                checked={assignedCount === refs.length}
+                indeterminate={assignedCount > 0 && assignedCount < refs.length}
+                onChange={(e) => toggleAll(e.target.checked)}
+              />
+            </li>
+          )}
+          {shownRefs.map((ref) => {
             const entity = entities.find((e) => e.id === ref.id_str);
             const label = entity?.name ?? (isLoading ? 'Loading…' : ref.id_str);
 
@@ -155,11 +158,12 @@ export function IonChannelModelsPanel({
                   {label}
                 </span>
                 {failingIds.has(ref.id_str) && <WarningFilled className="text-yellow-400!" />}
-                <Checkbox
-                  checked={assignedIds.has(ref.id_str)}
-                  disabled={disabled}
-                  onChange={(e) => toggleModel(ref.id_str, e.target.checked)}
-                />
+                {!disabled && (
+                  <Checkbox
+                    checked={assignedIds.has(ref.id_str)}
+                    onChange={(e) => toggleModel(ref.id_str, e.target.checked)}
+                  />
+                )}
               </li>
             );
           })}
