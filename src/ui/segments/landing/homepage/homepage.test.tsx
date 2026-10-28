@@ -91,7 +91,7 @@ describe('public homepage', () => {
     expect(document.querySelector('video')).not.toBeInTheDocument();
     const tour = screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' });
     expect(within(tour).queryByText('Take a closer look')).not.toBeInTheDocument();
-    expect(within(tour).getByRole('link', { name: 'Skeletonize EM data' })).toHaveAttribute(
+    expect(within(tour).getByRole('link', { name: 'Try out yourself' })).toHaveAttribute(
       'href',
       '/app/virtual-lab/sync'
     );

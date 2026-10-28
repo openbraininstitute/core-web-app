@@ -53,7 +53,6 @@ const SOURCES = {
 
 type Slide = {
   id: string;
-  action: string;
   title: string;
   description: string;
   alt: string;
@@ -67,7 +66,6 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'voltages',
     kind: 'image',
-    action: 'Try a voltage simulation',
     title: 'Follow the electrical response.',
     description: 'Compare membrane voltage traces across recorded neurons.',
     alt: 'Close-up of membrane voltage traces and their time axis in the simulation results.',
@@ -77,7 +75,6 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'spikes',
     kind: 'image',
-    action: 'Explore spike activity',
     title: 'Discover patterns in firing.',
     description: 'Inspect when individual neurons spike over the course of a simulation.',
     alt: 'Close-up of the spike raster, showing neuronal firing times and stimulus markers.',
@@ -86,7 +83,6 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'lfp',
-    action: 'Explore extracellular fields',
     title: 'See extracellular fields evolve.',
     description:
       'Watch extracellular field changes alongside the neurons’ synchronized voltage traces.',
@@ -96,7 +92,6 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'em',
-    action: 'Skeletonize EM data',
     title: 'Skeletonize electron microscopy data.',
     description: 'Turn detailed cell meshes into neuronal skeletons for analysis and modeling.',
     alt: 'Animated electron microscopy cell mesh showing the neuron’s surface and branching structure.',
@@ -105,7 +100,6 @@ const SLIDES: readonly Slide[] = [
   },
   {
     id: 'flywire',
-    action: 'Try the FlyWire model',
     title: 'Explore a Drosophila brain in 3D.',
     description:
       'View the FlyWire Drosophila model from different angles in the platform’s 3D viewer.',
@@ -116,7 +110,6 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'analysis',
     kind: 'image',
-    action: 'Analyze simulation results',
     title: 'Compare activity across cell types.',
     description: 'Explore distributions of mean membrane voltage for different neuron groups.',
     alt: 'Close-up of colored mean membrane voltage distributions grouped by neuron type.',
@@ -126,7 +119,6 @@ const SLIDES: readonly Slide[] = [
   {
     id: 'ai-chat',
     kind: 'screenshot',
-    action: 'Try the platform through chat',
     title: 'Use the platform through chat.',
     description:
       'Connect a compatible AI assistant to explore data, run simulations, and analyze results through conversation.',
@@ -315,7 +307,7 @@ export default function PlatformTour() {
           onKeyDown={handleKeys}
           data-testid="tour-platform-action"
         >
-          {slide.action} <span aria-hidden="true">↗</span>
+          Try out yourself <span aria-hidden="true">↗</span>
         </Link>
         <button
           type="button"

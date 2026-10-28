@@ -9,11 +9,12 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-function expectAction(name: string) {
+function expectSlide(title: string) {
   const actions = screen.getAllByTestId('tour-platform-action');
   expect(actions).toHaveLength(1);
-  expect(actions[0]).toHaveAccessibleName(name);
+  expect(actions[0]).toHaveAccessibleName('Try out yourself');
   expect(actions[0]).toHaveAttribute('href', '/app/virtual-lab/sync');
+  expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
 }
 
 function next(times = 1) {
@@ -23,29 +24,29 @@ function next(times = 1) {
 }
 
 describe('platform tour', () => {
-  it('rotates through contextual platform actions and restarts the timer after manual navigation', () => {
+  it('rotates through slides with one platform action and restarts the timer after manual navigation', () => {
     render(<PlatformTour />);
-    expectAction('Try a voltage simulation');
+    expectSlide('Follow the electrical response.');
     expect(
       screen.queryByRole('group', { name: 'Choose a platform detail' })
     ).not.toBeInTheDocument();
-    for (const [duration, action] of [
-      [8000, 'Explore spike activity'],
-      [8000, 'Explore extracellular fields'],
-      [12000, 'Skeletonize EM data'],
-      [16000, 'Try the FlyWire model'],
-      [4000, 'Analyze simulation results'],
-      [8000, 'Try the platform through chat'],
-      [8000, 'Try a voltage simulation'],
+    for (const [duration, title] of [
+      [8000, 'Discover patterns in firing.'],
+      [8000, 'See extracellular fields evolve.'],
+      [12000, 'Skeletonize electron microscopy data.'],
+      [16000, 'Explore a Drosophila brain in 3D.'],
+      [4000, 'Compare activity across cell types.'],
+      [8000, 'Use the platform through chat.'],
+      [8000, 'Follow the electrical response.'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
-      expectAction(action);
-      if (action === 'Try the FlyWire model') {
+      expectSlide(title);
+      if (title === 'Explore a Drosophila brain in 3D.') {
         expect(
           screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
         ).toHaveAttribute('src', '/images/homepage/flywire-3d.webp');
       }
-      if (action === 'Try the platform through chat') {
+      if (title === 'Use the platform through chat.') {
         expect(
           screen.getByRole('heading', { name: 'Use the platform through chat.' })
         ).toBeInTheDocument();
@@ -59,20 +60,20 @@ describe('platform tour', () => {
     }
     next();
     act(() => vi.advanceTimersByTime(7999));
-    expectAction('Explore spike activity');
+    expectSlide('Discover patterns in firing.');
     act(() => vi.advanceTimersByTime(1));
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces.gif');
-    expectAction('Explore extracellular fields');
+    expectSlide('See extracellular fields evolve.');
   });
 
   it('supports arrow keys and wraps through every detail', () => {
     render(<PlatformTour />);
     fireEvent.keyDown(screen.getByTestId('tour-platform-action'), { key: 'ArrowLeft' });
-    expectAction('Try the platform through chat');
+    expectSlide('Use the platform through chat.');
     fireEvent.keyDown(screen.getByRole('button', { name: 'Next detail' }), { key: 'ArrowRight' });
-    expectAction('Try a voltage simulation');
+    expectSlide('Follow the electrical response.');
   });
 
   it('swipes between details without turning vertical scrolling into navigation', () => {
@@ -86,10 +87,10 @@ describe('platform tour', () => {
       });
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 150, 105));
-    expectAction('Explore spike activity');
+    expectSlide('Discover patterns in firing.');
     fireEvent(viewport, pointer('pointerdown', 250, 100));
     fireEvent(viewport, pointer('pointerup', 240, 220));
-    expectAction('Explore spike activity');
+    expectSlide('Discover patterns in firing.');
   });
 
   it('does not start an automatic tour when reduced motion is requested', () => {
@@ -97,7 +98,7 @@ describe('platform tour', () => {
     vi.spyOn(window, 'matchMedia').mockReturnValue({ ...media, matches: true });
     render(<PlatformTour />);
     act(() => vi.advanceTimersByTime(24000));
-    expectAction('Try a voltage simulation');
+    expectSlide('Follow the electrical response.');
     next(3);
     expect(
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
@@ -110,7 +111,7 @@ describe('platform tour', () => {
     expect(
       screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
     ).toHaveAttribute('src', '/images/homepage/flywire-3d-poster.png');
-    expectAction('Try the FlyWire model');
+    expectSlide('Explore a Drosophila brain in 3D.');
   });
 
   it('keeps rotating after pointer interaction and wraps from the last slide to the first', () => {
@@ -120,12 +121,12 @@ describe('platform tour', () => {
     );
     fireEvent.focus(screen.getByTestId('tour-platform-action'));
     act(() => vi.advanceTimersByTime(8000));
-    expectAction('Explore spike activity');
+    expectSlide('Discover patterns in firing.');
     fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
     fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
-    expectAction('Try the platform through chat');
+    expectSlide('Use the platform through chat.');
     act(() => vi.advanceTimersByTime(8000));
-    expectAction('Try a voltage simulation');
+    expectSlide('Follow the electrical response.');
   });
 
   it('suspends automatic movement when the browser tab is hidden', () => {
@@ -133,6 +134,6 @@ describe('platform tour', () => {
     vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
     fireEvent(document, new Event('visibilitychange'));
     act(() => vi.advanceTimersByTime(24000));
-    expectAction('Try a voltage simulation');
+    expectSlide('Follow the electrical response.');
   });
 });
