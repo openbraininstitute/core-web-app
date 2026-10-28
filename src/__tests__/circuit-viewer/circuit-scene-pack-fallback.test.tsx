@@ -116,7 +116,7 @@ describe('CircuitScene on the pack', () => {
     expect(h.large?.showAxons).toBe(true);
   });
 
-  it('opens a microcircuit on its somas, the axons drawn once its morphologies are, and goes back to the somas where the pack cannot be had', () => {
+  it('opens a microcircuit on its somas, its morphologies drawn without their axons till told, and goes back to the somas where the pack cannot be had', () => {
     render(
       <CircuitScene
         circuit={circuitOf('micro', CircuitScaleDictionary.Microcircuit)}
@@ -130,7 +130,10 @@ describe('CircuitScene on the pack', () => {
     expect(h.menu?.showAxons).toBeUndefined();
 
     act(() => h.menu?.onToggleMorphologies?.(true));
-    expect(h.menu?.showAxons).toBe(true);
+    expect(h.menu?.showAxons).toBe(false);
+    expect(h.large?.showAxons).toBe(false);
+
+    act(() => h.menu?.onToggleAxons?.(true));
     expect(h.large?.showAxons).toBe(true);
 
     act(() => h.large?.onMorphologiesStopped?.());

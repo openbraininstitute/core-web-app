@@ -395,8 +395,6 @@ export function CircuitScene({
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
-    // A larger circuit keeps the axons it was drawn with before they could be hidden.
-    defaultShowAxons: drawnLarge && !smallForThePack,
     supportsElectrodes: enableElectrodes && electrodesAvailable,
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
     drawsSomas: largeCircuit,

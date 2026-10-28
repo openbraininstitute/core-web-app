@@ -68,8 +68,6 @@ interface ViewerConfigDefaults {
   defaultNeuronOpacity?: number;
   /** What the cells are drawn as to begin with, and again on reset. */
   defaultRepresentation?: CircuitRepresentation;
-  /** Whether the axons are drawn to begin with, and again on reset. */
-  defaultShowAxons?: boolean;
 }
 
 export function resolveViewerConfigDefaults(options: ViewerConfigDefaults = {}): ViewerConfig {
@@ -77,7 +75,6 @@ export function resolveViewerConfigDefaults(options: ViewerConfigDefaults = {}):
     ...DEFAULT_VIEWER_CONFIG,
     neuronOpacity: options.defaultNeuronOpacity ?? DEFAULT_VIEWER_CONFIG.neuronOpacity,
     representation: options.defaultRepresentation ?? DEFAULT_VIEWER_CONFIG.representation,
-    showAxons: options.defaultShowAxons ?? DEFAULT_VIEWER_CONFIG.showAxons,
   };
 }
 
@@ -127,15 +124,10 @@ export function useViewerConfig(
   circuitId: string,
   options?: ViewerConfigDefaults
 ): UseViewerConfig {
-  const { defaultNeuronOpacity, defaultRepresentation, defaultShowAxons } = options ?? {};
+  const { defaultNeuronOpacity, defaultRepresentation } = options ?? {};
   const defaults = useMemo(
-    () =>
-      resolveViewerConfigDefaults({
-        defaultNeuronOpacity,
-        defaultRepresentation,
-        defaultShowAxons,
-      }),
-    [defaultNeuronOpacity, defaultRepresentation, defaultShowAxons]
+    () => resolveViewerConfigDefaults({ defaultNeuronOpacity, defaultRepresentation }),
+    [defaultNeuronOpacity, defaultRepresentation]
   );
   const [config, setConfig] = useState<ViewerConfig>(defaults);
   const [hasSavedConfig, setHasSavedConfig] = useState(false);

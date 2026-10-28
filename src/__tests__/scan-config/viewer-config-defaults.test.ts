@@ -34,11 +34,7 @@ describe('resolveViewerConfigDefaults', () => {
     });
   });
 
-  it('hides the axons unless the host says to draw them', () => {
+  it('hides the axons', () => {
     expect(resolveViewerConfigDefaults().showAxons).toBe(false);
-    expect(resolveViewerConfigDefaults({ defaultShowAxons: true })).toEqual({
-      ...DEFAULT_VIEWER_CONFIG,
-      showAxons: true,
-    });
   });
 });

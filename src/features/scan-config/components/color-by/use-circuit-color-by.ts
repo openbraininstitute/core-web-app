@@ -23,8 +23,6 @@ import type { CircuitRepresentation, ColorByProperty, ColorMapping } from './typ
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 interface Options {
-  /** whether the axons are drawn to begin with; hidden when omitted */
-  defaultShowAxons?: boolean;
   /** whether electrode overlays are available for this preview */
   supportsElectrodes?: boolean;
   /** whether morphology-location markers are on screen, which the marker controls act on */
@@ -98,7 +96,6 @@ export interface PopulationsControls {
 export function useCircuitColorBy(
   circuit: ICircuit | undefined,
   {
-    defaultShowAxons,
     supportsElectrodes,
     supportsMorphologyLocations,
     drawsSomas,
@@ -113,7 +110,6 @@ export function useCircuitColorBy(
   const { config, hasSavedConfig, update, reset } = useViewerConfig(shown?.id ?? '', {
     defaultNeuronOpacity,
     defaultRepresentation,
-    defaultShowAxons,
   });
   // The choice is kept where morphologies stop being offered, and comes back with them.
   const representation: CircuitRepresentation = supportsMorphologies
