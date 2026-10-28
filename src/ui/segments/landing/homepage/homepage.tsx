@@ -75,45 +75,49 @@ export default function Homepage({
               Menu <span>＋</span>
             </button>
           </header>
-          <section className={`${styles.hero} ${styles.wrap}`} aria-labelledby="hero-title">
+          <section className={styles.hero} aria-labelledby="hero-title">
             <div className={styles['hero-copy']}>
-              <p className={styles['hero-label']}>
-                <span className={styles['status-dot']}></span>{' '}
-                {isAuthenticated
-                  ? 'Welcome back. Continue your research.'
-                  : 'Your research. A new workspace.'}
-              </p>
-              <h1 id="hero-title" data-testid="home-hero-heading">
-                Explore brain data.
-                <br />
-                Build models.
-                <br />
-                <em>Run simulations.</em>
-              </h1>
-              <p className={styles['hero-description']}>
-                Bring your next neuroscience question to life with curated data, computational
-                models, and tools to experiment. All in one online workspace.
-              </p>
-              <div className={styles['hero-actions']}>
-                <Link
-                  className={`${styles.button} ${styles.white}`}
-                  href="/app/virtual-lab/sync"
-                  prefetch={false}
-                  data-testid="virtual-labs-link"
-                >
-                  {researchAction} <span>↗</span>
-                </Link>
+              <div className={styles['hero-heading']}>
+                <p className={styles['hero-label']}>
+                  <span className={styles['status-dot']}></span>{' '}
+                  {isAuthenticated
+                    ? 'Welcome back. Continue your research.'
+                    : 'Your research. A new workspace.'}
+                </p>
+                <h1 id="hero-title" data-testid="home-hero-heading">
+                  Explore brain data.
+                  <br />
+                  Build models.
+                  <br />
+                  <em>Run simulations.</em>
+                </h1>
               </div>
-              <p className={styles.reassurance}>
-                <span>✓</span>{' '}
-                {isAuthenticated ? (
-                  'Your data, models, and experiments in one workspace.'
-                ) : (
-                  <>
-                    Free account <i>·</i> 100 initial credits included
-                  </>
-                )}
-              </p>
+              <div className={styles['hero-intro']}>
+                <p className={styles['hero-description']}>
+                  Bring your next neuroscience question to life with curated data, computational
+                  models, and tools to experiment. All in one online workspace.
+                </p>
+                <div className={styles['hero-actions']}>
+                  <Link
+                    className={`${styles.button} ${styles.white}`}
+                    href="/app/virtual-lab/sync"
+                    prefetch={false}
+                    data-testid="virtual-labs-link"
+                  >
+                    {researchAction} <span>↗</span>
+                  </Link>
+                </div>
+                <p className={styles.reassurance}>
+                  <span>✓</span>{' '}
+                  {isAuthenticated ? (
+                    'Your data, models, and experiments in one workspace.'
+                  ) : (
+                    <>
+                      Free account <i>·</i> 100 initial credits included
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
             <PlatformTour />
           </section>
