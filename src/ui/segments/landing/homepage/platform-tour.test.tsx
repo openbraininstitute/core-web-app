@@ -12,7 +12,7 @@ afterEach(() => {
 function expectSlide(title: string) {
   const actions = screen.getAllByTestId('tour-platform-action');
   expect(actions).toHaveLength(1);
-  expect(actions[0]).toHaveAccessibleName('Try out');
+  expect(actions[0]).toHaveAccessibleName('Try it out');
   expect(actions[0]).toHaveAttribute('href', '/app/virtual-lab/sync');
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
 }
