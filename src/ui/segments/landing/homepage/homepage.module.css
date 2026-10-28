@@ -74,6 +74,7 @@
 }
 .homepage .site-header {
   position: absolute;
+  width: 92%;
   inset: 24px 0 auto;
   z-index: 5;
   display: flex;
@@ -94,11 +95,11 @@
 }
 .homepage .site-header nav .button {
   font-size: inherit;
-  border: 1px solid #183f8b30;
+  border: 1px solid var(--blue);
   border-radius: 999px;
   padding-inline: 24px;
-  background: #ffffff80;
-  color: var(--navy);
+  background: #ffffffd9;
+  color: var(--blue);
 }
 .homepage .site-header .menu-toggle {
   color: var(--navy);
@@ -136,6 +137,7 @@
   font-weight: 650;
   transition:
     background 0.2s,
+    color 0.2s,
     transform 0.2s;
 }
 .homepage .button:hover {
@@ -167,6 +169,11 @@
 .homepage .button.blue:hover {
   background: #ffffffd9;
   color: var(--blue);
+}
+.homepage .site-header nav .button:hover {
+  background: var(--blue);
+  color: white;
+  text-decoration: none;
 }
 .homepage .menu-toggle {
   display: none;

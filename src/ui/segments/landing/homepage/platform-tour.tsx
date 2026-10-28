@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
+import { useArrowContrast } from './use-arrow-contrast';
+
 import type { KeyboardEvent, PointerEvent } from 'react';
 
 import styles from './platform-tour.module.css';
@@ -200,6 +202,8 @@ export default function PlatformTour({
   const animate = playing && !suspended;
   const delay = video?.duration ?? animation?.duration ?? INTERVAL;
 
+  useArrowContrast(rootRef, index, suspended);
+
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const respectMotion = () => {
@@ -289,6 +293,7 @@ export default function PlatformTour({
           return (
             <div
               key={item.id}
+              data-tour-slide={position}
               className={`${styles.layer} ${active ? styles.visible : ''}`}
               aria-hidden={!active}
               inert={!active}
@@ -375,6 +380,7 @@ export default function PlatformTour({
       <button
         type="button"
         className={`${styles.arrow} ${styles.previous}`}
+        data-tour-arrow
         aria-label="Previous detail"
         onKeyDown={handleKeys}
         onClick={() => selectSlide(index - 1)}
@@ -384,6 +390,7 @@ export default function PlatformTour({
       <button
         type="button"
         className={`${styles.arrow} ${styles.next}`}
+        data-tour-arrow
         aria-label="Next detail"
         onKeyDown={handleKeys}
         onClick={() => selectSlide(index + 1)}

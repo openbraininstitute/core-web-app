@@ -1,4 +1,8 @@
 .tour {
+  --overlay-center-x: 18%;
+  --overlay-center-y: 53%;
+  --overlay-radius-x: 65%;
+  --overlay-radius-y: 76%;
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -14,7 +18,8 @@
   z-index: 1;
   pointer-events: none;
   background: radial-gradient(
-    ellipse 65% 76% at 18% 53%,
+    ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
+      var(--overlay-center-y),
     #f8fafc 0%,
     #f8fafcf7 24%,
     #f8fafcdb 42%,
@@ -144,13 +149,16 @@
   width: 44px;
   min-height: 64px;
   padding: 0;
-  border: 1px solid #ffffff80;
-  border-radius: 8px;
-  background: #ffffff73;
-  backdrop-filter: blur(12px);
-  color: #183f8b;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--blue, #183f8b);
   font-size: 38px;
   line-height: 1;
+  transition: transform 0.2s;
+}
+.tour .arrow[data-tone="light"] {
+  color: #ffffffd9;
 }
 .previous {
   left: 6px;
@@ -158,11 +166,11 @@
 .next {
   right: 6px;
 }
-.arrow:hover {
-  background: #e4ecf8;
+.tour .arrow:hover {
+  transform: translateY(-50%) scale(1.12);
 }
 .arrow:focus-visible {
-  outline: 2px solid #183f8b;
+  outline: 2px solid currentColor;
   outline-offset: 3px;
 }
 
@@ -173,9 +181,16 @@
   }
 }
 @media (max-width: 800px) {
+  .tour {
+    --overlay-center-x: 42%;
+    --overlay-center-y: 29%;
+    --overlay-radius-x: 130%;
+    --overlay-radius-y: 62%;
+  }
   .tour::after {
     background: radial-gradient(
-      ellipse 130% 62% at 42% 29%,
+      ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
+        var(--overlay-center-y),
       #f8fafc 0%,
       #f8fafcf7 32%,
       #f8fafcd9 50%,
@@ -206,7 +221,8 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .image,
-  .layer {
+  .layer,
+  .tour .arrow {
     transition: none;
   }
 }
