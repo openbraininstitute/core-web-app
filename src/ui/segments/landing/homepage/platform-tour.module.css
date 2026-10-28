@@ -109,10 +109,11 @@
   bottom: 108px;
   width: min(420px, 36%);
   padding: 18px 20px;
-  border: 1px solid #dce3ee;
+  border: 1px solid #ffffffb3;
   border-radius: 8px;
-  background: #ffffffed;
-  backdrop-filter: blur(12px);
+  background: #ffffff6b;
+  box-shadow: 0 8px 30px #102c6012;
+  backdrop-filter: blur(18px);
 }
 .captionTitle {
   display: flex;
@@ -130,7 +131,7 @@
 }
 .captionTitle > span {
   font-size: 11px;
-  color: #60718b;
+  color: #49627f;
   flex-shrink: 0;
 }
 .caption p {
@@ -139,7 +140,7 @@
   max-width: 60ch;
   font-size: 14px;
   line-height: 1.65;
-  color: #58677a;
+  color: #36506f;
 }
 
 .controls {
