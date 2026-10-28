@@ -126,6 +126,15 @@ export const hideHelpFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** E-model validation: the Validate workflow tab and its results under Data > Simulations. */
+export const emodelValidationFlag = defineFlag<boolean>({
+  key: 'emodel-validation',
+  defaultValue: false,
+  values: [true, false],
+  description: 'E-model validation workflow and results',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 export const flags = [
   aiPanelStateFlag,
   extractionActivityFlag,
@@ -141,6 +150,7 @@ export const flags = [
   courseToolbarFlag,
   greyMenuPillsFlag,
   hideHelpFlag,
+  emodelValidationFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];
