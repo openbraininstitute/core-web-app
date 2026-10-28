@@ -288,9 +288,9 @@ export default function Homepage({ year }: { year: number }) {
               </summary>
               <p>
                 The tour shows voltage traces, spike timing, extracellular fields, electron
-                microscopy cell meshes, the FlyWire Drosophila model, and analysis plots. It cycles
-                automatically; use the arrows or swipe to choose a view. Sign in to run your own
-                experiments.
+                microscopy cell meshes, the FlyWire Drosophila model, analysis plots, and an AI
+                assistant connected to the platform. It cycles automatically; use the arrows or
+                swipe to choose a view. Sign in to run your own experiments.
               </p>
             </details>
             <details>

@@ -22,6 +22,7 @@ describe('platform tour', () => {
       [12000, 'em mesh'],
       [16000, 'flywire'],
       [4000, 'analysis'],
+      [8000, 'ai chat'],
       [8000, 'voltages'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
@@ -33,6 +34,17 @@ describe('platform tour', () => {
         expect(
           screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
         ).toHaveAttribute('src', '/images/homepage/flywire-3d.webp');
+      }
+      if (label === 'ai chat') {
+        expect(
+          screen.getByRole('heading', { name: 'Use the platform through chat.' })
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole('img', { name: /AI assistant chat connected to the OBI platform/ })
+        ).toHaveAttribute('src', expect.stringContaining('ai-chat-platform.png'));
+        expect(
+          screen.getByRole('link', { name: 'View AI chat example at full size' })
+        ).toHaveAttribute('href', '/images/homepage/ai-chat-platform.png');
       }
     }
     fireEvent.click(screen.getByRole('button', { name: 'Show spikes detail' }));
@@ -51,11 +63,11 @@ describe('platform tour', () => {
     fireEvent.keyDown(screen.getByRole('button', { name: 'Show voltages detail' }), {
       key: 'ArrowLeft',
     });
-    expect(screen.getByRole('button', { name: 'Show analysis detail' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Show ai chat detail' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Show analysis detail' }), {
+    fireEvent.keyDown(screen.getByRole('button', { name: 'Show ai chat detail' }), {
       key: 'ArrowRight',
     });
     expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
@@ -121,7 +133,7 @@ describe('platform tour', () => {
       'aria-pressed',
       'true'
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Show analysis detail' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Show ai chat detail' }));
     act(() => vi.advanceTimersByTime(8000));
     expect(screen.getByRole('button', { name: 'Show voltages detail' })).toHaveAttribute(
       'aria-pressed',

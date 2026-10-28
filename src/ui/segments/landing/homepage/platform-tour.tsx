@@ -33,6 +33,11 @@ const ANIMATIONS = {
 };
 
 const SOURCES = {
+  chat: {
+    src: '/images/homepage/ai-chat-platform.png',
+    width: 2986,
+    height: 1868,
+  },
   voltage: {
     src: '/images/homepage/virtual-lab-voltages.png',
     width: 2548,
@@ -53,6 +58,7 @@ type Slide = {
   alt: string;
 } & (
   | { kind: 'animation'; source: keyof typeof ANIMATIONS }
+  | { kind: 'screenshot'; source: keyof typeof SOURCES }
   | { kind: 'image'; source: keyof typeof SOURCES; crop: { x: number; y: number; width: number } }
 );
 
@@ -116,6 +122,16 @@ const SLIDES: readonly Slide[] = [
     source: 'voltage',
     crop: { x: 1248, y: 750, width: 1210 },
   },
+  {
+    id: 'ai-chat',
+    kind: 'screenshot',
+    label: 'AI chat',
+    title: 'Use the platform through chat.',
+    description:
+      'Connect a compatible AI assistant to explore data, run simulations, and analyze results through conversation.',
+    alt: 'AI assistant chat connected to the OBI platform alongside generated ion-channel comparison plots.',
+    source: 'chat',
+  },
 ];
 
 export default function PlatformTour() {
@@ -126,8 +142,8 @@ export default function PlatformTour() {
   const rootRef = useRef<HTMLElement>(null);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
   const slide = SLIDES[index];
-  const isAnimation = slide.kind === 'animation';
   const animation = slide.kind === 'animation' ? ANIMATIONS[slide.source] : null;
+  const screenshot = slide.kind === 'screenshot' ? SOURCES[slide.source] : null;
   const suspended = !inView || !pageVisible;
   const playing = !reducedMotion;
   const animate = playing && !suspended;
@@ -224,6 +240,27 @@ export default function PlatformTour() {
             loading="eager"
           />
         )}
+        {screenshot && (
+          <div className={styles.screenshotFrame}>
+            <Image
+              src={screenshot.src}
+              alt={slide.alt}
+              width={screenshot.width}
+              height={screenshot.height}
+              className={styles.screenshot}
+              sizes="(max-width: 800px) 100vw, 55vw"
+            />
+            <a
+              href={screenshot.src}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.expand}
+            >
+              <span aria-hidden="true">↗</span>
+              <span className="sr-only">View AI chat example at full size</span>
+            </a>
+          </div>
+        )}
         {Object.entries(SOURCES).map(([key, source]) => {
           const active = slide.kind === 'image' && slide.source === key;
           const defaultSlide = SLIDES.find((item) => item.kind === 'image' && item.source === key);
@@ -247,7 +284,7 @@ export default function PlatformTour() {
             />
           );
         })}
-        {!isAnimation && <span className={styles.detailBadge}>Detail view</span>}
+        {slide.kind === 'image' && <span className={styles.detailBadge}>Detail view</span>}
       </div>
 
       <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
