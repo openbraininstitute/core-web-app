@@ -14,6 +14,7 @@ import {
 } from '@/entity-configuration/domain/helpers';
 import { SingleNeuronSynaptome as singleNeuronSynaptomeEntity } from '@/entity-configuration/domain/model/single-neuron-synaptome';
 import { resolveEModelOptimizationCampaign } from '@/entity-configuration/domain/optimization/resolve-emodel-campaign';
+import { resolveIonChannelModelingCampaign } from '@/entity-configuration/domain/optimization/resolve-ion-channel-model-campaign';
 import { resolveMEModelBuildCampaign } from '@/entity-configuration/domain/optimization/resolve-memodel-campaign';
 import {
   singleNeuronSimulationApiQueryExpand,
@@ -29,6 +30,7 @@ import {
   OptimizeScanConfigTabs,
   ScanConfigActivity,
 } from '@/features/scan-config/types';
+import { buildIonChannelWorkflow } from '@/features/scan-config/workflow/definitions/build-ion-channel';
 import { buildMEModelWorkflow } from '@/features/scan-config/workflow/definitions/build-memodel';
 import { extractEFeaturesWorkflow } from '@/features/scan-config/workflow/definitions/extract-efeatures';
 import { optimizeEModelWorkflow } from '@/features/scan-config/workflow/definitions/optimize-emodel';
@@ -251,6 +253,54 @@ export default async function Configuration({
     return (
       <div className="flex h-full w-full items-center justify-center">
         No configuration found for this e-model.
+      </div>
+    );
+  }
+
+  if (extendedType === ExtendedEntitiesTypeDict.IonChannelModel) {
+    // the workflow tab is the scan config of the modeling campaign that produced this ion
+    // channel model; render the same read-only editor as the campaign's own detail page when
+    // traceable
+    const { data: modeling } = await tryCatch(
+      resolveIonChannelModelingCampaign(entity.id, context.virtualLabId, context.projectId)
+    );
+    const scanConfig = findScanConfigRegistryByTargetType(
+      ExtendedEntitiesTypeDict.IonChannelBuildCampaign
+    );
+
+    if (modeling?.form && scanConfig) {
+      const { data: generations } = await getTaskActivities({
+        context,
+        filters: {
+          used__id: modeling.campaignId,
+          task_activity_type: TaskActivityType.IonChannelModelingConfigGeneration,
+          page_size: 1,
+        },
+      });
+      return (
+        <ScanConfiguration
+          entityId={modeling.recordingId ?? undefined}
+          scanConfig={scanConfig}
+          virtualLabId={context.virtualLabId}
+          projectId={context.projectId}
+          origin={modeling.campaignId}
+          initialConfig={modeling.form}
+          readOnly
+          hideTabs={generations.length === 0}
+          defaultTab={{
+            __activity: ScanConfigActivity.Build,
+            id: BuildScanConfigTabs.configuration,
+          }}
+          activity={ScanConfigActivity.Build}
+          campaignOriginAction={ScanConfigCampaignOriginActionDict.View}
+          taskTypeBindings={buildIonChannelWorkflow.taskTypeBindings}
+        />
+      );
+    }
+
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No configuration found for this ion channel model.
       </div>
     );
   }
