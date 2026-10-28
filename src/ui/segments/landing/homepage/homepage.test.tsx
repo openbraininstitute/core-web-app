@@ -12,7 +12,7 @@ describe('public homepage', () => {
       'src',
       '/images/obi_logo.svg'
     );
-    const headerEntry = within(header).getByRole('link', { name: 'Sign up for free ↗' });
+    const headerEntry = within(header).getByRole('link', { name: 'Sign up ↗' });
     expect(headerEntry).toHaveAttribute('href', '/app/virtual-lab/sync');
     expect(headerEntry).not.toHaveAttribute('aria-describedby');
     expect(screen.queryByText('Sign in or create a free account')).not.toBeInTheDocument();
@@ -45,7 +45,7 @@ describe('public homepage', () => {
     expect(
       within(screen.getByTestId('site-header')).getByTestId('header-desktop-link-app-virtual-lab')
     ).toHaveAttribute('href', '/app/virtual-lab/sync');
-    expect(screen.queryByRole('link', { name: 'Sign up for free ↗' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Sign up ↗' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Try it out' })).not.toBeInTheDocument();
     expect(screen.queryByText('Sign in or create a free account')).not.toBeInTheDocument();
     expect(screen.queryByText(/100 initial credits included/)).not.toBeInTheDocument();
@@ -57,7 +57,7 @@ describe('public homepage', () => {
     expect(
       screen.queryByRole('link', { name: /^Open Virtual Labs(?: ↗)?$/ })
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Sign up for free ↗' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Sign up ↗' })).toHaveAttribute(
       'href',
       '/app/virtual-lab/sync'
     );
@@ -73,7 +73,7 @@ describe('public homepage', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
     expect(toggle).toHaveFocus();
     fireEvent.click(toggle);
-    fireEvent.click(screen.getByRole('link', { name: 'What you can do' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Features' }));
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
   });
 

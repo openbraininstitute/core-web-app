@@ -55,15 +55,18 @@ export default function Homepage({
               onClick={() => setMenuOpen(false)}
               onKeyDown={closeMenuOnEscape}
             >
-              <a href="#research">What you can do</a>
-              <a href="#getting-started">Getting started</a>
+              <Link href="/features">Features</Link>
+              <Link href="/pricing">Pricing</Link>
+              <Link href="/news">News</Link>
+              <Link href="/about">About</Link>
+              <Link href="/contact">Contact</Link>
               <Link
                 className={`${styles.button} ${styles.small} ${styles.white}`}
                 href="/app/virtual-lab/sync"
                 prefetch={false}
                 data-testid="header-desktop-link-app-virtual-lab"
               >
-                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up for free'} <span>↗</span>
+                {isAuthenticated ? 'Open Virtual Labs' : 'Sign up'} <span>↗</span>
               </Link>
             </nav>
             <button
@@ -85,7 +88,7 @@ export default function Homepage({
                   <span className={styles['status-dot']}></span>{' '}
                   {isAuthenticated
                     ? 'Welcome back. Continue your research.'
-                    : 'Your research. A new workspace.'}
+                    : 'Neuroscience at the speed of thought.'}
                 </p>
                 <h1
                   id="hero-title"

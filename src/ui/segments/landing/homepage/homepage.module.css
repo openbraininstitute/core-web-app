@@ -185,7 +185,7 @@
 }
 .homepage .hero-heading h1 {
   min-height: 3.36em;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
 }
 .homepage .title-line {
   display: block;
@@ -239,11 +239,11 @@
   font-size: 15px;
   line-height: 1.8;
   max-width: 440px;
-  color: #36506f;
+  color: #5f6368;
   margin: 0 0 30px;
 }
 .homepage .tour-caption {
-  min-height: 112px;
+  min-height: 124px;
   padding-bottom: 24px;
 }
 .homepage .tour-caption .hero-description {
@@ -1015,7 +1015,7 @@
     margin-bottom: 18px;
   }
   .homepage .tour-caption {
-    min-height: 132px;
+    min-height: 144px;
   }
   .homepage .hero-actions .button {
     min-height: 52px;
