@@ -287,9 +287,10 @@ export default function Homepage({ year }: { year: number }) {
                 What does the platform example show?<span>＋</span>
               </summary>
               <p>
-                The tour shows electron microscopy cell meshes, extracellular fields, voltage
-                traces, spike timing, and analysis plots. It cycles automatically; use the arrows or
-                swipe to choose a view. Sign in to run your own experiments.
+                The tour shows voltage traces, spike timing, extracellular fields, electron
+                microscopy cell meshes, the FlyWire Drosophila model, and analysis plots. It cycles
+                automatically; use the arrows or swipe to choose a view. Sign in to run your own
+                experiments.
               </p>
             </details>
             <details>

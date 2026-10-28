@@ -20,7 +20,8 @@ describe('platform tour', () => {
       [8000, 'spikes'],
       [8000, 'l4 field'],
       [12000, 'em mesh'],
-      [16000, 'analysis'],
+      [16000, 'flywire'],
+      [4000, 'analysis'],
       [8000, 'voltages'],
     ] as const) {
       act(() => vi.advanceTimersByTime(duration));
@@ -28,6 +29,11 @@ describe('platform tour', () => {
         'aria-pressed',
         'true'
       );
+      if (label === 'flywire') {
+        expect(
+          screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
+        ).toHaveAttribute('src', '/images/homepage/flywire-3d.webp');
+      }
     }
     fireEvent.click(screen.getByRole('button', { name: 'Show spikes detail' }));
     act(() => vi.advanceTimersByTime(7999));
@@ -98,6 +104,10 @@ describe('platform tour', () => {
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces-poster.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Show flywire detail' }));
+    expect(
+      screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
+    ).toHaveAttribute('src', '/images/homepage/flywire-3d-poster.png');
   });
 
   it('keeps rotating after pointer interaction and wraps from the last slide to the first', () => {

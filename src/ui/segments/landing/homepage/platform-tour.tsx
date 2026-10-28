@@ -9,6 +9,13 @@ import styles from './platform-tour.module.css';
 
 const INTERVAL = 8000;
 const ANIMATIONS = {
+  flywire: {
+    src: '/images/homepage/flywire-3d.webp',
+    poster: '/images/homepage/flywire-3d-poster.png',
+    width: 960,
+    height: 540,
+    duration: 4000,
+  },
   em: {
     src: '/images/homepage/em-cell-mesh.webp',
     poster: '/images/homepage/em-cell-mesh-poster.png',
@@ -88,6 +95,16 @@ const SLIDES: readonly Slide[] = [
     alt: 'Animated electron microscopy cell mesh showing the neuron’s surface and branching structure.',
     kind: 'animation',
     source: 'em',
+  },
+  {
+    id: 'flywire',
+    label: 'FlyWire',
+    title: 'Explore a Drosophila brain in 3D.',
+    description:
+      'View the FlyWire Drosophila model from different angles in the platform’s 3D viewer.',
+    alt: 'Animated 3D FlyWire Drosophila model, cropped to the model viewer.',
+    kind: 'animation',
+    source: 'flywire',
   },
   {
     id: 'analysis',
