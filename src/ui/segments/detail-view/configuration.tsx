@@ -266,33 +266,32 @@ export default async function Configuration({
   }
 
   if (extendedType === ExtendedEntitiesTypeDict.IonChannelModel) {
-    // the workflow tab is the scan config of the modeling campaign that produced this ion
-    // channel model; render the same read-only editor as the campaign's own detail page when
-    // traceable
-    const { data: modeling } = await tryCatch(
+    // the workflow tab is the scan config of the build campaign that produced this ion channel
+    // model; render the same read-only editor as the campaign's own detail page when traceable
+    const { data: build } = await tryCatch(
       resolveIonChannelModelingCampaign(entity.id, context.virtualLabId, context.projectId)
     );
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.IonChannelBuildCampaign
     );
 
-    if (modeling?.form && scanConfig) {
+    if (build && scanConfig) {
       const { data: generations } = await getTaskActivities({
         context,
         filters: {
-          used__id: modeling.campaignId,
+          used__id: build.campaign.id,
           task_activity_type: TaskActivityType.IonChannelModelingConfigGeneration,
           page_size: 1,
         },
       });
       return (
         <ScanConfiguration
-          entityId={modeling.recordingId ?? undefined}
+          entityId={build.sourceEntityId ?? undefined}
           scanConfig={scanConfig}
           virtualLabId={context.virtualLabId}
           projectId={context.projectId}
-          origin={modeling.campaignId}
-          initialConfig={modeling.form}
+          origin={build.campaign.id}
+          initialConfig={build.config?.form}
           readOnly
           hideTabs={generations.length === 0}
           defaultTab={{

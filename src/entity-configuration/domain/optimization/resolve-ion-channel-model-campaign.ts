@@ -1,12 +1,12 @@
 import { cache } from 'react';
 
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
-import { resolveIonChannelModelingCampaignConfig } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { Task } from '@/entity-configuration/domain/task-functions';
 
 import type { WorkspaceContext } from '@/types/common';
 
-/** the modeling campaign an ion channel model came from; `null` when it cannot be traced */
+/** the build campaign an ion channel model came from; `null` when it cannot be traced */
 export async function resolveIonChannelModelingCampaignId(
   icmId: string,
   context: WorkspaceContext
@@ -20,15 +20,15 @@ export async function resolveIonChannelModelingCampaignId(
 }
 
 /**
- * The modeling campaign an ion channel model came from, resolved for its scan-config view;
- * `null` when it cannot be traced. Cached per request (primitive args).
+ * The build campaign an ion channel model came from, resolved for its scan-config view; `null`
+ * when it cannot be traced. Cached per request (primitive args).
  */
 export const resolveIonChannelModelingCampaign = cache(
   async (icmId: string, virtualLabId: string, projectId: string) => {
     const context = { virtualLabId, projectId };
     const campaignId = await resolveIonChannelModelingCampaignId(icmId, context);
     if (!campaignId) return null;
-    const config = await resolveIonChannelModelingCampaignConfig({ id: campaignId, context });
-    return { campaignId, ...config };
+    // biome-ignore lint/style/noNonNullAssertion: resolve is defined on the campaign config
+    return await IonChannelBuildCampaign.api.query.resolve!({ id: campaignId, context });
   }
 );
