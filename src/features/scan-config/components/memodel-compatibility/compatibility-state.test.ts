@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCompatibilityState } from '@/ui/segments/workflows/build/memodel/compatibility-state';
+import { messages } from '@/i18n/en/me-model';
+
+import { deriveCompatibilityState } from './compatibility-state';
 
 import type { CompatibilityCheckResponse } from '@/api/small-scale-simulator/single-neuron/compatibility';
 import type { ApiResponse } from '@/types/small-scale-simulator/common';
@@ -68,6 +70,18 @@ describe('deriveCompatibilityState', () => {
   it('treats a failed request as a check that could not run, not an incompatibility', () => {
     expect(deriveCompatibilityState(true, { ...idleQuery, isError: true })).toEqual({
       kind: 'check_failed',
+    });
+  });
+
+  it('blocks an e-model that cannot be built with any morphology, whatever the simulator says', () => {
+    const query = { ...idleQuery, data: response({ status: 'compatible', compatible: true }) };
+
+    expect(deriveCompatibilityState(true, query, 'EM__CBXgr_GrC_cNAC')).toEqual({
+      kind: 'incompatible',
+      detail: messages.UnbuildableEModel,
+    });
+    expect(deriveCompatibilityState(true, query, 'EM__dSTUT_L5_TPC_A')).toEqual({
+      kind: 'compatible',
     });
   });
 
