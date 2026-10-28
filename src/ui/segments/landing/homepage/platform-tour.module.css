@@ -124,14 +124,6 @@
   isolation: isolate;
   color: #102c60;
 }
-.caption::before {
-  content: "";
-  position: absolute;
-  inset: -60px -70px;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse at center, #f8fafcf7 35%, #f8fafccc 55%, #f8fafc00 76%);
-}
 .captionTitle {
   display: flex;
   align-items: baseline;
