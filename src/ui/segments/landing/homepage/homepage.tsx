@@ -21,7 +21,7 @@ export default function Homepage({
   const [tourIndex, setTourIndex] = useState(0);
   const tourSlide = SLIDES[tourIndex];
   const menuButtonRef = useRef<HTMLButtonElement>(null);
-  const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Start your research for free';
+  const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Try it out';
 
   function closeMenuOnEscape(event: KeyboardEvent<HTMLElement>) {
     if (event.key === 'Escape') {
@@ -119,13 +119,9 @@ export default function Homepage({
                 </div>
                 <p className={styles.reassurance}>
                   <span>✓</span>{' '}
-                  {isAuthenticated ? (
-                    'Your data, models, and experiments in one workspace.'
-                  ) : (
-                    <>
-                      Free account <i>·</i> 100 initial credits included
-                    </>
-                  )}
+                  {isAuthenticated
+                    ? 'Your data, models, and experiments in one workspace.'
+                    : '100 initial credits included'}
                 </p>
               </div>
             </div>
