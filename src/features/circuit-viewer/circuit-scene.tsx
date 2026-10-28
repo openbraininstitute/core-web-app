@@ -42,6 +42,7 @@ import { classNames } from '@/util/utils';
 
 import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
+import { useCellFocus } from './use-cell-focus';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -294,6 +295,56 @@ export function CircuitScene({
   useEffect(() => {
     onPopulationChange?.(population);
   }, [population, onPopulationChange]);
+
+  // With the table in a pane of its own beside the scene, as while a simulation
+  // is configured, the two work as the results' views do: the scene shows the
+  // ticked rows, else those the filter keeps, a row under the pointer lights its
+  // cell, and a cell clicked marks its row and brings it into view. A host that
+  // says any of this itself is listened to instead.
+  const tableDriven = Boolean(paneTable) && circuit !== undefined;
+  // Kept with the circuit as well as the population, as the positionless
+  // populations are: another circuit's population of the same name is other cells.
+  const focus = useCellFocus({
+    scope: circuit && population ? `${circuit.id}/${population.name}` : '',
+    tableShown: tableDriven,
+  });
+  const [tableCells, setTableCells] = useState<{
+    circuitId: string;
+    population: string;
+    cells: Uint32Array | null;
+    rowCount: number;
+  }>();
+  const [tableResetRequest, setTableResetRequest] = useState(0);
+  const narrowed =
+    tableDriven &&
+    tableCells?.circuitId === circuit?.id &&
+    tableCells?.population === population?.name
+      ? tableCells
+      : null;
+  const tableShownCells = useMemo(() => {
+    if (!narrowed?.cells) return undefined;
+    const flags = new Uint8Array(narrowed.rowCount);
+    for (const cell of narrowed.cells) if (cell < flags.length) flags[cell] = 1;
+    return flags;
+  }, [narrowed]);
+  const held = focus.focusedCell !== null;
+  const selectedCount = held ? 1 : (narrowed?.cells?.length ?? null);
+  // The chip's reset undoes what its count says: the cell held first, then the
+  // table's own filters and ticks.
+  const tableSelection =
+    narrowed && selectedCount !== null
+      ? {
+          count: selectedCount,
+          total: narrowed.rowCount,
+          held,
+          onReset: held ? focus.releaseCell : () => setTableResetRequest((n) => n + 1),
+        }
+      : undefined;
+  const sceneShownCells = shownCells ?? (tableDriven ? tableShownCells : undefined);
+  const sceneHighlightedCell =
+    highlightedCell ?? (tableDriven ? (focus.highlightedCell ?? undefined) : undefined);
+  const sceneCellClick = onCellClick ?? (tableDriven ? focus.handleCellClick : undefined);
+  const sceneSelection = selection ?? tableSelection;
 
   // What the viewers draw, in declared order: every population, or only the
   // one on show.
@@ -641,6 +692,8 @@ export function CircuitScene({
         )}
         aria-hidden={!active}
         inert={!active || undefined}
+        onPointerDownCapture={tableDriven ? focus.handleScenePointerDown : undefined}
+        onPointerUpCapture={tableDriven ? focus.handleScenePointerUp : undefined}
       >
         {largeCircuit && circuit ? (
           <LargeCircuitPreview
@@ -649,12 +702,12 @@ export function CircuitScene({
             population={population}
             populations={populations}
             hiddenPopulations={hiddenPopulations}
-            shownCells={shownCells}
-            highlightedCell={highlightedCell}
+            shownCells={sceneShownCells}
+            highlightedCell={sceneHighlightedCell}
             nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
             recededColor={recededColor}
             onPopulationClick={handlePopulationClick}
-            onSubjectCellClick={onCellClick}
+            onSubjectCellClick={sceneCellClick}
             onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
             backgroundColor={config.backgroundColor}
             scalebarColor={theme?.foreground}
@@ -685,13 +738,13 @@ export function CircuitScene({
               population={population}
               populations={populations}
               hiddenPopulations={hiddenPopulations}
-              shownCells={shownCells}
-              highlightedCell={highlightedCell}
+              shownCells={sceneShownCells}
+              highlightedCell={sceneHighlightedCell}
               nodeColors={overrideColors ?? (enableColorBy ? nodeColors : undefined)}
               defaultColor={defaultColor}
               recededColor={recededColor}
               onPopulationClick={handlePopulationClick}
-              onSubjectCellClick={onCellClick}
+              onSubjectCellClick={sceneCellClick}
               onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
               {...sharedVizProps}
             />
@@ -711,7 +764,7 @@ export function CircuitScene({
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
-        selection={selection}
+        selection={sceneSelection}
         viz={{
           // A replay's afterglow is set with the rest of how the scene is drawn.
           menu:
@@ -741,6 +794,13 @@ export function CircuitScene({
             circuit={circuit}
             populationName={populationName}
             onPopulationChange={setTablePopulationName}
+            cells={{
+              onShownCellsChange: setTableCells,
+              onHoveredCellChange: focus.handleHoveredCell,
+              focusedCell: focus.focusedCell ?? undefined,
+              heldCell: focus.focusedCell?.nodeId ?? null,
+              resetRequest: tableResetRequest,
+            }}
           />,
           paneTable.target
         )}
