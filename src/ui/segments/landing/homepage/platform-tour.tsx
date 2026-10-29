@@ -219,14 +219,14 @@ export const CHAPTERS: readonly Chapter[] = [
     examples: ['models'],
     featured: 'models',
     description:
-      'Explore morphologies, electrophysiology, ion channels, circuits, and models across different species.',
+      'Explore morphologies, electrophysiological recordings, ion channels, circuits, and models across different species.',
   },
   {
     id: 'skeletonize',
     label: 'Skeletonize',
     examples: ['em'],
     featured: 'em',
-    description: 'Skeletonize electron microscopy meshes.',
+    description: 'Skeletonize electron microscopy meshes from MICrONS, H01, or your own data.',
   },
   {
     id: 'build',
@@ -245,9 +245,15 @@ export const CHAPTERS: readonly Chapter[] = [
     label: 'Ask AI',
     examples: ['ai-chat'],
     featured: 'ai-chat',
-    description: 'Connect the OBI Plugin to your Chat Agent and start prompting.',
+    description: 'Connect the OBI Plugin to your AI assistant and start prompting.',
   },
-  { id: 'teaching', label: 'Teach', examples: ['education'], featured: 'education' },
+  {
+    id: 'teaching',
+    label: 'Teach & learn',
+    examples: ['education'],
+    featured: 'education',
+    description: 'Teach through Moodle-connected courses and learn by joining OBI Summer Camps.',
+  },
 ];
 
 type TourContent = { slide: Slide; playing: boolean; controls: ReactNode };

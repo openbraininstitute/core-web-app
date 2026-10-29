@@ -49,7 +49,7 @@ describe('guided platform tour', () => {
     render(<PlatformTour />);
     const description = screen.getByTestId('chapter-description');
     const exploreCopy =
-      'Explore morphologies, electrophysiology, ion channels, circuits, and models across different species.';
+      'Explore morphologies, electrophysiological recordings, ion channels, circuits, and models across different species.';
     expect(description).toHaveTextContent(exploreCopy);
     expect(description.parentElement?.previousElementSibling).toHaveAttribute(
       'aria-label',
@@ -59,7 +59,9 @@ describe('guided platform tour', () => {
       within(screen.getByRole('heading').parentElement!).queryByText(exploreCopy)
     ).not.toBeInTheDocument();
     fireEvent.click(chapter('Skeletonize'));
-    expect(description).toHaveTextContent('Skeletonize electron microscopy meshes.');
+    expect(description).toHaveTextContent(
+      'Skeletonize electron microscopy meshes from MICrONS, H01, or your own data.'
+    );
     expect(
       within(screen.getByRole('heading').parentElement!).getByText(
         'Inspect detailed cell meshes and discover skeletonization tools.'
@@ -67,7 +69,7 @@ describe('guided platform tour', () => {
     ).toBeInTheDocument();
     fireEvent.click(chapter('Ask AI'));
     expect(description).toHaveTextContent(
-      'Connect the OBI Plugin to your Chat Agent and start prompting.'
+      'Connect the OBI Plugin to your AI assistant and start prompting.'
     );
     expect(
       within(screen.getByRole('heading').parentElement!).getByText(
@@ -129,7 +131,7 @@ describe('guided platform tour', () => {
     expectSlide('Turn EM meshes into neuronal skeletons.');
     advance(1);
     expectSlide('Bring your models into Virtual Labs.');
-    fireEvent.click(chapter('Teach'));
+    fireEvent.click(chapter('Teach & learn'));
     finishVideo();
     expectSlide('Explore data. Build models. Run simulations.');
     fireEvent.click(chapter('Explore'));
@@ -187,7 +189,7 @@ describe('guided platform tour', () => {
       'href',
       '/images/homepage/ai-chat-platform.png'
     );
-    fireEvent.click(chapter('Teach'));
+    fireEvent.click(chapter('Teach & learn'));
     expect(screen.getByLabelText(/Students exploring neuroscience/)).toHaveAttribute(
       'src',
       '/images/homepage/education.mp4'
@@ -208,9 +210,9 @@ describe('guided platform tour', () => {
   it('supports keyboard chapter selection and swipes without hijacking vertical scrolling', () => {
     render(<PlatformTour />);
     fireEvent.keyDown(chapter('Explore'), { key: 'ArrowLeft' });
-    expect(chapter('Teach')).toHaveFocus();
+    expect(chapter('Teach & learn')).toHaveFocus();
     expectSlide('Teach neuroscience by doing.');
-    fireEvent.keyDown(chapter('Teach'), { key: 'Home' });
+    fireEvent.keyDown(chapter('Teach & learn'), { key: 'Home' });
     expect(chapter('Explore')).toHaveFocus();
     const viewport = screen.getByTestId('tour-viewport');
     const touch = (type: string, x: number, y: number) =>
