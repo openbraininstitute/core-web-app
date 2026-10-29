@@ -105,9 +105,7 @@ function FieldRow({
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-baseline justify-between gap-2">
           <span className="flex items-center gap-1.5">
-            <span className="text-xs tracking-wide text-gray-500 uppercase">
-              {renderMathInText(label)}
-            </span>
+            <span className="text-xs text-gray-500">{renderMathInText(label)}</span>
             {description && (
               <Tooltip title={description}>
                 <InfoCircleOutlined className="text-xs text-gray-400" />
@@ -605,11 +603,11 @@ function FeatureCatalogue({
                   'sticky top-0 z-10 flex items-baseline justify-between gap-2 px-3 py-2',
                   // solid, not translucent: it is sticky, so rows must not read through it
                   'border-gray-200  border-b bg-gray-100',
-                  'text-lg font-semibold tracking-wider text-gray-500 uppercase'
+                  'text-lg font-semibold text-gray-500'
                 )}
               >
                 {group.label}
-                <span className="text-lg font-normal tracking-normal text-gray-400 normal-case">
+                <span className="text-lg font-normal text-gray-400">
                   {group.selectedCount}/{group.features.length}
                 </span>
               </h5>

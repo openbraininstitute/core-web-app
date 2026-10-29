@@ -73,9 +73,7 @@ export default function BlockUnion({
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <div className="text-lg text-gray-500 uppercase">
-            {renderMathInText(selectedBlockSchema.title)}
-          </div>
+          <div className="text-lg text-gray-500">{renderMathInText(selectedBlockSchema.title)}</div>
           {!campaignId && !loading && (
             <button
               type="button"

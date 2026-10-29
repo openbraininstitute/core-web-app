@@ -69,7 +69,7 @@ export default function Block({
     >
       {!hideTitle && (
         <>
-          <div className="text-lg text-gray-500 uppercase wrap-break-word">
+          <div className="text-lg text-gray-500 wrap-break-word">
             {renderMathInText(blockSchema.title)}
           </div>
           <MarkdownDescription className="mb-6 text-gray-500">
@@ -127,7 +127,7 @@ export default function Block({
                   >
                     <label
                       htmlFor={k}
-                      className={cn('text-primary-9 text-base font-semibold uppercase', {
+                      className={cn('text-primary-9 text-base font-semibold', {
                         'cursor-pointer': isBooleanInput,
                       })}
                     >

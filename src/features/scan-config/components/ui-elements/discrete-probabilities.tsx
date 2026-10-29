@@ -33,7 +33,7 @@ export function DiscreteProbabilities({
 
   return (
     <div className="flex flex-col gap-2" data-scan-config-block-element="discrete_probabilities">
-      <div className="flex gap-2 text-neutral-3 text-xs uppercase">
+      <div className="flex gap-2 text-neutral-3 text-xs">
         <div className="flex-1">Value</div>
         <div className="flex-1">Probability</div>
         <div className="w-16 text-right">Share</div>
