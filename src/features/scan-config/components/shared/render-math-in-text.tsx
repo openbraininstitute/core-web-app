@@ -75,7 +75,8 @@ export const renderMathInText = (text: string): ReactNode => {
                 key={html}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: required here
                 dangerouslySetInnerHTML={{ __html: html }}
-                className="inline-block"
+                // KaTeX resets font-weight to normal; follow the surrounding text instead
+                className="inline-block [&_.katex]:[font-weight:inherit]"
               />
             );
           } catch {
