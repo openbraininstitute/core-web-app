@@ -6,6 +6,7 @@ import { useCallback, useId, useMemo, useState } from 'react';
 
 import 'katex/dist/katex.min.css';
 
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Modal } from '@/ui/molecules/modal';
@@ -48,7 +49,7 @@ function OptionContent({
   return (
     // min-w-0 lets a wide formula scroll inside the card instead of spilling past it
     <div className="flex min-w-0 flex-col gap-2" data-testid={testId}>
-      <span className="text-primary-8 text-lg font-bold">{content.title}</span>
+      <span className="text-primary-8 text-lg font-bold">{renderMathInText(content.title)}</span>
       {content.description &&
         (markdown ? (
           <MarkdownDescription className="text-sm text-gray-700">

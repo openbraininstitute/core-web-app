@@ -2,10 +2,12 @@ import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import Block from '@/features/scan-config/components/ui-blocks/block';
+import { StringSelectionEnhanced } from '@/features/scan-config/components/ui-elements/string-selection-enhanced';
 import {
   type ConfigSchema,
   ScanConfigUIElementDict,
   type TBlock,
+  type StringSelectionEnhanced as TStringSelectionEnhanced,
 } from '@/features/scan-config/types';
 
 const BLOCK_SCHEMA = {
@@ -46,6 +48,25 @@ describe('form titles', () => {
     const { container } = renderBlock();
     const label = container.querySelector('label[for="duration"]');
     expect(label?.innerHTML).toBe('Duration');
+  });
+
+  it('renders inline math in an enhanced selection option title', () => {
+    const { getByTestId } = render(
+      <StringSelectionEnhanced
+        value="sig_fit_minf"
+        onChange={vi.fn()}
+        paramSchema={
+          {
+            enum: ['sig_fit_minf'],
+            title_by_key: { sig_fit_minf: 'Sigmoid equation for $m_\\infty$' },
+            ui_element: ScanConfigUIElementDict.StringSelectionEnhanced,
+          } as unknown as TStringSelectionEnhanced
+        }
+      />
+    );
+    const title = getByTestId('scan-config-control').querySelector('span');
+    expect(title?.querySelector('.katex')).not.toBeNull();
+    expect(title?.textContent).not.toContain('$');
   });
 
   it('renders inline math in a title with KaTeX', () => {
