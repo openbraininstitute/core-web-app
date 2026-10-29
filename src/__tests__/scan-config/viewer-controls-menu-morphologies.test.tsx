@@ -47,5 +47,24 @@ describe('ViewerControlsMenu morphologies', () => {
     fireEvent.click(screen.getByTestId('viewer-settings'));
 
     expect(screen.queryByTestId('viewer-toggle-morphologies')).toBeNull();
+    expect(screen.queryByTestId('viewer-morphologies-note')).toBeNull();
+  });
+
+  it('shows the switch off and disabled, with why, where the morphologies are coming or never will', () => {
+    render(
+      <ViewerControlsMenu
+        {...MENU}
+        showMorphologies
+        morphologiesNote="Preparing morphologies, this takes a few minutes"
+      />
+    );
+    fireEvent.click(screen.getByTestId('viewer-settings'));
+
+    const toggle = screen.getByTestId('viewer-toggle-morphologies');
+    expect(toggle).toHaveAttribute('aria-checked', 'false');
+    expect(toggle).toBeDisabled();
+    expect(screen.getByTestId('viewer-morphologies-note')).toHaveTextContent(
+      'Preparing morphologies, this takes a few minutes'
+    );
   });
 });

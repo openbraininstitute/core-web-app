@@ -1,5 +1,5 @@
 /**
- * The bytes of a pack stored as the circuit's asset as they come in, from entitycore, which sends the request on to S3.
+ * The bytes of a circuit's pack as they come in, from Bluenaas, which serves it from its cache.
  */
 import {
   type OnProgress,
@@ -14,8 +14,8 @@ export type { OnProgress };
 export interface PackRequest {
   url: string;
   headers: Record<string, string>;
-  /** The asset's size and digest, as entitycore has them. */
-  stored: { size: number; sha256: string | null };
+  /** The pack's size and digest, as Bluenaas has them. */
+  pack: { size: number; sha256: string };
 }
 
 /**
@@ -34,43 +34,42 @@ export async function downloadPack(
 ): Promise<Download> {
   const response = await fetch(request.url, { headers: request.headers });
   if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status})`);
-  const { size } = request.stored;
+  const { size } = request.pack;
   const file = new Arriving(size);
-  const whole = fill(file, response, size, throttledProgress(size, onProgress));
+  const whole = fill(file, request, response, throttledProgress(size, onProgress));
   // A cut short or failed download is told the page's reads through `file`; `whole` may then go unheard.
   whole.catch(() => {});
   return { file, whole };
 }
 
 /**
- * The body into `file`. A pack of `size` cut short is asked once more from where it stopped, of the URL the request
- * was sent on to, the presigned one; which is sent nothing but the range, as S3 refuses a presigned request that also
- * carries a token. Every byte of the asset's size in is the whole of it, whatever broke the stream after.
+ * The body into `file`. A pack of `size` cut short is asked once more from where it stopped, with the request's
+ * headers, which carry the token. Every byte of the pack's size in is the whole of it, whatever broke the stream after.
  */
 async function fill(
   file: Arriving,
+  request: PackRequest,
   response: Response,
-  size: number,
   progress: ThrottledProgress
 ): Promise<Uint8Array> {
+  const { size } = request.pack;
   let cause = await readInto(file, response.body as ReadableStream<Uint8Array>, progress);
-  if (file.in < size) cause = await resume(file, response.url, size, progress);
+  if (file.in < size) cause = await resume(file, request, progress);
   progress.last(file.in);
   file.end();
   if (file.in !== size) {
-    throw new Error(`Download of ${file.in} bytes, not the asset's ${size}`, { cause });
+    throw new Error(`Download of ${file.in} bytes, not the pack's ${size}`, { cause });
   }
   return file.all;
 }
 
-/** The rest of a file of `size` at `url` read into `file`; what broke it, or null. */
+/** The rest of the pack read into `file`; what broke it, or null. */
 async function resume(
   file: Arriving,
-  url: string,
-  size: number,
+  { url, headers, pack: { size } }: PackRequest,
   progress: ThrottledProgress
 ): Promise<unknown> {
-  const rest = await fetch(url, { headers: { Range: `bytes=${file.in}-` } }).catch(
+  const rest = await fetch(url, { headers: { ...headers, Range: `bytes=${file.in}-` } }).catch(
     (e: unknown) => e
   );
   if (!(rest instanceof Response)) return rest;

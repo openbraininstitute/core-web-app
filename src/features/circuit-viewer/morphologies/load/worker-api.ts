@@ -1,6 +1,6 @@
 /**
- * What the pack worker exposes over Comlink: a circuit's pack, stored as its asset, opened, from the cache a visit
- * before left it in, or as it comes in; opened once its somas are in, and put in the cache once the whole of it is
+ * What the pack worker exposes over Comlink: a circuit's pack, opened, from the cache a visit before left it in, or as
+ * it comes in from Bluenaas; opened once its somas are in, and put in the cache once the whole of it is
  * (`whole`). Then its boxes read as the view asks for them, each once its bytes are
  * in, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
  */
@@ -27,8 +27,12 @@ import type {
   Population,
 } from '../types';
 
-/** A stored pack, an asset, whose content cannot change under its URL. */
-export const STORED_PACK_CACHE = bucket('circuit-morphology-mpack');
+/** Packs by their digest: Bluenaas serves a circuit's pack under one URL, rebuilt whenever its cache is cleared. */
+export const PACK_CACHE = bucket('circuit-morphology-mpack');
+
+/** A pack's key in the cache, which must be a URL. */
+export const packCacheKey = (sha256: string) =>
+  `https://circuit-morphology-pack.invalid/${sha256.toLowerCase()}`;
 
 /**
  * The pack opened: its somas and frame, with no segments, where its segments lie, and how much of the file each box
@@ -55,19 +59,17 @@ async function openCached(cache: CacheBounds, key: string, size: number): Promis
 const hex = (digest: ArrayBuffer) =>
   Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
-/** The pack once the whole of it is in, checked against its asset's digest, put in the cache. */
+/** The pack once the whole of it is in, checked against its digest, put in the cache. */
 async function keep(whole: Promise<Uint8Array>, request: PackRequest, cache: CacheBounds) {
   const bytes = await whole;
   // Too large for the cache, it is not kept, nor checked: it is drawn already.
   if (bytes.byteLength > cache.maxBytes) return;
-  const { sha256 } = request.stored;
-  if (sha256) {
-    const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
-    if (hex(digest) !== sha256.toLowerCase()) {
-      throw new PackError("morphology pack whose digest is not its asset's");
-    }
+  const { sha256 } = request.pack;
+  const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
+  if (hex(digest) !== sha256.toLowerCase()) {
+    throw new PackError('morphology pack whose digest is not the one Bluenaas gave');
   }
-  await writeEntry(cache, request.url, bytes.buffer as ArrayBuffer, bytes.byteLength);
+  await writeEntry(cache, packCacheKey(sha256), bytes.buffer as ArrayBuffer, bytes.byteLength);
 }
 
 const buffersOf = ({ segments, segmentCells, segmentTypes }: MorphologySegments) => [
@@ -85,7 +87,7 @@ export function createPackApi(cache: CacheBounds) {
       populations: Population[],
       onProgress: OnProgress
     ): Promise<Opened> {
-      let pack = await openCached(cache, request.url, request.stored.size);
+      let pack = await openCached(cache, packCacheKey(request.pack.sha256), request.pack.size);
       const fromCache = pack !== null;
       let whole = Promise.resolve();
       if (!pack) {

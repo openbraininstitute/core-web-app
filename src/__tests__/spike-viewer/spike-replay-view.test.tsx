@@ -12,6 +12,8 @@ const fixtures = vi.hoisted(() => ({
   },
   scene: vi.fn(),
   flags: {} as Record<string, boolean>,
+  /** Whether Bluenaas has the circuit's pack ready. */
+  packReady: false,
 }));
 
 // `@tolokoban/tgd` runs WebGL and WASM setup at module scope; the raster pair
@@ -25,6 +27,14 @@ vi.mock('@/features/circuit-viewer/circuit-scene', () => ({
 vi.mock('@/features/feature-flags', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/features/feature-flags')>()),
   useFlag: (key: string) => fixtures.flags[key],
+}));
+vi.mock('@/features/circuit-viewer/morphologies/use-morphology-pack-status', () => ({
+  useMorphologyPackStatus: (circuit: unknown) =>
+    circuit
+      ? fixtures.packReady
+        ? { state: 'ready', size: 1, sha256: 'ab12' }
+        : { state: 'building' }
+      : null,
 }));
 vi.mock('@/features/spike-viewer/components/raster-plot', () => ({ default: () => null }));
 vi.mock('@/features/spike-viewer/components/raster-plot-controls', () => ({
@@ -56,7 +66,6 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
 }));
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
-import { AssetLabel, AssetStatus } from '@/api/entitycore/types/shared/global';
 import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
@@ -81,7 +90,7 @@ function spikes(...names: string[]): SpikeData {
 }
 
 function circuitOf(scale: string): TSceneSubject {
-  return { circuit: { id: 'c1', assets: [], scale } } as unknown as TSceneSubject;
+  return { circuit: { id: 'c1', scale } } as unknown as TSceneSubject;
 }
 
 const LARGE = circuitOf('microcircuit');
@@ -114,6 +123,7 @@ beforeEach(() => {
   fixtures.session = { status: 'ready', columns: POSITIONED };
   fixtures.scene.mockClear();
   fixtures.flags = {};
+  fixtures.packReady = false;
 });
 
 describe('SpikeReplayView', () => {
@@ -138,21 +148,10 @@ describe('SpikeReplayView', () => {
     [false, true, false],
     [true, true, true],
     [true, false, false],
-  ])('replays over a small microcircuit from the pack only with the flag (%s) and the pack (%s)', (flag, stored, large) => {
+  ])('replays over a small microcircuit from the pack only with the flag (%s) and the pack ready (%s)', (flag, ready, large) => {
     fixtures.flags = { [circuitMorphologiesFlag.key]: flag };
-    const pack = {
-      id: 'pack',
-      label: AssetLabel.circuit_morphology_pack,
-      is_directory: false,
-      status: AssetStatus.CREATED,
-    };
-    const small = {
-      circuit: {
-        id: 'c1',
-        assets: stored ? [pack] : [],
-        scale: CircuitScaleDictionary.SmallMicrocircuit,
-      },
-    } as unknown as TSceneSubject;
+    fixtures.packReady = ready;
+    const small = circuitOf(CircuitScaleDictionary.SmallMicrocircuit);
     render(<SpikeReplayView data={spikes('points')} subject={small} />);
 
     expect(lastScene()).toMatchObject({ largeCircuit: large });

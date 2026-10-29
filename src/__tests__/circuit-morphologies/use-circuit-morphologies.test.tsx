@@ -2,18 +2,16 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { AssetLabel, AssetStatus, type IAsset } from '@/api/entitycore/types/shared/global';
 import {
   type MorphologiesSource,
-  storedPackOf,
   useCircuitMorphologies,
 } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 
 import { loadedData, loadedOf, loads, started } from './pending-loads';
 
 const h = vi.hoisted(() => ({
-  assetRequest: vi.fn(async ({ entityId, id }: { entityId: string; id: string }) => ({
-    url: `https://entitycore.test/circuit/${entityId}/assets/${id}/download`,
+  packRequest: vi.fn(async ({ circuitId }: { circuitId: string }) => ({
+    url: `https://bluenaas.test/circuit/${circuitId}/morphology-pack`,
     headers: { Authorization: 'Bearer token' },
   })),
   logError: vi.fn(),
@@ -21,7 +19,9 @@ const h = vi.hoisted(() => ({
 
 vi.mock('@/features/circuit-viewer/morphologies/load/load', () => import('./pending-loads'));
 
-vi.mock('@/api/entitycore/queries/assets', () => ({ buildAssetDownloadRequest: h.assetRequest }));
+vi.mock('@/api/small-scale-simulator/circuit/morphology-pack', () => ({
+  buildMorphologyPackDownloadRequest: h.packRequest,
+}));
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ virtualLabId: 'lab', projectId: 'project' }),
@@ -42,7 +42,7 @@ const SOURCE: MorphologiesSource = {
   populations: POPULATIONS,
   positions: Float32Array.of(100, 200, 300, 130, 200, 300),
   somaRadius: 4,
-  stored: { id: 'pack-id', size: 1234, sha256: 'ab12' },
+  pack: { size: 1234, sha256: 'ab12' },
 };
 
 function render(source: MorphologiesSource | null = SOURCE) {
@@ -78,21 +78,19 @@ describe('useCircuitMorphologies', () => {
     expect(loads).toHaveLength(0);
   });
 
-  it("asks entitycore for the circuit's stored pack, in the route's workspace, with its size and digest", async () => {
+  it("asks Bluenaas for the circuit's pack, in the route's workspace, with its size and digest", async () => {
     const { result } = render();
     expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 1234 });
 
     const load = await started();
-    expect(h.assetRequest).toHaveBeenCalledWith({
+    expect(h.packRequest).toHaveBeenCalledWith({
       ctx: { virtualLabId: 'lab', projectId: 'project' },
-      entityType: 'circuit',
-      entityId: 'circuit-id',
-      id: 'pack-id',
+      circuitId: 'circuit-id',
     });
     expect(load.options.request).toEqual({
-      url: 'https://entitycore.test/circuit/circuit-id/assets/pack-id/download',
+      url: 'https://bluenaas.test/circuit/circuit-id/morphology-pack',
       headers: { Authorization: 'Bearer token' },
-      stored: { size: 1234, sha256: 'ab12' },
+      pack: { size: 1234, sha256: 'ab12' },
     });
     expect(load.options.populations).toBe(SOURCE.populations);
   });
@@ -294,36 +292,6 @@ describe('useCircuitMorphologies', () => {
     await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
 
     expect(loads).toHaveLength(1);
-    expect(h.assetRequest).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('storedPackOf', () => {
-  const asset = (fields: Partial<IAsset>): IAsset =>
-    ({
-      id: 'pack-id',
-      path: 'circuit.mpack',
-      full_path: 'circuit/circuit.mpack',
-      bucket_name: 'bucket',
-      is_directory: false,
-      content_type: 'application/octet-stream',
-      size: 1234,
-      sha256_digest: 'ab12',
-      label: AssetLabel.circuit_morphology_pack,
-      status: AssetStatus.CREATED,
-      ...fields,
-    }) as IAsset;
-
-  it("takes the circuit's pack, of its assets", () => {
-    const other = asset({ id: 'config', label: AssetLabel.sonata_circuit, is_directory: true });
-    expect(storedPackOf([other, asset({})])).toEqual({ id: 'pack-id', size: 1234, sha256: 'ab12' });
-    expect(storedPackOf([asset({ sha256_digest: null })])?.sha256).toBeNull();
-  });
-
-  it('takes none where there is no pack whole and kept', () => {
-    expect(storedPackOf(undefined)).toBeNull();
-    expect(storedPackOf([asset({ label: AssetLabel.sonata_circuit })])).toBeNull();
-    expect(storedPackOf([asset({ status: AssetStatus.UPLOADING })])).toBeNull();
-    expect(storedPackOf([asset({ status: AssetStatus.DELETED })])).toBeNull();
+    expect(h.packRequest).toHaveBeenCalledTimes(1);
   });
 });

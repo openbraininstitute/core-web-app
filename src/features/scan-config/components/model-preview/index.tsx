@@ -13,6 +13,7 @@ import {
   resolveEnableElectrodes,
   resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
+import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -51,7 +52,9 @@ export function ModelPreview({
   viewerFeatures?: Partial<IEntityViewerFeatures>;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
-  const drawsEachCell = useCircuitDrawsEachCell();
+  const drawsEachCell = useCircuitDrawsEachCell(
+    model.type === EntityTypeDict.Circuit ? (model as ICircuit) : undefined
+  );
   const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
   const domainElectrodes = viewerFeatures?.electrodes ?? false;
 
@@ -100,10 +103,20 @@ export function ModelPreview({
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
+      // Which renderer waits on whether Bluenaas has the pack of a pair or small circuit.
+      .with(
+        { type: EntityTypeDict.Circuit },
+        () => drawsEachCell === undefined,
+        () => (
+          <div className="relative h-full w-full">
+            <VisualizationLoadingIndicator />
+          </div>
+        )
+      )
       // A morphology per cell, each served by OBI-One `/circuit/viz`.
       .with(
         { type: EntityTypeDict.Circuit },
-        (circuit) => drawsEachCell(circuit as ICircuit),
+        () => drawsEachCell === true,
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}

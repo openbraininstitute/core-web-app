@@ -9,7 +9,10 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
-import { storedPackOf } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
+import {
+  morphologyPackNote,
+  useMorphologyPackStatus,
+} from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
@@ -93,7 +96,7 @@ export type TSceneSubject =
 
 interface ICircuitSceneOptions {
   /**
-   * Draw with `LargeCircuitPreview`, as somas or as the morphologies of the circuit's stored pack. @see
+   * Draw with `LargeCircuitPreview`, as somas or as the morphologies of the circuit's pack. @see
    * circuitDrawsEachCell
    */
   largeCircuit?: boolean;
@@ -271,7 +274,11 @@ export function CircuitScene({
     drawnLarge &&
     circuit !== undefined &&
     circuitSmallForThePack(circuit.scale);
-  const hasPack = storedPackOf(circuit?.assets) !== null;
+  // Asked again while it builds where the cells are drawn as somas until it is ready.
+  const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
+    poll: !smallForThePack,
+  });
+  const pack = packStatus?.state === 'ready' ? packStatus : null;
   const [fellBackFor, setFellBackFor] = useState<string | null>(null);
   const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
 
@@ -385,7 +392,10 @@ export function CircuitScene({
     hostPopulationName === undefined ? setTablePopulationName : undefined;
 
   // Drawn as somas, the cells can be switched to their morphologies where the circuit has its pack.
-  const supportsMorphologies = morphologiesFlag && largeCircuit && hasPack;
+  const supportsMorphologies = morphologiesFlag && largeCircuit && pack !== null;
+  // Else why not, where it is coming or never will.
+  const morphologiesNote =
+    largeCircuit && !smallForThePack ? morphologyPackNote(packStatus) : undefined;
 
   const canPickMorphologyLocations =
     !largeCircuit &&
@@ -451,6 +461,7 @@ export function CircuitScene({
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
     drawsSomas: largeCircuit,
     supportsMorphologies,
+    morphologiesNote,
     defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
     population,
@@ -751,6 +762,7 @@ export function CircuitScene({
             {...viewerProps}
             {...cellsProps}
             somaSizeScale={config.somaSizeScale}
+            pack={pack}
             followMorphologies={smallForThePack}
             representation={representation}
             onRepresentationChange={onRepresentationChange}

@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
-import { EntityTypeDict } from '@/api/entitycore/types';
-import { AssetLabel, AssetStatus, type IAsset } from '@/api/entitycore/types/shared/global';
+import { buildMorphologyPackDownloadRequest } from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { logError } from '@/utils/logger';
@@ -16,11 +14,10 @@ import type { WorkspaceContext } from '@/types/common';
 import type { PackRequest } from './load/download';
 import type { CircuitMorphologyData, Population } from './types';
 
-/** A pack stored as the circuit's asset. */
-export interface StoredPack {
-  id: string;
+/** A pack Bluenaas has ready: its size and digest, which name it in the cache. */
+export interface PackFile {
   size: number;
-  sha256: string | null;
+  sha256: string;
 }
 
 /** A circuit's cells as the page placed them. Memoise it: another one is another load. */
@@ -32,13 +29,13 @@ export interface MorphologiesSource {
   positions: Float32Array;
   /** The radius of such a soma, µm. */
   somaRadius: number;
-  /** The pack stored as the circuit's asset, which the morphologies are read from. */
-  stored: StoredPack;
+  /** The circuit's pack in Bluenaas, which the morphologies are read from. */
+  pack: PackFile;
 }
 
 export type MorphologiesLoad =
   | { status: 'idle' }
-  /** `total` is the stored pack's size. */
+  /** `total` is the pack's size. */
   | { status: 'loading'; received: number; total: number }
   /** `coming`, while the rest of the pack comes in. */
   | { status: 'ready'; data: CircuitMorphologyData; coming?: { received: number; total: number } };
@@ -51,26 +48,12 @@ export type MorphologiesStop = 'failed' | 'cut';
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
-/** The circuit's stored morphology pack, of its assets, if it has one. */
-export function storedPackOf(assets: IAsset[] | undefined): StoredPack | null {
-  const asset = assets?.find(
-    ({ label, is_directory: directory, status }) =>
-      label === AssetLabel.circuit_morphology_pack && !directory && status === AssetStatus.CREATED
-  );
-  return asset ? { id: asset.id, size: asset.size, sha256: asset.sha256_digest ?? null } : null;
-}
-
 async function packRequest(
-  { stored, circuitId }: MorphologiesSource,
+  { pack, circuitId }: MorphologiesSource,
   ctx: WorkspaceContext | null
 ): Promise<PackRequest> {
-  const request = await buildAssetDownloadRequest({
-    ctx,
-    entityType: EntityTypeDict.Circuit,
-    entityId: circuitId,
-    id: stored.id,
-  });
-  return { ...request, stored: { size: stored.size, sha256: stored.sha256 } };
+  const request = await buildMorphologyPackDownloadRequest({ ctx, circuitId });
+  return { ...request, pack };
 }
 
 /**
@@ -107,7 +90,7 @@ export function useCircuitMorphologies(
     const controller = new AbortController();
     const { signal } = controller;
     const setLoad = (load: MorphologiesLoad) => setCurrent({ source, load });
-    let last = { received: 0, total: source.stored.size };
+    let last = { received: 0, total: source.pack.size };
     setLoad({ status: 'loading', ...last });
     setStopped(null);
 

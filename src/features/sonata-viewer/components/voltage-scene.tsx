@@ -109,7 +109,7 @@ export function VoltageScene({
   const [frame, setFrame] = useState(0);
   const recoloredAt = useRef(0);
   const sceneTime = useSceneTime(timeRef);
-  const drawsEachCell = useCircuitDrawsEachCell();
+  const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const showSceneTime = sceneTime.show;
 
   const frameAt = useCallback(
@@ -262,21 +262,24 @@ export function VoltageScene({
           bare ? 'rounded-2xl' : 'rounded-xl border border-neutral-200'
         )}
       >
-        <CircuitScene
-          circuit={circuit}
-          largeCircuit={!drawsEachCell(circuit)}
-          features={SCENE_FEATURES}
-          populationName={populationName}
-          showUnselectedPopulations={false}
-          nodeColorsOverride={nodeColors}
-          fadedColumn={RAMP_STEPS}
-          highlightedCell={highlightedCell}
-          shownCells={shownCells}
-          onCellClick={onCellClick}
-          onEmptyClick={onEmptyClick}
-          selection={selection}
-          active={active}
-        />
+        {/* Its renderer waits on whether Bluenaas has the circuit's pack. */}
+        {drawsEachCell !== undefined && (
+          <CircuitScene
+            circuit={circuit}
+            largeCircuit={!drawsEachCell}
+            features={SCENE_FEATURES}
+            populationName={populationName}
+            showUnselectedPopulations={false}
+            nodeColorsOverride={nodeColors}
+            fadedColumn={RAMP_STEPS}
+            highlightedCell={highlightedCell}
+            shownCells={shownCells}
+            onCellClick={onCellClick}
+            onEmptyClick={onEmptyClick}
+            selection={selection}
+            active={active}
+          />
+        )}
         {!frames && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">
             <Spin tip="Reading the recording…">

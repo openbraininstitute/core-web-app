@@ -19,7 +19,7 @@ Measured on an M4 Pro in Chrome, with WebGPU:
 | A tenth of the fly brain, 13,790 cells | Zoomed to 8× and back, none left out; settled in 0.4 to 0.7 s | not taken | 1,637 MB | 2026-10-17 |
 | The whole fly brain, 137,900 cells | The coarsest level, 18.6M segments; a moving frame 13 to 14 ms | 4,078 MB | 2,243 MB | 2026-10-17 |
 
-The packs' sizes, and how long they take to build, are in OBI-One's `obi_one/scientific/library/morphology_pack/docs/performance.md`.
+Bluenaas builds a circuit's pack the first time a viewer asks for it and keeps it in its cache. The packs' sizes, and how long they take to build, are in Bluenaas's `app/core/morphology_pack/docs/performance.md`.
 
 ## Which circuit is drawn how
 
@@ -30,17 +30,19 @@ flowchart TD
   memodel -- no --> single{"Single scale?"}
   single -- yes --> each["CircuitVisualization<br/>a morphology per cell, read from OBI-One"]
   single -- no --> small{"Pair or small circuit?"}
-  small -- yes --> packSmall{"Flag on and a stored pack?"}
+  small -- yes --> packSmall{"Flag on and Bluenaas has the pack ready?"}
   packSmall -- no --> each
   packSmall -- yes --> openMorph["LargeCircuitPreview<br/>opens on the pack's morphologies"]
   openMorph -- "the pack cannot be had" --> each
   small -- no --> somas["LargeCircuitPreview<br/>opens on the somas"]
-  somas -- "flag on and a stored pack:<br/>the Morphologies switch" --> morph["The pack's morphologies"]
+  somas -- "flag on and the pack ready:<br/>the Morphologies switch" --> morph["The pack's morphologies"]
   morph -- "the pack cannot be had" --> somas
 ```
 
 - `circuitDrawsEachCell` ([draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts)) answers for every caller, so that they cannot disagree. The cutoff is cost: a morphology per cell reads every point of every one, far too many from a microcircuit up. A single cell stays on it whatever the flag, because picking a location on it needs section ids, which the pack does not carry.
-- A circuit has a pack where `storedPackOf` finds an asset labelled `circuit_morphology_pack`, created and not a directory.
+- `useMorphologyPackStatus` ([use-morphology-pack-status.ts](morphologies/use-morphology-pack-status.ts)) asks Bluenaas for the pack, `POST /circuit/{id}/morphology-pack`, which queues its build where there is neither a pack nor a build. The answer is `ready` (with the pack's size and SHA-256), `building`, `failed` or `refused` (with why). It is forgotten once nothing reads it, so the next visit asks again.
+- A pair or small circuit waits for that answer before a renderer is mounted, and keeps the one it got for as long as it is on show: a pack that turns ready during the visit is drawn on the next one.
+- A larger circuit opens on its somas at once, and asks again every 10 s while its pack builds. Until it is ready, the Morphologies switch in the settings is off and disabled, with why: preparing, couldn't prepare, or not available.
 - A pair or small circuit whose pack fails is drawn a cell at a time instead, for as long as it is on show (`fellBackFor` in [circuit-scene.tsx](circuit-scene.tsx)). A larger one goes back to its somas, and the status offers Try again.
 
 ## Where it is mounted
@@ -162,7 +164,7 @@ Debug mode is not a flag. It is the `localStorage` key `@openbraininstitute/morp
 | Which circuits are drawn how | `circuitDrawsEachCell` in [draws-morphologies.ts](../scan-config/components/circuit-viz/sources/draws-morphologies.ts) |
 | The budgets and the tolerance in pixels | `SEGMENT_BUDGET` and `DETAIL_PIXELS` in [engine/detail.ts](morphologies/engine/detail.ts); the Debug choices in [detail-readout.tsx](morphologies/detail-readout.tsx) |
 | When WebGPU is used | [engine/create-view.ts](morphologies/engine/create-view.ts), [engine/probe.ts](morphologies/engine/probe.ts) |
-| The pack's cache | `STORED_PACK_CACHE` in [load/worker-api.ts](morphologies/load/worker-api.ts), made by `bucket` in [asset-cache.ts](../viewer-3d/load/asset-cache.ts) |
+| The pack's cache | `PACK_CACHE` in [load/worker-api.ts](morphologies/load/worker-api.ts), made by `bucket` in [asset-cache.ts](../viewer-3d/load/asset-cache.ts) |
 | Status texts | [load-status.tsx](morphologies/load-status.tsx) |
 | Settings, their defaults and the menu | [use-viewer-config.ts](../scan-config/components/color-by/use-viewer-config.ts), [viewer-controls-menu.tsx](../scan-config/components/color-by/viewer-controls-menu.tsx) |
 | Soma radius by species | `SOMA_RADII` in [hooks.ts](../scan-config/components/model-preview/large-circuit-preview/hooks.ts) |

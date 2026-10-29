@@ -11,12 +11,12 @@ sequenceDiagram
   participant Hook as use-circuit-morphologies.ts
   participant Load as loadCircuitMorphologies
   participant W as Pack worker
-  participant Net as entitycore, then S3
+  participant Net as Bluenaas
   participant Cache as Cache Storage
 
-  Hook->>Load: the stored pack's request, the page's populations
+  Hook->>Load: the pack's request, the page's populations
   Load->>W: open
-  W->>Cache: the pack, by its entitycore URL
+  W->>Cache: the pack, by its SHA-256
   alt in the cache
     Cache-->>W: the whole pack
   else not there
@@ -34,13 +34,13 @@ sequenceDiagram
 
 ### How it works
 
-1. **The request.** `storedPackOf` ([../use-circuit-morphologies.ts](../use-circuit-morphologies.ts)) finds the circuit's asset labelled `circuit_morphology_pack`, created and not a directory. `packRequest` turns it into entitycore's download URL with the page's token (`buildAssetDownloadRequest`), and carries the asset's size and SHA-256. The hook starts the load in a `setTimeout`, so that React's StrictMode, which runs an effect twice, does not start a download only to abort it.
+1. **The request.** The host hands over the pack's size and SHA-256 from Bluenaas's answer (`useMorphologyPackStatus`). `packRequest` ([../use-circuit-morphologies.ts](../use-circuit-morphologies.ts)) adds Bluenaas's URL for the pack's bytes, `GET /circuit/{id}/morphology-pack`, with the page's token and project (`buildMorphologyPackDownloadRequest`). The hook starts the load in a `setTimeout`, so that React's StrictMode, which runs an effect twice, does not start a download only to abort it.
 2. **One worker a load.** `loadCircuitMorphologies` ([load.ts](load.ts)) starts [pack.worker.ts](pack.worker.ts) and keeps it until the load is aborted or fails. Aborting terminates it, which stops the download. Each call to it is raced on its own against the worker dying (`keepWorker` in [worker-handle.ts](../../../viewer-3d/load/worker-handle.ts)). Comlink never settles a call to a dead worker, and a single race shared by every call would hold each answer until the last.
-3. **The download** ([download.ts](download.ts)). One GET of the whole pack, which entitycore sends on to a presigned S3 URL. `Arriving` ([arriving.ts](arriving.ts)) fills a buffer of the asset's size as the bytes come, and a read waits for the bytes it needs. Progress goes to the page at most every 100 ms, as a message per network chunk would be hundreds.
+3. **The download** ([download.ts](download.ts)). One GET of the whole pack, which Bluenaas serves from its cache. `Arriving` ([arriving.ts](arriving.ts)) fills a buffer of the pack's size as the bytes come, and a read waits for the bytes it needs. Progress goes to the page at most every 100 ms, as a message per network chunk would be hundreds.
 
-   A stream that ends short is asked once more, from where it stopped, of the presigned URL, with `Range` and no other header: S3 refuses a presigned request that also carries a token. The rest is taken only as a 206 of exactly the bytes missing. Every byte of the asset's size in is the whole pack, whatever broke the stream after.
-4. **The cache.** The bucket `circuit-morphology-mpack` (`STORED_PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by entitycore's URL, under which an asset's content cannot change. It keeps entries 30 days and 500 MiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts), shared with the EM cell mesh viewer).
-   - Once the whole pack is in, its SHA-256 is checked against the asset's, and only then kept.
+   A stream that ends short is asked once more, from where it stopped, with the request's headers and `Range`. The rest is taken only as a 206 of exactly the bytes missing. Every byte of the pack's size in is the whole pack, whatever broke the stream after.
+4. **The cache.** The bucket `circuit-morphology-mpack` (`PACK_CACHE` in [worker-api.ts](worker-api.ts)), keyed by the pack's SHA-256 (`packCacheKey`): Bluenaas serves a circuit's pack under one URL, and builds it again whenever its cache is cleared. It keeps entries 30 days and 500 MiB in all, the least recently opened going first (`bucket` in [asset-cache.ts](../../../viewer-3d/load/asset-cache.ts), shared with the EM cell mesh viewer).
+   - Once the whole pack is in, its SHA-256 is checked against the one Bluenaas gave, and only then kept.
    - A pack larger than the bucket is neither kept nor checked: it is drawn already.
    - An entry of the wrong length, as an interrupted write leaves in Firefox, is deleted on the way out. So is one the reader refuses (`PackError`), and the pack is downloaded again.
    - The browser may still drop the bucket (Safari after a week without a visit): it is only a cache.
@@ -60,7 +60,7 @@ sequenceDiagram
    | What | Where | Then |
    | --- | --- | --- |
    | HTTP error, a pack the reader refuses, a worker that dies, cells that don't match | Before the somas are shown | The load fails: "The morphologies could not be loaded", with Try again. The worker is let go of. |
-   | The download stops twice, or the digest is not the asset's | After | The load is cut: what is drawn stays, and "Not all of the morphologies could be loaded" offers Try again |
+   | The download stops twice, or the digest is not the one Bluenaas gave | After | The load is cut: what is drawn stays, and "Not all of the morphologies could be loaded" offers Try again |
    | A box that cannot be read | Any time | The box is not asked for again, and the error is logged once |
 
    The reader's refusals are `PackError`s: not a morphology pack, of another version, laid out other than by space, a malformed index, a damaged block, cut short, at odds with its index, or with bytes left over. Try again loads the pack again from its start: a pack cut short is not kept.
@@ -86,7 +86,7 @@ load.ts               the pack's load on the page: the worker, its progress, the
 pack.worker.ts        worker entry: the pack's API over Comlink
 worker-api.ts         open from the cache or the download, keep, read boxes
 download.ts           the pack streamed, resumed once where cut short
-arriving.ts           a buffer of the asset's size, filled as the bytes come, read as they are in
+arriving.ts           a buffer of the pack's size, filled as the bytes come, read as they are in
 pack.ts               the reader: header, index, somas, boxes, readableAt, a box read over its base
 cells.ts              the pack's cells numbered as the page numbers them
 morton.ts             a box's segments in Morton order

@@ -34,6 +34,8 @@ export interface ViewerControlsMenuProps {
   /** the cells as morphologies and not soma points; omit where a circuit is not offered both */
   showMorphologies?: boolean;
   onToggleMorphologies?: (value: boolean) => void;
+  /** why the cells cannot be switched to morphologies yet, or ever: the switch is shown off and disabled with it */
+  morphologiesNote?: string;
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
@@ -86,6 +88,7 @@ export function ViewerControlsMenu({
   onToggleAxons,
   showMorphologies,
   onToggleMorphologies,
+  morphologiesNote,
   neuronOpacity,
   onNeuronOpacityChange,
   somaSizeScale,
@@ -130,12 +133,30 @@ export function ViewerControlsMenu({
               onCaptureImage();
             }}
           />
-          {onToggleMorphologies && (
-            <MenuRow label="Morphologies" icon={<RiNodeTree className="size-4 shrink-0" />}>
+          {(onToggleMorphologies || morphologiesNote) && (
+            <MenuRow
+              label={
+                morphologiesNote ? (
+                  <span className="flex flex-col">
+                    Morphologies
+                    <span
+                      data-testid="viewer-morphologies-note"
+                      className="text-xs text-neutral-500"
+                    >
+                      {morphologiesNote}
+                    </span>
+                  </span>
+                ) : (
+                  'Morphologies'
+                )
+              }
+              icon={<RiNodeTree className="size-4 shrink-0" />}
+            >
               <ViewerSwitch
                 testId="viewer-toggle-morphologies"
-                checked={!!showMorphologies}
-                onChange={onToggleMorphologies}
+                checked={!morphologiesNote && !!showMorphologies}
+                disabled={!!morphologiesNote}
+                onChange={onToggleMorphologies ?? (() => {})}
               />
             </MenuRow>
           )}

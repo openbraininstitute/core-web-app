@@ -7,7 +7,7 @@ import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-ci
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
 import { useCellClick } from '@/features/circuit-viewer/morphologies/use-cell-click';
 import {
-  storedPackOf,
+  type PackFile,
   useCircuitMorphologies,
 } from '@/features/circuit-viewer/morphologies/use-circuit-morphologies';
 import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
@@ -40,6 +40,8 @@ export interface LargeCircuitPreviewProps extends CircuitViewerHostProps, Circui
   className?: string;
   /** Multiplier on the per-species soma radius. */
   somaSizeScale?: number;
+  /** The circuit's pack, where Bluenaas has it ready; the cells stay somas without it. */
+  pack?: PackFile | null;
   /** Frame the view on the morphologies as they come, until the user moves it. */
   followMorphologies?: boolean;
   /**
@@ -83,6 +85,7 @@ export function LargeCircuitPreview({
   highlightedOverlayId = null,
   neuronOpacity,
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
+  pack = null,
   showAxons,
   followMorphologies = false,
   representation = 'somas',
@@ -145,30 +148,19 @@ export function LargeCircuitPreview({
   const drawable = placed.length > 0 && !error;
   // The cells are numbered through `placed`, as `positions` and `cellColors`
   // are, so a morphology's cell is the soma of the same index.
-  const stored = storedPackOf(circuit.assets);
-  // By its fields: the circuit fetched again is the same pack.
-  const { id: storedId, size: storedSize = 0, sha256: storedSha256 = null } = stored ?? {};
-  // A circuit without a stored pack stays somas.
+  // By its fields: the status asked again is the same pack.
+  const { size: packSize, sha256: packSha256 } = pack ?? {};
   const morphologiesSource = React.useMemo(
     () =>
-      wantsMorphologies && drawable && storedId !== undefined
+      wantsMorphologies && drawable && packSize !== undefined && packSha256 !== undefined
         ? {
             circuitId: circuit.id,
             ...somas,
             somaRadius: speciesRadius,
-            stored: { id: storedId, size: storedSize, sha256: storedSha256 },
+            pack: { size: packSize, sha256: packSha256 },
           }
         : null,
-    [
-      wantsMorphologies,
-      drawable,
-      circuit.id,
-      somas,
-      speciesRadius,
-      storedId,
-      storedSize,
-      storedSha256,
-    ]
+    [wantsMorphologies, drawable, circuit.id, somas, speciesRadius, packSize, packSha256]
   );
   const morphologies = useCircuitMorphologies(morphologiesSource, () => onMorphologiesStopped?.());
   const shown = morphologies.load.status === 'ready' ? morphologies.load.data : null;

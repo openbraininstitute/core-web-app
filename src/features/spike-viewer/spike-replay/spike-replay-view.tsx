@@ -144,7 +144,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
-  const drawsEachCellOf = useCircuitDrawsEachCell();
+  const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const {
     config: circuitConfig,
     isLoading: configLoading,
@@ -220,7 +220,6 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // Read off the same nodes session. Unknown until it is ready, and replayed in
   // the meantime: switching population mid-play should not pause on a download.
   const positioned = nodesStatus === 'ready' && nodeColumns ? hasPositions(nodeColumns) : undefined;
-  const drawsEachCell = circuit !== undefined && drawsEachCellOf(circuit);
   // Where the 3D view has nothing to show for these spikes at all, it drops
   // away and the raster has the panel, the way it does with no subject.
   const rasterOnly =
@@ -667,45 +666,48 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   );
 
   // The scene's colour-by is in its corner docked, else in the header row.
-  const scene = sceneMounted && subject && (
-    <CircuitScene
-      {...subject}
-      largeCircuit={circuit !== undefined && !drawsEachCell}
-      active={showScene}
-      features={SCENE_FEATURES}
-      // Only a name the config backs with cells. A name the scene
-      // cannot draw would make it fall back on its own — with no name
-      // it falls back deliberately, to the same default, and the
-      // notice in the header explains what is on show. An MEModel
-      // resolves no populations, so the name means nothing to it.
-      populationName={replayable ? populationName : undefined}
-      // The population above the panes is the one being replayed,
-      // and the spikes' cell indices are relative to it. The
-      // circuit's other populations are not drawn here.
-      showUnselectedPopulations={false}
-      colorByTarget={docked ? undefined : colorBySlot}
-      // It colours the raster too, where every spike in one colour is uniform.
-      colorByNoneLabel="Uniform"
-      shownCells={sceneCells}
-      highlightedCell={highlightedCell ?? undefined}
-      selection={sceneSelection}
-      onCellClick={handleCellClick}
-      onEmptyClick={releaseCell}
-      onNodeColorsChange={setSceneColors}
-      spikes={{
-        data: spikes ?? undefined,
-        timeInMs: seekToMs,
-        onTimeChange: handleTimeChange,
-        playing,
-        onPlayingChange: setPlaying,
-        speed,
-        afterglowInSeconds,
-        onAfterglowChange: setAfterglowInSeconds,
-        glow,
-        onGlowChange: setGlow,
-      }}
-    />
-  );
+  // A circuit's renderer waits on whether Bluenaas has its pack.
+  const scene = sceneMounted &&
+    subject &&
+    (circuit === undefined || drawsEachCell !== undefined) && (
+      <CircuitScene
+        {...subject}
+        largeCircuit={circuit !== undefined && !drawsEachCell}
+        active={showScene}
+        features={SCENE_FEATURES}
+        // Only a name the config backs with cells. A name the scene
+        // cannot draw would make it fall back on its own — with no name
+        // it falls back deliberately, to the same default, and the
+        // notice in the header explains what is on show. An MEModel
+        // resolves no populations, so the name means nothing to it.
+        populationName={replayable ? populationName : undefined}
+        // The population above the panes is the one being replayed,
+        // and the spikes' cell indices are relative to it. The
+        // circuit's other populations are not drawn here.
+        showUnselectedPopulations={false}
+        colorByTarget={docked ? undefined : colorBySlot}
+        // It colours the raster too, where every spike in one colour is uniform.
+        colorByNoneLabel="Uniform"
+        shownCells={sceneCells}
+        highlightedCell={highlightedCell ?? undefined}
+        selection={sceneSelection}
+        onCellClick={handleCellClick}
+        onEmptyClick={releaseCell}
+        onNodeColorsChange={setSceneColors}
+        spikes={{
+          data: spikes ?? undefined,
+          timeInMs: seekToMs,
+          onTimeChange: handleTimeChange,
+          playing,
+          onPlayingChange: setPlaying,
+          speed,
+          afterglowInSeconds,
+          onAfterglowChange: setAfterglowInSeconds,
+          glow,
+          onGlowChange: setGlow,
+        }}
+      />
+    );
 
   if (docked && sidePanel) {
     const panelTitles = ['3D Player', 'Statistics'];

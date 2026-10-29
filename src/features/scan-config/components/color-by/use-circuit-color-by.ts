@@ -31,6 +31,8 @@ interface Options {
   drawsSomas?: boolean;
   /** whether the circuit's cells can be drawn as morphologies in place of the soma points */
   supportsMorphologies?: boolean;
+  /** where they cannot be, but are coming or never will, why: the switch is shown off with it */
+  morphologiesNote?: string;
   /** what the cells are drawn as to begin with, where morphologies are offered; somas when omitted */
   defaultRepresentation?: CircuitRepresentation;
   /**
@@ -100,6 +102,7 @@ export function useCircuitColorBy(
     supportsMorphologyLocations,
     drawsSomas,
     supportsMorphologies,
+    morphologiesNote,
     defaultRepresentation,
     defaultNeuronOpacity,
     population,
@@ -231,6 +234,7 @@ export function useCircuitColorBy(
       onToggleMorphologies: supportsMorphologies
         ? (value) => onRepresentationChange(value ? 'morphologies' : 'somas')
         : undefined,
+      morphologiesNote: supportsMorphologies ? undefined : morphologiesNote,
       neuronOpacity: somas ? config.neuronOpacity : undefined,
       onNeuronOpacityChange: somas ? (value) => update({ neuronOpacity: value }) : undefined,
       somaSizeScale: somas ? config.somaSizeScale : undefined,
@@ -285,6 +289,7 @@ export function useCircuitColorBy(
       supportsElectrodes,
       supportsMorphologyLocations,
       supportsMorphologies,
+      morphologiesNote,
       morphologies,
       somas,
       onRepresentationChange,

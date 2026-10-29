@@ -17,8 +17,9 @@ import { mortonOrder } from '@/features/circuit-viewer/morphologies/load/morton'
 import { openPack } from '@/features/circuit-viewer/morphologies/load/pack';
 import {
   createPackApi,
+  PACK_CACHE,
   type PackApi,
-  STORED_PACK_CACHE,
+  packCacheKey,
 } from '@/features/circuit-viewer/morphologies/load/worker-api';
 
 import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
@@ -33,7 +34,7 @@ import type {
 import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
 import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
 
-const URL_A = 'https://entitycore.test/circuit/a/assets/p/download';
+const URL_A = 'https://bluenaas.test/circuit/a/morphology-pack';
 const BOUNDS: CacheBounds = { name: 'test-mpack', ttlMs: 60_000, maxBytes: 2 ** 20 };
 /** The pack's own, in its order: a page with these numbers its cells as the pack does. */
 const POPULATIONS = [
@@ -42,11 +43,12 @@ const POPULATIONS = [
 ];
 
 const small = () => pack('small');
-/** A request for a stored pack of `bytes`' size, at `url`, with the digest to check it against where there is one. */
-const requestOf = (bytes: Uint8Array = small(), sha256: string | null = null, url = URL_A) => ({
+const digestOf = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+/** A request for a pack of `bytes`' size at `url`, with the digest Bluenaas gives, its own unless said. */
+const requestOf = (bytes: Uint8Array = small(), sha256 = digestOf(bytes), url = URL_A) => ({
   url,
   headers: { Authorization: 'Bearer token' },
-  stored: { size: bytes.byteLength, sha256 },
+  pack: { size: bytes.byteLength, sha256 },
 });
 /** Not a pack: its first byte is another. */
 function broken(): Uint8Array {
@@ -181,7 +183,7 @@ const serve = (bytes: Uint8Array) => {
   return { fetch, served: server.served };
 };
 
-const cached = () => storage.bucket(BOUNDS.name).entries.get(URL_A);
+const cached = () => storage.bucket(BOUNDS.name).entries.get(packCacheKey(digestOf(small())));
 
 function replaceCached(body: Uint8Array) {
   const entry = cached();
@@ -318,15 +320,24 @@ describe('loadCircuitMorphologies', () => {
     expect(onProgress).not.toHaveBeenCalled();
   });
 
-  it('keeps a pack for each URL', async () => {
+  it('keeps a pack by its digest, whatever its URL', async () => {
     const other = URL_A.replace('/a/', '/b/');
     const server = fakeServer({ [URL_A]: small(), [other]: small() });
     vi.stubGlobal('fetch', server.fetch);
     await kept();
-    const second = await load({ request: requestOf(small(), null, other) });
+    const second = await load({ request: requestOf(small(), undefined, other) });
 
-    expect(second.fromCache).toBe(false);
-    expect(server.served.requests).toBe(2);
+    expect(second.fromCache).toBe(true);
+    expect(server.served.requests).toBe(1);
+  });
+
+  it('fetches the pack again where Bluenaas gives another digest under the same URL', async () => {
+    const { served } = serve(small());
+    await kept();
+    const rebuilt = await load({ request: requestOf(small(), '11'.repeat(32)) });
+
+    expect(rebuilt.fromCache).toBe(false);
+    expect(served.requests).toBe(2);
   });
 
   it('drops a cached pack that does not open, and fetches it again', async () => {
@@ -426,17 +437,12 @@ describe('loadCircuitMorphologies', () => {
     expect(workers[0].terminated).toBe(true);
   });
 
-  describe('cut short, or not the asset', () => {
-    const S3 = 'https://s3.test/pack?signature';
-    const digestOf = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
+  describe('cut short, or not the digest', () => {
     /** Past the somas, into the base. */
     const breakAt = (bytes: Uint8Array) => indexEnd(bytes) + indexOf(bytes).levels[2].offset + 40;
 
-    /**
-     * entitycore sending the request on to S3, which serves ranges; the `n`th response's body breaks at `breaks[n]`
-     * bytes into the file, where there is one.
-     */
-    function storedServer(bytes: Uint8Array, breaks: number[]) {
+    /** Bluenaas, which serves ranges; the `n`th response's body breaks at `breaks[n]` bytes into the file, where there is one. */
+    function rangeServer(bytes: Uint8Array, breaks: number[]) {
       const fetch = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
         const range = (init?.headers as Record<string, string> | undefined)?.Range;
         const from = range ? Number(range.slice('bytes='.length, -1)) : 0;
@@ -451,55 +457,51 @@ describe('loadCircuitMorphologies', () => {
             else controller.close();
           },
         });
-        const response = new Response(body, {
+        return new Response(body, {
           status: range ? 206 : 200,
           headers: { 'Content-Length': String(bytes.byteLength - from) },
         });
-        Object.defineProperty(response, 'url', { value: S3 });
-        return response;
       });
       vi.stubGlobal('fetch', fetch);
       return fetch;
     }
 
-    const storedRequest = (bytes: Uint8Array) => requestOf(bytes, digestOf(bytes));
-
-    it('resumes where the body broke, of the URL it was sent on to with the range alone, and keeps it', async () => {
+    it('resumes where the body broke, with the token and the range, and keeps it', async () => {
       const bytes = small();
-      const fetch = storedServer(bytes, [breakAt(bytes)]);
-      const first = await load({ request: storedRequest(bytes) });
+      const fetch = rangeServer(bytes, [breakAt(bytes)]);
+      const first = await load({ request: requestOf(bytes) });
       await first.whole;
 
       expect(fetch.mock.calls.map(([url, init]) => [url, init])).toEqual([
         [URL_A, { headers: { Authorization: 'Bearer token' } }],
-        [S3, { headers: { Range: `bytes=${breakAt(bytes)}-` } }],
+        [URL_A, { headers: { Authorization: 'Bearer token', Range: `bytes=${breakAt(bytes)}-` } }],
       ]);
       for (const level of [0, 1, 2]) {
         expect(await readLevel(first.data, level)).toEqual(await asRead(bytes, level));
       }
       expect(cached()?.body).toEqual(bytes);
 
-      const again = await load({ request: storedRequest(bytes) });
+      const again = await load({ request: requestOf(bytes) });
       expect(again.fromCache).toBe(true);
       expect(fetch).toHaveBeenCalledTimes(2);
     });
 
     it('refuses the boxes past a second break, keeps nothing, and fails the whole', async () => {
       const bytes = small();
-      storedServer(bytes, [breakAt(bytes), breakAt(bytes) + 100]);
-      const { data, whole } = await load({ request: storedRequest(bytes) });
+      rangeServer(bytes, [breakAt(bytes), breakAt(bytes) + 100]);
+      const { data, whole } = await load({ request: requestOf(bytes) });
 
       await expect(whole).rejects.toThrow(`Download of ${breakAt(bytes) + 100} bytes`);
       await expect(readLevel(data, 0)).rejects.toThrow('cut short');
       expect(cached()).toBeUndefined();
     });
 
-    it("keeps no pack whose digest is not its asset's, its morphologies still read", async () => {
+    it('keeps no pack whose digest is not the one Bluenaas gave, its morphologies still read', async () => {
       const bytes = small();
-      storedServer(bytes, []);
+      rangeServer(bytes, []);
       const { data, whole } = await load({ request: requestOf(bytes, '00'.repeat(32)) });
 
-      await expect(whole).rejects.toThrow("digest is not its asset's");
+      await expect(whole).rejects.toThrow('digest is not the one Bluenaas gave');
       expect(await readLevel(data, 2)).toEqual(await asRead(bytes, 2));
       expect(cached()).toBeUndefined();
     });
@@ -515,13 +517,13 @@ describe('loadCircuitMorphologies', () => {
         },
       });
       vi.stubGlobal('fetch', async () => new Response(body));
-      await kept({ request: storedRequest(bytes) });
+      await kept({ request: requestOf(bytes) });
 
       expect(cached()?.body).toEqual(bytes);
     });
 
     it('keeps packs a month', () => {
-      expect(STORED_PACK_CACHE.ttlMs).toBe(30 * 24 * 60 * 60 * 1000);
+      expect(PACK_CACHE.ttlMs).toBe(30 * 24 * 60 * 60 * 1000);
     });
   });
 

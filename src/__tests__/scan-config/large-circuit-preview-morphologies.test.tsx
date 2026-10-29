@@ -54,9 +54,9 @@ vi.mock(
   () => import('../circuit-morphologies/pending-loads')
 );
 
-vi.mock('@/api/entitycore/queries/assets', () => ({
-  buildAssetDownloadRequest: async ({ entityId, id }: { entityId: string; id: string }) => ({
-    url: `https://entitycore.test/circuit/${entityId}/assets/${id}/download`,
+vi.mock('@/api/small-scale-simulator/circuit/morphology-pack', () => ({
+  buildMorphologyPackDownloadRequest: async ({ circuitId }: { circuitId: string }) => ({
+    url: `https://bluenaas.test/circuit/${circuitId}/morphology-pack`,
     headers: {},
   }),
 }));
@@ -78,20 +78,12 @@ vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
   usePopulationsPlacement: () => h.placement,
 }));
 
-const PACK = {
-  id: 'pack-id',
-  label: 'circuit_morphology_pack',
-  is_directory: false,
-  status: 'created',
-  size: 6e6,
-  sha256_digest: 'ab12',
-};
+const PACK = { size: 6e6, sha256: 'ab12' };
 
 const circuit = {
   id: 'circuit-id',
   name: 'Circuit',
   subject: { species: { name: 'Mus musculus' } },
-  assets: [PACK],
 } as unknown as ICircuit;
 
 /** As the loader hands it over: the two cortex cells, and no soma for the input. */
@@ -139,6 +131,7 @@ function Hosted({
         representation={offered ? representation : 'somas'}
         onRepresentationChange={offered ? ask : undefined}
         onMorphologiesStopped={() => (offered ? ask('somas') : undefined)}
+        pack={PACK}
         {...props}
       />
     </>
@@ -260,19 +253,19 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(status()).toBe('Drawn with WebGL 2: the graphics ran out of memoryDismiss');
   });
 
-  it("asks entitycore for the circuit's stored pack", async () => {
+  it("asks Bluenaas for the circuit's pack, with the size and digest it gave", async () => {
     render(<Hosted start="morphologies" />);
     const load = await started();
 
     expect(load.options.request).toEqual({
-      url: 'https://entitycore.test/circuit/circuit-id/assets/pack-id/download',
+      url: 'https://bluenaas.test/circuit/circuit-id/morphology-pack',
       headers: {},
-      stored: { size: 6e6, sha256: 'ab12' },
+      pack: { size: 6e6, sha256: 'ab12' },
     });
   });
 
-  it('loads nothing for a circuit without a stored pack, its somas on show and nothing said', async () => {
-    render(<Hosted start="morphologies" circuit={{ ...circuit, assets: [] }} />);
+  it('loads nothing for a circuit without a pack ready, its somas on show and nothing said', async () => {
+    render(<Hosted start="morphologies" pack={null} />);
     await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
 
     expect(loads).toHaveLength(0);
