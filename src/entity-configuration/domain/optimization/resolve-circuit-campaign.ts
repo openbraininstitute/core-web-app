@@ -2,6 +2,7 @@ import { cache } from 'react';
 
 import { getTaskActivities } from '@/api/entitycore/queries/task';
 import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { BuildSynaptomeCampaign } from '@/entity-configuration/domain/model/build-synaptome-campaign';
 import { CircuitSynapticPhysiologyCampaign } from '@/entity-configuration/domain/model/circuit-synaptic-physiology-campaign';
@@ -12,7 +13,15 @@ import { buildEmSynapseMappingWorkflow } from '@/features/scan-config/workflow/d
 import { buildSynaptomeWorkflow } from '@/features/scan-config/workflow/definitions/build-synaptome';
 import { extractCircuitWorkflow } from '@/features/scan-config/workflow/definitions/extract-circuit';
 
+import type { ITaskActivity } from '@/api/entitycore/types/entities/task-activity';
 import type { WorkspaceContext } from '@/types/common';
+
+/** this execution activity's own config id, read off the `used` entitycore already returned */
+function usedConfigId(activity: ITaskActivity | undefined) {
+  return activity?.used.find(
+    (entity) => (entity.type ?? EntityTypeDict.TaskConfig) === EntityTypeDict.TaskConfig
+  )?.id;
+}
 
 /**
  * The build/extract workflow campaign a circuit (at any scale) came from, resolved for its
@@ -32,12 +41,16 @@ export const resolveCircuitWorkflow = cache(
       context,
       filters: { generated__id: circuitId, page_size: 1 },
     });
-    const activityType = activities.at(0)?.task_activity_type;
+    const activity = activities.at(0);
+    const activityType = activity?.task_activity_type;
+    // the execution activity's own `used` already carries its config id, so reuse it instead of
+    // re-querying `getTaskActivities` for the same activity (now filtered by type)
+    const configId = usedConfigId(activity);
+    if (!configId) return null;
 
     if (activityType === TaskActivityType.CircuitExtractionExecution) {
-      const campaignId = await Task.campaignIdOf({
-        id: circuitId,
-        executionType: activityType,
+      const campaignId = await Task.campaignIdFromConfigId({
+        configId,
         configGenerationType: TaskActivityType.CircuitExtractionConfigGeneration,
         context,
       });
@@ -57,9 +70,8 @@ export const resolveCircuitWorkflow = cache(
     }
 
     if (activityType === TaskActivityType.BuildSynaptomeExecution) {
-      const campaignId = await Task.campaignIdOf({
-        id: circuitId,
-        executionType: activityType,
+      const campaignId = await Task.campaignIdFromConfigId({
+        configId,
         configGenerationType: TaskActivityType.BuildSynaptomeConfigGeneration,
         context,
       });
@@ -79,9 +91,8 @@ export const resolveCircuitWorkflow = cache(
     }
 
     if (activityType === TaskActivityType.CircuitSynapticPhysiologyExecution) {
-      const campaignId = await Task.campaignIdOf({
-        id: circuitId,
-        executionType: activityType,
+      const campaignId = await Task.campaignIdFromConfigId({
+        configId,
         configGenerationType: TaskActivityType.CircuitSynapticPhysiologyConfigGeneration,
         context,
       });
@@ -101,9 +112,8 @@ export const resolveCircuitWorkflow = cache(
     }
 
     if (activityType === TaskActivityType.EmSynapseMappingExecution) {
-      const campaignId = await Task.campaignIdOf({
-        id: circuitId,
-        executionType: activityType,
+      const campaignId = await Task.campaignIdFromConfigId({
+        configId,
         configGenerationType: TaskActivityType.EmSynapseMappingConfigGeneration,
         context,
       });

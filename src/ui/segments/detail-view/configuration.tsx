@@ -46,7 +46,6 @@ import { cn } from '@/utils/css-class';
 import { resolveExploreDetailsPageUrl } from '@/utils/url-builder';
 
 import type {
-  IMEModel,
   ISingleNeuronSimulation,
   ISingleNeuronSynaptomeSimulation,
 } from '@/api/entitycore/types';
@@ -61,7 +60,6 @@ import type { SimulationPayload } from '@/types/small-scale-simulator/single-neu
 import type { Prettify } from '@/utils/type';
 
 type ExpandType = Prettify<{
-  memodel: IMEModel;
   config: {
     synapses: Array<TSingleNeuronSynaptomeConfiguration>;
   } | null;
@@ -166,7 +164,7 @@ export default async function Configuration({
 
     return (
       <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this ME-model.
+        No configuration found for this e-model.
       </div>
     );
   }
@@ -407,21 +405,19 @@ export default async function Configuration({
 
     return (
       <div className="flex w-full flex-col gap-4">
-        {build && (
-          <div className={cn('flex items-center gap-2', detailViewValueClass(fieldVariant))}>
-            Synapses added to ME-model{' '}
-            <Link
-              href={`${resolveExploreDetailsPageUrl({
-                ctx: context,
-                dataType: ExtendedEntitiesTypeDict.Memodel,
-                entityId: synaptome.me_model.id,
-              })}/workflow`}
-              className={detailViewLinkClass(fieldVariant)}
-            >
-              {synaptome.me_model.name}
-            </Link>
-          </div>
-        )}
+        <div className={cn('flex items-center gap-2', detailViewValueClass(fieldVariant))}>
+          Synapses added to ME-model{' '}
+          <Link
+            href={`${resolveExploreDetailsPageUrl({
+              ctx: context,
+              dataType: ExtendedEntitiesTypeDict.Memodel,
+              entityId: synaptome.me_model.id,
+            })}/workflow`}
+            className={detailViewLinkClass(fieldVariant)}
+          >
+            {synaptome.me_model.name}
+          </Link>
+        </div>
         {workflow}
         <div className="mt-10">
           <SynapseGroupList config={data.config} variant={fieldVariant} />

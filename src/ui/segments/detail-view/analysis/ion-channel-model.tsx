@@ -3,12 +3,12 @@ import { sortBy } from 'es-toolkit/compat';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { tryCatch } from '@/api/utils';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { PDFViewer } from '@/features/model-analysis/viewer/asset-viewers/pdf-viewer';
 import {
-  detailViewHeadingClass,
   detailViewLabelClass,
-  detailViewPanelBorderClass,
+  detailViewSectionHeadingClass,
   detailViewValueClass,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
@@ -27,14 +27,6 @@ type SummaryEntry = {
 
 type SummaryJson = Record<string, SummaryEntry>;
 
-function sectionHeadingClass(variant: TViewVariant) {
-  return cn(
-    'mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize',
-    detailViewHeadingClass(variant, 'xl'),
-    detailViewPanelBorderClass(variant)
-  );
-}
-
 export default async function IonChannelModelAnalysis({
   icm,
   ctx,
@@ -51,17 +43,17 @@ export default async function IonChannelModelAnalysis({
     (a) => a.label === AssetLabel.ion_channel_model_figure_summary_json
   );
 
-  const summary =
-    summaryAsset &&
-    (await downloadAsset({
+  const { data: summaryJson } = await tryCatch<SummaryJson | undefined>(async () => {
+    if (!summaryAsset) return undefined;
+    const summary = await downloadAsset({
       ctx,
       entityType: EntityTypeDict.IonChannelModel,
       entityId: icm.id,
-      id: summaryAsset?.id,
+      id: summaryAsset.id,
       asRawResponse: true,
-    }));
-
-  const summaryJson: SummaryJson | undefined = await summary?.json();
+    });
+    return summary.json();
+  });
 
   const groupedEntries = summaryJson
     ? Object.entries(summaryJson).reduce<Record<string, [string, SummaryEntry][]>>(
@@ -92,7 +84,13 @@ export default async function IonChannelModelAnalysis({
       ]
     : [];
 
-  if (orderedGroups.length === 0) return null;
+  if (orderedGroups.length === 0) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        No analysis available for this ion channel model.
+      </div>
+    );
+  }
 
   const columnHeaderClass = cn('text-center text-sm', detailViewLabelClass(variant));
   const rowLabelClass = cn('font-bold uppercase', detailViewValueClass(variant));
@@ -101,7 +99,7 @@ export default async function IonChannelModelAnalysis({
     <>
       {orderedGroups.map(([groupName, entries]) => (
         <div key={groupName}>
-          <div className={sectionHeadingClass(variant)}>Model {groupName}</div>
+          <div className={detailViewSectionHeadingClass(variant)}>Model {groupName}</div>
 
           {groupName === 'traces' && (
             <div className="flex flex-col">

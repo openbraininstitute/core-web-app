@@ -5,8 +5,8 @@ import { type TViewVariant, ViewVariant, WorkspaceScope } from '@/constants';
 import SimulationResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import Tabs, { Tab } from '@/ui/molecules/tabbed-page';
+import { useListingAreaClass } from '@/ui/segments/detail-view/related-artifacts/use-listing-area-class';
 import { detailViewGridContainerClass } from '@/ui/segments/detail-view/variant-styles';
-import { useMiniDetailView } from '@/ui/segments/mini-detail-view/event';
 import { cn } from '@/utils/css-class';
 
 import type { ISingleNeuronSynaptome } from '@/api/entitycore/types/entities/single-neuron-synaptome';
@@ -17,14 +17,6 @@ type Props = {
   context: WorkspaceContext;
   variant?: TViewVariant;
 };
-
-function useListingAreaClass() {
-  const { mdv } = useMiniDetailView();
-  return cn('grid h-[calc(100vh-18rem)] min-h-96 gap-2 overflow-hidden', {
-    "grid-cols-[minmax(0,1fr)_minmax(30rem,44rem)] [grid-template-areas:'body_mini-view']": mdv,
-    "grid-cols-1 [grid-template-areas:'body']": !mdv,
-  });
-}
 
 export function RelatedEntities({ synaptome, context, variant = ViewVariant.Light }: Props) {
   const listingAreaClass = useListingAreaClass();
