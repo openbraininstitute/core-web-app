@@ -260,7 +260,7 @@ export default async function Configuration({
 
     return (
       <div className="flex h-full w-full items-center justify-center">
-        No configuration found for this e-model.
+        No configuration found for this ME-model.
       </div>
     );
   }
