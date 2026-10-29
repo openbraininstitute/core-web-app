@@ -378,6 +378,17 @@ export default async function Configuration({
     const scanConfig = findScanConfigRegistryByTargetType(
       ExtendedEntitiesTypeDict.MEModelBuildCampaign
     );
+    const { data: generations } =
+      build && scanConfig
+        ? await getTaskActivities({
+            context,
+            filters: {
+              used__id: build.campaign.id,
+              task_activity_type: TaskActivityType.MEModelBuildConfigGeneration,
+              page_size: 1,
+            },
+          })
+        : { data: [] };
 
     const workflow =
       build && scanConfig ? (
@@ -389,6 +400,7 @@ export default async function Configuration({
           origin={build.campaign.id}
           initialConfig={build.config?.form}
           readOnly
+          hideTabs={generations.length === 0}
           defaultTab={{
             __activity: ScanConfigActivity.Build,
             id: BuildScanConfigTabs.configuration,
