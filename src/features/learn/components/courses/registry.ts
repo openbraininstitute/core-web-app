@@ -10,6 +10,7 @@ import { PHYSICS_STEPS } from './physics/Figure';
 import { PHYSICS2_STEPS } from './physics2/Figure';
 import { PLATFORM_STEPS } from './platform/Figure';
 import { PYTHON_STEPS } from './python/Figure';
+import { RETICULAR_STEPS } from './reticular/Figure';
 import { SDK_STEPS } from './sdk/Figure';
 import { TRANSMITTER_STEPS } from './transmitters/Figure';
 import { VALIDATION_STEPS } from './validation/Figure';
@@ -24,6 +25,7 @@ const COURSE_STEPS = {
   elec: ELEC_STEPS,
   transmitters: TRANSMITTER_STEPS,
   validation: VALIDATION_STEPS,
+  reticular: RETICULAR_STEPS,
 } as const;
 
 type CourseId = keyof typeof COURSE_STEPS;
