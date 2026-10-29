@@ -788,13 +788,13 @@ export default async function Overview({
   return (
     <>
       {metadataGrid}
+      {subjectSection}
+      {emCellMeshSection}
       {circuitViewerSection}
       {visualizations}
       {electrodeArraySection}
-      {subjectSection}
       {meModelSection}
       {synaptomeSection}
-      {emCellMeshSection}
       {morphometricsSection}
       {emodelFilePreviewSection}
       {efeaturePreviewSection}
