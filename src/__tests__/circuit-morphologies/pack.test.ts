@@ -128,7 +128,7 @@ describe('a level read box by box', () => {
     expectSomas(data, want.somasOf, 1);
   });
 
-  it('reads what the endpoint sends for a circuit', async () => {
+  it('reads the pack of a circuit of real cells', async () => {
     const want = expected('two-cells');
     const data = await readPack(pack('two-cells'));
     const count = want.level.segments;

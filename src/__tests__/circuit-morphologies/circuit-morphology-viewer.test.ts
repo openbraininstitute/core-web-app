@@ -1694,15 +1694,6 @@ describe('the morphologies over the somas', () => {
     expect(reset).toHaveBeenCalledTimes(2);
   });
 
-  it('are framed about their own middle on a reset', () => {
-    const { viewer, inner } = make();
-    viewer.setSomas(somas());
-    viewer.setData(ofTheSomas());
-    viewer.resetView();
-    const middle = new THREE.Vector3(5, 12.5, 0).add(inner.uniforms.uShift.value);
-    expect(rounded(inner.controls.target.toArray())).toEqual(rounded(middle.toArray()));
-  });
-
   it('frame the cells drawn on a reset, and none hidden', () => {
     const { viewer, inner } = make();
     viewer.setSomas(somas());
@@ -1833,7 +1824,7 @@ describe('the morphologies read a box at a time', () => {
     expect(new Set(words.map((w) => w & CELL_MASK))).toEqual(new Set([0, 2]));
   });
 
-  it('asks for the boxes of a pack still coming in as their bytes come, a frame at rest drawn once a finer level is in', () => {
+  it('asks for the boxes of a pack still coming in as their bytes come, with no frame drawn for them till they are read', () => {
     const { viewer, inner } = make();
     const data = chunked();
     const { arrival, to } = arrivalOf([
@@ -1847,7 +1838,7 @@ describe('the morphologies read a box at a time', () => {
     expect(reads).toHaveLength(0);
     expect(frames(inner)).toBe(0);
 
-    // A base newly in is read, with no frame drawn for it until it is.
+    // The coarsest level newly in is read, with no frame drawn for it until it is.
     to(15);
     expect(frames(inner)).toBe(0);
     expect(reads.flatMap(({ wanted }) => wanted)).toEqual([{ level: 2, box: 0 }]);

@@ -7,7 +7,7 @@
  *   outside the others' box, and cell 3 has no position.
  * - `wide`: the first and the last of 70,000 cells, with segments long enough for streams three and four bytes wide.
  * - `somas-only`: three cells with no morphology, one of them with no position.
- * - `two-cells`: what the endpoint sends for a circuit of two real cells. Every 61st segment is in the JSON.
+ * - `two-cells`: the pack of a circuit of two real cells. Every 61st segment is in the JSON.
  */
 import { readFileSync } from 'node:fs';
 import { deflateSync, inflateSync } from 'node:zlib';

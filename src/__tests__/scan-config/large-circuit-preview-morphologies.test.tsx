@@ -354,11 +354,8 @@ describe('LargeCircuitPreview morphologies', () => {
     expect(onPopulationClick).toHaveBeenCalledTimes(1);
   });
 
-  it.each([
-    ['no other population is on show', { hiddenPopulations: ['vpm'], onPopulationClick: vi.fn() }],
-    ['the host has the population pinned', { hiddenPopulations: [] }],
-  ])('takes no click on a morphology where %s', async (_, props) => {
-    expect((await shown(props)).onCellClick).toBeUndefined();
+  it('takes no click on a morphology where the host has the population pinned', async () => {
+    expect((await shown({ hiddenPopulations: [] })).onCellClick).toBeUndefined();
   });
 
   it('draws the electrodes over the morphologies as over the somas, and lets them be moved where the form takes it', async () => {

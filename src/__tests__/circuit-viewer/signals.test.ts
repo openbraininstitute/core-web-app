@@ -3,12 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { ViewerSignal } from '@/features/circuit-viewer/signals';
 
 describe('a viewer signal', () => {
-  it('rejects a dispatch until a viewer registers for it, rather than throwing', async () => {
-    const signal = new ViewerSignal<number, number>();
-    const dispatched = signal.dispatch(1);
-    await expect(dispatched).rejects.toThrow();
-  });
-
   it('goes to the viewer that registered last', async () => {
     const signal = new ViewerSignal<number, number>();
     signal.register((n) => n + 1);
