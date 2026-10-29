@@ -27,6 +27,7 @@ import {
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { cn } from '@/utils/css-class';
 
 import {
@@ -104,7 +105,9 @@ function FieldRow({
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-baseline justify-between gap-2">
           <span className="flex items-center gap-1.5">
-            <span className="text-xs tracking-wide text-gray-500 uppercase">{label}</span>
+            <span className="text-xs tracking-wide text-gray-500 uppercase">
+              {renderMathInText(label)}
+            </span>
             {description && (
               <Tooltip title={description}>
                 <InfoCircleOutlined className="text-xs text-gray-400" />
