@@ -1,172 +1,300 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import PlatformTour from './platform-tour';
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
+  vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {});
 });
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
-
+function chapter(name: string) {
+  return within(
+    screen.getByRole('group', { name: 'Choose a research or teaching chapter' })
+  ).getByRole('button', { name });
+}
+function example(name: string) {
+  return within(screen.getByRole('group', { name: 'Examples in the selected chapter' })).getByRole(
+    'button',
+    { name }
+  );
+}
 function expectSlide(title: string) {
-  expect(screen.queryByRole('link', { name: 'Try it out' })).not.toBeInTheDocument();
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
 }
-
-function next(times = 1) {
-  for (let count = 0; count < times; count += 1) {
-    fireEvent.click(screen.getByRole('button', { name: 'Next detail' }));
-  }
+function advance(duration = 12000) {
+  act(() => vi.advanceTimersByTime(duration));
+}
+function finishVideo() {
+  const video = document.querySelector('video');
+  expect(video).not.toBeNull();
+  expect(video).not.toHaveAttribute('loop');
+  if (video) fireEvent.ended(video);
+}
+function pointer(type: string, x = 0, y = 0) {
+  return Object.assign(new Event(type, { bubbles: true }), {
+    clientX: x,
+    clientY: y,
+    pointerType: 'mouse',
+  });
 }
 
-describe('platform tour', () => {
-  it('rotates through slides and restarts the timer after manual navigation', () => {
+describe('guided platform tour', () => {
+  it('puts the requested text below chapter selectors and restores the original hero captions', () => {
     render(<PlatformTour />);
-    expectSlide('Explore brain data. Build models. Run simulations.');
+    const description = screen.getByTestId('chapter-description');
+    const exploreCopy =
+      'Explore morphologies, electrophysiology, ion channels, circuits, and models across different species.';
+    expect(description).toHaveTextContent(exploreCopy);
+    expect(description.parentElement?.previousElementSibling).toHaveAttribute(
+      'aria-label',
+      'Choose a research or teaching chapter'
+    );
     expect(
-      screen.queryByRole('group', { name: 'Choose a platform detail' })
+      within(screen.getByRole('heading').parentElement!).queryByText(exploreCopy)
     ).not.toBeInTheDocument();
-    for (const [duration, title] of [
-      [14500, 'Follow the electrical response.'],
-      [8000, 'Discover patterns in firing.'],
-      [8000, 'See extracellular fields evolve.'],
-      [12000, 'Skeletonize electron microscopy data.'],
-      [16000, 'Explore a Drosophila brain in 3D.'],
-      [4000, 'Bring a microcircuit to life.'],
-      [8500, 'Compare activity across cell types.'],
-      [8000, 'Learn neuroscience by doing.'],
-      [10000, 'Use the platform through chat.'],
-      [8000, 'Explore brain data. Build models. Run simulations.'],
+    fireEvent.click(chapter('Skeletonize'));
+    expect(description).toHaveTextContent('Skeletonize electron microscopy meshes.');
+    expect(
+      within(screen.getByRole('heading').parentElement!).getByText(
+        'Inspect detailed cell meshes and discover skeletonization tools.'
+      )
+    ).toBeInTheDocument();
+    fireEvent.click(chapter('Ask AI'));
+    expect(description).toHaveTextContent(
+      'Connect the OBI Plugin to your Chat Agent and start prompting.'
+    );
+    expect(
+      within(screen.getByRole('heading').parentElement!).getByText(
+        'Explore data and workflows with a compatible AI assistant.'
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('completes each video and cycles through six chapters while pointer and focus stay in the hero', () => {
+    render(<PlatformTour />);
+    const root = screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' });
+    fireEvent(root, pointer('pointerover'));
+    fireEvent.focus(chapter('Explore'));
+    expect(chapter('Explore')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByRole('button', { name: 'Models overview' })).not.toBeInTheDocument();
+    advance(60000);
+    expectSlide('Explore data. Build models. Run simulations.');
+    finishVideo();
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    advance(16000);
+    expectSlide('Bring your models into Virtual Labs.');
+    advance(60000);
+    expectSlide('Bring your models into Virtual Labs.');
+    finishVideo();
+    expectSlide('Discover patterns in firing.');
+    advance();
+    expectSlide('Work through conversation.');
+    advance();
+    expectSlide('Teach neuroscience by doing.');
+    finishVideo();
+    expectSlide('Explore data. Build models. Run simulations.');
+    expect(chapter('Explore')).toHaveAttribute('aria-pressed', 'true');
+    finishVideo();
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+  });
+
+  it('plays a clicked chapter or example once and automatically continues to the next chapter', () => {
+    render(<PlatformTour />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause tour' }));
+    fireEvent.click(chapter('Build & simulate'));
+    const video = screen.getByLabelText(/Animated 3D FlyWire Drosophila model/);
+    expect(video).toHaveAttribute('autoplay');
+    expect(vi.mocked(HTMLMediaElement.prototype.play).mock.contexts).toContain(video);
+    finishVideo();
+    expectSlide('Discover patterns in firing.');
+
+    fireEvent.click(chapter('Build & simulate'));
+    fireEvent.click(example('Microcircuits'));
+    expectSlide('Build a circuit. Run an experiment.');
+    finishVideo();
+    expectSlide('Discover patterns in firing.');
+    fireEvent.click(chapter('Build & simulate'));
+    fireEvent.click(example('Extracellular fields'));
+    advance();
+    expectSlide('Discover patterns in firing.');
+
+    fireEvent.click(chapter('Skeletonize'));
+    advance(15999);
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    advance(1);
+    expectSlide('Bring your models into Virtual Labs.');
+    fireEvent.click(chapter('Teach'));
+    finishVideo();
+    expectSlide('Explore data. Build models. Run simulations.');
+    fireEvent.click(chapter('Explore'));
+    finishVideo();
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+  });
+
+  it('keeps all eleven examples reachable under the six chapters', () => {
+    render(<PlatformTour />);
+    expect(
+      screen.queryByRole('group', { name: 'Examples in the selected chapter' })
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Animated overview of brain models/)).toHaveAttribute(
+      'src',
+      '/images/homepage/models-overview.mp4'
+    );
+    for (const [name, items] of [
+      [
+        'Build & simulate',
+        [
+          ['Import models', 'Bring your models into Virtual Labs.'],
+          ['Microcircuits', 'Build a circuit. Run an experiment.'],
+          ['Extracellular fields', 'See extracellular fields evolve.'],
+        ],
+      ],
+      [
+        'Analyze',
+        [
+          ['Voltage traces', 'Follow the electrical response.'],
+          ['Spike activity', 'Discover patterns in firing.'],
+          ['Activity analysis', 'Compare activity across cell types.'],
+          ['Notebooks', 'Run your own analyses.'],
+        ],
+      ],
     ] as const) {
-      act(() => vi.advanceTimersByTime(duration));
-      expectSlide(title);
-      if (title === 'Explore a Drosophila brain in 3D.') {
-        expect(screen.getByLabelText(/Animated 3D FlyWire Drosophila model/)).toHaveAttribute(
-          'src',
-          '/images/homepage/flywire-platform.mp4'
-        );
-      }
-      if (title === 'Bring a microcircuit to life.' || title === 'Learn neuroscience by doing.') {
-        const label =
-          title === 'Bring a microcircuit to life.'
-            ? /Small microcircuit simulation/
-            : /Students exploring neuroscience/;
-        const video = screen.getByLabelText(label);
-        expect(video.tagName).toBe('VIDEO');
-        expect(video).toHaveAttribute('autoplay');
-        expect(video).toHaveAttribute('playsinline');
-        expect(video).not.toHaveAttribute('controls');
-      }
-      if (title === 'Use the platform through chat.') {
-        expect(
-          screen.getByRole('heading', { name: 'Use the platform through chat.' })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('img', { name: /AI assistant chat connected to the OBI platform/ })
-        ).toHaveAttribute('src', expect.stringContaining('ai-chat-platform.png'));
-        expect(
-          screen.getByRole('link', { name: 'View AI chat example at full size' })
-        ).toHaveAttribute('href', '/images/homepage/ai-chat-platform.png');
+      fireEvent.click(chapter(name));
+      expect(
+        within(screen.getByRole('group', { name: 'Examples in the selected chapter' })).getByText(
+          'Examples',
+          { exact: true }
+        )
+      ).toBeInTheDocument();
+      for (const [label, title] of items) {
+        fireEvent.click(example(label));
+        expectSlide(title);
+        expect(example(label)).toHaveAttribute('aria-pressed', 'true');
       }
     }
-    next(2);
-    act(() => vi.advanceTimersByTime(7999));
-    expectSlide('Discover patterns in firing.');
-    act(() => vi.advanceTimersByTime(1));
+    fireEvent.click(chapter('Skeletonize'));
     expect(
-      screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
-    ).toHaveAttribute('src', '/images/homepage/lfp-light-traces.gif');
-    expectSlide('See extracellular fields evolve.');
+      screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
+    ).toHaveAttribute('src', '/images/homepage/em-cell-mesh.webp');
+    fireEvent.click(chapter('Ask AI'));
+    expect(screen.getByRole('link', { name: 'View AI chat example at full size' })).toHaveAttribute(
+      'href',
+      '/images/homepage/ai-chat-platform.png'
+    );
+    fireEvent.click(chapter('Teach'));
+    expect(screen.getByLabelText(/Students exploring neuroscience/)).toHaveAttribute(
+      'src',
+      '/images/homepage/education.mp4'
+    );
   });
 
-  it('supports arrow keys and wraps through every detail', () => {
+  it('continues using a timed fallback if any video fails to load', () => {
     render(<PlatformTour />);
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Previous detail' }), {
-      key: 'ArrowLeft',
-    });
-    expectSlide('Use the platform through chat.');
-    fireEvent.keyDown(screen.getByRole('button', { name: 'Next detail' }), { key: 'ArrowRight' });
-    expectSlide('Explore brain data. Build models. Run simulations.');
+    fireEvent.error(screen.getByLabelText(/Animated overview of brain models/));
+    advance(14500);
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    fireEvent.click(chapter('Build & simulate'));
+    fireEvent.error(screen.getByLabelText(/Animated 3D FlyWire Drosophila model/));
+    advance(4000);
+    expectSlide('Discover patterns in firing.');
   });
 
-  it('swipes between details without turning vertical scrolling into navigation', () => {
+  it('supports keyboard chapter selection and swipes without hijacking vertical scrolling', () => {
     render(<PlatformTour />);
+    fireEvent.keyDown(chapter('Explore'), { key: 'ArrowLeft' });
+    expect(chapter('Teach')).toHaveFocus();
+    expectSlide('Teach neuroscience by doing.');
+    fireEvent.keyDown(chapter('Teach'), { key: 'Home' });
+    expect(chapter('Explore')).toHaveFocus();
     const viewport = screen.getByTestId('tour-viewport');
-    const pointer = (type: string, x: number, y: number) =>
-      Object.assign(new Event(type, { bubbles: true }), {
-        clientX: x,
-        clientY: y,
-        pointerType: 'touch',
-      });
-    fireEvent(viewport, pointer('pointerdown', 250, 100));
-    fireEvent(viewport, pointer('pointerup', 150, 105));
-    expectSlide('Follow the electrical response.');
-    fireEvent(viewport, pointer('pointerdown', 250, 100));
-    fireEvent(viewport, pointer('pointerup', 240, 220));
-    expectSlide('Follow the electrical response.');
+    const touch = (type: string, x: number, y: number) =>
+      Object.assign(pointer(type, x, y), { pointerType: 'touch' });
+    fireEvent(viewport, touch('pointerdown', 250, 100));
+    fireEvent(viewport, touch('pointerup', 150, 105));
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    fireEvent(viewport, touch('pointerdown', 250, 100));
+    fireEvent(viewport, touch('pointerup', 240, 220));
+    expectSlide('Turn EM meshes into neuronal skeletons.');
   });
 
-  it('does not start an automatic tour when reduced motion is requested', () => {
+  it('pauses both playback and automatic advancement and resumes using Play', () => {
+    render(<PlatformTour />);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause tour' }));
+    expect(HTMLMediaElement.prototype.pause).toHaveBeenCalled();
+    advance(60000);
+    expectSlide('Explore data. Build models. Run simulations.');
+    fireEvent.click(screen.getByRole('button', { name: 'Play tour' }));
+    finishVideo();
+    advance(5000);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause tour' }));
+    advance(24000);
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    expect(
+      screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
+    ).toHaveAttribute('src', '/images/homepage/em-cell-mesh-poster.png');
+    fireEvent.click(screen.getByRole('button', { name: 'Play tour' }));
+    advance(16000);
+    expectSlide('Bring your models into Virtual Labs.');
+    finishVideo();
+    expectSlide('Discover patterns in firing.');
+  });
+
+  it('suspends advancement when the browser tab is hidden or the hero is offscreen', () => {
+    let notify: IntersectionObserverCallback | undefined;
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(callback: IntersectionObserverCallback) {
+          notify = callback;
+        }
+        observe() {}
+        disconnect() {}
+      }
+    );
+    render(<PlatformTour />);
+    finishVideo();
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    fireEvent(document, new Event('visibilitychange'));
+    advance(24000);
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    visibility.mockReturnValue('visible');
+    fireEvent(document, new Event('visibilitychange'));
+    act(() =>
+      notify?.([{ isIntersecting: false } as IntersectionObserverEntry], {} as IntersectionObserver)
+    );
+    advance(24000);
+    expectSlide('Turn EM meshes into neuronal skeletons.');
+    act(() =>
+      notify?.([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver)
+    );
+    advance(16000);
+    expectSlide('Bring your models into Virtual Labs.');
+  });
+
+  it('uses still posters and manual navigation when reduced motion is requested', () => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     vi.spyOn(window, 'matchMedia').mockReturnValue({ ...media, matches: true });
     render(<PlatformTour />);
-    act(() => vi.advanceTimersByTime(24000));
-    expectSlide('Explore brain data. Build models. Run simulations.');
+    advance(60000);
     expect(screen.getByRole('img', { name: /Animated overview of brain models/ })).toHaveAttribute(
       'src',
       '/images/homepage/models-overview-poster.jpg'
     );
-    expect(document.querySelector('video')).not.toBeInTheDocument();
-    next(4);
+    fireEvent.click(chapter('Skeletonize'));
     expect(
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
     ).toHaveAttribute('src', '/images/homepage/em-cell-mesh-poster.png');
-    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
+    fireEvent.click(chapter('Build & simulate'));
+    fireEvent.click(example('Extracellular fields'));
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces-poster.png');
-    next(2);
-    expect(
-      screen.getByRole('img', { name: /Animated 3D FlyWire Drosophila model/ })
-    ).toHaveAttribute('src', '/images/homepage/flywire-platform-poster.jpg');
-    expectSlide('Explore a Drosophila brain in 3D.');
-    next();
-    expect(screen.getByRole('img', { name: /Small microcircuit simulation/ })).toHaveAttribute(
-      'src',
-      '/images/homepage/small-microcircuit-poster.jpg'
-    );
-    next(2);
-    expect(screen.getByRole('img', { name: /Students exploring neuroscience/ })).toHaveAttribute(
-      'src',
-      '/images/homepage/education-poster.jpg'
-    );
     expect(document.querySelector('video')).not.toBeInTheDocument();
-  });
-
-  it('keeps rotating after pointer interaction and wraps from the last slide to the first', () => {
-    render(<PlatformTour />);
-    fireEvent.mouseEnter(
-      screen.getByRole('region', { name: 'Inside Virtual Labs: platform tour' })
-    );
-    fireEvent.focus(screen.getByRole('button', { name: 'Previous detail' }));
-    act(() => vi.advanceTimersByTime(14500));
-    expectSlide('Follow the electrical response.');
-    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Previous detail' }));
-    expectSlide('Use the platform through chat.');
-    act(() => vi.advanceTimersByTime(8000));
-    expectSlide('Explore brain data. Build models. Run simulations.');
-  });
-
-  it('suspends automatic movement when the browser tab is hidden', () => {
-    render(<PlatformTour />);
-    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
-    fireEvent(document, new Event('visibilitychange'));
-    act(() => vi.advanceTimersByTime(24000));
-    expectSlide('Explore brain data. Build models. Run simulations.');
   });
 });

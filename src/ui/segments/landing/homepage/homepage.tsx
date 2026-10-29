@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import PlatformTour, { SLIDES } from './platform-tour';
+import PlatformTour from './platform-tour';
 
 import type { KeyboardEvent } from 'react';
 
@@ -19,11 +19,9 @@ export default function Homepage({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [headerDocked, setHeaderDocked] = useState(false);
-  const [tourIndex, setTourIndex] = useState(0);
-  const tourSlide = SLIDES[tourIndex];
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
-  const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Try it out';
+  const researchAction = isAuthenticated ? 'Open Virtual Labs' : 'Try it now';
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -102,50 +100,58 @@ export default function Homepage({
 
       <main id="main">
         <div className={styles['blue-world']} ref={heroRef}>
-          <PlatformTour activeIndex={tourIndex} onIndexChange={setTourIndex} showCaption={false} />
-
-          <section className={styles.hero} aria-labelledby="hero-title">
-            <div className={styles['hero-copy']}>
-              <div className={styles['hero-heading']}>
-                <p className={styles['hero-label']}>Neuroscience at the speed of thought</p>
-                <h1
-                  id="hero-title"
-                  data-testid="home-hero-heading"
-                  aria-label={tourSlide.title}
-                  key={tourSlide.id}
-                  className={tourIndex === 0 ? undefined : styles['slide-heading']}
-                >
-                  {tourSlide.titleLines
-                    ? tourSlide.titleLines.map((line) => (
-                        <span className={styles['title-line']} key={line}>
-                          {line === 'Run simulations.' ? <em>{line}</em> : line}
-                        </span>
-                      ))
-                    : tourSlide.title}
-                </h1>
-              </div>
-              <div className={styles['hero-intro']}>
-                <div id="tour-caption" className={styles['tour-caption']}>
-                  <p className={styles['hero-description']}>{tourSlide.description}</p>
+          <PlatformTour>
+            {({ slide: tourSlide, playing, controls }) => (
+              <section className={styles.hero} aria-labelledby="hero-title">
+                <div className={styles['hero-copy']}>
+                  <div className={styles['hero-heading']}>
+                    <p className={styles['hero-label']}>Neuroscience at the speed of thought</p>
+                    <h1
+                      id="hero-title"
+                      data-testid="home-hero-heading"
+                      aria-label={tourSlide.title}
+                      key={tourSlide.id}
+                      className={tourSlide.id === 'models' ? undefined : styles['slide-heading']}
+                    >
+                      {tourSlide.titleLines
+                        ? tourSlide.titleLines.map((line) => (
+                            <span className={styles['title-line']} key={line}>
+                              {line === 'Run simulations.' ? <em>{line}</em> : line}{' '}
+                            </span>
+                          ))
+                        : tourSlide.title}
+                    </h1>
+                  </div>
+                  <div className={styles['hero-intro']}>
+                    <div
+                      id="tour-caption"
+                      className={styles['tour-caption']}
+                      aria-live={playing ? 'off' : 'polite'}
+                      aria-atomic="true"
+                    >
+                      <p className={styles['hero-description']}>{tourSlide.description}</p>
+                    </div>
+                    <div className={styles['hero-actions']}>
+                      <Link
+                        className={`${styles.button} ${styles.blue}`}
+                        href="/app/virtual-lab/sync"
+                        prefetch={false}
+                        data-testid="virtual-labs-link"
+                      >
+                        {researchAction}
+                      </Link>
+                    </div>
+                    <p className={styles.reassurance}>
+                      {isAuthenticated
+                        ? 'Welcome back. Continue your research.'
+                        : 'Free account · 100 initial credits included'}
+                    </p>
+                  </div>
                 </div>
-                <div className={styles['hero-actions']}>
-                  <Link
-                    className={`${styles.button} ${styles.blue}`}
-                    href="/app/virtual-lab/sync"
-                    prefetch={false}
-                    data-testid="virtual-labs-link"
-                  >
-                    {researchAction}
-                  </Link>
-                </div>
-                <p className={styles.reassurance}>
-                  {isAuthenticated
-                    ? 'Welcome back. Continue your research.'
-                    : '100 initial credits included'}
-                </p>
-              </div>
-            </div>
-          </section>
+                {controls}
+              </section>
+            )}
+          </PlatformTour>
         </div>
         <section
           className={`${styles['early-adopters']} ${styles.wrap}`}

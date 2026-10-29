@@ -3,13 +3,11 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
-import { useArrowContrast } from './use-arrow-contrast';
-
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from 'react';
 
 import styles from './platform-tour.module.css';
 
-const INTERVAL = 8000;
+const INTERVAL = 12000;
 const VIDEOS = {
   models: {
     src: '/images/homepage/models-overview.mp4',
@@ -77,12 +75,14 @@ const SOURCES = {
 
 type Slide = {
   id: string;
+  label: string;
   title: string;
   titleLines?: readonly string[];
   description: string;
   alt: string;
 } & (
   | { kind: 'video'; source: keyof typeof VIDEOS }
+  | { kind: 'placeholder'; poster: string }
   | { kind: 'animation'; source: keyof typeof ANIMATIONS }
   | { kind: 'screenshot'; source: keyof typeof SOURCES }
   | { kind: 'image'; source: keyof typeof SOURCES; crop: { x: number; y: number; width: number } }
@@ -93,16 +93,19 @@ export const SLIDES: readonly Slide[] = [
     id: 'models',
     kind: 'video',
     source: 'models',
-    title: 'Explore brain data. Build models. Run simulations.',
-    titleLines: ['Explore brain data.', 'Build models.', 'Run simulations.'],
-    description: 'Explore the data, models, and tools available in Virtual Labs.',
+    label: 'Models overview',
+    title: 'Explore data. Build models. Run simulations.',
+    titleLines: ['Explore data.', 'Build models.', 'Run simulations.'],
+    description: '',
     alt: 'Animated overview of brain models expanding into a montage of neuroscience models.',
   },
   {
     id: 'voltages',
     kind: 'image',
+    label: 'Voltage traces',
     title: 'Follow the electrical response.',
-    description: 'Compare membrane voltage traces across recorded neurons.',
+    titleLines: ['Follow the electrical', 'response.'],
+    description: 'Compare responses across recorded neurons.',
     alt: 'Close-up of membrane voltage traces and their time axis in the simulation results.',
     source: 'voltage',
     crop: { x: 15, y: 170, width: 1190 },
@@ -110,33 +113,40 @@ export const SLIDES: readonly Slide[] = [
   {
     id: 'spikes',
     kind: 'image',
+    label: 'Spike activity',
     title: 'Discover patterns in firing.',
-    description: 'Inspect when individual neurons spike over the course of a simulation.',
+    titleLines: ['Discover patterns', 'in firing.'],
+    description: 'Inspect when neurons fire during a simulation.',
     alt: 'Close-up of the spike raster, showing neuronal firing times and stimulus markers.',
     source: 'spikes',
     crop: { x: 10, y: 170, width: 1190 },
   },
   {
     id: 'lfp',
+    label: 'Extracellular fields',
     title: 'See extracellular fields evolve.',
-    description:
-      'Watch extracellular field changes alongside the neurons’ synchronized voltage traces.',
+    titleLines: ['See extracellular', 'fields evolve.'],
+    description: 'Connect neuronal geometry with electrical activity.',
     alt: 'Animated layer 4 extracellular field above synchronized neuronal voltage traces and a time axis.',
     kind: 'animation',
     source: 'lfp',
   },
   {
     id: 'em',
-    title: 'Skeletonize electron microscopy data.',
-    description: 'Turn detailed cell meshes into neuronal skeletons for analysis and modeling.',
+    label: 'Skeletonize EM meshes',
+    title: 'Turn EM meshes into neuronal skeletons.',
+    titleLines: ['Turn EM meshes', 'into neuronal skeletons.'],
+    description: 'Inspect detailed cell meshes and discover skeletonization tools.',
     alt: 'Animated electron microscopy cell mesh showing the neuron’s surface and branching structure.',
     kind: 'animation',
     source: 'em',
   },
   {
     id: 'flywire',
-    title: 'Explore a Drosophila brain in 3D.',
-    description: 'Explore the FlyWire Drosophila model in the platform’s 3D viewer.',
+    label: 'Import models',
+    title: 'Bring your models into Virtual Labs.',
+    titleLines: ['Bring your models', 'into Virtual Labs.'],
+    description: 'Bring published or your own models into the platform.',
     alt: 'Animated 3D FlyWire Drosophila model in the platform.',
     kind: 'video',
     source: 'flywire',
@@ -145,69 +155,137 @@ export const SLIDES: readonly Slide[] = [
     id: 'microcircuit',
     kind: 'video',
     source: 'microcircuit',
-    title: 'Bring a microcircuit to life.',
-    description: 'Run a digital brain circuit and explore its activity in 3D.',
+    label: 'Microcircuits',
+    title: 'Build a circuit. Run an experiment.',
+    titleLines: ['Build a circuit.', 'Run an experiment.'],
+    description: 'Investigate how a digital circuit responds to stimulation.',
     alt: 'Small microcircuit simulation showing neurons in 3D alongside their spike activity.',
   },
   {
     id: 'analysis',
     kind: 'image',
+    label: 'Activity analysis',
     title: 'Compare activity across cell types.',
-    description: 'Explore distributions of mean membrane voltage for different neuron groups.',
+    titleLines: ['Compare activity', 'across cell types.'],
+    description: 'Explore distributions of mean membrane voltage.',
     alt: 'Close-up of colored mean membrane voltage distributions grouped by neuron type.',
     source: 'voltage',
     crop: { x: 1248, y: 750, width: 1210 },
   },
   {
+    id: 'notebooks',
+    kind: 'placeholder',
+    poster: VIDEOS.models.poster,
+    label: 'Notebooks',
+    title: 'Run your own analyses.',
+    titleLines: ['Run your own', 'analyses.'],
+    description: 'Use interactive notebooks to analyze data and models.',
+    alt: '',
+  },
+  {
     id: 'education',
     kind: 'video',
     source: 'education',
-    title: 'Learn neuroscience by doing.',
-    description: 'Explore brain models and simulations through hands-on learning.',
+    label: 'Teaching',
+    title: 'Teach neuroscience by doing.',
+    titleLines: ['Teach neuroscience', 'by doing.'],
+    description: 'Connect courses to Moodle and discover OBI Summer Camps.',
     alt: 'Students exploring neuroscience models and simulations during a classroom workshop.',
   },
   {
     id: 'ai-chat',
     kind: 'screenshot',
-    title: 'Use the platform through chat.',
-    description:
-      'Connect a compatible AI assistant to explore data, run simulations, and analyze results through conversation.',
+    label: 'AI chat',
+    title: 'Work through conversation.',
+    titleLines: ['Work through', 'conversation.'],
+    description: 'Explore data and workflows with a compatible AI assistant.',
     alt: 'AI assistant chat connected to the OBI platform alongside generated ion-channel comparison plots.',
     source: 'chat',
   },
 ];
 
+type Chapter = {
+  id: string;
+  label: string;
+  examples: readonly string[];
+  featured: string;
+  description?: string;
+};
+
+export const CHAPTERS: readonly Chapter[] = [
+  {
+    id: 'explore',
+    label: 'Explore',
+    examples: ['models'],
+    featured: 'models',
+    description:
+      'Explore morphologies, electrophysiology, ion channels, circuits, and models across different species.',
+  },
+  {
+    id: 'skeletonize',
+    label: 'Skeletonize',
+    examples: ['em'],
+    featured: 'em',
+    description: 'Skeletonize electron microscopy meshes.',
+  },
+  {
+    id: 'build',
+    label: 'Build & simulate',
+    examples: ['flywire', 'microcircuit', 'lfp'],
+    featured: 'flywire',
+  },
+  {
+    id: 'analyze',
+    label: 'Analyze',
+    examples: ['voltages', 'spikes', 'analysis', 'notebooks'],
+    featured: 'spikes',
+  },
+  {
+    id: 'ai',
+    label: 'Ask AI',
+    examples: ['ai-chat'],
+    featured: 'ai-chat',
+    description: 'Connect the OBI Plugin to your Chat Agent and start prompting.',
+  },
+  { id: 'teaching', label: 'Teach', examples: ['education'], featured: 'education' },
+];
+
+type TourContent = { slide: Slide; playing: boolean; controls: ReactNode };
+
 export default function PlatformTour({
-  activeIndex,
-  onIndexChange,
-  showCaption = true,
+  children,
 }: {
-  activeIndex?: number;
-  onIndexChange?: (index: number) => void;
-  showCaption?: boolean;
+  children?: (tour: TourContent) => ReactNode;
 } = {}) {
-  const [internalIndex, setInternalIndex] = useState(0);
-  const index = activeIndex ?? internalIndex;
-  const setIndex = onIndexChange ?? setInternalIndex;
+  const [index, setIndex] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [failedVideos, setFailedVideos] = useState<string[]>([]);
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [cycle, setCycle] = useState(0);
   const rootRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const chapterRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const pointerStart = useRef<{ x: number; y: number } | null>(null);
+  const clock = useRef({ index: 0, cycle: 0, remaining: VIDEOS.models.duration });
   const slide = SLIDES[index];
-  const animation = slide.kind === 'animation' ? ANIMATIONS[slide.source] : null;
-  const video = slide.kind === 'video' ? VIDEOS[slide.source] : null;
+  const chapterIndex = CHAPTERS.findIndex((item) => item.examples.includes(slide.id));
+  const chapter = CHAPTERS[chapterIndex];
+  const nextSlideId = CHAPTERS[(chapterIndex + 1) % CHAPTERS.length].featured;
+  const activeVideo = slide.kind === 'video' ? VIDEOS[slide.source] : null;
+  const delay =
+    activeVideo?.duration ??
+    (slide.kind === 'animation' ? ANIMATIONS[slide.source].duration : INTERVAL);
+  const waitingForVideo = !!activeVideo && !reducedMotion && !failedVideos.includes(slide.id);
   const suspended = !inView || !pageVisible;
-  const playing = !reducedMotion;
-  const animate = playing && !suspended;
-  const delay = video?.duration ?? animation?.duration ?? INTERVAL;
-
-  useArrowContrast(rootRef, index, suspended);
+  const animate = playing && !reducedMotion && !suspended;
 
   useEffect(() => {
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
     const respectMotion = () => {
       setReducedMotion(media.matches);
+      if (media.matches) setPlaying(false);
     };
     respectMotion();
     media.addEventListener('change', respectMotion);
@@ -233,23 +311,47 @@ export default function PlatformTour({
   }, []);
 
   useEffect(() => {
-    if (!playing || suspended) return;
-    const timer = window.setTimeout(() => setIndex((index + 1) % SLIDES.length), delay);
-    return () => window.clearTimeout(timer);
-  }, [index, playing, suspended, delay, setIndex]);
+    const video = videoRef.current;
+    if (!video || !activeVideo) return;
+    if (animate) void video.play()?.catch(() => {});
+    else video.pause();
+  }, [activeVideo, animate]);
 
-  function selectSlide(next: number) {
-    setIndex((next + SLIDES.length) % SLIDES.length);
+  useEffect(() => {
+    if (!playing || suspended || waitingForVideo) return;
+    // Videos advance on completion; stills and animations use their display duration.
+    if (clock.current.index !== index || clock.current.cycle !== cycle) {
+      clock.current = { index, cycle, remaining: delay };
+    }
+    const started = Date.now();
+    const timer = window.setTimeout(() => {
+      setIndex(SLIDES.findIndex((item) => item.id === nextSlideId));
+    }, clock.current.remaining);
+    return () => {
+      window.clearTimeout(timer);
+      clock.current.remaining = Math.max(0, clock.current.remaining - (Date.now() - started));
+    };
+  }, [index, nextSlideId, cycle, delay, waitingForVideo, playing, suspended]);
+
+  function selectExample(id: string) {
+    const next = SLIDES.findIndex((item) => item.id === id);
+    if (next < 0) return;
+    if (next === index && videoRef.current) videoRef.current.currentTime = 0;
+    setPlaying(true);
+    setCycle((value) => value + 1);
+    setIndex(next);
   }
 
-  function handleKeys(event: KeyboardEvent<HTMLElement>) {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      selectSlide(index - 1);
-    } else if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      selectSlide(index + 1);
-    }
+  function handleChapterKeys(event: KeyboardEvent<HTMLButtonElement>, position: number) {
+    let next: number;
+    if (event.key === 'ArrowLeft') next = (position - 1 + CHAPTERS.length) % CHAPTERS.length;
+    else if (event.key === 'ArrowRight') next = (position + 1) % CHAPTERS.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = CHAPTERS.length - 1;
+    else return;
+    event.preventDefault();
+    chapterRefs.current[next]?.focus();
+    selectExample(CHAPTERS[next].featured);
   }
 
   function finishSwipe(event: PointerEvent<HTMLDivElement>) {
@@ -259,18 +361,84 @@ export default function PlatformTour({
     const deltaX = event.clientX - start.x;
     const deltaY = event.clientY - start.y;
     if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
-      selectSlide(index + (deltaX < 0 ? 1 : -1));
+      const next = (chapterIndex + (deltaX < 0 ? 1 : -1) + CHAPTERS.length) % CHAPTERS.length;
+      selectExample(CHAPTERS[next].featured);
     }
   }
+
+  const controls = (
+    <div className={styles.navigation}>
+      <fieldset className={styles.chapters} aria-label="Choose a research or teaching chapter">
+        {CHAPTERS.map((item, position) => (
+          <button
+            type="button"
+            key={item.id}
+            ref={(element) => {
+              chapterRefs.current[position] = element;
+            }}
+            className={styles.chapter}
+            aria-pressed={position === chapterIndex}
+            onClick={() => selectExample(item.featured)}
+            onKeyDown={(event) => handleChapterKeys(event, position)}
+          >
+            {item.label}
+            {position === chapterIndex && (
+              <span className={styles.progress} key={`${index}-${cycle}`} aria-hidden="true" />
+            )}
+          </button>
+        ))}
+        <button
+          type="button"
+          className={styles.play}
+          aria-label={playing ? 'Pause tour' : 'Play tour'}
+          aria-pressed={playing}
+          onClick={() => {
+            setPlaying(!playing);
+            setCycle((value) => value + 1);
+          }}
+        >
+          <span aria-hidden="true">{playing ? 'Ⅱ' : '▷'}</span>
+        </button>
+      </fieldset>
+      <div className={styles.chapterDetails}>
+        {chapter.description ? (
+          <p
+            className={styles.chapterDescription}
+            data-testid="chapter-description"
+            aria-live={playing ? 'off' : 'polite'}
+          >
+            {chapter.description}
+          </p>
+        ) : chapter.examples.length > 1 ? (
+          <fieldset className={styles.examples} aria-label="Examples in the selected chapter">
+            <span className={styles.examplesLabel}>Examples</span>
+            {chapter.examples.map((id) => (
+              <button
+                type="button"
+                key={id}
+                className={styles.example}
+                aria-pressed={id === slide.id}
+                onClick={() => selectExample(id)}
+              >
+                {SLIDES.find((item) => item.id === id)?.label}
+              </button>
+            ))}
+          </fieldset>
+        ) : null}
+      </div>
+    </div>
+  );
 
   return (
     <section
       ref={rootRef}
       id="preview"
       className={styles.tour}
+      style={{ '--chapter-duration': `${delay}ms` } as CSSProperties}
+      data-playing={playing}
+      data-suspended={suspended}
       aria-label="Inside Virtual Labs: platform tour"
       aria-roledescription="carousel"
-      aria-describedby={showCaption ? undefined : 'tour-caption'}
     >
       <div
         className={styles.viewport}
@@ -299,17 +467,27 @@ export default function PlatformTour({
               inert={!active}
             >
               {videoSource &&
-                (active && animate ? (
+                (active && !reducedMotion ? (
                   <video
+                    ref={videoRef}
                     className={styles.animation}
                     src={videoSource.src}
                     poster={videoSource.poster}
                     width={videoSource.width}
                     height={videoSource.height}
                     aria-label={item.alt}
-                    autoPlay
+                    autoPlay={animate}
                     muted
-                    loop
+                    onEnded={() => {
+                      if (playing && !suspended) {
+                        setIndex(SLIDES.findIndex((entry) => entry.id === nextSlideId));
+                      }
+                    }}
+                    onError={() => {
+                      setFailedVideos((current) =>
+                        current.includes(item.id) ? current : [...current, item.id]
+                      );
+                    }}
                     playsInline
                     preload="auto"
                   />
@@ -324,6 +502,17 @@ export default function PlatformTour({
                     loading="eager"
                   />
                 ))}
+              {item.kind === 'placeholder' && (
+                <Image
+                  src={item.poster}
+                  alt={item.alt}
+                  width={1440}
+                  height={810}
+                  unoptimized
+                  className={styles.animation}
+                  loading="eager"
+                />
+              )}
               {animationSource && (
                 <Image
                   src={active && animate ? animationSource.src : animationSource.poster}
@@ -376,34 +565,15 @@ export default function PlatformTour({
           );
         })}
       </div>
-
-      <button
-        type="button"
-        className={`${styles.arrow} ${styles.previous}`}
-        data-tour-arrow
-        aria-label="Previous detail"
-        onKeyDown={handleKeys}
-        onClick={() => selectSlide(index - 1)}
-      >
-        <span aria-hidden="true">‹</span>
-      </button>
-      <button
-        type="button"
-        className={`${styles.arrow} ${styles.next}`}
-        data-tour-arrow
-        aria-label="Next detail"
-        onKeyDown={handleKeys}
-        onClick={() => selectSlide(index + 1)}
-      >
-        <span aria-hidden="true">›</span>
-      </button>
-
-      {showCaption && (
-        <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
-          <div className={styles.captionTitle}>
+      {children ? (
+        children({ slide, playing: playing, controls })
+      ) : (
+        <div className={styles.standalone}>
+          <div className={styles.caption} aria-live={playing ? 'off' : 'polite'} aria-atomic="true">
             <h2>{slide.title}</h2>
+            <p>{slide.description}</p>
           </div>
-          <p>{slide.description}</p>
+          {controls}
         </div>
       )}
     </section>

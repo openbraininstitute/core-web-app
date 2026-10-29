@@ -3,8 +3,7 @@
   --overlay-center-y: 53%;
   --overlay-radius-x: 65%;
   --overlay-radius-y: 76%;
-  position: absolute;
-  inset: 0;
+  position: relative;
   z-index: 0;
   overflow: hidden;
   background: #f8fafc;
@@ -20,11 +19,11 @@
   background: radial-gradient(
     ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
       var(--overlay-center-y),
-    #f8fafc 0%,
-    #f8fafcf7 24%,
-    #f8fafcdb 42%,
-    #f8fafc8c 60%,
-    #f8fafc38 78%,
+    #f8fafcd9 0%,
+    #f8fafcc6 24%,
+    #f8fafcaf 42%,
+    #f8fafc70 60%,
+    #f8fafc2d 78%,
     #f8fafc00 100%
   );
 }
@@ -107,122 +106,211 @@
   background: #dde7f6;
 }
 
+.standalone {
+  position: relative;
+  z-index: 2;
+  min-height: 600px;
+  padding: 140px 8% 40px;
+}
 .caption {
-  position: absolute;
-  z-index: 3;
-  right: 48px;
-  bottom: 108px;
-  width: min(420px, 36%);
-  isolation: isolate;
+  max-width: 550px;
   color: #102c60;
 }
-.captionTitle {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-.captionTitle h2 {
-  margin: 0;
-  font-family: var(--font-DMSerifText), serif;
-  font-size: 22px;
-  line-height: 1.3;
-  font-weight: 400;
-  letter-spacing: normal;
+.caption h2 {
+  font-family: var(--font-gabarito), sans-serif;
+  font-size: 40px;
+  line-height: 1.1;
 }
 .caption p {
-  min-height: 46px;
-  margin: 7px 0 0;
-  max-width: 60ch;
-  font-size: 14px;
-  line-height: 1.65;
-  color: #36506f;
+  font-size: 20px;
+  line-height: 1.55;
 }
-
-.tour .arrow {
-  position: absolute;
-  z-index: 4;
-  top: 50%;
-  transform: translateY(-50%);
-  display: grid;
-  place-items: center;
-  width: 44px;
-  min-height: 64px;
+.navigation {
+  width: min(800px, 100%);
+  margin-top: 27px;
+  pointer-events: auto;
+}
+.chapters {
+  min-inline-size: 0;
+  margin: 0;
   padding: 0;
   border: 0;
-  border-radius: 0;
-  background: transparent;
-  color: var(--blue, #183f8b);
-  font-size: 38px;
-  line-height: 1;
-  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.tour .arrow[data-tone="light"] {
-  color: #ffffffd9;
+.chapters .chapter {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 46px;
+  padding: 9px 17px;
+  border: 1px solid #183f8b45;
+  border-radius: 25px;
+  background: #ffffffcf;
+  color: #365479;
+  font-size: 15px;
+  font-weight: 400;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
-.previous {
-  left: 6px;
+.chapters .chapter[aria-pressed="true"] {
+  border-color: var(--blue, #183f8b);
+  background: var(--blue, #183f8b);
+  color: white;
 }
-.next {
-  right: 6px;
+.tour[data-playing="true"] .chapter[aria-pressed="true"] .progress {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #ffffff25;
+  transform-origin: left;
+  animation: chapter-progress var(--chapter-duration, 12s) linear forwards;
+  pointer-events: none;
 }
-.tour .arrow:hover {
-  transform: translateY(-50%) scale(1.12);
+.tour[data-suspended="true"] .progress {
+  animation-play-state: paused;
 }
-.arrow:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
-}
-
-@media (max-width: 1100px) and (min-width: 801px) {
-  .caption {
-    right: 32px;
-    width: 37%;
+@keyframes chapter-progress {
+  from {
+    transform: scaleX(0);
   }
+  to {
+    transform: scaleX(1);
+  }
+}
+.chapters .chapter:hover:not([aria-pressed="true"]) {
+  background: white;
+}
+.chapters .play {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid #183f8b35;
+  border-radius: 50%;
+  background: #ffffffcf;
+  color: var(--blue, #183f8b);
+  font-size: 20px;
+}
+.chapterDetails {
+  /* Keep the primary actions steady; secondary content always begins at the top. */
+  min-height: 101px;
+  margin-top: 12px;
+}
+.navigation .chapterDescription {
+  margin: 0;
+  color: #365479;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.examples {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0 18px;
+  min-height: 44px;
+  color: #365479;
+}
+.examplesLabel {
+  color: #476083;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.examples .example {
+  display: flex;
+  align-items: flex-start;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  line-height: 1.5;
+  background: transparent;
+  color: #365479;
+  font-size: 15px;
+}
+.examples .example[aria-pressed="true"] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  color: var(--blue, #183f8b);
+}
+.examples .example:hover {
+  color: var(--blue, #183f8b);
 }
 @media (max-width: 800px) {
   .tour {
     --overlay-center-x: 42%;
-    --overlay-center-y: 29%;
-    --overlay-radius-x: 130%;
-    --overlay-radius-y: 62%;
+    --overlay-center-y: 45%;
+    --overlay-radius-x: 150%;
+    --overlay-radius-y: 120%;
   }
   .tour::after {
     background: radial-gradient(
       ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
         var(--overlay-center-y),
-      #f8fafc 0%,
-      #f8fafcf7 32%,
-      #f8fafcd9 50%,
-      #f8fafc8c 66%,
-      #f8fafc33 84%,
+      #f8fafcd9 0%,
+      #f8fafcc6 32%,
+      #f8fafcae 50%,
+      #f8fafc70 66%,
+      #f8fafc29 84%,
       #f8fafc00 100%
     );
   }
-  .caption {
+  .navigation {
+    margin-top: 24px;
+  }
+  .chapters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 46px;
+    align-items: stretch;
+  }
+  .chapters .chapter {
+    padding: 9px 7px;
+    font-size: 14px;
+  }
+  .chapters .play {
+    grid-column: 3;
+    grid-row: 1 / 4;
+    align-self: center;
+  }
+  .chapterDetails {
+    min-height: 118px;
+  }
+  .navigation .chapterDescription {
+    font-size: 14px;
+  }
+  .examples {
+    column-gap: 14px;
+  }
+  .examplesLabel,
+  .examples .example {
+    font-size: 14px;
+  }
+  .expand {
+    top: auto;
+    bottom: 24px;
     right: 20px;
-    left: 20px;
-    width: auto;
   }
-  .caption {
-    bottom: 102px;
-  }
-  .captionTitle h2 {
-    font-size: 20px;
-  }
-  .caption p {
-    min-height: 44px;
-    font-size: 13px;
-  }
-  .tour .arrow {
-    top: 65%;
-    min-height: 56px;
+}
+@media (max-width: 360px) {
+  .chapterDetails {
+    min-height: 139px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .image,
+  .tour .progress {
+    animation: none;
+  }
   .layer,
-  .tour .arrow {
+  .chapters .chapter {
     transition: none;
   }
 }
