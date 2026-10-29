@@ -78,4 +78,27 @@ describe('NotebookCountLink', () => {
     expect(count).toHaveTextContent('0of0');
     expect(count).toHaveAttribute('data-active', 'false');
   });
+
+  it('shows a warning, not "0 of n", when the count fails', () => {
+    useNotebookCountMock.mockReturnValue({
+      filtered: undefined,
+      total: 47,
+      isLoading: false,
+      isError: true,
+    });
+
+    render(
+      <NotebookCountLink
+        title="Templates"
+        extendedType={TEMPLATE}
+        href="/x"
+        scope={WorkspaceScope.Public}
+        isActive={false}
+      />
+    );
+
+    const count = screen.getByTestId(`notebook-count-${TEMPLATE}`);
+    expect(count).not.toHaveTextContent('0of47');
+    expect(screen.getByRole('img', { name: 'warning' })).toBeInTheDocument();
+  });
 });

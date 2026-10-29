@@ -34,6 +34,19 @@ export interface IEntitycorePagedDataSourceOptions<Row> {
 }
 
 /**
+ * The entitycore params this source sends for `query`, before the host's `transformParams`.
+ * Shared with the Data/Notebooks sidebar counts so both build the same request.
+ */
+export function serializeEntitycoreQuery<Row>(
+  dataType: TExtendedEntitiesTypeDict,
+  schema: IGridSchema<Row>,
+  query: IGridQuery
+): TEntitycoreParams {
+  const ilike = getEntityByExtendedType({ type: dataType })?.api?.config?.ilikeSearchEnabled;
+  return serializeQuery(query, schema, { searchMode: ilike ? 'ilike' : 'plain' });
+}
+
+/**
  * The default {@link IGridDataSource}: one server page per request, delegating to the
  * entity's domain config (`api.query.list`), which owns endpoint, `narrowFilters`,
  * `ilikeSearchEnabled` and facets. The grid contributes only page/sort/filter/search.
@@ -43,10 +56,9 @@ export function createEntitycorePagedDataSource<Row>(
 ): IGridDataSource<Row> {
   const { dataType, schema, context, listQueryFn, withFacets = true, transformParams } = options;
   const entity = getEntityByExtendedType({ type: dataType });
-  const searchMode: 'ilike' | 'plain' = entity?.api?.config?.ilikeSearchEnabled ? 'ilike' : 'plain';
 
   const paramsFor = (query: IGridQuery): TEntitycoreParams => {
-    const serialized = serializeQuery(query, schema, { searchMode });
+    const serialized = serializeEntitycoreQuery(dataType, schema, query);
     return transformParams ? transformParams(serialized) : serialized;
   };
   const run = (args: Parameters<TListQueryFn<Row>>[0]) =>

@@ -22,6 +22,15 @@ const LOCAL_KEYS = [
   'columnWidths',
 ] as const satisfies ReadonlyArray<keyof IGridState>;
 
+/** sessionStorage key prefix of the session slice; the full key appends the `instanceKey`. */
+export const SESSION_NAMESPACE = 'data-grid:v2:s:';
+
+/**
+ * Same-tab sessionStorage change event, as `useSessionStorage` dispatches it: the `storage`
+ * event only fires in other tabs. Its `key` is the full storage key.
+ */
+export const SESSION_STORAGE_EVENT = 'session-storage';
+
 function pick(state: IGridState, keys: ReadonlyArray<keyof IGridState>): Partial<IGridState> {
   const out: Partial<IGridState> = {};
   for (const key of keys) {
@@ -34,8 +43,15 @@ function createStoragePersistence(
   getStorage: () => Storage | undefined,
   namespace: string,
   keys: ReadonlyArray<keyof IGridState>,
-  /** when set, this slice ignores the controller's `instanceKey` and stores under this */
-  fixedKey?: string
+  {
+    fixedKey,
+    onChange,
+  }: {
+    /** when set, this slice ignores the controller's `instanceKey` and stores under this */
+    fixedKey?: string;
+    /** called with the storage key after the stored value changes */
+    onChange?: (storageKey: string) => void;
+  } = {}
 ): IStatePersistence {
   const storage = (): Storage | undefined => {
     try {
@@ -61,7 +77,12 @@ function createStoragePersistence(
       const s = storage();
       if (!s) return;
       try {
-        s.setItem(storageKey(key), JSON.stringify(pick(state, keys)));
+        const next = JSON.stringify(pick(state, keys));
+        // every store change saves every slice (a row selection saves the filters too):
+        // skip the write and the change event when this slice did not change
+        if (s.getItem(storageKey(key)) === next) return;
+        s.setItem(storageKey(key), next);
+        onChange?.(storageKey(key));
       } catch {
         /* ignore quota / serialization errors */
       }
@@ -71,6 +92,7 @@ function createStoragePersistence(
       if (!s) return;
       try {
         s.removeItem(storageKey(key));
+        onChange?.(storageKey(key));
       } catch {
         /* ignore */
       }
@@ -82,8 +104,10 @@ function createStoragePersistence(
 export function createSessionStatePersistence(): IStatePersistence {
   return createStoragePersistence(
     () => (typeof window !== 'undefined' ? window.sessionStorage : undefined),
-    'data-grid:v2:s:',
-    SESSION_KEYS
+    SESSION_NAMESPACE,
+    SESSION_KEYS,
+    // lets the sidebar counts follow a listing's filters after its grid unmounts
+    { onChange: (key) => window.dispatchEvent(new StorageEvent(SESSION_STORAGE_EVENT, { key })) }
   );
 }
 
@@ -105,7 +129,7 @@ export function createLocalLayoutPersistence(layoutKey?: string): IStatePersiste
     () => (typeof window !== 'undefined' ? window.localStorage : undefined),
     'data-grid:v1:l:',
     LOCAL_KEYS,
-    layoutKey
+    { fixedKey: layoutKey }
   );
 }
 
