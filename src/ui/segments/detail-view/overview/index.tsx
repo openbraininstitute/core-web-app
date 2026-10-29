@@ -787,9 +787,9 @@ export default async function Overview({
 
   return (
     <>
+      {metadataGrid}
       {circuitViewerSection}
       {visualizations}
-      {metadataGrid}
       {electrodeArraySection}
       {subjectSection}
       {meModelSection}
