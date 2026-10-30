@@ -55,6 +55,20 @@ export type TableCells = {
    * neuron set: a property set where their values say exactly which they are, else their ids.
    */
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
+  /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
+  onPathwayChange?: (pathway: TablePathway | null) => void;
+};
+
+/**
+ * A pathway between two groups of a population's neurons, by node index: where it
+ * starts and where it ends. Named with its circuit and population, as the cells are.
+ */
+export type TablePathway = {
+  circuitId: string;
+  population: string;
+  rowCount: number;
+  pre: Uint32Array;
+  post: Uint32Array;
 };
 
 type Props = {
@@ -169,6 +183,7 @@ export default function CircuitNodesTable({
         }
       : undefined;
   const onShownCellsChange = cells?.onShownCellsChange;
+  const onPathwayChange = cells?.onPathwayChange;
   useEffect(() => {
     if (shown === undefined || !population) return;
     onShownCellsChange?.({
@@ -246,6 +261,19 @@ export default function CircuitNodesTable({
                 rowCount,
                 onReset: resetSelection,
               }
+            }
+            onPathwayChange={
+              onPathwayChange &&
+              population &&
+              ((pathway) =>
+                onPathwayChange(
+                  pathway && {
+                    circuitId: circuit.id,
+                    population: population.name,
+                    rowCount,
+                    ...pathway,
+                  }
+                ))
             }
             headerSlot={headerSlot}
           />

@@ -35,16 +35,19 @@ const CONFIG: Partial<Config> = {
 
 /**
  * One of the statistics' figures, filling its box; see `figures.ts` for what
- * each draws. `onPointClick` is told the `customdata` of a point clicked. A
+ * each draws. `onPointClick` is told the `customdata` of a point clicked, and
+ * `onPointHover` the point under the pointer, null once it leaves them. A
  * figure over time can carry the config's timings and the player's time over it.
  */
 export default function StatisticsPlot({
   figure,
   onPointClick,
+  onPointHover,
   timeline,
 }: {
   figure: Figure;
   onPointClick?: (customdata: unknown) => void;
+  onPointHover?: (point: HoverPoint | null) => void;
   timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor };
 }) {
   const [tip, setTip] = useState<PlacedTooltip>();
@@ -62,6 +65,7 @@ export default function StatisticsPlot({
     onClick: (event) => onPointClick?.(event.points[0]?.customdata),
     onHover: (event) => {
       const point = event.points[0] as HoverPoint | undefined;
+      onPointHover?.(point ?? null);
       const card = point && figure.tooltip?.(point);
       const box = boxRef.current?.getBoundingClientRect();
       const mouse = event.event as MouseEvent | undefined;
@@ -74,7 +78,10 @@ export default function StatisticsPlot({
       const flip = at.x - box.left > box.width * 0.6;
       setTip({ clientX: at.x, clientY: at.y, flip, card });
     },
-    onUnhover: () => setTip(undefined),
+    onUnhover: () => {
+      setTip(undefined);
+      onPointHover?.(null);
+    },
   });
   // react-plotly follows the window, not this box, which the grab bars around
   // the plot resize on their own.
@@ -98,6 +105,8 @@ export default function StatisticsPlot({
       onPointerMove={(e) => {
         pointerRef.current = { x: e.clientX, y: e.clientY };
       }}
+      // Plotly can miss the way out of a mark on a quick move off the plot.
+      onPointerLeave={onPointHover && (() => onPointHover(null))}
     >
       <Plot
         data={figure.data}

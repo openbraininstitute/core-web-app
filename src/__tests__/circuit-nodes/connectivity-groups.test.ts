@@ -4,6 +4,7 @@ import {
   defaultGrouping,
   groupConnectivity,
   possiblePairs,
+  rowMembers,
   selectionApplies,
   summarizeConnectivity,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
@@ -60,6 +61,15 @@ describe('groupConnectivity by a property', () => {
     // None (50) to L4_TPC (10).
     expect(groups.synapses?.[at(n, 3, 2)]).toBe(5);
     expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(6);
+  });
+
+  it('lists the node ids of each row', () => {
+    expect([0, 1, 2, 3].map((row) => [...rowMembers(groups, row)])).toEqual([
+      [20, 40],
+      [30],
+      [10],
+      [50],
+    ]);
   });
 
   it('counts the pairs of distinct neurons from row to row', () => {

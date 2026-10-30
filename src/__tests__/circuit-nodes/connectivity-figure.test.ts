@@ -16,6 +16,7 @@ const GROUPS: ConnectivityGroups = {
   synapses: Float64Array.from([5, 9, 0, 0]),
   runs: null,
   nodeIds: null,
+  members: { offsets: Uint32Array.from([0, 2, 5]), nodeIds: Uint32Array.from([0, 1, 2, 3, 4]) },
 };
 
 describe('cellValue', () => {

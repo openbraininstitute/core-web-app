@@ -9,6 +9,7 @@ import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
+import { pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -47,6 +48,7 @@ import { useCellFocus } from './use-cell-focus';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { TablePathway } from '@/features/circuit-nodes/circuit-nodes-table';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
@@ -330,6 +332,8 @@ export function CircuitScene({
     rowCount: number;
   }>();
   const [tableResetRequest, setTableResetRequest] = useState(0);
+  // The connectivity matrix's pathway under the pointer, of the cells on show.
+  const [tablePathway, setTablePathway] = useState<TablePathway | null>(null);
   const narrowed =
     tableDriven &&
     tableCells?.circuitId === circuit?.id &&
@@ -471,12 +475,24 @@ export function CircuitScene({
 
   // The override's faint column painted for the background on show, and drawn
   // flat, so every cell in it is the one shade.
-  const overrideColors = useMemo(() => {
+  const faintenedOverride = useMemo(() => {
     if (!nodeColorsOverride || fadedColumn === undefined) return nodeColorsOverride;
     const palette = [...nodeColorsOverride.palette];
     palette[fadedColumn] = fadedNeuronColor(config.backgroundColor);
     return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
   }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
+  // A pathway pointed at in the matrix beside the scene, over any other colours while it is.
+  const pathwayColors = useMemo(
+    () =>
+      tableDriven &&
+      tablePathway &&
+      tablePathway.circuitId === circuit?.id &&
+      tablePathway.population === population?.name
+        ? pathwayNodeColors({ ...tablePathway, background: config.backgroundColor })
+        : undefined,
+    [tableDriven, tablePathway, circuit?.id, population?.name, config.backgroundColor]
+  );
+  const overrideColors = pathwayColors ?? faintenedOverride;
 
   // A mapping with no column per node is colour-by off.
   const populationOnShow = population?.name;
@@ -824,6 +840,7 @@ export function CircuitScene({
               heldCell: focus.focusedCell?.nodeId ?? null,
               resetRequest: tableResetRequest,
               onCreateNeuronSet: createNeuronSet,
+              onPathwayChange: setTablePathway,
             }}
           />,
           paneTable.target

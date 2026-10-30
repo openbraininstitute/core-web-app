@@ -3,7 +3,7 @@
 import { RiResetLeftLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import dynamic from 'next/dynamic';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/components/loading';
@@ -13,6 +13,7 @@ import {
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
 import {
   defaultGrouping,
+  rowMembers,
   selectionApplies,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { useConnectivityMatrix } from '@/features/circuit-nodes/connectivity/use-connectivity';
@@ -29,6 +30,7 @@ import type {
   ConnectivitySummary,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityEntry } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import type { HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -61,6 +63,9 @@ function requestOf(groupBy: string, orderBy: string): ConnectivityRequest {
       }
     : { by: 'property', property: groupBy };
 }
+
+/** A pathway of the matrix: the node ids of the neurons it starts from, and of those it ends at. */
+export type MatrixPathway = { pre: Uint32Array; post: Uint32Array };
 
 /** The table's ticks or filter, which the matrix keeps to where they are of its neurons. */
 export type MatrixSelection = {
@@ -168,6 +173,7 @@ export function ConnectivityView({
   entry,
   listing,
   selection,
+  onPathwayChange,
   headerSlot,
 }: {
   circuitId: string;
@@ -178,6 +184,11 @@ export function ConnectivityView({
   listing: { isLoading: boolean; error: Error | null; empty: boolean };
   /** The neurons the table has selected, to which the matrix keeps. */
   selection?: MatrixSelection;
+  /**
+   * Told the pathway under the pointer, null once it leaves the matrix: only for a
+   * matrix of the selection's population, whose neurons a view beside it draws.
+   */
+  onPathwayChange?: (pathway: MatrixPathway | null) => void;
   headerSlot: HTMLElement | null;
 }) {
   // A matrix past what the browser can hold is never asked for.
@@ -248,6 +259,7 @@ export function ConnectivityView({
       edgePopulation={entry.population}
       group={matrix.group}
       selection={selection}
+      onPathwayChange={onPathwayChange}
       headerSlot={headerSlot}
     />
   );
@@ -258,12 +270,14 @@ function ReadyMatrix({
   edgePopulation,
   group,
   selection,
+  onPathwayChange,
   headerSlot,
 }: {
   summary: ConnectivitySummary;
   edgePopulation: string;
   group: (request: ConnectivityRequest, cells: Uint32Array | null) => Promise<ConnectivityGroups>;
   selection: MatrixSelection | undefined;
+  onPathwayChange: ((pathway: MatrixPathway | null) => void) | undefined;
   headerSlot: HTMLElement | null;
 }) {
   const categorical = summary.properties.filter((p) => p.kind === 'categorical');
@@ -273,18 +287,21 @@ function ReadyMatrix({
   const [measure, setMeasure] = useState<ConnectivityMeasure>('probability');
   const request = useMemo(() => requestOf(groupBy, orderBy), [groupBy, orderBy]);
 
-  // The table's selection, where it is some of the matrix's own neurons.
-  const cells =
-    selection?.cells &&
-    selection.cells.length < selection.rowCount &&
+  // The table's population is the matrix's: its selection, where it is some of the neurons,
+  // narrows the matrix, and a pathway's neurons are those the 3D view beside it draws.
+  const ofTable =
+    !!selection &&
     selectionApplies({
       edgePopulation,
       nodePopulation: selection.population,
       rowCount: selection.rowCount,
       neurons: summary.neurons,
-    })
+    });
+  const cells =
+    ofTable && selection.cells && selection.cells.length < selection.rowCount
       ? selection.cells
       : null;
+  const pathwayTo = ofTable ? onPathwayChange : undefined;
   const neurons = cells ? cells.length : summary.neurons;
   const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}`;
 
@@ -311,6 +328,33 @@ function ReadyMatrix({
     };
   }, [group, request, cells, requestKey]);
   const current = answer?.key === requestKey ? answer : null;
+
+  // The pathway under the pointer, told once per cell, and let go of with the rows it was of.
+  // Told through the latest callback, which a host may make anew on each render.
+  const hoveredRef = useRef<string | null>(null);
+  const pathwayToRef = useRef(pathwayTo);
+  useLayoutEffect(() => {
+    pathwayToRef.current = pathwayTo;
+  });
+  const hoverPathway = (point: HoverPoint | null) => {
+    const groups = current?.groups;
+    const [pre, post] = point && Array.isArray(point.pointNumber) ? point.pointNumber : [];
+    const key = groups && pre !== undefined && post !== undefined ? `${pre}/${post}` : null;
+    if (key === hoveredRef.current) return;
+    hoveredRef.current = key;
+    pathwayToRef.current?.(
+      groups && key ? { pre: rowMembers(groups, pre), post: rowMembers(groups, post) } : null
+    );
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: let go with the rows it was of
+  useEffect(
+    () => () => {
+      if (hoveredRef.current === null) return;
+      hoveredRef.current = null;
+      pathwayToRef.current?.(null);
+    },
+    [current]
+  );
 
   const byNeuron = groupBy === BY_NEURON;
   const axis = byNeuron ? `neurons${orderBy === MATRIX_ORDER ? '' : ` by ${orderBy}`}` : groupBy;
@@ -401,7 +445,7 @@ function ReadyMatrix({
         ) : cells?.length === 0 ? (
           <Empty description="None of the matrix's neurons are selected" />
         ) : figure ? (
-          <StatisticsPlot figure={figure} />
+          <StatisticsPlot figure={figure} onPointHover={pathwayTo && hoverPathway} />
         ) : (
           <div className="flex h-full items-center justify-center">
             <Spin />

@@ -32,6 +32,8 @@ export type ConnectivityGroups = {
   runs: RowRun[] | null;
   /** Neuron by neuron, one in each row: its node id. */
   nodeIds: Float64Array | null;
+  /** The node ids of each row's neurons: row r's run from `offsets[r]` to `offsets[r + 1]`. */
+  members: { offsets: Uint32Array; nodeIds: Uint32Array };
 };
 
 /** What a menu needs of a neuron property: its name, and its values where it has a few. */
@@ -206,7 +208,36 @@ export function groupConnectivity(
     connections[cell] += 1;
     if (synapses && matrix.synapses) synapses[cell] += matrix.synapses[e];
   }
-  return { by: request.by, labels, sizes, connections, synapses, runs, nodeIds: ids };
+  return {
+    by: request.by,
+    labels,
+    sizes,
+    connections,
+    synapses,
+    runs,
+    nodeIds: ids,
+    members: membersOf(rowOf, sizes, matrix.nodeIds),
+  };
+}
+
+/** The node ids of each row's neurons, row after row. */
+function membersOf(rowOf: Int32Array, sizes: Float64Array, nodeIds: Float64Array) {
+  const offsets = new Uint32Array(sizes.length + 1);
+  sizes.forEach((size, row) => {
+    offsets[row + 1] = offsets[row] + size;
+  });
+  const ids = new Uint32Array(offsets[sizes.length]);
+  const next = offsets.slice(0, sizes.length);
+  rowOf.forEach((row, neuron) => {
+    if (row >= 0) ids[next[row]++] = nodeIds[neuron];
+  });
+  return { offsets, nodeIds: ids };
+}
+
+/** The node ids of a row's neurons. */
+export function rowMembers(groups: ConnectivityGroups, row: number): Uint32Array {
+  const { offsets, nodeIds } = groups.members;
+  return nodeIds.subarray(offsets[row], offsets[row + 1]);
 }
 
 /** The pairs of distinct neurons from one row to another: a neuron makes no pair with itself. */

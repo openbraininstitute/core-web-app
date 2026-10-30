@@ -46,9 +46,14 @@ const api = {
   ): Promise<ConnectivityGroups> {
     if (!matrix) throw new Error('No connectivity matrix open; call open() first');
     const groups = groupConnectivity(matrix, request, cells);
-    const buffers = [groups.sizes, groups.connections, groups.synapses, groups.nodeIds].flatMap(
-      (array) => (array ? [array.buffer as ArrayBuffer] : [])
-    );
+    const buffers = [
+      groups.sizes,
+      groups.connections,
+      groups.synapses,
+      groups.nodeIds,
+      groups.members.offsets,
+      groups.members.nodeIds,
+    ].flatMap((array) => (array ? [array.buffer as ArrayBuffer] : []));
     return Comlink.transfer(groups, buffers);
   },
 };
