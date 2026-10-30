@@ -7,7 +7,11 @@ import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity
 import { EntityLifecycleStatus } from '@/api/entitycore/types/shared/global';
 import { WorkflowActivityDictValue } from '@/constants';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
-import { extracellularRecordingArrayBuildFlag, flags } from '@/features/feature-flags/flags';
+import {
+  circuitSimplificationFlag,
+  extracellularRecordingArrayBuildFlag,
+  flags,
+} from '@/features/feature-flags/flags';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import {
   readWorkflowSessionSelection,
@@ -226,6 +230,20 @@ const cases: TCase[] = [
     },
     href: `${base}/build/configure/extracellular-recording-array-campaign/{session}`,
     selects: { type: ExtendedEntitiesTypeDict.Circuit, id: ENTITY_ID },
+  },
+  {
+    name: 'circuit simplification task config → process editor',
+    fixture: {
+      entity: { type: EntityTypeDict.TaskConfig },
+      input: { type: EntityTypeDict.Circuit },
+      taskConfigType: TaskConfigType.CircuitSimplificationCampaign,
+    },
+    covers: {
+      activity: process,
+      targetType: ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+    },
+    href: `${base}/process/configure/circuit-simplification-campaign/{session}?origin=${ENTITY_ID}`,
+    flags: { [circuitSimplificationFlag.key]: true } as FeatureFlags,
   },
   {
     name: 'scale-less circuit → circuit synaptic physiology build when recording array is off',
@@ -562,7 +580,9 @@ describe('resolveWorkflowConfigureHrefForEntity', () => {
   });
 
   it('leaves pre-scan-config ion channel modeling campaigns out of the workflows', async () => {
-    applyFixture({ entity: { type: EntityTypeDict.IonChannelModelingCampaign } });
+    applyFixture({
+      entity: { type: EntityTypeDict.IonChannelModelingCampaign },
+    });
 
     await expect(
       resolveWorkflowConfigureHrefForEntity({

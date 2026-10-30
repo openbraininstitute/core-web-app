@@ -33,8 +33,8 @@ import {
   OptimizationTab,
   type TTaskNoun,
 } from '@/features/scan-config/use-cases/optimization/results';
+import { ProcessingTab } from '@/features/scan-config/use-cases/processing/results';
 import { SimulationsTab } from '@/features/scan-config/use-cases/simulations/results';
-import { SkeletonizationTab } from '@/features/scan-config/use-cases/skeletonization/results';
 import { workflowBreadcrumbRefsAtom } from '@/features/scan-config/workflow/breadcrumb-entities';
 import { resolveWorkflowEntityRefs } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { BreadcrumbChip } from '@/ui/molecules/breadcrumb';
@@ -153,6 +153,8 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}
+        resultsTabId={props.i18n?.resultsTabId}
+        resultsTabLabel={props.i18n?.resultsTab}
         // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={
           state.campaignId ? (
@@ -218,11 +220,13 @@ function ScanConfigResults({
     .with(ScanConfigActivity.Process, () =>
       props.taskTypeBindings ? (
         <Suspense>
-          <SkeletonizationTab
+          <ProcessingTab
             campaignId={state.campaignId}
             campaignOriginAction={props.campaignOriginAction}
             isCampaignIdChanged={state.isCampaignIdChanged}
             taskTypeBindings={props.taskTypeBindings}
+            launchLabel={props.i18n?.launch}
+            workflowLabel={props.i18n?.workflowLabel}
           />
         </Suspense>
       ) : null

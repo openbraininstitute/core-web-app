@@ -49,7 +49,10 @@ function legacyRightPreviewMode(options: {
     (activity === ScanConfigActivity.Build &&
       Boolean(entity) &&
       (entityType === ExtendedEntitiesTypeDict.Circuit ||
-        entityType === ExtendedEntitiesTypeDict.Memodel));
+        entityType === ExtendedEntitiesTypeDict.Memodel)) ||
+    (activity === ScanConfigActivity.Process &&
+      Boolean(entity) &&
+      entityType === ExtendedEntitiesTypeDict.Circuit);
 
   if (showIonChannel) return RightPreviewModeDict.IonChannel;
   if (showCircuit) return RightPreviewModeDict.CircuitModel;
@@ -115,8 +118,12 @@ describe('shouldShowCircuitModelPreview', () => {
     ).toBe(false);
   });
 
-  it('shows Circuit for Extract and Build, and Memodel for Build', () => {
-    for (const activity of [ScanConfigActivity.Extract, ScanConfigActivity.Build]) {
+  it('shows Circuit for Extract, Build, and Process, and Memodel for Build', () => {
+    for (const activity of [
+      ScanConfigActivity.Extract,
+      ScanConfigActivity.Build,
+      ScanConfigActivity.Process,
+    ]) {
       expect(
         shouldShowCircuitModelPreview({
           activity,
@@ -146,16 +153,6 @@ describe('shouldShowCircuitModelPreview', () => {
       shouldShowCircuitModelPreview({
         activity: ScanConfigActivity.Extract,
         entityType: ExtendedEntitiesTypeDict.Memodel,
-        hasEntity: true,
-      })
-    ).toBe(false);
-  });
-
-  it('hides Process (and any other non-circuit activities)', () => {
-    expect(
-      shouldShowCircuitModelPreview({
-        activity: ScanConfigActivity.Process,
-        entityType: ExtendedEntitiesTypeDict.Circuit,
         hasEntity: true,
       })
     ).toBe(false);
@@ -225,13 +222,21 @@ describe('resolveRightPreviewMode for e-feature extraction', () => {
 
   it('still yields to an explicitly opened settings form', () => {
     expect(
-      resolveRightPreviewMode({ ...efeatureState, hasEntity: false, settingsPanelActive: true })
+      resolveRightPreviewMode({
+        ...efeatureState,
+        hasEntity: false,
+        settingsPanelActive: true,
+      })
     ).toBe(RightPreviewModeDict.Settings);
   });
 
   it('still yields to a browse entity preview the user clicked', () => {
     expect(
-      resolveRightPreviewMode({ ...efeatureState, hasEntity: false, entityPreviewActive: true })
+      resolveRightPreviewMode({
+        ...efeatureState,
+        hasEntity: false,
+        entityPreviewActive: true,
+      })
     ).toBe(RightPreviewModeDict.EntityPreview);
   });
 
@@ -274,8 +279,16 @@ describe('Right refactor parity (pre-refactor branching oracle)', () => {
   it('entityPreviewActive gate matches legacy early-return condition', () => {
     const previewStates = [
       { entityPreview: null, previewRecord: null, isPreviewLoading: false },
-      { entityPreview: { dataType: 'circuit' }, previewRecord: null, isPreviewLoading: false },
-      { entityPreview: { dataType: 'circuit' }, previewRecord: null, isPreviewLoading: true },
+      {
+        entityPreview: { dataType: 'circuit' },
+        previewRecord: null,
+        isPreviewLoading: false,
+      },
+      {
+        entityPreview: { dataType: 'circuit' },
+        previewRecord: null,
+        isPreviewLoading: true,
+      },
       {
         entityPreview: { dataType: 'circuit' },
         previewRecord: { id: '1' },
@@ -286,7 +299,11 @@ describe('Right refactor parity (pre-refactor branching oracle)', () => {
         previewRecord: { id: '1' },
         isPreviewLoading: true,
       },
-      { entityPreview: null, previewRecord: { id: '1' }, isPreviewLoading: true },
+      {
+        entityPreview: null,
+        previewRecord: { id: '1' },
+        isPreviewLoading: true,
+      },
     ] as const;
 
     for (const state of previewStates) {
@@ -340,7 +357,11 @@ describe('Right refactor parity (pre-refactor branching oracle)', () => {
     for (const activity of ACTIVITIES) {
       for (const entityType of ENTITY_TYPES) {
         for (const hasEntity of [true, false]) {
-          const show = shouldShowCircuitModelPreview({ activity, entityType, hasEntity });
+          const show = shouldShowCircuitModelPreview({
+            activity,
+            entityType,
+            hasEntity,
+          });
           const legacy = legacyRightPreviewMode({
             entityPreview: null,
             previewRecord: null,

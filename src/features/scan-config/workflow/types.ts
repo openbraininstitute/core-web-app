@@ -101,6 +101,22 @@ export type TScanConfigEditorOptions = {
   readOnly?: boolean;
 };
 
+/** per-workflow UI messages and labels.
+ * Activity-level i18n is the fallback when a field is omitted.
+ * */
+export type TScanConfigWorkflowI18n = {
+  /** URL id for a workflow-specific results tab. */
+  resultsTabId?: TScanConfigTabs['id'];
+  /** Visible results-tab label (e.g. "simplifications"). */
+  resultsTab?: string;
+  generate?: string;
+  new?: string;
+  copyCampaignId?: string;
+  launch?: string;
+  /** Plural noun for the cost-confirmation modal (e.g. "simplifications"). */
+  workflowLabel?: string;
+};
+
 /** Declarative contract for a scan-config configure route. */
 export type TScanConfigWorkflowDefinition = {
   id: string;
@@ -114,6 +130,7 @@ export type TScanConfigWorkflowDefinition = {
    */
   seed?: TAnyWorkflowSeed;
   editor?: TScanConfigEditorOptions;
+  i18n?: TScanConfigWorkflowI18n;
   /** obi-one + entitycore task identifiers used by the workflow's results tab (launch + polling) */
   taskTypeBindings?: TWorkflowTaskTypeBindingsInput;
 };

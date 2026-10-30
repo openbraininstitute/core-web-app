@@ -34,6 +34,10 @@ type ScanConfigTabsPanelProps = {
   disableConfigurationTab: boolean;
   configuration: ReactNode;
   results: ReactNode;
+  /** Result tab id for workflows that distinguish their URL from another process workflow. */
+  resultsTabId?: string;
+  /** Override the results tab label for a workflow-specific noun. */
+  resultsTabLabel?: string;
   /** Rail-level content centred on the panel edge (e.g. the selection's copy action). */
   railCenter?: ReactNode;
 };
@@ -107,6 +111,8 @@ export function ScanConfigTabsPanel({
   disableConfigurationTab,
   configuration,
   results,
+  resultsTabId,
+  resultsTabLabel,
   railCenter,
 }: ScanConfigTabsPanelProps) {
   // the host's breadcrumb leads the rail, so the skeleton and the ready template share it
@@ -114,22 +120,24 @@ export function ScanConfigTabsPanel({
   // a results view's side panel takes the whole surface, rail and all
   const railCollapsed = useAtomValue(resultsSidePanelOpenAtom);
   // not memoised: `configuration` and `results` are fresh nodes on every render
-  const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity]).map(([id, label]) => {
-    const isConfiguration = id === BaseScanConfigTabs.configuration;
-    const disableConfiguration = disableConfigurationTab && isConfiguration;
-    const disabled = (isResultsTab(id) && disableResultsTab) || disableConfiguration;
-    const Icon = isConfiguration ? ConfigurationIcon : ResultsIcon;
+  const items: MorphingTabsItem[] = Object.entries(ScanConfigTabs[activity])
+    .filter(([id]) => !resultsTabId || !isResultsTab(id) || id === resultsTabId)
+    .map(([id, label]) => {
+      const isConfiguration = id === BaseScanConfigTabs.configuration;
+      const disableConfiguration = disableConfigurationTab && isConfiguration;
+      const disabled = (isResultsTab(id) && disableResultsTab) || disableConfiguration;
+      const Icon = isConfiguration ? ConfigurationIcon : ResultsIcon;
 
-    return {
-      id,
-      label,
-      testId: `scan-config-tab-${id}`,
-      icon: <Icon className="size-5" />,
-      disabled,
-      tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
-      content: isConfiguration ? configuration : results,
-    };
-  });
+      return {
+        id,
+        label: isResultsTab(id) ? (resultsTabLabel ?? label) : label,
+        testId: `scan-config-tab-${id}`,
+        icon: <Icon className="size-5" />,
+        disabled,
+        tooltip: disableConfiguration ? <LegacyConfigurationTooltip /> : undefined,
+        content: isConfiguration ? configuration : results,
+      };
+    });
 
   return (
     <MorphingTabs

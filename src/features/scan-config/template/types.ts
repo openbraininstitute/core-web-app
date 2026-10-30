@@ -1,6 +1,6 @@
-import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
-import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
+import type { TSchemaMappingConfiguration } from "@/features/scan-config/components/hooks/schema";
+import type { TScanConfigCampaignOriginActionDict } from "@/features/scan-config/helpers";
 import type {
   Config,
   ConfigSchema,
@@ -9,11 +9,14 @@ import type {
   TScanConfigTabs,
   TSupportedEntitiesForScanConfiguration,
   TSupportedEntityTypesForScanConfiguration,
-} from '@/features/scan-config/types';
-import type { TAnyWorkflowSeed } from '@/features/scan-config/workflow/seeding/workflow-seed';
-import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
-import type { TWorkflowSessionSelectionPayload } from '@/features/scan-config/workflow/workflow-session-selection';
-import type { Nullish } from '@/utils/type';
+} from "@/features/scan-config/types";
+import type { TAnyWorkflowSeed } from "@/features/scan-config/workflow/seeding/workflow-seed";
+import type {
+  TScanConfigWorkflowI18n,
+  TWorkflowTaskTypeBindings,
+} from "@/features/scan-config/workflow/types";
+import type { TWorkflowSessionSelectionPayload } from "@/features/scan-config/workflow/workflow-session-selection";
+import type { Nullish } from "@/utils/type";
 
 export type ScanConfigTemplateProps = {
   entity: TSupportedEntitiesForScanConfiguration | Nullish;
@@ -33,7 +36,10 @@ export type ScanConfigTemplateProps = {
   entityType: TSupportedEntityTypesForScanConfiguration;
   campaignEntityType?: TExtendedEntitiesTypeDict;
   workflowSessionSelection?: TWorkflowSessionSelectionPayload | null;
-  resolveSessionFromIdType?: (browseType: TExtendedEntitiesTypeDict) => string | undefined;
+  resolveSessionFromIdType?: (
+    browseType: TExtendedEntitiesTypeDict,
+  ) => string | undefined;
   seed?: TAnyWorkflowSeed;
   taskTypeBindings?: TWorkflowTaskTypeBindings;
+  i18n?: TScanConfigWorkflowI18n;
 };

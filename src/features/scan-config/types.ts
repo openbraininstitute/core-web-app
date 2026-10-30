@@ -72,6 +72,7 @@ export type TBuildScanConfigTabs = {
 export const ProcessScanConfigTabs = {
   ...BaseScanConfigTabs,
   skeletonizations: 'skeletonizations',
+  simplifications: 'simplifications',
 } as const;
 
 export type TProcessScanConfigTabs = {
@@ -159,6 +160,7 @@ export const SchemaNameDict = {
   MEModelBuildScanConfig: 'MEModelBuildScanConfig',
   // processing
   SkeletonizationScanConfig: 'SkeletonizationScanConfig',
+  CircuitSimplificationScanConfig: 'CircuitSimplificationScanConfig',
   // optimization
   EModelOptimizationScanConfig: 'EModelOptimizationScanConfig',
   // validation

@@ -1,8 +1,8 @@
-import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitScaleDictionary } from "@/api/entitycore/types/entities/circuit";
 import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
-} from '@/api/entitycore/types/extended-entity-type';
+} from "@/api/entitycore/types/extended-entity-type";
 import {
   BuildScanConfigTabs,
   type ConfigValue,
@@ -17,40 +17,41 @@ import {
   type TScanConfigActivity,
   type TScanConfigTabs,
   ValidateScanConfigTabs,
-} from '@/features/scan-config/types';
+} from "@/features/scan-config/types";
 
-import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import type { TSchemaMappingConfiguration } from "@/features/scan-config/components/hooks/schema";
 
 export {
   buildActivityStatusMap,
   findLatestExecutionForEntity,
-} from '@/features/task-runner/status';
+} from "@/features/task-runner/status";
 
-import { get } from 'es-toolkit/compat';
-import z from 'zod';
+import { get } from "es-toolkit/compat";
+import z from "zod";
 
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { isPlainObject } from '@/features/scan-config/components/utils';
-import { EntityTypeCatalog } from '@/ui/segments/workflows/config/entity-types';
+import { getEntityByExtendedType } from "@/entity-configuration/domain/helpers";
+import { isPlainObject } from "@/features/scan-config/components/utils";
+import { EntityTypeCatalog } from "@/ui/segments/workflows/config/entity-types";
 
-import { entityTypeForScanConfigFromIdType } from './workflow/workflow-schema-selection';
+import { entityTypeForScanConfigFromIdType } from "./workflow/workflow-schema-selection";
 
 /**
  * All valid config keys the AI agent state can hold.
  */
 export const VALID_AI_CONFIG_KEYS = [
-  'circuit_simulation_config',
-  'me_model_simulation_config',
-  'me_model_with_synapses_simulation_config',
-  'ion_channel_model_simulation_config',
-  'skeletonization_config',
-  'em_synapse_mapping_config',
+  "circuit_simulation_config",
+  "me_model_simulation_config",
+  "me_model_with_synapses_simulation_config",
+  "ion_channel_model_simulation_config",
+  "skeletonization_config",
+  "circuit_simplification_config",
+  "em_synapse_mapping_config",
   // Appended rather than inserted: findConfigKeyInState returns the FIRST non-null match,
   // so the order of this list decides which key wins if more than one is ever present.
-  'emodel_optimization_config',
-  'me_model_synaptic_model_placement_config',
-  'create_extracellular_recording_array_config',
-  'synapse_parameterization_config',
+  "emodel_optimization_config",
+  "me_model_synaptic_model_placement_config",
+  "create_extracellular_recording_array_config",
+  "synapse_parameterization_config",
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -58,7 +59,9 @@ export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
 /**
  * Finds the first valid AI config key that has a non-null value in a state object.
  */
-export function findConfigKeyInState(state: Record<string, unknown>): TAIConfigKey | null {
+export function findConfigKeyInState(
+  state: Record<string, unknown>,
+): TAIConfigKey | null {
   return VALID_AI_CONFIG_KEYS.find((key) => state[key] != null) ?? null;
 }
 
@@ -78,21 +81,28 @@ export function findConfigKeyInState(state: Record<string, unknown>): TAIConfigK
  * several of these workflows resolve the same Circuit entityType.
  */
 const BUILD_CONFIG_KEY_BY_SCHEMA: Partial<Record<SchemaName, TAIConfigKey>> = {
-  [SchemaNameDict.EMSynapseMappingScanConfig]: 'em_synapse_mapping_config',
-  [SchemaNameDict.BuildSynaptomeScanConfig]: 'me_model_synaptic_model_placement_config',
+  [SchemaNameDict.EMSynapseMappingScanConfig]: "em_synapse_mapping_config",
+  [SchemaNameDict.BuildSynaptomeScanConfig]:
+    "me_model_synaptic_model_placement_config",
   [SchemaNameDict.ExtracellularRecordingArrayScanConfig]:
-    'create_extracellular_recording_array_config',
-  [SchemaNameDict.SynapseParameterizationScanConfig]: 'synapse_parameterization_config',
+    "create_extracellular_recording_array_config",
+  [SchemaNameDict.SynapseParameterizationScanConfig]:
+    "synapse_parameterization_config",
 };
 
 export function getConfigKeyForEntity(
   entityType: TExtendedEntitiesTypeDict,
   activity: TScanConfigActivity,
   entity?: { scale?: string },
-  schemaName?: SchemaName
+  schemaName?: SchemaName,
 ): TAIConfigKey | null {
-  if (activity === ScanConfigActivity.Process) return 'skeletonization_config';
-  if (activity === ScanConfigActivity.Optimize) return 'emodel_optimization_config';
+  if (activity === ScanConfigActivity.Process) {
+    return entityType === ExtendedEntitiesTypeDict.Circuit
+      ? "circuit_simplification_config"
+      : "skeletonization_config";
+  }
+  if (activity === ScanConfigActivity.Optimize)
+    return "emodel_optimization_config";
   if (activity === ScanConfigActivity.Build) {
     return (schemaName && BUILD_CONFIG_KEY_BY_SCHEMA[schemaName]) ?? null;
   }
@@ -101,38 +111,38 @@ export function getConfigKeyForEntity(
 
   // Simulate activity — resolve by entity type
   if (entityType === ExtendedEntitiesTypeDict.MemodelCircuit) {
-    return 'me_model_simulation_config';
+    return "me_model_simulation_config";
   }
   if (entityType === ExtendedEntitiesTypeDict.IonChannelModel) {
-    return 'ion_channel_model_simulation_config';
+    return "ion_channel_model_simulation_config";
   }
   if (entityType === ExtendedEntitiesTypeDict.SingleNeuronCircuit) {
-    return 'me_model_with_synapses_simulation_config';
+    return "me_model_with_synapses_simulation_config";
   }
   // Circuit type — check scale for synaptome disambiguation
   if (entity?.scale === CircuitScaleDictionary.Single) {
-    return 'me_model_with_synapses_simulation_config';
+    return "me_model_with_synapses_simulation_config";
   }
-  return 'circuit_simulation_config';
+  return "circuit_simulation_config";
 }
 
 export const ScanConfigCampaignOriginActionDict = {
-  View: 'view',
-  Duplicate: 'duplicate',
-  Task: 'task',
+  View: "view",
+  Duplicate: "duplicate",
+  Task: "task",
 } as const;
 
 export type TScanConfigCampaignOriginActionDict =
   (typeof ScanConfigCampaignOriginActionDict)[keyof typeof ScanConfigCampaignOriginActionDict];
 
 /** query param for resume/duplicate flows (`?origin={campaignId}`). */
-export const ScanConfigOriginSearchParam = 'origin' as const;
+export const ScanConfigOriginSearchParam = "origin" as const;
 
 /** query param flagging the editor mode, e.g. `?mode=duplicate` to open editable. */
-export const ScanConfigModeSearchParam = 'mode' as const;
+export const ScanConfigModeSearchParam = "mode" as const;
 
 /** query param holding the editor's active tab (`?tab=simulations`). */
-export const ScanConfigTabSearchParam = 'tab' as const;
+export const ScanConfigTabSearchParam = "tab" as const;
 
 /** each activity's results tab — the one tab that is not `configuration`. */
 export const ScanConfigResultsTab = {
@@ -196,15 +206,17 @@ export const ScanConfigConfigurationTab = {
 export function resolveScanConfigTab(
   tab: TScanConfigTabs,
   activity: TScanConfigActivity,
-  hasCampaign: boolean
+  hasCampaign: boolean,
 ): TScanConfigTabs {
   return hasCampaign ? tab : ScanConfigConfigurationTab[activity];
 }
 
 export function parseScanConfigMode(
-  value: string | string[] | undefined
+  value: string | string[] | undefined,
 ): TScanConfigCampaignOriginActionDict | undefined {
-  return Object.values(ScanConfigCampaignOriginActionDict).find((action) => action === value);
+  return Object.values(ScanConfigCampaignOriginActionDict).find(
+    (action) => action === value,
+  );
 }
 
 /** obiOne FromID reference written under an `initialize` model field */
@@ -219,8 +231,8 @@ export type TFromIdRef = {
 export function isFromIdRef(value: unknown): value is TFromIdRef {
   return (
     isPlainObject(value) &&
-    typeof value.type === 'string' &&
-    typeof value.id_str === 'string' &&
+    typeof value.type === "string" &&
+    typeof value.id_str === "string" &&
     z.uuid().safeParse(value.id_str).success
   );
 }
@@ -240,12 +252,12 @@ export function extractConfigValueId(source: unknown): string | undefined {
   if (isFromIdRef(source)) {
     return source.id_str;
   }
-  if (typeof source === 'string') {
+  if (typeof source === "string") {
     return source;
   }
   if (isPlainObject(source)) {
     const id = source.id_str ?? source.id;
-    return typeof id === 'string' ? id : undefined;
+    return typeof id === "string" ? id : undefined;
   }
   return undefined;
 }
@@ -266,7 +278,7 @@ export function extractConfigValueId(source: unknown): string | undefined {
  */
 export function resolveEntityQueryFilters(
   entityQuery: TEntityQuery | undefined,
-  config: Record<string, unknown>
+  config: Record<string, unknown>,
 ): Record<string, unknown> {
   const filters = entityQuery?.filters ?? {};
   const valueFrom = entityQuery?.value_from;
@@ -279,7 +291,7 @@ export function resolveEntityQueryFilters(
 
   for (const [key, value] of Object.entries(filters)) {
     // primitives are static filters; a non-null object is the dynamic placeholder
-    const isDynamicPlaceholder = value !== null && typeof value === 'object';
+    const isDynamicPlaceholder = value !== null && typeof value === "object";
     if (!isDynamicPlaceholder) {
       resolved[key] = value;
     } else if (sourceId) {
@@ -295,10 +307,13 @@ export function resolveEntityQueryFilters(
  *
  * used in browse cart where selections are keyed by browse entity type
  */
-export function getEntityTypeTagLabel(entityType: TExtendedEntitiesTypeDict): string {
+export function getEntityTypeTagLabel(
+  entityType: TExtendedEntitiesTypeDict,
+): string {
   const domainTitle = getEntityByExtendedType({ type: entityType })?.title;
-  const label = domainTitle ?? EntityTypeCatalog[entityType]?.label ?? entityType;
-  return label.replace(/\s+/g, ' ').toUpperCase();
+  const label =
+    domainTitle ?? EntityTypeCatalog[entityType]?.label ?? entityType;
+  return label.replace(/\s+/g, " ").toUpperCase();
 }
 
 /**
@@ -319,7 +334,7 @@ export function getFromIdRefTypeBadgeLabel(ref: TFromIdRef): string {
     return domainTitle.toUpperCase();
   }
 
-  return ref.type.replace(/_/g, ' ').toUpperCase();
+  return ref.type.replace(/_/g, " ").toUpperCase();
 }
 
 /**
@@ -332,19 +347,21 @@ export function getFromIdRefTypeBadgeLabel(ref: TFromIdRef): string {
 export function resolveNeuronFilterProperties(
   paramSchema: NeuronPropertyFilter,
   state: Record<string, ConfigValue>,
-  schemaMappingConfig: TSchemaMappingConfiguration | undefined
+  schemaMappingConfig: TSchemaMappingConfiguration | undefined,
 ): { population: string; properties: Record<string, string[]> } {
   const selected = state[paramSchema.population_source_dropdown_key];
 
   const population =
-    Array.isArray(selected) && typeof selected[0] === 'string'
-      ? (selected[0] ?? '')
-      : typeof selected === 'string'
+    Array.isArray(selected) && typeof selected[0] === "string"
+      ? (selected[0] ?? "")
+      : typeof selected === "string"
         ? selected
-        : '';
+        : "";
 
   const properties =
-    schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation?.[population] ?? {};
+    schemaMappingConfig?.properties?.NodePropertyUniqueValuesByPopulation?.[
+      population
+    ] ?? {};
 
   return { population, properties };
 }

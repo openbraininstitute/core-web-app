@@ -30,13 +30,24 @@ const resultsHref = (
   activity: TActivityValue,
   listEntityType: (typeof ExtendedEntitiesTypeDict)[keyof typeof ExtendedEntitiesTypeDict],
   row: TWorkflowActivityTableRow
-) => buildWorkflowActivityResultsHref({ activity, listEntityType, workspace, row });
+) =>
+  buildWorkflowActivityResultsHref({
+    activity,
+    listEntityType,
+    workspace,
+    row,
+  });
 
 describe('workflow activity "View results" action', () => {
   it.each([
     // the campaign's own results tab reads its task results, so no single result entity is needed
     [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign, ActivityValues.Extract, 'extractions'],
     [ExtendedEntitiesTypeDict.CircuitExtractionCampaign, ActivityValues.Extract, 'extractions'],
+    [
+      ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
+      ActivityValues['Process Data'],
+      'simplifications',
+    ],
     [
       ExtendedEntitiesTypeDict.SkeletonizationCampaign,
       ActivityValues['Process Data'],
@@ -85,7 +96,12 @@ describe('workflow activity "View results" action', () => {
       EntityTypeDict.IonChannelModelingCampaign,
     ],
   ])('has no results view for %s', (entityType, rowType) => {
-    expect(resultsHref(ActivityValues.Build, entityType, { id: ROW_ID, type: rowType })).toBeNull();
+    expect(
+      resultsHref(ActivityValues.Build, entityType, {
+        id: ROW_ID,
+        type: rowType,
+      })
+    ).toBeNull();
   });
 
   it('keeps the detail-view route closed for the campaigns it cannot resolve', () => {
@@ -93,6 +109,7 @@ describe('workflow activity "View results" action', () => {
     for (const entityType of [
       ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
       ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+      ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
       ExtendedEntitiesTypeDict.SkeletonizationCampaign,
     ]) {
       expect(NotAllowedResultsActionEntityTypes).toContain(entityType);

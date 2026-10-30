@@ -2,7 +2,7 @@ import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity'
 import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
-import { ScanConfigActivity } from '@/features/scan-config/types';
+import { ProcessScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
 import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
 import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
@@ -17,6 +17,18 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
       // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
       return await SkeletonizationCampaign.api.query.resolve!({ id, context });
     },
+  },
+  editor: {
+    className: 'px-4',
+  },
+  i18n: {
+    resultsTabId: ProcessScanConfigTabs.skeletonizations,
+    resultsTab: 'skeletonizations',
+    generate: 'Generate skeletonization(s)',
+    new: 'New skeletonization campaign',
+    copyCampaignId: 'Copy skeletonization campaign ID',
+    launch: 'Launch skeletonizations',
+    workflowLabel: 'skeletonizations',
   },
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.Skeletonization,

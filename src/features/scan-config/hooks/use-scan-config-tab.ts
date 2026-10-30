@@ -5,6 +5,7 @@ import { useCallback } from 'react';
 
 import { ScanConfigTabSearchParam } from '@/features/scan-config/helpers';
 import {
+  BaseScanConfigTabs,
   ScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
@@ -17,13 +18,15 @@ type TScanConfigTabId = TScanConfigTabs['id'];
  */
 export function useScanConfigTab(
   activity: TScanConfigActivity,
-  defaultTab: TScanConfigTabs
+  defaultTab: TScanConfigTabs,
+  resultsTabId?: TScanConfigTabId
 ): [TScanConfigTabs, (tab: TScanConfigTabs) => void] {
+  const availableTabs = Object.values(ScanConfigTabs[activity]).filter(
+    (id) => !resultsTabId || id === BaseScanConfigTabs.configuration || id === resultsTabId
+  );
   const [id, setId] = useQueryState(
     ScanConfigTabSearchParam,
-    parseAsStringLiteral(
-      Object.values(ScanConfigTabs[activity]) as readonly TScanConfigTabId[]
-    ).withDefault(defaultTab.id)
+    parseAsStringLiteral(availableTabs as readonly TScanConfigTabId[]).withDefault(defaultTab.id)
   );
 
   const setTab = useCallback((next: TScanConfigTabs) => setId(next.id), [setId]);

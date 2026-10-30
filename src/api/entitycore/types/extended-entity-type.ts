@@ -22,6 +22,7 @@ export const ExtendedEntitiesTypeDict = {
   SynthesizedCellMorphology: 'synthesized_cell_morphology',
   UniversalCellMorphology: 'universal_cell_morphology',
   CircuitExtractionCampaign: 'circuit_extraction_campaign',
+  CircuitSimplificationCampaign: 'circuit_simplification_campaign',
   SkeletonizationCampaign: 'skeletonization_campaign',
   ExtracellularRecordingArrayCampaign: 'extracellular_recording_array_campaign',
   BuildSynaptomeCampaign: 'build_synaptome_campaign',

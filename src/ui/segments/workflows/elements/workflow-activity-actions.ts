@@ -39,6 +39,7 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.RegionCircuitSimulation,
   ExtendedEntitiesTypeDict.WholeBrainCircuitSimulation,
   ExtendedEntitiesTypeDict.CircuitExtractionCampaign,
+  ExtendedEntitiesTypeDict.CircuitSimplificationCampaign,
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
@@ -254,17 +255,20 @@ export function buildWorkflowActivityResultsHref(opts: {
   row: TWorkflowActivityTableRow;
   query?: Record<string, string | undefined>;
 }): string | null {
-  const scanConfigActivity = getWorkflow({
+  const workflow = getWorkflow({
     activity: opts.activity,
     targetType: opts.listEntityType,
-  })?.scanConfig?.definition.activity;
+  });
+  const scanConfigActivity = workflow?.scanConfig?.definition.activity;
 
   if (scanConfigActivity) {
     const href = buildConfigureUrlForActivityRow({
       ...opts,
       query: {
         ...opts.query,
-        [ScanConfigTabSearchParam]: ScanConfigResultsTab[scanConfigActivity].id,
+        [ScanConfigTabSearchParam]:
+          workflow?.scanConfig?.definition.i18n?.resultsTabId ??
+          ScanConfigResultsTab[scanConfigActivity].id,
       },
     });
 
