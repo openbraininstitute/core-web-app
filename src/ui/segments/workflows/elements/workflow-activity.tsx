@@ -3,7 +3,6 @@
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DEFAULT_PAGE_MEDIUM_SIZE } from '@/constants';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
@@ -19,10 +18,20 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
+import { useFlags } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { ActivityValues, getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
+import { getActivity, type TActivityValue } from '@/ui/segments/workflows/config';
 import { ActivityAndTypeSelectors } from '@/ui/segments/workflows/elements/browse-header';
-import { buildWorkflowActivityCellRenderers } from '@/ui/segments/workflows/elements/workflow-activity-cells';
+import {
+  ALL_WORKFLOWS,
+  allWorkflowsSources,
+  createAllWorkflowsDataSource,
+  type TAllWorkflows,
+} from '@/ui/segments/workflows/elements/workflow-activity-all';
+import {
+  buildWorkflowActivityCellRenderers,
+  WORKFLOW_ACTIVITY_QUERY_KEY,
+} from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
 import { cn } from '@/utils/css-class';
@@ -41,6 +50,7 @@ const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
 
 export function WorkflowActivity() {
   const { virtualLabId, projectId } = useWorkspace();
+  const flags = useFlags();
 
   const [{ activityType, entityType }, updateActivityState] = useQueryStates(
     {
@@ -49,15 +59,15 @@ export function WorkflowActivity() {
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(ActivityValues.Build) as SingleParserBuilder<TActivityValue>,
+        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<TActivityValue | TAllWorkflows>,
       entityType: parseAsString
         .withOptions({
           clearOnDefault: false,
           shallow: true,
         })
-        .withDefault(
-          ExtendedEntitiesTypeDict.MEModelBuildCampaign
-        ) as SingleParserBuilder<TExtendedEntitiesTypeDict>,
+        .withDefault(ALL_WORKFLOWS) as SingleParserBuilder<
+        TExtendedEntitiesTypeDict | TAllWorkflows
+      >,
     },
     {
       urlKeys: {
@@ -67,26 +77,27 @@ export function WorkflowActivity() {
     }
   );
 
-  const resolvedActivityType: TActivityValue =
-    activityType ?? (ActivityValues.Build as TActivityValue);
-  const resolvedEntityType: TExtendedEntitiesTypeDict =
-    entityType ?? ExtendedEntitiesTypeDict.MEModelBuildCampaign;
+  // All on either side lists every workflow: a type cannot narrow All, nor All a category
+  const all = activityType === ALL_WORKFLOWS || entityType === ALL_WORKFLOWS;
+  const listedActivity = all ? undefined : (activityType as TActivityValue);
+  const listedType = all ? undefined : (entityType as TExtendedEntitiesTypeDict);
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const gridKey = `${resolvedActivityType}-${resolvedEntityType}`;
+  const gridKey = all ? ALL_WORKFLOWS : `${listedActivity}-${listedType}`;
+  const layoutType = listedType ?? ALL_WORKFLOWS;
 
-  const activityName = getActivity(resolvedActivityType)?.name ?? '';
+  const activityName = listedActivity ? (getActivity(listedActivity)?.name ?? '') : '';
 
   const schema = useMemo(
     () =>
       buildWorkflowActivitySchema({
-        activity: resolvedActivityType,
+        activity: listedActivity,
         activityName,
-        entityType: resolvedEntityType,
+        entityType: listedType,
         workspace,
       }),
-    [resolvedActivityType, activityName, resolvedEntityType, workspace]
+    [listedActivity, activityName, listedType, workspace]
   );
 
   const operators = useMemo(() => createDefaultOperatorRegistry(), []);
@@ -96,19 +107,17 @@ export function WorkflowActivity() {
       new GridController<EntityCoreObjectTypes>({
         schema,
         context: {
-          dataType: resolvedEntityType,
+          dataType: layoutType,
           section: WORKFLOW_ACTIVITY_SECTION,
-          factors: { activity: resolvedActivityType },
+          factors: { activity: listedActivity ?? ALL_WORKFLOWS },
         },
         instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
         // The layout slice is keyed by section + entity type only, so a chosen column
         // set follows the type across projects the way the browse listings do.
-        persistence: createDefaultPersistence(
-          layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, resolvedEntityType)
-        ),
+        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, layoutType)),
         defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       }),
-    [schema, resolvedEntityType, resolvedActivityType, virtualLabId, projectId, gridKey]
+    [schema, layoutType, listedActivity, virtualLabId, projectId, gridKey]
   );
   useEffect(() => controller.connect(), [controller]);
 
@@ -119,17 +128,24 @@ export function WorkflowActivity() {
   const freeTextSearch = useGridStateSlice(controller, selectFreeTextSearch);
 
   // The grid contributes page/sort/filter/search; the entity's domain config owns the
-  // endpoint, and `params` below pins the workspace scope.
+  // endpoint (All asks each workflow's), and `params` below pins the workspace scope.
   const dataSource = useMemo(
     () =>
-      createEntitycorePagedDataSource<EntityCoreObjectTypes>({
-        dataType: resolvedEntityType,
-        schema,
-        context: { virtualLabId, projectId },
-        // workflow-only: a pasted UUID in the search box looks up that record by id
-        transformParams: withWorkflowIdSearch,
-      }),
-    [resolvedEntityType, schema, virtualLabId, projectId]
+      listedType
+        ? createEntitycorePagedDataSource<EntityCoreObjectTypes>({
+            dataType: listedType,
+            schema,
+            context: { virtualLabId, projectId },
+            // workflow-only: a pasted UUID in the search box looks up that record by id
+            transformParams: withWorkflowIdSearch,
+          })
+        : createAllWorkflowsDataSource({
+            sources: allWorkflowsSources(flags),
+            schema,
+            context: { virtualLabId, projectId },
+            transformParams: withWorkflowIdSearch,
+          }),
+    [listedType, schema, virtualLabId, projectId, flags]
   );
 
   const params = useMemo(
@@ -155,19 +171,22 @@ export function WorkflowActivity() {
           renderer={AgGridRenderer}
           operators={operators}
           cellRenderers={CELL_RENDERERS}
-          queryKey={['workflow-activity', virtualLabId, projectId, gridKey]}
+          queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
           params={params}
-          enabled={Boolean(resolvedActivityType && resolvedEntityType)}
+          enabled={all || Boolean(listedActivity && listedType)}
           loadingLabel="activities"
           className="min-h-0 flex-1"
           gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
           toolbarSlots={{
             entityType: (
               <ActivityAndTypeSelectors
-                activity={activityType}
-                entityType={entityType}
+                activity={all ? ALL_WORKFLOWS : activityType}
+                entityType={all ? ALL_WORKFLOWS : entityType}
                 onActivityChange={(activityType) => updateActivityState({ activityType })}
                 onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
+                onAllSelect={() =>
+                  updateActivityState({ activityType: ALL_WORKFLOWS, entityType: ALL_WORKFLOWS })
+                }
               />
             ),
             search: (

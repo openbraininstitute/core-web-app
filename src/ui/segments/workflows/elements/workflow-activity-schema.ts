@@ -12,6 +12,8 @@ import {
   OperatorId,
   SortDirection,
 } from '@/features/data-grid/core';
+import { getActivity } from '@/ui/segments/workflows/config';
+import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
 import {
   WORKFLOW_ACTIVITY_ACTIONS_COLUMN_WIDTH,
   WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
@@ -51,8 +53,11 @@ const workflowActivityAdvancedFilters: ReadonlyArray<IAdvancedFilterGroup> = [
 ];
 
 export interface IWorkflowActivitySchemaArgs {
-  /** the selected activity, forwarded to the actions cell to build its hrefs */
-  activity: TActivityValue;
+  /**
+   * the selected activity, forwarded to the actions cell to build its hrefs; `undefined` under
+   * All, whose rows each carry their own (`rowWorkflow`)
+   */
+  activity: TActivityValue | undefined;
   /** activity label shown verbatim in every Category cell (Build, Simulation, …) */
   activityName: string;
   /** the listing's selected entity type, used as the Type cell's fallback title */
@@ -102,10 +107,13 @@ export function buildWorkflowActivitySchema({
         },
       },
       {
-        // display-only: the activity is chosen in the toolbar
+        // display-only: the activity is chosen in the toolbar, or comes with the row under All
         id: 'category',
         header: 'Category',
-        getValue: () => activityName,
+        getValue: (row) => {
+          const own = rowWorkflow(row)?.activity;
+          return own ? (getActivity(own)?.name ?? '') : activityName;
+        },
         width: { minWidth: 120, flex: 1 },
       },
       {
@@ -185,7 +193,10 @@ export function buildWorkflowActivitySchema({
         id: 'actions',
         header: 'Actions',
         align: Align.Center,
-        getValue: () => '',
+        // never shown: a refetched row re-renders only the cells whose value changed, and the
+        // edit dialog has to open on the row as it now is, so an edit (a new
+        // `update_date`) must count as a change here
+        getValue: (row) => ('update_date' in row ? (row.update_date ?? '') : ''),
         cellRenderer: WORKFLOW_ACTIVITY_ACTIONS_RENDERER,
         cellRendererParams: { activity, entityType },
         pinned: ColumnPin.Right,

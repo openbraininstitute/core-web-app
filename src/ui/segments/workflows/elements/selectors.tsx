@@ -14,19 +14,29 @@ import {
   listActivities,
   listWorkflows,
 } from '@/ui/segments/workflows/config';
+import {
+  ALL_WORKFLOWS,
+  type TAllWorkflows,
+} from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
+
+/** The All entry, styled as the menus' other entries. */
+const ALL_ITEM_CLASS = cn(
+  'text-primary-9 text-lg font-bold cursor-pointer',
+  'data-highlighted:text-primary-7!'
+);
 
 export function EntityTypeSelectScrollable({
   value,
   category,
   onSelect,
 }: {
-  category: TActivityValue | null;
-  value: TExtendedEntitiesTypeDict | null;
-  onSelect: (v: TExtendedEntitiesTypeDict | null) => void;
+  category: TActivityValue | TAllWorkflows | null;
+  value: TExtendedEntitiesTypeDict | TAllWorkflows | null;
+  onSelect: (v: TExtendedEntitiesTypeDict | TAllWorkflows | null) => void;
 }) {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
@@ -35,7 +45,7 @@ export function EntityTypeSelectScrollable({
   return (
     <Select
       value={value ?? undefined}
-      onValueChange={(v: TExtendedEntitiesTypeDict) => onSelect(v)}
+      onValueChange={(v: TExtendedEntitiesTypeDict | TAllWorkflows) => onSelect(v)}
     >
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
@@ -53,6 +63,11 @@ export function EntityTypeSelectScrollable({
         side="bottom"
         sideOffset={3}
       >
+        {category === ALL_WORKFLOWS && (
+          <SelectItem value={ALL_WORKFLOWS} className={ALL_ITEM_CLASS}>
+            All
+          </SelectItem>
+        )}
         {groupWorkflowsByEntityGroup(
           listWorkflows({
             activity: category,
@@ -92,14 +107,20 @@ export function EntityTypeSelectScrollable({
 export function CategorySelectScrollable({
   value,
   onSelect,
+  includeAll = false,
 }: {
-  value: TActivityValue | null;
-  onSelect: (v: TActivityValue | null) => void;
+  value: TActivityValue | TAllWorkflows | null;
+  onSelect: (v: TActivityValue | TAllWorkflows | null) => void;
+  /** offers All first: every workflow's runs at once, legacy ones aside */
+  includeAll?: boolean;
 }) {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   return (
-    <Select value={value ?? undefined} onValueChange={(v: TActivityValue) => onSelect(v)}>
+    <Select
+      value={value ?? undefined}
+      onValueChange={(v: TActivityValue | TAllWorkflows) => onSelect(v)}
+    >
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
@@ -118,6 +139,11 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
+        {includeAll && (
+          <SelectItem value={ALL_WORKFLOWS} className={ALL_ITEM_CLASS}>
+            All
+          </SelectItem>
+        )}
         {listActivities(featureFlags).map(({ label, value: _value, disabled }) => (
           <SelectItem
             key={`category-${_value}`}

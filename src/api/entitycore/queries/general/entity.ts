@@ -1,8 +1,13 @@
+import { kebabCase } from 'es-toolkit/compat';
+
 import { entityCoreApi, getEntityCoreContext } from '@/api/entitycore/utils';
 import { compactRecord } from '@/utils/dictionary';
 
 import type { EntityCountResponse, IEntity } from '@/api/entitycore/types/entities/entity';
-import type { TEntityTypeWithBrainRegionDict } from '@/api/entitycore/types/entity-type';
+import type {
+  TEntityTypeDict,
+  TEntityTypeWithBrainRegionDict,
+} from '@/api/entitycore/types/entity-type';
 import type { BrainRegionHierarchyFilter } from '@/api/entitycore/types/shared/request';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -55,6 +60,33 @@ export async function getEntity({
 }): Promise<IEntity> {
   const api = await entityCoreApi();
   return await api.get(`${baseUri}/${id}`, {
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...getEntityCoreContext(context).headers,
+    },
+  });
+}
+
+/**
+ * Renames an entity and rewrites its description through its own route's `PATCH`, which takes
+ * both on every type a workflow listing shows (task configs, simulation campaigns, the legacy
+ * single-neuron ones).
+ */
+export async function updateEntityDetails({
+  type,
+  id,
+  data,
+  context,
+}: {
+  type: TEntityTypeDict;
+  id: string;
+  data: { name: string; description: string };
+  context?: WorkspaceContext | null;
+}): Promise<IEntity> {
+  const api = await entityCoreApi();
+  return await api.patch(`/${kebabCase(type)}/${id}`, {
+    body: data,
     headers: {
       accept: 'application/json',
       'content-type': 'application/json',
