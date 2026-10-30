@@ -7,6 +7,8 @@ import type { IAgGridContext } from '@/features/data-grid/renderers/aggrid/ag-co
 
 interface CellHostParams {
   rendererKey?: string;
+  /** the column is sized to its content (`IWidthSpec.fitContent`) */
+  fitted?: boolean;
 }
 
 /**
@@ -47,6 +49,18 @@ export function AgCellHost(props: CustomCellRendererProps) {
     rowIndex: props.node?.rowIndex ?? 0,
     params,
   });
+  // a fitted column's cell is watched, since what it shows may arrive after the fit
+  if (keyed !== undefined && params.fitted && ctx.watchFittedCell) {
+    const watch = ctx.watchFittedCell;
+    return (
+      <span
+        ref={(el) => (el ? watch(el) : undefined)}
+        className="inline-flex max-w-full items-center"
+      >
+        {keyed}
+      </span>
+    );
+  }
   if (keyed !== undefined) return keyed;
 
   // No (or unresolved) renderer key: print the plain value, or the shared

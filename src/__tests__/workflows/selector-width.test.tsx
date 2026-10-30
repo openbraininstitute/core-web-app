@@ -56,9 +56,20 @@ describe('workflow category/type selectors size to their content', () => {
     }
   });
 
-  it('keeps the minimum width, so a short label still fills the pill', () => {
-    render(<CategorySelectScrollable value={ActivityValues.Build} onSelect={vi.fn()} />);
+  it('takes no minimum width, so a short value leaves no gap before the chevron', () => {
+    render(
+      <>
+        <CategorySelectScrollable value={ActivityValues.Build} onSelect={vi.fn()} />
+        <EntityTypeSelectScrollable
+          category={ActivityValues.Build}
+          value={null}
+          onSelect={vi.fn()}
+        />
+      </>
+    );
 
-    expect(widthClasses(trigger())).toContain('min-w-36');
+    for (const el of screen.getAllByRole('combobox')) {
+      expect(widthClasses(el as HTMLElement).filter((c) => c.startsWith('min-w-'))).toEqual([]);
+    }
   });
 });

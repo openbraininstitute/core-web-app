@@ -2,7 +2,6 @@ import {
   EntityLifecycleStatus,
   EntityLifecycleStatusLabel,
 } from '@/api/entitycore/types/shared/global';
-import { CAMPAIGN_STATUS_COLUMN_MIN_WIDTH } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-badge';
 import { LIFECYCLE_STATUS_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import {
   Align,
@@ -84,12 +83,32 @@ export function buildWorkflowActivitySchema({
     advancedFilters: workflowActivityAdvancedFilters,
     columns: [
       {
+        // display-only: the activity is chosen in the toolbar, or comes with the row under All
+        id: 'category',
+        header: 'Category',
+        getValue: (row) => {
+          const own = rowWorkflow(row)?.activity;
+          return own ? (getActivity(own)?.name ?? '') : activityName;
+        },
+        width: { fitContent: true },
+      },
+      {
+        // display-only: the entity type is pinned by the toolbar's Type selector, or comes
+        // with the row under All
+        id: 'type',
+        header: 'Type',
+        getValue: () => '',
+        cellRenderer: WORKFLOW_ACTIVITY_TYPE_RENDERER,
+        cellRendererParams: { entityType },
+        width: { fitContent: true },
+      },
+      {
         id: 'name',
         header: 'Name',
         sortable: true,
         sortField: 'name',
         getValue: (row) => row.name ?? '',
-        width: { minWidth: 160, flex: 2 },
+        width: { fitContent: true, maxWidth: 480 },
         essential: true,
         filter: {
           operators: [OperatorId.Ilike, OperatorId.In, OperatorId.Eq],
@@ -107,39 +126,20 @@ export function buildWorkflowActivitySchema({
         },
       },
       {
-        // display-only: the activity is chosen in the toolbar, or comes with the row under All
-        id: 'category',
-        header: 'Category',
-        getValue: (row) => {
-          const own = rowWorkflow(row)?.activity;
-          return own ? (getActivity(own)?.name ?? '') : activityName;
-        },
-        width: { minWidth: 120, flex: 1 },
-      },
-      {
-        // display-only: the entity type is pinned by the toolbar's Type selector
-        id: 'type',
-        header: 'Type',
-        getValue: () => '',
-        cellRenderer: WORKFLOW_ACTIVITY_TYPE_RENDERER,
-        cellRendererParams: { entityType },
-        width: { minWidth: 140, flex: 1 },
-      },
-      {
         id: 'creationDate',
         header: 'Date',
         sortable: true,
         sortField: 'creation_date',
         getValue: (row) => row.creation_date ?? '',
         cellRenderer: WORKFLOW_ACTIVITY_DATE_RENDERER,
-        width: { minWidth: 150, flex: 1 },
+        width: { fitContent: true },
       },
       {
         id: 'createdBy',
         header: 'Created by',
         // not sortable: `/task-config` omits `created_by__pref_label` — see SORT SAFETY
         getValue: (row) => ('created_by' in row ? (row.created_by?.pref_label ?? '') : ''),
-        width: { minWidth: 140, flex: 1 },
+        width: { fitContent: true },
         filter: {
           // `created_by__pref_label__in` / `…__ilike`; options from the `created_by` facet
           operators: [OperatorId.In, OperatorId.Ilike],
@@ -156,7 +156,10 @@ export function buildWorkflowActivitySchema({
         getValue: () => '',
         cellRenderer: WORKFLOW_ACTIVITY_STATUS_RENDERER,
         cellRendererParams: { workspace },
-        width: { minWidth: CAMPAIGN_STATUS_COLUMN_MIN_WIDTH, flex: 1 },
+        // the badge opens its own card of executions on hover
+        ownHoverCard: true,
+        // refitted as the badges arrive, each from a request of its own after its row
+        width: { fitContent: true },
       },
       {
         /**
@@ -174,7 +177,7 @@ export function buildWorkflowActivitySchema({
         getValue: (row) =>
           'lifecycle_status' in row ? ((row.lifecycle_status as string) ?? '') : '',
         cellRenderer: LIFECYCLE_STATUS_RENDERER,
-        width: { minWidth: 140, flex: 1 },
+        width: { fitContent: true },
         filter: {
           operators: [OperatorId.In, OperatorId.Eq],
           field: 'lifecycle_status',

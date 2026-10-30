@@ -13,6 +13,14 @@ export interface IWidthSpec {
   minWidth?: number;
   flex?: number;
   resizable?: boolean;
+  /**
+   * As wide as its header and the rows on screen need, and no wider: refitted whenever rows
+   * arrive, until the user resizes it. Takes the place of `width` and `flex`, so suits cells
+   * that render their content with the row, not after a request of their own.
+   */
+  fitContent?: boolean;
+  /** With `fitContent`, the widest it fits to, so long text wraps or clips; dragging still widens it */
+  maxWidth?: number;
 }
 
 export type TCellValue = string | number | boolean | null | undefined;
@@ -121,6 +129,8 @@ export interface IColumnModel<Row = unknown> {
   /** cell renderer key resolved by the rendering adapter's cell-renderer registry */
   cellRenderer?: string;
   cellRendererParams?: Record<string, unknown>;
+  /** the cells show a hover card of their own, so the grid's row hover card leaves them alone */
+  ownHoverCard?: boolean;
   /** whether the column exists at all here (default: true); `false` drops it, chooser included */
   available?: TContextualValue<boolean>;
   /** position weight, ascending; ties keep declaration order */

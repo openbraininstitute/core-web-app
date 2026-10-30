@@ -31,6 +31,7 @@ import {
 import {
   buildWorkflowActivityCellRenderers,
   WORKFLOW_ACTIVITY_QUERY_KEY,
+  WorkflowHoverCard,
 } from '@/ui/segments/workflows/elements/workflow-activity-cells';
 import { buildWorkflowActivitySchema } from '@/ui/segments/workflows/elements/workflow-activity-schema';
 import { withWorkflowIdSearch } from '@/ui/segments/workflows/elements/workflow-activity-search';
@@ -42,8 +43,15 @@ import type { IGridState } from '@/features/data-grid/core';
 
 /** Grid section id — namespaces the persisted column layout away from the browse pages. */
 const WORKFLOW_ACTIVITY_SECTION = 'workflow-activity';
+/**
+ * Where the column layout is saved. Versioned because a saved order or width outranks the
+ * declared one: v3 has Category and Type first and fits every column to its content.
+ */
+const WORKFLOW_ACTIVITY_LAYOUT = `${WORKFLOW_ACTIVITY_SECTION}-v3`;
 
 const selectFreeTextSearch = (state: IGridState): string => state.freeTextSearch;
+
+const renderHoverCard = (row: EntityCoreObjectTypes) => <WorkflowHoverCard row={row} />;
 
 /** One registry for every workflow-activity grid, so remounts resolve the same objects. */
 const CELL_RENDERERS = buildWorkflowActivityCellRenderers();
@@ -114,7 +122,7 @@ export function WorkflowActivity() {
         instanceKey: `${WORKFLOW_ACTIVITY_SECTION}:${virtualLabId}:${projectId}:${gridKey}`,
         // The layout slice is keyed by section + entity type only, so a chosen column
         // set follows the type across projects the way the browse listings do.
-        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_SECTION, layoutType)),
+        persistence: createDefaultPersistence(layoutKeyFor(WORKFLOW_ACTIVITY_LAYOUT, layoutType)),
         defaultPageSize: DEFAULT_PAGE_MEDIUM_SIZE,
       }),
     [schema, layoutType, listedActivity, virtualLabId, projectId, gridKey]
@@ -175,6 +183,7 @@ export function WorkflowActivity() {
           params={params}
           enabled={all || Boolean(listedActivity && listedType)}
           loadingLabel="activities"
+          rowHoverCard={renderHoverCard}
           className="min-h-0 flex-1"
           gridClassName="[&_.ag-header]:bg-background [&_.ag-header-cell]:text-neutral-4"
           toolbarSlots={{

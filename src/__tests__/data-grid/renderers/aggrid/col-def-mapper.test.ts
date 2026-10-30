@@ -100,3 +100,52 @@ describe('buildColDefs — edge-pinned columns', () => {
     expect(name?.lockPosition).toBeUndefined();
   });
 });
+
+describe('buildColDefs — columns fitted to their content', () => {
+  const fitted = col('type', { cellRenderer: 'type', width: { fitContent: true, flex: 2 } });
+
+  it('takes no flex, so the renderer can size it to its content', () => {
+    const [def] = buildColDefs([fitted], { ...OPTIONS, withExpandColumn: false });
+
+    expect(def?.flex).toBeUndefined();
+  });
+
+  it('tells its header and its cells, which hug their content and watch it', () => {
+    const [def] = buildColDefs([fitted], { ...OPTIONS, withExpandColumn: false });
+
+    expect(def?.headerComponentParams.fitted).toBe(true);
+    expect(def?.cellRendererParams.fitted).toBe(true);
+  });
+
+  it('keeps a width the user dragged it to', () => {
+    const [def] = buildColDefs([fitted], {
+      ...OPTIONS,
+      columnWidths: { type: 222 },
+      withExpandColumn: false,
+    });
+
+    expect(def?.width).toBe(222);
+  });
+
+  it('leaves a column that is not fitted as it was', () => {
+    const [def] = buildColDefs([col('name', { width: { flex: 2 } })], {
+      ...OPTIONS,
+      withExpandColumn: false,
+    });
+
+    expect(def?.flex).toBe(2);
+    expect(def?.headerComponentParams.fitted).toBe(false);
+  });
+});
+
+describe('buildColDefs — a column with a hover card of its own', () => {
+  it('says so in its context, which keeps the row hover card away from it', () => {
+    const [own, plain] = buildColDefs([col('status', { ownHoverCard: true }), col('name')], {
+      ...OPTIONS,
+      withExpandColumn: false,
+    });
+
+    expect(own?.context?.ownHoverCard).toBe(true);
+    expect(plain?.context?.ownHoverCard).toBeUndefined();
+  });
+});

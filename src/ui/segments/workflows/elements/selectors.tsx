@@ -51,7 +51,7 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
         data-testid="workflow-type-filter"
@@ -125,7 +125,7 @@ export function CategorySelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
         data-testid="workflow-category-filter"

@@ -14,7 +14,7 @@ import type { WorkspaceContext } from '@/types/common';
 const labelClass = 'text-primary-9 text-sm font-bold';
 
 /** The row's own description, which not every entity type carries. */
-function descriptionOf(row: EntityCoreObjectTypes): string {
+export function descriptionOf(row: EntityCoreObjectTypes): string {
   return 'description' in row && typeof row.description === 'string' ? row.description : '';
 }
 

@@ -27,6 +27,7 @@ import {
   GRID_ICON_BUTTON_ACTIVE_CLASS,
   GRID_OVERLAY_Z_CLASS,
 } from '@/features/data-grid/react/molecules-theme';
+import { HOVER_CARD_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
@@ -38,7 +39,10 @@ import {
   type TWorkflowActivityTableRow,
 } from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { rowWorkflow } from '@/ui/segments/workflows/elements/workflow-activity-all';
-import { WorkflowDetailsDialog } from '@/ui/segments/workflows/elements/workflow-details-dialog';
+import {
+  descriptionOf,
+  WorkflowDetailsDialog,
+} from '@/ui/segments/workflows/elements/workflow-details-dialog';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
@@ -341,4 +345,21 @@ export function buildWorkflowActivityCellRenderers(): CellRendererRegistry {
     .register(WORKFLOW_ACTIVITY_STATUS_RENDERER, WorkflowActivityStatusCell)
     .register(WORKFLOW_ACTIVITY_ACTIONS_RENDERER, WorkflowActivityActionsCell)
     .register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
+}
+
+/** The row's name and description, in the card the grid shows under a hovered row. */
+export function WorkflowHoverCard({ row }: { row: EntityCoreObjectTypes }): ReactNode {
+  const description = descriptionOf(row).trim();
+  return (
+    <div className={cn(HOVER_CARD_CLASS, 'flex max-w-sm flex-col gap-1 px-4 py-3')}>
+      <span className="text-primary-9 font-bold wrap-break-word">{row.name}</span>
+      {description ? (
+        <p className="text-neutral-6 line-clamp-8 text-sm whitespace-pre-line wrap-break-word">
+          {description}
+        </p>
+      ) : (
+        <p className="text-neutral-4 text-sm italic">No description</p>
+      )}
+    </div>
+  );
 }

@@ -80,11 +80,13 @@ export function buildColDefs<Row>(
         unit: c.unit,
         sortable: !!c.sortable,
         filter: filterParams,
+        fitted: !!c.width?.fitContent,
       },
       width: userWidth ?? c.width?.width,
       minWidth: c.width?.minWidth,
-      // a user-resized width must win over any flex sizing
-      flex: userWidth != null ? undefined : c.width?.flex,
+      // a user-resized width must win over any flex sizing, and a fitted column takes none:
+      // the renderer sizes it to its content
+      flex: userWidth != null || c.width?.fitContent ? undefined : c.width?.flex,
       resizable: c.width?.resizable ?? true,
       // position-pinned columns (`movable: false`) keep their declared slot — no drag handle
       suppressMovable: c.movable === false,
@@ -117,8 +119,14 @@ export function buildColDefs<Row>(
       };
     } else if (c.cellRenderer) {
       colDef.cellRenderer = AgCellHost;
-      colDef.cellRendererParams = { rendererKey: c.cellRenderer, ...c.cellRendererParams };
+      colDef.cellRendererParams = {
+        rendererKey: c.cellRenderer,
+        ...c.cellRendererParams,
+        fitted: !!c.width?.fitContent,
+      };
     }
+
+    if (c.ownHoverCard) colDef.context = { ownHoverCard: true };
 
     if (filterParams) {
       colDef.suppressHeaderMenuButton = true;
