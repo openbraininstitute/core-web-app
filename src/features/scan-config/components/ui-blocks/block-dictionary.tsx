@@ -15,6 +15,7 @@ import {
   ELECTRODE_LOCATIONS_CONFIG_KEY,
   seedElectrodeInitialOrigin,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { ScanValueSelectorProvider } from '@/features/scan-config/components/ui-elements/parameter-sweep';
 import { isPlainObject } from '@/features/scan-config/components/utils';
@@ -261,12 +262,8 @@ export default function BlockDictionary({
                 hideWhenDetached
                 align="center"
                 side="right"
-                className={cn(
-                  'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-                  'bg-primary-8 px-4 py-2 text-base text-wrap ',
-                  'overflow-y-auto max-h-50 primary-scrollbar'
-                )}
-                arrowClassName="bg-primary-8"
+                showArrow={false}
+                className={DESCRIPTION_TOOLTIP_CLASS}
               >
                 {message}
               </TooltipContent>

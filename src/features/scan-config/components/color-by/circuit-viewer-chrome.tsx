@@ -81,8 +81,8 @@ export interface ICircuitViewerChromeProps {
   colorByNoneLabel?: string;
   /**
    * How many cells of the population on show are selected, of how many, and
-   * the way back to them all: said at the top centre while some are. With a
-   * cell `held`, the way back lets that one go first.
+   * the way back to them all: said at the bottom centre while some are, clear of
+   * the Populations pill. With a cell `held`, the way back lets that one go first.
    */
   selection?: { count: number; total: number; onReset: () => void; held?: boolean };
 }
@@ -278,7 +278,7 @@ export function CircuitViewerChrome({
         )}
       </div>
       {showVizChrome && selection && (
-        <div className="pointer-events-auto absolute top-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
+        <div className="pointer-events-auto absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2">
           <span
             className={cn(
               PILL_CLASS,

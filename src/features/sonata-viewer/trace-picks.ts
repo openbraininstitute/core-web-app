@@ -8,8 +8,11 @@ import type { PickAllState } from '@/features/circuit-nodes/components/nodes-gri
 import type { ColumnValues } from '@/features/circuit-nodes/types';
 import type { PickedTrace, PopulationMetadata } from '@/features/sonata-viewer/types';
 
-/** A cell picked in the table to draw, and its colour slot. */
-export type Pick = { nodeId: number; slot: number };
+/**
+ * A cell picked in the table to draw, and its colour slot: every trace of it, or with
+ * `traceIndex` the one compartment's ticked under it.
+ */
+export type Pick = { nodeId: number; slot: number; traceIndex?: number };
 
 /** A group-by value's traces among those the table keeps, and how many cells they are. */
 export type TraceGroup = { name: string; traces: number[]; cells: number };
@@ -22,13 +25,17 @@ const NO_PICKS: Pick[] = [];
  */
 const picksAtom = atom<{ key: string; cells: Pick[] } | undefined>(undefined);
 
-/** The picks with a cell ticked or unticked: a new pick takes the first slot free, so the others keep theirs. */
-function togglePickIn(cells: readonly Pick[], nodeId: number): Pick[] {
-  if (cells.some((c) => c.nodeId === nodeId)) return cells.filter((c) => c.nodeId !== nodeId);
+/**
+ * The picks with a cell, or one of its compartments, ticked or unticked: a new pick takes the
+ * first slot free, so the others keep theirs.
+ */
+export function togglePickIn(cells: readonly Pick[], nodeId: number, traceIndex?: number): Pick[] {
+  const same = (c: Pick) => c.nodeId === nodeId && c.traceIndex === traceIndex;
+  if (cells.some(same)) return cells.filter((c) => !same(c));
   const taken = new Set(cells.map((c) => c.slot));
   let slot = 0;
   while (taken.has(slot)) slot += 1;
-  return [...cells, { nodeId, slot }];
+  return [...cells, traceIndex === undefined ? { nodeId, slot } : { nodeId, slot, traceIndex }];
 }
 
 /** Every cell of `table` ticked, in node order, each taking the next slot free; or, all ticked, unticked. */
@@ -40,7 +47,7 @@ function togglePicksOf(
   const inTable = new Set(table);
   if (allTicked) return cells.filter((c) => !inTable.has(c.nodeId));
   const next = [...cells];
-  const have = new Set(next.map((c) => c.nodeId));
+  const have = new Set(next.flatMap((c) => (c.traceIndex === undefined ? [c.nodeId] : [])));
   const taken = new Set(next.map((c) => c.slot));
   let slot = 0;
   for (const nodeId of table) {
@@ -131,11 +138,15 @@ export function useTracePicks({
   const pickedCells = picks?.key === pickKey ? picks.cells : NO_PICKS;
 
   const togglePick = useCallback(
-    (nodeId: number) => {
+    (nodeId: number, traceIndex?: number) => {
       if (!pickKey) return;
       setPicks((previous) => ({
         key: pickKey,
-        cells: togglePickIn(previous?.key === pickKey ? previous.cells : NO_PICKS, nodeId),
+        cells: togglePickIn(
+          previous?.key === pickKey ? previous.cells : NO_PICKS,
+          nodeId,
+          traceIndex
+        ),
       }));
     },
     [pickKey, setPicks]
@@ -145,18 +156,34 @@ export function useTracePicks({
     [pickKey, setPicks]
   );
 
+  // A trace drawn once, in the colour of the first pick holding it.
   const pickedTraces = useMemo<PickedTrace[]>(() => {
     const traces: PickedTrace[] = [];
+    const drawn = new Set<number>();
+    const draw = (traceIndex: number, slot: number) => {
+      if (drawn.has(traceIndex)) return;
+      drawn.add(traceIndex);
+      traces.push({ traceIndex, slot });
+    };
     for (const cell of pickedCells) {
+      if (cell.traceIndex !== undefined) {
+        if (population?.traces[cell.traceIndex]) draw(cell.traceIndex, cell.slot);
+        continue;
+      }
       population?.traces.forEach((trace, traceIndex) => {
-        if (trace.nodeId === cell.nodeId) traces.push({ traceIndex, slot: cell.slot });
+        if (trace.nodeId === cell.nodeId) draw(traceIndex, cell.slot);
       });
     }
     return traces;
   }, [population, pickedCells]);
 
+  // The cells ticked whole, and the compartments ticked on their own.
   const selectedNodeIds = useMemo<ReadonlySet<number>>(
-    () => new Set(pickedCells.map((c) => c.nodeId)),
+    () => new Set(pickedCells.flatMap((c) => (c.traceIndex === undefined ? [c.nodeId] : []))),
+    [pickedCells]
+  );
+  const selectedTraces = useMemo<ReadonlySet<number>>(
+    () => new Set(pickedCells.flatMap((c) => (c.traceIndex === undefined ? [] : [c.traceIndex]))),
     [pickedCells]
   );
 
@@ -188,6 +215,7 @@ export function useTracePicks({
     pickedCells,
     pickedTraces,
     selectedNodeIds,
+    selectedTraces,
     tableCells,
     togglePick,
     pickAllState,

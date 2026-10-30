@@ -49,6 +49,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
@@ -57,6 +58,8 @@ import type { TElectrodeArrayEntity } from '@/features/scan-config/components/mo
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const NOTHING_HIDDEN: readonly string[] = [];
+/** The form's root element its neuron sets are in. */
+const NEURON_SETS = 'neuron_sets';
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -160,6 +163,15 @@ interface ICircuitSceneOptions {
   onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
+  /**
+   * Balls on cells of the population on show, at sections and offsets along them, each in a
+   * colour of its own: such as a compartment report's locations, coloured as it plays.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
+  /** Told the key of a ball clicked, which then counts as no click on its cell. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
@@ -228,6 +240,9 @@ export function CircuitScene({
   selection,
   onNodeColorsChange,
   spikes,
+  locationMarkers,
+  onLocationClick,
+  onLocationHover,
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
@@ -345,6 +360,11 @@ export function CircuitScene({
     highlightedCell ?? (tableDriven ? (focus.highlightedCell ?? undefined) : undefined);
   const sceneCellClick = onCellClick ?? (tableDriven ? focus.handleCellClick : undefined);
   const sceneSelection = selection ?? tableSelection;
+  // The table's neurons as a block of the form's neuron sets, opened there.
+  const createNeuronSet =
+    onCreateEntry && scanConfig && NEURON_SETS in scanConfig
+      ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS, block)
+      : undefined;
 
   // What the viewers draw, in declared order: every population, or only the
   // one on show.
@@ -746,6 +766,9 @@ export function CircuitScene({
               onPopulationClick={handlePopulationClick}
               onSubjectCellClick={sceneCellClick}
               onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
+              locationMarkers={locationMarkers}
+              onLocationClick={onLocationClick}
+              onLocationHover={onLocationHover}
               {...sharedVizProps}
             />
           )
@@ -800,6 +823,7 @@ export function CircuitScene({
               focusedCell: focus.focusedCell ?? undefined,
               heldCell: focus.focusedCell?.nodeId ?? null,
               resetRequest: tableResetRequest,
+              onCreateNeuronSet: createNeuronSet,
             }}
           />,
           paneTable.target

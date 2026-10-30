@@ -4,20 +4,32 @@ import { Modal } from 'antd';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-import { RiCheckLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
+import {
+  RiArrowRightSLine,
+  RiCheckLine,
+  RiDownload2Line,
+  RiLoader4Line,
+  RiResetLeftLine,
+  RiSubtractLine,
+  RiTable3,
+} from '@remixicon/react';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
+import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
 import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
+import { readAllRows, toCsv } from '@/features/circuit-nodes/nodes-csv';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { PillToggle, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
+import { logError } from '@/utils/logger';
 
 import type {
   CellMouseOverEvent,
@@ -88,8 +100,8 @@ type Props = {
    * scope's `initialFilterModel` replaces the last one's filters.
    */
   filterScope?: string;
-  /** Called with a clicked row's node id. */
-  onRowClick?: (nodeId: number) => void;
+  /** Called with a clicked row's node id, and a nested row's key after its row's. */
+  onRowClick?: (nodeId: number, nested?: number) => void;
   /**
    * The rows to draw as selected, by node id. Held by the host rather than the
    * grid: the infinite row model drops selection with every page it reloads,
@@ -103,10 +115,30 @@ type Props = {
    * some or none of them are picked, and what a click on it should do.
    */
   pickAll?: { state: PickAllState; onToggle: () => void };
-  /** Called with the node id of the row under the pointer, once per row, and null when it leaves the grid. */
-  onRowHover?: (nodeId: number | null) => void;
+  /**
+   * Called with the node id of the row under the pointer, and a nested row's key after its
+   * row's, once per row, and null when it leaves the grid.
+   */
+  onRowHover?: (nodeId: number | null, nested?: number) => void;
+  /**
+   * Opens or shuts the rows nested under a row, by its node id: rows the datasource serves
+   * right after it, marked {@link NESTED_ROW}, where it is marked {@link NESTING_ROW}. The
+   * node id column then carries a chevron on such a row, and its nested rows' labels.
+   */
+  onNestingToggle?: (nodeId: number) => void;
+  /** Nested rows to draw as selected, by key. */
+  selectedNestedRows?: PickedRows;
+  /** At the header's start, before the count: what the rows are of, such as the population on show. */
+  headerStart?: React.ReactNode;
   /** Right after the count, before the quick filters: what else narrows the rows, say. */
   headerExtra?: React.ReactNode;
+  /** The name of the CSV the rows on show download as, without its extension; `nodes` by default. */
+  downloadName?: string;
+  /**
+   * A host's place for the header, such as its toolbar, in place of a row of its own over the
+   * rows: the count stacks there to keep it short. Null until that place is mounted.
+   */
+  headerSlot?: HTMLElement | null;
   /**
    * A Reset above the rows while a filter is on, or while `picked` says the host
    * holds a pick to undo: it clears the filters and calls `onReset`.
@@ -184,21 +216,60 @@ export type PickAllState = 'all' | 'some' | 'none';
 /** Picked rows by node id: a set, or what answers as one without holding every id. */
 export type PickedRows = Pick<ReadonlySet<number>, 'has' | 'size'>;
 
+/**
+ * On a row nested under another, such as one of a cell's compartments under the cell: its
+ * key, its label and whether it is the last under its row. It carries its row's node id.
+ */
+export const NESTED_ROW = '__nested';
+/** On a row with rows nested under it: how many, and whether they are open. */
+export const NESTING_ROW = '__nesting';
+
+/**
+ * A row of the table nested under a row: its key, its cells, the nested table's columns as
+ * a CSS grid template every row under the same row shares, whether it is the last there,
+ * and whether it is the nested table's header, which nothing picks.
+ */
+export type NestedRowMark = {
+  key: number;
+  cells: readonly string[];
+  template: string;
+  last: boolean;
+  header?: boolean;
+};
+export type NestingRowMark = { count: number; open: boolean };
+
 /** What the cell renderers, row classes and the tick column's header read off the grid's context. */
 type GridContext = {
   visibleColumns: string[];
   isPicked: (nodeId: number) => boolean;
+  isNestedPicked: (key: number) => boolean;
+  toggleNesting: (nodeId: number) => void;
   pickAll: () => { state: PickAllState; onToggle: () => void } | undefined;
 };
 
 const PICKED_ROW_CLASS = 'nodes-row-picked';
 const FLASHED_ROW_CLASS = 'nodes-row-flashed';
 const MARKED_ROW_CLASS = 'nodes-row-marked';
+const NESTED_ROW_CLASS = 'nodes-row-nested';
 /** As long as the flash's fade in the stylesheet. */
 const FLASH_MS = 1600;
 
 function nodeIdOf(data: unknown): number {
   return Number((data as Record<string, unknown> | undefined)?.[NODE_ID_COLUMN]);
+}
+
+function nestedOf(data: unknown): NestedRowMark | undefined {
+  return (data as Record<string, unknown> | undefined)?.[NESTED_ROW] as NestedRowMark | undefined;
+}
+
+function nestingOf(data: unknown): NestingRowMark | undefined {
+  return (data as Record<string, unknown> | undefined)?.[NESTING_ROW] as NestingRowMark | undefined;
+}
+
+/** Whether a row is drawn picked: a nested row by its own key, any other by its node id. */
+function isRowPicked(context: GridContext | undefined, data: unknown): boolean {
+  const nested = nestedOf(data);
+  return nested ? !!context?.isNestedPicked(nested.key) : !!context?.isPicked(nodeIdOf(data));
 }
 
 function PickBox({ state }: { state: PickAllState }) {
@@ -216,10 +287,89 @@ function PickBox({ state }: { state: PickAllState }) {
 }
 
 function PickCell(params: ICellRendererParams) {
-  const picked = (params.context as GridContext | undefined)?.isPicked(nodeIdOf(params.data));
+  if (nestedOf(params.data)?.header) return null;
+  const picked = isRowPicked(params.context as GridContext | undefined, params.data);
   return (
     <span aria-hidden className="flex h-full items-center justify-center">
       <PickBox state={picked ? 'all' : 'none'} />
+    </span>
+  );
+}
+
+/**
+ * The node id column while rows nest: a chevron on a row with rows under it, which opens or
+ * shuts them, and under it each nested row's label on a branch of the tree.
+ */
+function NodeIdCell(params: ICellRendererParams) {
+  const context = params.context as GridContext | undefined;
+  const nested = nestedOf(params.data);
+  if (nested) {
+    // A row of the table under its row, over the file columns it spans: its cells on the
+    // nested table's columns, the header's set small and muted.
+    return (
+      <span className="flex h-full min-w-0 items-center gap-1.5">
+        <span aria-hidden className="relative ml-[7px] h-full w-2.5 shrink-0">
+          <span
+            className={cn(
+              'absolute top-0 left-0 border-l border-neutral-300',
+              nested.last ? 'h-1/2' : 'h-full'
+            )}
+          />
+          {!nested.header && (
+            <span className="absolute top-1/2 left-0 w-full border-t border-neutral-300" />
+          )}
+        </span>
+        {/* The template's widths are in the rows' own characters, header and all, so the
+            header's smaller type is set on its cells rather than here. */}
+        <span
+          className={cn('grid min-w-0', !nested.header && 'text-neutral-600')}
+          style={{ gridTemplateColumns: nested.template }}
+        >
+          {nested.cells.map((cell, i) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: a row's cells are its columns, in order
+              key={i}
+              title={cell}
+              className={cn(
+                'truncate pr-[2ch]',
+                nested.header && 'text-[11px] font-semibold tracking-wide text-neutral-400'
+              )}
+            >
+              {cell}
+            </span>
+          ))}
+        </span>
+      </span>
+    );
+  }
+  const nesting = nestingOf(params.data);
+  return (
+    <span className="flex h-full items-center justify-between gap-1">
+      {nesting ? (
+        <button
+          type="button"
+          data-nesting-toggle
+          aria-expanded={nesting.open}
+          aria-label={nesting.open ? 'Hide the rows under it' : 'Show the rows under it'}
+          title={
+            nesting.open
+              ? 'Hide the rows under it'
+              : `Show the ${nesting.count.toLocaleString()} rows under it`
+          }
+          onClick={() => context?.toggleNesting(nodeIdOf(params.data))}
+          className="text-primary-8 -ml-0.5 flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-neutral-100"
+        >
+          <RiArrowRightSLine
+            className={cn(
+              'size-4 transition-transform duration-200 ease-out motion-reduce:transition-none',
+              nesting.open && 'rotate-90'
+            )}
+          />
+        </button>
+      ) : (
+        <span aria-hidden className="w-4 shrink-0" />
+      )}
+      <span className="truncate">{params.valueFormatted ?? params.value}</span>
     </span>
   );
 }
@@ -271,7 +421,12 @@ type BuildArgs = {
   pinnedLook: PinnedLook;
   onReset: () => void;
   onOpenChooser: () => void;
+  /** Rows nest under others: the node id column shows the tree. */
+  nesting: boolean;
 };
+
+/** The node id column's width while it shows the tree, room for a nested row's label. */
+const NESTING_NODE_ID_WIDTH = 130;
 
 const NO_PINNED_COLUMNS: readonly PinnedColumn[] = [];
 
@@ -286,12 +441,36 @@ function buildColumnDefs({
   pinnedLook,
   onReset,
   onOpenChooser,
+  nesting,
 }: BuildArgs): ColDef[] {
   const fileColumns = orderedColumns.map((c) => {
     const isNumeric = c.kind === 'numeric';
     const useSetFilter =
       c.kind === 'categorical' && (c.library?.length ?? 0) < CATEGORICAL_SET_FILTER_MAX;
     const width = PREFERRED_WIDTH_BY_NAME.get(c.name) ?? (isNumeric ? 100 : 120);
+    if (nesting && c.name === NODE_ID_COLUMN) {
+      return {
+        field: c.name,
+        headerName: c.label ?? capitalize(c.name.replace(/_/g, ' ')),
+        headerComponent: ColumnHeader,
+        headerComponentParams: { onReset, isNumeric, onOpenChooser },
+        sortable: true,
+        resizable: true,
+        hide: !visible.has(c.name),
+        filter: NumericFilter,
+        suppressHeaderMenuButton: true,
+        minWidth: 60,
+        width: NESTING_NODE_ID_WIDTH,
+        cellRenderer: NodeIdCell,
+        // A nested row has none of its own node's values: its label runs on over their columns.
+        colSpan: (params) => {
+          if (!nestedOf(params.data)) return 1;
+          const shown = params.api.getDisplayedCenterColumns();
+          const at = shown.indexOf(params.column);
+          return at < 0 ? 1 : shown.length - at;
+        },
+      } satisfies ColDef;
+    }
     return {
       field: c.name,
       headerName: c.label ?? capitalize(c.name.replace(/_/g, ' ')),
@@ -383,7 +562,12 @@ export function NodesGrid({
   pickColumn = false,
   pickAll,
   onRowHover,
+  onNestingToggle,
+  selectedNestedRows = NO_SELECTION,
+  headerStart,
   headerExtra,
+  downloadName = 'nodes',
+  headerSlot,
   reset,
   resetRequest,
   quickFilters,
@@ -480,15 +664,26 @@ export function NodesGrid({
   // selection redraws the rows on show rather than rebuilding the columns.
   const selectedRef = useRef(selectedNodeIds);
   const isPicked = useCallback((nodeId: number) => selectedRef.current.has(nodeId), []);
+  const selectedNestedRef = useRef(selectedNestedRows);
+  const isNestedPicked = useCallback((key: number) => selectedNestedRef.current.has(key), []);
+  const nestingToggleRef = useRef(onNestingToggle);
+  const toggleNesting = useCallback((nodeId: number) => nestingToggleRef.current?.(nodeId), []);
   const pickAllRef = useRef(pickAll);
   const readPickAll = useCallback(() => pickAllRef.current, []);
   const gridContext = useMemo<GridContext>(
-    () => ({ visibleColumns: requestedColumns, isPicked, pickAll: readPickAll }),
-    [requestedColumns, isPicked, readPickAll]
+    () => ({
+      visibleColumns: requestedColumns,
+      isPicked,
+      isNestedPicked,
+      toggleNesting,
+      pickAll: readPickAll,
+    }),
+    [requestedColumns, isPicked, isNestedPicked, toggleNesting, readPickAll]
   );
   const pickAllState = pickAll?.state;
   useEffect(() => {
     pickAllRef.current = pickAll;
+    nestingToggleRef.current = onNestingToggle;
   });
   // biome-ignore lint/correctness/useExhaustiveDependencies: pickAllState redraws the tick atop the column
   useEffect(() => {
@@ -498,11 +693,13 @@ export function NodesGrid({
   const markedRef = useRef(markedNodeId);
   const rowClassRules = useMemo(
     () => ({
-      [PICKED_ROW_CLASS]: (p: RowClassParams) => isPicked(nodeIdOf(p.data)),
+      [PICKED_ROW_CLASS]: (p: RowClassParams) =>
+        isRowPicked(p.context as GridContext | undefined, p.data),
       [FLASHED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === flashedRef.current,
       [MARKED_ROW_CLASS]: (p: RowClassParams) => nodeIdOf(p.data) === markedRef.current,
+      [NESTED_ROW_CLASS]: (p: RowClassParams) => nestedOf(p.data) !== undefined,
     }),
-    [isPicked]
+    []
   );
   useEffect(() => {
     if (markedRef.current === markedNodeId) return;
@@ -545,8 +742,9 @@ export function NodesGrid({
   }, [focusRow, rowIndexOf, gridApi]);
   useEffect(() => {
     selectedRef.current = selectedNodeIds;
+    selectedNestedRef.current = selectedNestedRows;
     gridRef.current?.api?.redrawRows();
-  }, [selectedNodeIds]);
+  }, [selectedNodeIds, selectedNestedRows]);
 
   const [orderedNames, setOrderedNames] = useState<string[]>(() => defaultColumnOrder(columns));
   const [chooserOpen, setChooserOpen] = useState(false);
@@ -574,6 +772,7 @@ export function NodesGrid({
     onVisibleColumnsChange(defaultVisibleColumnSet(columns));
   }, [columns, onVisibleColumnsChange, fitPinned]);
 
+  const nesting = onNestingToggle !== undefined;
   const columnDefs = useMemo(() => {
     const defs = buildColumnDefs({
       orderedColumns,
@@ -582,6 +781,7 @@ export function NodesGrid({
       pinnedLook,
       onReset: resetAll,
       onOpenChooser: openChooser,
+      nesting,
     });
     return pickColumn ? [PICK_COLUMN, ...defs] : defs;
   }, [
@@ -592,6 +792,7 @@ export function NodesGrid({
     resetAll,
     openChooser,
     pickColumn,
+    nesting,
   ]);
 
   const onColumnMoved = (e: ColumnMovedEvent) => {
@@ -644,6 +845,17 @@ export function NodesGrid({
   // One datasource for the grid's life, reading through to the host's latest:
   // a new one pages the rows in again over the old ones rather than blanking them.
   const datasourceRef = useRef(datasource);
+  // A nested row's label spans the file columns, which the grid works out only as it draws a
+  // row: drawn while its page loaded, it is drawn again once its data is in.
+  const redrawNested = (startRow: number, rows: unknown[]) => {
+    const api = gridRef.current?.api;
+    if (!api || api.isDestroyed() || !rows.some((row) => nestedOf(row))) return;
+    const rowNodes = rows.flatMap((row, i) => {
+      const node = nestedOf(row) ? api.getDisplayedRowAtIndex(startRow + i) : undefined;
+      return node ? [node] : [];
+    });
+    api.redrawRows({ rowNodes });
+  };
   const [gridSource] = useState<IDatasource>(() => ({
     rowCount: datasource.rowCount,
     getRows: (params) => {
@@ -653,6 +865,7 @@ export function NodesGrid({
         successCallback: (rows, lastRow) => {
           params.successCallback(rows, lastRow);
           setLandedTotal(askedOf);
+          redrawNested(params.startRow, rows);
         },
       });
     },
@@ -716,6 +929,43 @@ export function NodesGrid({
   useEffect(() => {
     if (resetRequest) onResetClick();
   }, [resetRequest]);
+
+  // The rows the filter keeps, in the sort and columns on show, every one of them rather
+  // than those paged in so far: read from the host's datasource as the grid reads them.
+  const [downloading, setDownloading] = useState(false);
+  const downloadCsv = async () => {
+    const api = gridRef.current?.api;
+    if (!api || downloading) return;
+    setDownloading(true);
+    try {
+      const shown = api
+        .getAllDisplayedColumns()
+        .map((c) => c.getColId())
+        .filter((id) => id !== PICK_COLUMN.colId);
+      const sortModel = api
+        .getColumnState()
+        .filter((c) => c.sort)
+        .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+        .map((c) => ({ colId: c.colId, sort: c.sort as SortDirection }));
+      const rows = await readAllRows({
+        datasource: datasourceRef.current,
+        api,
+        context: gridContext,
+        sortModel,
+        filterModel: api.getFilterModel(),
+      });
+      // The rows of the table's own nodes: nested rows are a view of theirs.
+      const listed = rows.filter((row) => !(NESTED_ROW in row));
+      saveAs(
+        new Blob([toCsv(shown, listed)], { type: 'text/csv;charset=utf-8' }),
+        `${downloadName}.csv`
+      );
+    } catch (error) {
+      logError('The rows on show could not be downloaded:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
   const isOn = (quick: QuickFilter) =>
     Object.entries(quick.model).every(([colId, f]) => isEqual(filters[colId], f));
   const toggleQuickFilter = (quick: QuickFilter) => {
@@ -729,20 +979,32 @@ export function NodesGrid({
   };
 
   const onRowClicked = (e: RowClickedEvent) => {
+    // A row's chevron opens or shuts the rows under it, and picks nothing.
+    const target = e.event?.target;
+    if (target instanceof Element && target.closest('[data-nesting-toggle]')) return;
     const nodeId = nodeIdOf(e.data);
-    if (Number.isFinite(nodeId)) onRowClick?.(nodeId);
+    if (!Number.isFinite(nodeId)) return;
+    const nested = nestedOf(e.data);
+    // A nested table's header is no row of its own to pick.
+    if (nested?.header) return;
+    if (nested) onRowClick?.(nodeId, nested.key);
+    else onRowClick?.(nodeId);
   };
 
   // Cells report the pointer one by one; the host hears about rows.
-  const hoveredRef = useRef<number | null>(null);
-  const reportHover = (nodeId: number | null) => {
-    if (nodeId === hoveredRef.current) return;
-    hoveredRef.current = nodeId;
-    onRowHover?.(nodeId);
+  const hoveredRef = useRef<string | null>(null);
+  const reportHover = (nodeId: number | null, nested?: number) => {
+    const key = nodeId === null ? null : `${nodeId}:${nested ?? ''}`;
+    if (key === hoveredRef.current) return;
+    hoveredRef.current = key;
+    if (nodeId !== null && nested !== undefined) onRowHover?.(nodeId, nested);
+    else onRowHover?.(nodeId);
   };
   const onCellMouseOver = (e: CellMouseOverEvent) => {
     const nodeId = nodeIdOf(e.data);
-    reportHover(Number.isFinite(nodeId) ? nodeId : null);
+    const nested = nestedOf(e.data);
+    // Over a nested table's header, its row's.
+    reportHover(Number.isFinite(nodeId) ? nodeId : null, nested?.header ? undefined : nested?.key);
   };
 
   const onModelUpdated = useCallback(() => {
@@ -761,69 +1023,127 @@ export function NodesGrid({
     if (toAutoSize.length > 0) api.autoSizeColumns(toAutoSize, false);
   }, [columns, visibleColumns]);
 
+  // The header: a row of its own over the rows, or the host's slot, where the count stacks.
+  const stacked = headerSlot !== undefined;
+  const count = (
+    <span className={cn(styles.gridStat, 'shrink-0', stacked && styles.gridStatStacked)}>
+      {pickColumn ? (
+        // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
+        <>
+          <span>
+            {stacked ? null : 'Nodes: '}
+            <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
+              {selectedNodeIds.size.toLocaleString()}
+            </span>
+            /{total.toLocaleString()} selected{stacked ? null : ', '}
+          </span>
+          <span>
+            <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
+              {(filteredCount ?? total).toLocaleString()}
+            </span>
+            /{total.toLocaleString()} showing
+          </span>
+        </>
+      ) : filteredCount === null ? (
+        <>{total.toLocaleString()} nodes</>
+      ) : (
+        <>
+          <strong className={styles.gridStatHighlight}>{filteredCount.toLocaleString()}</strong> of{' '}
+          {total.toLocaleString()} nodes
+        </>
+      )}
+    </span>
+  );
+  // Some of the columns hidden; none at all is the table before its defaults are in.
+  const columnsHidden =
+    visibleColumns.size > 0 && columns.some((column) => !visibleColumns.has(column.name));
+  const actions = (
+    <>
+      {/* First, so the switches after it stay put at the end as it comes and goes. */}
+      {reset && (filtering || reset.picked) && (
+        <button
+          type="button"
+          onClick={onResetClick}
+          title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+          aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+          className={ROUND_PILL_CLASS}
+        >
+          <RiResetLeftLine className="size-4" />
+        </button>
+      )}
+      {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
+      {quickFilters?.map((quick) => (
+        <PillToggle
+          key={quick.label}
+          value={isOn(quick)}
+          onChange={(on) => {
+            if (on !== isOn(quick)) toggleQuickFilter(quick);
+          }}
+          options={[
+            { value: false, label: 'All', title: 'Every row' },
+            { value: true, label: quick.label, title: quick.title },
+          ]}
+        />
+      ))}
+      {scope && (
+        <PillToggle value={scope.value} options={scope.options} onChange={scope.onChange} />
+      )}
+      <button
+        type="button"
+        onClick={openChooser}
+        title={columnsHidden ? 'Show or hide columns: some are hidden' : 'Show or hide columns'}
+        aria-label={columnsHidden ? 'Show or hide columns, some hidden' : 'Show or hide columns'}
+        className={cn(ROUND_PILL_CLASS, 'relative')}
+      >
+        <RiTable3 className="size-4" />
+        {columnsHidden && (
+          // The dot a column's filter shows while it is on.
+          <span
+            aria-hidden
+            className="pointer-events-none absolute top-0.5 right-0.5 size-[8px] rounded-full bg-(--color-green-main) shadow-[0_0_0_1.5px_#fff]"
+          />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={downloadCsv}
+        disabled={downloading}
+        title={downloading ? 'Preparing the CSV…' : 'Download the rows on show as CSV'}
+        aria-label="Download the rows on show as CSV"
+        className={cn(ROUND_PILL_CLASS, 'disabled:opacity-60')}
+      >
+        {downloading ? (
+          <RiLoader4Line className="size-4 animate-spin" />
+        ) : (
+          <RiDownload2Line className="size-4" />
+        )}
+      </button>
+    </>
+  );
+
   return (
     <div className={styles.gridWrapper}>
-      <div className={styles.gridHeader}>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className={cn(styles.gridStat, 'shrink-0')}>
-            {pickColumn ? (
-              // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
-              <>
-                Nodes:{' '}
-                <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
-                  {selectedNodeIds.size.toLocaleString()}
-                </span>
-                /{total.toLocaleString()} selected,{' '}
-                <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
-                  {(filteredCount ?? total).toLocaleString()}
-                </span>
-                /{total.toLocaleString()} showing
-              </>
-            ) : filteredCount === null ? (
-              <>{total.toLocaleString()} nodes</>
-            ) : (
-              <>
-                <strong className={styles.gridStatHighlight}>
-                  {filteredCount.toLocaleString()}
-                </strong>{' '}
-                of {total.toLocaleString()} nodes
-              </>
-            )}
-          </span>
-          {headerExtra}
+      {headerSlot === undefined ? (
+        <div className={styles.gridHeader}>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {headerStart}
+            {count}
+            {headerExtra}
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* First, so the switches after it stay put at the end as it comes and goes. */}
-          {reset && (filtering || reset.picked) && (
-            <button
-              type="button"
-              onClick={onResetClick}
-              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              className={ROUND_PILL_CLASS}
-            >
-              <RiResetLeftLine className="size-4" />
-            </button>
-          )}
-          {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
-          {quickFilters?.map((quick) => (
-            <PillToggle
-              key={quick.label}
-              value={isOn(quick)}
-              onChange={(on) => {
-                if (on !== isOn(quick)) toggleQuickFilter(quick);
-              }}
-              options={[
-                { value: false, label: 'All', title: 'Every row' },
-                { value: true, label: quick.label, title: quick.title },
-              ]}
-            />
-          ))}
-          {scope && (
-            <PillToggle value={scope.value} options={scope.options} onChange={scope.onChange} />
-          )}
-        </div>
-      </div>
+      ) : (
+        headerSlot &&
+        createPortal(
+          <div className="flex min-w-0 items-center gap-2">
+            {headerStart}
+            {count}
+            {headerExtra}
+            {actions}
+          </div>,
+          headerSlot
+        )
+      )}
       <div
         ref={gridBoxRef}
         className={styles.grid}

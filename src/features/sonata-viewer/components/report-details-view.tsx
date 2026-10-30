@@ -189,8 +189,8 @@ export default function ReportDetailsView({
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
   /** Where a hovered line's card reads its cell's row of the nodes table. */
   cellRows?: CellRowSource;
-  /** Told the node id of a line clicked. */
-  onCellClick?: (nodeId: number) => void;
+  /** Told the node id of a line clicked, and the line's trace. */
+  onCellClick?: (nodeId: number, traceIndex: number) => void;
   /** The traces the nodes table's filter keeps; null shows them all. */
   visibleTraces: number[] | null;
   /** The traces of the cells picked in the nodes table, in the order they were picked. */
@@ -270,7 +270,7 @@ function SharedTracesPlot({
   timeWindow?: TimeRange | null;
   onTimeWindowChange?: (window: TimeRange | null) => void;
   cellRows?: CellRowSource;
-  onCellClick?: (nodeId: number) => void;
+  onCellClick?: (nodeId: number, traceIndex: number) => void;
   lines: Line[];
   hovered: number[];
   /** Name each line in a legend: the picked cells, each in its own colour. */
@@ -581,7 +581,7 @@ function SharedTracesPlot({
         if (!(e.target instanceof Element) || !e.target.closest('.nsewdrag')) return;
         const line = lineUnder(e.clientX, e.clientY);
         const trace = line && population.traces[line.traceIndex];
-        if (trace) onCellClick?.(trace.nodeId);
+        if (line && trace) onCellClick?.(trace.nodeId, line.traceIndex);
       }}
     >
       <Plot
@@ -671,13 +671,20 @@ function TraceCard({
   );
 }
 
-/** What a click on a line does: picks its cell alone, or lets it go where it is already that. */
+/**
+ * What a click on a line does: picks its cell alone, or a compartment's line its compartment,
+ * or lets it go where it is already that.
+ */
 function clickHint(lines: Line[], population: PopulationMetadata, traceIndex: number): string {
-  const nodeId = population.traces[traceIndex]?.nodeId;
+  const trace = population.traces[traceIndex];
   const picked = lines.filter((line) => line.slot !== null && !line.preview);
+  if (trace?.compartment !== undefined) {
+    const alone = picked.length === 1 && picked[0].traceIndex === traceIndex;
+    return alone ? 'Click to show every cell again' : 'Click to pick this compartment alone';
+  }
   const alone =
     picked.length > 0 &&
-    picked.every((line) => population.traces[line.traceIndex]?.nodeId === nodeId);
+    picked.every((line) => population.traces[line.traceIndex]?.nodeId === trace?.nodeId);
   return alone ? 'Click to show every cell again' : 'Click to pick this cell alone';
 }
 

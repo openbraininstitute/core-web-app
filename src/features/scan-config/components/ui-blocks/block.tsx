@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   SweepIconButton,
@@ -181,19 +182,13 @@ export default function Block({
                       hideWhenDetached
                       align="center"
                       side="right"
-                      className={cn(
-                        'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-                        'bg-primary-8 px-4 py-2 text-base text-wrap ',
-                        'overflow-y-auto max-h-50 primary-scrollbar'
-                      )}
-                      arrowClassName="bg-primary-8"
+                      showArrow={false}
+                      className={DESCRIPTION_TOOLTIP_CLASS}
                     >
                       {k === 'circuit' && entity ? (
                         entity.description
                       ) : (
-                        <MarkdownDescription dark>
-                          {blockElementSchema.description}
-                        </MarkdownDescription>
+                        <MarkdownDescription>{blockElementSchema.description}</MarkdownDescription>
                       )}
                     </TooltipContent>
                   </Tooltip>

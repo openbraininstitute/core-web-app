@@ -36,6 +36,7 @@ import { psthSeriesFigure } from '@/features/spike-viewer/spike-statistics/time-
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 
 import type { IDatasource } from 'ag-grid-community';
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
 import type { ScopedFilter, ScopedTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
@@ -87,6 +88,8 @@ type Props = {
   /** The config's timings and the player's time, marked over the PSTHs as over the raster. */
   events?: readonly TimelineEvent[];
   timeCursor?: TimeCursor;
+  /** At the start of the table's header, such as the population on show. */
+  headerStart?: ReactNode;
 };
 
 /** The raster window's cells, as a column of the session's, filtered on out of sight. */
@@ -148,6 +151,7 @@ export function SpikeStatisticsView({
   resetRequest,
   events,
   timeCursor,
+  headerStart,
 }: Props) {
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
@@ -494,6 +498,7 @@ export function SpikeStatisticsView({
       ) : (
         <KeptNodesGrid
           session={sessionKey}
+          downloadName={`${nodePopulation.name}-spike-statistics`}
           filterScope="spikes"
           columns={tableColumns ?? columns}
           rowCount={tableShown.rowCount}
@@ -514,6 +519,7 @@ export function SpikeStatisticsView({
               if (windowOn) onClearWindow?.();
             },
           }}
+          headerStart={headerStart}
           headerExtra={
             windowOn && (
               <WindowChip

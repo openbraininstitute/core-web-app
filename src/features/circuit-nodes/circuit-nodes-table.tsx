@@ -1,5 +1,6 @@
 'use client';
 
+import { RiAddLine } from '@remixicon/react';
 import { Empty, Progress, Spin } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -8,13 +9,17 @@ import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar'
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
+import { neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { GenericError } from '@/ui/molecules/generic-error';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 import { formatBytes } from '@/utils/format';
+import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
@@ -40,6 +45,11 @@ export type TableCells = {
   heldCell?: number | null;
   /** A reset of the filters and ticks asked for from the scene: a new number each time. */
   resetRequest?: number;
+  /**
+   * Given, the neurons on show, while they are neither all of them nor none, can be made a
+   * neuron set: a property set where their values say exactly which they are, else their ids.
+   */
+  onCreateNeuronSet?: (block: NeuronSetBlock) => void;
 };
 
 type Props = {
@@ -81,6 +91,7 @@ export default function CircuitNodesTable({
     columns,
     datasource,
     status,
+    getColumn,
     getFilteredIndices,
     getRowIndex,
     isLoading: workerLoading,
@@ -103,6 +114,34 @@ export default function CircuitNodesTable({
     getFilteredIndices,
   });
   const { shown, filterError } = ticks;
+  // The neurons on show as a neuron set, where they are some but not all of them.
+  const [makingSet, setMakingSet] = useState(false);
+  const onCreateNeuronSet = cells?.onCreateNeuronSet;
+  const setOfShown =
+    onCreateNeuronSet &&
+    population &&
+    columns &&
+    shown &&
+    shown.length > 0 &&
+    shown.length < rowCount
+      ? () => {
+          setMakingSet(true);
+          neuronSetBlock({
+            population,
+            cells: shown,
+            rowCount,
+            ticked: ticks.ticked.size > 0,
+            filterModel: ticks.filterModel,
+            columns,
+            getColumn,
+          })
+            .then(({ block }) => onCreateNeuronSet(block))
+            .catch((error: unknown) =>
+              logError('The neurons on show could not be made a neuron set:', error)
+            )
+            .finally(() => setMakingSet(false));
+        }
+      : undefined;
   const onShownCellsChange = cells?.onShownCellsChange;
   useEffect(() => {
     if (shown === undefined || !population) return;
@@ -136,6 +175,8 @@ export default function CircuitNodesTable({
   };
 
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
+  // The grid's count and buttons go up into the toolbar, beside the population.
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null);
   const lastColumnsKeyRef = useRef<string>('');
 
   useEffect(() => {
@@ -154,8 +195,9 @@ export default function CircuitNodesTable({
         populations={config?.nodes ?? []}
         populationName={population?.name}
         onPopulationChange={setSelectedPopulationName}
+        slotRef={setHeaderSlot}
       />
-      <div className={styles.body}>
+      <div className={cn(styles.body, 'relative')}>
         {renderBody({
           configError,
           configLoading,
@@ -170,7 +212,26 @@ export default function CircuitNodesTable({
           visibleColumns,
           setVisibleColumns,
           selection,
+          downloadName: population?.name,
+          headerSlot,
         })}
+        {/* Over the rows' bottom right, while the neurons on show can be made a set. */}
+        {setOfShown && (
+          <button
+            type="button"
+            onClick={setOfShown}
+            disabled={makingSet}
+            title={`Add the ${shown?.length.toLocaleString()} neurons on show as a neuron set`}
+            className={cn(
+              PILL_CLASS,
+              'absolute right-6 bottom-6 z-20 shrink-0 bg-purple-600 text-white shadow-lg',
+              'hover:bg-purple-700 disabled:opacity-60'
+            )}
+          >
+            Create neuron set
+            <RiAddLine className="size-4" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -209,6 +270,8 @@ function renderBody({
   visibleColumns,
   setVisibleColumns,
   selection,
+  downloadName,
+  headerSlot,
 }: {
   configError: Error | null;
   configLoading: boolean;
@@ -223,6 +286,8 @@ function renderBody({
   visibleColumns: Set<string>;
   setVisibleColumns: (next: Set<string>) => void;
   selection: GridSelection | undefined;
+  downloadName: string | undefined;
+  headerSlot: HTMLDivElement | null;
 }) {
   if (configError) {
     return (
@@ -267,6 +332,8 @@ function renderBody({
       datasource={datasource}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
+      downloadName={downloadName}
+      headerSlot={headerSlot}
       {...selection}
     />
   );

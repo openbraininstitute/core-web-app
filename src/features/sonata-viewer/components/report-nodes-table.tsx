@@ -2,13 +2,22 @@
 
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   KeptNodesGrid,
   KeptNodesGridPlaceholder,
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
+import {
+  compartmentHeaderRow,
+  compartmentRow,
+  compartmentsOf,
+  compartmentTable,
+  nestedDatasource,
+  nestedLayout,
+  shownIndexOf,
+} from '@/features/sonata-viewer/compartment-rows';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ReactNode } from 'react';
@@ -20,6 +29,8 @@ import type {
   ParsedCircuitConfig,
   SortItem,
 } from '@/features/circuit-nodes/types';
+import type { CompartmentNote, NestedLayout } from '@/features/sonata-viewer/compartment-rows';
+import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
 import type { PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** This table's owner name in the shared nodes session, beside any spike statistics. */
@@ -64,16 +75,27 @@ type Props = {
   population: PopulationMetadata;
   /** The traces whose cells pass the table's filter, in trace order; null when it filters nothing. */
   onVisibleTracesChange: (traceIndices: number[] | null) => void;
-  /** A row was clicked, by its cell's node id. */
-  onCellClick: (nodeId: number) => void;
+  /** A row was clicked, by its cell's node id, and a compartment's by its trace too. */
+  onCellClick: (nodeId: number, traceIndex?: number) => void;
   /** Rows drawn as ticked: the cells picked to draw. */
   selectedNodeIds: ReadonlySet<number>;
+  /** Compartments' rows drawn as ticked, by trace: those picked to draw on their own. */
+  selectedTraces?: ReadonlySet<number>;
   /** The tick atop the tick column, for every row the table shows at once. */
   pickAll?: { state: PickAllState; onToggle: () => void };
   /** Columns the host registered in the session, listed ahead of the file's. */
   extraColumns?: ColumnMeta[];
-  /** The cell under the pointer, by node id; null once it leaves the table. */
-  onCellHover?: (nodeId: number | null) => void;
+  /** The cell under the pointer, by node id, and a compartment's trace; null once it leaves the table. */
+  onCellHover?: (nodeId: number | null, traceIndex?: number) => void;
+  /**
+   * Each compartment's statistics, by the pinned column they fill and then by trace, for the
+   * rows nested under a cell recorded in several; null until they are worked out.
+   */
+  compartmentValues?: Readonly<Record<string, Float64Array>> | null;
+  /** What the compartment set a report records says of its compartments, for their rows. */
+  compartmentNote?: CompartmentNote | null;
+  /** Where the compartments are on their cells' morphologies, for their rows; null until measured. */
+  compartmentPlaces?: CompartmentPlaces | null;
   /** Statistics the host registered in the session, pinned against the table's right edge. */
   pinnedColumns?: readonly PinnedColumn[];
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
@@ -87,11 +109,16 @@ type Props = {
   /** A reset asked for from outside the table, such as the 3D view's: a new number each time. */
   resetRequest?: number;
   reset?: { picked: boolean; onReset: () => void };
+  /** At the start of the header above the rows, such as the population on show. */
+  headerStart?: ReactNode;
   /** Beside the count above the rows, such as the window the statistics are over. */
   headerExtra?: ReactNode;
   /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
   focusRow?: { nodeId: number; key: number };
 };
+
+/** Cells open on their compartments at first while the report recorded no more than this many in all. */
+const OPEN_COMPARTMENTS_AT_FIRST = 500;
 
 /**
  * The report's recorded cells as rows of the circuit's nodes table, every node
@@ -100,7 +127,8 @@ type Props = {
  * Filtering it is how the plot above chooses its cells, and clicking a row
  * ticks one to draw. The rows come from the circuit's own node file, through
  * the session its other viewers share, with a derived column marking which
- * cells the report recorded.
+ * cells the report recorded. A cell recorded in several compartments has them
+ * in rows nested under its own, opened and shut by its chevron.
  */
 export function ReportNodesTable({
   circuit,
@@ -109,8 +137,12 @@ export function ReportNodesTable({
   onVisibleTracesChange,
   onCellClick,
   selectedNodeIds,
+  selectedTraces,
   pickAll,
   onCellHover,
+  compartmentValues,
+  compartmentNote,
+  compartmentPlaces,
   extraColumns = NO_EXTRA_COLUMNS,
   pinnedColumns,
   pinnedVersion,
@@ -119,6 +151,7 @@ export function ReportNodesTable({
   onRowsChange,
   resetRequest,
   reset,
+  headerStart,
   headerExtra,
   focusRow,
 }: Props) {
@@ -137,6 +170,7 @@ export function ReportNodesTable({
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
+    getRowOrder,
   } = useNodesWorker({
     enabled: nodePopulation !== undefined,
     circuitId: circuit.id,
@@ -250,11 +284,99 @@ export function ReportNodesTable({
     pinnedVersion,
   ]);
 
-  // Where a cell falls among the rows the scope lists, not among the whole file's.
+  // The cells recorded in several compartments, open on them or not: at first, open while
+  // they come to few rows; then as their chevrons leave them.
+  const compartments = useMemo(() => compartmentsOf(population), [population]);
+  const openAtFirst = useMemo(() => {
+    let count = 0;
+    for (const list of compartments.values()) count += list.length;
+    return count <= OPEN_COMPARTMENTS_AT_FIRST;
+  }, [compartments]);
+  const [toggled, setToggled] = useState<ReadonlySet<number>>(() => new Set());
+  const toggleOpen = useCallback((nodeId: number) => {
+    setToggled((previous) => {
+      const next = new Set(previous);
+      if (!next.delete(nodeId)) next.add(nodeId);
+      return next;
+    });
+  }, []);
+  // An open cell has its compartments' table under it, headers first.
+  const openNodes = useMemo(() => {
+    const open = new Map<number, number>();
+    for (const [nodeId, list] of compartments) {
+      if (openAtFirst !== toggled.has(nodeId)) open.set(nodeId, list.length + 1);
+    }
+    return open;
+  }, [compartments, openAtFirst, toggled]);
+  const table = useMemo(
+    () => compartmentTable(compartments, compartmentNote, compartmentPlaces),
+    [compartments, compartmentNote, compartmentPlaces]
+  );
+  // A cell brought into view from elsewhere, such as a ball of its clicked in 3D, opens on its
+  // compartments: once for each request, so its chevron still shuts it after.
+  const openedFor = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!focusRow || openedFor.current === focusRow.key) return;
+    openedFor.current = focusRow.key;
+    if (compartments.has(focusRow.nodeId) && !openNodes.has(focusRow.nodeId)) {
+      toggleOpen(focusRow.nodeId);
+    }
+  }, [focusRow, compartments, openNodes, toggleOpen]);
+  const nests = compartments.size > 0;
+  const listedRows = scope === 'all' ? rowCount : recordedCount;
+  // The rows a sort and filter list, laid out with the open cells' compartments under them.
+  const layoutFor = useCallback(
+    async (sort: SortItem[], model: FilterModel) =>
+      nestedLayout(await getRowOrder(sort, { ...model, ...scopeModel }), listedRows, openNodes),
+    [getRowOrder, scopeModel, listedRows, openNodes]
+  );
+
+  // New pinned values can reorder the rows sorted by them: a new source lays them out again.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pinnedVersion is a reason to lay out again
+  const shownSource = useMemo<IDatasource | null>(() => {
+    if (!listedSource || !nests) return listedSource;
+    const layouts = new Map<string, Promise<NestedLayout>>();
+    return nestedDatasource({
+      base: listedSource,
+      layoutFor: (sort, model) => {
+        const key = JSON.stringify([sort, model]);
+        let layout = layouts.get(key);
+        if (!layout) {
+          layout = layoutFor(sort, model);
+          layouts.set(key, layout);
+        }
+        return layout;
+      },
+      nestingOf: (nodeId) => {
+        const list = compartments.get(nodeId);
+        return list && { count: list.length, open: openNodes.has(nodeId) };
+      },
+      nestedRow: (nodeId, child, last) => {
+        if (child === 0) return compartmentHeaderRow(nodeId, table);
+        // biome-ignore lint/style/noNonNullAssertion: only an open cell of the map has rows under it
+        const compartment = compartments.get(nodeId)![child - 1];
+        return compartmentRow(nodeId, compartment, last, compartmentValues, table);
+      },
+    });
+  }, [
+    listedSource,
+    nests,
+    layoutFor,
+    compartments,
+    openNodes,
+    compartmentValues,
+    table,
+    pinnedVersion,
+  ]);
+
+  // Where a cell falls among the rows the scope lists, not among the whole file's: and with
+  // compartments open, among the rows on show.
   const rowAmongListed = useCallback(
-    (nodeId: number, sort: SortItem[], model: FilterModel) =>
-      getRowIndex(nodeId, sort, { ...model, ...scopeModel }),
-    [getRowIndex, scopeModel]
+    async (nodeId: number, sort: SortItem[], model: FilterModel) => {
+      const row = await getRowIndex(nodeId, sort, { ...model, ...scopeModel });
+      return row < 0 || !nests ? row : shownIndexOf(await layoutFor(sort, model), row);
+    },
+    [getRowIndex, scopeModel, nests, layoutFor]
   );
 
   const scopeSwitch = useMemo(
@@ -301,7 +423,7 @@ export function ReportNodesTable({
       </Centered>
     );
   }
-  if (!listedSource || !columns) {
+  if (!shownSource || !columns) {
     const percent =
       progress?.total && progress.total > 0
         ? ` ${Math.round((progress.received / progress.total) * 100)}%`
@@ -325,10 +447,11 @@ export function ReportNodesTable({
     <KeptNodesGrid
       session={sessionKey}
       filterScope="voltage"
+      downloadName={`${population.name}-voltages`}
       columns={tableColumns ?? columns}
       rowCount={scope === 'all' ? rowCount : recordedCount}
       filteredCount={filtering ? filteredCount : null}
-      datasource={listedSource}
+      datasource={shownSource}
       onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
       initialFilterModel={filterModel}
       pinnedColumns={pinnedColumns}
@@ -336,6 +459,7 @@ export function ReportNodesTable({
       scope={scopeSwitch}
       resetRequest={resetRequest}
       reset={reset}
+      headerStart={headerStart}
       headerExtra={headerExtra}
       focusRow={focusRow}
       rowIndexOf={rowAmongListed}
@@ -344,6 +468,8 @@ export function ReportNodesTable({
       pickColumn
       pickAll={pickAll}
       onRowHover={onCellHover}
+      onNestingToggle={nests ? toggleOpen : undefined}
+      selectedNestedRows={selectedTraces}
     />
   );
 }

@@ -170,6 +170,14 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     [key]
   );
 
+  const getRowOrder = useCallback(
+    async (sort: SortItem[], filter: FilterModel) => {
+      if (!key) throw new Error('Nodes worker not ready');
+      return nodesWorkerRegistry.getRowOrder(key, sort, filter);
+    },
+    [key]
+  );
+
   const retry = useCallback(() => {
     if (key) nodesWorkerRegistry.retry(key);
   }, [key]);
@@ -184,6 +192,7 @@ export function useNodesWorker({ enabled, circuitId, circuitAssetId, population 
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
+    getRowOrder,
     status: state.status,
     isLoading: state.status === 'loading',
     progress: state.progress,

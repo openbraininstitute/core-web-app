@@ -42,7 +42,7 @@ export default function SpikeViewer({ entityId, entityType, asset, ctx }: SpikeV
   if (!data) {
     // Docked, as the view will be, with the table of the report before still in place.
     if (sidePanel?.target && subject && 'circuit' in subject) {
-      return <LoadingFilePanes title="Raster" panelTitles={['3D Player', 'Statistics']} />;
+      return <LoadingFilePanes title="Raster" />;
     }
     return (
       <div className="flex h-full items-center justify-center p-3">

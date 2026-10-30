@@ -26,6 +26,10 @@ import {
   SelectAllSkeleton,
 } from '@/features/scan-config/components/skeletons/columns';
 import { getLatestSimExecStatus } from '@/features/scan-config/components/utils';
+import {
+  type TSimulationProgress,
+  useSimulationProgress,
+} from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
 import { executionStatusColorMap } from '@/features/task-runner/activity-execution/color-map';
 import {
   LEGACY_SIMULATION_STATUS_QUERY_KEY_HEAD,
@@ -49,6 +53,8 @@ type Props = {
   simRequestInProgress: boolean;
   context: WorkspaceContext;
   statusMap: Map<string, ActivityStatus>;
+  /** The launch-system jobs of the simulations launched from this page. */
+  jobIdBySimulationId?: Map<string, string>;
   launchSimBtnLabelPrefix: string;
   onToggleSelectAll: (checked: boolean) => void;
   onActiveSimulationChange: (simulation: ISimulation) => void;
@@ -73,6 +79,7 @@ export function SimulationsResultsUiAdapter({
   simRequestInProgress,
   context,
   statusMap,
+  jobIdBySimulationId,
   launchSimBtnLabelPrefix,
   onToggleSelectAll,
   onActiveSimulationChange,
@@ -91,7 +98,8 @@ export function SimulationsResultsUiAdapter({
       sidePanelBar={simulationPicker}
       sidePanelReport={reportPicker}
       left={
-        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden">
+        // The launch button's foot level with the boxes beside it, as the configuration's is.
+        <div className="flex h-full w-full flex-col gap-4 overflow-y-hidden pb-3">
           {loading ? (
             <SelectAllSkeleton />
           ) : (
@@ -113,6 +121,7 @@ export function SimulationsResultsUiAdapter({
                   context={context}
                   selected={activeSimulationId === simulation.id}
                   simulation={simulation}
+                  jobId={jobIdBySimulationId?.get(simulation.id)}
                   fallbackStatus={statusMap.get(simulation.id)}
                   pauseStatusPolling={simRequestInProgress}
                   onSelect={() => onActiveSimulationChange(simulation)}
@@ -145,10 +154,19 @@ export function SimulationsResultsUiAdapter({
   );
 }
 
+/** A running simulation's status, as its task log has it. */
+function progressLabel(progress: TSimulationProgress | null) {
+  if (progress === null) return undefined;
+  if (progress === 'initialization') return 'Running: Load Circuit';
+  if (progress === 'finalizing') return 'Running: Finalizing';
+  return `Running: ${progress}%`;
+}
+
 type SimulationBlockProps = {
   campaignId: string;
   context: WorkspaceContext;
   simulation: ISimulation;
+  jobId?: string;
   fallbackStatus?: ActivityStatus;
   pauseStatusPolling?: boolean;
   onSelect: (simulationId: string) => void;
@@ -164,6 +182,7 @@ function SimulationListItem({
   campaignId,
   context,
   simulation,
+  jobId,
   fallbackStatus,
   pauseStatusPolling,
   onSelect,
@@ -200,6 +219,12 @@ function SimulationListItem({
       : (remoteStatus ?? fallbackStatus);
   const statusLoading = isLoading && !execStatus;
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED];
+  const progress = useSimulationProgress({
+    simulationId: simulation.id,
+    jobId,
+    context,
+    running: execStatus === ActivityStatus.RUNNING,
+  });
 
   useBalanceRefreshOnTaskCompletion({ status: execStatus, context });
 
@@ -299,7 +324,11 @@ function SimulationListItem({
             {statusLoading ? (
               <StatusBadgeSkeleton />
             ) : (
-              <StatusBadge status={execStatus} details={statusDetails} />
+              <StatusBadge
+                status={execStatus}
+                details={statusDetails}
+                label={progressLabel(progress)}
+              />
             )}
             <div className="flex items-center justify-center">
               <RiArrowRightSLine className="size-5 shrink-0 text-gray-500" />

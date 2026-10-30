@@ -138,6 +138,8 @@ export function ScanConfigTabsPanel({
       railCenter={railCenter}
       railEnd={end}
       railCollapsed={railCollapsed}
+      // The panel's boxes sit on the page; the tabs are pills over them.
+      surfaceless
       items={items}
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}

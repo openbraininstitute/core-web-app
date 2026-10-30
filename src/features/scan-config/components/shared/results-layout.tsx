@@ -19,6 +19,7 @@ import {
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -91,17 +92,24 @@ const DROP = { id: 'results-drop', duration: 500, easing: 'cubic-bezier(0.4, 0, 
 /** Room kept either side of the rule between the file and the panel. */
 const MIN_SIDE_WIDTH = 320;
 /**
- * A shut column's strip: its bar as far in as the panes' boxes were, which is
- * `mx-3` from either side of the file and `pl-1` more from the rule in the
- * panel - 10.5 px and 14 px at the app's 14 px rem.
+ * A shut column's strip: its bar as far in as the panes' boxes were, a pixel
+ * from the page's edge and 12 px from the rule, which the file's column ends a
+ * grid gap (gap-1.25, 4.375 px at the app's 14 px rem) short of.
  */
-const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
-const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
+const FILE_STRIP_WIDTH = 1 + SHUT_BAR_SIZE + (12 - 4.375);
+const PANEL_STRIP_WIDTH = 12 + SHUT_BAR_SIZE + 1;
+/** The strips' padding, as their panes' boxes have it. */
+const FILE_STRIP_CLASS = 'pt-px pb-3 pl-px pr-[calc(12px-0.3125rem)]';
+const PANEL_STRIP_CLASS = 'pt-px pb-3 pl-[12px] pr-px';
 /**
- * What the bar takes, in px: the tabs rail's height, which folds away as the bar
- * comes, so what it spans stays where it was and is not laid out again.
+ * What the bar takes, in px: less than the tabs rail's height, which folds away as
+ * the bar comes up where the tabs were, so what it spans rises a little to meet it,
+ * played as a move (DROP) rather than eased as a margin.
  */
-const BAR_ROOM = 48;
+const BAR_ROOM = 43.5;
+
+/** Inside the two left columns' window, clear of its rounded edges as the configuration's are. */
+const WINDOWED = 'mt-[calc(0.75rem+1px)] mb-6';
 
 export function ResultsLayout({
   left,
@@ -257,13 +265,21 @@ export function ResultsLayout({
   // auto-placement would push them past it.
   return (
     <ResultsSidePanelContext.Provider value={sidePanel}>
+      {/* The two left columns in one window, as the configuration's blocks and form are: its ring
+          a pixel under the page's clip, its foot level with the views' boxes. It goes with them. */}
+      <div
+        aria-hidden
+        style={moved}
+        className={cn(BOX_CLASS, 'col-start-1 col-end-3 row-start-1 mt-px mb-3 ml-px', slide, away)}
+      />
       <div
         ref={leftRef}
         id={leftId}
         inert={open || undefined}
         style={moved}
         className={cn(
-          'col-start-1 row-start-1 border-r border-gray-200 pr-4 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          'col-start-1 row-start-1 border-r border-gray-200 pr-4 pl-3 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          WINDOWED,
           slide,
           away
         )}
@@ -276,7 +292,8 @@ export function ResultsLayout({
         inert={open || undefined}
         style={moved}
         className={cn(
-          'col-start-2 row-start-1 relative border-r border-gray-200 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          'col-start-2 row-start-1 relative secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          WINDOWED,
           slide,
           away
         )}
@@ -309,7 +326,8 @@ export function ResultsLayout({
       <div
         inert={!open || undefined}
         className={cn(
-          'border-neutral-2 col-start-1 col-end-4 row-start-1 z-10 -mt-2 flex items-center gap-2 self-start border-b px-1 pt-2 pb-3',
+          // Up in the grid's top padding (pt-2), where the tabs were.
+          'col-start-1 col-end-4 row-start-1 z-10 -mt-2 flex items-center gap-2 self-start justify-self-start pl-1 pb-3',
           slide,
           open ? 'opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
         )}
@@ -336,8 +354,7 @@ export function ResultsLayout({
           !panelUp && 'pointer-events-none opacity-0'
         )}
       >
-        {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
-        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0 pl-1" />
+        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0" />
         {/* While the next file's panel is on its way, after a pick from the bar */}
         <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
           <Spin />
@@ -349,7 +366,8 @@ export function ResultsLayout({
         data-results-drop
         style={{ width: FILE_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
-          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start p-3',
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start',
+          FILE_STRIP_CLASS,
           slide,
           !fileShut && 'pointer-events-none opacity-0'
         )}
@@ -361,7 +379,8 @@ export function ResultsLayout({
         data-results-drop
         style={{ width: PANEL_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
-          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end py-3 pr-3 pl-4',
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end',
+          PANEL_STRIP_CLASS,
           slide,
           !panelShut && 'pointer-events-none opacity-0'
         )}

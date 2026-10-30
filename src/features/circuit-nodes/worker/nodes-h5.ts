@@ -314,6 +314,16 @@ export class NodesSession {
     return this.resolveView(viewKey, [], entries).slice();
   }
 
+  /** The rows a sort and filter show, by node id in their order; null when that is every row in node order. */
+  getRowOrder(sort: SortItem[], filter: FilterModel): Uint32Array | null {
+    const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    if (viewKey === null) return null;
+    // A copy, so the caller can transfer it without detaching the cached view.
+    return this.resolveView(viewKey, sortItems, filterEntries).slice();
+  }
+
   /** Where a node falls among the rows a sort and filter show; -1 where the filter leaves it out. */
   getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): number {
     const sortItems = sort.filter((s) => this.columnIndex.has(s.column));

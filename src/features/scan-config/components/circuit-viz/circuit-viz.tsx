@@ -28,6 +28,9 @@ import type { ICircuitOverlayGroup } from '@/features/scan-config/components/mod
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
 import type {
+  MorphoViewerMorphologyLocationHover,
+  MorphoViewerMorphologyLocationMarker,
+  MorphoViewerMorphologyLocationPick,
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSignals,
   MorphoViewerSmallCircuitCell,
@@ -143,7 +146,35 @@ interface CircuitVizProps {
    * when it does not.
    */
   chromeTopRight?: boolean;
+  /**
+   * Balls on cells of the population on show, each at a section and an offset along it in a
+   * colour of its own: a compartment report's locations, coloured by their values as it plays.
+   * In place of the form's morphology locations.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
+  /** Told the key of a ball clicked, which then counts as no click on its cell. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
 }
+
+/**
+ * A ball on a cell of the population on show: its key, such as the trace it plays, its node
+ * index, SONATA section id, offset and colour.
+ */
+export type SceneLocationMarker = {
+  key: number;
+  nodeId: number;
+  sectionId: number;
+  offset: number;
+  color: string;
+};
+
+/** A ball as the viewer takes it, its key along: the viewer hands a picked or hovered one back. */
+type KeyedMarker = MorphoViewerMorphologyLocationMarker & { key: number };
+
+/** The balls' radius in world units, µm: large enough to read a colour off with a whole cell in view. */
+const LOCATION_BALL_RADIUS = 10;
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
   /** Marker radius in world units, from the viewer settings slider. */
@@ -206,12 +237,42 @@ export function CircuitVisualization({
           showAxons: props.showAxons,
         })
       : undefined;
+  // Each ball on the section the viewer draws for its SONATA one, once its cell is loaded.
+  const { locationMarkers, showAxons } = props;
+  const circuitId = props.circuit.id;
+  const { sonataSectionIds } = source;
+  const markers = useMemo(() => {
+    if (!locationMarkers || !subjectName) return undefined;
+    return locationMarkers.flatMap((marker): KeyedMarker[] => {
+      const cellId = makeVizCellId(makeNodeKey(circuitId, subjectName, marker.nodeId), {
+        showAxons,
+      });
+      // Id 0 is the soma, which the viewer never indexes.
+      const sectionName =
+        sonataSectionIds?.get(cellId)?.get(marker.sectionId) ??
+        (marker.sectionId === 0 ? 'soma' : undefined);
+      if (sectionName === undefined) return [];
+      return [
+        {
+          key: marker.key,
+          cellId,
+          sectionName,
+          offset: marker.offset,
+          sonataSectionId: marker.sectionId,
+          color: marker.color,
+        },
+      ];
+    });
+  }, [locationMarkers, subjectName, circuitId, showAxons, sonataSectionIds]);
   return (
     <CircuitVizView
       {...props}
       source={source}
       onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
       pointedCellId={pointedCellId}
+      markers={markers}
+      onMarkerClick={props.onLocationClick}
+      onMarkerHover={props.onLocationHover}
     />
   );
 }
@@ -233,12 +294,19 @@ type TCircuitVizViewProps = Omit<
   | 'onPositionlessPopulationsChange'
   | 'nodeColors'
   | 'defaultColor'
+  | 'locationMarkers'
+  | 'onLocationClick'
+  | 'onLocationHover'
 > & {
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
   /** A cell pointed out from outside the scene, shown alone: neither it nor a hover is lit. */
   pointedCellId?: string;
+  /** Balls on the cells, resolved to the viewer's sections, in place of the form's locations. */
+  markers?: KeyedMarker[];
+  onMarkerClick?: (key: number) => void;
+  onMarkerHover?: (key: number | null) => void;
 };
 
 function CircuitVizView({
@@ -262,6 +330,9 @@ function CircuitVizView({
   chromeTopRight = false,
   onCellClick,
   pointedCellId,
+  markers,
+  onMarkerClick,
+  onMarkerHover,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -275,6 +346,43 @@ function CircuitVizView({
     sonataSectionIds: source.sonataSectionIds,
     backgroundColor,
   });
+  // A tap on a ball reaches the viewer's cell click first, which waits a microtask to see
+  // whether the same tap picked a ball: a ball's own click is then the only one.
+  const pendingCellClick = useRef<{ cell: MorphoViewerSmallCircuitCell | undefined } | null>(null);
+  const markersClickable = markers !== undefined && onMarkerClick !== undefined;
+  const handleViewerCellClick = useMemo(() => {
+    if (!onCellClick || !markersClickable) return onCellClick;
+    return (cell: MorphoViewerSmallCircuitCell | undefined) => {
+      pendingCellClick.current = { cell };
+      queueMicrotask(() => {
+        const pending = pendingCellClick.current;
+        pendingCellClick.current = null;
+        if (pending) onCellClick(pending.cell);
+      });
+    };
+  }, [onCellClick, markersClickable]);
+  // The host's balls, which hand back their keys when picked or hovered.
+  const markerSelection = useMemo(() => {
+    if (!markers) return undefined;
+    const keyOf = (marker: MorphoViewerMorphologyLocationMarker | undefined) =>
+      (marker as Partial<KeyedMarker> | undefined)?.key;
+    return {
+      selected: markers,
+      radius: LOCATION_BALL_RADIUS,
+      onPick: onMarkerClick
+        ? (pick: MorphoViewerMorphologyLocationPick) => {
+            const key = keyOf(pick.existingMarker);
+            if (key === undefined) return;
+            pendingCellClick.current = null;
+            onMarkerClick(key);
+          }
+        : undefined,
+      onHover: onMarkerHover
+        ? (hover: MorphoViewerMorphologyLocationHover | null) =>
+            onMarkerHover(hover?.kind === 'selected' ? (keyOf(hover) ?? null) : null)
+        : undefined,
+    };
+  }, [markers, onMarkerClick, onMarkerHover]);
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
   const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
@@ -324,7 +432,13 @@ function CircuitVizView({
 
   const [highlightedCellId, setHighlightedCellId] = useState('');
   const draggingOverlayRef = useRef(false);
+  // Off every cell is off every ball too: leaving a ball for empty space, the viewer says only that.
+  const markerHoverRef = useRef(onMarkerHover);
+  useEffect(() => {
+    markerHoverRef.current = onMarkerHover;
+  });
   const handleCellHover = useCallback((cell: Cell | undefined): void => {
+    if (!cell) markerHoverRef.current?.(null);
     if (draggingOverlayRef.current) return;
     setHighlightedCellId(cell?.id ?? '');
   }, []);
@@ -335,6 +449,13 @@ function CircuitVizView({
   };
   const resumeHoverHighlight = () => {
     draggingOverlayRef.current = false;
+  };
+  // Off the canvas nothing is under the pointer, which the viewer never says when the pointer
+  // goes straight from a cell to something else on the page.
+  const leaveScene = () => {
+    resumeHoverHighlight();
+    setHighlightedCellId('');
+    markerHoverRef.current?.(null);
   };
 
   // A cell pointed out is shown alone, in the colour it was picked by: lit as a
@@ -402,7 +523,7 @@ function CircuitVizView({
       onPointerDown={suspendHoverHighlight}
       onPointerUp={resumeHoverHighlight}
       onPointerCancel={resumeHoverHighlight}
-      onPointerLeave={resumeHoverHighlight}
+      onPointerLeave={leaveScene}
     >
       {cells.length > 0 && (
         <MorphoViewerCircuitMultipleNeurons
@@ -421,8 +542,8 @@ function CircuitVizView({
           // for a neurite would also put another population on show, recolouring
           // the scene and swapping the nodes table under the user. The checklist
           // still changes population.
-          onCellClick={locationPickMode ? undefined : onCellClick}
-          locationSelection={locationSelection}
+          onCellClick={locationPickMode ? undefined : handleViewerCellClick}
+          locationSelection={markerSelection ?? locationSelection}
           highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
           controls={[]}

@@ -12,11 +12,7 @@ import { runTask } from '@/api/one/runner';
 import { ObiOneTaskTypeDict } from '@/api/one/types/task';
 import { Loader } from '@/components/loader';
 import { useAppNotification } from '@/components/notification';
-import {
-  listAllChildren as listAllSimulationChildren,
-  listExecutionsBySimulationId,
-} from '@/entity-configuration/domain/simulation/simulation-campaign';
-import { getLatestSimulationExecution } from '@/entity-configuration/domain/simulation/status-utils';
+import { listAllChildren as listAllSimulationChildren } from '@/entity-configuration/domain/simulation/simulation-campaign';
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
@@ -47,7 +43,9 @@ import {
 } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulations/scan-parameter-picker';
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
+import { simulationJobIdQueryOptions } from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
+import { simulationCompartmentSets } from '@/features/sonata-viewer/compartment-sets';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { configTimeline } from '@/features/spike-viewer/config-timeline';
 import { SimulationProvider } from '@/features/spike-viewer/simulation-context';
@@ -211,6 +209,35 @@ export function SimulationsTab({
     },
     enabled: !!activeSimulation && !!nodeSetsAsset,
   });
+  // The simulation's compartment sets file: the locations its morphology locations blocks
+  // resolved to, which its compartment reports record, each set beside its block.
+  const compartmentSetsAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.compartment_sets
+  );
+  const { data: compartmentSetsFile } = useQuery({
+    queryKey: [
+      'simulation-compartment-sets',
+      { simulationId: activeSimulation?.id, assetId: compartmentSetsAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: compartmentSetsAsset!.id,
+        asRawResponse: true,
+      });
+      return (await req.json()) as unknown;
+    },
+    enabled: !!activeSimulation && !!compartmentSetsAsset,
+  });
+  const compartmentSets = useMemo(
+    () => simulationCompartmentSets(compartmentSetsFile, coordinateConfig, configSchema),
+    [compartmentSetsFile, coordinateConfig, configSchema]
+  );
+
   // The simulation on show, picked by its scan parameters: in the bar over a
   // results side panel, and in the header of the viewers that place it.
   const simulationPicker =
@@ -271,18 +298,13 @@ export function SimulationsTab({
     : undefined;
 
   // Only launch-system executions have an `execution_id`, so this doesn't need the flag.
-  const { data: recoveredJobId } = useQuery({
-    queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
-    queryFn: async () => {
-      const executions = await listExecutionsBySimulationId({
-        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when activeSimulation exists
-        simulationId: activeSimulation!.id,
-        context,
-      });
-      return getLatestSimulationExecution({ executions })?.execution_id ?? null;
-    },
-    enabled: Boolean(activeSimulation?.id) && !activeSimulationJobIdFromLaunch,
-  });
+  const { data: recoveredJobId } = useQuery(
+    simulationJobIdQueryOptions({
+      simulationId: activeSimulation?.id,
+      context,
+      enabled: !activeSimulationJobIdFromLaunch,
+    })
+  );
 
   const activeJobId = activeSimulationJobIdFromLaunch ?? recoveredJobId ?? undefined;
   const taskLogsViewerEnabled = !!activeSimulation && !!activeJobId;
@@ -476,6 +498,7 @@ export function SimulationsTab({
           simRequestInProgress={simRequestInProgress}
           context={context}
           statusMap={localStatusMap}
+          jobIdBySimulationId={jobIdMap}
           launchSimBtnLabelPrefix={launchSimBtnLabelPrefix}
           onToggleSelectAll={onToggleSelectAll}
           onActiveSimulationChange={onActiveSimulationChange}
@@ -483,7 +506,7 @@ export function SimulationsTab({
           onSimulationStatusLoad={onSimulationStatusLoad}
           onRun={onLaunch}
           middle={
-            <div className="h-full bg-white! w-full">
+            <div className="h-full w-full">
               {loading ? (
                 <InOutFilesColumnSkeleton />
               ) : (
@@ -498,6 +521,7 @@ export function SimulationsTab({
                     onLoadingChange={setFilesLoading}
                     jobId={activeJobId}
                     reports={simConfig?.reports}
+                    inputs={simConfig?.inputs}
                   />
                 )
               )}
@@ -542,6 +566,7 @@ export function SimulationsTab({
                     model={model}
                     run={simConfig?.run}
                     neuronSets={neuronSets}
+                    compartmentSets={compartmentSets}
                     simulationPicker={simulationPicker}
                     timeline={timeline}
                   >

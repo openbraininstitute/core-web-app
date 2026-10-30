@@ -222,12 +222,17 @@ export function PopulationsMenu({
         <ul className="max-h-72 overflow-y-auto">
           {populations.map((population, index) => {
             const { name } = population;
+            // On show: filled navy as the toolbar's chosen view is, white on a dark canvas.
+            const onShow = name === selected;
             const unplaceable = positionless.has(name);
             const isHidden = unplaceable || hiddenSet.has(name);
             // In place of the type: the row truncates, and both would cut the tag off.
             const tag = unplaceable ? 'no positions' : onSelect && population.type;
             const tagElement = tag && (
-              <span className={cn('ml-1', !theme && 'text-neutral-400')} style={mutedStyle}>
+              <span
+                className={cn('ml-1', onShow ? 'opacity-70' : !theme && 'text-neutral-400')}
+                style={onShow ? undefined : mutedStyle}
+              >
                 {tag}
               </span>
             );
@@ -237,7 +242,11 @@ export function PopulationsMenu({
                 title={unplaceable ? NO_POSITIONS_REASON : undefined}
                 className={cn(
                   'group/row flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors',
-                  hoverClass
+                  onShow
+                    ? theme?.isDark
+                      ? 'bg-white text-neutral-900'
+                      : 'bg-primary-9 text-white'
+                    : hoverClass
                 )}
               >
                 <label className="flex shrink-0 items-center">
@@ -267,9 +276,9 @@ export function PopulationsMenu({
                     onClick={() => onSelect(name)}
                     className={cn(
                       'min-w-0 flex-1 truncate text-left text-sm',
-                      name === selected && 'font-semibold',
+                      onShow && 'font-semibold',
                       isHidden && 'opacity-50',
-                      !theme && (name === selected ? 'text-primary-9' : 'text-neutral-700')
+                      !theme && !onShow && 'text-neutral-700'
                     )}
                   >
                     {name}
@@ -279,7 +288,7 @@ export function PopulationsMenu({
                   <span
                     className={cn(
                       'min-w-0 flex-1 truncate text-sm',
-                      name === selected && 'font-semibold',
+                      onShow && 'font-semibold',
                       isHidden && 'opacity-50'
                     )}
                   >
@@ -308,7 +317,7 @@ export function PopulationsMenu({
                     className={cn(
                       'shrink-0 text-xs font-medium opacity-0 transition-opacity',
                       'group-hover/row:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none',
-                      !theme && 'text-primary-9'
+                      !theme && !onShow && 'text-primary-9'
                     )}
                   >
                     Only

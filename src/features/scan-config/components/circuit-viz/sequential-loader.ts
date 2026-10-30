@@ -4,6 +4,7 @@ import { logError } from '@/utils/logger';
 
 import { buildMorphoTree, buildSonataSectionIdIndex } from './build-morpho-tree';
 
+import type { Sections } from '@/features/scan-config/types';
 import type { MorphoViewerSmallCircuitCellData } from '@/morpho-viewer';
 
 /** A loaded cell, plus the SONATA-id index built from the same response. */
@@ -148,3 +149,23 @@ export const sequentialCellLoader = new SequentialLoader(actualLoad);
 
 /** Synapse projection's own queue: shares the URL cache, unaffected by the axon-toggle clear(). */
 export const projectionCellLoader = new SequentialLoader(actualLoad);
+
+/**
+ * A morphology's sections as OBI-One serves them, axon and all, for what is measured along
+ * them rather than drawn: through the same cache, so one the viewer has loaded is not asked
+ * for again.
+ */
+export async function loadMorphologySections({
+  virtualLabId,
+  projectId,
+  circuitId,
+  name,
+  file,
+}: Omit<TMorphologyRequest, 'cellId' | 'showAxon'>): Promise<Sections> {
+  const key = circuitMorphologyPath(circuitId, file, name);
+  const promise = morphologiesCache.get(key) ?? loadCellAsync(virtualLabId, projectId, key, name);
+  addToCache(key, promise);
+  const json = await promise;
+  if (json === null) throw new Error(`Morphology "${file}" could not be loaded.`);
+  return SectionsArraySchema.parse(json);
+}
