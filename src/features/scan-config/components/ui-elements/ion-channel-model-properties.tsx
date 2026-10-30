@@ -19,6 +19,7 @@ import {
   useFieldError,
   useFieldErrorsSessionKey,
 } from '@/features/scan-config/components/hooks/field-errors';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
@@ -80,6 +81,7 @@ export function commonParentRegion(root: IBrainRegionHierarchy, regionIds: strin
 
 function Row({
   label,
+  unit,
   overridden,
   differ,
   derivedNote,
@@ -88,6 +90,7 @@ function Row({
   children,
 }: {
   label: string;
+  unit?: string;
   overridden: boolean;
   differ: boolean;
   derivedNote?: string;
@@ -109,7 +112,10 @@ function Row({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-primary-9 text-sm font-semibold">{label}</span>
+      <div className="flex items-center">
+        <span className="text-primary-9 text-sm font-semibold">{label}</span>
+        {unit && <FieldUnit unit={unit} className="text-sm" />}
+      </div>
       {children}
       {note && <span className="text-xs text-neutral-500">{note}</span>}
     </div>
@@ -477,7 +483,8 @@ export function IonChannelModelProperties({
       </Row>
 
       <Row
-        label="Temperature (°C)"
+        label="Temperature"
+        unit="°C"
         overridden={!differ.temperature && value.temperature != null}
         differ={differ.temperature && currentTemperature == null}
         derivedNote={sharedTemperature == null ? undefined : 'From the recordings'}

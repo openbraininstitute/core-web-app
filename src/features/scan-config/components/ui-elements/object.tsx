@@ -1,5 +1,6 @@
 'use client';
 
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
@@ -68,7 +69,7 @@ export function ObjectField({
                   {renderMathInText(fieldSchema.title)}
                 </label>
                 {fieldSchema.units && (
-                  <div className="text-sm text-gray-500">{fieldSchema.units}</div>
+                  <FieldUnit unit={fieldSchema.units} className="ml-1 text-sm" />
                 )}
               </div>
 

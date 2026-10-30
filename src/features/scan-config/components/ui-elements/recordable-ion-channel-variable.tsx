@@ -8,6 +8,7 @@ import { useMemo, useState } from 'react';
 
 import { getEntityCoreContext } from '@/api/entitycore/utils';
 import { obioneApi } from '@/api/one/utils';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
@@ -126,7 +127,7 @@ function SelectedDisplay({
       <div className="flex items-center gap-1.5">
         <span className="text-sm text-gray-400">Variable</span>
         <span className="font-semibold text-base text-primary-9">{variable.variable_name}</span>
-        {variable.unit && <span className="text-xs text-gray-400">({variable.unit})</span>}
+        {variable.unit && <FieldUnit unit={variable.unit} className="ml-0 text-base" />}
       </div>
     </span>
   );
@@ -348,9 +349,7 @@ export function SelectRecordableIonChannelVariable({
                           checkIconClassName="size-3 text-primary-8"
                         >
                           <span>{variable.variable_name}</span>
-                          <span className="ml-1.5 text-xs text-gray-400 font-normal">
-                            ({variable.unit})
-                          </span>
+                          {variable.unit && <FieldUnit unit={variable.unit} />}
                         </SelectItem>
                       );
                     })}

@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
@@ -69,7 +70,7 @@ export default function Block({
     >
       {!hideTitle && (
         <>
-          <div className="text-lg text-gray-500 uppercase wrap-break-word">
+          <div className="text-lg text-gray-500 wrap-break-word">
             {renderMathInText(blockSchema.title)}
           </div>
           <MarkdownDescription className="mb-6 text-gray-500">
@@ -127,14 +128,14 @@ export default function Block({
                   >
                     <label
                       htmlFor={k}
-                      className={cn('text-primary-9 text-base font-semibold uppercase', {
+                      className={cn('text-primary-9 text-base font-semibold', {
                         'cursor-pointer': isBooleanInput,
                       })}
                     >
                       {renderMathInText(blockElementSchema.title)}
                     </label>
                     {blockElementSchema.units && (
-                      <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                      <FieldUnit unit={blockElementSchema.units} className="ml-1 text-base" />
                     )}
                     {canCollapseSweep && (
                       <SweepIconButton

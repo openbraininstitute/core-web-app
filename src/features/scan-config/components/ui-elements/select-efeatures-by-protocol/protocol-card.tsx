@@ -27,6 +27,7 @@ import {
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { cn } from '@/utils/css-class';
 
@@ -98,24 +99,20 @@ function FieldRow({
   const label = title ?? fieldKey;
 
   return (
-    // the label row is scoped to the input's own column so the unit stays pinned to the input's
-    // right edge; keeping them in one row would shift the unit over the clear button whenever
-    // that button appears
     <div className="flex items-end gap-2">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            <span className="text-xs tracking-wide text-gray-500 uppercase">
-              {renderMathInText(label)}
-            </span>
-            {description && (
-              <Tooltip title={description}>
-                <InfoCircleOutlined className="text-xs text-gray-400" />
-              </Tooltip>
-            )}
+        <span className="flex items-center gap-1.5">
+          <span className="flex items-baseline text-xs">
+            <span className="text-gray-500">{renderMathInText(label)}</span>
+            {/* the label is already grey, so the unit goes a step lighter */}
+            {units && <FieldUnit unit={units} className="text-xs text-gray-400" />}
           </span>
-          {units && <span className="shrink-0 text-xs text-gray-400">{units}</span>}
-        </div>
+          {description && (
+            <Tooltip title={description}>
+              <InfoCircleOutlined className="text-xs text-gray-400" />
+            </Tooltip>
+          )}
+        </span>
         {renderField({ fieldKey, paramSchema, state, setState })}
       </div>
       {onRemove && (
@@ -605,11 +602,11 @@ function FeatureCatalogue({
                   'sticky top-0 z-10 flex items-baseline justify-between gap-2 px-3 py-2',
                   // solid, not translucent: it is sticky, so rows must not read through it
                   'border-gray-200  border-b bg-gray-100',
-                  'text-lg font-semibold tracking-wider text-gray-500 uppercase'
+                  'text-lg font-semibold text-gray-500'
                 )}
               >
                 {group.label}
-                <span className="text-lg font-normal tracking-normal text-gray-400 normal-case">
+                <span className="text-lg font-normal text-gray-400">
                   {group.selectedCount}/{group.features.length}
                 </span>
               </h5>
@@ -866,9 +863,12 @@ export function ProtocolCard({
           >
             <SettingsForm description={def.description}>
               <div className="flex flex-col gap-1.5">
-                <span className="text-primary-9 text-sm font-semibold">
-                  Extraction amplitudes (nA)
-                </span>
+                <div className="flex items-center">
+                  <span className="text-primary-9 text-sm font-semibold">
+                    Extraction amplitudes
+                  </span>
+                  <FieldUnit unit="nA" className="text-sm" />
+                </div>
                 <AmplitudeSettings
                   value={value}
                   onChange={onChange}
