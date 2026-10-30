@@ -30,6 +30,7 @@ import type {
   SortItem,
 } from '@/features/circuit-nodes/types';
 import type { CompartmentNote, NestedLayout } from '@/features/sonata-viewer/compartment-rows';
+import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
 import type { PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** This table's owner name in the shared nodes session, beside any spike statistics. */
@@ -93,6 +94,8 @@ type Props = {
   compartmentValues?: Readonly<Record<string, Float64Array>> | null;
   /** What the compartment set a report records says of its compartments, for their rows. */
   compartmentNote?: CompartmentNote | null;
+  /** Where the compartments are on their cells' morphologies, for their rows; null until measured. */
+  compartmentPlaces?: CompartmentPlaces | null;
   /** Statistics the host registered in the session, pinned against the table's right edge. */
   pinnedColumns?: readonly PinnedColumn[];
   /** Changes whenever the pinned columns' values do, so their cells are drawn again. */
@@ -139,6 +142,7 @@ export function ReportNodesTable({
   onCellHover,
   compartmentValues,
   compartmentNote,
+  compartmentPlaces,
   extraColumns = NO_EXTRA_COLUMNS,
   pinnedColumns,
   pinnedVersion,
@@ -305,8 +309,8 @@ export function ReportNodesTable({
     return open;
   }, [compartments, openAtFirst, toggled]);
   const table = useMemo(
-    () => compartmentTable(compartments, compartmentNote),
-    [compartments, compartmentNote]
+    () => compartmentTable(compartments, compartmentNote, compartmentPlaces),
+    [compartments, compartmentNote, compartmentPlaces]
   );
   // A cell brought into view from elsewhere, such as a ball of its clicked in 3D, opens on its
   // compartments: once for each request, so its chevron still shuts it after.

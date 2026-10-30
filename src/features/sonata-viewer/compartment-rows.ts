@@ -3,6 +3,7 @@ import { NESTED_ROW, NESTING_ROW } from '@/features/circuit-nodes/components/nod
 import type { IDatasource } from 'ag-grid-community';
 import type { NestedRowMark, NestingRowMark } from '@/features/circuit-nodes/components/nodes-grid';
 import type { FilterModel, SortDirection, SortItem } from '@/features/circuit-nodes/types';
+import type { CompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
 import type { PopulationMetadata } from '@/features/sonata-viewer/types';
 
 /** One of the compartments of a cell recorded in several: its trace, its section, and its name. */
@@ -32,25 +33,39 @@ const MAX_COLUMN_CHARACTERS = 32;
 
 /**
  * The columns of the compartments' table: where a compartment set says, each one's section
- * and offset, then the set's own columns; else the compartment as the report names it.
+ * and offset, else the compartment as the report names it; then where the morphologies say,
+ * its path distance and its section's type; then the set's own columns.
  */
 export function compartmentTable(
   compartments: ReadonlyMap<number, readonly Compartment[]>,
-  note?: CompartmentNote | null
+  note?: CompartmentNote | null,
+  places?: CompartmentPlaces | null
 ): CompartmentTable {
   const offsetOf = (compartment: Compartment) =>
     compartment.section === null ? undefined : note?.offsets.get(compartment.traceIndex);
   const located = note !== null && note !== undefined;
-  const headers = located
-    ? ['Section', 'Offset', ...note.columns.map((c) => c.label)]
-    : ['Compartment'];
+  const headers = [
+    ...(located ? ['Section', 'Offset'] : ['Compartment']),
+    ...(places ? ['Path distance (µm)', 'Section type'] : []),
+    ...(located ? note.columns.map((c) => c.label) : []),
+  ];
   const cellsOf = (compartment: Compartment) => {
     const offset = offsetOf(compartment);
-    if (!located) return [compartment.label];
+    const distance = places?.distances.get(compartment.traceIndex);
     return [
-      compartment.section === null ? '' : String(compartment.section),
-      offset === undefined ? '' : offset.toFixed(3),
-      ...note.columns.map((c) => c.value),
+      ...(located
+        ? [
+            compartment.section === null ? '' : String(compartment.section),
+            offset === undefined ? '' : offset.toFixed(3),
+          ]
+        : [compartment.label]),
+      ...(places
+        ? [
+            distance === undefined ? '' : distance.toFixed(1),
+            places.types.get(compartment.traceIndex) ?? '',
+          ]
+        : []),
+      ...(located ? note.columns.map((c) => c.value) : []),
     ];
   };
   // Each column as wide as its widest cell, so the rows under a cell line up.

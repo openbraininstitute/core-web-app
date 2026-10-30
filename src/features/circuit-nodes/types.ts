@@ -21,6 +21,8 @@ export type ColumnMeta = {
   library?: string[];
   /** What a header calls it, for a column a host added; the file's go by their names. */
   label?: string;
+  /** What a menu lists it under, where it is no neuron's property, such as a compartment's. */
+  heading?: string;
 };
 
 export type SortDirection = 'asc' | 'desc';

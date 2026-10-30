@@ -11,10 +11,16 @@ import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/
 import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import { compartmentsOf } from '@/features/sonata-viewer/compartment-rows';
 import {
   compartmentOffsets,
   compartmentSetColumns,
 } from '@/features/sonata-viewer/compartment-sets';
+import {
+  compartmentColumn,
+  compartmentStatistics,
+  sectionTypeColumn,
+} from '@/features/sonata-viewer/compartment-statistics';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import {
   ReportNodesTable,
@@ -34,6 +40,7 @@ import {
   VoltageScene,
 } from '@/features/sonata-viewer/components/voltage-scene';
 import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
+import { useCompartmentPlaces } from '@/features/sonata-viewer/hooks/use-compartment-places';
 import {
   useReportCellStatistics,
   useReportTraceStatistics,
@@ -75,6 +82,7 @@ import type { FallbackProps } from 'react-error-boundary';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
+import type { Compartment } from '@/features/sonata-viewer/compartment-rows';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type { SceneLocation } from '@/features/sonata-viewer/components/voltage-scene';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
@@ -87,6 +95,7 @@ import type { WorkspaceContext } from '@/types/common';
 const ErrorFallback = SimpleErrorComponent as unknown as ComponentType<FallbackProps>;
 
 const NO_TRACES: number[] = [];
+const NO_COMPARTMENTS: ReadonlyMap<number, readonly Compartment[]> = new Map();
 
 /** Group by nothing: every trace on the one plot. */
 const ALL = '__all__';
@@ -438,6 +447,21 @@ export function SonataReportView({
         : null,
     [setName, compartmentSet, population]
   );
+  // Where each compartment is on its cell, measured on the morphologies: for its row, and to
+  // plot and order the compartments by.
+  const reportCompartments = useMemo(
+    () => (population ? compartmentsOf(population) : NO_COMPARTMENTS),
+    [population]
+  );
+  const compartmentPlaces = useCompartmentPlaces({
+    enabled: compartmental && status === 'ready',
+    circuitId: circuit?.id,
+    circuitConfig,
+    populationName,
+    compartments: reportCompartments,
+    offsets: compartmentNote?.offsets,
+    getColumn,
+  });
   // Its locations, played in 3D as balls in their own values, read from the report while the
   // scene or the statistics want its frames.
   const sceneLocations = useMemo(() => {
@@ -480,16 +504,79 @@ export function SonataReportView({
   const locationFrames =
     locationData && locationData.locations === sceneLocations ? locationData.frames : null;
 
+  // A compartment report's statistics are over its compartments: each with its cell's
+  // properties, its own statistics, and where it is - its path distance, its offset.
+  const compartmentPlotStatistics = useMemo(
+    () =>
+      compartmental && traceValues && population
+        ? compartmentStatistics({
+            statistics,
+            traceValues,
+            traces: population.traces.length,
+            places: compartmentPlaces,
+            offsets: compartmentNote?.offsets,
+          })
+        : null,
+    [compartmental, traceValues, population, statistics, compartmentPlaces, compartmentNote]
+  );
+  const compartmentColumns = useMemo(
+    () => (tableColumns ? [...sectionTypeColumn(compartmentPlaces), ...tableColumns] : undefined),
+    [tableColumns, compartmentPlaces]
+  );
+  const getCompartmentColumn = useCallback(
+    (name: string) =>
+      population
+        ? compartmentColumn(name, population, compartmentPlaces, getColumn)
+        : Promise.reject(new Error('No population on show')),
+    [population, compartmentPlaces, getColumn]
+  );
+  // The compartments' own frames, for their mean over time, while the statistics are up.
+  const [compartmentFrames, setCompartmentFrames] = useState<{
+    population: string;
+    frames: CellFrames;
+  }>();
+  useEffect(() => {
+    if (!compartmental || !plotsUp || sliding || !population || !populationName) return;
+    if (compartmentFrames?.population === populationName) return;
+    let cancelled = false;
+    const traceIndices = population.traces.map((_, traceIndex) => traceIndex);
+    worker
+      .getTraceFrames(populationName, SCENE_FRAMES, traceIndices)
+      .then(({ times, values }) => {
+        if (cancelled) return;
+        // As cells' frames are, with each compartment's trace in its node's place.
+        const frames = { nodeIds: Uint32Array.from(traceIndices), times, values };
+        setCompartmentFrames({ population: populationName, frames });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    compartmental,
+    plotsUp,
+    sliding,
+    population,
+    populationName,
+    compartmentFrames?.population,
+    worker,
+  ]);
+
   // Shown at first beside the statistics: each group's mean over time.
   const meanLabel = `${voltage ? 'Mean voltage' : `Mean ${variableName ?? 'value'}`} (${population?.dataUnits ?? ''})`;
+  const meanFrames = compartmental
+    ? compartmentFrames?.population === populationName
+      ? compartmentFrames.frames
+      : undefined
+    : sceneFrames?.frames;
   const timeCourse = useMemo<TimeCourse>(
     () => ({
       label: 'Mean',
       figure: (groups, groupLabel) =>
-        sceneFrames
+        meanFrames
           ? meanTraceFigure(
               groups,
-              framesWithin(sceneFrames.frames, timeWindow),
+              framesWithin(meanFrames, timeWindow),
               groupLabel,
               meanLabel,
               CHART_LINE_COLOR
@@ -499,7 +586,7 @@ export function SonataReportView({
       events: timeline,
       timeCursor,
     }),
-    [sceneFrames, meanLabel, timeWindow, timeline, timeCursor]
+    [meanFrames, meanLabel, timeWindow, timeline, timeCursor]
   );
 
   // The plots are over the ticked cells, else those the table's filter keeps: a cell once,
@@ -510,6 +597,32 @@ export function SonataReportView({
     }
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
+  // Over compartments, the ticked ones - each of a cell ticked whole - else those the
+  // table's filter keeps.
+  const compartmentRows = useMemo(() => {
+    if (pickedCells.length > 0)
+      return Uint32Array.from(pickedTraces.map((p) => p.traceIndex)).sort();
+    return visibleTraces ? Uint32Array.from(visibleTraces) : null;
+  }, [pickedCells, pickedTraces, visibleTraces]);
+  const compartmentPlots = useMemo(
+    () =>
+      compartmentPlotStatistics && {
+        ...compartmentPlotStatistics,
+        cells: compartmentRows,
+        columns: compartmentColumns,
+        // Their own groupings, apart from the cells', and again once the places are in.
+        sessionKey: `${sessionKey}#compartments${compartmentPlaces ? ':placed' : ''}`,
+        getColumn: getCompartmentColumn,
+      },
+    [
+      compartmentPlotStatistics,
+      compartmentRows,
+      compartmentColumns,
+      sessionKey,
+      compartmentPlaces,
+      getCompartmentColumn,
+    ]
+  );
 
   const recordedNodes = useMemo(
     () => new Set(population?.traces.map((t) => t.nodeId)),
@@ -806,6 +919,7 @@ export function SonataReportView({
     onCellHover: handleCellHover,
     compartmentValues,
     compartmentNote,
+    compartmentPlaces,
     extraColumns: neuronSetColumns,
     headerExtra: docked && timeWindow && (
       <WindowChip
@@ -819,7 +933,19 @@ export function SonataReportView({
   };
 
   if (docked && table && sidePanel) {
-    const plotted = plotCells ? plotCells.length : population.nodeCount;
+    // What the plots are over: the compartments in a compartment report, else the cells.
+    const plotted = compartmentPlots
+      ? (compartmentRows?.length ?? population.traces.length)
+      : plotCells
+        ? plotCells.length
+        : population.nodeCount;
+    const plottedNoun = compartmentPlots
+      ? plotted === 1
+        ? 'compartment'
+        : 'compartments'
+      : plotted === 1
+        ? 'cell'
+        : 'cells';
     const tracesTitle = voltage ? 'Voltage traces' : 'Traces';
     const plotsPane = {
       title: 'Statistics',
@@ -864,6 +990,7 @@ export function SonataReportView({
                 timeCourse={timeCourse}
                 statistics={statistics}
                 values={statisticValues}
+                plots={compartmentPlots}
                 cells={plotCells}
                 columns={tableColumns}
                 ready={status === 'ready'}
@@ -877,7 +1004,7 @@ export function SonataReportView({
                 }
                 summary={
                   <span className="whitespace-nowrap text-xs text-neutral-400">
-                    {plotted.toLocaleString()} {plotted === 1 ? 'cell' : 'cells'}
+                    {plotted.toLocaleString()} {plottedNoun}
                     {pickedCells.length > 0
                       ? ' ticked'
                       : visibleTraces
