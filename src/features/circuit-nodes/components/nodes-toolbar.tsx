@@ -10,7 +10,7 @@ import {
 } from '@/ui/molecules/select';
 import { cn } from '@/utils/css-class';
 
-import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
+import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -28,7 +28,10 @@ const itemCls = 'text-primary-9 text-sm data-[state=checked]:font-bold';
 type Props = {
   view: ViewMode;
   onViewChange: (view: ViewMode) => void;
-  populations: NodePopulation[];
+  /** Whether the circuit has a connectivity matrix to show. */
+  connectivity?: boolean;
+  /** The node populations, or the matrices' edge populations while connectivity is on show. */
+  populations: readonly { name: string; type?: string }[];
   populationName: string | undefined;
   onPopulationChange: (name: string) => void;
   /** Its right end, for what a table beside it puts there: its count and its buttons. */
@@ -38,6 +41,7 @@ type Props = {
 export function NodesToolbar({
   view,
   onViewChange,
+  connectivity = false,
   populations,
   populationName,
   onPopulationChange,
@@ -56,6 +60,9 @@ export function NodesToolbar({
           <SelectContent className={contentCls}>
             <SelectItem value="nodes" className={itemCls}>
               Nodes
+            </SelectItem>
+            <SelectItem value="connectivity" disabled={!connectivity} className={itemCls}>
+              {connectivity ? 'Connectivity' : 'Connectivity (no matrix)'}
             </SelectItem>
             <SelectItem value="edges" disabled className={itemCls}>
               Edges (coming soon)

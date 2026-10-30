@@ -210,7 +210,7 @@ export type ParsedCircuitConfig = {
   raw: ICircuitSonataConfiguration;
 };
 
-export type ViewMode = 'nodes' | 'edges';
+export type ViewMode = 'nodes' | 'connectivity' | 'edges';
 
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 

@@ -1,11 +1,17 @@
 'use client';
 
 import { RiAddLine } from '@remixicon/react';
-import { Empty, Progress, Spin } from 'antd';
+import { Empty } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/components/loading';
 import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
+import { ConnectivityView } from '@/features/circuit-nodes/connectivity/connectivity-view';
+import {
+  connectivityAsset,
+  useConnectivityEntries,
+} from '@/features/circuit-nodes/connectivity/use-connectivity';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
@@ -14,7 +20,6 @@ import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
-import { formatBytes } from '@/utils/format';
 import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
@@ -71,8 +76,14 @@ export default function CircuitNodesTable({
 }: Props) {
   const { config, isLoading: configLoading, error: configError } = useCircuitConfig(circuit);
 
-  const [view, setView] = useState<ViewMode>('nodes');
+  const [chosenView, setView] = useState<ViewMode>('nodes');
+  // A circuit without a matrix, such as the next one shown here, has its nodes on show.
+  const view = chosenView === 'connectivity' && !connectivityAsset(circuit) ? 'nodes' : chosenView;
   const [internalPopulationName, setInternalPopulationName] = useState<string | undefined>();
+  const connectivity = useConnectivityEntries(circuit, view === 'connectivity');
+  const [edgePopulation, setEdgePopulation] = useState<string | undefined>();
+  const matrix =
+    connectivity.entries?.find((e) => e.population === edgePopulation) ?? connectivity.entries?.[0];
 
   const isControlled = onPopulationChange !== undefined;
   const selectedPopulationName = isControlled ? controlledPopulationName : internalPopulationName;
@@ -83,7 +94,8 @@ export default function CircuitNodesTable({
     [config, selectedPopulationName]
   );
 
-  const enabled = view === 'nodes';
+  // Kept open beside the matrix, so the table and its ticks are as they were on the way back.
+  const enabled = view !== 'edges';
 
   const {
     rowCount,
@@ -192,31 +204,50 @@ export default function CircuitNodesTable({
       <NodesToolbar
         view={view}
         onViewChange={setView}
-        populations={config?.nodes ?? []}
-        populationName={population?.name}
-        onPopulationChange={setSelectedPopulationName}
+        connectivity={!!connectivity.asset}
+        populations={
+          view === 'connectivity'
+            ? (connectivity.entries ?? []).map((e) => ({ name: e.population }))
+            : (config?.nodes ?? [])
+        }
+        populationName={view === 'connectivity' ? matrix?.population : population?.name}
+        onPopulationChange={view === 'connectivity' ? setEdgePopulation : setSelectedPopulationName}
         slotRef={setHeaderSlot}
       />
       <div className={cn(styles.body, 'relative')}>
-        {renderBody({
-          configError,
-          configLoading,
-          workerError,
-          workerLoading,
-          downloadProgress,
-          hasPopulation: !!population,
-          columns,
-          rowCount,
-          filteredCount,
-          datasource,
-          visibleColumns,
-          setVisibleColumns,
-          selection,
-          downloadName: population?.name,
-          headerSlot,
-        })}
+        {view === 'connectivity' ? (
+          <ConnectivityView
+            circuitId={circuit.id}
+            assetId={connectivity.asset?.id}
+            entry={matrix}
+            listing={{
+              isLoading: connectivity.isLoading,
+              error: connectivity.error,
+              empty: connectivity.entries?.length === 0,
+            }}
+            headerSlot={headerSlot}
+          />
+        ) : (
+          renderBody({
+            configError,
+            configLoading,
+            workerError,
+            workerLoading,
+            downloadProgress,
+            hasPopulation: !!population,
+            columns,
+            rowCount,
+            filteredCount,
+            datasource,
+            visibleColumns,
+            setVisibleColumns,
+            selection,
+            downloadName: population?.name,
+            headerSlot,
+          })
+        )}
         {/* Over the rows' bottom right, while the neurons on show can be made a set. */}
-        {setOfShown && (
+        {setOfShown && view === 'nodes' && (
           <button
             type="button"
             onClick={setOfShown}
@@ -322,7 +353,7 @@ function renderBody({
     );
   }
   if (workerLoading || !columns || !datasource) {
-    return <DownloadProgress progress={downloadProgress} />;
+    return <DownloadProgress progress={downloadProgress} what="nodes" />;
   }
   return (
     <NodesGrid
@@ -336,47 +367,5 @@ function renderBody({
       headerSlot={headerSlot}
       {...selection}
     />
-  );
-}
-
-function CenteredSpin({ label }: { label: string }) {
-  return (
-    <div className={styles.centered}>
-      <Spin tip={label} size="large" className="[&_.ant-spin-dot-item]:bg-primary-6!">
-        <div className={styles.spinBox} />
-      </Spin>
-    </div>
-  );
-}
-
-function DownloadProgress({
-  progress,
-}: {
-  progress: ReturnType<typeof useNodesWorker>['progress'];
-}) {
-  // No bytes yet (or no Content-Length to compute a percent): fall back to the indeterminate spinner.
-  if (!progress) return <CenteredSpin label="Loading nodes…" />;
-  if (!progress.total) {
-    return <CenteredSpin label={`Downloading nodes… ${formatBytes(progress.received, 0)}`} />;
-  }
-
-  const percent = Math.round((progress.received / progress.total) * 100);
-  return (
-    <div className={styles.centered}>
-      <div style={{ width: 280 }} className="text-center">
-        <div className="mb-1 text-sm text-primary-9">
-          Downloading nodes…{' '}
-          <span className="tabular-nums">
-            {formatBytes(progress.received, 0)} / {formatBytes(progress.total, 0)}
-          </span>
-        </div>
-        <Progress
-          type="line"
-          percent={percent}
-          strokeColor="var(--color-primary-6)"
-          className="[&_.ant-progress-text]:text-primary-9!"
-        />
-      </div>
-    </div>
   );
 }

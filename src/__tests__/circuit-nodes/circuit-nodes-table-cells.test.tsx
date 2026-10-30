@@ -39,6 +39,10 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
     error: null,
   }),
 }));
+vi.mock('@/features/circuit-nodes/connectivity/use-connectivity', () => ({
+  connectivityAsset: () => undefined,
+  useConnectivityEntries: () => ({ asset: undefined, isLoading: false, error: null }),
+}));
 vi.mock('@/features/circuit-nodes/hooks/use-nodes-worker', () => ({
   useNodesWorker: () => ({
     rowCount: 6,
