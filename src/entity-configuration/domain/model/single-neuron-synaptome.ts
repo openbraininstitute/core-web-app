@@ -1,4 +1,3 @@
-import { getMEModel } from '@/api/entitycore/queries';
 import {
   createSingleNeuronSynaptome,
   getSingleNeuronSynaptome,
@@ -17,8 +16,6 @@ import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 import type { WorkspaceContext } from '@/types/common';
 
 export const apiQueryExpand = {
-  memodel: (source: ISingleNeuronSynaptome, context: WorkspaceContext | undefined) =>
-    getMEModel({ id: source.me_model.id, context }),
   config: (source: ISingleNeuronSynaptome, context: WorkspaceContext | undefined) =>
     getSingleNeuronSynaptomeConfiguration(source, context),
 };
@@ -48,7 +45,7 @@ export const SingleNeuronSynaptome: EntityCoreTypeConfig<ISingleNeuronSynaptome>
   },
   detailViewSections: [
     DetailViewSectionsDict.Overview,
-    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Workflow,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isBookmarkable: true,

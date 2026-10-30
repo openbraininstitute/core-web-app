@@ -45,7 +45,7 @@ export function detailPageSectionRenderer({
       return <Viewer3D entity={entity} extendedType={entityType.extendedType} />;
     })
     .with({ section: DetailViewSectionsDict.Analysis }, () => {
-      return <Analysis entity={entity} extendedType={entityType.extendedType} />;
+      return <Analysis entity={entity} extendedType={entityType.extendedType} context={context} />;
     })
     .with(
       { section: DetailViewSectionsDict.Configuration },

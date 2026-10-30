@@ -31,7 +31,7 @@ export const MEmodel: EntityCoreTypeConfig<IMEModel> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
-    DetailViewSectionsDict.Configuration,
+    DetailViewSectionsDict.Workflow,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isDownloadable: true,

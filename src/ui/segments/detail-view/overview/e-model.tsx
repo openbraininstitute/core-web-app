@@ -4,22 +4,13 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { type TViewVariant, ViewVariant } from '@/constants';
 import { CodeBlock } from '@/ui/molecules/code-blocks';
 import {
-  detailViewHeadingClass,
   detailViewInsetPanelClass,
-  detailViewPanelBorderClass,
+  detailViewSectionHeadingClass,
 } from '@/ui/segments/detail-view/variant-styles';
 import { cn } from '@/utils/css-class';
 
 import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { WorkspaceContext } from '@/types/common';
-
-function sectionHeadingClass(variant: TViewVariant) {
-  return cn(
-    'mb-5 mt-5 rounded-full border px-4 py-3 text-xl font-bold capitalize',
-    detailViewHeadingClass(variant, 'xl'),
-    detailViewPanelBorderClass(variant)
-  );
-}
 
 export default async function EModelOverview({
   emodel,
@@ -45,7 +36,7 @@ export default async function EModelOverview({
 
   return (
     <div>
-      <div className={sectionHeadingClass(variant)}>File Preview: NEURON hoc</div>
+      <div className={detailViewSectionHeadingClass(variant)}>File Preview: NEURON hoc</div>
       <div
         className={cn(
           'overflow-x-auto secondary-scrollbar overflow-y-auto font-mono text-sm whitespace-pre shadow-lg',

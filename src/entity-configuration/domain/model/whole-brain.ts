@@ -46,6 +46,7 @@ export const WholeBrain: EntityCoreTypeConfig<ICircuit> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
+    DetailViewSectionsDict.Workflow,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
