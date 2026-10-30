@@ -1,7 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { ApiError } from '@/api/error';
+
 import { contactPositions, recordingArrayId } from './contacts';
-import { binAt, fieldValue, readRow, readSlice, rowsField, sliceOf } from './summary';
+import {
+  binAt,
+  fieldValue,
+  isLfpSummaryChanged,
+  LfpSummaryChangedError,
+  readRow,
+  readSlice,
+  rowsField,
+  sliceOf,
+} from './summary';
 
 import type { LfpAxis, LfpDataset, LfpField, LfpSummaryIndex } from './summary';
 
@@ -61,6 +72,18 @@ describe('readSlice', () => {
     await expect(readSlice({ url: 'u', headers: {} }, level0, [0, 2])).rejects.toThrow(
       'not read by range'
     );
+  });
+
+  it('tells a summary built again since its status was read', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(null, { status: 412 }))
+    );
+    await expect(readSlice({ url: 'u', headers: {} }, level0, [0, 2])).rejects.toBeInstanceOf(
+      LfpSummaryChangedError
+    );
+    expect(isLfpSummaryChanged(new ApiError('changed', { status: 412 }))).toBe(true);
+    expect(isLfpSummaryChanged(new ApiError('gone', { status: 404 }))).toBe(false);
   });
 });
 

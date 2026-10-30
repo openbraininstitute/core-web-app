@@ -21,6 +21,9 @@ function contextHeaders(ctx: WorkspaceContext) {
   return { ...getEntityCoreContext(ctx).headers, accept: 'application/json' };
 }
 
+/** Bluenaas answers 412 where the summary built is no longer the one of this sha256. */
+const ifMatch = (sha256: string) => ({ 'If-Match': `"${sha256}"` });
+
 /** The summary's status, its build queued where there is neither a summary nor a build. */
 export async function requestLfpSummary({ ctx, resultId, assetId }: LfpSummarySource) {
   const api = await smallScaleSimulatorApi();
@@ -30,17 +33,26 @@ export async function requestLfpSummary({ ctx, resultId, assetId }: LfpSummarySo
 }
 
 /** The summary's index: where each of its datasets lies in its file. */
-export async function getLfpSummaryIndex({ ctx, resultId, assetId }: LfpSummarySource) {
+export async function getLfpSummaryIndex(
+  { ctx, resultId, assetId }: LfpSummarySource,
+  sha256: string
+) {
   const api = await smallScaleSimulatorApi();
   return api.get<unknown>(summaryPath(resultId, assetId, '/index'), {
-    headers: contextHeaders(ctx),
+    headers: { ...contextHeaders(ctx), ...ifMatch(sha256) },
   });
 }
 
 /** The URL and headers of the summary's bytes, for range reads of its own. */
-export async function buildLfpSummaryRequest({ ctx, resultId, assetId }: LfpSummarySource) {
+export async function buildLfpSummaryRequest(
+  { ctx, resultId, assetId }: LfpSummarySource,
+  sha256: string
+) {
   const session = await getSession();
-  const headers: Record<string, string> = { ...getEntityCoreContext(ctx).headers };
+  const headers: Record<string, string> = {
+    ...getEntityCoreContext(ctx).headers,
+    ...ifMatch(sha256),
+  };
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;
   return { url: `${config.SMALL_SCALE_SIMULATOR_URL}${summaryPath(resultId, assetId)}`, headers };
 }

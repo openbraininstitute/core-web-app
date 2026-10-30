@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { ApiError } from '@/api/error';
+
 const datasetSchema = z.object({
   offset: z.number().int().nonnegative(),
   shape: z.array(z.number().int().nonnegative()),
@@ -96,6 +98,21 @@ export function sliceOf(
   };
 }
 
+/** The summary was built again since its status was read: its offsets are another file's. */
+export class LfpSummaryChangedError extends Error {
+  constructor() {
+    super('The LFP summary has changed');
+    this.name = 'LfpSummaryChangedError';
+  }
+}
+
+export function isLfpSummaryChanged(error: unknown) {
+  return (
+    error instanceof LfpSummaryChangedError ||
+    (error instanceof ApiError && error.cause?.status === 412)
+  );
+}
+
 /** A slice of a dataset's bytes, read with one range request. */
 export async function readSlice(
   request: LfpSummaryRequest,
@@ -108,6 +125,7 @@ export async function readSlice(
     headers: { ...request.headers, Range: `bytes=${offset}-${offset + length - 1}` },
     signal,
   });
+  if (response.status === 412) throw new LfpSummaryChangedError();
   if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
   // Else every read would download the whole file.
   if (response.status !== 206) throw new Error('The LFP summary was not read by range');
