@@ -465,8 +465,9 @@ function ReadyMatrix({
               detail: c.ranges ? 'ranges' : undefined,
             })),
             {
+              // no grouping: a row per neuron
               value: BY_NEURON,
-              label: 'Neuron',
+              label: 'None',
               detail: neurons.toLocaleString(),
             },
           ]}
