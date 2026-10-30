@@ -1,6 +1,11 @@
+import chroma from 'chroma-js';
 import { describe, expect, it } from 'vitest';
 
-import { PATHWAY_COLORS, pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
+import {
+  OUTSIDE_PATHWAY_OPACITY,
+  PATHWAY_COLORS,
+  pathwayNodeColors,
+} from '@/features/circuit-viewer/pathway-colors';
 
 describe('pathwayNodeColors', () => {
   const colors = pathwayNodeColors({
@@ -21,5 +26,10 @@ describe('pathwayNodeColors', () => {
   it('draws every other cell faint and flat, and ignores cells past the population', () => {
     expect([...colors.columnByNode]).toEqual([1, 0, 3, 2, 0]);
     expect(colors.flatColumns).toEqual([0]);
+  });
+
+  it('draws the cells outside the pathway 5% opaque', () => {
+    expect(chroma(colors.palette[0]).alpha()).toBeCloseTo(OUTSIDE_PATHWAY_OPACITY);
+    expect(chroma(colors.palette[1]).alpha()).toBe(1);
   });
 });
