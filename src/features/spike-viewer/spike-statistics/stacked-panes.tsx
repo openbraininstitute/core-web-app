@@ -67,7 +67,6 @@ export function StackedPanes({
   bottom = null,
   bottomShare = 0.5,
   floors = DEFAULT_FLOORS,
-  header,
 }: {
   split: 'file' | 'panel' | 'config';
   top: StackedPane;
@@ -76,8 +75,6 @@ export function StackedPanes({
   bottomShare?: number;
   /** What the top pane and the bottom one keep while open, the gutter included. */
   floors?: readonly [number, number];
-  /** Over the panes, such as the population on show and the button opening the panel. */
-  header?: ReactNode;
 }) {
   const sidePanel = useResultsSidePanel();
   // A layout effect, seeded by hand: the observer's first report only lands a
@@ -137,7 +134,6 @@ export function StackedPanes({
         'pt-px pb-3'
       )}
     >
-      {header}
       <div className="flex min-h-0 flex-1">
         <div ref={areaRef} className="relative min-h-0 min-w-0 flex-1">
           <div

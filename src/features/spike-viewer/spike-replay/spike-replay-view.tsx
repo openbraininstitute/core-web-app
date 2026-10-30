@@ -690,6 +690,10 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           />
         </CollapsingControls>
       )}
+      {/* With no spikes there is nothing to control, but the panel still opens from the box. */}
+      {!rasterControls && openPanel && (
+        <CollapsingControls trailing={openPanel}>{null}</CollapsingControls>
+      )}
     </div>
   );
 
@@ -740,11 +744,6 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
               raster's controls, and the table's header names the population. */}
           <StackedPanes
             split="file"
-            header={
-              // With no spikes the raster has no controls to hold the button.
-              !rasterControls &&
-              openPanel && <div className="mb-3 flex justify-end">{openPanel}</div>
-            }
             top={{
               title: 'Raster',
               keepsSize: true,
