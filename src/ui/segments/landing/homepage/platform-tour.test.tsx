@@ -18,10 +18,15 @@ function chapter(name: string) {
     screen.getByRole('group', { name: 'Choose a research or teaching chapter' })
   ).getByRole('button', { name });
 }
+function openExamples() {
+  const trigger = screen.getByRole('button', { name: /^Choose an example:/ });
+  if (!screen.queryByRole('menu', { name: /^Choose an example:/ })) {
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+  }
+  return screen.getByRole('menu', { name: /^Choose an example:/ });
+}
 function chooseExample(name: string) {
-  const picker = screen.getByRole('combobox', { name: 'Choose an example' });
-  const option = within(picker).getByRole('option', { name });
-  fireEvent.change(picker, { target: { value: option.getAttribute('value') } });
+  fireEvent.click(within(openExamples()).getByRole('menuitem', { name }));
 }
 function expectSlide(title: string) {
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
@@ -176,19 +181,17 @@ describe('guided platform tour', () => {
       for (const [label, title] of items) {
         chooseExample(label);
         expectSlide(title);
-        expect(screen.getByTestId('current-example')).toHaveDisplayValue(label);
+        expect(screen.getByTestId('current-example')).toHaveTextContent(label);
       }
-      const examples = screen.getByRole('group', { name: 'Examples in the selected chapter' });
-      expect(within(examples).queryByRole('button')).not.toBeInTheDocument();
       expect(
-        within(examples)
-          .getAllByRole('option')
+        within(openExamples())
+          .getAllByRole('menuitem')
           .map((option) => option.textContent)
       ).toEqual(items.map(([label]) => label));
       chooseExample(items[0][0]);
-      expect(screen.getByTestId('current-example')).toHaveDisplayValue(items[0][0]);
+      expect(screen.getByTestId('current-example')).toHaveTextContent(items[0][0]);
       chooseExample(items[items.length - 1][0]);
-      expect(screen.getByTestId('current-example')).toHaveDisplayValue(items[items.length - 1][0]);
+      expect(screen.getByTestId('current-example')).toHaveTextContent(items[items.length - 1][0]);
     }
     fireEvent.click(chapter('Skeletonize'));
     expect(
@@ -204,6 +207,24 @@ describe('guided platform tour', () => {
       'src',
       '/images/homepage/education.mp4'
     );
+  });
+
+  it('holds the current slide while choosing an example and resumes after Escape', () => {
+    render(<PlatformTour />);
+    fireEvent.click(chapter('Analyze'));
+    advance(3000);
+    const trigger = screen.getByRole('button', { name: /^Choose an example:/ });
+    const menu = openExamples();
+    advance(24000);
+    expectSlide('Discover patterns in firing.');
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    advance(0);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+    advance(8999);
+    expectSlide('Discover patterns in firing.');
+    advance(1);
+    expectSlide('Work through conversation.');
   });
 
   it('continues using a timed fallback if any video fails to load', () => {
