@@ -12,8 +12,8 @@ interface Draw {
 }
 
 /**
- * The draws whose arguments are at `offsets` of a buffer the culling writes, each drawn from a buffer of its own that
- * the arguments are copied into: Safari 27 hangs the GPU where draws in a pass read their arguments from one buffer
+ * Draws whose arguments the culling writes into one buffer, at `offsets`. Each draw reads its arguments from a buffer
+ * of its own, copied from that one: Safari 27 hangs the GPU when draws in a pass read their arguments from one buffer
  * (WebKit bug 321876).
  */
 export class IndirectDraws {
@@ -39,21 +39,21 @@ export class IndirectDraws {
     }
   }
 
-  /** What the draw at `offset` is drawn by, from its start. */
+  /** The arguments of the draw at `offset`, from the start of its own buffer. */
   of(offset: number): THREE.IndirectStorageBufferAttribute {
     const draw = this.draws.get(offset);
     if (!draw) throw new Error(`no draw at ${offset}`);
     return draw.attribute;
   }
 
-  /** Each draw's arguments copied from `from`, once `encoder` has written them. */
+  /** Copies each draw's arguments from `from`, in `encoder` after the commands that write them. */
   copy(encoder: GPUCommandEncoder, from: GPUBuffer): void {
     for (const [offset, { buffer }] of this.draws) {
       encoder.copyBufferToBuffer(from, offset, buffer, 0, ARGS_BYTES);
     }
   }
 
-  /** The draws' arguments set from `words`, laid out as the culling's buffer. */
+  /** Sets the draws' arguments from `words`, laid out as in the culling's buffer. */
   write(queue: GPUQueue, words: Uint32Array): void {
     for (const [offset, { buffer }] of this.draws) {
       queue.writeBuffer(buffer, 0, words, offset / 4, ARGS_BYTES / 4);

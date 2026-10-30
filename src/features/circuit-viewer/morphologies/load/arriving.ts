@@ -1,7 +1,7 @@
 /**
- * A file's bytes as they come in, in one buffer of the file's size where that is known: a read of a part waits until
- * its bytes are in (`until`), then takes them (`bytes`). The buffer grows where the file is longer than said, so a part
- * is taken again for each read, never held across one.
+ * A file's bytes as they come in, in one buffer of the file's size where that is known. To read a part, wait until its
+ * bytes are in (`until`), then take them (`bytes`). The buffer is replaced by a larger one when the file is longer than
+ * said, so take a part again for each read and never keep it for a later one.
  */
 export class Arriving {
   private buffer: Uint8Array;
@@ -28,12 +28,12 @@ export class Arriving {
     return this.received;
   }
 
-  /** The file as it came in, once it has (`end`); before, what is in so far. */
+  /** The whole file once it has all come in (`end`); before that, what is in so far. */
   get all(): Uint8Array {
     return this.buffer.subarray(0, this.received);
   }
 
-  /** Bytes `start` to `end`, which are in. */
+  /** Bytes `start` to `end`, which must already be in. */
   bytes(start: number, end: number): Uint8Array {
     return this.buffer.subarray(start, end);
   }
@@ -57,7 +57,7 @@ export class Arriving {
     this.settle((end) => end <= this.received, true);
   }
 
-  /** No more comes in: what waits for more is told it will not, and a buffer grown past the file let go of. */
+  /** Nothing more comes in: every wait for bytes learns they will not come, and a buffer past the file is cut to it. */
   end(): void {
     this.ended = true;
     if (this.buffer.byteLength > this.received) this.buffer = this.buffer.slice(0, this.received);

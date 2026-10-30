@@ -39,10 +39,10 @@ import type { ArenaStorage } from './arena-gpu';
 import type { GpuUniforms } from './gpu-uniforms';
 
 /**
- * As `impostors.ts` draws a segment and a soma, in WGSL, and a segment wide on screen as the tube itself. Pixels: the
- * fragment's position counts them from the top left of the target, y down, where WebGL's counts y up; geometry is
- * worked in pixels y up, as view space has it, and the ends handed to the fragments are turned over. The culling's
- * passes are written with the same text (`culling.ts`).
+ * Draws a segment and a soma in WGSL as `impostors.ts` does, and draws a segment that is wide on screen as the tube
+ * itself. Pixels: the fragment's position counts them from the top left of the target with y down, while WebGL counts
+ * y up. The geometry works in pixels with y up, as view space does, and flips the ends it hands to the fragments. The
+ * culling's passes use the same text (`culling.ts`).
  */
 export const IMPOSTORS_WGSL = /* wgsl */ `
 // A view point in device pixels from the viewport's bottom left, y up.
@@ -50,22 +50,22 @@ fn pixelsUp(p: vec3f, projection: mat4x4f, vp: vec4f) -> vec2f {
   let clip = projection * vec4f(p, 1.0);
   return (clip.xy / clip.w * 0.5 + 0.5) * vp.zw;
 }
-// Pixels y up as the fragment's position counts them.
+// Pixels with y up, turned into the fragment's position, which counts y down.
 fn toFragment(q: vec2f, vp: vec4f) -> vec2f {
   return vec2f(vp.x + q.x, vp.y + vp.w - q.y);
 }
-// The view point p's depth as the depth buffer takes it.
+// The depth of the view point p as the depth buffer stores it.
 fn depthOf(p: vec3f, projection: mat4x4f) -> f32 {
   let clip = projection * vec4f(p, 1.0);
   return clip.z / clip.w;
 }
-// How far from the edge of a round surface r pixels in radius its point of normal n is drawn, seen along ray: its sine
-// of the radius from the middle.
+// How far from the edge of a round surface, r pixels in radius, the point with normal n is drawn when seen along ray.
+// That point is drawn r times the sine of the angle between n and the ray from the middle.
 fn edgeOf(n: vec3f, ray: vec3f, r: f32) -> f32 {
   let facing = dot(n, -ray);
   return r * (1.0 - sqrt(max(1.0 - facing * facing, 0.0)));
 }
-// A cell in its sections' colours is all but opaque in the cell table.
+// The cell table marks a cell drawn in its sections' colours with an alpha just under opaque.
 fn ownColour(texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f, axon: vec3f, basal: vec3f, apical: vec3f) -> vec3f {
   if (texel.a > ${(BY_SECTION + 0.5) / 255}) { return texel.rgb; }
   switch type_ {
@@ -80,8 +80,9 @@ fn ownColour(texel: vec4f, type_: u32, unknown: vec3f, soma: vec3f, axon: vec3f,
 const IMPOSTORS = wgsl(IMPOSTORS_WGSL, [VIEW]);
 
 /**
- * A segment's ends in view space, each with its radius, and their radii in pixels and the µm a pixel spans at each; w
- * of the last column 1 where it is drawn: not a hole's, nor of the `hidden` type (`ImpostorUniforms.uHidden`).
+ * A segment's ends in view space, each with its radius, then their radii in pixels and the µm a pixel spans at each
+ * end. The last column's w is 1 where the segment is drawn: it is not a hole, nor of the `hidden` type
+ * (`ImpostorUniforms.uHidden`).
  */
 export const SEGMENT_ENDS_WGSL = /* wgsl */ `
 fn segmentEnds(word: u32, hidden: u32, shown: f32, least: f32, endA: vec4f, endB: vec4f, chartA: vec4f,
@@ -98,8 +99,8 @@ fn segmentEnds(word: u32, hidden: u32, shown: f32, least: f32, endA: vec4f, endB
   var rb = B.w;
   let orthographic = isOrthographic(projection);
   if (!orthographic) {
-    // Cut at twice the near plane's depth: nearer the eye an end has no place on screen, and up to there the lifted
-    // quad stays behind the near plane.
+    // Cut the segment at twice the near plane's depth. An end nearer the eye than that has no place on screen, and up
+    // to that depth the lifted quad stays behind the near plane.
     let cut = -2.0 * near;
     if (min(a.z, b.z) > cut) { return none; }
     if (a.z > cut) {
@@ -121,10 +122,11 @@ fn segmentEnds(word: u32, hidden: u32, shown: f32, least: f32, endA: vec4f, endB
 const segmentEnds = wgslFn(SEGMENT_ENDS_WGSL, [IMPOSTORS]);
 
 /**
- * A segment's quad, of its `ends`: the corner in the world, w 1 where it is drawn; its ends in the fragment's pixels;
- * the corner in view space. corner.x picks the end, corner.y the side. Drawn as the tube itself
- * where `tube` is 1 and flat where it is 0, a segment is drawn by the one draw whose kind its width on screen asks for
- * (`round`, the least radius in pixels of a tube); not drawn, its four corners are one point.
+ * A segment's quad, built from its `ends`. Columns: the corner in the world, with w 1 where the segment is drawn; its
+ * ends in the fragment's pixels; the corner in view space. corner.x picks the end, corner.y the side. `tube` is 1 in
+ * the draw of tubes and 0 in the flat draw, and only the draw of the kind that the segment's width on screen asks for
+ * draws it (`round` is the least radius in pixels of a tube). Where the segment is not drawn, its four corners are one
+ * point.
  */
 const segmentQuad = wgslFn(
   /* wgsl */ `
@@ -147,8 +149,8 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
   let across = vec2f(-along.y, along.x);
   let atB = corner.x > 0.0;
   let end = select(a, b, atB);
-  // As wide on screen as the wider end all along, and a little more: narrowing with the tube, the quad's side would
-  // cut into the wider end.
+  // Keep the quad as wide on screen as the wider end along its whole length, plus a little. If the quad narrowed with
+  // the tube, its side would cut into the wider end.
   let wide = ${QUAD_REACH} * max(radii.x, radii.y) * select(umA, umB, atB);
   let outward = select(-along, along, atB) + across * corner.y;
   let p = lifted(vec3f(end.xy + outward * wide, end.z), select(ra, rb, atB), projection);
@@ -158,11 +160,11 @@ fn segmentQuad(corner: vec3f, ends: mat4x4f, tube: f32, round: f32, world: mat4x
 );
 
 /**
- * Under pixel q, the normal of a segment's tube in view space, round across its width and across only, as far from its
- * edge, so that a round end carries on into the next segment without a seam; w 1 where the pixel is on it. And in the
- * second column how far the pixel is from the edge and the radius, in pixels, and in w the depth in view space of the
- * tube's surface, which the quad does not write: it stands at the tube's nearest all across. `depths`: each end's
- * depth in view space and radius.
+ * Under pixel q, the normal of a segment's tube in view space, with w 1 where the pixel is on the tube. The normal is
+ * round across the tube's width only, set by how far the pixel is from the edge, so that a round end carries on into
+ * the next segment without a seam. The second column holds how far the pixel is from the edge and the radius, in
+ * pixels, and in w the depth in view space of the tube's surface. The quad does not write that depth: it stands at the
+ * tube's nearest point all across. `depths`: each end's depth in view space and its radius.
  */
 const segmentSurface = wgslFn(/* wgsl */ `
 fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f, depths: vec4f) -> mat4x4f {
@@ -181,10 +183,10 @@ fn segmentSurface(q: vec2f, ends: vec4f, radii: vec4f, depths: vec4f) -> mat4x4f
 }`);
 
 /**
- * Under the corner's point p, a segment drawn as the tube itself: a ball at each end of radius a.w and b.w, and the cone
- * between them (Inigo Quilez's rounded cone), met by the ray through the pixel. As `somaSurface` has it: the normal in
- * view space, w 1 where the pixel is on the tube; how far the pixel is from its edge and its radius, in pixels, its
- * depth as the depth buffer takes it and in view space.
+ * Where the ray through p, the quad's point under the pixel, meets a segment drawn as the tube itself: a ball at each
+ * end, of radius a.w and b.w, and the cone between them (Inigo Quilez's rounded cone). The columns are as in
+ * `somaSurface`: the normal in view space, with w 1 where the pixel is on the tube; then how far the pixel is from the
+ * edge and the radius, in pixels, the depth as the depth buffer stores it, and the depth in view space.
  */
 const tubeSurface = wgslFn(
   /* wgsl */ `
@@ -208,7 +210,7 @@ fn tubeSurface(p: vec3f, a: vec4f, b: vec4f, radii: vec4f, projection: mat4x4f) 
   let m2 = dot(ba, ray);
   let m3 = dot(ray, oa);
   let m6 = dot(ray, ob);
-  // The nearest of where the ray meets a ball, and the cone between them from outside: the normal, and how far along.
+  // The ray's nearest hit on either ball, or on the cone between them from outside: the normal, and how far along.
   var hit = vec4f(0.0, 0.0, 1.0, 1e30);
   let h1 = m3 * m3 - dot(oa, oa) + ra * ra;
   if (h1 > 0.0) {
@@ -227,7 +229,7 @@ fn tubeSurface(p: vec3f, a: vec4f, b: vec4f, radii: vec4f, projection: mat4x4f) 
     let k0 = d2 * dot(oa, oa) - m1 * m1 + m1 * rr * ra * 2.0 - m0 * ra * ra;
     let h = k1 * k1 - k0 * k2;
     if (h >= 0.0) {
-      // Both roots, the way that loses no digits where the ray runs nearly along the cone's side.
+      // Both roots, in the form that loses no precision where the ray runs nearly along the cone's side.
       let s = -(k1 + select(-1.0, 1.0, k1 >= 0.0) * sqrt(h));
       var roots = array<f32, 2>(1e30, 1e30);
       if (k2 != 0.0) { roots[0] = s / k2; }
@@ -249,8 +251,8 @@ fn tubeSurface(p: vec3f, a: vec4f, b: vec4f, radii: vec4f, projection: mat4x4f) 
 );
 
 /**
- * A soma's quad: the corner in the world, w 1 where it is drawn; the centre in view space and the radius; the radius in
- * pixels and the corner in view space.
+ * A soma's quad. Columns: the corner in the world, with w 1 where the soma is drawn; the centre in view space and the
+ * radius; the radius in pixels; the corner in view space.
  */
 const somaQuad = wgslFn(
   /* wgsl */ `
@@ -265,15 +267,15 @@ fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, 
   // How far from its centre the sphere reaches on screen, in µm at the centre's depth.
   var reach = r;
   if (!isOrthographic(projection)) {
-    // From d away, at the angle t off the view's axis, the sphere spans asin(r / d) either way, and reaches
-    // r / cos(t + asin(r / d)) outwards. lean / d2 is that cosine: under an eighth the eye is in the sphere, or all
-    // but, and it is not drawn.
+    // Seen from d away, at the angle t off the view's axis, the sphere spans asin(r / d) either way and reaches
+    // r / cos(t + asin(r / d)) outwards. lean / d2 is that cosine. Below an eighth, the eye is inside the sphere or
+    // nearly so, and the soma is not drawn.
     let d2 = dot(c, c);
     let lean = -c.z * sqrt(max(d2 - r * r, 0.0)) - length(c.xy) * r;
     if (8.0 * lean < d2) { return none; }
     reach = r * d2 / lean;
   }
-  // A little wider than the sphere. Its depth is the fragment's to write.
+  // Make the quad a little wider than the sphere. The fragment writes its depth.
   let p = vec3f(c.xy + corner.xy * (1.2 * reach), c.z);
   return mat4x4f(world * vec4f(p, 1.0), vec4f(c, r), vec4f(r / um, 0.0, 0.0, 0.0), vec4f(p, 0.0));
 }`,
@@ -281,8 +283,9 @@ fn somaQuad(corner: vec3f, shown: f32, least: f32, sphere: vec4f, chart: vec4f, 
 );
 
 /**
- * Under the corner's point p, the sphere's normal in view space, w 1 where the pixel is on it; how far the pixel is
- * from its edge and its radius, in pixels, its depth as the depth buffer takes it and in view space.
+ * Where the ray through p, the quad's point under the pixel, meets the sphere: the normal in view space, with w 1 where
+ * the pixel is on the sphere; then how far the pixel is from the edge and the radius, in pixels, the depth as the depth
+ * buffer stores it, and the depth in view space.
  */
 const somaSurface = wgslFn(
   /* wgsl */ `
@@ -325,9 +328,9 @@ const spikeLight = wgslFn(SPIKE_LIGHT_WGSL);
 const spikeColour = wgslFn(SPIKE_COLOUR_WGSL);
 
 /**
- * The look's roughness and as much more as the normal turns from a pixel to the next, as three's WebGL lighting has
- * it: there it is the impostor's normal that turns, which spreads the highlight across a thin tube; three's WebGPU
- * lighting would take the flat quad's.
+ * The look's roughness, raised by how much the normal turns from one pixel to the next, as three's WebGL lighting does
+ * it. On WebGL the impostor's normal is the one that turns, which spreads the highlight across a thin tube; three's
+ * WebGPU lighting would use the flat quad's normal instead.
  */
 const roughnessOf = wgslFn(/* wgsl */ `
 fn roughnessOf(n: vec3f, roughness: f32) -> f32 {
@@ -339,8 +342,9 @@ fn roughnessOf(n: vec3f, roughness: f32) -> f32 {
 type Kind = 'segment' | 'tube' | 'soma';
 
 /**
- * What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram; and the least radius
- * in pixels of a tube by which the draw keeps its own kind (`GpuUniforms.tubeFrom` where not given).
+ * What a segment is drawn from: its cell-and-type word, its ends, and its ends in the dendrogram. `round` is the least
+ * radius in pixels of a tube, by which each draw keeps only the segments of its own kind (`GpuUniforms.tubeFrom` where
+ * not given).
  */
 interface SegmentInputs {
   word: Node<'uint'>;
@@ -351,7 +355,7 @@ interface SegmentInputs {
   round?: Node<'float'>;
 }
 
-/** A segment as its quads' attributes have it. */
+/** A segment read from its quad's attributes. */
 const fromAttributes = (): SegmentInputs => ({
   word: attribute('aCell', 'uint'),
   endA: attribute('aA', 'vec4'),
@@ -360,14 +364,16 @@ const fromAttributes = (): SegmentInputs => ({
   chartB: attribute('aChartB', 'vec4'),
 });
 
-/** Of the culling's lists, those kept to hide others, drawn to depth before the tests, or those seen. */
+/** Which of the culling's lists to read: those kept to hide others, drawn to depth before the tests, or those seen. */
 type List = 'kept' | 'seen';
 
 /**
- * An arena's segment, the instance's: culled (`listed`), the one at that place in `list` for the draw's kind, which
- * holds its flat segments from its start and its tubes back from its end; not, every segment in turn. None at or past
- * the arena's end. With no dendrogram, its ends stand for it. The culling chose a seen segment's kind, which its draw
- * keeps; a kept one is drawn by its kind now, so that one whose kind changed is left out, as it may be.
+ * The arena's segment for this instance. Where the arena is culled (`listed`), it is the one at the instance's place in
+ * `list` for the draw's kind: the list holds the flat segments from its start and the tubes back from its end. Where
+ * it is not culled, every segment is drawn in turn. An index at or past the arena's end gives a hole, which is not
+ * drawn. With no dendrogram, the segment's ends stand in for it. The culling chose each seen segment's kind, and its
+ * draw keeps that choice. A kept segment is drawn by its kind now, so a kept segment whose kind changed is left out,
+ * which is allowed.
  */
 function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube', list: List) {
   const { capacity, end } = arena;
@@ -387,8 +393,9 @@ function fromArena(u: GpuUniforms, arena: ArenaStorage, kind: 'segment' | 'tube'
 }
 
 /**
- * Where the arena is culled, a tube's pixel behind the farthest drawn there before the tests: what was drawn there
- * covers it, and the nearest of that is drawn. `viewZ`: the tube's depth there in view space.
+ * Whether, where the arena is culled, a tube's pixel lies behind the farthest depth drawn there before the tests. If
+ * so, what was drawn there covers it, and the nearest of that is drawn instead. `viewZ`: the tube's depth there in view
+ * space.
  */
 function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
   const away = viewZ.negate();
@@ -398,12 +405,12 @@ function behindOf(arena: ArenaStorage, viewZ: Node<'float'>): Node<'bool'> {
 }
 
 /**
- * What every material of a kind shares: the cell, its texel and how lit it is by a spike where `glowing`
- * (`spike-light.ts`), where its quad's corner is,
- * what the fragments take of it, and whether a pixel is on the tube or the sphere, with its normal, how far it is from
- * the edge, and its depth: as the depth buffer takes it, which a segment drawn flat does not write, and in view space.
- * Glowing in full, a cell drawn at the least width is drawn at twice it, to be seen. Its word, and a segment, are read
- * from `inputs`. `litOnly`: an unlit cell's quads are not drawn.
+ * What every material of a kind shares: the cell, its texel, and, where `glowing`, how lit it is by a spike
+ * (`spike-light.ts`); where the quad's corner is and what the fragments take of it; and whether a pixel is on the tube
+ * or the sphere, with its normal, how far it is from the edge, and its depth. The depth comes as the depth buffer
+ * stores it, which a segment drawn flat does not write, and in view space. A cell that glows in full and is drawn at
+ * the least width is drawn at twice that width, so that it can be seen. The word, and a segment's ends, are read from
+ * `inputs`. With `litOnly`, an unlit cell's quads are not drawn.
  */
 function impostorOf(
   kind: Kind,
@@ -549,13 +556,14 @@ function toneMapped(colour: Node<'vec3'>): Node<'vec3'> {
 /** How much of a lit cell shows through what covers it: less the deeper it lies. */
 const THROUGH = 0.6;
 /**
- * Through how much, CSS pixels at the orbit's target, and no more than the culling keeps (`KEEP_UM`); and as a line
- * along its middle this wide, CSS pixels, a soma as a dot this many times as wide: the same on screen at any zoom.
+ * How deep a lit cell shows through what covers it, in CSS pixels at the orbit's target, and no deeper than the culling
+ * keeps (`KEEP_UM`). The cell shows as a line along its middle this many CSS pixels wide, and a soma as a dot this many
+ * times as wide. All three stay the same on screen at any zoom.
  */
 export const THROUGH_CSS_PX = 60;
 export const THROUGH_LINE_CSS_PX = 3;
 const THROUGH_DOT = 2;
-/** Nearer the front than this, µm, a lit cell is the front, which the look draws. */
+/** A lit cell nearer the front than this, µm, is the front itself, which the look draws. */
 const FRONT_UM = 0.5;
 
 /** How far a pixel `away` µm from the eye lies behind what the frame drew in front there (`Occlusion.front`), µm. */
@@ -566,8 +574,9 @@ function behindFront(u: GpuUniforms, away: Node<'float'>) {
 }
 
 /**
- * A lit cell of `kind` drawn over the frame where it lies behind what was drawn in front, by up to `throughUm`, as a
- * line along its middle, in its spike's colour as much as it is lit by `THROUGH`, less the deeper it lies.
+ * A lit cell of `kind`, drawn over the frame where it lies up to `throughUm` behind what was drawn in front. It shows
+ * as a line along its middle in its spike's colour, as opaque as `THROUGH` times how lit it is, and fainter the deeper
+ * it lies.
  */
 function throughMaterial(
   kind: Kind,
@@ -604,11 +613,11 @@ function throughMaterial(
 }
 
 /**
- * An impostor of `kind` in the look's material, three's standard one under the look's lights: the cell's colour from
- * the cell table where the vertex colour would go, lit by a spike (`spike-light.ts`), tone mapped as Studio is on
- * WebGL 2 and written as shown; and for the occlusion, its surface (`surfaceOf`). A tube of a
- * culled `arena` is not drawn where it lies behind what was drawn before the tests (`behindOf`): writing its depth, it
- * would be shaded there under what covers it.
+ * An impostor of `kind` in the look's material: three's standard material under the look's lights. It takes the cell's
+ * colour from the cell table where the vertex colour would go, lights it by a spike (`spike-light.ts`), tone maps it as
+ * Studio is on WebGL 2 and writes it as shown. It also writes its surface for the occlusion (`surfaceOf`). A tube of a
+ * culled `arena` is not drawn where it lies behind what was drawn before the tests (`behindOf`): it writes its own
+ * depth, so it would otherwise be shaded there under what covers it.
  */
 function lookMaterial(
   kind: Kind,
@@ -641,7 +650,7 @@ function lookMaterial(
   const facing = col(surface, 0).z;
   const spike = spikeLit(kind, colour, facing, u);
   let shown = toneMapped(mix(output.rgb, spike, spiking));
-  // Past white, on a screen that shows it.
+  // Add light past white, on a screen that can show it.
   if (u.overWhite > 0) shown = shown.add(toneMapped(spike).mul(spiking.mul(u.overWhite)));
   material.outputNode = vec4(typed<'vec3'>(sRGBTransferOETF(shown)), output.a);
   material.mrtNode = surfaceOf(col(surface, 0).xyz, viewZ, spiking);
@@ -649,8 +658,8 @@ function lookMaterial(
 }
 
 /**
- * An impostor of `kind` drawn in a number in place of its shading, as `idMaterial` draws it: its cell's, or with
- * `segments`, its own, a soma's after the segments'.
+ * An impostor of `kind` drawn in a number in place of its shading, as `idMaterial` draws it: its cell's number, or,
+ * with `segments`, its own, where the somas are numbered after the segments.
  */
 function idMaterial(
   kind: Kind,
@@ -673,8 +682,8 @@ function idMaterial(
 }
 
 /**
- * A segment of `kind` drawn to depth alone, placed and masked as in the look, for the culling's tests: the depth the
- * look's material writes.
+ * A segment of `kind` drawn to depth only, placed and masked as in the look, for the culling's tests. It writes the
+ * same depth as the look's material.
  */
 function depthMaterial(
   kind: 'segment' | 'tube',
@@ -690,7 +699,7 @@ function depthMaterial(
   return material;
 }
 
-/** A segment's materials, the two draws: the flat ones and the tubes. */
+/** A segment's materials for its two draws: the flat segments and the tubes. */
 const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M) => [
   of('segment'),
   of('tube'),
@@ -698,7 +707,7 @@ const segments = <M extends THREE.Material>(of: (kind: 'segment' | 'tube') => M)
 
 /**
  * The impostors' materials on WebGPU: in the look, in their cells' numbers, in their segments' numbers, and lit through
- * what covers them, the segments in two draws, the flat ones and the tubes.
+ * what covers them. Each set draws the segments in two draws, the flat ones and the tubes.
  */
 export function impostorMaterials(u: GpuUniforms, look: Look) {
   return {
@@ -717,8 +726,8 @@ export function impostorMaterials(u: GpuUniforms, look: Look) {
 }
 
 /**
- * The segments' materials of an arena whose buffers `arena` binds: in the look and in their cells' numbers, of the
- * segments seen, and to depth and lit through what covers them, of those kept (`fromArena`), which the seen are among.
+ * The materials for the segments of the arena whose buffers `arena` binds. The look and cell-number materials draw the
+ * segments seen; the depth and lit-through materials draw the segments kept (`fromArena`), which include those seen.
  */
 export function arenaMaterials(u: GpuUniforms, look: Look, arena: ArenaStorage) {
   return {

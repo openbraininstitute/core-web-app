@@ -5,14 +5,14 @@ import { ROW_BITS } from '../cell-table';
 
 import type { ArrayNode, Node } from 'three/webgpu';
 
-/** A node of WGSL's making, of the type its function returns. */
+/** A node made by a WGSL function, cast to the type that function returns. */
 export const typed = <T extends string>(node: Node) => node as unknown as Node<T>;
 
 /** `node` handed to the fragments as the first vertex of a triangle has it. */
 export const flat = <T extends string>(node: Node<T>) =>
   varying(node).setInterpolation('flat', 'either');
 
-/** The column `k` of a matrix a WGSL function hands its results back in. */
+/** Column `k` of the matrix that a WGSL function returns its results in. */
 export const col = (m: Node<'mat4'>, k: number) =>
   typed<'vec4'>(element(m as unknown as ArrayNode<'vec4'>, uint(k)));
 
@@ -38,8 +38,8 @@ export const VIEW_WGSL = /* wgsl */ `
 fn isOrthographic(projection: mat4x4f) -> bool {
   return projection[3][3] > 0.5;
 }
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most, and behind the
-// near plane, at depth 0 here.
+// Brings the view point p nearer the eye by lift without moving it on screen: by at most half its depth, and never
+// past the near plane, which is at depth 0 here.
 fn lifted(p: vec3f, lift: f32, projection: mat4x4f) -> vec3f {
   if (isOrthographic(projection)) { return vec3f(p.xy, p.z + lift); }
   let near = projection[3][2] / projection[2][2];
@@ -54,9 +54,10 @@ fn pixelUm(z: f32, projection: mat4x4f, vp: vec4f) -> f32 {
 `;
 export const VIEW = wgsl(VIEW_WGSL);
 
-/** What WGSL that colours cells calls: as `CELL_GLSL` in `impostors.ts`. */
+/** The functions that WGSL colouring cells calls, as `CELL_GLSL` in `impostors.ts`. */
 export const CELLS = wgsl(/* wgsl */ `
-// Brightened and taken a third of the way to a warm white, in sRGB, as the somas view lights a spiking soma.
+// Brightens the colour and takes it a third of the way to a warm white, in sRGB, as the somas view lights a spiking
+// soma.
 fn glowing(colour: vec3f, glow: f32) -> vec3f {
   let hot = mix(min(colour * 2.2, vec3f(1.0)), vec3f(1.0, 0.97, 0.88), 0.35);
   return mix(colour, hot, glow);
@@ -73,7 +74,7 @@ fn cellXY(cell: u32) -> vec2i {
 }`;
 export const cellXY = wgslFn(CELL_XY_WGSL);
 
-/** A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's. */
+/** The cell's number plus one, a byte per channel, so that a pixel of zeros belongs to no cell. */
 export const cellId = wgslFn(/* wgsl */ `
 fn cellId(cell: u32) -> vec4f {
   let id = cell + 1u;

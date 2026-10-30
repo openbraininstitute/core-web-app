@@ -13,27 +13,29 @@ import type {
   PackArrival,
 } from '../types';
 
-/** The most segments asked of the pack's worker at once: a batch is read in some milliseconds. */
+/** The most segments asked of the pack's worker at once, so that a batch takes some milliseconds to read. */
 const BATCH_SEGMENTS = 250_000;
-/** The segments placed in a turn of the loop, 4 MB of upload, unless one box alone is more. */
+/** The segments placed in one turn of the loop: 4 MB of upload, unless one box alone is more. */
 const PLACED_SEGMENTS = Math.floor((4 * 2 ** 20) / SEGMENT_BYTES);
 /**
- * The culling's reads a box is taken as seen for after the last that marked it, which come a frame or two late: while
- * the view moves, long enough that a box at the edge of sight is not let go of as it comes and goes; at rest, of the
- * frames drawn since it came to rest, no more than that.
+ * For how many of the culling's reads after the last one that marked it a box still counts as seen. The reads come a
+ * frame or two late. While the view moves, this is long enough that a box at the edge of sight is not let go of as it
+ * comes and goes. At rest, only the reads of frames drawn since the view came to rest count, and a box lingers no
+ * longer than that lateness needs.
  */
 export const LINGER = { moving: 30, still: 4 } as const;
 
-/** The culling's reads, and of each box the one that last marked it (0 for none). */
+/** How many culling reads there were, and for each box the read that last marked it (0 for none). */
 interface Marks {
   reads: number;
   at: Int32Array;
 }
 
 /**
- * What the culling's reads tell is seen: the marks of every read, and of the reads of frames drawn still, with how many
- * of those there were when the view last came to rest, and how many times it did; and each box taken as seen, or with
- * `all` every box in view, the marks read no more.
+ * What the culling's reads say is seen. `every` holds the marks of every read, and `still` those of the reads of frames
+ * drawn still. `restFrom` is how many still reads there were when the view last came to rest, and `rest` how many times
+ * it has come to rest. `seen` holds each box taken as seen; with `all`, every box in view is taken as seen and the
+ * marks are read no more.
  */
 interface Sight {
   every: Marks;
@@ -55,7 +57,7 @@ const sightOf = (count: number): Sight => ({
   all: false,
 });
 
-/** `boxes` marked by a read more. */
+/** Counts one more read, which marked `boxes`. */
 function mark(marks: Marks, boxes: readonly number[]): void {
   const read = ++marks.reads;
   for (const box of boxes) marks.at[box] = read;
@@ -66,9 +68,9 @@ function isAbort(e: unknown): boolean {
 }
 
 /**
- * The segments an arena of a pack's boxes holds: the most room they can take drawn at once, each at its largest level,
- * within `budget`, and a quarter more, so that its holes seldom have to be closed; with `base`, the segments of each
- * box at the coarsest level, at the levels finer than it, beside room for the base.
+ * How many segments an arena for a pack's boxes holds: the most room the boxes can take drawn at once, each at its
+ * largest level, capped at `budget`, plus a quarter, so that its holes seldom have to be closed. With `base` (each
+ * box's segments at the coarsest level), only the finer levels count towards that, and room for the base is added.
  */
 function capacityOf(
   { levels, boxes }: MorphologyChunks,
@@ -85,7 +87,7 @@ function capacityOf(
   return baseRoom + Math.ceil(1.25 * Math.min(most, budget));
 }
 
-/** An arena of `chunks` for `budget`, keeping every box's coarsest level where it then holds no more than `baseUpTo`. */
+/** Plans an arena of `chunks` for `budget`, keeping every box's coarsest level if it then holds at most `baseUpTo`. */
 function arenaPlan(
   chunks: MorphologyChunks,
   budget: number,
@@ -100,15 +102,19 @@ function arenaPlan(
 }
 
 /**
- * A pack's boxes in an arena at the levels the view wants (`chooseDetail`): those it no longer wants let go of at once,
- * the others read from the pack a batch at a time, the nearest the focus first, and swapped in a box at a time as they
- * come. A box goes finer only while the view is still; coarser, at once. Placing them is paced (`apply`), so that a
- * frame uploads little. Where the arena keeps a base, every box's coarsest level is read, those in view first and then
- * the finer levels they want, before the others, and kept: a box goes back to it with no read, and the budget counts
- * the finer levels alone. There, with the culling's marks (`see`), a box goes finer only while seen, and one no longer
- * seen goes back to its base as the view moves (it keeps what it has at rest); one let go of while the view rests is
- * not asked for again until it moves or the rules change; and while the view moves, a box wanted coarser goes back to
- * its base at once, unless wanted at the floor (`Detail.floor`), no coarser than which it stays. Of a pack still coming in, a box is asked for at a level only once its bytes are in, and wanted no
+ * Streams a pack's boxes into an arena at the levels the view wants (`chooseDetail`). Boxes the view no longer wants
+ * are let go of at once. The others are read from the pack a batch at a time, nearest the focus first, and swapped in
+ * a box at a time as they come. A box goes finer only while the view is still, and coarser at once. Placing is paced
+ * (`apply`), so that a frame uploads little.
+ *
+ * Where the arena keeps a base, every box's coarsest level is read and kept: first the bases of the boxes in view,
+ * then the finer levels they want, then the other bases. A box then goes back to its base with no read, and the budget
+ * counts only the finer levels. With the culling's marks (`see`), a box there goes finer only while seen. A box no
+ * longer seen goes back to its base as the view moves, and keeps what it has at rest. A box let go of while the view
+ * rests is not asked for again until the view moves or the rules change. While the view moves, a box wanted coarser
+ * goes back to its base at once, unless it is wanted at the floor (`Detail.floor`), which it never goes coarser than.
+ *
+ * For a pack still coming in, a box is asked for at a level only once that level's bytes are in, and is wanted no
  * finer than what is in, as if the pixels wanted no more.
  */
 export class DetailStream {
@@ -116,19 +122,20 @@ export class DetailStream {
   private arena: SegmentArena;
   private onRead: () => void;
   private coarsest: number;
-  /** The levels drawn of each box, -1 for none. */
+  /** The level each box is drawn at, -1 for none. */
   private drawn: Int8Array;
   /** What the view wants, as last chosen, and the rules it was chosen by. */
   private detail: Detail | null = null;
   private rules: DetailRules | null = null;
   private still = false;
   private sight: Sight;
-  /** The boxes let go of while the view rested where it is. */
+  /** The boxes let go of while the view has rested where it is now. */
   private letGo = new Set<number>();
   /**
-   * The finest level `box` may be drawn at: any where it is seen, or has nothing at its base, which nothing marks; one
-   * not seen, while the view rests no finer than it is drawn and no coarser, so that no frame at rest takes away what
-   * it hides, and while it moves its base; one let go of, its base.
+   * The finest level `box` may be drawn at. A box let go of: its base. A box seen, or with nothing at its base (which
+   * nothing can mark): any level. A box not seen: while the view rests, the level it is drawn at, no finer and
+   * no coarser, so that no frame at rest takes away what it hides; while the view moves, or where it is not drawn,
+   * its base.
    */
   private finestFor = (box: number): number => {
     const { coarsest } = this;
@@ -137,27 +144,28 @@ export class DetailStream {
     const drawn = this.drawn[box];
     return this.still && drawn >= 0 ? drawn : coarsest;
   };
-  /** What came in and is not placed yet, by box, and of the bases. */
+  /** What has come in and is not placed yet: levels by box, and bases. */
   private ready = new Map<number, { level: number; segments: MorphologySegments }>();
   private bases = new Map<number, MorphologySegments>();
-  /** Whether no base is to be read again: each is placed, in, or could not be read. */
+  /** Whether no base is left to read: each is placed, has come in, or could not be read. */
   private basesRead: boolean;
   private reading = false;
   private stopped = false;
-  /** The boxes of a batch that could not be read, which are read no more, and whether that was told. */
+  /** The boxes of batches that could not be read, which are not read again, and whether that was logged. */
   private unread = new Set<number>();
   private told = false;
   /**
-   * Of a pack still coming in, how much is in and the finest level of each box that is (the levels' count where none
-   * is), whether that lifted what a box was chosen at since the levels were last chosen, and what stops it being told.
+   * For a pack still coming in: how much is in, and the finest level of each box that is in (the number of levels where
+   * none is); whether that lifted the level a box was chosen at since the levels were last chosen; and what stops the
+   * notices of more coming in.
    */
   private coming: { arrival: PackArrival; arrived: Int8Array } | null = null;
   private arrivedMore = false;
   private unlisten: (() => void) | null = null;
 
   /**
-   * `onRead` is told when boxes came in, to be placed, or more of the pack did, to be read; the arena keeps a base, of
-   * the coarsest level, where it keeps room for one (`SegmentArena`).
+   * `onRead` is called when boxes have come in to be placed, or more of the pack has come in to be read. The arena
+   * keeps a base of the coarsest level if it keeps room for one (`SegmentArena`).
    */
   constructor(chunks: MorphologyChunks, arena: SegmentArena, onRead: () => void) {
     this.chunks = chunks;
@@ -169,7 +177,7 @@ export class DetailStream {
     this.sight = sightOf(count);
     this.basesRead = !arena.keepsBase;
     if (arena.keepsBase) {
-      // Those of no segments at the base's level are drawn at it.
+      // Boxes with no segments at the base's level count as drawn at it.
       for (let box = 0; box < this.drawn.length; box++) {
         if (arena.hasBase(box)) this.drawn[box] = this.coarsest;
       }
@@ -178,7 +186,8 @@ export class DetailStream {
     if (arrival) {
       this.coming = { arrival, arrived: new Int8Array(count).fill(chunks.levels.length) };
       this.arrive();
-      // Only a box drawn coarser for what was in has the levels chosen again; what is newly in otherwise is just read.
+      // The levels are chosen again only where a box was drawn coarser for lack of what is now in; otherwise what is
+      // newly in is just read.
       this.unlisten = arrival.listen(() => {
         if (!this.arrive()) {
           this.read();
@@ -190,14 +199,14 @@ export class DetailStream {
     }
   }
 
-  /** Whether the levels are to be chosen again, more of the pack having come in since they were last. */
+  /** Whether the levels are to be chosen again, because more of the pack has come in since they last were. */
   get moreArrived(): boolean {
     return this.arrivedMore;
   }
 
   /**
-   * The finest level of each box that is in brought up to what is in now; whether that lifted what a box in view was
-   * chosen at for what was in.
+   * Brings the finest level of each box that is in up to what is in now. Returns whether that lifted the level a box
+   * in view was held to for what was in.
    */
   private arrive(): boolean {
     if (!this.coming) return false;
@@ -223,8 +232,8 @@ export class DetailStream {
   }
 
   /**
-   * A stream into an arena on `geometry`, the segments' quad, as large as the pack's boxes can need within `budget`,
-   * uploaded as `uploadsOf` has it; keeping a base where that takes no more than `baseUpTo` segments.
+   * Makes a stream into an arena on `geometry` (the segments' quad), as large as the pack's boxes can need within
+   * `budget` and uploaded through `uploadsOf`. The arena keeps a base if it then holds at most `baseUpTo` segments.
    */
   static of(
     chunks: MorphologyChunks,
@@ -240,8 +249,8 @@ export class DetailStream {
   }
 
   /**
-   * Whether its arena holds as much as `budget` asks of it, and keeps a base where one made for it would, holding no
-   * more than `baseUpTo`.
+   * Whether its arena holds as much as `budget` asks, and keeps a base exactly where an arena made now for `budget` and
+   * `baseUpTo` would.
    */
   holds(budget: number, baseUpTo: number): boolean {
     const { capacity, base } = arenaPlan(this.chunks, budget, baseUpTo);
@@ -249,9 +258,10 @@ export class DetailStream {
   }
 
   /**
-   * Its boxes streamed again into an arena on `geometry` made for `budget`, uploaded as its own is, keeping a base where
-   * it then holds no more than `baseUpTo`, those it could not read left out and those seen taken as seen; this stream
-   * stopped first, so that what its arena uploads to is let go of before the new one's is made.
+   * Streams its boxes again into a new arena on `geometry`, made for `budget` and uploaded the same way as its own. The
+   * new arena keeps a base if it then holds no more than `baseUpTo`. Boxes this stream could not read stay left out,
+   * and boxes seen stay seen. This stream stops first, so that what its arena uploads to is let go of before the new
+   * arena's is made.
    */
   remade(budget: number, baseUpTo: number, geometry: THREE.InstancedBufferGeometry): DetailStream {
     this.stop();
@@ -275,15 +285,16 @@ export class DetailStream {
     return this.arena.boxesMarked(marked);
   }
 
-  /** Which rest the view is in: one more each time it comes to rest, here or by a jump (`update`). */
+  /** Which rest the view is in: one more each time it comes to rest, in place or after a jump (`update`). */
   get rest(): number {
     return this.sight.rest;
   }
 
   /**
-   * The boxes a frame's culling marked (`boxesMarked`), and whether that frame was drawn `still` in this rest; or null
-   * where it marks none for good: every box in view then taken as seen. Whether that changed what the view may want, a
-   * box it takes finer seen now seen or no longer, not let go of: then the levels are to be chosen again.
+   * Takes the boxes a frame's culling marked (`boxesMarked`), and whether that frame was drawn `still` in this rest; or
+   * null where the culling will mark none from now on, and every box in view is then taken as seen. Returns whether
+   * that changed what the view may want, so that the levels are to be chosen again: whether a box the pixels want
+   * finer, and not let go of, is now seen or no longer seen.
    */
   see(boxes: readonly number[] | null, still: boolean): boolean {
     const { sight } = this;
@@ -298,9 +309,9 @@ export class DetailStream {
   }
 
   /**
-   * Which boxes are taken as seen: as the view moves, by every read; at rest, by those of frames drawn since it came to
-   * rest. Whether that changed for one taken finer seen, not let go of: at rest, one now seen alone, as one no longer
-   * seen keeps what it has.
+   * Works out which boxes are taken as seen: while the view moves, from every read; at rest, from the reads of frames
+   * drawn since it came to rest. Returns whether that changed for a box the pixels want finer, and not let go of. At
+   * rest only a box now seen counts, because a box no longer seen keeps what it has.
    */
   private judgeSeen(): boolean {
     const { sight, still, letGo } = this;
@@ -339,15 +350,15 @@ export class DetailStream {
   }
 
   /**
-   * The levels chosen again for `view`, a budget held to what the arena holds, and what is missing read; with `still`,
-   * finer levels too; with `moved`, the camera or the view's size changed since they were last, which at rest comes to
-   * rest anew. Whether there is anything to place at once (`apply`).
+   * Chooses the levels again for `view`, with the budget held to what the arena holds, and reads what is missing. With
+   * `still`, finer levels are read too. `moved` means the camera or the view's size changed since the levels were last
+   * chosen; at rest, the view then comes to rest anew. Returns whether there is anything to place at once (`apply`).
    */
   update(view: DetailView, rules: DetailRules, still: boolean, moved = false): boolean {
     if (this.stopped) return false;
     const { arena, sight } = this;
     if (!still || moved || rules !== this.rules) this.letGo.clear();
-    // Come to rest, here or by a jump: nothing is seen until a frame drawn still is read.
+    // The view came to rest, in place or after a jump: nothing counts as seen until a frame drawn still is read.
     if (still && (moved || !this.still)) {
       sight.restFrom = sight.still.reads;
       sight.rest++;
@@ -355,7 +366,7 @@ export class DetailStream {
     this.still = still;
     this.judgeSeen();
     const budget = Math.min(rules.budget, arena.capacity - arena.baseRoom);
-    // Without the culling's marks, every box in view as fine as the pixels take it.
+    // Without the culling's marks, every box in view may go as fine as the pixels want.
     const finest = rules.culling && !sight.all ? this.finestFor : undefined;
     const detail = chooseDetail(
       this.chunks,
@@ -378,8 +389,9 @@ export class DetailStream {
   }
 
   /**
-   * Boxes no longer wanted let go of, and boxes that came in placed, those that make room first, until `cap` segments
-   * are uploaded, one at the least. Whether what is drawn changed, and whether more is to be placed at once.
+   * Lets go of boxes no longer wanted, and places boxes that came in, those that make room first, until `cap` segments
+   * are uploaded; at least one is placed. Returns whether what is drawn changed, and whether more is to be placed at
+   * once.
    */
   apply(cap = PLACED_SEGMENTS): { changed: boolean; more: boolean } {
     const { arena, detail, drawn } = this;
@@ -398,7 +410,7 @@ export class DetailStream {
       changed = true;
     }
     let more = full();
-    // The bases first, which take none of the room.
+    // Bases go first: they take none of the room.
     for (const [box, segments] of this.bases) {
       if (uploaded > 0 && uploaded + segments.segmentCells.length > cap) {
         more = true;
@@ -436,7 +448,7 @@ export class DetailStream {
     return { changed, more };
   }
 
-  /** Nothing more is read or placed, and what the arena uploads to is let go of. */
+  /** Stops reading and placing, and lets go of what the arena uploads to. */
   stop(): void {
     this.stopped = true;
     this.unlisten?.();
@@ -456,9 +468,10 @@ export class DetailStream {
   }
 
   /**
-   * The level `box` goes to for `level` with no read, or null: let go of, its base (or none, where it keeps none) where
-   * that is wanted, or where a coarser level is while the view moves, unless one no coarser than the floor (which keeps
-   * what it has until that is read); `level`, where it has nothing at it.
+   * The level `box` goes to for the wanted `level` with no read, or null for none. A placed box is let go of and goes
+   * to its base (or to nothing, where no base is put) where its base is wanted, or, while the view moves, where a
+   * coarser level is wanted, unless that level is no coarser than the floor: then it keeps what it has until that level
+   * is read. A box with nothing at `level` goes straight to it.
    */
   private atOnce(box: number, level: number): number | null {
     const drawn = this.drawn[box];
@@ -473,8 +486,8 @@ export class DetailStream {
   }
 
   /**
-   * The bases neither placed, in nor unreadable, of the pack's bytes in, a batch of them: of the boxes in `order`, or
-   * else of every box.
+   * A batch of the bases still to read, of the boxes in `order` or else of every box: those not placed, not come in and
+   * not unreadable, whose bytes have arrived.
    */
   private basesToRead(order: Uint32Array | null): BoxRead[] {
     const batch: BoxRead[] = [];
@@ -499,8 +512,9 @@ export class DetailStream {
   }
 
   /**
-   * The boxes wanted and neither drawn, in nor unreadable, a batch of them; none of the base's level, and while the
-   * view moves none finer than what is drawn, nor with a base any (one wanted coarser goes back to its base).
+   * A batch of the boxes wanted that are not drawn, not come in and not unreadable. None at the base's level. While
+   * the view moves, none finer than what is drawn, and with a base none at all (a box wanted coarser goes back to its
+   * base).
    */
   private levelsToRead({ order, levels }: Detail): BoxRead[] {
     const { drawn } = this;
@@ -521,8 +535,8 @@ export class DetailStream {
   }
 
   /**
-   * What is to be read, unless a batch is being read: the bases of the boxes in view, the levels wanted, and then the
-   * other bases.
+   * Reads the next batch, unless one is being read: first the bases of the boxes in view, then the levels wanted, then
+   * the other bases.
    */
   private read(): void {
     const { detail } = this;
@@ -546,7 +560,7 @@ export class DetailStream {
       (e: unknown) => {
         this.reading = false;
         if (this.stopped || isAbort(e)) return;
-        // What is drawn of them stays, and the others are read on.
+        // What is drawn of them stays, and reading goes on with the other boxes.
         for (const { box } of batch) this.unread.add(box);
         if (!this.told) logError('Could not read the circuit morphologies', e);
         this.told = true;

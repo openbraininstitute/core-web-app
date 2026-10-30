@@ -1,8 +1,8 @@
 /**
- * What the pack worker exposes over Comlink: a circuit's pack, opened, from the cache a visit before left it in, or as
- * it comes in from Bluenaas; opened once its somas are in, and put in the cache once the whole of it is
- * (`whole`). Then its boxes read as the view asks for them, each once its bytes are
- * in, with the cells numbered as the page numbers them, each box in Morton order (`mortonOrder`).
+ * What the pack worker exposes over Comlink. It opens a circuit's pack, either from the cache where an earlier visit
+ * left it or as it comes in from Bluenaas. A downloaded pack opens once its somas are in, and goes into the cache once
+ * all of it is in (`whole`). The worker then reads the pack's boxes as the view asks for them, each once its bytes are
+ * in, with the cells numbered as the page numbers them and each box in Morton order (`mortonOrder`).
  */
 import * as Comlink from 'comlink';
 
@@ -33,7 +33,7 @@ import type {
   Population,
 } from '../types';
 
-/** Packs by their digest: Bluenaas serves a circuit's pack under one URL, rebuilt whenever its cache is cleared. */
+/** Packs by their digest: Bluenaas serves a circuit's pack under one URL and rebuilds it when its cache is cleared. */
 export const PACK_CACHE = bucket('circuit-morphology-mpack');
 
 /** A pack's key in the cache, which must be a URL. */
@@ -41,8 +41,8 @@ export const packCacheKey = (sha256: string) =>
   `https://circuit-morphology-pack.invalid/${sha256.toLowerCase()}`;
 
 /**
- * The pack opened: its somas and frame, with no segments, where its segments lie, and how much of the file each box
- * needs in to be read at each level (`Pack.readableAt`).
+ * The opened pack: its somas and frame, with no segments; where its segments lie; and how many bytes of the file must
+ * be in before each box can be read at each level (`Pack.readableAt`).
  */
 export type Opened = {
   data: CircuitMorphologyData;
@@ -105,14 +105,14 @@ export function createPackApi(cache: CacheBounds) {
       const numbers = pageCells(pack.data.populations, populations);
       opened = { readBox: pack.readBox, numbers, whole };
       const data = renumberSomas(pack.data, numbers, populations);
-      // The boxes and the levels are copied, not handed over: the pack reads by them.
+      // The boxes and the levels are copied, not handed over: the pack still reads by them.
       const { boxes, levels, readableAt } = pack;
       return Comlink.transfer({ data, boxes, levels, readableAt, fromCache }, [
         data.somas.buffer as ArrayBuffer,
       ]);
     },
 
-    /** Once the whole pack is in, checked and in the cache; it fails where the download did, or the check. */
+    /** Resolves once the whole pack is in, checked and in the cache; rejects where the download or the check failed. */
     async whole(): Promise<void> {
       if (!opened) throw new Error('no morphology pack is open');
       await opened.whole;

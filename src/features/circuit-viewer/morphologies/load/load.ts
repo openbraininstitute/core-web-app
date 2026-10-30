@@ -1,8 +1,8 @@
 /**
  * Loading a circuit's morphologies, on the page. One worker opens the circuit's pack, from its cache or as it comes in
- * from Bluenaas, and hands over its somas, with the cells numbered as the page numbers them, and where its
- * segments lie, once the somas are in; it then reads the pack's boxes as the view asks for them, each once its bytes
- * are in. It is terminated when the load is aborted, or fails: that is also what stops a download.
+ * from Bluenaas. Once the somas are in, it hands them over, with the cells numbered as the page numbers them, along
+ * with where the segments lie. It then reads the pack's boxes as the view asks for them, each once its bytes are in.
+ * The worker is terminated when the load is aborted or fails, and that is also what stops a download.
  */
 import * as Comlink from 'comlink';
 
@@ -16,14 +16,14 @@ export interface LoadOptions {
   request: PackRequest;
   /** The page's populations in its own order, which numbers its cells. */
   populations: Population[];
-  /** Aborted, the worker is terminated, and the data's boxes are read no more. */
+  /** Aborting it terminates the worker, and the data's boxes are no longer read. */
   signal: AbortSignal;
   /**
    * The pack's bytes as they come in, before it opens and after. Nothing is reported for a pack from the cache, or
    * once the load is aborted, has failed or the whole pack is in.
    */
   onProgress?: OnProgress;
-  /** The request's headers made again, for a download resumed after its token may have run out. */
+  /** Makes the request's headers again, to resume a download whose token may have run out. */
   freshHeaders?: FreshHeaders;
   worker?: () => WorkerHandle<PackApi>;
 }
@@ -44,12 +44,12 @@ const browserWorker = () =>
 
 export async function loadCircuitMorphologies(options: LoadOptions): Promise<Loaded> {
   let ended = false;
-  // The whole pack settled: what is still reported moves what is in, and is told the page no more.
+  // Once the whole pack has settled, a report still updates `received` and the listeners, but not `options.onProgress`.
   let settled = false;
   let received = 0;
   const listeners = new Set<() => void>();
-  // A report comes on a channel of its own, and can arrive after the pack is open, or before its answer, or after the
-  // whole has settled.
+  // Reports come on a channel of their own, so one can arrive after the pack is open, before `open` answers, or after
+  // `whole` has settled.
   const onProgress = Comlink.proxy((bytes: number, total: number) => {
     if (ended || received === Number.POSITIVE_INFINITY) return;
     received = bytes;

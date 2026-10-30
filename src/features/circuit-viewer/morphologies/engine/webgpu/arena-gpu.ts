@@ -8,7 +8,7 @@ import { COPY_DST, COPY_SRC, STORAGE } from './usage';
 
 import type { ArenaUploads } from '../segment-arena';
 
-/** A texel of no depth drawn, until the culling has drawn its own. */
+/** A texel with no depth drawn, used until the culling has drawn its own. */
 const NOTHING_DRAWN = new THREE.DataTexture(
   new Float32Array([Infinity]),
   1,
@@ -18,14 +18,14 @@ const NOTHING_DRAWN = new THREE.DataTexture(
 );
 NOTHING_DRAWN.needsUpdate = true;
 
-/** Of any length: the arena's buffers are bound in place of the attributes'. */
+/** Any length will do: the arena's buffers are bound in place of these attributes' own. */
 const endsAttribute = () => new THREE.StorageBufferAttribute(new Float32Array(4), 4);
 const wordsAttribute = () => new THREE.StorageBufferAttribute(new Uint32Array(4), 1);
 
 /**
- * What an arena's materials read and how: its segments' ends, two `vec4`s each, their cell-and-type words, and the
- * culling's lists; where the arena ends, how many segments it and each list hold, whether it is culled, through the
- * lists (`listed`, 1), and the farthest depth drawn before the culling's tests, in µm from the eye.
+ * What an arena's materials read, and how: its segments' ends (two `vec4`s each), their cell-and-type words, and the
+ * culling's lists; where the arena ends; how many segments it and each list hold; whether it is drawn culled, through
+ * the lists (`listed` is 1); and the farthest depth drawn before the culling's tests, in µm from the eye.
  */
 export function arenaStorage() {
   return {
@@ -55,10 +55,10 @@ export interface ArenaBuffers {
 }
 
 /**
- * An arena's arrays `ends`, `words` and `blocks` in buffers of the page's on `device`, which three binds for `storage`,
- * with the culling's lists: what changes written to them, and no copy kept by three. `told` is handed the buffers, and
- * null once they are let go of; `outOfMemory`, told a moment later where the device could not make them, unless they
- * were let go of first.
+ * Puts an arena's arrays `ends`, `words` and `blocks`, and the culling's lists, in buffers the page makes on `device`,
+ * which three binds for `storage`. Only what changes is written to them, and three keeps no copy. `told` is handed the
+ * buffers, and null once they are let go of. `outOfMemory` is called a moment later if the device could not make
+ * them, unless they were let go of first.
  */
 export function arenaOnGpu(
   renderer: THREE.WebGPURenderer,
@@ -70,7 +70,7 @@ export function arenaOnGpu(
 ): ArenaUploads {
   let { ends, words, blocks } = arrays;
   const capacity = words.length;
-  // A binding holds something.
+  // A binding cannot be empty.
   const bufferOf = (bytes: number, label: string, usage = STORAGE | COPY_DST) =>
     device.createBuffer({ label, size: Math.max(bytes, 32), usage });
   let gone = false;
@@ -111,7 +111,8 @@ export function arenaOnGpu(
       gone = true;
       told(null);
       for (const buffer of Object.values(buffers)) buffer.destroy();
-      // The out-of-memory callback, which shares this scope, may make the next arena while it holds them.
+      // The out-of-memory callback, which shares this scope, may make the next arena while this one still holds its
+      // arrays.
       ends = new Float32Array(0);
       words = new Uint32Array(0);
       blocks = new Float32Array(0);

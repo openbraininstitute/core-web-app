@@ -1,12 +1,12 @@
 import type { CircuitMorphologyData, MorphologySegments, Population } from '../types';
 
-/** The page's number of a cell of a population it has none of. */
+/** The page's number for a pack cell whose population the page does not have. */
 const NONE = 0xffffffff;
 
 /**
- * The page's number of each of a pack's cells, where the pack numbers them through `packed`, the populations it holds,
- * sorted by name, and the page through `populations`, its own in its order. A cell of a population the page has none of
- * gets `NONE`, as the page draws nothing of a population it could not place.
+ * The page's number for each of a pack's cells. The pack numbers its cells through `packed`, its populations sorted by
+ * name; the page numbers them through `populations`, its own populations in its own order. A cell whose population the
+ * page does not have gets `NONE`, since the page draws nothing of a population it could not place.
  */
 export function pageCells(packed: Population[], populations: Population[]): Uint32Array {
   const places = new Map<string, { first: number; cells: number }>();
@@ -33,8 +33,9 @@ export function pageCells(packed: Population[], populations: Population[]): Uint
 }
 
 /**
- * The data's somas, which the pack numbers, numbered as `numbers` says (`pageCells`), through `populations`: a cell of a
- * population the pack has none of gets a soma with no position, and a cell the page has no number for is left out.
+ * The data's somas, numbered by the pack, renumbered as `numbers` says (`pageCells`) for the page's `populations`. A
+ * page cell whose population the pack does not have gets a soma with no position, and a pack cell the page has no
+ * number for is left out.
  */
 export function renumberSomas(
   data: CircuitMorphologyData,
@@ -52,8 +53,8 @@ export function renumberSomas(
 }
 
 /**
- * Segments with their cells numbered as `numbers` says (`pageCells`), rewritten in place; those of a cell the page has
- * no number for are left out.
+ * Renumbers the segments' cells as `numbers` says (`pageCells`), rewriting them in place. Segments of a cell the page
+ * has no number for are left out.
  */
 export function renumberSegments(
   { segments, segmentCells, segmentTypes }: MorphologySegments,
@@ -78,9 +79,9 @@ export function renumberSegments(
 }
 
 /**
- * Gives each cell the pack left without a soma, one of a population it does not hold, the page's own position and
- * `radius`, as the somas view draws it. `positions` are the page's, three floats a cell in the circuit's frame.
- * `data`'s somas and bounds are rewritten in place.
+ * Gives each cell that the pack left without a soma, such as a cell of a population the pack does not hold, the page's
+ * own position and `radius`, as the somas view draws it. `positions` are the page's, three floats a cell in the
+ * circuit's frame. Rewrites `data`'s somas and bounds in place.
  */
 export function fillSomas(
   data: CircuitMorphologyData,

@@ -31,9 +31,9 @@ import { checkHooks, FrameTimes, gpuTexture, threeLoop, trackTimestamps } from '
 import type { GlowRowsWriter } from '../cell-table';
 import type { Lost } from '../create-view';
 
-/** What WebGPU asks of a row of a texture copied into a buffer: a multiple of this many bytes. */
+/** WebGPU pads each row of a texture copied into a buffer to a multiple of this many bytes. */
 const ROW_ALIGNMENT = 256;
-/** How much brighter than white a fully lit cell is drawn besides, on a screen that shows past it. */
+/** How far past white a fully lit cell is drawn, on a screen that can show colours brighter than white. */
 const OVER_WHITE = 0.6;
 
 /** A pack's arena on the GPU: its materials, what they bind, and the culling of its segments. */
@@ -43,12 +43,13 @@ interface GpuArena extends ReturnType<typeof arenaMaterials> {
 }
 
 /**
- * The circuit's morphologies on WebGPU (`CircuitView`), on a device of the page's own (`probeWebGPU`), which goes
- * with the view. Each material writes the colour shown, as the WebGL 2 tier's do: Studio's tone maps its own, and the
- * somas are drawn as they come out, so the renderer converts nothing and draws straight to the canvas; a still frame of
- * morphologies or opaque somas goes through the ambient occlusion first (`Occlusion`). A pack's segments are culled
- * (`Culling`): the segments kept the frame before are drawn to depth (`keptQuads`), the culling's tests run, and the
- * frame draws the segments seen. So are the somas drawn alone and opaque (`SomaCulling`).
+ * Draws the circuit's morphologies with WebGPU (`CircuitView`), on a device the page made for itself (`probeWebGPU`);
+ * the view destroys the device when it goes. As in the WebGL 2 tier, each material writes the final colour: Studio tone
+ * maps its own, and the somas' colours are drawn as they come out, so the renderer converts nothing and draws straight
+ * to the canvas. A still frame of morphologies or opaque somas goes through the ambient occlusion first (`Occlusion`).
+ * The culling (`Culling`) culls a pack's segments: the segments kept from the frame before are drawn to depth
+ * (`keptQuads`), the culling's tests run, and the frame draws only the segments seen. `SomaCulling` does the same for
+ * the somas drawn alone and opaque.
  */
 export class CircuitMorphologyGPU extends CircuitView {
   protected materials: CircuitMaterials;
@@ -56,27 +57,28 @@ export class CircuitMorphologyGPU extends CircuitView {
   private device: GPUDevice;
   private gpu: GpuUniforms;
   private idTarget: THREE.RenderTarget | null = null;
-  /** For the camera in use, made at its first still frame. */
+  /** Made for the camera in use, at its first still frame. */
   private occlusion: Occlusion | null = null;
-  /** False where the occlusion could not be made, which is not tried again. */
+  /** False once the occlusion has failed; it is not tried again. */
   private occluding = true;
-  /** False where the occlusion could not be made to glow, which is not tried again: it is made without. */
+  /** False once the occlusion has failed with the glow; it is not tried again, and the occlusion is made without. */
   private glowWorks = true;
-  /** Made at the first pack and kept, its programs with it: each pack's arena only binds its buffers to `storage`. */
+  /** Made for the first pack and kept, with its programs: a later pack's arena only binds its buffers to `storage`. */
   private arena: GpuArena | null = null;
   /** The kept segments' quads, drawn to depth before the culling's tests. */
   private keptQuads = new THREE.Scene();
-  /** Made for the cloud's somas, and let go of with them. */
+  /** Made when the cloud's somas are placed, and let go of with them. */
   private somaCulling: SomaCulling | null = null;
   private drawingSize = new THREE.Vector2();
-  /** Whether what a frame cost is being read back, which the next frames do not wait for. */
+  /** Whether a frame's GPU cost is being read back. The frames drawn meanwhile do not wait for it. */
   private reading = false;
   private frameTimes: FrameTimes;
   private onLost: ((how: Lost) => void) | null;
 
   /**
-   * A view in `host` on `device`; `onLost` is told once if the device is lost, which the view does not draw past, or
-   * cannot make a pack's arena, even without its base. Aborted (`signal`) before the renderer is ready, none is made.
+   * Makes a view in `host` on `device`. `onLost` is called once if the device is lost, after which the view draws
+   * nothing, or if the device cannot make a pack's arena even without its base. If `signal` aborts before the renderer
+   * is ready, no view is made.
    */
   static async create(
     host: HTMLElement,
@@ -89,9 +91,9 @@ export class CircuitMorphologyGPU extends CircuitView {
       device,
       antialias: true,
       alpha: true,
-      // What frames cost the GPU, where the device can tell, for the frames timed (`timeFrame`).
+      // Lets the frames timed (`timeFrame`) measure their GPU cost, where the device supports it.
       trackTimestamp: true,
-      // Past white, where the screen shows it.
+      // Colours past white, where the screen can show them.
       ...(overWhite && { outputType: THREE.HalfFloatType }),
     });
     try {
@@ -121,7 +123,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     this.device = device;
     this.frameTimes = new FrameTimes(device);
     this.onLost = onLost;
-    // As many as a binding takes of their ends, 8 floats each.
+    // As many segments as one binding holds the ends of, at 8 floats each.
     const { maxStorageBufferBindingSize, maxBufferSize } = device.limits;
     this.baseUpTo = Math.floor(Math.min(maxStorageBufferBindingSize, maxBufferSize) / (8 * 4));
     device.lost.then((info) => {
@@ -139,7 +141,7 @@ export class CircuitMorphologyGPU extends CircuitView {
       if (overWhite) this.gpu.overWhite = OVER_WHITE;
       this.gpu.throughHalfPx.value = (THROUGH_LINE_CSS_PX / 2) * this.pixelRatio;
       const cloud = somaCloudMaterials(this.gpu);
-      // Drawn whole, the somas are in the page's order, each the cell of its number.
+      // When the cloud is drawn whole, the somas are in the page's order: soma i is cell i.
       const whole = somaCloudMaterials(this.gpu, {
         cell: instanceIndex,
         centre: attribute('aPosition', 'vec3'),
@@ -159,13 +161,13 @@ export class CircuitMorphologyGPU extends CircuitView {
       };
       this.start();
     } catch (e) {
-      // Nothing of it stays in the host, where WebGL 2 takes its place.
+      // Leave nothing in the host: WebGL 2 takes this view's place.
       this.dispose();
       throw e;
     }
   }
 
-  /** `onLost` told how the view gave out, once, unless it was let go of. */
+  /** Tells `onLost` how the view gave out, once, unless the view was disposed. */
   private giveOut(how: Lost): void {
     const told = this.onLost;
     this.onLost = null;
@@ -173,8 +175,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * No arena keeps a base from then on, and this one is made again without it; where it kept none, or could not be made
-   * again, the view given out.
+   * From now on no arena keeps a base, and this one is made again without it. If it kept no base, or cannot be made
+   * again, the view gives out.
    */
   private outOfMemory(): void {
     this.baseUpTo = 0;
@@ -182,7 +184,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     try {
       refitted = this.refitArena();
     } catch (e) {
-      // Its arrays, say, under the same pressure: thrown in the device's callback, it would go untold.
+      // Making its arrays, say, can fail under the same memory pressure. Thrown in the device's callback, the error
+      // would go unreported.
       logError('Could not make the arena again without its base', e);
     }
     if (refitted)
@@ -203,8 +206,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * three turns a loop of its own on every refresh of the display from `init` to `dispose`, with a loop set or not;
-   * here it turns only while the view's does. Its first turn is at once, so the view's loop is set after it.
+   * three runs a loop of its own on every display refresh from `init` to `dispose`, whether a loop is set or not. Here
+   * it runs only while the view's loop does. Starting it runs a turn at once, so the view's loop is set after that.
    */
   protected override animate(loop: (() => void) | null): void {
     const turns = threeLoop(this.renderer);
@@ -224,10 +227,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * Still, morphologies and opaque somas are drawn with ambient occlusion, and moving, while the motion keeps it
-   * (`aoMoving`); other moving frames and translucent somas without. Its targets are the size of the canvas, so
-   * it is let go of with what it shades. Where spiking cells glow, morphologies are drawn through its target moving too
-   * while any is lit, and it is made again as whether they glow changes.
+   * Morphologies and opaque somas get ambient occlusion in still frames, and in moving frames while the motion keeps it
+   * (`aoMoving`). Other moving frames and translucent somas get none. The occlusion's targets are the size of the
+   * canvas, so it is let go of once nothing it shades is drawn. Where spiking cells glow, morphologies are drawn
+   * through its target while any cell is lit, moving or not, and it is made again when whether they glow changes.
    */
   protected override draw(moving: boolean): void {
     const from = performance.now();
@@ -240,9 +243,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * What the frame drawn since `from` cost the GPU, told where `timing` asks: by three's timestamps of its passes where
-   * they were `tracked`, the last frame's of those read at once (`FrameTimes`); where the device has none, from the
-   * frame's start until the GPU is done with it, which errs on the slow side. Frames not timed write no timestamps.
+   * Reports to `timing`, where set, what the frame drawn since `from` cost the GPU. Where its passes were `tracked`,
+   * the cost comes from three's timestamps, read at once for the last frame that wrote them (`FrameTimes`). Where the
+   * device has no timestamps, it is the time from the frame's start until the GPU is done with it, which errs on the
+   * slow side. Frames not timed write no timestamps.
    */
   private timeFrame(from: number, tracked: boolean): void {
     const { timing, renderer } = this;
@@ -282,27 +286,27 @@ export class CircuitMorphologyGPU extends CircuitView {
         else occlusion.render(AO_RADIUS_CSS * umPerPx);
         return;
       } catch (e) {
-        // Its passes are put together at its first frame, where three's parts it reads may be missing.
+        // The occlusion builds its passes at its first frame, which throws if parts of three it reads are missing.
         this.withoutOcclusion(e, glowing && !occlusion.occlusionFailed);
       }
     }
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** The occlusion was made for the other camera, and the somas kept for it hide little in this one. */
+  /** The occlusion was made for the other camera, and the somas kept for that camera hide little in this one. */
   protected override projectionChanged(): void {
     this.dropOcclusion();
     this.somaCulling?.reseed();
   }
 
-  /** The somas kept for the view before may hide little in this one. */
+  /** The somas kept for the previous view may hide little in this one. */
   protected override viewSet(): void {
     this.somaCulling?.reseed();
   }
 
   /**
-   * In buffers of the page's, which the segments' materials read as storage: the seen segments' quads drawn by the
-   * culling's draws, flat and tubes, and the kept segments' quads in their place in `keptQuads`.
+   * The arena lives in buffers the page makes, which the segments' materials read as storage. The culling's draws, flat
+   * and tubes, draw the seen segments' quads, and the kept segments' quads replace the old ones in `keptQuads`.
    */
   protected override arenaDrawing(): ArenaDrawing {
     if (!this.arena) {
@@ -340,7 +344,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     };
   }
 
-  /** `meshes` in place of the kept segments' quads, which are let go of. */
+  /** Puts `meshes` in place of the kept segments' quads, and lets the old quads go. */
   private keep(meshes: THREE.Mesh<THREE.InstancedBufferGeometry>[]): void {
     const was = [...this.keptQuads.children] as THREE.Mesh<THREE.InstancedBufferGeometry>[];
     for (const mesh of was) mesh.geometry.dispose();
@@ -350,8 +354,9 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * A pack's segments, where there is one: culled, the kept segments drawn to depth and the culling's tests run before
-   * the frame, drawn in `rest` (`restOf`), is drawn; not, where the culling is off or failed, every one of them drawn.
+   * Sets up the pack's segments, if there is a pack, for the frame drawn in `rest` (`restOf`). With culling, the kept
+   * segments are drawn to depth and the culling's tests run before the frame is drawn. Where culling is off or failed,
+   * every segment is drawn.
    */
   private cull(rest: number): void {
     const arena = this.arena;
@@ -374,7 +379,8 @@ export class CircuitMorphologyGPU extends CircuitView {
       if (culling.run(this.camera, uShift.value, this.gpu.tubeFrom.value, uHidden.value, end, rest))
         return;
     } else if (this.culls) {
-      // Told once as it failed, which neither a pack's stream made since nor one while the culling was off heard.
+      // The culling reported its failure once, when it failed. A pack's stream made since then, or one that was there
+      // while culling was off, did not hear it, so report it again.
       this.tellCulled(null);
     }
     storage.listed.value = 0;
@@ -412,9 +418,10 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * The somas drawn alone and opaque, culled: the culling's test run before the frame, which draws the somas seen in
-   * place of the pieces, at the most a soma swells to while spikes are replayed. Not culled, its targets are let go of;
-   * where the test could not run, the pieces are drawn from this frame on.
+   * Culls the somas drawn alone and opaque: the culling's test runs before the frame, and the frame draws the somas
+   * seen in place of the pieces. The test takes each soma at the largest size it swells to while spikes are replayed.
+   * When the somas are not culled, the culling's targets are let go of. Where the test could not run, the pieces are
+   * drawn from this frame on.
    */
   private cullSomas(): void {
     const culling = this.somaCulling;
@@ -453,8 +460,8 @@ export class CircuitMorphologyGPU extends CircuitView {
   }
 
   /**
-   * After `e`, the glow off for good where the occlusion glowed, else the occlusion, and the renderer drawing to the
-   * canvas again. An occlusion that fails again without the glow goes the next frame.
+   * After `e`, turns the glow off for good if the occlusion glowed, else the occlusion itself, and points the renderer
+   * back at the canvas. If the occlusion fails again without the glow, the next frame turns it off.
    */
   private withoutOcclusion(e: unknown, glows: boolean): void {
     this.dropOcclusion();
@@ -486,7 +493,8 @@ export class CircuitMorphologyGPU extends CircuitView {
     const target = this.pickTarget();
     const side = target.width;
     this.gpu.sync();
-    // The segments seen were culled for the frame last drawn, which the view may have moved from; with the whole view.
+    // The seen segments were culled for the last frame drawn, and the view may have moved since: cull for the whole
+    // view again.
     if (this.framePending) this.cull(this.restOf(this.drawnMoving));
     this.drawPick(renderer, target, scene, at);
     return renderer
@@ -494,7 +502,7 @@ export class CircuitMorphologyGPU extends CircuitView {
       .then((read) => packed(read as Uint8Array, side));
   }
 
-  /** Built for the pick's target, whose format the pipelines are made for. */
+  /** Compiled for the pick's target, because the pipelines are made for its format. */
   protected override compile(scene: THREE.Scene): void {
     const { renderer } = this;
     renderer.setRenderTarget(this.pickTarget());
@@ -502,7 +510,7 @@ export class CircuitMorphologyGPU extends CircuitView {
     renderer.setRenderTarget(null);
   }
 
-  /** Rows of the glow written to three's own texture once it has made one: three's WebGPU uploads a texture whole. */
+  /** Writes rows of the glow into three's own texture once three has made it: three's WebGPU uploads textures whole. */
   protected override glowRowsWriter(): GlowRowsWriter {
     return (texture, texels, rows) => {
       const gpu = gpuTexture(this.renderer, texture);

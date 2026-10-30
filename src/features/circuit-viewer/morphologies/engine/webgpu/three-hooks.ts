@@ -1,10 +1,11 @@
 /**
- * The private parts of three the circuit engine takes, in one place, as three r186 has them. From the WebGPU renderer:
- * what holds a GPU object for each of three's (`backend.get`), whose buffer three binds for an attribute in place of
- * making one and whose texture is the one three made for a texture of its own, the timestamps it writes for a frame, and
- * three's own loop. `checkHooks` is called once the renderer is ready; where a release of three changed one the engine
- * cannot do without, the view is drawn with WebGL 2. From `GTAONode`: the fields the occlusion's own setup reads
- * (`GTAO_PARTS`), checked when the occlusion is made. `three` is pinned to one release, so a bump runs these tests.
+ * The private parts of three that the circuit engine uses, in one place, as three r186 has them. From the WebGPU
+ * renderer: `backend.get`, which holds the GPU object for each of three's objects (three binds the buffer set there for
+ * an attribute instead of making one, and the texture there is the one three made for a texture of its own); the
+ * timestamps it writes for a frame; and three's own loop. `checkHooks` runs once the renderer is ready: where a release
+ * of three changed a part the engine cannot do without, the view is drawn with WebGL 2. From `GTAONode`: the fields
+ * the occlusion's own setup reads (`GTAO_PARTS`), checked when the occlusion is made. `three` is pinned to one
+ * release, so a bump runs these tests.
  */
 import { Unfit } from '../probe';
 import { COPY_DST, COPY_SRC, MAP_READ, QUERY_RESOLVE, READ } from './usage';
@@ -39,8 +40,8 @@ export function checkHooks(renderer: THREE.WebGPURenderer): void {
 }
 
 /**
- * `attribute` bound as `buffer`, of the page's: three makes no buffer of its own for an attribute that has one. Three
- * binds a buffer once for each attribute, so another buffer takes another attribute.
+ * Binds `attribute` to `buffer`, which the page made: three makes no buffer of its own for an attribute that has one.
+ * Three binds a buffer only once per attribute, so a different buffer needs a different attribute.
  */
 export function shareBuffer<A extends THREE.BufferAttribute>(
   renderer: THREE.WebGPURenderer,
@@ -60,8 +61,8 @@ export function gpuTexture(
 }
 
 /**
- * Whether three writes timestamps for the passes drawn from now on, turned `on` where the device can: false where it
- * cannot, or where a release of three changed how it is told.
+ * Turns three's timestamps `on` or off for the passes drawn from now on, and returns whether three writes them: false
+ * where the device cannot, or where a release of three changed how to turn them on.
  */
 export function trackTimestamps(renderer: THREE.WebGPURenderer, on: boolean): boolean {
   const backend = backendOf(renderer) as { trackTimestamp?: unknown } | undefined;
@@ -73,7 +74,7 @@ export function trackTimestamps(renderer: THREE.WebGPURenderer, on: boolean): bo
 
 interface TimestampPool {
   querySet: GPUQuerySet;
-  /** Where each pass's two timestamps are, by three's id for it, which ends in `:f` and the frame's number. */
+  /** Where each pass's two timestamps are, by three's id for the pass, which ends in `:f` and the frame's number. */
   queryOffsets: Map<string, number>;
   currentQueryIndex: number;
 }
@@ -91,10 +92,10 @@ function timestampPool(renderer: THREE.WebGPURenderer): TimestampPool | null {
 }
 
 /**
- * What the last frame three wrote timestamps for cost the GPU, ms: from its first pass's start to its last's end. three
- * sums what each pass took, which counts the same time twice where passes run at once, as the occlusion's do. Work of
- * the page's own between three's passes counts; before its first, not. The timestamps are taken as three would take
- * them, so its own reads find none it has not.
+ * Measures what the last frame with timestamps cost the GPU, in ms: from its first pass's start to its last pass's end.
+ * three itself sums what each pass took, which counts the same time twice where passes run at once, as the occlusion's
+ * do. The page's own GPU work between three's passes counts; work before the first pass does not. This takes the
+ * timestamps the way three would, so three's own reads do not find them again.
  */
 export class FrameTimes {
   private resolved: GPUBuffer | null = null;
@@ -102,7 +103,7 @@ export class FrameTimes {
 
   constructor(private device: GPUDevice) {}
 
-  /** Null where three wrote none, or keeps them otherwise in a release of its. */
+  /** Null where three wrote no timestamps, or where a release of three keeps them some other way. */
   async last(renderer: THREE.WebGPURenderer): Promise<number | null> {
     const pool = timestampPool(renderer);
     if (!pool || pool.currentQueryIndex === 0) return null;
@@ -157,7 +158,7 @@ interface Turns {
   stop(): void;
 }
 
-/** three's own loop: null where a release of three changed it, which leaves it turning. */
+/** three's own loop, or null where a release of three changed it; the loop then keeps running. */
 export function threeLoop(renderer: THREE.WebGPURenderer): Turns | null {
   const turns = (renderer as unknown as { _animation?: Partial<Turns> | null })._animation;
   return typeof turns?.start === 'function' && typeof turns.stop === 'function'

@@ -57,9 +57,9 @@ const SWC_TYPE: Partial<Record<SectionType, number>> = {
 type Point = [number, number, number];
 
 /**
- * One sphere for the soma's points: about their centre, as far out as they lie on average or as wide as the widest of
- * them. That is the radius of a single point, the mean distance of a contour's, and three points along a cylinder's
- * axis, as NeuroMorpho records a soma, come out at the cylinder's radius.
+ * One sphere for the soma's points, centred on their mean. Its radius is the larger of their mean distance from the
+ * centre and the widest point's radius. A single point keeps its own radius, a contour gets its mean distance, and
+ * three points along a cylinder's axis, as NeuroMorpho records a soma, come out at the cylinder's radius.
  */
 function somaSphere(points: Point[], radii: number[]): [number, number, number, number] | null {
   if (points.length === 0) return null;

@@ -60,17 +60,18 @@ const AO_SAMPLES = 16;
 export const AO_COVER = 0.5;
 /**
  * The glow round a spiking cell: its colour as shown times how lit it is (`spike-light.ts`), blurred by three's bloom
- * this strong and this wide, added over the frame and its background.
+ * with this strength and radius, and added over the frame and its background.
  */
 const GLOW_STRENGTH = 1.4;
 const GLOW_RADIUS = 0.5;
 
 /**
- * What a surface writes for the occlusion, besides its colour: its normal's x and y in view space, and how far it is
- * from the near plane towards the far (`viewZ`, its depth in view space) in two halves, 256 steps and what is left,
- * each of which stays exact in 16 bits when the samples of a pixel are summed. Linear, not as the depth buffer takes
- * it: in perspective that steps by the square of the distance, about 2 µm a millimetre away, which banded a far sphere.
- * And for the glow, where it is drawn, how lit it is by a spike.
+ * What a surface writes for the occlusion, besides its colour: its normal's x and y in view space, and how far it lies
+ * from the near plane towards the far (from `viewZ`, its depth in view space). That distance is split in two halves, a
+ * step out of 256 and what is left, so that each stays exact in 16 bits when the samples of a pixel are summed. It is
+ * linear, unlike the depth buffer's value: in perspective that steps by the square of the distance, about 2 µm at a
+ * millimetre away, which banded a far sphere. For the glow, where it is drawn, the surface also writes how lit it is by
+ * a spike.
  */
 export function surfaceOf(normal: Node<'vec3'>, viewZ: Node<'float'>, lit: Node<'float'>) {
   const across = viewZ.negate().sub(cameraNear).div(cameraFar.sub(cameraNear));
@@ -79,20 +80,21 @@ export function surfaceOf(normal: Node<'vec3'>, viewZ: Node<'float'>, lit: Node<
 }
 
 /**
- * A pixel's surface as the resolve left it (`surfaceOf`), `cover` of it covered: the normal's xy, and how far it is from
- * the near plane towards the far and from the eye, µm.
+ * A pixel's surface as the resolve left it (`surfaceOf`), with `cover` of the pixel covered: the normal's xy, how far
+ * the surface is from the near plane towards the far, and how far it is from the eye, µm.
  */
 export function surfaceAt(resolved: Node<'vec4'>, cover: Node<'float'>) {
-  // The resolve summed the covered samples: divided by how much was covered, one surface's again.
+  // The resolve summed the covered samples: dividing by how much was covered gives one surface's values again.
   const s = resolved.div(max(cover, 0.25));
   const across = s.z.add(s.w.div(256));
   return { normal: s.xy, across, away: cameraNear.add(across.mul(cameraFar.sub(cameraNear))) };
 }
 
 /**
- * `under`, a picture as the canvas takes it, its colours times how much of each pixel is covered, over `background`,
- * as the canvas takes it, with `glow`: added round the cells, past white only on a screen that shows past white; over
- * them, by what room is left below white, so they keep their detail under it.
+ * `under` drawn over `background`, both as the canvas takes them, with `glow` added. `under`'s colours are already
+ * multiplied by how much of each pixel is covered. Round the cells the glow is added in full, past white only on a
+ * screen that shows past white; over the cells it is added only up to the room left below white, so that they keep
+ * their detail under it.
  */
 function glowOver(
   under: Node<'vec4'>,
@@ -125,7 +127,8 @@ interface GTAOParts {
 /**
  * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for two things: in an orthographic
  * view the way to the eye is +z everywhere, where three takes it as towards the camera's position; and a pixel's depth
- * is its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's depth.
+ * is its own texel's, where three takes the nearest of four, which beside a fibre gave the background the fibre's
+ * depth.
  */
 class SurfaceGTAONode extends GTAONode {
   private readonly orthographic: boolean;
@@ -137,7 +140,7 @@ class SurfaceGTAONode extends GTAONode {
     if (missing.length > 0) throw new Error(`three's GTAONode has no ${missing.join(', ')}`);
   }
 
-  /** What went wrong in `setup`, which three logs and draws past, in black. */
+  /** What went wrong in `setup`; three logs it and draws on past it, in black. */
   failed: unknown = null;
 
   override setup(builder: THREE.NodeBuilder) {
@@ -206,7 +209,7 @@ class SurfaceGTAONode extends GTAONode {
         const cosHorizon = dot(viewDir, tangentToNormalInSlice).toConst();
         const cosHorizons = vec2(cosHorizon, cosHorizon.negate()).toVar();
 
-        // Its counter named j, which three's types do not know of.
+        // Names its counter j, which three's types do not know about.
         const steps = {
           start: int(0),
           end: int(STEPS),
@@ -263,15 +266,15 @@ class SurfaceGTAONode extends GTAONode {
 }
 
 /**
- * The circuit drawn with ambient occlusion, apart from the main draw: the scene into a target of its
- * own, its surfaces' normals and depth beside the colour (`surfaceOf`); of the four pixels under each of the
- * occlusion's, the one most covered; three's GTAO on those (`SurfaceGTAONode`), smoothed; and the colour darkened by it
- * onto the canvas. The colours the materials write are in sRGB, so the occlusion is taken to a gamma of 2.2, as if it
- * darkened the light. Made for one camera, and to be disposed of.
+ * The circuit drawn with ambient occlusion, apart from the main draw. The scene is drawn into a target of its own, with
+ * its surfaces' normals and depth beside the colour (`surfaceOf`). For each of the occlusion's pixels, the most covered
+ * of the four pixels under it is picked; three's GTAO runs on those (`SurfaceGTAONode`) and is smoothed; and the
+ * colour, darkened by it, goes onto the canvas. The materials write their colours in sRGB, so the occlusion is raised
+ * to the power 1 / 2.2, as if it darkened the light. Made for one camera, and to be disposed of.
  *
- * Made to `glow`, the surfaces also write how lit each pixel is by a spike, a byte, and the spiking cells glow
- * (`glowOver`), and `throughs` are drawn over the frame, on a still frame and on a moving one (`renderMoving`), which
- * draws the scene into the same target and leaves the occlusion out.
+ * Made with `glows`, the surfaces also write a byte of how lit each pixel is by a spike, the spiking cells glow
+ * (`glowOver`), and `throughs` are drawn over the frame. This holds on a still frame and on a moving one
+ * (`renderMoving`), which draws the scene into the same target and leaves the occlusion out.
  */
 export class Occlusion {
   /** The background as the canvas takes it, which the glow is added over. */
@@ -297,10 +300,11 @@ export class Occlusion {
       storeMultisampledColorBuffer: false,
       storeMultisampledDepthBuffer: false,
     });
-    // What writes no surface of its own (`surfaceOf`), the dots over the cells, stands all the way to the far plane,
+    // Whatever writes no surface of its own (`surfaceOf`), such as the dots over the cells, sits at the far plane,
     // where the occlusion counts nothing.
     const outputs = mrt({ output, surface: vec4(0, 0, 1, 0), ...(glows && { lit: vec4(0) }) });
-    // Cleared as its own, whatever the renderer's: three's bloom draws this pass from inside its own, opaque black.
+    // Set this pass's own clear colours, whatever the renderer's are: three's bloom draws this pass from inside its own
+    // pass, which clears to opaque black.
     scenePass.setMRT(
       outputs.setClearColor('output', 0x000000, 0).setClearColor('surface', 0x000000, 0)
     );
@@ -310,8 +314,8 @@ export class Occlusion {
       picture: scenePass.getTexture('output'),
       surface: scenePass.getTexture('surface'),
     };
-    // xy the normal's, z the depth as the depth buffer takes it (1 all the way to the far plane), w how much of the
-    // pixel is covered: what the resolve summed is divided by that again.
+    // xy: the normal's; z: the depth as the depth buffer stores it (1 at the far plane); w: how much of the pixel is
+    // covered, which `surfaceAt` divides the resolve's sum by.
     const picked = Fn(() => {
       const first = ivec2(screenCoordinate.xy).mul(2).toConst();
       const sum = vec4(0).toVar();
@@ -350,7 +354,7 @@ export class Occlusion {
     surfaces.add(whole);
     const surfacePass = pass(surfaces, camera, { samples: 0 });
     surfacePass.setResolutionScale(AO_SCALE);
-    // The surfaces' normals, written as they are: three's basic material gives `normalView` the quad's own.
+    // Write the surfaces' normals directly: three's basic material would give `normalView` the quad's own normal.
     surfacePass.setMRT(mrt({ output: vec4(unpackNormal(picked.xy), 1) }));
     const depth = surfacePass.getTextureNode('depth');
     const normals = surfacePass.getTextureNode('output');
@@ -379,7 +383,7 @@ export class Occlusion {
     litTexture.type = THREE.UnsignedByteType;
     const lit = scenePass.getTextureNode('lit').r;
     const glow = bloom(vec4(picture.rgb.min(1).mul(lit), 1), GLOW_STRENGTH, GLOW_RADIUS);
-    // After the frame, whose surfaces it reads (`Occlusion.front`), and tested against them, not a depth buffer.
+    // Drawn after the frame, whose surfaces it reads (`Occlusion.front`) and tests against, instead of a depth buffer.
     const throughPass = pass(throughs, camera, { samples: 0, depthBuffer: false });
     throughPass.setMRT(mrt({ output }).setClearColor('output', 0x000000, 0));
     const over = throughPass.getTextureNode('output');
@@ -394,7 +398,7 @@ export class Occlusion {
     return this.occlusion.failed !== null;
   }
 
-  /** A frame, the occlusion reaching `reach` µm, which in an orthographic view is the same on screen at any zoom. */
+  /** Draws a frame with the occlusion reaching `reach` µm: in an orthographic view, the same on screen at any zoom. */
   render(reach: number): void {
     this.occlusion.radius.value = reach;
     this.occlusion.thickness.value = reach;
@@ -403,7 +407,7 @@ export class Occlusion {
     if (this.occlusion.failed) throw this.occlusion.failed;
   }
 
-  /** A frame while the view moves, glowing and without the occlusion; made to glow only. */
+  /** Draws a frame while the view moves, with the glow and without the occlusion; only when made to glow. */
   renderMoving(): void {
     this.moving?.render();
   }

@@ -78,39 +78,39 @@ import type {
 import type { UploadsOf } from './segment-arena';
 
 /**
- * What the highlighted cell and the ring round each contact are drawn in: as far from the background as no colour of a
- * palette is.
+ * The colour of the highlighted cell and of the ring round each contact: farther from the background than any palette
+ * colour.
  */
 const FOREGROUND: ThemeColors = { light: '#1a1a1a', dark: '#ffffff' };
 
 /** How far around the pixel asked for a pick looks, in CSS pixels, as the somas view does. */
 const PICK_REACH = 4;
 /**
- * How far from a contact's centre a point is still on it, in CSS pixels, however small it is drawn: the somas view's 14
- * device pixels on a screen of pixel ratio 2.
+ * How far from a contact's centre, in CSS pixels, a point still counts as on it, however small the contact is drawn:
+ * the somas view's 14 device pixels on a screen of pixel ratio 2.
  */
 const CONTACT_REACH = 7;
-/** A location marker's radius until told otherwise, in µm, and the least it is drawn with, in CSS pixels: morphoviewer's. */
+/** A location marker's default radius in µm, and the least radius it is drawn with in CSS pixels: morphoviewer's. */
 const MARKER_RADIUS = 3;
 const MARKER_MIN_RADIUS = 3;
-/** How far from a marker's centre a point is still on it, in CSS pixels: morphoviewer's. */
+/** How far from a marker's centre, in CSS pixels, a point still counts as on it, as in morphoviewer. */
 const MARKER_REACH = 9;
-/** A synapse's radius in µm, and the least it is drawn with in device pixels: the small-circuit view's. */
+/** A synapse's radius in µm, and the least radius it is drawn with in device pixels, as in the small-circuit view. */
 const SYNAPSE_RADIUS = 0.5;
 const SYNAPSE_MIN_RADIUS = 2;
-/** How long the nudge lasts, ms, and how much nearer it brings the view at its height: morphoviewer's. */
+/** How long the nudge lasts, in ms, and how much nearer it brings the view at its peak, as in morphoviewer. */
 const NUDGE_MS = 900;
 const NUDGE_GROWTH = 0.06;
-/** How long the morph into the dendrogram and back takes, ms, the whole way: morphoviewer's. */
+/** How long a full morph into the dendrogram, or back, takes in ms, as in morphoviewer. */
 const MORPH_MS = 600;
 /**
- * Moving frames over the somas alone cut down as the EM mesh viewer's are, but a step in resolution kept only where it
- * saves a tenth: drawn front first, many somas cost their corners more than their pixels.
+ * Moving frames over the somas alone are cut down as in the EM mesh viewer, but a step down in resolution is kept only
+ * where it saves a tenth: drawn front first, many somas cost more in corners than in pixels.
  */
 const MOTION: MotionOptions = { ...DEFAULT_MOTION, leastSaving: 0.1 };
 /**
- * Over morphologies, only the occlusion left out: they are drawn through targets of the canvas's size, which a cut in
- * resolution would make again.
+ * Over morphologies, moving frames only leave out the occlusion: the morphologies are drawn through targets the size
+ * of the canvas, and a cut in resolution would make those targets again.
  */
 const MORPHOLOGY_MOTION: MotionOptions = { ...DEFAULT_MOTION, scale: 1 };
 const point = new THREE.Vector3();
@@ -151,7 +151,7 @@ function segmentGeometry(data: CircuitMorphologyData): THREE.InstancedBufferGeom
   );
 }
 
-/** What a frame is timed for: moving or still, and the motion told what it cost, the one it was drawn under. */
+/** What a frame is timed for: whether it is moving or still, and the motion it was drawn under, told what it cost. */
 export interface FrameTiming {
   kind: 'moving' | 'still';
   motion: MotionQuality;
@@ -171,7 +171,7 @@ interface PickRenderer<T> {
   render(scene: THREE.Scene, camera: THREE.Camera): void;
 }
 
-/** `pixels` of the pick's window `at`, rows top down, with those past the view's edges cleared: the pick draws past them. */
+/** Clears the `pixels` of the pick's window `at` (rows top down) past the view's edges: the pick draws past them. */
 function inView(pixels: Uint8Array, side: number, at: PickWindow): Uint8Array {
   for (let row = 0; row < side; row++) {
     for (let column = 0; column < side; column++) {
@@ -186,22 +186,21 @@ function inView(pixels: Uint8Array, side: number, at: PickWindow): Uint8Array {
 }
 
 /**
- * How a tier draws a pack's segments, read a box at a time, other than on three's attributes: where the arena's arrays
- * go, the materials of the segments in the look and in their cells' numbers, and the quads each of them is drawn on, by
- * their order.
+ * How a tier draws a pack's segments, read a box at a time, without three's attributes: where the arena's arrays go,
+ * the segment materials for the look and for cell numbers, and, in the same order, the quads each material draws on.
  */
 export interface ArenaDrawing {
   uploadsOf: UploadsOf;
   segment: THREE.Material[];
   ids: THREE.Material[];
   quads: THREE.InstancedBufferGeometry[];
-  /** Lit through what covers them (`CircuitMaterials.through`), on quads of their own. */
+  /** The lit cells drawn through what covers them (`CircuitMaterials.through`), on quads of their own. */
   through?: { materials: THREE.Material[]; quads: THREE.InstancedBufferGeometry[] };
 }
 
 /**
- * Morphologies read a box at a time: what reads and places them, the camera, the view's height and the rules their
- * levels were last chosen for, and whether the view was still; and whether the boxes seen changed since.
+ * Morphologies read a box at a time: the stream that reads and places them; the camera, view height, rules and
+ * stillness their levels were last chosen for; and whether the boxes seen have changed since.
  */
 interface Detailed {
   stream: DetailStream;
@@ -268,7 +267,7 @@ function drawnAlike(
   );
 }
 
-/** Whether neither set of populations takes in the other's: another circuit, or another population in place of one. */
+/** Whether neither set of populations contains the other: another circuit, or one population swapped for another. */
 function framesAgain(before: Population[] | null, after: Population[]): boolean {
   if (!before) return true;
   const has = (all: Population[], some: Population[]) =>
@@ -282,7 +281,7 @@ interface SomasBox {
   reach: Vec3;
 }
 
-/** The box of the somas of `positions` that `keep` keeps; null where it keeps none that has a place. */
+/** The box of the somas in `positions` that `keep` keeps; null where it keeps none that has a position. */
 function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): SomasBox | null {
   const extent = extentOf(positions, keep);
   if (!extent) return null;
@@ -291,10 +290,10 @@ function somasBox(positions: Float32Array, keep?: (cell: number) => boolean): So
 }
 
 /**
- * What a tier draws the circuit with, each reading the uniforms of `CircuitView`: the segments and the morphologies'
- * somas in the look, the cloud of somas, the same three in their cells' numbers for the pick, the segments and somas in
- * their segments' numbers for the pick of a section, and the dots. The segments are drawn once for each of their
- * materials, over the same quads, each drawing its own share of them.
+ * The materials a tier draws the circuit with, all reading the uniforms of `CircuitView`: the segments and the
+ * morphologies' somas in the look; the cloud of somas; the same three in cell numbers for the pick; the segments and
+ * somas in segment numbers for the pick of a section; and the dots. The segments are drawn once per material, over the
+ * same quads, and each material draws its own share of them.
  */
 export interface CircuitMaterials {
   segment: THREE.Material[];
@@ -312,33 +311,33 @@ export interface CircuitMaterials {
 }
 
 /**
- * A circuit's morphologies on a `SceneView`, in the Studio look, whichever GPU interface draws them: a quad a segment
- * and a quad a soma (`impostors.ts`), each cell coloured and shown or not by its texel of the cell table, and electrode
- * contacts in front of them (`electrodes.ts`). Before a circuit's morphologies are in, or without them, its somas are
- * drawn as the somas view drew them (`soma-cloud.ts`), from the page's positions; its morphologies then take their
- * place, over the same cells, in the same view. A spike replay lights the cells as they fire, on a clock
- * (`SpikeClock`) moved on by each turn of the loop.
+ * Draws a circuit's morphologies on a `SceneView` in the Studio look, whichever GPU interface is used: one quad per
+ * segment and one per soma (`impostors.ts`), each cell coloured and shown or hidden by its texel in the cell table, and
+ * electrode contacts in front of them (`electrodes.ts`). Until a circuit's morphologies arrive, or without them, its
+ * somas are drawn as the somas view drew them (`soma-cloud.ts`), from the page's positions; the morphologies then take
+ * their place, over the same cells, in the same view. A spike replay lights the cells as they fire, on a clock
+ * (`SpikeClock`) that each turn of the loop moves on.
  *
- * The tier makes the renderer on the canvas, its materials (`materials`) on the uniforms here, and then calls `start`;
- * it draws, draws a scene for a pick into its target and reads it (`readPick`), and builds the pick's programs
- * (`compile`). The arrays are drawn from as the reader made them, and kept, to be uploaded again.
+ * The tier makes the renderer on the canvas and its materials (`materials`) on the uniforms here, then calls `start`.
+ * It draws frames, draws a scene for a pick into its target and reads it back (`readPick`), and builds the pick's
+ * programs (`compile`). The arrays are drawn from as the reader made them, and kept so they can be uploaded again.
  */
 export abstract class CircuitView extends SceneView implements CircuitMorphologyView {
-  /** The look, of which the tier takes the material's shading and the lights, which ride on the camera. */
+  /** The look. The tier takes its material's shading and its lights, which ride on the camera. */
   protected look: Look;
   protected abstract materials: CircuitMaterials;
-  /** The pick's target's side, in device pixels. */
+  /** The side of the pick's target, in device pixels. */
   protected readonly pickSide: number;
   /** The segments' quads. */
   private chunks = new THREE.Group();
   /** The segments, the morphologies' somas and the cloud: what the cells are. */
   private surfaces = new THREE.Group();
-  /** The lit cells' quads drawn through what covers them, which the tier draws over the frame. */
+  /** Quads of the lit cells, drawn through what covers them; the tier draws them over the frame. */
   protected readonly throughs = new THREE.Scene();
   protected uniforms = impostorUniforms();
   /**
-   * The morphologies, their segments' and their somas' quads, the same quads for the pick, and for the pick of a section
-   * where the morphologies were read whole; where they are read a box at a time, what reads them.
+   * The morphologies; the quads of their segments and somas; the same quads for the pick, and for the pick of a section
+   * where the morphologies were read whole; and, where they are read a box at a time, what reads them.
    */
   private layer: {
     data: CircuitMorphologyData;
@@ -353,17 +352,20 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private toldDetail: DetailStats | null = null;
   /** What the tier's culling last counted. */
   private culled: CullCounts | null = null;
-  /** The most segments an arena may hold where it keeps every box's coarsest level (`DetailStream`), as the tier has it. */
+  /**
+   * An arena keeps every box's coarsest level (`DetailStream`) only where it then holds no more than this many
+   * segments. The tier sets it.
+   */
   protected baseUpTo = 0;
   /** The quads of the morphologies in their segments' numbers, drawn for a pick of a section alone. */
   private spots = new THREE.Scene();
   protected spotUniforms = { uSegments: { value: 0 } };
-  /** The read of `spots` at a point asked for in this task, which the pick of its cell and of its section share. */
+  /** The read of `spots` at a point asked for in this task; the picks of the cell and of the section there share it. */
   private spotRead: { x: number; y: number; read: Promise<number | null> } | null = null;
   protected cloudUniforms = somaCloudUniforms();
   /**
-   * The somas the cloud draws, whose populations decide whether the next ones are framed, the box round all of them,
-   * their pieces (`cloudPieces`), the whole of them once translucent (`wholeCloud`), and whether it is shown.
+   * The somas the cloud draws (their populations decide whether the next somas are framed), the box round all of them,
+   * their pieces (`cloudPieces`), the whole cloud once translucent (`wholeCloud`), and whether the cloud is shown.
    */
   private cloud: {
     somas: CircuitSomas;
@@ -375,19 +377,20 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     cutting: Promise<MortonSorted> | null;
   } | null = null;
   /**
-   * How far frames drawn while the view moves over the somas alone are cut down, by what they cost the GPU (`MOTION`):
-   * the occlusion left out, then the resolution.
+   * How much frames drawn while the view moves over the somas alone are cut down, by what they cost the GPU (`MOTION`):
+   * first the occlusion is left out, then the resolution drops.
    */
   private motion = new MotionQuality({ ...MOTION, ao: this.occludes ? 'auto' : 'off' });
   /** The same over morphologies, where the tier draws the occlusion; null where it does not. */
   private morphologyMotion = this.occludes ? new MotionQuality(MORPHOLOGY_MOTION) : null;
-  /** Of either motion, the fraction of the resolution the last frame was drawn at, and the moving frames drawn so. */
+  /** For either motion: the fraction of the resolution the last frame was drawn at, and the moving frames drawn so. */
   private drawnScale = 1;
   private drawnRung: MovingFrame | null = null;
   private steadyFrames = 0;
   /**
-   * What the frame drawn now is timed for, which the tier tells `measured`: a moving frame from the third drawn one way,
-   * as a GPU waking up draws its first slowly, a still one, or none, where nothing is cut down.
+   * What the current frame is timed for; the tier passes it to `measured`. Moving frames count only from the third one
+   * drawn the same way, as a GPU waking up draws its first ones slowly. Still frames count. Null where nothing is cut
+   * down.
    */
   protected timing: FrameTiming | null = null;
   /** Whether a moving frame keeps the occlusion, where the tier draws one. */
@@ -402,13 +405,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
   /** The cloud and the morphologies in their cells' numbers, drawn for a pick alone. */
   private ids = new THREE.Scene();
-  /** Of each material, the quads last let go of (`letGo`). */
+  /** For each material, the quads last let go of (`letGo`). */
   private kept = new Map<THREE.Material, Quads>();
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
   private defaultColor = DEFAULT_NEURON_COLOR;
   protected background = CANVAS_LIGHT;
-  /** What the data's positions have taken off: the electrodes come in the circuit's own frame. */
+  /** The offset taken off the data's positions; the electrodes come in the circuit's own frame. */
   private centre: Vec3 = [0, 0, 0];
   private electrodeGroups: readonly ElectrodeGroup[] = [];
   private highlightedElectrode: string | null = null;
@@ -462,8 +465,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private spikesPlayingListeners = new Set<(playing: boolean) => void>();
 
   /**
-   * `pixelRatio`: the device pixels a CSS pixel is drawn with; `budget`: the tier's segments drawn at once until told
-   * otherwise.
+   * `pixelRatio`: the device pixels a CSS pixel is drawn with; `budget`: how many segments the tier draws at once until
+   * told otherwise.
    */
   constructor(
     container: HTMLElement,
@@ -496,13 +499,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.dark = dark;
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
     };
-    // A gesture takes the view: the nudge's zoom would stop its glide every frame.
+    // A gesture takes over the view: otherwise the nudge's zoom would stop the gesture's glide every frame.
     this.controls.addEventListener('start', () => {
       this.nudging = null;
     });
   }
 
-  /** Once the tier has its renderer and materials: the theme, the canvas's size, and the first frame. */
+  /** Once the tier has its renderer and materials: sets the theme and canvas size, and asks for the first frame. */
   protected start(): void {
     this.setDark(false);
     this.fitCanvas();
@@ -534,7 +537,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return false;
   }
 
-  /** The tier's occlusion given up on: moving frames no longer step through it. */
+  /** Called when the tier gives up on occlusion: moving frames no longer step through it. */
   protected occlusionGone(): void {
     this.motion.configure({ ...MOTION, ao: 'off' });
     this.morphologyMotion = null;
@@ -546,23 +549,23 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The tier told of the cloud's somas as they are set, at `positions`, three floats a cell, cut into the pieces whose
-   * pyramids are `pieces`, and of none as they are let go of: what it culls (`cullsSomas`).
+   * Tells the tier of the cloud's somas, which it culls (`cullsSomas`). Once they are set, `positions` holds three
+   * floats a cell and `pieces` the pyramids of the pieces they are cut into; once they are let go of, there are none.
    */
   protected placeSomas(
     _positions: Float32Array | null,
     _pieces: readonly THREE.InstancedBufferGeometry[]
   ): void {}
 
-  /** The canvas drawn at `scale` of the resolution, scaled up onto the page. */
+  /** Draws the canvas at `scale` of the resolution, scaled up onto the page. */
   protected abstract scaleDrawing(scale: number): void;
 
   /** Draw `scene` into the pick's target (`drawPick`) for `at`, and read the target's pixels, rows top down. */
   protected abstract readPick(scene: THREE.Scene, at: PickWindow): Promise<Uint8Array>;
 
   /**
-   * `scene` drawn by `renderer` into `target`, the whole of which is the pick's window `at` of the view: a viewport
-   * larger than the target, as the view at an offset would be, makes Safari 27 drop the pass.
+   * Draws `scene` with `renderer` into `target`, which holds exactly the pick's window `at` of the view. A viewport
+   * larger than the target, such as the whole view at an offset, makes Safari 27 drop the pass.
    */
   protected drawPick<T>(
     renderer: PickRenderer<T>,
@@ -585,7 +588,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Begin to build the programs that draw `scene` for the pick, so that the first pick does not wait for them. */
   protected abstract compile(scene: THREE.Scene): void;
 
-  /** How a pack's arena is drawn; null on three's attributes, by the materials of morphologies read whole. */
+  /** How a pack's arena is drawn; null draws it on three's attributes with the materials of morphologies read whole. */
   protected arenaDrawing(): ArenaDrawing | null {
     return null;
   }
@@ -598,7 +601,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const side = this.pickSide;
     const middle = (side - 1) / 2;
     const ratio = this.pixelRatio;
-    // The pixel asked for at the target's middle; at full resolution, where a moving frame was drawn at less.
+    // Put the pixel asked for at the target's middle, at full resolution even where a moving frame was drawn at less.
     const at = {
       width: Math.floor(this.width * ratio),
       height: Math.floor(this.height * ratio),
@@ -663,15 +666,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Over the somas of the same cells, the morphologies take their place, drawn where the circuit's frame puts them and
-   * framed only as the somas would be (`setSomas`); over somas of other cells, they are not drawn; null gives the somas
-   * their place back. Without somas, the morphologies are all there is, about their own centre. With `follow`, a view
-   * still as the last framing left it is framed on them.
+   * Over the somas of the same cells, the morphologies take their place: they are drawn where the circuit's frame puts
+   * them, and reframed only where new somas would be (`setSomas`). Over somas of other cells, they are not drawn. Null
+   * gives the somas their place back. Without somas, the morphologies are all there is, drawn about their own centre.
+   * With `follow`, a view that has not moved since the last framing is framed on them.
    */
   setData(given: CircuitMorphologyData | null, follow = false): void {
     const unmoved = follow && this.unmoved();
     this.clearMorphologies();
-    // The somas, which keep the cell table, the origin and the view; morphologies of other cells are not drawn over them.
+    // The somas keep the cell table, the origin and the view; morphologies of other cells are not drawn over them.
     const under = this.cloud;
     const count = given ? given.somas.length / 4 : 0;
     // A segment's word has room for its cell in the bits below its type.
@@ -748,7 +751,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.spotUniforms.uSegments.value = data.segmentCells.length;
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
-    // From the top: what dropped the occlusion for other morphologies says nothing of these.
+    // Start over: dropping the occlusion for other morphologies says nothing about these.
     this.morphologyMotion?.configure(MORPHOLOGY_MOTION);
     this.compileIds();
 
@@ -778,8 +781,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The arena made again where it holds less than the budget asks of it, or keeps a base where `baseUpTo` would not,
-   * its boxes read again. Whether it was.
+   * Makes the arena again, and reads its boxes again, where it holds less than the budget asks of it or keeps a base
+   * where `baseUpTo` would not. Returns whether it did.
    */
   protected refitArena(): boolean {
     const { layer, baseUpTo } = this;
@@ -818,13 +821,13 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * What the tier's culling counted, for the listeners: with what they were told last, which it alone changes; null
-   * where it no longer culls. The boxes it marked are those seen, which the levels are chosen again by where that
-   * changes what the view may want; at rest, those of the frames drawn in this rest alone.
+   * Tells the listeners what the tier's culling counted, with the rest as they were told last; `read` is null where the
+   * tier no longer culls. The boxes the culling marked become the boxes seen, and the levels are chosen again where
+   * that changes what the view may want. A read counts as still only where its frame was drawn in the current rest.
    */
   protected tellCulled(read: CullRead | null): void {
     const detailed = this.layer?.detailed;
-    // Read back after the culling was switched off, or the pack let go of.
+    // Ignore a read that comes back after the culling was switched off or the pack was let go of.
     if (!this.culls || !detailed) return;
     const { stream } = detailed;
     let counts: CullCounts | null = null;
@@ -844,20 +847,20 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (this.toldDetail) this.tell({ ...this.toldDetail, culled: counts });
   }
 
-  /** The rest a frame is drawn still in (`DetailStream.rest`), -1 for one drawn `moving`. */
+  /** The rest (`DetailStream.rest`) a still frame is drawn in; -1 for a frame drawn `moving`. */
   protected restOf(moving: boolean): number {
     return moving ? -1 : (this.layer?.detailed?.stream.rest ?? -1);
   }
 
   /**
-   * A frame asked for where the view is `still`. Moving, what changed is drawn with the next move, or by the still frame
-   * that follows the last.
+   * Asks for a frame where the view is `still`. While the view moves, the change is drawn with the next move, or by the
+   * still frame that follows the last one.
    */
   private invalidateAtRest(still = !this.drawnMoving): void {
     if (still) this.invalidate();
   }
 
-  /** The listeners told what is drawn of morphologies read a box at a time, where that changed. */
+  /** Tells the listeners what is drawn of morphologies read a box at a time, where that changed. */
   private tellDetail(): void {
     const stats = this.layer?.detailed?.stream.stats(this.detailRules);
     this.tell(stats ? { ...stats, culled: this.culled } : null);
@@ -870,10 +873,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The levels chosen again where the camera, the view's height, the rules, whether the view is still, the boxes seen
-   * or what of the pack is in changed since they were last, and a frame asked for at rest where that lets go of boxes or
-   * places some at once.
-   * Here, not in `work`: the camera's near and far planes are set for the frame first.
+   * Chooses the levels again where any of these changed since the last choice: the camera, the view's height, the
+   * rules, whether the view is still, the boxes seen, or how much of the pack has arrived. Asks for a frame at rest
+   * where that lets go of boxes or places some at once.
+   * This runs here, not in `work`, because the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
     this.shapeCloud();
@@ -884,7 +887,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const height = this.height * this.pixelRatio;
     const was = detailed.chosenFor;
     const still = !moving;
-    // A stream made again for the budget keeps what it saw: none chosen yet is no move.
+    // A stream remade for the budget keeps what it saw, so having no levels chosen yet is not a move.
     const moved =
       was !== null &&
       (was.height !== height ||
@@ -943,7 +946,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.makeTable(cells);
     const box = somasBox(somas.positions);
     const reframe = framesAgain(before, somas.populations);
-    // Kept otherwise, so that the somas stay where they were drawn.
+    // Otherwise the centre is kept, so that the somas stay where they were drawn.
     if (reframe) this.centre = box?.mean ?? [0, 0, 0];
     this.cloudUniforms.uOffset.value.fromArray(this.centre);
     this.cloud = { somas, box, pieces: [], whole: null, shown: true, cutting: ordered ?? null };
@@ -955,7 +958,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.drawSynapses();
     if (reframe) this.resetView();
     if (!ordered) return;
-    // Cut once the order is in, the cloud drawn whole until then; an order asked for another cloud is not taken.
+    // Cut the cloud once the order arrives, and draw it whole until then; ignore an order asked for another cloud.
     ordered.then(
       (sorted) => {
         if (this.cloud?.cutting === ordered) this.cutCloud(somas, sorted);
@@ -968,7 +971,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     );
   }
 
-  /** The cloud of `somas` cut into its pieces (`cloudPieces`), in the order `sorted` gives, or worked out here. */
+  /** Cuts the cloud of `somas` into its pieces (`cloudPieces`), in the order `sorted` gives, or one worked out here. */
   private cutCloud(somas: CircuitSomas, sorted?: MortonSorted): void {
     const { cloud } = this;
     if (!cloud || cloud.pieces.length > 0) return;
@@ -977,7 +980,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const pieces = cloudPieces(somas.positions, sorted).map(
       ({ positions, cells, centre, reach }) => {
         const sphere = new THREE.Sphere(centre.sub(offset), reach);
-        // One buffer each, which both shapes draw from.
+        // One buffer each, which both shapes share.
         const position = new THREE.InstancedBufferAttribute(positions, 3);
         const cell = new THREE.InstancedBufferAttribute(cells, 1);
         const placed = (geometry: THREE.InstancedBufferGeometry) => {
@@ -1016,8 +1019,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * A moving frame drawn at the resolution its motion steps it to (`motionNow`), any other at the full one, and whether
-   * it is timed.
+   * Draws a moving frame at the resolution its motion steps it to (`motionNow`) and any other at the full one, and
+   * decides whether the frame is timed.
    */
   private cutDown(moving: boolean): void {
     const motion = this.motionNow();
@@ -1028,7 +1031,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.drawnScale = scale;
       this.electrodeUniforms.uScale.value = scale;
     }
-    // Drawn another way, as the occlusion left out, the first frames are slow again.
+    // When frames are drawn another way, such as without the occlusion, the first ones are slow again.
     if (rung !== this.drawnRung) {
       this.drawnRung = rung;
       this.steadyFrames = 0;
@@ -1050,7 +1053,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.morphologyMotion?.reset();
   }
 
-  /** Each piece of the cloud drawn as flat quads where its somas are small on screen, and as pyramids elsewhere. */
+  /** Draws each piece of the cloud as flat quads where its somas are small on screen, and as pyramids elsewhere. */
   private shapeCloud(): void {
     const { cloud } = this;
     if (!cloud?.shown || this.translucent) return;
@@ -1063,7 +1066,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.showPieces();
   }
 
-  /** Each piece's sphere round its somas as large as one glowing in full. */
+  /** Makes each piece's bounding sphere large enough for its somas glowing in full. */
   private padPieces(): void {
     const pad = this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL);
     for (const { pyramids, reach } of this.cloud?.pieces ?? []) {
@@ -1093,9 +1096,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Translucent, the cloud drawn whole, in the page's order, as before it was cut into pieces: drawn a piece after
-   * another, which of two overlapping somas blends over the other would follow the pieces, and show them. Drawn whole
-   * too until it is cut (`cutCloud`). Made the first time it is drawn so, and kept, hidden while the pieces are.
+   * Draws a translucent cloud whole, in the page's order, as before it was cut into pieces. If it were drawn piece by
+   * piece, the pieces would decide which of two overlapping somas blends over the other, and they would show. The cloud
+   * is also drawn whole until it is cut (`cutCloud`). The whole mesh is made the first time it is needed and then kept,
+   * hidden while the pieces are shown.
    */
   private wholeCloud(): void {
     const { cloud } = this;
@@ -1114,8 +1118,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The cloud's pieces as shown and as small as they were last found, where the tier does not cull them, or its whole
-   * where it is drawn whole.
+   * Shows the cloud's pieces as the cloud is shown and as small as they were last found, where the tier does not cull
+   * them; or the whole cloud where it is drawn whole.
    */
   protected showPieces(): void {
     const { cloud } = this;
@@ -1130,17 +1134,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   setCrowding(somas: CircuitSomas, crowding: Uint8Array | null): void {
-    // Worked out for other somas.
+    // The crowding was worked out for other somas.
     if (!this.table || this.cloud?.somas !== somas) return;
     this.table.setCrowding(crowding);
     if (this.cloud?.shown) this.invalidate();
   }
 
   /**
-   * Over the somas, the view frames those drawn as the somas view did: centred on their mean, as far either side as the
-   * farthest of them from it on each axis, and a soma's radius more; where none is drawn, all of them. Over their
-   * morphologies, it frames those of the cells drawn about their middle, a pack's by its populations' boxes of the
-   * sections drawn.
+   * Over the somas, frames the somas drawn as the somas view did: centred on their mean, reaching on each axis as far
+   * as the farthest of them from it, plus a soma's radius; where none is drawn, all of them. Over morphologies, frames
+   * those of the cells drawn about their middle; for a pack, by its populations' boxes of the sections drawn.
    */
   override resetView(): void {
     this.frameCells();
@@ -1162,8 +1165,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (layer) {
       const { data } = layer;
       const shown = table.hides ? (cell: number) => table.shown(cell) : undefined;
-      // A pack's segments are in its chunks, out of the extent's reach: its populations' boxes stand for them, or its
-      // bounds where it keeps none.
+      // A pack's segments are in its chunks, out of the extent's reach: the boxes of its populations stand in for them,
+      // or its bounds where it has no boxes.
       const drawn = data.chunks
         ? packExtent(data, (type) => type !== this.uniforms.uHidden.value, shown)
         : shown
@@ -1192,7 +1195,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.controls.update();
   }
 
-  /** The somas of `box`, `pad` more each way, where the view draws them. */
+  /** The box of the somas in `box`, padded by `pad` each way, where the view draws them. */
   private somaBox({ mean, reach }: SomasBox, pad: number): THREE.Box3 {
     const middle = new THREE.Vector3(...mean).sub(new THREE.Vector3(...this.centre));
     const half = new THREE.Vector3(...reach).addScalar(pad);
@@ -1243,7 +1246,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
           return n < segmentCells.length ? segmentCells[n] : n - segmentCells.length;
         })
       : this.numberAround(this.ids, x, y);
-    // Other data by now has other cells.
+    // By now, other data may have other cells.
     return read.then((cell) => (this.table === table ? cell : null));
   }
 
@@ -1253,7 +1256,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (last?.x === x && last.y === y) return last.read;
     const read = this.numberAround(this.spots, x, y);
     this.spotRead = { x, y, read };
-    // Asked again later, the view may have moved.
+    // A later ask reads again: the view may have moved by then.
     queueMicrotask(() => {
       if (this.spotRead?.read === read) this.spotRead = null;
     });
@@ -1264,7 +1267,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const layer = this.layer;
     if (!layer?.data.trees) return Promise.resolve(null);
     const { data } = layer;
-    // Where the camera is now, and the morph, which the pick is drawn from.
+    // Use the camera and the morph as they are now, as the pick was drawn from them.
     const onScreen = this.projector();
     const shift = this.uniforms.uShift.value.toArray() as Vec3;
     const mix = this.uniforms.uMix.value;
@@ -1351,7 +1354,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return () => this.markerListeners.delete(listener);
   }
 
-  /** The markers' listeners told where they are after a frame, where that is not where they were last told. */
+  /** Tells the markers' listeners where the markers are after a frame, where that differs from what they last heard. */
   protected override afterDraw(): void {
     if (this.markerListeners.size === 0) return;
     const markers = this.markersOnScreen();
@@ -1448,7 +1451,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   setSpikesPlaying(playing: boolean): void {
     if (playing === this.spiking.playing) return;
-    // Played at the end, the clock starts again from the beginning.
+    // Playing at the end starts the clock again from the beginning.
     this.spiking.playing = playing;
     this.spikeFrame();
     // The loop turns for `work` once it is going.
@@ -1468,7 +1471,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
-  /** Whether spiking cells give off light (`setSpikeGlow`): asked, while there are spikes, round morphologies. */
+  /** Whether spiking cells give off light (`setSpikeGlow`): where asked, while there are spikes, over morphologies. */
   protected get glowing(): boolean {
     return this.glowAsked && this.spiking.replaying && this.drawsMorphologies;
   }
@@ -1491,8 +1494,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The boxes that came in placed, a little a turn. The replay's clock moves on by the time the last turn of the loop
-   * took, which keeps turning while it plays.
+   * Places the boxes that came in, a little each turn. The replay's clock moves on by the time the last turn of the
+   * loop took, and the loop keeps turning while the replay plays.
    */
   protected override work(): boolean {
     const placing = this.placeBoxes();
@@ -1505,7 +1508,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return !ended || moving;
   }
 
-  /** What came in of the boxes placed, and those no longer wanted let go of. Whether more is left to place. */
+  /** Places what came in of the boxes and lets go of those no longer wanted. Returns whether more is left to place. */
   private placeBoxes(): boolean {
     const stream = this.layer?.detailed?.stream;
     if (!stream) return false;
@@ -1527,7 +1530,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
-  /** The morph's mix for this frame, eased in and out, the markers going with it. Whether it goes on. */
+  /** Sets the morph's mix for this frame, eased in and out, and moves the markers with it. Whether it goes on. */
   private morphFrame(): boolean {
     const { target, from, start } = this.morph;
     if (this.uniforms.uMix.value === target) return false;
@@ -1545,11 +1548,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.invalidate();
   }
 
-  /** The nudge's zoom for this frame, as morphoviewer's: a sine's hump. Whether it goes on. */
+  /** Sets the nudge's zoom for this frame, as morphoviewer does: one hump of a sine. Returns whether it goes on. */
   private nudgeFrame(): boolean {
     const nudging = this.nudging;
     if (!nudging) return false;
-    // Zoomed meanwhile, by the slider say: the view is the user's.
+    // If the zoom changed meanwhile, say by the slider, the user has taken over the view.
     if (this.zoom !== nudging.set) {
       this.nudging = null;
       return false;
@@ -1563,12 +1566,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return false;
   }
 
-  /** A frame only where a cell glows otherwise: before the first spike, a playing replay draws nothing. */
+  /** Asks for a frame only where a cell's glow changed: before the first spike, a playing replay draws nothing. */
   private showGlow(): void {
     if (this.table?.glow(this.spiking.glow, this.spiking.lit)) this.invalidate();
   }
 
-  /** The glow at the replay's moment, which the listeners are told of. */
+  /** Shows the glow at the replay's current time, and tells the listeners that time. */
   private spikeFrame(): void {
     this.showGlow();
     const { timeInMs } = this.spiking;
@@ -1580,8 +1583,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * The contacts as they are now, in a mesh drawn after the cells, over them, made larger only when they outgrow it. A
-   * frame only where that changed what is drawn.
+   * Draws the contacts as they are now in a mesh drawn after the cells and over them, made larger only when the
+   * contacts outgrow it. Asks for a frame only where that changed what is drawn.
    */
   private drawElectrodes(): void {
     this.electrodes = this.drawDots(this.electrodes, this.electrodeGroups, {
@@ -1592,7 +1595,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     });
   }
 
-  /** The synapses where the circuit's frame puts them, after the cells, which hide those behind them. */
+  /** Draws the synapses where the circuit's frame puts them, after the cells, which hide the synapses behind them. */
   private drawSynapses(): void {
     this.synapseDots = this.drawDots(this.synapseDots, this.synapseGroups, {
       material: this.materials.synapse,
@@ -1601,7 +1604,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     });
   }
 
-  /** The markers where the morphologies drawn put them, after the electrodes and over them. */
+  /** Draws the markers where the drawn morphologies put them, after the electrodes and over them. */
   private drawMarkers(): void {
     const data = this.layer?.data;
     this.markerPoints = this.markers.map(({ cell, sonataId, offset }) => {
@@ -1622,8 +1625,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * `groups`' dots in `mesh`, drawn after the cells and over them, the group `highlighted` larger and lighter, a mesh
-   * made larger only when they outgrow it. A frame only where what is drawn changed.
+   * Draws the dots of `groups` in `mesh`, after the cells and over them, with the group `highlighted` larger and
+   * lighter. The mesh is made larger only when the dots outgrow it. Asks for a frame only where what is drawn changed.
    */
   private drawDots(
     mesh: Quads | null,
@@ -1673,12 +1676,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return dots;
   }
 
-  /** How the tier writes rows of the glow straight to the GPU; none, and three uploads them. */
+  /** How the tier writes rows of the glow straight to the GPU; without one, three uploads them. */
   protected glowRowsWriter(): GlowRowsWriter | undefined {
     return undefined;
   }
 
-  /** A cell table for `cells` cells, which the shaders read, painted, and glowing as the replay is. */
+  /** Makes a cell table of `cells` cells for the shaders to read, paints it, and sets its glow to the replay's. */
   private makeTable(cells: number): void {
     this.table = new CellTable(cells, this.glowRowsWriter());
     this.uniforms.uCells.value = this.table.texture;
@@ -1689,15 +1692,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.showGlow();
   }
 
-  /** The pick's programs begin to build now, not at the first pick, which would wait for them. */
+  /** Starts building the pick's programs now, so that the first pick does not wait for them. */
   private compileIds(): void {
     this.compile(this.ids);
     if (this.spots.children.length > 0) this.compile(this.spots);
   }
 
   /**
-   * `bounds` round what there is: every soma of the cloud, drawn or not and as large as one glowing in full, and the
-   * morphologies.
+   * Sets `bounds` round everything there is: every soma of the cloud, drawn or not and as large as one glowing in full,
+   * and the morphologies.
    */
   private bound(): void {
     const all = new THREE.Box3();
@@ -1707,7 +1710,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!all.isEmpty()) this.bounds.copy(all);
   }
 
-  /** The cloud and its pick shown, or not while the morphologies take their place. */
+  /** Shows the cloud and its pick, or hides them while the morphologies take their place. */
   private showCloud(shown: boolean): void {
     if (this.cloud) this.cloud.shown = shown;
     this.showPieces();
@@ -1715,9 +1718,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * `meshes` out of the view, each disposed once the next of its material is let go of: WebGPU keeps what three holds of
-   * a mesh until it is disposed, and three lets go of a material's programs with its last mesh, which the quads that
-   * take their place would build again.
+   * Takes `meshes` out of the view. Each is disposed only once the next mesh of its material is let go of. WebGPU keeps
+   * what three holds for a mesh until the mesh is disposed, and three drops a material's programs with its last mesh,
+   * which the quads that take its place would then build again.
    */
   protected letGo(...meshes: Quads[]): void {
     for (const mesh of meshes) {
@@ -1739,7 +1742,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.uniforms.uSomas.value = null;
     this.culled = null;
     this.uniforms.uShift.value.set(0, 0, 0);
-    // They sit on the morphologies.
+    // The markers sit on the morphologies.
     this.drawMarkers();
     this.tellDetail();
     this.invalidate();

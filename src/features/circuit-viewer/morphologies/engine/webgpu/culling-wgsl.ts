@@ -1,19 +1,20 @@
 /**
- * The culling's passes, on the arena's segments and in µm from the eye, so that the same holds in perspective, and on
- * the somas drawn alone. Each pass is put together with the impostors' own WGSL
- * (`depth-pyramid.ts`), whose `segmentEnds` places a segment as its draw does.
+ * The culling's passes, for the arena's segments and for the somas drawn alone. They measure depth in µm from the eye,
+ * so the same tests hold in perspective. Each pass is built with the impostors' own WGSL (`depth-pyramid.ts`), whose
+ * `segmentEnds` places a segment as its draw does.
  */
 
 import { QUAD_REACH } from '../impostors';
 
-/** How much nearer a segment is taken to be than it is, µm and a share of its distance: the arithmetic's rounding. */
+/** A segment is taken to be nearer than it is by this many µm plus this share of its distance, to cover rounding. */
 export const NEAR_UM = 0.02;
 export const NEAR_SHARE = 1e-6;
-/** How far behind what hides it a segment is still kept, µm, to hide others the next frame. */
+/** How far behind what hides it a segment may be and still be kept, µm, so that it hides others the next frame. */
 export const KEEP_UM = 10;
 /**
- * The texels a side a block's box is tested on, and the rows a segment is walked over pixel by pixel; past them, a
- * coarser level of the pyramid. 4 rows was the fastest while the whole brain turned.
+ * A block's box is tested on at most this many texels a side, and a segment is walked pixel by pixel over at most this
+ * many rows; past that, the test uses a coarser level of the pyramid. 4 rows was the fastest while the whole brain
+ * turned.
  */
 const BLOCK_TEXELS = 8;
 const ROWS = 4;
@@ -34,7 +35,7 @@ struct View {
 }
 @group(0) @binding(0) var<uniform> view: View;
 
-// A view point in device pixels from the top left, y down, as the fragment's position counts them.
+// Where a view-space point falls, in device pixels from the top left with y down, as the fragment's position counts.
 fn texelOf(p: vec3f) -> vec2f {
   return toFragment(pixelsUp(p, view.projection, view.vp), view.vp);
 }
@@ -42,7 +43,7 @@ fn nearer(away: f32) -> f32 { return away - away * ${NEAR_SHARE} - ${NEAR_UM}; }
 `;
 
 const FARTHEST = /* wgsl */ `
-// The farthest drawn under texel p of level m, µm from the eye; level 0 is the picture's own.
+// The farthest depth drawn under texel p of level m, µm from the eye. Level 0 is the full-size depth.
 fn farthest(p: vec2i, m: u32) -> f32 {
   if (m == 0u) { return textureLoad(full, p, 0).x; }
   let l = i32(m) - 1;
@@ -59,8 +60,8 @@ struct Args { indices: u32, instances: atomic<u32>, firstIndex: u32, baseVertex:
 `;
 
 /**
- * The depth drawn before the tests, at each pixel the farthest of its samples, in µm from the eye: a few of the depth
- * buffer's steps farther, for what turning it back loses.
+ * Turns the depth drawn before the tests into µm from the eye, taking the farthest of each pixel's samples. It adds a
+ * few of the depth buffer's steps to cover the precision lost in turning depth back into distance.
  */
 export const RESOLVE = /* wgsl */ `
 ${VIEW}
@@ -79,8 +80,8 @@ ${VIEW}
 `;
 
 /**
- * The pyramid: each level the farthest of the 2 × 2 texels under it, and of a third where a side is odd, so that a
- * texel never says nearer than any pixel it stands for.
+ * Builds the pyramid: each texel of a level holds the farthest of the 2 × 2 texels under it, plus a third row or column
+ * at the edge of an odd side, so that a texel is never nearer than any pixel it stands for.
  */
 export const PYRAMID = /* wgsl */ `
 @group(0) @binding(0) var src: texture_2d<f32>;
@@ -102,8 +103,9 @@ export const PYRAMID = /* wgsl */ `
 `;
 
 /**
- * A block is up to 64 segments of a box. One whose box may show, or hide by no more than \`KEEP_UM\`, is handed on for
- * the next pass to test its segments one by one. The box is widened by the least radius a segment is drawn with.
+ * A block is up to 64 segments of one box. A block whose box may show, or is hidden by no more than \`KEEP_UM\`, is
+ * handed on to the next pass, which tests its segments one by one. The box is widened by the least radius a segment
+ * is drawn with.
  */
 export const BLOCKS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}
@@ -158,7 +160,7 @@ fn shows(bl: Block) -> bool {
 }
 `;
 
-/** The blocks handed on as the size of the next pass: up to 512 workgroups a row. */
+/** Sizes the next pass by the blocks handed on: up to 512 workgroups a row. */
 export const ARGS = /* wgsl */ `
 @group(0) @binding(0) var<storage, read> counters: array<u32>;
 @group(0) @binding(1) var<storage, read_write> dispatch: array<u32>;
@@ -170,14 +172,15 @@ export const ARGS = /* wgsl */ `
 `;
 
 /**
- * Each segment of the blocks handed on, against the farthest drawn before it: first the whole of it against the 2 × 2
- * texels of the level that holds it, then, where that leaves it open, texel by texel along it. It is taken at its
- * nearest all along, the nearest of its ends less its radius, which neither its flat quad nor its tube is nearer than,
- * and as wide as its quad. Those seen go on the seen list, those hidden by no more than \`KEEP_UM\` and those seen on the
- * kept list, which the next frame draws to depth before its tests: when the view moves, what was seen parts in thin
- * cracks, and with nothing behind them every block would show through one. A segment as wide on screen as a tube
- * (\`GpuUniforms.tubeFrom\`) goes on the lists' tubes. The lists are as long as the arena, which no frame can overfill.
- * A block with a segment kept is marked, a bit a block (\`marked\`), for the boxes seen to be read back.
+ * Tests each segment of the blocks handed on against the farthest depth drawn before it. First the whole segment is
+ * tested against the 2 × 2 texels of the level that holds it; where that leaves it open, it is tested texel by texel
+ * along its length. All along, it is taken at its nearest (the nearest of its ends less its radius, which neither its
+ * flat quad nor its tube is nearer than) and as wide as its quad. Segments seen go on the seen list. Segments seen, and
+ * those hidden by no more than \`KEEP_UM\`, go on the kept list, which the next frame draws to depth before its tests:
+ * when the view moves, what was seen parts in thin cracks, and with nothing behind them every block would show through
+ * one. A segment as wide on screen as a tube (\`GpuUniforms.tubeFrom\`) goes in the tubes' part of the lists. Each list
+ * is as long as the arena, so no frame can overfill it. A block with a kept segment is marked, a bit a block
+ * (\`marked\`), so that the boxes seen can be read back.
  */
 export const SEGMENTS = /* wgsl */ `
 ${VIEW}${BLOCK}${FARTHEST}${DRAW_ARGS}
@@ -212,9 +215,9 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
   }
   if (!open) { return 1u; }
 
-  // Row by row along the way it runs most, on the level where that is few enough rows. On the picture's own level a
-  // pixel counts where its centre is on the segment, as it is drawn; on a coarser one a texel counts wherever it may
-  // touch it.
+  // Walk row by row along the segment's major axis, on the level where that takes few enough rows. On the full-size
+  // level a pixel counts if its centre is on the segment, as when it is drawn; on a coarser level a texel counts if it
+  // may touch the segment at all.
   let m = u32(clamp(ceil(log2(max(ext / ${ROWS}.0, 1.0))), 0.0, f32(view.counts.x)));
   let k = 1.0 / f32(1u << m);
   let pad = select(0.01, 0.7072, m > 0u);
@@ -265,13 +268,13 @@ fn seen(a: vec2f, b: vec2f, r: f32, near: f32) -> u32 {
   return select(2u, 4u, kept);
 }
 
-// Segment \`i\` onto the lists it goes on; whether it is kept.
+// Puts segment \`i\` on the lists it belongs on; returns whether it is kept.
 fn listed(i: u32) -> bool {
   let A = ends[2u * i];
   let B = ends[2u * i + 1u];
   let e = segmentEnds(words[i], view.counts.w, 1.0, view.more.z, A, B, A, B, 0.0, view.shift.xyz, view.view,
                       view.projection, view.vp, view.shift.w);
-  // A hole, hidden, or behind the eye: drawn neither to be seen nor to hide others.
+  // A hole, a hidden segment, or one behind the eye: it is drawn neither to be seen nor to hide others.
   if (e[3].w < 0.5) { return false; }
   let radii = e[2].xy;
   let near = nearer(min(-e[0].z - e[0].w, -e[1].z - e[1].w));
@@ -295,7 +298,7 @@ fn listed(i: u32) -> bool {
 
 var<workgroup> keeps: atomic<u32>;
 
-// A workgroup a block: its segments tested, and the block marked once where one is kept.
+// One workgroup per block: it tests the block's segments, and marks the block once if any segment is kept.
 @compute @workgroup_size(64) fn main(@builtin(workgroup_id) wid: vec3u, @builtin(local_invocation_index) lid: u32) {
   let g = wid.y * 512u + wid.x;
   var c = 0u;
@@ -310,11 +313,12 @@ var<workgroup> keeps: atomic<u32>;
 `;
 
 /**
- * Each soma of the cloud drawn alone, a thread a soma, as a sphere of the radius it may be drawn at, against the
- * farthest drawn before it on the level of the pyramid where its box on screen is 2 × 2 texels, taken at its nearest.
- * Those seen go on the seen list, and they and those hidden by no more than \`KEEP_UM\` on the kept list, which the
- * next frame draws to depth before the test. A cell the cell table hides is on neither: drawing nothing, it hides
- * nothing behind it, and would be seen. The somas are \`positions\`, three floats each, in the order of their cells.
+ * Tests each soma of the cloud drawn alone, one thread per soma. A soma is taken as a sphere of the radius it may be
+ * drawn at, at its nearest, and tested against the farthest depth drawn before it, on the pyramid level where its box
+ * on screen is 2 × 2 texels. Somas seen go on the seen list; they and those hidden by no more than \`KEEP_UM\` go on
+ * the kept list, which the next frame draws to depth before the test. A cell the cell table hides goes on neither: it
+ * draws nothing, so it hides nothing behind it, and the test would count it as seen. The somas are \`positions\`,
+ * three floats each, in the order of their cells.
  */
 export const SOMAS = /* wgsl */ `
 ${VIEW}${FARTHEST}${DRAW_ARGS}
@@ -356,7 +360,7 @@ fn sphereSeen(c: vec3f, r: f32) -> u32 {
   return select(0u, 1u, near - ${KEEP_UM} <= far);
 }
 
-// Over two dimensions where the somas take more workgroups than one has.
+// Dispatched over two dimensions where the somas need more workgroups than one dimension allows.
 @compute @workgroup_size(64) fn main(@builtin(global_invocation_id) id: vec3u, @builtin(num_workgroups) n: vec3u) {
   let i = id.y * n.x * 64u + id.x;
   if (i >= view.counts.w) { return; }

@@ -1,11 +1,11 @@
 /**
  * Reads a morphology pack: the binary file Bluenaas writes of a circuit's morphologies, simplified, placed in the
  * circuit and cut into chunks of space. The format is specified in Bluenaas's `app/core/morphology_pack/docs/`
- * (`format.md`; what this reader relies on is in `reader-contract.md`). The index and the somas are read when the pack is
- * opened, and the chunks a box of space at a time: a level's box over its base's, whose boxes read last are kept a while
- * for the finer levels.
+ * (`format.md`; what this reader relies on is in `reader-contract.md`). The reader reads the index and the somas when
+ * it opens the pack, and the chunks one box of space at a time. A level's box is read over its base level's box, and
+ * the base boxes read last are kept a while for the finer levels.
  */
-// The whole of zod comes with `z` imported by name, and the reader runs in a worker of its own.
+// Importing `z` by name brings in the whole of zod, and this reader runs in a worker with a bundle of its own.
 import * as z from 'zod';
 
 import { Arriving } from './arriving';
@@ -18,17 +18,17 @@ const HEADER_BYTES = 12;
 const COUNTS_BYTES = 16;
 const SOMA_BYTES = 16;
 const SCRATCH_STREAMS = 13;
-/** What a box read as whole numbers takes a segment: two ends of four numbers, its cell and its type. */
+/** The bytes a segment takes in a box read as whole numbers: two ends of four numbers, its cell and its type. */
 const GRID_BYTES = 37;
-/** How much of the boxes read last is kept for the finer levels read over them. */
+/** How many bytes of the boxes read last are kept for the finer levels read over them. */
 const KEPT_BYTES = 64 * 1024 * 1024;
 /** Radius steps whose radius is looked up rather than worked out. */
 const RADIUS_TABLE = 512;
 /** The most deflate can inflate a byte to. */
 const MOST_INFLATED = 1032;
-/** The most an index inflates to, far more than a pack's. */
+/** The most an index may inflate to, far more than any pack's index needs. */
 const MOST_INDEX_BYTES = 64 * 1024 * 1024;
-/** The most bytes a segment takes in a chunk: a run's own four steps and its run's numbers, four bytes each. */
+/** The most bytes a segment takes in a chunk: its own four steps and its run's numbers, four bytes each. */
 const MOST_SEGMENT_BYTES = 13 * 4;
 
 const CUT_SHORT = 'morphology pack cut short';
@@ -86,7 +86,7 @@ type PackIndex = z.infer<typeof indexSchema>;
 async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Array> {
   const stream = new DecompressionStream('deflate');
   const writer = stream.writable.getWriter();
-  // What is not deflate fails the read below, and these with it.
+  // Bytes that are not deflate make the read below fail, and these two calls fail with it; the read reports it.
   writer.write(deflated as Uint8Array<ArrayBuffer>).catch(() => {});
   writer.close().catch(() => {});
   const reader = stream.readable.getReader();
@@ -107,7 +107,7 @@ async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Arr
     throw new PackError('morphology pack with a damaged block', { cause });
   }
   const [only] = parts;
-  // A buffer of its own: the somas are read as floats over the whole of it.
+  // Only a part that fills its own buffer is returned as it is: the somas are read as floats over the whole buffer.
   if (parts.length === 1 && only.byteOffset === 0 && only.byteLength === only.buffer.byteLength) {
     return only;
   }
@@ -120,7 +120,7 @@ async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Arr
   return all;
 }
 
-/** The index, and where in the file the blocks its offsets count in start. */
+/** The index, and where in the file the blocks start: the index's offsets count from there. */
 async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: number }> {
   const whole = await file.until(HEADER_BYTES);
   const header = file.bytes(0, HEADER_BYTES);
@@ -143,8 +143,8 @@ async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: nu
 }
 
 /**
- * Whether the levels' chunks agree with one another and with their bases, and each chunk's bytes could hold the
- * segments it says it has: a segment takes a byte at least once inflated.
+ * Whether the levels' chunks agree with one another and with their bases, and whether each chunk's bytes could hold the
+ * segments it claims. Once inflated, a segment takes at least a byte.
  */
 function soundLevels({ levels }: PackIndex): boolean {
   const sizes = new Set(
@@ -173,7 +173,7 @@ async function blockAt(file: Arriving, start: number, bytes: number): Promise<Ui
 
 const sum = (numbers: number[]) => numbers.reduce((total, n) => total + n, 0);
 
-/** A stream's `count` numbers into `out`, and where the next stream starts. */
+/** Reads a stream's `count` numbers into `out` and returns where the next stream starts. */
 function readStream(
   data: Uint8Array,
   at: number,
@@ -193,7 +193,7 @@ function readStream(
   return end;
 }
 
-/** A box's segments at a level, as whole numbers of the grid and of the radius' steps, in the order read. */
+/** A box's segments at one level, in grid steps and radius steps, in the order they were read. */
 interface Grid {
   count: number;
   /** x, y, z and radius step of each segment's near end, then of its far end. */
@@ -209,17 +209,17 @@ const gridOf = (count: number): Grid => ({
   types: new Uint8Array(count),
 });
 
-/** The base of a level read alone, never handed over. */
+/** The base of a level that has none. It is shared, so it is never handed over. */
 const NO_BASE = gridOf(0);
 
-/** The chord's guess of the next point: a `left`-th of the way from `from` on to `to`, rounded down. */
+/** Guesses the next point on the chord: a `left`-th of the way from `from` to `to`, rounded down. */
 const towards = (from: number, to: number, left: number) => from + Math.floor((to - from) / left);
-/** A step guessed from the one before it in its run; a run's first, with 0 before it, is guessed 0. */
+/** Guesses a step from the step before it in its run. A run's first step has 0 before it, so it is guessed as 0. */
 const guessed = (before: number) => (3 * before + 2) >> 2;
 
 /**
- * The segments that follow the base's in `grid` from the first on: for each base segment, from its near end through its
- * inner points to its far end. `counts` and `inner` are the streams read.
+ * Writes into `grid`, from its first segment on, the segments that follow the base's: for each base segment, from its
+ * near end through its inner points to its far end. `counts` and `inner` are the streams read.
  */
 function follow(base: Grid, counts: Int32Array, inner: Int32Array[], grid: Grid) {
   const [ix, iy, iz, ir] = inner;
@@ -266,7 +266,7 @@ function follow(base: Grid, counts: Int32Array, inner: Int32Array[], grid: Grid)
   }
 }
 
-/** A chunk's runs read from `at` into the end of `grid`, of the pack's `cells`; where they end. */
+/** Reads a chunk's runs from `at` into the end of `grid` and returns where they end. The pack has `cells` cells. */
 function readRuns(
   data: Uint8Array,
   at: number,
@@ -357,13 +357,13 @@ function readRuns(
 }
 
 interface Scratch {
-  /** Arrays as long as the largest chunk has segments, for its streams. */
+  /** Arrays for a chunk's streams, each as long as the largest chunk's count of segments. */
   streams: Int32Array[];
   /** Each run's far end, four numbers a run. */
   runEnds: Int32Array;
 }
 
-/** A chunk's inflated block read over `base`, the base's segments in its box: `count` segments. */
+/** Reads a chunk's inflated block, `count` segments, over `base`: the base level's segments in the same box. */
 function readChunk(
   data: Uint8Array,
   corner: Vec3,
@@ -402,9 +402,9 @@ function readChunk(
 const hasPosition = (somas: Float32Array, i: number) =>
   Number.isFinite(somas[i] + somas[i + 1] + somas[i + 2]);
 
-/** Around the pack's points and the somas that have a position, in µm in the circuit's frame; null if none. */
+/** The box around the pack's points and the somas that have a position, µm in the circuit's frame; null if none. */
 function boxOf(index: PackIndex, somas: Float32Array) {
-  // The index's bounds are the first level's, and the origin alone where it has no segments.
+  // The index's bounds are the first level's, and only the origin where that level has no segments.
   const none = index.levels[0].segments === 0;
   const min = index.bounds[0].map((steps) => (none ? Infinity : steps * index.gridUm)) as Vec3;
   const max = index.bounds[1].map((steps) => (none ? -Infinity : steps * index.gridUm)) as Vec3;
@@ -419,8 +419,9 @@ function boxOf(index: PackIndex, somas: Float32Array) {
 }
 
 /**
- * Every level's chunks gathered in boxes, a box each place a level has a chunk: each box's cube in grid steps grown by
- * the farthest its chunks reach, least then greatest, and its chunk at each level, -1 for none.
+ * Gathers every level's chunks into boxes, one box for each place where any level has a chunk. `corners` holds each
+ * box's cube in grid steps, grown by the farthest any of its chunks reaches, least corner then greatest. `inBox` holds
+ * each box's chunk at each level, -1 for none.
  */
 function gatherBoxes(index: PackIndex): { corners: number[]; inBox: number[][] } {
   const numbers = new Map<string, number>();
@@ -452,7 +453,7 @@ function gatherBoxes(index: PackIndex): { corners: number[]; inBox: number[][] }
   return { corners, inBox };
 }
 
-/** The boxes read last, as whole numbers, kept for the finer levels read over them while they fit in `bytes`. */
+/** Keeps the boxes read last, as whole numbers, for the finer levels read over them, as long as they fit in `bytes`. */
 class Kept {
   private readonly held = new Map<number, { grid: Promise<Grid>; bytes: number }>();
   private total = 0;
@@ -489,22 +490,22 @@ class Kept {
   }
 }
 
-/** A pack opened: its somas and frame, where its segments lie, and each box's read when asked for. */
+/** An open pack: its somas and frame, where its segments lie, and a read of each box when asked. */
 export interface Pack extends PackBoxes {
-  /** The somas, the populations, the frame and the bounds, with no segments; the level is the finest. */
+  /** The somas, the populations, the frame and the bounds, with no segments. The bounds hold the finest level and every placed soma. */
   data: CircuitMorphologyData;
-  /** The segments level `level` has in box `box`, their cells numbered as the pack numbers them. */
+  /** Reads the segments of box `box` at level `level`, with their cells numbered as the pack numbers them. */
   readBox(level: number, box: number): Promise<MorphologySegments>;
   /**
-   * Of each level, how much of the file each box needs in to be read at it: up to the end of its chunk and of its
-   * bases' (0 where it has none).
+   * For each level, how many bytes of the file must be in before each box can be read at it: up to the end of its chunk
+   * and of its bases' chunks (0 where there are none).
    */
   readableAt: Float64Array[];
 }
 
 /**
- * The index and the somas of a pack, read now, or once they are in where the pack is still coming in; its chunks are
- * read a box at a time (`readBox`), each once its bytes and its bases' are in.
+ * Opens a pack: reads its index and somas now, or once their bytes are in if the pack is still coming in. Its chunks
+ * are read a box at a time (`readBox`), each once its bytes and its bases' bytes are in.
  */
 export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
   const file = bytes instanceof Arriving ? bytes : Arriving.whole(bytes);
@@ -583,14 +584,14 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     const chunk = inBox[b][level];
     return chunk < 0 ? 0 : index.levels[level].chunks.segments[chunk];
   };
-  // Shared by every read, as a chunk is read with no wait between; grown to the largest chunk read so far.
+  // Shared by every read: `readChunk` never waits, so no two reads use it at once. Grown to the largest chunk so far.
   let scratch: Scratch | null = null;
   const kept = new Kept(KEPT_BYTES);
 
   const readGrid = async (level: number, b: number): Promise<Grid> => {
     const { base, chunks, chunkSteps } = index.levels[level];
     const chunk = inBox[b][level];
-    // Its own, not the shared one: a box read is handed over.
+    // A fresh empty grid, not `NO_BASE`: the box read is handed over.
     if (chunk < 0) return gridOf(0);
     const count = chunks.segments[chunk];
     // Each base segment's count takes up to four bytes.
@@ -602,7 +603,7 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
         inflate(block, mostBytes)
       ),
     ]);
-    // Checked before anything is made for the chunk's segments, each of which takes a byte at least.
+    // Checked before anything is made for the chunk's segments: each segment takes at least a byte.
     if (count > inflated.length) throw new PackError(AT_ODDS);
     const most = Math.max(count, under.count);
     if (!scratch || scratch.runEnds.length < 4 * most) {
@@ -631,8 +632,8 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     }
     const grid = await gridAt(level, b);
     const { ends } = grid;
-    // A box kept for the finer levels is not handed over: its cells are numbered again in place. Any other box's whole
-    // numbers are made micrometres where they lie, each read before it is written over.
+    // A box kept for the finer levels is copied, not handed over, because its cells are renumbered in place. Any other
+    // box's whole numbers become micrometres in the same buffer, each read before it is written over.
     const kept = isBase[level];
     const segments = kept ? new Float32Array(ends.length) : new Float32Array(ends.buffer);
     const [cx, cy, cz] = centre;

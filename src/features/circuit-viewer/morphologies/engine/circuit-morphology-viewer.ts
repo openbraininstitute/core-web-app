@@ -15,7 +15,7 @@ import { electrodeMaterial } from './electrodes';
 import { idMaterial, impostor } from './impostors';
 import { somaCloudIdMaterial, somaCloudMaterial } from './soma-cloud';
 
-/** `pixels`, a square `side` wide read from WebGL bottom row first, top row first. */
+/** Reorders `pixels`, a square `side` wide that WebGL reads bottom row first, to top row first. */
 function topDown(pixels: Uint8Array, side: number): Uint8Array {
   const rows = new Uint8Array(pixels.length);
   const stride = 4 * side;
@@ -28,15 +28,16 @@ function topDown(pixels: Uint8Array, side: number): Uint8Array {
 /**
  * The circuit's morphologies on WebGL 2 (`CircuitView`), the fallback where WebGPU is missing. Frames go straight to
  * the antialiased canvas, with no ambient occlusion: a flat quad has a flat depth. They are timed on the GPU
- * (`GpuTimer`) where the view asks. Its context lost, it draws no more, and `onLost` is told, to make the view anew.
+ * (`GpuTimer`) where the view asks. When its context is lost, it stops drawing and calls `onLost`, so that the view can
+ * be made anew.
  */
 export class CircuitMorphologyViewer extends CircuitView {
   protected materials: CircuitMaterials;
   private renderer: THREE.WebGLRenderer;
   private idTarget: THREE.WebGLRenderTarget | null = null;
   /**
-   * What frames cost the GPU, made the first time one is timed, null without WebGL 2; and what the frame it times was
-   * timed for.
+   * The timer that measures what frames cost the GPU, made the first time a frame is timed, or null without WebGL 2;
+   * and what the frame it is measuring was timed for.
    */
   private timer: GpuTimer | null | undefined;
   private timed: FrameTiming | null = null;
@@ -103,7 +104,7 @@ export class CircuitMorphologyViewer extends CircuitView {
     this.renderer.setPixelRatio(this.pixelRatio * scale);
   }
 
-  /** A frame, timed on the GPU where `timing` asks and no other is being timed. */
+  /** Draws a frame, timed on the GPU where `timing` asks for it and no other frame is being timed. */
   protected override draw(): void {
     const { timing } = this;
     const timer = timing ? this.timerNow() : null;
@@ -129,7 +130,10 @@ export class CircuitMorphologyViewer extends CircuitView {
     return this.timer;
   }
 
-  /** Told once: the browser took the context back, most often the oldest where a page asks for more than it allows. */
+  /**
+   * Calls `onLost` once. The browser took the context back, most often because the page asked for more contexts than
+   * it allows and this one was the oldest.
+   */
   private onContextLost = (): void => {
     const told = this.onLost;
     this.onLost = null;
@@ -147,7 +151,7 @@ export class CircuitMorphologyViewer extends CircuitView {
       .then(() => topDown(pixels, side));
   }
 
-  /** Built for the pick's target: three builds a program for the colour space and tone mapping of where it draws. */
+  /** Compiles for the pick's target: three builds a program for the colour space and tone mapping of its target. */
   protected override compile(scene: THREE.Scene): void {
     const { renderer } = this;
     renderer.setRenderTarget(this.pickTarget());

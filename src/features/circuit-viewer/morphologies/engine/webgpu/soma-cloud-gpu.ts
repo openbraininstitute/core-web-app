@@ -35,7 +35,9 @@ export interface SomaSource {
   centre: Node<'vec3'>;
 }
 
-/** The pyramid's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view. */
+/**
+ * The pyramid's corner, as `soma-cloud.ts` places it; a cell not drawn has its corners at one point outside the view.
+ */
 const cloudCorner = wgslFn(
   /* wgsl */ `
 fn cloudCorner(centre: vec3f, corner: vec3f, offset: vec3f, radius: f32, modelView: mat4x4f, projection: mat4x4f,
@@ -56,7 +58,7 @@ fn cloudLook(cell: u32, highlighted: u32, texel: vec4f, glow: f32, shade: vec4f,
   if (cell == highlighted) {
     colour = toSRGB(highlight);
   } else if (shade.g < 0.5) {
-    // How crowded the cell is darkens it by up to 55%; with no colour of its own it runs along the blue ramp.
+    // Crowding darkens the cell by up to 55%; a cell with no colour of its own takes its colour from the blue ramp.
     colour = colour * (1.0 - 0.55 * shade.r);
   } else if (shade.r < 0.5) {
     colour = mix(${srgbWGSL(BLUE_RAMP[0])}, ${srgbWGSL(BLUE_RAMP[1])}, 2.0 * shade.r);
@@ -78,19 +80,20 @@ fn cloudColour(coord: vec2f, look: vec4f, alpha: f32, rimOn: f32) -> vec4f {
   let z2 = 1.0 - dot(coord, coord);
   let facing = 0.5 * (1.0 + dot(vec3f(coord, sqrt(max(z2, 0.0))), vec3f(${LIGHT.map((v) => v.toFixed(6)).join(', ')})));
   let shaded = look.rgb * (0.5 + 0.5 * smoothstep(0.0, 1.0, facing)) + 0.33 * pow(facing, 50.0);
-  // Light of its own while it glows, and a ring at its edge where the morphologies have one.
+  // A glowing soma gives light of its own, and gets a ring at its edge where the morphologies have one.
   let hot = shaded + 0.2 * look.a * look.rgb;
   let rim = look.a * rimOn * smoothstep(0.9, 1.0, length(coord));
   return vec4f(mix(hot, ${srgbWGSL(GLOW_RIM_COLOR)}, rim), alpha);
 }`);
 
-/** The corner on the unit disc, straight across the screen, as `discCoord` in `soma-cloud.ts` has it. */
+/** The corner on the unit disc, interpolated straight across the screen, as `discCoord` in `soma-cloud.ts` has it. */
 export const DISC_COORD = varying(positionGeometry.xy).setInterpolation('linear');
 
 /**
- * The somas of `soma-cloud.ts` on WebGPU: a pyramid a cell at its position, shaded as a sphere and drawn as it comes out,
- * as on WebGL 2, and for the occlusion, the sphere's surface (`surfaceOf`); and the same pyramids in their cells'
- * numbers. Each reads its cell and centre where it is given them (`SomaSource`).
+ * The somas of `soma-cloud.ts` on WebGPU. The cloud material draws one pyramid per cell at its position, shaded as a
+ * sphere and drawn as it comes out, as on WebGL 2, and writes the sphere's surface for the occlusion (`surfaceOf`). The
+ * id material draws the same pyramids in their cells' numbers. Both read each soma's cell and centre from where they
+ * are given (`SomaSource`).
  */
 export function somaCloudMaterials(
   u: GpuUniforms,
@@ -133,7 +136,7 @@ export function somaCloudMaterials(
     highlight: u.highlight,
   });
   const alpha = cloudAlpha({ cell, highlighted: u.highlighted, glow, opacity: u.opacity });
-  // Not a fragment node, which would write nothing of the occlusion's surface (`Occlusion`).
+  // Not a fragment node: a fragment node would write nothing to the occlusion's surface (`Occlusion`).
   cloud.maskNode = outside.not();
   cloud.outputNode = typed<'vec4'>(
     cloudColour({

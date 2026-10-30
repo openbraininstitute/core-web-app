@@ -8,9 +8,9 @@ import type { CircuitMorphologyView } from '../types';
 export type Tier = 'webgpu' | 'webgl';
 /** What the debug tools ask for: WebGPU where the browser has it, or WebGL 2 whatever it has. */
 export type TierChoice = 'auto' | 'webgl';
-/** How a WebGPU view gave out: its device lost, or out of memory for a pack's arena. */
+/** How a WebGPU view failed: its device was lost, or it ran out of memory for a pack's arena. */
 export type Lost = 'reset' | 'memory';
-/** Why WebGL 2 draws a view WebGPU was asked for, where the page says so: the browser has none, or a view gave out. */
+/** Why WebGL 2 draws a view WebGPU was asked for, where the page says why: the browser has none, or a view failed. */
 export type Fallback = 'missing' | Lost;
 
 export interface CreatedView {
@@ -28,8 +28,8 @@ const REASONS: Record<Fallback, string> = {
 };
 
 /**
- * How a WebGPU view gave out for good: WebGL 2 for the rest of the page's life. The first reset does not count, as the
- * browser often hands out a new device after one; running out of memory does.
+ * How a WebGPU view failed for good. Once it is set, views use WebGL 2 for the rest of the page's life. The first reset
+ * does not count, as the browser often hands out a new device after one; running out of memory does.
  */
 let lost: Lost | null = null;
 let resets = 0;
@@ -44,11 +44,12 @@ function onWebGL(
 }
 
 /**
- * A view of a circuit in `host`, drawn with WebGPU where the browser grants a device fit for it, else with WebGL 2: at
- * once where WebGPU is out of the question, once the device is asked for where it is not. If the view gives out, its
- * device lost or out of memory, `onLost` is told, and the views made after draw with WebGL 2 (after a second reset,
- * or the first time memory runs out). It is told too when a WebGL 2 view's context is lost, and the next is made alike. Aborted (`signal`)
- * while the device is asked for, no view is made, and the promise rejects with the signal's reason.
+ * Makes a view of a circuit in `host`. It draws with WebGPU where the browser grants a device fit for it, else with
+ * WebGL 2. The view comes at once where WebGPU is out of the question; otherwise it comes once the device has been
+ * asked for. If a WebGPU view fails (its device lost, or out of memory), `onLost` is called, and views made after a
+ * second reset, or after the first time memory runs out, draw with WebGL 2. `onLost` is also called when a WebGL 2
+ * view loses its context, and the next view is made by the same rules. If `signal` aborts while the device is asked
+ * for, no view is made, and the promise rejects with the signal's reason.
  */
 export function createCircuitView(
   host: HTMLElement,
@@ -60,7 +61,7 @@ export function createCircuitView(
   if (lost) return onWebGL(host, onLost, REASONS[lost], lost);
   const gpu = globalThis.navigator?.gpu;
   if (!gpu) return onWebGL(host, onLost, REASONS.missing, 'missing');
-  // Fetched while the device is asked for.
+  // Load the WebGPU engine while the device is asked for.
   const engine = import('./webgpu/circuit-morphology-gpu');
   engine.catch(() => {});
   return probeWebGPU(gpu).then(async (probed) => {

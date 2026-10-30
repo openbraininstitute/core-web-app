@@ -9,16 +9,16 @@ const ROW = 1 << ROW_BITS;
 
 const HIDDEN = [0, 0, 0, 0];
 const opaque = (color: string) => [...chroma(color).rgb(), 255];
-/** The alpha of a cell drawn in its sections' colours, whose own colour is its soma's. */
+/** The alpha of a cell drawn in its sections' colours. The cell's own colour is then its soma's. */
 export const BY_SECTION = 254;
-/** How crowded a cell is taken to be until it is known, as the somas view did: halfway. */
+/** How crowded a cell is assumed to be until its crowding is known: halfway, as the somas view did. */
 const HALF_CROWDED = 128;
-/** The glow kept is the glow to this power: held near full, then let go. */
+/** The stored glow is the glow raised to this power, so it stays near full, then drops off. */
 export const GLOW_POWER = 0.4;
 
 /**
- * Writes rows of `texture`, a byte a cell, from `texels` straight to the GPU where it can, in place of three uploading
- * the whole: false where it cannot.
+ * Writes the given rows of `texture` (a byte a cell) from `texels` straight to the GPU, so that three does not upload
+ * the whole texture. Returns false where it cannot.
  */
 export type GlowRowsWriter = (
   texture: THREE.DataTexture,
@@ -26,7 +26,10 @@ export type GlowRowsWriter = (
   rows: readonly number[]
 ) => boolean;
 
-/** Each cell's soma (`CircuitMorphologyData.somas`) laid out as the cell table: x, y and z, and w 1 where it has a place. */
+/**
+ * Lays out each cell's soma (`CircuitMorphologyData.somas`) like the cell table: x, y and z, and w = 1 where the soma
+ * has a position.
+ */
 export function somaTexture(somas: Float32Array): THREE.DataTexture {
   const cells = Math.floor(somas.length / 4);
   const rows = Math.max(1, Math.ceil(cells / ROW));
@@ -40,10 +43,10 @@ export function somaTexture(somas: Float32Array): THREE.DataTexture {
 }
 
 /**
- * A texel a cell, which the shaders look up by the cell's number: its colour, and in alpha whether it is drawn.
- * Colouring, hiding and receding cells rewrite this texture and nothing else. How brightly each cell glows is a
- * texture of its own beside it, a byte a cell, which a spike replay rewrites every frame. A third, which only the
- * somas read, holds two bytes a cell: how crowded its neighbourhood is, and 255 where it has no colour of its own.
+ * One texel a cell, which the shaders look up by cell number: the cell's colour, and in alpha whether it is drawn.
+ * Colouring, hiding and receding cells rewrite this texture and nothing else. A second texture, a byte a cell, holds
+ * how brightly each cell glows; a spike replay rewrites it every frame. A third, read only by the somas, holds two
+ * bytes a cell: how crowded the cell's neighbourhood is, and 255 where the cell has no colour of its own.
  */
 export class CellTable {
   readonly texture: THREE.DataTexture;
@@ -55,7 +58,7 @@ export class CellTable {
   /** The cells that glow in `glowTexels`. */
   private lit: readonly number[] = [];
   private hiding = false;
-  /** What the cells in section colours were last painted in; null where none is. */
+  /** The section colours of the last paint; null where no cell is in section colours. */
   sectionColors: SectionColors | null = null;
 
   constructor(
@@ -86,9 +89,9 @@ export class CellTable {
   }
 
   /**
-   * How brightly each cell glows, from 0 to 1, by its number, kept as the somas view shapes it: held near full, then let
-   * go. Only the cells of `lit` glow, so only they and those that glowed before are looked at, and only the rows they
-   * are in uploaded. True where that changed a cell.
+   * Sets how brightly each cell glows, from 0 to 1 by cell number, stored as the somas view shapes it: held near full,
+   * then dropping off. Only the cells in `lit` glow, so only they and the cells that glowed before are checked, and
+   * only the rows holding a changed cell are uploaded. Returns true where a cell changed.
    */
   glow(glow: Readonly<Float32Array>, lit: readonly number[]): boolean {
     const rows = new Set<number>();
@@ -114,7 +117,7 @@ export class CellTable {
     return true;
   }
 
-  /** How crowded each cell's neighbourhood is, from 0 to 255 by its number; null takes every cell as half crowded. */
+  /** Sets how crowded each cell's neighbourhood is, 0 to 255 by cell number; null makes every cell half crowded. */
   setCrowding(crowding: Readonly<Uint8Array> | null): void {
     for (let cell = 0; cell < this.cells; cell++) {
       this.shadeTexels[2 * cell] = crowding ? crowding[cell] : HALF_CROWDED;
@@ -123,8 +126,9 @@ export class CellTable {
   }
 
   /**
-   * Each cell in its column's colour, or in `own` where it has no column or its column has no colour of its own. A cell
-   * in section colours is in the soma's, and `sectionColors` are the last of the palette.
+   * Paints each cell in its column's colour, or in `own` where the cell has no column or the column has no colour of
+   * its own. A cell in section colours takes its soma's colour, and `sectionColors` becomes the last section colours in
+   * the palette.
    */
   paint(colors: CellColors | null, own: string): void {
     const ownRgba = opaque(own);
@@ -141,7 +145,7 @@ export class CellTable {
     const byCell = colors?.columnByCell;
     let ownChanged = false;
     for (let cell = 0; cell < this.cells; cell++) {
-      // Past the end of either, there is no column.
+      // Past the end of either array, the cell has no column.
       const rgba = (byCell && columns[byCell[cell]]) ?? ownRgba;
       for (let k = 0; k < 4; k++) this.texels[4 * cell + k] = rgba[k];
       const own = rgba === ownRgba ? 255 : 0;

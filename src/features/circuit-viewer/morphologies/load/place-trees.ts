@@ -48,9 +48,9 @@ function place(
 }
 
 /**
- * The cells drawn as their morphologies where `trees` has one, each turned and moved to its cell's place, and as a
- * soma `PLACEHOLDER_SOMA_RADIUS` wide at its position where it has none, or none yet; less `centre` throughout. A cell
- * without a position has nothing drawn. The morphologies are kept, not copied.
+ * The cells drawn as their morphologies where `trees` has one, each turned and moved to its cell's place. A cell with
+ * no morphology, or none yet, is drawn as a soma of radius `PLACEHOLDER_SOMA_RADIUS` at its position. Every position
+ * has `centre` taken off. A cell without a position has nothing drawn. The morphologies are kept, not copied.
  */
 export function placeTrees(
   { somas: { positions, populations }, orientations }: TreeCells,
@@ -71,7 +71,7 @@ export function placeTrees(
   const segmentTypes = new Uint8Array(total);
   const somaArray = new Float32Array(4 * cells);
   const firstSegments = new Uint32Array(cells);
-  // The dendrograms, where any was charted; a cell with none stands in it as it is.
+  // The dendrograms, if any tree was charted; a cell without one appears in the chart as it is drawn in space.
   const chart = morphologies.some((tree) => tree?.chart)
     ? { segments: new Float32Array(8 * total), somas: new Float32Array(4 * cells) }
     : undefined;
@@ -116,7 +116,7 @@ export function placeTrees(
     trees: { morphologies, firstSegments },
     chart,
   };
-  // Round both, which the view goes between.
+  // Bounds around both the morphologies and the dendrograms, since the view moves between them.
   const extents = [
     morphologiesExtent(data),
     chart && morphologiesExtent({ ...chart, segmentCells }),

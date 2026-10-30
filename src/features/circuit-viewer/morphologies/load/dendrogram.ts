@@ -1,8 +1,8 @@
 /**
  * A morphology laid out as its dendrogram, as morphoviewer charted an ME-model: each section a column, branching
  * across x by its share of the tree's leaves, path distance from the soma up y, both scaled to the cell's own extent
- * so that the chart takes about the room the cell did and the morph between them stays in frame. The same segments, in
- * the same order, so that a branch is followed from one to the other.
+ * so that the chart takes about the room the cell did and the morph between them stays in frame. It has the same
+ * segments in the same order, so that a branch can be followed from one to the other.
  */
 import { SectionType } from '@/features/circuit-viewer/section-type';
 
@@ -51,9 +51,9 @@ function strokes(
 }
 
 /**
- * `tree`'s dendrogram in its own frame: eight floats a segment as its `segments`, a segment of a section on that
- * section's column, its stem the column's foot, its joint across from its parent's column (the soma's, x = 0, for a
- * root section), all in z = 0; and the soma, a ball at the foot of the chart. `kinds` says what each segment is.
+ * `tree`'s dendrogram in its own frame, eight floats a segment as in its `segments`, all in z = 0. A section's segments
+ * lie on its column, its stem at the column's foot, and its joint runs across from its parent's column (the soma's,
+ * x = 0, for a root section). The soma is a ball at the foot of the chart. `kinds` says what each segment is.
  */
 export function dendrogramOf(
   tree: Omit<TreeMorphology, 'chart'>,

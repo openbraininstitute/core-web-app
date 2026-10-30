@@ -3,10 +3,10 @@
  * screen, and the fragment shader hands the material the normal of the tube or the sphere under the pixel. The lights,
  * the tone mapping and the rest of the shading stay the look's.
  *
- * A segment's quad is flat: shaded as a cylinder across its width, at one depth, the tube's nearest. A soma's is a
- * sphere found per pixel, with its own depth.
+ * A segment's quad is flat: it is shaded as a cylinder across its width and drawn at one depth, the tube's nearest. A
+ * soma's quad finds the sphere per pixel and writes the sphere's own depth.
  *
- * The same quads drawn in each cell's number in place of its shading tell which cell is under a pixel (`idMaterial`).
+ * The same quads, drawn in each cell's number in place of its shading, tell which cell is under a pixel (`idMaterial`).
  */
 
 import chroma from 'chroma-js';
@@ -20,7 +20,7 @@ import { NEON, PULSE_FRONT_GLSL, SOMA_LINE, SPIKE_LIGHT_GLSL } from './spike-lig
 
 import type { SectionColors } from '../types';
 
-/** What the impostors' shaders read, one set a viewer. */
+/** What the impostors' shaders read: one set per viewer. */
 export interface ImpostorUniforms {
   /** The cell table's texture, and its glow beside it. */
   uCells: { value: THREE.Texture | null };
@@ -42,17 +42,18 @@ export interface ImpostorUniforms {
   uHighlighted: { value: number };
   uHighlight: { value: THREE.Color };
   /**
-   * The colour a glowing soma of the somas view is ringed in, and in w how much: on a light background, where a soma lit
-   * near white would read as fading out, and not on a dark one, where the ring would hide a small one.
+   * The colour of the ring round a glowing soma in the somas view, and in w how much of it. The ring shows on a light
+   * background, where a soma lit near white would seem to fade out, and not on a dark one, where it would hide a small
+   * soma.
    */
   uGlowRim: { value: THREE.Vector4 };
   /** The colours of a cell drawn in its sections' colours, by SWC's numbers: unknown, soma, axon, basal, apical. */
   uSectionColours: { value: THREE.Color[] };
-  /** The section type not drawn besides a hole's; `HOLE` for none. */
+  /** The section type not drawn, besides holes; `HOLE` for none. */
   uHidden: { value: number };
 }
 
-/** No cell has this number: the cell table has not that many texels. */
+/** No cell has this number: the cell table has fewer texels. */
 export const NO_CELL = 0xffffffff;
 /** The section type of a segment that is not drawn: a place in a buffer that no box holds. */
 export const HOLE = 255;
@@ -112,17 +113,18 @@ export function setSectionColours(uniforms: ImpostorUniforms, colors: SectionCol
   });
 }
 
-/** What every shader that draws cells needs of them, the soma cloud's included. */
+/** What every shader that draws cells needs, the soma cloud's included. */
 export const CELL_GLSL = /* glsl */ `
 ivec2 cellXY( uint cell ) {
 	return ivec2( int( cell & ${(1 << ROW_BITS) - 1}u ), int( cell >> ${ROW_BITS}u ) );
 }
-// A cell's number and one, a byte a channel, so that a pixel of zeros is no cell's.
+// The cell's number plus one, a byte per channel, so that a pixel of zeros belongs to no cell.
 vec4 cellId( uint cell ) {
 	uint id = cell + 1u;
 	return vec4( id & 255u, ( id >> 8u ) & 255u, ( id >> 16u ) & 255u, id >> 24u ) / 255.0;
 }
-// Brightened and taken a third of the way to a warm white, in sRGB, as the somas view lights a spiking soma.
+// Brightens the colour and takes it a third of the way to a warm white, in sRGB, as the somas view lights a spiking
+// soma.
 vec3 glowing( vec3 colour, float glow ) {
 	vec3 hot = mix( min( colour * 2.2, vec3( 1.0 ) ), vec3( 1.0, 0.97, 0.88 ), 0.35 );
 	return mix( colour, hot, glow );
@@ -132,9 +134,9 @@ const vec4 NOWHERE = vec4( 2.0, 2.0, 2.0, 1.0 );
 `;
 
 /**
- * `geometry` given what the segments' quads are placed by: both ends of each segment as x, y, z and radius, eight floats
- * a segment, the same in the dendrogram (`charted`, the ends again where none was charted), and its cell and type in a
- * word (`packCellTypes`).
+ * `geometry` with the attributes that place the segments' quads: both ends of each segment as x, y, z and radius, eight
+ * floats per segment; the same in the dendrogram (`charted`, a copy of the ends where none was charted); and each
+ * segment's cell and type in one word (`packCellTypes`).
  */
 export function segmentAttributes(
   geometry: THREE.InstancedBufferGeometry,
@@ -154,7 +156,7 @@ export function segmentAttributes(
 const CORNERS = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
 const TRIANGLES = [0, 1, 2, 2, 1, 3];
 
-/** `instances` of one shape, for the caller to add the attributes a shader places each by. */
+/** `instances` of one shape; the caller adds the attributes that a shader places each instance by. */
 export function instancedGeometry(
   corners: number[],
   triangles: number[],
@@ -183,8 +185,8 @@ float pixelUm( float z ) {
 
 /** `lifted`, for a vertex shader: as `VIEW_WGSL` has it. */
 export const LIFTED = /* glsl */ `
-// The view point p brought nearer the eye by lift, where it stays on screen: by half its depth at most, and behind the
-// near plane.
+// Brings the view point p nearer the eye by lift without moving it on screen: by at most half its depth, and never
+// past the near plane.
 vec3 lifted( vec3 p, float lift ) {
 	if ( isOrthographic ) return vec3( p.xy, p.z + lift );
 	float near = projectionMatrix[ 3 ][ 2 ] / ( projectionMatrix[ 2 ][ 2 ] - 1.0 );
@@ -225,10 +227,10 @@ vec3 viewToWorld( vec3 v ) {
 `;
 
 /**
- * What a kind adds to each shader: `impostorCorner`, a corner of its quad in view space, false where it is not drawn,
- * no thinner than `least` device pixels, `somaDistance`, how far the corner's end is from its cell's soma in µm, and
- * `impostorNormal`, the normal under the pixel in view space, and in `edge` how far the pixel is from the impostor's
- * edge and its radius, both in device pixels.
+ * What a kind adds to each shader. `impostorCorner` gives a corner of its quad in view space, no thinner than `least`
+ * device pixels, and returns false where the impostor is not drawn. `somaDistance` gives how far the corner's end is
+ * from its cell's soma, in µm. `impostorNormal` gives the normal under the pixel in view space, and in `edge` how far
+ * the pixel is from the impostor's edge and its radius, both in device pixels.
  */
 interface Kind {
   vertex: string;
@@ -259,8 +261,8 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	vec3 b = ( viewMatrix * vec4( B.xyz + uShift, 1.0 ) ).xyz;
 	float ra = A.w, rb = B.w;
 	if ( ! isOrthographic ) {
-		// Cut at twice the near plane's depth: nearer the eye an end has no place on screen, and up to there the lifted
-		// quad stays behind the near plane.
+		// Cut the segment at twice the near plane's depth. An end nearer the eye than that has no place on screen, and up
+		// to that depth the lifted quad stays behind the near plane.
 		float cut = - 2.0 * projectionMatrix[ 3 ][ 2 ] / ( projectionMatrix[ 2 ][ 2 ] - 1.0 );
 		if ( min( a.z, b.z ) > cut ) return false;
 		if ( a.z > cut ) {
@@ -285,15 +287,16 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	vec2 across = vec2( - along.y, along.x );
 	bool atB = corner.x > 0.0;
 	vec3 end = atB ? b : a;
-	// As wide on screen as the wider end all along, and a little more: narrowing with the tube, the quad's side would
-	// cut into the wider end.
+	// Keep the quad as wide on screen as the wider end along its whole length, plus a little. If the quad narrowed with
+	// the tube, its side would cut into the wider end.
 	float wide = ${QUAD_REACH} * max( vSegmentRadii.x, vSegmentRadii.y ) * ( atB ? umB : umA );
 	vec2 outward = ( atB ? along : - along ) + across * corner.y;
 	P = lifted( vec3( end.xy + outward * wide, end.z ), atB ? rb : ra );
 	return true;
 }
 
-// The real ends', not the dendrogram's. A cell with no place for its soma is lit as one with its soma under it.
+// Measured from the real ends, not the dendrogram's. A cell with no place for its soma is lit as if its soma were at
+// the corner's end.
 float somaDistance( vec3 corner ) {
 	vec4 soma = texelFetch( uSomas, cellXY( impostorCell() ), 0 );
 	return soma.w > 0.5 ? distance( ( corner.x > 0.0 ? aB : aA ).xyz, soma.xyz ) : 0.0;
@@ -304,8 +307,8 @@ flat in vec2 vSegmentA;
 flat in vec2 vSegmentB;
 flat in vec2 vSegmentRadii;
 
-// Round across the tube's width, and across only, as far from its edge, so that a round end carries on into the next
-// segment without a seam.
+// The normal is round across the tube's width only, set by how far the pixel is from the edge, so that a round end
+// carries on into the next segment without a seam.
 vec3 impostorNormal( out vec2 edge ) {
 	vec2 q = gl_FragCoord.xy;
 	vec2 ab = vSegmentB - vSegmentA;
@@ -343,15 +346,15 @@ bool impostorCorner( vec3 corner, float shown, float least, out vec3 P ) {
 	// How far from its centre the sphere reaches on screen, in µm at the centre's depth.
 	float reach = r;
 	if ( ! isOrthographic ) {
-		// From d away, at the angle t off the view's axis, the sphere spans asin( r / d ) either way, and reaches
-		// r / cos( t + asin( r / d ) ) outwards. lean / d2 is that cosine: under an eighth the eye is in the sphere, or all
-		// but, and it is not drawn.
+		// Seen from d away, at the angle t off the view's axis, the sphere spans asin( r / d ) either way and reaches
+		// r / cos( t + asin( r / d ) ) outwards. lean / d2 is that cosine. Below an eighth, the eye is inside the sphere
+		// or nearly so, and the soma is not drawn.
 		float d2 = dot( c, c );
 		float lean = - c.z * sqrt( max( d2 - r * r, 0.0 ) ) - length( c.xy ) * r;
 		if ( 8.0 * lean < d2 ) return false;
 		reach = r * d2 / lean;
 	}
-	// A little wider than the sphere. Its depth is the fragment shader's to write.
+	// Make the quad a little wider than the sphere. The fragment shader writes its depth.
 	P = vec3( c.xy + corner.xy * ( 1.2 * reach ), c.z );
 	vSomaCentre = c;
 	vSomaRadius = r;
@@ -371,7 +374,7 @@ flat in float vSomaRadius;
 flat in float vSomaRadiusPx;
 in vec3 vSomaPoint;
 
-// The sphere's own depth is written with it.
+// Also writes the sphere's own depth.
 vec3 impostorNormal( out vec2 edge ) {
 	vec3 ray = isOrthographic ? vec3( 0.0, 0.0, - 1.0 ) : normalize( vSomaPoint );
 	vec3 from = isOrthographic ? vec3( vSomaPoint.xy, vSomaCentre.z + 2.0 * vSomaRadius ) : vec3( 0.0 );
@@ -383,7 +386,8 @@ vec3 impostorNormal( out vec2 edge ) {
 	vec4 clip = projectionMatrix * vec4( p, 1.0 );
 	gl_FragDepth = clip.z / clip.w * 0.5 + 0.5;
 	vec3 n = normalize( p - vSomaCentre );
-	// Seen at an angle off the normal, a point of the sphere is drawn its sine of the radius from the centre.
+	// A point of the sphere seen at an angle off its normal is drawn the sine of that angle times the radius from the
+	// centre.
 	float facing = dot( n, - ray );
 	edge = vec2( vSomaRadiusPx * ( 1.0 - sqrt( max( 1.0 - facing * facing, 0.0 ) ) ), vSomaRadiusPx );
 	return n;
@@ -402,10 +406,10 @@ out float vGlow;
 out float vPulse;
 ${PULSE_FRONT_GLSL}
 
-// The kind's.
+// Defined by the kind.
 float sectionType();
 
-// A cell in its sections' colours is all but opaque in the cell table.
+// The cell table marks a cell drawn in its sections' colours with an alpha just under opaque.
 vec3 ownColour( vec4 cell ) {
 	if ( cell.a > ${(BY_SECTION + 0.5) / 255} ) return cell.rgb;
 	int type = int( sectionType() + 0.5 );
@@ -443,7 +447,7 @@ void main() {
 }
 `;
 
-/** What the impostors of each kind are numbered by in a pass of the segments: a segment by its own, a soma after them. */
+/** How each kind is numbered in a pass of the segments: a segment by its own number, a soma after all the segments. */
 const SEGMENT_NUMBERS: Record<KindName, string> = {
   segment: 'uint( gl_InstanceID )',
   soma: 'uSegments + impostorCell()',
@@ -503,8 +507,8 @@ export function impostor<T extends THREE.Material>(
         'vec4 cell = cellTexel();\n\tvGlow = cellGlow();' +
           '\n\t#ifdef USE_COLOR\n\t\tvColor = vec4( cellColour( ownColour( cell ) ), 1.0 );\n\t#endif'
       )
-      // The vertex normal is never shaded: the fragment shader finds its own. Glowing in full, a cell drawn at the
-      // least width is drawn at twice it, to be seen.
+      // The vertex normal is never shaded: the fragment shader finds its own. A cell that glows in full and is drawn
+      // at the least width is drawn at twice that width, so that it can be seen.
       .replace(
         '#include <beginnormal_vertex>',
         'vec3 cornerView;' +
@@ -512,7 +516,7 @@ export function impostor<T extends THREE.Material>(
           '\n\tvPulse = vGlow > 0.0 ? pulseFront( somaDistance( position ), vGlow, uAfterglow ) : 0.0;' +
           '\n\tvec3 objectNormal = vec3( 0.0, 0.0, 1.0 );'
       )
-      // Not drawn, its four corners are one point.
+      // An impostor that is not drawn has its four corners at one point.
       .replace(
         '#include <begin_vertex>',
         'vec3 transformed = cornerOn ? viewToWorld( cornerView ) : vec3( 0.0 );'
@@ -535,8 +539,8 @@ export function impostor<T extends THREE.Material>(
 
 /**
  * A material that draws the impostors of `kind` in their cells' numbers, where a cell is shown: the same quads, cut to
- * the same outlines and at the same depths as `impostor` draws them. With `segments`, in the segments' numbers, and
- * a soma in its cell's after those: `uSegments` + its cell.
+ * the same outlines and at the same depths as `impostor` draws them. With `segments`, it draws them in the segments'
+ * numbers instead, and a soma in its cell's number after those: `uSegments` + its cell.
  */
 export function idMaterial(
   kind: KindName,
@@ -563,8 +567,8 @@ export function idMaterial(
 }
 
 /**
- * The cell drawn nearest the middle of a square of pixels `side` wide, drawn by `idMaterial` and read as RGBA bytes;
- * null where none is drawn in it.
+ * The cell drawn nearest the middle of a square of pixels `side` wide, drawn by `idMaterial` and read back as RGBA
+ * bytes; null where no cell is drawn in it.
  */
 export function cellNearMiddle(pixels: Uint8Array, side: number): number | null {
   const middle = (side - 1) / 2;

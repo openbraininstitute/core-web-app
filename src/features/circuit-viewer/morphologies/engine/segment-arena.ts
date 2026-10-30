@@ -6,17 +6,17 @@ import type { MorphologySegments } from '../types';
 
 /** The bytes a segment takes on the GPU: its two ends, and its cell and type in a word. */
 export const SEGMENT_BYTES = 8 * 4 + 4;
-/** The segments the culling tests together, whose box it tests first. */
+/** How many segments the culling tests together as a block. It tests the block's box first. */
 export const BLOCK = 64;
 
 /** The room `segments` take in an arena: a whole number of blocks. */
 export const roomFor = (segments: number) => Math.ceil(segments / BLOCK) * BLOCK;
-/** Where the block that `slot` starts is in the blocks' array. */
+/** Where the block starting at `slot` is in the blocks' array. */
 const rowOf = (slot: number) => (8 * slot) / BLOCK;
-/** What the words of `count` segments uploaded alone come to, in segments. */
+/** The upload size of `count` segments' words alone, in segments. */
 const wordsOf = (count: number) => Math.ceil((4 * count) / SEGMENT_BYTES);
 
-/** The box whose room holds `slot`, by where each box's starts and the last's ends (`starts`). */
+/** The box whose room holds `slot`. `starts` holds where each box's room starts, and where the last one ends. */
 function boxAt(starts: Uint32Array, slot: number): number {
   let lo = 0;
   let hi = starts.length - 1;
@@ -29,7 +29,7 @@ function boxAt(starts: Uint32Array, slot: number): number {
 }
 
 /**
- * Where an arena's arrays are uploaded: told of the segments that changed and always of the blocks over them;
+ * Uploads an arena's arrays. It is told which segments changed, and always uploads the blocks over them too;
  * `wordsOnly` leaves out the segments' ends, never the blocks.
  */
 export interface ArenaUploads {
@@ -38,8 +38,8 @@ export interface ArenaUploads {
 }
 
 /**
- * An arena's uploads for its segments' ends (8 floats each), their cell-and-type words, and its blocks (8 words each:
- * the least x, y and z of their box, their first segment, the greatest x, y and z, and their segments).
+ * Makes an arena's uploads for its segments' ends (8 floats each), their cell-and-type words, and its blocks (8 words
+ * each: the least x, y and z of the block's box, its first segment, the greatest x, y and z, and its segment count).
  */
 export type UploadsOf = (
   ends: Float32Array,
@@ -49,7 +49,7 @@ export type UploadsOf = (
 
 const NO_UPLOADS: ArenaUploads = { upload() {}, dispose() {} };
 
-/** three's attributes on the quads `geometry`, which three uploads where they changed. */
+/** The arrays as three's attributes on the quads' `geometry`; three uploads the ranges that changed. */
 function attributesOf(
   geometry: THREE.InstancedBufferGeometry,
   ends: Float32Array,
@@ -78,16 +78,16 @@ interface Place {
 }
 
 /**
- * The segments of the boxes drawn, as the segments' quads take them, in arrays of a fixed number of segments drawn up
- * to the last box. A box's segments lie together, from the start of a block of `BLOCK`, its last block filled out with
- * holes. A box let go of leaves a hole, its segments' type `HOLE`, which the shaders draw nothing of; the smallest hole
- * a box fits in takes it, or else the end, and where neither has room every box is moved down to close the holes. Each
- * block has the box its segments are drawn in, empty where it has no segment. Only what changed before the end is
- * uploaded (`ArenaUploads`), so what reads the blocks reads none past it.
+ * Holds the segments of the boxes drawn, laid out as the segments' quads read them, in arrays of a fixed number of
+ * segments. The quads are drawn up to the last box. A box's segments lie together, starting at a block of `BLOCK`, with
+ * holes filling out its last block. A box let go of leaves a hole: its segments' type becomes `HOLE`, which the shaders
+ * draw nothing of. A box goes into the smallest hole it fits, or else at the end; where neither has room, every box is
+ * moved down to close the holes. Each block holds the box its segments are drawn in, empty where it has no segment.
+ * Only what changed before the end is uploaded (`ArenaUploads`), so whatever reads the blocks reads none past the end.
  *
- * With a base, the arena starts with room for each box at its base level, in the order of the boxes, which no other
- * box takes and which is never moved: a box's base is drawn there (`putBase`) while the box is put at no other level,
- * and holes with its blocks emptied while it is, so that every draw of the arena draws a box once.
+ * With a base, the arena starts with room for each box at its base level, in the boxes' order. No other box takes that
+ * room, and it never moves. A box's base is drawn there (`putBase`) while the box is not put at another level; while
+ * it is, the base's room is holes with its blocks emptied. So every draw of the arena draws each box once.
  */
 export class SegmentArena {
   readonly geometry: THREE.InstancedBufferGeometry;
@@ -101,9 +101,9 @@ export class SegmentArena {
   private uploads: ArenaUploads;
   private uploadsOf?: UploadsOf;
   private places = new Map<number, Place>();
-  /** By where they start, none touching another or the end. */
+  /** Sorted by where they start. No hole touches another or the end. */
   private holes: Place[] = [];
-  /** Where the last box's room ends: what is drawn. */
+  /** Where the last box's room ends: the quads are drawn up to here. */
   private end = 0;
   private live = 0;
   private used = 0;
@@ -111,12 +111,12 @@ export class SegmentArena {
   private baseAt: Uint32Array | null = null;
   /** Each box's base segments, -1 until it is put. */
   private baseCounts = new Int32Array(0);
-  /** The base's words, which the arena's are where no box hides them. */
+  /** The base's words. The arena's words match them wherever no box hides the base. */
   private baseWords = new Uint32Array(0);
 
   /**
-   * `geometry` is the segments' quad, drawn as many times as the arena has segments up to its last box; `capacity` is
-   * taken to a whole number of blocks; without `uploadsOf`, the arrays are three's attributes on `geometry`; `base`,
+   * `geometry` is the segments' quad, drawn once for each slot up to the end of the last box; `capacity` is rounded
+   * up to a whole number of blocks; without `uploadsOf`, the arrays are three's attributes on `geometry`; `base` gives
    * each box's segments at its base level, which the arena keeps room for.
    */
   constructor(
@@ -177,7 +177,7 @@ export class SegmentArena {
     return this.capacity - this.used;
   }
 
-  /** The segments of `box` put; undefined where it is not, its base aside. */
+  /** How many segments `box` has put; undefined where it is not put (its base does not count). */
   sizeOf(box: number): number | undefined {
     return this.places.get(box)?.count;
   }
@@ -188,8 +188,8 @@ export class SegmentArena {
   }
 
   /**
-   * The boxes drawn with a block marked in `marked`, a bit a block, each once. Marks read back a frame or two late are
-   * taken as they are: a box put since its base was marked is among them, and one moved since may be missed.
+   * The boxes drawn with a block marked in `marked` (a bit a block), each listed once. Marks read back a frame or two
+   * late are taken as they are: a box put since its base was marked is included, and a box moved since may be missed.
    */
   boxesMarked(marked: Uint32Array): number[] {
     const boxes: number[] = [];
@@ -204,10 +204,10 @@ export class SegmentArena {
     }
     const { baseAt } = this;
     if (!baseAt) return boxes;
-    // The base's blocks marked, each the box whose base it holds, in the boxes' order.
+    // Each marked block of the base stands for the box whose base it holds; the boxes come in order.
     const blocks = this.baseRoom / BLOCK;
     let found: Set<number> | null = null;
-    // Where the last box found's base ends: its other blocks are passed over.
+    // Where the base of the last box found ends: its other blocks are skipped.
     let past = 0;
     for (let word = 0; 32 * word < blocks; word++) {
       for (let bits = marked[word]; bits !== 0; bits &= bits - 1) {
@@ -227,8 +227,8 @@ export class SegmentArena {
   }
 
   /**
-   * `box`'s base drawn in the room kept for it, unless the box is put; it must not be put already, and must fit. What
-   * was uploaded, in segments.
+   * Puts `box`'s base in the room kept for it, and draws it unless the box is put. The base must not be put already,
+   * and must fit. Returns what was uploaded, in segments.
    */
   putBase(box: number, { segments, segmentCells, segmentTypes }: MorphologySegments): number {
     const { baseAt } = this;
@@ -247,12 +247,12 @@ export class SegmentArena {
     return n;
   }
 
-  /** Where `box`'s base starts, where one of some segments is put; else -1. */
+  /** Where `box`'s base starts, if a base with segments is put; else -1. */
   private baseStart(box: number): number {
     return this.baseAt && this.baseCounts[box] > 0 ? this.baseAt[box] : -1;
   }
 
-  /** `box`'s base drawn, where it has one: its words, and its blocks over its ends; its segments. */
+  /** Draws `box`'s base, if it has one: sets its words, and its blocks over its ends. Returns its segments. */
   private drawBase(box: number): number {
     const start = this.baseStart(box);
     if (start < 0) return 0;
@@ -263,14 +263,14 @@ export class SegmentArena {
     return n;
   }
 
-  /** `box`'s base drawn again, its words and blocks uploaded; what was uploaded, in segments. */
+  /** Draws `box`'s base again and uploads its words and blocks; returns what was uploaded, in segments. */
   private showBase(box: number): number {
     const n = this.drawBase(box);
     if (n > 0) this.upload(this.baseStart(box), n, true);
     return wordsOf(n);
   }
 
-  /** `box`'s base hidden, where it has one, its words and blocks uploaded; what was uploaded, in segments. */
+  /** Hides `box`'s base, if it has one, and uploads its words and blocks; returns what was uploaded, in segments. */
   private hideBase(box: number): number {
     const start = this.baseStart(box);
     if (start < 0) return 0;
@@ -281,14 +281,15 @@ export class SegmentArena {
     return wordsOf(n);
   }
 
-  /** The room `box` takes more with `segments` drawn in place of what it has. */
+  /** How much more room `box` takes with `segments` drawn in place of what it has. */
   growthOf(box: number, segments: number): number {
     return roomFor(segments) - roomFor(this.sizeOf(box) ?? 0);
   }
 
   /**
-   * `box`'s segments drawn in place of what it has, its base hidden all along; they must fit. What was uploaded, in
-   * segments: their room, every box's where the holes had to be closed, and its base's words.
+   * Draws `segments` for `box` in place of what it has; its base stays hidden while the box is put. They must fit.
+   * Returns what was uploaded, in segments: their room, every box's where the holes had to be closed, and the words of
+   * what it had or of its base.
    */
   replace(box: number, segments: MorphologySegments): number {
     const was = this.places.has(box) ? this.unplace(box) : this.hideBase(box);
@@ -296,15 +297,15 @@ export class SegmentArena {
   }
 
   /**
-   * `box`'s segments no longer drawn, a hole in their place, its base drawn again. What was uploaded, in segments: their
-   * words alone, and its base's.
+   * Stops drawing `box`'s segments, leaving a hole in their place, and draws its base again. Returns what was uploaded,
+   * in segments: their words alone, and its base's.
    */
   remove(box: number): number {
     if (!this.places.has(box)) return 0;
     return this.unplace(box) + this.showBase(box);
   }
 
-  /** `box`'s segments drawn, where they fit; what was uploaded, in segments. */
+  /** Draws `box`'s segments, which must fit; returns what was uploaded, in segments. */
   private place(box: number, { segments, segmentCells, segmentTypes }: MorphologySegments): number {
     const n = segmentCells.length;
     const room = roomFor(n);
@@ -327,7 +328,7 @@ export class SegmentArena {
     return uploaded;
   }
 
-  /** `box`'s segments let go of, a hole in their place; what was uploaded, in segments: their words alone. */
+  /** Lets go of `box`'s segments, leaving a hole in their place. Returns the segments uploaded: their words alone. */
   private unplace(box: number): number {
     const place = this.places.get(box);
     if (!place) return 0;
@@ -338,21 +339,21 @@ export class SegmentArena {
     this.used -= room;
     this.hole(place.start, place.count);
     this.leave({ start: place.start, count: room });
-    // The last box's words are past the end once it goes, where nothing is drawn.
+    // Once the last box goes, its words are past the end, where nothing is drawn.
     const count = place.start < this.end ? place.count : 0;
     this.upload(place.start, count, true);
     return wordsOf(count);
   }
 
-  /** Holes for the `count` segments from `start`, their blocks emptied. */
+  /** Turns the `count` segments from `start` into holes, and empties their blocks. */
   private hole(start: number, count: number): void {
     this.words.fill(HOLE_WORD, start, start + count);
     this.blocks.fill(0, rowOf(start), rowOf(start + roomFor(count)));
   }
 
   /**
-   * What it uploads to let go of, and its arrays, which a read still under way would keep past a new arena's otherwise
-   * (on WebGPU; on WebGL 2 its quads' attributes hold them too); its quads are the caller's.
+   * Lets go of what it uploads to, and of its arrays: otherwise a read still under way would keep them alive alongside
+   * a new arena's (on WebGPU; on WebGL 2 its quads' attributes hold them too). Its quads belong to the caller.
    */
   dispose(): void {
     this.uploads.dispose();
@@ -365,8 +366,9 @@ export class SegmentArena {
   }
 
   /**
-   * The boxes of the blocks from the one `start` starts on, over `segments`: each end's reach (`QUAD_REACH`) in each
-   * axis. A block's first segment is kept with its box's least corner, and its segments with its greatest.
+   * Sets the boxes of the blocks over `segments`, from the block at `start`: each box covers each end's reach
+   * (`QUAD_REACH`) in each axis. A block keeps its first segment next to its box's least corner, and its segment count
+   * next to the greatest.
    */
   private bound(segments: Float32Array, start: number): void {
     const { blocks, blockWords } = this;
@@ -399,7 +401,7 @@ export class SegmentArena {
     }
   }
 
-  /** Where `room` goes with no box moved: the smallest hole it fits in, else the end; null where neither. */
+  /** Where `room` goes without moving any box: the smallest hole it fits, else the end; null where neither has room. */
   private take(room: number): number | null {
     let best = -1;
     for (let i = 0; i < this.holes.length; i++) {
@@ -419,7 +421,7 @@ export class SegmentArena {
     return this.end - room;
   }
 
-  /** `place` a hole, joined to the holes it touches, or the end brought back to it where it was the last. */
+  /** Turns `place` into a hole, joined to the holes it touches; where it was the last, the end moves back to it. */
   private leave({ start, count }: Place): void {
     let at = this.holes.findIndex((hole) => hole.start > start);
     if (at < 0) at = this.holes.length;
@@ -440,8 +442,8 @@ export class SegmentArena {
   }
 
   /**
-   * Every box moved down to the base in the order they lie, with its blocks, the holes closed. The segments uploaded:
-   * those from the first hole on.
+   * Moves every box down to the base, in the order they lie, with its blocks, closing the holes. Returns the segments
+   * uploaded: those from the first hole on.
    */
   private compact(): number {
     const { ends, words, blocks } = this;
@@ -457,7 +459,7 @@ export class SegmentArena {
       }
       at += room;
     }
-    // Every box from the first hole on moved, and each block's first segment is where the block now is.
+    // Every box from the first hole on has moved, so each block's first segment is now where the block is.
     for (let slot = from; slot < at; slot += BLOCK) this.blockWords[rowOf(slot) + 3] = slot;
     blocks.fill(0, rowOf(at), rowOf(this.end));
     this.holes = [];

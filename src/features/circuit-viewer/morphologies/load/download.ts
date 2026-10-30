@@ -33,15 +33,15 @@ export interface PackRequest {
 }
 
 /**
- * The pack coming in, and the whole of it once it has, every byte the size said; a download cut short rejects, after
- * what came in is told it is all.
+ * The pack as it comes in, and the whole pack once every byte of its size is in. A download cut short rejects `whole`
+ * after ending `file`, so the reads waiting on it learn that nothing more is coming.
  */
 export interface Download {
   file: Arriving;
   whole: Promise<Uint8Array>;
 }
 
-/** Answers once the response has come, with the body still coming. */
+/** Resolves once the response arrives, while the body is still coming in. */
 export async function downloadPack(
   request: PackRequest,
   onProgress?: OnProgress,
@@ -56,7 +56,7 @@ export async function downloadPack(
   const file = new Arriving(size);
   const headers = freshHeaders ?? (() => Promise.resolve(request.headers));
   const whole = fill(file, request, headers, response, throttledProgress(size, onProgress));
-  // A cut short or failed download is told the page's reads through `file`; `whole` may then go unheard.
+  // The page's reads through `file` learn of a download cut short or failed, so nothing may listen to `whole`.
   whole.catch(() => {});
   return { file, whole };
 }

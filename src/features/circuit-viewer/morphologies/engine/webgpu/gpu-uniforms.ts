@@ -32,10 +32,10 @@ const NO_SOMAS = empty(THREE.RGBAFormat, 4, THREE.FloatType);
 const NO_FRONT = empty(THREE.RGBAFormat, 4, THREE.HalfFloatType);
 
 /**
- * How wide on screen a segment is drawn as the tube itself, round in depth and meeting the next in a round joint, in
- * device pixels; a thinner one is drawn flat, as on WebGL 2. A tube writes its own depth, so each of its pixels is
- * shaded under whatever covers it: from 12 px, CA1's 300 cells took 15 ms more a frame at 16 times nearer, and from 48
- * px 2.6 ms.
+ * The width on screen, in device pixels, from which a segment is drawn as the tube itself, round in depth and meeting
+ * the next in a round joint; a thinner one is drawn flat, as on WebGL 2. A tube writes its own depth, so each of its
+ * pixels is shaded under whatever covers it. With tubes from 12 px, CA1's 300 cells took 15 ms more per frame at 16
+ * times nearer; with tubes from 48 px, 2.6 ms more.
  */
 const TUBE_FROM_PX = 48;
 
@@ -63,8 +63,8 @@ export interface HeldUniforms {
 }
 
 /**
- * The uniforms of `CircuitView` as the WebGPU tier's nodes read them, copied into the nodes before each draw
- * (`sync`): the textures of a new cell table and the numbers change where the holders change them.
+ * The uniforms of `CircuitView` as the WebGPU tier's nodes read them. `sync` copies them into the nodes before each
+ * draw, so the nodes pick up a new cell table's textures and any numbers the holders changed.
  */
 export class GpuUniforms {
   readonly cells = texture(NO_CELLS);
@@ -74,16 +74,16 @@ export class GpuUniforms {
   readonly afterglow = uniform(0);
   readonly neon = uniform(new THREE.Vector2());
   readonly spikeHue = uniform(new THREE.Vector4());
-  /** How much brighter than white a fully lit cell is drawn besides, on a screen that shows past it; 0 on others. */
+  /** How much brighter than white a fully lit cell is also drawn, on a screen that can show past white; 0 on others. */
   overWhite = 0;
-  /** How far behind what is in front a lit cell shows through, µm, and half the line it shows as, device pixels. */
+  /** How far behind what is in front a lit cell shows through, µm, and half the width of its line, device pixels. */
   readonly throughUm = uniform(0);
   readonly throughHalfPx = uniform(0);
-  /** The frame's picture and surfaces as the occlusion drew them (`Occlusion.front`): what is in front, where. */
+  /** The frame's picture and surfaces as the occlusion drew them (`Occlusion.front`): what is in front, per pixel. */
   readonly frontPicture = texture(NO_FRONT);
   readonly frontSurface = texture(NO_FRONT);
 
-  /** What the frame drew in front (`Occlusion.front`), or none. */
+  /** Binds what the frame drew in front (`Occlusion.front`), or blank textures where there is none. */
   showFront(front: { picture: THREE.Texture; surface: THREE.Texture } | null): void {
     this.frontPicture.value = front?.picture ?? NO_FRONT;
     this.frontSurface.value = front?.surface ?? NO_FRONT;

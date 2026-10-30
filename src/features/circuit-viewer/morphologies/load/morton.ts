@@ -1,10 +1,10 @@
 import type { MorphologySegments } from '../types';
 
-/** The bits of a Morton code an axis, and of each pass of its sort. */
+/** The bits per axis of a Morton code, and per pass of its sort. */
 const MORTON_BITS = 10;
 const SIDE = 1 << MORTON_BITS;
 
-/** `bits`' lowest 10 spread 3 apart. */
+/** Spreads the lowest 10 bits of `bits` 3 apart. */
 function spread(bits: number): number {
   let v = (bits | (bits << 16)) & 0x030000ff;
   v = (v | (v << 8)) & 0x0300f00f;
@@ -13,8 +13,9 @@ function spread(bits: number): number {
 }
 
 /**
- * The points, x, y and z after one another, as numbered in the Morton order over the box they span: those of one code in
- * the order they came, those with no place among the first.
+ * The Morton order of the points, x, y and z after one another, over the box they span: for each place in the order,
+ * the index of the point there. Points of one code keep the order they came in, and points with no position sort among
+ * the first.
  */
 export function mortonPermutation(points: Float32Array): Uint32Array {
   const n = Math.floor(points.length / 3);
@@ -37,7 +38,7 @@ export function mortonPermutation(points: Float32Array): Uint32Array {
     codes[i] = code;
     order[i] = i;
   }
-  // Ten bits of the code a pass, the lowest first, each pass keeping the order of the one before.
+  // Sorts ten bits of the code a pass, the lowest first; each pass keeps the order of the pass before for equal bits.
   let nextCodes = new Uint32Array(n);
   let nextOrder = new Uint32Array(n);
   const starts = new Uint32Array(SIDE);
@@ -77,15 +78,15 @@ export function mortonSorted(points: Float32Array): MortonSorted {
 }
 
 /**
- * The segments in the Morton order of their midpoints over the box they span, those of one code in the order they came:
- * the WebGPU tier's culling tests blocks of 64 segments, one after another, by the box around them, which this keeps
- * small.
+ * The segments in the Morton order of their midpoints over the box they span, segments of one code in the order they
+ * came. The WebGPU tier culls blocks of 64 consecutive segments by the box around each block, and this order keeps
+ * those boxes small.
  */
 export function mortonOrder(read: MorphologySegments): MorphologySegments {
   const { segments, segmentCells, segmentTypes } = read;
   const n = segmentCells.length;
   if (n < 2) return read;
-  // Each midpoint taken twice over, which orders them the same.
+  // Each midpoint doubled (the sum of the ends), which gives the same order.
   const mids = new Float32Array(3 * n);
   for (let i = 0; i < n; i++) {
     for (let k = 0; k < 3; k++) mids[3 * i + k] = segments[8 * i + k] + segments[8 * i + 4 + k];

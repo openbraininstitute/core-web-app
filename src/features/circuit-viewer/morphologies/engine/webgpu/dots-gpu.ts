@@ -15,8 +15,8 @@ import { col, typed, VIEW } from './cells-wgsl';
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
- * A dot's corner in clip space, as `electrodes.ts` places it; and in the second column, where its ring starts, a share
- * of the whole.
+ * A dot's corner in clip space, as `electrodes.ts` places it; the second column holds where its ring starts, as a share
+ * of the whole radius.
  */
 const dotQuad = wgslFn(
   /* wgsl */ `
@@ -38,9 +38,9 @@ fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f) -> vec
 }`);
 
 /**
- * Dots of `electrodes.ts` on WebGPU, their colours written as they came, in sRGB: in front of the cells, with a ring a
- * CSS pixel wide on a screen of `pixelRatio`; or `among` them, with no ring, hidden by what is nearer the eye and
- * brought towards it by their radius.
+ * Dots of `electrodes.ts` on WebGPU, with their colours written as given, in sRGB. By default they are drawn in front
+ * of the cells, with a ring a CSS pixel wide on a screen of `pixelRatio`. With `among`, they are drawn among the cells,
+ * with no ring, hidden by what is nearer the eye, and brought towards the eye by their radius.
  */
 function dotMaterial(
   u: GpuUniforms,
@@ -67,7 +67,7 @@ function dotMaterial(
   const corner = varying(positionGeometry.xy);
   const material = new THREE.MeshBasicNodeMaterial();
   material.vertexNode = col(quad, 0);
-  // Not a fragment node, which would write nothing of the occlusion's surface (`Occlusion`).
+  // Not a fragment node: a fragment node would write nothing to the occlusion's surface (`Occlusion`).
   material.colorNode = typed<'vec4'>(
     dotColour({
       corner,

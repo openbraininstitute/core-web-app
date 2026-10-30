@@ -1,15 +1,17 @@
 /**
- * The somas of a circuit: a low pyramid a cell (`fanGeometry`), its base facing the eye at the soma's centre and as
- * wide as its sphere, its tip a radius nearer, shaded as a sphere by a fixed light. Where two somas meet, each covers the
- * other where its pyramid is nearer, much as their spheres would, without one covering the other whole as they turn.
- * Where somas are a few pixels across, a flat quad a soma does (`QUADS_BELOW_PX`). The cloud is cut into pieces of
- * neighbours (`cloudPieces`). The colours are worked in sRGB and drawn as they come out, with no tone mapping.
+ * The somas of a circuit, one low pyramid per cell (`fanGeometry`). Its base faces the eye at the soma's centre and is
+ * as wide as the soma's sphere, its tip is a radius nearer, and a fixed light shades it as a sphere. Where two somas
+ * meet, each covers the other where its pyramid is nearer, much as their spheres would, and neither covers the other
+ * whole as they turn. Where somas are a few pixels across, a flat quad per soma is enough (`QUADS_BELOW_PX`). The cloud
+ * is cut into pieces of neighbours (`cloudPieces`). The colours are worked in sRGB and drawn as they come out, with no
+ * tone mapping.
  *
  * Each cell takes its colour from the cell table, darkened the more crowded its neighbourhood is; a cell with no
- * colour of its own runs along a blue ramp by it instead. A spike swells it, lights it towards a warm white, rings it
- * where the morphologies are ringed, on a light background, and makes it opaque however translucent the rest are.
+ * colour of its own takes its colour from a blue ramp by crowding instead. A spike swells the soma, lights it towards
+ * a warm white, rings it on a light background where the morphologies are ringed, and makes it opaque however
+ * translucent the rest are.
  *
- * The same pyramids drawn in each cell's number tell which cell is under a pixel (`somaCloudIdMaterial`).
+ * The same pyramids, drawn in each cell's number, tell which cell is under a pixel (`somaCloudIdMaterial`).
  */
 
 import chroma from 'chroma-js';
@@ -41,18 +43,18 @@ export function somaCloudUniforms(): SomaCloudUniforms {
   };
 }
 
-/** How much wider a soma glowing in full is drawn, a share of its radius. */
+/** How much wider a soma that glows in full is drawn, as a share of its radius. */
 export const GLOW_SWELL = 0.7;
 
 /** Where the somas are lit from, in view space. */
 export const LIGHT = new THREE.Vector3(-0.4, 0.5, 0.666).normalize().toArray();
-/** What a cell with no colour of its own runs along as it is less and more crowded. */
+/** The ramp a cell with no colour of its own takes its colour from, from least to most crowded. */
 export const BLUE_RAMP = ['hsl(200, 100%, 80%)', 'hsl(200, 100%, 50%)', 'hsl(220, 100%, 30%)'];
 
 const glsl = (values: number[]) => `vec3( ${values.map((v) => v.toFixed(6)).join(', ')} )`;
 const srgb = (color: string) => glsl(chroma(color).gl().slice(0, 3));
 
-// A hexagon round the unit circle: where two somas meet, a square base's corners show.
+// A hexagon round the unit circle: with a square base, the corners would show where two somas meet.
 const FAN_SIDES = 6;
 const FAN_REACH = 1 / Math.cos(Math.PI / FAN_SIDES);
 const FAN_CORNERS = [0, 0, 1];
@@ -69,9 +71,9 @@ export function fanGeometry(instances: number): THREE.InstancedBufferGeometry {
 }
 
 /**
- * The device pixels a soma's radius spans below which a piece of the cloud is drawn as flat quads, 4 corners a soma
- * against the pyramid's 7, and above which as pyramids again: so small, which of two overlapping somas covers the other
- * cannot be seen to jump.
+ * Where a soma's radius spans fewer device pixels than `QUADS_BELOW_PX`, a piece of the cloud is drawn as flat quads,
+ * 4 corners per soma against the pyramid's 7; above `PYRAMIDS_ABOVE_PX` it is drawn as pyramids again. At that size,
+ * nobody can see a jump in which of two overlapping somas covers the other.
  */
 export const QUADS_BELOW_PX = 3;
 export const PYRAMIDS_ABOVE_PX = 3.6;
@@ -89,8 +91,9 @@ export interface CloudPiece {
 }
 
 /**
- * The somas in the Morton order of their positions, as `ordered` has them where it is given, cut into pieces of
- * neighbours, each drawn by meshes of its own: three leaves out those out of view and draws the nearer first.
+ * The somas in the Morton order of their positions (as the given `MortonSorted` has them), cut into pieces of
+ * neighbours. Each piece is drawn by meshes of its own, so three leaves out the pieces out of view and draws the nearer
+ * ones first.
  */
 export function cloudPieces(
   positions: Float32Array,
@@ -127,7 +130,7 @@ in uint aCell;
 
 ${CELL_GLSL}
 ${LIFTED}
-// Drawn whole, the somas are in the page's order, each the cell of its number.
+// When the somas are drawn whole, they are in the page's order, so each instance's number is its cell's.
 uint cellOf() {
 #ifdef WHOLE
 	return uint( gl_InstanceID );
@@ -140,8 +143,8 @@ vec4 cornerAt( float radius ) {
 	vec4 centre = modelViewMatrix * vec4( aPosition - uOffset, 1.0 );
 	return projectionMatrix * vec4( lifted( vec3( centre.xy + position.xy * radius, centre.z ), position.z * radius ), 1.0 );
 }
-// The corner on the unit disc times the corner's w, and w: divided in the fragments, it runs straight across the
-// screen, which the tip, nearer than the base, would otherwise bend.
+// The corner on the unit disc times the corner's w, and w. The fragments divide by w, so the coordinate runs straight
+// across the screen; otherwise the tip, nearer than the base, would bend it.
 vec3 discCoord( vec4 clip ) {
 	return vec3( position.xy * clip.w, clip.w );
 }
@@ -163,7 +166,7 @@ vec3 toSRGB( vec3 linear ) {
 	return mix( linear * 12.92, 1.055 * pow( linear, vec3( 1.0 / 2.4 ) ) - 0.055, step( 0.0031308, linear ) );
 }
 
-// How crowded the cell is darkens it by up to 55%; with no colour of its own it runs along the blue ramp.
+// Crowding darkens the cell by up to 55%; a cell with no colour of its own takes its colour from the blue ramp.
 vec3 crowded( vec3 colour, vec2 shade ) {
 	if ( shade.g < 0.5 ) return colour * ( 1.0 - 0.55 * shade.r );
 	return shade.r < 0.5
@@ -204,7 +207,7 @@ void main() {
 	if ( z2 < 0.0 ) discard;
 	float facing = 0.5 * ( 1.0 + dot( vec3( coord, sqrt( z2 ) ), ${glsl(LIGHT)} ) );
 	vec3 shaded = vColour * ( 0.5 + 0.5 * smoothstep( 0.0, 1.0, facing ) ) + 0.33 * pow( facing, 50.0 );
-	// Light of its own while it glows, and a ring at its edge where the morphologies have one.
+	// A glowing soma gives light of its own, and gets a ring at its edge where the morphologies have one.
 	vec3 hot = shaded + 0.2 * vGlow * vColour;
 	float rim = vGlow * uGlowRim.a * smoothstep( 0.9, 1.0, length( coord ) );
 	gl_FragColor = vec4( mix( hot, ${srgb(GLOW_RIM_COLOR)}, rim ), vAlpha );
@@ -245,8 +248,8 @@ type Shared = Pick<
 >;
 
 /**
- * The cloud's material. Translucent below an opacity of 1, it blends, and still writes its depth, unsorted. `whole`,
- * for the somas drawn whole in the page's order, it reads each one's cell from its instance, and is translucent.
+ * The cloud's material. Below an opacity of 1 it blends, still writes its depth, and is not sorted. With `whole`, for
+ * the somas drawn whole in the page's order, it reads each soma's cell from its instance and is translucent.
  */
 export function somaCloudMaterial(
   shared: Shared,
@@ -262,7 +265,7 @@ export function somaCloudMaterial(
   });
 }
 
-/** The same pyramids in their cells' numbers, where a cell is drawn, as large as when it does not glow. */
+/** The same pyramids in their cells' numbers, for the cells drawn, at the size of a soma that does not glow. */
 export function somaCloudIdMaterial(
   shared: Pick<ImpostorUniforms, 'uCells'>,
   own: SomaCloudUniforms

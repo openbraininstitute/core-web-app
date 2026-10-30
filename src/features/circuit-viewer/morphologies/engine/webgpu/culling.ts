@@ -12,27 +12,27 @@ import type * as THREE from 'three/webgpu';
 import type { CullRead } from '../../types';
 import type { ArenaBuffers, ArenaStorage } from './arena-gpu';
 
-/** The least radius a segment is tested at, px: a cell glowing in full is drawn at twice the least. */
+/** The smallest radius a segment is tested at, px: a fully glowing cell is drawn at twice the smallest radius. */
 const LEAST_PX = 2 * MIN_RADIUS;
 /**
- * The frames whose counts may be on their way back at once. Each frame's are read, and past these, the last tested once
- * a buffer is free, so that the last before the view rests always is.
+ * How many frames' counts may be on their way back at once. Every frame's counts are read; past this many, the last
+ * frame tested is read once a buffer is free, so the last frame before the view rests is always read.
  */
 const READS = 8;
 /** The passes' counters: the blocks handed on, the segments in them, and two words of padding. */
 const COUNTS_BYTES = 16;
 
-/** Where in the draws' arguments each list's are, bytes: five words each, the kept first. */
+/** The byte offset of each list's draw in the draws' arguments: five words each, the kept lists first. */
 export const DRAWS = { keptFlat: 0, keptTubes: 20, seenFlat: 40, seenTubes: 60 } as const;
 const DRAWS_BYTES = 80;
-/** Where a draw's instances are in its arguments, words. */
+/** The word offset of the instance count in a draw's arguments. */
 const INSTANCES = 1;
-/** Draws of none of the quads, six indices each. */
+/** Draws that draw no quads: six indices and no instances each. */
 const NO_DRAWS = new Uint32Array(DRAWS_BYTES / 4).map((_, k) => (k % 5 === 0 ? 6 : 0));
 
 type Pipelines = Record<'blocks' | 'args' | 'segments', GPUComputePipeline>;
 
-/** What the passes bind, made again where the pyramid's targets or the arena change. */
+/** What the passes bind; made again when the pyramid's targets or the arena change. */
 interface Bound {
   levels: Levels;
   blocks: GPUBindGroup;
@@ -41,18 +41,18 @@ interface Bound {
 }
 
 /**
- * The culling of an arena's segments on the GPU, on blocks of 64 (`culling-wgsl.ts`): each frame, the
- * segments kept the frame before are drawn to depth (`targetOf`, by three), and then the passes here, on `device`'s
- * queue before three draws the frame: that depth's pyramid (`DepthPyramid`), the blocks' test, the segments' test into
- * the lists, flat and tubes, of those kept and those seen, and the draws' arguments, which three's quads are drawn by
- * (`quads`). What the tests count, and the blocks they mark, are read back each frame
- * and handed to `counted`, and null once the culling failed.
+ * Culls an arena's segments on the GPU, in blocks of 64 (`culling-wgsl.ts`). Each frame, three draws the segments kept
+ * from the frame before to depth (`targetOf`). Then the passes here run on `device`'s queue before three draws the
+ * frame: they build that depth's pyramid (`DepthPyramid`), test the blocks, test the segments into the lists of those
+ * kept and those seen (flat and tubes), and fill the draws' arguments, which three's quads are drawn by (`quads`).
+ * What the tests count, and the blocks they mark, are read back each frame and handed to `counted`. Once the culling
+ * fails, `counted` gets null.
  */
 export class Culling {
   private device: GPUDevice;
   private storage: ArenaStorage;
   private counted: (read: CullRead | null) => void;
-  /** The draws' arguments the tests count into, copied to `indirect`'s and read back; drawn from by none. */
+  /** The draws' arguments the tests count into, copied to `indirect`'s and read back. No draw reads this buffer. */
   private drawsBuffer: GPUBuffer;
   private indirect: IndirectDraws;
   private counters: GPUBuffer;
@@ -62,15 +62,15 @@ export class Culling {
   private pipelines: Pipelines | null = null;
   private arena: ArenaBuffers | null = null;
   private bound: Bound | null = null;
-  /** Buffers to read the counts back into, and those of them free. */
+  /** Buffers to read the counts back into, and which of them are free. */
   private reads: GPUBuffer[] = [];
   private free: GPUBuffer[] = [];
-  /** Whether the last tested were left unread, no buffer free, and the rest their frame was drawn in (`run`). */
+  /** Whether the last tests went unread for want of a free buffer, and the rest their frame was drawn in (`run`). */
   private unread = false;
   private rest = -1;
-  /** Of the arena tested: counts read back of another are dropped. */
+  /** Changes with the arena tested and on failure: counts read back from before a change are dropped. */
   private generation = 0;
-  /** True once the culling could not be made or bound, which is not tried again. */
+  /** True once the culling could not be made or bound. It is not tried again. */
   private broken = false;
 
   constructor(
@@ -96,18 +96,21 @@ export class Culling {
     return this.arena !== null;
   }
 
-  /** Whether the culling could not be made or bound, for good: every segment is to be drawn. */
+  /** Whether the culling could not be made or bound. That is final: every segment is to be drawn. */
   get failed(): boolean {
     return this.broken;
   }
 
-  /** The arena whose segments are tested, or none, whose targets are let go of; its lists hold nothing kept yet. */
+  /**
+   * Sets the arena whose segments are tested. With none, the pyramid's targets are let go of. A new arena's lists hold
+   * nothing kept yet.
+   */
   setArena(arena: ArenaBuffers | null): void {
     this.arena = arena;
     this.bound = null;
     if (!arena) this.pyramid.release();
     this.generation++;
-    // Sized for the last arena's marks.
+    // The read buffers are sized for the last arena's marks.
     this.dropReads();
     this.drawNone();
   }
@@ -129,11 +132,11 @@ export class Culling {
   }
 
   /**
-   * The tests, once the kept segments are drawn into the target: submitted, and the lists and the draws filled for
-   * three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius in
-   * pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
-   * segments end; `rest`: the rest the frame is drawn still in, -1 for one drawn moving, which its read tells. False
-   * where nothing was tested.
+   * Runs and submits the tests once the kept segments are drawn into the target. The tests fill the lists and the
+   * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
+   * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
+   * segments end; `rest`: the rest the frame is drawn still in, or -1 for a frame drawn moving, handed on with the
+   * frame's read. Returns false where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },
@@ -185,8 +188,8 @@ export class Culling {
   }
 
   /**
-   * Not culled: every segment up to `end` drawn by the seen lists' draws and the kept ones, each of its own kind. As
-   * with `drawNone`, the last tests left unread are not read: the draws they counted are gone.
+   * Without culling: the seen draws and the kept draws each draw every segment up to `end`, each those of its own
+   * kind. As with `drawNone`, the last tests left unread are not read: the draws they counted are gone.
    */
   drawAll(end: number): void {
     this.unread = false;
@@ -194,7 +197,7 @@ export class Culling {
     this.indirect.write(this.device.queue, this.allDraws);
   }
 
-  /** None drawn, kept or seen. */
+  /** Draws nothing, kept or seen. */
   drawNone(): void {
     this.unread = false;
     this.indirect.write(this.device.queue, NO_DRAWS);
@@ -207,7 +210,7 @@ export class Culling {
     this.pyramid.dispose();
   }
 
-  /** The passes' programs; where the device refuses one, the culling fails once it has said so. */
+  /** The passes' programs. Where the device refuses one, the culling fails once the device reports it. */
   private pipelinesNow(): Pipelines {
     if (!this.pipelines) {
       const { device } = this;
@@ -273,9 +276,9 @@ export class Culling {
   }
 
   /**
-   * `encoder` submitted with what the tests left copied out at its end and read back: the counts, and the blocks marked
-   * (`marked`, the arena's), with the rest the last tested were drawn in; where no buffer is free, the last tested once
-   * one is.
+   * Submits `encoder` with copies, at its end, of what the tests left, and reads them back: the counts and the
+   * blocks marked (`marked`, the arena's), with the rest the tested frame was drawn in. Where no buffer is free, the
+   * last tests are read once one is.
    */
   private submit(encoder: GPUCommandEncoder, marked: GPUBuffer): void {
     const blocksAt = COUNTS_BYTES + DRAWS_BYTES;
@@ -293,7 +296,7 @@ export class Culling {
     const markedWords = marked.size / 4;
     read.mapAsync(READ).then(
       () => {
-        // Destroyed with the view since.
+        // The view, and the buffer with it, was destroyed since.
         if (read.mapState !== 'mapped') return;
         const words = new Uint32Array(read.getMappedRange());
         const at = (offset: number) => words[(COUNTS_BYTES + offset) / 4 + INSTANCES];
@@ -314,7 +317,7 @@ export class Culling {
           );
         }
       },
-      // Destroyed with the view.
+      // The buffer was destroyed with the view.
       () => undefined
     );
   }

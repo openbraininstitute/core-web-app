@@ -7,9 +7,9 @@ import { IMPOSTORS_WGSL, SEGMENT_ENDS_WGSL } from './impostors-gpu';
 import { gpuTexture } from './three-hooks';
 import { COPY_DST, STORAGE_BINDING, TEXTURE_BINDING, UNIFORM } from './usage';
 
-/** The samples a pixel of the depth drawn before the tests has, as the picture's. */
+/** The samples per pixel of the depth drawn before the tests, the same as the picture's. */
 const SAMPLES = 4;
-/** The view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts, in bytes. */
+/** The bytes of the view as the passes take it (`culling-wgsl.ts`): two matrices, three vectors and the counts. */
 const VIEW_BYTES = 192;
 
 /** What the passes' WGSL calls besides their own. */
@@ -47,17 +47,17 @@ type Pipelines = Record<'resolve' | 'pyramid', GPUComputePipeline>;
 /** What a culling's tests bind, in this order: the view, the farthest at each pixel, and the pyramid. */
 export type Levels = [GPUBufferBinding, GPUTextureView, GPUTextureView];
 
-/** The targets of a picture's size: the full depth's farthest, and the pyramid over it. */
+/** The targets for one picture size: the farthest depth at full size, and the pyramid over it. */
 interface Targets {
   width: number;
   height: number;
   full: THREE.StorageTexture;
   hiz: GPUTexture;
-  /** Its levels' sizes, the half of the picture's first. */
+  /** The sizes of the pyramid's levels, the first half the picture's. */
   sizes: [number, number][];
 }
 
-/** What the passes bind, made again where the depth drawn before them or the targets change. */
+/** What the passes bind, made again when the depth drawn before them or the targets change. */
 interface Bound {
   depth: GPUTexture;
   resolve: GPUBindGroup;
@@ -66,9 +66,9 @@ interface Bound {
 }
 
 /**
- * What a culling tests against: the depth drawn into its target by three (`targetOf`), and then, in a compute pass of
- * the culling's, that depth at each pixel the farthest of its samples, in µm from the eye, and the pyramid over it
- * (`build`), with the view the passes take. Where the device refuses a pass, `failed` is told.
+ * What a culling tests against. three draws the depth into the target (`targetOf`). Then, in a compute pass of the
+ * culling's, `build` writes the view the passes take, takes the farthest of each pixel's samples, in µm from the eye,
+ * and makes the pyramid over it. Where the device refuses a pass, it tells `failed`.
  */
 export class DepthPyramid {
   private renderer: THREE.WebGPURenderer;
@@ -122,9 +122,9 @@ export class DepthPyramid {
   }
 
   /**
-   * Once the depth is drawn into the target: the view written for the passes, with `more` and `counts` after the far
-   * plane and the pyramid's levels (`culling-wgsl.ts`), and the farthest and the pyramid made in `pass`. What the tests
-   * bind of them; null where three made no texture of the depth.
+   * Runs once the depth is drawn into the target. It writes the view for the passes, with `more` after the far plane
+   * and `counts` after the number of the pyramid's levels (`culling-wgsl.ts`), and makes the farthest depth and the
+   * pyramid in `pass`. Returns what the tests bind of them; null where three made no texture of the depth.
    */
   build(
     pass: GPUComputePassEncoder,
@@ -160,7 +160,7 @@ export class DepthPyramid {
     return bound.levels;
   }
 
-  /** Let go of the target and the targets, made again as they are next asked for. */
+  /** Let go of the target and the targets; they are made again when next asked for. */
   release(): void {
     this.target?.dispose();
     this.target = null;
@@ -195,7 +195,7 @@ export class DepthPyramid {
     return this.pipelines;
   }
 
-  /** The targets at the picture's size, made again where it changed. */
+  /** The targets at the picture's size, made again when the size changed. */
   private targetsOf(width: number, height: number): Targets {
     const was = this.targets;
     if (was?.width === width && was.height === height) return was;

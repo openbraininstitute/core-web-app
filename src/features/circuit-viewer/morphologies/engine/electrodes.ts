@@ -1,8 +1,8 @@
 /**
- * Electrode contacts drawn as the somas view draws them: a flat disc each, in its array's colour as the host gives it,
- * in front of the cells whatever is nearer the eye. A contact is as wide as its radius in µm, and never under a pixel or
- * two across, so a probe stays in sight from afar. A ring in the theme's foreground goes round each, so that a contact
- * reads on cells of its own colour.
+ * Draws electrode contacts as the somas view draws them: each is a flat disc in the colour the host gives its array,
+ * in front of the cells even where they are nearer the eye. A contact is as wide as its radius in µm, but never under
+ * a pixel or two across, so a probe stays visible from afar. A ring in the theme's foreground colour goes round each
+ * contact, so that it stands out on cells of its own colour.
  */
 
 import chroma from 'chroma-js';
@@ -15,7 +15,7 @@ import type { Vec3 } from '../types';
 /** How much larger and how much nearer white the highlighted array is drawn, as in the somas view. */
 const HIGHLIGHT_SCALE = 1.55;
 const HIGHLIGHT_LIGHTEN = 0.55;
-/** What a contact is drawn in where the host's colour cannot be read, which its styling passes on as it is. */
+/** The colour of a contact whose host colour cannot be read. The host's styling passes such a colour on unchanged. */
 const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
 export const RING_PX = 1;
@@ -28,20 +28,20 @@ export interface ElectrodeUniforms {
   /** The ring's colour, in sRGB. */
   uRingColour: { value: THREE.Vector3 };
   /**
-   * The fraction of the resolution the frame is drawn at: the least radius and the ring are in the device pixels of all
-   * of it, so that a frame drawn at less draws them as wide on screen.
+   * The fraction of the full resolution the frame is drawn at. The least radius and the ring are in device pixels of
+   * the full resolution, so a frame drawn at less still draws them as wide on screen.
    */
   uScale: { value: number };
 }
 
-/** The least radius in device pixels for contacts `radius` µm wide: the somas view's, which counts it so. */
+/** The least radius in device pixels for contacts `radius` µm wide, counted the way the somas view counts it. */
 export function minRadius(radius: number): number {
   return Math.max(2, Math.round(0.32 * radius)) / 2;
 }
 
 /**
- * How far from its centre a contact `radius` µm wide is drawn, its ring taken in, as the vertex shader draws it: in CSS
- * pixels where one spans `um` µm, on a screen of `pixelRatio`.
+ * How far from its centre the vertex shader draws a contact `radius` µm wide, ring included: in CSS pixels, where one
+ * CSS pixel spans `um` µm, on a screen of `pixelRatio`.
  */
 export function drawnRadius(radius: number, lit: boolean, um: number, pixelRatio: number): number {
   const disc = (radius * (lit ? HIGHLIGHT_SCALE : 1)) / um;
@@ -88,9 +88,9 @@ void main() {
 `;
 
 /**
- * The contacts' material, its ring a CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
- * synapses are, have no ring and are hidden by what is nearer the eye, brought towards it by their radius to sit on the
- * surface they are on rather than in it.
+ * The contacts' material, with a ring one CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
+ * synapses are, have no ring, and anything nearer the eye hides them. The shader moves them towards the eye by their
+ * radius, so that they sit on the surface they lie on rather than inside it.
  */
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
@@ -123,8 +123,8 @@ export interface DotGroup {
 }
 
 /**
- * Write `groups`' dots, `centre` taken off, three floats each, into `contacts`, and their looks into `looks`: the
- * colour in sRGB and the scale, four floats each. True where that changed a float.
+ * Writes the dots of `groups` into `contacts`, three floats each with `centre` subtracted, and their looks into
+ * `looks`, four floats each: the colour in sRGB and the scale. Returns true where that changed a float.
  */
 export function writeDots(
   groups: readonly DotGroup[],
