@@ -1,6 +1,10 @@
 import katex from 'katex';
 
-export const renderMathInText = (text: string) => {
+import type { ReactNode } from 'react';
+
+import 'katex/dist/katex.min.css';
+
+export const renderMathInText = (text: string): ReactNode => {
   const parts = [];
   let currentIndex = 0;
 
@@ -21,6 +25,8 @@ export const renderMathInText = (text: string) => {
       endIndex: match.index + match[0].length,
     });
   }
+
+  if (matches.length === 0) return text;
 
   // build parts array with regular text and LaTeX
   matches.forEach((mt) => {
@@ -49,14 +55,6 @@ export const renderMathInText = (text: string) => {
     });
   }
 
-  // if no matches found, return the whole text as regular text
-  if (parts.length === 0) {
-    parts.push({
-      type: 'text',
-      content: text,
-    });
-  }
-
   return (
     <>
       {parts.map((part) => {
@@ -77,7 +75,8 @@ export const renderMathInText = (text: string) => {
                 key={html}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: required here
                 dangerouslySetInnerHTML={{ __html: html }}
-                className="inline-block"
+                // KaTeX resets font-weight to normal; follow the surrounding text instead
+                className="inline-block [&_.katex]:[font-weight:inherit]"
               />
             );
           } catch {

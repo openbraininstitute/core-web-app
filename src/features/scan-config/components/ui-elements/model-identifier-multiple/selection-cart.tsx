@@ -11,6 +11,7 @@ import { CheckOutlined } from '@ant-design/icons';
 import { Input } from 'antd';
 import { useId } from 'react';
 
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { ModelIdentifierEntityCard } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/entity-card';
 import { countSelectedEntities } from '@/features/scan-config/components/ui-elements/model-identifier-multiple/helpers';
 import { getEntityTypeTagLabel } from '@/features/scan-config/helpers';
@@ -71,7 +72,7 @@ export function ModelIdentifierSelectionCart({
       )}
     >
       <div className="text-base px-2 font-semibold tracking-wide text-gray-500 uppercase">
-        {title}
+        {renderMathInText(title)}
       </div>
 
       <div className={cn('flex min-h-0 flex-1 px-2 flex-col gap-3 overflow-hidden pb-2 bg-white')}>

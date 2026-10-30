@@ -1,5 +1,6 @@
 'use client';
 
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   type Config,
@@ -64,7 +65,7 @@ export function ObjectField({
             >
               <div className="mb-1 flex w-full items-center gap-0.5">
                 <label htmlFor={fieldKey} className="text-primary-9 text-sm font-medium">
-                  {fieldSchema.title}
+                  {renderMathInText(fieldSchema.title)}
                 </label>
                 {fieldSchema.units && (
                   <div className="text-sm text-gray-500">{fieldSchema.units}</div>

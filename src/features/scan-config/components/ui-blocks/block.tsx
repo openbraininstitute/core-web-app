@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
   SweepIconButton,
@@ -68,7 +69,9 @@ export default function Block({
     >
       {!hideTitle && (
         <>
-          <div className="text-lg text-gray-500 uppercase wrap-break-word">{blockSchema.title}</div>
+          <div className="text-lg text-gray-500 uppercase wrap-break-word">
+            {renderMathInText(blockSchema.title)}
+          </div>
           <MarkdownDescription className="mb-6 text-gray-500">
             {blockSchema.description}
           </MarkdownDescription>
@@ -128,7 +131,7 @@ export default function Block({
                         'cursor-pointer': isBooleanInput,
                       })}
                     >
-                      {blockElementSchema.title}
+                      {renderMathInText(blockElementSchema.title)}
                     </label>
                     {blockElementSchema.units && (
                       <div className="text-lg text-gray-500">{blockElementSchema.units}</div>

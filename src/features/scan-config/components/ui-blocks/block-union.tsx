@@ -4,6 +4,7 @@ import {
   type TSchemaMappingConfiguration,
   unionVariantDefaults,
 } from '@/features/scan-config/components/hooks/schema';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useShowingDiffs } from '@/features/scan-config/hooks/use-showing-diffs';
@@ -72,7 +73,9 @@ export default function BlockUnion({
     return (
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <div className="text-lg text-gray-500 uppercase">{selectedBlockSchema.title}</div>
+          <div className="text-lg text-gray-500 uppercase">
+            {renderMathInText(selectedBlockSchema.title)}
+          </div>
           {!campaignId && !loading && (
             <button
               type="button"
@@ -135,7 +138,9 @@ export default function BlockUnion({
               });
             }}
           >
-            <span className="text-primary-9 block text-lg font-bold">{o.title}</span>
+            <span className="text-primary-9 block text-lg font-bold">
+              {renderMathInText(o.title)}
+            </span>
             <span className="mt-3 block">{o.description}</span>
           </button>
         );
