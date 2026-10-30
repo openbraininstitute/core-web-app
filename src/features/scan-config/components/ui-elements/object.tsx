@@ -68,7 +68,7 @@ export function ObjectField({
                   {renderMathInText(fieldSchema.title)}
                 </label>
                 {fieldSchema.units && (
-                  <div className="text-sm text-gray-500">{fieldSchema.units}</div>
+                  <div className="ml-1 text-sm text-gray-500">{fieldSchema.units}</div>
                 )}
               </div>
 

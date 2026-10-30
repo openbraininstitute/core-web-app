@@ -134,7 +134,7 @@ export default function Block({
                       {renderMathInText(blockElementSchema.title)}
                     </label>
                     {blockElementSchema.units && (
-                      <div className="text-lg text-gray-500">{blockElementSchema.units}</div>
+                      <div className="ml-1 text-base text-gray-500">{blockElementSchema.units}</div>
                     )}
                     {canCollapseSweep && (
                       <SweepIconButton
