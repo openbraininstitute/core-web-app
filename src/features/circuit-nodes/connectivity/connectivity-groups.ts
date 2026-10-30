@@ -55,14 +55,18 @@ function byCharacters(a: string, b: string): number {
 /** What a neuron with no value of a property is filed under. */
 const NO_VALUE = 'None';
 
-/** The values a categorical property takes, in order. */
-function valuesInUse(property: Extract<VertexProperty, { kind: 'categorical' }>): string[] {
+/** The values a categorical property takes, in order: among the `included` neurons, where given. */
+function valuesInUse(
+  property: Extract<VertexProperty, { kind: 'categorical' }>,
+  included: Uint8Array | null = null
+): string[] {
   const used = new Uint8Array(property.library.length);
   let none = false;
-  for (const code of property.codes) {
+  property.codes.forEach((code, neuron) => {
+    if (included && !included[neuron]) return;
     if (code < 0) none = true;
     else used[code] = 1;
-  }
+  });
   const values = property.library.filter((_, code) => used[code]).sort(byCharacters);
   return none ? [...values, NO_VALUE] : values;
 }
@@ -85,13 +89,28 @@ export function summarizeConnectivity(matrix: ConnectivityMatrix): ConnectivityS
   };
 }
 
-/** Each neuron's value of a categorical property, as its place among the values in use. */
-function rankedValues(property: Extract<VertexProperty, { kind: 'categorical' }>) {
-  const values = valuesInUse(property);
+/**
+ * Each neuron's value of a categorical property, as its place among the values
+ * in use; -1 for a neuron left out.
+ */
+function rankedValues(
+  property: Extract<VertexProperty, { kind: 'categorical' }>,
+  included: Uint8Array | null
+) {
+  const values = valuesInUse(property, included);
   const rankOfCode = property.library.map((value) => values.indexOf(value));
   const none = values.indexOf(NO_VALUE);
-  const ranks = Int32Array.from(property.codes, (code) => (code < 0 ? none : rankOfCode[code]));
+  const ranks = Int32Array.from(property.codes, (code, neuron) => {
+    if (included && !included[neuron]) return -1;
+    return code < 0 ? none : rankOfCode[code];
+  });
   return { values, ranks };
+}
+
+/** A flag per neuron of the matrix: whether its node id is among `cells`. */
+function includedNeurons(matrix: ConnectivityMatrix, cells: ArrayLike<number>): Uint8Array {
+  const wanted = new Set(Array.from(cells));
+  return Uint8Array.from(matrix.nodeIds, (id) => (wanted.has(id) ? 1 : 0));
 }
 
 function categorical(matrix: ConnectivityMatrix, name: string | null) {
@@ -101,21 +120,26 @@ function categorical(matrix: ConnectivityMatrix, name: string | null) {
 
 function countRows(rowOf: Int32Array, rows: number): Float64Array {
   const sizes = new Float64Array(rows);
-  for (const row of rowOf) sizes[row] += 1;
+  for (const row of rowOf) if (row >= 0) sizes[row] += 1;
   return sizes;
 }
 
 /**
- * The rows of the matrix: a neuron's row, how many neurons each holds and what
- * it is called. By a property, a row per value; neuron by neuron, a row per
- * neuron in the order asked for, or per run of them past `maxRows`.
+ * The rows of the matrix: a neuron's row (-1 if left out), how many neurons
+ * each holds and what it is called. By a property, a row per value; neuron by
+ * neuron, a row per neuron in the order asked for, or per run of them past
+ * `maxRows`.
  */
-function rowsOf(matrix: ConnectivityMatrix, request: ConnectivityRequest) {
+function rowsOf(
+  matrix: ConnectivityMatrix,
+  request: ConnectivityRequest,
+  included: Uint8Array | null
+) {
   const { size, nodeIds } = matrix;
   if (request.by === 'property') {
     const property = categorical(matrix, request.property);
     if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
-    const { values, ranks } = rankedValues(property);
+    const { values, ranks } = rankedValues(property, included);
     return {
       rowOf: ranks,
       sizes: countRows(ranks, values.length),
@@ -126,15 +150,18 @@ function rowsOf(matrix: ConnectivityMatrix, request: ConnectivityRequest) {
   }
 
   const property = categorical(matrix, request.orderBy);
-  const ordered = property ? rankedValues(property) : null;
-  const order = Array.from({ length: size }, (_, i) => i).sort(
-    (a, b) =>
-      (ordered ? ordered.ranks[a] - ordered.ranks[b] : 0) || nodeIds[a] - nodeIds[b] || a - b
-  );
-  const rows = Math.max(1, Math.min(size, request.maxRows));
-  const rowOf = new Int32Array(size);
+  const ordered = property ? rankedValues(property, included) : null;
+  const order = Array.from({ length: size }, (_, i) => i)
+    .filter((neuron) => !included || included[neuron])
+    .sort(
+      (a, b) =>
+        (ordered ? ordered.ranks[a] - ordered.ranks[b] : 0) || nodeIds[a] - nodeIds[b] || a - b
+    );
+  const count = order.length;
+  const rows = Math.max(1, Math.min(count, request.maxRows));
+  const rowOf = new Int32Array(size).fill(-1);
   order.forEach((neuron, rank) => {
-    rowOf[neuron] = Math.floor((rank * rows) / size);
+    rowOf[neuron] = Math.floor((rank * rows) / count);
   });
 
   const runs: RowRun[] = [];
@@ -147,26 +174,35 @@ function rowsOf(matrix: ConnectivityMatrix, request: ConnectivityRequest) {
     }
   }
   const sizes = countRows(rowOf, rows);
-  const ids = rows === size ? Float64Array.from(order, (neuron) => nodeIds[neuron]) : null;
+  const ids = rows === count ? Float64Array.from(order, (neuron) => nodeIds[neuron]) : null;
   const labels = ids
     ? Array.from(ids, (id) => `Neuron ${id}`)
     : Array.from(sizes, (n) => `${n.toLocaleString()} neurons`);
   return { rowOf, sizes, labels, runs: ordered ? runs : null, ids };
 }
 
-/** The matrix as `request` asks for it: its connections and synapses, summed by rows. */
+/**
+ * The matrix as `request` asks for it: its connections and synapses, summed by
+ * rows. Given `cells`, node ids, only those neurons and the connections between
+ * them are counted.
+ */
 export function groupConnectivity(
   matrix: ConnectivityMatrix,
-  request: ConnectivityRequest
+  request: ConnectivityRequest,
+  cells: ArrayLike<number> | null = null
 ): ConnectivityGroups {
-  const { rowOf, sizes, labels, runs, ids } = rowsOf(matrix, request);
+  const included = cells ? includedNeurons(matrix, cells) : null;
+  const { rowOf, sizes, labels, runs, ids } = rowsOf(matrix, request, included);
   const n = labels.length;
   const connections = new Float64Array(n * n);
   const synapses = matrix.synapses ? new Float64Array(n * n) : null;
   const { pre, post, size } = matrix;
   for (let e = 0; e < pre.length; e++) {
     if (pre[e] >= size || post[e] >= size) continue;
-    const cell = rowOf[pre[e]] * n + rowOf[post[e]];
+    const from = rowOf[pre[e]];
+    const to = rowOf[post[e]];
+    if (from < 0 || to < 0) continue;
+    const cell = from * n + to;
     connections[cell] += 1;
     if (synapses && matrix.synapses) synapses[cell] += matrix.synapses[e];
   }
@@ -185,4 +221,25 @@ export function defaultGrouping(properties: readonly PropertySummary[]): string 
   return (
     ['mtype', 'layer', 'synapse_class', 'etype'].find((n) => names.includes(n)) ?? names[0] ?? null
   );
+}
+
+/**
+ * Whether a selection of a node population's neurons is of the matrix's: the
+ * population at both ends of the edge population, as its name says them
+ * (`source__target__type`), else one of as many neurons.
+ */
+export function selectionApplies({
+  edgePopulation,
+  nodePopulation,
+  rowCount,
+  neurons,
+}: {
+  edgePopulation: string;
+  nodePopulation: string;
+  rowCount: number;
+  neurons: number;
+}): boolean {
+  const [source, target, kind] = edgePopulation.split('__');
+  if (kind !== undefined) return source === nodePopulation && target === nodePopulation;
+  return rowCount === neurons;
 }

@@ -125,7 +125,21 @@ export default function CircuitNodesTable({
     rowCount,
     getFilteredIndices,
   });
-  const { shown, filterError } = ticks;
+  const { shown, filterError, clearTicks, setFilterModel } = ticks;
+  // Every neuron on show again, the way the grid's reset does it, for a view in the grid's place.
+  const resetSelection = () => {
+    clearTicks();
+    setFilterModel({});
+  };
+  // A reset asked for from the 3D view goes to the grid, which is not up beside the matrix.
+  const resetRequest = cells?.resetRequest;
+  const seenResetRef = useRef(resetRequest);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new request resets
+  useEffect(() => {
+    if (resetRequest === seenResetRef.current) return;
+    seenResetRef.current = resetRequest;
+    if (resetRequest && view === 'connectivity') resetSelection();
+  }, [resetRequest]);
   // The neurons on show as a neuron set, where they are some but not all of them.
   const [makingSet, setMakingSet] = useState(false);
   const onCreateNeuronSet = cells?.onCreateNeuronSet;
@@ -225,6 +239,14 @@ export default function CircuitNodesTable({
               error: connectivity.error,
               empty: connectivity.entries?.length === 0,
             }}
+            selection={
+              population && {
+                cells: shown,
+                population: population.name,
+                rowCount,
+                onReset: resetSelection,
+              }
+            }
             headerSlot={headerSlot}
           />
         ) : (

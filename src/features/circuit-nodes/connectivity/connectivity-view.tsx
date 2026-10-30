@@ -1,5 +1,6 @@
 'use client';
 
+import { RiResetLeftLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
@@ -10,10 +11,13 @@ import {
   connectivityFigure,
   MEASURES,
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
-import { defaultGrouping } from '@/features/circuit-nodes/connectivity/connectivity-groups';
+import {
+  defaultGrouping,
+  selectionApplies,
+} from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { useConnectivityMatrix } from '@/features/circuit-nodes/connectivity/use-connectivity';
 import { GenericError } from '@/ui/molecules/generic-error';
-import { PILL_CLASS, PillSelect } from '@/ui/molecules/select/pill-select';
+import { PILL_CLASS, PillSelect, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 import { formatBytes } from '@/utils/format';
 import { MAX_ASSET_BYTES } from '@/utils/h5/fs';
@@ -58,15 +62,97 @@ function requestOf(groupBy: string, orderBy: string): ConnectivityRequest {
     : { by: 'property', property: groupBy };
 }
 
-/** In the toolbar's right end, as the table's count is: the matrix's size. */
-function Summary({ summary }: { summary: ConnectivitySummary }) {
+/** The table's ticks or filter, which the matrix keeps to where they are of its neurons. */
+export type MatrixSelection = {
+  /** The node ids on show: null for every neuron, undefined until they are known. */
+  cells: Uint32Array | null | undefined;
+  /** The node population they are of, and how many neurons it has. */
+  population: string;
+  rowCount: number;
+  /** Clears the table's ticks and filter. */
+  onReset: () => void;
+};
+
+/** A number per selection, so an answer is known by the selection it was asked over. */
+const selectionIds = new WeakMap<Uint32Array, number>();
+let lastSelectionId = 0;
+function selectionId(cells: Uint32Array | null): number {
+  if (!cells) return 0;
+  let id = selectionIds.get(cells);
+  if (id === undefined) {
+    lastSelectionId += 1;
+    id = lastSelectionId;
+    selectionIds.set(cells, id);
+  }
+  return id;
+}
+
+function sum(values: ArrayLike<number>): number {
+  let total = 0;
+  for (let i = 0; i < values.length; i++) total += values[i];
+  return total;
+}
+
+/**
+ * In the toolbar's right end, as the table's count is: the neurons drawn, and
+ * the connections and synapses among them where known.
+ */
+function Summary({
+  neurons,
+  of,
+  connections,
+  synapses,
+}: {
+  neurons: number;
+  /** All the matrix's neurons, where only some are drawn. */
+  of?: number;
+  connections: number | undefined;
+  synapses: number | null | undefined;
+}) {
   return (
     <span className={cn(styles.gridStat, styles.gridStatStacked, 'shrink-0 text-right')}>
-      <span>{summary.neurons.toLocaleString()} neurons</span>
       <span>
-        {summary.connections.toLocaleString()} connections
-        {summary.synapses !== null && ` · ${summary.synapses.toLocaleString()} synapses`}
+        {neurons.toLocaleString()}
+        {of !== undefined && ` of ${of.toLocaleString()}`} neurons
       </span>
+      {connections !== undefined && (
+        <span>
+          {connections.toLocaleString()} connections
+          {synapses != null && ` · ${synapses.toLocaleString()} synapses`}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** That only some neurons are drawn, and the way back to all of them. */
+function SelectionNote({
+  count,
+  total,
+  onReset,
+}: {
+  count: number;
+  total: number;
+  onReset: () => void;
+}) {
+  return (
+    <span className="ml-auto flex items-center gap-2">
+      <span
+        className={cn(PILL_CLASS, 'font-normal whitespace-nowrap text-neutral-500 hover:bg-white')}
+      >
+        Only the
+        <strong className="text-primary-9 font-semibold">{count.toLocaleString()}</strong>
+        selected of {total.toLocaleString()} neurons
+      </span>
+      <button
+        type="button"
+        onClick={onReset}
+        title="Show every neuron again"
+        aria-label="Show every neuron again"
+        className={ROUND_PILL_CLASS}
+      >
+        <RiResetLeftLine className="size-4" />
+      </button>
     </span>
   );
 }
@@ -81,6 +167,7 @@ export function ConnectivityView({
   assetId,
   entry,
   listing,
+  selection,
   headerSlot,
 }: {
   circuitId: string;
@@ -89,6 +176,8 @@ export function ConnectivityView({
   entry: ConnectivityEntry | undefined;
   /** How the asset's list of matrices is getting on. */
   listing: { isLoading: boolean; error: Error | null; empty: boolean };
+  /** The neurons the table has selected, to which the matrix keeps. */
+  selection?: MatrixSelection;
   headerSlot: HTMLElement | null;
 }) {
   // A matrix past what the browser can hold is never asked for.
@@ -156,7 +245,9 @@ export function ConnectivityView({
     <ReadyMatrix
       key={matrix.key}
       summary={state.summary}
+      edgePopulation={entry.population}
       group={matrix.group}
+      selection={selection}
       headerSlot={headerSlot}
     />
   );
@@ -164,11 +255,15 @@ export function ConnectivityView({
 
 function ReadyMatrix({
   summary,
+  edgePopulation,
   group,
+  selection,
   headerSlot,
 }: {
   summary: ConnectivitySummary;
-  group: (request: ConnectivityRequest) => Promise<ConnectivityGroups>;
+  edgePopulation: string;
+  group: (request: ConnectivityRequest, cells: Uint32Array | null) => Promise<ConnectivityGroups>;
+  selection: MatrixSelection | undefined;
   headerSlot: HTMLElement | null;
 }) {
   const categorical = summary.properties.filter((p) => p.kind === 'categorical');
@@ -177,7 +272,21 @@ function ReadyMatrix({
   const [orderBy, setOrderBy] = useState(initial ?? MATRIX_ORDER);
   const [measure, setMeasure] = useState<ConnectivityMeasure>('probability');
   const request = useMemo(() => requestOf(groupBy, orderBy), [groupBy, orderBy]);
-  const requestKey = JSON.stringify(request);
+
+  // The table's selection, where it is some of the matrix's own neurons.
+  const cells =
+    selection?.cells &&
+    selection.cells.length < selection.rowCount &&
+    selectionApplies({
+      edgePopulation,
+      nodePopulation: selection.population,
+      rowCount: selection.rowCount,
+      neurons: summary.neurons,
+    })
+      ? selection.cells
+      : null;
+  const neurons = cells ? cells.length : summary.neurons;
+  const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}`;
 
   // Kept with the request it answers, so a change never draws the last one's rows.
   const [answer, setAnswer] = useState<{
@@ -187,7 +296,7 @@ function ReadyMatrix({
   } | null>(null);
   useEffect(() => {
     let live = true;
-    group(request)
+    group(request, cells)
       .then((groups) => live && setAnswer({ key: requestKey, groups }))
       .catch((error: unknown) => {
         if (live) {
@@ -200,7 +309,7 @@ function ReadyMatrix({
     return () => {
       live = false;
     };
-  }, [group, request, requestKey]);
+  }, [group, request, cells, requestKey]);
   const current = answer?.key === requestKey ? answer : null;
 
   const byNeuron = groupBy === BY_NEURON;
@@ -216,7 +325,24 @@ function ReadyMatrix({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {headerSlot && createPortal(<Summary summary={summary} />, headerSlot)}
+      {headerSlot &&
+        createPortal(
+          cells ? (
+            <Summary
+              neurons={neurons}
+              of={summary.neurons}
+              connections={current?.groups && sum(current.groups.connections)}
+              synapses={current?.groups?.synapses && sum(current.groups.synapses)}
+            />
+          ) : (
+            <Summary
+              neurons={neurons}
+              connections={summary.connections}
+              synapses={summary.synapses}
+            />
+          ),
+          headerSlot
+        )}
       <div className="flex flex-wrap items-center gap-2 py-2">
         <PillSelect
           label="Group by"
@@ -224,11 +350,7 @@ function ReadyMatrix({
           onChange={(value) => {
             setGroupBy(value);
             // A neuron to a neuron is connected or not: how many synapses says more.
-            if (
-              value === BY_NEURON &&
-              summary.neurons <= MAX_NEURON_ROWS &&
-              measure === 'probability'
-            ) {
+            if (value === BY_NEURON && neurons <= MAX_NEURON_ROWS && measure === 'probability') {
               setMeasure(summary.synapses === null ? 'connections' : 'synapses');
             }
           }}
@@ -241,7 +363,7 @@ function ReadyMatrix({
             {
               value: BY_NEURON,
               label: 'Neuron',
-              detail: summary.neurons.toLocaleString(),
+              detail: neurons.toLocaleString(),
             },
           ]}
         />
@@ -262,10 +384,13 @@ function ReadyMatrix({
           onChange={(value) => setMeasure(value as ConnectivityMeasure)}
           options={measures.map((m) => ({ value: m.value, label: m.label }))}
         />
-        {byNeuron && summary.neurons > MAX_NEURON_ROWS && (
+        {byNeuron && neurons > MAX_NEURON_ROWS && (
           <span className="text-xs text-neutral-400">
-            {Math.ceil(summary.neurons / MAX_NEURON_ROWS).toLocaleString()} neurons or so to a row
+            {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons or so to a row
           </span>
+        )}
+        {cells && selection && (
+          <SelectionNote count={cells.length} total={summary.neurons} onReset={selection.onReset} />
         )}
       </div>
       <div className="relative min-h-0 flex-1">
@@ -273,6 +398,8 @@ function ReadyMatrix({
           <div className={styles.centered}>
             <GenericError content={current.error.message} />
           </div>
+        ) : cells?.length === 0 ? (
+          <Empty description="None of the matrix's neurons are selected" />
         ) : figure ? (
           <StatisticsPlot figure={figure} />
         ) : (

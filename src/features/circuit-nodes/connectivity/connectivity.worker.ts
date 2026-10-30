@@ -39,9 +39,13 @@ const api = {
     return summarizeConnectivity(matrix);
   },
 
-  async group(request: ConnectivityRequest): Promise<ConnectivityGroups> {
+  /** The matrix's rows as asked for: of the neurons whose node ids are `cells`, where given. */
+  async group(
+    request: ConnectivityRequest,
+    cells: Uint32Array | null = null
+  ): Promise<ConnectivityGroups> {
     if (!matrix) throw new Error('No connectivity matrix open; call open() first');
-    const groups = groupConnectivity(matrix, request);
+    const groups = groupConnectivity(matrix, request, cells);
     const buffers = [groups.sizes, groups.connections, groups.synapses, groups.nodeIds].flatMap(
       (array) => (array ? [array.buffer as ArrayBuffer] : [])
     );

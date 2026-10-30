@@ -925,8 +925,13 @@ export function NodesGrid({
     gridRef.current?.api.setFilterModel(null);
     reset?.onReset();
   };
+  // Only a request made while the grid is up resets it: one from before it mounted, such as
+  // while the host showed a view of its own in its place, was seen to then.
+  const seenResetRef = useRef(resetRequest);
   // biome-ignore lint/correctness/useExhaustiveDependencies: only a new request resets, with the reset as it stands
   useEffect(() => {
+    if (resetRequest === seenResetRef.current) return;
+    seenResetRef.current = resetRequest;
     if (resetRequest) onResetClick();
   }, [resetRequest]);
 

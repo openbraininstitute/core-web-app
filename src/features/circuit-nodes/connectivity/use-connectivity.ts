@@ -152,10 +152,14 @@ class ConnectivitySessions {
     if (session?.state.status === 'error') this.open(key, session);
   }
 
-  group(key: string, request: ConnectivityRequest): Promise<ConnectivityGroups> {
+  group(
+    key: string,
+    request: ConnectivityRequest,
+    cells: Uint32Array | null
+  ): Promise<ConnectivityGroups> {
     const proxy = this.sessions.get(key)?.proxy;
     if (!proxy) return Promise.reject(new Error('The connectivity matrix is not open'));
-    return proxy.group(request);
+    return proxy.group(request, cells);
   }
 
   private setState(session: Session, state: ConnectivityState): void {
@@ -237,9 +241,9 @@ export function useConnectivityMatrix(
     key ? connectivitySessions.state(key) : IDLE
   );
   const group = useCallback(
-    (request: ConnectivityRequest) =>
+    (request: ConnectivityRequest, cells: Uint32Array | null) =>
       key
-        ? connectivitySessions.group(key, request)
+        ? connectivitySessions.group(key, request, cells)
         : Promise.reject(new Error('No connectivity matrix')),
     [key]
   );

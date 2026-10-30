@@ -4,6 +4,7 @@ import {
   defaultGrouping,
   groupConnectivity,
   possiblePairs,
+  selectionApplies,
   summarizeConnectivity,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { connectivityEntries } from '@/features/circuit-nodes/connectivity/use-connectivity';
@@ -104,6 +105,62 @@ describe('groupConnectivity neuron by neuron', () => {
       ['None', 1, 1],
     ]);
     expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(6);
+  });
+});
+
+describe('groupConnectivity over a selection', () => {
+  // Nodes 20, 30 and 40: L23_PC, L2_TPC and L23_PC again.
+  const cells = Uint32Array.from([20, 30, 40]);
+
+  it('keeps to the selected neurons and the values they take', () => {
+    const groups = groupConnectivity(MATRIX, { by: 'property', property: 'mtype' }, cells);
+
+    expect(groups.labels).toEqual(['L23_PC', 'L2_TPC']);
+    expect([...groups.sizes]).toEqual([2, 1]);
+  });
+
+  it('counts only the connections between selected neurons', () => {
+    const groups = groupConnectivity(MATRIX, { by: 'property', property: 'mtype' }, cells);
+
+    // 20 → 40, 40 → 20 and 30 → 20; 10 → 20 and 50 → 10 leave out a neuron.
+    expect([...groups.connections]).toEqual([2, 0, 1, 0]);
+    expect([...(groups.synapses ?? [])]).toEqual([10, 0, 3, 0]);
+  });
+
+  it('draws only the selected neurons one by one', () => {
+    const groups = groupConnectivity(MATRIX, { by: 'neuron', orderBy: null, maxRows: 10 }, cells);
+
+    expect([...(groups.nodeIds ?? [])]).toEqual([20, 30, 40]);
+    expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(3);
+  });
+
+  it('has nothing to draw of a selection of none', () => {
+    const groups = groupConnectivity(
+      MATRIX,
+      { by: 'property', property: 'mtype' },
+      new Uint32Array(0)
+    );
+
+    expect(groups.labels).toEqual([]);
+  });
+});
+
+describe('selectionApplies', () => {
+  it('holds for the population at both ends of the edge population', () => {
+    const at = (nodePopulation: string, edgePopulation = 'S1__S1__chemical') =>
+      selectionApplies({ edgePopulation, nodePopulation, rowCount: 5, neurons: 5 });
+
+    expect(at('S1')).toBe(true);
+    expect(at('POm')).toBe(false);
+    expect(at('S1', 'POm__S1__chemical')).toBe(false);
+  });
+
+  it('falls back to the number of neurons where the name says nothing of its ends', () => {
+    const at = (rowCount: number) =>
+      selectionApplies({ edgePopulation: 'default', nodePopulation: 'All', rowCount, neurons: 5 });
+
+    expect(at(5)).toBe(true);
+    expect(at(6)).toBe(false);
   });
 });
 
