@@ -11,7 +11,8 @@ import { WheelHint } from './status';
 
 import type { ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
-import type { Projection, SceneViewer } from '../engine/scene-viewer';
+import type { Projection } from '../engine/scene-view';
+import type { SceneViewer } from '../engine/scene-viewer';
 
 /**
  * The control layer over a view, laid out as the circuit viewer's: fullscreen and the viewer's menus (top-left),

@@ -14,7 +14,7 @@ import {
 } from './constants';
 
 import type { BumpParams, Look } from '@/features/viewer-3d/engine/looks';
-import type { Projection } from '@/features/viewer-3d/engine/scene-viewer';
+import type { Projection } from '@/features/viewer-3d/engine/scene-view';
 import type { Palette } from './engine/colors';
 import type { SkeletonKind } from './engine/viewer';
 

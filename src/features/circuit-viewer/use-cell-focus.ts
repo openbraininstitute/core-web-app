@@ -1,7 +1,5 @@
 import { useCallback, useState } from 'react';
 
-import { useEmptySceneTap } from '@/features/circuit-viewer/use-empty-scene-tap';
-
 /**
  * The cell pointed out in the scene, and in a raster beside it: a table row
  * under the pointer while the table is on show, else the cell last clicked.
@@ -24,12 +22,8 @@ export function useCellFocus({ scope, tableShown }: { scope: string; tableShown:
     nodeId: number;
     key: number;
   } | null>(null);
-  // A tap on the scene's empty space lets the clicked cell go.
-  const sceneTap = useEmptySceneTap(() => setClickedCell(null));
-  const { cellClicked } = sceneTap;
   const handleCellClick = useCallback(
     (cell: number | null) => {
-      cellClicked();
       if (cell === null) {
         setClickedCell(null);
         return;
@@ -41,18 +35,17 @@ export function useCellFocus({ scope, tableShown }: { scope: string; tableShown:
           : { scope, nodeId: cell, key: (previous?.key ?? 0) + 1 }
       );
     },
-    [scope, cellClicked]
+    [scope]
   );
   const focusedCell = clickedCell?.scope === scope ? clickedCell : null;
+  const releaseCell = useCallback(() => setClickedCell(null), []);
 
   return {
     handleHoveredCell,
     handleCellClick,
-    handleScenePointerDown: sceneTap.onPointerDownCapture,
-    handleScenePointerUp: sceneTap.onPointerUpCapture,
     /** The cell clicked, while it is of the scope on show. */
     focusedCell,
     highlightedCell: hoveredRow ?? focusedCell?.nodeId ?? null,
-    releaseCell: () => setClickedCell(null),
+    releaseCell,
   };
 }

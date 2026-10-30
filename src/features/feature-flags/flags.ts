@@ -80,6 +80,15 @@ export const emMeshDebugFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+/** A circuit past the small scales as morphologies and not only somas, where OBI-One can build its pack. */
+export const circuitMorphologiesFlag = defineFlag<boolean>({
+  key: 'circuit-morphologies',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Morphologies in the 3D viewer of circuits larger than a small microcircuit',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
  * unless switched on. */
 export const learnFlag = defineFlag<boolean>({
@@ -145,6 +154,7 @@ export const flags = [
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
+  circuitMorphologiesFlag,
   learnFlag,
   aiButtonFlag,
   courseToolbarFlag,

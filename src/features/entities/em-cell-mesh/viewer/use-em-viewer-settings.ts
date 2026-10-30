@@ -7,7 +7,8 @@ import { STAND_IN_TRIANGLES } from './engine/stand-in';
 import { storedMeshColor, storeMeshColor } from './mesh-color';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
-import type { AODepth, Projection } from '@/features/viewer-3d/engine/scene-viewer';
+import type { Projection } from '@/features/viewer-3d/engine/scene-view';
+import type { AODepth } from '@/features/viewer-3d/engine/scene-viewer';
 import type { ForcedMesh } from './engine/mesh-choice';
 
 export interface EmViewerSettings {

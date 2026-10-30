@@ -18,9 +18,9 @@ import type {
 export const ELECTRODE_LOCATIONS_CONFIG_KEY = 'electrode_locations';
 
 /**
- * One coloured point-cloud group for morphoviewer `overlays`.
+ * One coloured point-cloud group of the viewer's electrodes.
  *
- * Why this shape: morphoviewer paints world XYZ spheres; the host also needs
+ * Why this shape: the viewer paints world XYZ spheres; the host also needs
  * `id` / `origin` / `rotation` so drag-rotate can write back into the form.
  */
 export interface ICircuitOverlayGroup {
@@ -104,7 +104,7 @@ export function colorForElectrodeOrigin(name: string): string {
 }
 
 /**
- * Pack API `locations` tuples into a morphoviewer-friendly Float32Array.
+ * Pack API `locations` tuples into the Float32Array the viewer reads.
  *
  * @param locations - World XYZ points from Obi-One summary
  * @returns Interleaved `[x0,y0,z0, x1,y1,z1, …]`
@@ -163,7 +163,7 @@ function readRotation(entry: ElectrodeLocationsBlockSummary): {
 }
 
 /**
- * Map an Obi-One dictionary summary into morphoviewer overlay groups.
+ * Map an Obi-One dictionary summary into the viewer's electrode groups.
  *
  * How: each block with `locations` → contact cloud + (optional) origin sphere,
  * both sharing `id === blockName` so one gesture transforms the whole array.
@@ -175,7 +175,6 @@ function readRotation(entry: ElectrodeLocationsBlockSummary): {
  *
  * @example
  * const groups = electrodeSummaryToOverlays(apiResponse);
- * // → MorphoViewerSmallCircuit overlays={groups}
  */
 export function electrodeSummaryToOverlays(
   summary: TElectrodeLocationsDictionarySummary | null | undefined
@@ -213,7 +212,7 @@ export function electrodeSummaryToOverlays(
       });
     }
   }
-  // Stable order for React Query / morphoviewer identity.
+  // Stable order for React Query and the viewer's identity checks.
   groups.sort((a, b) => a.name.localeCompare(b.name));
   return groups;
 }
@@ -390,7 +389,7 @@ function roundCoord(value: number): number {
 /**
  * Obi-One extrinsic ZXY Euler (degrees) → row-major 3×3 matrix.
  *
- * Why shared with morphoviewer rotate math: placeholders must use the same
+ * Why shared with the viewer's rotate math: placeholders must use the same
  * convention as live drag-rotate so orientation never disagrees.
  */
 function rotationMatrixZXY(xDeg: number, yDeg: number, zDeg: number): Float64Array {

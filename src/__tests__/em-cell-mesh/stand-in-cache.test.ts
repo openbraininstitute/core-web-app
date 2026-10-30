@@ -2,7 +2,7 @@
 import { MeshoptSimplifier } from 'meshoptimizer';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { STAND_IN_CACHE } from '@/features/entities/em-cell-mesh/viewer/engine/asset-cache';
+import { STAND_IN_CACHE } from '@/features/entities/em-cell-mesh/viewer/engine/caches';
 import { makeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in';
 import {
   decodeStandIn,
@@ -13,7 +13,7 @@ import {
   storeStandIn,
 } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in-cache';
 
-import { FakeCacheStorage } from './fake-caches';
+import { FakeCacheStorage } from '../viewer-3d/fake-caches';
 import { torus } from './mesh-fixtures';
 
 import type { StandIn } from '@/features/entities/em-cell-mesh/viewer/engine/types';

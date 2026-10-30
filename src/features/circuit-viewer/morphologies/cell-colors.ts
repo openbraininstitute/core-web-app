@@ -1,0 +1,141 @@
+import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { CellColors, Population, SectionColors } from './types';
+
+/** No cell has a colour of its own: each is in the view's own colour. */
+export const NO_CELL_COLORS: CellColors = { palette: [], columnByCell: new Uint16Array(0) };
+
+/** What the rest of the population fades to while one of its somas is pointed out. */
+const FADED = '#d4d4d4';
+
+/**
+ * How the rest of the population on show is drawn while one of its cells is pointed out: faded where somas are drawn,
+ * the cell standing out among them; taken out where morphologies are, whose tangle would hide it, and no hover lit
+ * beside it there.
+ */
+export function pointingOut(
+  highlightedCell: number | undefined,
+  drawsMorphologies: boolean,
+  recededColor?: string
+): { fadedColor: string | false; hover: boolean } {
+  const pointing = highlightedCell !== undefined;
+  return {
+    fadedColor: pointing && !drawsMorphologies ? (recededColor ?? FADED) : false,
+    hover: !(pointing && drawsMorphologies),
+  };
+}
+
+/** Each population's cells in the page's numbering, from its first to the one after its last. */
+export function populationRanges(
+  populations: readonly Population[]
+): { name: string; first: number; end: number }[] {
+  let first = 0;
+  return populations.map(({ name, cells }) => {
+    const range = { name, first, end: first + cells };
+    first = range.end;
+    return range;
+  });
+}
+
+/** The population the cell numbered `cell` is of, and its index in it; undefined past the last. */
+export function cellAt(
+  populations: readonly Population[],
+  cell: number
+): { name: string; index: number } | undefined {
+  const range = populationRanges(populations).find(({ end }) => cell < end);
+  return range && { name: range.name, index: cell - range.first };
+}
+
+export interface CellColorsOptions {
+  /** In the page's order, which numbers the cells. */
+  populations: readonly Population[];
+  /** The population on show. */
+  subject: string | undefined;
+  /** The colour-by mapping, of the population on show's cells. */
+  nodeColors?: NodeColors;
+  /** What the cells of the population on show are in where the mapping has no colour for them; null for the view's. */
+  own?: string | SectionColors | null;
+  /** What the other populations' cells are in; the view's own colour without it. */
+  receded?: string;
+  hidden: ReadonlySet<string>;
+  /** One flag per cell of the population on show; a 0 takes that cell out as a hidden population's are. */
+  shownCells?: Uint8Array;
+  /** A cell of the population on show to point out, by its index in it: drawn whatever `shownCells` says. */
+  highlightedCell?: number;
+  /** What the rest of the population on show is in while a cell is pointed out; false takes it out. */
+  fadedColor?: string | false;
+}
+
+/**
+ * A palette and each cell's column of it, from what the page knows of the cells. The mapping's palette comes first, at
+ * its own indices, so that its columns are copied as they are: at region scale a selection change costs one copy of
+ * a typed array. Each colour of our own then takes a column on first use: `own`, the receded colour, and `false` for
+ * the cells of a hidden population, which are not drawn, nor picked.
+ */
+export function cellColorsOf({
+  populations,
+  subject,
+  nodeColors,
+  own = null,
+  receded,
+  hidden,
+  shownCells,
+  highlightedCell,
+  fadedColor = false,
+}: CellColorsOptions): CellColors {
+  if (
+    !nodeColors &&
+    own === null &&
+    !receded &&
+    hidden.size === 0 &&
+    !shownCells &&
+    highlightedCell === undefined
+  ) {
+    return NO_CELL_COLORS;
+  }
+
+  const palette: CellColors['palette'] = nodeColors ? [...nodeColors.palette] : [];
+  const columns = new Map<CellColors['palette'][number], number>();
+  const columnOf = (color: CellColors['palette'][number]) => {
+    let column = columns.get(color);
+    if (column === undefined) {
+      column = palette.push(color) - 1;
+      columns.set(color, column);
+    }
+    return column;
+  };
+  const ranges = populationRanges(populations);
+  const columnByCell = new Uint16Array(ranges.at(-1)?.end ?? 0);
+  for (const { name, first, end } of ranges) {
+    if (hidden.has(name)) {
+      columnByCell.fill(columnOf(false), first, end);
+    } else if (name === subject) {
+      const mapped = Math.min(end - first, nodeColors?.columnByNode.length ?? 0);
+      // A cell out of the population points nothing out.
+      const pointed =
+        highlightedCell !== undefined && highlightedCell >= 0 && highlightedCell < end - first
+          ? highlightedCell
+          : undefined;
+      if (pointed !== undefined && !shownCells) {
+        // Every other cell fades, so none of the mapping is copied but the one pointed out's.
+        columnByCell.fill(columnOf(fadedColor), first, end);
+        columnByCell[first + pointed] =
+          nodeColors && pointed < mapped ? nodeColors.columnByNode[pointed] : columnOf(own);
+        continue;
+      }
+      if (nodeColors) columnByCell.set(nodeColors.columnByNode.subarray(0, mapped), first);
+      if (first + mapped < end) columnByCell.fill(columnOf(own), first + mapped, end);
+      if (shownCells) {
+        const off = columnOf(false);
+        const faded = pointed === undefined ? undefined : columnOf(fadedColor);
+        for (let i = 0; i < end - first; i++) {
+          if (i === pointed) continue;
+          if (shownCells[i] !== 1) columnByCell[first + i] = off;
+          else if (faded !== undefined) columnByCell[first + i] = faded;
+        }
+      }
+    } else {
+      columnByCell.fill(columnOf(receded ?? null), first, end);
+    }
+  }
+  return { palette, columnByCell };
+}

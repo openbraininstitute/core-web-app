@@ -1,4 +1,11 @@
-import { RiCameraLine, RiEqualizerLine, RiResetLeftLine } from '@remixicon/react';
+import {
+  RiCameraLine,
+  RiEqualizerLine,
+  RiLoopRightLine,
+  RiNodeTree,
+  RiResetLeftLine,
+  RiSunLine,
+} from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
@@ -24,6 +31,11 @@ export interface ViewerControlsMenuProps {
   /** axons toggle — omit for viewers that have no axons (point cloud) */
   showAxons?: boolean;
   onToggleAxons?: (value: boolean) => void;
+  /** the cells as morphologies and not soma points; omit where a circuit is not offered both */
+  showMorphologies?: boolean;
+  onToggleMorphologies?: (value: boolean) => void;
+  /** why the cells cannot be switched to morphologies yet, or ever: the switch is shown off and disabled with it */
+  morphologiesNote?: string;
   /** neuron / soma opacity (0–1); omit to hide the control */
   neuronOpacity?: number;
   onNeuronOpacityChange?: (value: number) => void;
@@ -33,6 +45,9 @@ export interface ViewerControlsMenuProps {
   /** how long a replayed spike stays lit, in wall-clock seconds; omit without a replay */
   spikeAfterglowInSeconds?: number;
   onSpikeAfterglowChange?: (seconds: number) => void;
+  /** whether replayed spikes give off light; omit without a replay */
+  spikeGlow?: boolean;
+  onToggleSpikeGlow?: (value: boolean) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -51,6 +66,9 @@ export interface ViewerControlsMenuProps {
   /** scalebar down the side of the canvas */
   showScalebar?: boolean;
   onToggleScalebar?: (value: boolean) => void;
+  /** the view turning slowly on its own */
+  spin?: boolean;
+  onToggleSpin?: (value: boolean) => void;
   /** reset-config toggle is shown only when a saved config exists for this circuit */
   hasSavedConfig: boolean;
   onResetConfig: () => void;
@@ -68,12 +86,17 @@ export function ViewerControlsMenu({
   onBackgroundDarkChange,
   showAxons,
   onToggleAxons,
+  showMorphologies,
+  onToggleMorphologies,
+  morphologiesNote,
   neuronOpacity,
   onNeuronOpacityChange,
   somaSizeScale,
   onSomaSizeScaleChange,
   spikeAfterglowInSeconds,
   onSpikeAfterglowChange,
+  spikeGlow,
+  onToggleSpikeGlow,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -85,6 +108,8 @@ export function ViewerControlsMenu({
   onToggleZoomSlider,
   showScalebar,
   onToggleScalebar,
+  spin,
+  onToggleSpin,
   onElectrodeRadiusChange,
   hasSavedConfig,
   onResetConfig,
@@ -108,6 +133,33 @@ export function ViewerControlsMenu({
               onCaptureImage();
             }}
           />
+          {(onToggleMorphologies || morphologiesNote) && (
+            <MenuRow
+              label={
+                morphologiesNote ? (
+                  <span className="flex flex-col">
+                    Morphologies
+                    <span
+                      data-testid="viewer-morphologies-note"
+                      className="text-xs text-neutral-500"
+                    >
+                      {morphologiesNote}
+                    </span>
+                  </span>
+                ) : (
+                  'Morphologies'
+                )
+              }
+              icon={<RiNodeTree className="size-4 shrink-0" />}
+            >
+              <ViewerSwitch
+                testId="viewer-toggle-morphologies"
+                checked={!morphologiesNote && !!showMorphologies}
+                disabled={!!morphologiesNote}
+                onChange={onToggleMorphologies ?? (() => {})}
+              />
+            </MenuRow>
+          )}
           {onToggleAxons && (
             <MenuRow label="Axons" icon={<AxonIcon className="size-4 shrink-0" />}>
               <ViewerSwitch
@@ -136,6 +188,11 @@ export function ViewerControlsMenu({
               value={electrodeRadius}
               onChange={onElectrodeRadiusChange}
             />
+          )}
+          {onToggleSpin && (
+            <MenuRow label="Spin" icon={<RiLoopRightLine className="size-4 shrink-0" />}>
+              <ViewerSwitch testId="viewer-toggle-spin" checked={!!spin} onChange={onToggleSpin} />
+            </MenuRow>
           )}
           {onToggleScalebar && (
             <MenuRow label="Scale bar" icon={<RulerMeasure className="size-4 shrink-0" />}>
@@ -214,6 +271,22 @@ export function ViewerControlsMenu({
               format={(seconds) => `${seconds.toFixed(2)} s`}
               onChange={onSpikeAfterglowChange}
             />
+          )}
+          {onToggleSpikeGlow && (
+            <MenuRow
+              label={
+                <span title="Spiking cells give off a soft light on a dark background, and a tint of their colour on a light one. Turn it off on a slow graphics card">
+                  Spike glow
+                </span>
+              }
+              icon={<RiSunLine className="size-4 shrink-0" />}
+            >
+              <ViewerSwitch
+                testId="viewer-toggle-spike-glow"
+                checked={!!spikeGlow}
+                onChange={onToggleSpikeGlow}
+              />
+            </MenuRow>
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
             <BackgroundToggle dark={backgroundDark} onChange={onBackgroundDarkChange} />

@@ -6,7 +6,8 @@ import { FullscreenPortalScope, toggleFullscreen } from '@/utils/fullscreen';
 import { useSignal } from './use-signal';
 
 import type { ReactNode, RefObject } from 'react';
-import type { Projection, SceneViewer } from './engine/scene-viewer';
+import type { Projection, SceneView } from './engine/scene-view';
+import type { SceneViewer } from './engine/scene-viewer';
 
 /** A viewer's element, which double-clicking takes fullscreen: the host of its canvas, and its chrome over it. */
 export function ViewerFrame({
@@ -38,7 +39,7 @@ export function ViewerFrame({
 }
 
 /** For a while after a wheel turned outside fullscreen without Ctrl, which scrolls the page: the hint to hold it. */
-export function useWheelHint(viewer: SceneViewer | null): boolean {
+export function useWheelHint(viewer: Pick<SceneView, 'onWheelWithoutCtrl'> | null): boolean {
   const [hint, setHint] = useSignal(10000);
   useEffect(() => viewer?.onWheelWithoutCtrl(() => setHint(true)), [viewer, setHint]);
   return hint;

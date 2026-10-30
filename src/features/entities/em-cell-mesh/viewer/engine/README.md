@@ -48,7 +48,7 @@ The meshes also have level-of-detail sets made by Ultraliser (`lod_mesh_block` a
 6. **One worker, one tab at a time.** Each step's worker hands its arrays to the next through the page, transferred rather than copied, and is terminated once done (`load.ts`). The peak is then the decode's, about 2.4 GB measured on the largest mesh, never two workers' at once. The first version ran the stand-in and the full build side by side after the decode, which would have peaked at about 5 GB. The decode, the stand-in and the build hold a Web Lock (`em-mesh-decode`) between them, so that two tabs don't reach their peaks together. A view not seen yet (`SceneViewer.seen`: a tab opened in the background, or the card scrolled past) downloads and reads its caches, but makes nothing until it is.
 
    A worker that dies, out of memory say, fails the step it was on rather than leave it hanging: Comlink never settles a call to a dead worker. Before the stand-in, that is an error; after it, the stand-in stays on show, and the status says that full detail could not be loaded.
-7. **Caches.** Three Cache Storage buckets, each kept for 30 days and to 500 MiB, the least recently opened going first past that (`asset-cache.ts`). The 30 days are safe, as a replaced mesh gets a new asset id. The browser may still drop a bucket (Safari after a week without a visit): it is only a cache.
+7. **Caches.** Three Cache Storage buckets, each kept for 30 days and to 500 MiB, the least recently opened going first past that (`caches.ts`, on `viewer-3d/load/asset-cache.ts`). The 30 days are safe, as a replaced mesh gets a new asset id. The browser may still drop a bucket (Safari after a week without a visit): it is only a cache.
    - `em-cell-mesh-glb` holds the GLB as downloaded (step 1). It saves the download, about 2.5 s on the largest mesh.
    - `em-cell-mesh-stand-in` holds the stand-in as packed, a JSON header then the arrays (`stand-in-cache.ts`): about 11 bytes a triangle, 32 MB for the largest mesh at 3M. The stand-in worker makes the entry, a Blob, which the page stores without another copy. It is read as the load starts, and on a hit the stand-in is drawn at once, and the stand-in worker is never started. Each size has an entry of its own.
    - `em-cell-mesh-full` holds the full mesh as packed, its arrays compressed with meshoptimizer's codecs (`full-cache.ts`): a quarter of the size, 86 MiB for the largest mesh, decoded in a fifth of a second. A built mesh's chunks go to the full-cache worker as they go up to the GPU, once three is done with their arrays. The worker encodes each as it comes, stores them all after the last, and is terminated. The cache is asked as the load starts, and read as soon as it has the mesh, while the stand-in's cache is read and the GLB downloads: on a hit the download stops, and nothing is decoded or built. A stand-in of a size not cached yet is clustered from the full mesh's chunks (`unpackMesh`): on Draco's grid every chunk has the same origin, so the chunks joined are the mesh again, the vertices on their borders once in each. A mesh refused at its header, or whose download fails, offline say, loads from it all the same.
@@ -62,7 +62,7 @@ The meshes also have level-of-detail sets made by Ultraliser (`lod_mesh_block` a
 9. **Which mesh.** Before every frame `MeshChooser` (`mesh-choice.ts`) picks the stand-in or the full mesh. The stand-in is drawn while the full mesh is not all up, where the stand-in is the whole mesh, and while the view moves on a GPU too slow for the full mesh (step 10). The Debug menu can force either. Otherwise the choice is by the stand-in's error on screen, in device pixels, the canvas's own: the error in µm times the pixel ratio, over the µm a CSS pixel spans, which in the orthographic view is the scale bar's figure. In perspective that is taken at the point of the mesh's bounds nearest the camera, where the error looks largest. The full mesh comes in past 0.1 px and goes under 0.06 px, with no flicker in between.
 
    The thresholds are far under a pixel because of what clustering loses (step 4). They began at 1.2 and 0.8 px, for a stand-in that would only move the surface, and came down as the stand-in turned out to drop the thinnest fibres. At a pixel ratio of 1 the dendrites of every stand-in size looked thinner than the full mesh's at overview zoom, at 0.12 to 0.54 px, their spines lost, and zoomed further out the largest mesh's 3M stand-in still looked thinner at 0.13 px. At overview zoom the full mesh is drawn at either pixel ratio. At a pixel ratio of 1, the largest mesh's stand-in comes back at about an eighth of the overview's zoom.
-10. **Frame cost.** A frame is timed on the GPU (`gpu-timer.ts`): timing `render()` would measure only the submission. Chrome and Edge on desktop have `EXT_disjoint_timer_query_webgl2`. Elsewhere a fence after the frame is polled every 2 ms, from the frame's start until the GPU is done with it, which counts the submission and the polling too, and errs on the slow side. A result not in after a second counts as a second, as the slowest GPUs are what the measurement is for. One frame is timed at a time.
+10. **Frame cost.** A frame is timed on the GPU (`gpu-timer.ts`, in `viewer-3d/engine/`): timing `render()` would measure only the submission. Chrome and Edge on desktop have `EXT_disjoint_timer_query_webgl2`. Elsewhere a fence after the frame is polled every 2 ms, from the frame's start until the GPU is done with it, which counts the submission and the polling too, and errs on the slow side. A result not in after a second counts as a second, as the slowest GPUs are what the measurement is for. One frame is timed at a time.
 
     The full mesh's cost (`FrameCost`) is the median of the last three full frames timed. A GPU that has been idle draws its first frames slowly: the M4 Pro drew the largest mesh in 13 to 31 ms the first frame after a pause, and in 8 ms from the third on. So a cold full frame, the first after a pause, after frames of the stand-in or after a change, counts at half. The two full frames after an upload or a resize go untimed, and after either, while nothing moves, the viewer draws the frames it takes to time one, so that the cost is known before the first drag. Moving frames are timed from the third after a pause, or after the page was hidden, and only where the frame before drew the same mesh, cut down the same way.
 
@@ -138,7 +138,7 @@ stand-in.worker.ts    worker entry: the stand-in, and meshoptimizer's memory for
 build.worker.ts       worker entry: the full mesh's normals and chunks, terminated after
 full-cache.worker.ts  worker entry: the full mesh's cache, written as it goes up and read back, terminated after
 download.ts           the GLB from its cache or the network, teed into the cache, its header checked as it arrives
-asset-cache.ts        Cache Storage buckets kept in bounds: lifetime, total size, the least recently opened first
+caches.ts             the three Cache Storage buckets
 budget.ts             whether a mesh fits, from its header: Draco's ceiling, the device's memory
 glb.ts                the GLB container: the JSON chunk and the counts it gives, plain accessors
 decode.ts             a GLB into one mesh around its centre, on Draco's grid where it fits 16 bits
@@ -150,9 +150,10 @@ full-cache.ts         the full mesh between visits, compressed with meshoptimize
 types.ts              the meshes as the steps hand them on
 em-mesh-viewer.ts     EmMeshViewer: the two meshes on the shared scene, the upload, the choice, timing, a lost context
 mesh-choice.ts        which mesh a frame draws: the error on screen, what frames cost
-motion-quality.ts     how moving frames are cut down: the occlusion, then the resolution
-gpu-timer.ts          what a frame costs the GPU: a timer query, or a fence
+motion-quality.ts     the mesh's own motion options: the stand-in while moving, beside the scene's
 ```
+
+Shared with [the circuit viewer's loader](../../../../circuit-viewer/morphologies/load/README.md), in `src/features/viewer-3d/load/`: `asset-cache.ts`, which keeps a Cache Storage bucket in bounds (lifetime, total size, the least recently opened first), and `worker-handle.ts`, a worker behind Comlink that says when it dies.
 
 The scene is shared with the morphology viewer, in `src/features/viewer-3d/engine/`. Its cameras, controls and looks are described in [the morphology engine's reference](../../../cell-morphology/morpho-viewer/engine/README.md#looks).
 
@@ -161,6 +162,8 @@ scene-viewer.ts        renderer, cameras, OrbitControls, render-on-demand loop, 
                        moving frames' own pipeline, shader warm-up, draws unseen
 depth-normals-pass.ts  the normals rebuilt from the scene's depth, once a pixel, for the occlusion
 normals.ts             area-weighted vertex normals, and which triangles have no area
+motion-quality.ts      how moving frames are cut down: the occlusion, then the resolution
+gpu-timer.ts           what a frame costs the GPU: a timer query, or a fence
 looks.ts               shading styles, and their variants for a surface without colours, types or radii
 ```
 

@@ -4,6 +4,7 @@ import { computeSpikeStatistics } from '@/features/spike-viewer/spike-statistics
 import { psthSeries } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { spikeBounds, spikesBetween, spikesByCell } from '@/features/spike-viewer/spike-trace';
 
+import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { SpikePca } from '@/features/spike-viewer/spike-statistics/pca';
 import type {
   CellGroup,
@@ -14,7 +15,6 @@ import type {
   PsthSeries,
 } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import type { SpikeData, SpikePopulation, SpikesByCell } from '@/features/spike-viewer/spike-trace';
-import type { MorphoViewerSpikes } from '@/morpho-viewer';
 
 /** A population's spikes cut to some of its cells, time-sorted as the file's are. */
 export type KeptSpikes = { nodeIds: Float64Array; timestamps: Float32Array };
@@ -133,7 +133,7 @@ export class SpikeStore {
     cells: Uint8Array | null,
     window: [number, number] | null,
     timeRange: { min: number; max: number }
-  ): MorphoViewerSpikes | null {
+  ): CircuitSpikes | null {
     const population = this.population(name);
     if (!population) return null;
     const kept = this.kept(name, cells, window);

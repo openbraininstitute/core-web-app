@@ -10,6 +10,7 @@ import {
 import { InteractionManager } from '@/features/spike-viewer/renderer/interaction';
 import { WebGLPoints } from '@/features/spike-viewer/renderer/webgl-points';
 import { spikesByCell } from '@/features/spike-viewer/spike-trace';
+import { lowerBound, upperBound } from '@/utils/sorted';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type {
@@ -913,28 +914,4 @@ function paddedView(bounds: ViewBounds): ViewBounds {
     yMin: bounds.yMin - yPad,
     yMax: bounds.yMax + yPad,
   };
-}
-
-/** Find first index where arr[i] >= value (lower bound). */
-function lowerBound(arr: Float32Array, value: number): number {
-  let lo = 0;
-  let hi = arr.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (arr[mid] < value) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
-
-/** Find first index where arr[i] > value (upper bound). */
-function upperBound(arr: Float32Array, value: number): number {
-  let lo = 0;
-  let hi = arr.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (arr[mid] <= value) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
 }

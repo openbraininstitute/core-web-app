@@ -1,18 +1,19 @@
 'use client';
 
 import { memo, useMemo } from 'react';
-import { match, P } from 'ts-pattern';
+import { match } from 'ts-pattern';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { CircuitPreview } from '@/features/scan-config/components/model-preview/circuit-preview';
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
   resolveEnableMorphologyLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
+import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -51,6 +52,9 @@ export function ModelPreview({
   viewerFeatures?: Partial<IEntityViewerFeatures>;
 }) {
   const flagEnabled = useFlag(electrodeOverlaysFlag.key);
+  const drawsEachCell = useCircuitDrawsEachCell(
+    model.type === EntityTypeDict.Circuit ? (model as ICircuit) : undefined
+  );
   const featureEnabled = electrodeOverlaysEnabled ?? !!flagEnabled;
   const domainElectrodes = viewerFeatures?.electrodes ?? false;
 
@@ -99,13 +103,20 @@ export function ModelPreview({
           defaultNeuronOpacity={defaultNeuronOpacity}
         />
       ))
-      // Single / pair / small share CircuitPreview + MorphoViewerSmallCircuit, all served
-      // by OBI-One `/circuit/viz`.
+      // Which renderer waits on whether Bluenaas has the pack of a pair or small circuit.
       .with(
-        {
-          type: EntityTypeDict.Circuit,
-          scale: P.when(circuitDrawsMorphologies),
-        },
+        { type: EntityTypeDict.Circuit },
+        () => drawsEachCell === undefined,
+        () => (
+          <div className="relative h-full w-full">
+            <VisualizationLoadingIndicator />
+          </div>
+        )
+      )
+      // A morphology per cell, each served by OBI-One `/circuit/viz`.
+      .with(
+        { type: EntityTypeDict.Circuit },
+        () => drawsEachCell === true,
         (circuit) => (
           <CircuitPreview
             circuit={circuit as ICircuit}

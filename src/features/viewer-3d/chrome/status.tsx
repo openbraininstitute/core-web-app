@@ -1,25 +1,47 @@
-import { RiAlertLine, RiLoader4Line } from '@remixicon/react';
+import { RiAlertLine, RiInformationLine, RiLoader4Line } from '@remixicon/react';
 
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { cn } from '@/utils/css-class';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 
-/** A line of status over the view, top-centre: work under way, or a warning, with what can be done about it. */
+export const megabytes = (bytes: number) => (bytes / 1e6).toFixed(1);
+
+const ICONS = {
+  busy: <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />,
+  warning: <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />,
+  info: <RiInformationLine aria-hidden className="size-4 shrink-0 opacity-70" />,
+};
+
+/**
+ * Status over the view, top-centre unless placed: work under way, a warning or a note, with what can be done about
+ * it. `detail` follows the text on screen but is hidden from screen readers, so progress that changes often is not
+ * announced each time.
+ */
 export function StatusPill({
   text,
-  failed,
+  detail,
+  kind,
   theme,
+  place,
   children,
 }: {
   text: string;
-  failed: boolean;
+  detail?: string;
+  kind: keyof typeof ICONS;
   theme: ViewerTheme;
+  place?: CSSProperties;
   children?: ReactNode;
 }) {
   return (
-    <div className="absolute top-3 left-1/2 flex max-w-[calc(100%-24rem)] -translate-x-1/2 justify-center">
+    <div
+      className={cn(
+        'absolute flex',
+        !place && 'top-3 left-1/2 max-w-[calc(100%-24rem)] -translate-x-1/2 justify-center'
+      )}
+      style={place}
+    >
       <div
         role="status"
         className={cn(
@@ -28,15 +50,14 @@ export function StatusPill({
         )}
         style={{
           ...panelStyle(theme),
-          ...(failed && { boxShadow: '0 0 0 1px var(--color-warning)' }),
+          ...(kind === 'warning' && { boxShadow: '0 0 0 1px var(--color-warning)' }),
         }}
       >
-        {failed ? (
-          <RiAlertLine aria-hidden className="size-4 shrink-0 text-warning" />
-        ) : (
-          <RiLoader4Line aria-hidden className="size-4 shrink-0 animate-spin" />
-        )}
-        <span className="truncate">{text}</span>
+        {ICONS[kind]}
+        <span className="truncate">
+          {text}
+          {detail && <span aria-hidden> {detail}</span>}
+        </span>
         {children}
       </div>
     </div>
@@ -67,6 +88,28 @@ export function StatusAlert({
         {children && <div className="mt-2 flex gap-2">{children}</div>}
       </div>
     </div>
+  );
+}
+
+/** What can be done about a status, in its pill or under its alert. */
+export function StatusAction({
+  onClick,
+  disabled,
+  children,
+}: {
+  onClick(): void;
+  disabled?: boolean;
+  children: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-full border border-current/30 px-3 py-1 text-xs font-medium transition-colors hover:bg-current/10 disabled:opacity-50"
+    >
+      {children}
+    </button>
   );
 }
 

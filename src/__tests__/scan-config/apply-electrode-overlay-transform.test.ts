@@ -25,7 +25,6 @@ describe('applyElectrodeOverlayTransform', () => {
       id: 'Lin',
       origin: { x: 12.3456, y: -4.2, z: 100.999 },
       rotation: { x: 15.126, y: 0, z: 359.5 },
-      phase: 'end',
     });
 
     expect(next.electrode_locations).toMatchObject({
@@ -58,7 +57,6 @@ describe('applyElectrodeOverlayTransform', () => {
       id: 'Lin',
       origin: { x: 5, y: 6, z: 7 },
       rotation: { x: 1, y: 0, z: 2 },
-      phase: 'end',
     });
 
     const block = (next.electrode_locations as Record<string, Record<string, unknown>>).Lin;
@@ -79,7 +77,6 @@ describe('applyElectrodeOverlayTransform', () => {
         id: 'missing',
         origin: { x: 9, y: 9, z: 9 },
         rotation: { x: 0, y: 0, z: 0 },
-        phase: 'end',
       })
     ).toBe(config);
   });

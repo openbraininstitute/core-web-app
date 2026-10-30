@@ -4,7 +4,7 @@
  * again with no download, no Draco and no build. An entry is a JSON header, then each chunk's encoded arrays, each on
  * a 4-byte boundary.
  */
-import { packEntry, unpackEntry, versionedKey } from './asset-cache';
+import { packEntry, unpackEntry, versionedKey } from '@/features/viewer-3d/load/asset-cache';
 
 import type { MeshoptDecoder } from 'meshoptimizer/decoder';
 import type { MeshoptEncoder } from 'meshoptimizer/encoder';

@@ -270,7 +270,7 @@ export function useReferencedElectrodeOverlays(
   );
 
   // `combine` rather than a `useMemo` over the results: that array is new on
-  // every render, so overlays would be rebuilt and re-uploaded to morphoviewer.
+  // every render, so overlays would be rebuilt and re-uploaded to the viewer.
   const combine = useCallback(
     (results: TArraySummaryResult[]) => ({
       overlays: results.flatMap((result, index) =>

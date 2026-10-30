@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { buildAssetDownloadRequest } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-viewer';
+import { MAX_PIXEL_RATIO } from '@/features/viewer-3d/engine/scene-view';
 import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 

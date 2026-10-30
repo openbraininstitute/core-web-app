@@ -1,3 +1,5 @@
+import { median } from '@/features/viewer-3d/engine/motion-quality';
+
 /**
  * Which mesh to draw, chosen every frame: the stand-in wherever its error is far under a device pixel, and, on a GPU
  * too slow for the full mesh, while the view moves.
@@ -18,8 +20,6 @@ const SAMPLES = 3;
  * drew the largest cell in 13 to 31 ms so, and in 8 ms from the third frame on.
  */
 export const COLD = 2;
-/** The frames after the loop starts left unmeasured while the view moves, as the GPU wakes up over them. */
-export const WAKE_FRAMES = 2;
 /** The full frames left unmeasured after an upload or a resize, which pay for it. */
 export const SKIP_FRAMES = 2;
 
@@ -71,9 +71,6 @@ export class MeshChooser {
     this.byError = 'stand-in';
   }
 }
-
-export const median = (values: readonly number[]) =>
-  [...values].sort((a, b) => a - b)[values.length >> 1];
 
 /**
  * The full mesh's frame cost: the median of the last few frames measured, skipping those that pay for a change, and

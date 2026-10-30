@@ -17,7 +17,7 @@ export interface IEntityViewerFeatures {
   electrodes: boolean;
   /** Color-by dropdown + legend in the viewer chrome. */
   colorBy: boolean;
-  /** Whole-cell hover highlight (morphoviewer flat ADD overlay). */
+  /** Whole-cell hover highlight. */
   cellHover: boolean;
   /** Nodes-table toggle in the viewer chrome. */
   nodesTable: boolean;
