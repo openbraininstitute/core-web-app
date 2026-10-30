@@ -1,0 +1,272 @@
+.tour {
+  --overlay-center-x: 18%;
+  --overlay-center-y: 53%;
+  --overlay-radius-x: 65%;
+  --overlay-radius-y: 76%;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background: #f8fafc;
+  color: #172c4a;
+  scroll-margin-top: 24px;
+}
+.tour::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
+      var(--overlay-center-y),
+    #f8fafcd9 0%,
+    #f8fafcc6 24%,
+    #f8fafcaf 42%,
+    #f8fafc70 60%,
+    #f8fafc2d 78%,
+    #f8fafc00 100%
+  );
+}
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background: #f8fafc;
+  touch-action: pan-y;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: #f8fafc;
+  transition: opacity 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.layer.visible {
+  z-index: 1;
+  opacity: 1;
+  pointer-events: auto;
+}
+.image {
+  position: absolute;
+  inset: 0 auto auto 0;
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  transform-origin: 0 0;
+  user-select: none;
+  pointer-events: none;
+}
+.animation {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 65% center;
+  background: #f8fafc;
+  user-select: none;
+  pointer-events: none;
+}
+
+.screenshotFrame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: #fff;
+}
+.screenshot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+.expand {
+  position: absolute;
+  top: 140px;
+  right: 48px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 4px;
+  background: #edf2f9;
+  color: #183f8b;
+  font-size: 20px;
+  cursor: zoom-in;
+}
+.expand:hover {
+  background: #dde7f6;
+}
+
+.standalone {
+  position: relative;
+  z-index: 2;
+  min-height: 600px;
+  padding: 140px 8% 40px;
+}
+.caption {
+  max-width: 550px;
+  color: #102c60;
+}
+.caption h2 {
+  font-family: var(--font-gabarito), sans-serif;
+  font-size: 40px;
+  line-height: 1.1;
+}
+.caption p {
+  font-size: 20px;
+  line-height: 1.55;
+}
+.navigation {
+  width: min(800px, 100%);
+  margin-top: 27px;
+  pointer-events: auto;
+}
+.chapters {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 22px;
+}
+.chapters .chapter {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #365479;
+  font-size: 15px;
+  font-weight: 400;
+  transition: color 0.2s;
+}
+.chapters .chapter[aria-pressed="true"] {
+  border-bottom-color: var(--blue, #183f8b);
+  color: var(--blue, #183f8b);
+  font-weight: 600;
+}
+.tour[data-playing="true"] .chapter[aria-pressed="true"] .progress {
+  position: absolute;
+  inset: auto 0 -2px;
+  height: 2px;
+  background: #8eb3e3;
+  transform-origin: left;
+  animation: chapter-progress var(--chapter-duration, 12s) linear forwards;
+  pointer-events: none;
+}
+.tour[data-suspended="true"] .progress {
+  animation-play-state: paused;
+}
+@keyframes chapter-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+.chapters .chapter:hover:not([aria-pressed="true"]) {
+  color: var(--blue, #183f8b);
+  border-bottom-color: #183f8b66;
+}
+.chapters .play {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--blue, #183f8b);
+  font-size: 20px;
+}
+.chapters .play:hover {
+  background: #ffffff80;
+}
+.chapterDetails {
+  /* Keep the primary actions steady; secondary content always begins at the top. */
+  min-height: 101px;
+  margin-top: 12px;
+}
+.navigation .chapterDescription {
+  margin: 0;
+  color: #365479;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.chapters .chapter:focus-visible,
+.chapters .play:focus-visible {
+  outline: 2px solid var(--blue, #183f8b);
+  outline-offset: 3px;
+}
+@media (max-width: 800px) {
+  .tour {
+    --overlay-center-x: 42%;
+    --overlay-center-y: 45%;
+    --overlay-radius-x: 150%;
+    --overlay-radius-y: 120%;
+  }
+  .tour::after {
+    background: radial-gradient(
+      ellipse var(--overlay-radius-x) var(--overlay-radius-y) at var(--overlay-center-x)
+        var(--overlay-center-y),
+      #f8fafcd9 0%,
+      #f8fafcc6 32%,
+      #f8fafcae 50%,
+      #f8fafc70 66%,
+      #f8fafc29 84%,
+      #f8fafc00 100%
+    );
+  }
+  .navigation {
+    margin-top: 24px;
+  }
+  .chapters {
+    gap: 2px 18px;
+  }
+  .chapters .chapter {
+    padding: 10px 0;
+    font-size: 14px;
+  }
+  .chapterDetails {
+    min-height: 118px;
+  }
+  .navigation .chapterDescription {
+    font-size: 14px;
+  }
+  .expand {
+    top: auto;
+    bottom: 24px;
+    right: 20px;
+  }
+}
+@media (max-width: 360px) {
+  .chapterDetails {
+    min-height: 139px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour .progress {
+    animation: none;
+  }
+  .layer,
+  .chapters .chapter {
+    transition: none;
+  }
+}
