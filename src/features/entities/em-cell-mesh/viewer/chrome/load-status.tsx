@@ -92,16 +92,11 @@ export function LoadStatus({
   }
   if (fullReady) return null;
   const downloading = total > 0 && received < total;
+  const detail = downloading ? `${megabytes(received)} / ${megabytes(total)} MB` : undefined;
   let text: string;
-  if (hasStandIn)
-    text = downloading
-      ? `Loading full detail… ${megabytes(received)} / ${megabytes(total)} MB`
-      : 'Loading full detail…';
-  else
-    text = downloading
-      ? `Downloading ${megabytes(received)} / ${megabytes(total)} MB`
-      : 'Decoding…';
-  return <StatusPill text={text} kind="busy" theme={theme} />;
+  if (hasStandIn) text = 'Loading full detail…';
+  else text = downloading ? 'Downloading' : 'Decoding…';
+  return <StatusPill text={text} detail={detail} kind="busy" theme={theme} />;
 }
 
 /** Downloads the GLB, for a viewer elsewhere. */

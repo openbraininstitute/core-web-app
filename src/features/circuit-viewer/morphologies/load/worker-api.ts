@@ -15,7 +15,13 @@ import {
 } from '@/features/viewer-3d/load/asset-cache';
 
 import { pageCells, renumberSegments, renumberSomas } from './cells';
-import { downloadPack, type OnProgress, type PackRequest } from './download';
+import {
+  downloadPack,
+  type FreshHeaders,
+  type OnProgress,
+  PackChanged,
+  type PackRequest,
+} from './download';
 import { mortonOrder } from './morton';
 import { openPack, type Pack, PackError } from './pack';
 
@@ -59,16 +65,15 @@ async function openCached(cache: CacheBounds, key: string, size: number): Promis
 const hex = (digest: ArrayBuffer) =>
   Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
-/** The pack once the whole of it is in, checked against its digest, put in the cache. */
+/** Checks the whole pack against its digest once it is in, and puts it in the cache if it fits. */
 async function keep(whole: Promise<Uint8Array>, request: PackRequest, cache: CacheBounds) {
   const bytes = await whole;
-  // Too large for the cache, it is not kept, nor checked: it is drawn already.
-  if (bytes.byteLength > cache.maxBytes) return;
   const { sha256 } = request.pack;
   const digest = await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>);
   if (hex(digest) !== sha256.toLowerCase()) {
-    throw new PackError('morphology pack whose digest is not the one Bluenaas gave');
+    throw new PackChanged('morphology pack whose digest is not the one Bluenaas gave');
   }
+  if (bytes.byteLength > cache.maxBytes) return;
   await writeEntry(cache, packCacheKey(sha256), bytes.buffer as ArrayBuffer, bytes.byteLength);
 }
 
@@ -85,13 +90,14 @@ export function createPackApi(cache: CacheBounds) {
     async open(
       request: PackRequest,
       populations: Population[],
-      onProgress: OnProgress
+      onProgress: OnProgress,
+      freshHeaders?: FreshHeaders
     ): Promise<Opened> {
       let pack = await openCached(cache, packCacheKey(request.pack.sha256), request.pack.size);
       const fromCache = pack !== null;
       let whole = Promise.resolve();
       if (!pack) {
-        const download = await downloadPack(request, onProgress);
+        const download = await downloadPack(request, onProgress, freshHeaders);
         pack = await openPack(download.file);
         whole = keep(download.whole, request, cache);
         whole.catch(() => {});

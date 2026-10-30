@@ -27,8 +27,12 @@ const REASONS: Record<Fallback, string> = {
   memory: 'the graphics ran out of memory',
 };
 
-/** How a WebGPU view gave out, once one did: WebGL 2 for the rest of the page's life. */
+/**
+ * How a WebGPU view gave out for good: WebGL 2 for the rest of the page's life. The first reset does not count, as the
+ * browser often hands out a new device after one; running out of memory does.
+ */
 let lost: Lost | null = null;
+let resets = 0;
 
 function onWebGL(
   host: HTMLElement,
@@ -41,9 +45,9 @@ function onWebGL(
 
 /**
  * A view of a circuit in `host`, drawn with WebGPU where the browser grants a device fit for it, else with WebGL 2: at
- * once where WebGPU is out of the question, once the device is asked for where it is not. Should the view give out, its
- * device lost or out of memory, `onLost` is told, and every view made after draws with WebGL 2; it is told too where
- * a WebGL 2 view's context is lost, the next made alike. Aborted (`signal`)
+ * once where WebGPU is out of the question, once the device is asked for where it is not. If the view gives out, its
+ * device lost or out of memory, `onLost` is told, and the views made after draw with WebGL 2 (after a second reset,
+ * or the first time memory runs out). It is told too when a WebGL 2 view's context is lost, and the next is made alike. Aborted (`signal`)
  * while the device is asked for, no view is made, and the promise rejects with the signal's reason.
  */
 export function createCircuitView(
@@ -72,7 +76,7 @@ export function createCircuitView(
         host,
         device,
         (how) => {
-          lost = how;
+          if (how === 'memory' || ++resets > 1) lost = how;
           onLost();
         },
         signal

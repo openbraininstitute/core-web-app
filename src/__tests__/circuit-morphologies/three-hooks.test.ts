@@ -1,15 +1,18 @@
 // @vitest-environment node
+import GTAONode from 'three/addons/tsl/display/GTAONode.js';
 // @ts-expect-error three types none of its WebGPU backend's parts.
 import WebGPUAttributeUtils from 'three/src/renderers/webgpu/utils/WebGPUAttributeUtils.js';
 // @ts-expect-error three types none of its WebGPU backend's parts.
 import WebGPUBindingUtils from 'three/src/renderers/webgpu/utils/WebGPUBindingUtils.js';
-import { StorageBufferAttribute } from 'three/webgpu';
+import { texture } from 'three/tsl';
+import { PerspectiveCamera, StorageBufferAttribute, Texture } from 'three/webgpu';
 import { describe, expect, it, vi } from 'vitest';
 
 import { Unfit } from '@/features/circuit-viewer/morphologies/engine/probe';
 import {
   checkHooks,
   FrameTimes,
+  GTAO_PARTS,
   shareBuffer,
   threeLoop,
   trackTimestamps,
@@ -33,6 +36,15 @@ function backendGet() {
 describe("three's private parts", () => {
   it('are all there where the backend holds what three has of each object', () => {
     expect(() => checkHooks(rendererWith())).not.toThrow();
+  });
+
+  it("are all there in three's GTAO, which the occlusion's setup reads", () => {
+    const node = new GTAONode(
+      texture(new Texture()),
+      texture(new Texture()),
+      new PerspectiveCamera()
+    );
+    expect(GTAO_PARTS.filter((part) => !(part in node))).toEqual([]);
   });
 
   it.each([

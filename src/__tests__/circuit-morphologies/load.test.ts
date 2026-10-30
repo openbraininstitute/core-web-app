@@ -486,6 +486,18 @@ describe('loadCircuitMorphologies', () => {
       expect(fetch).toHaveBeenCalledTimes(2);
     });
 
+    it('resumes with the headers made again, where the page makes them', async () => {
+      const bytes = small();
+      const fetch = rangeServer(bytes, [breakAt(bytes)]);
+      const freshHeaders = vi.fn(async () => ({ Authorization: 'Bearer newer' }));
+      await kept({ request: requestOf(bytes), freshHeaders });
+
+      expect(freshHeaders).toHaveBeenCalledTimes(1);
+      expect(fetch.mock.calls[1][1]).toEqual({
+        headers: { Authorization: 'Bearer newer', Range: `bytes=${breakAt(bytes)}-` },
+      });
+    });
+
     it('refuses the boxes past a second break, keeps nothing, and fails the whole', async () => {
       const bytes = small();
       rangeServer(bytes, [breakAt(bytes), breakAt(bytes) + 100]);
@@ -501,9 +513,50 @@ describe('loadCircuitMorphologies', () => {
       rangeServer(bytes, []);
       const { data, whole } = await load({ request: requestOf(bytes, '00'.repeat(32)) });
 
-      await expect(whole).rejects.toThrow('digest is not the one Bluenaas gave');
+      await expect(whole).rejects.toMatchObject({
+        name: 'PackChanged',
+        message: expect.stringContaining('digest is not the one Bluenaas gave'),
+      });
       expect(await readLevel(data, 2)).toEqual(await asRead(bytes, 2));
       expect(cached()).toBeUndefined();
+    });
+
+    it('checks the digest of a pack too large for the cache, and does not keep it', async () => {
+      const bytes = small();
+      rangeServer(bytes, []);
+      const { maxBytes } = BOUNDS;
+      BOUNDS.maxBytes = bytes.byteLength - 1;
+      try {
+        const { whole } = await load({ request: requestOf(bytes, '00'.repeat(32)) });
+        await expect(whole).rejects.toMatchObject({ name: 'PackChanged' });
+      } finally {
+        BOUNDS.maxBytes = maxBytes;
+      }
+    });
+
+    it('stops reading a body longer than the pack, and says the pack changed', async () => {
+      const bytes = small();
+      const longer = new Uint8Array(bytes.byteLength + 1000);
+      longer.set(bytes);
+      vi.stubGlobal('fetch', async () => new Response(longer));
+      const { data, whole } = await load({ request: requestOf(bytes) });
+
+      await expect(whole).rejects.toMatchObject({ name: 'PackChanged' });
+      expect(await readLevel(data, 2)).toEqual(await asRead(bytes, 2));
+      expect(cached()).toBeUndefined();
+    });
+
+    it.each([
+      ['more than the most', 2 ** 31 + 1],
+      ['no whole number', 12.5],
+      ['none', 0],
+    ])('downloads nothing for a size of %s', async (_case, size) => {
+      const fetch = vi.fn();
+      vi.stubGlobal('fetch', fetch);
+      const request = { ...requestOf(), pack: { size, sha256: digestOf(small()) } };
+
+      await expect(load({ request })).rejects.toThrow(`Morphology pack of ${size} bytes`);
+      expect(fetch).not.toHaveBeenCalled();
     });
 
     it('takes one whose body broke after its last byte as whole, and keeps it', async () => {

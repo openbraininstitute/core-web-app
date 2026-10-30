@@ -14,7 +14,7 @@ export type MorphologyPackStatus =
   | { state: 'refused'; reason: MorphologyPackNoPackReason }
   | { state: 'failed' };
 
-const packPath = (circuitId: string) => `/circuit/${circuitId}/morphology-pack`;
+const packPath = (circuitId: string) => `/circuit/${encodeURIComponent(circuitId)}/morphology-pack`;
 
 /** The pack's status, its build queued where there is neither a pack nor a build. */
 export async function requestMorphologyPack({

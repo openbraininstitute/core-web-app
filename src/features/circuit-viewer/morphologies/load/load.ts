@@ -1,6 +1,6 @@
 /**
- * Loading a circuit's morphologies, on the page. One worker opens the pack stored as the circuit's asset, from its
- * cache or as it comes in, and hands over its somas, with the cells numbered as the page numbers them, and where its
+ * Loading a circuit's morphologies, on the page. One worker opens the circuit's pack, from its cache or as it comes in
+ * from Bluenaas, and hands over its somas, with the cells numbered as the page numbers them, and where its
  * segments lie, once the somas are in; it then reads the pack's boxes as the view asks for them, each once its bytes
  * are in. It is terminated when the load is aborted, or fails: that is also what stops a download.
  */
@@ -9,7 +9,7 @@ import * as Comlink from 'comlink';
 import { keepWorker, type WorkerHandle, wrapWorker } from '@/features/viewer-3d/load/worker-handle';
 
 import type { BoxRead, CircuitMorphologyData, PackArrival, Population } from '../types';
-import type { OnProgress, PackRequest } from './download';
+import type { FreshHeaders, OnProgress, PackRequest } from './download';
 import type { Opened, PackApi } from './worker-api';
 
 export interface LoadOptions {
@@ -23,12 +23,15 @@ export interface LoadOptions {
    * once the load is aborted, has failed or the whole pack is in.
    */
   onProgress?: OnProgress;
+  /** The request's headers made again, for a download resumed after its token may have run out. */
+  freshHeaders?: FreshHeaders;
   worker?: () => WorkerHandle<PackApi>;
 }
 
 /**
  * The morphologies' somas and frame, and their segments to read a box at a time (`chunks`). `whole` settles once the
- * whole pack is in and kept, failing where it did not all come in or was not the asset.
+ * whole pack is in and kept. It fails where the pack did not all come in, or is not the one Bluenaas named
+ * (`PackChanged`).
  */
 export interface Loaded {
   data: CircuitMorphologyData;
@@ -56,10 +59,11 @@ export async function loadCircuitMorphologies(options: LoadOptions): Promise<Loa
   options.signal.addEventListener('abort', () => {
     ended = true;
   });
+  const freshHeaders = options.freshHeaders && Comlink.proxy(options.freshHeaders);
   const worker = keepWorker(options.worker ?? browserWorker, options.signal);
   try {
     const { data, boxes, levels, readableAt, fromCache } = await worker.call<Opened>((api) =>
-      api.open(options.request, options.populations, onProgress)
+      api.open(options.request, options.populations, onProgress, freshHeaders)
     );
     const read = (wanted: BoxRead[]) => worker.call((api) => api.read(wanted));
     const arrival: PackArrival | undefined = fromCache

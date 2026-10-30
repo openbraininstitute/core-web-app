@@ -1,9 +1,10 @@
 /**
- * The private parts of three's WebGPU renderer the circuit engine takes, in one place, as three r186 has them: what
- * holds a GPU object for each of three's (`backend.get`), whose buffer three binds for an attribute in place of making
- * one and whose texture is the one three made for a texture of its own, the timestamps it writes for a frame, and
+ * The private parts of three the circuit engine takes, in one place, as three r186 has them. From the WebGPU renderer:
+ * what holds a GPU object for each of three's (`backend.get`), whose buffer three binds for an attribute in place of
+ * making one and whose texture is the one three made for a texture of its own, the timestamps it writes for a frame, and
  * three's own loop. `checkHooks` is called once the renderer is ready; where a release of three changed one the engine
- * cannot do without, the view is drawn with WebGL 2.
+ * cannot do without, the view is drawn with WebGL 2. From `GTAONode`: the fields the occlusion's own setup reads
+ * (`GTAO_PARTS`), checked when the occlusion is made. `three` is pinned to one release, so a bump runs these tests.
  */
 import { Unfit } from '../probe';
 import { COPY_DST, COPY_SRC, MAP_READ, QUERY_RESOLVE, READ } from './usage';
@@ -17,6 +18,18 @@ interface Backend {
 function backendOf(renderer: THREE.WebGPURenderer): Partial<Backend> | undefined {
   return (renderer as unknown as { backend?: Partial<Backend> }).backend;
 }
+
+/** The fields of three's `GTAONode` that `SurfaceGTAONode`'s setup reads, which are its own, not its interface. */
+export const GTAO_PARTS = [
+  '_noiseNode',
+  '_resolution',
+  '_temporalDirection',
+  '_temporalOffset',
+  '_cameraProjectionMatrix',
+  '_cameraProjectionMatrixInverse',
+  '_material',
+  '_textureNode',
+] as const;
 
 /** Throws `Unfit` where `renderer` lacks a part the tier takes. */
 export function checkHooks(renderer: THREE.WebGPURenderer): void {

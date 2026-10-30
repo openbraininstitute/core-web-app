@@ -16,16 +16,19 @@ const ICONS = {
 
 /**
  * Status over the view, top-centre unless placed: work under way, a warning or a note, with what can be done about
- * it.
+ * it. `detail` follows the text on screen but is hidden from screen readers, so progress that changes often is not
+ * announced each time.
  */
 export function StatusPill({
   text,
+  detail,
   kind,
   theme,
   place,
   children,
 }: {
   text: string;
+  detail?: string;
   kind: keyof typeof ICONS;
   theme: ViewerTheme;
   place?: CSSProperties;
@@ -51,7 +54,10 @@ export function StatusPill({
         }}
       >
         {ICONS[kind]}
-        <span className="truncate">{text}</span>
+        <span className="truncate">
+          {text}
+          {detail && <span aria-hidden> {detail}</span>}
+        </span>
         {children}
       </div>
     </div>

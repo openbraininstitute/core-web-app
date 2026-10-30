@@ -39,6 +39,13 @@ const h = vi.hoisted(() => ({
 }));
 
 // Named for what it draws: the somas, or the morphologies in their place.
+// The status's client, which Try again asks for the pack's status again.
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>();
+  const client = new actual.QueryClient();
+  return { ...actual, useQueryClient: () => client };
+});
+
 vi.mock('@/features/circuit-viewer/morphologies/lazy-circuit-cells', () => ({
   LazyCircuitCells: (props: CircuitCellsProps) => {
     h.cells = props;

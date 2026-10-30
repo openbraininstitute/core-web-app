@@ -1,3 +1,4 @@
+import { logWarn } from '@/utils/logger';
 import { upperBound } from '@/utils/sorted';
 
 import type { CircuitSpikes } from './types';
@@ -179,7 +180,7 @@ function clamp(value: number, min: number, max: number): number {
 function warnIfUnsorted(times: Float32Array): void {
   for (let i = 1; i < times.length; i++) {
     if (times[i] >= times[i - 1]) continue;
-    console.warn(
+    logWarn(
       `Spike times must be ascending, but times[${i}] (${times[i]}) is before times[${i - 1}] (${times[i - 1]}). Cells will light up at the wrong moments.`
     );
     return;

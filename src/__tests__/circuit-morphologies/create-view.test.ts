@@ -194,24 +194,52 @@ describe('createCircuitView', () => {
   });
 
   // Each on a module of its own: the page draws with WebGL 2 from then on.
-  it.each([
-    ['a lost device', 'reset', 'the graphics were reset'],
-    ['a device out of memory for an arena', 'memory', 'the graphics ran out of memory'],
-  ] as const)('tells of %s, and draws every view after it with WebGL 2', async (_case, how, reason) => {
+  const freshModule = async () => {
     vi.resetModules();
-    const { createCircuitView: create } = await import(
-      '@/features/circuit-viewer/morphologies/engine/create-view'
-    );
+    return (await import('@/features/circuit-viewer/morphologies/engine/create-view'))
+      .createCircuitView;
+  };
+
+  it('tells of a device out of memory for an arena, and draws every view after it with WebGL 2', async () => {
+    const create = await freshModule();
     const { adapter } = adapterOf();
     const gpu = withGPU(async () => adapter);
     const onLost = vi.fn();
     await create(host(), 'auto', onLost);
 
-    h.gpu.made[0].onLost(how);
+    h.gpu.made[0].onLost('memory');
 
     expect(onLost).toHaveBeenCalledTimes(1);
-    expect(create(host(), 'auto', unheard)).toMatchObject({ tier: 'webgl', reason, fallback: how });
+    expect(create(host(), 'auto', unheard)).toMatchObject({
+      tier: 'webgl',
+      reason: 'the graphics ran out of memory',
+      fallback: 'memory',
+    });
     expect(create(host(), 'webgl', unheard)).toMatchObject({ fallback: null });
     expect(gpu.requestAdapter).toHaveBeenCalledTimes(1);
+  });
+
+  it('tells of a lost device, tries WebGPU once more, and draws with WebGL 2 after a second', async () => {
+    const create = await freshModule();
+    const { adapter } = adapterOf();
+    const gpu = withGPU(async () => adapter);
+    const onLost = vi.fn();
+    await create(host(), 'auto', onLost);
+
+    h.gpu.made[0].onLost('reset');
+
+    expect(onLost).toHaveBeenCalledTimes(1);
+    await expect(create(host(), 'auto', onLost)).resolves.toMatchObject({ tier: 'webgpu' });
+    expect(gpu.requestAdapter).toHaveBeenCalledTimes(2);
+
+    h.gpu.made[1].onLost('reset');
+
+    expect(onLost).toHaveBeenCalledTimes(2);
+    expect(create(host(), 'auto', unheard)).toMatchObject({
+      tier: 'webgl',
+      reason: 'the graphics were reset',
+      fallback: 'reset',
+    });
+    expect(gpu.requestAdapter).toHaveBeenCalledTimes(2);
   });
 });

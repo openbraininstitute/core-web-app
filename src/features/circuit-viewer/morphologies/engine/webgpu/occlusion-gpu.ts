@@ -48,6 +48,8 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
+import { GTAO_PARTS } from './three-hooks';
+
 import type { Node, TextureNode, UniformNode } from 'three/webgpu';
 
 /** The EM viewer's occlusion (`scene-viewer.ts`): at half the resolution, over 32 CSS pixels, then smoothed. */
@@ -119,16 +121,6 @@ interface GTAOParts {
   _material: THREE.NodeMaterial;
   _textureNode: TextureNode;
 }
-const PARTS = [
-  '_noiseNode',
-  '_resolution',
-  '_temporalDirection',
-  '_temporalOffset',
-  '_cameraProjectionMatrix',
-  '_cameraProjectionMatrixInverse',
-  '_material',
-  '_textureNode',
-] as const;
 
 /**
  * three's GTAO on depth and normals drawn at its own size. Its setup is three's but for two things: in an orthographic
@@ -141,7 +133,7 @@ class SurfaceGTAONode extends GTAONode {
   constructor(depthNode: TextureNode, normalNode: TextureNode, camera: THREE.Camera) {
     super(depthNode, normalNode, camera);
     this.orthographic = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
-    const missing = PARTS.filter((part) => !(part in this));
+    const missing = GTAO_PARTS.filter((part) => !(part in this));
     if (missing.length > 0) throw new Error(`three's GTAONode has no ${missing.join(', ')}`);
   }
 

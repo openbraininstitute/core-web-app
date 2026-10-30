@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { deflateSync, inflateSync } from 'node:zlib';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { Arriving } from '@/features/circuit-viewer/morphologies/load/arriving';
 import { openPack, PackError } from '@/features/circuit-viewer/morphologies/load/pack';
@@ -433,6 +433,39 @@ describe('openPack and readBox, of what is not a pack they read', () => {
       box.splice(3, 3, ...box.slice(0, 3));
     });
     await expect(openPack(twice)).rejects.toThrow('at odds with its index');
+  });
+
+  it('refuses a chunk that says it has more segments than its bytes could hold, before making room for them', async () => {
+    const claiming = (count: (bytes: number) => number) =>
+      withIndex(pack('small'), (index) => {
+        const level = index.levels[2];
+        const was = level.chunks.segments[0];
+        level.chunks.segments[0] = count(level.chunks.bytes[0]);
+        level.segments += level.chunks.segments[0] - was;
+      });
+    // Past what deflate can inflate its bytes to.
+    await expect(openPack(claiming(() => 1_000_000_000))).rejects.toThrow('at odds with its index');
+    // Within that, but past what they do inflate to.
+    const allocate = vi.spyOn(globalThis, 'Int32Array');
+    await expect(
+      readPack(
+        claiming((bytes) => 1000 * bytes),
+        2
+      )
+    ).rejects.toThrow('at odds with its index');
+    expect(allocate).not.toHaveBeenCalled();
+    allocate.mockRestore();
+  });
+
+  it('refuses a block that inflates to more than it could hold', async () => {
+    const somas = withSomas(pack('small'), (inflated) =>
+      Buffer.concat([inflated, Buffer.alloc(64)])
+    );
+    await expect(readPack(somas)).rejects.toThrow('damaged block');
+    const chunk = withChunk(pack('small'), (inflated) =>
+      Buffer.concat([inflated, Buffer.alloc(1_000_000)])
+    );
+    await expect(readPack(chunk)).rejects.toThrow('damaged block');
   });
 
   it('refuses a cell beyond the populations', async () => {

@@ -291,7 +291,6 @@ export enum AssetLabel {
   electrode_array_weight_matrix = 'electrode_array_weight_matrix',
   electrode_array_image = 'electrode_array_image',
   electrode_locations = 'electrode_locations',
-  circuit_morphology_pack = 'circuit_morphology_pack',
 }
 
 export enum AssetContentType {

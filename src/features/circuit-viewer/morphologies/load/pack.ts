@@ -1,6 +1,6 @@
 /**
- * Reads a morphology pack: the binary file OBI-One writes of a circuit's morphologies, simplified, placed in the circuit
- * and cut into chunks of space. The format is specified in OBI-One's `obi_one/scientific/library/morphology_pack/docs/`
+ * Reads a morphology pack: the binary file Bluenaas writes of a circuit's morphologies, simplified, placed in the
+ * circuit and cut into chunks of space. The format is specified in Bluenaas's `app/core/morphology_pack/docs/`
  * (`format.md`; what this reader relies on is in `reader-contract.md`). The index and the somas are read when the pack is
  * opened, and the chunks a box of space at a time: a level's box over its base's, whose boxes read last are kept a while
  * for the finer levels.
@@ -24,6 +24,12 @@ const GRID_BYTES = 37;
 const KEPT_BYTES = 64 * 1024 * 1024;
 /** Radius steps whose radius is looked up rather than worked out. */
 const RADIUS_TABLE = 512;
+/** The most deflate can inflate a byte to. */
+const MOST_INFLATED = 1032;
+/** The most an index inflates to, far more than a pack's. */
+const MOST_INDEX_BYTES = 64 * 1024 * 1024;
+/** The most bytes a segment takes in a chunk: a run's own four steps and its run's numbers, four bytes each. */
+const MOST_SEGMENT_BYTES = 13 * 4;
 
 const CUT_SHORT = 'morphology pack cut short';
 const AT_ODDS = 'morphology pack at odds with its index';
@@ -76,17 +82,42 @@ const indexSchema = z.object({
 
 type PackIndex = z.infer<typeof indexSchema>;
 
-async function inflate(deflated: Uint8Array): Promise<Uint8Array> {
+/** Inflates a block, which is damaged if it inflates to more than `maxBytes`. */
+async function inflate(deflated: Uint8Array, maxBytes: number): Promise<Uint8Array> {
   const stream = new DecompressionStream('deflate');
   const writer = stream.writable.getWriter();
   // What is not deflate fails the read below, and these with it.
   writer.write(deflated as Uint8Array<ArrayBuffer>).catch(() => {});
   writer.close().catch(() => {});
+  const reader = stream.readable.getReader();
+  const parts: Uint8Array[] = [];
+  let total = 0;
   try {
-    return new Uint8Array(await new Response(stream.readable).arrayBuffer());
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        throw new Error(`inflates to more than ${maxBytes} bytes`);
+      }
+      parts.push(value);
+    }
   } catch (cause) {
     throw new PackError('morphology pack with a damaged block', { cause });
   }
+  const [only] = parts;
+  // A buffer of its own: the somas are read as floats over the whole of it.
+  if (parts.length === 1 && only.byteOffset === 0 && only.byteLength === only.buffer.byteLength) {
+    return only;
+  }
+  const all = new Uint8Array(total);
+  let at = 0;
+  for (const part of parts) {
+    all.set(part, at);
+    at += part.byteLength;
+  }
+  return all;
 }
 
 /** The index, and where in the file the blocks its offsets count in start. */
@@ -99,7 +130,7 @@ async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: nu
   if (version !== VERSION) throw new PackError(`morphology pack version ${version}`);
   const end = HEADER_BYTES + view.getUint32(8, true);
   const json = new TextDecoder().decode(
-    await inflate(await blockAt(file, HEADER_BYTES, end - HEADER_BYTES))
+    await inflate(await blockAt(file, HEADER_BYTES, end - HEADER_BYTES), MOST_INDEX_BYTES)
   );
   let index: PackIndex;
   try {
@@ -111,7 +142,10 @@ async function openIndex(file: Arriving): Promise<{ index: PackIndex; blocks: nu
   return { index, blocks: end };
 }
 
-/** Whether the levels' chunks agree with one another and with their bases. */
+/**
+ * Whether the levels' chunks agree with one another and with their bases, and each chunk's bytes could hold the
+ * segments it says it has: a segment takes a byte at least once inflated.
+ */
 function soundLevels({ levels }: PackIndex): boolean {
   const sizes = new Set(
     levels.filter(({ chunks }) => chunks.bytes.length > 0).map(({ chunkSteps }) => chunkSteps)
@@ -124,6 +158,7 @@ function soundLevels({ levels }: PackIndex): boolean {
         chunks.segments.length === chunks.bytes.length &&
         chunks.reach.length === chunks.bytes.length &&
         sum(chunks.segments) === segments &&
+        chunks.segments.every((count, i) => count <= MOST_INFLATED * chunks.bytes[i]) &&
         (chunkSteps > 0 || chunks.bytes.length === 0) &&
         (base === null || (base > level && base < levels.length))
     )
@@ -477,7 +512,8 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
   if (!soundLevels(index)) throw new PackError(AT_ODDS);
   const cells = sum(index.populations.map((p) => p.cells));
   const somaBytes = await inflate(
-    await blockAt(file, blocks + index.somas.offset, index.somas.bytes)
+    await blockAt(file, blocks + index.somas.offset, index.somas.bytes),
+    SOMA_BYTES * cells
   );
   if (somaBytes.byteLength !== SOMA_BYTES * cells) throw new PackError(AT_ODDS);
   const somas = new Float32Array(somaBytes.buffer);
@@ -543,8 +579,11 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     }
   }
   const isBase = index.levels.map((_, level) => index.levels.some(({ base }) => base === level));
-  const largest = Math.max(0, ...index.levels.flatMap(({ chunks }) => chunks.segments));
-  // Made at the first read, and shared by every read: a chunk is read with no wait between.
+  const declared = (level: number, b: number) => {
+    const chunk = inBox[b][level];
+    return chunk < 0 ? 0 : index.levels[level].chunks.segments[chunk];
+  };
+  // Shared by every read, as a chunk is read with no wait between; grown to the largest chunk read so far.
   let scratch: Scratch | null = null;
   const kept = new Kept(KEPT_BYTES);
 
@@ -553,16 +592,27 @@ export async function openPack(bytes: Uint8Array | Arriving): Promise<Pack> {
     const chunk = inBox[b][level];
     // Its own, not the shared one: a box read is handed over.
     if (chunk < 0) return gridOf(0);
+    const count = chunks.segments[chunk];
+    // Each base segment's count takes up to four bytes.
+    const mostBytes =
+      COUNTS_BYTES + 16 + 4 * (base === null ? 0 : declared(base, b)) + MOST_SEGMENT_BYTES * count;
     const [under, inflated] = await Promise.all([
       base === null ? NO_BASE : gridAt(base, b),
-      blockAt(file, offsets[level][chunk], chunks.bytes[chunk]).then(inflate),
+      blockAt(file, offsets[level][chunk], chunks.bytes[chunk]).then((block) =>
+        inflate(block, mostBytes)
+      ),
     ]);
-    scratch ??= {
-      streams: Array.from({ length: SCRATCH_STREAMS }, () => new Int32Array(largest)),
-      runEnds: new Int32Array(4 * largest),
-    };
+    // Checked before anything is made for the chunk's segments, each of which takes a byte at least.
+    if (count > inflated.length) throw new PackError(AT_ODDS);
+    const most = Math.max(count, under.count);
+    if (!scratch || scratch.runEnds.length < 4 * most) {
+      scratch = {
+        streams: Array.from({ length: SCRATCH_STREAMS }, () => new Int32Array(most)),
+        runEnds: new Int32Array(4 * most),
+      };
+    }
     const at = [0, 1, 2].map((k) => chunks.box[3 * chunk + k] * chunkSteps) as Vec3;
-    return readChunk(inflated, at, under, chunks.segments[chunk], cells, scratch);
+    return readChunk(inflated, at, under, count, cells, scratch);
   };
   const gridAt = (level: number, b: number): Promise<Grid> =>
     isBase[level] ? kept.get(level * count + b, () => readGrid(level, b)) : readGrid(level, b);

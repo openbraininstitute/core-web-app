@@ -94,8 +94,8 @@ export class CircuitMorphologyGPU extends CircuitView {
       // Past white, where the screen shows it.
       ...(overWhite && { outputType: THREE.HalfFloatType }),
     });
-    await renderer.init();
     try {
+      await renderer.init();
       if (signal?.aborted) throw signal.reason;
       checkHooks(renderer);
     } catch (e) {

@@ -11,6 +11,20 @@ import { Arriving } from './arriving';
 
 export type { OnProgress };
 
+/** The largest pack downloaded, more than the browser could draw. */
+export const MOST_PACK_BYTES = 2 ** 31;
+
+/** The bytes are not the pack Bluenaas said it had: it was built again since. */
+export class PackChanged extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'PackChanged';
+  }
+}
+
+/** The request's headers as they are now, with a token that has not run out. */
+export type FreshHeaders = () => Promise<Record<string, string>>;
+
 export interface PackRequest {
   url: string;
   headers: Record<string, string>;
@@ -30,64 +44,74 @@ export interface Download {
 /** Answers once the response has come, with the body still coming. */
 export async function downloadPack(
   request: PackRequest,
-  onProgress?: OnProgress
+  onProgress?: OnProgress,
+  freshHeaders?: FreshHeaders
 ): Promise<Download> {
+  const { size } = request.pack;
+  if (!Number.isSafeInteger(size) || size <= 0 || size > MOST_PACK_BYTES) {
+    throw new Error(`Morphology pack of ${size} bytes`);
+  }
   const response = await fetch(request.url, { headers: request.headers });
   if (!response.ok || !response.body) throw new Error(`Download failed (HTTP ${response.status})`);
-  const { size } = request.pack;
   const file = new Arriving(size);
-  const whole = fill(file, request, response, throttledProgress(size, onProgress));
+  const headers = freshHeaders ?? (() => Promise.resolve(request.headers));
+  const whole = fill(file, request, headers, response, throttledProgress(size, onProgress));
   // A cut short or failed download is told the page's reads through `file`; `whole` may then go unheard.
   whole.catch(() => {});
   return { file, whole };
 }
 
 /**
- * The body into `file`. A pack of `size` cut short is asked once more from where it stopped, with the request's
- * headers, which carry the token. Every byte of the pack's size in is the whole of it, whatever broke the stream after.
+ * Reads the body into `file`. If it stops short of the pack's size, the rest is asked for once, with fresh headers,
+ * since the token may have run out. Once every byte of the size is in, the pack is whole, whatever broke the stream
+ * after. A body longer than the size is another pack.
  */
 async function fill(
   file: Arriving,
   request: PackRequest,
+  headers: FreshHeaders,
   response: Response,
   progress: ThrottledProgress
 ): Promise<Uint8Array> {
   const { size } = request.pack;
-  let cause = await readInto(file, response.body as ReadableStream<Uint8Array>, progress);
-  if (file.in < size) cause = await resume(file, request, progress);
+  let cause = await readInto(file, response.body as ReadableStream<Uint8Array>, size, progress);
+  if (file.in < size) cause = await resume(file, request, headers, progress);
   progress.last(file.in);
   file.end();
+  if (cause instanceof PackChanged) throw cause;
   if (file.in !== size) {
     throw new Error(`Download of ${file.in} bytes, not the pack's ${size}`, { cause });
   }
   return file.all;
 }
 
-/** The rest of the pack read into `file`; what broke it, or null. */
+/** Reads the rest of the pack into `file`. Returns what broke it, or null. */
 async function resume(
   file: Arriving,
-  { url, headers, pack: { size } }: PackRequest,
+  { url, pack: { size } }: PackRequest,
+  headers: FreshHeaders,
   progress: ThrottledProgress
 ): Promise<unknown> {
-  const rest = await fetch(url, { headers: { ...headers, Range: `bytes=${file.in}-` } }).catch(
-    (e: unknown) => e
-  );
+  const rest = await headers()
+    .then((now) => fetch(url, { headers: { ...now, Range: `bytes=${file.in}-` } }))
+    .catch((e: unknown) => e);
   if (!(rest instanceof Response)) return rest;
   if (
     rest.status === 206 &&
     rest.body &&
     Number(rest.headers.get('Content-Length')) === size - file.in
   ) {
-    return readInto(file, rest.body, progress);
+    return readInto(file, rest.body, size, progress);
   }
   await rest.body?.cancel().catch(() => {});
   return new Error(`Download not resumed (HTTP ${rest.status})`);
 }
 
-/** A body read into `file` to its end; what broke it, or null. */
+/** Reads a body into `file` to its end, or up to `size` where it runs past. Returns what broke it, or null. */
 async function readInto(
   file: Arriving,
   body: ReadableStream<Uint8Array>,
+  size: number,
   progress: ThrottledProgress
 ): Promise<unknown> {
   const reader = body.getReader();
@@ -95,6 +119,11 @@ async function readInto(
     for (;;) {
       const { done, value } = await reader.read();
       if (done) return null;
+      if (file.in + value.byteLength > size) {
+        file.add(value.subarray(0, size - file.in));
+        await reader.cancel().catch(() => {});
+        return new PackChanged(`Download longer than the pack's ${size} bytes`);
+      }
       file.add(value);
       progress.report(file.in);
     }

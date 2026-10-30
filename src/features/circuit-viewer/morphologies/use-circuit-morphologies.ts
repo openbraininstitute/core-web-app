@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 import { buildMorphologyPackDownloadRequest } from '@/api/small-scale-simulator/circuit/morphology-pack';
@@ -41,10 +42,10 @@ export type MorphologiesLoad =
   | { status: 'ready'; data: CircuitMorphologyData; coming?: { received: number; total: number } };
 
 /**
- * Why a load stopped: it failed, with nothing to show; or the rest of the pack did not come in, what had shown kept
- * (`cut`).
+ * Why a load stopped: it failed, with nothing to show; the rest of the pack did not come in, what had shown kept
+ * (`cut`); or the pack that came in is not the one Bluenaas named, since it was built again (`changed`).
  */
-export type MorphologiesStop = 'failed' | 'cut';
+export type MorphologiesStop = 'failed' | 'cut' | 'changed';
 
 const IDLE: MorphologiesLoad = { status: 'idle' };
 
@@ -72,6 +73,7 @@ export function useCircuitMorphologies(
   retry(): void;
 } {
   const workspace = useWorkspace();
+  const queryClient = useQueryClient();
   const [current, setCurrent] = useState<{
     source: MorphologiesSource;
     load: MorphologiesLoad;
@@ -84,7 +86,7 @@ export function useCircuitMorphologies(
   useEffect(() => {
     // The rest of a pack no longer shown is nothing to say.
     if (!source) {
-      setStopped((was) => (was === 'cut' ? null : was));
+      setStopped((was) => (was === 'failed' ? was : null));
       return;
     }
     const controller = new AbortController();
@@ -111,6 +113,7 @@ export function useCircuitMorphologies(
       const loaded = await loadCircuitMorphologies({
         request,
         populations: source.populations,
+        freshHeaders: async () => (await packRequest(source, workspace)).headers,
         signal,
         onProgress: (received, total) => {
           if (signal.aborted) return;
@@ -128,7 +131,7 @@ export function useCircuitMorphologies(
         .catch((e: unknown) => {
           if (signal.aborted) return;
           logError('Could not load the whole of the circuit morphologies', e);
-          setStopped('cut');
+          setStopped(e instanceof Error && e.name === 'PackChanged' ? 'changed' : 'cut');
         })
         .finally(() => {
           if (!signal.aborted) show(data, null);
@@ -159,6 +162,11 @@ export function useCircuitMorphologies(
     load,
     stopped,
     dismiss: () => setStopped(null),
-    retry: () => setAttempt((n) => n + 1),
+    // The status first: a pack built again since has another digest, and maybe another size.
+    retry: () => {
+      queryClient
+        .invalidateQueries({ queryKey: ['circuit-morphology-pack', source?.circuitId] })
+        .finally(() => setAttempt((n) => n + 1));
+    },
   };
 }

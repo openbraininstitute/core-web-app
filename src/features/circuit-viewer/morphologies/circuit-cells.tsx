@@ -12,7 +12,7 @@ import { themeFromBackground } from '@/features/scan-config/components/color-by/
 import { clampZoom } from '@/features/scan-config/components/zoom-slider/scale';
 import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
-import { WheelHint } from '@/features/viewer-3d/chrome/status';
+import { StatusAction, StatusAlert, WheelHint } from '@/features/viewer-3d/chrome/status';
 import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
 import { logError } from '@/utils/logger';
@@ -103,6 +103,8 @@ export interface CircuitCellsProps {
 
 /** Up to this many somas are put in their Morton order on the page: a worker would take longer to start. */
 const SORTED_HERE_CELLS = 100_000;
+/** After this many lost graphics, the view is not made again. */
+const MOST_LOSSES = 3;
 
 /**
  * A circuit's cells in one three.js view: the somas as the page placed them, and their morphologies in their place
@@ -142,6 +144,8 @@ export function CircuitCells({
   /** What the view is made for: a new one, made again once the graphics give out, on WebGL 2 after WebGPU. */
   const [making, setMaking] = useState<{ choice: TierChoice }>({ choice: 'auto' });
   const [created, setCreated] = useState<CreatedView | null>(null);
+  const losses = useRef(0);
+  const [gaveUp, setGaveUp] = useState(false);
   const viewer = created?.view ?? null;
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
@@ -167,7 +171,14 @@ export function CircuitCells({
       host,
       making.choice,
       () => {
-        if (!gone.signal.aborted) setMaking((was) => ({ ...was }));
+        if (gone.signal.aborted) return;
+        losses.current += 1;
+        if (losses.current > MOST_LOSSES) {
+          logError(`The circuit view lost its graphics ${losses.current} times, not made again`);
+          setGaveUp(true);
+          return;
+        }
+        setMaking((was) => ({ ...was }));
       },
       gone.signal
     );
@@ -365,7 +376,16 @@ export function CircuitCells({
   return (
     <div className="absolute inset-0" data-testid="circuit-cells">
       <div className="absolute inset-0" ref={hostRef} />
-      {viewer && (
+      {gaveUp && (
+        <StatusAlert
+          title="The graphics were reset"
+          message="The browser has not given them back. Reload the page to view the circuit again."
+          theme={theme}
+        >
+          <StatusAction onClick={() => window.location.reload()}>Reload the page</StatusAction>
+        </StatusAlert>
+      )}
+      {viewer && !gaveUp && (
         <div className="pointer-events-none absolute inset-0">
           {showScalebar && <Scalebar viewer={viewer} color={theme.foreground} />}
           <AxesGizmo viewer={viewer} ring={theme.foreground} />

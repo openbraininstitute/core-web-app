@@ -140,7 +140,7 @@
     "superjson": "^2.2.6",
     "tailwind-merge": "^3.5.0",
     "tar-stream": "^3.2.0",
-    "three": "^0.186.0",
+    "three": "0.186.0",
     "ts-pattern": "^5.9.0",
     "use-breakpoint": "^4.0.10",
     "zod": "^4.4.3"
@@ -159,7 +159,7 @@
     "@types/react-plotly.js": "^2.6.4",
     "@types/react-resizable": "^3.0.8",
     "@types/tar-stream": "^3.1.4",
-    "@types/three": "^0.186.0",
+    "@types/three": "0.186.0",
     "@vitest/coverage-v8": "^5.0.0",
     "autoprefixer": "^10.5.0",
     "check-barrel-import-violation": "^0.3.0",

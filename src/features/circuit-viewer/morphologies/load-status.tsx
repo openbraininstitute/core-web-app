@@ -15,12 +15,11 @@ const GAVE_OUT: Record<Lost, string> = {
 const STOPPED: Record<MorphologiesStop, string> = {
   failed: 'The morphologies could not be loaded',
   cut: 'Not all of the morphologies could be loaded',
+  changed: 'The morphologies were updated while loading',
 };
 
-function loadingText({ received, total }: { received: number; total: number }): string {
-  if (received === 0) return 'Loading morphologies…';
-  return `Loading morphologies… ${megabytes(received)} / ${megabytes(total)} MB`;
-}
+const loadingDetail = ({ received, total }: { received: number; total: number }) =>
+  received === 0 ? undefined : `${megabytes(received)} / ${megabytes(total)} MB`;
 
 /**
  * Over the cells: how far the pack has come before it is shown, that it could not be loaded or the rest of it did not
@@ -53,7 +52,13 @@ export function MorphologiesStatus({
   let pill: ReactNode = null;
   const gaveOut = fallback && fallback !== 'missing' ? GAVE_OUT[fallback] : null;
   const busy = (of: { received: number; total: number }) => (
-    <StatusPill text={loadingText(of)} kind="busy" theme={theme} place={place} />
+    <StatusPill
+      text="Loading morphologies…"
+      detail={loadingDetail(of)}
+      kind="busy"
+      theme={theme}
+      place={place}
+    />
   );
   if (load.status === 'loading') {
     pill = busy(load);

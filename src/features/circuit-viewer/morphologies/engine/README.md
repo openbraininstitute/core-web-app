@@ -28,20 +28,20 @@ flowchart TD
   start2 -- yes --> webgpu(["WebGPU"])
 ```
 
-- The WebGPU engine's module is fetched while the device is asked for ([create-view.ts](create-view.ts)). The device is asked with every feature the adapter has, and buffers up to 2 GiB ([probe.ts](probe.ts)).
-- The engine reaches into a few of three's private parts, all in [webgpu/three-hooks.ts](webgpu/three-hooks.ts): the GPU object behind each of three's (`backend.get`), to bind buffers of its own; the timestamps of a frame; three's own loop. `checkHooks` checks the one the engine cannot do without, `backend.get`, once the renderer is ready. A release of three without it is `Unfit`, and the view is drawn with WebGL 2 rather than broken.
+- The WebGPU engine's module is fetched while the device is asked for ([create-view.ts](create-view.ts)). The device is asked with every feature the adapter has, as three asks for its own device: three's shaders depend on some of them (`float32-filterable`, `subgroups`, `clip-distances`). Buffers go up to 2 GiB ([probe.ts](probe.ts)).
+- The engine reaches into a few of three's private parts, all listed in [webgpu/three-hooks.ts](webgpu/three-hooks.ts): the GPU object behind each of three's (`backend.get`), to bind buffers of its own; the timestamps of a frame; three's own loop; and the fields of `GTAONode` the occlusion's setup reads (`GTAO_PARTS`). `three` is pinned to one release in `package.json`, so a bump is its own change and runs `three-hooks.test.ts`. `checkHooks` checks the one the engine cannot do without, `backend.get`, once the renderer is ready. A release of three without it is `Unfit`, and the view is drawn with WebGL 2 rather than broken.
 
 Once drawing, a WebGPU view can give out:
 
 | What | Then |
 | --- | --- |
-| The device is lost | `onLost`: the view is made again with WebGL 2, as is every view made after on the page. The status says so. |
-| The arena's buffers are out of memory | The arena is made again without its base, on the same device. Where there was no base to drop, or that fails too, as for a lost device. |
+| The device is lost | `onLost`: the view is made again. After the first reset it is tried once more on WebGPU, as the browser often hands out a new device; after a second, it and every view made after on the page are drawn with WebGL 2, and the status says so. |
+| The arena's buffers are out of memory | The arena is made again without its base, on the same device. Where there was no base to drop, or that fails too, the view and every one after are drawn with WebGL 2. |
 | The culling cannot run | Every box in view counts as seen, and every segment is drawn |
 | The somas' culling cannot run | The cloud is drawn by pieces, as on WebGL 2 |
 | The ambient occlusion cannot run | Frames are drawn without it; where only the glow failed, without the glow |
 
-A WebGL 2 view whose context the browser takes back, most often the oldest where a page asks for more than it allows, tells `onLost` too, and is made again on WebGL 2, the cells it was given handed to the new one.
+A WebGL 2 view whose context the browser takes back, most often the oldest where a page asks for more than it allows, tells `onLost` too, and is made again on WebGL 2, the cells it was given handed to the new one. After three lost graphics a view is not made again: `CircuitCells` says the graphics were reset and offers to reload the page.
 
 ## Detail
 
@@ -164,9 +164,9 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 
 ## Considered, and left out
 
-- **Simplifying in the browser.** The levels are made once by OBI-One, where the browser would make them at each visit.
+- **Simplifying in the browser.** The levels are made once by the pack's writer, where the browser would make them at each visit.
 - **Two copies of the arena, swapped between frames,** so that the prepass never reads a box at two levels. The base hidden in the same upload already ensures that.
-- **Sorting the segments by Morton order in OBI-One's writer.** A run's points are coded one from the last, so another order is another format; the worker sorts each box as it reads it instead.
+- **Sorting the segments by Morton order in the pack's writer.** A run's points are coded one from the last, so another order is another format; the worker sorts each box as it reads it instead.
 
 ## Layout
 

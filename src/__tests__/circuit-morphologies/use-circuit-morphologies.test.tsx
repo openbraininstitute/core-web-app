@@ -1,5 +1,6 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { StrictMode } from 'react';
+import { type ReactNode, StrictMode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -45,6 +46,11 @@ const SOURCE: MorphologiesSource = {
   pack: { size: 1234, sha256: 'ab12' },
 };
 
+let queryClient = new QueryClient();
+const withQueries = ({ children }: { children: ReactNode }) => (
+  <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+);
+
 function render(source: MorphologiesSource | null = SOURCE) {
   const onStopped = vi.fn();
   /** The source and the load's status of every render. */
@@ -55,7 +61,7 @@ function render(source: MorphologiesSource | null = SOURCE) {
       renders.push([of, morphologies.load.status]);
       return morphologies;
     },
-    { initialProps: { source } }
+    { initialProps: { source }, wrapper: withQueries }
   );
   return { ...hook, onStopped, renders };
 }
@@ -64,6 +70,7 @@ const ready = (result: { current: ReturnType<typeof useCircuitMorphologies> }) =
   waitFor(() => expect(result.current.load.status).toBe('ready'));
 
 afterEach(() => {
+  queryClient = new QueryClient();
   loads.length = 0;
   vi.clearAllMocks();
 });
@@ -171,13 +178,37 @@ describe('useCircuitMorphologies', () => {
     await act(async () => first.resolve(loadedOf(data(), false, Promise.reject(new Error('cut')))));
     await waitFor(() => expect(result.current.stopped).toBe('cut'));
 
-    act(() => result.current.retry());
+    const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+    await act(async () => result.current.retry());
 
+    expect(invalidate).toHaveBeenCalledWith({
+      queryKey: ['circuit-morphology-pack', 'circuit-id'],
+    });
     expect(first.options.signal.aborted).toBe(true);
     expect(result.current.stopped).toBeNull();
     expect(result.current.load).toEqual({ status: 'loading', received: 0, total: 1234 });
     const second = await started(2);
     expect(second.options.request).toEqual(first.options.request);
+  });
+
+  it('says the pack changed where what came in is not the one Bluenaas named', async () => {
+    const { result } = render();
+    const load = await started();
+    const changed = Object.assign(new Error('digest'), { name: 'PackChanged' });
+    await act(async () => load.resolve(loadedOf(data(), false, Promise.reject(changed))));
+
+    await waitFor(() => expect(result.current.stopped).toBe('changed'));
+  });
+
+  it('makes the headers again for a download resumed', async () => {
+    render();
+    const load = await started();
+    h.packRequest.mockResolvedValueOnce({
+      url: 'https://bluenaas.test/circuit/circuit-id/morphology-pack',
+      headers: { Authorization: 'Bearer newer' },
+    });
+
+    await expect(load.options.freshHeaders?.()).resolves.toEqual({ Authorization: 'Bearer newer' });
   });
 
   it('forgets a pack cut short once its source goes', async () => {
@@ -286,7 +317,9 @@ describe('useCircuitMorphologies', () => {
   });
 
   it('starts one load where React runs the effect twice, as it does in development', async () => {
-    renderHook(() => useCircuitMorphologies(SOURCE, () => {}), { wrapper: StrictMode });
+    renderHook(() => useCircuitMorphologies(SOURCE, () => {}), {
+      wrapper: ({ children }) => <StrictMode>{withQueries({ children })}</StrictMode>,
+    });
 
     await started();
     await act(() => new Promise((resolve) => setTimeout(resolve, 5)));
