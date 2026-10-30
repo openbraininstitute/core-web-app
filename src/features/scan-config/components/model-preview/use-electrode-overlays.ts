@@ -4,10 +4,10 @@ import { keepPreviousData, type UseQueryResult, useQueries, useQuery } from '@ta
 import { useAtomValue } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
-import { getSimulatableExtracellularRecordingArray } from '@/api/entitycore/queries/model/simulatable-extracellular-recording-array';
 import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { extracellularLocationsBlockDictionarySummary } from '@/api/one/generated/extracellular-locations-block-dictionary-summary';
 import {
+  arrayLocationsQuery,
   downloadElectrodeLocations,
   findElectrodeLocationsAsset,
 } from '@/features/scan-config/components/model-preview/electrode-locations-asset';
@@ -38,9 +38,6 @@ import type { Config } from '@/features/scan-config/types';
 
 /** Debounce before POSTing `block_dictionary_summary` on live form edits. */
 const DEBOUNCE_MS = 80;
-
-/** An array with no stored locations draws nothing, and is not an error. */
-const NO_LOCATIONS: TElectrodeLocationsDictionarySummary = {};
 
 /** Any entity carrying an `electrode_locations` asset. */
 export type TElectrodeArrayEntity = EntityCoreIdentifiable &
@@ -229,25 +226,7 @@ export function useReferencedElectrodeOverlays(
   const queries = useMemo(
     () =>
       arrayRefs.map((ref) => ({
-        queryKey: [
-          'referenced-electrode-array-locations',
-          ctx.virtualLabId,
-          ctx.projectId,
-          ref.entityId,
-        ],
-        queryFn: async (): Promise<TElectrodeLocationsDictionarySummary> => {
-          const array = await getSimulatableExtracellularRecordingArray({
-            id: ref.entityId,
-            context: ctx,
-          });
-          const asset = findElectrodeLocationsAsset(array.assets);
-          if (!asset) return NO_LOCATIONS;
-          return downloadElectrodeLocations({
-            ctx,
-            entityId: ref.entityId,
-            assetId: asset.id,
-          });
-        },
+        ...arrayLocationsQuery(ctx, ref.entityId),
         enabled: !!ctx.virtualLabId && !!ctx.projectId,
         staleTime: 5 * 60_000,
         refetchOnWindowFocus: false,

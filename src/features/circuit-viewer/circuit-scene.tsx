@@ -86,8 +86,8 @@ export interface IElectrodeOverlayOptions {
    */
   visibleIds?: readonly string[];
   /**
-   * Groups drawn as they are, in their own colours, such as contacts coloured
-   * by a recorded field: no array is fetched and nothing in the menu shows them.
+   * Groups drawn as they are beside the array's, in their own colours, such as
+   * contacts coloured by a recorded field: not scoped, styled or toggled from the menu.
    */
   drawn?: ICircuitOverlayGroup[];
 }
@@ -570,12 +570,14 @@ export function CircuitScene({
   const hostOwnsVisibility = visibleOverlayIds !== undefined;
   const visibleOverlays =
     enableElectrodes && (hostOwnsVisibility || config.showElectrodes) ? scopedOverlays : undefined;
-  const styledOverlays = useMemo(
-    () =>
-      drawnOverlays ??
-      styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
-    [drawnOverlays, visibleOverlays, highlightedOverlayId, config.backgroundColor]
-  );
+  const styledOverlays = useMemo(() => {
+    const styled = styleOverlaysForSelection(
+      visibleOverlays,
+      highlightedOverlayId,
+      config.backgroundColor
+    );
+    return drawnOverlays ? [...(styled ?? []), ...drawnOverlays] : styled;
+  }, [drawnOverlays, visibleOverlays, highlightedOverlayId, config.backgroundColor]);
   // Handles appear only when something drawn can actually be moved: a scene of
   // referenced-only arrays (a simulation's recordings) stays static even though
   // the host passed a write path for the rest of the form.

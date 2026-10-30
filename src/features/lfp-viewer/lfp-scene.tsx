@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { hexAt, levelOf, SCALE_GRADIENT, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
@@ -21,6 +21,19 @@ const SELECTED_COLOR = '#000000';
 const LEVEL_COLORS = Array.from({ length: SCENE_LEVELS }, (_, i) =>
   hexAt((i / (SCENE_LEVELS - 1)) * 2 - 1)
 );
+
+/** Each contact's colour level at a bin. */
+function levelsAt(field: LfpField, scale: ColourScale, bin: number): Uint8Array {
+  const levels = new Uint8Array(field.contacts);
+  for (let c = 0; c < field.contacts; c++) {
+    levels[c] = levelOf(scale.position(fieldValue(field, c, bin)));
+  }
+  return levels;
+}
+
+function sameLevels(a: Uint8Array, b: Uint8Array): boolean {
+  return a.length === b.length && a.every((level, c) => level === b[c]);
+}
 
 type Props = {
   circuit: ICircuit;
@@ -48,40 +61,43 @@ export function LfpScene({
   timeCursor,
   active,
 }: Props) {
-  const [bin, setBin] = useState(0);
-  const recoloredAt = useRef(0);
-  const pending = useRef<number | null>(null);
+  const [levels, setLevels] = useState<Uint8Array | null>(null);
 
+  // Recoloured only while on screen, and drawn again only where a contact's colour changed.
   useEffect(() => {
+    if (!active) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let recoloredAt = 0;
+    let pending: number | null = null;
     const unsubscribe = timeCursor.subscribe((t) => {
       if (t === null) return;
-      pending.current = binAt(field, t);
-      const wait = RECOLOR_MS - (performance.now() - recoloredAt.current);
+      pending = binAt(field, t);
       if (timer) return;
       timer = setTimeout(
         () => {
           timer = null;
-          recoloredAt.current = performance.now();
-          if (pending.current !== null) setBin(pending.current);
+          recoloredAt = performance.now();
+          if (pending === null) return;
+          const next = levelsAt(field, scale, pending);
+          setLevels((shown) => (shown && sameLevels(shown, next) ? shown : next));
         },
-        Math.max(0, wait)
+        Math.max(0, RECOLOR_MS - (performance.now() - recoloredAt))
       );
     });
     return () => {
       unsubscribe();
       if (timer) clearTimeout(timer);
     };
-  }, [timeCursor, field]);
+  }, [active, timeCursor, field, scale]);
 
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
-    if (!positions) return undefined;
+    if (!positions || !levels || levels.length !== field.contacts) return undefined;
     const byLevel: number[][] = LEVEL_COLORS.map(() => []);
     const selected: number[] = [];
     for (let c = 0; c < field.contacts; c++) {
       const xyz = [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
       if (c === selectedContact) selected.push(...xyz);
-      else byLevel[levelOf(scale.position(fieldValue(field, c, bin)))].push(...xyz);
+      else byLevel[levels[c]].push(...xyz);
     }
     const groups = byLevel.flatMap((coordinates, level) =>
       coordinates.length === 0
@@ -104,7 +120,7 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field, scale, bin, selectedContact]);
+  }, [positions, field.contacts, levels, selectedContact]);
   const electrodes = useMemo(() => ({ drawn }), [drawn]);
 
   return (

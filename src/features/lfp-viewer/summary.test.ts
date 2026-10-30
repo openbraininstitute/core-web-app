@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { contactPositions, recordingArrayId } from './contacts';
-import { binAt, fieldValue, readContacts, readSlice, sliceOf } from './summary';
+import { binAt, fieldValue, readRow, readSlice, rowsField, sliceOf } from './summary';
 
 import type { LfpAxis, LfpDataset, LfpField, LfpSummaryIndex } from './summary';
 
@@ -43,7 +43,9 @@ describe('readSlice', () => {
       async () => new Response(new Int16Array([1, -2, 3, -4, 5]).buffer, { status: 206 })
     );
     vi.stubGlobal('fetch', fetchMock);
-    const values = await readSlice({ url: 'u', headers: { a: 'b' } }, level0, [0, 2]);
+    const values = new Int16Array(
+      await readSlice({ url: 'u', headers: { a: 'b' } }, level0, [0, 2])
+    );
     expect(Array.from(values)).toEqual([1, -2, 3, -4, 5]);
     expect(fetchMock).toHaveBeenCalledWith(
       'u',
@@ -58,16 +60,16 @@ describe('readSlice', () => {
       'fetch',
       vi.fn(async () => new Response(file.buffer, { status: 200 }))
     );
-    const values = await readSlice({ url: 'u', headers: {} }, level0, [0, 2]);
+    const values = new Int16Array(await readSlice({ url: 'u', headers: {} }, level0, [0, 2]));
     expect(values[0]).toBe(7);
     expect(values).toHaveLength(5);
   });
 });
 
-describe('readContacts', () => {
+describe('readRow and rowsField', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('reads each contact by its own range and packs them in the order asked', async () => {
+  it('reads each contact by its own range and packs them in the order given', async () => {
     const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
       const range = (init.headers as Record<string, string>).Range;
       const offset = Number(range.slice('bytes='.length).split('-')[0]);
@@ -82,7 +84,9 @@ describe('readContacts', () => {
       levels: [{ step: 1, kind: 'value', dataset: '/lfp/total/level0' }],
       scales: [0.25, 1, 1],
     } as unknown as LfpAxis;
-    const field = await readContacts({ url: 'u', headers: {} }, index, axis, 0, [3, 1]);
+    const request = { url: 'u', headers: {} };
+    const rows = await Promise.all([3, 1].map((c) => readRow(request, index, axis, 0, c)));
+    const field = rowsField(index, axis, 0, rows);
     expect(Array.from(field.data)).toEqual([
       1030, 1030, 1030, 1030, 1030, 1010, 1010, 1010, 1010, 1010,
     ]);

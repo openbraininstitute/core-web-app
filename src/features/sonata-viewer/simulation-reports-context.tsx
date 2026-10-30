@@ -38,8 +38,12 @@ export function SimulationReportsProvider({
   );
 }
 
+export function useSimulationReports(): SimulationReportsContextValue {
+  return useContext(SimulationReportsContext);
+}
+
 export function useSimulationReport(assetFileName?: string): SimulationReport | null {
-  const reports = useContext(SimulationReportsContext);
+  const reports = useSimulationReports();
   if (!reports || !assetFileName) return null;
   const reportKey = assetFileName.replace(/\.h5$/, '');
   return reports[reportKey] ?? null;

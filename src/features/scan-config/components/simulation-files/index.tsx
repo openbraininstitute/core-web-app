@@ -93,7 +93,7 @@ export function SimulationFiles({
   jobId,
   reports,
 }: SimulationFilesProps) {
-  const lfpViewer = useFlag(lfpViewerFlag.key);
+  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   const [inputLoading, inputFiles] = useInputFiles(simulation, context);
 
   const outputAvailable =

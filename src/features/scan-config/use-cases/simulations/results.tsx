@@ -247,7 +247,7 @@ export function SimulationsTab({
     !!activeSimulationExecStatus &&
       [ActivityStatus.ERROR, ActivityStatus.DONE].includes(activeSimulationExecStatus)
   );
-  const lfpViewer = useFlag(lfpViewerFlag.key);
+  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   const shownReport =
     selectedFile && isAssetBackedFile(selectedFile) && hasStatistics(selectedFile, lfpViewer)
       ? selectedFile

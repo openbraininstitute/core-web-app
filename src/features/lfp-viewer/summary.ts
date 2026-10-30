@@ -96,15 +96,14 @@ export function sliceOf(
   };
 }
 
-/** Reads a slice of a dataset with one range request. */
+/** A slice of a dataset's bytes, read with one range request. */
 export async function readSlice(
   request: LfpSummaryRequest,
   entry: LfpDataset,
   leading: readonly number[] = [],
-  count = 1,
   signal?: AbortSignal
-): Promise<Int16Array | Float32Array> {
-  const { offset, length } = sliceOf(entry, leading, count);
+): Promise<ArrayBuffer> {
+  const { offset, length } = sliceOf(entry, leading);
   const response = await fetch(request.url, {
     headers: { ...request.headers, Range: `bytes=${offset}-${offset + length - 1}` },
     signal,
@@ -114,7 +113,7 @@ export async function readSlice(
   // A server that ignores the range sends the whole file.
   if (response.status === 200) bytes = bytes.slice(offset, offset + length);
   if (bytes.byteLength !== length) throw new Error('The LFP summary was cut short');
-  return entry.dtype === '<i2' ? new Int16Array(bytes) : new Float32Array(bytes);
+  return bytes;
 }
 
 /** The level an axis is overviewed at: its coarsest, under the format's 2,048 bins. */
@@ -132,38 +131,45 @@ export async function readField(
   signal?: AbortSignal
 ): Promise<LfpField> {
   const entry = datasetOf(index, level.dataset);
-  const data = await readSlice(request, entry, [group], 1, signal);
+  const data = new Int16Array(await readSlice(request, entry, [group], signal));
   return {
     contacts: entry.shape[1],
     bins: entry.shape[2],
     binMs: level.step * index.time.dt,
     start: index.time.start,
     kind: level.kind,
-    data: data as Int16Array,
+    data,
     scale: axis.scales[group],
   };
 }
 
-/** Contacts' full-resolution values, a range read each, one after another in the order given. */
-export async function readContacts(
+/** A contact's full-resolution values, with one range request. */
+export async function readRow(
   request: LfpSummaryRequest,
   index: LfpSummaryIndex,
   axis: LfpAxis,
   group: number,
-  contacts: readonly number[],
+  contact: number,
   signal?: AbortSignal
-): Promise<LfpField> {
+): Promise<Int16Array> {
   const entry = datasetOf(index, axis.levels[0].dataset);
-  const steps = entry.shape[2];
-  const rows = await Promise.all(
-    contacts.map((contact) => readSlice(request, entry, [group, contact], 1, signal))
-  );
-  const data = new Int16Array(contacts.length * steps);
+  return new Int16Array(await readSlice(request, entry, [group, contact], signal));
+}
+
+/** Contacts' full-resolution rows as one field, a row each in the order given. */
+export function rowsField(
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  group: number,
+  rows: readonly Int16Array[]
+): LfpField {
+  const steps = datasetOf(index, axis.levels[0].dataset).shape[2];
+  const data = new Int16Array(rows.length * steps);
   rows.forEach((row, i) => {
-    data.set(row as Int16Array, i * steps);
+    data.set(row, i * steps);
   });
   return {
-    contacts: contacts.length,
+    contacts: rows.length,
     bins: steps,
     binMs: index.time.dt,
     start: index.time.start,

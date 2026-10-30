@@ -46,6 +46,7 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
 import type { LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
@@ -66,7 +67,9 @@ const GAINS = [0.5, 1, 2, 4, 8];
 const MAX_SPECTRA = 8;
 const TRACES_TITLE = 'Extracellular field';
 const TABLE_TITLE = 'Electrodes';
-const PANEL_TITLES = ['3D Player', 'Statistics'];
+const SCENE_TITLE = '3D Player';
+const STATISTICS_TITLE = 'Statistics';
+const PANEL_TITLES = [SCENE_TITLE, STATISTICS_TITLE];
 
 /**
  * An LFP report, read from the summary Bluenaas builds of it the first time it
@@ -81,17 +84,18 @@ export function LfpViewer({
 }: {
   entity: ISimulationResult;
   asset: IAsset;
-  ctx: WorkspaceContext | null;
+  ctx: WorkspaceContext;
   report: SimulationReport | null;
 }) {
-  const { status, summary } = useLfpSummary({ ctx, resultId: entity.id, assetId: asset.id });
+  const source = { ctx, resultId: entity.id, assetId: asset.id };
+  const { status, summary } = useLfpSummary(source);
   const { model } = useSimulation();
   const circuit = replaySubject(model)?.circuit;
-  const contacts = useContactPositions({
+  const contacts = useContactPositions(
     ctx,
-    arrayId: recordingArrayId(report?.electrodes_file),
-    contacts: summary.data?.index.contacts,
-  });
+    recordingArrayId(report?.electrodes_file),
+    summary.data?.index.contacts
+  );
   const sidePanel = useResultsSidePanel();
 
   if (status.error || summary.error) {
@@ -127,11 +131,11 @@ export function LfpViewer({
   }
   return (
     <LfpReportView
-      source={{ ctx, resultId: entity.id, assetId: asset.id }}
+      source={source}
       summary={summary.data}
       circuit={circuit}
-      positions={contacts.data?.positions ?? null}
-      blocks={contacts.data?.blocks ?? null}
+      positions={contacts?.positions ?? null}
+      blocks={contacts?.blocks ?? null}
     />
   );
 }
@@ -157,7 +161,7 @@ function LfpReportView({
   positions,
   blocks,
 }: {
-  source: { ctx: WorkspaceContext | null; resultId: string; assetId: string };
+  source: LfpSummarySource;
   summary: LfpSummary;
   circuit: ICircuit | undefined;
   positions: Float32Array | null;
@@ -191,8 +195,7 @@ function LfpReportView({
       n === 1 ? 0 : Math.round((i * (index.contacts - 1)) / (n - 1))
     );
   }, [ticked, index.contacts]);
-  const traceRows = useTraceField({ ...source, summary, traces });
-  const traceField = traceRows.isPlaceholderData ? null : (traceRows.data ?? null);
+  const traceField = useTraceField(source, summary, traces);
 
   // The player: one clock, moving every view's cursor outside React.
   const timeCursor = useMemo(() => createTimeCursor(), []);
@@ -233,8 +236,7 @@ function LfpReportView({
   };
 
   const sidePanel = useResultsSidePanel();
-  const docked = sidePanel !== null && circuit !== undefined;
-  const dockedOpen = docked && (sidePanel?.open ?? false);
+  const dockedOpen = !!circuit && !!sidePanel?.open;
   const shuts = sidePanel?.shuts;
   const sliding = sidePanel?.sliding ?? false;
   const sceneUp = dockedOpen && shuts?.columns !== 'end' && shuts?.panel !== 'start';
@@ -375,7 +377,7 @@ function LfpReportView({
     />
   );
 
-  if (!docked || !sidePanel) {
+  if (!sidePanel || !circuit) {
     return (
       <div className="flex h-full min-h-0 flex-col gap-3 px-4 pt-1.25 pb-4">
         <div className="flex min-h-[320px] flex-[3] flex-col">{tracesPane}</div>
@@ -404,10 +406,10 @@ function LfpReportView({
             split="panel"
             floors={PANEL_FLOORS}
             top={{
-              title: '3D Player',
+              title: SCENE_TITLE,
               keepsSize: true,
               boxClassName: 'px-2 pt-2',
-              content: sceneMounted && circuit && (
+              content: sceneMounted && (
                 <LfpScene
                   circuit={circuit}
                   populationName={index.populations.length === 1 ? index.populations[0] : undefined}
@@ -421,7 +423,7 @@ function LfpReportView({
               ),
             }}
             bottom={{
-              title: 'Statistics',
+              title: STATISTICS_TITLE,
               content: (
                 <div className="flex h-full min-h-0 flex-col p-2">
                   <div className="text-primary-9 px-1 text-xs font-semibold">

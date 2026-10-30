@@ -12,17 +12,17 @@ export type LfpSummaryStatus =
   | { state: 'refused'; reason: string }
   | { state: 'failed' };
 
-type SummaryOf = { ctx: WorkspaceContext | null; resultId: string; assetId: string };
+export type LfpSummarySource = { ctx: WorkspaceContext; resultId: string; assetId: string };
 
 const summaryPath = (resultId: string, assetId: string, part = '') =>
   `/simulation-result/${resultId}/lfp-summary${part}?asset=${encodeURIComponent(assetId)}`;
 
-function contextHeaders(ctx: WorkspaceContext | null) {
+function contextHeaders(ctx: WorkspaceContext) {
   return { ...getEntityCoreContext(ctx).headers, accept: 'application/json' };
 }
 
 /** The summary's status, its build queued where there is neither a summary nor a build. */
-export async function requestLfpSummary({ ctx, resultId, assetId }: SummaryOf) {
+export async function requestLfpSummary({ ctx, resultId, assetId }: LfpSummarySource) {
   const api = await smallScaleSimulatorApi();
   return api.post<LfpSummaryStatus>(summaryPath(resultId, assetId), {
     headers: contextHeaders(ctx),
@@ -30,7 +30,7 @@ export async function requestLfpSummary({ ctx, resultId, assetId }: SummaryOf) {
 }
 
 /** The summary's index: where each of its datasets lies in its file. */
-export async function getLfpSummaryIndex({ ctx, resultId, assetId }: SummaryOf) {
+export async function getLfpSummaryIndex({ ctx, resultId, assetId }: LfpSummarySource) {
   const api = await smallScaleSimulatorApi();
   return api.get<unknown>(summaryPath(resultId, assetId, '/index'), {
     headers: contextHeaders(ctx),
@@ -38,11 +38,7 @@ export async function getLfpSummaryIndex({ ctx, resultId, assetId }: SummaryOf) 
 }
 
 /** The URL and headers of the summary's bytes, for range reads of its own. */
-export async function buildLfpSummaryRequest({
-  ctx,
-  resultId,
-  assetId,
-}: SummaryOf): Promise<{ url: string; headers: Record<string, string> }> {
+export async function buildLfpSummaryRequest({ ctx, resultId, assetId }: LfpSummarySource) {
   const session = await getSession();
   const headers: Record<string, string> = { ...getEntityCoreContext(ctx).headers };
   if (session?.accessToken) headers.Authorization = `Bearer ${session.accessToken}`;

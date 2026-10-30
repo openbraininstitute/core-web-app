@@ -9,8 +9,12 @@ import { useFlag } from '@/features/feature-flags';
 import { lfpViewerFlag } from '@/features/feature-flags/flags';
 import { LfpViewer } from '@/features/lfp-viewer';
 import { isAssetBackedFile } from '@/features/scan-config/types';
+import { isLfpReport } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { SonataViewer } from '@/features/sonata-viewer';
-import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
+import {
+  useSimulationReport,
+  useSimulationReports,
+} from '@/features/sonata-viewer/simulation-reports-context';
 import { SpikeViewer } from '@/features/spike-viewer';
 import { cn } from '@/utils/css-class';
 
@@ -85,7 +89,7 @@ function isLfpReportFile(file: TAssetBackedFile): boolean {
  * A file whose statistics open beside it in a results layout: spikes, a voltage
  * report, or with the LFP viewer on, an extracellular report.
  */
-export function hasStatistics(file: TAssetBackedFile, lfpViewer = false): boolean {
+export function hasStatistics(file: TAssetBackedFile, lfpViewer: boolean): boolean {
   return isSpikeFile(file) || isVoltageReportFile(file) || (lfpViewer && isLfpReportFile(file));
 }
 
@@ -134,8 +138,10 @@ function renderFileContent(
       { asset: { content_type: AssetContentType.h5, label: AssetLabel.replay_spikes } },
       (f) => <H5SpikeFileViewer file={f} context={context} />
     )
-    .with(P.when(isVoltageReportFile), (f) => <H5SonataFileViewer file={f} context={context} />)
-    .with(P.when(isLfpReportFile), (f) => <H5SonataFileViewer file={f} context={context} />)
+    .with(
+      P.when((f) => isVoltageReportFile(f) || isLfpReportFile(f)),
+      (f) => <H5SonataFileViewer file={f} context={context} />
+    )
     .otherwise((f) => <PlaceholderFileViewer file={f} />);
 }
 
@@ -282,11 +288,12 @@ function H5SpikeFileViewer({ file, context }: H5FileViewerProps) {
 
 function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
   const { entity, asset } = file;
-  // The runs launch-system registers label an LFP report a voltage report; its config entry says what it is.
+  const reports = useSimulationReports();
   const report = useSimulationReport(asset.path.split('/').pop());
-  const lfpViewer = useFlag(lfpViewerFlag.key);
+  const lfpViewer = useFlag(lfpViewerFlag.key) === true;
   if (!lfpViewer && isLfpReportFile(file)) return <PlaceholderFileViewer file={file} />;
-  if (lfpViewer && (isLfpReportFile(file) || report?.type === 'lfp')) {
+  // The runs launch-system registers label an LFP report a voltage report; its config entry says what it is.
+  if (lfpViewer && isLfpReport(file, reports)) {
     return (
       <LfpViewer
         key={`${entity.id}-${asset.id}`}
@@ -303,7 +310,7 @@ function H5SonataFileViewer({ file, context }: H5FileViewerProps) {
       entity={entity as ISimulationResult}
       assetId={asset.id}
       ctx={context}
-      withStatistics={hasStatistics(file)}
+      withStatistics={hasStatistics(file, lfpViewer)}
     />
   );
 }

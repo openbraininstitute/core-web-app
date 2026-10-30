@@ -3,7 +3,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
+import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
+import { computeTicks, formatTick } from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { ReactNode } from 'react';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
@@ -27,7 +29,7 @@ type Props = {
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
   /** The traced contacts at full resolution, a row each in the order of `traces`, once read. */
-  traceField?: LfpField | null;
+  traceField: LfpField | null;
   /** How many times the shared gain the traces are drawn at. */
   gain: number;
   window: [number, number];
@@ -37,7 +39,7 @@ type Props = {
   onSeek: (timeInMs: number) => void;
   timeCursor: TimeCursor;
   /** Under the plot, lined up with it: given the plot's left and right edges. */
-  footer?: (left: number, right: number) => ReactNode;
+  footer: (left: number, right: number) => ReactNode;
 };
 
 /** A contact's lowest and highest µV over bins [from, to). */
@@ -62,11 +64,12 @@ function extent(field: LfpField, contact: number, from: number, to: number): [nu
   return [low * field.scale, high * field.scale];
 }
 
-function niceStep(span: number, count: number): number {
-  const raw = span / Math.max(1, count);
-  const power = 10 ** Math.floor(Math.log10(raw));
-  const unit = raw / power;
-  return (unit < 1.5 ? 1 : unit < 3.5 ? 2 : unit < 7.5 ? 5 : 10) * power;
+/** The bins of a field over [from, to) ms, clamped to the run. */
+function binRange(field: LfpField, from: number, to: number): [number, number] {
+  return [
+    Math.max(0, Math.floor((from - field.start) / field.binMs)),
+    Math.min(field.bins, Math.ceil((to - field.start) / field.binMs)),
+  ];
 }
 
 /**
@@ -80,7 +83,7 @@ export function FieldPlot({
   field,
   scale,
   traces,
-  traceField = null,
+  traceField,
   gain,
   window: [from, to],
   onWindowChange,
@@ -120,27 +123,23 @@ export function FieldPlot({
     Math.min(rows - 1, Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rows)));
   const contactOf = (y: number) => (mode === 'map' ? rowOf(y) : (traces[rowOf(y)] ?? null));
 
-  // The map's image, a pixel per contact and bin over the window, drawn once per window.
-  const firstBin = Math.max(0, Math.floor((from - field.start) / field.binMs));
-  const lastBin = Math.min(field.bins, Math.ceil((to - field.start) / field.binMs));
+  // The map's image, a pixel per contact and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
-    if (mode !== 'map' || lastBin <= firstBin || typeof document === 'undefined') return null;
-    const width = lastBin - firstBin;
-    const image = new ImageData(width, field.contacts);
+    if (mode !== 'map' || field.bins === 0 || typeof document === 'undefined') return null;
+    const image = new ImageData(field.bins, field.contacts);
     const pixels = new Uint32Array(image.data.buffer);
     for (let c = 0; c < field.contacts; c++) {
-      for (let b = 0; b < width; b++) {
-        const [low, high] = extent(field, c, firstBin + b, firstBin + b + 1);
-        const uv = Math.abs(high) > Math.abs(low) ? high : low;
-        pixels[c * width + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
+      for (let b = 0; b < field.bins; b++) {
+        const uv = fieldValue(field, c, b);
+        pixels[c * field.bins + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
       }
     }
     const canvas = document.createElement('canvas');
-    canvas.width = width;
+    canvas.width = field.bins;
     canvas.height = field.contacts;
     canvas.getContext('2d')?.putImageData(image, 0, 0);
     return canvas;
-  }, [mode, field, scale, firstBin, lastBin]);
+  }, [mode, field, scale]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf and the plot's edges follow from size, from and to
   useEffect(() => {
@@ -157,7 +156,8 @@ export function FieldPlot({
     const plotWidth = plot.right - plot.left;
     const plotHeight = plot.bottom - plot.top;
 
-    if (mode === 'map' && mapImage) {
+    const [firstBin, lastBin] = binRange(field, from, to);
+    if (mode === 'map' && mapImage && lastBin > firstBin) {
       g.imageSmoothingEnabled = false;
       const x0 = xOf(field.start + firstBin * field.binMs);
       const x1 = xOf(field.start + lastBin * field.binMs);
@@ -165,13 +165,22 @@ export function FieldPlot({
       g.beginPath();
       g.rect(plot.left, plot.top, plotWidth, plotHeight);
       g.clip();
-      g.drawImage(mapImage, x0, plot.top, x1 - x0, plotHeight);
+      g.drawImage(
+        mapImage,
+        firstBin,
+        0,
+        lastBin - firstBin,
+        field.contacts,
+        x0,
+        plot.top,
+        x1 - x0,
+        plotHeight
+      );
       g.restore();
       g.fillStyle = LABEL;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
-      const step = niceStep(field.contacts, plotHeight / 40);
-      for (let c = 0; c < field.contacts; c += step) {
+      for (const c of computeTicks(0, field.contacts - 1, plotHeight / 40, true)) {
         g.fillText(`e${c}`, plot.left - 6, plot.top + ((c + 0.5) / field.contacts) * plotHeight);
       }
       if (selectedContact !== null) {
@@ -191,8 +200,7 @@ export function FieldPlot({
       const pxPerUv = (rowHeight * 0.45 * gain) / scale.limit;
       // The traced rows at full resolution where they are in, else the overview's.
       const source = traceField ?? field;
-      const first = Math.max(0, Math.floor((from - source.start) / source.binMs));
-      const last = Math.min(source.bins, Math.ceil((to - source.start) / source.binMs));
+      const [first, last] = binRange(source, from, to);
       const binsPerPx = (last - first) / plotWidth;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
@@ -234,32 +242,19 @@ export function FieldPlot({
     g.fillStyle = LABEL;
     g.textAlign = 'center';
     g.textBaseline = 'top';
-    const tick = niceStep(to - from, plotWidth / 80);
-    for (let t = Math.ceil(from / tick) * tick; t <= to; t += tick) {
+    const ticks = computeTicks(from, to, plotWidth / 80);
+    const tickStep = ticks.length > 1 ? ticks[1] - ticks[0] : to - from;
+    for (const t of ticks) {
       const x = xOf(t);
       g.beginPath();
       g.moveTo(x, plot.bottom);
       g.lineTo(x, plot.bottom + 4);
       g.stroke();
-      g.fillText(`${Number(t.toPrecision(6))}`, x, plot.bottom + 6);
+      g.fillText(formatTick(t, tickStep), x, plot.bottom + 6);
     }
     g.textAlign = 'right';
     g.fillText('ms', size.width - 2, plot.bottom + 6);
-  }, [
-    size,
-    mode,
-    mapImage,
-    field,
-    scale,
-    traces,
-    traceField,
-    gain,
-    from,
-    to,
-    selectedContact,
-    firstBin,
-    lastBin,
-  ]);
+  }, [size, mode, mapImage, field, scale, traces, traceField, gain, from, to, selectedContact]);
 
   // The player's time, moved outside React.
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf follows from size, from and to
@@ -302,14 +297,10 @@ export function FieldPlot({
           }
           const contact = contactOf(y);
           const t = timeOf(x);
-          const bin = Math.min(
-            field.bins - 1,
-            Math.max(0, Math.floor((t - field.start) / field.binMs))
-          );
-          const [low, high] = contact === null ? [0, 0] : extent(field, contact, bin, bin + 1);
-          const uv = Math.abs(high) > Math.abs(low) ? high : low;
           setHover(
-            contact === null ? null : `e${contact} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`
+            contact === null
+              ? null
+              : `e${contact} · ${t.toFixed(1)} ms · ${fieldValue(field, contact, binAt(field, t)).toFixed(1)} µV`
           );
         }}
         onPointerLeave={() => setHover(null)}
@@ -356,7 +347,7 @@ export function FieldPlot({
           </div>
         )}
       </div>
-      {footer && size.width > 0 && footer(plot.left, plot.right)}
+      {size.width > 0 && footer(plot.left, plot.right)}
     </div>
   );
 }

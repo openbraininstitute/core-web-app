@@ -33,7 +33,7 @@ export function fieldLimit(field: LfpField): number {
 }
 
 /** A position on the scale's colour, as RGB. */
-export function rgbAt(position: number): [number, number, number] {
+function rgbAt(position: number): [number, number, number] {
   const at = ((position + 1) / 2) * (STOPS.length - 1);
   const i = Math.min(STOPS.length - 2, Math.max(0, Math.floor(at)));
   const f = Math.min(1, Math.max(0, at - i));
@@ -59,7 +59,7 @@ export function hexAt(position: number): string {
     .join('')}`;
 }
 
-/** The level a position is binned into, of `levels`. */
-export function levelOf(position: number, levels = SCENE_LEVELS): number {
-  return Math.round(((position + 1) / 2) * (levels - 1));
+/** The scene level a position is binned into. */
+export function levelOf(position: number): number {
+  return Math.round(((position + 1) / 2) * (SCENE_LEVELS - 1));
 }
