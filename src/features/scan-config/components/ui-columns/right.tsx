@@ -134,11 +134,13 @@ export function EntityPreviewPane({
       id="scan-config-controls-right-mini-detail"
       className={cn(
         'h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar',
-        inset ? 'p-3' : 'px-0.5 py-1'
+        // Boxed, the view is the box's content: no card of its own inside it.
+        !inset && 'px-0.5 py-1'
       )}
     >
       {record ? (
         <MiniDetailViewRenderer
+          bare={inset}
           section={WorkspaceSection.Data}
           record={record}
           dataType={dataType}
