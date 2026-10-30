@@ -16,6 +16,10 @@ import {
   rowMembers,
   selectionApplies,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
+import {
+  nodeColumnOptions,
+  nodeProperty,
+} from '@/features/circuit-nodes/connectivity/node-properties';
 import { useConnectivityMatrix } from '@/features/circuit-nodes/connectivity/use-connectivity';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { PILL_CLASS, PillSelect, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
@@ -28,8 +32,10 @@ import type {
   ConnectivityGroups,
   ConnectivityRequest,
   ConnectivitySummary,
+  NodeProperty,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityEntry } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
@@ -66,6 +72,12 @@ function requestOf(groupBy: string, orderBy: string): ConnectivityRequest {
 
 /** A pathway of the matrix: the node ids of the neurons it starts from, and of those it ends at. */
 export type MatrixPathway = { pre: Uint32Array; post: Uint32Array };
+
+/** The node file's columns, read in the table's own session, to group the matrix by. */
+export type NodeColumns = {
+  columns: readonly ColumnMeta[];
+  getColumn: (name: string) => Promise<ColumnValues>;
+};
 
 /** The table's ticks or filter, which the matrix keeps to where they are of its neurons. */
 export type MatrixSelection = {
@@ -173,6 +185,7 @@ export function ConnectivityView({
   entry,
   listing,
   selection,
+  nodeColumns,
   onPathwayChange,
   headerSlot,
 }: {
@@ -184,6 +197,8 @@ export function ConnectivityView({
   listing: { isLoading: boolean; error: Error | null; empty: boolean };
   /** The neurons the table has selected, to which the matrix keeps. */
   selection?: MatrixSelection;
+  /** The columns of the table's node file, offered to group by where it is the matrix's. */
+  nodeColumns?: NodeColumns;
   /**
    * Told the pathway under the pointer, null once it leaves the matrix: only for a
    * matrix of the selection's population, whose neurons a view beside it draws.
@@ -259,6 +274,7 @@ export function ConnectivityView({
       edgePopulation={entry.population}
       group={matrix.group}
       selection={selection}
+      nodeColumns={nodeColumns}
       onPathwayChange={onPathwayChange}
       headerSlot={headerSlot}
     />
@@ -270,13 +286,19 @@ function ReadyMatrix({
   edgePopulation,
   group,
   selection,
+  nodeColumns,
   onPathwayChange,
   headerSlot,
 }: {
   summary: ConnectivitySummary;
   edgePopulation: string;
-  group: (request: ConnectivityRequest, cells: Uint32Array | null) => Promise<ConnectivityGroups>;
+  group: (
+    request: ConnectivityRequest,
+    cells: Uint32Array | null,
+    outside: NodeProperty[]
+  ) => Promise<ConnectivityGroups>;
   selection: MatrixSelection | undefined;
+  nodeColumns: NodeColumns | undefined;
   onPathwayChange: ((pathway: MatrixPathway | null) => void) | undefined;
   headerSlot: HTMLElement | null;
 }) {
@@ -303,7 +325,38 @@ function ReadyMatrix({
       : null;
   const pathwayTo = ofTable ? onPathwayChange : undefined;
   const neurons = cells ? cells.length : summary.neurons;
-  const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}`;
+
+  // The node file's other columns, where the table's file is the matrix's, read once each.
+  const fromNodes = useMemo(
+    () =>
+      ofTable && nodeColumns
+        ? nodeColumnOptions(nodeColumns.columns, new Set(categorical.map((p) => p.name)))
+        : [],
+    [ofTable, nodeColumns, categorical]
+  );
+  const [outside, setOutside] = useState<Record<string, NodeProperty | Error>>({});
+  const wanted = [groupBy, groupBy === BY_NEURON ? orderBy : null].filter(
+    (name): name is string => !!name && fromNodes.some((c) => c.name === name)
+  );
+  const missing = wanted.filter((name) => !outside[name]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: asked for once per column missing
+  useEffect(() => {
+    if (!nodeColumns) return;
+    for (const name of missing) {
+      nodeColumns
+        .getColumn(name)
+        .then((column) => nodeProperty(name, column))
+        .catch((error: unknown) => (error instanceof Error ? error : new Error(String(error))))
+        .then((read) => setOutside((known) => ({ ...known, [name]: read })));
+    }
+  }, [missing.join('|')]);
+  const outsideError = wanted
+    .map((name) => outside[name])
+    .find((read): read is Error => read instanceof Error);
+  const outsideProperties = wanted
+    .map((name) => outside[name])
+    .filter((read): read is NodeProperty => !!read && !(read instanceof Error));
+  const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}/${missing.length}`;
 
   // Kept with the request it answers, so a change never draws the last one's rows.
   const [answer, setAnswer] = useState<{
@@ -311,9 +364,11 @@ function ReadyMatrix({
     groups?: ConnectivityGroups;
     error?: Error;
   } | null>(null);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the key says what the answer is to
   useEffect(() => {
+    if (missing.length > 0) return;
     let live = true;
-    group(request, cells)
+    group(request, cells, outsideProperties)
       .then((groups) => live && setAnswer({ key: requestKey, groups }))
       .catch((error: unknown) => {
         if (live) {
@@ -326,7 +381,7 @@ function ReadyMatrix({
     return () => {
       live = false;
     };
-  }, [group, request, cells, requestKey]);
+  }, [group, requestKey]);
   const current = answer?.key === requestKey ? answer : null;
 
   // The pathway under the pointer, told once per cell, and let go of with the rows it was of.
@@ -404,6 +459,11 @@ function ReadyMatrix({
               label: p.name,
               detail: `${p.values?.length ?? 0}`,
             })),
+            ...fromNodes.map((c) => ({
+              value: c.name,
+              label: c.name,
+              detail: c.ranges ? 'ranges' : undefined,
+            })),
             {
               value: BY_NEURON,
               label: 'Neuron',
@@ -419,6 +479,7 @@ function ReadyMatrix({
             options={[
               { value: MATRIX_ORDER, label: 'Node id' },
               ...categorical.map((p) => ({ value: p.name, label: p.name })),
+              ...fromNodes.map((c) => ({ value: c.name, label: c.name })),
             ]}
           />
         )}
@@ -438,9 +499,9 @@ function ReadyMatrix({
         )}
       </div>
       <div className="relative min-h-0 flex-1">
-        {current?.error ? (
+        {current?.error || outsideError ? (
           <div className={styles.centered}>
-            <GenericError content={current.error.message} />
+            <GenericError content={(outsideError ?? current?.error)?.message} />
           </div>
         ) : cells?.length === 0 ? (
           <Empty description="None of the matrix's neurons are selected" />

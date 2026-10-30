@@ -14,9 +14,12 @@ const ARRAY = 10;
 /** Connections read at a time: big enough to be quick, small enough not to double the heap. */
 const EDGE_CHUNK = 1 << 20;
 
-/** A neuron property of the matrix: a library and a code per neuron (-1 for none), or a number. */
+/**
+ * A neuron property of the matrix: a library and a code per neuron (-1 for none),
+ * kept in the library's order where `ordered`, such as ranges of a number; or a number.
+ */
 export type VertexProperty =
-  | { name: string; kind: 'categorical'; library: string[]; codes: Int32Array }
+  | { name: string; kind: 'categorical'; library: string[]; codes: Int32Array; ordered?: boolean }
   | { name: string; kind: 'numeric'; values: Float64Array };
 
 /**

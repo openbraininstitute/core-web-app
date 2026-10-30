@@ -155,6 +155,38 @@ describe('groupConnectivity over a selection', () => {
   });
 });
 
+describe('groupConnectivity by a property from outside the matrix', () => {
+  // By node id: 10 and 30 in the first range, 20 and 40 in the second, 50 in none.
+  const depth = {
+    name: 'depth',
+    library: ['0–100', '100–200'],
+    codes: Int32Array.from({ length: 51 }, (_, id) =>
+      [10, 30].includes(id) ? 0 : [20, 40].includes(id) ? 1 : -1
+    ),
+    ordered: true,
+  };
+
+  it('groups the neurons by their node ids’ values, in the property’s own order', () => {
+    const groups = groupConnectivity(MATRIX, { by: 'property', property: 'depth' }, null, [depth]);
+
+    expect(groups.labels).toEqual(['0–100', '100–200', 'None']);
+    expect([...groups.sizes]).toEqual([2, 2, 1]);
+    // 20 → 40 and 40 → 20 are within the second range.
+    expect(groups.connections[at(3, 1, 1)]).toBe(2);
+  });
+
+  it('orders the neurons by it, one by one', () => {
+    const groups = groupConnectivity(
+      MATRIX,
+      { by: 'neuron', orderBy: 'depth', maxRows: 10 },
+      null,
+      [depth]
+    );
+
+    expect([...(groups.nodeIds ?? [])]).toEqual([10, 30, 20, 40, 50]);
+  });
+});
+
 describe('selectionApplies', () => {
   it('holds for the population at both ends of the edge population', () => {
     const at = (nodePopulation: string, edgePopulation = 'S1__S1__chemical') =>

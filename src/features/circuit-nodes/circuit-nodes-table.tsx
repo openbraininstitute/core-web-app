@@ -262,6 +262,7 @@ export default function CircuitNodesTable({
                 onReset: resetSelection,
               }
             }
+            nodeColumns={columns && { columns, getColumn }}
             onPathwayChange={
               onPathwayChange &&
               population &&

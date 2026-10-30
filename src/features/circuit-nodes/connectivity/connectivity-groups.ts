@@ -36,6 +36,17 @@ export type ConnectivityGroups = {
   members: { offsets: Uint32Array; nodeIds: Uint32Array };
 };
 
+/**
+ * A property of the neurons from outside the matrix, such as a column of the node
+ * file: its values' library and a code per node id, -1 for none.
+ */
+export type NodeProperty = {
+  name: string;
+  library: string[];
+  codes: Int32Array;
+  ordered?: boolean;
+};
+
 /** What a menu needs of a neuron property: its name, and its values where it has a few. */
 export type PropertySummary = { name: string; kind: VertexProperty['kind']; values?: string[] };
 
@@ -69,7 +80,8 @@ function valuesInUse(
     if (code < 0) none = true;
     else used[code] = 1;
   });
-  const values = property.library.filter((_, code) => used[code]).sort(byCharacters);
+  const values = property.library.filter((_, code) => used[code]);
+  if (!property.ordered) values.sort(byCharacters);
   return none ? [...values, NO_VALUE] : values;
 }
 
@@ -115,7 +127,23 @@ function includedNeurons(matrix: ConnectivityMatrix, cells: ArrayLike<number>): 
   return Uint8Array.from(matrix.nodeIds, (id) => (wanted.has(id) ? 1 : 0));
 }
 
-function categorical(matrix: ConnectivityMatrix, name: string | null) {
+/** A categorical property of the neurons: from outside the matrix where given one, else its own. */
+function categorical(
+  matrix: ConnectivityMatrix,
+  name: string | null,
+  outside: readonly NodeProperty[]
+): Extract<VertexProperty, { kind: 'categorical' }> | null {
+  const node = outside.find((p) => p.name === name);
+  if (node) {
+    const { codes } = node;
+    return {
+      name: node.name,
+      kind: 'categorical',
+      library: node.library,
+      ordered: node.ordered,
+      codes: Int32Array.from(matrix.nodeIds, (id) => (id < codes.length ? codes[id] : -1)),
+    };
+  }
   const property = matrix.properties.find((p) => p.name === name);
   return property?.kind === 'categorical' ? property : null;
 }
@@ -135,11 +163,12 @@ function countRows(rowOf: Int32Array, rows: number): Float64Array {
 function rowsOf(
   matrix: ConnectivityMatrix,
   request: ConnectivityRequest,
-  included: Uint8Array | null
+  included: Uint8Array | null,
+  outside: readonly NodeProperty[]
 ) {
   const { size, nodeIds } = matrix;
   if (request.by === 'property') {
-    const property = categorical(matrix, request.property);
+    const property = categorical(matrix, request.property, outside);
     if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
     const { values, ranks } = rankedValues(property, included);
     return {
@@ -151,7 +180,7 @@ function rowsOf(
     };
   }
 
-  const property = categorical(matrix, request.orderBy);
+  const property = categorical(matrix, request.orderBy, outside);
   const ordered = property ? rankedValues(property, included) : null;
   const order = Array.from({ length: size }, (_, i) => i)
     .filter((neuron) => !included || included[neuron])
@@ -186,15 +215,17 @@ function rowsOf(
 /**
  * The matrix as `request` asks for it: its connections and synapses, summed by
  * rows. Given `cells`, node ids, only those neurons and the connections between
- * them are counted.
+ * them are counted. `outside` are properties to group or order by besides the
+ * matrix's own.
  */
 export function groupConnectivity(
   matrix: ConnectivityMatrix,
   request: ConnectivityRequest,
-  cells: ArrayLike<number> | null = null
+  cells: ArrayLike<number> | null = null,
+  outside: readonly NodeProperty[] = []
 ): ConnectivityGroups {
   const included = cells ? includedNeurons(matrix, cells) : null;
-  const { rowOf, sizes, labels, runs, ids } = rowsOf(matrix, request, included);
+  const { rowOf, sizes, labels, runs, ids } = rowsOf(matrix, request, included, outside);
   const n = labels.length;
   const connections = new Float64Array(n * n);
   const synapses = matrix.synapses ? new Float64Array(n * n) : null;

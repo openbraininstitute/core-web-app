@@ -11,6 +11,7 @@ import type {
   ConnectivityGroups,
   ConnectivityRequest,
   ConnectivitySummary,
+  NodeProperty,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityMatrix } from '@/features/circuit-nodes/connectivity/connectivity-h5';
 import type { DownloadProgress } from '@/features/circuit-nodes/types';
@@ -39,13 +40,17 @@ const api = {
     return summarizeConnectivity(matrix);
   },
 
-  /** The matrix's rows as asked for: of the neurons whose node ids are `cells`, where given. */
+  /**
+   * The matrix's rows as asked for: of the neurons whose node ids are `cells`, where
+   * given, and by `outside`'s properties besides the matrix's own.
+   */
   async group(
     request: ConnectivityRequest,
-    cells: Uint32Array | null = null
+    cells: Uint32Array | null = null,
+    outside: NodeProperty[] = []
   ): Promise<ConnectivityGroups> {
     if (!matrix) throw new Error('No connectivity matrix open; call open() first');
-    const groups = groupConnectivity(matrix, request, cells);
+    const groups = groupConnectivity(matrix, request, cells, outside);
     const buffers = [
       groups.sizes,
       groups.connections,

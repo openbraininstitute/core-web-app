@@ -21,6 +21,7 @@ import type {
   ConnectivityGroups,
   ConnectivityRequest,
   ConnectivitySummary,
+  NodeProperty,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { DownloadProgress } from '@/features/circuit-nodes/types';
 
@@ -155,11 +156,12 @@ class ConnectivitySessions {
   group(
     key: string,
     request: ConnectivityRequest,
-    cells: Uint32Array | null
+    cells: Uint32Array | null,
+    outside: NodeProperty[]
   ): Promise<ConnectivityGroups> {
     const proxy = this.sessions.get(key)?.proxy;
     if (!proxy) return Promise.reject(new Error('The connectivity matrix is not open'));
-    return proxy.group(request, cells);
+    return proxy.group(request, cells, outside);
   }
 
   private setState(session: Session, state: ConnectivityState): void {
@@ -241,9 +243,9 @@ export function useConnectivityMatrix(
     key ? connectivitySessions.state(key) : IDLE
   );
   const group = useCallback(
-    (request: ConnectivityRequest, cells: Uint32Array | null) =>
+    (request: ConnectivityRequest, cells: Uint32Array | null, outside: NodeProperty[]) =>
       key
-        ? connectivitySessions.group(key, request, cells)
+        ? connectivitySessions.group(key, request, cells, outside)
         : Promise.reject(new Error('No connectivity matrix')),
     [key]
   );
