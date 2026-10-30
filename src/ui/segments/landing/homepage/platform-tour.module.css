@@ -138,34 +138,32 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 4px 22px;
 }
 .chapters .chapter {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  min-height: 46px;
-  padding: 9px 17px;
-  border: 1px solid #183f8b45;
-  border-radius: 25px;
-  background: #ffffffcf;
+  min-height: 44px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
   color: #365479;
   font-size: 15px;
   font-weight: 400;
-  transition:
-    background 0.2s,
-    color 0.2s;
+  transition: color 0.2s;
 }
 .chapters .chapter[aria-pressed="true"] {
-  border-color: var(--blue, #183f8b);
-  background: var(--blue, #183f8b);
-  color: white;
+  border-bottom-color: var(--blue, #183f8b);
+  color: var(--blue, #183f8b);
+  font-weight: 600;
 }
 .tour[data-playing="true"] .chapter[aria-pressed="true"] .progress {
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: #ffffff25;
+  inset: auto 0 -2px;
+  height: 2px;
+  background: #8eb3e3;
   transform-origin: left;
   animation: chapter-progress var(--chapter-duration, 12s) linear forwards;
   pointer-events: none;
@@ -182,20 +180,24 @@
   }
 }
 .chapters .chapter:hover:not([aria-pressed="true"]) {
-  background: white;
+  color: var(--blue, #183f8b);
+  border-bottom-color: #183f8b66;
 }
 .chapters .play {
   display: grid;
   place-items: center;
-  width: 46px;
-  min-width: 46px;
-  height: 46px;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
   padding: 0;
-  border: 1px solid #183f8b35;
-  border-radius: 50%;
-  background: #ffffffcf;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
   color: var(--blue, #183f8b);
   font-size: 20px;
+}
+.chapters .play:hover {
+  background: #ffffff80;
 }
 .chapterDetails {
   /* Keep the primary actions steady; secondary content always begins at the top. */
@@ -213,37 +215,47 @@
   margin: 0;
   padding: 0;
   border: 0;
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 0 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  align-items: center;
+  gap: 8px;
+  width: min(360px, 100%);
   min-height: 44px;
   color: #365479;
 }
-.examplesLabel {
-  color: #476083;
-  font-size: 15px;
+.navigation .exampleCaption {
+  min-width: 0;
+  margin: 0;
+  font-size: 14px;
   line-height: 1.5;
 }
-.examples .example {
-  display: flex;
-  align-items: flex-start;
+.examplesLabel {
+  color: #5b6c83;
+}
+.exampleName {
+  color: #365479;
+}
+.examples .exampleArrow {
+  display: grid;
+  place-items: center;
+  width: 44px;
   min-height: 44px;
   padding: 0;
   border: 0;
-  line-height: 1.5;
+  border-radius: 4px;
   background: transparent;
-  color: #365479;
-  font-size: 15px;
-}
-.examples .example[aria-pressed="true"] {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 6px;
   color: var(--blue, #183f8b);
+  font-size: 25px;
+  line-height: 1;
 }
-.examples .example:hover {
-  color: var(--blue, #183f8b);
+.examples .exampleArrow:hover {
+  background: #ffffff80;
+}
+.chapters .chapter:focus-visible,
+.chapters .play:focus-visible,
+.examples .exampleArrow:focus-visible {
+  outline: 2px solid var(--blue, #183f8b);
+  outline-offset: 3px;
 }
 @media (max-width: 800px) {
   .tour {
@@ -268,30 +280,16 @@
     margin-top: 24px;
   }
   .chapters {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 46px;
-    align-items: stretch;
+    gap: 2px 18px;
   }
   .chapters .chapter {
-    padding: 9px 7px;
+    padding: 10px 0;
     font-size: 14px;
-  }
-  .chapters .play {
-    grid-column: 3;
-    grid-row: 1 / 4;
-    align-self: center;
   }
   .chapterDetails {
     min-height: 118px;
   }
   .navigation .chapterDescription {
-    font-size: 14px;
-  }
-  .examples {
-    column-gap: 14px;
-  }
-  .examplesLabel,
-  .examples .example {
     font-size: 14px;
   }
   .expand {

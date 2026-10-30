@@ -348,6 +348,12 @@ export default function PlatformTour({
     setIndex(next);
   }
 
+  function browseExample(direction: number) {
+    const position = chapter.examples.indexOf(slide.id);
+    const next = (position + direction + chapter.examples.length) % chapter.examples.length;
+    selectExample(chapter.examples[next]);
+  }
+
   function handleChapterKeys(event: KeyboardEvent<HTMLButtonElement>, position: number) {
     let next: number;
     if (event.key === 'ArrowLeft') next = (position - 1 + CHAPTERS.length) % CHAPTERS.length;
@@ -417,18 +423,32 @@ export default function PlatformTour({
           </p>
         ) : chapter.examples.length > 1 ? (
           <fieldset className={styles.examples} aria-label="Examples in the selected chapter">
-            <span className={styles.examplesLabel}>Examples</span>
-            {chapter.examples.map((id) => (
-              <button
-                type="button"
-                key={id}
-                className={styles.example}
-                aria-pressed={id === slide.id}
-                onClick={() => selectExample(id)}
-              >
-                {SLIDES.find((item) => item.id === id)?.label}
-              </button>
-            ))}
+            <p
+              className={styles.exampleCaption}
+              aria-live={playing ? 'off' : 'polite'}
+              aria-atomic="true"
+            >
+              <span className={styles.examplesLabel}>Example:</span>{' '}
+              <span className={styles.exampleName} data-testid="current-example">
+                {slide.label}
+              </span>
+            </p>
+            <button
+              type="button"
+              className={styles.exampleArrow}
+              aria-label="Previous example"
+              onClick={() => browseExample(-1)}
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button
+              type="button"
+              className={styles.exampleArrow}
+              aria-label="Next example"
+              onClick={() => browseExample(1)}
+            >
+              <span aria-hidden="true">›</span>
+            </button>
           </fieldset>
         ) : null}
       </div>

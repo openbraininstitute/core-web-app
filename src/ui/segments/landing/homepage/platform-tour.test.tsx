@@ -18,11 +18,13 @@ function chapter(name: string) {
     screen.getByRole('group', { name: 'Choose a research or teaching chapter' })
   ).getByRole('button', { name });
 }
-function example(name: string) {
-  return within(screen.getByRole('group', { name: 'Examples in the selected chapter' })).getByRole(
-    'button',
-    { name }
-  );
+function chooseExample(name: string) {
+  const group = screen.getByRole('group', { name: 'Examples in the selected chapter' });
+  for (let step = 0; step < 4; step += 1) {
+    if (screen.getByTestId('current-example').textContent === name) return;
+    fireEvent.click(within(group).getByRole('button', { name: 'Next example' }));
+  }
+  expect(screen.getByTestId('current-example')).toHaveTextContent(name);
 }
 function expectSlide(title: string) {
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
@@ -117,12 +119,12 @@ describe('guided platform tour', () => {
     expectSlide('Discover patterns in firing.');
 
     fireEvent.click(chapter('Build & simulate'));
-    fireEvent.click(example('Microcircuits'));
+    chooseExample('Microcircuits');
     expectSlide('Build a circuit. Run an experiment.');
     finishVideo();
     expectSlide('Discover patterns in firing.');
     fireEvent.click(chapter('Build & simulate'));
-    fireEvent.click(example('Extracellular fields'));
+    chooseExample('Extracellular fields');
     advance();
     expectSlide('Discover patterns in firing.');
 
@@ -170,15 +172,21 @@ describe('guided platform tour', () => {
       fireEvent.click(chapter(name));
       expect(
         within(screen.getByRole('group', { name: 'Examples in the selected chapter' })).getByText(
-          'Examples',
+          'Example:',
           { exact: true }
         )
       ).toBeInTheDocument();
       for (const [label, title] of items) {
-        fireEvent.click(example(label));
+        chooseExample(label);
         expectSlide(title);
-        expect(example(label)).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByTestId('current-example')).toHaveTextContent(label);
       }
+      const examples = screen.getByRole('group', { name: 'Examples in the selected chapter' });
+      expect(within(examples).getAllByRole('button')).toHaveLength(2);
+      fireEvent.click(within(examples).getByRole('button', { name: 'Next example' }));
+      expect(screen.getByTestId('current-example')).toHaveTextContent(items[0][0]);
+      fireEvent.click(within(examples).getByRole('button', { name: 'Previous example' }));
+      expect(screen.getByTestId('current-example')).toHaveTextContent(items[items.length - 1][0]);
     }
     fireEvent.click(chapter('Skeletonize'));
     expect(
@@ -293,7 +301,7 @@ describe('guided platform tour', () => {
       screen.getByRole('img', { name: /Animated electron microscopy cell mesh/ })
     ).toHaveAttribute('src', '/images/homepage/em-cell-mesh-poster.png');
     fireEvent.click(chapter('Build & simulate'));
-    fireEvent.click(example('Extracellular fields'));
+    chooseExample('Extracellular fields');
     expect(
       screen.getByRole('img', { name: /Animated layer 4 extracellular field/ })
     ).toHaveAttribute('src', '/images/homepage/lfp-light-traces-poster.png');
