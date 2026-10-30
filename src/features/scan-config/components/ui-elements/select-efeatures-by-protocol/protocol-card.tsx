@@ -864,9 +864,12 @@ export function ProtocolCard({
           >
             <SettingsForm description={def.description}>
               <div className="flex flex-col gap-1.5">
-                <span className="text-primary-9 text-sm font-semibold">
-                  Extraction amplitudes (nA)
-                </span>
+                <div className="flex items-center">
+                  <span className="text-primary-9 text-sm font-semibold">
+                    Extraction amplitudes
+                  </span>
+                  <span className="ml-1 text-sm text-gray-500">nA</span>
+                </div>
                 <AmplitudeSettings
                   value={value}
                   onChange={onChange}

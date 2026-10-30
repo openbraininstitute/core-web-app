@@ -80,6 +80,7 @@ export function commonParentRegion(root: IBrainRegionHierarchy, regionIds: strin
 
 function Row({
   label,
+  unit,
   overridden,
   differ,
   derivedNote,
@@ -88,6 +89,7 @@ function Row({
   children,
 }: {
   label: string;
+  unit?: string;
   overridden: boolean;
   differ: boolean;
   derivedNote?: string;
@@ -109,7 +111,10 @@ function Row({
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-primary-9 text-sm font-semibold">{label}</span>
+      <div className="flex items-center">
+        <span className="text-primary-9 text-sm font-semibold">{label}</span>
+        {unit && <span className="ml-1 text-sm text-gray-500">{unit}</span>}
+      </div>
       {children}
       {note && <span className="text-xs text-neutral-500">{note}</span>}
     </div>
@@ -477,7 +482,8 @@ export function IonChannelModelProperties({
       </Row>
 
       <Row
-        label="Temperature (°C)"
+        label="Temperature"
+        unit="°C"
         overridden={!differ.temperature && value.temperature != null}
         differ={differ.temperature && currentTemperature == null}
         derivedNote={sharedTemperature == null ? undefined : 'From the recordings'}
