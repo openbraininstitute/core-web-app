@@ -60,8 +60,9 @@ export function useScanConfigTemplate({
   resolveSessionFromIdType,
   seed,
   hideTabs,
+  i18n,
 }: ScanConfigTemplateProps) {
-  const [urlTab, setTab] = useScanConfigTab(activity, defaultTab);
+  const [urlTab, setTab] = useScanConfigTab(activity, defaultTab, i18n?.resultsTabId);
   const firstRoot = Object.entries(schema.properties).find(([, spec]) => !isType(spec))?.[0];
   const [selectedRootElement, setSelectedRootElement] = useState(firstRoot ?? '');
   const [editing, setEditing] = useState(true);

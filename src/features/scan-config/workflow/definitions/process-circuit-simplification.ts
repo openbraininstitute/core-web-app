@@ -16,7 +16,10 @@ export const processCircuitSimplificationWorkflow = defineScanConfigWorkflow({
   campaign: {
     resolve: async ({ id, context }) => {
       // biome-ignore lint/style/noNonNullAssertion: function is guaranteed to be defined
-      return await CircuitSimplificationCampaign.api.query.resolve!({ id, context });
+      return await CircuitSimplificationCampaign.api.query.resolve!({
+        id,
+        context,
+      });
     },
   },
   editor: {
@@ -28,6 +31,7 @@ export const processCircuitSimplificationWorkflow = defineScanConfigWorkflow({
     },
   },
   i18n: {
+    resultsTabId: ProcessScanConfigTabs.simplifications,
     resultsTab: 'simplifications',
     generate: 'Generate simplification(s)',
     new: 'New circuit simplification campaign',

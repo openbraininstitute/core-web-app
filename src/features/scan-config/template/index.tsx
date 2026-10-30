@@ -153,6 +153,8 @@ function ScanConfigTemplateContent(props: ScanConfigTemplateProps) {
         disableConfigurationTab={Boolean(!props.initialConfig && props.readOnly)}
         configuration={configurationContent}
         results={resultsContent}
+        resultsTabId={props.i18n?.resultsTabId}
+        resultsTabLabel={props.i18n?.resultsTab}
         // the centre copy button exists only once a campaign has been generated (its id is known)
         railCenter={
           state.campaignId ? (

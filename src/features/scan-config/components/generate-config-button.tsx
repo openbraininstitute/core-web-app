@@ -83,7 +83,11 @@ export default function GenerateConfigButton({
     campaignEntityType,
     onSuccess: (newCampaignId) => {
       setCampaignId(newCampaignId);
-      setTab(ScanConfigResultsTab[activity]);
+      setTab(
+        i18n?.resultsTabId
+          ? ({ id: i18n.resultsTabId, __activity: activity } as TScanConfigTabs)
+          : ScanConfigResultsTab[activity]
+      );
     },
     onError: (error) => {
       if (!(error instanceof ScanConfigGenerationError)) {

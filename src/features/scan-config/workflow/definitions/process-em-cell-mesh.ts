@@ -1,13 +1,13 @@
-import { TaskActivityType } from "@/api/entitycore/types/entities/task-activity";
-import { TaskConfigType } from "@/api/entitycore/types/entities/task-config";
-import { ObiOneTaskTypeDict } from "@/api/one/types/task";
-import { SkeletonizationCampaign } from "@/entity-configuration/domain/processing/skeletonization-campaign";
-import { ScanConfigActivity } from "@/features/scan-config/types";
-import { defineScanConfigWorkflow } from "@/features/scan-config/workflow/define";
-import { ScanConfigEntitySourceMode } from "@/features/scan-config/workflow/types";
+import { TaskActivityType } from '@/api/entitycore/types/entities/task-activity';
+import { TaskConfigType } from '@/api/entitycore/types/entities/task-config';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
+import { SkeletonizationCampaign } from '@/entity-configuration/domain/processing/skeletonization-campaign';
+import { ProcessScanConfigTabs, ScanConfigActivity } from '@/features/scan-config/types';
+import { defineScanConfigWorkflow } from '@/features/scan-config/workflow/define';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
 
 export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
-  id: "process-em-cell-mesh",
+  id: 'process-em-cell-mesh',
   activity: ScanConfigActivity.Process,
   entity: {
     mode: ScanConfigEntitySourceMode.Session,
@@ -19,15 +19,16 @@ export const processEmCellMeshWorkflow = defineScanConfigWorkflow({
     },
   },
   editor: {
-    className: "px-4",
+    className: 'px-4',
   },
   i18n: {
-    resultsTab: "skeletonizations",
-    generate: "Generate skeletonization(s)",
-    new: "New skeletonization campaign",
-    copyCampaignId: "Copy skeletonization campaign ID",
-    launch: "Launch skeletonizations",
-    workflowLabel: "skeletonizations",
+    resultsTabId: ProcessScanConfigTabs.skeletonizations,
+    resultsTab: 'skeletonizations',
+    generate: 'Generate skeletonization(s)',
+    new: 'New skeletonization campaign',
+    copyCampaignId: 'Copy skeletonization campaign ID',
+    launch: 'Launch skeletonizations',
+    workflowLabel: 'skeletonizations',
   },
   taskTypeBindings: {
     obiOne: ObiOneTaskTypeDict.Skeletonization,

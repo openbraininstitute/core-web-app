@@ -92,9 +92,13 @@ function ModelPreviewSkeleton() {
 export function ScanConfigSkeleton({
   className,
   activity = ScanConfigActivity.Simulate,
+  resultsTabId,
+  resultsTabLabel,
 }: {
   className?: string;
   activity?: TScanConfigActivity;
+  resultsTabId?: string;
+  resultsTabLabel?: string;
 }) {
   return (
     <div className={cn('flex h-full min-h-0 flex-col', className)}>
@@ -105,6 +109,8 @@ export function ScanConfigSkeleton({
         setTab={() => {}}
         disableResultsTab
         disableConfigurationTab={false}
+        resultsTabId={resultsTabId}
+        resultsTabLabel={resultsTabLabel}
         results={null}
         configuration={
           <div className="flex min-h-0 flex-1 flex-col px-2 pt-6 pb-2">

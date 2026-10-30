@@ -1,29 +1,26 @@
-import { kebabCase } from "es-toolkit/compat";
+import { kebabCase } from 'es-toolkit/compat';
 
-import { EntityTypeDict, type TEntityTypeDict } from "@/api/entitycore/types";
-import { ExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
-import { config } from "@/config";
-import { WorkflowActivityDictValue } from "@/constants";
-import { DetailViewSectionsDict } from "@/entity-configuration/definitions/types";
-import { getEntityByExtendedType } from "@/entity-configuration/domain/helpers";
+import { EntityTypeDict, type TEntityTypeDict } from '@/api/entitycore/types';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
+import { WorkflowActivityDictValue } from '@/constants';
+import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
+import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import {
   ScanConfigCampaignOriginActionDict,
   ScanConfigModeSearchParam,
   ScanConfigOriginSearchParam,
   ScanConfigResultsTab,
   ScanConfigTabSearchParam,
-} from "@/features/scan-config/helpers";
-import { ScanConfigEntitySourceMode } from "@/features/scan-config/workflow/types";
-import { getWorkflow } from "@/ui/segments/workflows/config/helpers";
-import { buildConfigureUrlForEntity } from "@/ui/segments/workflows/config/routes";
+} from '@/features/scan-config/helpers';
+import { ScanConfigEntitySourceMode } from '@/features/scan-config/workflow/types';
+import { getWorkflow } from '@/ui/segments/workflows/config/helpers';
+import { buildConfigureUrlForEntity } from '@/ui/segments/workflows/config/routes';
 
-import type { ITaskConfig } from "@/api/entitycore/types/entities/task-config";
-import type { TExtendedEntitiesTypeDict } from "@/api/entitycore/types/extended-entity-type";
-import type { WorkspaceContext } from "@/types/common";
-import type {
-  IWorkflowDescriptor,
-  TActivityValue,
-} from "@/ui/segments/workflows/config/types";
+import type { ITaskConfig } from '@/api/entitycore/types/entities/task-config';
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import type { WorkspaceContext } from '@/types/common';
+import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
 
 /**
  * Campaign and simulation types the detail-view results route cannot open.
@@ -64,13 +61,10 @@ type TWorkflowActivityConfigureRequest = {
   entityType?: TExtendedEntitiesTypeDict;
 };
 
-function usesStaticScanConfigConfigureRoute(
-  workflow: IWorkflowDescriptor | null,
-): boolean {
+function usesStaticScanConfigConfigureRoute(workflow: IWorkflowDescriptor | null): boolean {
   return (
     workflow?.isScanConfig === true &&
-    workflow.scanConfig?.definition.entity.mode ===
-      ScanConfigEntitySourceMode.StaticType
+    workflow.scanConfig?.definition.entity.mode === ScanConfigEntitySourceMode.StaticType
   );
 }
 
@@ -102,12 +96,10 @@ function usesStaticScanConfigConfigureRoute(
  */
 function resolveActivityRowEntityRef(
   workflow: IWorkflowDescriptor,
-  row: TWorkflowActivityTableRow,
-): Pick<TWorkflowActivityConfigureRequest, "entityId" | "entityType"> | null {
+  row: TWorkflowActivityTableRow
+): Pick<TWorkflowActivityConfigureRequest, 'entityId' | 'entityType'> | null {
   if (row.type === EntityTypeDict.TaskConfig) {
-    const inputId = (row as ITaskConfig<Record<string, unknown>>).inputs?.at(
-      0,
-    )?.id;
+    const inputId = (row as ITaskConfig<Record<string, unknown>>).inputs?.at(0)?.id;
     if (!inputId) {
       return null;
     }
@@ -201,7 +193,7 @@ export function canDuplicateWorkflowActivityRow(opts: {
 function buildDetailViewBasePath(
   workspace: WorkspaceContext,
   listEntityType: TExtendedEntitiesTypeDict,
-  rowId: string,
+  rowId: string
 ): string {
   return `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/workflows/view/${kebabCase(listEntityType)}/${rowId}`;
 }
@@ -213,15 +205,9 @@ export function buildWorkflowActivityDetailConfigurationHref(opts: {
   rowId: string;
 }): string | null {
   const entity = getEntityByExtendedType({ type: opts.listEntityType });
-  const base = buildDetailViewBasePath(
-    opts.workspace,
-    opts.listEntityType,
-    opts.rowId,
-  );
+  const base = buildDetailViewBasePath(opts.workspace, opts.listEntityType, opts.rowId);
 
-  if (
-    entity?.detailViewSections?.includes(DetailViewSectionsDict.Configuration)
-  ) {
+  if (entity?.detailViewSections?.includes(DetailViewSectionsDict.Configuration)) {
     return `${base}/configuration`;
   }
 
@@ -239,21 +225,13 @@ export function buildWorkflowActivityDetailResultsHref(opts: {
   rowId: string;
 }): string | null {
   const entity = getEntityByExtendedType({ type: opts.listEntityType });
-  const base = buildDetailViewBasePath(
-    opts.workspace,
-    opts.listEntityType,
-    opts.rowId,
-  );
+  const base = buildDetailViewBasePath(opts.workspace, opts.listEntityType, opts.rowId);
 
   if (entity?.detailViewSections?.includes(DetailViewSectionsDict.Results)) {
     return `${base}/${DetailViewSectionsDict.Results}`;
   }
 
-  if (
-    entity?.detailViewSections?.includes(
-      DetailViewSectionsDict.RelatedArtifacts,
-    )
-  ) {
+  if (entity?.detailViewSections?.includes(DetailViewSectionsDict.RelatedArtifacts)) {
     return `${base}/${DetailViewSectionsDict.RelatedArtifacts}`;
   }
 
@@ -277,17 +255,20 @@ export function buildWorkflowActivityResultsHref(opts: {
   row: TWorkflowActivityTableRow;
   query?: Record<string, string | undefined>;
 }): string | null {
-  const scanConfigActivity = getWorkflow({
+  const workflow = getWorkflow({
     activity: opts.activity,
     targetType: opts.listEntityType,
-  })?.scanConfig?.definition.activity;
+  });
+  const scanConfigActivity = workflow?.scanConfig?.definition.activity;
 
   if (scanConfigActivity) {
     const href = buildConfigureUrlForActivityRow({
       ...opts,
       query: {
         ...opts.query,
-        [ScanConfigTabSearchParam]: ScanConfigResultsTab[scanConfigActivity].id,
+        [ScanConfigTabSearchParam]:
+          workflow?.scanConfig?.definition.i18n?.resultsTabId ??
+          ScanConfigResultsTab[scanConfigActivity].id,
       },
     });
 

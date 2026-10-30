@@ -105,7 +105,9 @@ export type TScanConfigEditorOptions = {
  * Activity-level i18n is the fallback when a field is omitted.
  * */
 export type TScanConfigWorkflowI18n = {
-  /** Visible results-tab label (e.g. "simplifications"). The tab id stays activity-generic. */
+  /** URL id for a workflow-specific results tab. */
+  resultsTabId?: TScanConfigTabs['id'];
+  /** Visible results-tab label (e.g. "simplifications"). */
   resultsTab?: string;
   generate?: string;
   new?: string;
