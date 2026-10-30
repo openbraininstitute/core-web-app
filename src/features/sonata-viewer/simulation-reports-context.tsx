@@ -15,6 +15,9 @@ import type { ReactNode } from 'react';
 export type SimulationReport = {
   variable_name: string;
   unit: string;
+  type?: string;
+  /** An extracellular report's electrodes file, which obi-one names by its recording array's id. */
+  electrodes_file?: string;
 };
 
 type SimulationReportsContextValue = Record<string, SimulationReport> | null;

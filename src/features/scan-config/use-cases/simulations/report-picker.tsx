@@ -63,7 +63,7 @@ export function isLfpReport(
   reports: Readonly<Record<string, unknown>> | null | undefined
 ): boolean {
   return (
-    (file.asset.label as string) === 'lfp_report' ||
+    file.asset.label === AssetLabel.lfp_report ||
     (file.asset.content_type === AssetContentType.h5 && reportEntry(file, reports).type === 'lfp')
   );
 }

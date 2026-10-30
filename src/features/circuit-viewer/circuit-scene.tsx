@@ -85,6 +85,11 @@ export interface IElectrodeOverlayOptions {
    * then also owns it: the viewer's own show/hide toggle stops gating them.
    */
   visibleIds?: readonly string[];
+  /**
+   * Groups drawn as they are, in their own colours, such as contacts coloured
+   * by a recorded field: no array is fetched and nothing in the menu shows them.
+   */
+  drawn?: ICircuitOverlayGroup[];
 }
 
 /** The MEModel on show. Only its id and name are read here. */
@@ -262,7 +267,7 @@ export function CircuitScene({
     onCreateEntry,
     supportsExplicitLocations,
   } = form ?? {};
-  const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
+  const { arrayEntity, visibleIds: visibleOverlayIds, drawn: drawnOverlays } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   // An MEModel is one cell with no nodes file: nothing to colour by, list, or highlight.
   const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
@@ -566,8 +571,10 @@ export function CircuitScene({
   const visibleOverlays =
     enableElectrodes && (hostOwnsVisibility || config.showElectrodes) ? scopedOverlays : undefined;
   const styledOverlays = useMemo(
-    () => styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
-    [visibleOverlays, highlightedOverlayId, config.backgroundColor]
+    () =>
+      drawnOverlays ??
+      styleOverlaysForSelection(visibleOverlays, highlightedOverlayId, config.backgroundColor),
+    [drawnOverlays, visibleOverlays, highlightedOverlayId, config.backgroundColor]
   );
   // Handles appear only when something drawn can actually be moved: a scene of
   // referenced-only arrays (a simulation's recordings) stays static even though
