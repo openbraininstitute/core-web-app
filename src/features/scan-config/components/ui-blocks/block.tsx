@@ -1,6 +1,7 @@
 import { RiCloseLine } from '@remixicon/react';
 import { isNil } from 'es-toolkit/compat';
 
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { UIElementRender } from '@/features/scan-config/components/ui-elements';
 import {
@@ -134,7 +135,7 @@ export default function Block({
                       {renderMathInText(blockElementSchema.title)}
                     </label>
                     {blockElementSchema.units && (
-                      <div className="ml-1 text-base text-gray-500">{blockElementSchema.units}</div>
+                      <FieldUnit unit={blockElementSchema.units} className="ml-1 text-base" />
                     )}
                     {canCollapseSweep && (
                       <SweepIconButton

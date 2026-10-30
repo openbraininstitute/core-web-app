@@ -27,6 +27,7 @@ import {
   useScanConfigSettingsPanelSlot,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { cn } from '@/utils/css-class';
 
@@ -98,22 +99,20 @@ function FieldRow({
   const label = title ?? fieldKey;
 
   return (
-    // the label row is scoped to the input's own column so the unit stays pinned to the input's
-    // right edge; keeping them in one row would shift the unit over the clear button whenever
-    // that button appears
     <div className="flex items-end gap-2">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500">{renderMathInText(label)}</span>
-            {description && (
-              <Tooltip title={description}>
-                <InfoCircleOutlined className="text-xs text-gray-400" />
-              </Tooltip>
-            )}
+        <span className="flex items-center gap-1.5">
+          <span className="flex items-baseline text-xs">
+            <span className="text-gray-500">{renderMathInText(label)}</span>
+            {/* the label is already grey, so the unit goes a step lighter */}
+            {units && <FieldUnit unit={units} className="text-xs text-gray-400" />}
           </span>
-          {units && <span className="shrink-0 text-xs text-gray-400">{units}</span>}
-        </div>
+          {description && (
+            <Tooltip title={description}>
+              <InfoCircleOutlined className="text-xs text-gray-400" />
+            </Tooltip>
+          )}
+        </span>
         {renderField({ fieldKey, paramSchema, state, setState })}
       </div>
       {onRemove && (
@@ -868,7 +867,7 @@ export function ProtocolCard({
                   <span className="text-primary-9 text-sm font-semibold">
                     Extraction amplitudes
                   </span>
-                  <span className="ml-1 text-sm text-gray-500">nA</span>
+                  <FieldUnit unit="nA" className="text-sm" />
                 </div>
                 <AmplitudeSettings
                   value={value}

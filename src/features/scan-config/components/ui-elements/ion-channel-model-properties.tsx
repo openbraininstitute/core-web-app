@@ -19,6 +19,7 @@ import {
   useFieldError,
   useFieldErrorsSessionKey,
 } from '@/features/scan-config/components/hooks/field-errors';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
 import { makeSessionAtomWithDefault } from '@/ui/hooks/use-session-atom';
@@ -113,7 +114,7 @@ function Row({
     <div className="flex flex-col gap-1">
       <div className="flex items-center">
         <span className="text-primary-9 text-sm font-semibold">{label}</span>
-        {unit && <span className="ml-1 text-sm text-gray-500">{unit}</span>}
+        {unit && <FieldUnit unit={unit} className="text-sm" />}
       </div>
       {children}
       {note && <span className="text-xs text-neutral-500">{note}</span>}

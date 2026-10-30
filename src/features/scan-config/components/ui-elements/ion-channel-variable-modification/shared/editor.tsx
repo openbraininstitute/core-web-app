@@ -4,7 +4,7 @@ import { isNil } from 'es-toolkit/compat';
 import { useCallback, useEffect, useState } from 'react';
 
 import { useFieldError } from '@/features/scan-config/components/hooks/field-errors';
-import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
+import { FieldUnit } from '@/features/scan-config/components/shared/field-unit';
 import { cn } from '@/utils/css-class';
 
 import 'katex/dist/katex.min.css';
@@ -119,24 +119,20 @@ function SectionConfigRow({
   return (
     <div data-scan-config-block-element-item={`${uiElement}_editor_item`}>
       <div className="mb-1.5 flex items-center gap-2">
-        <span
-          className={cn(
-            'inline-flex items-center rounded-full border border-gray-300 ',
-            'bg-white px-2.5 py-0.5 text-sm font-semibold text-primary-8'
-          )}
-        >
-          {entry.section_list}
+        <span className="flex items-center">
+          <span
+            className={cn(
+              'inline-flex items-center rounded-full border border-gray-300 ',
+              'bg-white px-2.5 py-0.5 text-sm font-semibold text-primary-8'
+            )}
+          >
+            {entry.section_list}
+          </span>
+          {entry.units && <FieldUnit unit={entry.units} className="text-sm" />}
         </span>
-        <span className="text-sm text-gray-400">
-          {!isNil(entry.value) ? (
-            <>
-              Default: {entry.value}
-              {entry.units ? <> {renderMathInText(entry.units)}</> : null}
-            </>
-          ) : (
-            renderMathInText(entry.units) || ''
-          )}
-        </span>
+        {!isNil(entry.value) && (
+          <span className="text-sm text-gray-400">Default: {entry.value}</span>
+        )}
       </div>
 
       <div
