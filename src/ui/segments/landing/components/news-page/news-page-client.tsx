@@ -17,6 +17,7 @@ import styles from './single-news-page.module.css';
 type NewsPageProps = {
   className?: string;
   newsItem: ContentForNewsItem;
+  isAuthenticated?: boolean;
 };
 
 export type FullScreenImageValue = {
@@ -46,10 +47,10 @@ const portableTextComponents = {
   },
 };
 
-export default function NewsPageClient({ className, newsItem }: NewsPageProps) {
+export default function NewsPageClient({ className, newsItem, isAuthenticated }: NewsPageProps) {
   return (
     <div className={classNames(className, styles.pageContent)}>
-      <Menu scrollHasStarted section={EnumSection.News} />
+      <Menu scrollHasStarted section={EnumSection.News} isAuthenticated={isAuthenticated} />
       <HeaderNews content={newsItem} />
       <div className={styles.content}>
         <PortableText value={newsItem.articleContent} components={portableTextComponents} />
