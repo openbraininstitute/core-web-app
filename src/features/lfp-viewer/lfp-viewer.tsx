@@ -124,7 +124,7 @@ export function LfpViewer({
   }
   if (!summary.data) {
     return sidePanel?.target ? (
-      <LoadingFilePanes title={TRACES_TITLE} panelTitles={PANEL_TITLES} />
+      <LoadingFilePanes title={TRACES_TITLE} panelTitles={PANEL_TITLES} tableTitle={TABLE_TITLE} />
     ) : (
       <div className="flex h-full items-center justify-center">
         <Spin />

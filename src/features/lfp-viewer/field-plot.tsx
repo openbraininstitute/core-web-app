@@ -245,13 +245,15 @@ export function FieldPlot({
     g.textBaseline = 'top';
     const ticks = computeTicks(from, to, plotWidth / 80);
     const tickStep = ticks.length > 1 ? ticks[1] - ticks[0] : to - from;
+    const unitLeft = size.width - 2 - g.measureText('ms').width - 4;
     for (const t of ticks) {
       const x = xOf(t);
       g.beginPath();
       g.moveTo(x, plot.bottom);
       g.lineTo(x, plot.bottom + 4);
       g.stroke();
-      g.fillText(formatTick(t, tickStep), x, plot.bottom + 6);
+      const label = formatTick(t, tickStep);
+      if (x + g.measureText(label).width / 2 <= unitLeft) g.fillText(label, x, plot.bottom + 6);
     }
     g.textAlign = 'right';
     g.fillText('ms', size.width - 2, plot.bottom + 6);
