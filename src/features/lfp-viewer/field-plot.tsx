@@ -119,6 +119,7 @@ export function FieldPlot({
   const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * (plot.right - plot.left);
   const timeOf = (x: number) => from + ((x - plot.left) / (plot.right - plot.left)) * (to - from);
   const rows = mode === 'map' ? field.contacts : traces.length;
+  const fullTraces = mode === 'traces' ? traceField : null;
   const rowOf = (y: number) =>
     Math.min(rows - 1, Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rows)));
   const contactOf = (y: number) => (mode === 'map' ? rowOf(y) : (traces[rowOf(y)] ?? null));
@@ -297,11 +298,14 @@ export function FieldPlot({
           }
           const contact = contactOf(y);
           const t = timeOf(x);
-          setHover(
-            contact === null
-              ? null
-              : `e${contact} · ${t.toFixed(1)} ms · ${fieldValue(field, contact, binAt(field, t)).toFixed(1)} µV`
-          );
+          if (contact === null) {
+            setHover(null);
+            return;
+          }
+          const uv = fullTraces
+            ? fieldValue(fullTraces, rowOf(y), binAt(fullTraces, t))
+            : fieldValue(field, contact, binAt(field, t));
+          setHover(`e${contact} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
         }}
         onPointerLeave={() => setHover(null)}
         onPointerUp={(e) => {
@@ -315,7 +319,7 @@ export function FieldPlot({
           }
           const a = timeOf(Math.min(drag.x0, drag.x1));
           const b = timeOf(Math.max(drag.x0, drag.x1));
-          if (b - a >= field.binMs * 2) onWindowChange([a, b]);
+          if (b - a >= (fullTraces ?? field).binMs * 2) onWindowChange([a, b]);
         }}
         onDoubleClick={() => onWindowChange(null)}
       >

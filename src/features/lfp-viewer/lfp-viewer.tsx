@@ -62,6 +62,8 @@ const StatisticsPlot = dynamic(
 const DEFAULT_TRACES = 32;
 /** Above this many contacts the map is shown first: their traces would not read. */
 const MAP_FIRST_ABOVE = 64;
+/** Ticked contacts traced at most, a range read each. */
+const MAX_TRACES = 64;
 const GAINS = [0.5, 1, 2, 4, 8];
 /** Spectra drawn beside the mean at most. */
 const MAX_SPECTRA = 8;
@@ -129,6 +131,9 @@ export function LfpViewer({
       </div>
     );
   }
+  if (summary.data.index.contacts === 0) {
+    return <Empty className="p-2em" description="This LFP report has no contacts" />;
+  }
   return (
     <LfpReportView
       source={source}
@@ -189,7 +194,7 @@ function LfpReportView({
     return best;
   });
   const traces = useMemo(() => {
-    if (ticked.length > 0) return ticked;
+    if (ticked.length > 0) return ticked.slice(0, MAX_TRACES);
     const n = Math.min(DEFAULT_TRACES, index.contacts);
     return Array.from({ length: n }, (_, i) =>
       n === 1 ? 0 : Math.round((i * (index.contacts - 1)) / (n - 1))
@@ -305,6 +310,8 @@ function LfpReportView({
             <>
               <span className="whitespace-nowrap text-xs text-neutral-400">
                 {index.contacts.toLocaleString()} contacts · {index.populations.join(', ')}
+                {ticked.length > MAX_TRACES &&
+                  ` · the first ${MAX_TRACES} of ${ticked.length} ticked traced`}
               </span>
               <PlotHelp>
                 Drag to zoom · Double-click to reset · Click to move the player there; in the map,

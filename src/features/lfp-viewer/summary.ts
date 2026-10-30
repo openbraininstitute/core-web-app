@@ -109,9 +109,9 @@ export async function readSlice(
     signal,
   });
   if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
-  let bytes = await response.arrayBuffer();
-  // A server that ignores the range sends the whole file.
-  if (response.status === 200) bytes = bytes.slice(offset, offset + length);
+  // Else every read would download the whole file.
+  if (response.status !== 206) throw new Error('The LFP summary was not read by range');
+  const bytes = await response.arrayBuffer();
   if (bytes.byteLength !== length) throw new Error('The LFP summary was cut short');
   return bytes;
 }

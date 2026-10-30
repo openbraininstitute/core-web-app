@@ -53,16 +53,14 @@ describe('readSlice', () => {
     );
   });
 
-  it('cuts the slice out of a whole file sent by a server that ignored the range', async () => {
-    const file = new Int16Array(600);
-    file[510] = 7;
+  it('refuses a whole file sent by a server that ignored the range', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(file.buffer, { status: 200 }))
+      vi.fn(async () => new Response(new Int16Array(600).buffer, { status: 200 }))
     );
-    const values = new Int16Array(await readSlice({ url: 'u', headers: {} }, level0, [0, 2]));
-    expect(values[0]).toBe(7);
-    expect(values).toHaveLength(5);
+    await expect(readSlice({ url: 'u', headers: {} }, level0, [0, 2])).rejects.toThrow(
+      'not read by range'
+    );
   });
 });
 
