@@ -126,9 +126,14 @@ export function StackedPanes({
     <div
       className={cn(
         'flex h-full min-h-0 flex-col',
-        // Beside the panel a file's views take the page's left edge, as the lists did, and keep
-        // clear of the grab bar on their right; otherwise the other way round.
-        split === 'file' && sidePanel?.open ? 'pl-px pr-3' : 'pl-3 pr-px',
+        // Beside the panel a file's views take the page's left edge, as the lists did, and the
+        // panel's its right. Between the two each keeps a GUTTER from the grab bar, as panes do
+        // from theirs; the file's column ends a grid gap (gap-1.25) short of that bar.
+        split === 'file' && sidePanel?.open
+          ? 'pl-px pr-[calc(12px-0.3125rem)]'
+          : split === 'panel'
+            ? 'pl-[12px] pr-px'
+            : 'pl-3 pr-px',
         'pt-px pb-3'
       )}
     >

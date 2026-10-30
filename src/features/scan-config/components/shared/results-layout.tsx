@@ -92,12 +92,15 @@ const DROP = { id: 'results-drop', duration: 500, easing: 'cubic-bezier(0.4, 0, 
 /** Room kept either side of the rule between the file and the panel. */
 const MIN_SIDE_WIDTH = 320;
 /**
- * A shut column's strip: its bar as far in as the panes' boxes were, which is
- * `mx-3` from either side of the file and `pl-1` more from the rule in the
- * panel - 10.5 px and 14 px at the app's 14 px rem.
+ * A shut column's strip: its bar as far in as the panes' boxes were, a pixel
+ * from the page's edge and 12 px from the rule, which the file's column ends a
+ * grid gap (gap-1.25, 4.375 px at the app's 14 px rem) short of.
  */
-const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
-const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
+const FILE_STRIP_WIDTH = 1 + SHUT_BAR_SIZE + (12 - 4.375);
+const PANEL_STRIP_WIDTH = 12 + SHUT_BAR_SIZE + 1;
+/** The strips' padding, as their panes' boxes have it. */
+const FILE_STRIP_CLASS = 'pt-px pb-3 pl-px pr-[calc(12px-0.3125rem)]';
+const PANEL_STRIP_CLASS = 'pt-px pb-3 pl-[12px] pr-px';
 /**
  * What the bar takes, in px: less than the tabs rail's height, which folds away as
  * the bar comes up where the tabs were, so what it spans rises a little to meet it,
@@ -351,8 +354,7 @@ export function ResultsLayout({
           !panelUp && 'pointer-events-none opacity-0'
         )}
       >
-        {/* A little in from the grab bar, so it sits midway between the file and the panel. */}
-        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0 pl-1" />
+        <div ref={setTarget} data-results-side-panel className="peer h-full min-h-0 min-w-0" />
         {/* While the next file's panel is on its way, after a pick from the bar */}
         <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
           <Spin />
@@ -364,7 +366,8 @@ export function ResultsLayout({
         data-results-drop
         style={{ width: FILE_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
-          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start p-3',
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-start',
+          FILE_STRIP_CLASS,
           slide,
           !fileShut && 'pointer-events-none opacity-0'
         )}
@@ -376,7 +379,8 @@ export function ResultsLayout({
         data-results-drop
         style={{ width: PANEL_STRIP_WIDTH, marginTop: contentTop }}
         className={cn(
-          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end py-3 pr-3 pl-4',
+          'relative col-start-1 col-end-4 row-start-1 min-h-0 justify-self-end',
+          PANEL_STRIP_CLASS,
           slide,
           !panelShut && 'pointer-events-none opacity-0'
         )}

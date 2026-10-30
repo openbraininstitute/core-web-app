@@ -162,7 +162,9 @@ export function FileViewer({ file, context, loading = false, className = '' }: F
   const boxed = !isSpikeReport && !isVoltageReport;
 
   return (
-    <div className={cn('text-primary-9 relative w-full', className, boxed && 'py-3 pr-px pl-3')}>
+    <div
+      className={cn('text-primary-9 relative w-full', className, boxed && 'pt-px pr-px pb-3 pl-3')}
+    >
       <div
         className={cn('relative h-full overflow-auto p-6', {
           'p-0': edgeToEdge,

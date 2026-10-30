@@ -491,6 +491,7 @@ export function SimulationsTab({
                     onLoadingChange={setFilesLoading}
                     jobId={activeJobId}
                     reports={simConfig?.reports}
+                    inputs={simConfig?.inputs}
                   />
                 )
               )}
