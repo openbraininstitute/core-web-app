@@ -78,6 +78,7 @@ import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type { SceneLocation } from '@/features/sonata-viewer/components/voltage-scene';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
+import type { Pick as TracePick } from '@/features/sonata-viewer/trace-picks';
 import type { CellFrames, SonataReportMetadata, TraceFrames } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
@@ -323,6 +324,8 @@ export function SonataReportView({
     population: string;
     nodeId: number;
     traceIndex?: number;
+    /** Whether it is a ball under the pointer in the scene, rather than a row in the table. */
+    inScene?: boolean;
   } | null>(null);
   const handleCellHover = useCallback(
     (nodeId: number | null, traceIndex?: number) => {
@@ -439,12 +442,12 @@ export function SonataReportView({
   // scene or the statistics want its frames.
   const sceneLocations = useMemo(() => {
     if (!compartmentNote || !population) return null;
-    const locations: (SceneLocation & { traceIndex: number })[] = [];
+    const locations: SceneLocation[] = [];
     for (const [traceIndex, offset] of compartmentNote.offsets) {
       const sectionId = population.traces[traceIndex]?.elementId;
       if (sectionId === null || sectionId === undefined) continue;
       locations.push({
-        traceIndex,
+        key: traceIndex,
         nodeId: population.traces[traceIndex].nodeId,
         sectionId,
         offset,
@@ -464,7 +467,7 @@ export function SonataReportView({
       .getTraceFrames(
         populationName,
         SCENE_FRAMES,
-        sceneLocations.map((l) => l.traceIndex)
+        sceneLocations.map((l) => l.key)
       )
       .then((frames) => {
         if (!cancelled) setLocationData({ locations: sceneLocations, frames });
@@ -532,23 +535,62 @@ export function SonataReportView({
 
   // The row a click elsewhere brings into view.
   const [focusedRow, setFocusedRow] = useState<{ nodeId: number; key: number }>();
-  // A line clicked in the traces picks its cell alone, holds it out in the
-  // scene and brings its row into view; clicked again, it lets it go.
+  // A line clicked in the traces picks its cell alone, or a compartment's line its compartment
+  // alone, holds the cell out in the scene and brings its row into view; clicked again, it lets
+  // it go.
   const [heldCell, setHeldCell] = useState<{ key: string; nodeId: number } | null>(null);
   const handleTraceClick = useCallback(
-    (nodeId: number) => {
+    (nodeId: number, traceIndex?: number) => {
       if (!pickKey) return;
-      const alone = pickedCells.length === 1 && pickedCells[0].nodeId === nodeId;
+      const compartment =
+        traceIndex !== undefined && population?.traces[traceIndex]?.compartment !== undefined
+          ? traceIndex
+          : undefined;
+      const same = (pick: TracePick) => pick.nodeId === nodeId && pick.traceIndex === compartment;
+      const alone = pickedCells.length === 1 && same(pickedCells[0]);
       // It keeps its colour if it had one.
-      const slot = pickedCells.find((c) => c.nodeId === nodeId)?.slot ?? 0;
-      setPickedCells(alone ? [] : [{ nodeId, slot }]);
+      const slot = pickedCells.find(same)?.slot ?? 0;
+      const pick: TracePick =
+        compartment === undefined ? { nodeId, slot } : { nodeId, slot, traceIndex: compartment };
+      setPickedCells(alone ? [] : [pick]);
       setHeldCell(alone ? null : { key: pickKey, nodeId });
       if (!alone) setFocusedRow({ nodeId, key: performance.now() });
     },
-    [pickKey, pickedCells, setPickedCells]
+    [pickKey, pickedCells, setPickedCells, population]
   );
   const held =
-    heldCell?.key === pickKey && selectedNodeIds.has(heldCell.nodeId) ? heldCell.nodeId : undefined;
+    heldCell?.key === pickKey && pickedCells.some((pick) => pick.nodeId === heldCell.nodeId)
+      ? heldCell.nodeId
+      : undefined;
+  // A ball clicked in the scene picks its compartment alone, as its line does, and one under
+  // the pointer is pointed out in the traces as its row is.
+  const handleLocationClick = useCallback(
+    (traceIndex: number) => {
+      const nodeId = population?.traces[traceIndex]?.nodeId;
+      if (nodeId !== undefined) handleTraceClick(nodeId, traceIndex);
+    },
+    [population, handleTraceClick]
+  );
+  const handleLocationHover = useCallback(
+    (traceIndex: number | null) => {
+      const nodeId = traceIndex === null ? undefined : population?.traces[traceIndex]?.nodeId;
+      // Off every ball lets go only a ball's hover, never a row's.
+      setHovered((previous) =>
+        traceIndex === null || nodeId === undefined || !populationName
+          ? previous?.inScene
+            ? null
+            : previous
+          : { population: populationName, nodeId, traceIndex, inScene: true }
+      );
+    },
+    [population, populationName]
+  );
+  // While any are picked, the balls of what is picked: the compartments ticked, and every one
+  // of a cell ticked whole.
+  const shownLocations = useMemo(
+    () => (pickedCells.length > 0 ? new Set(pickedTraces.map((p) => p.traceIndex)) : null),
+    [pickedCells, pickedTraces]
+  );
   // What the scene is narrowed to within the table's scope, by ticks or a
   // filter, said over it with the way back: the table's own reset, its filters
   // and ticks and the traces' window, and the cell held with them.
@@ -674,6 +716,12 @@ export function SonataReportView({
         timeAxis={groupBy === ALL ? tracesAxis : null}
         locations={sceneLocations ?? undefined}
         locationFrames={locationFrames}
+        shownLocations={shownLocations}
+        highlightedLocation={
+          hovered?.population === populationName ? hovered.traceIndex : undefined
+        }
+        onLocationClick={handleLocationClick}
+        onLocationHover={handleLocationHover}
       />
     ) : null;
 

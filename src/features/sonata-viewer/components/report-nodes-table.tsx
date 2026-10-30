@@ -2,7 +2,7 @@
 
 import { Empty, Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   KeptNodesGrid,
@@ -308,6 +308,16 @@ export function ReportNodesTable({
     () => compartmentTable(compartments, compartmentNote),
     [compartments, compartmentNote]
   );
+  // A cell brought into view from elsewhere, such as a ball of its clicked in 3D, opens on its
+  // compartments: once for each request, so its chevron still shuts it after.
+  const openedFor = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!focusRow || openedFor.current === focusRow.key) return;
+    openedFor.current = focusRow.key;
+    if (compartments.has(focusRow.nodeId) && !openNodes.has(focusRow.nodeId)) {
+      toggleOpen(focusRow.nodeId);
+    }
+  }, [focusRow, compartments, openNodes, toggleOpen]);
   const nests = compartments.size > 0;
   const listedRows = scope === 'all' ? rowCount : recordedCount;
   // The rows a sort and filter list, laid out with the open cells' compartments under them.

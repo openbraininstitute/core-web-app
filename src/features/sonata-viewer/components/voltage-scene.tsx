@@ -30,10 +30,15 @@ const RAMP_STEPS = 32;
 const RAMP = Array.from({ length: RAMP_STEPS }, (_, i) => mix(RAMP_STOPS, i / (RAMP_STEPS - 1)));
 /** The population's cells the report did not record: drawn faint, in the scene's ghost colour. */
 const UNRECORDED = '#e5e7eb';
-/** The recorded cells while their locations play as balls: plain, so the balls carry the values. */
-const PLAIN = '#a3adbd';
+/**
+ * The recorded cells while their locations play as balls: plain, so the balls carry the values.
+ * Dark enough that the viewer's hover, which adds a cell's colour to itself, stays off white.
+ */
+const PLAIN = '#5c677a';
 /** A ball's colour while its values load. */
 const UNPLAYED = '#9ca3af';
+/** The other balls while one is pointed out. */
+const FADED_BALL = '#e5e7eb';
 /** Colours change at most this often while playing; the clock itself moves every frame. */
 const RECOLOR_MS = 50;
 /** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
@@ -83,10 +88,21 @@ type Props = {
   locations?: readonly SceneLocation[];
   /** The locations' values over the run, a column each in their order; null while they load. */
   locationFrames?: TraceFrames | null;
+  /** The locations to show by key, such as those picked; all of those on the cells shown without. */
+  shownLocations?: ReadonlySet<number> | null;
+  /** A location to point out by key, such as the table row under the pointer: the rest faded. */
+  highlightedLocation?: number;
+  /** Told the key of a location's ball clicked. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the location's ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
 };
 
-/** A location a report recorded: its cell's node index, its SONATA section id, and its offset along it. */
-export type SceneLocation = { nodeId: number; sectionId: number; offset: number };
+/**
+ * A location a report recorded: its key, such as the trace it plays, its cell's node index,
+ * its SONATA section id, and its offset along that section.
+ */
+export type SceneLocation = { key: number; nodeId: number; sectionId: number; offset: number };
 
 /**
  * A voltage report played over the circuit: each recorded cell coloured by its
@@ -115,6 +131,10 @@ export function VoltageScene({
   timeAxis = null,
   locations,
   locationFrames = null,
+  shownLocations,
+  highlightedLocation,
+  onLocationClick,
+  onLocationHover,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -216,7 +236,8 @@ export function VoltageScene({
     return { palette: [...RAMP, UNRECORDED, PLAIN], columnByNode };
   }, [frames, valueRange, cellCount, frame, ballsPlay, rampStep]);
 
-  // Each location's ball in its value at the time on show, the frames' nearest.
+  // Each location's ball in its value at the time on show, the frames' nearest: those on the
+  // cells shown, or those picked, the one pointed out alone in colour.
   const locationMarkers = useMemo<SceneLocationMarker[] | undefined>(() => {
     if (!locations || locations.length === 0) return undefined;
     const time = frames?.times[frame] ?? 0;
@@ -225,13 +246,38 @@ export function VoltageScene({
     const at = times
       ? Math.min(times.length - 1, Math.max(0, Math.round((time - times[0]) / step)))
       : 0;
-    return locations.map((location, i) => ({
-      ...location,
-      color: locationFrames
-        ? RAMP[rampStep(locationFrames.values[at * locations.length + i])]
-        : UNPLAYED,
-    }));
-  }, [locations, locationFrames, frames, frame, rampStep]);
+    return locations.flatMap((location, i) => {
+      if (
+        shownLocations ? !shownLocations.has(location.key) : shownCells?.[location.nodeId] === 0
+      ) {
+        return [];
+      }
+      const color =
+        highlightedLocation !== undefined && highlightedLocation !== location.key
+          ? FADED_BALL
+          : locationFrames
+            ? RAMP[rampStep(locationFrames.values[at * locations.length + i])]
+            : UNPLAYED;
+      return [{ ...location, color }];
+    });
+  }, [
+    locations,
+    locationFrames,
+    frames,
+    frame,
+    rampStep,
+    shownLocations,
+    shownCells,
+    highlightedLocation,
+  ]);
+  // A ball clicked is a click on the scene, which keeps the tap from counting as an empty one.
+  const handleLocationClick = useCallback(
+    (key: number) => {
+      cellClicked();
+      onLocationClick?.(key);
+    },
+    [cellClicked, onLocationClick]
+  );
 
   // The scrubber lies across its own track, measured, unless it is under the traces' axis.
   const [track, setTrack] = useState<HTMLDivElement | null>(null);
@@ -327,6 +373,8 @@ export function VoltageScene({
           selection={selection}
           active={active}
           locationMarkers={locationMarkers}
+          onLocationClick={onLocationClick ? handleLocationClick : undefined}
+          onLocationHover={onLocationHover}
         />
         {!frames && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/70">

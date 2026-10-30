@@ -168,6 +168,10 @@ interface ICircuitSceneOptions {
    * colour of its own: such as a compartment report's locations, coloured as it plays.
    */
   locationMarkers?: readonly SceneLocationMarker[];
+  /** Told the key of a ball clicked, which then counts as no click on its cell. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
@@ -237,6 +241,8 @@ export function CircuitScene({
   onNodeColorsChange,
   spikes,
   locationMarkers,
+  onLocationClick,
+  onLocationHover,
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
@@ -761,6 +767,8 @@ export function CircuitScene({
               onSubjectCellClick={sceneCellClick}
               onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
               locationMarkers={locationMarkers}
+              onLocationClick={onLocationClick}
+              onLocationHover={onLocationHover}
               {...sharedVizProps}
             />
           )
