@@ -3,13 +3,6 @@
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
-
 import type { CSSProperties, KeyboardEvent, PointerEvent, ReactNode } from 'react';
 
 import styles from './platform-tour.module.css';
@@ -272,7 +265,6 @@ export default function PlatformTour({
 } = {}) {
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
-  const [exampleMenuOpen, setExampleMenuOpen] = useState(false);
   const [failedVideos, setFailedVideos] = useState<string[]>([]);
   const [inView, setInView] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
@@ -286,13 +278,20 @@ export default function PlatformTour({
   const slide = SLIDES[index];
   const chapterIndex = CHAPTERS.findIndex((item) => item.examples.includes(slide.id));
   const chapter = CHAPTERS[chapterIndex];
-  const nextSlideId = CHAPTERS[(chapterIndex + 1) % CHAPTERS.length].featured;
+  // Start each chapter with its featured example, then show the remaining examples.
+  const chapterExamples = [
+    chapter.featured,
+    ...chapter.examples.filter((id) => id !== chapter.featured),
+  ];
+  const nextSlideId =
+    chapterExamples[chapterExamples.indexOf(slide.id) + 1] ??
+    CHAPTERS[(chapterIndex + 1) % CHAPTERS.length].featured;
   const activeVideo = slide.kind === 'video' ? VIDEOS[slide.source] : null;
   const delay =
     activeVideo?.duration ??
     (slide.kind === 'animation' ? ANIMATIONS[slide.source].duration : INTERVAL);
   const waitingForVideo = !!activeVideo && !reducedMotion && !failedVideos.includes(slide.id);
-  const suspended = !inView || !pageVisible || exampleMenuOpen;
+  const suspended = !inView || !pageVisible;
   const animate = playing && !reducedMotion && !suspended;
 
   useEffect(() => {
@@ -348,7 +347,6 @@ export default function PlatformTour({
   }, [index, nextSlideId, cycle, delay, waitingForVideo, playing, suspended]);
 
   function selectExample(id: string) {
-    setExampleMenuOpen(false);
     const next = SLIDES.findIndex((item) => item.id === id);
     if (next < 0) return;
     if (next === index && videoRef.current) videoRef.current.currentTime = 0;
@@ -424,40 +422,6 @@ export default function PlatformTour({
           >
             {chapter.description}
           </p>
-        ) : chapter.examples.length > 1 ? (
-          <fieldset className={styles.examples} aria-label="Examples in the selected chapter">
-            <span className={styles.examplesLabel}>Example:</span>
-            <DropdownMenu open={exampleMenuOpen} onOpenChange={setExampleMenuOpen} modal={false}>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className={styles.exampleSelect}
-                  aria-label={`Choose an example: ${slide.label}`}
-                  data-testid="current-example"
-                >
-                  {slide.label}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className={styles.exampleMenu}
-                align="start"
-                sideOffset={6}
-                collisionPadding={16}
-                aria-label="Choose an example"
-              >
-                {chapter.examples.map((id) => (
-                  <DropdownMenuItem
-                    key={id}
-                    className={styles.exampleMenuItem}
-                    data-current={id === slide.id}
-                    onSelect={() => selectExample(id)}
-                  >
-                    {SLIDES.find((item) => item.id === id)?.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </fieldset>
         ) : null}
       </div>
     </div>
