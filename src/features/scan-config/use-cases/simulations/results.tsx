@@ -45,6 +45,7 @@ import { ScanParameterPicker } from '@/features/scan-config/use-cases/simulation
 import { SimulationsResultsUiAdapter } from '@/features/scan-config/use-cases/simulations/ui-adapter';
 import { simulationJobIdQueryOptions } from '@/features/scan-config/use-cases/simulations/use-simulation-progress';
 import { useSimulationsTabState } from '@/features/scan-config/use-cases/simulations/use-simulations-tab-state';
+import { simulationCompartmentSets } from '@/features/sonata-viewer/compartment-sets';
 import { SimulationReportsProvider } from '@/features/sonata-viewer/simulation-reports-context';
 import { configTimeline } from '@/features/spike-viewer/config-timeline';
 import { SimulationProvider } from '@/features/spike-viewer/simulation-context';
@@ -208,6 +209,35 @@ export function SimulationsTab({
     },
     enabled: !!activeSimulation && !!nodeSetsAsset,
   });
+  // The simulation's compartment sets file: the locations its morphology locations blocks
+  // resolved to, which its compartment reports record, each set beside its block.
+  const compartmentSetsAsset = activeSimulation?.assets?.find(
+    (a) => a.label === AssetLabel.compartment_sets
+  );
+  const { data: compartmentSetsFile } = useQuery({
+    queryKey: [
+      'simulation-compartment-sets',
+      { simulationId: activeSimulation?.id, assetId: compartmentSetsAsset?.id },
+    ],
+    queryFn: async () => {
+      const req = await downloadAsset({
+        ctx: context,
+        entityType: EntityTypeDict.Simulation,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        entityId: activeSimulation!.id,
+        // biome-ignore lint/style/noNonNullAssertion: query is only enabled when both are available
+        id: compartmentSetsAsset!.id,
+        asRawResponse: true,
+      });
+      return (await req.json()) as unknown;
+    },
+    enabled: !!activeSimulation && !!compartmentSetsAsset,
+  });
+  const compartmentSets = useMemo(
+    () => simulationCompartmentSets(compartmentSetsFile, coordinateConfig, configSchema),
+    [compartmentSetsFile, coordinateConfig, configSchema]
+  );
+
   // The simulation on show, picked by its scan parameters: in the bar over a
   // results side panel, and in the header of the viewers that place it.
   const simulationPicker =
@@ -536,6 +566,7 @@ export function SimulationsTab({
                     model={model}
                     run={simConfig?.run}
                     neuronSets={neuronSets}
+                    compartmentSets={compartmentSets}
                     simulationPicker={simulationPicker}
                     timeline={timeline}
                   >

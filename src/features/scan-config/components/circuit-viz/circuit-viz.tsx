@@ -28,6 +28,7 @@ import type { ICircuitOverlayGroup } from '@/features/scan-config/components/mod
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { Cell } from '@/features/scan-config/types';
 import type {
+  MorphoViewerMorphologyLocationMarker,
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSignals,
   MorphoViewerSmallCircuitCell,
@@ -143,7 +144,24 @@ interface CircuitVizProps {
    * when it does not.
    */
   chromeTopRight?: boolean;
+  /**
+   * Balls on cells of the population on show, each at a section and an offset along it in a
+   * colour of its own: a compartment report's locations, coloured by their values as it plays.
+   * In place of the form's morphology locations.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
 }
+
+/** A ball on a cell of the population on show: its node index, SONATA section id, offset and colour. */
+export type SceneLocationMarker = {
+  nodeId: number;
+  sectionId: number;
+  offset: number;
+  color: string;
+};
+
+/** The balls' radius in world units, µm: large enough to read a colour off with a whole cell in view. */
+const LOCATION_BALL_RADIUS = 10;
 
 export interface IMorphologyLocationsBinding extends IFormBindingOptions {
   /** Marker radius in world units, from the viewer settings slider. */
@@ -206,12 +224,39 @@ export function CircuitVisualization({
           showAxons: props.showAxons,
         })
       : undefined;
+  // Each ball on the section the viewer draws for its SONATA one, once its cell is loaded.
+  const { locationMarkers, showAxons } = props;
+  const circuitId = props.circuit.id;
+  const { sonataSectionIds } = source;
+  const markers = useMemo(() => {
+    if (!locationMarkers || !subjectName) return undefined;
+    return locationMarkers.flatMap((marker): MorphoViewerMorphologyLocationMarker[] => {
+      const cellId = makeVizCellId(makeNodeKey(circuitId, subjectName, marker.nodeId), {
+        showAxons,
+      });
+      // Id 0 is the soma, which the viewer never indexes.
+      const sectionName =
+        sonataSectionIds?.get(cellId)?.get(marker.sectionId) ??
+        (marker.sectionId === 0 ? 'soma' : undefined);
+      if (sectionName === undefined) return [];
+      return [
+        {
+          cellId,
+          sectionName,
+          offset: marker.offset,
+          sonataSectionId: marker.sectionId,
+          color: marker.color,
+        },
+      ];
+    });
+  }, [locationMarkers, subjectName, circuitId, showAxons, sonataSectionIds]);
   return (
     <CircuitVizView
       {...props}
       source={source}
       onCellClick={onPopulationClick || onSubjectCellClick ? handleCellClick : undefined}
       pointedCellId={pointedCellId}
+      markers={markers}
     />
   );
 }
@@ -233,12 +278,15 @@ type TCircuitVizViewProps = Omit<
   | 'onPositionlessPopulationsChange'
   | 'nodeColors'
   | 'defaultColor'
+  | 'locationMarkers'
 > & {
   source: SmallCircuitSource;
   /** Whole-cell clicks, from the same pick pass as `cellHover`. */
   onCellClick?: (cell: MorphoViewerSmallCircuitCell | undefined) => void;
   /** A cell pointed out from outside the scene, shown alone: neither it nor a hover is lit. */
   pointedCellId?: string;
+  /** Balls on the cells, resolved to the viewer's sections, in place of the form's locations. */
+  markers?: MorphoViewerMorphologyLocationMarker[];
 };
 
 function CircuitVizView({
@@ -262,6 +310,7 @@ function CircuitVizView({
   chromeTopRight = false,
   onCellClick,
   pointedCellId,
+  markers,
 }: TCircuitVizViewProps) {
   const enableCellHover = features?.cellHover ?? true;
   const {
@@ -275,6 +324,11 @@ function CircuitVizView({
     sonataSectionIds: source.sonataSectionIds,
     backgroundColor,
   });
+  // The host's balls, drawn read-only: nothing to pick or hover.
+  const markerSelection = useMemo(
+    () => (markers ? { selected: markers, radius: LOCATION_BALL_RADIUS } : undefined),
+    [markers]
+  );
   const [progress, setProgress] = useState(0);
   const [morphologiesPainted, setMorphologiesPainted] = useState(false);
   const { cells, isLoading, error, loadCell, retry, synapses, anchor, download } = source;
@@ -422,7 +476,7 @@ function CircuitVizView({
           // the scene and swapping the nodes table under the user. The checklist
           // still changes population.
           onCellClick={locationPickMode ? undefined : onCellClick}
-          locationSelection={locationSelection}
+          locationSelection={markerSelection ?? locationSelection}
           highlightedCellIds={highlightedCellIds}
           loadCell={loadCell}
           controls={[]}

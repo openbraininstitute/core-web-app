@@ -78,6 +78,12 @@ const api = {
     return session.getRowIndex(nodeId, sort, filter);
   },
 
+  async getRowOrder(sort: SortItem[], filter: FilterModel): Promise<Uint32Array | null> {
+    if (!session) throw new Error('NodesSession not initialized; call open() first');
+    const order = session.getRowOrder(sort, filter);
+    return order ? Comlink.transfer(order, [order.buffer as ArrayBuffer]) : null;
+  },
+
   async getGeometry(options?: NodeGeometryOptions): Promise<NodeGeometry> {
     if (!session) throw new Error('NodesSession not initialized; call open() first');
     const geometry = session.getGeometry(options);

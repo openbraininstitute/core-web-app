@@ -11,6 +11,10 @@ import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/
 import { NEURON_HEADING } from '@/features/circuit-nodes/types';
 import { PaneResizeHandle, ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
+import {
+  compartmentOffsets,
+  compartmentSetColumns,
+} from '@/features/sonata-viewer/compartment-sets';
 import ReportDetailsView from '@/features/sonata-viewer/components/report-details-view';
 import {
   ReportNodesTable,
@@ -30,7 +34,10 @@ import {
   VoltageScene,
 } from '@/features/sonata-viewer/components/voltage-scene';
 import { CHART_LINE_COLOR } from '@/features/sonata-viewer/constants';
-import { useReportCellStatistics } from '@/features/sonata-viewer/hooks/use-report-cell-statistics';
+import {
+  useReportCellStatistics,
+  useReportTraceStatistics,
+} from '@/features/sonata-viewer/hooks/use-report-cell-statistics';
 import useSonataReport from '@/features/sonata-viewer/hooks/use-sonata-report';
 import { reportStatistics } from '@/features/sonata-viewer/report-statistics';
 import { useSimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
@@ -69,8 +76,9 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
+import type { SceneLocation } from '@/features/sonata-viewer/components/voltage-scene';
 import type { TimeRange } from '@/features/sonata-viewer/hooks/use-plot-listeners';
-import type { CellFrames, SonataReportMetadata } from '@/features/sonata-viewer/types';
+import type { CellFrames, SonataReportMetadata, TraceFrames } from '@/features/sonata-viewer/types';
 import type { SonataWorkerImpl } from '@/features/sonata-viewer/worker/sonata-worker';
 import type { TimeCourse } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import type { WorkspaceContext } from '@/types/common';
@@ -167,7 +175,7 @@ export function SonataReportView({
   /** Whether its statistics open beside it in a results layout. */
   withStatistics?: boolean;
 }) {
-  const { simulationPicker, timeline } = useSimulation();
+  const { simulationPicker, timeline, compartmentSets } = useSimulation();
   const populationNames = useMemo(() => metadata.populations.map((p) => p.name), [metadata]);
   const [chosenPopulation, setChosenPopulation] = useReportPopulation(
     reportPath,
@@ -288,6 +296,7 @@ export function SonataReportView({
     pickedCells,
     pickedTraces,
     selectedNodeIds,
+    selectedTraces,
     tableCells,
     togglePick,
     pickAllState,
@@ -308,18 +317,26 @@ export function SonataReportView({
     [populationName]
   );
 
-  // The row under the pointer in the table, which the plot shows for as long as it is there.
-  const [hovered, setHovered] = useState<{ population: string; nodeId: number } | null>(null);
+  // The row under the pointer in the table, which the plot shows for as long as it is there:
+  // a cell's every trace, or a compartment's own.
+  const [hovered, setHovered] = useState<{
+    population: string;
+    nodeId: number;
+    traceIndex?: number;
+  } | null>(null);
   const handleCellHover = useCallback(
-    (nodeId: number | null) => {
+    (nodeId: number | null, traceIndex?: number) => {
       setHovered(
-        nodeId === null || !populationName ? null : { population: populationName, nodeId }
+        nodeId === null || !populationName
+          ? null
+          : { population: populationName, nodeId, traceIndex }
       );
     },
     [populationName]
   );
   const hoveredTraces = useMemo(() => {
     if (!population || hovered?.population !== populationName) return NO_TRACES;
+    if (hovered.traceIndex !== undefined) return [hovered.traceIndex];
     const traces: number[] = [];
     population.traces.forEach((trace, traceIndex) => {
       if (trace.nodeId === hovered.nodeId) traces.push(traceIndex);
@@ -385,6 +402,80 @@ export function SonataReportView({
     statistics,
     setDerivedColumns,
   });
+  // In a compartment report, each compartment's too, for its row under its cell's, by the
+  // pinned column it fills.
+  const compartmental = !!population && population.traces.length > population.nodeCount;
+  const traceValues = useReportTraceStatistics({
+    enabled: docked && compartmental,
+    worker,
+    populationName,
+    timeWindow,
+    voltage,
+  });
+  const compartmentValues = useMemo(
+    () =>
+      traceValues &&
+      Object.fromEntries(
+        statistics.flatMap((s) => (traceValues[s.key] ? [[s.column, traceValues[s.key]]] : []))
+      ),
+    [traceValues, statistics]
+  );
+  // A report of a compartment set: where along its section each compartment is, and the set
+  // as the simulation's config made it, for their rows.
+  const report = useSimulationReport(reportPath?.split('/').pop());
+  const setName = report?.type === 'compartment_set' ? report.compartment_set : undefined;
+  const compartmentSet = setName ? compartmentSets?.[setName] : undefined;
+  const compartmentNote = useMemo(
+    () =>
+      setName && compartmentSet && population
+        ? {
+            offsets: compartmentOffsets(population, compartmentSet),
+            columns: compartmentSetColumns(setName, compartmentSet),
+          }
+        : null,
+    [setName, compartmentSet, population]
+  );
+  // Its locations, played in 3D as balls in their own values, read from the report while the
+  // scene or the statistics want its frames.
+  const sceneLocations = useMemo(() => {
+    if (!compartmentNote || !population) return null;
+    const locations: (SceneLocation & { traceIndex: number })[] = [];
+    for (const [traceIndex, offset] of compartmentNote.offsets) {
+      const sectionId = population.traces[traceIndex]?.elementId;
+      if (sectionId === null || sectionId === undefined) continue;
+      locations.push({
+        traceIndex,
+        nodeId: population.traces[traceIndex].nodeId,
+        sectionId,
+        offset,
+      });
+    }
+    return locations.length > 0 ? locations : null;
+  }, [compartmentNote, population]);
+  const [locationData, setLocationData] = useState<{
+    locations: readonly SceneLocation[];
+    frames: TraceFrames;
+  }>();
+  useEffect(() => {
+    if (!wantFrames || !sceneLocations || !populationName) return;
+    if (locationData?.locations === sceneLocations) return;
+    let cancelled = false;
+    worker
+      .getTraceFrames(
+        populationName,
+        SCENE_FRAMES,
+        sceneLocations.map((l) => l.traceIndex)
+      )
+      .then((frames) => {
+        if (!cancelled) setLocationData({ locations: sceneLocations, frames });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [wantFrames, sceneLocations, populationName, locationData?.locations, worker]);
+  const locationFrames =
+    locationData && locationData.locations === sceneLocations ? locationData.frames : null;
 
   // Shown at first beside the statistics: each group's mean over time.
   const meanLabel = `${voltage ? 'Mean voltage' : `Mean ${variableName ?? 'value'}`} (${population?.dataUnits ?? ''})`;
@@ -408,10 +499,11 @@ export function SonataReportView({
     [sceneFrames, meanLabel, timeWindow, timeline, timeCursor]
   );
 
-  // The plots are over the ticked cells, else those the table's filter keeps.
+  // The plots are over the ticked cells, else those the table's filter keeps: a cell once,
+  // however many of its compartments are ticked.
   const plotCells = useMemo(() => {
     if (pickedCells.length > 0) {
-      return Uint32Array.from(pickedCells.map((c) => c.nodeId).sort((a, b) => a - b));
+      return Uint32Array.from(new Set(pickedCells.map((c) => c.nodeId))).sort();
     }
     return visibleTraces ? Uint32Array.from(tableCells) : null;
   }, [pickedCells, visibleTraces, tableCells]);
@@ -580,6 +672,8 @@ export function SonataReportView({
         onSpeedChange={setSceneSpeed}
         transportTarget={docked ? transportSlot : undefined}
         timeAxis={groupBy === ALL ? tracesAxis : null}
+        locations={sceneLocations ?? undefined}
+        locationFrames={locationFrames}
       />
     ) : null;
 
@@ -659,8 +753,11 @@ export function SonataReportView({
     onRowsChange: handleRows,
     onCellClick: togglePick,
     selectedNodeIds,
+    selectedTraces,
     pickAll: { state: pickAllState, onToggle: togglePickAll },
     onCellHover: handleCellHover,
+    compartmentValues,
+    compartmentNote,
     extraColumns: neuronSetColumns,
     headerExtra: docked && timeWindow && (
       <WindowChip

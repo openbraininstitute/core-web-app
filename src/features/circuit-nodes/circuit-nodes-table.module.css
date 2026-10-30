@@ -181,6 +181,13 @@
   --ag-cell-horizontal-padding: 6px;
 }
 
+/* Rows nested under another (see `NESTED_ROW`), set back from the rows they belong to. Before
+   the picked rows' tint, which wins on a picked one. */
+.grid :global(.ag-row.nodes-row-nested) {
+  background-color: #fafbfc;
+  color: var(--color-neutral-500, #737373);
+}
+
 /* Rows the host holds as selected, through sorts and refilters (see `selectedNodeIds`). */
 .grid :global(.ag-row.nodes-row-picked) {
   background-color: #eaf2fd;

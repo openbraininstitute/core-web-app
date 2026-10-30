@@ -49,6 +49,7 @@ import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
+import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
@@ -162,6 +163,11 @@ interface ICircuitSceneOptions {
   onNodeColorsChange?: (colors: { population: string; nodeColors: NodeColors } | null) => void;
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
+  /**
+   * Balls on cells of the population on show, at sections and offsets along them, each in a
+   * colour of its own: such as a compartment report's locations, coloured as it plays.
+   */
+  locationMarkers?: readonly SceneLocationMarker[];
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
@@ -230,6 +236,7 @@ export function CircuitScene({
   selection,
   onNodeColorsChange,
   spikes,
+  locationMarkers,
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
@@ -753,6 +760,7 @@ export function CircuitScene({
               onPopulationClick={handlePopulationClick}
               onSubjectCellClick={sceneCellClick}
               onPositionlessPopulationsChange={handlePositionlessPopulationsChange}
+              locationMarkers={locationMarkers}
               {...sharedVizProps}
             />
           )
