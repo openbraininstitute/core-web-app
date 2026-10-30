@@ -217,45 +217,44 @@
   border: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
   width: fit-content;
   max-width: 100%;
   min-height: 44px;
   color: #365479;
 }
-.navigation .exampleCaption {
-  flex: 0 1 auto;
-  min-width: 0;
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-}
 .examplesLabel {
   color: #5b6c83;
+  font-size: 14px;
 }
-.exampleName {
-  color: #365479;
-}
-.examples .exampleArrow {
-  flex: 0 0 44px;
-  display: grid;
-  place-items: center;
-  width: 44px;
+.examples .exampleSelect {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
   min-height: 44px;
-  padding: 0;
+  padding: 6px 2px;
   border: 0;
-  border-radius: 4px;
+  border-bottom: 1px solid #36547966;
+  border-radius: 0;
+  appearance: none;
   background: transparent;
-  color: var(--blue, #183f8b);
-  font-size: 25px;
-  line-height: 1;
+  color: #365479;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  cursor: pointer;
 }
-.examples .exampleArrow:hover {
-  background: #ffffff80;
+.examples .exampleSelect:hover {
+  color: var(--blue, #183f8b);
+  border-bottom-color: var(--blue, #183f8b);
+}
+.exampleSelect option {
+  background: #fff;
+  color: #172c4a;
 }
 .chapters .chapter:focus-visible,
 .chapters .play:focus-visible,
-.examples .exampleArrow:focus-visible {
+.examples .exampleSelect:focus-visible {
   outline: 2px solid var(--blue, #183f8b);
   outline-offset: 3px;
 }

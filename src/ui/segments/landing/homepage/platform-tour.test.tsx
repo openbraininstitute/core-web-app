@@ -19,12 +19,9 @@ function chapter(name: string) {
   ).getByRole('button', { name });
 }
 function chooseExample(name: string) {
-  const group = screen.getByRole('group', { name: 'Examples in the selected chapter' });
-  for (let step = 0; step < 4; step += 1) {
-    if (screen.getByTestId('current-example').textContent === name) return;
-    fireEvent.click(within(group).getByRole('button', { name: 'Next example' }));
-  }
-  expect(screen.getByTestId('current-example')).toHaveTextContent(name);
+  const picker = screen.getByRole('combobox', { name: 'Choose an example' });
+  const option = within(picker).getByRole('option', { name });
+  fireEvent.change(picker, { target: { value: option.getAttribute('value') } });
 }
 function expectSlide(title: string) {
   expect(screen.getByRole('heading', { name: title })).toBeInTheDocument();
@@ -179,14 +176,19 @@ describe('guided platform tour', () => {
       for (const [label, title] of items) {
         chooseExample(label);
         expectSlide(title);
-        expect(screen.getByTestId('current-example')).toHaveTextContent(label);
+        expect(screen.getByTestId('current-example')).toHaveDisplayValue(label);
       }
       const examples = screen.getByRole('group', { name: 'Examples in the selected chapter' });
-      expect(within(examples).getAllByRole('button')).toHaveLength(2);
-      fireEvent.click(within(examples).getByRole('button', { name: 'Next example' }));
-      expect(screen.getByTestId('current-example')).toHaveTextContent(items[0][0]);
-      fireEvent.click(within(examples).getByRole('button', { name: 'Previous example' }));
-      expect(screen.getByTestId('current-example')).toHaveTextContent(items[items.length - 1][0]);
+      expect(within(examples).queryByRole('button')).not.toBeInTheDocument();
+      expect(
+        within(examples)
+          .getAllByRole('option')
+          .map((option) => option.textContent)
+      ).toEqual(items.map(([label]) => label));
+      chooseExample(items[0][0]);
+      expect(screen.getByTestId('current-example')).toHaveDisplayValue(items[0][0]);
+      chooseExample(items[items.length - 1][0]);
+      expect(screen.getByTestId('current-example')).toHaveDisplayValue(items[items.length - 1][0]);
     }
     fireEvent.click(chapter('Skeletonize'));
     expect(
