@@ -19,6 +19,7 @@ import {
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { ChromeButton } from '@/features/scan-config/components/color-by/chrome-button';
+import { BOX_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
@@ -98,10 +99,14 @@ const MIN_SIDE_WIDTH = 320;
 const FILE_STRIP_WIDTH = 10.5 + SHUT_BAR_SIZE + 10.5;
 const PANEL_STRIP_WIDTH = 14 + SHUT_BAR_SIZE + 10.5;
 /**
- * What the bar takes, in px: the tabs rail's height, which folds away as the bar
- * comes, so what it spans stays where it was and is not laid out again.
+ * What the bar takes, in px: less than the tabs rail's height, which folds away as
+ * the bar comes up where the tabs were, so what it spans rises a little to meet it,
+ * played as a move (DROP) rather than eased as a margin.
  */
-const BAR_ROOM = 48;
+const BAR_ROOM = 43.5;
+
+/** Inside the two left columns' window, clear of its rounded edges as the configuration's are. */
+const WINDOWED = 'mt-[calc(0.75rem+1px)] mb-6';
 
 export function ResultsLayout({
   left,
@@ -257,13 +262,21 @@ export function ResultsLayout({
   // auto-placement would push them past it.
   return (
     <ResultsSidePanelContext.Provider value={sidePanel}>
+      {/* The two left columns in one window, as the configuration's blocks and form are: its ring
+          a pixel under the page's clip, its foot level with the views' boxes. It goes with them. */}
+      <div
+        aria-hidden
+        style={moved}
+        className={cn(BOX_CLASS, 'col-start-1 col-end-3 row-start-1 mt-px mb-3 ml-px', slide, away)}
+      />
       <div
         ref={leftRef}
         id={leftId}
         inert={open || undefined}
         style={moved}
         className={cn(
-          'col-start-1 row-start-1 border-r border-gray-200 pr-4 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          'col-start-1 row-start-1 border-r border-gray-200 pr-4 pl-3 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          WINDOWED,
           slide,
           away
         )}
@@ -276,7 +289,8 @@ export function ResultsLayout({
         inert={open || undefined}
         style={moved}
         className={cn(
-          'col-start-2 row-start-1 relative border-r border-gray-200 secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          'col-start-2 row-start-1 relative secondary-scrollbar flex w-full min-h-0 flex-1 flex-col items-center overflow-y-auto overflow-x-hidden',
+          WINDOWED,
           slide,
           away
         )}
@@ -309,7 +323,8 @@ export function ResultsLayout({
       <div
         inert={!open || undefined}
         className={cn(
-          'border-neutral-2 col-start-1 col-end-4 row-start-1 z-10 -mt-2 flex items-center gap-2 self-start border-b px-1 pt-2 pb-3',
+          // Up in the grid's top padding (pt-2), where the tabs were.
+          'col-start-1 col-end-4 row-start-1 z-10 -mt-2 flex items-center gap-2 self-start justify-self-start pl-1 pb-3',
           slide,
           open ? 'opacity-100' : 'pointer-events-none -translate-y-2 opacity-0'
         )}

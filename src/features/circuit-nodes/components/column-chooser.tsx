@@ -9,6 +9,14 @@ import type { ColumnMeta } from '@/features/circuit-nodes/types';
 
 import styles from './column-chooser.module.css';
 
+/** Kept on by Clear all, as the Data tables keep their essential columns: the rows still say which cells they are. */
+const KEPT_COLUMN = 'node_id';
+
+const BULK_BUTTON_CLASS = cn(
+  'text-xs font-medium underline-offset-2 text-primary-6 hover:text-primary-8 hover:underline',
+  'disabled:cursor-not-allowed disabled:text-gray-300 disabled:no-underline'
+);
+
 type Props = {
   columns: ColumnMeta[];
   orderedNames: string[];
@@ -95,43 +103,67 @@ export function ColumnChooser({
     onVisibleColumnsChange(next);
   };
 
+  const allShown = items.every((name) => visibleColumns.has(name));
+  const kept: string[] = items.filter((name) => name === KEPT_COLUMN);
+  const noneShown = items.every((name) => name === KEPT_COLUMN || !visibleColumns.has(name));
+
   return (
-    <ul className={styles.list}>
-      {items.map((name, index) => {
-        const isDragging = draggingIndex === index;
-        const dragActive = draggingIndex !== null;
-        const showLineAbove = dragActive && dropIndex === index;
-        const showLineBelow = dragActive && dropIndex === index + 1;
-        const cls = cn(
-          styles.row,
-          isDragging && styles.rowDragging,
-          showLineAbove && styles.rowDropAbove,
-          showLineBelow && styles.rowDropBelow
-        );
-        const label = labelByName.get(name) ?? capitalize(name.replace(/_/g, ' '));
-        return (
-          <li
-            key={name}
-            className={cls}
-            draggable
-            onDragStart={(e) => onDragStart(e, index)}
-            onDragOver={(e) => onDragOver(e, index)}
-            onDrop={onDrop}
-            onDragEnd={onDragEnd}
-          >
-            <span className={styles.handle}>
-              <RiDraggable size={16} />
-            </span>
-            <Checkbox
-              checked={visibleColumns.has(name)}
-              onChange={(ev) => toggle(name, ev.target.checked)}
-            />
-            <span className={styles.label} title={label}>
-              {label}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-end gap-4 px-1.5">
+        <button
+          type="button"
+          disabled={allShown}
+          onClick={() => onVisibleColumnsChange(new Set(items))}
+          className={BULK_BUTTON_CLASS}
+        >
+          Select all
+        </button>
+        <button
+          type="button"
+          disabled={noneShown}
+          onClick={() => onVisibleColumnsChange(new Set(kept))}
+          className={BULK_BUTTON_CLASS}
+        >
+          Clear all
+        </button>
+      </div>
+      <ul className={styles.list}>
+        {items.map((name, index) => {
+          const isDragging = draggingIndex === index;
+          const dragActive = draggingIndex !== null;
+          const showLineAbove = dragActive && dropIndex === index;
+          const showLineBelow = dragActive && dropIndex === index + 1;
+          const cls = cn(
+            styles.row,
+            isDragging && styles.rowDragging,
+            showLineAbove && styles.rowDropAbove,
+            showLineBelow && styles.rowDropBelow
+          );
+          const label = labelByName.get(name) ?? capitalize(name.replace(/_/g, ' '));
+          return (
+            <li
+              key={name}
+              className={cls}
+              draggable
+              onDragStart={(e) => onDragStart(e, index)}
+              onDragOver={(e) => onDragOver(e, index)}
+              onDrop={onDrop}
+              onDragEnd={onDragEnd}
+            >
+              <span className={styles.handle}>
+                <RiDraggable size={16} />
+              </span>
+              <Checkbox
+                checked={visibleColumns.has(name)}
+                onChange={(ev) => toggle(name, ev.target.checked)}
+              />
+              <span className={styles.label} title={label}>
+                {label}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

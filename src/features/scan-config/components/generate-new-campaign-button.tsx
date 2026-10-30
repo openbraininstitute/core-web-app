@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { useAppNotification } from '@/components/notification';
 import { isLegacyMigratedEmodel } from '@/entity-configuration/domain/optimization/legacy-migrated-emodels';
 import { useFlags } from '@/features/feature-flags';
+import { GENERATE_CLICKABLE } from '@/features/scan-config/components/generate-config-button';
+import { LAUNCH_GREEN } from '@/features/scan-config/components/shared/task-launch-button';
 import { ScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 import { ScanConfigActivity } from '@/features/scan-config/types';
 import { messages } from '@/i18n/en/scan-config';
@@ -85,10 +87,9 @@ export default function GenerateNewCampaignButton({
       type="button"
       data-testid="scan-config-generate-new-campaign"
       className={classNames(
-        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-lg drop-shadow',
-        loading
-          ? 'bg-gray-300 text-gray-500'
-          : 'bg-linear-to-r from-[#003A8C] to-primary-10 text-white'
+        // As the generate button an editable configuration has.
+        'flex min-h-12.5 p-2 w-full items-center justify-center rounded-full text-sm font-semibold ring-1 ring-black/5',
+        loading ? 'bg-gray-300 text-gray-500' : `${LAUNCH_GREEN} ${GENERATE_CLICKABLE} text-white`
       )}
       onClick={onClick}
       disabled={loading}

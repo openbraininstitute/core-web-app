@@ -29,9 +29,9 @@ function warnedTabs(paths: string[]) {
 }
 
 describe('EModelOptimisationMechanismsTabList', () => {
-  it('shows a check on every tab when the config is valid', () => {
+  it('shows nothing on any tab when the config is valid: warnings only', () => {
     expect(warnedTabs([])).toEqual([]);
-    expect(screen.getAllByRole('img', { name: 'check-circle' })).toHaveLength(4);
+    expect(screen.queryAllByRole('img', { name: 'check-circle' })).toHaveLength(0);
   });
 
   it('flags Mechanism Selection for ion channel model errors', () => {

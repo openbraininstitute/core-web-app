@@ -31,6 +31,8 @@ type Props = {
   populations: NodePopulation[];
   populationName: string | undefined;
   onPopulationChange: (name: string) => void;
+  /** Its right end, for what a table beside it puts there: its count and its buttons. */
+  slotRef?: (element: HTMLDivElement | null) => void;
 };
 
 export function NodesToolbar({
@@ -39,14 +41,14 @@ export function NodesToolbar({
   populations,
   populationName,
   onPopulationChange,
+  slotRef,
 }: Props) {
   return (
     <div className={styles.toolbar}>
       <div className={styles.toolbarGroup}>
-        <span className={styles.toolbarLabel}>View</span>
         <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
           <SelectTrigger
-            className={cn(triggerCls, styles.viewSelect)}
+            className={cn(triggerCls, styles.viewSelect, 'px-3')}
             icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
           >
             <SelectValue />
@@ -70,6 +72,7 @@ export function NodesToolbar({
           onChange={onPopulationChange}
         />
       </div>
+      {slotRef && <div ref={slotRef} className={styles.toolbarSlot} />}
     </div>
   );
 }

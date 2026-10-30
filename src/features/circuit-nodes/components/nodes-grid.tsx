@@ -4,20 +4,31 @@ import { Modal } from 'antd';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
-import { RiCheckLine, RiResetLeftLine, RiSubtractLine } from '@remixicon/react';
+import {
+  RiCheckLine,
+  RiDownload2Line,
+  RiLoader4Line,
+  RiResetLeftLine,
+  RiSubtractLine,
+  RiTable3,
+} from '@remixicon/react';
 import capitalize from 'es-toolkit/compat/capitalize';
 import isEqual from 'es-toolkit/compat/isEqual';
+import { saveAs } from 'file-saver';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { CategoricalFilter } from '@/features/circuit-nodes/components/categorical-filter';
 import { ColumnChooser } from '@/features/circuit-nodes/components/column-chooser';
 import { ColumnHeader } from '@/features/circuit-nodes/components/column-header';
 import { NumericFilter } from '@/features/circuit-nodes/components/numeric-filter';
 import { TextFilter } from '@/features/circuit-nodes/components/text-filter';
+import { readAllRows, toCsv } from '@/features/circuit-nodes/nodes-csv';
 import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { PillToggle, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
+import { logError } from '@/utils/logger';
 
 import type {
   CellMouseOverEvent,
@@ -105,8 +116,17 @@ type Props = {
   pickAll?: { state: PickAllState; onToggle: () => void };
   /** Called with the node id of the row under the pointer, once per row, and null when it leaves the grid. */
   onRowHover?: (nodeId: number | null) => void;
+  /** At the header's start, before the count: what the rows are of, such as the population on show. */
+  headerStart?: React.ReactNode;
   /** Right after the count, before the quick filters: what else narrows the rows, say. */
   headerExtra?: React.ReactNode;
+  /** The name of the CSV the rows on show download as, without its extension; `nodes` by default. */
+  downloadName?: string;
+  /**
+   * A host's place for the header, such as its toolbar, in place of a row of its own over the
+   * rows: the count stacks there to keep it short. Null until that place is mounted.
+   */
+  headerSlot?: HTMLElement | null;
   /**
    * A Reset above the rows while a filter is on, or while `picked` says the host
    * holds a pick to undo: it clears the filters and calls `onReset`.
@@ -383,7 +403,10 @@ export function NodesGrid({
   pickColumn = false,
   pickAll,
   onRowHover,
+  headerStart,
   headerExtra,
+  downloadName = 'nodes',
+  headerSlot,
   reset,
   resetRequest,
   quickFilters,
@@ -716,6 +739,41 @@ export function NodesGrid({
   useEffect(() => {
     if (resetRequest) onResetClick();
   }, [resetRequest]);
+
+  // The rows the filter keeps, in the sort and columns on show, every one of them rather
+  // than those paged in so far: read from the host's datasource as the grid reads them.
+  const [downloading, setDownloading] = useState(false);
+  const downloadCsv = async () => {
+    const api = gridRef.current?.api;
+    if (!api || downloading) return;
+    setDownloading(true);
+    try {
+      const shown = api
+        .getAllDisplayedColumns()
+        .map((c) => c.getColId())
+        .filter((id) => id !== PICK_COLUMN.colId);
+      const sortModel = api
+        .getColumnState()
+        .filter((c) => c.sort)
+        .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
+        .map((c) => ({ colId: c.colId, sort: c.sort as SortDirection }));
+      const rows = await readAllRows({
+        datasource: datasourceRef.current,
+        api,
+        context: gridContext,
+        sortModel,
+        filterModel: api.getFilterModel(),
+      });
+      saveAs(
+        new Blob([toCsv(shown, rows)], { type: 'text/csv;charset=utf-8' }),
+        `${downloadName}.csv`
+      );
+    } catch (error) {
+      logError('The rows on show could not be downloaded:', error);
+    } finally {
+      setDownloading(false);
+    }
+  };
   const isOn = (quick: QuickFilter) =>
     Object.entries(quick.model).every(([colId, f]) => isEqual(filters[colId], f));
   const toggleQuickFilter = (quick: QuickFilter) => {
@@ -761,69 +819,127 @@ export function NodesGrid({
     if (toAutoSize.length > 0) api.autoSizeColumns(toAutoSize, false);
   }, [columns, visibleColumns]);
 
+  // The header: a row of its own over the rows, or the host's slot, where the count stacks.
+  const stacked = headerSlot !== undefined;
+  const count = (
+    <span className={cn(styles.gridStat, 'shrink-0', stacked && styles.gridStatStacked)}>
+      {pickColumn ? (
+        // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
+        <>
+          <span>
+            {stacked ? null : 'Nodes: '}
+            <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
+              {selectedNodeIds.size.toLocaleString()}
+            </span>
+            /{total.toLocaleString()} selected{stacked ? null : ', '}
+          </span>
+          <span>
+            <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
+              {(filteredCount ?? total).toLocaleString()}
+            </span>
+            /{total.toLocaleString()} showing
+          </span>
+        </>
+      ) : filteredCount === null ? (
+        <>{total.toLocaleString()} nodes</>
+      ) : (
+        <>
+          <strong className={styles.gridStatHighlight}>{filteredCount.toLocaleString()}</strong> of{' '}
+          {total.toLocaleString()} nodes
+        </>
+      )}
+    </span>
+  );
+  // Some of the columns hidden; none at all is the table before its defaults are in.
+  const columnsHidden =
+    visibleColumns.size > 0 && columns.some((column) => !visibleColumns.has(column.name));
+  const actions = (
+    <>
+      {/* First, so the switches after it stay put at the end as it comes and goes. */}
+      {reset && (filtering || reset.picked) && (
+        <button
+          type="button"
+          onClick={onResetClick}
+          title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+          aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
+          className={ROUND_PILL_CLASS}
+        >
+          <RiResetLeftLine className="size-4" />
+        </button>
+      )}
+      {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
+      {quickFilters?.map((quick) => (
+        <PillToggle
+          key={quick.label}
+          value={isOn(quick)}
+          onChange={(on) => {
+            if (on !== isOn(quick)) toggleQuickFilter(quick);
+          }}
+          options={[
+            { value: false, label: 'All', title: 'Every row' },
+            { value: true, label: quick.label, title: quick.title },
+          ]}
+        />
+      ))}
+      {scope && (
+        <PillToggle value={scope.value} options={scope.options} onChange={scope.onChange} />
+      )}
+      <button
+        type="button"
+        onClick={openChooser}
+        title={columnsHidden ? 'Show or hide columns: some are hidden' : 'Show or hide columns'}
+        aria-label={columnsHidden ? 'Show or hide columns, some hidden' : 'Show or hide columns'}
+        className={cn(ROUND_PILL_CLASS, 'relative')}
+      >
+        <RiTable3 className="size-4" />
+        {columnsHidden && (
+          // The dot a column's filter shows while it is on.
+          <span
+            aria-hidden
+            className="pointer-events-none absolute top-0.5 right-0.5 size-[8px] rounded-full bg-(--color-green-main) shadow-[0_0_0_1.5px_#fff]"
+          />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={downloadCsv}
+        disabled={downloading}
+        title={downloading ? 'Preparing the CSV…' : 'Download the rows on show as CSV'}
+        aria-label="Download the rows on show as CSV"
+        className={cn(ROUND_PILL_CLASS, 'disabled:opacity-60')}
+      >
+        {downloading ? (
+          <RiLoader4Line className="size-4 animate-spin" />
+        ) : (
+          <RiDownload2Line className="size-4" />
+        )}
+      </button>
+    </>
+  );
+
   return (
     <div className={styles.gridWrapper}>
-      <div className={styles.gridHeader}>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <span className={cn(styles.gridStat, 'shrink-0')}>
-            {pickColumn ? (
-              // Ticks and the filter each narrow what is drawn, ticks first, so both are told.
-              <>
-                Nodes:{' '}
-                <span className={selectedNodeIds.size > 0 ? styles.gridStatHighlight : undefined}>
-                  {selectedNodeIds.size.toLocaleString()}
-                </span>
-                /{total.toLocaleString()} selected,{' '}
-                <span className={filteredCount !== null ? styles.gridStatHighlight : undefined}>
-                  {(filteredCount ?? total).toLocaleString()}
-                </span>
-                /{total.toLocaleString()} showing
-              </>
-            ) : filteredCount === null ? (
-              <>{total.toLocaleString()} nodes</>
-            ) : (
-              <>
-                <strong className={styles.gridStatHighlight}>
-                  {filteredCount.toLocaleString()}
-                </strong>{' '}
-                of {total.toLocaleString()} nodes
-              </>
-            )}
-          </span>
-          {headerExtra}
+      {headerSlot === undefined ? (
+        <div className={styles.gridHeader}>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {headerStart}
+            {count}
+            {headerExtra}
+          </div>
+          <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* First, so the switches after it stay put at the end as it comes and goes. */}
-          {reset && (filtering || reset.picked) && (
-            <button
-              type="button"
-              onClick={onResetClick}
-              title={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
-              className={ROUND_PILL_CLASS}
-            >
-              <RiResetLeftLine className="size-4" />
-            </button>
-          )}
-          {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
-          {quickFilters?.map((quick) => (
-            <PillToggle
-              key={quick.label}
-              value={isOn(quick)}
-              onChange={(on) => {
-                if (on !== isOn(quick)) toggleQuickFilter(quick);
-              }}
-              options={[
-                { value: false, label: 'All', title: 'Every row' },
-                { value: true, label: quick.label, title: quick.title },
-              ]}
-            />
-          ))}
-          {scope && (
-            <PillToggle value={scope.value} options={scope.options} onChange={scope.onChange} />
-          )}
-        </div>
-      </div>
+      ) : (
+        headerSlot &&
+        createPortal(
+          <div className="flex min-w-0 items-center gap-2">
+            {headerStart}
+            {count}
+            {headerExtra}
+            {actions}
+          </div>,
+          headerSlot
+        )
+      )}
       <div
         ref={gridBoxRef}
         className={styles.grid}

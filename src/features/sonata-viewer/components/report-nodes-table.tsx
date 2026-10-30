@@ -87,6 +87,8 @@ type Props = {
   /** A reset asked for from outside the table, such as the 3D view's: a new number each time. */
   resetRequest?: number;
   reset?: { picked: boolean; onReset: () => void };
+  /** At the start of the header above the rows, such as the population on show. */
+  headerStart?: ReactNode;
   /** Beside the count above the rows, such as the window the statistics are over. */
   headerExtra?: ReactNode;
   /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
@@ -119,6 +121,7 @@ export function ReportNodesTable({
   onRowsChange,
   resetRequest,
   reset,
+  headerStart,
   headerExtra,
   focusRow,
 }: Props) {
@@ -325,6 +328,7 @@ export function ReportNodesTable({
     <KeptNodesGrid
       session={sessionKey}
       filterScope="voltage"
+      downloadName={`${population.name}-voltages`}
       columns={tableColumns ?? columns}
       rowCount={scope === 'all' ? rowCount : recordedCount}
       filteredCount={filtering ? filteredCount : null}
@@ -336,6 +340,7 @@ export function ReportNodesTable({
       scope={scopeSwitch}
       resetRequest={resetRequest}
       reset={reset}
+      headerStart={headerStart}
       headerExtra={headerExtra}
       focusRow={focusRow}
       rowIndexOf={rowAmongListed}

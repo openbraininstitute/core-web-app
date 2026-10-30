@@ -121,12 +121,7 @@ export default function SonataViewer({
   if (isLoading || !metadata || !worker) {
     // Docked, as the view will be, with the table of the report before still in place.
     if (withStatistics && circuit && sidePanel?.target) {
-      return (
-        <LoadingFilePanes
-          title={variableName ? 'Traces' : 'Voltage traces'}
-          panelTitles={variableName ? ['Statistics'] : ['3D Player', 'Statistics']}
-        />
-      );
+      return <LoadingFilePanes title={variableName ? 'Traces' : 'Voltage traces'} />;
     }
     return <SonataViewerSkeleton />;
   }
@@ -508,7 +503,8 @@ export function SonataReportView({
     return <Empty className="p-2em" description="This report recorded no population" />;
   }
 
-  // At the right end of the traces' controls: how many cells, then how the plot is worked.
+  // At the right end of the traces' controls: how many cells, how the plot is worked, and,
+  // while the panel is not up, what opens it.
   const countAndHelp = (
     <>
       <span className="whitespace-nowrap text-xs text-neutral-400">
@@ -520,6 +516,12 @@ export function SonataReportView({
         Click a trace to pick its cell alone, again to show every cell · Hover a timing for its
         window
       </PlotHelp>
+      {docked && sidePanel && !dockedOpen && (
+        <OpenPanelButton
+          titles={voltage ? ['3D Player', 'Statistics'] : ['Statistics']}
+          onOpen={() => sidePanel.setOpen(true)}
+        />
+      )}
     </>
   );
 
@@ -681,22 +683,10 @@ export function SonataReportView({
     const panelTitles = voltage ? ['3D Player', 'Statistics'] : ['Statistics'];
     return (
       <>
-        {/* The traces over the table, and while the panel is not up a button over them opening it. */}
+        {/* The traces over the table, their box topping the column: the panel's button ends the
+            traces' controls, and the table's header names the population. */}
         <StackedPanes
           split="file"
-          header={
-            !dockedOpen && (
-              <div className="mb-3 flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2">
-                <PopulationHeader
-                  populations={metadata.populations}
-                  population={population}
-                  onChange={setChosenPopulation}
-                />
-                {/* The simulation on show is picked in the list beside it. */}
-                <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
-              </div>
-            )
-          }
           top={{
             title: tracesTitle,
             boxClassName: 'p-2',
@@ -752,6 +742,13 @@ export function SonataReportView({
                 }
                 table={{
                   ...table,
+                  headerStart: !dockedOpen && (
+                    <PopulationHeader
+                      populations={metadata.populations}
+                      population={population}
+                      onChange={setChosenPopulation}
+                    />
+                  ),
                   reset: {
                     picked: pickedCells.length > 0 || timeWindow !== null,
                     onReset: () => {

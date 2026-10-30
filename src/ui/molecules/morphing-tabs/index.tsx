@@ -56,8 +56,11 @@ export interface MorphingTabsProps {
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (id: string | null) => void;
-  /** Which side of the rail the tabs sit on. Default `start`; `end` leaves the start free. */
-  tabsAlign?: 'start' | 'end';
+  /**
+   * Where on the rail the tabs sit. Default `start`; `end` leaves the start free;
+   * `center` puts them in the middle, the centre slot moving to the end.
+   */
+  tabsAlign?: 'start' | 'end' | 'center';
   /** Rail-level leading content (e.g. a breadcrumb), in the rail row above the panel's top edge. */
   railStart?: ReactNode;
   /** Rail-level content centred in the rail row. */
@@ -69,6 +72,11 @@ export interface MorphingTabsProps {
    * surface: for a view inside that wants the room. Animated either way.
    */
   railCollapsed?: boolean;
+  /**
+   * No white surface under the panel, which then sits on the page: the tabs are
+   * pills over it, the active one white as the boxes in the panel are.
+   */
+  surfaceless?: boolean;
   ariaLabel?: string;
   className?: string;
   classNames?: MorphingTabsClassNames;
@@ -260,10 +268,12 @@ function fitTabs(count: number, inner: number, gap: number, widest: number) {
 /**
  * What a tab needs to show its label in full: everything before the label, the label at its own
  * width (`scrollWidth`, which a truncated label still reports in full), and the padding after it.
+ * `scrollWidth` is a whole number that can round the text's width down, which at some zooms left
+ * the label a fraction of a pixel short and cut it to an ellipsis; a pixel either side covers it.
  */
 function labelledWidth(button: HTMLElement, label: HTMLElement) {
   const after = Number.parseFloat(getComputedStyle(button).paddingRight) || 0;
-  return Math.ceil(label.offsetLeft + label.scrollWidth + after);
+  return Math.ceil(label.offsetLeft + label.scrollWidth + after) + 2;
 }
 
 export function MorphingTabs({
@@ -276,6 +286,7 @@ export function MorphingTabs({
   railCenter,
   railEnd,
   railCollapsed = false,
+  surfaceless = false,
   ariaLabel = 'Tabs',
   className,
   classNames,
@@ -340,7 +351,8 @@ export function MorphingTabs({
   const { tabWidth, slotGap } = fitTabs(
     items.length,
     surface.width - SURFACE_INSET * 2 - endReserve,
-    surface.gap,
+    // Without a surface the tabs meet, on one pill.
+    surfaceless ? 0 : surface.gap,
     surface.labelled > 0 ? Math.min(MAX_TAB_WIDTH, surface.labelled) : MAX_TAB_WIDTH
   );
   const tabsWidth = items.length * tabWidth + Math.max(0, items.length - 1) * slotGap;
@@ -349,11 +361,13 @@ export function MorphingTabs({
     SURFACE_INSET +
     (tabsAlign === 'end'
       ? Math.max(0, surface.width - SURFACE_INSET * 2 - endReserve - tabsWidth)
-      : 0);
+      : tabsAlign === 'center'
+        ? Math.max(0, Math.round((surface.width - tabsWidth) / 2) - SURFACE_INSET)
+        : 0);
   const slotLeft = (index: number) => slotStart + index * (tabWidth + slotGap);
   // start / centre slots stop short of the tabs when they sit at the end, so they never collide
   const railRight =
-    tabsAlign === 'end' && surface.width > 0
+    tabsAlign !== 'start' && surface.width > 0
       ? surface.width - slotStart + RAIL_GAP
       : SURFACE_INSET + endReserve;
 
@@ -443,7 +457,7 @@ export function MorphingTabs({
         className
       )}
     >
-      {placed && surface.width > SURFACE_INSET * 2 ? (
+      {placed && !surfaceless && surface.width > SURFACE_INSET * 2 ? (
         <LiquidSurface
           left={surfaceLeft}
           fold={fold}
@@ -467,6 +481,14 @@ export function MorphingTabs({
           aria-orientation="horizontal"
           className={cn('relative z-30 flex h-full gap-3 md:gap-4', classNames?.rail)}
         >
+          {surfaceless && (
+            // The one pill the tabs share, the active one raised white inside it.
+            <span
+              aria-hidden
+              className="absolute top-0 rounded-full bg-white/60"
+              style={{ left: slotStart, width: tabsWidth, height: TAB_HEIGHT - 8 }}
+            />
+          )}
           {items.map((item, index) => {
             const isActive = item.id === activeId;
 
@@ -491,10 +513,21 @@ export function MorphingTabs({
                     style={{ width: tabWidth, height: TAB_HEIGHT }}
                     className="relative flex items-stretch"
                   >
-                    {!isActive ? (
+                    {!isActive || surfaceless ? (
                       <span
                         aria-hidden
-                        className="absolute inset-x-0 top-0 bottom-2 rounded-[1.25rem] bg-[oklch(0.984_0.003_247.858)] transition-colors duration-200 group-hover:bg-[oklch(0.929_0.013_255.508)]"
+                        className={cn(
+                          'absolute transition-colors duration-200',
+                          !surfaceless
+                            ? 'inset-x-0 top-0 bottom-2 rounded-[1.25rem] bg-[oklch(0.984_0.003_247.858)] group-hover:bg-[oklch(0.929_0.013_255.508)]'
+                            : // inside the shared pill, clear of its border
+                              cn(
+                                'inset-x-[3px] top-[3px] bottom-[11px] rounded-full',
+                                isActive
+                                  ? 'bg-white shadow-[0_2px_6px_-2px_rgb(0_39_102/0.18),0_1px_2px_rgb(0_39_102/0.08)] ring-1 ring-primary-9/5'
+                                  : 'group-hover:bg-[oklch(0.929_0.013_255.508)]'
+                              )
+                        )}
                       />
                     ) : null}
 
@@ -515,7 +548,9 @@ export function MorphingTabs({
                       onKeyDown={(event) => handleTabKeyDown(index, event)}
                       className={cn(
                         'group relative z-10 flex h-full w-full min-w-0 items-center gap-2 overflow-hidden rounded-t-[1.5rem] px-3 text-left outline-none transition-colors',
-                        isActive ? 'text-primary-8' : 'pb-2 text-neutral-4 hover:text-[#181818]',
+                        isActive
+                          ? cn('text-primary-8', surfaceless && 'pb-2')
+                          : 'pb-2 text-neutral-4 hover:text-[#181818]',
                         item.disabled && 'cursor-not-allowed opacity-60 hover:text-neutral-4',
                         classNames?.tab
                       )}
@@ -526,7 +561,7 @@ export function MorphingTabs({
                         aria-hidden
                         className={cn(
                           'pointer-events-none absolute inset-x-1 top-1 opacity-0 transition-opacity group-focus-visible:opacity-100',
-                          isActive
+                          isActive && !surfaceless
                             ? 'bottom-0 rounded-t-[1.25rem] border-x-2 border-t-2 border-black/20'
                             : 'bottom-2 rounded-[1rem] border-2 border-black/20'
                         )}
@@ -574,15 +609,39 @@ export function MorphingTabs({
                 {railStart}
               </div>
               {/* flex-auto grows into all the space between start and tabs (and still shrinks with start), so the capped child is centred in it */}
-              <div className="flex min-w-0 flex-auto justify-center">
-                <div
-                  className={cn(
-                    'flex min-w-0 max-w-[min(32rem,100%)] [&>*]:pointer-events-auto',
-                    classNames?.railCenter
-                  )}
-                >
-                  {railCenter}
+              {tabsAlign !== 'center' && (
+                <div className="flex min-w-0 flex-auto justify-center">
+                  <div
+                    className={cn(
+                      'flex min-w-0 max-w-[min(32rem,100%)] [&>*]:pointer-events-auto',
+                      classNames?.railCenter
+                    )}
+                  >
+                    {railCenter}
+                  </div>
                 </div>
+              )}
+            </div>
+          ) : null}
+          {tabsAlign === 'center' && railCenter ? (
+            // The tabs have the middle: the centre slot goes past them, to the end.
+            <div
+              data-slot="morphing-tabs-rail-center"
+              className="pointer-events-none absolute z-30 flex items-center justify-end overflow-hidden"
+              style={{
+                left: slotStart + tabsWidth + RAIL_GAP,
+                right: SURFACE_INSET + endReserve,
+                top: 0,
+                height: RAIL_HEIGHT,
+              }}
+            >
+              <div
+                className={cn(
+                  'flex min-w-0 max-w-[min(32rem,100%)] [&>*]:pointer-events-auto',
+                  classNames?.railCenter
+                )}
+              >
+                {railCenter}
               </div>
             </div>
           ) : null}

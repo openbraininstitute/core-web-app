@@ -1,4 +1,4 @@
-import { CheckCircleFilled, WarningFilled } from '@ant-design/icons';
+import { WarningFilled } from '@ant-design/icons';
 import { useSetAtom } from 'jotai';
 
 import BlockDictionaryEntries from '@/features/scan-config/components/block-dictionary-entries';
@@ -6,6 +6,7 @@ import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/compone
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { DESCRIPTION_TOOLTIP_CLASS } from '@/features/scan-config/components/shared/box-class';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
@@ -84,12 +85,15 @@ export function RootElement({
   const { highlights, hasHighlights, isExpanded, diffClass } = useRootElementDiff(rootElement);
   const hasFieldErrors = useFieldErrorsForPath(rootElement);
   const isSelected = selectedRootElement === rootElement;
+  const isBlockDictionary =
+    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary;
+  const entries = isPlainObject(config[rootElement]) ? (config[rootElement] as object) : {};
   // only a dictionary holds sub-entries; the count is what it currently holds
-  const entryCount =
-    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary
-      ? Object.keys(isPlainObject(config[rootElement]) ? (config[rootElement] as object) : {})
-          .length
-      : null;
+  const entryCount = isBlockDictionary ? Object.keys(entries).length : null;
+  // The block picked is one of this dictionary's own.
+  const holdsSelected = isSelected && !!selectedEntry && selectedEntry in entries;
+  // A dictionary is lit only while shut on the block picked: open, that block is lit instead.
+  const lit = isBlockDictionary ? holdsSelected && !isExpanded : isSelected;
 
   if (!schema?.properties) return;
 
@@ -110,6 +114,7 @@ export function RootElement({
               tab={rootElement}
               testId={`scan-config-root-element-${rootElement}`}
               selectedTab={selectedRootElement}
+              selected={lit}
               onClick={() => {
                 // emodel_optimisation_parameters: always expanded, keeps its inner tab
                 if (
@@ -129,8 +134,12 @@ export function RootElement({
                 // BlockDictionary: always toggle expand/collapse on click,
                 // regardless of whether this root element is currently selected.
                 if (isDictionary) {
-                  setSelectedRootElement(rootElement);
-                  setSelectedEntry('');
+                  // The block picked stays picked, its form open, as its own dictionary opens or shuts.
+                  if (!holdsSelected) {
+                    setSelectedRootElement(rootElement);
+                    setSelectedEntry('');
+                    setEditing(false);
+                  }
 
                   if (isExpanded) {
                     setExpandedRootElements((prev) => {
@@ -138,14 +147,12 @@ export function RootElement({
                       newSet.delete(rootElement);
                       return newSet;
                     });
-                    setEditing(false);
                   } else {
                     setExpandedRootElements((prev) => {
                       const newSet = new Set(prev);
                       newSet.add(rootElement);
                       return newSet;
                     });
-                    setEditing(false);
                   }
                   return;
                 }
@@ -183,18 +190,16 @@ export function RootElement({
                 />
               </span>
               <div className="flex items-center gap-3">
-                {entryCount ? <CountBadge count={entryCount} selected={isSelected} /> : null}
+                {entryCount ? <CountBadge count={entryCount} selected={lit} /> : null}
 
-                {errors?.find((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
-                hasFieldErrors ? (
-                  <WarningFilled className="text-yellow-400!" />
-                ) : (
-                  <CheckCircleFilled className="text-green-600!" />
-                )}
+                {/* A warning where the block has a problem; one that is fine needs no tick. */}
+                {(errors?.some((error) => error.instancePath.startsWith(`/${rootElement}`)) ||
+                  hasFieldErrors) && <WarningFilled className="text-yellow-400!" />}
 
                 <Chevron
+                  // A dictionary's points down while open; the e-model's is never shut.
                   rotate={
-                    rootElementSchema.ui_element === ScanConfigUIElementDict.BlockDictionary ||
+                    (isBlockDictionary && isExpanded) ||
                     rootElementSchema.ui_element ===
                       ScanConfigUIElementDict.EModelOptimisationParameters
                       ? 90
@@ -210,14 +215,10 @@ export function RootElement({
           hideWhenDetached
           align="center"
           side="right"
-          className={cn(
-            'text-white shadow-bnb max-w-2xs min-w-2xs rounded-md ',
-            'bg-primary-8 px-4 py-2 text-base text-wrap ',
-            'overflow-y-auto max-h-50 primary-scrollbar'
-          )}
-          arrowClassName="bg-primary-8"
+          showArrow={false}
+          className={DESCRIPTION_TOOLTIP_CLASS}
         >
-          <MarkdownDescription dark>{rootElementSchema.description}</MarkdownDescription>
+          <MarkdownDescription>{rootElementSchema.description}</MarkdownDescription>
         </TooltipContent>
       </Tooltip>
 

@@ -57,7 +57,9 @@ export type StackedPane = {
  * into a bar naming it, which the layout keeps (`split` is its name there),
  * and the other takes the room. Without a bottom pane the top one has it all.
  * The configuration's right column (`config`) has no results layout, and keeps
- * which pane is shut itself.
+ * which pane is shut itself. Its top box's ring, a pixel outside the box, is
+ * level with the top of the rule beside the form, where the page clips; its
+ * foot is level with the generate button's.
  */
 export function StackedPanes({
   split,
@@ -121,7 +123,15 @@ export function StackedPanes({
         : panes.size;
 
   return (
-    <div className="flex h-full min-h-0 flex-col p-3">
+    <div
+      className={cn(
+        'flex h-full min-h-0 flex-col',
+        // Beside the panel a file's views take the page's left edge, as the lists did, and keep
+        // clear of the grab bar on their right; otherwise the other way round.
+        split === 'file' && sidePanel?.open ? 'pl-px pr-3' : 'pl-3 pr-px',
+        'pt-px pb-3'
+      )}
+    >
       {header}
       <div className="flex min-h-0 flex-1">
         <div ref={areaRef} className="relative min-h-0 min-w-0 flex-1">
@@ -192,25 +202,13 @@ export function StackedPanes({
  */
 export function LoadingFilePanes({
   title,
-  panelTitles,
 }: {
   /** What the plot over the table is called, for its bar if it is shut. */
   title: string;
-  panelTitles: readonly string[];
 }) {
-  const sidePanel = useResultsSidePanel();
   return (
     <StackedPanes
       split="file"
-      header={
-        sidePanel &&
-        !sidePanel.open && (
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <Skeleton className="h-9 w-56 rounded-full" />
-            <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
-          </div>
-        )
-      }
       top={{
         title,
         content: (

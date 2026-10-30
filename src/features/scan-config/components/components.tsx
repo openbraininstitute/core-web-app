@@ -3,6 +3,7 @@ import { classNames } from '@/util/utils';
 export function LeftMenuTab({
   tab,
   selectedTab,
+  selected,
   children,
   onClick,
   rounded = 'rounded-full',
@@ -13,6 +14,8 @@ export function LeftMenuTab({
 }: {
   tab: string;
   selectedTab: string;
+  /** Whether it is lit, where that is more than being the selected tab. */
+  selected?: boolean;
   onClick?: () => void;
   rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full';
   children?: React.ReactNode;
@@ -23,7 +26,7 @@ export function LeftMenuTab({
    * test cannot address these tabs by their visible text. */
   testId?: string;
 }) {
-  const isSelected = tab === selectedTab;
+  const isSelected = selected ?? tab === selectedTab;
   return (
     <button
       data-scan-config-menu="left-menu-top-item"
@@ -46,7 +49,7 @@ export function LeftMenuTab({
   );
 }
 
-/** Small numeric pill shown next to a tab label, e.g. how many entries/parameters it holds. */
+/** Small grey number shown next to a tab label, e.g. how many entries/parameters it holds. */
 export function CountBadge({
   count,
   selected,
@@ -61,11 +64,11 @@ export function CountBadge({
       data-testid={testId}
       className={classNames(
         // 1em box: the same height as the status mark beside it
-        'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
-        selected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
+        'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center',
+        selected ? 'text-gray-300' : 'text-gray-400'
       )}
     >
-      <span className="text-[0.7em] leading-none font-semibold tabular-nums">{count}</span>
+      <span className="leading-none font-semibold tabular-nums">{count}</span>
     </span>
   );
 }
@@ -78,6 +81,7 @@ export function Chevron({ rotate }: { rotate?: number }) {
       height="16"
       viewBox="0 0 16 16"
       fill="currentColor"
+      className="transition-transform duration-200 ease-out motion-reduce:transition-none"
       style={rotate !== undefined ? { transform: `rotate(${rotate}deg)` } : undefined}
     >
       <title>Chevron</title>

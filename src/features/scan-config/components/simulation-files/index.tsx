@@ -343,7 +343,10 @@ function useInputFiles(
     }
 
     sortBy(
-      simulation.assets.map((asset) => ({ asset, entity: simulation })),
+      simulation.assets
+        // The compartment sets are the simulator's own bookkeeping for its reports, not a file to read.
+        .filter((asset) => asset.label !== AssetLabel.compartment_sets)
+        .map((asset) => ({ asset, entity: simulation })),
       (file) => file.asset.path
     ).forEach((file) => {
       files.push({ ...file, renderer: ActivityCustomFileRenderer.Default });

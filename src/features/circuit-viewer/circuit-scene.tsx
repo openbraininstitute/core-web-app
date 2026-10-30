@@ -57,6 +57,8 @@ import type { TElectrodeArrayEntity } from '@/features/scan-config/components/mo
 import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const NOTHING_HIDDEN: readonly string[] = [];
+/** The form's root element its neuron sets are in. */
+const NEURON_SETS = 'neuron_sets';
 const MIN_TABLE_HEIGHT = 280;
 const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 
@@ -345,6 +347,11 @@ export function CircuitScene({
     highlightedCell ?? (tableDriven ? (focus.highlightedCell ?? undefined) : undefined);
   const sceneCellClick = onCellClick ?? (tableDriven ? focus.handleCellClick : undefined);
   const sceneSelection = selection ?? tableSelection;
+  // The table's neurons as a block of the form's neuron sets, opened there.
+  const createNeuronSet =
+    onCreateEntry && scanConfig && NEURON_SETS in scanConfig
+      ? (block: Record<string, unknown>) => onCreateEntry(NEURON_SETS, block)
+      : undefined;
 
   // What the viewers draw, in declared order: every population, or only the
   // one on show.
@@ -800,6 +807,7 @@ export function CircuitScene({
               focusedCell: focus.focusedCell ?? undefined,
               heldCell: focus.focusedCell?.nodeId ?? null,
               resetRequest: tableResetRequest,
+              onCreateNeuronSet: createNeuronSet,
             }}
           />,
           paneTable.target

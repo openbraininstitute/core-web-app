@@ -97,16 +97,16 @@ export function MiddleColumnContent({ props, state }: ColumnProps) {
 }
 
 const MIDDLE_WRAPPER_BASE = cn(
-  'h-full min-w-0 overflow-x-hidden overflow-y-auto secondary-scrollbar border-r border-l border-gray-200 px-3'
+  'h-full min-w-0 overflow-x-hidden overflow-y-auto no-scrollbar border-r border-l border-gray-200 px-3'
 );
 
 /** Standard scrollable middle wrapper used by the default layout. */
-export function MiddleColumn({ props, state }: ColumnProps) {
+export function MiddleColumn({ props, state, className }: ColumnProps & { className?: string }) {
   return (
     <div
       id="scan-config-controls-middle"
       data-testid="scan-config-middle-content"
-      className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE)}
+      className={cn(styles.scrollable, MIDDLE_WRAPPER_BASE, className)}
     >
       <MiddleColumnContent props={props} state={state} />
     </div>
