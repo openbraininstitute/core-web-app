@@ -6,6 +6,7 @@
 
 import { ELEC_STEPS } from './elec/Figure';
 import { JAXLEY_STEPS } from './jaxley/Figure';
+import { MTYPE_STEPS } from './mtypes/Figure';
 import { PHYSICS_STEPS } from './physics/Figure';
 import { PHYSICS2_STEPS } from './physics2/Figure';
 import { PLATFORM_STEPS } from './platform/Figure';
@@ -24,6 +25,7 @@ const COURSE_STEPS = {
   elec: ELEC_STEPS,
   transmitters: TRANSMITTER_STEPS,
   validation: VALIDATION_STEPS,
+  mtypes: MTYPE_STEPS,
 } as const;
 
 type CourseId = keyof typeof COURSE_STEPS;

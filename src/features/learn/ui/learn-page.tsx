@@ -105,6 +105,8 @@ const MINI_FOCUS: Record<string, Focus> = {
   // 120px of the 600 across, centred 67px down: down to 127px, short of the labels under it at ~130
   'brain-modeling': { x: 0.5, y: 0.32, span: 0.2 },
   'electrical-physics': { x: 0.5, y: 0.5, span: 0.32 },
+  // the cell, on the left of its choices
+  'mtype-game': { x: 0.27, y: 0.5, span: 0.55 },
 };
 /** The rest: the middle half of their figure. */
 const MINI_FOCUS_DEFAULT: Focus = { x: 0.5, y: 0.5, span: 0.5 };

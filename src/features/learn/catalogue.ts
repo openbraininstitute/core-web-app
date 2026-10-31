@@ -8,6 +8,7 @@ import { ELECTRICAL_TERMS } from '@/features/learn/slides/electrical-terms';
 import { ENTITYSDK_SLIDES } from '@/features/learn/slides/entitysdk';
 import { MEMBRANE_BASICS_SLIDES } from '@/features/learn/slides/membrane-basics';
 import { MISC_SLIDES } from '@/features/learn/slides/misc';
+import { MTYPE_GAME_SLIDES } from '@/features/learn/slides/mtype-game';
 import { NEURON_VS_JAXLEY_SLIDES } from '@/features/learn/slides/neuron-vs-jaxley';
 import { NEUROTRANSMITTERS_SLIDES } from '@/features/learn/slides/neurotransmitters';
 import { PLATFORM_SLIDES } from '@/features/learn/slides/platform';
@@ -159,6 +160,17 @@ export const LEARN_COURSES: LearnCourse[] = [
       'Slides that used to end the brain-modeling path, kept together as a course of their own: synapses, the neuron and its inputs, the axon initial segment, and the membrane’s voltage — from separated charge up to the spike.',
     slides: MISC_SLIDES,
     preview: 'morphology',
+  },
+  {
+    id: 'mtype-game',
+    rough: true,
+    title: 'Guess the morphological type',
+    level: 'All levels',
+    description:
+      'A game of shapes: one real neuron at a time from the rat’s somatosensory cortex, turning, to be named from its shape alone — first excitatory or inhibitory, then the eleven excitatory kinds by their dendrites, the fifteen kinds of interneuron by their axons, and all 26 together, four choices to a cell.',
+    slides: MTYPE_GAME_SLIDES,
+    // slide 5's: the whole game, playable on the card
+    preview: 'mtypes:all',
   },
   {
     id: 'why-model',

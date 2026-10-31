@@ -8,6 +8,7 @@
 
 import ElecFigure, { type ElecStep } from './elec/Figure';
 import JaxleyFigure, { type JaxleyStep } from './jaxley/Figure';
+import MtypesFigure, { type MtypeStep } from './mtypes/Figure';
 import PhysicsFigure, { type PhysicsStep } from './physics/Figure';
 import Physics2Figure, { type Physics2Step } from './physics2/Figure';
 import PlatformFigure, { type PlatformStep } from './platform/Figure';
@@ -45,6 +46,8 @@ export default function CourseFigure({
       return <TransmittersFigure step={step as TransmitterStep} back={back} />;
     case 'validation':
       return <ValidationFigure step={step as ValidationStep} back={back} />;
+    case 'mtypes':
+      return <MtypesFigure step={step as MtypeStep} back={back} />;
     default:
       return null;
   }
