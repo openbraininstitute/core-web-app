@@ -4,6 +4,7 @@
  * course carries on from slide to slide.
  */
 
+import { COMPARTMENTAL_STEPS } from './compartmental/Figure';
 import { ELEC_STEPS } from './elec/Figure';
 import { JAXLEY_STEPS } from './jaxley/Figure';
 import { MTYPE_STEPS } from './mtypes/Figure';
@@ -12,6 +13,7 @@ import { PHYSICS2_STEPS } from './physics2/Figure';
 import { PLATFORM_STEPS } from './platform/Figure';
 import { PYTHON_STEPS } from './python/Figure';
 import { SDK_STEPS } from './sdk/Figure';
+import { TM_STEPS } from './tm/Figure';
 import { TRANSMITTER_STEPS } from './transmitters/Figure';
 import { VALIDATION_STEPS } from './validation/Figure';
 
@@ -26,6 +28,8 @@ const COURSE_STEPS = {
   transmitters: TRANSMITTER_STEPS,
   validation: VALIDATION_STEPS,
   mtypes: MTYPE_STEPS,
+  compartmental: COMPARTMENTAL_STEPS,
+  tm: TM_STEPS,
 } as const;
 
 type CourseId = keyof typeof COURSE_STEPS;

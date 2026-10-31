@@ -10,6 +10,7 @@ import type { Slide } from '@/features/learn/components/walkthrough/Walkthrough'
 export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   {
     say: 'Neurons have a cell membrane made of "lipids" (i.e. fat molecules)',
+    section: 'The membrane',
     widget: 'physics2:lipids',
   },
   {
@@ -42,6 +43,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   },
   {
     say: "Let's consider the potassium ions",
+    section: 'Diffusion',
     widget: 'physics2:potassium',
   },
   {
@@ -86,6 +88,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   },
   {
     say: 'But as ions are electrically charged, something very different happens',
+    section: 'The membrane electric field',
     widget: 'physics2:charged',
   },
   {
@@ -142,6 +145,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   },
   {
     say: 'We consider the voltage between the inside and outside of the cell created by the electric field',
+    section: 'The membrane potential',
     widget: 'physics2:voltage',
   },
   {
@@ -178,6 +182,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   },
   {
     say: 'The membrane potential at which the outward flow of potassium ions is balanced by the repulsive electrical force is called the reversal or equilibrium potential',
+    section: 'Reversal and resting potentials',
     widget: 'physics2:equilibrium',
   },
   {
@@ -229,63 +234,203 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:nearer',
   },
   {
-    say: 'We can now consider what happens when a signal arrives from another neuron',
-    widget: 'physics2:signal',
+    say: 'So far the channels have been passive, staying open. But many ion channels are active: they open and shut in response to something',
+    section: 'Active ion channels',
+    widget: 'physics2:activeChannels',
   },
   {
-    say: 'Two neurons can be connected via a chemical synapse',
-    widget: 'physics2:synapse',
+    say: 'Let’s zoom in on one of them. An ion channel is a protein: a large molecule that spans the membrane, folded around a pore through which ions can pass',
+    widget: 'physics2:closeUp',
   },
   {
-    say: 'When a signal arrives at the presynaptic terminal, chemical molecules (called neurotransmitters) are released',
-    widget: 'physics2:release',
+    say: 'Part of the protein forms a gate across the pore. While the gate is shut, no ions can pass. When it opens, they flow through',
+    widget: 'physics2:gate',
   },
   {
-    say: 'These bind to receptors in the postsynaptic neuron',
-    widget: 'physics2:bind',
+    say: 'This one is a voltage-gated sodium channel: it opens in response to the membrane potential. On each side it has a voltage sensor, a part of the protein carrying positive charges, within the membrane',
+    widget: 'physics2:sensor',
   },
   {
-    say: 'These receptors contain ion channels which open when the neurotransmitter binds to them',
-    widget: 'physics2:opening',
+    say: 'The voltage sensors sit in the electric field across the membrane. At rest, with the inside negative, the field pushes their positive charges inward, and they hold the gate shut',
+    widget: 'physics2:held',
   },
   {
-    say: 'These ion channels are selective for certain types of ion',
-    widget: 'physics2:inflow',
+    say: 'When the membrane potential rises, there is less negative charge lining the inside of the membrane. The field weakens and no longer holds the sensors in, so they move outward',
+    widget: 'physics2:rises',
   },
   {
-    say: 'One example is the AMPA receptor which is activated when the neurotransmitter ‘glutamate’ is released',
-    widget: 'physics2:glutamate',
+    say: 'As the sensors move out, they pull the gate open, and sodium ions flow in through the pore. This opening in response is called activation',
+    widget: 'physics2:activates',
   },
   {
-    say: 'AMPA receptors are selective for both Na⁺ and K⁺, and act similarly to the passive ion channels we saw earlier once activated, allowing sodium to flow in and potassium to flow out with similar permeability',
-    widget: 'physics2:ampa',
+    say: 'When the membrane potential falls back, the field pushes the sensors back in, and the gate shuts again. This is deactivation, the reverse of activation',
+    widget: 'physics2:deactivates',
   },
   {
-    say: 'Na⁺ wants to flow in (toward +60 mV) and K⁺ wants to flow out (toward −90 mV).\n\nThe reversal potential is where these two currents cancel. With roughly equal permeability, that’s a voltage between the two, close to 0 mV',
-    widget: 'physics2:cancel',
+    say: 'Sodium channels also have a second gate: a loop of the protein, hanging inside the cell',
+    widget: 'physics2:secondGate',
+  },
+  {
+    say: 'Soon after the channel opens, this second gate swings into the pore and plugs it. The channel shuts, even though the membrane potential stays up. This is inactivation',
+    widget: 'physics2:inactivates',
+  },
+  {
+    say: 'To recover, the membrane potential has to fall back. The sensors return and the first gate shuts, and then, slowly, the plug comes out',
+    widget: 'physics2:recovers',
+  },
+  {
+    say: 'Until it has recovered, the channel cannot open again: a second rise in the membrane potential too soon finds it still plugged',
+    widget: 'physics2:tooSoon',
+  },
+  {
+    say: 'Other channels are ligand-gated: they open when a particular chemical, a ligand, binds to them. Often the ligand is a neurotransmitter, released by another neuron',
+    widget: 'physics2:ligandGated',
+  },
+  {
+    say: 'When the ligand binds, the protein changes shape and the gate opens: the channel activates. When the ligand comes off, the gate shuts again: it deactivates',
+    widget: 'physics2:binds',
+  },
+  {
+    say: 'With the ligand still bound, many ligand-gated channels shut anyway after a while: they desensitize. Like inactivation, it takes time to recover from',
+    widget: 'physics2:desensitizes',
+  },
+  {
+    say: 'So an active channel moves between three states: closed, open, and inactivated (or, for a ligand-gated channel, desensitized)',
+    widget: 'physics2:channelStates',
+  },
+  {
+    say: 'In fact, a channel flicks open and shut at random. A rise in the membrane potential makes it more likely to be open: it raises the channel’s open probability',
+    widget: 'physics2:chance',
+  },
+  {
+    say: 'A neuron’s membrane has many such channels. Each opens at random, but together the share of them that are open changes smoothly, and with it how permeable the membrane is to sodium',
+    widget: 'physics2:together',
+  },
+  {
+    say: 'The classic way to characterise a channel is a voltage clamp: hold the membrane potential at one level after another, and record the current through the channels at each',
+    widget: 'physics2:clamp',
+  },
+  {
+    say: 'Plotting the peak current at each level against the potential gives the channel’s current–voltage, or I–V, curve',
+    widget: 'physics2:peakIV',
+  },
+  {
+    say: 'If the channels’ conductance were the same at every potential, as a passive channel’s is, the curve would be a straight line through the reversal potential: Ohm’s law',
+    widget: 'physics2:linear',
+  },
+  {
+    say: 'But the share of sodium channels that open rises with the potential: hardly any below −50 mV, about half by 0 mV, and nearly all by +90 mV. The current is that conductance times the driving force, so the curve bends',
+    widget: 'physics2:bends',
+  },
+  {
+    say: 'Where the curve crosses zero, the current reverses. This is sodium’s reversal potential, here about +67 mV: below it sodium flows in, above it, out',
+    widget: 'physics2:reverses',
+  },
+  {
+    say: 'Neurons signal to one another with brief pulses in their membrane potential, called action potentials, or spikes',
+    section: 'The action potential',
+    widget: 'physics2:spikes',
+  },
+  {
+    say: 'Close up, each spike is a sudden rise of over 100 mV and a fall back again, all within a couple of milliseconds',
+    widget: 'physics2:oneSpike',
+  },
+  {
+    say: 'It starts with inputs from other neurons, at synapses. Each one opens receptor channels for a moment, letting positive ions in, and lifts the membrane potential a little',
+    widget: 'physics2:inputs',
+  },
+  {
+    say: 'An input on its own soon fades away. But if enough arrive close together to lift the potential past a threshold, about −55 mV, a spike fires',
+    widget: 'physics2:threshold',
+  },
+  {
+    say: 'A spike is all or nothing: a bigger input does not make a bigger spike, only one that comes sooner, and too small an input makes none at all',
+    widget: 'physics2:allOrNone',
+  },
+  {
+    say: 'What makes the spike are voltage-gated channels: sodium channels, like the one we zoomed in on, and potassium channels, which open more slowly',
+    widget: 'physics2:gated',
+  },
+  {
+    say: 'Past the threshold, sodium channels open and sodium rushes in. That raises the potential further, which opens more of them: a runaway, driving the potential up towards sodium’s reversal potential',
+    widget: 'physics2:upstroke',
+  },
+  {
+    say: 'Within a millisecond, the sodium channels inactivate, and the slower potassium channels open. The potential peaks, short of sodium’s reversal potential',
+    widget: 'physics2:peak',
+  },
+  {
+    say: 'Potassium flows out, and the potential falls back, for a moment below rest, towards potassium’s reversal potential, until the potassium channels shut again',
+    widget: 'physics2:downstroke',
+  },
+  {
+    say: 'For a few milliseconds after, while the sodium channels recover from inactivation, even a strong input cannot fire another spike: the refractory period',
+    widget: 'physics2:refractory',
+  },
+  {
+    say: 'So the action potential is a brief spike, about a millisecond long and over 100 mV high: up as sodium flows in, and down as potassium flows out',
+    widget: 'physics2:actionPotential',
+  },
+  {
+    say: 'The action potential travels along the neuron’s axon to its synapses on other neurons, where it releases neurotransmitter, passing the signal on',
+    widget: 'physics2:propagate',
+  },
+  {
+    say: 'Each action potential lets a little sodium into the cell, and a little potassium out. Over many spikes, this would wear down the concentration differences that the reversal potentials depend on',
+    section: 'The sodium–potassium pump',
+    widget: 'physics2:pumpNeed',
+  },
+  {
+    say: 'The sodium–potassium pump keeps them up. It is a protein in the membrane that uses energy, from ATP, to carry ions against their concentration gradients',
+    widget: 'physics2:pump',
+  },
+  {
+    say: 'In each round it carries three sodium ions out of the cell and two potassium ions in, using the energy of one molecule of ATP',
+    widget: 'physics2:pumpCycle',
+  },
+  {
+    say: 'As three positive charges go out for every two that come in, the pump also makes the inside a little more negative, by a few millivolts',
+    widget: 'physics2:electrogenic',
+  },
+  {
+    say: 'Each spike moves only a small share of the ions, but neurons fire many spikes: running the pumps takes a large share of the brain’s energy',
+    widget: 'physics2:pumpEnergy',
+  },
+  {
+    say: 'Next, to see how inputs add up and spread, we will look at how current flows within a neuron, starting with a dendrite',
+    section: 'Current in a dendrite',
+    widget: 'physics2:first',
+  },
+  {
+    say: 'Let’s say we want to consider what happens when current is injected into the system, for example by an electrode or a different type of ion channel',
+    widget: 'physics2:inject',
+  },
+  {
+    say: 'We’ll take the latter example, of an ion channel which opens in certain circumstances',
+    widget: 'physics2:channel',
+  },
+  {
+    say: 'Say it opens briefly, for about 5 milliseconds, and then shuts again',
+    widget: 'physics2:opens',
+  },
+  {
+    say: 'While it is open, sodium ions flow in through it, as it is selective for sodium',
+    widget: 'physics2:sodium',
   },
   {
     say: 'The influx of positive ions neutralizes part of the excess negative layer inside the membrane, and reduces the excess positive charge outside',
     widget: 'physics2:excess',
   },
   {
-    say: 'This drives the membrane potential up in the vicinity of the synapse',
+    say: 'This drives the membrane potential up in the vicinity of the channel',
     widget: 'physics2:rise',
   },
   {
-    say: 'Glutamate is cleared quickly. After release, glutamate diffuses out of the cleft and is taken up by transporters within about 1 ms',
-    widget: 'physics2:clearance',
-  },
-  {
-    say: 'After glutamate unbinds, the channel takes time to shut, a process called deactivation. Some channels also enter a closed, glutamate-bound state, called desensitization. The AMPA current (EPSC) typically decays with a time constant of about 1–5 ms',
-    widget: 'physics2:unbind',
-  },
-  {
-    say: 'The initial rise in voltage when the receptor is open is therefore short',
+    say: 'The initial rise in voltage when the channel is open is therefore short',
     widget: 'physics2:brief',
   },
   {
-    say: 'The rise time is governed by the resistance of the open ion channels and the capacitance of the membrane\n\nThe resistance of the open ion channels is governed by the number of receptors × the open probability × the single-channel conductance. The larger that product, the lower the resistance (= 1 / conductance)',
+    say: 'The rise time is governed by the resistance of the open ion channels and the capacitance of the membrane\n\nThe resistance of the open ion channels is governed by the number of channels × the open probability × the single-channel conductance. The larger that product, the lower the resistance (= 1 / conductance)',
     widget: 'physics2:resist',
   },
   {
@@ -315,6 +460,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
   },
   {
     say: 'The extra positive charge also repels nearby positive ions, mainly K⁺, which is the most abundant cation inside',
+    section: 'Spread and decay',
     widget: 'physics2:repel',
   },
   {
@@ -322,7 +468,7 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:along',
   },
   {
-    say: 'This spread of charge along the dendrite contributes to a fast decay in the membrane potential in the vicinity of the synapse',
+    say: 'This spread of charge along the dendrite contributes to a fast decay in the membrane potential in the vicinity of the channel',
     widget: 'physics2:spread',
   },
   {
@@ -330,29 +476,12 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:leak',
   },
   {
-    say: 'That explains why the local EPSP at the synapse is large and brief, while the same EPSP recorded at the soma is smaller, rises more slowly, and decays more slowly. Once the charge has spread out, the decay mostly reflects leakage over τₘ',
+    say: 'That explains why the local change in potential by the channel is large and brief, while the same change recorded at the soma is smaller, rises more slowly, and decays more slowly. Once the charge has spread out, the decay mostly reflects leakage over τₘ',
     widget: 'physics2:soma',
   },
   {
     say: 'The cations also leak out through ion channels meaning that the propagation of positive charge gradually decays',
     widget: 'physics2:decay',
-  },
-  {
-    say: 'Fast unbinding (deactivation): once glutamate drops, it comes off the receptor quickly and the channel closes, over about 1 to 3 ms',
-    widget: 'physics2:deactivation',
-  },
-  {
-    say: 'Desensitization: if glutamate lingers, AMPA receptors close anyway within a few to about 10 ms, and stay unresponsive for a while',
-    widget: 'physics2:desensitize',
-  },
-  {
-    say: 'Synapse type: some auditory brainstem synapses, built for precise timing, have decays under 1 ms. Many cortical and hippocampal synapses are around 2 to 5 ms',
-    note: 'Subunits and auxiliary proteins (such as TARPs) change opening and desensitization rates. Temperature: everything is faster at body temperature than in many room-temperature lab recordings',
-    widget: 'physics2:factors',
-  },
-  {
-    say: 'Charging the capacitance takes time, so the voltage doesn’t follow the brief AMPA current instantly. The membrane time constant τ = rₘ × cₘ sets how fast the voltage rises and decays, typically about 10 to 30 ms',
-    widget: 'physics2:tau',
   },
 
   // {
