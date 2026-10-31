@@ -3,17 +3,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppMessage } from '@/components/notification';
-import { morphologyLocationMarkerColor } from '@/features/scan-config/components/color-by/palette';
+import {
+  morphologyLocationMarkerColor,
+  morphologyLocationsNeuronColor,
+  recedeMarkerColor,
+} from '@/features/scan-config/components/color-by/palette';
 import { DEFAULT_MORPHOLOGY_LOCATION_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import {
   collectLocations,
-  EXPLICIT_BLOCK_TYPE,
   type IFormBindingOptions,
   type IStoredLocation,
   type ITaggedLocation,
+  isExplicitLocationsBlockType,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   MorphologyLocationPickModeDict,
   morphologyLocationPickMode,
+  PER_NEURON_EXPLICIT_BLOCK_TYPE,
   readEntry,
   readLocations,
   readLocationsDictionary,
@@ -35,6 +40,8 @@ import type { Config } from '@/features/scan-config/types';
 interface Options extends IFormBindingOptions {
   /** The cells a location applies to: those of the population on show that have a morphology. */
   cells: readonly number[];
+  /** The scene index of node 0 of the population on show, so a cell's SONATA node id is `cell - firstCell`. */
+  firstCell: number;
   /** Canvas background, so a marker that recedes stays visible against it. */
   backgroundColor: string;
   /** Marker radius in µm, from the viewer settings slider. */
@@ -62,11 +69,13 @@ export interface LocationHover {
   screen: ScreenPoint;
   /** Previewed from a generated block, so it moves with that block's parameters. */
   generated?: boolean;
+  /** The SONATA node id the location is on, where the block stores one per row. */
+  nodeId?: number;
 }
 
 /** A stored location's tag, where its marker is drawn. */
 export interface LocationLabel {
-  marker: { sectionType?: SectionType; sonataSectionId?: number };
+  marker: { sectionType?: SectionType; sonataSectionId?: number; nodeId?: number };
   screen: ScreenPoint;
   visible: boolean;
 }
@@ -81,12 +90,15 @@ interface Stored {
   entry: string;
   locationIndex: number;
   generated?: boolean;
+  /** The row's `node_id`; unset for a row of a plain explicit block. */
+  nodeId?: number;
 }
 
 const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(spot.type);
 
 /**
- * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` block.
+ * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` or `PerNeuronExplicitMorphologyLocations`
+ * block, whichever `explicitLocationsBlockType` names.
  *
  * Clicking a neurite adds a location to the open block, and the block's rows come back as markers. The config is the
  * only source of truth, so the list and the 3D view cannot drift apart. With no block open, a click creates one. Locations previewed from
@@ -94,9 +106,9 @@ const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(
  *
  * `locations` is `undefined` when there is nothing to draw and nothing to pick.
  *
- * A row has a section id and an offset but no cell, so it applies to every morphology in the neuron set. That is only
- * unambiguous for one cell, which is what OBI-One allows today; the markers still span every cell given, so the view
- * keeps matching what gets simulated.
+ * A plain explicit row has a section id and an offset but no cell, so it applies to every morphology in the neuron set,
+ * which is only unambiguous for one cell. A per-neuron row also carries the node id of the cell it was clicked on, so it
+ * is drawn on that cell alone, in that cell's colour.
  */
 export function useLocationSelection({
   config,
@@ -104,8 +116,9 @@ export function useLocationSelection({
   selectedRootElement,
   selectedEntry,
   onCreateEntry,
-  supportsExplicitLocations,
+  explicitLocationsBlockType,
   cells,
+  firstCell,
   backgroundColor,
   markerRadius = DEFAULT_MORPHOLOGY_LOCATION_RADIUS,
   showLabels = false,
@@ -125,9 +138,15 @@ export function useLocationSelection({
     selectedEntry,
     onConfigChange,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockType,
   });
   const canEdit = pickMode === MorphologyLocationPickModeDict.Edit;
+  const perNeuron = explicitLocationsBlockType === PER_NEURON_EXPLICIT_BLOCK_TYPE;
+  // A pick's neuron, where the block stores one: only cells of the population on show have node ids rows can name.
+  const nodeIdOf = useCallback(
+    (cell: number) => (perNeuron && cells.includes(cell) ? cell - firstCell : undefined),
+    [perNeuron, cells, firstCell]
+  );
   // Read through the dictionary, not `config`: an edit elsewhere in the form must not rebuild the markers.
   const dictionary = readLocationsDictionary(config);
   const storedLocations = useMemo<ITaggedLocation[]>(
@@ -137,25 +156,42 @@ export function useLocationSelection({
   const ownLocationCount = readLocations(readEntry(config, selectedEntry)).length;
 
   // In step: the view tells of a marker by its index.
-  const { markers, stored } = useMemo(() => {
-    const all: { markers: LocationMarker[]; stored: Stored[] } = { markers: [], stored: [] };
-    // Once a block: a generated one can hold thousands of markers, and receding a colour is not free.
+  const { markers, stored, ownMarkers } = useMemo(() => {
+    const all: { markers: LocationMarker[]; stored: Stored[]; ownMarkers: number } = {
+      markers: [],
+      stored: [],
+      ownMarkers: 0,
+    };
+    // Once a block, or a block's neuron: a generated block can hold thousands of markers, and receding is not free.
     const colors = new Map<string, string>();
-    const colorOf = (entry: string) => {
-      let color = colors.get(entry);
+    const colorOf = (entry: string, nodeId: number | undefined) => {
+      const key = nodeId === undefined ? entry : `${entry}\0${nodeId}`;
+      let color = colors.get(key);
       if (color === undefined) {
-        color = morphologyLocationMarkerColor(entry, selectedEntry, backgroundColor);
-        colors.set(entry, color);
+        // Coloured by neuron where the row names one, so points read as belonging to their cell.
+        color =
+          nodeId === undefined
+            ? morphologyLocationMarkerColor(entry, selectedEntry, backgroundColor)
+            : entry === selectedEntry
+              ? morphologyLocationsNeuronColor(nodeId)
+              : recedeMarkerColor(morphologyLocationsNeuronColor(nodeId), backgroundColor);
+        colors.set(key, color);
       }
       return color;
     };
-    for (const cell of cells) {
-      for (const location of storedLocations) {
+    // A Set: per-neuron rows look their cell up once each.
+    const inScene = new Set(cells);
+    for (const location of storedLocations) {
+      const nodeId = location.node_id;
+      // A per-neuron row sits on its own neuron, and is not drawn while that neuron is not.
+      const targets = nodeId === undefined ? cells : [firstCell + nodeId];
+      for (const cell of targets) {
+        if (nodeId !== undefined && !inScene.has(cell)) continue;
         all.markers.push({
           cell,
           sonataId: location.section_id,
           offset: location.offset,
-          color: colorOf(location.entry),
+          color: colorOf(location.entry, nodeId),
         });
         all.stored.push({
           sonataId: location.section_id,
@@ -163,11 +199,13 @@ export function useLocationSelection({
           entry: location.entry,
           locationIndex: location.index,
           generated: location.generated,
+          nodeId,
         });
+        if (!location.generated) all.ownMarkers++;
       }
     }
     return all;
-  }, [storedLocations, cells, selectedEntry, backgroundColor]);
+  }, [storedLocations, cells, firstCell, selectedEntry, backgroundColor]);
 
   const onPick = useCallback(
     (hit: LocationHit) => {
@@ -191,7 +229,11 @@ export function useLocationSelection({
           message.info('At least one location is required — edit this one instead of removing it.');
           return;
         }
-        location = { section_id: existing.sonataId, offset: existing.offset };
+        location = {
+          ...(existing.nodeId === undefined ? {} : { node_id: existing.nodeId }),
+          section_id: existing.sonataId,
+          offset: existing.offset,
+        };
       } else {
         const { spot } = hit;
         // The view picks on whatever cell the tap landed near, and the scene holds every population's cells. Only
@@ -214,11 +256,17 @@ export function useLocationSelection({
           );
           return;
         }
-        location = { section_id: spot.sonataId, offset: Number(spot.offset.toFixed(4)) };
+        location = {
+          // The cell the tap landed on, checked above to be of the population on show, is the neuron it belongs to.
+          ...(perNeuron ? { node_id: spot.cell - firstCell } : {}),
+          section_id: spot.sonataId,
+          offset: Number(spot.offset.toFixed(4)),
+        };
       }
       if (!canEdit) {
+        if (!explicitLocationsBlockType) return;
         onCreateEntry?.(MORPHOLOGY_LOCATIONS_CONFIG_KEY, {
-          type: EXPLICIT_BLOCK_TYPE,
+          type: explicitLocationsBlockType,
           locations: [location],
         });
         return;
@@ -235,7 +283,10 @@ export function useLocationSelection({
       canEdit,
       onCreateEntry,
       cells,
+      firstCell,
       stored,
+      perNeuron,
+      explicitLocationsBlockType,
     ]
   );
 
@@ -249,7 +300,7 @@ export function useLocationSelection({
     (hit: LocationHit | null) => {
       clearTimeout(restTimer.current);
       restTimer.current = undefined;
-      const next = hit && hoverOf(hit, stored);
+      const next = hit && hoverOf(hit, stored, nodeIdOf);
 
       if (next && !canEdit && !hoverVisible.current) {
         restTimer.current = setTimeout(() => {
@@ -263,13 +314,11 @@ export function useLocationSelection({
       hoverVisible.current = next !== null;
       setHover(next);
     },
-    [canEdit, stored]
+    [canEdit, stored, nodeIdOf]
   );
 
   const labelsGenerated = markers.length <= MAX_LABELLED_MARKERS;
-  const labelledCount = labelsGenerated
-    ? markers.length
-    : cells.length * ownMarkerRows(storedLocations);
+  const labelledCount = labelsGenerated ? markers.length : ownMarkers;
   const labelled = showLabels && labelledCount > 0 && labelledCount <= MAX_LABELLED_MARKERS;
 
   const pendingLabels = useRef<LocationLabel[] | null>(null);
@@ -280,7 +329,11 @@ export function useLocationSelection({
         marker && stored[index] && (labelsGenerated || !stored[index].generated)
           ? [
               {
-                marker: { sectionType: marker.type, sonataSectionId: stored[index].sonataId },
+                marker: {
+                  sectionType: marker.type,
+                  sonataSectionId: stored[index].sonataId,
+                  nodeId: stored[index].nodeId,
+                },
                 screen: marker.screen,
                 visible: marker.visible,
               },
@@ -328,15 +381,12 @@ export function useLocationSelection({
   };
 }
 
-/** How many of `locations` are stored rather than generated. */
-function ownMarkerRows(locations: readonly ITaggedLocation[]): number {
-  let count = 0;
-  for (const location of locations) if (!location.generated) count++;
-  return count;
-}
-
 /** What the popover says of a hit. */
-function hoverOf(hit: LocationHit, stored: readonly Stored[]): LocationHover | null {
+function hoverOf(
+  hit: LocationHit,
+  stored: readonly Stored[],
+  nodeIdOf: (cell: number) => number | undefined
+): LocationHover | null {
   if ('spot' in hit) {
     const { spot } = hit;
     return {
@@ -345,6 +395,7 @@ function hoverOf(hit: LocationHit, stored: readonly Stored[]): LocationHover | n
       sonataSectionId: spot.sonataId ?? undefined,
       offset: spot.offset,
       screen: spot.screen,
+      nodeId: nodeIdOf(spot.cell),
     };
   }
   const location = stored[hit.marker];
@@ -356,6 +407,7 @@ function hoverOf(hit: LocationHit, stored: readonly Stored[]): LocationHover | n
     offset: location.offset,
     screen: hit.screen,
     generated: location.generated,
+    nodeId: location.nodeId,
   };
 }
 
@@ -373,7 +425,7 @@ function writeLocation(
 ): Config {
   const blocks = readLocationsDictionary(previous);
   const current = blocks?.[entry] as Record<string, unknown> | undefined;
-  if (!blocks || !current || current.type !== EXPLICIT_BLOCK_TYPE) return previous;
+  if (!blocks || !current || !isExplicitLocationsBlockType(current.type)) return previous;
 
   const rows = readLocations(current);
   let next: IStoredLocation[];
@@ -396,9 +448,12 @@ function writeLocation(
   } as Config;
 }
 
-function rowOf(locations: IStoredLocation[], { locationIndex, offset, sonataId }: Stored): number {
+function rowOf(
+  locations: IStoredLocation[],
+  { locationIndex, offset, sonataId, nodeId }: Stored
+): number {
   const matches = (location: IStoredLocation) =>
-    location.section_id === sonataId && location.offset === offset;
+    location.node_id === nodeId && location.section_id === sonataId && location.offset === offset;
   const candidate = locations[locationIndex];
   if (candidate && matches(candidate)) return locationIndex;
   return locations.findIndex(matches);

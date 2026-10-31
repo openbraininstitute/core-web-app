@@ -8,8 +8,20 @@ import type { Config } from '@/features/scan-config/types';
 /** Block-dictionary key holding morphology-location blocks in a scan config. */
 export const MORPHOLOGY_LOCATIONS_CONFIG_KEY = 'morphology_locations';
 
-/** Only this block type stores locations outright; the others describe how to sample them. */
+/** Stores locations outright, as section and offset on the single neuron being configured. */
 export const EXPLICIT_BLOCK_TYPE = 'ExplicitMorphologyLocations';
+
+/** Stores locations outright, each on the neuron its row names. */
+export const PER_NEURON_EXPLICIT_BLOCK_TYPE = 'PerNeuronExplicitMorphologyLocations';
+
+/** The block types that store locations rather than describe how to sample them. */
+export type TExplicitLocationsBlockType =
+  | typeof EXPLICIT_BLOCK_TYPE
+  | typeof PER_NEURON_EXPLICIT_BLOCK_TYPE;
+
+export function isExplicitLocationsBlockType(type: unknown): type is TExplicitLocationsBlockType {
+  return type === EXPLICIT_BLOCK_TYPE || type === PER_NEURON_EXPLICIT_BLOCK_TYPE;
+}
 
 /** One stored location: a SONATA section id and a normalized offset along that section. */
 const StoredLocationSchema = z.object({
@@ -17,7 +29,15 @@ const StoredLocationSchema = z.object({
   offset: z.number(),
 });
 
-export type IStoredLocation = z.infer<typeof StoredLocationSchema>;
+/** A per-neuron row also names the SONATA node id of the neuron it sits on. */
+const StoredNeuronLocationSchema = StoredLocationSchema.extend({
+  node_id: z.number(),
+});
+
+/** `node_id` is set exactly when the row comes from a per-neuron block. */
+export type IStoredLocation = z.infer<typeof StoredLocationSchema> & {
+  node_id?: number;
+};
 
 /** The selected block, or null when the form is not on a morphology-locations entry. */
 export function readEntry(config: Config | null | undefined, entry: string | undefined) {
@@ -27,19 +47,25 @@ export function readEntry(config: Config | null | undefined, entry: string | und
   return isObject(block) ? block : null;
 }
 
-/** The rows that are complete locations; anything else is dropped rather than rendered. */
-export function readLocationRows(value: unknown): IStoredLocation[] {
+/**
+ * The rows that are complete locations; anything else is dropped rather than rendered.
+ *
+ * With `perNeuron`, a row without a `node_id` is incomplete too: the backend rejects it, and
+ * there is no neuron to draw it on.
+ */
+export function readLocationRows(value: unknown, perNeuron = false): IStoredLocation[] {
   if (!Array.isArray(value)) return [];
+  const schema = perNeuron ? StoredNeuronLocationSchema : StoredLocationSchema;
   return value.flatMap((row) => {
-    const parsed = StoredLocationSchema.safeParse(row);
+    const parsed = schema.safeParse(row);
     return parsed.success ? [parsed.data] : [];
   });
 }
 
-/** An explicit block's stored rows. */
+/** An explicit or per-neuron block's stored rows. */
 export function readLocations(block: Record<string, unknown> | null): IStoredLocation[] {
-  if (block?.type !== EXPLICIT_BLOCK_TYPE) return [];
-  return readLocationRows(block.locations);
+  if (!isExplicitLocationsBlockType(block?.type)) return [];
+  return readLocationRows(block.locations, block.type === PER_NEURON_EXPLICIT_BLOCK_TYPE);
 }
 
 /** A stored location, plus which block it came from and where it sits in that block. */
@@ -63,7 +89,7 @@ export function readGeneratedBlocks(
   dictionary: Record<string, unknown> | null
 ): Array<[string, Record<string, unknown>]> {
   return blocksOf(dictionary).filter(
-    ([, block]) => typeof block.type === 'string' && block.type !== EXPLICIT_BLOCK_TYPE
+    ([, block]) => typeof block.type === 'string' && !isExplicitLocationsBlockType(block.type)
   );
 }
 
@@ -107,18 +133,25 @@ export interface IFormBindingOptions {
   selectedEntry?: string;
   /** Add a block and open it. Without it, a pick with no block open does nothing. */
   onCreateEntry?: (rootElement: string, block: Record<string, unknown>) => void;
-  /** Whether the model takes explicit locations. Off unless the host says otherwise. */
-  supportsExplicitLocations?: boolean;
+  /** The block types the form's morphology-locations dictionary accepts, from its schema. */
+  locationBlockTypes?: readonly string[];
+  /**
+   * The block a 3D pick writes to on this model, if any: explicit on one neuron, per-neuron on
+   * several. Off unless the host says otherwise.
+   */
+  explicitLocationsBlockType?: TExplicitLocationsBlockType | null;
+  /** The model is one morphology, the only kind the generated-locations preview endpoint takes. */
+  previewsGeneratedLocations?: boolean;
 }
 
-/** Whether the form selection is one a 3D click can add a location to. */
+/** Whether the form selection is a block holding stored locations. */
 export function supportsMorphologyLocationPicking({
   config,
   selectedRootElement,
   selectedEntry,
 }: IFormBindingOptions): boolean {
   if (selectedRootElement !== MORPHOLOGY_LOCATIONS_CONFIG_KEY) return false;
-  return readEntry(config, selectedEntry)?.type === EXPLICIT_BLOCK_TYPE;
+  return isExplicitLocationsBlockType(readEntry(config, selectedEntry)?.type);
 }
 
 /** What a 3D click does here: extend the open block, or start a new one. */
@@ -139,16 +172,36 @@ export function morphologyLocationPickMode({
   selectedEntry,
   onConfigChange,
   onCreateEntry,
-  supportsExplicitLocations,
+  explicitLocationsBlockType,
 }: IFormBindingOptions): TMorphologyLocationPickModeDict {
-  if (!supportsExplicitLocations) return null;
+  if (!explicitLocationsBlockType) return null;
 
-  if (supportsMorphologyLocationPicking({ config, selectedRootElement, selectedEntry })) {
+  // Only the block this model's picks are shaped for: a per-neuron row cannot go into an
+  // explicit block, nor the reverse.
+  if (
+    selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY &&
+    readEntry(config, selectedEntry)?.type === explicitLocationsBlockType
+  ) {
     return onConfigChange ? MorphologyLocationPickModeDict.Edit : null;
   }
   return onCreateEntry && readLocationsDictionary(config) !== null
     ? MorphologyLocationPickModeDict.Create
     : null;
+}
+
+/** The block types a form's schema accepts under `morphology_locations`. */
+export function readLocationBlockTypes(schema: unknown): string[] {
+  const variants = (
+    schema as {
+      properties?: Record<string, { additionalProperties?: { oneOf?: unknown[] } } | undefined>;
+    }
+  )?.properties?.[MORPHOLOGY_LOCATIONS_CONFIG_KEY]?.additionalProperties?.oneOf;
+  if (!Array.isArray(variants)) return [];
+  return variants.flatMap((variant) => {
+    const type = (variant as { properties?: { type?: { const?: unknown } } })?.properties?.type
+      ?.const;
+    return typeof type === 'string' ? [type] : [];
+  });
 }
 
 /** Set while the pointer is on the "add locations from the 3D viewer" hint. */

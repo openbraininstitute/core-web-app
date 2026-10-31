@@ -11,7 +11,7 @@ import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/colo
 import { useMorphologyLocationPreviews } from '@/features/scan-config/components/hooks/use-morphology-location-previews';
 import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import {
-  EXPLICIT_BLOCK_TYPE,
+  isExplicitLocationsBlockType,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   readEntry,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -166,13 +166,23 @@ function CircuitVizView({
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
 }: TCircuitVizViewProps) {
-  const { tree, cellColors, hidden, locationCells, error, synapses, anchor, download } = source;
+  const {
+    tree,
+    cellColors,
+    hidden,
+    locationCells,
+    locationFirstCell,
+    error,
+    synapses,
+    anchor,
+    download,
+  } = source;
   const morphologies = useTreeMorphologies(tree, { axons: showAxons, hidden });
   const locationPreviews = useMorphologyLocationPreviews({
     config: morphologyLocations?.config,
     entityId,
     // The same single-morphology models the preview endpoint accepts.
-    enabled: Boolean(morphologyLocations?.supportsExplicitLocations),
+    enabled: Boolean(morphologyLocations?.previewsGeneratedLocations),
   });
   const openLocationBlock =
     morphologyLocations?.selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
@@ -206,6 +216,7 @@ function CircuitVizView({
   const { locations, hover, labels, pickMode } = useLocationSelection({
     ...morphologyLocations,
     cells: locationCells,
+    firstCell: locationFirstCell,
     backgroundColor,
     generatedLocations: visibleGeneratedLocations,
   });
@@ -297,7 +308,7 @@ function CircuitVizView({
       )}
       <MorphologyLocationLabels labels={labels} />
       <MorphologyLocationPopover hover={hover} pickMode={pickMode} />
-      {openLocationBlock && openLocationBlock.type !== EXPLICIT_BLOCK_TYPE && (
+      {openLocationBlock && !isExplicitLocationsBlockType(openLocationBlock.type) && (
         <MorphologyLocationPreviewStatus
           pending={locationPreviews.pending.has(morphologyLocations?.selectedEntry ?? '')}
           error={locationPreviews.errors.get(morphologyLocations?.selectedEntry ?? '')}

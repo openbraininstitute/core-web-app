@@ -260,7 +260,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockType,
+    previewsGeneratedLocations,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -410,7 +411,7 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockType,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
@@ -422,7 +423,7 @@ export function CircuitScene({
     }) ||
       hasAnyLocation(scanConfig) ||
       // The flag that turns the preview on, so the controls show only with generated markers.
-      (Boolean(supportsExplicitLocations) && hasGeneratedBlock(scanConfig)));
+      (Boolean(previewsGeneratedLocations) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -728,7 +729,8 @@ export function CircuitScene({
         selectedRootElement,
         selectedEntry,
         onCreateEntry,
-        supportsExplicitLocations,
+        explicitLocationsBlockType,
+        previewsGeneratedLocations,
         markerRadius: config.morphologyLocationRadius,
         showLabels: config.showMorphologyLocationLabels,
       },
@@ -742,7 +744,8 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockType,
+      previewsGeneratedLocations,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
     ]

@@ -5,6 +5,7 @@ import {
   collectLocations,
   hasGeneratedBlock,
   readGeneratedBlocks,
+  readLocationBlockTypes,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
@@ -79,6 +80,40 @@ describe('readGeneratedBlocks', () => {
     };
 
     expect(readGeneratedBlocks(dictionary).map(([entry]) => entry)).toEqual(['sampled']);
+  });
+
+  it('leaves out per-neuron blocks, which store their locations too', () => {
+    const dictionary = {
+      perNeuron: {
+        type: 'PerNeuronExplicitMorphologyLocations',
+        locations: [{ node_id: 2, section_id: 3, offset: 0.1 }],
+      },
+    };
+
+    expect(readGeneratedBlocks(dictionary)).toEqual([]);
+  });
+});
+
+describe('readLocationBlockTypes', () => {
+  it('lists the block types the morphology-locations dictionary accepts', () => {
+    const schema = {
+      properties: {
+        morphology_locations: {
+          additionalProperties: {
+            oneOf: [
+              { properties: { type: { const: 'RandomMorphologyLocations' } } },
+              { properties: { type: { const: 'PerNeuronExplicitMorphologyLocations' } } },
+            ],
+          },
+        },
+      },
+    };
+
+    expect(readLocationBlockTypes(schema)).toEqual([
+      'RandomMorphologyLocations',
+      'PerNeuronExplicitMorphologyLocations',
+    ]);
+    expect(readLocationBlockTypes({ properties: {} })).toEqual([]);
   });
 });
 

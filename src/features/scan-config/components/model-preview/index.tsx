@@ -11,7 +11,8 @@ import { CircuitPreview } from '@/features/scan-config/components/model-preview/
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
-  resolveEnableMorphologyLocations,
+  resolveExplicitLocationsBlockType,
+  resolvePreviewsGeneratedLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
@@ -84,10 +85,14 @@ export function ModelPreview({
       }),
   };
 
-  const picksLocations = resolveEnableMorphologyLocations(model);
+  const explicitLocationsBlockType = resolveExplicitLocationsBlockType(
+    model,
+    form?.locationBlockTypes ?? []
+  );
+  const previewsGeneratedLocations = resolvePreviewsGeneratedLocations(model);
   const viewerForm = useMemo(
-    () => (form ? { ...form, supportsExplicitLocations: picksLocations } : undefined),
-    [form, picksLocations]
+    () => (form ? { ...form, explicitLocationsBlockType, previewsGeneratedLocations } : undefined),
+    [form, explicitLocationsBlockType, previewsGeneratedLocations]
   );
 
   return (

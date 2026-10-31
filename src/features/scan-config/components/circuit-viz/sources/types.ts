@@ -25,6 +25,8 @@ export type TSmallCircuitSource = {
    * morphologies.
    */
   locationCells: readonly number[];
+  /** The scene index of node 0 of the population on show: a cell's SONATA node id is its index less this. */
+  locationFirstCell: number;
   /** Node-file bytes still coming, so the viewer can say what it is waiting for. An MEModel reads no node files. */
   download?: DownloadProgress | null;
   /** What the source failed at: the circuit's config or the placement of every population. */

@@ -156,15 +156,20 @@ export function useSmallCircuitSource({
 
   // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
   // sections number the same way. None while it is hidden, whose cells are not drawn.
+  const locationRange = useMemo(
+    () =>
+      tree
+        ? populationRanges(tree.somas.populations).find(({ name }) => name === populationName)
+        : undefined,
+    [tree, populationName]
+  );
   const locationCells = useMemo(() => {
-    const range = tree
-      ? populationRanges(tree.somas.populations).find(({ name }) => name === populationName)
-      : undefined;
+    const range = locationRange;
     if (!tree || !range || hidden.has(range.name)) return [];
     return Array.from({ length: range.end - range.first }, (_, i) => range.first + i).filter(
       (cell) => tree.requests[cell] !== null
     );
-  }, [tree, populationName, hidden]);
+  }, [tree, locationRange, hidden]);
 
   const pointed = pointingOut(highlightedCell, locationCells.length > 0, recededColor);
   const cellColors = useMemo(
@@ -224,6 +229,7 @@ export function useSmallCircuitSource({
     cellColors,
     hidden: hiddenPopulations,
     locationCells,
+    locationFirstCell: locationRange?.first ?? 0,
     download,
     error,
     synapses,

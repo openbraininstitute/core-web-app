@@ -826,6 +826,19 @@ export function UIElementRender({
     )
     .with(
       {
+        paramSchema: { ui_element: ScanConfigUIElementDict.PerNeuronMorphologyLocationSelection },
+      },
+      ({ paramSchema }) => (
+        <MorphologyLocationSelection
+          value={value}
+          paramSchema={paramSchema}
+          disabled={disabled}
+          onChange={(newValue) => setState({ ...state, [k]: newValue as unknown as ConfigValue })}
+        />
+      )
+    )
+    .with(
+      {
         paramSchema: { ui_element: ScanConfigUIElementDict.VoltageDuration },
       },
       ({ paramSchema }) => {

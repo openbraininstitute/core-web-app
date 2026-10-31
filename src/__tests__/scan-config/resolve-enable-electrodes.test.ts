@@ -5,7 +5,8 @@ import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit'
 import {
   resolveEnableCellHover,
   resolveEnableElectrodes,
-  resolveEnableMorphologyLocations,
+  resolveExplicitLocationsBlockType,
+  resolvePreviewsGeneratedLocations,
 } from '@/features/scan-config/components/model-preview/resolve-enable-electrodes';
 
 describe('resolveEnableElectrodes', () => {
@@ -76,31 +77,91 @@ describe('resolveEnableCellHover', () => {
   });
 });
 
-describe('resolveEnableMorphologyLocations', () => {
-  it('takes explicit locations on one neuron', () => {
-    // The single cell, and the synaptome — a single-scale circuit holding one neuron.
-    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Memodel })).toBe(true);
+const EXPLICIT = 'ExplicitMorphologyLocations';
+const PER_NEURON = 'PerNeuronExplicitMorphologyLocations';
+
+describe('resolveExplicitLocationsBlockType', () => {
+  it('picks explicit locations on one neuron', () => {
+    // The single cell, and the synaptome: a single-scale circuit holding one neuron.
+    expect(resolveExplicitLocationsBlockType({ type: EntityTypeDict.Memodel }, [EXPLICIT])).toBe(
+      EXPLICIT
+    );
     expect(
-      resolveEnableMorphologyLocations({
+      resolveExplicitLocationsBlockType(
+        { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+        [EXPLICIT]
+      )
+    ).toBe(EXPLICIT);
+  });
+
+  it('picks per-neuron locations on a circuit drawing several neurons', () => {
+    for (const scale of [
+      CircuitScaleDictionary.PairNeuron,
+      CircuitScaleDictionary.SmallMicrocircuit,
+    ]) {
+      expect(
+        resolveExplicitLocationsBlockType({ type: EntityTypeDict.Circuit, scale }, [
+          EXPLICIT,
+          PER_NEURON,
+        ])
+      ).toBe(PER_NEURON);
+    }
+  });
+
+  it('falls back to per-neuron on one neuron when the workflow takes only that', () => {
+    expect(
+      resolveExplicitLocationsBlockType(
+        { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single },
+        [PER_NEURON]
+      )
+    ).toBe(PER_NEURON);
+  });
+
+  it('never offers a block the workflow schema does not take', () => {
+    // An MEModel has no node ids to fill a per-neuron row with.
+    expect(resolveExplicitLocationsBlockType({ type: EntityTypeDict.Memodel }, [PER_NEURON])).toBe(
+      null
+    );
+    // A bare section id means a different branch on every morphology of a pair.
+    expect(
+      resolveExplicitLocationsBlockType(
+        { type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.PairNeuron },
+        [EXPLICIT]
+      )
+    ).toBe(null);
+  });
+
+  it('picks nothing where morphologies are not drawn, or on other models', () => {
+    for (const scale of [CircuitScaleDictionary.Microcircuit, CircuitScaleDictionary.Region]) {
+      expect(
+        resolveExplicitLocationsBlockType({ type: EntityTypeDict.Circuit, scale }, [
+          EXPLICIT,
+          PER_NEURON,
+        ])
+      ).toBe(null);
+    }
+    expect(
+      resolveExplicitLocationsBlockType({ type: EntityTypeDict.IonChannelModel }, [EXPLICIT])
+    ).toBe(null);
+    expect(resolveExplicitLocationsBlockType({}, [EXPLICIT])).toBe(null);
+  });
+});
+
+describe('resolvePreviewsGeneratedLocations', () => {
+  it('previews on one morphology only', () => {
+    expect(resolvePreviewsGeneratedLocations({ type: EntityTypeDict.Memodel })).toBe(true);
+    expect(
+      resolvePreviewsGeneratedLocations({
         type: EntityTypeDict.Circuit,
         scale: CircuitScaleDictionary.Single,
       })
     ).toBe(true);
-  });
-
-  it('does not on a circuit that generates its locations', () => {
-    for (const scale of [
-      CircuitScaleDictionary.PairNeuron,
-      CircuitScaleDictionary.SmallMicrocircuit,
-      CircuitScaleDictionary.Microcircuit,
-      CircuitScaleDictionary.Region,
-    ]) {
-      expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.Circuit, scale })).toBe(false);
-    }
-  });
-
-  it('does not on anything else the preview accepts', () => {
-    expect(resolveEnableMorphologyLocations({ type: EntityTypeDict.IonChannelModel })).toBe(false);
-    expect(resolveEnableMorphologyLocations({})).toBe(false);
+    expect(
+      resolvePreviewsGeneratedLocations({
+        type: EntityTypeDict.Circuit,
+        scale: CircuitScaleDictionary.PairNeuron,
+      })
+    ).toBe(false);
+    expect(resolvePreviewsGeneratedLocations({})).toBe(false);
   });
 });
