@@ -237,15 +237,23 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:synapse',
   },
   {
-    say: 'When a signal arrives at the presynaptic terminal, neurotransmitters are released, which bind to receptors in the postsynaptic neurons',
+    say: 'When a signal arrives at the presynaptic terminal, chemical molecules (called neurotransmitters) are released',
     widget: 'physics2:release',
   },
   {
-    say: 'This opens ion channels in the receptors which selectively let ions flow into the cell',
+    say: 'These bind to receptors in the postsynaptic neuron',
+    widget: 'physics2:bind',
+  },
+  {
+    say: 'These receptors contain ion channels which open when the neurotransmitter binds to them',
+    widget: 'physics2:opening',
+  },
+  {
+    say: 'These ion channels are selective for certain types of ion',
     widget: 'physics2:inflow',
   },
   {
-    say: 'Glutamate is a neurotransmitter which binds to AMPA and NMDA receptors, both of which are selective for cations (positive ions)',
+    say: 'One example is the AMPA receptor which is activated when the neurotransmitter ‘glutamate’ is released',
     widget: 'physics2:glutamate',
   },
   {
@@ -253,28 +261,81 @@ export const ELECTRICAL_PHYSICS_SLIDES: Slide[] = [
     widget: 'physics2:ampa',
   },
   {
-    say: 'Na⁺ wants to flow in (toward +60 mV) and K⁺ wants to flow out (toward −90 mV). The reversal potential is where these two currents cancel. With roughly equal permeability, that’s a voltage between the two, close to 0 mV',
+    say: 'Na⁺ wants to flow in (toward +60 mV) and K⁺ wants to flow out (toward −90 mV).\n\nThe reversal potential is where these two currents cancel. With roughly equal permeability, that’s a voltage between the two, close to 0 mV',
     widget: 'physics2:cancel',
   },
   {
-    say: 'The influx of positive ions drives the membrane potential up in the vicinity of the synapse, as excess positive charge collects on the membrane, pushing away some positive charge on the outside of the cell',
+    say: 'The influx of positive ions neutralizes part of the excess negative layer inside the membrane, and reduces the excess positive charge outside',
     widget: 'physics2:excess',
+  },
+  {
+    say: 'This drives the membrane potential up in the vicinity of the synapse',
+    widget: 'physics2:rise',
+  },
+  {
+    say: 'Glutamate is cleared quickly. After release, glutamate diffuses out of the cleft and is taken up by transporters within about 1 ms',
+    widget: 'physics2:clearance',
+  },
+  {
+    say: 'After glutamate unbinds, the channel takes time to shut, a process called deactivation. Some channels also enter a closed, glutamate-bound state, called desensitization. The AMPA current (EPSC) typically decays with a time constant of about 1–5 ms',
+    widget: 'physics2:unbind',
+  },
+  {
+    say: 'The initial rise in voltage when the receptor is open is therefore short',
+    widget: 'physics2:brief',
+  },
+  {
+    say: 'The rise time is governed by the resistance of the open ion channels and the capacitance of the membrane\n\nThe resistance of the open ion channels is governed by the number of receptors × the open probability × the single-channel conductance. The larger that product, the lower the resistance (= 1 / conductance)',
+    widget: 'physics2:resist',
+  },
+  {
+    say: 'In fact the time constant (the time for the voltage to rise 63% of the way) is equal to that resistance × the capacitance of the membrane',
+    widget: 'physics2:rc',
+  },
+  {
+    say: 'The capacitance is how much charge the membrane holds per volt across it\n\nOr conversely, how much charge is needed to create a voltage of 1 volt',
+    widget: 'physics2:capacitance',
+  },
+  {
+    say: 'The membrane capacitance is constant at about 1 µF/cm² across most types of neuron\n\nCapacitance is governed by the thickness of the membrane. The charge either side sets the field across it, and the voltage is the work to carry a charge through that field, so across a thinner membrane the same charge makes less voltage, and more charge is needed for 1 volt',
+    widget: 'physics2:thickness',
+  },
+  {
+    say: 'Capacitance also grows with the area of the membrane, and with the dielectric constant ε of the lipids between the two layers of charge, a measure of how much they weaken the field, and so the voltage, for the same charge: C = ε × A / d\n\nEvery neuron’s membrane is much the same lipid bilayer, of much the same thickness, so per cm² its capacitance is much the same too',
+    widget: 'physics2:dielectric',
+  },
+  {
+    say: 'Ohm’s law sets the current through the open channels: I = (E − V) / R, the gap between their reversal potential E and the membrane potential V, divided by their resistance R',
+    widget: 'physics2:ohm',
+  },
+  {
+    say: 'That current charges the membrane’s capacitance. Since Q = C × V, the voltage is V = Q / C, so a charge ΔQ flowing in raises it by ΔV = ΔQ / C. A current I brings in a charge I each second, so it raises the voltage by I / C each second',
+    note: 'Together, the voltage rises at (E − V) / (R × C): fast at first, then slower as V nears E, so it covers 63% of the way in τ = R × C',
+    widget: 'physics2:charging',
   },
   {
     say: 'The extra positive charge also repels nearby positive ions, mainly K⁺, which is the most abundant cation inside',
     widget: 'physics2:repel',
   },
   {
-    say: 'These cations in turn repel other cations, leading to a net flow of cations along the dendrite, with the cations accumulating on the membrane to also drive the membrane potential up',
+    say: 'These cations in turn repel other cations, leading to a net flow of cations along the dendrite, with these cations accumulating on the membrane to also drive the membrane potential up further down the dendrite',
     widget: 'physics2:along',
+  },
+  {
+    say: 'This spread of charge along the dendrite contributes to a fast decay in the membrane potential in the vicinity of the synapse',
+    widget: 'physics2:spread',
+  },
+  {
+    say: 'Additionally contributing to the decay, K⁺ ions leak out through the membrane with a slower time constant τₘ (about 10–30 ms)',
+    widget: 'physics2:leak',
+  },
+  {
+    say: 'That explains why the local EPSP at the synapse is large and brief, while the same EPSP recorded at the soma is smaller, rises more slowly, and decays more slowly. Once the charge has spread out, the decay mostly reflects leakage over τₘ',
+    widget: 'physics2:soma',
   },
   {
     say: 'The cations also leak out through ion channels meaning that the propagation of positive charge gradually decays',
     widget: 'physics2:decay',
-  },
-  {
-    say: 'Glutamate is cleared quickly. After release, glutamate diffuses out of the cleft and is taken up by transporters within about 1 ms',
-    widget: 'physics2:clearance',
   },
   {
     say: 'Fast unbinding (deactivation): once glutamate drops, it comes off the receptor quickly and the channel closes, over about 1 to 3 ms',
