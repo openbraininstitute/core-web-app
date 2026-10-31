@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { serviceAiAgentUrl } from '@/services/ai-agent/api/url';
 
 import { ExpandableImage } from './expandable-image';

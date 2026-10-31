@@ -5,10 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { downloadArchive } from '@/services/entity-download';
-import sessionAtom from '@/state/session';
+import sessionAtom from '@/features/auth/client/session-atom';
 import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download-button';
 
-import type { Session } from 'next-auth';
+import type { Session } from '@/features/auth/types';
 import type { EntityCoreIdentifiable } from '@/api/entitycore/types/shared/global';
 
 vi.mock('@/ui/hooks/use-scope', () => ({

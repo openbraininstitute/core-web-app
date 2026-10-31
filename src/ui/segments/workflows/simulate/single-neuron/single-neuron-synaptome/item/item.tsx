@@ -15,7 +15,7 @@ import { Color } from 'three';
 
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,

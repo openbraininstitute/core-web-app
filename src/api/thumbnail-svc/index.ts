@@ -1,7 +1,7 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
 import buildQueryString from '@/util/query-params-builder';

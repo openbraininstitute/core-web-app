@@ -2,11 +2,11 @@
 
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { useSession } from '@/features/auth/client';
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { Loader } from '@/components/loader';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

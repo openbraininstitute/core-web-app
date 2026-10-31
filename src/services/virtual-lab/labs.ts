@@ -1,4 +1,4 @@
-import authFetch from '@/auth-fetch';
+import authFetch from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 
 import type { VirtualLabBalanceResponse } from '@/types/accounting';

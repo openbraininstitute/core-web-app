@@ -11,7 +11,7 @@ vi.mock('@/api/api-client', () => ({
   authApiClient: vi.fn(async () => ({ post, delete: del })),
 }));
 vi.mock('@/config', () => ({ config: { ENTITY_CORE_URL: 'https://entitycore.test' } }));
-vi.mock('@/auth-fetch', () => ({ getSession: vi.fn(async () => null) }));
+vi.mock('@/features/auth/auth-fetch', () => ({ getSession: vi.fn(async () => null) }));
 
 const FAKE_DIGEST = 'a'.repeat(64);
 vi.mock('@/utils/hash', () => ({

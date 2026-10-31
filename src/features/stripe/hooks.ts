@@ -6,8 +6,8 @@ import { confirmStripeSetupPaymentMethod } from '@/features/stripe/confirm-setup
 import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-parties';
 
 import type { Stripe, StripeElements } from '@stripe/stripe-js';
-import type { User } from 'next-auth';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
+import type { User } from '@/features/auth/types';
 
 export function useSetupIntentQuery({
   enabled = true,

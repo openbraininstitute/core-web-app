@@ -1,4 +1,4 @@
-import authFetch, { getSession } from '@/auth-fetch';
+import authFetch, { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 import { assertApiResponse } from '@/util/utils';
 

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { auth } from '@/auth';
+import { auth } from '@/features/auth/server';
 import { createDownloadStream } from '@/features/entity-download/download-stream';
 import { ticketStore } from '@/features/entity-download/ticket-store';
 import { getDownloadStreamHeaders } from '@/features/entity-download/utils';

@@ -13,7 +13,6 @@ import { RiRestartLine } from '@remixicon/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Form, Input, List, Popconfirm, Select, Table } from 'antd';
 import { compact, find, get, sortBy, uniqBy } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { type SVGProps, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
@@ -26,6 +25,7 @@ import {
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
+import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';

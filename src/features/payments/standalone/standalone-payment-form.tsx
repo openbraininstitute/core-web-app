@@ -4,7 +4,6 @@ import { useElements, useStripe } from '@stripe/react-stripe-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import {
   useCallback,
   useDeferredValue,
@@ -19,6 +18,7 @@ import {
   BillingQuoteRequestFlowDict,
   type TBillingAddress,
 } from '@/api/virtual-lab-svc/queries/types';
+import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { CreditsAmountInput, useCreditConversionQuery } from '@/features/credits';
 import { BillingSummary } from '@/features/payments/billing-summary';
@@ -37,7 +37,7 @@ import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
-import type { User } from 'next-auth';
+import type { User } from '@/features/auth/types';
 
 const MAX_CONVERSIONS_PER_TRANSACTION = 10;
 

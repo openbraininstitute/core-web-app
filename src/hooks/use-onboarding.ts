@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { get, isNil } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 
 import {
   getOnboardingStatus,
   updateOnboardingStatus,
 } from '@/api/virtual-lab-svc/queries/onboarding';
+import { useSession } from '@/features/auth/client';
 
 import type {
   TOnboardingFeature,

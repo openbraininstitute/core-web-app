@@ -1,6 +1,6 @@
 'use server';
 
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import { serverConfig as config } from '@/config/server';
 
 export async function keycloakLogout() {

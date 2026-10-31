@@ -1,8 +1,8 @@
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { atom, useAtomValue } from 'jotai';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
+import { useSession } from '@/features/auth/client';
 import ApplicationSidebar, {
   NavigationItem,
   type NavigationItemProps,

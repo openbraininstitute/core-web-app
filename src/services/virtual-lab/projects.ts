@@ -1,4 +1,4 @@
-import authFetch, { authFetchWithoutRetry } from '@/auth-fetch';
+import authFetch, { authFetchWithoutRetry } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 
 import type {

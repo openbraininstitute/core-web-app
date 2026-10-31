@@ -7,7 +7,7 @@ import {
   usePainter,
   usePainterLoadingListener,
 } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/hooks';
-import { useAccessToken } from '@/hooks/useAccessToken';
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { classNames } from '@/util/utils';
 
 import type { VisibleRegion } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/types';

@@ -1,5 +1,5 @@
 import { isServer } from '@/config';
-import { getClientSession } from '@/hooks/session';
+import { getClientSession } from '@/features/auth/client/use-session-state';
 import { retry } from '@/util/retry';
 
 /**
@@ -10,7 +10,7 @@ export async function getSession() {
   if (!isServer) return await getClientSession();
 
   // Only import if running on server
-  const { auth } = await import('@/auth');
+  const { auth } = await import('@/features/auth/server');
 
   return await auth();
 }

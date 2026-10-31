@@ -13,7 +13,7 @@ import {
   ExpandingPillContent,
 } from '@/features/data-grid/react/expanding-toolbar-button';
 import { downloadArchive, downloadFailedNotification } from '@/services/entity-download';
-import sessionAtom from '@/state/session';
+import sessionAtom from '@/features/auth/client/session-atom';
 import { Button } from '@/ui/molecules/button';
 import {
   SelectionBadgeAnchor,

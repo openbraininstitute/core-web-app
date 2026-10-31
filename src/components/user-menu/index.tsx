@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 
+import { useSession } from '@/features/auth/client';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import {
   Menubar,

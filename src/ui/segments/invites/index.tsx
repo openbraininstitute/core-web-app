@@ -4,11 +4,11 @@ import { useRouter } from '@bprogress/next/app';
 import { useMutation } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
 import { tryCatch } from '@/api/utils';
 import { acceptInvite } from '@/api/virtual-lab-svc/queries/invite';
 import { listProjects } from '@/api/virtual-lab-svc/queries/project';
+import { useSession } from '@/features/auth/client';
 import { config } from '@/config';
 import {
   type InvitationContentResponse,
