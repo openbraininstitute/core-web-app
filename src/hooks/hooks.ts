@@ -6,7 +6,7 @@ import { unwrap } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 import { type DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import sessionAtom from '@/state/session';
+import sessionAtom from '@/features/auth/client/session-atom';
 import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { Atom } from 'jotai/vanilla';

@@ -2,7 +2,7 @@
 
 import { atom } from 'jotai';
 
-import type { Session } from 'next-auth';
+import type { Session } from '@/features/auth/types';
 
 const sessionAtom = atom<Session | null>(null);
 

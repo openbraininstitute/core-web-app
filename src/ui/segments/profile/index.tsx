@@ -4,10 +4,10 @@ import { CloseOutlined, LoadingOutlined } from '@ant-design/icons';
 import { RiCheckFill, RiFileCopyLine } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import { match } from 'ts-pattern';
 
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
+import { useSession } from '@/features/auth/client';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import { hasVisibleFlags } from '@/features/feature-flags/flags';

@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Form, Input } from 'antd';
 import { useAtom, useAtomValue } from 'jotai';
-import { useSession } from 'next-auth/react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import z from 'zod';
 
@@ -11,6 +10,7 @@ import {
   getSingleNeuronSimulations,
   getSingleNeuronSynaptomeSimulations,
 } from '@/api/entitycore/queries';
+import { useSession } from '@/features/auth/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { OVERVIEW_CONFIGURATION_SESSION_KEY } from '@/ui/segments/workflows/simulate/single-neuron/shared/constant';
 import {

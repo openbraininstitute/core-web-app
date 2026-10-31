@@ -4,11 +4,10 @@ import { AntdRegistry } from '@ant-design/nextjs-registry';
 import { App, ConfigProvider } from 'antd';
 import { Provider as JotaiProvider } from 'jotai';
 import { MotionConfig } from 'motion/react';
-import { SessionProvider } from 'next-auth/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ProgressBarProvider } from '@/app/app/progress-provider';
-import SessionStateProvider from '@/components/SessionStateProvider';
+import SessionStateProvider from '@/features/auth/components/session-state-provider';
 import ThemeProvider from '@/components/ThemeProvider';
 import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
 import { QueryProvider } from '@/query-provider/client';
@@ -17,15 +16,13 @@ import commonAntdTheme from '@/theme/antd';
 import { JotaiDevTools } from '@/utils/jotai-devtools';
 
 import type { ReactNode } from 'react';
-import type { SessionOrNull } from '@/hooks/session';
 
 type ProvidersProps = {
   children: ReactNode;
-  session: SessionOrNull;
   flags: FeatureFlags;
 };
 
-export function Providers({ children, session, flags }: ProvidersProps) {
+export function Providers({ children, flags }: ProvidersProps) {
   return (
     <MotionConfig reducedMotion="user">
       <ConfigProvider theme={commonAntdTheme}>
@@ -37,13 +34,14 @@ export function Providers({ children, session, flags }: ProvidersProps) {
                   <JotaiProvider>
                     <JotaiDevTools />
                     <ThemeProvider>
-                      <SessionProvider session={session} refetchInterval={2 * 60}>
-                        <SessionStateProvider>
-                          <FlagsProvider flags={flags}>
-                            <ProgressBarProvider>{children}</ProgressBarProvider>
-                          </FlagsProvider>
-                        </SessionStateProvider>
-                      </SessionProvider>
+                      {/* Better Auth needs no SessionProvider; `useSession` is
+                          store-based. SessionStateProvider drives the session
+                          atom and the periodic refetch (see useSessionState). */}
+                      <SessionStateProvider>
+                        <FlagsProvider flags={flags}>
+                          <ProgressBarProvider>{children}</ProgressBarProvider>
+                        </FlagsProvider>
+                      </SessionStateProvider>
                     </ThemeProvider>
                   </JotaiProvider>
                 </QueryProvider>

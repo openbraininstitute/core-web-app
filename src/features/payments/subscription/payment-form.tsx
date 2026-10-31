@@ -5,13 +5,13 @@ import { Spin } from 'antd';
 import { NotificationPlacements } from 'antd/es/notification/interface';
 import { get } from 'es-toolkit/compat';
 import { useAtomValue } from 'jotai';
-import { useSession } from 'next-auth/react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
   BillingQuoteRequestFlowDict,
   SubscriptionStatus,
 } from '@/api/virtual-lab-svc/queries/types';
+import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
@@ -41,11 +41,11 @@ import { cn } from '@/utils/css-class';
 import { useCreateSubscriptionMutation } from './hooks';
 
 import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
-import type { User } from 'next-auth';
 import type {
   CreditConversionResponse,
   TBillingAddress,
 } from '@/api/virtual-lab-svc/queries/types';
+import type { User } from '@/features/auth/types';
 
 type Props = {
   onPrevious: () => void;

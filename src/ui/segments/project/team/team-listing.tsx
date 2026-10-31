@@ -3,9 +3,9 @@
 import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { List } from 'antd';
 import { compact, get, sortBy } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
 
+import { useSession } from '@/features/auth/client';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { useWorkspace } from '@/ui/hooks/use-workspace';

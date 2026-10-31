@@ -4,7 +4,6 @@ import { DeleteOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button as AntdButton, Popconfirm, Select } from 'antd';
 import { find, get } from 'es-toolkit/compat';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 
 import {
@@ -12,6 +11,7 @@ import {
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
+import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';

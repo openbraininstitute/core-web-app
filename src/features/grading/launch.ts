@@ -5,7 +5,7 @@ import { tryCatch } from '@/api/utils';
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { auth } from '@/auth';
+import { auth } from '@/features/auth/server';
 import { serverConfig } from '@/config/server';
 import { makeRoles } from '@/hooks/use-user-membership';
 import { startNotebook } from '@/services/notebooks';

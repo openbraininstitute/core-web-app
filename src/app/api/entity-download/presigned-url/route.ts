@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
-import { auth } from '@/auth';
+import { auth } from '@/features/auth/server';
 import { formatBytes } from '@/utils/format';
 import { log } from '@/utils/logger';
 

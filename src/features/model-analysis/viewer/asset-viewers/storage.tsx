@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AssetContentType as ContentType } from '@/api/entitycore/types/shared/global';
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import { compactRecord } from '@/utils/dictionary';
 import { log } from '@/utils/logger';
 

@@ -1,6 +1,6 @@
 'use client';
 
-import useSessionState from '@/hooks/session';
+import useSessionState from '@/features/auth/client/use-session-state';
 
 import type { ReactElement, ReactNode } from 'react';
 

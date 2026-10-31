@@ -1,4 +1,4 @@
-import { getSession } from '@/auth-fetch';
+import { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 
 import type {

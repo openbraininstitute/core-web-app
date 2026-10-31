@@ -4,12 +4,12 @@ import { RiArrowDownSLine, RiArrowRightSLine, RiCheckFill, RiFileCopyLine } from
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
+import { useSession } from '@/features/auth/client';
 import { UserFilled } from '@/components/icons/buttons';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';

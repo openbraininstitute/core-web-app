@@ -1,5 +1,5 @@
+import { getSessionCookie } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
-import nextAuthMiddleware, { type NextRequestWithAuth } from 'next-auth/middleware';
 
 const { PRIMARY_HOSTNAME } = process.env;
 
@@ -106,7 +106,7 @@ function stripFirstPathSegment(pathname: string): string {
  * - bypasses redirects for static assets (supports version-prefixed paths).
  * - enforces `PRIMARY_HOSTNAME` on non-asset routes by redirecting to the canonical host.
  * - allows free-access application and API routes as configured.
- * - delegates remaining routes to next-auth middleware for authentication.
+ * - redirects requests without a Better Auth session cookie to the login page.
  */
 export async function proxy(request: NextRequest) {
   const requestPathname = request.nextUrl.pathname;
@@ -148,7 +148,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If not authenticated redirect to Keycloak's login and if successful back to the originally requested page
-  // Otherwise let them through
-  return nextAuthMiddleware(request as NextRequestWithAuth);
+  // If not authenticated, redirect to the login page (which initiates the
+  // Keycloak flow) preserving the originally requested page as callbackUrl.
+  // Optimistic cookie-presence check only — the page/route handlers still
+  // validate the session server-side.
+  const sessionCookie = getSessionCookie(request);
+  if (!sessionCookie) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/app/log-in';
+    url.searchParams.set('callbackUrl', `${requestPathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.next();
 }

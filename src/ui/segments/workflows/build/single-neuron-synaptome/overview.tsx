@@ -1,8 +1,8 @@
 'use client';
 
 import { Form, Input } from 'antd';
-import { useSession } from 'next-auth/react';
 
+import { useSession } from '@/features/auth/client';
 import {
   label,
   useBuildSingleNeuronSynaptomeSessionState,

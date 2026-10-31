@@ -2,16 +2,20 @@
 
 import { useAtom } from 'jotai';
 import { usePathname } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import { useEffect } from 'react';
 
-import sessionAtom from '@/state/session';
+import { useSession } from '@/features/auth/client';
+import sessionAtom from '@/features/auth/client/session-atom';
+import { usePrevious } from '@/hooks/hooks';
 
-import { usePrevious } from './hooks';
+import type { Session, SessionOrNull } from '@/features/auth/types';
 
-import type { Session } from 'next-auth';
+export type { SessionOrNull };
 
-export type SessionOrNull = Session | null;
+// Matches the previous next-auth SessionProvider `refetchInterval` (2 min).
+// Polling /get-session re-runs the server `customSession`, which renews the
+// Keycloak access token when it nears expiry and re-syncs the auth-manager.
+const SESSION_REFETCH_INTERVAL_MS = 2 * 60 * 1000;
 
 /*
    Waits for useSessionState to set the session.
@@ -85,4 +89,10 @@ export default function useSessionState() {
     const target = `${window.location.pathname}${window.location.search}`;
     window.location.href = `/app/log-in?callbackUrl=${encodeURIComponent(target)}`;
   }, [currentSession, pathname]);
+
+  const { refetch } = currentSession;
+  useEffect(() => {
+    const intervalId = setInterval(() => refetch(), SESSION_REFETCH_INTERVAL_MS);
+    return () => clearInterval(intervalId);
+  }, [refetch]);
 }

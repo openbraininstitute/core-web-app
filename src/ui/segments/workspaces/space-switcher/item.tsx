@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { listAllProjects } from '@/api/virtual-lab-svc/queries/project';
-import { authFetch } from '@/auth-fetch';
+import { authFetch } from '@/features/auth/auth-fetch';
 import { useConfig } from '@/config';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button } from '@/ui/molecules/button';

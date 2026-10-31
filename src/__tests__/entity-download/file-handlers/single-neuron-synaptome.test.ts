@@ -23,7 +23,7 @@ const { downloadAssetMock, getSessionMock } = vi.hoisted(() => {
   return { downloadAssetMock, getSessionMock };
 });
 
-vi.mock('@/auth-fetch', () => ({ getSession: getSessionMock }));
+vi.mock('@/features/auth/auth-fetch', () => ({ getSession: getSessionMock }));
 
 vi.mock('@/api/entitycore/queries', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/api/entitycore/queries')>();
