@@ -59,8 +59,19 @@ function useShare(what: Shared) {
   return { note, run };
 }
 
-/** On the course card on the right: a round button beside the course's own. */
-export function ShareButton({ what, className }: { what: Shared; className?: string }) {
+/**
+ * On the course card on the right: a round button beside the course's own. `dark` on the card's
+ * navy, as the mini detail view's round buttons are, its note in white.
+ */
+export function ShareButton({
+  what,
+  dark = false,
+  className,
+}: {
+  what: Shared;
+  dark?: boolean;
+  className?: string;
+}) {
   const { note, run } = useShare(what);
   return (
     <button
@@ -69,7 +80,10 @@ export function ShareButton({ what, className }: { what: Shared; className?: str
       aria-label={`Share ${what.title}`}
       title="Share"
       className={cn(
-        'relative flex size-[42px] shrink-0 items-center justify-center rounded-full border border-[#d9d9d9] bg-white text-[#002766] transition-colors hover:border-[#002766] hover:bg-[#f0f5ff]',
+        'relative flex size-[42px] shrink-0 items-center justify-center rounded-full border transition-colors',
+        dark
+          ? 'bg-primary-9 hover:bg-primary-7/40 border-white/16 text-white shadow-[8px_8px_20px_0px_#0000005C,-12px_-8px_32px_0px_#FFFFFF1F]'
+          : 'border-[#d9d9d9] bg-white text-[#002766] hover:border-[#002766] hover:bg-[#f0f5ff]',
         className
       )}
     >
@@ -77,7 +91,10 @@ export function ShareButton({ what, className }: { what: Shared; className?: str
       {note && (
         <span
           role="status"
-          className="absolute top-full right-0 mt-[6px] rounded-[6px] bg-[#002766] px-[8px] py-[3px] text-[11px] font-semibold whitespace-nowrap text-white"
+          className={cn(
+            'absolute top-full right-0 mt-[6px] rounded-[6px] px-[8px] py-[3px] text-[11px] font-semibold whitespace-nowrap',
+            dark ? 'text-primary-8 bg-white' : 'bg-[#002766] text-white'
+          )}
         >
           {note}
         </span>
