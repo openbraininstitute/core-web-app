@@ -16,13 +16,15 @@ import commonAntdTheme from '@/theme/antd';
 import { JotaiDevTools } from '@/utils/jotai-devtools';
 
 import type { ReactNode } from 'react';
+import type { TSessionOrNull } from '@/features/auth/types';
 
-type ProvidersProps = {
+type TProvidersProps = {
   children: ReactNode;
+  session: TSessionOrNull;
   flags: FeatureFlags;
 };
 
-export function Providers({ children, flags }: ProvidersProps) {
+export function Providers({ children, session, flags }: TProvidersProps) {
   return (
     <MotionConfig reducedMotion="user">
       <ConfigProvider theme={commonAntdTheme}>
@@ -34,10 +36,9 @@ export function Providers({ children, flags }: ProvidersProps) {
                   <JotaiProvider>
                     <JotaiDevTools />
                     <ThemeProvider>
-                      {/* Better Auth needs no SessionProvider; `useAuthSession` is
-                          store-based. SessionStateProvider drives the session
-                          atom and the periodic refetch (see useSessionState). */}
-                      <SessionStateProvider>
+                      {/* Better Auth has no SessionProvider; the server session seeds
+                          `useAuthSession` and SessionStateProvider runs the polling. */}
+                      <SessionStateProvider initialSession={session}>
                         <FlagsProvider flags={flags}>
                           <ProgressBarProvider>{children}</ProgressBarProvider>
                         </FlagsProvider>
