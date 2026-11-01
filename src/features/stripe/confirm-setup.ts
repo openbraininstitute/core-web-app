@@ -2,7 +2,7 @@ import { makeStripeBilling } from './utils';
 
 import type { Stripe, StripeElements } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
-import type { User } from '@/features/auth/types';
+import type { TUser } from '@/features/auth/types';
 
 export type StripeSetupConfirmationErrorReason = 'stripe_error' | 'missing_payment_method';
 
@@ -27,7 +27,7 @@ export async function confirmStripeSetupPaymentMethod({
   elements: StripeElements;
   returnUrl: string;
   stripe: Stripe;
-  user: User;
+  user: TUser;
 }) {
   const { setupIntent, error } = await stripe.confirmSetup({
     elements,

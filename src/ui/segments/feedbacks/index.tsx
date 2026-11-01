@@ -6,9 +6,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useSession } from '@/features/auth/client';
 import ChevronDownIcon from '@/components/icons/ChevronDownIcon';
 import { Loader } from '@/components/loader';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
@@ -33,7 +33,7 @@ export default function FeedbackForm({ onClose }: FeedbackFormProps) {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const { virtualLabId, projectId } = useWorkspace();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
 
   useEffect(() => {
     setMounted(true);

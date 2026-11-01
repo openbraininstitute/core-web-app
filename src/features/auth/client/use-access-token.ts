@@ -1,6 +1,6 @@
-import { useSession } from '@/features/auth/client';
+import { useAuthSession } from '@/features/auth/client';
 
 export function useAccessToken(): string | undefined {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   return session?.accessToken;
 }

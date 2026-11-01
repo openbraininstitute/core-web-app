@@ -4,11 +4,11 @@ import useSessionState from '@/features/auth/client/use-session-state';
 
 import type { ReactElement, ReactNode } from 'react';
 
-type SessionStateWrapperProps = {
+type TSessionStateWrapperProps = {
   children: ReactNode;
 };
 
-export default function SessionStateProvider({ children }: SessionStateWrapperProps) {
+export default function SessionStateProvider({ children }: TSessionStateWrapperProps) {
   useSessionState();
 
   return children as ReactElement<any>;

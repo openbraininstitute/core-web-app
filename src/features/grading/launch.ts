@@ -5,8 +5,9 @@ import { tryCatch } from '@/api/utils';
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { auth } from '@/features/auth/server';
 import { serverConfig } from '@/config/server';
+import { REFRESH_ACCESS_TOKEN_ERROR } from '@/features/auth/constants';
+import { auth } from '@/features/auth/server';
 import { makeRoles } from '@/hooks/use-user-membership';
 import { startNotebook } from '@/services/notebooks';
 import { log } from '@/utils/logger';
@@ -239,7 +240,7 @@ export async function resolveGradingLaunch(raw: RawParams): Promise<LaunchResolu
   // A `RefreshAccessTokenError` session decrypts as authenticated but can no longer mint fresh
   // access tokens — treat it as logged-out so the caller bounces through log-in to re-auth.
   const session = await auth();
-  if (!session || session.error === 'RefreshAccessTokenError') {
+  if (!session || session.error === REFRESH_ACCESS_TOKEN_ERROR) {
     return { ok: false, reason: 'needs-login', params: verified.params };
   }
 

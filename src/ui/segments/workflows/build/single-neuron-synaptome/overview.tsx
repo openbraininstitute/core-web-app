@@ -2,7 +2,7 @@
 
 import { Form, Input } from 'antd';
 
-import { useSession } from '@/features/auth/client';
+import { useAuthSession } from '@/features/auth/client';
 import {
   label,
   useBuildSingleNeuronSynaptomeSessionState,
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export function Info({ sessionId }: Props) {
-  const { data } = useSession();
+  const { data } = useAuthSession();
   const [form] = Form.useForm();
 
   const { setSessionValue, sessionValue } = useBuildSingleNeuronSynaptomeSessionState({

@@ -7,7 +7,7 @@ import { keyBuilder as externalKeyBuilder } from '@/ui/use-query-keys/third-part
 
 import type { Stripe, StripeElements } from '@stripe/stripe-js';
 import type { TBillingAddress } from '@/api/virtual-lab-svc/queries/types';
-import type { User } from '@/features/auth/types';
+import type { TUser } from '@/features/auth/types';
 
 export function useSetupIntentQuery({
   enabled = true,
@@ -46,7 +46,7 @@ export async function resolvePaymentMethodId({
   elements: StripeElements;
   returnUrl: string;
   stripe: Stripe;
-  user: User;
+  user: TUser;
 }): Promise<string> {
   if (cachedPaymentMethodId) {
     return cachedPaymentMethodId;

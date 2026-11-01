@@ -13,8 +13,8 @@ import { match, P } from 'ts-pattern';
 
 import { getCountries } from '@/api/virtual-lab-svc/queries/config';
 import { checkUserProfileEmailAvailability } from '@/api/virtual-lab-svc/queries/user';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { Button } from '@/ui/molecules/button';
 import { CustomFormError, createZodFieldValidator } from '@/ui/segments/contribute/shared/helpers';
 import { GhostRoundedIconButton } from '@/ui/segments/workspaces/space-manager/sections/elements';
@@ -56,7 +56,7 @@ function getIdentityProviderDisplay(identityProvider?: string): {
 }
 
 export function Profile({ data }: ProfileProps) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const initialValues = useInitialValues(data);
   const { error: errorNotify, success: successNotify } = useAppNotification();
   const [form] = Form.useForm<TUpdateUserProfileRequest>();

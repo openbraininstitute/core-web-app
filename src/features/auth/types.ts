@@ -4,7 +4,7 @@
  * The Better Auth server (`customSession`) and the client adapter both produce
  * this shape.
  */
-export interface SessionUser {
+export interface ISessionUser {
   id: string;
   name: string;
   email: string;
@@ -14,16 +14,16 @@ export interface SessionUser {
   identityProvider?: string;
 }
 
-export interface Session {
-  user: SessionUser;
+export interface ISession {
+  user: ISessionUser;
   accessToken: string;
   idToken: string;
-  /** Set to 'RefreshAccessTokenError' when the Keycloak refresh fails. */
+  /** Set to `REFRESH_ACCESS_TOKEN_ERROR` when the Keycloak refresh fails. */
   error?: string;
 }
 
-export type SessionOrNull = Session | null;
+export type TSessionOrNull = ISession | null;
 
 /** Alias for the session user, replacing next-auth's `User` type for consumers
  * that typed a parameter/prop as the authenticated user. */
-export type User = SessionUser;
+export type TUser = ISessionUser;

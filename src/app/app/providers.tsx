@@ -7,8 +7,8 @@ import { MotionConfig } from 'motion/react';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { ProgressBarProvider } from '@/app/app/progress-provider';
-import SessionStateProvider from '@/features/auth/components/session-state-provider';
 import ThemeProvider from '@/components/ThemeProvider';
+import SessionStateProvider from '@/features/auth/components/session-state-provider';
 import { type FeatureFlags, FlagsProvider } from '@/features/feature-flags';
 import { QueryProvider } from '@/query-provider/client';
 import { AtomProvider } from '@/state/state';
@@ -34,7 +34,7 @@ export function Providers({ children, flags }: ProvidersProps) {
                   <JotaiProvider>
                     <JotaiDevTools />
                     <ThemeProvider>
-                      {/* Better Auth needs no SessionProvider; `useSession` is
+                      {/* Better Auth needs no SessionProvider; `useAuthSession` is
                           store-based. SessionStateProvider drives the session
                           atom and the periodic refetch (see useSessionState). */}
                       <SessionStateProvider>

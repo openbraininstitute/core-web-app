@@ -9,9 +9,10 @@ import { type ComponentProps, useCallback, useEffect, useMemo, useRef, useState 
 import { getProject, listProjects } from '@/api/virtual-lab-svc/queries/project';
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
 import { getSelfVirtualLab, listVirtualLabs } from '@/api/virtual-lab-svc/queries/virtual-lab';
-import { useSession } from '@/features/auth/client';
 import { UserFilled } from '@/components/icons/buttons';
 import { SignOutFill } from '@/components/icons/EditorIcons';
+import { useAuthSession } from '@/features/auth/client';
+import { AuthStatus } from '@/features/auth/constants';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useOnClickOutside } from '@/hooks/useOnClickOutside';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -71,7 +72,7 @@ export function SpaceSwitcher({ className }: Props) {
   } | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { status: userStatus, data: sessionData } = useSession();
+  const { status: userStatus, data: sessionData } = useAuthSession();
   const [, copyAccessToken, , copying] = useCopyToClipboard();
 
   const onCopyToken = () => {
@@ -361,7 +362,7 @@ export function SpaceSwitcher({ className }: Props) {
             username={username}
             onClick={onUserClick}
             active={profileActive}
-            hidden={userStatus !== 'authenticated' || userLoading}
+            hidden={userStatus !== AuthStatus.Authenticated || userLoading}
           />
           {!virtualLabId ? (
             <span className="text-gray-500">Select virtual lab</span>

@@ -11,8 +11,8 @@ import {
   BillingQuoteRequestFlowDict,
   SubscriptionStatus,
 } from '@/api/virtual-lab-svc/queries/types';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
 import PricingToggleCards from '@/features/payments/subscription/pricing-toggle-cards';
@@ -45,7 +45,7 @@ import type {
   CreditConversionResponse,
   TBillingAddress,
 } from '@/api/virtual-lab-svc/queries/types';
-import type { User } from '@/features/auth/types';
+import type { TUser } from '@/features/auth/types';
 
 type Props = {
   onPrevious: () => void;
@@ -62,7 +62,7 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
   const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const { interval, tier } = useAtomValue(flowAtom);
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
   const [stripeElementsReady, setElementsReady] = useState(false);
@@ -111,7 +111,7 @@ function Form({ onPrevious, onSetupIntentRefreshNeeded }: Props) {
   const disableForm =
     !formLoaded || !stripeElementsReady || isSubscribing || quote.isFetching || !quote.data;
 
-  const user = session?.user as User;
+  const user = session?.user as TUser;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
 
   const disablePaying =

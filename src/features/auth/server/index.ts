@@ -14,9 +14,9 @@ import {
 import { log } from '@/utils/logger';
 
 import type { OAuth2Tokens } from 'better-auth/oauth2';
-import type { Session } from '@/features/auth/types';
+import type { ISession } from '@/features/auth/types';
 
-export type { Session, SessionOrNull, SessionUser } from '@/features/auth/types';
+export type { ISession, ISessionUser, TSessionOrNull } from '@/features/auth/types';
 
 const issuer = config.KEYCLOAK_ISSUER;
 const clientId = config.KEYCLOAK_CLIENT_ID;
@@ -61,13 +61,13 @@ async function getKeycloakUserInfo(tokens: OAuth2Tokens) {
 }
 
 /**
- * Reshapes Better Auth's `{ user, session }` into the legacy next-auth `Session`
+ * Reshapes Better Auth's `{ user, session }` into the legacy next-auth session
  * shape the app's ~35 consumers depend on, and keeps the Keycloak access token
  * fresh. Runs on every `/get-session` (the client polls every 2 min), mirroring
  * the old next-auth `jwt` callback: refreshes the access token when it is within
  * {@link ACCESS_TOKEN_RENEWAL_THRESHOLD} of expiry and re-syncs the auth-manager.
  */
-async function toLegacySession(user: Record<string, unknown>): Promise<Session> {
+async function toLegacySession(user: Record<string, unknown>): Promise<ISession> {
   // Lazy import to avoid a TDZ on `serverAuth` (defined below) and to keep
   // `next/headers` out of any client-reachable import graph.
   const { headers } = await import('next/headers');
@@ -204,12 +204,12 @@ export const serverAuth = betterAuth({
 });
 
 /**
- * Server-side session accessor returning the legacy `Session` shape.
+ * Server-side session accessor returning the legacy `ISession` shape.
  * Drop-in replacement for the previous next-auth `auth()` (getServerSession).
  * Used by `auth-fetch`, route handlers, server actions and RSC.
  */
-export async function auth(): Promise<Session | null> {
+export async function auth(): Promise<ISession | null> {
   const { headers } = await import('next/headers');
   const session = await serverAuth.api.getSession({ headers: await headers() });
-  return (session as Session | null) ?? null;
+  return (session as ISession | null) ?? null;
 }

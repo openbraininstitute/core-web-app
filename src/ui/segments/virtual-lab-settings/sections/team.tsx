@@ -19,9 +19,9 @@ import {
   cancelVirtualLabInvite,
   listVirtualLabMembers,
 } from '@/api/virtual-lab-svc/queries/member';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Button as UiButton } from '@/ui/molecules/button';
 import { XInput } from '@/ui/segments/profile/sections/profile-form/elements';
@@ -443,7 +443,7 @@ type ListingStepProps = {
 };
 
 function ListingMembers({ onInviteMemberClick, virtualLabId }: ListingStepProps) {
-  const { data } = useSession();
+  const { data } = useAuthSession();
   const { isVirtualLabAdmin } = useWorkspaceMembership({ virtualLabId });
   const tableSlotRef = useRef<HTMLDivElement>(null);
   const [tableBodyScrollY, setTableBodyScrollY] = useState<number>();
