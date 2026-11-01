@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { config } from '@/config';
 import { signIn, useAuthSession } from '@/features/auth/client';
@@ -16,6 +16,12 @@ const SYNC_PATH = `${config.ROOT_ROUTE}/sync`;
 function setAuthProxyRedirectCookie(url: string) {
   // biome-ignore lint/suspicious/noDocumentCookie: Enable auth for preview deployments with only one subdomain registered in Keycloak as redirect_uri
   document.cookie = `${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=${encodeURIComponent(url)}; path=/; domain=${PREVIEW_DOMAIN_SUFFIX}; secure; samesite=lax`;
+}
+
+function hasAuthProxyRedirectCookie(): boolean {
+  return document.cookie
+    .split('; ')
+    .some((c) => c.startsWith(`${AUTH_PROXY_REDIRECT_TARGET_COOKIE}=`));
 }
 
 function parseCandidate(candidate: string): URL | null {
@@ -51,6 +57,7 @@ export function LoginRedirect() {
   const searchParams = useSearchParams();
   const session = useAuthSession();
   const hasInitiated = useRef(false);
+  const [failed, setFailed] = useState(false);
 
   const redirectURL = searchParams.get('callbackUrl');
 
@@ -81,16 +88,33 @@ export function LoginRedirect() {
       // registered as a Keycloak redirect URI.
       setAuthProxyRedirectCookie(callbackUrl);
       window.location.href = `${config.AUTH_PROXY_URL}${config.ROOT_ROUTE}/log-in`;
-    } else if (config.AUTH_PROXY_URL && onProxyHost) {
-      // On the proxy deployment: sign in, then return through redirect-after-signin,
-      // which reads the stashed cookie and bounces back to the original subdomain.
-      signIn('keycloak', {
-        callbackUrl: `${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`,
-      });
+    } else if (config.AUTH_PROXY_URL && onProxyHost && hasAuthProxyRedirectCookie()) {
+      // On the proxy deployment with a stashed target: sign in, then return through
+      // redirect-after-signin, which reads the cookie and bounces back to the original subdomain.
+      // Without the cookie the user signed in directly on the proxy host: use their own target.
+      startSignIn(`${config.AUTH_PROXY_URL}/api/auth/redirect-after-signin`);
     } else {
-      signIn('keycloak', { callbackUrl });
+      startSignIn(callbackUrl);
+    }
+
+    async function startSignIn(target: string) {
+      const result = await signIn('keycloak', { callbackUrl: target });
+      // Better Auth returns errors (e.g. a 403 for an untrusted callback) instead of throwing;
+      // without this the page would sit on "Redirecting" forever.
+      if (result?.error) setFailed(true);
     }
   }, [redirectURL, session.status, session.data?.error]);
+
+  if (failed) {
+    return (
+      <div className="flex flex-col items-center justify-center space-y-4">
+        <h2 className="text-primary-8 text-xl font-bold">Sign-in could not start</h2>
+        <a className="text-primary-7 underline" href={`${config.ROOT_ROUTE}/log-in`}>
+          Try again
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center justify-center space-y-4">

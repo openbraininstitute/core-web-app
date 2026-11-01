@@ -5,7 +5,7 @@ export { KEYCLOAK_PROVIDER_ID, REFRESH_ACCESS_TOKEN_ERROR } from '@/features/aut
 
 /**
  * Keycloak / auth-manager helpers for the Better Auth server instance.
- * Server-only — imports `serverConfig`. Client code should use `@/auth/constants`.
+ * Server-only — imports `serverConfig`. Client code should use `@/features/auth/constants`.
  */
 
 // TODO: Lower this back to minutes after all tasks

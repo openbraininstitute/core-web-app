@@ -42,7 +42,7 @@ Core web application for the Open Brain Institute. Built with Next.js, it provid
 | UI | Ant Design 5, Radix UI primitives, CSS Modules, Tailwind CSS 4 tooling |
 | Data fetching | TanStack Query 5, custom api client wrapper |
 | State and URL state | Jotai, `nuqs` |
-| Auth | NextAuth 4 with Keycloak OAuth/OIDC and auth-manager refresh-token sync |
+| Auth | Better Auth (stateless) with Keycloak OAuth/OIDC and auth-manager refresh-token sync |
 | Runtime config | Zod-validated server/client configuration with browser env injection |
 | Content | Sanity |
 | Payments | Stripe |
@@ -58,7 +58,7 @@ Core web application for the Open Brain Institute. Built with Next.js, it provid
 src/
   app/                    Next.js App Router routes, layouts, route handlers, and errors
   api/                    Typed clients and helpers for platform backend services
-  auth/                   NextAuth and Keycloak integration
+  features/auth/          Better Auth and Keycloak integration
   components/             Shared legacy and cross-cutting React components
   config/                 Runtime configuration schema, server/client accessors, and provider
   constants/              Platform constants and static markdown content
@@ -94,7 +94,7 @@ flowchart LR
   Browser["Browser"]
   AppRouter["Next.js App Router"]
   RuntimeConfig["Runtime config"]
-  Auth["NextAuth and Keycloak"]
+  Auth["Better Auth and Keycloak"]
   Query["TanStack Query"]
   Services["Service clients"]
   PlatformApis["Platform APIs"]
