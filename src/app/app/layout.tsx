@@ -1,6 +1,7 @@
 import { type ReactNode, Suspense } from 'react';
 
 import { Providers } from '@/app/app/providers';
+import { auth } from '@/features/auth/server';
 import { getAllFlags } from '@/features/feature-flags';
 import { LearnSettingsProvider } from '@/features/learn/learn-settings-provider';
 import { getLearnSettings } from '@/features/learn/learn-settings-server';
@@ -11,11 +12,15 @@ type RootLayoutProps = {
 };
 
 export default async function AppLayout({ children }: RootLayoutProps) {
-  const flags = await getAllFlags();
-  const learnSettings = await getLearnSettings();
+  // Independent reads, run together; the session seeds the client so the first render is not a loading state.
+  const [session, flags, learnSettings] = await Promise.all([
+    auth(),
+    getAllFlags(),
+    getLearnSettings(),
+  ]);
 
   return (
-    <Providers flags={flags}>
+    <Providers session={session} flags={flags}>
       <LearnSettingsProvider settings={learnSettings}>
         <AppOnboardingProvider>
           <Suspense fallback={null}>{children}</Suspense>
