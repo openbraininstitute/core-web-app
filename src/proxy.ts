@@ -1,7 +1,11 @@
-import { getSessionCookie } from 'better-auth/cookies';
+import { getCookieCache } from 'better-auth/cookies';
 import { type NextRequest, NextResponse } from 'next/server';
 
-const { PRIMARY_HOSTNAME } = process.env;
+const { PRIMARY_HOSTNAME, BETTER_AUTH_URL, AUTH_PROXY_URL } = process.env;
+
+// Must match the server's cookie-name rule: `useSecureCookies` on preview, else an https base URL.
+const SECURE_AUTH_COOKIES =
+  AUTH_PROXY_URL !== undefined || (BETTER_AUTH_URL ?? '').startsWith('https://');
 
 const FREE_ACCESS_PAGES = [
   '/',
@@ -106,7 +110,7 @@ function stripFirstPathSegment(pathname: string): string {
  * - bypasses redirects for static assets (supports version-prefixed paths).
  * - enforces `PRIMARY_HOSTNAME` on non-asset routes by redirecting to the canonical host.
  * - allows free-access application and API routes as configured.
- * - redirects requests without a Better Auth session cookie to the login page.
+ * - redirects requests without a valid Better Auth session cookie to the login page.
  */
 export async function proxy(request: NextRequest) {
   const requestPathname = request.nextUrl.pathname;
@@ -150,10 +154,15 @@ export async function proxy(request: NextRequest) {
 
   // If not authenticated, redirect to the login page (which initiates the
   // Keycloak flow) preserving the originally requested page as callbackUrl.
-  // Optimistic cookie-presence check only — the page/route handlers still
-  // validate the session server-side.
-  const sessionCookie = getSessionCookie(request);
-  if (!sessionCookie) {
+  // Decrypts the JWE session cookie and checks its expiry: one in-process AES
+  // decode per request, no I/O. A stale, forged or rotated-secret cookie is
+  // redirected here instead of rendering the app shell as unauthenticated.
+  // Plugins (token refresh, auth-manager sync) do not run; `/get-session` does that.
+  const session = await getCookieCache(request, {
+    strategy: 'jwe',
+    isSecure: SECURE_AUTH_COOKIES,
+  }).catch(() => null);
+  if (!session) {
     const url = request.nextUrl.clone();
     url.pathname = '/app/log-in';
     url.searchParams.set('callbackUrl', `${requestPathname}${request.nextUrl.search}`);

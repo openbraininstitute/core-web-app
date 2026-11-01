@@ -86,11 +86,11 @@ async function toLegacySession(user: Record<string, unknown>): Promise<ISession>
     accessToken = current.accessToken ?? '';
     idToken = current.idToken ?? '';
 
+    // No recorded expiry (no `expires_in` in the token response) counts as expired: refresh now.
     const expiresAtMs = current.accessTokenExpiresAt
       ? new Date(current.accessTokenExpiresAt).getTime()
       : 0;
-    const withinRenewalWindow =
-      expiresAtMs > 0 && Date.now() > expiresAtMs - ACCESS_TOKEN_RENEWAL_THRESHOLD;
+    const withinRenewalWindow = Date.now() > expiresAtMs - ACCESS_TOKEN_RENEWAL_THRESHOLD;
 
     if (withinRenewalWindow) {
       try {
@@ -146,9 +146,20 @@ export const serverAuth = betterAuth({
   session: {
     expiresIn: 10 * 60 * 60, // 10 hours, matching the legacy maxAge
   },
-  // Identity comes only from Keycloak; the additional user fields below are not `input: false`
-  // (that would strip them from the OAuth profile), so block the endpoint that could write them.
-  disabledPaths: ['/update-user'],
+  // HTTP-only denylist (the router's onRequest gate); `serverAuth.api.*` calls below are unaffected.
+  // - /update-user: the additional user fields are not `input: false` (that strips them from the
+  //   OAuth profile), so nothing may write them.
+  // - account endpoints: /refresh-token returns the raw Keycloak refresh token and rotates the
+  //   account cookie behind the auth-manager's back; the browser only ever needs /get-session.
+  disabledPaths: [
+    '/update-user',
+    '/refresh-token',
+    '/get-access-token',
+    '/account-info',
+    '/list-accounts',
+    '/link-social',
+    '/unlink-account',
+  ],
   user: {
     additionalFields: {
       username: { type: 'string', required: false },
