@@ -4,9 +4,10 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 
 import { config } from '@/config';
-import { signIn, useSession } from '@/features/auth/client';
+import { signIn, useAuthSession } from '@/features/auth/client';
 import {
   AUTH_PROXY_REDIRECT_TARGET_COOKIE,
+  AuthStatus,
   PREVIEW_DOMAIN_SUFFIX,
 } from '@/features/auth/constants';
 
@@ -48,7 +49,7 @@ function resolveCallbackUrl(redirectURL: string | null, onboarding: string): str
 
 export function LoginRedirect() {
   const searchParams = useSearchParams();
-  const session = useSession();
+  const session = useAuthSession();
   const hasInitiated = useRef(false);
 
   const redirectURL = searchParams.get('callbackUrl');
@@ -56,13 +57,13 @@ export function LoginRedirect() {
   useEffect(() => {
     if (hasInitiated.current) return;
     // Wait for the session probe to skip a redundant OAuth round-trip for an SSO'd user.
-    if (session.status === 'loading') return;
+    if (session.status === AuthStatus.Loading) return;
 
     hasInitiated.current = true;
 
     // A 'RefreshAccessTokenError' session decrypts as authenticated but can't
     // mint fresh access tokens — fall through to re-auth instead of bouncing.
-    if (session.status === 'authenticated' && !session.data?.error) {
+    if (session.status === AuthStatus.Authenticated && !session.data?.error) {
       const safeTarget = redirectURL && isSameOriginTarget(redirectURL) ? redirectURL : SYNC_PATH;
       window.location.replace(safeTarget);
       return;

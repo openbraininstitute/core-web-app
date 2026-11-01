@@ -11,8 +11,8 @@ import {
   removeUserFromProject,
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Button } from '@/ui/molecules/button';
 import {
@@ -53,7 +53,7 @@ export function RoleModifier({
   projectAdmins,
 }: RoleModifierProps) {
   const queryClient = useQueryClient();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const { virtualLabId, projectId } = useWorkspace();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, updateRole] = useState(user.role);

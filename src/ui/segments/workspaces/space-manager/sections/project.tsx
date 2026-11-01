@@ -25,9 +25,9 @@ import {
   updateProjectUserRole,
 } from '@/api/virtual-lab-svc/queries/member';
 import { getProject, updateProject } from '@/api/virtual-lab-svc/queries/project';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
 import { MemberAvatarCasual } from '@/components/VirtualLab/create-entity-flows/common/member-avatar';
+import { useAuthSession } from '@/features/auth/client';
 import { useWorkspaceMembership } from '@/hooks/use-user-membership';
 import { Badge } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
@@ -769,7 +769,7 @@ function ProjectRoleModifier({
   virtualLabAdmins?: Array<string> | null;
   projectAdmins?: Array<string> | null;
 }) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const queryClient = useQueryClient();
   const { error: notifyError, success: notifySuccess } = useAppNotification();
   const [role, setRole] = useState(user.role);
@@ -980,7 +980,7 @@ function ProjectMembersListing({
   targetVirtualLabId: string;
   targetProjectId: string;
 }) {
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const {
     virtualLabAdmins,
     virtualLabOwnerId,

@@ -7,9 +7,9 @@ import Link from 'next/link';
 import { match } from 'ts-pattern';
 
 import { getUserProfile } from '@/api/virtual-lab-svc/queries/user';
-import { useSession } from '@/features/auth/client';
 import { useTabs } from '@/components/detail-view-tabs';
 import { SignOutFill } from '@/components/icons/EditorIcons';
+import { useAuthSession } from '@/features/auth/client';
 import { hasVisibleFlags } from '@/features/feature-flags/flags';
 import { useCopyToClipboard } from '@/hooks/useCopyClipboard';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
@@ -23,7 +23,7 @@ import { keyBuilder } from '@/ui/use-query-keys/user';
 import { cn } from '@/utils/css-class';
 
 function Header({ onClose }: { onClose: () => void }) {
-  const session = useSession();
+  const session = useAuthSession();
   const { data, isLoading, isError } = useQuery({
     queryKey: keyBuilder.profile(),
     queryFn: getUserProfile,

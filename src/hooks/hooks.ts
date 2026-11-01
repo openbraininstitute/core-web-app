@@ -6,7 +6,6 @@ import { unwrap } from 'jotai/utils';
 import { usePathname } from 'next/navigation';
 import { type DependencyList, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import sessionAtom from '@/features/auth/client/session-atom';
 import { createLoadableAtom } from '@/utils/jotai-loadable';
 
 import type { Atom } from 'jotai/vanilla';
@@ -35,10 +34,6 @@ export function useLoadable<T, DT = T>(loadableAtom: Atom<Loadable<Promise<T>>>,
   }, [loadableValue]);
 
   return state;
-}
-
-export function useSessionAtomValue() {
-  return useAtomValue(sessionAtom);
 }
 
 export function useUnwrappedValue<T>(atom: Atom<T>) {

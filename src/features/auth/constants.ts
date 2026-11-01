@@ -10,3 +10,12 @@ export const KEYCLOAK_PROVIDER_ID = 'keycloak';
 /** Error flag surfaced on the session when a Keycloak refresh fails; the client
  * relies on it to redirect to log-in. */
 export const REFRESH_ACCESS_TOKEN_ERROR = 'RefreshAccessTokenError';
+
+/** Lifecycle of the client session probe. */
+export const AuthStatus = {
+  Authenticated: 'authenticated',
+  Loading: 'loading',
+  Unauthenticated: 'unauthenticated',
+} as const;
+
+export type TAuthStatus = (typeof AuthStatus)[keyof typeof AuthStatus];

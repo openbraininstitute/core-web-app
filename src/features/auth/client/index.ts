@@ -1,42 +1,13 @@
 'use client';
 
-import { customSessionClient } from 'better-auth/client/plugins';
-import { createAuthClient } from 'better-auth/react';
-
+import { authClient } from '@/features/auth/client/auth-client';
 import { KEYCLOAK_PROVIDER_ID } from '@/features/auth/constants';
 
-import type { Session } from '@/features/auth/types';
-
-// Type-only reference to the server instance so `customSessionClient` infers the
-// reshaped session returned by `customSession`. `import type` keeps the server
-// module (and its `next/headers` imports) out of the client bundle.
-type ServerAuth = typeof import('@/features/auth/server').serverAuth;
-
-export const authClient = createAuthClient({
-  plugins: [customSessionClient<ServerAuth>()],
-});
-
-export type SessionStatus = 'loading' | 'authenticated' | 'unauthenticated';
-
-type UseSessionReturn =
-  | { data: Session; status: 'authenticated'; refetch: () => void }
-  | { data: null; status: 'unauthenticated'; refetch: () => void }
-  | { data: null; status: 'loading'; refetch: () => void };
-
-/**
- * Drop-in replacement for next-auth's `useSession`, returning the same
- * discriminated `{ data, status }` shape (so `status === 'authenticated'`
- * narrows `data` to a non-null `Session`) and the legacy `Session` object, so
- * existing consumers work unchanged. Also exposes `refetch` for the polling in
- * `useSessionState` (the old SessionProvider `refetchInterval`).
- */
-export function useSession(): UseSessionReturn {
-  const { data, isPending, refetch } = authClient.useSession();
-  const session = (data as Session | null) ?? null;
-  if (isPending) return { data: null, status: 'loading', refetch };
-  if (session) return { data: session, status: 'authenticated', refetch };
-  return { data: null, status: 'unauthenticated', refetch };
-}
+export { authClient } from '@/features/auth/client/auth-client';
+export {
+  type TUseAuthSessionReturn,
+  useAuthSession,
+} from '@/features/auth/client/use-auth-session';
 
 /**
  * Drop-in replacement for next-auth's `signIn('keycloak', { callbackUrl })`.

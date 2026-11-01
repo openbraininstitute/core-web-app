@@ -5,7 +5,8 @@ import {
   getOnboardingStatus,
   updateOnboardingStatus,
 } from '@/api/virtual-lab-svc/queries/onboarding';
-import { useSession } from '@/features/auth/client';
+import { useAuthSession } from '@/features/auth/client';
+import { AuthStatus } from '@/features/auth/constants';
 
 import type {
   TOnboardingFeature,
@@ -21,14 +22,14 @@ export const onboardingKeys = {
  * fetching onboarding status
  */
 export function useOnboardingStatus() {
-  const session = useSession();
+  const session = useAuthSession();
 
   const query = useQuery({
     queryKey: onboardingKeys.status(),
     queryFn: getOnboardingStatus,
     staleTime: Infinity,
     retry: 2,
-    enabled: session.status === 'authenticated',
+    enabled: session.status === AuthStatus.Authenticated,
     select: (response: VlmOnboardingResponse) => response.data,
   });
 

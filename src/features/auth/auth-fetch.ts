@@ -1,13 +1,19 @@
 import { isServer } from '@/config';
-import { getClientSession } from '@/features/auth/client/use-session-state';
+import { authClient } from '@/features/auth/client/auth-client';
 import { retry } from '@/util/retry';
 
+import type { TSessionOrNull } from '@/features/auth/types';
+
 /**
-  Gets the current session.
+  Gets the current session, fresh on every call (never cached here).
   Works server and client side.
 */
-export async function getSession() {
-  if (!isServer) return await getClientSession();
+export async function getSession(): Promise<TSessionOrNull> {
+  if (!isServer) {
+    const { data, error } = await authClient.getSession();
+    if (error) throw error;
+    return (data as TSessionOrNull) ?? null;
+  }
 
   // Only import if running on server
   const { auth } = await import('@/features/auth/server');

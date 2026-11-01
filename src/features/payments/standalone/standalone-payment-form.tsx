@@ -18,8 +18,8 @@ import {
   BillingQuoteRequestFlowDict,
   type TBillingAddress,
 } from '@/api/virtual-lab-svc/queries/types';
-import { useSession } from '@/features/auth/client';
 import { useAppNotification } from '@/components/notification';
+import { useAuthSession } from '@/features/auth/client';
 import { CreditsAmountInput, useCreditConversionQuery } from '@/features/credits';
 import { BillingSummary } from '@/features/payments/billing-summary';
 import { useBillingQuoteQuery } from '@/features/payments/hooks';
@@ -37,7 +37,7 @@ import { keyBuilder as userKeyBuilder } from '@/ui/use-query-keys/user';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { StripePaymentElementChangeEvent } from '@stripe/stripe-js';
-import type { User } from '@/features/auth/types';
+import type { TUser } from '@/features/auth/types';
 
 const MAX_CONVERSIONS_PER_TRANSACTION = 10;
 
@@ -58,7 +58,7 @@ export function StandalonePaymentForm({
   const queryClient = useQueryClient();
   const elements = useElements();
   const stripe = useStripe();
-  const { data: session } = useSession();
+  const { data: session } = useAuthSession();
   const { success: successNotify, error: errorNotify } = useAppNotification();
   const createStandalonePayment = useCreateStandalonePaymentMutation();
   const [billingAddress, setBillingAddress] = useState<TBillingAddress | null>(null);
@@ -131,7 +131,7 @@ export function StandalonePaymentForm({
 
   const limitReached = Boolean(conversionKey) && !conversionAllowed;
   const currentBillingAddress = billingAddress?.country ? billingAddress : null;
-  const user = session?.user as User;
+  const user = session?.user as TUser;
   const creditsError = !credits ? messages.creditsAmountRequired : undefined;
 
   const disablePaying =

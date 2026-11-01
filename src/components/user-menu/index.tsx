@@ -1,6 +1,5 @@
 import Link from 'next/link';
 
-import { useSession } from '@/features/auth/client';
 import { SignOutFill } from '@/components/icons/EditorIcons';
 import {
   Menubar,
@@ -9,6 +8,7 @@ import {
   MenubarMenu,
   MenubarTrigger,
 } from '@/components/Menu';
+import { useAuthSession } from '@/features/auth/client';
 import { classNames } from '@/util/utils';
 
 import type { ReactNode } from 'react';
@@ -20,7 +20,7 @@ type Props = {
   };
 };
 export default function UserMenu({ children, cls }: Props) {
-  const { data } = useSession();
+  const { data } = useAuthSession();
   const userName = data?.user.name ?? data?.user.username;
   return (
     <Menubar className="border-none p-0!">
