@@ -1,11 +1,11 @@
 import { CameraFilled } from '@ant-design/icons';
 import React from 'react';
 
+import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { Settings } from '@/features/brain-atlas-viewer/brain-atlas-viewer-gltf/settings/settings';
 import { useBrainRegionRootHierarchyQuery } from '@/features/brain-region-hierarchy/context';
 import { useHierarchyRuntimeMetadataQuery } from '@/features/brain-region-hierarchy/hooks/use-brain-region-species';
 import { SPECIES_TAXONOMY_IDS } from '@/features/brain-region-hierarchy/types';
-import { useAccessToken } from '@/features/auth/client/use-access-token';
 import { classNames } from '@/util/utils';
 
 import {

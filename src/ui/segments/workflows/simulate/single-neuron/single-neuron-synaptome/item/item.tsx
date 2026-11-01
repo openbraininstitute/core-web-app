@@ -15,12 +15,12 @@ import { Color } from 'three';
 
 import { getSingleNeuronSynaptomePlacement } from '@/api/small-scale-simulator';
 import { tryCatch } from '@/api/utils';
-import { getSession } from '@/features/auth/auth-fetch';
 import {
   sendDisplaySynapses3DEvent,
   sendRemoveSynapses3DEvent,
 } from '@/components/neuron-viewer/hooks/events';
 import { useAppNotification } from '@/components/notification';
+import { getSession } from '@/features/auth/auth-fetch';
 import { createBubblesInstanced } from '@/services/bluenaas-single-cell/renderer-utils';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { Button } from '@/ui/molecules/button';

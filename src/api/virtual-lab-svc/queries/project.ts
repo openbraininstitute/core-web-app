@@ -1,6 +1,6 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
+import { getSession } from '@/features/auth/auth-fetch';
 import { fetchAllPaginatedData } from '@/utils/pagination';
 
 import type {
