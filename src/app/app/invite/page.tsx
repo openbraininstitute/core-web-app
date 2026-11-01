@@ -3,8 +3,8 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { tryCatch } from '@/api/utils';
 import { getInviteContent } from '@/api/virtual-lab-svc/queries/invite';
-import { getSession } from '@/features/auth/auth-fetch';
 import { ErrorComponent as SimpleErrorComponent } from '@/components/GenericErrorFallback';
+import { getSession } from '@/features/auth/auth-fetch';
 import { InvitationProcessing } from '@/ui/segments/invites';
 import { getErrorUrl } from '@/ui/segments/invites/helpers';
 

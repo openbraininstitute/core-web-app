@@ -1,9 +1,9 @@
 import find from 'es-toolkit/compat/find';
 import kebabCase from 'es-toolkit/compat/kebabCase';
 
-import { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
 import { getEntityByCoreType } from '@/entity-configuration/domain/helpers';
+import { getSession } from '@/features/auth/auth-fetch';
 import buildQueryString from '@/util/query-params-builder';
 
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';

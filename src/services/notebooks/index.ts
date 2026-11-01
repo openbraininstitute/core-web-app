@@ -1,5 +1,5 @@
-import authFetch, { getSession } from '@/features/auth/auth-fetch';
 import { config } from '@/config';
+import authFetch, { getSession } from '@/features/auth/auth-fetch';
 import { assertApiResponse } from '@/util/utils';
 
 export type NotebookStartResponse = {

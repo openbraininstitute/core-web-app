@@ -17,13 +17,14 @@ export default function useSessionState() {
   const pathname = usePathname();
   const previousSession = usePrevious(currentSession);
 
+  const status = currentSession.status;
+  const previousStatus = previousSession?.status;
   // If user logs-out in another window refresh page, (middleware will redirect to login if in a secured page)
-  if (
-    currentSession.status === AuthStatus.Unauthenticated &&
-    previousSession?.status === AuthStatus.Authenticated
-  ) {
-    window.location.reload();
-  }
+  useEffect(() => {
+    if (status === AuthStatus.Unauthenticated && previousStatus === AuthStatus.Authenticated) {
+      window.location.reload();
+    }
+  }, [status, previousStatus]);
 
   useEffect(() => {
     if (currentSession.data?.error !== REFRESH_ACCESS_TOKEN_ERROR) return;

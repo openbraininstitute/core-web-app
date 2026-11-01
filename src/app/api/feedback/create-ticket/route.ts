@@ -1,8 +1,8 @@
 import { Octokit } from '@octokit/core';
 import { type NextRequest, NextResponse } from 'next/server';
 
-import { auth } from '@/features/auth/server';
 import { serverConfig } from '@/config/server';
+import { auth } from '@/features/auth/server';
 import { log } from '@/utils/logger';
 
 export async function POST(req: NextRequest) {
