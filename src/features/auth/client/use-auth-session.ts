@@ -7,11 +7,10 @@ import { AuthStatus } from '@/features/auth/constants';
 
 import type { ISession, TSessionOrNull } from '@/features/auth/types';
 
-export type TUseAuthSessionReturn = { refetch: () => void } & (
+export type TUseAuthSessionReturn =
   | { data: ISession; status: typeof AuthStatus.Authenticated }
   | { data: null; status: typeof AuthStatus.Unauthenticated }
-  | { data: null; status: typeof AuthStatus.Loading }
-);
+  | { data: null; status: typeof AuthStatus.Loading };
 
 /**
  * The session the server rendered with (`auth()` in the app layout). `undefined` means no
@@ -19,15 +18,15 @@ export type TUseAuthSessionReturn = { refetch: () => void } & (
  */
 export const InitialSessionContext = createContext<TSessionOrNull | undefined>(undefined);
 
-function toReturn(session: TSessionOrNull, refetch: () => void): TUseAuthSessionReturn {
-  if (session) return { data: session, status: AuthStatus.Authenticated, refetch };
-  return { data: null, status: AuthStatus.Unauthenticated, refetch };
+function toReturn(session: TSessionOrNull): TUseAuthSessionReturn {
+  if (session) return { data: session, status: AuthStatus.Authenticated };
+  return { data: null, status: AuthStatus.Unauthenticated };
 }
 
 /**
  * The one client-side entry point to the session: wraps Better Auth's `useSession`
  * and returns the `{ data, status }` shape the app consumes, so `status === AuthStatus.Authenticated`
- * narrows `data` to a non-null `ISession`. Also exposes `refetch` for the polling in `useSessionState`.
+ * narrows `data` to a non-null `ISession`.
  * Components must use this instead of calling `authClient.useSession` directly.
  *
  * Better Auth's store reports its initial pending state during SSR and hydration, so the
@@ -36,11 +35,11 @@ function toReturn(session: TSessionOrNull, refetch: () => void): TUseAuthSession
  */
 export function useAuthSession(): TUseAuthSessionReturn {
   const initialSession = useContext(InitialSessionContext);
-  const { data, isPending, isRefetching, refetch } = authClient.useSession();
+  const { data, isPending, isRefetching } = authClient.useSession();
 
   if (isPending && !isRefetching) {
-    if (initialSession !== undefined) return toReturn(initialSession, refetch);
-    return { data: null, status: AuthStatus.Loading, refetch };
+    if (initialSession !== undefined) return toReturn(initialSession);
+    return { data: null, status: AuthStatus.Loading };
   }
-  return toReturn((data as ISession | null) ?? null, refetch);
+  return toReturn((data as ISession | null) ?? null);
 }
