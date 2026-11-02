@@ -14,6 +14,7 @@ import {
   useMorphologyPackStatus,
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
+import { PathwayKey } from '@/features/circuit-viewer/pathway-key';
 import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
@@ -59,7 +60,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TablePathway } from '@/features/circuit-nodes/circuit-nodes-table';
-import type { NodePopulation } from '@/features/circuit-nodes/types';
+import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
@@ -368,6 +369,8 @@ export function CircuitScene({
   const [tableResetRequest, setTableResetRequest] = useState(0);
   // The connectivity matrix's pathway under the pointer, of the cells on show.
   const [tablePathway, setTablePathway] = useState<TablePathway | null>(null);
+  // Whether the table shows the matrix, whose hovered pathway the key explains.
+  const [tableView, setTableView] = useState<ViewMode>('nodes');
   const narrowed =
     tableDriven &&
     tableCells?.circuitId === circuit?.id &&
@@ -845,6 +848,11 @@ export function CircuitScene({
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
         selection={sceneSelection}
+        keys={
+          tableDriven && tableView === 'connectivity' ? (
+            <PathwayKey background={config.backgroundColor} theme={theme} />
+          ) : undefined
+        }
         viz={{
           // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a
           // control the host offers no setter for, and the glow where the viewer cannot draw it.
@@ -883,6 +891,7 @@ export function CircuitScene({
               resetRequest: tableResetRequest,
               onCreateNeuronSet: createNeuronSet,
               onPathwayChange: setTablePathway,
+              onViewChange: setTableView,
             }}
           />,
           paneTable.target

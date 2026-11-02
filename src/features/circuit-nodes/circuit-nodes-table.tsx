@@ -57,6 +57,8 @@ export type TableCells = {
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
   /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
   onPathwayChange?: (pathway: TablePathway | null) => void;
+  /** Told what the table shows, its nodes or the connectivity matrix: nodes once it is gone. */
+  onViewChange?: (view: ViewMode) => void;
 };
 
 /**
@@ -184,6 +186,11 @@ export default function CircuitNodesTable({
       : undefined;
   const onShownCellsChange = cells?.onShownCellsChange;
   const onPathwayChange = cells?.onPathwayChange;
+  const onViewChange = cells?.onViewChange;
+  useEffect(() => {
+    onViewChange?.(view);
+    return () => onViewChange?.('nodes');
+  }, [view, onViewChange]);
   useEffect(() => {
     if (shown === undefined || !population) return;
     onShownCellsChange?.({

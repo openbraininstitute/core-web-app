@@ -22,7 +22,7 @@ import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
-import type { CSSProperties } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { ViewerTheme } from './contrast';
 import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
@@ -95,6 +95,8 @@ export interface ICircuitViewerChromeProps {
    * the Populations pill. With a cell `held`, the way back lets that one go first.
    */
   selection?: { count: number; total: number; onReset: () => void; held?: boolean };
+  /** Further keys, under the color-by's in the top-right corner: what else colours the scene. */
+  keys?: ReactNode;
 }
 
 /**
@@ -113,6 +115,7 @@ export function CircuitViewerChrome({
   colorByTarget,
   colorByNoneLabel,
   selection,
+  keys,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
   const populations = viz?.populations;
@@ -414,6 +417,19 @@ export function CircuitViewerChrome({
               />
             </div>
           )}
+          {keys}
+        </div>
+      )}
+      {!colorBy && keys && (
+        <div
+          className={cn(
+            'pointer-events-auto absolute right-3 top-3 flex flex-col items-end gap-2',
+            !showVizChrome && 'invisible pointer-events-none'
+          )}
+          aria-hidden={!showVizChrome}
+          inert={!showVizChrome || undefined}
+        >
+          {keys}
         </div>
       )}
 
