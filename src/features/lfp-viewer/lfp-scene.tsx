@@ -126,7 +126,6 @@ export function LfpScene({
 
   return (
     <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      {/* Its renderer waits on whether Bluenaas has the circuit's pack. */}
       {drawsEachCell !== undefined && (
         <CircuitScene
           circuit={circuit}
