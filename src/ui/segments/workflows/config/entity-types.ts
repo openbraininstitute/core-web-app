@@ -208,4 +208,9 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.System,
     label: 'Whole brain',
   },
+  [ExtendedEntitiesTypeDict.NeuroMechFlySimulation]: {
+    value: ExtendedEntitiesTypeDict.NeuroMechFlySimulation,
+    group: EntityGroupDict.System,
+    label: 'Whole brain + NeuroMechFly body',
+  },
 };

@@ -21,6 +21,7 @@ export { ScanConfigFromIdType, type TScanConfigFromIdType };
 export const ScanConfigGeneratedApiPath = {
   CircuitSimulation: 'circuit-simulation-scan-config-generate-grid',
   Brian2CircuitSimulation: 'brian-2-circuit-simulation-scan-config-generate-grid',
+  Brian2NeuroMechFlySimulation: 'brian-2-neuro-mech-fly-simulation-scan-config-generate-grid',
   LearningEngineCircuitSimulation: 'learning-engine-circuit-simulation-scan-config-generate-grid',
   MEModelWithSynapsesCircuitSimulation:
     'me-model-with-synapses-circuit-simulation-scan-config-generate-grid',
@@ -296,6 +297,14 @@ export function wholeBrainCircuitSimulationConfigureBinding(): TScanConfigConfig
     // via `resolveSimulatorScanConfigOverride`.
     generatedApiPath: ScanConfigGeneratedApiPath.CircuitSimulation,
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
+  };
+}
+
+/** A Brian2 whole-brain circuit walking the NeuroMechFly body, in closed loop. */
+export function neuroMechFlySimulationConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    ...wholeBrainCircuitSimulationConfigureBinding(),
+    generatedApiPath: ScanConfigGeneratedApiPath.Brian2NeuroMechFlySimulation,
   };
 }
 

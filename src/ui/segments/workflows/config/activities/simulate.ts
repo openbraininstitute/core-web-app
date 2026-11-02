@@ -5,6 +5,7 @@ import { simulateIonChannelWorkflow } from '@/features/scan-config/workflow/defi
 import { simulateMEModelWithSynapsesCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-me-model-with-synapses-circuit';
 import { simulateMemodelCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-memodel-circuit';
 import { simulateMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-microcircuit';
+import { simulateNeuroMechFlyWorkflow } from '@/features/scan-config/workflow/definitions/simulate-neuromechfly';
 import { simulatePairedNeuronCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-paired-neuron-circuit';
 import { simulateRegionCircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-region-circuit';
 import { simulateSmallMicrocircuitWorkflow } from '@/features/scan-config/workflow/definitions/simulate-small-microcircuit';
@@ -14,6 +15,7 @@ import {
   circuitSimulationConfigureBinding,
   ionChannelSimulationConfigureBinding,
   memodelCircuitSimulationConfigureBinding,
+  neuroMechFlySimulationConfigureBinding,
   wholeBrainCircuitSimulationConfigureBinding,
 } from '../scan-config-binding';
 import { WorkflowBrowseDefaults, WorkflowStagePresets } from '../types';
@@ -203,6 +205,28 @@ export const SimulateWorkflows: readonly IWorkflowDescriptor[] = [
     },
     configurationInputs: [{ type: ExtendedEntitiesTypeDict.WholeBrain }],
     order: 8,
+    disabled: false,
+  },
+  {
+    ...WorkflowBrowseDefaults,
+    ...WorkflowStagePresets.ScanConfig,
+    sourceType: ExtendedEntitiesTypeDict.WholeBrain,
+    targetType: ExtendedEntitiesTypeDict.NeuroMechFlySimulation,
+    breadcrumb: {
+      root: 'Whole brain + NeuroMechFly body simulation',
+      steps: { selection: 'Select whole brain' },
+    },
+    scanConfig: {
+      definition: simulateNeuroMechFlyWorkflow,
+      schemaName: SchemaNameDict.Brian2NeuroMechFlySimulationScanConfig,
+      configureBinding: neuroMechFlySimulationConfigureBinding(),
+    },
+    // The closed loop runs Brian2 point-neuron circuits only.
+    configurationInputs: [
+      { type: ExtendedEntitiesTypeDict.WholeBrain, filters: { target_simulator: 'Brian2' } },
+    ],
+    label: 'Whole brain + NeuroMechFly body',
+    order: 8.5,
     disabled: false,
   },
   {

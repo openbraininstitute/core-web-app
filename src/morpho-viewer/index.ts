@@ -29,6 +29,7 @@ export type {
   MorphoViewerMorphologyLocationSelection,
   /** Absolute origin + rotation from electrode overlay drag/rotate (`phase: 'end'`). */
   MorphoViewerOverlayTransformEvent,
+  MorphoViewerMeshAnimation,
   MorphoViewerSmallCircuitCell,
   MorphoViewerSmallCircuitCellData,
   MorphoViewerSmallCircuitProps,
@@ -37,6 +38,7 @@ export type {
   MorphoViewerSynapsesGroup,
   MorphoViewerTree,
   MorphoViewerTreeItem,
+  MorphoViewerWorldMesh,
   SectionColors,
 } from '@openbraininstitute/morphoviewer';
 

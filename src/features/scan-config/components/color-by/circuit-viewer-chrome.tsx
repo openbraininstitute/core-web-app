@@ -12,6 +12,12 @@ import { PopulationsMenu } from '@/features/circuit-nodes/components/populations
 import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
+import { ArenaInteractionHelp } from '../circuit-viz/arena-interaction-help';
+import {
+  BodyPreviewControls,
+  BodyReplayNote,
+  type IBodyPreviewControls,
+} from '../circuit-viz/body-preview-controls';
 import { ElectrodeInteractionHelp } from '../circuit-viz/electrode-interaction-help';
 import { MorphologyLocationHelp } from '../circuit-viz/morphology-location/help';
 import { ZoomSlider } from '../zoom-slider/zoom-slider';
@@ -68,6 +74,12 @@ export interface ICircuitViewerChromeProps {
     electrodesInteractive?: boolean;
     /** Whether clicking a neurite adds a morphology location right now. */
     morphologyLocationsInteractive?: boolean;
+    /** Whether a NeuroMechFly arena's handles can be dragged. */
+    arenaInteractive?: boolean;
+    /** Play buttons for the effect of a NeuroMechFly experiment's forces and leg overrides. */
+    bodyPreview?: IBodyPreviewControls;
+    /** What the body did in the NeuroMechFly episode being replayed. */
+    bodyReplay?: { readout: string };
     /** Camera zoom and a way to set it; omit to leave the zoom slider out. */
     zoom?: { value: number; onChange: (zoom: number) => void };
   };
@@ -258,9 +270,12 @@ export function CircuitViewerChrome({
                 viz.menu.showElectrodes !== false &&
                 viz.electrodesInteractive !== false && <ElectrodeInteractionHelp />}
               {viz.morphologyLocationsInteractive && <MorphologyLocationHelp />}
+              {viz.arenaInteractive && viz.menu.showArena !== false && <ArenaInteractionHelp />}
             </div>
           )}
         </div>
+        {viz?.bodyPreview && showVizChrome && <BodyPreviewControls {...viz.bodyPreview} />}
+        {viz?.bodyReplay && showVizChrome && <BodyReplayNote {...viz.bodyReplay} />}
         {viz && (
           <div
             className={cn(!showVizChrome && 'invisible pointer-events-none')}

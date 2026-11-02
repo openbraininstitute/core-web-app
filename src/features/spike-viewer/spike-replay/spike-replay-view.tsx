@@ -128,7 +128,7 @@ interface SpikeReplayViewProps {
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
 export function SpikeReplayView({ data, subject, reportPath, session }: SpikeReplayViewProps) {
-  const { timeline } = useSimulation();
+  const { timeline, simulationId } = useSimulation();
   // Every pass over the spikes - the cells on show, the replay's arrays, the
   // statistics - is the file's worker's, so none of them holds up the page.
   const ownSession = useSpikeSession(session === undefined ? data : null);
@@ -722,6 +722,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       selection={sceneSelection}
       onCellClick={handleCellClick}
       onNodeColorsChange={setSceneColors}
+      // An embodied circuit's body replays the episode this simulation ran.
+      simulationId={simulationId ?? undefined}
       spikes={{
         data: spikes ?? undefined,
         timeInMs: seekToMs,

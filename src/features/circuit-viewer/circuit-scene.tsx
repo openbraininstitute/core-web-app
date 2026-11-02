@@ -27,6 +27,11 @@ import {
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
+  isNeuroMechFlyOverlay,
+  NEUROMECHFLY_MARKER_RADIUS,
+} from '@/features/scan-config/components/model-preview/neuromechfly/scene';
+import { useNeuroMechFlyScene } from '@/features/scan-config/components/model-preview/neuromechfly/use-neuromechfly-scene';
+import {
   hasAnyLocation,
   type IFormBindingOptions,
   morphologyLocationPickMode,
@@ -164,6 +169,11 @@ interface ICircuitSceneOptions {
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /**
+   * The simulation whose results are on show. An embodied circuit's body then replays the episode
+   * that simulation ran, at the spikes' playhead, if one was stored.
+   */
+  simulationId?: string;
+  /**
    * Balls on cells of the population on show, at sections and offsets along them, each in a
    * colour of its own: such as a compartment report's locations, coloured as it plays.
    */
@@ -240,6 +250,7 @@ export function CircuitScene({
   selection,
   onNodeColorsChange,
   spikes,
+  simulationId,
   locationMarkers,
   onLocationClick,
   onLocationHover,
@@ -446,6 +457,19 @@ export function CircuitScene({
     subject: memodel,
   });
 
+  // An embodied circuit stands in its body; configuring its closed loop adds the arena.
+  const neuroMechFly = useNeuroMechFlyScene({
+    circuit: largeCircuit ? circuit : undefined,
+    simulationId,
+    config: scanConfig,
+    setConfig,
+    backgroundDark: menu.backgroundDark,
+    selectedRootElement,
+    selectedEntry,
+    signals,
+  });
+  const { onOverlayTransform: handleNeuroMechFlyTransform } = neuroMechFly;
+
   // A viewer whose WebGL context the browser took back - it takes the oldest
   // when a page asks for more than it allows - is drawn black from then on:
   // built anew, it draws again. Caught on the way down, since the loss does
@@ -574,6 +598,18 @@ export function CircuitScene({
     enableElectrodes &&
       setConfig &&
       styledOverlays?.some((group) => draggableOverlayIds.has(group.id))
+  );
+  const hasArena = neuroMechFly.overlays.length > 0;
+  const sceneOverlays = useMemo(
+    () => (hasArena ? [...(styledOverlays ?? []), ...neuroMechFly.overlays] : styledOverlays),
+    [hasArena, styledOverlays, neuroMechFly.overlays]
+  );
+  const handleSceneOverlayTransform = useCallback(
+    (event: MorphoViewerOverlayTransformEvent) => {
+      if (isNeuroMechFlyOverlay(event.id)) handleNeuroMechFlyTransform(event);
+      else handleOverlayTransform(event);
+    },
+    [handleNeuroMechFlyTransform, handleOverlayTransform]
   );
 
   // Selecting an electrode (or having overlays) turns the toggle on so markers
@@ -733,13 +769,20 @@ export function CircuitScene({
             scalebarColor={theme?.foreground}
             showScalebar={config.showScalebar}
             signals={signals}
-            overlays={styledOverlays}
-            overlaysInteractive={overlaysInteractive}
-            onOverlayTransform={handleOverlayTransform}
-            highlightedOverlayId={highlightedOverlayId}
+            overlays={sceneOverlays}
+            overlaysInteractive={overlaysInteractive || neuroMechFly.interactive}
+            onOverlayTransform={handleSceneOverlayTransform}
+            highlightedOverlayId={neuroMechFly.highlightedOverlayId ?? highlightedOverlayId}
             neuronOpacity={config.neuronOpacity}
             somaSizeScale={config.somaSizeScale}
-            electrodeRadius={config.electrodeRadius}
+            electrodeRadius={hasArena ? NEUROMECHFLY_MARKER_RADIUS : config.electrodeRadius}
+            overlaysMinRadiusInPixels={hasArena ? 5 : undefined}
+            overlaysMaxRadiusInPixels={hasArena ? 12 : undefined}
+            meshes={neuroMechFly.meshes}
+            cellsMatrix={neuroMechFly.cellsMatrix}
+            meshAnimation={neuroMechFly.meshAnimation}
+            cellsTrack={neuroMechFly.cellsTrack}
+            ground={neuroMechFly.ground}
             features={vizFeatures}
             spikes={spikes}
           />
@@ -790,19 +833,24 @@ export function CircuitScene({
         selection={sceneSelection}
         viz={{
           // A replay's afterglow is set with the rest of how the scene is drawn.
-          menu:
-            spikes?.data && spikes.onAfterglowChange
+          menu: {
+            ...(spikes?.data && spikes.onAfterglowChange
               ? {
                   ...menu,
                   spikeAfterglowInSeconds: spikes.afterglowInSeconds,
                   onSpikeAfterglowChange: spikes.onAfterglowChange,
                 }
-              : menu,
+              : menu),
+            ...neuroMechFly.menu,
+          },
           onResetView,
           // Nothing of the population on show is drawn to colour.
           colorBy: enableColorBy && !subjectUnplaceable ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
+          arenaInteractive: neuroMechFly.interactive,
+          bodyPreview: neuroMechFly.bodyPreview,
+          bodyReplay: neuroMechFly.bodyReplay,
           morphologyLocationsInteractive: canPickMorphologyLocations,
           // Omitted rather than hidden downstream: the large-circuit viewer takes no zoom
           // props, and with the setting off there is nothing to drive.

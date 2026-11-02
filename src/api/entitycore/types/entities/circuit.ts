@@ -186,6 +186,8 @@ export type SonataCircuitComponentConfig = {
   synaptic_models_dir: string;
   templates_dir: string;
   alternate_morphologies?: Record<string, string>;
+  /** An embodied circuit's body interface: which neurons the body drives and reads, and how. */
+  body_interface_file?: string;
 };
 
 export type ICircuitSonataConfiguration = {
