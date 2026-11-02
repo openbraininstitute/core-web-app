@@ -284,6 +284,11 @@ export function SpinyControls({
         </div>
         <div className="pointer-events-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-xl bg-slate-950/55 px-3 py-1 text-[11px] text-white/80 backdrop-blur">
           <span className={cn(load.error && 'text-rose-300')}>{status(load)}</span>
+          {load.mismatch && (
+            <span className="text-amber-300">
+              The skeleton lies outside this mesh: they may be from different cells or segmentations
+            </span>
+          )}
           {[1, 2, 3, 4].map((t) => (
             <span key={t} className="flex items-center gap-1">
               <span className="size-2 rounded-full" style={{ background: TYPE_COLOURS[t] }} />

@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
-import { meshCentre } from './engine/mesh-centre';
+import { meshCentre, shareInside } from './engine/mesh-centre';
 
 import type { SpinyWorkerApi } from './engine/spiny.worker';
 import type { SpinyComparisonViewer } from './engine/spiny-viewer';
@@ -28,10 +28,21 @@ export interface SpinyLoad {
   progress: SpinyProgress | null;
   counts: SpinyCounts | null;
   centre: Vec3 | null;
+  /** The skeleton does not lie inside the mesh's box: they are likely not of the same cell, or segmentation. */
+  mismatch: boolean;
   error: string | null;
 }
 
-const INITIAL: SpinyLoad = { progress: null, counts: null, centre: null, error: null };
+/** How much of the skeleton's box must lie inside the mesh's for the two to be taken as one cell. */
+const INSIDE_ENOUGH = 0.9;
+
+const INITIAL: SpinyLoad = {
+  progress: null,
+  counts: null,
+  centre: null,
+  mismatch: false,
+  error: null,
+};
 
 /**
  * Loads the spiny H5 in a worker, all of it, and puts it in the viewer, moved onto the mesh's origin. Another pair, or
@@ -61,10 +72,10 @@ export function useSpinyMorphology(
     (async () => {
       const [spinyRequest, meshRequest] = await Promise.all([sources.spiny(), sources.mesh()]);
       if (signal.aborted) return;
-      const [centre, data] = await Promise.all([
-        meshCentre(meshRequest, signal).then((c) => {
-          patch({ centre: c });
-          return c;
+      const [box, data] = await Promise.all([
+        meshCentre(meshRequest, signal).then((box) => {
+          patch({ centre: box.centre });
+          return box;
         }),
         api.load(
           { ...spinyRequest, fileKey: `spiny-${sources.key.replace(/[^\w-]/g, '_')}` },
@@ -73,8 +84,8 @@ export function useSpinyMorphology(
       ]);
       if (signal.aborted) return;
       viewer.setSpiny(data);
-      viewer.setCentre(centre);
-      patch({ counts: data.counts });
+      viewer.setCentre(box.centre);
+      patch({ counts: data.counts, mismatch: shareInside(data.bounds, box) < INSIDE_ENOUGH });
     })().catch((e: unknown) => {
       if (signal.aborted) return;
       logError('Could not load the spiny morphology', e);

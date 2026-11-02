@@ -10,6 +10,7 @@ import {
   placeVertices,
 } from '@/features/entities/cell-morphology/spiny-comparison/engine/geometry';
 import { gridLayout } from '@/features/entities/cell-morphology/spiny-comparison/engine/grid';
+import { shareInside } from '@/features/entities/cell-morphology/spiny-comparison/engine/mesh-centre';
 import { readSpiny } from '@/features/entities/cell-morphology/spiny-comparison/engine/read-spiny';
 import {
   alongPath,
@@ -19,6 +20,7 @@ import {
   slerpDirection,
   turnAbout,
 } from '@/features/entities/cell-morphology/spiny-comparison/engine/tour';
+import { meshHints } from '@/features/entities/cell-morphology/spiny-comparison/find-mesh';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import {
   inputMeshId,
@@ -379,5 +381,36 @@ describe('the fly-throughs’ paths', () => {
     expect(Math.hypot(...half)).toBeCloseTo(1, 6);
     expect(half[0]).toBeCloseTo(0, 6);
     near(turnAbout([1, 0, 0], [0, 0, 1], Math.PI / 2), [0, 1, 0]);
+  });
+});
+
+describe('finding a spiny morphology’s mesh', () => {
+  it('reads the mesh id from a workflow output’s name, and the cell id from a name or description', () => {
+    expect(meshHints({ name: '353b3e46-7f01-440b-a464-f80ea67c488a', description: '' })).toEqual({
+      meshId: '353b3e46-7f01-440b-a464-f80ea67c488a',
+      cellId: null,
+    });
+    // kept as digits: 864691136330101226 is past what a number holds exactly
+    expect(meshHints({ name: 'MICrONS neuron 864691136330101226', description: '' })).toEqual({
+      meshId: null,
+      cellId: '864691136330101226',
+    });
+    expect(
+      meshHints({
+        name: 'my morphology',
+        description: 'Reconstructed morphology and extracted spines of neuron 864691136053465.',
+      }).cellId
+    ).toBe('864691136053465');
+    expect(meshHints({ name: 'L5 TPC 2021', description: 'no id here' })).toEqual({
+      meshId: null,
+      cellId: null,
+    });
+  });
+
+  it('measures how much of the skeleton’s box lies inside the mesh’s', () => {
+    const mesh = { min: [0, 0, 0], max: [10, 10, 10] } as never;
+    expect(shareInside({ min: [1, 1, 1], max: [9, 9, 9] }, mesh)).toBe(1);
+    expect(shareInside({ min: [5, 0, 0], max: [15, 10, 10] }, mesh)).toBeCloseTo(0.5, 6);
+    expect(shareInside({ min: [20, 0, 0], max: [30, 10, 10] }, mesh)).toBe(0);
   });
 });
