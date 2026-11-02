@@ -514,8 +514,11 @@ function ReadyMatrix({
           options={measures.map((m) => ({ value: m.value, label: m.label }))}
         />
         {byNeuron && neurons > MAX_NEURON_ROWS && (
-          <span className="text-xs text-neutral-400">
-            {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons or so to a row
+          <span
+            className="text-xs text-neutral-400"
+            title={`Too many neurons for a row each: the ${neurons.toLocaleString()} are split into ${MAX_NEURON_ROWS} rows and columns, each a run of consecutive neurons in the Order by order.`}
+          >
+            About {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons per row and column
           </span>
         )}
         {cells && selection && (
