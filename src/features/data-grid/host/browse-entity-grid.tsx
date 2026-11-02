@@ -503,6 +503,7 @@ export function EntityDataGrid({
           activeRowId={activeRowId}
           selection={pickerSelection}
           framed={framed}
+          showColumnChooser={false}
           toolbarSlots={{
             action: allowUpload ? <UploadDataButton compact entityType={dataType} /> : undefined,
             brainRegion: toolbarBrainRegion,

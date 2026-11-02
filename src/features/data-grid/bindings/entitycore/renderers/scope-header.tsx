@@ -85,7 +85,7 @@ function ScopeSortHeader({ columnId, ctx }: Pick<IHeaderRendererProps, 'columnId
           const isLast = isOn && !shown.has(other);
           const Icon = kind === 'public' ? GlobalOutlined : ProjectIcon;
           return (
-            <ScopeTooltip key={kind} kind={kind}>
+            <ScopeTooltip key={kind} kind={kind} canChangeProject>
               <button
                 type="button"
                 aria-pressed={isOn}
@@ -248,7 +248,7 @@ function ScopeFilterHeader({ columnId, ctx }: Pick<IHeaderRendererProps, 'column
           const isOn = side !== other;
           const Icon = kind === 'public' ? GlobalOutlined : ProjectIcon;
           return (
-            <ScopeTooltip key={kind} kind={kind}>
+            <ScopeTooltip key={kind} kind={kind} canChangeProject>
               <button
                 type="button"
                 aria-pressed={isOn}
@@ -366,6 +366,7 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
           <ScopeTooltip
             key={kind}
             kind={kind}
+            canChangeProject
             note={heldByPublic ? 'Shown while public data is: it is public too' : undefined}
           >
             <button

@@ -3,12 +3,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
+import { LightTooltip } from '@/features/data-grid/bindings/entitycore/renderers/light-tooltip';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { openSpaceSwitcher } from '@/ui/segments/workspaces/space-switcher/event';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
-import type { ComponentProps, ReactElement } from 'react';
+import type { ReactElement } from 'react';
 import type { TScopeKind } from '@/features/data-grid/bindings/entitycore/scope-filter';
 
 export const SCOPE_LABELS: Record<TScopeKind, string> = {
@@ -18,7 +18,15 @@ export const SCOPE_LABELS: Record<TScopeKind, string> = {
 };
 
 /** Rendered only while its tooltip is open, so the project is fetched on demand. */
-function ProjectScopeHint({ published, note }: { published?: boolean; note?: string }) {
+function ProjectScopeHint({
+  published,
+  note,
+  canChangeProject,
+}: {
+  published?: boolean;
+  note?: string;
+  canChangeProject: boolean;
+}) {
   const { virtualLabId, projectId } = useWorkspace();
   const { data: project } = useQuery({
     queryKey: keyBuilder.getWorkspace({ virtualLabId, projectId }),
@@ -32,13 +40,15 @@ function ProjectScopeHint({ published, note }: { published?: boolean; note?: str
       <span>Project{project?.name ? `: ${project.name}` : ''}</span>
       {published && <span>Made public</span>}
       {note && <span className="opacity-80">{note}</span>}
-      <button
-        type="button"
-        onClick={openSpaceSwitcher}
-        className="rounded-full bg-white/15 px-2.5 py-0.5 font-semibold transition-colors hover:bg-white/25"
-      >
-        Change project
-      </button>
+      {canChangeProject && (
+        <button
+          type="button"
+          onClick={openSpaceSwitcher}
+          className="bg-primary-1 text-primary-9 hover:bg-primary-2 rounded-full px-2.5 py-0.5 font-semibold transition-colors"
+        >
+          Change project
+        </button>
+      )}
     </div>
   );
 }
@@ -47,9 +57,10 @@ interface IScopeTooltipProps {
   kind: TScopeKind;
   /** a line under the hint, e.g. why a toggle cannot be switched off */
   note?: string;
+  /** offers "Change project": the column header's icons only, not every row's */
+  canChangeProject?: boolean;
   /** the hovered element; Radix hands it a ref and its handlers */
   children: ReactElement;
-  side?: ComponentProps<typeof TooltipContent>['side'];
   delayDuration?: number;
 }
 
@@ -57,28 +68,31 @@ interface IScopeTooltipProps {
 export function ScopeTooltip({
   kind,
   note,
+  canChangeProject = false,
   children,
-  side = 'bottom',
   delayDuration,
 }: IScopeTooltipProps) {
   return (
-    <Tooltip delayDuration={delayDuration}>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      {/* the label keeps the screen-reader copy of the content free of its button */}
-      <TooltipContent
-        side={side}
-        sideOffset={4}
-        aria-label={note ? `${SCOPE_LABELS[kind]}. ${note}` : SCOPE_LABELS[kind]}
-      >
-        {kind === 'public' ? (
+    <LightTooltip
+      delayDuration={delayDuration}
+      // the label keeps the screen-reader copy of the content free of its button
+      ariaLabel={note ? `${SCOPE_LABELS[kind]}. ${note}` : SCOPE_LABELS[kind]}
+      label={
+        kind === 'public' ? (
           <div className="flex flex-col items-start gap-1.5">
             <span>Public</span>
             {note && <span className="opacity-80">{note}</span>}
           </div>
         ) : (
-          <ProjectScopeHint published={kind === 'published'} note={note} />
-        )}
-      </TooltipContent>
-    </Tooltip>
+          <ProjectScopeHint
+            published={kind === 'published'}
+            note={note}
+            canChangeProject={canChangeProject}
+          />
+        )
+      }
+    >
+      {children}
+    </LightTooltip>
   );
 }

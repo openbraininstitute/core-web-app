@@ -40,26 +40,45 @@ export function useScopeMarks() {
   return marks === 'badge' || marks === 'sort' ? marks : 'filter';
 }
 
+/** A globe with a person badge: the project's own data, made public. */
+function GlobeWithProjectBadge({ muted }: { muted?: boolean }) {
+  return (
+    <svg
+      role="img"
+      aria-label={SCOPE_LABELS.published}
+      viewBox="0 0 24 24"
+      width="1.2em"
+      height="1.2em"
+      fill="none"
+    >
+      <g stroke="currentColor" strokeWidth="1.7" strokeLinecap="round">
+        <circle cx="10" cy="10" r="7.7" />
+        <ellipse cx="10" cy="10" rx="3.3" ry="7.7" />
+        <path d="M2.3 10h15.4" />
+      </g>
+      {/* the ring cuts the badge out of the globe */}
+      <circle cx="16.5" cy="16.5" r="7.5" className="fill-white" />
+      <circle cx="16.5" cy="16.5" r="6.5" className={muted ? 'fill-gray-300' : 'fill-primary-4'} />
+      <circle cx="16.5" cy="14.2" r="2.2" fill="white" />
+      <path d="M12.4 21c.4-2.4 2-3.6 4.1-3.6s3.7 1.2 4.1 3.6z" fill="white" />
+    </svg>
+  );
+}
+
 /**
- * A globe, people, or for the project's made-public data either both side by side or
- * people with a globe at their foot; `muted` leaves the colour to the parent. Colours sit
+ * A globe, people, or for the project's made-public data a globe with a person
+ * badge; `muted` leaves the colour to the parent. Colours sit
  * on wrappers: on the icon itself a colour class ties with antd's `.anticon { color:
  * inherit }`, and whichever stylesheet loaded last wins.
  */
 export function ScopeMark({ kind, muted }: { kind: TScopeKind; muted?: boolean }) {
   const ProjectIcon = useProjectScopeIcon();
-  const marks = useScopeMarks();
   const tint = (scope: keyof typeof SCOPE_COLORS) =>
     cn('inline-flex', !muted && SCOPE_COLORS[scope]);
-  if (kind === 'published' && marks !== 'badge') {
+  if (kind === 'published') {
     return (
-      <span aria-label={SCOPE_LABELS.published} role="img" className="inline-flex gap-1">
-        <span className={tint('public')}>
-          <GlobalOutlined aria-hidden />
-        </span>
-        <span className={tint('project')}>
-          <ProjectIcon aria-hidden />
-        </span>
+      <span className={tint('public')}>
+        <GlobeWithProjectBadge muted={muted} />
       </span>
     );
   }
@@ -71,18 +90,8 @@ export function ScopeMark({ kind, muted }: { kind: TScopeKind; muted?: boolean }
     );
   }
   return (
-    <span className={cn('relative', tint('project'))}>
+    <span className={tint('project')}>
       <ProjectIcon aria-label={SCOPE_LABELS[kind]} />
-      {kind === 'published' && (
-        <span
-          className={cn(
-            'absolute -bottom-0.5 -left-1 rounded-full bg-white p-px text-[0.55em]',
-            tint('public')
-          )}
-        >
-          <GlobalOutlined aria-hidden />
-        </span>
-      )}
     </span>
   );
 }
@@ -100,13 +109,13 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
   if (!kind) return EMPTY_PLACEHOLDER;
   return (
     // to the side and a beat late, so sweeping down the column does not flash one per row
-    <ScopeTooltip kind={kind} side="right" delayDuration={200}>
-      <span
-        data-testid={`scope-cell-${kind}`}
-        className="flex h-full items-center justify-center text-lg"
-      >
-        <ScopeMark kind={kind} />
-      </span>
-    </ScopeTooltip>
+    <span className="flex h-full items-center justify-center text-lg">
+      {/* the icon is the trigger, so the card hangs from it and not from the cell's edge */}
+      <ScopeTooltip kind={kind} delayDuration={200}>
+        <span data-testid={`scope-cell-${kind}`} className="inline-flex">
+          <ScopeMark kind={kind} />
+        </span>
+      </ScopeTooltip>
+    </span>
   );
 }

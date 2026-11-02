@@ -249,7 +249,7 @@ describe('scope cell', () => {
     expect(screen.getByRole('img', { name: 'Project' })).toHaveClass('anticon-user');
   });
 
-  it("shows both marks for the project's made-public data", () => {
+  it("shows a globe with a person badge for the project's made-public data", () => {
     renderWithFlags(
       <ScopeCell
         row={{ authorized_public: true, authorized_project_id: PROJECT }}
@@ -257,9 +257,8 @@ describe('scope cell', () => {
         rowIndex={0}
       />
     );
-    const mark = screen.getByRole('img', { name: 'Project, made public' });
-    expect(mark.querySelector('.anticon-global')).not.toBeNull();
-    expect(mark.querySelector('.anticon-team')).not.toBeNull();
+    expect(screen.getByTestId('scope-cell-published')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Project, made public' })).toBeInTheDocument();
   });
 
   it('falls back to the empty placeholder without the flag', () => {
