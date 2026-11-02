@@ -1,4 +1,4 @@
-import { MorphoViewerTreeItemType } from '@/morpho-viewer';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 
 /**
  * Human labels for the section types a morphology can report.
@@ -7,29 +7,24 @@ import { MorphoViewerTreeItemType } from '@/morpho-viewer';
  * rest of the UI copy. `Dendrite` is what the viewer calls a basal dendrite on a cell with no
  * apical one, where the distinction would be noise.
  */
-const SECTION_TYPE_LABELS: Partial<Record<MorphoViewerTreeItemType, string>> = {
-  [MorphoViewerTreeItemType.Soma]: 'Soma',
-  [MorphoViewerTreeItemType.Axon]: 'Axon',
-  [MorphoViewerTreeItemType.Dendrite]: 'Dendrite',
-  [MorphoViewerTreeItemType.BasalDendrite]: 'Basal dendrite',
-  [MorphoViewerTreeItemType.ApicalDendrite]: 'Apical dendrite',
-  [MorphoViewerTreeItemType.Myelin]: 'Myelin',
+const SECTION_TYPE_LABELS: Partial<Record<SectionType, string>> = {
+  [SectionType.Soma]: 'Soma',
+  [SectionType.Axon]: 'Axon',
+  [SectionType.Dendrite]: 'Dendrite',
+  [SectionType.BasalDendrite]: 'Basal dendrite',
+  [SectionType.ApicalDendrite]: 'Apical dendrite',
+  [SectionType.Myelin]: 'Myelin',
 };
 
 /** Section types a morphology location may sit on today. */
-export const TARGETABLE_SECTION_TYPES: readonly MorphoViewerTreeItemType[] = [
-  MorphoViewerTreeItemType.BasalDendrite,
-  MorphoViewerTreeItemType.ApicalDendrite,
-  MorphoViewerTreeItemType.Dendrite,
+const TARGETABLE_SECTION_TYPES: readonly SectionType[] = [
+  SectionType.BasalDendrite,
+  SectionType.ApicalDendrite,
+  SectionType.Dendrite,
 ];
 
-/**
- * Whether a location may sit on this section.
- *
- * Takes `number` because the enum is declared in both the viewer package and this feature,
- * and TypeScript treats those as different types even though the values match.
- */
-export function isTargetableSectionType(sectionType: number | undefined): boolean {
+/** Whether a location may sit on this section. */
+export function isTargetableSectionType(sectionType: SectionType | undefined): boolean {
   return sectionType !== undefined && TARGETABLE_SECTION_TYPES.includes(sectionType);
 }
 
@@ -39,6 +34,6 @@ export function isTargetableSectionType(sectionType: number | undefined): boolea
  * Returns `undefined` rather than "Unknown" so callers can omit the row: a label that says
  * nothing is worse than no label.
  */
-export function sectionTypeLabel(type: MorphoViewerTreeItemType | undefined): string | undefined {
+export function sectionTypeLabel(type: SectionType | undefined): string | undefined {
   return type === undefined ? undefined : SECTION_TYPE_LABELS[type];
 }

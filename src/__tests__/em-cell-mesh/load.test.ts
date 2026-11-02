@@ -11,7 +11,6 @@ import {
   type LoadOptions,
   type LoadReport,
   loadEmMesh,
-  type WorkerHandle,
   type Workers,
 } from '@/features/entities/em-cell-mesh/viewer/engine/load';
 import { decodeStandIn } from '@/features/entities/em-cell-mesh/viewer/engine/stand-in-cache';
@@ -22,11 +21,12 @@ import {
   createStandInApi,
 } from '@/features/entities/em-cell-mesh/viewer/engine/worker-apis';
 
-import { FakeCacheStorage, fakeServer } from './fake-caches';
+import { FakeCacheStorage, fakeServer } from '../viewer-3d/fake-caches';
 import { dracoDecoder, encodeGlb, torus } from './mesh-fixtures';
 
-import type { CacheBounds } from '@/features/entities/em-cell-mesh/viewer/engine/asset-cache';
 import type { PackedMesh, StandIn } from '@/features/entities/em-cell-mesh/viewer/engine/types';
+import type { CacheBounds } from '@/features/viewer-3d/load/asset-cache';
+import type { WorkerHandle } from '@/features/viewer-3d/load/worker-handle';
 
 const URL_A = 'https://entitycore.test/em-cell-mesh/1/assets/a/download';
 const DESKTOP = { memoryGB: 8, pixels: 1920 * 1080 };

@@ -119,6 +119,39 @@ describe('viewer controls', () => {
     expect(camera.position.distanceTo(held)).toBeGreaterThan(1);
   });
 
+  it('holds the spin while a press is kept from the controls, as a dragged electrode keeps it', () => {
+    const container = renderer.domElement.parentElement as HTMLElement;
+    viewer.setSpin(true);
+    run(50);
+    container.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 2, button: 0 }));
+    run();
+    expect(renderer.loop).toBeNull();
+    const held = camera.position.clone();
+    container.dispatchEvent(new PointerEvent('pointerup', { pointerId: 2, button: 0 }));
+    run(30);
+    expect(camera.position.distanceTo(held)).toBeGreaterThan(1);
+  });
+
+  it('spins no view that may not be turned, as a flat chart', () => {
+    const position = camera.position.clone();
+    controls.enableRotate = false;
+    viewer.setSpin(true);
+    run();
+    expect(renderer.loop).toBeNull();
+    expect(camera.position.distanceTo(position)).toBe(0);
+  });
+
+  it('ends a turn to an axis on the axis while the view spins, and spins on from there', () => {
+    const turning = viewer as unknown as { turn: unknown };
+    viewer.setSpin(true);
+    run(5);
+    viewer.viewAlong(0, 1);
+    for (let i = 0; i < 100 && turning.turn !== null; i++) run(1);
+    expect(facing().x).toBeCloseTo(1, 6);
+    run(30);
+    expect(facing().x).toBeLessThan(1 - 1e-4);
+  });
+
   it('resets to the fitted, upright view while a drag and a pan are still easing out', () => {
     viewer.resetView();
     run();

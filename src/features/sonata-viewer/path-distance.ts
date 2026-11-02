@@ -1,9 +1,9 @@
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
+import { SectionType } from '@/features/circuit-viewer/section-type';
 
 import type { Sections } from '@/features/scan-config/types';
 
 /** A section of a morphology: how far along the neurites from the soma it starts, its length and its type. */
-export type SectionPath = { start: number; length: number; type: MorphoViewerTreeItemType };
+export type SectionPath = { start: number; length: number; type: SectionType };
 
 /**
  * Each section's path along the morphology by its SONATA id: from the soma's surface to the
@@ -20,7 +20,7 @@ export function sectionPaths(sections: Sections): Map<number, SectionPath> {
       const [x1, y1, z1] = section.points[i];
       length += Math.hypot(x1 - x0, y1 - y0, z1 - z0);
     }
-    lengthOf.set(section.id, section.type === MorphoViewerTreeItemType.Soma ? 0 : length);
+    lengthOf.set(section.id, section.type === SectionType.Soma ? 0 : length);
   }
   // Up to the soma, then back down: each section's start known once its parent's is.
   const startOf = new Map<string, number>();

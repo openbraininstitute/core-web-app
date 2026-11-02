@@ -1,9 +1,11 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
+import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
+import { loadSections } from '@/features/circuit-viewer/morphologies/load/read-sections';
 import { sectionTypeLabel } from '@/features/scan-config/components/circuit-viz/section-type-label';
-import { loadMorphologySections } from '@/features/scan-config/components/circuit-viz/sequential-loader';
 import {
   morphologyFileOf,
   resolveMorphologyLocation,
@@ -50,6 +52,7 @@ export function useCompartmentPlaces({
   getColumn: (name: string) => Promise<ColumnValues>;
 }): CompartmentPlaces | null {
   const { virtualLabId, projectId } = useWorkspace();
+  const queryClient = useQueryClient();
   const [found, setFound] = useState<{
     compartments: ReadonlyMap<number, readonly Compartment[]>;
     offsets: ReadonlyMap<number, number> | undefined;
@@ -78,12 +81,10 @@ export function useCompartmentPlaces({
           if (!name) return;
           let pending = pathsOf.get(name);
           if (!pending) {
-            pending = loadMorphologySections({
+            pending = loadSections(queryClient, {
+              path: circuitMorphologyPath(circuitId, morphologyFileOf(location, name), name),
               virtualLabId,
               projectId,
-              circuitId,
-              name,
-              file: morphologyFileOf(location, name),
             }).then(sectionPaths);
             pathsOf.set(name, pending);
           }
@@ -123,6 +124,7 @@ export function useCompartmentPlaces({
     getColumn,
     virtualLabId,
     projectId,
+    queryClient,
   ]);
   return found?.compartments === compartments && found.offsets === offsets ? found.places : null;
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { SectionType } from '@/features/circuit-viewer/section-type';
 import { sectionPaths } from '@/features/sonata-viewer/path-distance';
-import { MorphoViewerTreeItemType } from '@/morpho-viewer/tree-item-type';
 
 import type { Sections } from '@/features/scan-config/types';
 
@@ -10,7 +10,7 @@ const section = (
   parent: string | null,
   sonata: number,
   points: [number, number, number][],
-  type = MorphoViewerTreeItemType.ApicalDendrite
+  type: SectionType = SectionType.ApicalDendrite
 ): Sections[number] => ({
   id,
   parent_id: parent,
@@ -36,7 +36,7 @@ describe('sectionPaths', () => {
           [0, 0, 0],
           [3, 0, 0],
         ],
-        MorphoViewerTreeItemType.Soma
+        SectionType.Soma
       ),
       section('1', 'soma', 1, [
         [0, 0, 0],
@@ -50,7 +50,7 @@ describe('sectionPaths', () => {
     expect(paths.get(0)).toMatchObject({
       start: 0,
       length: 0,
-      type: MorphoViewerTreeItemType.Soma,
+      type: SectionType.Soma,
     });
     expect(paths.get(1)).toMatchObject({ start: 0, length: 10 });
     expect(paths.get(2)?.start).toBe(10);

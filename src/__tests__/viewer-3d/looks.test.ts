@@ -12,45 +12,7 @@ import {
   withDisplacement,
 } from '@/features/viewer-3d/engine/looks';
 
-/** The shader lib entry three compiles a built-in material from (WebGLPrograms' `shaderIDs`). */
-const SHADER_IDS: Record<string, string> = {
-  MeshBasicMaterial: 'basic',
-  MeshToonMaterial: 'toon',
-  MeshStandardMaterial: 'physical',
-  MeshPhysicalMaterial: 'physical',
-  MeshMatcapMaterial: 'matcap',
-  MeshNormalMaterial: 'normal',
-};
-
-/** What three hands a material's `onBeforeCompile`: the shader sources, includes not yet resolved. */
-function compile(m: THREE.Material): {
-  vertexShader: string;
-  fragmentShader: string;
-  uniforms: Record<string, THREE.IUniform>;
-} {
-  const sm = m as THREE.ShaderMaterial;
-  const src = sm.isShaderMaterial ? sm : THREE.ShaderLib[SHADER_IDS[m.type]];
-  const shader = {
-    vertexShader: src.vertexShader,
-    fragmentShader: src.fragmentShader,
-    uniforms: THREE.UniformsUtils.clone(src.uniforms),
-  };
-  m.onBeforeCompile(
-    shader as unknown as THREE.WebGLProgramParametersWithUniforms,
-    null as unknown as THREE.WebGLRenderer
-  );
-  return shader;
-}
-
-/** The functions and globals declared more than once in a shader, which GLSL refuses: two hooks bringing the same code. */
-function redeclared(source: string): string[] {
-  const names = [
-    ...source.matchAll(
-      /^\s*(?:(?:uniform|varying|attribute)\s+\w+\s+(\w+);|\w+\s+(\w+)\(.*\)\s*\{)\s*$/gm
-    ),
-  ].map((m) => m[1] ?? m[2]);
-  return names.filter((n, i) => names.indexOf(n) !== i);
-}
+import { compile, redeclared } from './compile';
 
 /** OKLCH of a colour, brighter than white too: OKLab goes as the cube root of the light. */
 function oklch(c: THREE.Color): [number, number, number] {
@@ -205,6 +167,14 @@ describe('looks for a surface without colours, types or radii', () => {
     expect(bare.map((l) => l.id)).toEqual(
       looks.filter((l) => l.id !== 'fluorescence').map((l) => l.id)
     );
+  });
+
+  it('builds only the looks asked for, and refuses one the surface does not allow or that is not there', () => {
+    const ids = (only: string[]) => createLooks(1, [], only).map((l) => l.id);
+    expect(ids(['studio'])).toEqual(['studio']);
+    expect(ids(['clay', 'flat'])).toEqual(['clay', 'flat']);
+    expect(() => ids(['fluorescence'])).toThrow('no look "fluorescence" for this surface');
+    expect(() => ids(['studio '])).toThrow('no look "studio " for this surface');
   });
 
   it('draws in a colour of its theme where the neurite colours would go: darker than a light background, lighter than a dark one', () => {

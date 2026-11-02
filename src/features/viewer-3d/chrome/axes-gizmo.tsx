@@ -4,7 +4,7 @@ import { cn } from '@/utils/css-class';
 
 import { gizmoTips, TIPS } from '../engine/gizmo';
 
-import type { ViewControls } from '../engine/scene-viewer';
+import type { ViewControls } from '../engine/scene-view';
 
 const AXES = [
   { name: 'X', color: '#f03c2e', shade: '#4a0d08', ink: '#fff' },
