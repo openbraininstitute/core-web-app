@@ -1,10 +1,11 @@
 import { isEqual } from 'es-toolkit';
 import * as THREE from 'three';
 
+import { GpuTimer, type TimerKind } from '@/features/viewer-3d/engine/gpu-timer';
+import { median, WAKE_FRAMES } from '@/features/viewer-3d/engine/motion-quality';
 import { SceneViewer } from '@/features/viewer-3d/engine/scene-viewer';
 
 import { chunkArrays } from './chunks';
-import { GpuTimer, type TimerKind } from './gpu-timer';
 import {
   type Choice,
   errorPixels,
@@ -13,9 +14,7 @@ import {
   MeshChooser,
   type MeshKind,
   MovingCost,
-  median,
   type Reason,
-  WAKE_FRAMES,
 } from './mesh-choice';
 import { DEFAULT_MOTION, type MotionOptions, MotionQuality } from './motion-quality';
 
@@ -527,11 +526,12 @@ export class EmMeshViewer extends SceneViewer {
     this.tellStatus();
   };
 
-  protected override afterDraw(moved: MovingFrame | null): void {
+  protected override afterDraw(moving: boolean): void {
     if (this.timing) {
       this.timing = false;
       this.timer?.end();
     }
+    const moved = moving ? this.drawnCut : null;
     if (moved && this.choice) this.lastMoving = { mesh: this.choice.mesh, ...moved };
     this.tellStatus();
   }

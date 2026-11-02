@@ -1,4 +1,5 @@
-import { atom } from 'jotai';
+import { atom, useSetAtom } from 'jotai';
+import { useEffect } from 'react';
 
 /**
  * World-space point the circuit viewer is framed on (bbox / soma average).
@@ -16,3 +17,11 @@ export type CircuitSceneAnchor = readonly [number, number, number];
  * a prop drill would be noisy; an atom lets any viewer publish the anchor once.
  */
 export const circuitSceneAnchorAtom = atom<CircuitSceneAnchor | null>(null);
+
+/** `anchor` published, once there is one, for new electrodes to start from. */
+export function usePublishAnchor(anchor: CircuitSceneAnchor | null | undefined) {
+  const setAnchor = useSetAtom(circuitSceneAnchorAtom);
+  useEffect(() => {
+    if (anchor) setAnchor(anchor);
+  }, [anchor, setAnchor]);
+}
