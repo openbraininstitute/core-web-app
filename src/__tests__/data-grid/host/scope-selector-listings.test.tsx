@@ -79,9 +79,9 @@ describe('listings with a scope selector', () => {
       ExtendedEntitiesTypeDict.AnalysisNotebookTemplate,
       false,
     ],
-  ] as const)('lead %s with the scope column', async (_, section, dataType, picker) => {
+  ] as const)('lead %s with the visibility and editable columns', async (_, section, dataType, picker) => {
     const ids = await columnsFor({ dataType, section, picker, requireScopeSelector: true });
-    expect(ids[0]).toBe('scope');
+    expect(ids.slice(0, 2)).toEqual(['visibility', 'editable']);
   });
 
   it('leave a listing pinned to both scopes without a selector unmarked', async () => {
@@ -90,6 +90,7 @@ describe('listings with a scope selector', () => {
       section: WorkspaceSection.Data,
       scope: WorkspaceScope.Combined,
     });
-    expect(ids).not.toContain('scope');
+    expect(ids).not.toContain('visibility');
+    expect(ids).not.toContain('editable');
   });
 });

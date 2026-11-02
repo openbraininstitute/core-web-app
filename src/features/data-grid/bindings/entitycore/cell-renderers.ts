@@ -3,6 +3,10 @@ import {
   DescriptionCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/description-cell';
 import {
+  EDITABLE_RENDERER,
+  EditableCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/editable-cell';
+import {
   LIFECYCLE_STATUS_RENDERER,
   LifecycleStatusCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
@@ -15,6 +19,14 @@ import {
   SCOPE_HEADER_RENDERER,
   ScopeHeader,
 } from '@/features/data-grid/bindings/entitycore/renderers/scope-header';
+import {
+  VISIBILITY_RENDERER,
+  VisibilityCell,
+} from '@/features/data-grid/bindings/entitycore/renderers/visibility-cell';
+import {
+  VISIBILITY_HEADER_RENDERER,
+  VisibilityHeader,
+} from '@/features/data-grid/bindings/entitycore/renderers/visibility-header';
 import { CellRendererRegistry } from '@/features/data-grid/react';
 
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
@@ -32,6 +44,9 @@ export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRe
   registry.register(DESCRIPTION_RENDERER, DescriptionCell);
   registry.register(SCOPE_RENDERER, ScopeCell);
   registry.registerHeader(SCOPE_HEADER_RENDERER, ScopeHeader);
+  registry.register(VISIBILITY_RENDERER, VisibilityCell);
+  registry.registerHeader(VISIBILITY_HEADER_RENDERER, VisibilityHeader);
+  registry.register(EDITABLE_RENDERER, EditableCell);
   registerSharedRenderers(registry);
   definition.registerCellRenderers?.(registry);
   return registry;
