@@ -141,6 +141,9 @@ interface ITypeCellParams {
 /** `cellRendererParams` the Status cell reads; supplied by the schema factory. */
 interface IStatusCellParams {
   workspace?: WorkspaceContext;
+  /** the listing's workflow, for the runs' links (an All row brings its own) */
+  activity?: TActivityValue;
+  entityType?: TExtendedEntitiesTypeDict;
 }
 
 /**
@@ -190,9 +193,17 @@ export function WorkflowActivityStatusCell({
   row,
   params,
 }: ICellRendererProps<EntityCoreObjectTypes>): ReactNode {
-  const { workspace } = (params ?? {}) as IStatusCellParams;
+  const { workspace, activity, entityType } = (params ?? {}) as IStatusCellParams;
   if (!workspace) return null;
-  return <WorkflowStatusCell record={row} workspace={workspace} />;
+  const own = rowWorkflow(row);
+  return (
+    <WorkflowStatusCell
+      record={row}
+      workspace={workspace}
+      activity={own?.activity ?? activity}
+      entityType={own?.targetType ?? entityType}
+    />
+  );
 }
 
 /** `cellRendererParams` the actions cell reads; supplied by the schema factory. */

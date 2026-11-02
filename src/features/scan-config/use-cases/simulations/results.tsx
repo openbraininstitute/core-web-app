@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { get } from 'es-toolkit/compat';
+import { useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
@@ -32,6 +33,7 @@ import {
 } from '@/features/scan-config/components/simulation-files';
 import { InOutFilesColumnSkeleton } from '@/features/scan-config/components/skeletons/columns';
 import { errorRegistry } from '@/features/scan-config/error-registry';
+import { ScanConfigItemSearchParam } from '@/features/scan-config/helpers';
 import {
   ActivityCustomFileRenderer,
   isAssetBackedFile,
@@ -123,7 +125,10 @@ export function SimulationsTab({
     jobIdBySimulationId: jobIdMap,
   } = state;
 
-  const activeSimulation = pickedSimulation ?? simulations[0] ?? null;
+  // a link can name the simulation to open on (the workflows table's status cards); a pick wins
+  const linkedId = useSearchParams().get(ScanConfigItemSearchParam);
+  const linkedSimulation = linkedId ? simulations.find(({ id }) => id === linkedId) : undefined;
+  const activeSimulation = pickedSimulation ?? linkedSimulation ?? simulations[0] ?? null;
   const {
     modal: offlineTokenConsentModal,
     ensure: ensureOfflineTokenConsent,

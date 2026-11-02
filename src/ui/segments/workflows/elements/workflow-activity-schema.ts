@@ -155,7 +155,7 @@ export function buildWorkflowActivitySchema({
         align: Align.Center,
         getValue: () => '',
         cellRenderer: WORKFLOW_ACTIVITY_STATUS_RENDERER,
-        cellRendererParams: { workspace },
+        cellRendererParams: { workspace, activity, entityType },
         // the badge opens its own card of executions on hover
         ownHoverCard: true,
         // refitted as the badges arrive, each from a request of its own after its row

@@ -6,7 +6,7 @@
 import { RiArrowRightSLine } from '@remixicon/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Checkbox } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import { statusById as getSimulationStatusById } from '@/entity-configuration/domain/simulation/simulation-campaign';
@@ -157,7 +157,8 @@ export function SimulationsResultsUiAdapter({
 /** A running simulation's status, as its task log has it. */
 function progressLabel(progress: TSimulationProgress | null) {
   if (progress === null) return undefined;
-  if (progress === 'initialization') return 'Running: Load Circuit';
+  // before it steps, it is still setting up, not yet running
+  if (progress === 'initialization') return 'Initializing';
   if (progress === 'finalizing') return 'Running: Finalizing';
   return `Running: ${progress}%`;
 }
@@ -241,9 +242,16 @@ function SimulationListItem({
     ? undefined
     : 'There was a problem generating this simulation';
 
+  // a simulation opened from a link can sit far down a long campaign's list
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (selected) cardRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selected]);
+
   return (
     /* biome-ignore lint/a11y/useSemanticElements: The card contains nested controls, so a button wrapper would be invalid. */
     <div
+      ref={cardRef}
       data-testid={`scan-config-coordinate-${simulation.id}`}
       className={cn(
         'group flex-none cursor-pointer rounded-2xl border border-gray-200',

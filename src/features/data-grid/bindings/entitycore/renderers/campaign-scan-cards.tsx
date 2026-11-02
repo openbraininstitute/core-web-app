@@ -1,6 +1,7 @@
 'use client';
 
 import { RiCheckLine, RiFileCopyLine } from '@remixicon/react';
+import Link from 'next/link';
 
 import { isFromIdRef } from '@/features/scan-config/helpers';
 import { getParamLabel } from '@/features/task-runner/expanded-view';
@@ -132,18 +133,34 @@ function CopyableId({ id }: { id: string }): ReactNode {
   );
 }
 
-function ScanParameterCard({ card }: { card: IScanCard }): ReactNode {
+function ScanParameterCard({ card, href }: { card: IScanCard; href?: string | null }): ReactNode {
+  const heading = (
+    <>
+      <span
+        title={card.title}
+        className="min-w-0 flex-1 truncate text-sm font-semibold text-primary-9"
+      >
+        {card.title}
+      </span>
+      {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
+    </>
+  );
+  const headingClass =
+    'flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2';
   return (
     <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
-      <div className="flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2">
-        <span
-          title={card.title}
-          className="min-w-0 flex-1 truncate text-sm font-semibold text-primary-9"
+      {/* the run's name and status lead to it in its campaign's results */}
+      {href ? (
+        <Link
+          href={href}
+          title={`Open ${card.title}`}
+          className={`${headingClass} transition-colors hover:bg-gray-100`}
         >
-          {card.title}
-        </span>
-        {card.status ? <CampaignStatusBadge status={card.status} compact /> : null}
-      </div>
+          {heading}
+        </Link>
+      ) : (
+        <div className={headingClass}>{heading}</div>
+      )}
       <div className="p-1.5">
         {card.params.length > 0 ? (
           <dl className="flex flex-col gap-0.5">
@@ -180,6 +197,8 @@ interface CampaignScanCardsProps {
   title?: string;
   loading?: boolean;
   error?: unknown;
+  /** where a card leads, by its id; no link without it */
+  cardHref?: (id: string) => string | null;
 }
 
 /**
@@ -191,6 +210,7 @@ export function CampaignScanCards({
   title,
   loading,
   error,
+  cardHref,
 }: CampaignScanCardsProps): ReactNode {
   const cards = loading || error ? [] : toScanCardData(records);
   const cols = scanCardColumns(loading ? 2 : cards.length);
@@ -228,7 +248,7 @@ export function CampaignScanCards({
         ) : (
           <div className="grid gap-2" style={gridStyle}>
             {cards.map((card) => (
-              <ScanParameterCard key={card.id} card={card} />
+              <ScanParameterCard key={card.id} card={card} href={cardHref?.(card.id)} />
             ))}
           </div>
         )}

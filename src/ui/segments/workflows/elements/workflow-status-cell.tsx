@@ -22,12 +22,19 @@ import {
   type TTaskCampaignRow,
 } from '@/entity-configuration/domain/task-functions';
 import { CampaignStatusBadgePopover } from '@/features/data-grid/bindings/entitycore/renderers/campaign-status-cell';
+import { ScanConfigItemSearchParam } from '@/features/scan-config/helpers';
 import { TASK_STATUS_QUERY_KEY_HEAD } from '@/features/task-runner/constants';
 import { StatusMap } from '@/ui/segments/project/activities/elements/helpers';
+import {
+  buildWorkflowActivityResultsHref,
+  type TWorkflowActivityTableRow,
+} from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { cn } from '@/utils/css-class';
 
+import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ActivityStatus } from '@/api/entitycore/types/shared/activity';
 import type { WorkspaceContext } from '@/types/common';
+import type { TActivityValue } from '@/ui/segments/workflows/config';
 
 type WorkflowTaskCampaignRow = TTaskCampaignRow<{
   scan_parameters: Record<string, unknown>;
@@ -77,9 +84,14 @@ export function toTaskScanCardRows(
 export function WorkflowStatusCell({
   record,
   workspace,
+  activity,
+  entityType,
 }: {
   record: EntityCoreObjectTypes;
   workspace: WorkspaceContext;
+  /** the row's workflow, so a run in the popover leads to itself in the campaign's results */
+  activity?: TActivityValue;
+  entityType?: TExtendedEntitiesTypeDict;
 }) {
   const enabled = Boolean(record.id && workspace.virtualLabId && workspace.projectId);
   const statusQueryKey = [
@@ -87,6 +99,16 @@ export function WorkflowStatusCell({
     { campaignId: record.id, context: workspace },
   ];
   const scanQueryKey = ['campaign-scan-rows', { campaignId: record.id, context: workspace }];
+  const cardHref = (id: string) =>
+    activity && entityType
+      ? buildWorkflowActivityResultsHref({
+          activity,
+          listEntityType: entityType,
+          workspace,
+          row: record as unknown as TWorkflowActivityTableRow,
+          query: { [ScanConfigItemSearchParam]: id },
+        })
+      : null;
 
   return match({ type: record.type })
     .with({ type: EntityTypeDict.SimulationCampaign }, () => (
@@ -97,6 +119,7 @@ export function WorkflowStatusCell({
         fetchScanRows={() => listSimulationRows({ id: record.id, context: workspace })}
         scanQueryKey={scanQueryKey}
         title={`${record.name ?? 'Simulation'} execution status`}
+        cardHref={cardHref}
       />
     ))
     .with({ type: EntityTypeDict.TaskConfig }, () => {
@@ -138,6 +161,7 @@ export function WorkflowStatusCell({
             }
             scanQueryKey={scanQueryKey}
             title={`${record.name ?? 'Campaign'} execution status`}
+            cardHref={expandRow ? cardHref : undefined}
           />
         );
       }
