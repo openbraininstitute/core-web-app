@@ -147,8 +147,9 @@ export function buildFilteredHierarchyTree(
   return filteredTree;
 }
 
-/** Navy icons in circuit rows, leaving the Scope column its own colours. */
-const NAVY_ROW_ICONS = '[&_.ag-cell:not([col-id=scope])_svg]:text-primary-8!';
+/** Navy icons in circuit rows, leaving the Scope, Public / Project and Editable columns their own colours. */
+const NAVY_ROW_ICONS =
+  '[&_.ag-cell:not([col-id=scope],[col-id=visibility],[col-id=editable])_svg]:text-primary-8!';
 
 /** Per-row class for the circuit listing: highlight filtered-in rows, dim filtered-out hierarchy rows. */
 export function circuitListingRowClass(
