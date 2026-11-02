@@ -66,7 +66,8 @@ const SIMULATION_FILE_NAMES: Partial<Record<string, string>> = {
 };
 
 /** Which of the groups are open: kept as the simulation on show changes. */
-const openGroupsAtom = atom({ circuit: false, simulation: false, result: false });
+// The result opens listed, as what the panel is for; the inputs stay shut until asked for.
+const openGroupsAtom = atom({ circuit: false, simulation: false, result: true });
 
 const NO_FILES: TAssetBackedFile[] = [];
 
