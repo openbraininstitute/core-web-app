@@ -7,6 +7,10 @@ import {
   EditableCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/editable-cell';
 import {
+  EDITABLE_HEADER_RENDERER,
+  EditableHeader,
+} from '@/features/data-grid/bindings/entitycore/renderers/editable-header';
+import {
   LIFECYCLE_STATUS_RENDERER,
   LifecycleStatusCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
@@ -47,6 +51,7 @@ export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRe
   registry.register(VISIBILITY_RENDERER, VisibilityCell);
   registry.registerHeader(VISIBILITY_HEADER_RENDERER, VisibilityHeader);
   registry.register(EDITABLE_RENDERER, EditableCell);
+  registry.registerHeader(EDITABLE_HEADER_RENDERER, EditableHeader);
   registerSharedRenderers(registry);
   definition.registerCellRenderers?.(registry);
   return registry;

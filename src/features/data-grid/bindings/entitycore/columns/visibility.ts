@@ -1,4 +1,8 @@
 import { EDITABLE_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/editable-cell';
+import {
+  EDITABLE_HEADER_RENDERER,
+  EditableFilter,
+} from '@/features/data-grid/bindings/entitycore/renderers/editable-header';
 import { VISIBILITY_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/visibility-cell';
 import { VISIBILITY_HEADER_RENDERER } from '@/features/data-grid/bindings/entitycore/renderers/visibility-header';
 import { Align, FilterOptionsKind, OperatorId } from '@/features/data-grid/core';
@@ -57,7 +61,12 @@ export function visibilityColumn<Row>(): IColumnModel<Row> {
   };
 }
 
-/** Whether the record belongs to the current project, so it can be edited. Not filterable. */
+/**
+ * Whether the record belongs to the current project, so it can be edited. Filtering on it
+ * is "this project's" (`authorized_project_id`), or the public data of other projects: all
+ * public data less this project's, which the data source passes over itself because the API
+ * has no "not equal" param.
+ */
 export function editableColumn<Row>(): IColumnModel<Row> {
   return {
     id: 'editable',
@@ -67,9 +76,40 @@ export function editableColumn<Row>(): IColumnModel<Row> {
     // the cell needs the current project, which a cached definition cannot hold
     getValue: () => '',
     cellRenderer: EDITABLE_RENDERER,
+    headerRenderer: EDITABLE_HEADER_RENDERER,
     divider: true,
     width: { width: 96, minWidth: 96 },
     align: Align.Center,
+    filter: {
+      operators: [OperatorId.Eq],
+      field: 'authorized_project_id',
+      targets: [
+        {
+          id: 'editable',
+          label: 'Editable?',
+          field: 'authorized_project_id',
+          operators: [OperatorId.Eq],
+          options: {
+            kind: FilterOptionsKind.Static,
+            items: [
+              { id: EditableFilter.Editable, label: "Editable (this project's)" },
+              { id: EditableFilter.ReadOnly, label: "Read-only (other projects')" },
+            ],
+          },
+          description: "This project's data, or public data from other projects",
+        },
+      ],
+      toParams: (value, { projectId }) => {
+        if (value === EditableFilter.Editable)
+          return projectId ? { authorized_project_id: projectId } : {};
+        if (value === EditableFilter.ReadOnly) return { authorized_public: 'true' };
+        return {};
+      },
+      toExcept: (value, { projectId }) =>
+        value === EditableFilter.ReadOnly && projectId
+          ? { authorized_public: 'true', authorized_project_id: projectId }
+          : undefined,
+    },
   };
 }
 

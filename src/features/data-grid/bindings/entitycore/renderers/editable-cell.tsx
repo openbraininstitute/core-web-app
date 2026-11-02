@@ -23,7 +23,7 @@ export function isEditableRecord(row: IEditableRow | undefined, projectId?: stri
 }
 
 /** A person with a pencil (Streamline, CC BY 4.0). */
-function EditIcon() {
+export function EditIcon() {
   return (
     <svg
       role="img"

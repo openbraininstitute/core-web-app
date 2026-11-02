@@ -10,6 +10,7 @@ import {
 } from '@/features/data-grid/bindings/entitycore/columns/visibility';
 import { getEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
 import { EditableCell } from '@/features/data-grid/bindings/entitycore/renderers/editable-cell';
+import { EditableHeader } from '@/features/data-grid/bindings/entitycore/renderers/editable-header';
 import { VisibilityCell } from '@/features/data-grid/bindings/entitycore/renderers/visibility-cell';
 import { resolveColumns } from '@/features/data-grid/core';
 import { defaultFlags } from '@/features/feature-flags/config';
@@ -48,13 +49,37 @@ describe('visibility and editable columns', () => {
   it('filters on the bare authorized_public param', () => {
     const { filter } = visibilityColumn();
     expect(filter?.field).toBe('authorized_public');
-    expect(editableColumn().filter).toBeUndefined();
+    expect(editableColumn().filter?.field).toBe('authorized_project_id');
   });
 
   it('has its renderers registered', () => {
     const registry = buildCellRenderers(morphology());
     expect(registry.get('visibility')).toBe(VisibilityCell);
     expect(registry.get('editable')).toBe(EditableCell);
+    expect(registry.getHeader('editableHeader')).toBe(EditableHeader);
+  });
+});
+
+describe('editable filter', () => {
+  const { filter } = editableColumn();
+  const workspace = { projectId: 'p1' };
+
+  it("keeps this project's data for Editable", () => {
+    expect(filter?.toParams?.('editable', workspace)).toEqual({ authorized_project_id: 'p1' });
+    expect(filter?.toExcept?.('editable', workspace)).toBeUndefined();
+  });
+
+  it("keeps public data less this project's for Read-only", () => {
+    expect(filter?.toParams?.('read-only', workspace)).toEqual({ authorized_public: 'true' });
+    expect(filter?.toExcept?.('read-only', workspace)).toEqual({
+      authorized_public: 'true',
+      authorized_project_id: 'p1',
+    });
+  });
+
+  it('filters nothing for an unknown value, or Editable without a project', () => {
+    expect(filter?.toParams?.('other', workspace)).toEqual({});
+    expect(filter?.toParams?.('editable', {})).toEqual({});
   });
 });
 
