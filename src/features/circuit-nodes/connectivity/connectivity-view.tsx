@@ -20,7 +20,10 @@ import {
   nodeColumnOptions,
   nodeProperty,
 } from '@/features/circuit-nodes/connectivity/node-properties';
-import { useConnectivityMatrix } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import {
+  useConnectivityDownloadGate,
+  useConnectivityMatrix,
+} from '@/features/circuit-nodes/connectivity/use-connectivity';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { PILL_CLASS, PillSelect, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
@@ -206,9 +209,15 @@ export function ConnectivityView({
   onPathwayChange?: (pathway: MatrixPathway | null) => void;
   headerSlot: HTMLElement | null;
 }) {
-  // A matrix past what the browser can hold is never asked for.
+  // A matrix past what the browser can hold is never asked for, and a large one only once
+  // the user has seen its size and said to.
   const tooLarge = entry?.size != null && entry.size > MAX_ASSET_BYTES;
-  const matrix = useConnectivityMatrix(circuitId, assetId, tooLarge ? undefined : entry);
+  const gate = useConnectivityDownloadGate(circuitId, assetId, tooLarge ? undefined : entry);
+  const matrix = useConnectivityMatrix(
+    circuitId,
+    assetId,
+    tooLarge || gate.waiting ? undefined : entry
+  );
   const { state } = matrix;
 
   if (listing.error) {
@@ -239,6 +248,20 @@ export function ConnectivityView({
           More than the browser can open ({formatBytes(MAX_ASSET_BYTES, 0)}). It can still be
           downloaded from the circuit&apos;s files.
         </span>
+      </div>
+    );
+  }
+  if (gate.checking) return <CenteredSpin label="Loading the connectivity matrix…" />;
+  if (gate.waiting) {
+    return (
+      <div className={cn(styles.centered, 'flex-col gap-3 text-center text-sm text-neutral-500')}>
+        <span className="text-primary-9 font-semibold">
+          This matrix is {formatBytes(entry.size ?? 0, 1)}
+        </span>
+        <span>It downloads to this browser, which keeps it for next time.</span>
+        <button type="button" className={PILL_CLASS} onClick={gate.allow}>
+          Download
+        </button>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import * as Comlink from 'comlink';
 
+import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
 import {
   groupConnectivity,
   summarizeConnectivity,
@@ -15,9 +16,6 @@ import type {
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityMatrix } from '@/features/circuit-nodes/connectivity/connectivity-h5';
 import type { DownloadProgress } from '@/features/circuit-nodes/types';
-
-/** Matrices kept between sessions, apart from the circuits' own files. */
-const CONNECTIVITY_H5_CACHE = 'obi-connectivity-h5-v1';
 
 let matrix: ConnectivityMatrix | null = null;
 

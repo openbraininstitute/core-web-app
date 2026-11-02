@@ -9,6 +9,7 @@ import {
 } from '@/api/entitycore/queries/assets';
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { CONNECTIVITY_H5_CACHE } from '@/features/circuit-nodes/connectivity/cache-name';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 
 import type {
@@ -253,4 +254,70 @@ export function useConnectivityMatrix(
     if (key) connectivitySessions.retry(key);
   }, [key]);
   return { state, key, group, retry };
+}
+
+/** Past this a matrix is downloaded only once asked for, after the view says how big it is. */
+export const CONFIRM_DOWNLOAD_BYTES = 25 * 1024 * 1024;
+
+/** The large matrices the user has said to download, this visit: each is asked about once. */
+const allowedDownloads = new Set<string>();
+const allowedListeners = new Set<() => void>();
+
+function subscribeAllowed(listener: () => void): () => void {
+  allowedListeners.add(listener);
+  return () => allowedListeners.delete(listener);
+}
+
+function allowDownload(key: string): void {
+  allowedDownloads.add(key);
+  for (const listener of allowedListeners) listener();
+}
+
+/**
+ * Whether a matrix waits for the user's word before downloading: one past
+ * {@link CONFIRM_DOWNLOAD_BYTES}, not yet in the browser's cache, and not already allowed.
+ * `checking` while the cache is asked.
+ */
+export function useConnectivityDownloadGate(
+  circuitId: string,
+  assetId: string | undefined,
+  entry: ConnectivityEntry | undefined
+) {
+  const ctx = useWorkspace();
+  const key = assetId && entry ? `${circuitId}/${assetId}/${entry.path}` : null;
+  const path = entry?.path;
+  const large = (entry?.size ?? 0) > CONFIRM_DOWNLOAD_BYTES;
+  const allowed = useSyncExternalStore(
+    subscribeAllowed,
+    () => key !== null && allowedDownloads.has(key),
+    () => false
+  );
+  const asks = large && !allowed && key !== null;
+  // The worker files a download under its URL, so a matrix fetched before needs no asking.
+  const cached = useQuery({
+    queryKey: ['connectivity-matrix-cached', key],
+    queryFn: async () => {
+      if (!assetId || !path) return false;
+      const { url } = await buildAssetDownloadRequest({
+        ctx,
+        entityType: EntityTypeDict.Circuit,
+        entityId: circuitId,
+        id: assetId,
+        assetPath: path,
+      });
+      const cache = await caches.open(CONNECTIVITY_H5_CACHE);
+      return Boolean(await cache.match(url));
+    },
+    enabled: asks,
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+  const allow = useCallback(() => {
+    if (key) allowDownload(key);
+  }, [key]);
+  return {
+    /** waiting for the user's word */
+    waiting: asks && cached.data !== true,
+    checking: asks && cached.isLoading,
+    allow,
+  };
 }
