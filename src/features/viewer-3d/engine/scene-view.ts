@@ -4,7 +4,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { distanceFor, fitHalfHeight, halfHeightAt, orthoClip, orthoPixelScale } from './camera';
 import { boxCorners, clipRange, fitDistance, orbitRadius } from './framing';
 import { type Axis, axisView, type Sign } from './gizmo';
-import { followScreenUp, glideLeft, stopGlide, turnCamera } from './rotation';
+import { followScreenUp, glideLeft, spinAbout, stopGlide, turnCamera } from './rotation';
 
 /** Fraction of the way from the centre to the edge of the view that the farthest-reaching side of a cell comes to on reset. */
 const FIT_FILL = 0.92;
@@ -32,6 +32,50 @@ const FRAME_MS = { min: 1000 / 240, max: 250 };
 const sphere = new THREE.Sphere();
 
 export type Projection = 'orthographic' | 'perspective';
+
+/**
+ * What a frame was drawn with, for drawing over the view in step with it: the camera's view and projection matrices,
+ * the point of the content's own frame that sits at the scene's origin, and the view's size in CSS pixels.
+ */
+export interface ViewFrame {
+  view: Readonly<THREE.Matrix4>;
+  projection: Readonly<THREE.Matrix4>;
+  origin: readonly [number, number, number];
+  width: number;
+  height: number;
+}
+
+const ORIGIN = [0, 0, 0] as const;
+
+/** The side of the target a view is framed from, and its way up, as unit vectors of the scene. */
+export interface Facing {
+  from: readonly [number, number, number];
+  up: readonly [number, number, number];
+}
+
+/** Down the z axis with y up, as views are framed unless a host asks otherwise. */
+export const FRONT: Facing = { from: [0, 0, 1], up: [0, 1, 0] };
+
+/**
+ * A box of a view's content, µm, to frame the view on, and where from where that is not `FRONT`;
+ * with `points` (x, y, z after one another), those are fitted into the view rather than its corners.
+ */
+export type FrameBox = {
+  min: [number, number, number];
+  max: [number, number, number];
+  points?: readonly number[];
+} & Partial<Facing>;
+
+/**
+ * Where a host holds a view's camera, in the content's own frame: looking at `target` from the side `from`, `up` up
+ * the screen, `umPerPx` µm to a CSS pixel in the orthographic view.
+ */
+export interface CameraPose {
+  target: readonly [number, number, number];
+  from: readonly [number, number, number];
+  up: readonly [number, number, number];
+  umPerPx: number;
+}
 
 /** What the chrome over a view drives and listens to: the axes gizmo and the scale bar. */
 export interface ViewControls {
@@ -61,6 +105,8 @@ export abstract class SceneView implements ViewControls {
   );
   /** Points (x, y, z after one another) that `resetView` fits into the view instead of the corners of `bounds`. */
   protected fitPoints: Float32Array | null = null;
+  /** Where `resetView` frames the view from. */
+  protected facing: Facing = FRONT;
   /** The canvas's size in CSS pixels, as `resize` left it. */
   protected width = 1;
   protected height = 1;
@@ -97,6 +143,7 @@ export abstract class SceneView implements ViewControls {
   private pixelScaleListeners = new Set<(scale: number | null) => void>();
   private wheelListeners = new Set<() => void>();
   private viewListeners = new Set<(orientation: Readonly<THREE.Quaternion>) => void>();
+  private frameListeners = new Set<(frame: ViewFrame) => void>();
   /** The camera's orientation as the view listeners last heard it. */
   private heardOrientation = new THREE.Quaternion();
   /** The camera turning to view along an axis: its orientation at either end, and when it set off. */
@@ -143,6 +190,11 @@ export abstract class SceneView implements ViewControls {
 
   protected get camera(): THREE.PerspectiveCamera | THREE.OrthographicCamera {
     return this.projection === 'perspective' ? this.perspective : this.orthographic;
+  }
+
+  /** The point of the content's own frame that the scene's origin stands for. */
+  protected get origin(): readonly [number, number, number] {
+    return ORIGIN;
   }
 
   dispose(): void {
@@ -225,6 +277,7 @@ export abstract class SceneView implements ViewControls {
     this.drawnMoving = moving;
     this.afterDraw(moving);
     this.framesDrawn++;
+    if (this.frameListeners.size > 0) this.tellFrame();
     const orientation = this.camera.quaternion;
     if (!orientation.equals(this.heardOrientation)) {
       this.heardOrientation.copy(orientation);
@@ -542,7 +595,8 @@ export abstract class SceneView implements ViewControls {
     // reaches farthest on screen comes to within a margin of the edge.
     const aspect = this.width / this.height;
     const tanY = Math.tan((FOV * Math.PI) / 360);
-    const points = this.fitPoints ?? boxCorners(this.bounds);
+    const facing = this.facing === FRONT ? null : facingBasis(this.facing);
+    const points = asFaced(this.fitPoints ?? boxCorners(this.bounds), facing);
     const r = orbitRadius(this.bounds) || 50;
     const camera = this.camera;
     if (this.projection === 'perspective') {
@@ -561,6 +615,13 @@ export abstract class SceneView implements ViewControls {
       camera.position.set(0, 0, Math.max(distanceFor(half, FOV), r * 1.05));
     }
     camera.up.set(0, 1, 0);
+    if (facing) {
+      // As far off on the side asked for, the way up asked for up the screen, and the spin about it.
+      camera.position.applyMatrix4(facing);
+      camera.up.set(...this.facing.up);
+      camera.lookAt(0, 0, 0);
+      spinAbout(this.controls, camera.up);
+    }
     this.stopCamera();
     this.viewSet();
     this.controls.target.set(0, 0, 0);
@@ -579,6 +640,25 @@ export abstract class SceneView implements ViewControls {
   }
 
   /** The camera's orientation now and whenever it turns. */
+  /** Told after every frame drawn what it was drawn with; a frame is drawn for a new listener. */
+  onFrame(listener: (frame: ViewFrame) => void): () => void {
+    this.frameListeners.add(listener);
+    this.invalidate();
+    return () => this.frameListeners.delete(listener);
+  }
+
+  private tellFrame(): void {
+    const { camera, width, height } = this;
+    const frame: ViewFrame = {
+      view: camera.matrixWorldInverse,
+      projection: camera.projectionMatrix,
+      origin: this.origin,
+      width,
+      height,
+    };
+    for (const listener of this.frameListeners) listener(frame);
+  }
+
   onViewChange(listener: (orientation: Readonly<THREE.Quaternion>) => void): () => void {
     this.viewListeners.add(listener);
     listener(this.camera.quaternion);
@@ -595,4 +675,24 @@ export abstract class SceneView implements ViewControls {
     this.wheelListeners.add(listener);
     return () => this.wheelListeners.delete(listener);
   }
+}
+
+/** The rotation that takes the view framed down the z axis, y up, to one framed from `facing`. */
+function facingBasis({ from, up }: Facing): THREE.Matrix4 {
+  const z = new THREE.Vector3(...from).normalize();
+  const x = new THREE.Vector3(...up).cross(z).normalize();
+  const y = new THREE.Vector3().crossVectors(z, x);
+  return new THREE.Matrix4().makeBasis(x, y, z);
+}
+
+/** `points` as a view framed from the facing `basis` sees them: across, up, and towards it. */
+function asFaced(points: ArrayLike<number>, basis: THREE.Matrix4 | null): ArrayLike<number> {
+  if (!basis) return points;
+  const inverse = basis.clone().transpose();
+  const faced = new Float32Array(points.length);
+  const point = new THREE.Vector3();
+  for (let i = 0; i + 2 < points.length; i += 3) {
+    point.set(points[i], points[i + 1], points[i + 2]).applyMatrix4(inverse).toArray(faced, i);
+  }
+  return faced;
 }

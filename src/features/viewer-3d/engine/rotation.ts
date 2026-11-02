@@ -22,6 +22,14 @@ export function followScreenUp(controls: OrbitControls): void {
   _quatInverse.copy(_quat).invert();
 }
 
+/** Turn OrbitControls' turntable about `axis` of the scene, whichever way the camera looks. */
+export function spinAbout(controls: OrbitControls, axis: THREE.Vector3): void {
+  const { _quat, _quatInverse } = controls as unknown as Internals;
+  if (!_quat || !_quatInverse) return;
+  _quat.setFromUnitVectors(axis.clone().normalize(), Y);
+  _quatInverse.copy(_quat).invert();
+}
+
 /** What OrbitControls' easing has yet to apply: the turn, rad, and the pan, in world units. Null where three renamed them. */
 export function glideLeft(controls: OrbitControls): { angle: number; pan: number } | null {
   const { _sphericalDelta, _panOffset } = controls as unknown as Internals;

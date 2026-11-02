@@ -52,7 +52,7 @@ import { createPortal } from 'react-dom';
 
 import { useCanvasFrame } from '@/features/learn/components/basics/useCanvasFrame';
 import { useSpillRoot } from '@/features/learn/components/basics/useSpillRoot';
-import { Embedded } from '@/features/learn/components/embedded';
+import { Embedded, FigureScaleBar } from '@/features/learn/components/embedded';
 import { mulberry32 } from '@/features/learn/lib/basics/morphologies';
 import { savedSomaZoom, savedSpill, subscribe } from '@/features/learn/lib/settings';
 
@@ -1518,7 +1518,7 @@ const WHITE: RGB = [255, 255, 255];
  * its box — or, spilling over the page, the whole window about it. Set each
  * frame before drawing; what falls outside it is skipped.
  */
-const seen = { x0: 0, y0: 0, x1: 0, y1: 0, spill: false };
+const seen = { x0: 0, y0: 0, x1: 0, y1: 0, spill: false, bar: true };
 const outside = (x: number, y: number, pad: number) =>
   x < seen.x0 - pad || x > seen.x1 + pad || y < seen.y0 - pad || y > seen.y1 + pad;
 
@@ -2955,8 +2955,8 @@ function plate(
     tag(ctx, text, 14, y, look.text, null, 0.6 * alpha, w < 560 ? 9 : 10.5);
     y -= 14 * alpha;
   }
-  // no bar where each neuron is drawn to a scale of its own
-  if (bar > 0.5) scaleBar(ctx, s, w - 16, th - 8, look);
+  // no bar where each neuron is drawn to a scale of its own, nor where the page showing it asks for none
+  if (bar > 0.5 && seen.bar) scaleBar(ctx, s, w - 16, th - 8, look);
 }
 
 interface Credit {
@@ -6500,6 +6500,7 @@ function Wet3D({
   // Whether it draws all it holds, past its box over the whole page, behind the words; and, when it does,
   // the place kept for it in the page, which it is still framed by. Never outside a course.
   const embedded = useContext(Embedded);
+  const scaleBarShown = useContext(FigureScaleBar);
   const spill = useSyncExternalStore(subscribe, savedSpill, () => false) && !embedded;
   const somaZoom = useSyncExternalStore(subscribe, savedSomaZoom, () => false);
   // whether the soma's slide was last drawn closed in on the soma: switched in the settings, it eases there
@@ -6568,8 +6569,9 @@ function Wet3D({
         x1: cw - box.left,
         y1: ch - box.top,
         spill: true,
+        bar: scaleBarShown,
       });
-    } else Object.assign(seen, { x0: 0, y0: 0, x1: w, y1: h, spill: false });
+    } else Object.assign(seen, { x0: 0, y0: 0, x1: w, y1: h, spill: false, bar: scaleBarShown });
     if (!scene || scene === 'failed') {
       fluid(ctx, spec.look, w, h, now);
       if (scene === 'failed')
@@ -6899,7 +6901,7 @@ function Wet3D({
 }
 
 /** On white, no frame: the figure is the page, and the cell floats on it. */
-const FLOATING_CLASS = 'h-[340px] w-full rounded-xl';
+const FLOATING_CLASS = 'h-[var(--learn-figure-h,340px)] w-full rounded-xl';
 
 /** Ten, as the switcher wants them: a name, and one figure that runs across the slides, told which it is on. */
 const variants = (specs: Spec[], kind?: string) =>

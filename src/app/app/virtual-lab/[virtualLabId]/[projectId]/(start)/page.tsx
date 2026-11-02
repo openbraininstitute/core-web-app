@@ -1,7 +1,7 @@
 import { tryCatch } from '@/api/utils';
 import { getProject } from '@/api/virtual-lab-svc/queries/project';
 import { getQueryClient } from '@/query-provider/server';
-import { GetStartedCards } from '@/ui/segments/project/get-started/sections/get-started-cards';
+import { ProjectHome } from '@/ui/segments/project/project-home';
 import { keyBuilder } from '@/ui/use-query-keys/workspace';
 
 import type { Metadata } from 'next';
@@ -41,9 +41,5 @@ export async function generateMetadata({
 }
 
 export default async function Page(_props: ServerSideComponentProp<WorkspaceContext, null>) {
-  return (
-    <div className="flex w-full flex-col gap-4 pr-2">
-      <GetStartedCards />
-    </div>
-  );
+  return <ProjectHome />;
 }

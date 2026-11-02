@@ -562,6 +562,35 @@ export class EmMeshViewer extends SceneViewer {
   }
 
   /** How frames drawn while the view moves are cut down: from the top again, by what they cost, where left to it. */
+  /**
+   * Whether the mesh on show is under a point of the page, in client px: a ray through the bounds of the chunks
+   * drawn. Their bounds, not their triangles: a chunk's arrays are let go of once on the GPU.
+   */
+  surfaceAt(clientX: number, clientY: number): boolean {
+    const rect = this.renderer.domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return false;
+    const ray = new THREE.Raycaster();
+    ray.setFromCamera(
+      new THREE.Vector2(
+        ((clientX - rect.left) / rect.width) * 2 - 1,
+        -((clientY - rect.top) / rect.height) * 2 + 1
+      ),
+      this.camera
+    );
+    const box = new THREE.Box3();
+    // The layers hidden, the stand-in once the full mesh is up, are not hit.
+    return this.chunks.children.some(
+      (layer) =>
+        layer.visible &&
+        layer.children.some((chunk) => {
+          const bounds = (chunk as THREE.Mesh).geometry?.boundingBox;
+          return bounds
+            ? ray.ray.intersectsBox(box.copy(bounds).applyMatrix4(chunk.matrixWorld))
+            : false;
+        })
+    );
+  }
+
   setMotion(options: MotionOptions): void {
     // Made again for the next cut frame, if any.
     this.dropMovingPipeline();
