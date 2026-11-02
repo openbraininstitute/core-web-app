@@ -44,6 +44,7 @@ import {
   WorkflowDetailsDialog,
 } from '@/ui/segments/workflows/elements/workflow-details-dialog';
 import { WorkflowStatusCell } from '@/ui/segments/workflows/elements/workflow-status-cell';
+import { keyBuilder } from '@/ui/use-query-keys/data';
 import { renderDateAndHour } from '@/util/date';
 import { cn } from '@/utils/css-class';
 
@@ -341,7 +342,11 @@ export function WorkflowActivityActionsCell({
           row={row}
           workspace={workspace}
           onClose={() => setEditing(false)}
-          onSaved={() => queryClient.invalidateQueries({ queryKey: [WORKFLOW_ACTIVITY_QUERY_KEY] })}
+          onSaved={() => {
+            // the editor's cached copy names the campaign as it was
+            queryClient.removeQueries({ queryKey: keyBuilder.simCampaign({ entityId: row.id }) });
+            return queryClient.invalidateQueries({ queryKey: [WORKFLOW_ACTIVITY_QUERY_KEY] });
+          }}
         />
       )}
     </div>
