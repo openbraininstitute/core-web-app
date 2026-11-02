@@ -5,6 +5,7 @@ const { PRIMARY_HOSTNAME } = process.env;
 
 const FREE_ACCESS_PAGES = [
   '/',
+  '/dev-neuromechfly-harness', // LOCAL TEST ONLY, remove before committing
   '/home',
   '/about',
   '/mission',
