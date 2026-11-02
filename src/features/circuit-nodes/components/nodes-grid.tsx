@@ -1113,8 +1113,8 @@ export function NodesGrid({
         type="button"
         onClick={downloadCsv}
         disabled={downloading}
-        title={downloading ? 'Preparing the CSV…' : 'Download the rows on show as CSV'}
-        aria-label="Download the rows on show as CSV"
+        title={downloading ? 'Preparing the CSV…' : 'Download the shown rows as CSV'}
+        aria-label="Download the shown rows as CSV"
         className={cn(ROUND_PILL_CLASS, 'disabled:opacity-60')}
       >
         {downloading ? (
