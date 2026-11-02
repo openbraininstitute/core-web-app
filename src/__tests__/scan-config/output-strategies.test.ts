@@ -124,9 +124,9 @@ describe('workflow output strategies', () => {
     expect(files?.map((file) => file.id)).toEqual(['result-id', 'asset-1']);
     const first = files?.[0];
     expect(first?.renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
-    expect(first && !isAssetBackedFile(first) ? first.dataType : undefined).toBe(
-      ExtendedEntitiesTypeDict.EFeatureExtractionResult
-    );
+    expect(
+      first?.renderer === ActivityCustomFileRenderer.MiniDetailView ? first.dataType : undefined
+    ).toBe(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
   });
 
   it('shows an entity output as a single mini-detail row', () => {

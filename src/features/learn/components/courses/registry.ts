@@ -13,6 +13,7 @@ import { PHYSICS2_STEPS } from './physics2/Figure';
 import { PLATFORM_STEPS } from './platform/Figure';
 import { PYTHON_STEPS } from './python/Figure';
 import { SDK_STEPS } from './sdk/Figure';
+import { SKELETON_STEPS } from './skeleton/Figure';
 import { TM_STEPS } from './tm/Figure';
 import { TRANSMITTER_STEPS } from './transmitters/Figure';
 import { VALIDATION_STEPS } from './validation/Figure';
@@ -30,6 +31,7 @@ const COURSE_STEPS = {
   mtypes: MTYPE_STEPS,
   compartmental: COMPARTMENTAL_STEPS,
   tm: TM_STEPS,
+  skeleton: SKELETON_STEPS,
 } as const;
 
 type CourseId = keyof typeof COURSE_STEPS;

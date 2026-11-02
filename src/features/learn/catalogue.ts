@@ -14,9 +14,10 @@ import { NEURON_VS_JAXLEY_SLIDES } from '@/features/learn/slides/neuron-vs-jaxle
 import { NEUROTRANSMITTERS_SLIDES } from '@/features/learn/slides/neurotransmitters';
 import { PLATFORM_SLIDES } from '@/features/learn/slides/platform';
 import { PYTHON_SLIDES } from '@/features/learn/slides/python';
+import { SKELETONIZATION_SLIDES } from '@/features/learn/slides/skeletonization';
+import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plasticity';
 import { SYNAPSES_SLIDES } from '@/features/learn/slides/synapses';
 import { TSODYKS_MARKRAM_SLIDES } from '@/features/learn/slides/tsodyks-markram';
-import { SYNAPSE_PLASTICITY_SLIDES } from '@/features/learn/slides/synapse-plasticity';
 import { VALIDATION_SLIDES } from '@/features/learn/slides/validation';
 import { WHY_MODEL_SLIDES } from '@/features/learn/slides/why-model';
 
@@ -186,6 +187,17 @@ export const LEARN_COURSES: LearnCourse[] = [
       'entitysdk, OBI’s Python client for EntityCore: connecting, searching and filtering, reading an entity’s fields, fetching one by id, downloading its files and working on them, models and recordings, registering your own — every cell as run against production, with what it printed.',
     slides: ENTITYSDK_SLIDES,
     preview: 'sdk:entities',
+  },
+  {
+    id: 'skeletonization',
+    rough: true,
+    title: 'Skeletonized morphologies and their spines',
+    level: 'Intermediate',
+    description:
+      'One real neuron’s membrane mesh, skeleton and spines in 3D; how the platform’s skeletonization workflow makes a morphology from a mesh; the files it writes and what it registers; what is inside the spiny H5; using them in Python with entitysdk, morph-spines, MorphIO, NeuroM and morph-tool, each cell as run on the example cell; and what in obi-one reads them.',
+    slides: SKELETONIZATION_SLIDES,
+    // slide 1's: the cell turning, its membrane, then its skeleton and spines
+    preview: 'skeleton:intro',
   },
   {
     id: 'misc',

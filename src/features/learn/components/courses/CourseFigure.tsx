@@ -6,8 +6,8 @@
  * and whether the slide was come back to.
  */
 
-import ElecFigure, { type ElecStep } from './elec/Figure';
 import CompartmentalFigure, { type CompartmentalStep } from './compartmental/Figure';
+import ElecFigure, { type ElecStep } from './elec/Figure';
 import JaxleyFigure, { type JaxleyStep } from './jaxley/Figure';
 import MtypesFigure, { type MtypeStep } from './mtypes/Figure';
 import PhysicsFigure, { type PhysicsStep } from './physics/Figure';
@@ -15,6 +15,7 @@ import Physics2Figure, { type Physics2Step } from './physics2/Figure';
 import PlatformFigure, { type PlatformStep } from './platform/Figure';
 import PythonFigure, { type PythonStep } from './python/Figure';
 import SdkFigure, { type SdkStep } from './sdk/Figure';
+import SkeletonFigure, { type SkeletonStep } from './skeleton/Figure';
 import TmFigure, { type TmStep } from './tm/Figure';
 import TransmittersFigure, { type TransmitterStep } from './transmitters/Figure';
 import ValidationFigure, { type ValidationStep } from './validation/Figure';
@@ -54,6 +55,8 @@ export default function CourseFigure({
       return <CompartmentalFigure step={step as CompartmentalStep} back={back} />;
     case 'tm':
       return <TmFigure step={step as TmStep} back={back} />;
+    case 'skeleton':
+      return <SkeletonFigure step={step as SkeletonStep} back={back} />;
     default:
       return null;
   }
