@@ -35,20 +35,17 @@ export function resolveSimulationLaunchTarget({
   entityType,
   scale,
   targetSimulator,
-  smallScalesViaLaunchSystem,
 }: {
   entityType: TEntityTypeDict | null;
   scale: TCircuitScaleDictionary | null;
   targetSimulator: string | null;
-  smallScalesViaLaunchSystem: boolean;
 }): TSimulationLaunchTarget | null {
-  // Small scales run as machine jobs, which don't need an offline token.
-  const smallScaleTarget = (taskType: TObiOneTaskType) =>
-    smallScalesViaLaunchSystem ? { taskType, requiresOfflineTokenConsent: false } : null;
-
   // `circuit_simulation` loads `simulation.entity_id` as a Circuit, which a me-model isn't.
   if (entityType === EntityTypeDict.Memodel) {
-    return smallScaleTarget(ObiOneTaskTypeDict.SingleNeuronSimulationExecution);
+    return {
+      taskType: ObiOneTaskTypeDict.SingleNeuronSimulationExecution,
+      requiresOfflineTokenConsent: false,
+    };
   }
   if (targetSimulator === 'Brian2') {
     return {
@@ -61,8 +58,11 @@ export function resolveSimulationLaunchTarget({
   }
   if (scale === null) return null;
 
+  // Small scales run as machine jobs, which don't need an offline token.
   const smallScaleTaskType = SMALL_SCALE_TASK_TYPES[scale];
-  if (smallScaleTaskType) return smallScaleTarget(smallScaleTaskType);
+  if (smallScaleTaskType) {
+    return { taskType: smallScaleTaskType, requiresOfflineTokenConsent: false };
+  }
 
   return TASK_LAUNCH_SCALES.has(scale)
     ? { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true }
