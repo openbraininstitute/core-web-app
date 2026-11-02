@@ -16,6 +16,10 @@ import {
   isDetailRow,
 } from '@/features/data-grid/renderers/aggrid/detail-rows';
 import { isExpanderClick } from '@/features/data-grid/renderers/aggrid/expand-cell';
+import {
+  measureContentWidths,
+  planColumnWidths,
+} from '@/features/data-grid/renderers/aggrid/fit-columns';
 import { isInteractiveClick } from '@/features/data-grid/renderers/aggrid/interactive-target';
 import { registerDataGridModules } from '@/features/data-grid/renderers/aggrid/register-modules';
 import { useRowHoverCard } from '@/features/data-grid/renderers/aggrid/row-hover-card';
@@ -51,6 +55,12 @@ registerDataGridModules();
 const SYNTHETIC_COL_IDS = new Set([EXPAND_COL_ID, 'ag-Grid-SelectionColumn']);
 
 const DEFAULT_ROW_HEIGHT = 44;
+/**
+ * Each fitted column's last fitted width, by column id: a grid made anew (another listing)
+ * starts its columns there rather than at AG Grid's default, so its first fit moves less.
+ */
+const lastFittedWidths = new Map<string, number>();
+
 /** The narrowest a fitted, capped column shrinks to when the columns overrun the grid. */
 const MIN_SHRUNK_WIDTH = 160;
 /** How long fitted cells must hold their width before their columns are refitted. */
@@ -94,6 +104,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   useEffect(() => setMounted(true), []);
 
   const apiRef = useRef<GridApi<TDisplayRow<Row>> | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const getRowId = controller.schema.getRowId;
   const hoverCard = useRowHoverCard(rowHoverCard);
 
@@ -116,6 +127,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
       buildColDefs(orderedColumns, {
         hidden,
         columnWidths: state.columnWidths,
+        fittedStartWidths: lastFittedWidths,
         withExpandColumn: Boolean(detail),
         expandColumn,
       }),
@@ -130,49 +142,44 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         .map((c) => ({ id: c.id, maxWidth: c.width?.maxWidth, minWidth: c.width?.minWidth })),
     [orderedColumns, hidden, state.columnWidths]
   );
+  // One fit is one change: the widths are measured and planned first and applied together,
+  // so the columns to the right of a capped or shrunk one move once, not twice.
   const fitColumns = useCallback(() => {
     const api = apiRef.current;
     if (!api || api.isDestroyed() || fitted.length === 0) return;
-    api.autoSizeColumns(fitted.map(({ id }) => id));
-  }, [fitted]);
-  useEffect(() => fitColumns(), [fitColumns]);
-  // AG Grid applies a fit once the cells have rendered, so the caps go on afterwards. Then, if
-  // the columns still overrun the grid, the capped ones (long text, which can clip) give
-  // back the difference, widest first, so none is pushed out of view.
-  const capFittedColumns = useCallback(
-    (api: GridApi) => {
-      const capped = fitted.filter(({ maxWidth }) => maxWidth != null);
-      const widths = new Map(
-        capped.map(({ id, maxWidth }) => [
-          id,
-          Math.min(api.getColumn(id)?.getActualWidth() ?? 0, maxWidth ?? Number.POSITIVE_INFINITY),
-        ])
+    // a page still loading has nothing to fit to, so the last page's widths stay
+    if (api.getDisplayedRowCount() === 0) return;
+    // a frame on, so the cells the rows just brought are committed and measured
+    requestAnimationFrame(() => {
+      const root = rootRef.current;
+      if (api.isDestroyed() || !root) return;
+      const natural = measureContentWidths(
+        root,
+        fitted.map(({ id }) => id)
       );
-      const { left, right } = api.getHorizontalPixelRange();
-      const used = api
+      const fittedIds = new Set(fitted.map(({ id }) => id));
+      const fixedWidth = api
         .getAllDisplayedColumns()
-        .filter((column) => !column.isPinned())
-        .reduce(
-          (sum, column) => sum + (widths.get(column.getColId()) ?? column.getActualWidth()),
-          0
-        );
-      let overrun = used - (right - left);
-      for (const { id, minWidth } of [...capped].sort(
-        (a, b) => (widths.get(b.id) ?? 0) - (widths.get(a.id) ?? 0)
-      )) {
-        if (overrun <= 0) break;
-        const width = widths.get(id) ?? 0;
-        const given = Math.min(overrun, Math.max(0, width - (minWidth ?? MIN_SHRUNK_WIDTH)));
-        widths.set(id, width - given);
-        overrun -= given;
-      }
-      const changed = [...widths]
-        .filter(([id, width]) => width !== api.getColumn(id)?.getActualWidth())
+        .filter((column) => !column.isPinned() && !fittedIds.has(column.getColId()))
+        .reduce((sum, column) => sum + column.getActualWidth(), 0);
+      const { left, right } = api.getHorizontalPixelRange();
+      const planned = planColumnWidths({
+        columns: fitted.flatMap(({ id, maxWidth, minWidth }) => {
+          const width = natural.get(id);
+          return width === undefined ? [] : [{ id, natural: width, maxWidth, minWidth }];
+        }),
+        fixedWidth,
+        available: right - left,
+        floor: MIN_SHRUNK_WIDTH,
+      });
+      for (const [id, width] of planned) lastFittedWidths.set(id, width);
+      const changed = [...planned]
+        .filter(([id, width]) => Math.abs(width - (api.getColumn(id)?.getActualWidth() ?? 0)) >= 1)
         .map(([key, newWidth]) => ({ key, newWidth }));
       if (changed.length > 0) api.setColumnWidths(changed);
-    },
-    [fitted]
-  );
+    });
+  }, [fitted]);
+  useEffect(() => fitColumns(), [fitColumns]);
 
   // Fitted cells whose content changes width after the fit refit their columns, once the
   // changes settle. The observer reads the latest fit through a ref, so it is made once.
@@ -355,7 +362,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
 
   const onColumnResized = useCallback(
     (e: ColumnResizedEvent) => {
-      if (e.finished && e.source === 'autosizeColumns') capFittedColumns(e.api);
       if (!e.finished || e.source !== 'uiColumnResized') return;
       for (const col of e.columns ?? []) {
         const id = col.getColId();
@@ -367,7 +373,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
         });
       }
     },
-    [controller, capFittedColumns]
+    [controller]
   );
 
   const onCellClicked = useCallback(
@@ -455,6 +461,7 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
   return (
     // our cells are flex, so text-align alone won't centre/right-align them
     <div
+      ref={rootRef}
       className={`ag-data-grid h-full min-h-0 w-full [&_.ag-overlay-loading-center]:border-0! [&_.ag-overlay-loading-center]:bg-transparent! [&_.ag-overlay-loading-center]:shadow-none! [&_.ag-cell.ag-center-aligned-cell]:justify-center! [&_.ag-cell.ag-right-aligned-cell]:justify-end! ${
         effectiveSelectionMode === 'single' ? SINGLE_SELECT_RADIO_CLASS : ''
       }`}
@@ -488,8 +495,6 @@ function AgGridRendererImpl<Row>(props: IGridRendererProps<Row>) {
           apiRef.current = e.api;
           applySelection();
         }}
-        // a fitted column is its content and the cell's own padding, nothing more
-        autoSizePadding={0}
         onFirstDataRendered={fitColumns}
         onGridSizeChanged={fitColumns}
         onRowDataUpdated={() => {
