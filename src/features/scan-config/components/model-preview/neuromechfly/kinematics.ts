@@ -174,13 +174,17 @@ function meshPoses(
   for (const leg of LEG_CODES) {
     const chain: TMatrix[] = [];
     for (const body of kinematics.legs[leg].bodies) {
-      let pose = multiply(body.parent === -1 ? thorax : chain[body.parent], posed(body.pos, body.quat));
+      let pose = multiply(
+        body.parent === -1 ? thorax : chain[body.parent],
+        posed(body.pos, body.quat)
+      );
       for (const joint of body.joints) {
         pose = multiply(pose, hinge(joint.axis, joint.pos, angle(leg, joint, index) - joint.ref));
         index += 1;
       }
       chain.push(pose);
-      for (const geom of body.geoms) poses.set(geom.mesh, multiply(pose, posed(geom.pos, geom.quat)));
+      for (const geom of body.geoms)
+        poses.set(geom.mesh, multiply(pose, posed(geom.pos, geom.quat)));
     }
   }
   return poses;
@@ -191,8 +195,10 @@ function meshPoses(
  * fly standing at the origin facing +X. Passive joints (the outer tarsi) keep their standing angle.
  */
 export function legMeshPoses(kinematics: IBodyKinematics, angles: TAngles): Map<number, TMatrix> {
-  return meshPoses(kinematics, posed(kinematics.thorax.pos, kinematics.thorax.quat), (leg, joint) =>
-    joint.actuated === null ? joint.standing : angles[leg][joint.actuated]
+  return meshPoses(
+    kinematics,
+    posed(kinematics.thorax.pos, kinematics.thorax.quat),
+    (leg, joint) => (joint.actuated === null ? joint.standing : angles[leg][joint.actuated])
   );
 }
 
@@ -291,7 +297,9 @@ function apply3(r: number[][], v: number[]): number[] {
 }
 
 function compose3(a: number[][], b: number[][]): number[][] {
-  return a.map((row) => [0, 1, 2].map((c) => row[0] * b[0][c] + row[1] * b[1][c] + row[2] * b[2][c]));
+  return a.map((row) =>
+    [0, 1, 2].map((c) => row[0] * b[0][c] + row[1] * b[1][c] + row[2] * b[2][c])
+  );
 }
 
 function transpose3(a: number[][]): number[][] {
@@ -302,8 +310,7 @@ function solve3(a: number[][], b: number[]): number[] {
   const [[a0, a1, a2], [b0, b1, b2], [c0, c1, c2]] = a;
   const det = a0 * (b1 * c2 - b2 * c1) - a1 * (b0 * c2 - b2 * c0) + a2 * (b0 * c1 - b1 * c0);
   if (Math.abs(det) < 1e-30) return [0, 0, 0];
-  const column = (k: number) =>
-    a.map((row, r) => row.map((value, c) => (c === k ? b[r] : value)));
+  const column = (k: number) => a.map((row, r) => row.map((value, c) => (c === k ? b[r] : value)));
   const determinant = (m: number[][]) =>
     m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
     m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
@@ -369,7 +376,10 @@ export function bodyPreview(
             : 1;
         const vector = force.force.map((v) => v * scale);
         const world = force.frame === 'body' ? apply3(total, vector) : vector;
-        const arm = apply3(total, centre.map((v, axis) => v - kinematics.com[axis]));
+        const arm = apply3(
+          total,
+          centre.map((v, axis) => v - kinematics.com[axis])
+        );
         push = push.map((v, axis) => v + world[axis]);
         torque = torque.map((v, axis) => v + cross(arm, world)[axis]);
         pushed = true;
@@ -393,10 +403,7 @@ export function bodyPreview(
     path.push([...com]);
     // world = com + R (p - com0), for a point p placed at the start.
     fly.push(
-      multiply(
-        multiply(translation(com), rotation(orientation)),
-        translation(com0.map((v) => -v))
-      )
+      multiply(multiply(translation(com), rotation(orientation)), translation(com0.map((v) => -v)))
     );
 
     const angles = { ...standing };

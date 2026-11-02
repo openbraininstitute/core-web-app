@@ -1,5 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
-
 import {
   LEG_BY_NAME,
   multiply,
@@ -27,13 +25,6 @@ import type {
   IBodyTracks,
 } from '@/features/scan-config/components/model-preview/neuromechfly/scene';
 import type { MorphoViewerWorldMesh } from '@/morpho-viewer';
-
-/**
- * LOCAL TEST ONLY: results do not carry a replay yet. A closed loop launched from the local web
- * app (worktree-groups/malecns_banc_lif_circuits/local-launch) stores its replay by simulation id,
- * in a folder the dev server serves here.
- */
-const REPLAY_URL = '/static/neuromechfly/replays';
 
 /** What a closed loop records for replaying its episode (obi-one `replay_document`). */
 export interface IBodyReplay {
@@ -68,22 +59,6 @@ export interface IBodyReplay {
     overrides: boolean[][];
     upright: boolean[];
   };
-}
-
-/** The episode replay of simulation `simulationId`, or null when there is none to play. */
-export function useBodyReplay(simulationId: string | undefined): IBodyReplay | null {
-  const { data } = useQuery({
-    queryKey: ['neuromechfly-replay', simulationId],
-    enabled: Boolean(simulationId),
-    retry: false,
-    queryFn: async () => {
-      const response = await fetch(`${REPLAY_URL}/${simulationId}.json`);
-      // Run elsewhere than here, or before replays were recorded.
-      if (!response.ok) return null;
-      return (await response.json()) as IBodyReplay;
-    },
-  });
-  return data ?? null;
 }
 
 /** The arena the episode ran in, as the scene draws an experiment's. */
@@ -144,10 +119,22 @@ function along(origin: number[], direction: number[], length: number, width: num
   const v = u.map((value) => value / norm);
   const w = [d[1] * v[2] - d[2] * v[1], d[2] * v[0] - d[0] * v[2], d[0] * v[1] - d[1] * v[0]];
   return [
-    d[0] * length, v[0] * width, w[0] * width, origin[0],
-    d[1] * length, v[1] * width, w[1] * width, origin[1],
-    d[2] * length, v[2] * width, w[2] * width, origin[2],
-    0, 0, 0, 1,
+    d[0] * length,
+    v[0] * width,
+    w[0] * width,
+    origin[0],
+    d[1] * length,
+    v[1] * width,
+    w[1] * width,
+    origin[1],
+    d[2] * length,
+    v[2] * width,
+    w[2] * width,
+    origin[2],
+    0,
+    0,
+    0,
+    1,
   ];
 }
 
@@ -178,7 +165,8 @@ export function replayTracks(
   const overridden = replay.leg_overrides.map((override) => LEG_BY_NAME[override.leg]);
   const taken = new Map<number, Float32Array>();
   for (const mesh of legOf.keys()) {
-    if (overridden.includes(legOf.get(mesh) as never)) taken.set(mesh, new Float32Array(frames * 16));
+    if (overridden.includes(legOf.get(mesh) as never))
+      taken.set(mesh, new Float32Array(frames * 16));
   }
   const hidden = columnMajorOf(HIDDEN);
   for (let frame = 0; frame < frames; frame++) {
@@ -292,10 +280,22 @@ export function replayPathMeshes(replay: IBodyReplay, dark: boolean): MorphoView
       color: dark ? '#94a3b8' : '#64748b',
       box: { center: [0.5, 0, 0], size: [1, 1, 1] },
       matrix: columnMajorOf([
-        dx * reach, -dy * PATH_WIDTH_UM, 0, x0,
-        dy * reach, dx * PATH_WIDTH_UM, 0, y0,
-        0, 0, PATH_HEIGHT_UM, PATH_HEIGHT_UM,
-        0, 0, 0, 1,
+        dx * reach,
+        -dy * PATH_WIDTH_UM,
+        0,
+        x0,
+        dy * reach,
+        dx * PATH_WIDTH_UM,
+        0,
+        y0,
+        0,
+        0,
+        PATH_HEIGHT_UM,
+        PATH_HEIGHT_UM,
+        0,
+        0,
+        0,
+        1,
       ]),
     });
   }
@@ -313,10 +313,12 @@ export function replayReadout(replay: IBodyReplay): string {
   const parts: string[] = [];
   const reached = replay.sources_reached.map((source) => seconds(source.time_ms));
   const sources = replay.arena.odour_sources.length;
-  if (reached.length === 0) parts.push(sources === 1 ? 'did not reach the source' : 'reached no source');
+  if (reached.length === 0)
+    parts.push(sources === 1 ? 'did not reach the source' : 'reached no source');
   else if (sources === 1) parts.push(`reached the source at ${reached[0]}`);
   else parts.push(`reached ${reached.length} of ${sources} sources, at ${reached.join(', ')}`);
-  if (summary.path_length_mm !== undefined) parts.push(`walked ${summary.path_length_mm.toFixed(1)} mm`);
+  if (summary.path_length_mm !== undefined)
+    parts.push(`walked ${summary.path_length_mm.toFixed(1)} mm`);
   if (summary.overturned_s) parts.push(`turned over at ${summary.overturned_s.toFixed(2)} s`);
   if (replay.forces.length) parts.push(plural(replay.forces.length, 'push', 'pushes'));
   if (replay.leg_overrides.length) {

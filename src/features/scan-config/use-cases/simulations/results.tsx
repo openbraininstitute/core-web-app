@@ -564,7 +564,6 @@ export function SimulationsTab({
                         file it is handed. Both already resolved above. */}
                   <SimulationProvider
                     model={model}
-                    simulationId={activeSimulation?.id}
                     run={simConfig?.run}
                     neuronSets={neuronSets}
                     compartmentSets={compartmentSets}

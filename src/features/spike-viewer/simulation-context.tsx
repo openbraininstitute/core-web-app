@@ -20,8 +20,6 @@ export type SimulationNeuronSets = {
 
 type SimulationContextValue = {
   model: TSupportedEntitiesForScanConfiguration | null;
-  /** The simulation on show, whose output files these are. */
-  simulationId: string | null;
   run: SimulationRun | null;
   neuronSets: SimulationNeuronSets | null;
   /** The locations its compartment reports record, by set, each beside the block it came from. */
@@ -50,7 +48,6 @@ const NO_TIMELINE: readonly TimelineEvent[] = [];
  */
 const SimulationContext = createContext<SimulationContextValue>({
   model: null,
-  simulationId: null,
   run: null,
   neuronSets: null,
   compartmentSets: null,
@@ -60,7 +57,6 @@ const SimulationContext = createContext<SimulationContextValue>({
 
 export function SimulationProvider({
   model,
-  simulationId,
   run,
   neuronSets,
   compartmentSets,
@@ -69,7 +65,6 @@ export function SimulationProvider({
   children,
 }: {
   model: TSupportedEntitiesForScanConfiguration | null | undefined;
-  simulationId?: string | null;
   run: SimulationRun | null | undefined;
   neuronSets?: SimulationNeuronSets | null;
   compartmentSets?: SimulationCompartmentSets | null;
@@ -80,14 +75,13 @@ export function SimulationProvider({
   const value = useMemo(
     () => ({
       model: model ?? null,
-      simulationId: simulationId ?? null,
       run: run ?? null,
       neuronSets: neuronSets ?? null,
       compartmentSets: compartmentSets ?? null,
       simulationPicker,
       timeline,
     }),
-    [model, simulationId, run, neuronSets, compartmentSets, simulationPicker, timeline]
+    [model, run, neuronSets, compartmentSets, simulationPicker, timeline]
   );
 
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;

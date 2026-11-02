@@ -10,6 +10,15 @@ import {
   standingAngles,
 } from '@/features/scan-config/components/model-preview/neuromechfly/kinematics';
 import {
+  forceArrowMeshes,
+  replayArena,
+  replayPath,
+  replayPathMeshes,
+  replayReadout,
+  replayTracks,
+  takenLegMeshes,
+} from '@/features/scan-config/components/model-preview/neuromechfly/replay';
+import {
   applyNeuroMechFlyOverlayTransform,
   arenaColors,
   arenaMeshes,
@@ -27,16 +36,6 @@ import {
   readArena,
   readPerturbations,
 } from '@/features/scan-config/components/model-preview/neuromechfly/scene';
-import {
-  forceArrowMeshes,
-  replayArena,
-  replayPath,
-  replayPathMeshes,
-  replayReadout,
-  replayTracks,
-  takenLegMeshes,
-  useBodyReplay,
-} from '@/features/scan-config/components/model-preview/neuromechfly/replay';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { resolveCircuitAssetPath } from '@/utils/circuit-manifest';
 
@@ -147,16 +146,20 @@ function useBodyAssets(enabled: boolean): IBodyAssets | null {
  */
 export function useNeuroMechFlyScene({
   circuit,
-  simulationId,
+  bodyReplay,
   ...scene
 }: {
   /** Undefined turns the scene off: only large-circuit viewers draw it. */
   circuit: ICircuit | undefined;
-  /** The simulation whose results are on show: its episode is replayed, if one was stored. */
-  simulationId?: string;
+  /** The episode a closed loop ran, as its spike report carries it (JSON), to replay. */
+  bodyReplay?: string;
 } & Omit<IEmbodiedSceneOptions, 'bodyInterface' | 'replay'>) {
   const bodyInterface = useBodyInterface(circuit);
-  const replay = useBodyReplay(isEmbodied(bodyInterface) ? simulationId : undefined);
+  const replay = useMemo(
+    () =>
+      bodyReplay && isEmbodied(bodyInterface) ? (JSON.parse(bodyReplay) as IBodyReplay) : null,
+    [bodyInterface, bodyReplay]
+  );
   return useEmbodiedScene({ ...scene, bodyInterface, replay });
 }
 
@@ -238,7 +241,8 @@ export function useEmbodiedScene({
       });
       // Pushed off its centre of mass, a free fly of 1 mg spins fast.
       let turn = '';
-      if (played.turnDegrees >= 360) turn = `, spinning ${(played.turnDegrees / 360).toFixed(1)} turns`;
+      if (played.turnDegrees >= 360)
+        turn = `, spinning ${(played.turnDegrees / 360).toFixed(1)} turns`;
       else if (played.turnDegrees >= 1) turn = `, turning ${played.turnDegrees.toFixed(0)}°`;
       const readout = `${force.name}: a free fly moves ${played.displacementMm.toFixed(1)} mm${turn} in ${force.duration} ms.`;
       return { played, readout };

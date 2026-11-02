@@ -1,6 +1,6 @@
 import { LEG_BY_NAME } from '@/features/scan-config/components/model-preview/neuromechfly/kinematics';
 
-import type { Config, ConfigValue } from '@/features/scan-config/types';
+import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type {
   IBodyKinematics,
   IBodyPreview,
@@ -8,7 +8,7 @@ import type {
   IPreviewOverride,
   TMatrix,
 } from '@/features/scan-config/components/model-preview/neuromechfly/kinematics';
-import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import type { Config, ConfigValue } from '@/features/scan-config/types';
 import type { MorphoViewerOverlayTransformEvent, MorphoViewerWorldMesh } from '@/morpho-viewer';
 
 /** Root elements of obi-one's `Brian2NeuroMechFlySimulationScanConfig`. */
@@ -117,7 +117,10 @@ function readNumber(value: ConfigValue | undefined, fallback: number): [number, 
     return [Number.isFinite(first) ? first : fallback, true];
   }
   const number = Number(value);
-  return [value !== null && value !== undefined && Number.isFinite(number) ? number : fallback, false];
+  return [
+    value !== null && value !== undefined && Number.isFinite(number) ? number : fallback,
+    false,
+  ];
 }
 
 export function readArena(config: Config): IArena {
@@ -256,12 +259,22 @@ export function arenaMeshes(
   ];
   for (let x = x0; x <= x1; x += GRID_STEP_MM) {
     meshes.push(
-      box(`arena:grid:x${x}`, colors.grid, [x, (y0 + y1) / 2, 0.003], [GRID_LINE_MM, y1 - y0, 0.006])
+      box(
+        `arena:grid:x${x}`,
+        colors.grid,
+        [x, (y0 + y1) / 2, 0.003],
+        [GRID_LINE_MM, y1 - y0, 0.006]
+      )
     );
   }
   for (let y = y0; y <= y1; y += GRID_STEP_MM) {
     meshes.push(
-      box(`arena:grid:y${y}`, colors.grid, [(x0 + x1) / 2, y, 0.003], [x1 - x0, GRID_LINE_MM, 0.006])
+      box(
+        `arena:grid:y${y}`,
+        colors.grid,
+        [(x0 + x1) / 2, y, 0.003],
+        [x1 - x0, GRID_LINE_MM, 0.006]
+      )
     );
   }
   for (const wall of arena.walls) {
@@ -351,7 +364,10 @@ export function arenaOverlays(arena: IArena, colors: IArenaColors): ICircuitOver
       end: [wall.x1, wall.y1],
       middle: [(wall.x0 + wall.x1) / 2, (wall.y0 + wall.y1) / 2],
     } as const;
-    for (const [end, [x, y]] of Object.entries(ends) as ['start' | 'end' | 'middle', readonly [number, number]][]) {
+    for (const [end, [x, y]] of Object.entries(ends) as [
+      'start' | 'end' | 'middle',
+      readonly [number, number],
+    ][]) {
       const top: [number, number, number] = [x, y, WALL_HEIGHT_MM];
       groups.push({
         id: overlayIds.wallEnd(wall.name, end),
@@ -436,11 +452,11 @@ export function applyNeuroMechFlyOverlayTransform(
 
     const anchor = turned(centre, arena.heading);
     const tip = [event.origin.x, event.origin.y, event.origin.z].map((v) => v / UM_PER_MM);
-    const pushed = tip.map((v, axis) => ((v - anchor[axis]) * UM_PER_MM) / ARROW_UM_PER_MICRONEWTON);
+    const pushed = tip.map(
+      (v, axis) => ((v - anchor[axis]) * UM_PER_MM) / ARROW_UM_PER_MICRONEWTON
+    );
     const vector =
-      force.frame === 'body'
-        ? turned(pushed as [number, number, number], -arena.heading)
-        : pushed;
+      force.frame === 'body' ? turned(pushed as [number, number, number], -arena.heading) : pushed;
     return withBlock(config, FORCES_KEY, force.name, (block) => ({
       ...block,
       force_x: roundTo(vector[0], 1),
@@ -486,7 +502,6 @@ export function applyNeuroMechFlyOverlayTransform(
   }
   return config;
 }
-
 
 /**
  * The centre of mass of each segment a force can push, with the fly standing at the origin facing

@@ -66,6 +66,8 @@ export type SpikeData = {
   populations: SpikePopulation[];
   timeRange: { min: number; max: number };
   nodeIdRange: { min: number; max: number };
+  /** A NeuroMechFly closed loop's replay of the body's episode (JSON), which its report carries. */
+  bodyReplay?: string;
 };
 
 /**
@@ -74,6 +76,7 @@ export type SpikeData = {
  * Expected HDF5 structure:
  * /spikes/{population}/node_ids - array of node IDs
  * /spikes/{population}/timestamps - array of spike times
+ * /neuromechfly_replay - optional: a closed loop's replay of the body (JSON text)
  */
 export function parseSpikeData(file: File): SpikeData {
   const spikesGroup = file.get('spikes');
@@ -135,8 +138,10 @@ export function parseSpikeData(file: File): SpikeData {
     }
   }
 
+  const bodyReplay = file.get('neuromechfly_replay');
   return {
     populations,
+    ...(bodyReplay instanceof Dataset ? { bodyReplay: String(bodyReplay.value) } : {}),
     timeRange: {
       min: globalMinTime === Infinity ? 0 : globalMinTime,
       max: globalMaxTime === -Infinity ? 0 : globalMaxTime,

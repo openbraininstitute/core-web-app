@@ -27,17 +27,17 @@ import {
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
-  isNeuroMechFlyOverlay,
-  NEUROMECHFLY_MARKER_RADIUS,
-} from '@/features/scan-config/components/model-preview/neuromechfly/scene';
-import { useNeuroMechFlyScene } from '@/features/scan-config/components/model-preview/neuromechfly/use-neuromechfly-scene';
-import {
   hasAnyLocation,
   type IFormBindingOptions,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import {
+  isNeuroMechFlyOverlay,
+  NEUROMECHFLY_MARKER_RADIUS,
+} from '@/features/scan-config/components/model-preview/neuromechfly/scene';
+import { useNeuroMechFlyScene } from '@/features/scan-config/components/model-preview/neuromechfly/use-neuromechfly-scene';
 import {
   electrodeBlockPath,
   useElectrodeOverlays,
@@ -169,10 +169,10 @@ interface ICircuitSceneOptions {
   /** Spikes to replay over the circuit, and the transport driving them. */
   spikes?: ISpikeReplayBinding;
   /**
-   * The simulation whose results are on show. An embodied circuit's body then replays the episode
-   * that simulation ran, at the spikes' playhead, if one was stored.
+   * The episode a NeuroMechFly closed loop ran, as its spike report carries it (JSON). An embodied
+   * circuit's body then replays it, at the spikes' playhead.
    */
-  simulationId?: string;
+  bodyReplay?: string;
   /**
    * Balls on cells of the population on show, at sections and offsets along them, each in a
    * colour of its own: such as a compartment report's locations, coloured as it plays.
@@ -250,7 +250,7 @@ export function CircuitScene({
   selection,
   onNodeColorsChange,
   spikes,
-  simulationId,
+  bodyReplay,
   locationMarkers,
   onLocationClick,
   onLocationHover,
@@ -460,7 +460,7 @@ export function CircuitScene({
   // An embodied circuit stands in its body; configuring its closed loop adds the arena.
   const neuroMechFly = useNeuroMechFlyScene({
     circuit: largeCircuit ? circuit : undefined,
-    simulationId,
+    bodyReplay,
     config: scanConfig,
     setConfig,
     backgroundDark: menu.backgroundDark,
