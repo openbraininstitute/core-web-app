@@ -21,19 +21,6 @@ const circuit = (
   targetSimulator: string | null = 'NEURON'
 ): TLaunchInput => ({ entityType: EntityTypeDict.Circuit, scale, targetSimulator });
 
-const SMALL_SCALES = [
-  CircuitScaleDictionary.Single,
-  CircuitScaleDictionary.PairNeuron,
-  CircuitScaleDictionary.SmallMicrocircuit,
-];
-
-const LARGE_SCALES = [
-  CircuitScaleDictionary.Microcircuit,
-  CircuitScaleDictionary.Region,
-  CircuitScaleDictionary.System,
-  CircuitScaleDictionary.WholeBrain,
-];
-
 describe('resolveSimulationLaunchTarget', () => {
   it('routes me-model campaigns to the single-neuron task type', () => {
     expect(resolveSimulationLaunchTarget(memodel)).toEqual({
@@ -72,7 +59,12 @@ describe('resolveSimulationLaunchTarget', () => {
   });
 
   it('launches the larger NEURON scales on the generic circuit task, asking for consent', () => {
-    for (const scale of LARGE_SCALES) {
+    for (const scale of [
+      CircuitScaleDictionary.Microcircuit,
+      CircuitScaleDictionary.Region,
+      CircuitScaleDictionary.System,
+      CircuitScaleDictionary.WholeBrain,
+    ]) {
       expect(resolveSimulationLaunchTarget(circuit(scale))).toEqual({
         taskType: ObiOneTaskTypeDict.CircuitSimulation,
         requiresOfflineTokenConsent: true,
@@ -81,7 +73,7 @@ describe('resolveSimulationLaunchTarget', () => {
   });
 
   it('picks the simulator over the scale for Brian2 and LearningEngine, asking for consent', () => {
-    for (const scale of [...SMALL_SCALES, ...LARGE_SCALES]) {
+    for (const scale of Object.values(CircuitScaleDictionary)) {
       expect(resolveSimulationLaunchTarget(circuit(scale, 'Brian2'))).toEqual({
         taskType: ObiOneTaskTypeDict.CircuitSimulationBrian2,
         requiresOfflineTokenConsent: true,
@@ -90,6 +82,18 @@ describe('resolveSimulationLaunchTarget', () => {
         taskType: ObiOneTaskTypeDict.CircuitSimulation,
         requiresOfflineTokenConsent: true,
       });
+    }
+  });
+
+  it('returns null for a circuit with a null or unknown scale', () => {
+    for (const scale of [null, 'unknown' as TCircuitScaleDictionary]) {
+      expect(
+        resolveSimulationLaunchTarget({
+          entityType: EntityTypeDict.Circuit,
+          scale,
+          targetSimulator: 'NEURON',
+        })
+      ).toBeNull();
     }
   });
 
