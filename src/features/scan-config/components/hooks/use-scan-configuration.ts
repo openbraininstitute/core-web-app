@@ -29,6 +29,7 @@ import {
   ScanConfigDefaultTab,
   SchemaMappingKeyDict,
   type SchemaName,
+  SchemaNameDict,
   type TScanConfigActivity,
   type TScanConfigTabs,
   type TSupportedEntitiesForScanConfiguration,
@@ -159,11 +160,14 @@ export function useScanConfiguration({
   const isEntityLoading = shouldFetchEntity && loadingEntity;
 
   // Select the circuit-simulation generation endpoint + schema from the circuit's
-  // `target_simulator` (Brian2 / LearningEngine), falling back to the descriptor default.
+  // `target_simulator` (Brian2 / LearningEngine), falling back to the descriptor default. Only
+  // a workflow on the generic circuit-simulation config is switched: one with a config of its own
+  // (e.g. the NeuroMechFly closed loop) keeps it.
   const simulatorOverride = useMemo(() => {
+    if (registryResolved.schemaName !== SchemaNameDict.CircuitSimulationScanConfig) return null;
     const targetSimulator = entity && 'target_simulator' in entity ? entity.target_simulator : null;
     return resolveSimulatorScanConfigOverride(targetSimulator);
-  }, [entity]);
+  }, [entity, registryResolved.schemaName]);
 
   const effectiveSchemaName = simulatorOverride?.schemaName ?? registryResolved.schemaName;
   const effectiveEndpoint = simulatorOverride

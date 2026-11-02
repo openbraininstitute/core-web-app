@@ -30,6 +30,9 @@ export const ExtendedEntitiesTypeDict = {
   CircuitSynapticPhysiologyCampaign: 'circuit_synaptic_physiology_campaign',
   RegionCircuitSimulation: 'region_circuit_simulation',
   WholeBrainCircuitSimulation: 'whole_brain_circuit_simulation',
+  // Route key of the NeuroMechFly closed-loop workflow, which also produces a whole-brain
+  // simulation campaign: two workflows with one target type collide.
+  NeuroMechFlySimulation: 'neuromechfly_simulation',
 } as const;
 
 export type TExtendedEntitiesTypeDict =

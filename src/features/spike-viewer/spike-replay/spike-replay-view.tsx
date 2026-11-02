@@ -722,6 +722,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
       selection={sceneSelection}
       onCellClick={handleCellClick}
       onNodeColorsChange={setSceneColors}
+      // An embodied circuit's body replays the episode this simulation ran.
+      bodyReplay={data.bodyReplay}
       spikes={{
         data: spikes ?? undefined,
         timeInMs: seekToMs,

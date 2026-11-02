@@ -41,6 +41,10 @@ export interface ICircuitOverlayGroup {
   origin?: [number, number, number];
   /** Absolute placement rotations in degrees (Obi-One extrinsic ZXY). */
   rotation?: { x?: number; y?: number; z?: number };
+  /** What dragging it does; electrodes take the viewer's default. */
+  drag?: 'view' | 'xy' | 'turn-z';
+  /** False leaves it out of picking, e.g. a value the form sweeps. */
+  interactive?: boolean;
 }
 
 export interface IElectrodeOverlaySource {

@@ -28,9 +28,11 @@ import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type {
+  MorphoViewerMeshAnimation,
   MorphoViewerCellColors,
   MorphoViewerOverlayTransformEvent,
   MorphoViewerSignals,
+  MorphoViewerWorldMesh,
 } from '@/morpho-viewer';
 
 import styles from './large-circuit-preview.module.css';
@@ -106,6 +108,20 @@ export interface LargeCircuitPreviewProps {
   somaSizeScale?: number;
   /** Electrode marker radius (world units). */
   electrodeRadius?: number;
+  /** Smallest on-screen overlay radius; follows `electrodeRadius` unless given. */
+  overlaysMinRadiusInPixels?: number;
+  /** Largest on-screen overlay radius, for markers sized for a wider view than the one on show. */
+  overlaysMaxRadiusInPixels?: number;
+  /** Meshes in world coordinates: an embodied circuit's body, its arena. */
+  meshes?: MorphoViewerWorldMesh[];
+  /** Where the somas stand in the world, when it is not their own frame (the body's). */
+  cellsMatrix?: MorphoViewerWorldMesh['matrix'];
+  /** Plays the meshes' tracks and `cellsTrack`: a preview of the body moving, or an episode replayed. */
+  meshAnimation?: MorphoViewerMeshAnimation;
+  /** Where the somas stand at each frame of `meshAnimation`. */
+  cellsTrack?: Float32Array;
+  /** A fixed earth: +Z up, the camera never below the floor or rolled. */
+  ground?: boolean;
   /**
    * Viewer feature flags from domain `viewer` (via host).
    * Reserved for parity with {@link CircuitViz}; soma-only path has no cell hover.
@@ -145,6 +161,13 @@ export function LargeCircuitPreview({
   neuronOpacity,
   somaSizeScale = DEFAULT_SOMA_SIZE_SCALE,
   electrodeRadius = DEFAULT_ELECTRODE_RADIUS,
+  overlaysMinRadiusInPixels,
+  overlaysMaxRadiusInPixels,
+  meshes,
+  cellsMatrix,
+  meshAnimation,
+  cellsTrack,
+  ground,
   spikes,
 }: LargeCircuitPreviewProps) {
   const debugMode = useMorphoViewerDebugMode();
@@ -356,13 +379,15 @@ export function LargeCircuitPreview({
 
   const morphoOverlays = React.useMemo(
     () =>
-      overlays?.map(({ color, coordinates, id, kind, origin, rotation }) => ({
+      overlays?.map(({ color, coordinates, id, kind, origin, rotation, drag, interactive }) => ({
         color,
         coordinates,
         id,
         kind,
         origin,
         rotation,
+        drag,
+        interactive,
       })),
     [overlays]
   );
@@ -389,7 +414,15 @@ export function LargeCircuitPreview({
           signals={signals}
           overlays={morphoOverlays}
           overlaysRadius={electrodeRadius}
-          overlaysMinRadiusInPixels={Math.max(2, Math.round(electrodeRadius * 0.32))}
+          overlaysMinRadiusInPixels={
+            overlaysMinRadiusInPixels ?? Math.max(2, Math.round(electrodeRadius * 0.32))
+          }
+          overlaysMaxRadiusInPixels={overlaysMaxRadiusInPixels}
+          meshes={meshes}
+          cellsMatrix={cellsMatrix}
+          meshAnimation={meshAnimation}
+          cellsTrack={cellsTrack}
+          ground={ground}
           overlaysInteractive={overlaysInteractive}
           onOverlayTransform={onOverlayTransform}
           highlightedOverlayId={highlightedOverlayId}

@@ -1,4 +1,10 @@
-import { RiCameraLine, RiEqualizerLine, RiResetLeftLine } from '@remixicon/react';
+import {
+  RiBugLine,
+  RiCameraLine,
+  RiEqualizerLine,
+  RiGridLine,
+  RiResetLeftLine,
+} from '@remixicon/react';
 
 import { AxonIcon } from '@/components/icons/Axon';
 import { RulerMeasure } from '@/components/icons/RulerMeasure';
@@ -36,6 +42,12 @@ export interface ViewerControlsMenuProps {
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
+  /** an embodied circuit's NeuroMechFly body — omit for circuits without one */
+  showBody?: boolean;
+  onToggleBody?: (value: boolean) => void;
+  /** the closed-loop arena, while one is configured */
+  showArena?: boolean;
+  onToggleArena?: (value: boolean) => void;
   /** electrode marker radius (world units); omit when electrodes unavailable */
   electrodeRadius?: number;
   onElectrodeRadiusChange?: (value: number) => void;
@@ -76,6 +88,10 @@ export function ViewerControlsMenu({
   onSpikeAfterglowChange,
   showElectrodes,
   onToggleElectrodes,
+  showBody,
+  onToggleBody,
+  showArena,
+  onToggleArena,
   electrodeRadius,
   morphologyLocationRadius,
   onMorphologyLocationRadiusChange,
@@ -123,6 +139,20 @@ export function ViewerControlsMenu({
                 testId="viewer-toggle-electrodes"
                 checked={!!showElectrodes}
                 onChange={onToggleElectrodes}
+              />
+            </MenuRow>
+          )}
+          {onToggleBody && (
+            <MenuRow label="Fly body" icon={<RiBugLine className="size-4 shrink-0" />}>
+              <ViewerSwitch testId="viewer-toggle-body" checked={!!showBody} onChange={onToggleBody} />
+            </MenuRow>
+          )}
+          {onToggleArena && (
+            <MenuRow label="Arena" icon={<RiGridLine className="size-4 shrink-0" />}>
+              <ViewerSwitch
+                testId="viewer-toggle-arena"
+                checked={!!showArena}
+                onChange={onToggleArena}
               />
             </MenuRow>
           )}

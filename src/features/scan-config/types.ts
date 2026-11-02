@@ -143,6 +143,7 @@ export const SchemaNameDict = {
   // simulation
   CircuitSimulationScanConfig: 'CircuitSimulationScanConfig',
   Brian2CircuitSimulationScanConfig: 'Brian2CircuitSimulationScanConfig',
+  Brian2NeuroMechFlySimulationScanConfig: 'Brian2NeuroMechFlySimulationScanConfig',
   LearningEngineCircuitSimulationScanConfig: 'LearningEngineCircuitSimulationScanConfig',
   MEModelSimulationScanConfig: 'MEModelSimulationScanConfig',
   MEModelWithSynapsesCircuitSimulationScanConfig: 'MEModelWithSynapsesCircuitSimulationScanConfig',
