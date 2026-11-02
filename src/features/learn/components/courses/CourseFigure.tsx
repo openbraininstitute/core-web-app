@@ -12,6 +12,7 @@ import PhysicsFigure, { type PhysicsStep } from './physics/Figure';
 import Physics2Figure, { type Physics2Step } from './physics2/Figure';
 import PlatformFigure, { type PlatformStep } from './platform/Figure';
 import PythonFigure, { type PythonStep } from './python/Figure';
+import ReticularFigure, { type ReticularStep } from './reticular/Figure';
 import SdkFigure, { type SdkStep } from './sdk/Figure';
 import TransmittersFigure, { type TransmitterStep } from './transmitters/Figure';
 import ValidationFigure, { type ValidationStep } from './validation/Figure';
@@ -45,6 +46,8 @@ export default function CourseFigure({
       return <TransmittersFigure step={step as TransmitterStep} back={back} />;
     case 'validation':
       return <ValidationFigure step={step as ValidationStep} back={back} />;
+    case 'reticular':
+      return <ReticularFigure step={step as ReticularStep} back={back} />;
     default:
       return null;
   }
