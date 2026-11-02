@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
 import { hexAt, levelOf, SCALE_GRADIENT, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -62,6 +62,7 @@ export function LfpScene({
   active,
 }: Props) {
   const [levels, setLevels] = useState<Uint8Array | null>(null);
+  const drawsEachCell = useCircuitDrawsEachCell(circuit);
 
   // Recoloured only while on screen, and drawn again only where a contact's colour changed.
   useEffect(() => {
@@ -125,15 +126,18 @@ export function LfpScene({
 
   return (
     <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
-      <CircuitScene
-        circuit={circuit}
-        largeCircuit={!circuitDrawsMorphologies(circuit.scale)}
-        features={SCENE_FEATURES}
-        populationName={populationName}
-        showUnselectedPopulations={false}
-        electrodes={electrodes}
-        active={active}
-      />
+      {/* Its renderer waits on whether Bluenaas has the circuit's pack. */}
+      {drawsEachCell !== undefined && (
+        <CircuitScene
+          circuit={circuit}
+          largeCircuit={!drawsEachCell}
+          features={SCENE_FEATURES}
+          populationName={populationName}
+          showUnselectedPopulations={false}
+          electrodes={electrodes}
+          active={active}
+        />
+      )}
       <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
         <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />
         <div className="mt-0.5 flex justify-between tabular-nums">
