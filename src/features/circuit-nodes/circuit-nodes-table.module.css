@@ -143,11 +143,16 @@
   color: var(--color-dark);
 }
 
-/* Let antd Select/Dropdown popups (anchored inside the custom filter popover
-   via getPopupContainer) escape the ag-grid popup's clipping bounds. */
-.grid :global(.ag-popup-child),
-.grid :global(.ag-filter),
-.grid :global(.ag-filter-wrapper) {
+/* The filters, which open on the page rather than in the grid: above what is around the
+   table, and letting antd Select/Dropdown popups (anchored inside them via
+   getPopupContainer) escape their bounds. */
+.filterPopup:global(.ag-popup-child) {
+  z-index: 1030;
+  overflow: visible;
+}
+
+.filterPopup :global(.ag-filter),
+.filterPopup :global(.ag-filter-wrapper) {
   overflow: visible;
 }
 

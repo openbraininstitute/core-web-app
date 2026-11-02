@@ -29,6 +29,7 @@ import { PREFERRED_COLUMNS } from '@/features/circuit-nodes/types';
 import { PaneSideResizeHandle } from '@/features/circuit-viewer/pane-resize-handle';
 import { PillToggle, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
+import { useFullscreenElement } from '@/utils/fullscreen';
 import { logError } from '@/utils/logger';
 
 import type {
@@ -41,6 +42,7 @@ import type {
   ICellRendererParams,
   IDatasource,
   IHeaderParams,
+  PostProcessPopupParams,
   RowClassParams,
   RowClickedEvent,
   ValueFormatterParams,
@@ -55,6 +57,11 @@ import type {
 const PREFERRED_NAME_SET = new Set(PREFERRED_COLUMNS.map((p) => p.name));
 
 const CATEGORICAL_SET_FILTER_MAX = 100;
+
+/** Marks the filters, which open outside the grid, for their styles. */
+function markFilterPopup({ type, ePopup }: PostProcessPopupParams) {
+  if (type === 'columnFilter') ePopup.classList.add(styles.filterPopup);
+}
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -577,6 +584,10 @@ export function NodesGrid({
   markedNodeId = null,
 }: Props) {
   const gridRef = useRef<AgGridReact>(null);
+  // Filters open on the page, or the view filling the screen: inside the grid, which clips
+  // what runs past its edge, a long list (the m-types) was cut off under a short table.
+  const fullscreen = useFullscreenElement();
+  const popupParent = fullscreen ?? (typeof document === 'undefined' ? undefined : document.body);
 
   // The pinned columns' widths are set on the grid itself, from their share of
   // its width, on each resize and each move of their edge. Handed down in the
@@ -1168,6 +1179,8 @@ export function NodesGrid({
           suppressCellFocus
           maintainColumnOrder
           headerHeight={60}
+          popupParent={popupParent}
+          postProcessPopup={markFilterPopup}
           onGridReady={onGridReady}
           onNewColumnsLoaded={(e) => restoreFilters(e.api)}
           // New pinned columns come in at their first width, and are fitted at once.
