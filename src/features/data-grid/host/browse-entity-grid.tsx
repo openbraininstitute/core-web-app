@@ -32,9 +32,6 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { withScopeColumn } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
-import { useScopeMarks } from '@/features/data-grid/bindings/entitycore/renderers/scope-cell';
-import { ScopeToolbarToggles } from '@/features/data-grid/bindings/entitycore/renderers/scope-toolbar';
-import { SCOPE_COLUMN_ID } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,
   GridActionType,
@@ -289,9 +286,6 @@ export function EntityDataGrid({
   const resolvedGetRowClass = getRowClass || applyLifecycleGating ? composedGetRowClass : undefined;
 
   const speciesKey = isAllSpeciesMode ? 'all' : workspaceSpecies?.hierarchId;
-  // the filter design repeats the scope column's marks beside the search
-  const withScopeToggles =
-    useScopeMarks() === 'filter' && definition.schema.columns.some((c) => c.id === SCOPE_COLUMN_ID);
   const controller = useMemo(
     () =>
       new GridController<EntityCoreIdentifiableNamed>({
@@ -512,8 +506,6 @@ export function EntityDataGrid({
           activeRowId={activeRowId}
           selection={pickerSelection}
           framed={framed}
-          // the framed Data listing drops the chooser's icon; pickers keep it
-          showColumnChooser={!framed}
           toolbarSlots={{
             action: allowUpload ? <UploadDataButton compact entityType={dataType} /> : undefined,
             brainRegion: toolbarBrainRegion,
@@ -526,10 +518,7 @@ export function EntityDataGrid({
               />
             ) : undefined,
             search: allowSearch ? (
-              <>
-                {withScopeToggles && <ScopeToolbarToggles controller={controller} />}
-                <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
-              </>
+              <GridSearch onSearch={handleSearch} openOnMount value={freeTextSearch} />
             ) : undefined,
             // Merged last so a plugin adds without disturbing the shared controls.
             ...extraToolbarSlots,
