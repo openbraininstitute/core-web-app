@@ -3,16 +3,18 @@
 import { DeleteOutlined } from '@ant-design/icons';
 import { RiCursorHand } from '@remixicon/react';
 import { InputNumber } from 'antd';
-import { useSetAtom } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useEffect, useId } from 'react';
 
 import { morphologyLocationsNeuronColor } from '@/features/scan-config/components/color-by/palette';
 import {
+  hiddenLocationNodesAtom,
   type IStoredLocation,
   morphologyLocationsHintHoveredAtom,
   readLocationRows,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { ScanConfigUIElementDict } from '@/features/scan-config/types';
+import { cn } from '@/utils/css-class';
 
 import type {
   IMorphologyLocationSelection,
@@ -65,6 +67,9 @@ export default function MorphologyLocationSelection({
     if (!nudgeOnHover) setHintHovered(false);
   }, [nudgeOnHover, setHintHovered]);
 
+  // Rows on a neuron the viewer is not drawing: kept, but greyed out like their markers.
+  const hiddenNodes = useAtomValue(hiddenLocationNodesAtom);
+
   const update = (index: number, patch: Partial<IMorphologyLocationPoint>) =>
     onChange(rows.with(index, { ...rows[index], ...patch }));
 
@@ -93,7 +98,15 @@ export default function MorphologyLocationSelection({
           // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional; two rows may hold identical values
           key={index}
           data-testid="scan-config-location"
-          className="flex items-end gap-2 border border-gray-200 p-2"
+          className={cn(
+            'flex items-end gap-2 border border-gray-200 p-2',
+            row.node_id !== undefined && hiddenNodes.has(row.node_id) && 'opacity-40'
+          )}
+          title={
+            row.node_id !== undefined && hiddenNodes.has(row.node_id)
+              ? 'This neuron is hidden in the 3D viewer'
+              : undefined
+          }
         >
           {row.node_id !== undefined && (
             <ReadOnlyId

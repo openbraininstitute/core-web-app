@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cellAt,
   cellColorsOf,
+  isCellDrawn,
   NO_CELL_COLORS,
   pointingOut,
 } from '@/features/circuit-viewer/morphologies/cell-colors';
@@ -145,5 +146,20 @@ describe('a cell by its number', () => {
     expect(cellAt(POPULATIONS, 0)).toEqual({ name: 'cortex', index: 0 });
     expect(cellAt(POPULATIONS, 4)).toEqual({ name: 'thalamus', index: 1 });
     expect(cellAt(POPULATIONS, 6)).toBeUndefined();
+  });
+});
+
+describe('isCellDrawn', () => {
+  it('is false only for a cell the colours take out', () => {
+    const colors = cellColorsOf({
+      populations: POPULATIONS,
+      subject: 'cortex',
+      hidden: NONE,
+      shownCells: Uint8Array.of(1, 0, 1),
+    });
+
+    expect([0, 1, 2].map((cell) => isCellDrawn(colors, cell))).toEqual([true, false, true]);
+    // Past the end of the columns, a cell is in the default colour.
+    expect(isCellDrawn(NO_CELL_COLORS, 4)).toBe(true);
   });
 });

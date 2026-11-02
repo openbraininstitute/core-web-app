@@ -204,5 +204,8 @@ export function readLocationBlockTypes(schema: unknown): string[] {
   });
 }
 
+/** Node ids of the population on show that the 3D viewer is not drawing, published for the form. */
+export const hiddenLocationNodesAtom = atom<ReadonlySet<number>>(new Set<number>());
+
 /** Set while the pointer is on the "add locations from the 3D viewer" hint. */
 export const morphologyLocationsHintHoveredAtom = atom(false);

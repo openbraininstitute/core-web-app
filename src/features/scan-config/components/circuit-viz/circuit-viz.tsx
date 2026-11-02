@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { isCellDrawn } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { sectionNumbered } from '@/features/circuit-viewer/morphologies/sections';
@@ -11,6 +13,7 @@ import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/colo
 import { useMorphologyLocationPreviews } from '@/features/scan-config/components/hooks/use-morphology-location-previews';
 import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import {
+  hiddenLocationNodesAtom,
   isExplicitLocationsBlockType,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   readEntry,
@@ -213,9 +216,15 @@ function CircuitVizView({
     }
     return drawn;
   }, [morphologies, locationPreviews.locations, locationCells]);
+  // A location is not drawn on a neuron the view is not drawing: one the nodes table filters out, say.
+  const drawnLocationCells = useMemo(
+    () => locationCells.filter((cell) => isCellDrawn(cellColors, cell)),
+    [locationCells, cellColors]
+  );
+  usePublishHiddenLocationNodes(locationCells, drawnLocationCells, locationFirstCell);
   const { locations, hover, labels, pickMode } = useLocationSelection({
     ...morphologyLocations,
-    cells: locationCells,
+    cells: drawnLocationCells,
     firstCell: locationFirstCell,
     backgroundColor,
     generatedLocations: visibleGeneratedLocations,
@@ -352,6 +361,27 @@ function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
   const next = new Set(set);
   if (!next.delete(key)) next.add(key);
   return next;
+}
+
+/** Tells the form which neurons of the population on show the view is not drawing, so it can grey their rows out. */
+function usePublishHiddenLocationNodes(
+  cells: readonly number[],
+  drawn: readonly number[],
+  firstCell: number
+) {
+  const setHiddenNodes = useSetAtom(hiddenLocationNodesAtom);
+  useEffect(() => {
+    const shown = new Set(drawn);
+    const hidden = new Set<number>();
+    for (const cell of cells) if (!shown.has(cell)) hidden.add(cell - firstCell);
+    // Kept when unchanged, so the form does not render again on every recolour.
+    setHiddenNodes((previous) =>
+      previous.size === hidden.size && [...hidden].every((id) => previous.has(id))
+        ? previous
+        : hidden
+    );
+  }, [cells, drawn, firstCell, setHiddenNodes]);
+  useEffect(() => () => setHiddenNodes(new Set()), [setHiddenNodes]);
 }
 
 type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick' | 'entityId'> & {
