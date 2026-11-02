@@ -6,8 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from 'react-dom';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { useEmptySceneTap } from '@/features/circuit-viewer/use-empty-scene-tap';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { SceneTime, useSceneTime } from '@/features/spike-viewer/components/scene-time';
 import { Scrubber } from '@/features/spike-viewer/spike-replay/scrubber';
 import { SPEEDS } from '@/features/spike-viewer/spike-replay/transport-bar';
@@ -110,6 +109,7 @@ export function VoltageScene({
   const [frame, setFrame] = useState(0);
   const recoloredAt = useRef(0);
   const sceneTime = useSceneTime(timeRef);
+  const drawsEachCell = useCircuitDrawsEachCell();
   const showSceneTime = sceneTime.show;
 
   const frameAt = useCallback(
@@ -165,17 +165,6 @@ export function VoltageScene({
     if (!playing && timeRef.current >= end) moveTo(start, true);
     setPlaying(!playing);
   };
-
-  // A tap on empty space is told apart from one on a cell, which the scene reports.
-  const sceneTap = useEmptySceneTap(() => onEmptyClick?.());
-  const { cellClicked } = sceneTap;
-  const handleCellClick = useCallback(
-    (nodeId: number) => {
-      cellClicked();
-      onCellClick?.(nodeId);
-    },
-    [cellClicked, onCellClick]
-  );
 
   const nodeColors = useMemo<NodeColors | undefined>(() => {
     if (!frames || !valueRange) return undefined;
@@ -272,12 +261,10 @@ export function VoltageScene({
           'relative min-h-0 flex-1 overflow-hidden',
           bare ? 'rounded-2xl' : 'rounded-xl border border-neutral-200'
         )}
-        onPointerDownCapture={sceneTap.onPointerDownCapture}
-        onPointerUpCapture={sceneTap.onPointerUpCapture}
       >
         <CircuitScene
           circuit={circuit}
-          largeCircuit={!circuitDrawsMorphologies(circuit.scale)}
+          largeCircuit={!drawsEachCell(circuit)}
           features={SCENE_FEATURES}
           populationName={populationName}
           showUnselectedPopulations={false}
@@ -285,7 +272,8 @@ export function VoltageScene({
           fadedColumn={RAMP_STEPS}
           highlightedCell={highlightedCell}
           shownCells={shownCells}
-          onCellClick={handleCellClick}
+          onCellClick={onCellClick}
+          onEmptyClick={onEmptyClick}
           selection={selection}
           active={active}
         />

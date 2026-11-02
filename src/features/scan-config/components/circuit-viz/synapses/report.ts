@@ -1,4 +1,4 @@
-import { isMorphoViewerDebugMode } from '@/morpho-viewer/debug-mode';
+import { isCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 
 interface ReportTask {
   message: string;
@@ -22,9 +22,9 @@ export class Report {
     return this;
   }
 
-  /** Dump the log, for whoever switched morphoviewer's debug flag on. */
+  /** Dump the log, for whoever switched the circuit viewer's debug flag on. */
   debug() {
-    if (!isMorphoViewerDebugMode()) return;
+    if (!isCircuitViewerDebugMode()) return;
 
     const { tasks } = this;
     const text = tasks.map((task) => `%c${task.message}`).join('\n');

@@ -125,6 +125,9 @@ export const MAX_BUMP_AMPLITUDE = 0.2;
 
 export const DEFAULT_LOOK = 'studio';
 
+/** What the looks' tone mapping multiplies by. */
+export const EXPOSURE = 0.95;
+
 /**
  * One set of uniform objects shared by every material, so that a change reaches all of them, the compare tiles and
  * the ambient-occlusion pass included.
@@ -838,11 +841,12 @@ function lighter(color: string, by: number): THREE.Color {
 /**
  * The looks for a surface with the vertex attributes `has`: those that draw in the neurite colours draw a surface
  * without them in a plain colour for the theme and the surface colour (`plainColor`), and a surface without radii has
- * no bumps and no width floor.
+ * no bumps and no width floor. With `only`, just the looks of those ids, each of which the surface must allow.
  */
 export function createLooks(
   pixelRatio: number,
-  has: readonly SurfaceAttribute[] = MORPHOLOGY_SURFACE
+  has: readonly SurfaceAttribute[] = MORPHOLOGY_SURFACE,
+  only?: readonly string[]
 ): Look[] {
   const colors = has.includes('color');
   const displaced = has.includes('radius');
@@ -1107,5 +1111,11 @@ export function createLooks(
       l.onTheme(false, PLAIN);
     }
   }
-  return looks.filter((l) => l.needs?.every((a) => has.includes(a)) ?? true);
+  const allowed = looks.filter((l) => l.needs?.every((a) => has.includes(a)) ?? true);
+  if (!only) return allowed;
+  return only.map((id) => {
+    const look = allowed.find((l) => l.id === id);
+    if (!look) throw new Error(`no look "${id}" for this surface`);
+    return look;
+  });
 }

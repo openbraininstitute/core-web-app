@@ -5,12 +5,15 @@ import type { CSSProperties } from 'react';
 /**
  * in-house flag: when true, node colors, the legend, and the scalebar adapt to
  * the canvas background so everything stays legible. Canvas background is
- * restricted to {@link CANVAS_LIGHT} or {@link CANVAS_DARK}.
+ * restricted to {@link CANVAS_LIGHT} or {@link CANVAS_DARK}, or {@link CANVAS_WHITE}
+ * where a host asks for it.
  */
 export const BACKGROUND_ADAPTIVE = true;
 
-export const CANVAS_LIGHT = '#ffffff';
+export const CANVAS_LIGHT = '#e4e7ed';
 export const CANVAS_DARK = '#000000';
+/** A light canvas for a page that is white around the viewer; the settings' light is still {@link CANVAS_LIGHT}. */
+export const CANVAS_WHITE = '#ffffff';
 
 /** minimum WCAG contrast ratio a mark must keep against the background. */
 const MIN_CONTRAST = 3;
@@ -44,10 +47,13 @@ function clamp01(v: number): number {
   return Math.max(0, Math.min(1, v));
 }
 
-/** coerce any stored value to one of the two supported canvas backgrounds */
-export function normalizeCanvasBackground(color: string): typeof CANVAS_LIGHT | typeof CANVAS_DARK {
+/** coerce any stored value to one of the supported canvas backgrounds */
+export function normalizeCanvasBackground(
+  color: string
+): typeof CANVAS_LIGHT | typeof CANVAS_DARK | typeof CANVAS_WHITE {
   const hex = color.trim().toLowerCase();
   if (hex === '#000' || hex === '#000000' || hex === 'black') return CANVAS_DARK;
+  if (hex === '#fff' || hex === '#ffffff' || hex === 'white') return CANVAS_WHITE;
   return CANVAS_LIGHT;
 }
 
@@ -57,7 +63,7 @@ export function backgroundIsDark(background: string): boolean {
 
 /**
  * keep a color's hue + chroma but push lightness toward the side that reads on
- * a black or white canvas. Cheap and deterministic; safe to call per color.
+ * the dark or light canvas. Cheap and deterministic; safe to call per color.
  */
 export function adaptColorToBackground(color: string, background: string): string {
   let parsed: chroma.Color;
@@ -85,7 +91,7 @@ export function adaptColorToBackground(color: string, background: string): strin
   return chroma.oklch(clamp01(l), chromaC, hue).hex();
 }
 
-/** chrome theme for a black or white canvas background */
+/** chrome theme for the dark or light canvas background */
 export function themeFromBackground(background: string): ViewerTheme {
   return viewerTheme(backgroundIsDark(background));
 }

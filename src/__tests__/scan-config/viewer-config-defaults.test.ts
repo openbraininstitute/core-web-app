@@ -23,4 +23,22 @@ describe('resolveViewerConfigDefaults', () => {
     expect(defaults.neuronOpacity).toBe(0.2);
     expect(defaults.electrodeRadius).toBe(DEFAULT_ELECTRODE_RADIUS);
   });
+
+  it('starts on the somas unless the host says the morphologies', () => {
+    expect(resolveViewerConfigDefaults({ defaultRepresentation: 'somas' })).toEqual(
+      DEFAULT_VIEWER_CONFIG
+    );
+    expect(resolveViewerConfigDefaults({ defaultRepresentation: 'morphologies' })).toEqual({
+      ...DEFAULT_VIEWER_CONFIG,
+      representation: 'morphologies',
+    });
+  });
+
+  it('hides the axons unless the host says to draw them', () => {
+    expect(resolveViewerConfigDefaults().showAxons).toBe(false);
+    expect(resolveViewerConfigDefaults({ defaultShowAxons: true })).toEqual({
+      ...DEFAULT_VIEWER_CONFIG,
+      showAxons: true,
+    });
+  });
 });

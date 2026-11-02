@@ -2,10 +2,11 @@ import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
 import { fileName } from '@/features/viewer-3d/chrome/debug-rows';
+import { readEntry } from '@/features/viewer-3d/load/asset-cache';
 import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 
-import { GLB_CACHE, readEntry } from './engine/asset-cache';
+import { GLB_CACHE } from './engine/caches';
 
 import type { DownloadRequest } from './engine/download';
 

@@ -1,0 +1,76 @@
+/* The connections between the shortcuts, faint until a node they reach is pointed at. */
+.edge {
+  fill: none;
+  stroke: #dfe5ee;
+  stroke-width: 1;
+  transition:
+    stroke 200ms ease,
+    stroke-width 200ms ease;
+}
+
+.edgeLit {
+  stroke: #91caff;
+  stroke-width: 1.5;
+}
+
+/* A spike: a navy dot with a blue glow, travelling a connection along its path. */
+.spike {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: #002766;
+  box-shadow: 0 0 8px 2px rgb(64 169 255 / 55%);
+  offset-rotate: 0deg;
+  opacity: 0;
+  pointer-events: none;
+  animation-name: travel;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Fired by a node pointed at: once, quicker, brighter. */
+.burst {
+  width: 7px;
+  height: 7px;
+  background: #1677ff;
+  box-shadow: 0 0 12px 4px rgb(64 169 255 / 70%);
+  animation-duration: 850ms;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-timing-function: cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+@keyframes travel {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* A node lighting as a spike arrives: its ring flashes. */
+.node {
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spike {
+    display: none;
+  }
+}

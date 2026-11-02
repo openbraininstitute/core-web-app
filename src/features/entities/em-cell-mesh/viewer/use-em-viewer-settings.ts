@@ -7,7 +7,8 @@ import { STAND_IN_TRIANGLES } from './engine/stand-in';
 import { storedMeshColor, storeMeshColor } from './mesh-color';
 
 import type { Look } from '@/features/viewer-3d/engine/looks';
-import type { AODepth, Projection } from '@/features/viewer-3d/engine/scene-viewer';
+import type { Projection } from '@/features/viewer-3d/engine/scene-view';
+import type { AODepth } from '@/features/viewer-3d/engine/scene-viewer';
 import type { ForcedMesh } from './engine/mesh-choice';
 
 export interface EmViewerSettings {
@@ -52,10 +53,12 @@ const DEFAULT_SETTINGS: Omit<EmViewerSettings, 'color'> = {
 
 export type UpdateEmSettings = (patch: Partial<EmViewerSettings>) => void;
 
-export function useEmViewerSettings() {
+/** `defaults`: the host's settings to begin with, over the viewer's own and the colour last chosen. */
+export function useEmViewerSettings(defaults?: Partial<EmViewerSettings>) {
   const [settings, setSettings] = useState<EmViewerSettings>(() => ({
     ...DEFAULT_SETTINGS,
     color: storedMeshColor(),
+    ...defaults,
   }));
   const update: UpdateEmSettings = (patch) => setSettings((s) => ({ ...s, ...patch }));
   const chooseColor = (color: string) => {

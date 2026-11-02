@@ -9,6 +9,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 
 import { PopulationsMenu } from '@/features/circuit-nodes/components/populations-menu';
+import { useBareViewer } from '@/features/viewer-3d/bare';
 import { PILL_CLASS, ROUND_PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
 
@@ -20,8 +21,10 @@ import { ColorByDropdown } from './color-by-dropdown';
 import { ColorLegend } from './color-legend';
 import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
+import { ColorModeDict } from './types';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
+import type { CSSProperties } from 'react';
 import type { ViewerTheme } from './contrast';
 import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
@@ -32,6 +35,15 @@ import styles from './chrome-animations.module.css';
 const LEFT_TOP = 12;
 const GAP = 8;
 const LEFT_HEIGHT = 32 + GAP + 32;
+// `top-3`, a button's `size-8` and `gap-2`, in rem as the root font is not 16px.
+const BESIDE_RECENTRE = '3.25rem';
+
+/** A viewer's status beside the re-centre button, clear of the Populations pill, colour key and hidden notice. */
+export const STATUS_PLACE: CSSProperties = {
+  top: BESIDE_RECENTRE,
+  left: BESIDE_RECENTRE,
+  maxWidth: `calc(100% - ${BESIDE_RECENTRE} - 16rem)`,
+};
 
 export interface ICircuitViewerChromeProps {
   /** The view-mode pill. Omit when the host has only one view to offer. */
@@ -104,6 +116,7 @@ export function CircuitViewerChrome({
   colorByNoneLabel,
   selection,
 }: ICircuitViewerChromeProps) {
+  const bare = useBareViewer();
   const colorBy = viz?.colorBy;
   const populations = viz?.populations;
   const selectedProperty = colorBy?.selectedProperty ?? null;
@@ -180,6 +193,15 @@ export function CircuitViewerChrome({
 
   const panel = theme ? panelStyle(theme) : undefined;
 
+  // Bare, colour-by is all there is, and only in the host's place: nothing over the canvas.
+  if (bare) {
+    return colorBy && showVizChrome ? (
+      <Placed target={colorByTarget ?? null}>
+        <BareColorBy colorBy={colorBy} noneLabel={colorByNoneLabel} />
+      </Placed>
+    ) : null;
+  }
+
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
       {viz?.zoom && (
@@ -210,13 +232,15 @@ export function CircuitViewerChrome({
         </div>
       )}
       {/* What the scene is made of: which populations are in it, the table
-          listing the one on show, and how it is drawn. */}
+          listing the one on show, and how it is drawn. Only the rows take the
+          pointer: the column is as wide as its widest row, and the status
+          beside the re-centre button sits inside that box. */}
       <div
         ref={leftRef}
         data-testid="viewer-chrome-left"
-        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+        className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-2"
       >
-        <div className="flex items-center gap-2">
+        <div className="pointer-events-auto flex items-center gap-2">
           {modeToggle && <ModeToggle options={modeToggle} />}
           {table && (
             <ChromeButton
@@ -251,7 +275,6 @@ export function CircuitViewerChrome({
                   onSelect={populations.onSelect}
                   positionless={populations.positionless}
                   theme={theme}
-                  autoOpen={showVizChrome}
                 />
               )}
               {viz.menu.onToggleElectrodes &&
@@ -263,7 +286,7 @@ export function CircuitViewerChrome({
         </div>
         {viz && (
           <div
-            className={cn(!showVizChrome && 'invisible pointer-events-none')}
+            className={cn('pointer-events-auto', !showVizChrome && 'invisible pointer-events-none')}
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
@@ -473,6 +496,51 @@ function ChromeNotice({
         >
           {action}
         </button>
+      )}
+    </div>
+  );
+}
+
+/** At most this many swatches in a bare key, then how many more there are. */
+const BARE_KEY_ENTRIES = 18;
+
+/** The dropdown, and under it the key as a line of swatches rather than a panel, for a page's own column. */
+function BareColorBy({ colorBy, noneLabel }: { colorBy: ColorByControls; noneLabel?: string }) {
+  const mapping = colorBy.selectedProperty && !colorBy.legendLoading ? colorBy.mapping : null;
+  const categories = mapping?.mode === ColorModeDict.Categorical ? mapping.categorical : undefined;
+  const scale = mapping?.mode === ColorModeDict.Continuous ? mapping.continuous : undefined;
+  const more = (categories?.length ?? 0) - BARE_KEY_ENTRIES;
+  return (
+    <div className="flex flex-col items-start gap-3" data-testid="color-by-toolbar">
+      <ColorByDropdown
+        value={colorBy.selectedProperty}
+        onChange={colorBy.onSelectProperty}
+        properties={colorBy.properties}
+        loading={colorBy.propertiesLoading}
+        error={colorBy.propertiesError}
+        onRetry={colorBy.onRetryProperties}
+        noneLabel={noneLabel}
+      />
+      {categories && (
+        <ul className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] leading-4 text-neutral-500">
+          {categories.slice(0, BARE_KEY_ENTRIES).map(({ value, color }) => (
+            <li key={value} className="flex items-center gap-1.5">
+              <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />
+              {value}
+            </li>
+          ))}
+          {more > 0 && <li>and {more} more</li>}
+        </ul>
+      )}
+      {scale && (
+        <div className="flex items-center gap-2 text-[11px] leading-4 text-neutral-500 tabular-nums">
+          {Number.parseFloat(scale.min.toFixed(2))}
+          <span
+            className="h-1.5 w-40 rounded-full"
+            style={{ background: `linear-gradient(to right, ${scale.gradient.join(', ')})` }}
+          />
+          {Number.parseFloat(scale.max.toFixed(2))}
+        </div>
       )}
     </div>
   );
