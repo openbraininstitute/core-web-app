@@ -124,11 +124,11 @@ describe('GoToProjectLink / workflows pages', () => {
   });
 
   it('restarts a session-based configure page at its /new page', () => {
-    visit('/workflows/build/configure/memodel/wf_abc1234567', 'scope=public');
+    visit('/workflows/build/configure/memodel-build-campaign/wf_abc1234567', 'scope=public');
 
     expect(renderLink()).toHaveAttribute(
       'href',
-      `${targetBase}/workflows/build/new/memodel?scope=public`
+      `${targetBase}/workflows/build/new/memodel-build-campaign?scope=public`
     );
   });
 

@@ -10,12 +10,14 @@
 export const ScanConfigFromIdType = {
   CellMorphologyFromID: 'CellMorphologyFromID',
   MEModelFromID: 'MEModelFromID',
+  EModelFromID: 'EModelFromID',
   CircuitFromID: 'CircuitFromID',
   EMCellMeshFromID: 'EMCellMeshFromID',
   MEModelWithSynapsesCircuitFromID: 'MEModelWithSynapsesCircuitFromID',
   IonChannelModelFromID: 'IonChannelModelFromID',
   SimulatableExtracellularRecordingArrayFromID: 'SimulatableExtracellularRecordingArrayFromID',
   ElectricalCellRecordingFromID: 'ElectricalCellRecordingFromID',
+  IonChannelRecordingFromID: 'IonChannelRecordingFromID',
 } as const;
 
 export type TScanConfigFromIdType =

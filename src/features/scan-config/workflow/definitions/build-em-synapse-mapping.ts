@@ -26,7 +26,6 @@ export const buildEmSynapseMappingWorkflow = defineScanConfigWorkflow({
     config: TaskConfigType.EmSynapseMappingConfig,
   },
   editor: {
-    className: 'px-4',
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
     defaultTab: {
       __activity: ScanConfigActivity.Build,

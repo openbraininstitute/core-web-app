@@ -1,6 +1,7 @@
 import { Image } from 'antd';
 
 import { hasAssets } from '@/api/entitycore/guards';
+import { DETAIL_PREVIEW_DPI } from '@/api/thumbnail-svc';
 import { EmptyPreview, renderPreview } from '@/entity-configuration/definitions/renderer';
 import { cn } from '@/utils/css-class';
 
@@ -36,7 +37,9 @@ export function SingleNeuronSimulationPreview({
         className="h-full! w-full! rounded-md object-contain"
       />
     ),
-    'simulation'
+    'simulation',
+    undefined,
+    DETAIL_PREVIEW_DPI
   );
   const stimulus = renderPreview(
     record,
@@ -53,7 +56,9 @@ export function SingleNeuronSimulationPreview({
         className="h-full! w-full! rounded-md object-contain"
       />
     ),
-    'stimulus'
+    'stimulus',
+    undefined,
+    DETAIL_PREVIEW_DPI
   );
 
   return (

@@ -12,8 +12,10 @@ import { useWorkspaceHierarchyRegistry } from '@/features/brain-region-hierarchy
 import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 import { CARD_EDGE_CLASS } from '@/features/data-grid/react/molecules-theme';
 import { useFlags } from '@/features/feature-flags';
+import { getVariantGroup } from '@/features/views/listing/variants/registry';
 import { SegmentedTabs } from '@/ui/molecules/tabs/segmented-tabs';
 import { BrowseLink } from '@/ui/segments/explore/browse-link';
+import { BrowseLinkGroup } from '@/ui/segments/explore/browse-link-group';
 import {
   BrowseExperimentalDataExtendedTypes,
   DataSectionDataTypeTabsConfig,
@@ -59,17 +61,23 @@ function BrowseLinkList({
   currentBrainRegionId,
   defaultBrainRegionId,
 }: TBrowseLinkListProps) {
-  return entities.map((entity) => (
-    <BrowseLink
-      enabled
-      key={`link-${entity.title}/${entity.extendedType}`}
-      scope={scope}
-      extendedType={entity.extendedType}
-      hierarchyId={hierarchyId}
-      currentBrainRegionId={currentBrainRegionId}
-      defaultBrainRegionId={defaultBrainRegionId}
-    />
-  ));
+  return entities.map((entity) => {
+    const linkProps = {
+      enabled: true,
+      scope,
+      extendedType: entity.extendedType,
+      hierarchyId,
+      currentBrainRegionId,
+      defaultBrainRegionId,
+    };
+    const group = getVariantGroup(entity.extendedType);
+    const key = `link-${entity.title}/${entity.extendedType}`;
+    return group ? (
+      <BrowseLinkGroup key={key} group={group} {...linkProps} />
+    ) : (
+      <BrowseLink key={key} {...linkProps} />
+    );
+  });
 }
 
 export function EntityLinkCount() {

@@ -63,6 +63,7 @@ export {
   buildGridQuery,
   createInitialState,
   GridController,
+  repairPersistedFilters,
 } from './grid-controller';
 export {
   createDefaultOperatorRegistry,

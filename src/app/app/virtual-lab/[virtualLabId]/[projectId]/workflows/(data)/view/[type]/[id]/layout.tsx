@@ -22,7 +22,7 @@ export default async function Layout({
   const { virtualLabId, projectId, id } = awaitedParams;
   const type = snakeCase(awaitedParams.type) as TExtendedEntitiesTypeDict;
   return (
-    <DataViewLayout context={{ virtualLabId, projectId }} id={id} type={type}>
+    <DataViewLayout origin="workflows" context={{ virtualLabId, projectId }} id={id} type={type}>
       {children}
     </DataViewLayout>
   );

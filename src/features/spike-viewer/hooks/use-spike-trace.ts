@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import * as Comlink from 'comlink';
 import { useEffect, useState } from 'react';
 
 import { downloadAsset } from '@/api/entitycore/queries/assets';
+import { workerSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
 import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { IAsset } from '@/api/entitycore/types/shared/global';
+import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { SpikeData } from '@/features/spike-viewer/spike-trace';
-import type { SpikeTraceWorkerApi } from '@/features/spike-viewer/spike-trace.worker';
 import type { WorkspaceContext } from '@/types/common';
 
 type UseSpikeTraceArgs = {
@@ -18,13 +18,23 @@ type UseSpikeTraceArgs = {
   ctx?: WorkspaceContext;
 };
 
+/**
+ * A spike file parsed in a worker, and that worker kept on as the file's
+ * session: it holds a copy of the spikes, to answer the views from off the
+ * page's thread.
+ */
 export default function useSpikeTrace({
   entityId,
   entityType,
   asset,
   ctx,
-}: UseSpikeTraceArgs): [SpikeData | null, Error | null] {
-  const [data, setData] = useState<SpikeData | null>(null);
+}: UseSpikeTraceArgs): [SpikeData | null, Error | null, SpikeSession | null] {
+  // Kept with its file: the session of a file before has ended, and would leave every question hanging.
+  const [parsed, setParsed] = useState<{
+    buffer: ArrayBuffer;
+    data: SpikeData;
+    session: SpikeSession;
+  } | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   const {
@@ -61,26 +71,25 @@ export default function useSpikeTrace({
     if (!spikeArrayBuffer) return;
 
     let cancelled = false;
-    const worker = new Worker(new URL('../spike-trace.worker.ts', import.meta.url));
-    const proxy = Comlink.wrap<SpikeTraceWorkerApi>(worker);
+    const { proxy, session, close } = workerSession(
+      new Worker(new URL('../spike-trace.worker.ts', import.meta.url))
+    );
 
     proxy
       .parseSpikeFile(asset.id, spikeArrayBuffer)
-      .then((result) => {
-        if (!cancelled) setData(result);
+      .then((data) => {
+        if (!cancelled) setParsed({ buffer: spikeArrayBuffer, data, session });
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e : new Error(String(e)));
-      })
-      .finally(() => {
-        proxy[Comlink.releaseProxy]();
       });
 
     return () => {
       cancelled = true;
-      worker.terminate();
+      close();
     };
   }, [spikeArrayBuffer, asset.id]);
 
-  return [data, error];
+  const current = parsed?.buffer === spikeArrayBuffer ? parsed : null;
+  return [current?.data ?? null, error, current?.session ?? null];
 }

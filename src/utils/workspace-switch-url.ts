@@ -63,6 +63,12 @@ const reportsStrategy: SectionStrategy = (rest, params) => ({
   params: new URLSearchParams(params),
 });
 
+// Learn's courses are the same in every project, so the course in view comes along.
+const learnStrategy: SectionStrategy = (_rest, params) => ({
+  path: [WorkspaceMainPages.Learn],
+  params: cleanSearchParams({ searchParams: params, keepKeys: ['course'] }),
+});
+
 const WORKFLOW_NEW_SEGMENT = 'new';
 const WORKFLOW_CONFIGURE_SEGMENT = 'configure';
 
@@ -106,6 +112,7 @@ const workflowsStrategy: SectionStrategy = (rest, params) => {
 };
 
 const SECTION_STRATEGIES: Partial<Record<string, SectionStrategy>> = {
+  [WorkspaceMainPages.Learn]: learnStrategy,
   [WorkspaceMainPages.Data]: dataStrategy,
   [WorkspaceMainPages.Notebooks]: notebooksStrategy,
   [WorkspaceMainPages.Reports]: reportsStrategy,

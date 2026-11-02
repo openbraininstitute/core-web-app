@@ -104,6 +104,8 @@ describe('resolveConcreteEntityPathParam', () => {
         ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign,
         ExtendedEntitiesTypeDict.Circuit,
       ],
+      [ExtendedEntitiesTypeDict.IonChannelBuildCampaign, ExtendedEntitiesTypeDict.IonChannelModel],
+      [ExtendedEntitiesTypeDict.MEModelBuildCampaign, ExtendedEntitiesTypeDict.Memodel],
       [ExtendedEntitiesTypeDict.SingleNeuronCircuit, ExtendedEntitiesTypeDict.SingleNeuronCircuit],
       [ExtendedEntitiesTypeDict.Emodel, ExtendedEntitiesTypeDict.Emodel],
       [ExtendedEntitiesTypeDict.Memodel, ExtendedEntitiesTypeDict.Memodel],

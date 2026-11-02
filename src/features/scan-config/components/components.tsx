@@ -1,60 +1,4 @@
 import { classNames } from '@/util/utils';
-import { cn } from '@/utils/css-class';
-
-import type { TScanConfigTabs } from '@/features/scan-config/types';
-
-export const getRoundedByIndex = (
-  index: number,
-  length: number
-): 'rounded-full' | 'rounded-l-full' | 'rounded-r-full' | 'rounded-none' => {
-  if (length === 1) return 'rounded-full';
-  if (index === 0) return 'rounded-l-full';
-  if (index === length - 1) return 'rounded-r-full';
-  return 'rounded-none';
-};
-
-export function Tab({
-  tab,
-  selectedTab,
-  children,
-  onClick,
-  rounded = 'rounded-full',
-  extraClass,
-  disabled,
-}: {
-  tab: string;
-  selectedTab: TScanConfigTabs;
-  onClick?: () => void;
-  rounded?: 'rounded-l-full' | 'rounded-r-full' | 'rounded-full' | 'rounded-none';
-  children?: React.ReactNode;
-  extraClass?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      id={`tab-${tab}`}
-      data-testid={`scan-config-tab-${tab}`}
-      aria-label={tab}
-      disabled={disabled}
-      aria-disabled={disabled}
-      onClick={!disabled ? onClick : undefined}
-      type="button"
-      className={cn(
-        'min-w-37.5 px-5 py-2',
-        extraClass,
-        rounded,
-        { 'bg-gray-100 cursor-not-allowed text-gray-600': disabled },
-        {
-          'bg-linear-to-r from-[#003A8C] to-[#001026] text-white rounded-l-none':
-            tab === selectedTab.id,
-        },
-        { "'text-primary-8 bg-white'": tab !== selectedTab.id }
-      )}
-    >
-      {children}
-    </button>
-  );
-}
 
 export function LeftMenuTab({
   tab,
@@ -99,6 +43,30 @@ export function LeftMenuTab({
     >
       {children}
     </button>
+  );
+}
+
+/** Small numeric pill shown next to a tab label, e.g. how many entries/parameters it holds. */
+export function CountBadge({
+  count,
+  selected,
+  testId,
+}: {
+  count: number;
+  selected?: boolean;
+  testId?: string;
+}) {
+  return (
+    <span
+      data-testid={testId}
+      className={classNames(
+        // 1em box: the same height as the status mark beside it
+        'inline-flex h-[1em] min-w-[1em] shrink-0 items-center justify-center rounded-full px-[0.2em]',
+        selected ? 'bg-white text-primary-8' : 'bg-primary-8 text-white'
+      )}
+    >
+      <span className="text-[0.7em] leading-none font-semibold tabular-nums">{count}</span>
+    </span>
   );
 }
 

@@ -115,11 +115,18 @@ const BASE_ENTITY_TYPE_FALLBACK: Partial<
   [ExtendedEntitiesTypeDict.WholeBrain]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.BrainRegion]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.IonChannelModelingCampaign]: ExtendedEntitiesTypeDict.IonChannelModel,
+  [ExtendedEntitiesTypeDict.IonChannelBuildCampaign]: ExtendedEntitiesTypeDict.IonChannelModel,
+  [ExtendedEntitiesTypeDict.MEModelBuildCampaign]: ExtendedEntitiesTypeDict.Memodel,
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: ExtendedEntitiesTypeDict.Circuit,
   [ExtendedEntitiesTypeDict.CircuitSynapticPhysiologyCampaign]: ExtendedEntitiesTypeDict.Circuit,
 };
 
+/** The type whose listing an entity of `extendedType` belongs to (e.g. a whole brain → circuit). */
+export function resolveBaseEntityType(extendedType: TExtendedEntitiesTypeDict) {
+  return BASE_ENTITY_TYPE_FALLBACK[extendedType] ?? extendedType;
+}
+
 export function resolveConcreteEntityPathParam(extendedType?: TExtendedEntitiesTypeDict) {
   if (!extendedType) return '';
-  return kebabCase(BASE_ENTITY_TYPE_FALLBACK[extendedType] ?? extendedType);
+  return kebabCase(resolveBaseEntityType(extendedType));
 }

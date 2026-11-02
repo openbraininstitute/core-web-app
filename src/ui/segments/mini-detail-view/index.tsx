@@ -8,6 +8,7 @@ import { match, P } from 'ts-pattern';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
+import { DETAIL_PREVIEW_DPI } from '@/api/thumbnail-svc';
 import { type TViewVariant, ViewVariant, WorkspaceSection } from '@/constants';
 import { getFieldDefinition } from '@/entity-configuration/definitions';
 import { renderPreview } from '@/entity-configuration/definitions/renderer';
@@ -28,6 +29,7 @@ import {
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
 import { CircuitPreview } from '@/ui/segments/mini-detail-view/previews/circuit-preview';
+import { EFeatureExtractionResultPreview } from '@/ui/segments/mini-detail-view/previews/efeature-extraction-result-preview';
 import { ExtracellularRecordingArrayPreview } from '@/ui/segments/mini-detail-view/previews/extracellular-recording-array-preview';
 import { MEModelPreview } from '@/ui/segments/mini-detail-view/previews/me-model-preview';
 import { SingleNeuronSimulationPreview } from '@/ui/segments/mini-detail-view/previews/single-neuron-simulation-preview';
@@ -49,6 +51,7 @@ import type {
 import type { IAnalysisNotebookTemplate } from '@/api/entitycore/types/entities/analysis-notebook-template';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulatableExtracellularRecordingArray } from '@/api/entitycore/types/entities/simulatable-extracellular-recording-array';
+import type { ITaskResult } from '@/api/entitycore/types/entities/task-result';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { EntityCoreResource } from '@/api/entitycore/types/shared/global';
 import type { TVirtualLab } from '@/api/virtual-lab-svc/queries/types';
@@ -144,10 +147,10 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
   interactive?: boolean;
 }) {
   if (!record) return null;
-  const InteractiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
+  const interactiveViewer = interactive ? resolveInteractiveViewer(dataType ?? record.type) : null;
   const viewConfig = getViewDefinitionByExtendedType(dataType ?? record.type);
   const miniConfig = withLifecycleStatusLast(viewConfig?.miniDetailView);
-  const preview = match({ type: record.type })
+  const typePreview = match({ type: record.type })
     .with({ type: P.nullish }, () => null)
     .with(
       {
@@ -188,7 +191,10 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   rootClassName=" w-full  h-80"
                   className="max-h-full w-full rounded-md object-contain"
                 />
-              )
+              ),
+              undefined,
+              undefined,
+              DETAIL_PREVIEW_DPI
             )}
           </div>
         );
@@ -313,9 +319,22 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
     )
     .otherwise(() => null);
 
+  // task results share the generic `task_result` type; only the listing type tells them apart
+  const preview =
+    dataType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ? (
+      <EFeatureExtractionResultPreview key={record.id} record={record as unknown as ITaskResult} />
+    ) : (
+      typePreview
+    );
+
   const actions = match({ section })
     .with({ section: WorkspaceSection.Data }, () => (
-      <DataActions record={record} dataType={dataType} theme={theme} />
+      <DataActions
+        record={record}
+        dataType={dataType}
+        theme={theme}
+        openDetailsInNewTab={openDetailsInNewTab}
+      />
     ))
     .with({ section: WorkspaceSection.Notebooks }, () => (
       <NotebookActions
@@ -332,8 +351,9 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.SimulateWorkflow,
           WorkspaceSection.ExtractWorkflow,
           WorkspaceSection.ProcessWorkflow,
-          // only reached from Optimize's scan-config pickers, which hide "Use model"
-          WorkspaceSection.OptimizeWorkflow
+          // only reached from Optimize's and Validate's scan-config pickers, which hide "Use model"
+          WorkspaceSection.OptimizeWorkflow,
+          WorkspaceSection.ValidateWorkflow
         ),
       },
       ({ section }) => (
@@ -429,7 +449,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
             <div
               className={cn('primary-scrollbar h-[calc(100%-90px)] w-full overflow-auto px-5', {
                 'bg-white text-primary-9 secondary-scrollbar': theme === 'light',
-                'flex flex-col': InteractiveViewer,
+                'flex flex-col': interactiveViewer,
               })}
             >
               {record.description && (
@@ -462,12 +482,15 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
                   )}
                 </ExpandableText>
               )}
-              {InteractiveViewer ? (
+              {interactiveViewer ? (
                 <div
                   data-testid="mini-detail-interactive-viewer"
-                  className="mt-5 min-h-[320px] flex-1"
+                  className={cn(
+                    'mt-5 min-h-[320px]',
+                    interactiveViewer.sizing === 'fill' ? 'flex-1' : 'flex-[1_0_auto]'
+                  )}
                 >
-                  <InteractiveViewer key={record.id} record={record} />
+                  <interactiveViewer.Viewer key={record.id} record={record} />
                 </div>
               ) : (
                 (preview ?? (

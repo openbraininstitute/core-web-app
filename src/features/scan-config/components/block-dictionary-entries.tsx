@@ -13,8 +13,13 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Fragment, memo, useEffect, useMemo, useRef } from 'react';
 
 import { useFieldErrors } from '@/features/scan-config/components/hooks/field-errors';
+import {
+  DISTANCE_DISTRIBUTIONS_KEY,
+  remapParameterDistributions,
+} from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { clearDeletedBlockReferences } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/state';
 import { useEntryDiff } from '@/features/scan-config/hooks/use-entry-diff';
+import { MarkdownDescription } from '@/ui/molecules/markdown-description';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/molecules/tooltip';
 import { cn } from '@/utils/css-class';
 
@@ -211,7 +216,14 @@ export default function BlockDictionaryEntries({
       });
     });
 
-    setConfig(newConfig);
+    // Distributions are referenced by plain string in each parameter's `distribution`, not via
+    // block references, so cascade the rename into every parameter that uses the old name.
+    const afterRename =
+      selectedRootElement === DISTANCE_DISTRIBUTIONS_KEY
+        ? remapParameterDistributions(newConfig, schema, selectedEntry, newKey)
+        : newConfig;
+
+    setConfig(afterRename);
 
     setIsEditingKey(false);
     setSelectedEntry(newKey);
@@ -407,7 +419,14 @@ export default function BlockDictionaryEntries({
                                       });
                                     });
 
-                                    setConfig(cleaned);
+                                    // Distributions are referenced by plain string, so reset any
+                                    // parameter using the deleted distribution back to uniform.
+                                    const afterDelete =
+                                      rootElement === DISTANCE_DISTRIBUTIONS_KEY
+                                        ? remapParameterDistributions(cleaned, schema, subkey, null)
+                                        : cleaned;
+
+                                    setConfig(afterDelete);
 
                                     setSelectedEntry('');
                                     allEntries.delete(subkey);
@@ -479,7 +498,9 @@ const BlockDictionaryEntryTooltip = memo(
     return (
       <div className="flex flex-col gap-2">
         <div className="font-bold">{blockType.title}</div>
-        <div className="max-w-2xs wrap-break-word">{blockType.description}</div>
+        <MarkdownDescription dark className="max-w-2xs">
+          {blockType.description}
+        </MarkdownDescription>
       </div>
     );
   },

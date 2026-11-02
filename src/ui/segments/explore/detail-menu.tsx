@@ -16,7 +16,15 @@ const SECTION_LABELS: Record<TDetailViewSectionDict, string> = {
   [DetailViewSectionsDict.RelatedPublications]: 'Related publications',
   [DetailViewSectionsDict.RelatedArtifacts]: 'Related artifacts',
   [DetailViewSectionsDict.Configuration]: 'Configuration',
+  [DetailViewSectionsDict.Workflow]: 'Workflow',
 };
+
+function useSectionHref() {
+  const path = usePathname();
+  const query = useSearchParams();
+  const parentPath = path.split('/').slice(0, -1).join('/');
+  return (s: TDetailViewSectionDict) => `${parentPath}/${s}?${query.toString()}`;
+}
 
 export default function DetailMenu({
   sections,
@@ -25,17 +33,12 @@ export default function DetailMenu({
   sections: TDetailViewSectionDict[];
   variant?: TViewVariant;
 }) {
-  const path = usePathname();
-  const parentPath = path.split('/').slice(0, -1).join('/');
-  const page = path.split('/').pop();
-  const query = useSearchParams();
+  const page = usePathname().split('/').pop();
+  const sectionHref = useSectionHref();
 
-  return sections.map((s) => {
-    const url = `${parentPath}/${s}?${query.toString()}`;
-    return (
-      <Tab key={s} highlight={page === s} href={url} variant={variant}>
-        {SECTION_LABELS[s]}
-      </Tab>
-    );
-  });
+  return sections.map((s) => (
+    <Tab key={s} highlight={page === s} href={sectionHref(s)} variant={variant}>
+      {SECTION_LABELS[s]}
+    </Tab>
+  ));
 }

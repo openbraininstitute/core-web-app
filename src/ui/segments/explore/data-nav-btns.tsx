@@ -1,7 +1,6 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 
 import { config } from '@/config';
 import {
@@ -14,18 +13,18 @@ import {
 } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { createSessionStatePersistence } from '@/features/data-grid/react';
+import { listingInstanceId } from '@/features/views/listing/variants/scope-listing';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
+import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import { useDataListStateSnapshotActions } from '@/ui/segments/data-table/elements/context';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { isBrowser } from '@/utils/environment';
-import { getRouteSegmentsAfterWorkspace } from '@/utils/path';
-import { resolveConcreteEntityPathParam } from '@/utils/url-builder';
+import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
-import type { WorkspaceContext } from '@/types/common';
+import type { IListingVariant } from '@/features/views/listing/variants/types';
 
 function getGroupDisplayName(group: TEntityTypeGroup): string {
   const groupLabels: Record<TEntityTypeGroup, string> = {
@@ -39,159 +38,104 @@ function getGroupDisplayName(group: TEntityTypeGroup): string {
   return groupLabels[group] || group;
 }
 
-export function BackToListingOriginButton({
-  virtualLabId,
-  projectId,
-  onClick,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & { onClick: () => void; variant?: TViewVariant }) {
-  const queryParams = useSearchParams();
-  const query = new URLSearchParams(queryParams);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'capitalize text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
-          query: query.toString(),
-        }}
-        className={linkClass}
-      >
-        Data
-      </Link>
-    </Breadcrumb>
-  );
-}
-
-export function BackToCategory({
-  virtualLabId,
-  projectId,
-  group,
-  onClick,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & {
-  group: TEntityTypeGroup;
-  onClick: () => void;
-  variant?: TViewVariant;
-}) {
-  const queryParams = useSearchParams();
-  const groupDisplayName = getGroupDisplayName(group);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'capitalize text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'capitalize text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb variant={variant} tone={ToneDict.Inactive}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`,
-          query: { ...Object.fromEntries(queryParams.entries()), group },
-        }}
-        className={linkClass}
-      >
-        {groupDisplayName}
-      </Link>
-    </Breadcrumb>
-  );
-}
-
-export function BackToEntityType({
-  virtualLabId,
-  projectId,
-  type,
-  title,
-  onClick,
-  group,
-  variant = ViewVariant.Light,
-}: WorkspaceContext & {
-  type: TExtendedEntitiesTypeDict;
-  title: string;
-  group: TEntityTypeGroup;
-  onClick: () => void;
-  variant?: TViewVariant;
-}) {
-  const queryParams = useSearchParams();
-  const query = new URLSearchParams(queryParams);
-  query.set(DATA_GROUP_QUERY_PARAM, group);
-  query.delete(SCOPE_QUERY_PARAMS);
-
-  const linkClass =
-    variant === ViewVariant.Default
-      ? 'font-bold text-[#adcdf2] hover:text-[#c5e8ff]'
-      : 'font-bold text-primary-9 hover:text-primary-8';
-
-  return (
-    <Breadcrumb showChevron={false} variant={variant} tone={ToneDict.Active}>
-      <Link
-        onClick={onClick}
-        href={{
-          pathname: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data/browse/entity/${resolveConcreteEntityPathParam(type)}`,
-          query: query.toString(),
-        }}
-        className={linkClass}
-      >
-        {title}
-      </Link>
-    </Breadcrumb>
-  );
-}
-
+/**
+ * Data › category › type trail for the data details page, in its chip. The host passes it as the
+ * top bar's `start` slot as is.
+ */
 export function DataBreadcrumb({
   type,
   title,
   group,
-  variant = ViewVariant.Light,
+  name,
+  variant,
 }: {
+  /** the listing variant the entity belongs to (e.g. its circuit scale): adds a crumb after the type */
+  variant?: IListingVariant;
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
   title: string;
-  variant?: TViewVariant;
+  /** The entity's own name, trailing the trail as plain (non-clickable) text. */
+  name: string;
 }) {
   const { virtualLabId, projectId } = useWorkspace();
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
-  const section = routeSegments.at(0);
+  const queryParams = useSearchParams();
 
-  const { dataKey } = makeDataKey({
-    virtualLabId,
-    projectId,
-    section: WorkspaceSection.Data,
-    dataType: type,
-    scope: DATA_SECTION_SCOPE,
-  });
+  // the listing is keyed by the base type (a whole brain lists under circuit)
+  const listingType = resolveBaseEntityType(type);
+  const keyFor = (variantOfListing?: IListingVariant) =>
+    makeDataKey({
+      virtualLabId,
+      projectId,
+      section: WorkspaceSection.Data,
+      dataType: listingType,
+      scope: DATA_SECTION_SCOPE,
+      id: listingInstanceId(undefined, variantOfListing),
+    }).dataKey;
+  const dataKey = keyFor();
 
   const { reset: runStorageReset } = useDataListStateSnapshotActions({
     dataKey,
-    dataType: type,
+    dataType: listingType,
     section: WorkspaceSection.Data,
   });
 
+  // a crumb = fresh listing, so clear the grid's transient session slice (filters/sort/page/
+  // search) of the listing it opens only; the durable column-layout slice is left intact
   const onLinkClick = () => {
-    if (isBrowser()) {
-      runStorageReset();
-      // breadcrumb = fresh listing, so clear the grid's transient session slice
-      // (filters/sort/page/search); the durable column-layout slice is left intact
-      createSessionStatePersistence().clear?.(dataKey);
-    }
+    if (!isBrowser()) return;
+    runStorageReset();
+    createSessionStatePersistence().clear?.(dataKey);
+  };
+  const onVariantLinkClick = () => {
+    if (isBrowser()) createSessionStatePersistence().clear?.(keyFor(variant));
   };
 
-  if (section !== WorkspaceSection.Data) return null;
+  const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
+  const typeHome = `${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`;
+  const listingQuery = { [DATA_GROUP_QUERY_PARAM]: group };
+  const withQuery = (path: string, set: Record<string, string> = {}) => {
+    const query = new URLSearchParams(queryParams);
+    // the listings hold both scopes, so no scope param carries over
+    query.delete(SCOPE_QUERY_PARAMS);
+    for (const [key, value] of Object.entries(set)) query.set(key, value);
+    const search = query.toString();
+    return search ? `${path}?${search}` : path;
+  };
+
   return (
-    <div data-testid="data-view-breadcrumb" className="flex flex-nowrap gap-3">
-      <BackToListingOriginButton {...{ virtualLabId, projectId, onClick: onLinkClick, variant }} />
-      <BackToCategory {...{ virtualLabId, projectId, group, onClick: onLinkClick, variant }} />
-      <BackToEntityType
-        {...{ virtualLabId, projectId, type, title, group, onClick: onLinkClick, variant }}
+    <BreadcrumbChip>
+      <BreadcrumbTrail
+        data-testid="data-view-breadcrumb"
+        items={[
+          { key: 'data', label: 'Data', href: withQuery(dataHome), onClick: onLinkClick },
+          {
+            key: 'group',
+            label: getGroupDisplayName(group),
+            href: withQuery(dataHome, { [DATA_GROUP_QUERY_PARAM]: group }),
+            onClick: onLinkClick,
+            className: 'capitalize',
+          },
+          {
+            key: 'type',
+            label: title,
+            href: withQuery(typeHome, listingQuery),
+            onClick: onLinkClick,
+          },
+          ...(variant
+            ? [
+                {
+                  key: 'variant',
+                  label: variant.label,
+                  href: withQuery(`${typeHome}/${variant.slug}`, listingQuery),
+                  onClick: onVariantLinkClick,
+                },
+              ]
+            : []),
+          // the entity itself is plain text: it has no listing of its own to link back to
+          { key: 'entity', label: name, ellipsis: name },
+        ]}
       />
-    </div>
+    </BreadcrumbChip>
   );
 }
 
@@ -202,9 +146,5 @@ export function ClosePage({
   url: string;
   variant?: TViewVariant;
 }) {
-  const routeSegments = getRouteSegmentsAfterWorkspace(usePathname(), config.ROOT_ROUTE);
-  const section = routeSegments.at(0);
-  if (section !== WorkspaceSection.Data) return null;
-
   return <Close href={url} className="mr-1" variant={variant} />;
 }

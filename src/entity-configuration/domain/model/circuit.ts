@@ -2,6 +2,7 @@ import { includes, isArray, without } from 'es-toolkit/compat';
 
 import { getCircuit, getCircuits } from '@/api/entitycore/queries/model/circuit';
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { CircuitDerivationColumnExpand } from '@/api/entitycore/types/entities/derivation';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { DetailViewSectionsDict } from '@/entity-configuration/definitions/types';
@@ -57,7 +58,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
           filters: mergedFilters,
           // Needed for the "Derivation type" column (issue #517): load each circuit's
           // incoming derivations so the column can show how the circuit was derived.
-          expand: 'generated_from_derivations',
+          expand: CircuitDerivationColumnExpand,
         });
       },
       one: getCircuit,

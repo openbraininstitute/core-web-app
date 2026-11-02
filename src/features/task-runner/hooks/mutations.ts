@@ -5,7 +5,11 @@ import { useCallback } from 'react';
 
 import { ApiError } from '@/api/error';
 import { runTask } from '@/api/one/runner';
+import { ObiOneTaskTypeDict } from '@/api/one/types/task';
+import { taskConfigRunner } from '@/api/small-scale-simulator/task-config';
 import { useAppNotification } from '@/components/notification';
+import { useFlags } from '@/features/feature-flags';
+import { memodelBuildViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { useRunWithOfflineTokenConsent } from '@/features/offline-auth-management';
 import { errorRegistry } from '@/features/scan-config/error-registry';
 import { getErrorMessage } from '@/utils/error';
@@ -17,6 +21,7 @@ import { invalidateProjectBalance } from './use-balance-refresh';
 import type { QueryClient } from '@tanstack/react-query';
 import type { TTaskActivityType } from '@/api/entitycore/types/entities/task-activity';
 import type { TObiOneTaskType } from '@/api/one/types/task';
+import type { FlagKey } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 
 export function invalidateTaskExecutionActivities({
@@ -43,6 +48,33 @@ export function invalidateTaskExecutionActivities({
   });
 }
 
+type TTaskLauncher = (params: {
+  ctx: WorkspaceContext;
+  task_type: TObiOneTaskType;
+  config_id: string;
+}) => Promise<unknown>;
+
+// a module-level registry rather than a binding field: bindings cross the server/client boundary
+const LaunchersByTaskType: Partial<
+  Record<TObiOneTaskType, { launch: TTaskLauncher; launchSystemFlag?: FlagKey }>
+> = {
+  [ObiOneTaskTypeDict.IonChannelFitting]: { launch: taskConfigRunner('/ion-channel/build/run') },
+  [ObiOneTaskTypeDict.MEModelBuild]: {
+    launch: taskConfigRunner('/single-neuron/build/run'),
+    launchSystemFlag: memodelBuildViaLaunchSystemFlag.key,
+  },
+};
+
+export function pickLauncher(
+  taskType: TObiOneTaskType,
+  flags: ReturnType<typeof useFlags>
+): TTaskLauncher {
+  const launcher = LaunchersByTaskType[taskType];
+  if (!launcher) return runTask;
+  if (launcher.launchSystemFlag && flags[launcher.launchSystemFlag]) return runTask;
+  return launcher.launch;
+}
+
 export type TTaskLaunchMutationOptions = {
   context: WorkspaceContext;
   obiOneTaskType: TObiOneTaskType;
@@ -66,6 +98,7 @@ export function useTaskLaunchMutation({
   const notification = useAppNotification();
   const { runWithConsent } = useRunWithOfflineTokenConsent();
   const logTopicLower = logTopic.toLowerCase();
+  const flags = useFlags();
 
   const handleTaskError = useCallback(
     (error: unknown, configId: string) => {
@@ -89,11 +122,12 @@ export function useTaskLaunchMutation({
     mutationFn: async (configIdsOrId: string[] | string) => {
       const configIds = Array.isArray(configIdsOrId) ? configIdsOrId : [configIdsOrId];
 
+      const launch = pickLauncher(obiOneTaskType, flags);
       const runLaunches = async () => {
         let launched = false;
         for (const configId of configIds) {
           try {
-            const executionId = await runTask({
+            const executionId = await launch({
               ctx: context,
               task_type: obiOneTaskType,
               config_id: configId,

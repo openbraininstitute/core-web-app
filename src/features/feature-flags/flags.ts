@@ -45,6 +45,14 @@ export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
+export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
+  key: 'memodel-build-via-launch-system',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Launch single neuron (ME-model) builds via the launch system',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
 /** Interactive electrode overlays in circuit preview (independent of the build workflow). */
 export const electrodeOverlaysFlag = defineFlag<boolean>({
   key: 'electrode-overlays',
@@ -95,6 +103,60 @@ export const scopeMarksFlag = defineFlag<'filter' | 'sort' | 'badge'>({
   description: 'Scope marks in the Data table',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
+/** Learn: its tab in the project's top menu, its page of courses and the courses themselves. Off
+ * unless switched on. */
+export const learnFlag = defineFlag<boolean>({
+  key: 'learn',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Learn: free courses, each a deck of slides',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The AI assistant opened from a round "AI" button in the top menu, rather than its side rail. */
+export const aiButtonFlag = defineFlag<boolean>({
+  key: 'ai-button',
+  defaultValue: false,
+  values: [true, false],
+  description: 'AI assistant: a round "AI" button in the top menu instead of the side rail',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The project's top bar drawn in the style of the Learn courses' bar. */
+export const courseToolbarFlag = defineFlag<boolean>({
+  key: 'course-toolbar',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top bar drawn in the style of the Learn courses' bar",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** The top menu's links, all but the active one, on the page's grey rather than white. */
+export const greyMenuPillsFlag = defineFlag<boolean>({
+  key: 'grey-menu-pills',
+  defaultValue: false,
+  values: [true, false],
+  description: "Top menu: links on the page's grey instead of white",
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** Help hidden altogether: no Help button in the top menu, and no Help page. */
+export const hideHelpFlag = defineFlag<boolean>({
+  key: 'hide-help',
+  defaultValue: false,
+  values: [true, false],
+  description: 'Help hidden altogether: no Help button and no Help page',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
+
+/** E-model validation: the Validate workflow tab and its results under Data > Simulations. */
+export const emodelValidationFlag = defineFlag<boolean>({
+  key: 'emodel-validation',
+  defaultValue: false,
+  values: [true, false],
+  description: 'E-model validation workflow and results',
+  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
+});
 
 export const flags = [
   aiPanelStateFlag,
@@ -102,11 +164,18 @@ export const flags = [
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
   smallScalesViaLaunchSystemFlag,
+  memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   morphologyDebugFlag,
   emMeshDebugFlag,
   projectScopeIconFlag,
   scopeMarksFlag,
+  learnFlag,
+  aiButtonFlag,
+  courseToolbarFlag,
+  greyMenuPillsFlag,
+  hideHelpFlag,
+  emodelValidationFlag,
 ] as const;
 
 export type FlagKey = (typeof flags)[number]['key'];

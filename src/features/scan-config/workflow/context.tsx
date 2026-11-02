@@ -124,6 +124,11 @@ export function ScanConfigWorkflowProvider({
   );
 }
 
+/** Null outside the provider, for chrome that renders on both configure and other routes. */
+export function useScanConfigWorkflowOptional(): TScanConfigWorkflowContextValue | null {
+  return useContext(ScanConfigWorkflowContext);
+}
+
 export function useScanConfigWorkflow(): TScanConfigWorkflowContextValue {
   const context = useContext(ScanConfigWorkflowContext);
   if (!context) {

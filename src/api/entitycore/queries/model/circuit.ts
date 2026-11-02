@@ -18,6 +18,7 @@ const baseUri = '/circuit';
  * @param params - The parameters for the API request.
  * @param params.withFacets - Optional flag to include facets in the response.
  * @param params.filters - Optional filters to apply to the synaptome data query.
+ * @param params.expand - Optional `expand` values, sent as repeated `expand=` params.
  * @param params.context - Optional workspace context for the API request.
  *
  * @returns A promise that resolves to the data.
@@ -32,14 +33,14 @@ export async function getCircuits({
 }: {
   withFacets?: boolean;
   filters?: Partial<ICircuitFilter>;
-  expand?: EntityExpandParam;
+  expand?: ReadonlyArray<EntityExpandParam>;
   context?: WorkspaceContext | null;
 }) {
   const api = await entityCoreApi();
   return await api.get<EntityCoreResponse<ICircuit>>(baseUri, {
     queryParams: compactRecord({
       ...filters,
-      expand,
+      expand: expand && [...expand],
       with_facets: withFacets,
     }),
     headers: {

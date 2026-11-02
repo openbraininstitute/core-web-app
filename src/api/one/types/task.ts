@@ -12,7 +12,10 @@ export const ObiOneTaskTypeDict = {
   ExtracellularRecordingWeightsCalculation: 'extracellular_recording_weights_calculation',
   BuildSynaptome: 'circuit_single_build',
   EModelOptimization: 'emodel_optimization',
+  EModelValidation: 'emodel_validation',
   CircuitSynapticPhysiology: 'circuit_synaptic_physiology_assignment',
+  IonChannelFitting: 'ion_channel_fitting',
+  MEModelBuild: 'memodel_build',
 } as const;
 
 export type TObiOneTaskType = (typeof ObiOneTaskTypeDict)[keyof typeof ObiOneTaskTypeDict];

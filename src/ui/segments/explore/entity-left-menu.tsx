@@ -107,7 +107,7 @@ export function EntityLeftMenu({ dataKey }: Props) {
             y: view === ExploreLeftMenuContext.DataGroup ? 0 : -6,
           }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className={`absolute inset-0 flex flex-col ${
+          className={`no-scrollbar absolute inset-0 flex flex-col overflow-y-auto ${
             view === ExploreLeftMenuContext.DataGroup
               ? 'pointer-events-auto'
               : 'pointer-events-none'

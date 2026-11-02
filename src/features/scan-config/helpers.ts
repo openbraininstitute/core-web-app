@@ -11,9 +11,12 @@ import {
   OptimizeScanConfigTabs,
   ProcessScanConfigTabs,
   ScanConfigActivity,
+  type SchemaName,
+  SchemaNameDict,
   SimulateScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
+  ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 
 import type { TSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
@@ -45,6 +48,9 @@ export const VALID_AI_CONFIG_KEYS = [
   // Appended rather than inserted: findConfigKeyInState returns the FIRST non-null match,
   // so the order of this list decides which key wins if more than one is ever present.
   'emodel_optimization_config',
+  'me_model_synaptic_model_placement_config',
+  'create_extracellular_recording_array_config',
+  'synapse_parameterization_config',
 ] as const;
 
 export type TAIConfigKey = (typeof VALID_AI_CONFIG_KEYS)[number];
@@ -61,17 +67,35 @@ export function findConfigKeyInState(state: Record<string, unknown>): TAIConfigK
  * Handles the circuit-scale ambiguity where Circuit + Simulate can map to
  * either circuit_simulation_config or me_model_with_synapses_simulation_config.
  *
- * Returns null when the activity has no AI config key, rather than falling back to a
+ * Returns null when the activity has no AI config key (e.g. Validate and Extract: the AI agent has
+ * no key for them, so chat editing is off), rather than falling back to a
  * circuit-simulation key. The old fallback meant any unhandled activity silently published
  * its config under the wrong key, which is how Optimize behaved before it was handled here.
  */
+/**
+ * Build activity isn't 1:1 with a single key (several Build schemas share
+ * the activity), so it dispatches by schemaName rather than entityType —
+ * several of these workflows resolve the same Circuit entityType.
+ */
+const BUILD_CONFIG_KEY_BY_SCHEMA: Partial<Record<SchemaName, TAIConfigKey>> = {
+  [SchemaNameDict.EMSynapseMappingScanConfig]: 'em_synapse_mapping_config',
+  [SchemaNameDict.BuildSynaptomeScanConfig]: 'me_model_synaptic_model_placement_config',
+  [SchemaNameDict.ExtracellularRecordingArrayScanConfig]:
+    'create_extracellular_recording_array_config',
+  [SchemaNameDict.SynapseParameterizationScanConfig]: 'synapse_parameterization_config',
+};
+
 export function getConfigKeyForEntity(
   entityType: TExtendedEntitiesTypeDict,
   activity: TScanConfigActivity,
-  entity?: { scale?: string }
+  entity?: { scale?: string },
+  schemaName?: SchemaName
 ): TAIConfigKey | null {
   if (activity === ScanConfigActivity.Process) return 'skeletonization_config';
   if (activity === ScanConfigActivity.Optimize) return 'emodel_optimization_config';
+  if (activity === ScanConfigActivity.Build) {
+    return (schemaName && BUILD_CONFIG_KEY_BY_SCHEMA[schemaName]) ?? null;
+  }
 
   if (activity !== ScanConfigActivity.Simulate) return null;
 
@@ -132,6 +156,10 @@ export const ScanConfigResultsTab = {
     id: OptimizeScanConfigTabs.optimizations,
     __activity: ScanConfigActivity.Optimize,
   },
+  [ScanConfigActivity.Validate]: {
+    id: ValidateScanConfigTabs.validations,
+    __activity: ScanConfigActivity.Validate,
+  },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 /** each activity's configuration tab — the editor's landing tab. */
@@ -155,6 +183,10 @@ export const ScanConfigConfigurationTab = {
   [ScanConfigActivity.Optimize]: {
     id: OptimizeScanConfigTabs.configuration,
     __activity: ScanConfigActivity.Optimize,
+  },
+  [ScanConfigActivity.Validate]: {
+    id: ValidateScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.Validate,
   },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
@@ -204,7 +236,7 @@ export type TEntityQuery = {
 };
 
 /** reads the entity uuid from a config value (FromID ref, `{id}`/`{id_str}`, or bare string). */
-function extractConfigValueId(source: unknown): string | undefined {
+export function extractConfigValueId(source: unknown): string | undefined {
   if (isFromIdRef(source)) {
     return source.id_str;
   }

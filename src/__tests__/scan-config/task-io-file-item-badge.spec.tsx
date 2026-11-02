@@ -34,6 +34,20 @@ describe('TaskIOFileItem badge', () => {
     expect(screen.queryByText('circuit_config.json')).not.toBeInTheDocument();
   });
 
+  it('names the OBI-ONE config alike in every workflow, whatever its asset label', () => {
+    for (const label of [AssetLabel.task_config, AssetLabel.simulation_generation_config]) {
+      const { unmount } = render(
+        <TaskIOFileItem
+          file={makeFile({ path: 'obi_one_coordinate.json', label })}
+          onSelect={vi.fn()}
+        />
+      );
+      expect(screen.getByText('OBI-ONE Config')).toBeInTheDocument();
+      expect(screen.getByText('json')).toBeInTheDocument();
+      unmount();
+    }
+  });
+
   it('keeps the generic folder badge for any other directory asset', () => {
     render(
       <TaskIOFileItem

@@ -25,4 +25,6 @@ export interface ISpikeReplayBinding {
   speed?: number;
   /** Wall-clock seconds for a spike to fade to `1/e` of full brightness. */
   afterglowInSeconds?: number;
+  /** Set from the scene's settings; omit to leave the slider out. */
+  onAfterglowChange?(afterglowInSeconds: number): void;
 }

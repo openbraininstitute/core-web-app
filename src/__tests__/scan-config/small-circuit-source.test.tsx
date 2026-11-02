@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 import { useSmallCircuitSource } from '@/features/scan-config/components/circuit-viz/sources/use-small-circuit-source';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 
@@ -55,10 +56,13 @@ const fixtures = vi.hoisted(() => ({
     },
   } as unknown,
   configError: null as Error | null,
-  placement: { placed: [], failures: new Map(), settled: true, download: null } as ReturnType<
-    typeof usePopulationsPlacement
-  >,
+  placement: { placed: [], failures: new Map(), settled: true, download: null } as Placement,
+  noNames: new Set<string>() as ReadonlySet<string>,
 }));
+
+// `positionless` is left out where a test has none, as most do.
+type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless'> &
+  Partial<Pick<ReturnType<typeof usePopulationsPlacement>, 'positionless'>>;
 
 // The viewer barrel pulls in tgd, which touches `document` at module scope.
 vi.mock('@/morpho-viewer', () => ({}));
@@ -78,7 +82,7 @@ vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
 }));
 
 vi.mock('@/features/circuit-nodes/hooks/use-populations-placement', () => ({
-  usePopulationsPlacement: () => fixtures.placement,
+  usePopulationsPlacement: () => ({ positionless: fixtures.noNames, ...fixtures.placement }),
 }));
 
 /** Soma plus one dendrite, whose morphio ids and SONATA ids are not one apart. */
@@ -356,7 +360,7 @@ describe('useSmallCircuitSource', () => {
   it('draws on when a population cannot be placed', () => {
     fixtures.placement = {
       placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
-      failures: new Map([['inputs', new Error('no x/y/z columns')]]),
+      failures: new Map([['inputs', new Error('inputs.h5 could not be opened')]]),
       settled: true,
       download: null,
     };
@@ -366,9 +370,24 @@ describe('useSmallCircuitSource', () => {
     expect(result.current.cells.map((cell) => cell.id)).toEqual([
       'circuit-id/default #0?axons=false',
     ]);
-    // Painted, not receded: with the population on show nowhere on screen,
-    // there is nothing for the rest to recede behind.
+    // Painted, not receded: nothing says why the population on show is missing.
     expect(result.current.cells[0].color).toBe(DEFAULT_NEURON_COLOR);
+    expect(result.current.positionless).toEqual(new Set());
+  });
+
+  it('recedes the rest behind a population on show with no positions, and reports it', () => {
+    fixtures.placement = {
+      placed: [{ population: DEFAULT, geometry: placement([0, 0, 0], ['morph-a']) }],
+      failures: new Map([['inputs', new PopulationWithoutPositionsError('inputs')]]),
+      positionless: new Set(['inputs']),
+      settled: true,
+      download: null,
+    };
+    const { result } = render(false, [DEFAULT, INPUTS], INPUTS);
+
+    expect(result.current.error).toBeNull();
+    expect(result.current.cells[0].color).toBe('#cccccc');
+    expect(result.current.positionless).toEqual(new Set(['inputs']));
   });
 
   it('fails only once no population at all could be placed', () => {

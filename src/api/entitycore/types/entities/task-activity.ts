@@ -34,6 +34,8 @@ export const TaskActivityType = {
   EFeatureExtractionExecution: 'efeature_extraction__execution',
   IonChannelModelingConfigGeneration: 'ion_channel_modeling__config_generation',
   IonChannelModelingExecution: 'ion_channel_modeling__execution',
+  MEModelBuildConfigGeneration: 'memodel_build__config_generation',
+  MEModelBuildExecution: 'memodel_build__execution',
   SkeletonizationConfigGeneration: 'skeletonization__config_generation',
   SkeletonizationExecution: 'skeletonization__execution',
   IonChannelSimulationConfigGeneration: 'ion_channel_simulation__config_generation',
@@ -48,6 +50,8 @@ export const TaskActivityType = {
   BuildSynaptomeExecution: 'circuit_single_build__execution',
   EModelOptimizationConfigGeneration: 'emodel_optimization__config_generation',
   EModelOptimizationExecution: 'emodel_optimization__execution',
+  EModelValidationConfigGeneration: 'optimized_emodel_analysis_validation__config_generation',
+  EModelValidationExecution: 'optimized_emodel_analysis_validation__execution',
   CircuitSynapticPhysiologyConfigGeneration:
     'circuit_synaptic_physiology_assignment__config_generation',
   CircuitSynapticPhysiologyExecution: 'circuit_synaptic_physiology_assignment__execution',

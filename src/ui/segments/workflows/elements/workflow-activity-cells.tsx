@@ -1,6 +1,5 @@
 'use client';
 
-import { LoadingOutlined } from '@ant-design/icons';
 import { useRouter } from '@bprogress/next';
 import {
   RiBarChartBoxLine,
@@ -11,15 +10,12 @@ import {
 } from '@remixicon/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { EntityTypeDict } from '@/api/entitycore/types';
 import { type ITaskConfig, TaskConfigType } from '@/api/entitycore/types/entities/task-config';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import { useAppNotification } from '@/components/notification';
-import { config } from '@/config';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { resolveIonChannelModelingByCampaignId } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import {
   LIFECYCLE_STATUS_RENDERER,
   LifecycleStatusCell,
@@ -206,9 +202,7 @@ export function WorkflowActivityActionsCell({
   const { activity, entityType } = (params ?? {}) as IActionsCellParams;
   const { push: navigate } = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
-  const notification = useAppNotification();
   const searchParams = useSearchParams();
-  const [isResolvingResults, setIsResolvingResults] = useState(false);
   const [, copyId, , hasCopiedId] = useCopyToClipboard();
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [virtualLabId, projectId]);
@@ -259,33 +253,6 @@ export function WorkflowActivityActionsCell({
     if (href) navigate(href);
   }, [activity, entityType, workspace, tableRow, navigate]);
 
-  // An ion-channel campaign has no direct results route: the generated model is
-  // resolved first, so this action navigates on click instead of linking.
-  const onViewIonChannelResults = useCallback(async () => {
-    setIsResolvingResults(true);
-    try {
-      const resolved = await resolveIonChannelModelingByCampaignId({
-        id: row.id,
-        context: workspace,
-      });
-      const modelId = resolved.generatedModelIds.at(0);
-      if (modelId) {
-        navigate(
-          `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/workflows/view/ion-channel-model/${modelId}`
-        );
-      } else {
-        notification.info({
-          message: 'No ion channel model found',
-          description: 'This campaign has not produced any ion channel model yet.',
-        });
-      }
-    } finally {
-      setIsResolvingResults(false);
-    }
-  }, [row.id, workspace, navigate, virtualLabId, projectId, notification]);
-
-  const isIonChannelModelingCampaign =
-    entityType === ExtendedEntitiesTypeDict.IonChannelModelingCampaign;
   const canViewResults = Boolean(resultsHref);
 
   const actions: IRowAction[] = [
@@ -296,25 +263,13 @@ export function WorkflowActivityActionsCell({
       href: configurationHref,
       disabled: !configurationHref,
     },
-    isIonChannelModelingCampaign
-      ? {
-          key: 'results',
-          label: 'View results',
-          icon: isResolvingResults ? (
-            <LoadingOutlined />
-          ) : (
-            <RiBarChartBoxLine size={ACTION_ICON_SIZE} />
-          ),
-          onClick: () => void onViewIonChannelResults(),
-          disabled: !canViewResults || isResolvingResults,
-        }
-      : {
-          key: 'results',
-          label: 'View results',
-          icon: <RiBarChartBoxLine size={ACTION_ICON_SIZE} />,
-          href: resultsHref,
-          disabled: !canViewResults,
-        },
+    {
+      key: 'results',
+      label: 'View results',
+      icon: <RiBarChartBoxLine size={ACTION_ICON_SIZE} />,
+      href: resultsHref,
+      disabled: !canViewResults,
+    },
     {
       key: 'duplicate',
       label: 'Duplicate',

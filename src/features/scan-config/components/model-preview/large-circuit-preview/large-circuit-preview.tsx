@@ -38,6 +38,9 @@ import styles from './large-circuit-preview.module.css';
 /** Somas per JSON part of the debug download (see its `handleDownload`). */
 const DOWNLOAD_CHUNK = 65_536;
 
+/** What the rest of the population fades to while one of its somas is pointed out. */
+const FADED = '#d4d4d4';
+
 /** An empty palette: the viewer falls back to its own depth-shaded blue. */
 const VIEWER_DEFAULT_PALETTE: MorphoViewerCellColors = {
   palette: [],
@@ -65,12 +68,20 @@ export interface LargeCircuitPreviewProps {
    * camera.
    */
   hiddenPopulations?: readonly string[];
+  /** One flag per cell of the population on show; a 0 takes that soma out the same way. */
+  shownCells?: Uint8Array;
+  /** A soma of the population on show to point out, by node index: every other one of it fades. */
+  highlightedCell?: number;
+  /** Told the node index of a clicked soma of the population on show. */
+  onSubjectCellClick?: (index: number) => void;
   /** the colour-by mapping's palette + palette column per node; undefined → viewer default */
   nodeColors?: NodeColors;
   /** Colour for the somas of the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when one of those somas is clicked. */
   onPopulationClick?: (populationName: string) => void;
+  /** @see CircuitVizProps.onPositionlessPopulationsChange */
+  onPositionlessPopulationsChange?: (names: ReadonlySet<string>) => void;
   backgroundColor: string;
   /** scalebar pin/label color (adaptive mode); undefined → package default  */
   scalebarColor?: string;
@@ -116,9 +127,13 @@ export function LargeCircuitPreview({
   population,
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
+  onSubjectCellClick,
   nodeColors,
   recededColor,
   onPopulationClick,
+  onPositionlessPopulationsChange,
   backgroundColor,
   scalebarColor,
   showScalebar = true,
@@ -140,13 +155,17 @@ export function LargeCircuitPreview({
   // recolours the somas in place and the camera stays where the user left it.
   // Nothing is reported placed until everything is, so anything placed at all
   // means the whole scene can be built.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
+  const { placed, failures, positionless, settled, download } = usePopulationsPlacement({
     circuit,
     populations,
   });
   const subjectName = population?.name;
   const subject = placed.find((entry) => entry.population.name === subjectName)?.geometry ?? null;
   const hidden = React.useMemo(() => new Set(hiddenPopulations), [hiddenPopulations]);
+  // Before paint: see CircuitVisualization.
+  React.useLayoutEffect(() => {
+    onPositionlessPopulationsChange?.(positionless);
+  }, [positionless, onPositionlessPopulationsChange]);
   // Context is what is on screen beside the subject, so a hidden population is
   // not it: there is nothing to recede behind the subject and nothing a click
   // could land on.
@@ -224,9 +243,12 @@ export function LargeCircuitPreview({
   // nothing on screen is the selection then either, and the viewer's own ramp
   // would say the opposite, lighting the whole rest of the circuit up the
   // moment the user takes the selection out of it.
-  // With the population on show unplaceable there is no selection on screen to
-  // recede behind, and receding everything would grey the whole circuit out.
-  const recede = hasContext && subject ? recededColor : undefined;
+  // The same holds for a population on show with no positions, which the chrome
+  // explains; any other failure to place it goes unexplained, so nothing recedes.
+  const recede =
+    hasContext && (subject || (subjectName !== undefined && positionless.has(subjectName)))
+      ? recededColor
+      : undefined;
 
   // The mapping already arrives as a palette and a column per soma. This memo
   // writes the subject's columns at its offset in the scene and appends a
@@ -235,7 +257,15 @@ export function LargeCircuitPreview({
   const cellColors = React.useMemo(() => {
     // Nothing to colour by, nothing receding and nothing hidden, so leave the
     // viewer to its own depth-shaded blue, as it draws today.
-    if (!nodeColors && !recede && hidden.size === 0) return VIEWER_DEFAULT_PALETTE;
+    if (
+      !nodeColors &&
+      !recede &&
+      hidden.size === 0 &&
+      !shownCells &&
+      highlightedCell === undefined
+    ) {
+      return VIEWER_DEFAULT_PALETTE;
+    }
 
     const palette: (string | null | false)[] = nodeColors ? [...nodeColors.palette] : [];
     // Three entries are added here beyond the mapping's own colours: the
@@ -249,6 +279,7 @@ export function LargeCircuitPreview({
     let ownRampColumn: number | undefined;
     let recededColumn: number | undefined;
     let hiddenColumn: number | undefined;
+    let fadedColumn: number | undefined;
 
     const columnByCell = new Uint16Array(positions.length / 3);
     let index = 0;
@@ -268,10 +299,40 @@ export function LargeCircuitPreview({
         if (ownRampColumn === undefined) ownRampColumn = palette.push(null) - 1;
         columnByCell.fill(ownRampColumn, index, index + geometry.count);
       }
+      if (candidate.name === subjectName && shownCells && !hidden.has(candidate.name)) {
+        for (let i = 0; i < geometry.count; i++) {
+          if (shownCells[i] === 1) continue;
+          if (hiddenColumn === undefined) hiddenColumn = palette.push(false) - 1;
+          columnByCell[index + i] = hiddenColumn;
+        }
+      }
+      if (
+        candidate.name === subjectName &&
+        highlightedCell !== undefined &&
+        highlightedCell < geometry.count &&
+        !hidden.has(candidate.name)
+      ) {
+        if (fadedColumn === undefined) fadedColumn = palette.push(recededColor ?? FADED) - 1;
+        for (let i = 0; i < geometry.count; i++) {
+          if (i === highlightedCell || columnByCell[index + i] === hiddenColumn) continue;
+          columnByCell[index + i] = fadedColumn;
+        }
+      }
       index += geometry.count;
     }
-    return { palette, columnByCell };
-  }, [placed, subjectName, positions.length, nodeColors, recede, hidden]);
+    // The mapping's columns stand at its own indices, so its flat ones carry over.
+    return { palette, columnByCell, flatColumns: nodeColors?.flatColumns };
+  }, [
+    placed,
+    subjectName,
+    positions.length,
+    nodeColors,
+    recede,
+    hidden,
+    shownCells,
+    highlightedCell,
+    recededColor,
+  ]);
 
   const handleCellClick = React.useCallback(
     (index: number) => {
@@ -280,16 +341,18 @@ export function LargeCircuitPreview({
         end += geometry.count;
         if (index < end) {
           if (candidate.name !== subjectName) onPopulationClick?.(candidate.name);
+          else onSubjectCellClick?.(index - (end - geometry.count));
           return;
         }
       }
     },
-    [placed, subjectName, onPopulationClick]
+    [placed, subjectName, onPopulationClick, onSubjectCellClick]
   );
   // Only offered when there is something to select: the viewer builds its pick
   // buffer on the first click, which at region scale is a second copy of every
   // position.
-  const canPickPopulation = onPopulationClick !== undefined && hasContext;
+  const canPickPopulation =
+    (onPopulationClick !== undefined && hasContext) || onSubjectCellClick !== undefined;
 
   const morphoOverlays = React.useMemo(
     () =>

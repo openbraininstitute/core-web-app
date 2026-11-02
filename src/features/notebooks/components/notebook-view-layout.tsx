@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import {
@@ -13,7 +12,7 @@ import { EntityTypeGroup } from '@/entity-configuration/domain/group';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
 import { NotebookActionMenu } from '@/features/notebooks/components/notebook-action-menu';
-import Breadcrumb, { ToneDict } from '@/ui/molecules/breadcrumb';
+import { BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
 import Close from '@/ui/molecules/close';
 import DetailMenu from '@/ui/segments/explore/detail-menu';
 import { EntityNameDisplay } from '@/ui/segments/explore/entity-name-display';
@@ -77,18 +76,13 @@ export async function NotebookViewLayout({
         data-testid="notebook-view-layout-header"
         className="flex w-full items-center justify-between px-5 pt-4"
       >
-        <div data-testid="notebook-breadcrumb" className="flex flex-nowrap gap-3">
-          <Breadcrumb variant={ViewVariant.Light} tone={ToneDict.Inactive}>
-            <Link href={notebooksHome} className="text-primary-9 hover:text-primary-8">
-              Notebooks
-            </Link>
-          </Breadcrumb>
-          <Breadcrumb showChevron={false} variant={ViewVariant.Light} tone={ToneDict.Active}>
-            <Link href={parentLink} className="text-primary-9 hover:text-primary-8 font-bold">
-              {typeLabel}
-            </Link>
-          </Breadcrumb>
-        </div>
+        <BreadcrumbTrail
+          data-testid="notebook-breadcrumb"
+          items={[
+            { key: 'notebooks', label: 'Notebooks', href: notebooksHome },
+            { key: 'type', label: typeLabel, href: parentLink },
+          ]}
+        />
         <Close href={parentLink} className="mr-1" variant={ViewVariant.Light} />
       </div>
 

@@ -5,38 +5,54 @@ import {
   useScanConfiguration,
 } from '@/features/scan-config/components/hooks/use-scan-configuration';
 import ScanConfigSkeleton from '@/features/scan-config/components/skeletons/full-page';
+import { ScanConfigTopBar } from '@/features/scan-config/components/top-bar/context';
 import { ScanConfigTemplate } from '@/features/scan-config/template';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
 
+import type { ReactNode } from 'react';
+
 export type ScanConfigContainerProps = TUseScanConfigurationParams & {
   className?: string;
+  /** show only the configuration, without the tab strip */
+  hideTabs?: boolean;
 };
 
+/**
+ * Error / unresolved / not-ready states have no tab rail, so the host's breadcrumb (and close)
+ * keep their usual row above the message instead of disappearing with the template.
+ */
+function ScanConfigFallback({ children }: { children?: ReactNode }) {
+  return (
+    <div className="flex h-full min-h-0 w-full flex-col">
+      <ScanConfigTopBar />
+      <div className="flex min-h-0 flex-1 items-center justify-center">{children}</div>
+    </div>
+  );
+}
+
 export function ScanConfigContainer(props: ScanConfigContainerProps) {
-  const { className, ...configurationParams } = props;
+  const { className, hideTabs, ...configurationParams } = props;
   const { isLoading, error, unresolvedMessage, ready } = useScanConfiguration(configurationParams);
 
   if (isLoading) {
-    return <ScanConfigSkeleton />;
+    return <ScanConfigSkeleton activity={configurationParams.activity} className={className} />;
   }
 
   if (error) {
-    return <div className="flex h-full w-full items-center justify-center">{error.message}</div>;
+    return <ScanConfigFallback>{error.message}</ScanConfigFallback>;
   }
 
   if (unresolvedMessage) {
-    return (
-      <div className="flex h-full w-full items-center justify-center">{unresolvedMessage}</div>
-    );
+    return <ScanConfigFallback>{unresolvedMessage}</ScanConfigFallback>;
   }
 
   if (!ready) {
-    return null;
+    return <ScanConfigFallback />;
   }
 
   return (
     <>
-      <ScanConfigTemplate {...ready} className={className} />
+      <ScanConfigTemplate {...ready} className={className} hideTabs={hideTabs} />
       <DownloadPanel />
     </>
   );

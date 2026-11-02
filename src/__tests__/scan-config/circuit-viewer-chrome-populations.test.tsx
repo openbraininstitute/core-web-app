@@ -162,6 +162,39 @@ describe('CircuitViewerChrome population notices', () => {
 
     expect(screen.queryByRole('status')).toBeNull();
   });
+
+  it('warns that the population on show has no positions, with nothing to undo', () => {
+    renderChrome({
+      menu: MENU,
+      populations: withHidden([], { selected: 'vpm', positionless: new Set(['vpm']) }).populations,
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      '“vpm” has no positions (x/y/z), so it can’t be drawn in 3D'
+    );
+    expect(screen.queryByRole('button', { name: 'Show' })).toBeNull();
+  });
+
+  it('does not call a population with no positions selected but hidden', () => {
+    renderChrome({
+      menu: MENU,
+      populations: withHidden(['vpm'], { selected: 'vpm', positionless: new Set(['vpm']) })
+        .populations,
+    });
+
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.queryByText(/selected but hidden/)).toBeNull();
+  });
+
+  it('reads a scene with every drawable population hidden as empty', () => {
+    renderChrome({
+      menu: MENU,
+      populations: withHidden(['cortex', 'thalamus'], { positionless: new Set(['vpm']) })
+        .populations,
+    });
+
+    expect(screen.getByRole('status')).toHaveTextContent('Every population is hidden');
+  });
 });
 
 describe('CircuitViewerChrome checklist introduction', () => {

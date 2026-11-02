@@ -2,6 +2,7 @@ import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-n
 import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
+import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
@@ -18,10 +19,12 @@ import { Emodel } from '@/entity-configuration/domain/model/e-model';
 import { EmSynapseMappingCampaign } from '@/entity-configuration/domain/model/em-synapse-mapping-campaign';
 import { ExtracellularRecordingArray } from '@/entity-configuration/domain/model/extracellular-recording-array';
 import { ExtracellularRecordingArrayCampaign } from '@/entity-configuration/domain/model/extracellular-recording-array-campaign';
+import { IonChannelBuildCampaign } from '@/entity-configuration/domain/model/ion-channel-build-campaign';
 import { IonChannelModel } from '@/entity-configuration/domain/model/ion-channel-model';
 import { IonChannelModelingCampaign } from '@/entity-configuration/domain/model/ion-channel-modeling-campaign';
 import { MEmodel } from '@/entity-configuration/domain/model/me-model';
 import { MEModelCircuit } from '@/entity-configuration/domain/model/me-model-circuit';
+import { MEModelBuildCampaign } from '@/entity-configuration/domain/model/memodel-build-campaign';
 import { Microcircuit } from '@/entity-configuration/domain/model/microcircuit';
 import { PairedNeuronCircuit } from '@/entity-configuration/domain/model/paired-neurons';
 import { SingleNeuronCircuit } from '@/entity-configuration/domain/model/single-neuron-circuit';
@@ -36,7 +39,7 @@ import {
   SingleNeuronSimulation,
   SingleNeuronSynaptomeSimulation,
 } from '@/entity-configuration/domain/simulation';
-import { EFeatureExtractionResult } from '@/entity-configuration/domain/simulation/efeature-extraction-result';
+import { EModelValidationResult } from '@/entity-configuration/domain/simulation/emodel-validation-result';
 import { IonChannelModelSimulation } from '@/entity-configuration/domain/simulation/ion-channel-model-simulation';
 import { MEModelCircuitSimulation } from '@/entity-configuration/domain/simulation/memodel-circuit-simulation';
 import { MicrocircuitSimulation } from '@/entity-configuration/domain/simulation/microcircuit-simulation';
@@ -45,6 +48,7 @@ import { RegionCircuitSimulation } from '@/entity-configuration/domain/simulatio
 import { SingeNeuronCircuitSimulation } from '@/entity-configuration/domain/simulation/single-neuron-circuit-simulation';
 import { SmallMicrocircuitSimulation } from '@/entity-configuration/domain/simulation/small-microcircuit-simulation';
 import { WholeBrainCircuitSimulation } from '@/entity-configuration/domain/simulation/whole-brain-circuit-simulation';
+import { EModelValidationCampaign } from '@/entity-configuration/domain/validation/emodel-validation-campaign';
 
 import type { EntityCoreTypeConfig } from '@/entity-configuration/domain/types';
 
@@ -76,6 +80,8 @@ export const EntityCoreModelConfiguration = {
   Circuit,
   IonChannelModel,
   IonChannelModelingCampaign,
+  IonChannelBuildCampaign,
+  MEModelBuildCampaign,
   EmSynapseMappingCampaign,
   ExtracellularRecordingArray,
   ExtracellularRecordingArrayCampaign,
@@ -97,6 +103,7 @@ const EntityCoreSimulationConfiguration = {
   IonChannelModelSimulation,
   RegionCircuitSimulation,
   WholeBrainCircuitSimulation,
+  EModelValidationResult,
 };
 
 const EntityCoreExtractionConfiguration = {
@@ -112,6 +119,10 @@ const EntityCoreOptimizationConfiguration = {
   EModelOptimizationCampaign,
 };
 
+const EntityCoreValidationConfiguration = {
+  EModelValidationCampaign,
+};
+
 export const EntityCoreConfiguration = {
   ...UniversalTypesCoreConfiguration,
   ...EntityCoreExperimentalConfiguration,
@@ -120,6 +131,7 @@ export const EntityCoreConfiguration = {
   ...EntityCoreExtractionConfiguration,
   ...EntityCoreProcessingConfiguration,
   ...EntityCoreOptimizationConfiguration,
+  ...EntityCoreValidationConfiguration,
   AnalysisNotebookTemplate,
   AnalysisNotebookResult,
 } as const;
@@ -130,3 +142,5 @@ export type TEntityCoreConfigurationItem =
 type InnerEntityType<T> = T extends EntityCoreTypeConfig<infer U> ? U : never;
 
 export type EntityTypeValue = InnerEntityType<TEntityCoreConfigurationItem>;
+
+export { protocolTypeFilter } from '@/entity-configuration/domain/model/synthesized-morphology';

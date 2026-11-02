@@ -23,6 +23,10 @@ const OUTPUT_FILE_ORDER: Partial<Record<TExtendedEntitiesTypeDict, readonly stri
     AssetLabel.efeature_extraction_features,
     AssetLabel.efeature_extraction_figures,
   ],
+  [ExtendedEntitiesTypeDict.EModelValidationResult]: [
+    AssetLabel.validation_result_details,
+    AssetLabel.validation_result_figure,
+  ],
 };
 
 /**

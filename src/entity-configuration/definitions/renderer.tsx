@@ -180,7 +180,9 @@ export function renderPreview<T extends EntityCoreResource>(
   loadingClassName?: string,
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
-  target?: TThumbnailServiceTarget
+  target?: TThumbnailServiceTarget,
+  label?: undefined,
+  dpi?: number
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -192,7 +194,8 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TEntityAssetTarget,
-  label?: AssetLabel
+  label?: AssetLabel,
+  dpi?: number
 ): JSX.Element;
 
 export function renderPreview<T extends EntityCoreResource>(
@@ -204,7 +207,8 @@ export function renderPreview<T extends EntityCoreResource>(
   fill?: boolean,
   customRender?: (src: string) => ReactNode,
   target?: TThumbnailServiceTarget | TEntityAssetTarget,
-  label?: AssetLabel
+  label?: AssetLabel,
+  dpi?: number
 ) {
   if (target === PreviewTarget.AssetLabel) {
     return (
@@ -219,6 +223,7 @@ export function renderPreview<T extends EntityCoreResource>(
         target={target as TEntityAssetTarget}
         label={label as AssetLabel}
         customRender={customRender}
+        dpi={dpi}
       />
     );
   }
@@ -233,6 +238,7 @@ export function renderPreview<T extends EntityCoreResource>(
       fill={fill}
       target={target as TThumbnailServiceTarget}
       customRender={customRender}
+      dpi={dpi}
     />
   );
 }

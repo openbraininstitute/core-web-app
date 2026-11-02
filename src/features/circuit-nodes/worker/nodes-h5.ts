@@ -7,18 +7,20 @@ import {
   ColumnKindDict,
   type ColumnMeta,
   type ColumnValues,
+  type DerivedColumn,
+  type FilterModel,
   type GetRowsRequest,
   type GetRowsResponse,
   type NodeGeometry,
   type NodeGeometryOptions,
   type NumberFilter,
+  POSITION_COLUMNS,
   type SortItem,
   type TextFilter,
 } from '@/features/circuit-nodes/types';
 
 const SYNTHETIC_NODE_ID = 'node_id';
 
-const POSITION_COLUMNS = ['x', 'y', 'z'] as const;
 const ORIENTATION_COLUMNS = [
   'orientation_x',
   'orientation_y',
@@ -58,9 +60,33 @@ type SyntheticNodeIdHandle = {
   name: string;
 };
 
-type ColumnHandle = CategoricalHandle | NumericHandle | StringHandle | SyntheticNodeIdHandle;
+/** A column handed in whole rather than read from the file; see {@link NodesSession.setDerivedColumns}. */
+type DerivedHandle = {
+  kind: 'derived';
+  name: string;
+  values: Float64Array;
+};
 
-type LoadedColumn = Float32Array | Float64Array | Uint32Array | string[];
+/** The same, as an index per node into a library of its own. */
+type DerivedCategoricalHandle = {
+  kind: 'derived-categorical';
+  name: string;
+  indices: Uint32Array;
+  library: string[];
+  librarySortRank: Uint32Array;
+};
+
+type ColumnHandle =
+  | CategoricalHandle
+  | NumericHandle
+  | StringHandle
+  | SyntheticNodeIdHandle
+  | DerivedHandle
+  | DerivedCategoricalHandle;
+
+type NumericColumn = Float32Array | Float64Array | BigInt64Array | BigUint64Array;
+
+type LoadedColumn = NumericColumn | Uint32Array | string[];
 
 type GenericFilter =
   | TextFilter
@@ -68,8 +94,10 @@ type GenericFilter =
   | { filterType: 'text'; operator: 'AND' | 'OR'; conditions: TextFilter[] }
   | { filterType: 'number'; operator: 'AND' | 'OR'; conditions: NumberFilter[] };
 
+type RowTest = (row: number) => boolean;
+
 type Compiled =
-  | { kind: 'generic'; handle: ColumnHandle; data: LoadedColumn; filter: GenericFilter }
+  | { kind: 'generic'; test: RowTest }
   | { kind: 'set'; data: Uint32Array; mask: Uint8Array };
 
 function classifyDtype(dtype: string): ColumnKind {
@@ -85,8 +113,9 @@ function classifyDtype(dtype: string): ColumnKind {
   return 'string';
 }
 
-function toNumber(v: number | bigint): number {
-  return typeof v === 'bigint' ? Number(v) : v;
+/** A 64-bit integer column, which h5wasm reads as a BigInt64Array or BigUint64Array. */
+function isInt64(handle: ColumnHandle): boolean {
+  return handle.kind === 'numeric' && /^[<>|]?[qQ]$/.test(handle.dtype);
 }
 
 function alphabeticRank(library: string[]): Uint32Array {
@@ -120,6 +149,7 @@ export class NodesSession {
   private columnIndex: Map<string, ColumnHandle>;
   private loaded: LruMap<string, LoadedColumn>;
   private viewCache: LruMap<string, Uint32Array>;
+  private derivedByOwner = new Map<string, string[]>();
 
   constructor(filename: string, populationKey: string) {
     this.filename = filename;
@@ -237,6 +267,62 @@ export class NodesSession {
     this.viewCache.clear();
   }
 
+  /**
+   * Replace one owner's columns computed outside the file, which page, sort and
+   * filter like the file's own once set.
+   *
+   * By owner, because the session is shared: a simulation's spike statistics
+   * and a report's recorded cells can both be on one population, and neither
+   * may clear the other's. They live in the column index rather than the LRU,
+   * so the table's reads can never evict values nothing could load again, and
+   * they stay out of `columns`, which the nodes table elsewhere lists. A name
+   * the file or another owner already has is skipped, so a derived column
+   * never shadows anything.
+   */
+  setDerivedColumns(owner: string, columns: DerivedColumn[]): void {
+    for (const name of this.derivedByOwner.get(owner) ?? []) this.columnIndex.delete(name);
+    const names: string[] = [];
+    for (const column of columns) {
+      const { name } = column;
+      const length = 'values' in column ? column.values.length : column.indices.length;
+      if (this.columnIndex.has(name) || length !== this.rowCount) continue;
+      this.columnIndex.set(
+        name,
+        'values' in column
+          ? { kind: 'derived', name, values: column.values }
+          : {
+              kind: 'derived-categorical',
+              name,
+              indices: column.indices,
+              library: column.library,
+              librarySortRank: alphabeticRank(column.library),
+            }
+      );
+      names.push(name);
+    }
+    this.derivedByOwner.set(owner, names);
+    // A view sorted or filtered by the old values would page the wrong rows.
+    this.viewCache.clear();
+  }
+
+  /** The rows a filter model keeps, in node order, or null when it keeps them all. */
+  getFilteredIndices(filter: FilterModel): Uint32Array | null {
+    const entries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey([], entries);
+    if (viewKey === null) return null;
+    // A copy, so the caller can transfer it without detaching the cached view.
+    return this.resolveView(viewKey, [], entries).slice();
+  }
+
+  /** Where a node falls among the rows a sort and filter show; -1 where the filter leaves it out. */
+  getRowIndex(nodeId: number, sort: SortItem[], filter: FilterModel): number {
+    const sortItems = sort.filter((s) => this.columnIndex.has(s.column));
+    const filterEntries = Object.entries(filter).filter(([col]) => this.columnIndex.has(col));
+    const viewKey = this.buildViewKey(sortItems, filterEntries);
+    if (viewKey === null) return nodeId >= 0 && nodeId < this.rowCount ? nodeId : -1;
+    return this.resolveView(viewKey, sortItems, filterEntries).indexOf(nodeId);
+  }
+
   getRows(req: GetRowsRequest): GetRowsResponse {
     const { start, end, sort, filter, columns } = req;
     const sortItems = (sort ?? []).filter((s) => this.columnIndex.has(s.column));
@@ -327,7 +413,7 @@ export class NodesSession {
       const data = this.loadColumn(col);
       if (f.filterType === 'set') {
         // Set filter is meaningful only on categorical columns; ignore otherwise.
-        if (handle.kind !== 'categorical') return [];
+        if (handle.kind !== 'categorical' && handle.kind !== 'derived-categorical') return [];
         const mask = new Uint8Array(handle.library.length);
         const allowed = new Set(f.values);
         for (let i = 0; i < handle.library.length; i++) {
@@ -335,7 +421,7 @@ export class NodesSession {
         }
         return [{ kind: 'set', data: data as Uint32Array, mask }];
       }
-      return [{ kind: 'generic', handle, data, filter: f }];
+      return [{ kind: 'generic', test: rowTest(handle, data, f) }];
     });
 
     const buf = new Uint32Array(this.rowCount);
@@ -348,7 +434,7 @@ export class NodesSession {
             pass = false;
             break;
           }
-        } else if (!matchOne(c.handle, c.data, i, c.filter)) {
+        } else if (!c.test(i)) {
           pass = false;
           break;
         }
@@ -368,6 +454,10 @@ export class NodesSession {
     const sorted = indices.slice();
     sorted.sort((a, b) => {
       for (const c of compiled) {
+        // Blanks last whichever way the column runs: a cell that never fired
+        // has no first spike, which is not the same as the earliest one.
+        const blank = blankOrder(c.data, a, b);
+        if (blank !== 0) return blank;
         const cmp = compareAt(c.handle, c.data, a, b);
         if (cmp !== 0) return c.direction === 'asc' ? cmp : -cmp;
       }
@@ -430,14 +520,18 @@ export class NodesSession {
     // is sharing.
     if (!names.every((name) => this.columnIndex.get(name)?.kind === 'numeric')) return null;
 
-    // Numeric handles, so `loadColumn` went through `ensureFloatArray`.
-    const columns = names.map((name) => this.loadColumn(name) as Float32Array | Float64Array);
+    // Numeric handles, so `loadColumn` went through `ensureNumericArray`.
+    const columns = names.map((name) => this.loadColumn(name) as NumericColumn);
 
     const stride = names.length;
     const out = new Float32Array(this.rowCount * stride);
     for (let c = 0; c < stride; c++) {
       const column = columns[c];
-      for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+      if (column instanceof BigInt64Array || column instanceof BigUint64Array) {
+        for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = Number(column[i]);
+      } else {
+        for (let i = 0; i < this.rowCount; i++) out[i * stride + c] = column[i];
+      }
     }
     return out;
   }
@@ -454,13 +548,15 @@ export class NodesSession {
       this.loaded.set(name, arr);
       return arr;
     }
+    if (handle.kind === 'derived') return handle.values;
+    if (handle.kind === 'derived-categorical') return handle.indices;
 
     const raw = handle.dataset.value;
     let loaded: LoadedColumn;
     if (handle.kind === 'categorical') {
       loaded = ensureUint32(raw);
     } else if (handle.kind === 'numeric') {
-      loaded = ensureFloatArray(raw);
+      loaded = ensureNumericArray(raw);
     } else {
       loaded = ensureStringArray(raw);
     }
@@ -488,6 +584,19 @@ export class NodesSession {
       return out;
     }
 
+    if (handle.kind === 'derived') {
+      const out = new Array<number>(indices.length);
+      for (let i = 0; i < indices.length; i++) out[i] = handle.values[indices[i]];
+      return out;
+    }
+    if (handle.kind === 'derived-categorical') {
+      const out = new Array<string>(indices.length);
+      for (let i = 0; i < indices.length; i++) {
+        out[i] = handle.library[handle.indices[indices[i]]] ?? '';
+      }
+      return out;
+    }
+
     if (!useGather && !this.loaded.has(name) && !isVariableLengthString(handle)) {
       const sliced = handle.dataset.slice([[sliceStart, sliceEnd]]);
       return decodeSliceForPage(handle, sliced);
@@ -504,10 +613,12 @@ export class NodesSession {
         out[i] = lib[libIdx] ?? String(libIdx);
       }
     } else if (handle.kind === 'numeric') {
-      const arr = data as Float32Array | Float64Array;
+      const arr = data as NumericColumn;
+      // 64-bit integers as exact text, as `decodeSliceForPage` gives them, whatever their size.
+      const asText = isInt64(handle);
       for (let i = 0; i < indices.length; i++) {
         const idx = (indices as Uint32Array)[i] ?? (indices as number[])[i];
-        out[i] = arr[idx];
+        out[i] = asText ? String(arr[idx]) : Number(arr[idx]);
       }
     } else {
       const arr = data as string[];
@@ -535,6 +646,16 @@ export class NodesSession {
     if (handle.kind === ColumnKindDict.SyntheticNodeId) {
       return { kind: ColumnKindDict.Numeric, values: identityIndices(this.rowCount) };
     }
+    if (handle.kind === 'derived') {
+      return { kind: ColumnKindDict.Numeric, values: handle.values.slice() };
+    }
+    if (handle.kind === 'derived-categorical') {
+      return {
+        kind: ColumnKindDict.Categorical,
+        library: handle.library,
+        indices: handle.indices.slice(),
+      };
+    }
 
     const data = this.loadColumn(name);
     if (handle.kind === ColumnKindDict.Categorical) {
@@ -545,9 +666,14 @@ export class NodesSession {
       };
     }
     if (handle.kind === ColumnKindDict.Numeric) {
+      const column = data as NumericColumn;
       return {
         kind: ColumnKindDict.Numeric,
-        values: (data as Float32Array | Float64Array).slice(),
+        // Numbers: ids past 2^53 lose their last digits, so close ones share a colour.
+        values:
+          column instanceof BigInt64Array || column instanceof BigUint64Array
+            ? Float64Array.from(column, Number)
+            : column.slice(),
       };
     }
     return { kind: ColumnKindDict.String, values: [...(data as string[])] };
@@ -605,7 +731,8 @@ function ensureUint32(raw: unknown): Uint32Array {
   return new Uint32Array(0);
 }
 
-function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
+/** 64-bit integers stay BigInt when any is past 2^53, so that ids such as FlyWire's stay exact. */
+function ensureNumericArray(raw: unknown): NumericColumn {
   if (raw instanceof Float64Array) return raw;
   if (raw instanceof Float32Array) return raw;
   if (
@@ -618,7 +745,10 @@ function ensureFloatArray(raw: unknown): Float32Array | Float64Array {
   }
   if (raw instanceof BigInt64Array || raw instanceof BigUint64Array) {
     const out = new Float64Array(raw.length);
-    for (let i = 0; i < raw.length; i++) out[i] = Number(raw[i]);
+    for (let i = 0; i < raw.length; i++) {
+      out[i] = Number(raw[i]);
+      if (!Number.isSafeInteger(out[i])) return raw;
+    }
     return out;
   }
   if (Array.isArray(raw)) return Float64Array.from(raw.map((v) => Number(v)));
@@ -631,14 +761,23 @@ function ensureStringArray(raw: unknown): string[] {
   return [];
 }
 
+/** A missing value (`NaN`) after a present one; anything else is the column's to order. */
+function blankOrder(data: LoadedColumn, a: number, b: number): number {
+  if (!(data instanceof Float64Array || data instanceof Float32Array)) return 0;
+  const blankA = Number.isNaN(data[a]);
+  const blankB = Number.isNaN(data[b]);
+  if (blankA === blankB) return 0;
+  return blankA ? 1 : -1;
+}
+
 function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: number): number {
-  if (handle.kind === 'categorical') {
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
     const arr = data as Uint32Array;
     const rank = handle.librarySortRank;
     return rank[arr[a]] - rank[arr[b]];
   }
-  if (handle.kind === 'numeric') {
-    const arr = data as Float32Array | Float64Array;
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
+    const arr = data as NumericColumn;
     const va = arr[a];
     const vb = arr[b];
     if (va < vb) return -1;
@@ -652,78 +791,158 @@ function compareAt(handle: ColumnHandle, data: LoadedColumn, a: number, b: numbe
   return arr[a].localeCompare(arr[b]);
 }
 
-function matchOne(
-  handle: ColumnHandle,
-  data: LoadedColumn,
-  row: number,
-  filter: GenericFilter
-): boolean {
+/** A filter as a test on a row, with its bounds parsed and its comparison chosen once, not per row. */
+function rowTest(handle: ColumnHandle, data: LoadedColumn, filter: GenericFilter): RowTest {
   if ('operator' in filter) {
-    const { operator, conditions } = filter;
-    if (conditions.length === 0) return true;
-    if (operator === 'OR') {
-      for (const c of conditions) if (matchOne(handle, data, row, c)) return true;
-      return false;
+    const tests = filter.conditions.map((c) => rowTest(handle, data, c));
+    if (tests.length === 0) return () => true;
+    if (filter.operator === 'OR') {
+      return (row) => {
+        for (const test of tests) if (test(row)) return true;
+        return false;
+      };
     }
-    for (const c of conditions) if (!matchOne(handle, data, row, c)) return false;
-    return true;
+    return (row) => {
+      for (const test of tests) if (!test(row)) return false;
+      return true;
+    };
   }
   if (filter.filterType === 'text') {
-    let value: string;
-    if (handle.kind === 'categorical') {
-      const arr = data as Uint32Array;
-      value = handle.library[arr[row]] ?? '';
-    } else if (handle.kind === 'string') {
-      value = (data as string[])[row] ?? '';
-    } else if (handle.kind === 'numeric') {
-      value = String((data as Float32Array | Float64Array)[row]);
-    } else {
-      value = String(row);
-    }
-    return matchText(value, filter);
+    const test = textTest(filter);
+    return (row) => test(textAt(handle, data, row));
   }
-  // number filter
-  let num: number;
-  if (handle.kind === 'numeric') {
-    num = (data as Float32Array | Float64Array)[row];
-  } else if (handle.kind === 'synthetic-node-id') {
-    num = row;
-  } else if (handle.kind === 'categorical') {
-    num = (data as Uint32Array)[row];
-  } else {
-    num = Number((data as string[])[row]);
+  if (data instanceof BigInt64Array || data instanceof BigUint64Array) {
+    const test = integerTest(filter);
+    if (test) return (row) => test(data[row]);
   }
-  return matchNumber(num, filter);
+  const test = numberTest(filter);
+  return (row) => test(numberAt(handle, data, row));
 }
 
-function matchText(value: string, f: TextFilter): boolean {
-  const v = value.toLowerCase();
+function textAt(handle: ColumnHandle, data: LoadedColumn, row: number): string {
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
+    return handle.library[(data as Uint32Array)[row]] ?? '';
+  }
+  if (handle.kind === 'string') return (data as string[])[row] ?? '';
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
+    return String((data as NumericColumn)[row]);
+  }
+  return String(row);
+}
+
+function numberAt(handle: ColumnHandle, data: LoadedColumn, row: number): number {
+  if (handle.kind === 'numeric' || handle.kind === 'derived') {
+    return Number((data as NumericColumn)[row]);
+  }
+  if (handle.kind === 'synthetic-node-id') return row;
+  if (handle.kind === 'categorical' || handle.kind === 'derived-categorical') {
+    return (data as Uint32Array)[row];
+  }
+  return Number((data as string[])[row]);
+}
+
+/** The values of an Equals filter, which matches any of them: "3, 5, 9" for numbers. */
+function listedValues(text: string, separator: RegExp = /[\s,;]+/): string[] {
+  return text
+    .split(separator)
+    .map((v) => v.trim())
+    .filter((v) => v !== '');
+}
+
+function textTest(f: TextFilter): (value: string) => boolean {
   const q = (f.filter ?? '').toLowerCase();
+  // Text can hold spaces, so only commas part its values.
+  const any = new Set(listedValues(q, /,/));
   return match(f.type)
-    .with('contains', () => v.includes(q))
-    .with('equals', () => v === q)
-    .with('notEqual', () => v !== q)
-    .with('startsWith', () => v.startsWith(q))
-    .with('endsWith', () => v.endsWith(q))
+    .with('contains', () => (v: string) => v.toLowerCase().includes(q))
+    .with('equals', () => (v: string) => any.has(v.toLowerCase()))
+    .with('notEqual', () => (v: string) => v.toLowerCase() !== q)
+    .with('startsWith', () => (v: string) => v.toLowerCase().startsWith(q))
+    .with('endsWith', () => (v: string) => v.toLowerCase().endsWith(q))
     .exhaustive();
 }
 
-function matchNumber(value: number, f: NumberFilter): boolean {
+function numberTest(f: NumberFilter): (v: number) => boolean {
   const q = Number(f.filter);
+  const q2 = Number(f.filterTo ?? f.filter);
+  const lo = Math.min(q, q2);
+  const hi = Math.max(q, q2);
+  const any = new Set(
+    listedValues(f.filter ?? '')
+      .map(Number)
+      .filter((v) => !Number.isNaN(v))
+  );
   return match(f.type)
-    .with('equals', () => value === q)
-    .with('notEqual', () => value !== q)
-    .with('lessThan', () => value < q)
-    .with('lessThanOrEqual', () => value <= q)
-    .with('greaterThan', () => value > q)
-    .with('greaterThanOrEqual', () => value >= q)
-    .with('inRange', () => {
-      const q2 = Number(f.filterTo ?? q);
-      const lo = Math.min(q, q2);
-      const hi = Math.max(q, q2);
-      return value >= lo && value <= hi;
-    })
+    .with('equals', () => (v: number) => any.has(v))
+    .with('notEqual', () => (v: number) => v !== q)
+    .with('lessThan', () => (v: number) => v < q)
+    .with('lessThanOrEqual', () => (v: number) => v <= q)
+    .with('greaterThan', () => (v: number) => v > q)
+    .with('greaterThanOrEqual', () => (v: number) => v >= q)
+    .with('inRange', () => (v: number) => v >= lo && v <= hi)
     .exhaustive();
+}
+
+/**
+ * A number filter as an exact test on 64-bit integers: each bound becomes the whole numbers either
+ * side of it, since as a number it would round. Null when a bound is not a decimal ("Infinity").
+ */
+function integerTest(f: NumberFilter): ((v: bigint) => boolean) | null {
+  if (f.type === 'equals') {
+    const bounds = listedValues(f.filter).map(wholeBounds);
+    if (bounds.length === 0 || bounds.some((b) => b === null)) return null;
+    // A value between two whole numbers is no id.
+    const ids = new Set(
+      (bounds as [bigint, bigint][]).filter(([lo, hi]) => lo === hi).map(([lo]) => lo)
+    );
+    return (v: bigint) => ids.has(v);
+  }
+  const a = wholeBounds(f.filter);
+  const b = wholeBounds(f.filterTo ?? f.filter);
+  if (!a || !b) return null;
+  const [floor, ceil] = a;
+  const lo = a[1] < b[1] ? a[1] : b[1];
+  const hi = a[0] > b[0] ? a[0] : b[0];
+  return match(f.type)
+    .with('notEqual', () => (floor === ceil ? (v: bigint) => v !== floor : () => true))
+    .with('lessThan', () => (v: bigint) => v < ceil)
+    .with('lessThanOrEqual', () => (v: bigint) => v <= floor)
+    .with('greaterThan', () => (v: bigint) => v > floor)
+    .with('greaterThanOrEqual', () => (v: bigint) => v >= ceil)
+    .with('inRange', () => (v: bigint) => v >= lo && v <= hi)
+    .exhaustive();
+}
+
+const ZERO = BigInt(0);
+const ONE = BigInt(1);
+const DECIMAL = /^([+-]?)(\d*)(?:\.(\d*))?(?:e([+-]?\d+))?$/i;
+
+/** The floor and ceiling of a decimal such as "5.5" or "7.2e17"; null if it is not one. */
+function wholeBounds(text: string): [bigint, bigint] | null {
+  const m = DECIMAL.exec(text.trim());
+  if (!m || (m[2] === '' && !m[3])) return null;
+  const [, sign, int, frac = '', exp = '0'] = m;
+  const digits = BigInt(int + frac);
+  const shift = Number(exp) - frac.length; // the decimal is digits × 10^shift
+  let floor: bigint;
+  let ceil: bigint;
+  if (shift >= 0) {
+    // Capped past every 64-bit integer, which is all it is compared with.
+    floor = digits * pow10(Math.min(shift, 40));
+    ceil = floor;
+  } else if (-shift > int.length + frac.length) {
+    floor = ZERO; // below 1
+    ceil = digits === ZERO ? ZERO : ONE;
+  } else {
+    const scale = pow10(-shift);
+    floor = digits / scale;
+    ceil = digits % scale === ZERO ? floor : floor + ONE;
+  }
+  return sign === '-' ? [-ceil, -floor] : [floor, ceil];
+}
+
+function pow10(n: number): bigint {
+  return BigInt(`1${'0'.repeat(n)}`);
 }
 
 class LruMap<K, V> {
@@ -770,17 +989,17 @@ function decodeSliceForPage(handle: ColumnHandle, sliced: unknown): (string | nu
     if (sliced instanceof Float64Array || sliced instanceof Float32Array) {
       return Array.from(sliced);
     }
+    if (sliced instanceof BigInt64Array || sliced instanceof BigUint64Array) {
+      // Exact text, which a number past 2^53 would round.
+      return Array.from(sliced, (v) => v.toString());
+    }
     if (
-      sliced instanceof BigInt64Array ||
-      sliced instanceof BigUint64Array ||
       sliced instanceof Int32Array ||
       sliced instanceof Uint32Array ||
       sliced instanceof Int16Array ||
       sliced instanceof Uint16Array
     ) {
-      const out = new Array<number>(sliced.length);
-      for (let i = 0; i < sliced.length; i++) out[i] = toNumber(sliced[i] as number | bigint);
-      return out;
+      return Array.from(sliced);
     }
     if (Array.isArray(sliced)) return sliced.map((v) => Number(v));
     return [];

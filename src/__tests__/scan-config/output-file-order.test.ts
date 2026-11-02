@@ -32,6 +32,20 @@ describe('orderOutputFiles', () => {
     ).toEqual(['extracted_features.json', 'figures/IDRest_amp.png', 'figures/SAHP_amp.png']);
   });
 
+  it('lists the validation summary before the score figures', () => {
+    const summary = file(AssetLabel.validation_result_details, 'emodel_validation_summary.txt');
+    const figure = file(AssetLabel.validation_result_figure, 'scores.png');
+
+    const ordered = orderOutputFiles(
+      [figure, summary],
+      ExtendedEntitiesTypeDict.EModelValidationResult
+    );
+
+    expect(
+      ordered.map((entry) => (isAssetBackedFile(entry) ? entry.asset.path : undefined))
+    ).toEqual(['emodel_validation_summary.txt', 'scores.png']);
+  });
+
   it('keeps files it does not name last, in the order they arrived', () => {
     const ordered = orderOutputFiles(
       [other, figureA, features],

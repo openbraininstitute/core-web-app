@@ -19,9 +19,17 @@ permissions:
   contents: read
 
 jobs:
+  # the suite is CPU-bound on a 4-vCPU runner, so splitting its files across
+  # runners cuts wall time roughly by the shard count; each shard writes a blob
+  # report (results + raw coverage) that the `merge` job combines
   test:
-    name: Unit tests
+    name: Unit tests (shard ${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ubuntu-latest
+    strategy:
+      # let every shard finish so one run lists all failing tests
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - name: Check out code
         uses: actions/checkout@v6
@@ -43,7 +51,55 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Run unit tests with coverage
-        run: pnpm run test:coverage
+        run: pnpm exec vitest run --coverage --shard=${{ matrix.shard }}/${{ strategy.job-total }} --reporter=default --reporter=blob
+
+      # `.vitest/blob` is a hidden folder, which upload-artifact skips by default
+      - name: Upload blob report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-report-${{ matrix.shard }}
+          path: .vitest/blob
+          include-hidden-files: true
+          retention-days: 1
+          if-no-files-found: error
+
+  merge:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    needs:
+      - test
+    # still merge when a shard failed, so the report shows every failure
+    if: ${{ !cancelled() }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+        with:
+          version: 11.10.0
+
+      - name: Set-up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Download blob reports
+        uses: actions/download-artifact@v7
+        with:
+          pattern: blob-report-*
+          merge-multiple: true
+          path: .vitest/blob
+
+      - name: Merge test results and coverage
+        run: pnpm exec vitest --merge-reports --coverage
 
       - name: Prepare unit coverage artifact
         if: always()
@@ -59,6 +115,11 @@ jobs:
           path: test-artifacts/unit-coverage-summary.json
           if-no-files-found: warn
 
+      # a shard that crashed uploads no blob, so the merge alone can pass
+      - name: Fail when a shard failed
+        if: needs.test.result != 'success'
+        run: exit 1
+
   # renders the unit test results into a report, posts it to the run
   # summary, and (for same-repo PRs) keeps a sticky PR comment up to date
   test-coverage-report:
@@ -71,7 +132,7 @@ jobs:
       issues: write
       pull-requests: write
     needs:
-      - test
+      - merge
     # always() so the report is produced even when the unit test job fails
     if: always()
     steps:
@@ -91,7 +152,7 @@ jobs:
 
       - name: Render test coverage report
         env:
-          UNIT_JOB_STATUS: ${{ needs.test.result }}
+          UNIT_JOB_STATUS: ${{ needs.merge.result }}
           UNIT_COVERAGE_SUMMARY_PATH: test-artifacts/unit-coverage-summary.json
           REPORT_PATH: test-coverage-report.md
         run: node scripts/ci/render-test-coverage-report.mjs

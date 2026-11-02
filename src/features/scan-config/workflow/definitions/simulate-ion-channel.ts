@@ -86,6 +86,5 @@ export const simulateIonChannelWorkflow = defineScanConfigWorkflow({
   seed: new IonChannelSimulationSeed(),
   editor: {
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
-    className: 'px-4',
   },
 });

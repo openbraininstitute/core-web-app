@@ -29,6 +29,7 @@ import {
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
+import { cn } from '@/utils/css-class';
 
 import { usePinnedEntityPreview } from './use-pinned-entity-preview';
 
@@ -82,6 +83,8 @@ type RightProps = {
    * a write path the viewer offers no drag/rotate handles at all.
    */
   locked?: boolean;
+  /** In a box of its own: the 3D runs to its edges, and the other panes keep clear of its corners. */
+  inset?: boolean;
 };
 
 /**
@@ -113,21 +116,26 @@ function useHostNeuronOpacity(): number | undefined {
 }
 
 /** Browse-selection overlay: loaded mini-detail or loading skeleton. */
-function EntityPreviewPane({
+export function EntityPreviewPane({
   dataType,
   record,
   pinned,
+  inset,
 }: {
   dataType: TExtendedEntitiesTypeDict;
   record: EntityCoreObjectTypes | null;
   pinned?: boolean;
+  inset?: boolean;
 }) {
   const setEntityPreview = useSetScanConfigEntityPreview();
 
   return (
     <div
       id="scan-config-controls-right-mini-detail"
-      className="h-full min-h-0 overflow-auto rounded-lg px-0.5 py-1 secondary-scrollbar"
+      className={cn(
+        'h-full min-h-0 overflow-auto rounded-lg secondary-scrollbar',
+        inset ? 'p-3' : 'px-0.5 py-1'
+      )}
     >
       {record ? (
         <MiniDetailViewRenderer
@@ -137,6 +145,8 @@ function EntityPreviewPane({
           theme={ViewVariant.Light}
           enableAnimation={false}
           hideUseModelAction
+          // leaving the page would lose the config being viewed or edited
+          openDetailsInNewTab
           interactive
           onClose={pinned ? undefined : () => setEntityPreview(null)}
         />
@@ -151,13 +161,18 @@ function IonChannelPreviewPane({
   selectedRootElement,
   selectedEntry,
   config,
+  inset,
 }: {
   selectedRootElement: string;
   selectedEntry: string;
   config: Config;
+  inset?: boolean;
 }) {
   return (
-    <div id="scan-config-controls-right-preview" className="rounded-lg px-0.5 h-full">
+    <div
+      id="scan-config-controls-right-preview"
+      className={cn('rounded-lg h-full', inset ? 'p-3' : 'px-0.5')}
+    >
       <IonChannelModelRecordingRender
         selectedRootElement={selectedRootElement}
         selectedEntry={selectedEntry}
@@ -177,6 +192,7 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
+  inset,
 }: {
   entity: TSupportedEntitiesForScanConfiguration;
   config: Config;
@@ -187,6 +203,7 @@ function CircuitModelPreviewPane({
   defaultNeuronOpacity: number | undefined;
   viewerFeatures: IEntityViewerFeatures;
   locked?: boolean;
+  inset?: boolean;
 }) {
   // Memoised so the grouped prop does not hand ModelPreview a fresh object every
   // render; `config` already changes on each form edit, the rest rarely.
@@ -206,7 +223,7 @@ function CircuitModelPreviewPane({
   return (
     <div
       id="scan-config-controls-right-preview"
-      className="h-full min-h-0 overflow-hidden rounded-lg px-0.5"
+      className={cn('h-full min-h-0 overflow-hidden rounded-lg', !inset && 'px-0.5')}
     >
       <div
         className="h-full min-h-0 overflow-hidden rounded-lg"
@@ -284,6 +301,7 @@ export function Right({
   setConfig,
   schema,
   locked,
+  inset,
 }: RightProps) {
   useClearEntityPreviewOnNavigation(entity?.id);
   const defaultNeuronOpacity = useHostNeuronOpacity();
@@ -332,6 +350,7 @@ export function Right({
           dataType={entityPreview.dataType}
           record={(previewRecord as EntityCoreObjectTypes | null) ?? null}
           pinned={pinned}
+          inset={inset}
         />
       ) : (
         <EmptyPreviewPane />
@@ -342,6 +361,7 @@ export function Right({
         selectedRootElement={selectedRootElement}
         selectedEntry={selectedEntry}
         config={config}
+        inset={inset}
       />
     ))
     .with(RightPreviewModeDict.EFeatures, () => (
@@ -364,6 +384,7 @@ export function Right({
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}
+          inset={inset}
         />
       ) : (
         <EmptyPreviewPane />

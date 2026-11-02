@@ -1,11 +1,18 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
+import { getTaskResult } from '@/api/entitycore/queries/task';
+import { TaskResultType } from '@/api/entitycore/types/entities/task-result';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { resolveOutputStrategy } from '@/features/scan-config/outputs/registry';
 import { ActivityCustomFileRenderer, isAssetBackedFile } from '@/features/scan-config/types';
 
 import type { TOutputEntity, TResolvedOutput } from '@/features/scan-config/outputs/types';
+
+vi.mock('@/api/entitycore/queries/task', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/entitycore/queries/task')>()),
+  getTaskResult: vi.fn(),
+}));
 
 function makeResolved(entity: Partial<TOutputEntity>, strategyId = 'circuit'): TResolvedOutput {
   return {
@@ -25,6 +32,32 @@ describe('workflow output strategies', () => {
     expect(
       resolveOutputStrategy({ id: 'c', type: ExtendedEntitiesTypeDict.CellMorphology })?.id
     ).toBe('registered-entity');
+  });
+
+  it('gives the validation results of a run no row, since the task result summarises them', async () => {
+    const strategy = resolveOutputStrategy({ id: 'v', type: EntityTypeDict.ValidationResult });
+
+    expect(strategy?.id).toBe('validation-result');
+    // resolving must not reach for an entity configuration that does not exist
+    await expect(
+      strategy?.resolve({
+        ref: { id: 'v', type: EntityTypeDict.ValidationResult },
+        context: {} as never,
+      })
+    ).resolves.toBeNull();
+  });
+
+  it('shows a validation summary in the code viewer even though it is stored as plain text', () => {
+    const strategy = resolveOutputStrategy({ id: 't', type: EntityTypeDict.TaskResult });
+    const summary = { id: 'a-1', label: 'validation_result_details', path: 'summary.txt' };
+    const figure = { id: 'a-2', label: 'validation_result_figure', path: 'scores.png' };
+    const entity = { id: 'result', type: EntityTypeDict.TaskResult, assets: [summary, figure] };
+
+    const files = strategy?.toFiles(makeResolved(entity as never, 'task-result')) ?? [];
+
+    expect(files.map((file) => (isAssetBackedFile(file) ? file.enforcedRenderType : null))).toEqual(
+      ['application/json', undefined]
+    );
   });
 
   it('has no strategy for a ref with no type, rather than guessing one', () => {
@@ -150,5 +183,31 @@ describe('workflow output strategies', () => {
       dataUpdateCount: 1,
     });
     expect(settled).toBe(false);
+  });
+});
+
+describe('task result extended type', () => {
+  const ref = { id: 'r', type: EntityTypeDict.TaskResult };
+  const resolvedTypeOf = async (taskResultType: string) => {
+    vi.mocked(getTaskResult).mockResolvedValue({
+      id: 'r',
+      type: EntityTypeDict.TaskResult,
+      task_result_type: taskResultType,
+    } as never);
+    const strategy = resolveOutputStrategy(ref);
+    return (await strategy?.resolve({ ref, context: {} as never }))?.extendedType;
+  };
+
+  it('resolves the registered result kinds to their entity configuration', async () => {
+    await expect(resolvedTypeOf(TaskResultType.EFeatureExtractionResult)).resolves.toBe(
+      ExtendedEntitiesTypeDict.EFeatureExtractionResult
+    );
+    await expect(
+      resolvedTypeOf(TaskResultType.OptimizedEModelAnalysisValidationResult)
+    ).resolves.toBe(ExtendedEntitiesTypeDict.EModelValidationResult);
+  });
+
+  it('leaves an unregistered result kind without one, so only its assets render', async () => {
+    await expect(resolvedTypeOf(TaskResultType.CircuitSimulationResult)).resolves.toBeUndefined();
   });
 });

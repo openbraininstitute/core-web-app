@@ -1,13 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { LeftMenuTab, Tab } from '@/features/scan-config/components/components';
+import { LeftMenuTab } from '@/features/scan-config/components/components';
+import ScanConfigTabsPanel from '@/features/scan-config/components/tabs';
 import Block from '@/features/scan-config/components/ui-blocks/block';
 import {
   type ConfigSchema,
   ScanConfigUIElementDict,
   type TBlock,
-  type TScanConfigTabs,
 } from '@/features/scan-config/types';
 
 // E2E tests address a field by its property key, scoped to its block, because a
@@ -99,11 +99,17 @@ describe('scan config navigation test ids', () => {
 
   it('identifies a tab by its id', () => {
     render(
-      <Tab tab="results" selectedTab={{ id: 'configuration' } as TScanConfigTabs}>
-        Results
-      </Tab>
+      <ScanConfigTabsPanel
+        activity="simulate"
+        tab={{ __activity: 'simulate', id: 'configuration' }}
+        setTab={vi.fn()}
+        disableResultsTab={false}
+        disableConfigurationTab={false}
+        configuration={null}
+        results={null}
+      />
     );
 
-    expect(screen.getByTestId('scan-config-tab-results')).toBeInTheDocument();
+    expect(screen.getByTestId('scan-config-tab-simulations')).toBeInTheDocument();
   });
 });

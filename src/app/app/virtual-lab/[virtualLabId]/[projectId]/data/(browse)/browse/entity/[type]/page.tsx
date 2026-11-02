@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation';
 
 import { DATA_LISTING_PROPS } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
-import { SelectionScope } from '@/features/data-grid/core';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
-import { DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities } from '@/features/views/listing/data-browse-entities';
+import {
+  DATA_BROWSE_ALLOWED_ENTITIES as AllowedEntities,
+  DATA_BROWSE_LISTING_PROPS,
+} from '@/features/views/listing/data-browse-entities';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { ServerSideComponentProp, WorkspaceContext } from '@/types/common';
@@ -27,15 +29,6 @@ export default async function Page({
   if (!entity || !isAllowed) notFound();
 
   return (
-    <BrowseEntityScope
-      {...DATA_LISTING_PROPS}
-      dataType={dataType}
-      mainTableProps={{
-        selectionType: 'checkbox',
-        selectionScope: SelectionScope.Shared,
-      }}
-      allowDownload
-      allowDelete
-    />
+    <BrowseEntityScope {...DATA_LISTING_PROPS} dataType={dataType} {...DATA_BROWSE_LISTING_PROPS} />
   );
 }

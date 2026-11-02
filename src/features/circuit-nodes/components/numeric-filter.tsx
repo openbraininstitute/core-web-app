@@ -1,12 +1,12 @@
 import { useGridFilter } from 'ag-grid-react';
-import { InputNumber, Select } from 'antd';
+import { Input, InputNumber, Select } from 'antd';
 import { useEffect, useRef, useState } from 'react';
 
 import { useDebouncedCallback } from '@/hooks/hooks';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { CustomFilterProps } from 'ag-grid-react';
-import type { GetRef, InputNumber as InputNumberType } from 'antd';
+import type { GetRef, InputNumber as InputNumberType, InputRef } from 'antd';
 import type { NumberFilter, NumberFilterOp } from '@/features/circuit-nodes/types';
 
 import popover from './filter-popover.module.css';
@@ -25,41 +25,49 @@ const OPERATOR_OPTIONS: { value: NumberFilterOp; label: string }[] = [
 
 type Params = CustomFilterProps<unknown, unknown, NumberFilter | null>;
 
+function isNumber(value: string): boolean {
+  return value.trim() !== '' && Number.isFinite(Number(value));
+}
+
+/** The numbers typed for Equals, which matches any of them; anything else typed is left out. */
+function listed(value: string): string[] {
+  return value.split(/[\s,;]+/).filter(isNumber);
+}
+
 function toModel(op: NumberFilterOp, value: string, valueTo: string): NumberFilter | null {
-  const n = Number(value);
-  if (value.trim() === '' || !Number.isFinite(n)) return null;
-  if (op === 'inRange') {
-    const m = Number(valueTo);
-    if (valueTo.trim() === '' || !Number.isFinite(m)) return null;
-    return { filterType: 'number', type: op, filter: n, filterTo: m };
+  if (op === 'equals') {
+    const values = listed(value);
+    return values.length > 0 ? { filterType: 'number', type: op, filter: values.join(', ') } : null;
   }
-  return { filterType: 'number', type: op, filter: n };
+  if (!isNumber(value)) return null;
+  if (op === 'inRange') {
+    if (!isNumber(valueTo)) return null;
+    return { filterType: 'number', type: op, filter: value.trim(), filterTo: valueTo.trim() };
+  }
+  return { filterType: 'number', type: op, filter: value.trim() };
 }
 
 export function NumericFilter({ model, onModelChange }: Params) {
   const [op, setOp] = useState<NumberFilterOp>(model?.type ?? 'equals');
-  const [value, setValue] = useState<string>(
-    model?.filter !== undefined ? String(model.filter) : ''
-  );
-  const [valueTo, setValueTo] = useState<string>(
-    model?.filterTo !== undefined ? String(model.filterTo) : ''
-  );
+  const [value, setValue] = useState<string>(model?.filter ?? '');
+  const [valueTo, setValueTo] = useState<string>(model?.filterTo ?? '');
 
   useEffect(() => {
     setOp(model?.type ?? 'equals');
-    setValue(model?.filter !== undefined ? String(model.filter) : '');
-    setValueTo(model?.filterTo !== undefined ? String(model.filterTo) : '');
+    setValue(model?.filter ?? '');
+    setValueTo(model?.filterTo ?? '');
   }, [model]);
 
   const hidePopupRef = useRef<(() => void) | null>(null);
   const valueInputRef = useRef<GetRef<typeof InputNumberType>>(null);
+  const listInputRef = useRef<InputRef>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const getPopupContainer = () => containerRef.current ?? fullscreenPopupContainer();
   useGridFilter({
     doesFilterPass: () => true,
     afterGuiAttached: (params) => {
       hidePopupRef.current = params?.hidePopup ?? null;
-      valueInputRef.current?.focus();
+      (listInputRef.current ?? valueInputRef.current)?.focus();
     },
   });
 
@@ -79,8 +87,11 @@ export function NumericFilter({ model, onModelChange }: Params) {
   };
 
   const onOpChange = (next: NumberFilterOp) => {
+    // Only Equals takes several values; the others keep the first.
+    const kept = next === 'equals' ? value : (listed(value)[0] ?? '');
     setOp(next);
-    commit(next, value, valueTo);
+    setValue(kept);
+    commit(next, kept, valueTo);
   };
 
   const onValueChange = (next: string) => {
@@ -116,23 +127,37 @@ export function NumericFilter({ model, onModelChange }: Params) {
         getPopupContainer={getPopupContainer}
       />
       <div className={popover.row}>
-        <InputNumber
-          ref={valueInputRef}
-          size="small"
-          controls={false}
-          value={value === '' ? null : Number(value)}
-          onChange={(v) => onValueChange(v === null || v === undefined ? '' : String(v))}
-          onPressEnter={onPressEnter}
-          placeholder="Value"
-          style={{ width: '100%' }}
-        />
+        {op === 'equals' ? (
+          <Input
+            ref={listInputRef}
+            size="small"
+            value={value}
+            onChange={(e) => onValueChange(e.target.value)}
+            onPressEnter={onPressEnter}
+            placeholder="Values, e.g. 3, 7"
+            title="Separate values with commas or spaces: a row matching any of them is kept"
+          />
+        ) : (
+          <InputNumber
+            ref={valueInputRef}
+            size="small"
+            controls={false}
+            stringMode
+            value={value === '' ? null : value}
+            onChange={(v) => onValueChange(v === null || v === undefined ? '' : String(v))}
+            onPressEnter={onPressEnter}
+            placeholder="Value"
+            style={{ width: '100%' }}
+          />
+        )}
         {op === 'inRange' && (
           <>
             <span className={popover.rangeLabel}>to</span>
             <InputNumber
               size="small"
               controls={false}
-              value={valueTo === '' ? null : Number(valueTo)}
+              stringMode
+              value={valueTo === '' ? null : valueTo}
               onChange={(v) => onValueToChange(v === null || v === undefined ? '' : String(v))}
               onPressEnter={onPressEnter}
               placeholder="Value"

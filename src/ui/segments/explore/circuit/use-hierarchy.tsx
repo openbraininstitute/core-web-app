@@ -12,6 +12,7 @@ import {
 } from '@/api/entitycore/queries/model/circuit';
 import {
   CIRCUIT_DERIVED_DERIVATION_TYPES,
+  CircuitDerivationColumnExpand,
   DerivationTypeDictionary,
 } from '@/api/entitycore/types/entities/derivation';
 import { DEFAULT_PAGE_SIZE } from '@/constants';
@@ -73,7 +74,7 @@ export function useFullRawHierarchy({
               virtualLabId,
               projectId,
               // Keep the cache key in sync with the expanded fetch below.
-              expand: 'generated_from_derivations',
+              expand: CircuitDerivationColumnExpand,
               ...circuitScaleFilter,
             }),
             queryFn: () =>
@@ -82,7 +83,7 @@ export function useFullRawHierarchy({
                 context: virtualLabId && projectId ? { virtualLabId, projectId } : undefined,
                 // Enrich hierarchy rows with their incoming derivations so the "Derivation type"
                 // column renders in the tree view too, matching the flat list (issue #517).
-                expand: 'generated_from_derivations',
+                expand: CircuitDerivationColumnExpand,
                 filters: {
                   page: 1,
                   page_size: DEFAULT_PAGE_SIZE,

@@ -1,12 +1,14 @@
 'use client';
 
 import { WarningFilled } from '@ant-design/icons';
-import { RiArrowRightSLine } from '@remixicon/react';
+import { RiArrowRightSLine, RiEqualizerLine } from '@remixicon/react';
 
+import { IonChannelIcon } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/ion-channel-icon';
 import {
   assignedModelIds,
   hasErrorAt,
   readMechanisms,
+  regionParameterCounts,
   regionPath,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
 import { MarkdownDescription } from '@/ui/molecules/markdown-description';
@@ -29,6 +31,10 @@ type Props = {
   errors: readonly ErrorObject[];
   /** when true, hides choices with no assigned ion channel models (Parameters Selection tab) */
   onlyAssigned?: boolean;
+  /** when true, each card also breaks down its parameters into fixed vs. optimized (Parameters Selection tab) */
+  showParameterCounts?: boolean;
+  /** shown instead of the cards when `onlyAssigned` leaves none */
+  emptyMessage?: string;
 };
 
 /**
@@ -52,27 +58,32 @@ export function RegionChoiceCards({
   setSelectedRegionChoice,
   errors,
   onlyAssigned,
+  showParameterCounts,
+  emptyMessage = 'No section lists have assigned ion channel models yet. Assign models in Region Assignment to configure their parameters here.',
 }: Props) {
   const mechanisms = readMechanisms(value);
 
   const choices = [...rootSchema.properties.base_parameters.choices]
     .sort((a, b) => a.display_order - b.display_order)
-    .map((choice) => ({ choice, channelCount: assignedModelIds(mechanisms, choice.name).length }))
+    .map((choice) => ({
+      choice,
+      channelCount: assignedModelIds(mechanisms, choice.name).length,
+      parameterCounts: showParameterCounts ? regionParameterCounts(mechanisms, choice.name) : null,
+    }))
     .filter(({ channelCount }) => !onlyAssigned || channelCount > 0);
 
   if (onlyAssigned && choices.length === 0) {
-    return (
-      <div className="p-4 text-sm italic text-gray-500">
-        No section lists have assigned ion channel models yet. Assign models in Region Assignment to
-        configure their parameters here.
-      </div>
-    );
+    return <div className="p-4 text-sm italic text-gray-500">{emptyMessage}</div>;
   }
 
   return (
     <div className="flex flex-col items-center gap-2 overflow-y-auto p-4">
-      {choices.map(({ choice, channelCount }) => {
+      {choices.map(({ choice, channelCount, parameterCounts }) => {
         const isSelected = choice.name === selectedRegionChoice;
+        const pillClass = cn(
+          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+          isSelected ? 'bg-white/15 text-white' : 'bg-gray-100 text-gray-600'
+        );
 
         return (
           <Tooltip key={choice.name}>
@@ -104,15 +115,28 @@ export function RegionChoiceCards({
                   <MarkdownDescription className={cn('mt-3', isSelected && 'text-primary-1')}>
                     {choice.description}
                   </MarkdownDescription>
-                  <span
-                    data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
-                    className={cn(
-                      'mt-3 block text-sm',
-                      isSelected ? 'text-primary-1' : 'text-gray-500'
-                    )}
-                  >
-                    {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
-                  </span>
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                    <span
+                      data-testid={`scan-config-emodel-section-list-${choice.name}-channel-count`}
+                      className={pillClass}
+                    >
+                      <IonChannelIcon className="size-3" />
+                      {channelCount} {channelCount === 1 ? 'channel' : 'channels'}
+                    </span>
+                  </div>
+                  {parameterCounts && (
+                    <div
+                      data-testid={`scan-config-emodel-section-list-${choice.name}-parameter-count`}
+                      className="mt-1.5 flex flex-wrap items-center gap-1.5"
+                    >
+                      <span className={pillClass}>
+                        <RiEqualizerLine className="size-3" aria-hidden />
+                        {parameterCounts.fixed + parameterCounts.optimized} parameters
+                      </span>
+                      <span className={pillClass}>{parameterCounts.fixed} fixed</span>
+                      <span className={pillClass}>{parameterCounts.optimized} optimized</span>
+                    </div>
+                  )}
                 </div>
                 {hasErrorAt(errors, regionPath(choice.name)) && (
                   <WarningFilled className="text-yellow-400!" />

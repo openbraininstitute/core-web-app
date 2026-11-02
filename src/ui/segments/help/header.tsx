@@ -1,10 +1,14 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 import { useTabs } from '@/components/detail-view-tabs';
+import { learnFlag, useFlag } from '@/features/feature-flags';
+import { useLearnSetting } from '@/features/learn/learn-settings-provider';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { PillTabs, PillTabsList, PillTabsTrigger } from '@/ui/molecules/tabs';
+import { helpSectionShown, LEAN_HELP_SECTIONS } from '@/ui/segments/help/lean';
 import { cn } from '@/utils/css-class';
 
 const HelpSections = {
@@ -56,25 +60,40 @@ const tabsConfigItems: Array<{
 function HelpTabs() {
   const breakpoint = useDefaultBreakpoint();
   const pathname = usePathname();
+  // with Learn's "remove unneeded features" on, only the lean sections, opening on Guides; but
+  // only while Learn is on, as only its page can switch the setting back
+  const learn = useFlag(learnFlag.key) === true;
+  const lean = useLearnSetting('leanHelp') && learn;
+  const tabs = lean
+    ? tabsConfigItems.filter((tab) => LEAN_HELP_SECTIONS.includes(tab.key))
+    : tabsConfigItems;
 
   // Set default tab based on pathname
-  const defaultTab = pathname?.includes('/tutorials')
-    ? HelpSections.Tutorials
-    : HelpSections.Overview;
+  const defaultTab = lean
+    ? HelpSections.Guides
+    : pathname?.includes('/tutorials')
+      ? HelpSections.Tutorials
+      : HelpSections.Overview;
 
-  const { activeTab } = useTabs<HelpSectionsKeys>({
-    tabsConfig: tabsConfigItems,
+  const { activeTab, onChangeTab } = useTabs<HelpSectionsKeys>({
+    tabsConfig: tabs,
     tabKey: 'section',
     shallow: true,
     defaultKey: defaultTab,
   });
+  // the section the page shows, as the server picks it: with Help lean, Guides for a link to one
+  // it leaves off; and the address put right to match
+  const shown = (lean ? helpSectionShown(activeTab, true) : activeTab) as HelpSectionsKeys;
+  useEffect(() => {
+    if (shown !== activeTab) onChangeTab(shown)();
+  }, [shown, activeTab, onChangeTab]);
 
   const router = useRouter();
 
   return (
     <PillTabs
-      value={activeTab ?? 'overview'}
-      defaultValue={activeTab ?? 'overview'}
+      value={shown}
+      defaultValue={shown}
       className="w-full"
       activationMode="manual"
       onValueChange={(value: string) => {
@@ -83,11 +102,15 @@ function HelpTabs() {
       }}
     >
       <PillTabsList
-        className={cn('grid h-10 w-full grid-cols-7 bg-white p-0 shadow-2xl', {
-          'h-12': breakpoint === 'xl',
-        })}
+        className={cn(
+          'grid h-10 w-full bg-white p-0 shadow-2xl',
+          lean ? 'grid-cols-3' : 'grid-cols-7',
+          {
+            'h-12': breakpoint === 'xl',
+          }
+        )}
       >
-        {tabsConfigItems.map((tab) => (
+        {tabs.map((tab) => (
           <PillTabsTrigger
             key={tab.key}
             value={tab.key}

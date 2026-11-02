@@ -100,7 +100,7 @@ export default function MorphologyLocationSelection({
               data-testid="scan-config-location-section"
               id={`${fieldId}-section-${index}`}
               // `!` because antd's disabled colour is a more specific selector.
-              className="w-full [&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
+              className="w-full! [&_input]:cursor-default [&_input]:font-medium [&_input]:!text-neutral-10"
               variant="filled"
               controls={false}
               disabled
@@ -114,7 +114,7 @@ export default function MorphologyLocationSelection({
             <InputNumber
               data-testid="scan-config-location-offset"
               id={`${fieldId}-offset-${index}`}
-              className="w-full"
+              className="w-full!"
               disabled={disabled}
               min={offsetSchema?.minimum ?? 0}
               max={offsetSchema?.maximum ?? 1}

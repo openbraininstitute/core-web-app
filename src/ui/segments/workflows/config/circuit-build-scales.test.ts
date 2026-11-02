@@ -63,17 +63,17 @@ describe('circuit scales offered by build workflows', () => {
     await circuitBrowse(targetType).loader.facets?.build(null)({ filters: {}, context });
     expect(getCircuits.mock.lastCall?.[0]).toMatchObject({
       withFacets: true,
-      filters: { scale__in: expected, number_neurons__lte: 10_000 },
+      filters: { scale__in: expected, number_neurons__lte: 400_000 },
     });
   });
 
-  it('lists extracellular recording arrays only on circuits of up to 10,000 neurons', async () => {
+  it('lists extracellular recording arrays only on circuits of up to 400,000 neurons', async () => {
     const targetType = ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign;
 
-    expect((await sentFilters(targetType))?.number_neurons__lte).toBe(10_000);
+    expect((await sentFilters(targetType))?.number_neurons__lte).toBe(400_000);
     expect(
-      (await sentFilters(targetType, { number_neurons__lte: 50_000 }))?.number_neurons__lte
-    ).toBe(10_000);
+      (await sentFilters(targetType, { number_neurons__lte: 500_000 }))?.number_neurons__lte
+    ).toBe(400_000);
     expect(
       (await sentFilters(targetType, { number_neurons__lte: 5_000 }))?.number_neurons__lte
     ).toBe(5_000);

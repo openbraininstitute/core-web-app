@@ -53,6 +53,7 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
     error: null,
     retry: vi.fn(),
     anchor: null,
+    positionless: new Set(),
     ...overrides,
   };
 }

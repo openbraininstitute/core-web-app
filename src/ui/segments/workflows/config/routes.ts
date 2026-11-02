@@ -11,7 +11,11 @@ import {
   type TWorkflowSessionSelectionRef,
   WorkflowSessionSelectionMode,
 } from '@/features/scan-config/workflow/workflow-session-selection';
-import { featuresSatisfied, getWorkflow } from '@/ui/segments/workflows/config/helpers';
+import {
+  featuresSatisfied,
+  getWorkflow,
+  getWorkflowEntityLabel,
+} from '@/ui/segments/workflows/config/helpers';
 import {
   type TWorkflowInitialStage,
   WORKFLOW_SESSION_ID_SEARCH_PARAM,
@@ -30,7 +34,12 @@ import type { FeatureFlags } from '@/features/feature-flags/flags';
 import type { TWorkflowEntitySeed } from '@/features/scan-config/workflow/seeding/types';
 import type { TWorkflowSchemaSelection } from '@/features/scan-config/workflow/workflow-schema-selection';
 import type { WorkspaceContext } from '@/types/common';
-import type { IWorkflowDescriptor, TActivityValue } from '@/ui/segments/workflows/config/types';
+import type { BreadcrumbTrailItem } from '@/ui/molecules/breadcrumb';
+import type {
+  IWorkflowDescriptor,
+  TActivityEntry,
+  TActivityValue,
+} from '@/ui/segments/workflows/config/types';
 
 function toWorkflowRouteTypeSegment(targetType: TExtendedEntitiesTypeDict) {
   return makePathParamUrlFromExtendedType({ extendedType: targetType }).pathParam;
@@ -58,6 +67,40 @@ export function buildWorkflowHomeHref({
     [WORKFLOW_HOME_QUERY_KEYS.activity]: activity,
     [WORKFLOW_HOME_QUERY_KEYS.entityType]: targetType,
   });
+}
+
+/**
+ * The `activity › workflow` head of every workflow breadcrumb (configure and details pages), so
+ * both name the same workflow the same way. `fallbackType` labels it when no descriptor matched.
+ */
+export function buildWorkflowCrumbs({
+  activity,
+  workflow,
+  workspace,
+  fallbackType,
+}: {
+  activity: TActivityEntry | null;
+  workflow: IWorkflowDescriptor | null;
+  workspace: WorkspaceContext;
+  fallbackType?: TExtendedEntitiesTypeDict;
+}): BreadcrumbTrailItem[] {
+  const label = workflow?.label ?? getWorkflowEntityLabel(workflow?.sourceType ?? fallbackType);
+  const href = (targetType?: TExtendedEntitiesTypeDict) =>
+    buildWorkflowHomeHref({ activity: activity?.value, targetType, workspace });
+
+  return [
+    ...(activity ? [{ key: 'activity', label: activity.label, href: href() }] : []),
+    ...(label
+      ? [
+          {
+            key: 'type',
+            label,
+            href: href(workflow?.targetType ?? fallbackType),
+            className: 'max-w-96 truncate',
+          },
+        ]
+      : []),
+  ];
 }
 
 function appendQuery(pathname: string, query: Record<string, string | undefined>) {

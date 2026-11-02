@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { useParams } from 'next/navigation';
 
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
+import { TopBar } from '@/ui/molecules/top-bar';
 import { useMiniDetailView, useSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
 import { WorkflowBreadcrumbProvider } from '@/ui/segments/workflows/browse/workflow-breadcrumb-context';
 import { WorkflowBreadcrumb } from '@/ui/segments/workflows/elements/workflow-breadcrumb';
@@ -34,16 +35,13 @@ export function WorkflowNewLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="mx-2 flex h-full max-h-[calc(100vh-6rem)] w-[calc(100%-10px)] flex-col overflow-hidden">
+    <div className="mx-2 flex h-full min-h-0 w-[calc(100%-10px)] flex-col overflow-hidden">
       <WorkflowBreadcrumbProvider key={type}>
-        <div className="bg-background border-neutral-2 h-full overflow-hidden rounded-2xl border">
-          <WorkflowBreadcrumb />
+        <TopBar start={<WorkflowBreadcrumb />} />
+        <div className="bg-background border-neutral-2 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border">
           <motion.div
             id="browse-workflow-new-inner-layout"
-            className={cn(
-              'grid gap-2 [grid-area:main]',
-              'h-full max-h-[calc(100%-4rem)] px-3 py-2'
-            )}
+            className={cn('grid min-h-0 flex-1 gap-2 [grid-area:main]', 'px-3 py-2')}
             initial={gridTemplate}
             animate={gridTemplate}
             transition={GRID_TRANSITION}

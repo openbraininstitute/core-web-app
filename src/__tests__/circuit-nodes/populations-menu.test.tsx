@@ -256,3 +256,45 @@ describe('PopulationsMenu introduction', () => {
     expect(screen.getByTestId('populations-menu-content')).toBeInTheDocument();
   });
 });
+
+describe('PopulationsMenu with a population that has no positions', () => {
+  const POSITIONLESS = new Set(['vpm']);
+
+  it('lists it with a dead, unchecked box and a tag saying why', () => {
+    open({ positionless: POSITIONLESS });
+
+    expect(checkbox('vpm')).toBeDisabled();
+    expect(checkbox('vpm').checked).toBe(false);
+    expect(checkbox('vpm')).toHaveAccessibleDescription(
+      expect.stringContaining('no positions (x/y/z)')
+    );
+    expect(screen.getByRole('button', { name: /^vpm/ })).toHaveTextContent('no positions');
+    expect(screen.getByRole('button', { name: /^vpm/ }).closest('li')).toHaveAttribute(
+      'title',
+      expect.stringContaining('no positions (x/y/z)')
+    );
+  });
+
+  it('offers no Only on it, but can still put it on show for the nodes table', () => {
+    const { onSelect } = open({ positionless: POSITIONLESS });
+
+    expect(screen.queryByRole('button', { name: 'Show only vpm' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /^vpm/ }));
+    expect(onSelect).toHaveBeenCalledWith('vpm');
+  });
+
+  it('leaves it out of the count and of what Show all brings back', () => {
+    render(
+      <PopulationsMenu
+        populations={POPULATIONS}
+        hidden={['vpm']}
+        onChange={vi.fn()}
+        positionless={POSITIONLESS}
+      />
+    );
+    expect(screen.getByTestId('populations-menu-trigger')).toHaveTextContent(/^Populations2$/);
+
+    fireEvent.click(screen.getByTestId('populations-menu-trigger'));
+    expect(screen.getByTestId('populations-menu-show-all')).toBeDisabled();
+  });
+});

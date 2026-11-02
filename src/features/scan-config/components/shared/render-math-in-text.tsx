@@ -1,0 +1,95 @@
+import katex from 'katex';
+
+import type { ReactNode } from 'react';
+
+import 'katex/dist/katex.min.css';
+
+export const renderMathInText = (text: string): ReactNode => {
+  const parts = [];
+  let currentIndex = 0;
+
+  // regex to match LaTeX expressions (backslash followed by command or underscore/superscript)
+  const latexRegex =
+    /\$(.+?)\$|\\[a-zA-Z]+(?:_\{[^}]+\}|\^\{[^}]+\}|_[a-zA-Z0-9]|\^[a-zA-Z0-9])?|[a-zA-Z0-9]+_\{[^}]+\}/g;
+
+  let match: RegExpExecArray | null;
+  const regex = new RegExp(latexRegex);
+
+  // find all Latex expressions in the line
+  const matches = [];
+  // biome-ignore lint/suspicious/noAssignInExpressions: needed
+  while ((match = regex.exec(text)) !== null) {
+    matches.push({
+      index: match.index,
+      text: match[0],
+      endIndex: match.index + match[0].length,
+    });
+  }
+
+  if (matches.length === 0) return text;
+
+  // build parts array with regular text and LaTeX
+  matches.forEach((mt) => {
+    // add regular text before this match
+    if (mt.index > currentIndex) {
+      parts.push({
+        type: 'text',
+        content: text.substring(currentIndex, mt.index),
+      });
+    }
+
+    // add Latex match
+    parts.push({
+      type: 'latex',
+      content: mt.text,
+    });
+
+    currentIndex = mt.endIndex;
+  });
+
+  // add remaining text after last match
+  if (currentIndex < text.length) {
+    parts.push({
+      type: 'text',
+      content: text.substring(currentIndex),
+    });
+  }
+
+  return (
+    <>
+      {parts.map((part) => {
+        if (part.type === 'latex') {
+          try {
+            let latex = part.content.replace(/^\$|\$$/g, '');
+            // bare superscript/subscript (e.g. "^2") needs an empty base for KaTeX
+            if (/^[\^_]/.test(latex)) {
+              latex = `{}${latex}`;
+            }
+            const html = katex.renderToString(latex, {
+              throwOnError: false,
+              displayMode: false,
+              output: 'html',
+            });
+            return (
+              <span
+                key={html}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: required here
+                dangerouslySetInnerHTML={{ __html: html }}
+                // KaTeX resets font-weight to normal; follow the surrounding text instead
+                className="inline-block [&_.katex]:[font-weight:inherit]"
+              />
+            );
+          } catch {
+            return (
+              <span key={part.content} className="text-red-600">
+                {part.content}
+              </span>
+            );
+          }
+        } else {
+          return <span key={part.content}>{part.content}</span>;
+        }
+      })}
+    </>
+  );
+};

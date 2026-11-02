@@ -118,15 +118,6 @@ export const corePageNumberAtom = atomFamily((key: string) => {
   return childAtom;
 });
 
-export const coreSelectedRowsAtom = atomFamily(
-  (_key: string) => {
-    const childAtom = atom<Array<any>>([]);
-    childAtom.debugLabel = `selected-rows/${_key}`;
-    return childAtom;
-  },
-  (a, b) => a === b
-);
-
 /**
  * AtomFamily for persisting and restoring data list (table) parameters (filters, sort, page, etc.)
  * state is persisted per dataKey (unique for each data-table context) and entity dataType.

@@ -21,7 +21,7 @@ export {
 } from './persistence/storage-persistence';
 export { ServerGridStateStatus } from './renderer';
 export { DataGridToolbar } from './toolbar';
-export { useDataGrid } from './use-data-grid';
+export { FACETS_STALE_MS, useDataGrid } from './use-data-grid';
 export { useGridState, useGridStateSlice } from './use-grid-state';
 
 export type { IActiveFiltersButtonProps } from './active-filters';

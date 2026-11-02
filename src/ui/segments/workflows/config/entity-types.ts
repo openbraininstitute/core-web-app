@@ -21,6 +21,18 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Subcellular,
     label: 'Ion channel modeling campaign',
   },
+  [ExtendedEntitiesTypeDict.IonChannelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.IonChannelBuildCampaign,
+    group: EntityGroupDict.Subcellular,
+    label: 'Ion channel',
+  },
+  // the build's source type: `resolveWorkflow` groups a workflow by its *source*, so without
+  // this the entry falls back to the Cellular default and sits away from the ion channel ones.
+  [ExtendedEntitiesTypeDict.IonChannelRecording]: {
+    value: ExtendedEntitiesTypeDict.IonChannelRecording,
+    group: EntityGroupDict.Subcellular,
+    label: 'Ion channel recording',
+  },
   [ExtendedEntitiesTypeDict.IonChannelModelSimulation]: {
     value: ExtendedEntitiesTypeDict.IonChannelModelSimulation,
     group: EntityGroupDict.Subcellular,
@@ -41,6 +53,11 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     group: EntityGroupDict.Cellular,
     label: 'Single neuron',
     title: 'Single neuron',
+  },
+  [ExtendedEntitiesTypeDict.MEModelBuildCampaign]: {
+    value: ExtendedEntitiesTypeDict.MEModelBuildCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'Single neuron',
   },
   [ExtendedEntitiesTypeDict.SingleNeuronSimulation]: {
     value: ExtendedEntitiesTypeDict.SingleNeuronSimulation,
@@ -144,6 +161,13 @@ export const EntityTypeCatalog: Partial<Record<TExtendedEntitiesTypeDict, TEntit
     label: 'E-model',
     title: 'E-model',
     description: 'Optimize E-Model parameters against extracted e-features.',
+  },
+  [ExtendedEntitiesTypeDict.EModelValidationCampaign]: {
+    value: ExtendedEntitiesTypeDict.EModelValidationCampaign,
+    group: EntityGroupDict.Cellular,
+    label: 'E-model',
+    title: 'E-model',
+    description: 'Validate an optimized E-Model against e-features.',
   },
   [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign]: {
     value: ExtendedEntitiesTypeDict.EmSynapseMappingCampaign,

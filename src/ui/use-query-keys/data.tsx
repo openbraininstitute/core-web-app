@@ -11,6 +11,7 @@ import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-
 import type { IProtocolFilter } from '@/api/entitycore/types/shared/protocol';
 import type { ISubjectFilter } from '@/api/entitycore/types/shared/subject';
 import type { TWorkspaceScope } from '@/constants';
+import type { TSavedListingFilters } from '@/features/data-grid/saved-listing-filters';
 import type { WorkspaceContext } from '@/types/common';
 
 const prefix = 'data';
@@ -42,11 +43,17 @@ export const keyBuilder = {
     hierarchyId,
     extendedEntityType,
     scope,
+    variantSlug,
+    savedFilters,
   }: WorkspaceContext & {
     brainRegionId?: string;
     hierarchyId?: string;
     scope: TWorkspaceScope;
     extendedEntityType?: TExtendedEntitiesTypeDict;
+    /** listing variant; the head stays per-type so prefix invalidation still hits it */
+    variantSlug?: string;
+    /** the listing's saved filters/search the count applies */
+    savedFilters?: TSavedListingFilters | null;
   }) => [
     `${prefix}-entity-count-${extendedEntityType}`,
     {
@@ -56,6 +63,8 @@ export const keyBuilder = {
       brainRegionId: brainRegionId ?? '',
       hierarchyId: hierarchyId ?? '',
       scope,
+      variantSlug: variantSlug ?? '',
+      savedFilters: savedFilters ?? null,
     },
   ],
   userSimulationsCount: ({
@@ -252,10 +261,6 @@ export const keyBuilder = {
       pageSize,
     },
   ],
-  ionChannelsFile: ({ entityName }: { entityName: string }) => [
-    `${prefix}-ion-channels-file`,
-    { entityName },
-  ],
   scientificArtifactPublicationLinks: ({
     context,
     ...props
@@ -316,17 +321,6 @@ export const keyBuilder = {
   preview: (context: WorkspaceContext, params?: Record<string, any>) => [
     `${prefix}-asset-preview`,
     { context, params },
-  ],
-  singleIonChannelModelingCampaign: ({
-    context,
-    id,
-    ...props
-  }: {
-    context: WorkspaceContext;
-    id: string;
-  } & Record<string, any>) => [
-    `${prefix}-ion-channel-modeling-campaign`,
-    { context, id, ...props },
   ],
   validationResults: ({
     context,

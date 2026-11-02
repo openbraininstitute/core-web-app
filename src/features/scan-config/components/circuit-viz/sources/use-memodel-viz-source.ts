@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 
 import { fetchCircuitViz, memodelMorphologyPath } from '@/api/one/circuit-visualization';
 import { IDENTITY_QUATERNION } from '@/features/circuit-nodes/geometry-utils';
+import { NO_NAMES } from '@/features/circuit-nodes/population-utils';
 import {
   buildMorphoTree,
   buildSonataSectionIdIndex,
@@ -87,6 +88,7 @@ export function useMemodelVisualizationSource({
     retry,
     sonataSectionIds,
     anchor: cells.length > 0 ? ORIGIN : null,
+    positionless: NO_NAMES,
   };
 }
 

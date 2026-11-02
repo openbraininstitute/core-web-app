@@ -17,6 +17,8 @@ export const WorkflowSessionSelectionMode = {
 export type TWorkflowSessionSelectionRef = {
   type: TExtendedEntitiesTypeDict;
   id: string;
+  /** display name captured at pick time, so chrome can name the selection without refetching */
+  name?: string;
 } & TWorkflowEntitySeed;
 
 const workflowSeedAttributesSchema = z.record(
@@ -32,6 +34,7 @@ const workflowSeedPropertySchema = z.object({
 const workflowSessionSelectionRefSchema = z.object({
   type: z.string(),
   id: z.string(),
+  name: z.string().optional(),
   /** entity facts a schema's `entity_query.filters` may test when picking a block variant */
   attributes: workflowSeedAttributesSchema.optional(),
   /** values derived from the entity, keyed by ObiOne's `property` annotation */

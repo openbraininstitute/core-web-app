@@ -46,6 +46,8 @@ const COMPONENTS = { a: MarkdownLink };
 type Props = {
   children: string | Nullish;
   className?: string;
+  /** for dark surfaces such as tooltips */
+  dark?: boolean;
 };
 
 /**
@@ -54,11 +56,11 @@ type Props = {
  * descriptions keep their line breaks (remark-breaks) and bare URLs are
  * auto-linked (GFM autolink literals). Raw HTML is not rendered.
  */
-export function MarkdownDescription({ children, className }: Props): ReactNode {
+export function MarkdownDescription({ children, className, dark }: Props): ReactNode {
   if (!children) return null;
 
   return (
-    <div className={cn(styles.markdownDescription, className)}>
+    <div className={cn(styles.markdownDescription, dark && styles.dark, className)}>
       <ReactMarkdown
         remarkPlugins={REMARK_PLUGINS}
         rehypePlugins={REHYPE_PLUGINS}

@@ -9,11 +9,13 @@ import { ViewVariant } from '@/constants';
 import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import MEModelResults from '@/features/entities/me-model/detail-view/simulation';
 import SynaptomeResults from '@/features/entities/single-neuron-synaptome/detail-view/simulation';
+import { RelatedEntities as EmodelRelatedEntities } from '@/ui/segments/detail-view/related-artifacts/e-model';
 import { ICMRelatedArtifacts } from '@/ui/segments/detail-view/related-artifacts/ion-channel-model/index';
 import { detailViewVariantFromGroup } from '@/ui/segments/detail-view/variant-styles';
 import { RelatedCircuits } from '@/ui/segments/explore/circuit/elements/related-circuits';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { IEModel } from '@/api/entitycore/types/entities/e-model';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { TRetrieveEntityOutput } from '@/entity-configuration/domain/requests';
 import type { WorkspaceContext } from '@/types/common';
@@ -57,6 +59,9 @@ export default async function RelatedArtifacts({
         context={context}
         variant={fieldVariant}
       />
+    ))
+    .with({ entityConfig: { extendedType: ExtendedEntitiesTypeDict.Emodel } }, () => (
+      <EmodelRelatedEntities emodel={entity as IEModel} variant={fieldVariant} />
     ))
     .otherwise(() => notFound());
 }

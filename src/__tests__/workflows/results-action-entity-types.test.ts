@@ -44,6 +44,8 @@ describe('workflow activity "View results" action', () => {
     ],
     [ExtendedEntitiesTypeDict.EmSynapseMappingCampaign, ActivityValues.Build, 'results'],
     [ExtendedEntitiesTypeDict.BuildSynaptomeCampaign, ActivityValues.Build, 'results'],
+    [ExtendedEntitiesTypeDict.IonChannelBuildCampaign, ActivityValues.Build, 'results'],
+    [ExtendedEntitiesTypeDict.MEModelBuildCampaign, ActivityValues.Build, 'results'],
     [ExtendedEntitiesTypeDict.ExtracellularRecordingArrayCampaign, ActivityValues.Build, 'results'],
   ])('opens %s on its own results tab', (entityType, activity, tab) => {
     const href = resultsHref(activity, entityType, taskConfigRow);

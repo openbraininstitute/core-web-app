@@ -230,3 +230,4 @@ CLAUDE.md
 .release-notes
 .env.test.secrets
 .cursor/
+.agent-scratch/

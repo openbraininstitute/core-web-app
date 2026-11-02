@@ -307,6 +307,9 @@ export const WorkflowStagePresets = {
    *
    * @example Extract activity
    * - Intracellular EFeatures → e-feature extraction campaign
+   *
+   * @example Build activity
+   * - Ion channel → ion channel build campaign
    */
   ScanConfigInEditorSelection: {
     initialStage: WorkflowInitialStagePolicyDict.Configure,

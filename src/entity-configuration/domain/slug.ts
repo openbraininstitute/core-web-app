@@ -22,6 +22,8 @@ export const ModelEntitySlug = {
   Circuit: 'circuit',
   IonChannelModel: 'ion-channel-model',
   IonChannelModelingCampaign: 'ion-channel-modeling-campaign',
+  IonChannelBuildCampaign: 'ion-channel-build-campaign',
+  MEModelBuildCampaign: 'memodel-build-campaign',
   SingleNeuronCircuit: 'single-neuron-circuit',
   EmSynapseMappingCampaign: 'em-synapse-mapping-campaign',
   ExtracellularRecordingArray: 'extracellular-recording-array',
@@ -42,6 +44,7 @@ const SimulationEntitySlug = {
   IonChannelModelSimulation: 'ion-channel-model-simulation',
   RegionCircuitSimulation: 'region-circuit-simulation',
   WholeBrainCircuitSimulation: 'whole-brain-circuit-simulation',
+  EModelValidationResult: 'emodel-validation-result',
 } as const;
 
 const ExtractionEntitySlug = {
@@ -57,6 +60,10 @@ const OptimizationEntitySlug = {
   EModelOptimization: 'emodel-optimization',
 } as const;
 
+const ValidationEntitySlug = {
+  EModelValidation: 'emodel-validation',
+} as const;
+
 export const EntitySlug = {
   ...ExperimentalEntitySlug,
   ...ModelEntitySlug,
@@ -64,6 +71,7 @@ export const EntitySlug = {
   ...ExtractionEntitySlug,
   ...ProcessingEntitySlug,
   ...OptimizationEntitySlug,
+  ...ValidationEntitySlug,
   AnalysisNotebookTemplate: 'template',
   AnalysisNotebookResult: 'results',
 } as const;

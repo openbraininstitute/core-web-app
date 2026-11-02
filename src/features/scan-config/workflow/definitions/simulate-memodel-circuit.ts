@@ -16,6 +16,5 @@ export const simulateMemodelCircuitWorkflow = defineScanConfigWorkflow({
   editor: {
     schemaMappingKey: SchemaMappingKeyDict.Circuit,
     campaignOriginAction: ScanConfigCampaignOriginActionDict.Task,
-    className: 'px-4',
   },
 });

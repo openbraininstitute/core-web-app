@@ -95,7 +95,7 @@ export function TextFilter({ model, onModelChange }: Params) {
       <Input
         ref={inputRef}
         prefix={<RiSearchLine size={14} />}
-        placeholder="Filter…"
+        placeholder={op === 'equals' ? 'Values, comma separated' : 'Filter…'}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
         onPressEnter={() => {

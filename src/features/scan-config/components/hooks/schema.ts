@@ -2,7 +2,7 @@
 
 import $RefParser from '@apidevtools/json-schema-ref-parser';
 import { type QueryClient, useQuery } from '@tanstack/react-query';
-import { omit, pick } from 'es-toolkit/compat';
+import { isEmpty, omit, pick } from 'es-toolkit/compat';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { z } from 'zod';
@@ -227,7 +227,16 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'ElectricalCellRecordingFromID',
+  [ExtendedEntitiesTypeDict.IonChannelRecording]: 'IonChannelRecordingFromID',
 };
+
+export function unionVariantDefaults(variant: TBlock): Record<string, ConfigValue> {
+  const defaults: Record<string, ConfigValue> = {};
+  Object.entries(variant.properties ?? {}).forEach(([key, value]) => {
+    defaults[key] = (isType(value) ? value.const : undefined) ?? value.default ?? null;
+  });
+  return defaults;
+}
 
 function buildInitialConfigState(
   schema: ConfigSchema,
@@ -322,6 +331,10 @@ function buildInitialConfigState(
               { type: EntityTypeDict.ElectricalCellRecording },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.ElectricalCellRecording]
             )
+            .with(
+              { type: EntityTypeDict.IonChannelRecording },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.IonChannelRecording]
+            )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
             });
@@ -339,7 +352,12 @@ function buildInitialConfigState(
 
       state[k] = initialConfigforKey;
     } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
-      state[k] = initialConfigforKey;
+      // a lone variant has nothing to pick, and an empty block carries no discriminator to parse
+      const [onlyVariant, ...otherVariants] = v.oneOf;
+      state[k] =
+        isEmpty(initialConfigforKey) && onlyVariant && !otherVariants.length
+          ? unionVariantDefaults(onlyVariant)
+          : initialConfigforKey;
     } else {
       const nestedState: Record<string, Record<string, ConfigValue>> = {};
 

@@ -13,10 +13,12 @@ import {
   errorsUnder,
   makeParameterSelection,
   PARAMETERS_KEY,
+  readDistribution,
   readMechanisms,
   readOptimizationValue,
   readRegionEntries,
   regionPath,
+  type TDistributionOption,
   type TOptimizationValue,
   writeRegionEntries,
 } from '@/features/scan-config/components/ui-blocks/emodel-optimisation/mechanism-regions';
@@ -43,6 +45,8 @@ type Props = {
   disabled?: boolean;
   /** ajv errors inside `value` (paths relative to it), to flag the parameters that fail */
   errors: readonly ErrorObject[];
+  /** custom distributions selectable per parameter (name + python function) */
+  availableDistributions: readonly TDistributionOption[];
 };
 
 /**
@@ -58,6 +62,7 @@ export function RegionModelDetail({
   onChange,
   disabled,
   errors,
+  availableDistributions,
 }: Props) {
   const { virtualLabId, projectId } = useWorkspace();
   const context = { virtualLabId, projectId };
@@ -83,6 +88,8 @@ export function RegionModelDetail({
   const modelName = isPlainObject(model) && typeof model.name === 'string' ? model.name : '';
   const modelDescription =
     isPlainObject(model) && typeof model.description === 'string' ? model.description : '';
+  const nmodlSuffix =
+    isPlainObject(model) && typeof model.nmodl_suffix === 'string' ? model.nmodl_suffix : '';
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col gap-2 overflow-y-auto p-4">
@@ -115,12 +122,14 @@ export function RegionModelDetail({
       ) : (
         <NeuronBlockParameters
           neuronBlock={isPlainObject(model) ? model.neuron_block : undefined}
+          nmodlSuffix={nmodlSuffix}
           choiceName={choiceName}
           modelId={modelId}
           value={value}
           onChange={onChange}
           disabled={disabled}
           errors={errors}
+          availableDistributions={availableDistributions}
         />
       )}
     </div>
@@ -135,22 +144,26 @@ export function RegionModelDetail({
  */
 function NeuronBlockParameters({
   neuronBlock,
+  nmodlSuffix,
   choiceName,
   modelId,
   value,
   onChange,
   disabled,
   errors,
+  availableDistributions,
 }: {
   neuronBlock: unknown;
+  nmodlSuffix: string;
   choiceName: string;
   modelId: string;
   value: ConfigValue;
   onChange: (next: ConfigValue) => void;
   disabled?: boolean;
   errors: readonly ErrorObject[];
+  availableDistributions: readonly TDistributionOption[];
 }) {
-  const parameters = extractNeuronBlockParameters(neuronBlock);
+  const parameters = extractNeuronBlockParameters(neuronBlock, nmodlSuffix);
 
   // The region entries and the index of this model's entry within them.
   const entries = useMemo(
@@ -188,9 +201,20 @@ function NeuronBlockParameters({
   };
 
   const setParameterValue = (parameterName: string, optimizationValue: TOptimizationValue) => {
+    // Keep the parameter's chosen distribution when its value changes.
+    const current = readDistribution(parametersDict[parameterName]);
     writeParameters({
       ...parametersDict,
-      [parameterName]: makeParameterSelection(optimizationValue),
+      [parameterName]: makeParameterSelection(optimizationValue, current),
+    });
+  };
+
+  const setParameterDistribution = (parameterName: string, distribution: string | null) => {
+    // Keep the parameter's value when its distribution changes.
+    const optimizationValue = readOptimizationValue(parametersDict[parameterName]);
+    writeParameters({
+      ...parametersDict,
+      [parameterName]: makeParameterSelection(optimizationValue, distribution),
     });
   };
 
@@ -230,8 +254,11 @@ function NeuronBlockParameters({
               `${regionPath(choiceName)}/${entryIndex}/${PARAMETERS_KEY}/${param.name}/value`
             )}
             optimizationValue={checked ? readOptimizationValue(parametersDict[param.name]) : null}
+            distribution={checked ? readDistribution(parametersDict[param.name]) : null}
+            availableDistributions={availableDistributions}
             onToggle={(next) => toggleParameter(param.name, next)}
             onValueChange={(next) => setParameterValue(param.name, next)}
+            onDistributionChange={(next) => setParameterDistribution(param.name, next)}
           />
         );
       })}

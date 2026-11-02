@@ -57,7 +57,7 @@ export function EntityTypeSelectScrollable({
           listWorkflows({
             activity: category,
             flags: featureFlags,
-            context: 'configure',
+            context: 'browse',
           }).filter((w) => !w.disabled)
         ).map(({ group, options }) => {
           return (

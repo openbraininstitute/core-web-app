@@ -27,7 +27,8 @@ interface IStepLabelProps {
 function StepLabel({ label, status, isActive }: IStepLabelProps) {
   return (
     <div
-      className={cn('font-light', {
+      // The button turns navy on hover, so the label has to follow it to white.
+      className={cn('font-light group-hover:text-white', {
         'text-error': status === 'invalid',
         'text-primary-8 font-bold': status === 'valid',
         'text-primary-6': status !== 'invalid' && isActive,
@@ -118,9 +119,7 @@ export function StepNavigation() {
                       rounded
                       type="button"
                       variant="outline"
-                      className={cn(
-                        'active:text-primary-6 text-label active:bg-neutral-1 bg-transparent px-2 text-base shadow-none'
-                      )}
+                      className={cn('group text-label bg-transparent px-2 text-base shadow-none')}
                       onClick={() => setActiveStep(step.key)}
                     >
                       <StepLabel label={step.label} status={status} isActive={isActive} />

@@ -55,6 +55,10 @@ type TOptions = {
   populations: readonly NodePopulation[];
   /** @see CircuitVizProps.hiddenPopulations */
   hiddenPopulations?: readonly string[];
+  /** @see CircuitVizProps.shownCells */
+  shownCells?: Uint8Array;
+  /** @see CircuitVizProps.highlightedCell */
+  highlightedCell?: number;
   showAxons: boolean;
   nodeColors?: NodeColors;
   /** Paint for nodes colour-by has nothing to say about. */
@@ -95,6 +99,8 @@ export function useSmallCircuitSource({
   population,
   populations,
   hiddenPopulations,
+  shownCells,
+  highlightedCell,
   showAxons,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
@@ -112,7 +118,7 @@ export function useSmallCircuitSource({
   // morphology in the world. None of it changes with the selection, so
   // selecting another population repaints the scene instead of re-reading it,
   // and the camera stays where the user left it.
-  const { placed, failures, settled, download } = usePopulationsPlacement({
+  const { placed, failures, positionless, settled, download } = usePopulationsPlacement({
     circuit,
     populations,
     withMorphologies: true,
@@ -210,14 +216,14 @@ export function useSmallCircuitSource({
     // belongs to, where a later pass would have to parse it back out of the ids.
     let locationCells = NO_CELLS;
     let n = 0;
+    // The rest recede behind the population on show, or behind one with no
+    // positions, which the chrome explains; any other failure goes unexplained.
+    const recede = subject !== null || positionless.has(population.name);
 
     for (const entry of drawn) {
       const { population: candidate, geometry } = entry;
       const onShow = candidate.name === population.name;
-      // The rest recede behind the population on show, unless that one could
-      // not be placed: an input population carries no positions, and there is
-      // then nothing on screen to recede behind.
-      const flat = onShow || !subject ? paint : recededColor;
+      const flat = onShow || !recede ? paint : recededColor;
       // The first check inside `morphologyRequest`, hoisted: it is the same for
       // every node, and asking per cell allocated a request object per node only
       // to discard it. The two terms of `somaOnly` below are therefore one
@@ -235,6 +241,14 @@ export function useSmallCircuitSource({
             : IDENTITY_QUATERNION,
           somaRadius: PLACEHOLDER_SOMA_RADIUS,
           color: onShow ? (palette[columnByNode[i]] ?? flat) : flat,
+          // A cell the host filtered out, or every other while one is pointed
+          // out, is hidden in place rather than dropped: a spike names its cell
+          // by this array's index. The cell pointed out shows, filtered or not.
+          hidden:
+            onShow &&
+            (highlightedCell !== undefined
+              ? i !== highlightedCell
+              : shownCells !== undefined && shownCells[i] !== 1),
           // Told to the viewer, not left for it to discover by asking: it counts the cells it
           // is waiting on, and a scene where most of them will never answer would otherwise
           // report itself nearly loaded before the first morphology arrived.
@@ -248,6 +262,7 @@ export function useSmallCircuitSource({
     population,
     placed,
     hidden,
+    positionless,
     settled,
     subject,
     circuitId,
@@ -257,6 +272,8 @@ export function useSmallCircuitSource({
     nodeColors,
     defaultColor,
     recededColor,
+    shownCells,
+    highlightedCell,
   ]);
 
   // A config that loads but names no node population would otherwise leave the
@@ -391,6 +408,7 @@ export function useSmallCircuitSource({
     synapses,
     sonataSectionIds,
     anchor,
+    positionless,
   };
 }
 

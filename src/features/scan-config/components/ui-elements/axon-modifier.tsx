@@ -33,6 +33,7 @@ export function AxonModifier({ value, onChange, disabled, paramSchema }: IAxonMo
       onChange={onChange}
       disabled={disabled}
       paramSchema={stringSelectionSchema}
+      markdown
     />
   );
 }

@@ -30,6 +30,9 @@ export interface ViewerControlsMenuProps {
   /** multiplier on the soma radius; omit for viewers that draw morphologies */
   somaSizeScale?: number;
   onSomaSizeScaleChange?: (value: number) => void;
+  /** how long a replayed spike stays lit, in wall-clock seconds; omit without a replay */
+  spikeAfterglowInSeconds?: number;
+  onSpikeAfterglowChange?: (seconds: number) => void;
   /** electrode location overlays — omit when none are available */
   showElectrodes?: boolean;
   onToggleElectrodes?: (value: boolean) => void;
@@ -69,6 +72,8 @@ export function ViewerControlsMenu({
   onNeuronOpacityChange,
   somaSizeScale,
   onSomaSizeScaleChange,
+  spikeAfterglowInSeconds,
+  onSpikeAfterglowChange,
   showElectrodes,
   onToggleElectrodes,
   electrodeRadius,
@@ -192,6 +197,22 @@ export function ViewerControlsMenu({
               value={somaSizeScale}
               format={(scale) => `${scale.toFixed(1)}×`}
               onChange={onSomaSizeScaleChange}
+            />
+          )}
+          {onSpikeAfterglowChange && spikeAfterglowInSeconds !== undefined && (
+            <MenuSlider
+              label={
+                <span title="Measured in real time, so a flash looks the same at any playback speed">
+                  Spike afterglow
+                </span>
+              }
+              testId="viewer-slider-spike-afterglow"
+              min={0.05}
+              max={1}
+              step={0.05}
+              value={spikeAfterglowInSeconds}
+              format={(seconds) => `${seconds.toFixed(2)} s`}
+              onChange={onSpikeAfterglowChange}
             />
           )}
           <MenuRow label="Background" icon={<SelectionBackground className="size-4 shrink-0" />}>
