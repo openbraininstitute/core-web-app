@@ -118,7 +118,8 @@ function CopyableId({ id }: { id: string }): ReactNode {
         aria-label={`Copy ID ${id}`}
         onClick={() => void copy(id)}
         className={cn(
-          'flex w-full min-w-0 cursor-pointer items-center justify-end gap-1',
+          // above the card's stretched link, so a copy is not also a click through
+          'relative z-10 flex w-full min-w-0 cursor-pointer items-center justify-end gap-1',
           'text-primary-8 transition-colors hover:text-primary-6'
         )}
       >
@@ -148,13 +149,14 @@ function ScanParameterCard({ card, href }: { card: IScanCard; href?: string | nu
   const headingClass =
     'flex items-center justify-between gap-2 border-b border-neutral-2 px-3 py-2';
   return (
-    <div className="flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
-      {/* the run's name and status lead to it in its campaign's results */}
+    <div className="relative flex w-full min-w-0 flex-col overflow-hidden rounded-xl border border-neutral-2 bg-white transition-colors hover:bg-gray-50">
+      {/* the whole card leads to the run in its campaign's results: the heading's link
+          is stretched over it, and the id copy buttons sit above that */}
       {href ? (
         <Link
           href={href}
           title={`Open ${card.title}`}
-          className={`${headingClass} transition-colors hover:bg-gray-100`}
+          className={cn(headingClass, 'after:absolute after:inset-0')}
         >
           {heading}
         </Link>
