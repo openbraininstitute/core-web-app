@@ -129,6 +129,7 @@ function CircuitVizView({
   backgroundColor,
   showScalebar = true,
   spin,
+  aoMoving,
   signals,
   overlays,
   overlaysInteractive = false,
@@ -209,6 +210,7 @@ function CircuitVizView({
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           spin={spin}
+          aoMoving={aoMoving}
           signals={signals}
           onZoomChange={onZoomChange}
         />
@@ -254,7 +256,8 @@ function CircuitVizView({
   );
 }
 
-type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick'> & {
+/** A click on the cell comes as cell 0. */
+type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source'> & {
   memodelId: string;
 };
 

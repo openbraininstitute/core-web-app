@@ -21,6 +21,8 @@ export interface StoredPack {
   id: string;
   size: number;
   sha256: string | null;
+  /** Read from here rather than from the circuit's asset: a pack the app serves itself, made for one view. */
+  url?: string;
 }
 
 /** A circuit's cells as the page placed them. Memoise it: another one is another load. */
@@ -64,13 +66,15 @@ async function packRequest(
   { stored, circuitId }: MorphologiesSource,
   ctx: WorkspaceContext | null
 ): Promise<PackRequest> {
+  const digest = { size: stored.size, sha256: stored.sha256 };
+  if (stored.url) return { url: stored.url, headers: {}, stored: digest };
   const request = await buildAssetDownloadRequest({
     ctx,
     entityType: EntityTypeDict.Circuit,
     entityId: circuitId,
     id: stored.id,
   });
-  return { ...request, stored: { size: stored.size, sha256: stored.sha256 } };
+  return { ...request, stored: digest };
 }
 
 /**

@@ -207,6 +207,8 @@ export class SceneViewer extends SceneView {
   protected meshVisible = true;
   private wireframe = false;
   private dark = false;
+  /** A flat colour in place of the look's light background, where a host asks for one. */
+  private lightCanvas: string | null = null;
   private surfaceColor: ThemeColors = PLAIN;
   private ao = false;
   /** What frames are drawn through: the scene into a multisampled target, then the passes. */
@@ -484,7 +486,8 @@ export class SceneViewer extends SceneView {
   }
 
   private applyBackground(): void {
-    this.container.style.background = backgroundCss(this.look, this.dark);
+    this.container.style.background =
+      this.lightCanvas && !this.dark ? this.lightCanvas : backgroundCss(this.look, this.dark);
     for (const l of this.looks) {
       // Fog fades towards the (flat) background of its look.
       if (l.fog) l.fog.color.set(l.background[this.dark ? 'dark' : 'light'][1]);
@@ -532,6 +535,12 @@ export class SceneViewer extends SceneView {
 
   setDark(dark: boolean): void {
     this.dark = dark;
+    this.applyBackground();
+  }
+
+  /** Draw over `color` in place of the look's light background, or over the look's own again with null. */
+  setLightCanvas(color: string | null): void {
+    this.lightCanvas = color;
     this.applyBackground();
   }
 

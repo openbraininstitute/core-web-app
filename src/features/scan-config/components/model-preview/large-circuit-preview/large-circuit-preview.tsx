@@ -19,6 +19,7 @@ import {
 import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
+import { useBareViewer, useViewOverlay } from '@/features/viewer-3d/bare';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
@@ -75,6 +76,8 @@ export function LargeCircuitPreview({
   backgroundColor,
   showScalebar = true,
   spin,
+  aoMoving,
+  frameZoom,
   signals,
   onZoomChange,
   overlays,
@@ -96,6 +99,7 @@ export function LargeCircuitPreview({
   onEmptyClick,
 }: LargeCircuitPreviewProps) {
   const debugMode = useCircuitViewerDebugMode();
+  const bare = useBareViewer();
   const speciesRadius = useSomaRadius(circuit);
   const somaRadius = speciesRadius * somaSizeScale;
   // Somas only: positions are all that is read, for every population at once,
@@ -145,9 +149,16 @@ export function LargeCircuitPreview({
   const drawable = placed.length > 0 && !error;
   // The cells are numbered through `placed`, as `positions` and `cellColors`
   // are, so a morphology's cell is the soma of the same index.
-  const stored = storedPackOf(circuit.assets);
+  // A host's own pack for this view, made lighter, over the circuit's stored one.
+  const ownPack = useViewOverlay()?.pack;
+  const stored = ownPack ?? storedPackOf(circuit.assets);
   // By its fields: the circuit fetched again is the same pack.
-  const { id: storedId, size: storedSize = 0, sha256: storedSha256 = null } = stored ?? {};
+  const {
+    id: storedId,
+    size: storedSize = 0,
+    sha256: storedSha256 = null,
+    url: storedUrl,
+  } = stored ?? {};
   // A circuit without a stored pack stays somas.
   const morphologiesSource = React.useMemo(
     () =>
@@ -156,7 +167,7 @@ export function LargeCircuitPreview({
             circuitId: circuit.id,
             ...somas,
             somaRadius: speciesRadius,
-            stored: { id: storedId, size: storedSize, sha256: storedSha256 },
+            stored: { id: storedId, size: storedSize, sha256: storedSha256, url: storedUrl },
           }
         : null,
     [
@@ -168,6 +179,7 @@ export function LargeCircuitPreview({
       storedId,
       storedSize,
       storedSha256,
+      storedUrl,
     ]
   );
   const morphologies = useCircuitMorphologies(morphologiesSource, () => onMorphologiesStopped?.());
@@ -237,6 +249,8 @@ export function LargeCircuitPreview({
           backgroundColor={backgroundColor}
           showScalebar={showScalebar}
           spin={spin}
+          aoMoving={aoMoving}
+          frameZoom={frameZoom}
           signals={signals}
           onZoomChange={onZoomChange}
           onLeftOut={setLeftOut}
@@ -250,21 +264,23 @@ export function LargeCircuitPreview({
           </Button>
         </div>
       )}
-      <MorphologiesStatus
-        load={morphologies.load}
-        // Why they could not be shown is nothing to say where they are no longer offered.
-        stopped={onRepresentationChange ? morphologies.stopped : null}
-        leftOut={leftOut}
-        fallback={fallback}
-        theme={themeFromBackground(backgroundColor)}
-        place={statusPlace}
-        // Loaded again where the morphologies are still asked for; asked for again where the host went back to somas.
-        onRetry={() =>
-          wantsMorphologies ? morphologies.retry() : onRepresentationChange?.('morphologies')
-        }
-        onDismiss={morphologies.dismiss}
-        onFallbackDismiss={() => setFallback(null)}
-      />
+      {!bare && (
+        <MorphologiesStatus
+          load={morphologies.load}
+          // Why they could not be shown is nothing to say where they are no longer offered.
+          stopped={onRepresentationChange ? morphologies.stopped : null}
+          leftOut={leftOut}
+          fallback={fallback}
+          theme={themeFromBackground(backgroundColor)}
+          place={statusPlace}
+          // Loaded again where the morphologies are still asked for; asked for again where the host went back to somas.
+          onRetry={() =>
+            wantsMorphologies ? morphologies.retry() : onRepresentationChange?.('morphologies')
+          }
+          onDismiss={morphologies.dismiss}
+          onFallbackDismiss={() => setFallback(null)}
+        />
+      )}
     </div>
   );
 }

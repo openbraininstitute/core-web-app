@@ -47,15 +47,32 @@ export function gpuTexture(
 }
 
 /**
- * Whether three writes timestamps for the passes drawn from now on, turned `on` where the device can: false where it
- * cannot, or where a release of three changed how it is told.
+ * The renderer three writes timestamps for, one at a time. three hands every renderer's passes one object to hold
+ * their timestamp writes, and a pass keeps it: with two renderers writing timestamps, a pass of one would be given the
+ * other's query set, of another device, and its frame would not be drawn at all. The first to ask keeps them until it
+ * lets go of them (`releaseTimestamps`); the others time their frames without.
+ */
+let timestamped: THREE.WebGPURenderer | null = null;
+
+/**
+ * Whether three writes timestamps for the passes drawn from now on, turned `on` where the device can and no other
+ * renderer has them: false where it cannot, or where a release of three changed how it is told.
  */
 export function trackTimestamps(renderer: THREE.WebGPURenderer, on: boolean): boolean {
   const backend = backendOf(renderer) as { trackTimestamp?: unknown } | undefined;
   if (!backend || typeof backend.trackTimestamp !== 'boolean') return false;
-  const tracked = on && renderer.hasFeature('timestamp-query');
+  const tracked =
+    on &&
+    (timestamped === null || timestamped === renderer) &&
+    renderer.hasFeature('timestamp-query');
+  if (tracked) timestamped = renderer;
   backend.trackTimestamp = tracked;
   return tracked;
+}
+
+/** The renderer's timestamps given up, as it is disposed of, for the next renderer to take. */
+export function releaseTimestamps(renderer: THREE.WebGPURenderer): void {
+  if (timestamped === renderer) timestamped = null;
 }
 
 interface TimestampPool {

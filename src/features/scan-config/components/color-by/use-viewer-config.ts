@@ -70,15 +70,19 @@ interface ViewerConfigDefaults {
   defaultRepresentation?: CircuitRepresentation;
   /** Whether the axons are drawn to begin with, and again on reset. */
   defaultShowAxons?: boolean;
+  /** The host's own settings to begin with and reset to, over all of the above. */
+  viewerDefaults?: Partial<ViewerConfig>;
 }
 
 export function resolveViewerConfigDefaults(options: ViewerConfigDefaults = {}): ViewerConfig {
-  return {
+  const config: ViewerConfig = {
     ...DEFAULT_VIEWER_CONFIG,
     neuronOpacity: options.defaultNeuronOpacity ?? DEFAULT_VIEWER_CONFIG.neuronOpacity,
     representation: options.defaultRepresentation ?? DEFAULT_VIEWER_CONFIG.representation,
     showAxons: options.defaultShowAxons ?? DEFAULT_VIEWER_CONFIG.showAxons,
+    ...options.viewerDefaults,
   };
+  return { ...config, backgroundColor: normalizeCanvasBackground(config.backgroundColor) };
 }
 
 function storageKey(circuitId: string): string {
@@ -127,15 +131,17 @@ export function useViewerConfig(
   circuitId: string,
   options?: ViewerConfigDefaults
 ): UseViewerConfig {
-  const { defaultNeuronOpacity, defaultRepresentation, defaultShowAxons } = options ?? {};
+  const { defaultNeuronOpacity, defaultRepresentation, defaultShowAxons, viewerDefaults } =
+    options ?? {};
   const defaults = useMemo(
     () =>
       resolveViewerConfigDefaults({
         defaultNeuronOpacity,
         defaultRepresentation,
         defaultShowAxons,
+        viewerDefaults,
       }),
-    [defaultNeuronOpacity, defaultRepresentation, defaultShowAxons]
+    [defaultNeuronOpacity, defaultRepresentation, defaultShowAxons, viewerDefaults]
   );
   const [config, setConfig] = useState<ViewerConfig>(defaults);
   const [hasSavedConfig, setHasSavedConfig] = useState(false);

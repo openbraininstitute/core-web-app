@@ -19,7 +19,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { ViewerTheme } from './contrast';
-import type { CircuitRepresentation, ColorByProperty, ColorMapping } from './types';
+import type { CircuitRepresentation, ColorByProperty, ColorMapping, ViewerConfig } from './types';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
 
 interface Options {
@@ -41,6 +41,8 @@ interface Options {
    * Defaults to full opacity when omitted.
    */
   defaultNeuronOpacity?: number;
+  /** the host's settings to begin with and reset to, over all of the above */
+  viewerDefaults?: Partial<ViewerConfig>;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
   /** What is on show when it is not a circuit. Names the saved config and the snapshot. */
@@ -105,6 +107,7 @@ export function useCircuitColorBy(
     supportsMorphologies,
     defaultRepresentation,
     defaultNeuronOpacity,
+    viewerDefaults,
     population,
     subject,
   }: Options = {}
@@ -114,6 +117,7 @@ export function useCircuitColorBy(
     defaultNeuronOpacity,
     defaultRepresentation,
     defaultShowAxons,
+    viewerDefaults,
   });
   // The choice is kept where morphologies stop being offered, and comes back with them.
   const representation: CircuitRepresentation = supportsMorphologies
@@ -147,7 +151,10 @@ export function useCircuitColorBy(
     () => (BACKGROUND_ADAPTIVE ? viewerTheme(backgroundDark) : null),
     [backgroundDark]
   );
-  const defaultColor = useMemo(() => defaultNeuronColor(adaptiveBackground), [adaptiveBackground]);
+  const defaultColor = useMemo(
+    () => config.neuronColor ?? defaultNeuronColor(adaptiveBackground),
+    [config.neuronColor, adaptiveBackground]
+  );
   const recededColor = useMemo(
     () => recededNeuronColor(config.backgroundColor),
     [config.backgroundColor]

@@ -13,7 +13,8 @@ import {
   MotionQuality,
   WAKE_FRAMES,
 } from '@/features/viewer-3d/engine/motion-quality';
-import { SceneView } from '@/features/viewer-3d/engine/scene-view';
+import { spinAbout, stopGlide } from '@/features/viewer-3d/engine/rotation';
+import { FRONT, SceneView } from '@/features/viewer-3d/engine/scene-view';
 import { logError } from '@/utils/logger';
 
 import { extentOf, morphologiesExtent, packExtent } from '../extent';
@@ -53,6 +54,7 @@ import { NEON, SPIKE_HUE } from './spike-light';
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { Look, ThemeColors } from '@/features/viewer-3d/engine/looks';
+import type { CameraPose, FrameBox } from '@/features/viewer-3d/engine/scene-view';
 import type { MovingFrame } from '@/features/viewer-3d/engine/scene-viewer';
 import type { MortonSorted } from '../load/morton';
 import type { TreeSection } from '../load/tree';
@@ -381,6 +383,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private motion = new MotionQuality({ ...MOTION, ao: this.occludes ? 'auto' : 'off' });
   /** The same over morphologies, where the tier draws the occlusion; null where it does not. */
   private morphologyMotion = this.occludes ? new MotionQuality(MORPHOLOGY_MOTION) : null;
+  /** Moving frames over morphologies keep the occlusion whatever they cost (`setAoMoving`). */
+  private keepAo = false;
   /** Of either motion, the fraction of the resolution the last frame was drawn at, and the moving frames drawn so. */
   private drawnScale = 1;
   private drawnRung: MovingFrame | null = null;
@@ -454,6 +458,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     zoom: number;
     target: THREE.Vector3;
   } | null = null;
+  /** The zoom a framing leaves the view at: 1 fits the cells to it, less leaves room round them. */
+  private frameZoom = 1;
+  /** A gesture took the view since it was last framed: a turn, a pan or a zoom of the user's. */
+  private touched = false;
+  /** A box of the circuit's own frame the view is framed on in place of the cells, as a host asked. */
+  private frameOn: FrameBox | null = null;
+  /** Where a host holds the camera, whatever framing comes meanwhile, and the spin it asked for, held off till then. */
+  private held: CameraPose | null = null;
+  private spinAsked = false;
   protected readonly spiking = new SpikeClock();
   private glowAsked = DEFAULT_SPIKE_GLOW;
   /** Whether the background is dark. */
@@ -480,6 +493,9 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     // Light rigs ride on the camera so the look keeps its lighting while orbiting.
     if (look.rig) this.camera.add(look.rig);
     this.chunks.name = 'circuit morphologies';
+    this.controls.addEventListener('start', () => {
+      this.touched = true;
+    });
     this.surfaces.add(this.chunks);
     this.scene.add(this.surfaces);
     // The circuit viewer's own background, as behind the somas, in place of Studio's gradient.
@@ -500,6 +516,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.controls.addEventListener('start', () => {
       this.nudging = null;
     });
+  }
+
+  /** The positions are drawn less their centre: the circuit's own frame is that far off the scene's. */
+  protected override get origin(): readonly [number, number, number] {
+    return this.centre;
   }
 
   /** Once the tier has its renderer and materials: the theme, the canvas's size, and the first frame. */
@@ -532,6 +553,18 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Whether the tier draws ambient occlusion. */
   protected get occludes(): boolean {
     return false;
+  }
+
+  /** How moving frames over morphologies are cut down: not at all where they keep the occlusion. */
+  private get morphologyMotionOptions(): MotionOptions {
+    return this.keepAo ? { ...MORPHOLOGY_MOTION, ao: 'on' } : MORPHOLOGY_MOTION;
+  }
+
+  setAoMoving(on: boolean): void {
+    if (on === this.keepAo) return;
+    this.keepAo = on;
+    this.morphologyMotion?.configure(this.morphologyMotionOptions);
+    this.invalidate();
   }
 
   /** The tier's occlusion given up on: moving frames no longer step through it. */
@@ -638,7 +671,93 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.detailListeners.clear();
   }
 
-  setDark(dark: boolean): void {
+  setFrameBox(box: FrameBox | null): void {
+    if (isEqual(box, this.frameOn)) return;
+    this.frameOn = box;
+    this.facing = box?.from && box.up ? { from: box.from, up: box.up } : FRONT;
+    this.resetView();
+  }
+
+  /**
+   * Hold the camera where `pose` puts it, at once, the spin held off and any framing meanwhile taken back to it; null
+   * lets it go, back where the framing puts it, turning again if a spin was asked for.
+   */
+  holdCamera(pose: CameraPose | null): void {
+    const was = this.held;
+    this.held = pose;
+    if (pose) {
+      if (!was) super.setSpin(false);
+      this.placeCamera(pose);
+      return;
+    }
+    if (!was) return;
+    this.resetView();
+    super.setSpin(this.spinAsked);
+  }
+
+  /** The camera as the last framing left it, as a pose to hold; null before the first framing. */
+  framedCamera(): CameraPose | null {
+    const was = this.framedAt;
+    return was && this.poseOf(was.position, was.target, was.quaternion, was.zoom);
+  }
+
+  /** The camera as it is now, as a pose to hold. */
+  cameraNow(): CameraPose | null {
+    const { camera, controls } = this;
+    return this.poseOf(camera.position, controls.target, camera.quaternion, camera.zoom);
+  }
+
+  private poseOf(
+    position: THREE.Vector3,
+    target: THREE.Vector3,
+    quaternion: THREE.Quaternion,
+    zoom: number
+  ): CameraPose | null {
+    const { camera } = this;
+    if (!(camera instanceof THREE.OrthographicCamera)) return null;
+    const [x, y, z] = this.centre;
+    return {
+      target: [target.x + x, target.y + y, target.z + z],
+      from: position.clone().sub(target).normalize().toArray(),
+      up: new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion).toArray(),
+      umPerPx: (camera.top - camera.bottom) / (zoom * this.height),
+    };
+  }
+
+  /** The camera looking at the pose's target from its side, as far off as it was, at its scale. */
+  private placeCamera({ target, from, up, umPerPx }: CameraPose): void {
+    const { camera, controls } = this;
+    const [x, y, z] = this.centre;
+    const at = new THREE.Vector3(target[0] - x, target[1] - y, target[2] - z);
+    const away = camera.position.distanceTo(controls.target) || 1;
+    stopGlide(controls);
+    controls.target.copy(at);
+    camera.position.copy(at).addScaledVector(new THREE.Vector3(...from).normalize(), away);
+    camera.up.set(...up);
+    camera.lookAt(at);
+    spinAbout(controls, camera.up);
+    if (camera instanceof THREE.OrthographicCamera && umPerPx > 0) {
+      this.setZoom((camera.top - camera.bottom) / (umPerPx * this.height));
+    }
+    controls.update();
+    this.invalidate();
+  }
+
+  override setSpin(on: boolean): void {
+    this.spinAsked = on;
+    if (!this.held) super.setSpin(on);
+  }
+
+  setFrameZoom(zoom: number): void {
+    if (zoom === this.frameZoom) return;
+    const asFramed = this.zoom === this.frameZoom;
+    this.frameZoom = zoom;
+    if (asFramed) this.setZoom(zoom);
+  }
+
+  /** `light`: the canvas when it is not dark, the viewer's own grey unless a host asks for another. */
+  setDark(dark: boolean, light: string = CANVAS_LIGHT): void {
+    if (!dark) this.look.background.light = [light, light];
     this.container.style.background = backgroundCss(this.look, dark);
     this.look.onTheme?.(dark, PLAIN);
     this.invalidate();
@@ -749,7 +868,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const detailed = stream ? { stream, chosenFor: null, seenChanged: false } : null;
     this.layer = { data, meshes: [...segmentMeshes, somaMesh, ...through], ids, spots, detailed };
     // From the top: what dropped the occlusion for other morphologies says nothing of these.
-    this.morphologyMotion?.configure(MORPHOLOGY_MOTION);
+    this.morphologyMotion?.configure(this.morphologyMotionOptions);
     this.compileIds();
 
     if (under) {
@@ -922,11 +1041,21 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     if (!was) return false;
     const { camera, controls } = this;
     const near = (a: THREE.Vector3, b: THREE.Vector3) => a.distanceTo(b) <= 1e-6 * (1 + b.length());
+    const sameZoom = Math.abs(camera.zoom - was.zoom) <= 1e-9 * was.zoom;
+    // Turned by its spin alone, the view still frames what it framed: about the same target, as far off and as near.
+    if (controls.autoRotate && !this.touched) {
+      const off = was.position.distanceTo(was.target);
+      return (
+        near(controls.target, was.target) &&
+        Math.abs(camera.position.distanceTo(controls.target) - off) <= 1e-6 * (1 + off) &&
+        sameZoom
+      );
+    }
     return (
       near(camera.position, was.position) &&
       near(controls.target, was.target) &&
       1 - Math.abs(camera.quaternion.dot(was.quaternion)) < 1e-9 &&
-      Math.abs(camera.zoom - was.zoom) <= 1e-9 * was.zoom
+      sameZoom
     );
   }
 
@@ -1144,16 +1273,29 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    */
   override resetView(): void {
     this.frameCells();
+    if (this.frameZoom !== 1) this.setZoom(this.frameZoom);
     const { camera, controls } = this;
+    this.touched = false;
     this.framedAt = {
       position: camera.position.clone(),
       quaternion: camera.quaternion.clone(),
       zoom: camera.zoom,
       target: controls.target.clone(),
     };
+    // Framed, but held where the host has it.
+    if (this.held) this.placeCamera(this.held);
   }
 
   private frameCells(): void {
+    if (this.frameOn) {
+      const { min, max, points } = this.frameOn;
+      const centre = new THREE.Vector3(...this.centre);
+      this.frameBox(
+        new THREE.Box3(new THREE.Vector3(...min).sub(centre), new THREE.Vector3(...max).sub(centre)),
+        points?.map((v, i) => v - this.centre[i % 3])
+      );
+      return;
+    }
     const { cloud, table, layer } = this;
     if (!cloud || !table) {
       super.resetView();
@@ -1181,10 +1323,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.frameBox(this.somaBox(drawn, this.cloudUniforms.uRadius.value));
   }
 
-  /** The view framed on `box`, about its middle, as `resetView` frames anything about the origin. */
-  private frameBox(box: THREE.Box3): void {
+  /** The view framed on `box`, about its middle, as `resetView` frames anything about the origin; on `points` where given. */
+  private frameBox(box: THREE.Box3, points?: readonly number[]): void {
     const middle = box.getCenter(new THREE.Vector3());
-    this.fitPoints = Float32Array.from(boxCorners(box, middle));
+    this.fitPoints = points
+      ? Float32Array.from(points, (v, i) => v - middle.getComponent(i % 3))
+      : Float32Array.from(boxCorners(box, middle));
     super.resetView();
     this.fitPoints = null;
     this.camera.position.add(middle);

@@ -8,10 +8,14 @@ import {
   DEFAULT_SPIKE_GLOW,
   DEFAULT_SPIKE_SPEED,
 } from '@/features/circuit-viewer/spike-clock';
-import { themeFromBackground } from '@/features/scan-config/components/color-by/contrast';
+import {
+  CANVAS_WHITE,
+  themeFromBackground,
+} from '@/features/scan-config/components/color-by/contrast';
 import { clampZoom } from '@/features/scan-config/components/zoom-slider/scale';
 import { AxesGizmo } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { Scalebar } from '@/features/viewer-3d/chrome/scalebar';
+import { useBareViewer, useViewOverlay } from '@/features/viewer-3d/bare';
 import { WheelHint } from '@/features/viewer-3d/chrome/status';
 import { useWheelHint } from '@/features/viewer-3d/viewer-frame';
 import { useLatest } from '@/ui/hooks/use-latest';
@@ -89,6 +93,10 @@ export interface CircuitCellsProps {
   backgroundColor: string;
   showScalebar: boolean;
   spin?: boolean;
+  /** Moving frames keep the ambient occlusion whatever they cost, rather than drawn flat to keep up. */
+  aoMoving?: boolean;
+  /** The zoom the cells are framed at, on load and on re-centre: below 1 leaves room round them. */
+  frameZoom?: number;
   /** The circuit viewer's bus, on which this view answers the camera reset, the snapshot, the zoom and the nudge. */
   signals: CircuitViewerSignals;
   /** Told the view's zoom whenever it changes, 1 as a reset frames it. */
@@ -103,6 +111,8 @@ export interface CircuitCellsProps {
 
 /** Up to this many somas are put in their Morton order on the page: a worker would take longer to start. */
 const SORTED_HERE_CELLS = 100_000;
+/** How long the morphologies must stand as they are before the view counts as built, ms. */
+const BUILT_AFTER_MS = 150;
 
 /**
  * A circuit's cells in one three.js view: the somas as the page placed them, and their morphologies in their place
@@ -132,6 +142,8 @@ export function CircuitCells({
   backgroundColor,
   showScalebar,
   spin = false,
+  aoMoving = false,
+  frameZoom,
   signals,
   onZoomChange,
   onLeftOut,
@@ -145,6 +157,8 @@ export function CircuitCells({
   const viewer = created?.view ?? null;
   const theme = themeFromBackground(backgroundColor);
   const wheelHint = useWheelHint(viewer);
+  const bare = useBareViewer();
+  const overlay = useViewOverlay();
   const debugMode = useCircuitViewerDebugMode();
   const fellBack = useLatest(onFallback);
 
@@ -183,11 +197,25 @@ export function CircuitCells({
     };
   }, [making, fellBack]);
 
+  // A host's frame before anything else, so that the first framing is on it.
+  const overlayFrame = overlay?.frame ?? null;
+  useEffect(() => {
+    if (overlayFrame) viewer?.setFrameBox?.(overlayFrame);
+  }, [viewer, overlayFrame]);
+  const detailPixels = overlay?.detailPixels;
+  useEffect(() => {
+    if (detailPixels !== undefined) viewer?.setDetailRules({ pixels: detailPixels });
+  }, [viewer, detailPixels]);
+
   // In this order: the default colour and the radius before the somas, so that these are painted and bounded once; the
   // crowding's worker set going before the somas are drawn, half crowded until it is done; the somas with the colours
   // they come with, painted once where both change; the morphologies over them, framed with the axons as drawn.
   const colors = useLatest(cellColors);
-  useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
+  // The light canvas is the viewer's grey unless the host asked for white.
+  useEffect(() => {
+    if (backgroundColor === CANVAS_WHITE) viewer?.setDark(false, CANVAS_WHITE);
+    else viewer?.setDark(theme.isDark);
+  }, [viewer, theme.isDark, backgroundColor]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
   useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
   useEffect(() => {
@@ -218,12 +246,17 @@ export function CircuitCells({
   useEffect(() => viewer?.setCellColors(cellColors), [viewer, cellColors]);
   const following = useLatest(follow);
   useEffect(() => viewer?.setAxons(axons), [viewer, axons]);
+  // Ahead of the morphologies, which are framed as they come.
+  useEffect(() => {
+    if (frameZoom !== undefined) viewer?.setFrameZoom?.(frameZoom);
+  }, [viewer, frameZoom]);
   useEffect(() => viewer?.setData(data, following.current), [viewer, data, following]);
   useEffect(() => viewer?.setSomaOpacity(somaOpacity), [viewer, somaOpacity]);
   useEffect(() => viewer?.setElectrodeRadius(electrodeRadius), [viewer, electrodeRadius]);
   useEffect(() => viewer?.setSynapses(synapses), [viewer, synapses]);
   useEffect(() => viewer?.setDendrogram(dendrogram), [viewer, dendrogram]);
   useEffect(() => viewer?.setSpin(spin), [viewer, spin]);
+  useEffect(() => viewer?.setAoMoving?.(aoMoving), [viewer, aoMoving]);
 
   // Heard before the spikes are handed over, so that the host learns of the replay starting again with them.
   const timeChanged = useLatest(spikes?.onTimeChange);
@@ -333,6 +366,28 @@ export function CircuitCells({
     [viewer, leftOutChanged]
   );
 
+  // Told once the morphologies are in and have stood a moment: read whole, as they are given; read a box at a
+  // time, with every box at the level the view wants. What the culling counts changes every frame of a turn.
+  const built = useLatest(overlay?.onBuilt);
+  useEffect(() => {
+    if (!viewer || !data) return;
+    let stood = '';
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const off = viewer.onDetail((detail) => {
+      const now = detail ? `${detail.drawn}/${detail.wanted}` : '';
+      if (now === stood && timer !== undefined) return;
+      stood = now;
+      clearTimeout(timer);
+      timer = undefined;
+      if (detail && detail.drawn < detail.wanted) return;
+      timer = setTimeout(() => built.current?.(), BUILT_AFTER_MS);
+    });
+    return () => {
+      off();
+      clearTimeout(timer);
+    };
+  }, [viewer, data, built]);
+
   const glowHeard = useLatest(onGlowAvailable);
   const glowAvailable = created?.tier === 'webgpu' && data != null;
   useEffect(() => glowHeard.current?.(glowAvailable), [glowHeard, glowAvailable]);
@@ -365,11 +420,12 @@ export function CircuitCells({
   return (
     <div className="absolute inset-0" data-testid="circuit-cells">
       <div className="absolute inset-0" ref={hostRef} />
+      {viewer && overlay?.render(viewer)}
       {viewer && (
         <div className="pointer-events-none absolute inset-0">
           {showScalebar && <Scalebar viewer={viewer} color={theme.foreground} />}
-          <AxesGizmo viewer={viewer} ring={theme.foreground} />
-          <WheelHint visible={wheelHint} theme={theme} />
+          {!bare && <AxesGizmo viewer={viewer} ring={theme.foreground} />}
+          {!bare && <WheelHint visible={wheelHint} theme={theme} />}
           {debugMode && created && (
             <DetailReadout
               viewer={viewer}
