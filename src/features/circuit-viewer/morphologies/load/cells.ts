@@ -1,0 +1,106 @@
+import type { CircuitMorphologyData, MorphologySegments, Population } from '../types';
+
+/** The page's number for a pack cell whose population the page does not have. */
+const NONE = 0xffffffff;
+
+/**
+ * The page's number for each of a pack's cells. The pack numbers its cells through `packed`, its populations sorted by
+ * name; the page numbers them through `populations`, its own populations in its own order. A cell whose population the
+ * page does not have gets `NONE`, since the page draws nothing of a population it could not place.
+ */
+export function pageCells(packed: Population[], populations: Population[]): Uint32Array {
+  const places = new Map<string, { first: number; cells: number }>();
+  let cells = 0;
+  for (const population of populations) {
+    places.set(population.name, { first: cells, cells: population.cells });
+    cells += population.cells;
+  }
+  const numbers = new Uint32Array(packed.reduce((total, p) => total + p.cells, 0)).fill(NONE);
+  let first = 0;
+  for (const { name, cells: count } of packed) {
+    const place = places.get(name);
+    if (place) {
+      if (place.cells !== count) {
+        throw new Error(
+          `morphology pack with ${count} cells in ${name}, where the page has ${place.cells}`
+        );
+      }
+      for (let i = 0; i < count; i++) numbers[first + i] = place.first + i;
+    }
+    first += count;
+  }
+  return numbers;
+}
+
+/**
+ * The data's somas, numbered by the pack, renumbered as `numbers` says (`pageCells`) for the page's `populations`. A
+ * page cell whose population the pack does not have gets a soma with no position, and a pack cell the page has no
+ * number for is left out.
+ */
+export function renumberSomas(
+  data: CircuitMorphologyData,
+  numbers: Uint32Array,
+  populations: Population[]
+): CircuitMorphologyData {
+  const cells = populations.reduce((total, p) => total + p.cells, 0);
+  const somas = new Float32Array(4 * cells).fill(NaN);
+  for (let i = 3; i < somas.length; i += 4) somas[i] = 0;
+  numbers.forEach((page, cell) => {
+    if (page === NONE) return;
+    for (let k = 0; k < 4; k++) somas[4 * page + k] = data.somas[4 * cell + k];
+  });
+  return { ...data, somas, populations };
+}
+
+/**
+ * Renumbers the segments' cells as `numbers` says (`pageCells`), rewriting them in place. Segments of a cell the page
+ * has no number for are left out.
+ */
+export function renumberSegments(
+  { segments, segmentCells, segmentTypes }: MorphologySegments,
+  numbers: Uint32Array
+): MorphologySegments {
+  let kept = 0;
+  for (let i = 0; i < segmentCells.length; i++) {
+    const cell = numbers[segmentCells[i]];
+    if (cell === NONE) continue;
+    if (kept !== i) {
+      segments.copyWithin(8 * kept, 8 * i, 8 * i + 8);
+      segmentTypes[kept] = segmentTypes[i];
+    }
+    segmentCells[kept++] = cell;
+  }
+  if (kept === segmentCells.length) return { segments, segmentCells, segmentTypes };
+  return {
+    segments: segments.slice(0, 8 * kept),
+    segmentCells: segmentCells.slice(0, kept),
+    segmentTypes: segmentTypes.slice(0, kept),
+  };
+}
+
+/**
+ * Gives each cell that the pack left without a soma, such as a cell of a population the pack does not hold, the page's
+ * own position and `radius`, as the somas view draws it. `positions` are the page's, three floats a cell in the
+ * circuit's frame. Rewrites `data`'s somas and bounds in place.
+ */
+export function fillSomas(
+  data: CircuitMorphologyData,
+  positions: Float32Array,
+  radius: number
+): void {
+  const { somas, centre, bounds } = data;
+  const cells = Math.min(somas.length / 4, positions.length / 3);
+  for (let cell = 0; cell < cells; cell++) {
+    if (!Number.isNaN(somas[4 * cell])) continue;
+    if (!Number.isFinite(positions[3 * cell] + positions[3 * cell + 1] + positions[3 * cell + 2])) {
+      continue;
+    }
+    for (let axis = 0; axis < 3; axis++) {
+      const at = positions[3 * cell + axis] - centre[axis];
+      somas[4 * cell + axis] = at;
+      bounds.min[axis] = Math.min(bounds.min[axis], at - radius);
+      bounds.max[axis] = Math.max(bounds.max[axis], at + radius);
+    }
+    somas[4 * cell + 3] = radius;
+  }
+}

@@ -3,8 +3,8 @@ import {
   hasElectrodeLocationsDictionary,
 } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 
+import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
 import type { Config, ConfigValue } from '@/features/scan-config/types';
-import type { MorphoViewerOverlayTransformEvent } from '@/morpho-viewer';
 
 const COORD_DECIMALS = 3;
 const ANGLE_DECIMALS = 2;
@@ -40,25 +40,22 @@ function nextScalar(current: unknown, next: number): ConfigValue {
 }
 
 /**
- * Apply a morphoviewer overlay drag/rotate back into scan-config.
+ * Apply the viewer's electrode drag/rotate back into scan-config.
  *
- * How: called from `CircuitPreview` only on `event.phase === 'end'` so mid-drag
+ * How: the viewer reports a drag only once it ends, so mid-drag
  * React updates do not fight the live WebGL buffers. Only updates `origin_*` /
  * `rotation_*` keys that already exist on the block.
  * Why: Linear probes expose Rx/Rz only; planar arrays may also have Ry — never
  * invent fields the schema did not declare.
  *
  * @param config - Full scan-config root
- * @param event - Overlay transform from morphoviewer (`id`, origin, rotation)
+ * @param event - Electrode transform from the viewer (`id`, origin, rotation)
  * @returns New config object, or the same reference when nothing applies
  *
  * @example
  * setConfig((prev) => applyElectrodeOverlayTransform(prev, event));
  */
-export function applyElectrodeOverlayTransform(
-  config: Config,
-  event: MorphoViewerOverlayTransformEvent
-): Config {
+export function applyElectrodeOverlayTransform(config: Config, event: ElectrodeTransform): Config {
   const dictionary = config[ELECTRODE_LOCATIONS_CONFIG_KEY];
   if (!hasElectrodeLocationsDictionary(dictionary)) return config;
 

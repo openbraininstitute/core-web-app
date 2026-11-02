@@ -15,6 +15,17 @@ export function orbitRadius(box: Box3): number {
   );
 }
 
+/** The eight corners of `box`, x, y, z after one another, less `about`'s x, y and z. */
+export function boxCorners(box: Box3, about = { x: 0, y: 0, z: 0 }): number[] {
+  const corners: number[] = [];
+  for (const x of [box.min.x, box.max.x]) {
+    for (const y of [box.min.y, box.max.y]) {
+      for (const z of [box.min.z, box.max.z]) corners.push(x - about.x, y - about.y, z - about.z);
+    }
+  }
+  return corners;
+}
+
 /**
  * Distance along +z from the origin at which a camera looking down -z at the origin (the soma) sees every one of
  * `points` (x, y, z after one another), with `tanX`, `tanY` the tangents of its half fields of view. Each point needs
