@@ -1,12 +1,14 @@
 'use client';
 
-import { MenuOutlined } from '@ant-design/icons';
+import { ControlOutlined, MenuOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { ADMIN_ROOT } from '@/admin/shell/sections';
+import { useOperatorCapabilities } from '@/admin/shell/use-operator-capabilities';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { getUserGroups } from '@/api/virtual-lab-svc/queries/user';
 import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
@@ -151,6 +153,16 @@ const links: LinkItem[] = [
     hasAction: false,
   },
   {
+    id: 'workspace-admin',
+    key: 'admin',
+    title: 'Admin',
+    url: ADMIN_ROOT,
+    icon: <ControlOutlined className="group-hover:text-primary-3 text-[17px]! shrink-0" />,
+    allowText: false,
+    className: '',
+    hasAction: false,
+  },
+  {
     id: 'workspace-help',
     key: 'help',
     title: 'Help',
@@ -195,6 +207,9 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
     staleTime: 1000 * 60 * 5,
   });
 
+  const { data: capabilities } = useOperatorCapabilities();
+  const isOperator = Boolean(capabilities?.ops.view);
+
   const learn = useFlag(learnFlag.key);
   const help = useFlag(hideHelpFlag.key) !== true;
   // the links, all but the active one, on the page's grey rather than white: behind its flag
@@ -214,6 +229,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
       links.filter((link) => {
         if (link.id === 'workspace-learn') return learn;
         if (link.id === 'workspace-help') return help;
+        if (link.id === 'workspace-admin') return isOperator;
         if (link.id === 'workspace-course') {
           return (
             hasCourse && isVlabAdmin && projectId === virtualLabData?.course?.template_project_id
@@ -221,13 +237,24 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
         }
         return true;
       }),
-    [learn, help, hasCourse, isVlabAdmin, projectId, virtualLabData?.course?.template_project_id]
+    [
+      learn,
+      help,
+      isOperator,
+      hasCourse,
+      isVlabAdmin,
+      projectId,
+      virtualLabData?.course?.template_project_id,
+    ]
   );
 
   const hashedLinks = filteredLinks.map((link) => ({
     ...link,
     baseUrl: link.url,
-    url: `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
+    url:
+      link.id === 'workspace-admin'
+        ? link.url
+        : `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${link.url}`,
   }));
 
   // (after tests:) breakpoint for 950px threshold
@@ -374,7 +401,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
             );
           }
 
-          if (id === 'workspace-help') {
+          if (id === 'workspace-help' || id === 'workspace-admin') {
             const isActiveHelp = activeSection === baseUrl || isActive?.(pathname);
             return (
               <div key={key} className="group flex w-max items-center justify-center gap-0">
@@ -418,7 +445,7 @@ export function TopMenuNavigation({ plain = false }: { plain?: boolean } = {}) {
                     </Link>
                   </Badge>
                   <span className="text-primary-9 absolute top-full left-1/2 -translate-x-1/2 text-sm whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                    Help
+                    {title}
                   </span>
                 </div>
               </div>
