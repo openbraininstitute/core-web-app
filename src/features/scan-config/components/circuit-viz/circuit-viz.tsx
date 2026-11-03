@@ -217,10 +217,16 @@ function CircuitVizView({
     return drawn;
   }, [morphologies, locationPreviews.locations, locationCells]);
   // A location is not drawn on a neuron the view is not drawing: one the nodes table filters out, say.
-  const drawnLocationCells = useMemo(
+  const filteredLocationCells = useMemo(
     () => locationCells.filter((cell) => isCellDrawn(cellColors, cell)),
     [locationCells, cellColors]
   );
+  // Kept while the same cells stay drawn: the colours change on every row hovered in the nodes table, and new cells
+  // would rebuild every marker. State rather than a ref: React Compiler will not read a ref in render.
+  const [drawnLocationCells, setDrawnLocationCells] = useState(filteredLocationCells);
+  if (!sameCells(filteredLocationCells, drawnLocationCells)) {
+    setDrawnLocationCells(filteredLocationCells);
+  }
   usePublishHiddenLocationNodes(locationCells, drawnLocationCells, locationFirstCell);
   const { locations, hover, labels, pickMode } = useLocationSelection({
     ...morphologyLocations,
@@ -361,6 +367,10 @@ function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
   const next = new Set(set);
   if (!next.delete(key)) next.add(key);
   return next;
+}
+
+function sameCells(a: readonly number[], b: readonly number[]): boolean {
+  return a.length === b.length && a.every((cell, i) => cell === b[i]);
 }
 
 /** Tells the form which neurons of the population on show the view is not drawing, so it can grey their rows out. */

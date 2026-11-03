@@ -487,6 +487,29 @@ describe('per-neuron explicit locations', () => {
     expect(result.current.locations?.markers).toEqual([]);
   });
 
+  it('keeps markers in step with their rows past a row that is not drawn', () => {
+    const config = perNeuronConfig([
+      { node_id: 3, section_id: 3, offset: 0.5 },
+      { node_id: 0, section_id: 3, offset: 0.5 },
+      { node_id: 7, section_id: 3, offset: 0.5 },
+    ]);
+    let next: Config | undefined;
+    const { result } = renderPerNeuron({
+      config,
+      onConfigChange: (updater) => {
+        next = updater(config);
+      },
+    });
+
+    // Node 3 is not drawn, so marker 1 is node 7's.
+    act(() => result.current.locations?.onPick?.(marker(1)));
+
+    expect(readLocations(readEntry(next, 'block'))).toEqual([
+      { node_id: 3, section_id: 3, offset: 0.5 },
+      { node_id: 0, section_id: 3, offset: 0.5 },
+    ]);
+  });
+
   it('records the neuron a click landed on', () => {
     const config = perNeuronConfig([{ node_id: 0, section_id: 3, offset: 0.5 }]);
     let next: Config | undefined;
