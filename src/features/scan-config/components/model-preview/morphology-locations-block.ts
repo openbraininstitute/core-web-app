@@ -80,6 +80,11 @@ export function hasAnyLocation(config: Config | null | undefined): boolean {
   );
 }
 
+/** Whether any block samples its locations from parameters, so the viewer previews them. */
+export function hasGeneratedBlock(config: Config | null | undefined): boolean {
+  return readGeneratedBlocks(readLocationsDictionary(config)).length > 0;
+}
+
 function blocksOf(
   dictionary: Record<string, unknown> | null
 ): Array<[string, Record<string, unknown>]> {

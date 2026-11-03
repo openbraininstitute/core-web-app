@@ -37,6 +37,7 @@ import {
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
   hasAnyLocation,
+  hasGeneratedBlock,
   type IFormBindingOptions,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
@@ -415,7 +416,9 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
     }) ||
-      hasAnyLocation(scanConfig));
+      hasAnyLocation(scanConfig) ||
+      // The flag that turns the preview on, so the controls show only with generated markers.
+      (Boolean(supportsExplicitLocations) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
