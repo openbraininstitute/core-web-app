@@ -31,6 +31,24 @@ describe('GET /api/admin/capabilities', () => {
     expect(getUserGroupsMock).not.toHaveBeenCalled();
   });
 
+  it('returns 401 for a session whose refresh token died', async () => {
+    authMock.mockResolvedValueOnce({ ...SESSION, error: 'RefreshAccessTokenError' });
+
+    const res = await GET();
+
+    expect(res.status).toBe(401);
+    expect(getUserGroupsMock).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when Keycloak rejects the token', async () => {
+    authMock.mockResolvedValueOnce(SESSION);
+    getUserGroupsMock.mockResolvedValueOnce(null);
+
+    const res = await GET();
+
+    expect(res.status).toBe(401);
+  });
+
   it('returns the derived capability record for the session groups', async () => {
     authMock.mockResolvedValueOnce(SESSION);
     getUserGroupsMock.mockResolvedValueOnce(['/service/accounting/admin']);

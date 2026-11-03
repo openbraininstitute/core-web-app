@@ -109,25 +109,38 @@ describe('getUserGroups', () => {
     vi.setSystemTime(T0 + 6 * MINUTE); // past TTL, inside the stale cap
     fetchMock.mockResolvedValueOnce({ ok: false, status, json: async () => ({}) });
 
-    await expect(getUserGroups(SESSION)).resolves.toEqual([]);
+    await expect(getUserGroups(SESSION)).resolves.toBeNull();
 
     fetchMock.mockResolvedValueOnce(userinfoError());
     await expect(getUserGroups(SESSION)).rejects.toThrow('503');
   });
 
-  it('throws on a resolution failure when allowStale is false (fail closed)', async () => {
-    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
-    await getUserGroups(SESSION);
+  it('answers null without calling Keycloak when there is no access token', async () => {
+    const noToken = { user: { id: 'sub-2' } } as unknown as Session;
 
-    vi.setSystemTime(T0 + 6 * MINUTE);
-    fetchMock.mockResolvedValueOnce(userinfoError());
-
-    await expect(getUserGroups(SESSION, { allowStale: false })).rejects.toThrow();
+    await expect(getUserGroups(noToken)).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('throws with allowStale false when there is no access token', async () => {
-    const noToken = { user: { id: 'sub-2' } } as unknown as Session;
-    await expect(getUserGroups(noToken, { allowStale: false })).rejects.toThrow();
-    expect(fetchMock).not.toHaveBeenCalled();
+  it('evicts the entry fetched longest ago when the cache is full', async () => {
+    const sessionFor = (id: string) => ({ user: { id }, accessToken: id }) as unknown as Session;
+    fetchMock.mockResolvedValue(userinfoOk([]));
+
+    await getUserGroups(sessionFor('first'));
+    await getUserGroups(sessionFor('second'));
+    for (let i = 0; i < 9_998; i += 1) {
+      await getUserGroups(sessionFor(`user-${i}`));
+    }
+
+    vi.setSystemTime(T0 + 6 * MINUTE); // past the TTL, so 'first' refetches and is newest again
+    await getUserGroups(sessionFor('first'));
+    expect(fetchMock).toHaveBeenCalledTimes(10_001);
+
+    await getUserGroups(sessionFor('overflow'));
+
+    vi.setSystemTime(T0 + 7 * MINUTE); // 'overflow' and 'first' now sit inside their TTL
+    fetchMock.mockRejectedValue(new Error('outage'));
+    await expect(getUserGroups(sessionFor('first'))).resolves.toEqual([]);
+    await expect(getUserGroups(sessionFor('second'))).rejects.toThrow('outage');
   });
 });

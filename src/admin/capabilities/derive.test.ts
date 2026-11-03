@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { deriveCapabilities, hasCapability } from './derive';
+import { deriveCapabilities } from './derive';
+import { hasCapability } from './has-capability';
 import {
   ACCOUNTING_ADMIN_GROUP,
   ENTITYCORE_ADMIN_GROUP,

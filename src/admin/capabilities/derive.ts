@@ -1,6 +1,6 @@
 import { CAPABILITY_REGISTRY } from './registry';
 
-import type { CapabilityPath, OperatorCapabilities } from './types';
+import type { OperatorCapabilities } from './types';
 
 export function deriveCapabilities(groups: string[]): OperatorCapabilities {
   const held = new Set(groups);
@@ -20,10 +20,4 @@ export function deriveCapabilities(groups: string[]): OperatorCapabilities {
   const view = Object.values(granted).some((section) => Object.values(section).some(Boolean));
 
   return { ...granted, ops: { view } };
-}
-
-export function hasCapability(caps: OperatorCapabilities, path: CapabilityPath): boolean {
-  const [group, leaf] = path.split('.') as [keyof OperatorCapabilities, string];
-  const section = caps[group] as Record<string, boolean> | undefined;
-  return Boolean(section?.[leaf]);
 }

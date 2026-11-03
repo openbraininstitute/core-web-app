@@ -15,18 +15,16 @@ type CacheEntry = { groups: string[]; fetchedAt: number };
 
 const groupsCache = new Map<string, CacheEntry>();
 
-function makeRoom(now: number) {
-  if (groupsCache.size < CACHE_MAX_ENTRIES) return;
-  for (const [key, entry] of groupsCache) {
-    if (now - entry.fetchedAt >= STALE_MAX_AGE_MS) groupsCache.delete(key);
-  }
+// Deleting first keeps the Map in fetch order, so its first key is always the oldest entry.
+function cacheGroups(key: string, entry: CacheEntry) {
+  groupsCache.delete(key);
   if (groupsCache.size >= CACHE_MAX_ENTRIES) {
     const oldest = groupsCache.keys().next().value;
     if (oldest) groupsCache.delete(oldest);
   }
+  groupsCache.set(key, entry);
 }
 
-// `null` means Keycloak rejected the token, which is an answer and not an outage.
 async function fetchUserGroups(accessToken: string): Promise<string[] | null> {
   const response = await fetch(`${config.KEYCLOAK_ISSUER}/protocol/openid-connect/userinfo`, {
     headers: { authorization: `Bearer ${accessToken}` },
@@ -42,24 +40,14 @@ async function fetchUserGroups(accessToken: string): Promise<string[] | null> {
     : [];
 }
 
-// A /userinfo outage serves the cached value up to the stale cap, then throws, so it never
-// reads as "this user has no groups". `allowStale: false` is for writes: it throws at once,
-// so an outage can't preserve a revoked operator's access.
-export async function getUserGroups(
-  session: Session | null | undefined,
-  { allowStale = true }: { allowStale?: boolean } = {}
-): Promise<string[]> {
-  const accessToken = session?.accessToken;
-  const sub = session?.user?.id;
+// `null` means the session has no token Keycloak accepts, so the user is logged out. A
+// /userinfo outage serves the cached value up to the stale cap, then throws, so it never reads
+// as "this user has no groups".
+export async function getUserGroups(session: Session): Promise<string[] | null> {
+  const { accessToken } = session;
+  if (!accessToken) return null;
 
-  if (!accessToken) {
-    if (!allowStale) {
-      throw new Error('cannot resolve operator groups: no access token on session');
-    }
-    return [];
-  }
-
-  const key = sub || accessToken;
+  const key = session.user.id || accessToken;
   const now = Date.now();
 
   const cached = groupsCache.get(key);
@@ -69,15 +57,14 @@ export async function getUserGroups(
     const groups = await fetchUserGroups(accessToken);
     if (!groups) {
       groupsCache.delete(key);
-      return [];
+      return null;
     }
-    makeRoom(now);
-    groupsCache.set(key, { groups, fetchedAt: now });
+    cacheGroups(key, { groups, fetchedAt: now });
     return groups;
   } catch (error) {
     log('error', 'failed to resolve keycloak groups from userinfo', error);
-    if (allowStale && cached && now - cached.fetchedAt < STALE_MAX_AGE_MS) return cached.groups;
-    throw error instanceof Error ? error : new Error('failed to resolve operator groups');
+    if (cached && now - cached.fetchedAt < STALE_MAX_AGE_MS) return cached.groups;
+    throw error;
   }
 }
 

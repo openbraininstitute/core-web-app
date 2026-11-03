@@ -23,7 +23,9 @@ describe('requireCapability', () => {
   it('sends a signed-out visitor to log in', async () => {
     authMock.mockResolvedValueOnce(null);
 
-    await expect(requireCapability('ops.view')).rejects.toThrow('redirect:/app/log-in');
+    await expect(requireCapability('ops.view')).rejects.toThrow(
+      'redirect:/app/log-in?callbackUrl=%2Fapp%2Fadmin'
+    );
     expect(getUserGroupsMock).not.toHaveBeenCalled();
   });
 
@@ -32,6 +34,13 @@ describe('requireCapability', () => {
 
     await expect(requireCapability('ops.view')).rejects.toThrow('redirect:/app/log-in');
     expect(getUserGroupsMock).not.toHaveBeenCalled();
+  });
+
+  it('sends a token Keycloak rejects to log in, not to forbidden', async () => {
+    authMock.mockResolvedValueOnce({ accessToken: 'tok' });
+    getUserGroupsMock.mockResolvedValueOnce(null);
+
+    await expect(requireCapability('ops.view')).rejects.toThrow('redirect:/app/log-in');
   });
 
   it('sends a user without the capability to the forbidden page', async () => {

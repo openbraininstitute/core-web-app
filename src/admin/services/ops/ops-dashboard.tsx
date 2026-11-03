@@ -1,8 +1,7 @@
 'use client';
 
 import { ReloadOutlined } from '@ant-design/icons';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { config } from '@/config';
 import { Align } from '@/features/data-grid/core';
@@ -11,7 +10,7 @@ import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import { adminQueryKeys, OPS_SERVICE_HEALTH_KEY_PREFIX } from '../../shared/query-keys';
+import { adminQueryKeys } from '../../shared/query-keys';
 import { fetchServiceVersion, probeServiceHealth } from './health';
 import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
@@ -28,16 +27,15 @@ function useServiceHealth(service: ServiceRow) {
     queryKey: adminQueryKeys.opsServiceHealth({ key: service.key }),
     queryFn: () => probeServiceHealth(service),
     refetchInterval: STATUS_REFRESH_MS,
-    retry: false,
   });
 }
 
 function StatusCell({ service }: { service: ServiceRow }) {
-  const { data: health, isPending } = useServiceHealth(service);
+  const { data: health } = useServiceHealth(service);
 
-  if (isPending) return <span className="text-neutral-4">Checking</span>;
+  if (!health) return <span className="text-neutral-4">Checking</span>;
 
-  const operational = health?.status === 'operational';
+  const operational = health.status === 'operational';
   return (
     <Badge
       rounded
@@ -51,7 +49,7 @@ function StatusCell({ service }: { service: ServiceRow }) {
     >
       {operational
         ? 'Operational'
-        : `Unreachable${health?.httpStatus ? ` (${health.httpStatus})` : ''}`}
+        : `Unreachable${health.httpStatus ? ` (${health.httpStatus})` : ''}`}
     </Badge>
   );
 }
@@ -67,7 +65,6 @@ function VersionCell({ service }: { service: ServiceRow }) {
     queryFn: () => fetchServiceVersion(service.baseUrl),
     enabled: service.supportsVersion,
     staleTime: VERSION_STALE_MS,
-    retry: false,
   });
   return version ? <span className="font-mono text-sm">{version}</span> : null;
 }
@@ -118,17 +115,29 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
   },
 ];
 
-export function OpsDashboard() {
+function RefreshButton() {
   const queryClient = useQueryClient();
+  const queryKey = adminQueryKeys.ops();
+  const isFetching = useIsFetching({ queryKey }) > 0;
 
-  const services = useMemo(
-    () =>
-      SERVICE_CATALOG.flatMap((descriptor) => {
-        const url = config[descriptor.configKey] as string | undefined;
-        return url ? [{ ...descriptor, baseUrl: serviceBaseUrl(descriptor, url) }] : [];
-      }),
-    []
+  return (
+    <Button
+      rounded
+      variant="outline"
+      size="sm"
+      onClick={() => queryClient.invalidateQueries({ queryKey })}
+    >
+      <ReloadOutlined spin={isFetching} />
+      Refresh
+    </Button>
   );
+}
+
+export function OpsDashboard() {
+  const services = SERVICE_CATALOG.map((descriptor) => ({
+    ...descriptor,
+    baseUrl: serviceBaseUrl(descriptor, config[descriptor.configKey] as string),
+  }));
 
   return (
     <div className="flex flex-col gap-4">
@@ -139,17 +148,7 @@ export function OpsDashboard() {
             Web app {config.APP_VERSION}, {config.DEPLOYMENT_ENV}
           </p>
         </div>
-        <Button
-          rounded
-          variant="outline"
-          size="sm"
-          onClick={() =>
-            queryClient.invalidateQueries({ queryKey: [OPS_SERVICE_HEALTH_KEY_PREFIX] })
-          }
-        >
-          <ReloadOutlined />
-          Refresh
-        </Button>
+        <RefreshButton />
       </div>
 
       <div className="border-neutral-2 rounded-lg border bg-white">

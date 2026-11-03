@@ -2,7 +2,7 @@ import type { CapabilityPath } from '../capabilities/types';
 
 export const ADMIN_ROOT = '/app/admin';
 
-export type AdminNavItem = {
+type AdminNavItem = {
   label: string;
   href: string;
   need: CapabilityPath;

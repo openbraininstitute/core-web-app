@@ -1,10 +1,8 @@
-const PREFIX = 'admin';
-
-export const OPS_SERVICE_HEALTH_KEY_PREFIX = `${PREFIX}-ops-health`;
+const OPS = ['admin', 'ops'] as const;
 
 export const adminQueryKeys = {
-  operatorCapabilities: () => [`${PREFIX}-operator-capabilities`] as const,
-  opsServiceHealth: ({ key }: { key: string }) => [OPS_SERVICE_HEALTH_KEY_PREFIX, { key }] as const,
-  opsServiceVersion: ({ key }: { key: string }) =>
-    [OPS_SERVICE_HEALTH_KEY_PREFIX, 'version', { key }] as const,
+  operatorCapabilities: () => ['admin', 'operator-capabilities'] as const,
+  ops: () => OPS,
+  opsServiceHealth: ({ key }: { key: string }) => [...OPS, 'health', { key }] as const,
+  opsServiceVersion: ({ key }: { key: string }) => [...OPS, 'version', { key }] as const,
 };

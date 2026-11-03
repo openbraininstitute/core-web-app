@@ -1,4 +1,4 @@
-import type { ClientConfig } from '@/config';
+import type { PlatformApiUrlField } from '@/config/schema';
 
 // Services a browser can probe through the public gateway. Accounting and launch-system are
 // blocked by source IP, and grading and cell-api send no CORS header, so those need a
@@ -8,7 +8,7 @@ export type ServiceDescriptor = {
   key: string;
   label: string;
   description: string;
-  configKey: keyof ClientConfig;
+  configKey: PlatformApiUrlField;
   healthPath: string;
   supportsVersion: boolean;
   // The config URL carries a version path, but health and version are mounted at the root.

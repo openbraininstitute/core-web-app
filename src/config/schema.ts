@@ -132,6 +132,8 @@ const platformApiUrlFields = {
   LAUNCH_SYSTEM_URL: '/launch-system',
 } as const satisfies Partial<Record<keyof typeof configFields, string>>;
 
+export type PlatformApiUrlField = keyof typeof platformApiUrlFields;
+
 const baseServerSchema = z
   .object(
     Object.fromEntries(Object.entries(configFields).map(([key, { schema }]) => [key, schema]))

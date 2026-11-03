@@ -8,7 +8,7 @@ import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
-import { hasCapability } from '../capabilities/derive';
+import { hasCapability } from '../capabilities/has-capability';
 import { ADMIN_NAV, ADMIN_ROOT } from './sections';
 
 import type { ReactNode } from 'react';
@@ -56,7 +56,7 @@ export function AdminShell({
           <div key={group.label} className="flex flex-col gap-0.5">
             <div className="text-neutral-4 px-3 text-sm">{group.label}</div>
             {group.items.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(`${item.href}/`);
+              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Button
                   key={item.href}
@@ -65,7 +65,7 @@ export function AdminShell({
                   asChild
                   variant="outline"
                   size="sm"
-                  active={Boolean(isActive)}
+                  active={isActive}
                   className={cn(
                     'w-full justify-start font-semibold shadow-none',
                     !isActive && 'hover:bg-neutral-1 hover:text-primary-9 bg-transparent'
