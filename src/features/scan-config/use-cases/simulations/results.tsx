@@ -266,7 +266,6 @@ export function SimulationsTab({
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
 
-  // Only launch-system executions have an `execution_id`.
   const { data: recoveredJobId } = useQuery({
     queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
     queryFn: async () => {
@@ -325,7 +324,7 @@ export function SimulationsTab({
         setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
-        log('error', 'Failed to submit a simulation');
+        log('error', 'Failed to submit a simulation', error);
         if (isLowCreditsError(error)) {
           lowFundsError = true;
         }

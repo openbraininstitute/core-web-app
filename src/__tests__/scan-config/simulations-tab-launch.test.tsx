@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
 
 const mocks = vi.hoisted(() => ({
-  model: {} as { entity?: unknown; entityType?: string; isLoading: boolean },
+  model: {} as { entity?: unknown; entityType?: string },
   notificationError: vi.fn(),
   openModal: vi.fn(),
   costConfirmation: {} as { taskType?: string; onConfirm?: (ids: string[]) => unknown },
@@ -116,12 +116,10 @@ async function clickLaunch() {
 describe('SimulationsTab launch routing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.costConfirmation.taskType = undefined;
-    mocks.costConfirmation.onConfirm = undefined;
   });
 
   it('launches a me-model through obi-one', async () => {
-    mocks.model = { entity: {}, entityType: EntityTypeDict.Memodel, isLoading: false };
+    mocks.model = { entityType: EntityTypeDict.Memodel };
     mocks.runTask.mockResolvedValue({ job_id: 'job' });
 
     await clickLaunch();
@@ -136,7 +134,7 @@ describe('SimulationsTab launch routing', () => {
   });
 
   it('runs an ion channel model on Bluenaas', async () => {
-    mocks.model = { entity: {}, entityType: EntityTypeDict.IonChannelModel, isLoading: false };
+    mocks.model = { entityType: EntityTypeDict.IonChannelModel };
 
     await clickLaunch();
 
@@ -150,11 +148,11 @@ describe('SimulationsTab launch routing', () => {
   });
 
   it.each([
-    ['a model that failed to load', { isLoading: false }],
-    ['a circuit that failed to load', { entityType: EntityTypeDict.Circuit, isLoading: false }],
+    ['a model that failed to load', {}],
+    ['a circuit that failed to load', { entityType: EntityTypeDict.Circuit }],
     [
       'a circuit with an unknown scale',
-      { entity: { scale: 'unknown' }, entityType: EntityTypeDict.Circuit, isLoading: false },
+      { entity: { scale: 'unknown' }, entityType: EntityTypeDict.Circuit },
     ],
   ])('launches nothing for %s', async (_, model) => {
     mocks.model = model;

@@ -18,18 +18,29 @@ export type TSimulationLaunchTarget = {
   requiresOfflineTokenConsent: boolean;
 };
 
-const SMALL_SCALE_TASK_TYPES: Partial<Record<TCircuitScaleDictionary, TObiOneTaskType>> = {
-  [CircuitScaleDictionary.Single]: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
-  [CircuitScaleDictionary.PairNeuron]: ObiOneTaskTypeDict.CircuitSimulation,
-  [CircuitScaleDictionary.SmallMicrocircuit]: ObiOneTaskTypeDict.CircuitSimulation,
+// Small scales run as machine jobs, which don't need an offline token.
+const SMALL_CIRCUIT_TARGET: TSimulationLaunchTarget = {
+  taskType: ObiOneTaskTypeDict.CircuitSimulation,
+  requiresOfflineTokenConsent: false,
 };
 
-const TASK_LAUNCH_SCALES: ReadonlySet<TCircuitScaleDictionary> = new Set([
-  CircuitScaleDictionary.Microcircuit,
-  CircuitScaleDictionary.Region,
-  CircuitScaleDictionary.System,
-  CircuitScaleDictionary.WholeBrain,
-]);
+const LARGE_CIRCUIT_TARGET: TSimulationLaunchTarget = {
+  taskType: ObiOneTaskTypeDict.CircuitSimulation,
+  requiresOfflineTokenConsent: true,
+};
+
+const SCALE_TARGETS: Record<TCircuitScaleDictionary, TSimulationLaunchTarget> = {
+  [CircuitScaleDictionary.Single]: {
+    taskType: ObiOneTaskTypeDict.SingleNeuronSynaptomeSimulationExecution,
+    requiresOfflineTokenConsent: false,
+  },
+  [CircuitScaleDictionary.PairNeuron]: SMALL_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.SmallMicrocircuit]: SMALL_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.Microcircuit]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.Region]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.System]: LARGE_CIRCUIT_TARGET,
+  [CircuitScaleDictionary.WholeBrain]: LARGE_CIRCUIT_TARGET,
+};
 
 export function resolveSimulationLaunchTarget({
   entityType,
@@ -58,15 +69,7 @@ export function resolveSimulationLaunchTarget({
   }
   if (scale === null) return null;
 
-  // Small scales run as machine jobs, which don't need an offline token.
-  const smallScaleTaskType = SMALL_SCALE_TASK_TYPES[scale];
-  if (smallScaleTaskType) {
-    return { taskType: smallScaleTaskType, requiresOfflineTokenConsent: false };
-  }
-
-  return TASK_LAUNCH_SCALES.has(scale)
-    ? { taskType: ObiOneTaskTypeDict.CircuitSimulation, requiresOfflineTokenConsent: true }
-    : null;
+  return SCALE_TARGETS[scale] ?? null;
 }
 
 // TODO Remove this after the data is migrated

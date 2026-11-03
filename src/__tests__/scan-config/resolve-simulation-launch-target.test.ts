@@ -17,7 +17,7 @@ const memodel: TLaunchInput = {
 };
 
 const circuit = (
-  scale: TCircuitScaleDictionary,
+  scale: TCircuitScaleDictionary | null,
   targetSimulator: string | null = 'NEURON'
 ): TLaunchInput => ({ entityType: EntityTypeDict.Circuit, scale, targetSimulator });
 
@@ -87,13 +87,7 @@ describe('resolveSimulationLaunchTarget', () => {
 
   it('returns null for a circuit with a null or unknown scale', () => {
     for (const scale of [null, 'unknown' as TCircuitScaleDictionary]) {
-      expect(
-        resolveSimulationLaunchTarget({
-          entityType: EntityTypeDict.Circuit,
-          scale,
-          targetSimulator: 'NEURON',
-        })
-      ).toBeNull();
+      expect(resolveSimulationLaunchTarget(circuit(scale))).toBeNull();
     }
   });
 
