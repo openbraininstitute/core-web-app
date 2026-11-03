@@ -1,3 +1,8 @@
+import { maxBy } from 'es-toolkit';
+
+import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
+
+import type { FieldPlotMode } from '@/features/lfp-viewer/field-plot';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 
 /** Bins the measurements are taken over at most: blocks of the overview's, averaged. */
@@ -6,6 +11,14 @@ const MODE_ITERATIONS = 50;
 const MODE_TOLERANCE = 1e-6;
 /** Above this many contacts, rows are bins of contacts. */
 const CONTACTS_PER_ROW_ABOVE = 64;
+/** Above this many contacts the map is shown first: their traces would not read. */
+const MAP_FIRST_ABOVE = 64;
+/** Below this share of signal common to all contacts the map is shown first: it is what differs. */
+const MAP_FIRST_SHARED_BELOW = 0.5;
+/** Traces drawn while none are ticked: spread evenly over the contacts. */
+const DEFAULT_TRACES = 32;
+/** Ticked contacts traced at most, a range read each. */
+export const MAX_TRACES = 64;
 
 export type RowOrder = 'along' | 'similar' | 'contacts';
 
@@ -16,14 +29,13 @@ export type FieldRow = {
   label: string;
 };
 
-export type FieldStructure = {
+type FieldStructure = {
   /** The share of the field's variance that all contacts have in common, from 0 to 1. */
   sharedShare: number;
   /** Per contact, its weight in the main pattern of what differs between contacts. */
   mode: Float32Array;
 };
 
-/** The field at bin midpoints, averaged into at most `MEASURED_BINS` bins: contact × bin. */
 function measuredValues(field: LfpField): { values: Float32Array; bins: number } {
   const bins = Math.min(field.bins, MEASURED_BINS);
   const values = new Float32Array(field.contacts * bins);
@@ -45,7 +57,14 @@ function measuredValues(field: LfpField): { values: Float32Array; bins: number }
   return { values, bins };
 }
 
-/** The leading right singular vector of contact × bin values, by power iteration on them. */
+function signOfLargest(values: ArrayLike<number>): 1 | -1 {
+  let largest = 0;
+  for (let i = 1; i < values.length; i++) {
+    if (Math.abs(values[i]) > Math.abs(values[largest])) largest = i;
+  }
+  return values[largest] < 0 ? -1 : 1;
+}
+
 function leadingVector(values: Float32Array, contacts: number, bins: number): Float32Array {
   // Deterministic and with no symmetry the field could share.
   let vector = Float64Array.from({ length: contacts }, (_, c) => 1 + ((c * 7919) % 101) / 101);
@@ -74,11 +93,7 @@ function leadingVector(values: Float32Array, contacts: number, bins: number): Fl
     if (change < MODE_TOLERANCE) break;
   }
   // Its sign is arbitrary: fixed, so that a map does not flip between visits.
-  let largest = 0;
-  for (let c = 1; c < contacts; c++) {
-    if (Math.abs(vector[c]) > Math.abs(vector[largest])) largest = c;
-  }
-  const sign = vector[largest] < 0 ? -1 : 1;
+  const sign = signOfLargest(vector);
   return Float32Array.from(vector, (v) => v * sign);
 }
 
@@ -87,7 +102,7 @@ export function describeField(field: LfpField): FieldStructure {
   const { values, bins } = measuredValues(field);
   let grand = 0;
   for (const v of values) grand += v;
-  grand /= values.length || 1;
+  grand /= values.length;
 
   const shared = new Float64Array(bins);
   let total = 0;
@@ -111,6 +126,10 @@ export function describeField(field: LfpField): FieldStructure {
   };
 }
 
+export function openingView({ sharedShare, mode }: FieldStructure): FieldPlotMode {
+  return mode.length > MAP_FIRST_ABOVE || sharedShare < MAP_FIRST_SHARED_BELOW ? 'map' : 'traces';
+}
+
 function solve3(a: number[][], b: number[]): number[] | null {
   const det = (m: number[][]) =>
     m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
@@ -121,23 +140,15 @@ function solve3(a: number[][], b: number[]): number[] | null {
   return b.map((_, i) => det(a.map((row, r) => row.map((v, c) => (c === i ? b[r] : v)))) / whole);
 }
 
-/**
- * The straight line through the array the contacts' weights change along: a unit vector whose
- * largest component is positive, or null where they do not change with position. An array that
- * is a line or a plane gives a line within it: the small ridge keeps its missing axes at zero.
- */
 export function fieldDirection(
   mode: Float32Array,
   positions: Float32Array
 ): [number, number, number] | null {
-  const n = mode.length;
-  const centre = [0, 0, 0];
-  for (let c = 0; c < n; c++) {
-    for (let k = 0; k < 3; k++) centre[k] += positions[c * 3 + k] / n;
-  }
+  const centre = extentOf(positions)?.mean;
+  if (!centre) return null;
   const a = [0, 1, 2].map(() => [0, 0, 0]);
   const b = [0, 0, 0];
-  for (let c = 0; c < n; c++) {
+  for (let c = 0; c < mode.length; c++) {
     for (let i = 0; i < 3; i++) {
       const pi = positions[c * 3 + i] - centre[i];
       b[i] += pi * mode[c];
@@ -146,30 +157,22 @@ export function fieldDirection(
   }
   const trace = a[0][0] + a[1][1] + a[2][2];
   if (trace === 0) return null;
+  // An array that is a line or a plane gives a line within it: this keeps its missing axes at zero.
   for (let i = 0; i < 3; i++) a[i][i] += trace * 1e-6;
   const solved = solve3(a, b);
   if (!solved) return null;
   const norm = Math.hypot(...solved);
   if (norm === 0) return null;
-  const largest = solved.reduce(
-    (best, v, i) => (Math.abs(v) > Math.abs(solved[best]) ? i : best),
-    0
-  );
-  const sign = solved[largest] < 0 ? -1 : 1;
+  const sign = signOfLargest(solved);
   return [(solved[0] * sign) / norm, (solved[1] * sign) / norm, (solved[2] * sign) / norm];
 }
 
-/** Each contact's distance along a direction through the array's centre, in its units. */
 export function coordinatesAlong(
   positions: Float32Array,
   direction: readonly [number, number, number]
 ): Float32Array {
-  const n = positions.length / 3;
-  const centre = [0, 0, 0];
-  for (let c = 0; c < n; c++) {
-    for (let k = 0; k < 3; k++) centre[k] += positions[c * 3 + k] / n;
-  }
-  return Float32Array.from({ length: n }, (_, c) => {
+  const centre = extentOf(positions)?.mean ?? [0, 0, 0];
+  return Float32Array.from({ length: positions.length / 3 }, (_, c) => {
     let along = 0;
     for (let k = 0; k < 3; k++) along += (positions[c * 3 + k] - centre[k]) * direction[k];
     return along;
@@ -181,11 +184,6 @@ function signedMicrons(value: number): string {
   return `${rounded > 0 ? '+' : rounded < 0 ? '−' : ''}${Math.abs(rounded)} µm`;
 }
 
-/**
- * The map's rows, top to bottom: the contacts from highest `coordinate` to lowest, or in their
- * own order without one. Each contact is a row up to `CONTACTS_PER_ROW_ABOVE`; past that, rows
- * hold as many contacts each. A row of many is named by `unit`: its middle µm, or its place.
- */
 export function buildRows(
   contacts: number,
   coordinate: Float32Array | null,
@@ -194,56 +192,76 @@ export function buildRows(
 ): FieldRow[] {
   const order = Array.from({ length: contacts }, (_, c) => c);
   if (coordinate) order.sort((a, b) => coordinate[b] - coordinate[a] || a - b);
-  const count =
-    contacts <= CONTACTS_PER_ROW_ABOVE ? contacts : Math.max(1, Math.ceil(Math.sqrt(contacts)));
+  const count = contacts <= CONTACTS_PER_ROW_ABOVE ? contacts : Math.ceil(Math.sqrt(contacts));
   return Array.from({ length: count }, (_, r) => {
     const members = order.slice(
       Math.floor((r * contacts) / count),
       Math.floor(((r + 1) * contacts) / count)
     );
     const middle = members[Math.floor(members.length / 2)];
-    let lead = members[0];
-    for (const c of members) if (swing(c) > swing(lead)) lead = c;
     let label = `e${members[0]}`;
     if (members.length > 1 && coordinate) {
       label = unit === 'microns' ? signedMicrons(coordinate[middle]) : `#${r + 1}`;
     }
-    return { contacts: members, lead, label };
+    return { contacts: members, lead: maxBy(members, swing) ?? members[0], label };
   });
 }
 
-/**
- * What differs between contacts: the mean across contacts taken off each bin, in a field of its
- * own scale since what is left can be far smaller than what was shared.
- */
-export function withoutShared(field: LfpField): LfpField {
-  const { contacts, bins, kind } = field;
-  const perBin = kind === 'value' ? 1 : 2;
-  const mean = new Float64Array(bins * perBin);
-  for (let c = 0; c < contacts; c++) {
-    for (let i = 0; i < mean.length; i++) mean[i] += field.data[c * mean.length + i] / contacts;
+export function fieldRows(
+  order: RowOrder,
+  { mode }: FieldStructure,
+  positions: Float32Array | null,
+  direction: readonly [number, number, number] | null,
+  swing: (contact: number) => number
+): FieldRow[] {
+  if (order === 'along' && positions && direction) {
+    return buildRows(mode.length, coordinatesAlong(positions, direction), 'microns', swing);
   }
-  const residual = new Float64Array(field.data.length);
-  let largest = 0;
+  return buildRows(mode.length, order === 'similar' ? mode : null, 'place', swing);
+}
+
+// In the rows' order, so that both views read from top to bottom alike.
+export function tracedContacts(rows: readonly FieldRow[], ticked: readonly number[]): number[] {
+  const ordered = rows.flatMap((row) => row.contacts);
+  if (ticked.length > 0) {
+    const shown = new Set(ticked.slice(0, MAX_TRACES));
+    return ordered.filter((c) => shown.has(c));
+  }
+  const n = Math.min(DEFAULT_TRACES, ordered.length);
+  return Array.from({ length: n }, (_, i) =>
+    n === 1 ? ordered[0] : ordered[Math.round((i * (ordered.length - 1)) / (n - 1))]
+  );
+}
+
+export function withoutShared(field: LfpField): LfpField {
+  const { contacts, bins, kind, data } = field;
+  const perContact = bins * (kind === 'value' ? 1 : 2);
+  const mean = new Float64Array(perContact);
   for (let c = 0; c < contacts; c++) {
-    for (let b = 0; b < bins; b++) {
-      for (let k = 0; k < perBin; k++) {
-        const i = b * perBin + k;
-        const at = c * mean.length + i;
-        residual[at] = (field.data[at] - mean[i]) * field.scale;
-        largest = Math.max(largest, Math.abs(residual[at]));
-      }
-      if (perBin === 2) {
-        const low = c * mean.length + b * 2;
-        // Taken off each end apart, the ends can cross.
-        if (residual[low] > residual[low + 1]) {
-          const swap = residual[low];
-          residual[low] = residual[low + 1];
-          residual[low + 1] = swap;
-        }
+    for (let i = 0; i < perContact; i++) mean[i] += data[c * perContact + i];
+  }
+  // Summed first: a signal every contact shares then leaves exactly nothing, not rounding noise.
+  for (let i = 0; i < perContact; i++) mean[i] /= contacts;
+
+  let largest = 0;
+  for (let at = 0; at < data.length; at++) {
+    largest = Math.max(largest, Math.abs(data[at] - mean[at % perContact]));
+  }
+  // A scale of its own: what is left can be far smaller than what was shared.
+  const stretch = largest > 0 ? 32767 / largest : 1;
+  const residual = new Int16Array(data.length);
+  for (let at = 0; at < data.length; at++) {
+    residual[at] = Math.round((data[at] - mean[at % perContact]) * stretch);
+  }
+  if (kind === 'min_max') {
+    // Taken off each end apart, the ends can cross.
+    for (let low = 0; low < residual.length; low += 2) {
+      if (residual[low] > residual[low + 1]) {
+        const swap = residual[low];
+        residual[low] = residual[low + 1];
+        residual[low + 1] = swap;
       }
     }
   }
-  const scale = largest > 0 ? largest / 32767 : field.scale;
-  return { ...field, scale, data: Int16Array.from(residual, (v) => Math.round(v / scale)) };
+  return { ...field, scale: field.scale / stretch, data: residual };
 }

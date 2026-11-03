@@ -67,7 +67,6 @@ function extent(field: LfpField, contact: number, from: number, to: number): [nu
   return [low * field.scale, high * field.scale];
 }
 
-/** A row's value in a bin, in µV: the mean of its contacts'. */
 function rowValue(field: LfpField, row: FieldRow, bin: number): number {
   let sum = 0;
   for (const contact of row.contacts) sum += fieldValue(field, contact, bin);
@@ -93,7 +92,7 @@ export function FieldPlot({
   mode,
   field,
   scale,
-  rows: mapRows,
+  rows,
   traces,
   traceField,
   gain,
@@ -130,19 +129,19 @@ export function FieldPlot({
   };
   const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * (plot.right - plot.left);
   const timeOf = (x: number) => from + ((x - plot.left) / (plot.right - plot.left)) * (to - from);
-  const rows = mode === 'map' ? mapRows.length : traces.length;
-  const fullTraces = mode === 'traces' ? traceField : null;
+  const rowCount = mode === 'map' ? rows.length : traces.length;
   const rowOf = (y: number) =>
-    Math.min(rows - 1, Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rows)));
-  const contactOf = (y: number) =>
-    mode === 'map' ? (mapRows[rowOf(y)]?.lead ?? null) : (traces[rowOf(y)] ?? null);
+    Math.min(
+      rowCount - 1,
+      Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rowCount))
+    );
 
   // The map's image, a pixel per row and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
     if (mode !== 'map' || field.bins === 0 || typeof document === 'undefined') return null;
-    const image = new ImageData(field.bins, mapRows.length);
+    const image = new ImageData(field.bins, rows.length);
     const pixels = new Uint32Array(image.data.buffer);
-    mapRows.forEach((row, r) => {
+    rows.forEach((row, r) => {
       for (let b = 0; b < field.bins; b++) {
         const uv = rowValue(field, row, b);
         pixels[r * field.bins + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
@@ -150,10 +149,10 @@ export function FieldPlot({
     });
     const canvas = document.createElement('canvas');
     canvas.width = field.bins;
-    canvas.height = mapRows.length;
+    canvas.height = rows.length;
     canvas.getContext('2d')?.putImageData(image, 0, 0);
     return canvas;
-  }, [mode, field, scale, mapRows]);
+  }, [mode, field, scale, rows]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf and the plot's edges follow from size, from and to
   useEffect(() => {
@@ -184,7 +183,7 @@ export function FieldPlot({
         firstBin,
         0,
         lastBin - firstBin,
-        mapRows.length,
+        rows.length,
         x0,
         plot.top,
         x1 - x0,
@@ -194,19 +193,16 @@ export function FieldPlot({
       g.fillStyle = LABEL;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
-      for (const r of computeTicks(0, mapRows.length - 1, plotHeight / 40, true)) {
-        g.fillText(
-          mapRows[r].label,
-          plot.left - 6,
-          plot.top + ((r + 0.5) / mapRows.length) * plotHeight
-        );
+      const rowY = (r: number) => plot.top + ((r + 0.5) / rows.length) * plotHeight;
+      for (const r of computeTicks(0, rows.length - 1, plotHeight / 40, true)) {
+        g.fillText(rows[r].label, plot.left - 6, rowY(r));
       }
       const selectedRow =
         selectedContact === null
           ? -1
-          : mapRows.findIndex((row) => row.contacts.includes(selectedContact));
+          : rows.findIndex((row) => row.contacts.includes(selectedContact));
       if (selectedRow >= 0) {
-        const y = plot.top + ((selectedRow + 0.5) / mapRows.length) * plotHeight;
+        const y = rowY(selectedRow);
         g.fillStyle = SELECTED;
         g.beginPath();
         g.moveTo(plot.left - 4, y);
@@ -282,7 +278,7 @@ export function FieldPlot({
     size,
     mode,
     mapImage,
-    mapRows,
+    rows,
     field,
     scale,
     traces,
@@ -328,30 +324,34 @@ export function FieldPlot({
           const x = localX(e);
           const y = localY(e);
           if (drag) setDrag({ ...drag, x1: inPlot(x) });
-          if (x < plot.left || x > plot.right || y < plot.top || y > plot.bottom || rows === 0) {
+          if (
+            x < plot.left ||
+            x > plot.right ||
+            y < plot.top ||
+            y > plot.bottom ||
+            rowCount === 0
+          ) {
             setHover(null);
             return;
           }
-          const contact = contactOf(y);
+          const r = rowOf(y);
           const t = timeOf(x);
-          if (contact === null) {
-            setHover(null);
-            return;
-          }
+          let name: string;
+          let uv: number;
           if (mode === 'map') {
-            const row = mapRows[rowOf(y)];
-            const uv = rowValue(field, row, binAt(field, t));
-            const name =
+            const row = rows[r];
+            name =
               row.contacts.length > 1
                 ? `${row.label} · ${row.contacts.length} contacts`
                 : row.label;
-            setHover(`${name} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
-            return;
+            uv = rowValue(field, row, binAt(field, t));
+          } else {
+            name = `e${traces[r]}`;
+            uv = traceField
+              ? fieldValue(traceField, r, binAt(traceField, t))
+              : fieldValue(field, traces[r], binAt(field, t));
           }
-          const uv = fullTraces
-            ? fieldValue(fullTraces, rowOf(y), binAt(fullTraces, t))
-            : fieldValue(field, contact, binAt(field, t));
-          setHover(`e${contact} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
+          setHover(`${name} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
         }}
         onPointerLeave={() => setHover(null)}
         onPointerUp={(e) => {
@@ -359,13 +359,13 @@ export function FieldPlot({
           setDrag(null);
           if (Math.abs(drag.x1 - drag.x0) < DRAG_PX) {
             onSeek(timeOf(drag.x0));
-            const contact = contactOf(localY(e));
-            if (contact !== null && mode === 'map') onContactClick(contact);
+            const row = mode === 'map' ? rows[rowOf(localY(e))] : undefined;
+            if (row) onContactClick(row.lead);
             return;
           }
           const a = timeOf(Math.min(drag.x0, drag.x1));
           const b = timeOf(Math.max(drag.x0, drag.x1));
-          if (b - a >= (fullTraces ?? field).binMs * 2) onWindowChange([a, b]);
+          if (b - a >= (traceField ?? field).binMs * 2) onWindowChange([a, b]);
         }}
         onDoubleClick={() => onWindowChange(null)}
       >

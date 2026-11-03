@@ -48,9 +48,7 @@ type Props = {
   populationName: string | undefined;
   field: LfpField;
   scale: ColourScale;
-  /** xyz per contact, in the report's order; null where the array's are not known. */
-  positions: Float32Array | null;
-  positionsState: ContactPositions['state'];
+  contacts: ContactPositions;
   /** Below this |V|, in µV, a contact is drawn as at zero. */
   hideBelow: number;
   selectedContact: number | null;
@@ -67,13 +65,13 @@ export function LfpScene({
   populationName,
   field,
   scale,
-  positions,
-  positionsState,
+  contacts,
   hideBelow,
   selectedContact,
   timeCursor,
   active,
 }: Props) {
+  const { positions } = contacts;
   const [levels, setLevels] = useState<Uint8Array | null>(null);
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
 
@@ -158,11 +156,11 @@ export function LfpScene({
           <span>+{formatUv(scale.limit)} µV</span>
         </div>
       </div>
-      {(positionsState === 'absent' || positionsState === 'failed') && (
+      {!positions && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-neutral-500">
-          {positionsState === 'absent'
-            ? "Where this report's contacts are is not stored with its recording array"
-            : "Where this report's contacts are could not be read"}
+          {contacts.state === 'failed'
+            ? "Where this report's contacts are could not be read"
+            : "Where this report's contacts are is not stored with its recording array"}
         </div>
       )}
     </div>

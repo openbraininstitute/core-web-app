@@ -5,6 +5,9 @@ import {
   coordinatesAlong,
   describeField,
   fieldDirection,
+  fieldRows,
+  openingView,
+  tracedContacts,
   withoutShared,
 } from './field-structure';
 
@@ -156,9 +159,70 @@ describe('buildRows', () => {
   });
 });
 
+describe('openingView', () => {
+  const structure = (sharedShare: number, contacts: number) => ({
+    sharedShare,
+    mode: new Float32Array(contacts),
+  });
+
+  it('opens traces of a few contacts that share most of the field', () => {
+    expect(openingView(structure(0.9, 16))).toBe('traces');
+  });
+
+  it('opens the map where little is shared, or where traces would not read', () => {
+    expect(openingView(structure(0.3, 16))).toBe('map');
+    expect(openingView(structure(0.9, 65))).toBe('map');
+  });
+});
+
+describe('fieldRows', () => {
+  const noSwing = () => 0;
+  const structure = { sharedShare: 0, mode: Float32Array.of(-1, 1, 0) };
+  const positions = lineAlong(1, 3);
+  const leads = (rows: { lead: number }[]) => rows.map((r) => r.lead);
+
+  it('follows the direction, the weights or the contacts’ own order', () => {
+    expect(leads(fieldRows('along', structure, positions, [0, 1, 0], noSwing))).toEqual([2, 1, 0]);
+    expect(leads(fieldRows('similar', structure, positions, [0, 1, 0], noSwing))).toEqual([
+      1, 2, 0,
+    ]);
+    expect(leads(fieldRows('contacts', structure, positions, [0, 1, 0], noSwing))).toEqual([
+      0, 1, 2,
+    ]);
+  });
+
+  it('falls back on the contacts’ order without a direction to follow', () => {
+    expect(leads(fieldRows('along', structure, positions, null, noSwing))).toEqual([0, 1, 2]);
+  });
+});
+
+describe('tracedContacts', () => {
+  const rows = (order: number[]) => order.map((c) => ({ contacts: [c], lead: c, label: `e${c}` }));
+
+  it('keeps the rows’ order for ticked contacts', () => {
+    expect(tracedContacts(rows([3, 1, 2, 0]), [0, 3])).toEqual([3, 0]);
+  });
+
+  it('traces every contact while none are ticked and they are few', () => {
+    expect(tracedContacts(rows([3, 1, 2, 0]), [])).toEqual([3, 1, 2, 0]);
+  });
+
+  it('spreads the default traces over many, from the first row to the last', () => {
+    const traced = tracedContacts(rows(Array.from({ length: 100 }, (_, c) => c)), []);
+    expect(traced).toHaveLength(32);
+    expect(traced[0]).toBe(0);
+    expect(traced[31]).toBe(99);
+  });
+});
+
 describe('withoutShared', () => {
   it('leaves nothing of a signal every contact shares', () => {
     const removed = withoutShared(fieldOf(4, (_, b) => 50 * sine(b)));
+    expect(removed.data.every((v) => v === 0)).toBe(true);
+  });
+
+  it('leaves no rounding noise where the contacts do not divide evenly', () => {
+    const removed = withoutShared(fieldOf(7, (_, b) => 50 * sine(b)));
     expect(removed.data.every((v) => v === 0)).toBe(true);
   });
 

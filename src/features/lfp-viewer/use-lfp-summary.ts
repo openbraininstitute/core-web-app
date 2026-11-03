@@ -149,6 +149,8 @@ export type ContactPositions =
   | { state: 'loading' | 'failed' | 'absent'; positions: null; blocks: null }
   | { state: 'ready'; positions: Float32Array; blocks: ContactBlock[] };
 
+const NO_POSITIONS = { positions: null, blocks: null };
+
 /**
  * Where the report's contacts are, from its recording array's stored
  * locations, in the report's order. Absent where the array has none, or they
@@ -165,11 +167,9 @@ export function useContactPositions(
     staleTime: Infinity,
   });
   return useMemo(() => {
-    if (isLoading) return { state: 'loading', positions: null, blocks: null };
-    if (isError) return { state: 'failed', positions: null, blocks: null };
+    if (isLoading) return { state: 'loading', ...NO_POSITIONS };
+    if (isError) return { state: 'failed', ...NO_POSITIONS };
     const found = data && contacts !== undefined ? contactPositions(data, contacts) : null;
-    return found
-      ? { state: 'ready', ...found }
-      : { state: 'absent', positions: null, blocks: null };
+    return found ? { state: 'ready', ...found } : { state: 'absent', ...NO_POSITIONS };
   }, [data, isError, isLoading, contacts]);
 }

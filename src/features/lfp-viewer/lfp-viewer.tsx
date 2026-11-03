@@ -2,6 +2,7 @@
 
 import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
+import { maxBy } from 'es-toolkit';
 import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -12,10 +13,12 @@ import { recordingArrayId } from '@/features/lfp-viewer/contacts';
 import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
 import {
-  buildRows,
-  coordinatesAlong,
   describeField,
   fieldDirection,
+  fieldRows,
+  MAX_TRACES,
+  openingView,
+  tracedContacts,
   withoutShared,
 } from '@/features/lfp-viewer/field-structure';
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
@@ -65,16 +68,8 @@ const StatisticsPlot = dynamic(
   { ssr: false, loading: () => <Spin className="m-auto" /> }
 );
 
-/** Traces drawn while none are ticked: spread evenly over the contacts. */
-const DEFAULT_TRACES = 32;
-/** Above this many contacts the map is shown first: their traces would not read. */
-const MAP_FIRST_ABOVE = 64;
-/** Below this share of signal common to all contacts the map is shown first: it is what differs. */
-const MAP_FIRST_SHARED_BELOW = 0.5;
 /** "Hide below" in 3D, as shares of the scale's limit. */
 const HIDE_BELOW_SHARES = [0, 0.05, 0.1, 0.25];
-/** Ticked contacts traced at most, a range read each. */
-const MAX_TRACES = 64;
 const GAINS = [0.5, 1, 2, 4, 8];
 /** Spectra drawn beside the mean at most. */
 const MAX_SPECTRA = 8;
@@ -191,49 +186,38 @@ function LfpReportView({
   const scale = useMemo(() => colourScale(fieldLimit(field)), [field]);
   const [hideBelowShare, setHideBelowShare] = useState(0);
 
-  const [mode, setMode] = useState<FieldPlotMode>(
-    index.contacts > MAP_FIRST_ABOVE || structure.sharedShare < MAP_FIRST_SHARED_BELOW
-      ? 'map'
-      : 'traces'
-  );
+  const [mode, setMode] = useState<FieldPlotMode>(() => openingView(structure));
   const [chosenOrder, setChosenOrder] = useState<RowOrder | null>(null);
   const order = chosenOrder ?? (direction ? 'along' : 'contacts');
-  const swing = useMemo(() => {
-    const ptp = index.stats.indexOf('ptp');
-    return (contact: number) => (ptp < 0 ? 0 : stats[contact * index.stats.length + ptp]);
-  }, [index.stats, stats]);
-  const rows = useMemo(() => {
-    if (order === 'along' && positions && direction) {
-      return buildRows(index.contacts, coordinatesAlong(positions, direction), 'microns', swing);
-    }
-    return buildRows(index.contacts, order === 'similar' ? structure.mode : null, 'place', swing);
-  }, [order, positions, direction, structure, index.contacts, swing]);
+  const ptp = index.stats.indexOf('ptp');
+  const swing = useCallback(
+    (contact: number) => (ptp < 0 ? 0 : stats[contact * index.stats.length + ptp]),
+    [index.stats, ptp, stats]
+  );
+  const rows = useMemo(
+    () => fieldRows(order, structure, positions, direction, swing),
+    [order, structure, positions, direction, swing]
+  );
   const [gain, setGain] = useState(1);
   const [timeWindow, setTimeWindow] = useState<[number, number] | null>(null);
   const [ticked, setTicked] = useState<number[]>([]);
   // At first the contact the field swings most at.
-  const [selectedContact, setSelectedContact] = useState<number | null>(() => {
-    if (index.stats.indexOf('ptp') < 0) return null;
-    let best = 0;
-    for (let c = 1; c < index.contacts; c++) {
-      if (swing(c) > swing(best)) best = c;
-    }
-    return best;
-  });
-  // In the rows' order, so that both views read from top to bottom alike.
-  const traces = useMemo(() => {
-    const ordered = rows.flatMap((row) => row.contacts);
-    if (ticked.length > 0) {
-      const shown = new Set(ticked.slice(0, MAX_TRACES));
-      return ordered.filter((c) => shown.has(c));
-    }
-    const n = Math.min(DEFAULT_TRACES, ordered.length);
-    return Array.from({ length: n }, (_, i) =>
-      n === 1 ? ordered[0] : ordered[Math.round((i * (ordered.length - 1)) / (n - 1))]
-    );
-  }, [ticked, rows]);
-  // Full resolution is read a contact at a time: the mean of them all is only in the overview.
-  const traceField = useTraceField(source, summary, removeShared ? [] : traces);
+  const [selectedContact, setSelectedContact] = useState<number | null>(() =>
+    ptp < 0
+      ? null
+      : (maxBy(
+          Array.from({ length: index.contacts }, (_, c) => c),
+          swing
+        ) ?? null)
+  );
+  const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
+  // Read only while drawn. A contact's row at full resolution holds nothing of the mean to take off.
+  const traceField = useTraceField(
+    source,
+    summary,
+    mode === 'traces' && !removeShared ? traces : []
+  );
+  const sharedPercent = Math.round(structure.sharedShare * 100);
 
   // The player: one clock, moving every view's cursor outside React.
   const timeCursor = useMemo(() => createTimeCursor(), []);
@@ -383,14 +367,10 @@ function LfpReportView({
           />
           <PillSelect
             label="Shared signal"
-            title={`What all contacts have in common: ${Math.round(structure.sharedShare * 100)}% of the field's variance`}
+            title={`What all contacts have in common: ${sharedPercent}% of the field's variance`}
             value={removeShared ? 'removed' : 'kept'}
             options={[
-              {
-                value: 'kept',
-                label: 'Kept',
-                detail: `${Math.round(structure.sharedShare * 100)}% of the field`,
-              },
+              { value: 'kept', label: 'Kept', detail: `${sharedPercent}% of the field` },
               { value: 'removed', label: 'Removed' },
             ]}
             onChange={(v) => setRemoveShared(v === 'removed')}
@@ -435,7 +415,7 @@ function LfpReportView({
         scale={scale}
         rows={rows}
         traces={traces}
-        traceField={removeShared ? null : traceField}
+        traceField={traceField}
         gain={gain}
         window={shownWindow}
         onWindowChange={setTimeWindow}
@@ -500,8 +480,7 @@ function LfpReportView({
                   populationName={index.populations.length === 1 ? index.populations[0] : undefined}
                   field={field}
                   scale={scale}
-                  positions={positions}
-                  positionsState={contacts.state}
+                  contacts={contacts}
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
                   timeCursor={timeCursor}
