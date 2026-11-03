@@ -21,6 +21,7 @@ import { arrayLocationsQuery } from '@/features/scan-config/components/model-pre
 
 import type { QueryClient, UseQueryResult } from '@tanstack/react-query';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
+import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type { LfpField, LfpSummaryIndex } from '@/features/lfp-viewer/summary';
 import type { WorkspaceContext } from '@/types/common';
 
@@ -144,24 +145,31 @@ export function useTraceField(
   });
 }
 
+export type ContactPositions =
+  | { state: 'loading' | 'failed' | 'absent'; positions: null; blocks: null }
+  | { state: 'ready'; positions: Float32Array; blocks: ContactBlock[] };
+
 /**
  * Where the report's contacts are, from its recording array's stored
- * locations, in the report's order. Null where the array has none, or they do
- * not match the report.
+ * locations, in the report's order. Absent where the array has none, or they
+ * do not match the report.
  */
 export function useContactPositions(
   ctx: WorkspaceContext,
   arrayId: string | null,
   contacts: number | undefined
-) {
-  const locations = useQuery({
+): ContactPositions {
+  const { data, isError, isLoading } = useQuery({
     ...arrayLocationsQuery(ctx, arrayId ?? ''),
     enabled: arrayId !== null,
     staleTime: Infinity,
   });
-  return useMemo(
-    () =>
-      locations.data && contacts !== undefined ? contactPositions(locations.data, contacts) : null,
-    [locations.data, contacts]
-  );
+  return useMemo(() => {
+    if (isLoading) return { state: 'loading', positions: null, blocks: null };
+    if (isError) return { state: 'failed', positions: null, blocks: null };
+    const found = data && contacts !== undefined ? contactPositions(data, contacts) : null;
+    return found
+      ? { state: 'ready', ...found }
+      : { state: 'absent', positions: null, blocks: null };
+  }, [data, isError, isLoading, contacts]);
 }

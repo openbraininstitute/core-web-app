@@ -29,7 +29,12 @@ export function fieldLimit(field: LfpField): number {
   const sample = new Float32Array(Math.ceil(data.length / stride));
   for (let i = 0, j = 0; i < data.length; i += stride, j++) sample[j] = Math.abs(data[i]);
   sample.sort();
-  return Math.max(1, sample[Math.floor((sample.length - 1) * 0.999)] * scale);
+  return sample[Math.floor((sample.length - 1) * 0.999)] * scale || 1;
+}
+
+/** A value in µV as a legend or a menu says it: to two figures below 10. */
+export function formatUv(uv: number): string {
+  return uv >= 10 ? uv.toFixed(0) : uv.toPrecision(2);
 }
 
 /** A position on the scale's colour, as RGB. */

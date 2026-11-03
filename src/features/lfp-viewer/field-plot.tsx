@@ -9,6 +9,7 @@ import { computeTicks, formatTick } from '@/features/spike-viewer/renderer/axis-
 
 import type { ReactNode } from 'react';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
+import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 
@@ -26,6 +27,8 @@ type Props = {
   mode: FieldPlotMode;
   field: LfpField;
   scale: ColourScale;
+  /** The map's rows, top to bottom: each draws the mean of its contacts. */
+  rows: readonly FieldRow[];
   /** The contacts drawn as traces, top to bottom. */
   traces: readonly number[];
   /** The traced contacts at full resolution, a row each in the order of `traces`, once read. */
@@ -64,6 +67,13 @@ function extent(field: LfpField, contact: number, from: number, to: number): [nu
   return [low * field.scale, high * field.scale];
 }
 
+/** A row's value in a bin, in µV: the mean of its contacts'. */
+function rowValue(field: LfpField, row: FieldRow, bin: number): number {
+  let sum = 0;
+  for (const contact of row.contacts) sum += fieldValue(field, contact, bin);
+  return sum / row.contacts.length;
+}
+
 /** The bins of a field over [from, to) ms, clamped to the run. */
 function binRange(field: LfpField, from: number, to: number): [number, number] {
   return [
@@ -74,14 +84,16 @@ function binRange(field: LfpField, from: number, to: number): [number, number] {
 
 /**
  * The field over time: stacked traces of a few contacts, each drawn as its
- * lowest-to-highest value per pixel so no peak is lost, or every contact as a
- * row of colour. Dragging zooms into a span of time, a double-click zooms back
- * out, and a click moves the player there, and in the map picks the row's contact.
+ * lowest-to-highest value per pixel so no peak is lost, or rows of colour, each
+ * a contact or the mean of several. Dragging zooms into a span of time, a
+ * double-click zooms back out, and a click moves the player there, and in the
+ * map picks the row's contact.
  */
 export function FieldPlot({
   mode,
   field,
   scale,
+  rows: mapRows,
   traces,
   traceField,
   gain,
@@ -118,29 +130,30 @@ export function FieldPlot({
   };
   const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * (plot.right - plot.left);
   const timeOf = (x: number) => from + ((x - plot.left) / (plot.right - plot.left)) * (to - from);
-  const rows = mode === 'map' ? field.contacts : traces.length;
+  const rows = mode === 'map' ? mapRows.length : traces.length;
   const fullTraces = mode === 'traces' ? traceField : null;
   const rowOf = (y: number) =>
     Math.min(rows - 1, Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rows)));
-  const contactOf = (y: number) => (mode === 'map' ? rowOf(y) : (traces[rowOf(y)] ?? null));
+  const contactOf = (y: number) =>
+    mode === 'map' ? (mapRows[rowOf(y)]?.lead ?? null) : (traces[rowOf(y)] ?? null);
 
-  // The map's image, a pixel per contact and bin over the whole run; a window crops it.
+  // The map's image, a pixel per row and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
     if (mode !== 'map' || field.bins === 0 || typeof document === 'undefined') return null;
-    const image = new ImageData(field.bins, field.contacts);
+    const image = new ImageData(field.bins, mapRows.length);
     const pixels = new Uint32Array(image.data.buffer);
-    for (let c = 0; c < field.contacts; c++) {
+    mapRows.forEach((row, r) => {
       for (let b = 0; b < field.bins; b++) {
-        const uv = fieldValue(field, c, b);
-        pixels[c * field.bins + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
+        const uv = rowValue(field, row, b);
+        pixels[r * field.bins + b] = COLOUR_TABLE[Math.round(((scale.position(uv) + 1) / 2) * 255)];
       }
-    }
+    });
     const canvas = document.createElement('canvas');
     canvas.width = field.bins;
-    canvas.height = field.contacts;
+    canvas.height = mapRows.length;
     canvas.getContext('2d')?.putImageData(image, 0, 0);
     return canvas;
-  }, [mode, field, scale]);
+  }, [mode, field, scale, mapRows]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf and the plot's edges follow from size, from and to
   useEffect(() => {
@@ -171,7 +184,7 @@ export function FieldPlot({
         firstBin,
         0,
         lastBin - firstBin,
-        field.contacts,
+        mapRows.length,
         x0,
         plot.top,
         x1 - x0,
@@ -181,11 +194,19 @@ export function FieldPlot({
       g.fillStyle = LABEL;
       g.textAlign = 'right';
       g.textBaseline = 'middle';
-      for (const c of computeTicks(0, field.contacts - 1, plotHeight / 40, true)) {
-        g.fillText(`e${c}`, plot.left - 6, plot.top + ((c + 0.5) / field.contacts) * plotHeight);
+      for (const r of computeTicks(0, mapRows.length - 1, plotHeight / 40, true)) {
+        g.fillText(
+          mapRows[r].label,
+          plot.left - 6,
+          plot.top + ((r + 0.5) / mapRows.length) * plotHeight
+        );
       }
-      if (selectedContact !== null) {
-        const y = plot.top + ((selectedContact + 0.5) / field.contacts) * plotHeight;
+      const selectedRow =
+        selectedContact === null
+          ? -1
+          : mapRows.findIndex((row) => row.contacts.includes(selectedContact));
+      if (selectedRow >= 0) {
+        const y = plot.top + ((selectedRow + 0.5) / mapRows.length) * plotHeight;
         g.fillStyle = SELECTED;
         g.beginPath();
         g.moveTo(plot.left - 4, y);
@@ -257,7 +278,20 @@ export function FieldPlot({
     }
     g.textAlign = 'right';
     g.fillText('ms', size.width - 2, plot.bottom + 6);
-  }, [size, mode, mapImage, field, scale, traces, traceField, gain, from, to, selectedContact]);
+  }, [
+    size,
+    mode,
+    mapImage,
+    mapRows,
+    field,
+    scale,
+    traces,
+    traceField,
+    gain,
+    from,
+    to,
+    selectedContact,
+  ]);
 
   // The player's time, moved outside React.
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf follows from size, from and to
@@ -302,6 +336,16 @@ export function FieldPlot({
           const t = timeOf(x);
           if (contact === null) {
             setHover(null);
+            return;
+          }
+          if (mode === 'map') {
+            const row = mapRows[rowOf(y)];
+            const uv = rowValue(field, row, binAt(field, t));
+            const name =
+              row.contacts.length > 1
+                ? `${row.label} · ${row.contacts.length} contacts`
+                : row.label;
+            setHover(`${name} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
             return;
           }
           const uv = fullTraces

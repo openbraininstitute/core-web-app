@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
-import { hexAt, levelOf, SCALE_GRADIENT, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
+import {
+  formatUv,
+  hexAt,
+  levelOf,
+  SCALE_GRADIENT,
+  SCENE_LEVELS,
+} from '@/features/lfp-viewer/colour-scale';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 
@@ -11,6 +17,7 @@ import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
 import type { LfpField } from '@/features/lfp-viewer/summary';
+import type { ContactPositions } from '@/features/lfp-viewer/use-lfp-summary';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 
@@ -22,11 +29,12 @@ const LEVEL_COLORS = Array.from({ length: SCENE_LEVELS }, (_, i) =>
   hexAt((i / (SCENE_LEVELS - 1)) * 2 - 1)
 );
 
-/** Each contact's colour level at a bin. */
-function levelsAt(field: LfpField, scale: ColourScale, bin: number): Uint8Array {
+/** Each contact's colour level at a bin; under `hideBelow` µV, zero's, so its ring still shows it. */
+function levelsAt(field: LfpField, scale: ColourScale, bin: number, hideBelow: number): Uint8Array {
   const levels = new Uint8Array(field.contacts);
   for (let c = 0; c < field.contacts; c++) {
-    levels[c] = levelOf(scale.position(fieldValue(field, c, bin)));
+    const uv = fieldValue(field, c, bin);
+    levels[c] = levelOf(Math.abs(uv) < hideBelow ? 0 : scale.position(uv));
   }
   return levels;
 }
@@ -42,6 +50,9 @@ type Props = {
   scale: ColourScale;
   /** xyz per contact, in the report's order; null where the array's are not known. */
   positions: Float32Array | null;
+  positionsState: ContactPositions['state'];
+  /** Below this |V|, in µV, a contact is drawn as at zero. */
+  hideBelow: number;
   selectedContact: number | null;
   timeCursor: TimeCursor;
   active: boolean;
@@ -57,6 +68,8 @@ export function LfpScene({
   field,
   scale,
   positions,
+  positionsState,
+  hideBelow,
   selectedContact,
   timeCursor,
   active,
@@ -79,7 +92,7 @@ export function LfpScene({
           timer = null;
           recoloredAt = performance.now();
           if (pending === null) return;
-          const next = levelsAt(field, scale, pending);
+          const next = levelsAt(field, scale, pending, hideBelow);
           setLevels((shown) => (shown && sameLevels(shown, next) ? shown : next));
         },
         Math.max(0, RECOLOR_MS - (performance.now() - recoloredAt))
@@ -89,7 +102,7 @@ export function LfpScene({
       unsubscribe();
       if (timer) clearTimeout(timer);
     };
-  }, [active, timeCursor, field, scale]);
+  }, [active, timeCursor, field, scale, hideBelow]);
 
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
     if (!positions || !levels || levels.length !== field.contacts) return undefined;
@@ -140,14 +153,16 @@ export function LfpScene({
       <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
         <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />
         <div className="mt-0.5 flex justify-between tabular-nums">
-          <span>−{scale.limit.toFixed(0)}</span>
+          <span>−{formatUv(scale.limit)}</span>
           <span>0</span>
-          <span>+{scale.limit.toFixed(0)} µV</span>
+          <span>+{formatUv(scale.limit)} µV</span>
         </div>
       </div>
-      {!positions && (
+      {(positionsState === 'absent' || positionsState === 'failed') && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-neutral-500">
-          Where this report&apos;s contacts are is not stored with its recording array
+          {positionsState === 'absent'
+            ? "Where this report's contacts are is not stored with its recording array"
+            : "Where this report's contacts are could not be read"}
         </div>
       )}
     </div>
