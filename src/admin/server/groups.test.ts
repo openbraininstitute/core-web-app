@@ -86,15 +86,33 @@ describe('getUserGroups', () => {
     expect(groups).toEqual(['/service/entitycore/admin']);
   });
 
-  it('refuses stale groups beyond the 15-min stale cap (returns empty)', async () => {
+  it('throws instead of reporting no groups beyond the 15-min stale cap', async () => {
     fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
     await getUserGroups(SESSION);
 
     vi.setSystemTime(T0 + 16 * MINUTE); // past the 15-min stale cap
     fetchMock.mockResolvedValueOnce(userinfoError());
-    const groups = await getUserGroups(SESSION);
 
-    expect(groups).toEqual([]);
+    await expect(getUserGroups(SESSION)).rejects.toThrow('503');
+  });
+
+  it('throws on an outage with nothing cached', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('timeout'));
+
+    await expect(getUserGroups(SESSION)).rejects.toThrow('timeout');
+  });
+
+  it.each([401, 403])('drops the cached groups when /userinfo answers %i', async (status) => {
+    fetchMock.mockResolvedValueOnce(userinfoOk(['/service/entitycore/admin']));
+    await getUserGroups(SESSION);
+
+    vi.setSystemTime(T0 + 6 * MINUTE); // past TTL, inside the stale cap
+    fetchMock.mockResolvedValueOnce({ ok: false, status, json: async () => ({}) });
+
+    await expect(getUserGroups(SESSION)).resolves.toEqual([]);
+
+    fetchMock.mockResolvedValueOnce(userinfoError());
+    await expect(getUserGroups(SESSION)).rejects.toThrow('503');
   });
 
   it('throws on a resolution failure when allowStale is false (fail closed)', async () => {

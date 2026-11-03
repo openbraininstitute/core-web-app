@@ -12,13 +12,14 @@ import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import { adminQueryKeys, OPS_SERVICE_HEALTH_KEY_PREFIX } from '../../shared/query-keys';
-import { probeServiceHealth } from './health';
+import { fetchServiceVersion, probeServiceHealth } from './health';
 import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { ServiceDescriptor } from './service-catalog';
 
 const STATUS_REFRESH_MS = 60_000;
+const VERSION_STALE_MS = 5 * 60_000;
 
 type ServiceRow = ServiceDescriptor & { baseUrl: string };
 
@@ -61,8 +62,14 @@ function LatencyCell({ service }: { service: ServiceRow }) {
 }
 
 function VersionCell({ service }: { service: ServiceRow }) {
-  const { data: health } = useServiceHealth(service);
-  return health?.version ? <span className="font-mono text-sm">{health.version}</span> : null;
+  const { data: version } = useQuery({
+    queryKey: adminQueryKeys.opsServiceVersion({ key: service.key }),
+    queryFn: () => fetchServiceVersion(service.baseUrl),
+    enabled: service.supportsVersion,
+    staleTime: VERSION_STALE_MS,
+    retry: false,
+  });
+  return version ? <span className="font-mono text-sm">{version}</span> : null;
 }
 
 const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [

@@ -1,8 +1,7 @@
-import { requireCapability } from '@/admin/server/resolve';
-import { OpsDashboard } from '@/admin/services/ops/ops-dashboard';
+import { redirect } from 'next/navigation';
 
-export default async function AdminLandingPage() {
-  await requireCapability('ops.view');
+import { ADMIN_ROOT } from '@/admin/shell/sections';
 
-  return <OpsDashboard />;
+export default function AdminLandingPage() {
+  redirect(`${ADMIN_ROOT}/services`);
 }

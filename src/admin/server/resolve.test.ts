@@ -27,6 +27,13 @@ describe('requireCapability', () => {
     expect(getUserGroupsMock).not.toHaveBeenCalled();
   });
 
+  it('sends a session whose refresh token died to log in, not to forbidden', async () => {
+    authMock.mockResolvedValueOnce({ accessToken: 'tok', error: 'RefreshAccessTokenError' });
+
+    await expect(requireCapability('ops.view')).rejects.toThrow('redirect:/app/log-in');
+    expect(getUserGroupsMock).not.toHaveBeenCalled();
+  });
+
   it('sends a user without the capability to the forbidden page', async () => {
     authMock.mockResolvedValueOnce({ accessToken: 'tok' });
     getUserGroupsMock.mockResolvedValueOnce(['/service/entitycore/admin']);

@@ -6,9 +6,8 @@ import { adminQueryKeys } from '../shared/query-keys';
 
 import type { OperatorCapabilities } from '../capabilities/types';
 
-async function fetchOperatorCapabilities(): Promise<OperatorCapabilities | null> {
+async function fetchOperatorCapabilities(): Promise<OperatorCapabilities> {
   const res = await fetch('/api/admin/capabilities', { credentials: 'same-origin' });
-  if (res.status === 401) return null;
   if (!res.ok) throw new Error(`operator capabilities request failed: ${res.status}`);
   return (await res.json()) as OperatorCapabilities;
 }

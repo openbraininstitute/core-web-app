@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cache } from 'react';
 
 import { auth } from '@/auth';
 
@@ -16,13 +17,19 @@ export async function resolveCapabilities(
   return deriveCapabilities(groups);
 }
 
+// Per request, because a page and its layout both ask during one render.
+const currentCapabilities = cache(async () => {
+  const session = await auth();
+  // A session whose refresh token died still decrypts, but it is logged out.
+  if (!session || session.error === 'RefreshAccessTokenError') return null;
+  return resolveCapabilities(session);
+});
+
 // Every admin page calls this as well as the layout: layouts don't re-run on client-side
 // navigation, so the layout alone doesn't guard a page.
 export async function requireCapability(need: CapabilityPath): Promise<OperatorCapabilities> {
-  const session = await auth();
-  if (!session) redirect('/app/log-in');
-
-  const capabilities = await resolveCapabilities(session);
+  const capabilities = await currentCapabilities();
+  if (!capabilities) redirect('/app/log-in');
   if (!hasCapability(capabilities, need)) redirect('/app/admin/forbidden');
 
   return capabilities;
