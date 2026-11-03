@@ -20,7 +20,10 @@ import {
 import { arrayLocationsQuery } from '@/features/scan-config/components/model-preview/electrode-locations-asset';
 
 import type { QueryClient, UseQueryResult } from '@tanstack/react-query';
-import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
+import type {
+  LfpSummarySource,
+  LfpSummaryStatus,
+} from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ContactBlock } from '@/features/lfp-viewer/contacts';
 import type { LfpField, LfpSummaryIndex } from '@/features/lfp-viewer/summary';
 import type { WorkspaceContext } from '@/types/common';
@@ -39,18 +42,28 @@ export type LfpSummary = {
   psd: Float32Array;
 };
 
-const statusKey = ({ resultId, assetId }: LfpSummarySource) => [
+export const statusKey = ({ resultId, assetId }: LfpSummarySource) => [
   'lfp-summary',
   'status',
   resultId,
   assetId,
 ];
 
-/** A read of a summary built again since its status was read asks the status again. */
-function askStatusIfChanged(queryClient: QueryClient, source: LfpSummarySource) {
+/**
+ * A read of a summary built again since its status was read asks the status again: once, however
+ * many reads of that summary fail, and not after the status has moved on from it.
+ */
+export function askStatusIfChanged(
+  queryClient: QueryClient,
+  source: LfpSummarySource,
+  sha256: string
+) {
   return (error: unknown): never => {
     if (isLfpSummaryChanged(error)) {
-      queryClient.invalidateQueries({ queryKey: statusKey(source) });
+      const status = queryClient.getQueryData<LfpSummaryStatus>(statusKey(source));
+      if (status?.state === 'ready' && status.sha256 === sha256) {
+        queryClient.invalidateQueries({ queryKey: statusKey(source) }, { cancelRefetch: false });
+      }
     }
     throw error;
   };
@@ -90,7 +103,7 @@ export function useLfpSummary(source: LfpSummarySource) {
         ]);
         return { sha256, index, total, stats: new Float32Array(stats), psd: new Float32Array(psd) };
       } catch (error) {
-        return askStatusIfChanged(queryClient, source)(error);
+        return askStatusIfChanged(queryClient, source, sha256)(error);
       }
     },
   });
@@ -139,7 +152,7 @@ export function useTraceField(
                 0,
                 contact,
                 signal
-              ).catch(askStatusIfChanged(queryClient, source)),
+              ).catch(askStatusIfChanged(queryClient, source, sha256)),
           })),
     combine,
   });
