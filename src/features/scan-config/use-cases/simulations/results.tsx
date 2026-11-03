@@ -406,10 +406,7 @@ export function SimulationsTab({
   };
 
   const simTaskType =
-    launchTarget?.taskType ??
-    (entityType === EntityTypeDict.IonChannelModel
-      ? ObiOneTaskTypeDict.IonChannelModelSimulationExecution
-      : ObiOneTaskTypeDict.CircuitSimulation);
+    launchTarget?.taskType ?? ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
 
   const costModalItems = useMemo(
     () =>
@@ -427,6 +424,16 @@ export function SimulationsTab({
     onConfirm: run,
   });
 
+  // Bluenaas only runs ion channel models. Without a target, such as when the model failed to load,
+  // nothing launches.
+  const onLaunch = () => {
+    if (launchTarget || entityType === EntityTypeDict.IonChannelModel) {
+      openModal();
+      return;
+    }
+    notification.error({ message: messages.SimulationLaunchTargetError, duration: 20 });
+  };
+
   const onToggleSelectAll = (checked: boolean) => {
     act.onToggleSelectAll(checked);
   };
@@ -435,7 +442,7 @@ export function SimulationsTab({
     ? `(${resolvedSelectedSimulationIds.length})`
     : '';
 
-  // Until the model resolves, Launch would go to the small-scale simulator.
+  // Until the model resolves, Launch has no target.
   const loading = simulationsLoading || modelLoading;
 
   return (
@@ -468,7 +475,7 @@ export function SimulationsTab({
           onActiveSimulationChange={onActiveSimulationChange}
           onSelectedForSimChange={onSelectedForSimChange}
           onSimulationStatusLoad={onSimulationStatusLoad}
-          onRun={openModal}
+          onRun={onLaunch}
           middle={
             <div className="h-full bg-white! w-full">
               {loading ? (
