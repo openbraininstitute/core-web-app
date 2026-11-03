@@ -135,8 +135,8 @@ export class Culling {
    * Runs and submits the tests once the kept segments are drawn into the target. The tests fill the lists and the
    * draws for three's draw that follows. `shift`: what the arena's positions are moved by; `tubeFrom`: the least radius
    * in pixels of a tube; `hidden`: the section type not drawn (`ImpostorUniforms.uHidden`); `end`: where the arena's
-   * segments end; `rest`: the rest the frame is drawn still in, or -1 for a frame drawn moving, handed on with the
-   * frame's read. Returns false where nothing was tested.
+   * segments end; `rest`: what is told of the frame (`DetailStream.frameRest`), handed on with the frame's read. Returns
+   * false where nothing was tested.
    */
   run(
     camera: THREE.Camera & { near: number; far: number },

@@ -51,7 +51,7 @@ A pack holds three levels; each box of space is drawn at one of them, or not at 
 2. In view, the µm a device pixel spans where the box comes nearest the eye picks the coarsest level whose tolerance is within 2 of them (`DETAIL_PIXELS`).
 3. **The floor** (`DetailRules.wholeFloor`): the finest level at which every box of the pack fits the budget. Every box is drawn at least at it, in view or not, so that a small circuit is drawn finest whatever the view, and turning it reads nothing. A circuit whose finer levels are all over the budget has no floor.
 4. Of a pack still coming in, a box is wanted no finer than its bytes in allow (`readableAt`).
-5. **The budget.** Over it, boxes go coarser a level at a time, those farthest from what the view turns about first. Still over it at the coarsest, every box in view is left out: their somas are drawn, and the status says to zoom in. The budget counts segments in blocks of 64, as the arena holds them, and on WebGPU only those finer than the base, which is always drawn.
+5. **The budget.** A box over it by itself goes to the finest level it fits at, so that it does not take the others with it. Then, over it, boxes go coarser a level at a time, those farthest from what the view turns about first. Still over it at the coarsest, every box in view is left out: their somas are drawn, and the status says to zoom in. The budget counts segments in blocks of 64, as the arena holds them, and on WebGPU only those finer than the base, which is always drawn.
 
 The budgets are 4M segments on WebGPU and 2M on WebGL 2 (`SEGMENT_BUDGET`). `chooseDetail` runs before a frame where the camera, the view's size, the rules, the motion, the seen boxes or the bytes in have changed, in `beforeDraw` rather than with the frame's other work, as the near and far planes are set by then.
 
@@ -73,6 +73,8 @@ With a base, the culling marks the blocks it found seen or just hidden, and the 
 - A box marked within the last 30 reads is seen while the view moves. At rest, within the last 4 reads of frames drawn at rest (`LINGER`).
 - A box not seen keeps the level it has while the view rests, finer or coarser, so that no frame at rest takes away what it hides.
 - As the view moves, a box not seen goes back to its base. One let go of at rest is not asked for again until the view moves or the rules change.
+- The frame after a box is put or taken out, or a base in view comes in, tests against kept segments that have lost what the box had drawn, or lack the base, so it sees through. Its marks do not count (`SEES_THROUGH`), and at rest one more frame is drawn, whose marks do. Otherwise a box behind it would count as seen, and could take the budget from the boxes really seen.
+- A read still on its way when a box is put or taken out no longer counts at rest, as a block it marked may now hold another box.
 
 ## The arena
 
@@ -83,7 +85,7 @@ With a base, the culling marks the blocks it found seen or just hidden, and the 
 - A box goes into the smallest hole it fits, or at the end. Where neither has room, every box is moved down to close the holes. The arena has room for the most the budget allows and a quarter more, so that this is seldom needed.
 - Only what lies before the end is drawn and uploaded.
 
-**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between.
+**The base.** On WebGPU, where the coarsest level of every box fits one storage binding, the arena starts with room for each box at it, in box order, never moved. A box put at a finer level has its base made holes in the same upload, and its base shown again when it is taken out. So every draw of the arena draws each box once. The culling's depth prepass, which draws last frame's kept segments, never tests against geometry the frame does not draw, with no second copy of the arena to swap between. It may test against less than the frame draws, for the one frame after a box is put or taken out (*Seen boxes*).
 
 On WebGL 2 the arena is three's instanced attributes, uploaded by range. On WebGPU it is buffers the engine owns and three binds (`shareBuffer` in [webgpu/three-hooks.ts](webgpu/three-hooks.ts)), uploaded with `writeBuffer` and drawn by indirect draws from the culling's lists ([webgpu/arena-gpu.ts](webgpu/arena-gpu.ts)).
 

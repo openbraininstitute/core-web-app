@@ -5,6 +5,10 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 
 import { CircuitMorphologyViewer } from '@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer';
 import {
+  type DetailStream,
+  SEES_THROUGH,
+} from '@/features/circuit-viewer/morphologies/engine/detail-stream';
+import {
   CELL_MASK,
   HOLE,
   NO_CELL,
@@ -32,6 +36,7 @@ import type {
   CellColors,
   CircuitMorphologyData,
   CircuitSomas,
+  CullRead,
   ElectrodeGroup,
   MorphologyChunks,
 } from '@/features/circuit-viewer/morphologies/types';
@@ -91,6 +96,10 @@ vi.mock('three', async (importOriginal) => ({
 
 interface Internals {
   renderer: InstanceType<typeof FakeRenderer>;
+  layer: { detailed: { stream: DetailStream } };
+  tellCulled(read: CullRead): void;
+  restOf(moving: boolean): number;
+  dirty: boolean;
   beforeDraw(moving: boolean): void;
   drawsOpaqueSomas: boolean;
   cullsSomas: boolean;
@@ -1891,6 +1900,52 @@ describe('the morphologies read a box at a time', () => {
       (mesh) => mesh instanceof THREE.Mesh && mesh.geometry === segmentsOf(inner).geometry
     );
     expect(picked?.visible).toBe(true);
+  });
+
+  describe('of a frame that saw through', () => {
+    async function drawn() {
+      const made = make();
+      made.viewer.setData(chunked());
+      frames(made.inner);
+      await readAll(made.inner);
+      return { ...made, stream: made.inner.layer.detailed.stream };
+    }
+
+    it('takes no marks, and those of the next frame', async () => {
+      const { inner, stream } = await drawn();
+      const see = vi.spyOn(stream, 'see');
+      const read = (rest: number) => ({
+        tested: 0,
+        kept: 0,
+        drawn: 0,
+        marked: new Uint32Array(1),
+        rest,
+      });
+      inner.tellCulled(read(SEES_THROUGH));
+      expect(see).not.toHaveBeenCalled();
+      inner.tellCulled(read(stream.rest));
+      expect(see).toHaveBeenCalledOnce();
+    });
+
+    it('asks for one more frame at rest, none while moving or where nothing culls', async () => {
+      const { viewer, inner, stream } = await drawn();
+      const frameRest = vi.spyOn(stream, 'frameRest').mockReturnValue(SEES_THROUGH);
+      const asked = (moving: boolean) => {
+        inner.dirty = false;
+        expect(inner.restOf(moving)).toBe(SEES_THROUGH);
+        return inner.dirty;
+      };
+      expect(asked(false)).toBe(true);
+      expect(asked(true)).toBe(false);
+      viewer.setDetailRules({ culling: false });
+      expect(asked(false)).toBe(false);
+
+      frameRest.mockReturnValue(stream.rest);
+      viewer.setDetailRules({ culling: true });
+      inner.dirty = false;
+      inner.restOf(false);
+      expect(inner.dirty).toBe(false);
+    });
   });
 
   it('tells what it draws, the rules included, and null once the morphologies go', async () => {
