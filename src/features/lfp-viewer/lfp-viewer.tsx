@@ -17,6 +17,7 @@ import {
   fieldDirection,
   fieldRows,
   MAX_TRACES,
+  openingOrder,
   openingView,
   tracedContacts,
   withoutShared,
@@ -187,7 +188,7 @@ function LfpReportView({
 
   const [mode, setMode] = useState<FieldPlotMode>(() => openingView(structure));
   const [chosenOrder, setChosenOrder] = useState<RowOrder | null>(null);
-  const order = chosenOrder ?? (direction ? 'along' : 'contacts');
+  const order = chosenOrder ?? openingOrder(structure, direction);
   const ptp = index.stats.indexOf('ptp');
   const swing = useCallback(
     (contact: number) => (ptp < 0 ? 0 : stats[contact * index.stats.length + ptp]),
@@ -331,7 +332,7 @@ function LfpReportView({
                   ` · the first ${MAX_TRACES} of ${ticked.length} ticked traced`}
                 {order === 'along' &&
                   direction &&
-                  ` · along (${direction.map((d) => d.toFixed(2)).join(', ')})`}
+                  ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
               </span>
               <PlotHelp>
                 Drag to zoom · Double-click to reset · Click to move the player there; in the map,
@@ -358,7 +359,11 @@ function LfpReportView({
                 value: 'along',
                 label: 'Along the field',
                 disabled: !direction,
-                detail: direction ? undefined : 'Needs the contacts’ positions',
+                detail: direction
+                  ? undefined
+                  : positions
+                    ? 'No straight line follows this field'
+                    : 'Needs the contacts’ positions',
               },
               { value: 'similar', label: 'Similar contacts' },
               { value: 'contacts', label: 'Contact order' },

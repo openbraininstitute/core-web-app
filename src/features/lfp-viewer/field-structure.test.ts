@@ -6,6 +6,7 @@ import {
   describeField,
   fieldDirection,
   fieldRows,
+  openingOrder,
   openingView,
   tracedContacts,
   withoutShared,
@@ -97,22 +98,27 @@ describe('fieldDirection', () => {
       }
     }
     const direction = fieldDirection(Float32Array.from(mode), Float32Array.from(positions));
-    expect(direction?.[0]).toBeCloseTo(0, 5);
-    expect(direction?.[1]).toBeCloseTo(1, 5);
-    expect(direction?.[2]).toBeCloseTo(0, 5);
+    expect(direction?.axis[0]).toBeCloseTo(0, 5);
+    expect(direction?.axis[1]).toBeCloseTo(1, 5);
+    expect(direction?.axis[2]).toBeCloseTo(0, 5);
   });
 
   it('stays on the line of an array that is a line', () => {
     const mode = Float32Array.from({ length: 16 }, (_, c) => c - 7.5);
     const direction = fieldDirection(mode, lineAlong(1, 16));
-    expect(direction?.[0]).toBeCloseTo(0, 5);
-    expect(direction?.[1]).toBeCloseTo(1, 5);
-    expect(direction?.[2]).toBeCloseTo(0, 5);
+    expect(direction?.axis[0]).toBeCloseTo(0, 5);
+    expect(direction?.axis[1]).toBeCloseTo(1, 5);
+    expect(direction?.axis[2]).toBeCloseTo(0, 5);
   });
 
   it('points its largest component up, whichever way the weights run', () => {
     const mode = Float32Array.from({ length: 16 }, (_, c) => 7.5 - c);
-    expect(fieldDirection(mode, lineAlong(1, 16))?.[1]).toBeCloseTo(1, 5);
+    expect(fieldDirection(mode, lineAlong(1, 16))?.axis[1]).toBeCloseTo(1, 5);
+  });
+
+  it('says how much of the weights the line explains', () => {
+    const mode = Float32Array.from({ length: 16 }, (_, c) => c - 7.5);
+    expect(fieldDirection(mode, lineAlong(1, 16))?.explained).toBeCloseTo(1, 3);
   });
 
   it('gives none where the contacts share one place', () => {
@@ -140,7 +146,7 @@ describe('fieldDirection', () => {
       { length: contacts },
       (_, c) => positions[c * 3 + 1] / 700 + ((Math.sin(c * 12.9898) * 43758) % 1)
     );
-    expect(fieldDirection(mode, positions)?.[1]).toBeGreaterThan(0.9);
+    expect(fieldDirection(mode, positions)?.axis[1]).toBeGreaterThan(0.9);
   });
 
   it('gives none for a field every contact shares, spread over a volume', () => {
@@ -225,20 +231,47 @@ describe('openingView', () => {
   });
 });
 
+describe('openingOrder', () => {
+  const direction = (explained: number) => ({
+    axis: [0, 1, 0] as [number, number, number],
+    explained,
+  });
+  const structure = (contacts: number, weight = 1) => ({
+    sharedShare: 0,
+    mode: new Float32Array(contacts).fill(weight),
+  });
+
+  it('follows the field where a straight line explains most of it', () => {
+    expect(openingOrder(structure(16), direction(0.91))).toBe('along');
+    expect(openingOrder(structure(683), direction(0.5))).toBe('along');
+  });
+
+  it('groups similar contacts where many have only a weak line, or none', () => {
+    expect(openingOrder(structure(683), direction(0.19))).toBe('similar');
+    expect(openingOrder(structure(683), null)).toBe('similar');
+  });
+
+  it('keeps the contacts’ own order where they are few and no line explains them', () => {
+    expect(openingOrder(structure(64), direction(0.3))).toBe('contacts');
+    expect(openingOrder(structure(16), null)).toBe('contacts');
+  });
+
+  it('has nothing to group by where the field leaves no pattern', () => {
+    expect(openingOrder(structure(683, 0), null)).toBe('contacts');
+  });
+});
+
 describe('fieldRows', () => {
   const noSwing = () => 0;
   const structure = { sharedShare: 0, mode: Float32Array.of(-1, 1, 0) };
   const positions = lineAlong(1, 3);
+  const ALONG_Y = { axis: [0, 1, 0] as [number, number, number], explained: 1 };
   const leads = (rows: { lead: number }[]) => rows.map((r) => r.lead);
 
   it('follows the direction, the weights or the contacts’ own order', () => {
-    expect(leads(fieldRows('along', structure, positions, [0, 1, 0], noSwing))).toEqual([2, 1, 0]);
-    expect(leads(fieldRows('similar', structure, positions, [0, 1, 0], noSwing))).toEqual([
-      1, 2, 0,
-    ]);
-    expect(leads(fieldRows('contacts', structure, positions, [0, 1, 0], noSwing))).toEqual([
-      0, 1, 2,
-    ]);
+    expect(leads(fieldRows('along', structure, positions, ALONG_Y, noSwing))).toEqual([2, 1, 0]);
+    expect(leads(fieldRows('similar', structure, positions, ALONG_Y, noSwing))).toEqual([1, 2, 0]);
+    expect(leads(fieldRows('contacts', structure, positions, ALONG_Y, noSwing))).toEqual([0, 1, 2]);
   });
 
   it('falls back on the contacts’ order without a direction to follow', () => {

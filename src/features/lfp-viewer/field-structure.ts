@@ -18,6 +18,8 @@ const ROUNDING_SHARE = 1e-9;
  * 3 / (contacts - 1) of its variance to three axes on average, and a few contacts fit anything.
  */
 const LINE_ABOVE_CHANCE = 4;
+/** Rows open along the field where a straight line explains this share of the weights. */
+const LINE_EXPLAINS_MOST = 0.5;
 /** Differences up to this many steps of a stored field are its rounding. */
 const ROUNDING_STEPS = 1;
 /** Above this many contacts the map is shown first: their traces would not read. */
@@ -43,6 +45,13 @@ type FieldStructure = {
   sharedShare: number;
   /** Per contact, its weight in the main pattern of what differs between contacts. */
   mode: Float32Array;
+};
+
+export type FieldDirection = {
+  /** A unit vector whose largest component is positive. */
+  axis: [number, number, number];
+  /** The share of the contacts' weights a straight line along it explains, from 0 to 1. */
+  explained: number;
 };
 
 function measuredValues(field: LfpField): { values: Float32Array; bins: number } {
@@ -159,10 +168,7 @@ function solve3(a: number[][], b: number[]): number[] | null {
   return b.map((_, i) => det(a.map((row, r) => row.map((v, c) => (c === i ? b[r] : v)))) / whole);
 }
 
-export function fieldDirection(
-  mode: Float32Array,
-  positions: Float32Array
-): [number, number, number] | null {
+export function fieldDirection(mode: Float32Array, positions: Float32Array): FieldDirection | null {
   const centre = extentOf(positions)?.mean;
   if (!centre) return null;
   const a = [0, 1, 2].map(() => [0, 0, 0]);
@@ -187,10 +193,20 @@ export function fieldDirection(
   if (!solved) return null;
   const norm = Math.hypot(...solved);
   if (norm === 0) return null;
-  const explained = solved[0] * b[0] + solved[1] * b[1] + solved[2] * b[2];
-  if (explained < LINE_ABOVE_CHANCE * (3 / (n - 1)) * weights) return null;
+  const explained = (solved[0] * b[0] + solved[1] * b[1] + solved[2] * b[2]) / weights;
+  if (explained < LINE_ABOVE_CHANCE * (3 / (n - 1))) return null;
   const sign = signOfLargest(solved);
-  return [(solved[0] * sign) / norm, (solved[1] * sign) / norm, (solved[2] * sign) / norm];
+  return {
+    axis: [(solved[0] * sign) / norm, (solved[1] * sign) / norm, (solved[2] * sign) / norm],
+    explained,
+  };
+}
+
+export function openingOrder({ mode }: FieldStructure, direction: FieldDirection | null): RowOrder {
+  if (direction && direction.explained >= LINE_EXPLAINS_MOST) return 'along';
+  return mode.length > ROWS_AT_LEAST && mode.some((weight) => weight !== 0)
+    ? 'similar'
+    : 'contacts';
 }
 
 export function coordinatesAlong(
@@ -237,11 +253,11 @@ export function fieldRows(
   order: RowOrder,
   { mode }: FieldStructure,
   positions: Float32Array | null,
-  direction: readonly [number, number, number] | null,
+  direction: FieldDirection | null,
   swing: (contact: number) => number
 ): FieldRow[] {
   if (order === 'along' && positions && direction) {
-    return buildRows(mode.length, coordinatesAlong(positions, direction), 'microns', swing);
+    return buildRows(mode.length, coordinatesAlong(positions, direction.axis), 'microns', swing);
   }
   return buildRows(mode.length, order === 'similar' ? mode : null, 'place', swing);
 }
