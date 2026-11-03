@@ -22,7 +22,6 @@ import {
 } from './brain-views';
 import { L6_COLOR } from './brains';
 import { BRAIN_CHAPTERS, BRAIN_INTRO, SERIF_TITLE } from './chapters';
-import { ExamplesGallery } from './examples-gallery';
 import { AgentReady } from './agent-ready';
 import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { LandingThemes, ThemeNav } from './landing-themes';
@@ -39,7 +38,7 @@ const THEME_LINKS: Record<string, string> = {
   'Leverage AI': 'agents',
   Explore: 'analysis',
   Teach: 'teach',
-  Build: 'examples',
+  Build: 'microcircuit',
   Learn: 'next',
 };
 /** The word each screen is about, by its index: its own, and the models' screens Build's. */
@@ -56,7 +55,14 @@ const THEME_UNDERLINES: Record<number, string> = Object.fromEntries(
  * human's, turning, and inside each what the platform holds of it. Over its landing the fly's nervous
  * system comes in inside the fly's body, walking, or (`walking` false) alone, turning.
  */
-export function BrainsWalkthroughPage({ walking = true }: { walking?: boolean }) {
+export function BrainsWalkthroughPage({
+  walking = true,
+  enterHref,
+}: {
+  walking?: boolean;
+  /** Where Enter/the end lead on the public landing, where there is no workspace home to uncover. */
+  enterHref?: string;
+}) {
   return (
     <Walkthrough
       fullscreen
@@ -67,9 +73,10 @@ export function BrainsWalkthroughPage({ walking = true }: { walking?: boolean })
       introBase={<LandingThemes />}
       // The first screen's title, as the intro's words rise into it.
       firstTitleClass={SERIF_TITLE}
-      // For now, the home as main has it: uncovered as the walkthrough ends.
+      // In-app, the home as main has it is uncovered as it ends; on the landing, Enter leads to the app.
       end="main"
-      endUnder={<OriginalHomePage />}
+      enterHref={enterHref}
+      endUnder={enterHref ? undefined : <OriginalHomePage />}
       floating={(state) => (
         <>
           <FloatingMicrocircuit {...state} />
@@ -91,7 +98,7 @@ export function BrainsWalkthroughPage({ walking = true }: { walking?: boolean })
       stage={(chapter, colorSlot) => (
         <FadingStage
           scene={chapter.scene}
-          wide={(scene) => scene === 'trio' || scene === 'examples'}
+          wide={(scene) => scene === 'trio'}
           // The first screen, on its grid.
           full={(scene) => scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.
@@ -117,7 +124,6 @@ function BrainScene({ scene, colorSlot }: { scene: TBrainScene; colorSlot: HTMLE
   if (scene === 'notebooks') return <NotebooksVideo />;
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join') return <EarlyAdopters />;
-  if (scene === 'examples') return <ExamplesGallery />;
   // As the other walkthrough's first screen has it.
   if (scene === 'l6') return <ModelView model="l6" colorSlot={colorSlot} color={L6_COLOR} />;
   if (scene === 'trio') return <BrainTrio />;

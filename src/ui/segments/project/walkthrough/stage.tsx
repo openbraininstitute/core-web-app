@@ -6,6 +6,7 @@ import { CourseFigureLive } from '@/features/learn/ui/course-preview';
 import { ModelView } from '@/ui/segments/project/models/model-views';
 import { cn } from '@/utils/css-class';
 
+import { ExamplesGallery } from './examples-gallery';
 import { COURSE_WIDGET } from './scenes';
 
 import type { ReactNode } from 'react';
@@ -103,6 +104,7 @@ export function WalkthroughStage({
   return (
     <FadingStage
       scene={chapter.scene}
+      wide={(scene) => scene === 'examples'}
       draw={(scene, leaving) => (
         <Scene
           scene={scene}
@@ -127,6 +129,7 @@ function Scene({
   videos: TWalkthroughVideos;
 }) {
   if (scene === 'course') return <CourseLayer />;
+  if (scene === 'examples') return <ExamplesGallery />;
   if (scene === 'workflows' || scene === 'notebooks') {
     return <VideoLayer src={videos[scene] ?? null} />;
   }

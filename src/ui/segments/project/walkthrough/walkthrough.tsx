@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   createContext,
   useCallback,
@@ -18,6 +19,7 @@ import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
+import { MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
@@ -89,8 +91,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   fullscreen = false,
   bold = false,
   intro,
-  end = 'models',
+  end = 'main',
   endUnder,
+  enterHref,
   floating,
   introTail,
   introFoot,
@@ -115,6 +118,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   end?: THomeDesign;
   /** Over the whole window: that home, drawn under it as it ends, so that it is uncovered rather than loaded after. */
   endUnder?: ReactNode;
+  /**
+   * Where Enter the platform and the end lead, in full: given on the public landing, where there is no
+   * workspace to build the home address from. When set, `end`/`endUnder` are not used.
+   */
+  enterHref?: string;
   /** The numbered rail of chapters down the right edge, full screen; off where the host has its own. */
   pager?: boolean;
   /** Room kept along the foot of the screens for a line of the host's own, the way on above it: a CSS length. */
@@ -233,7 +241,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // Finished, the walkthrough fades and the home it leads to opens.
   const router = useRouter();
   const { virtualLabId, projectId } = useWorkspace();
-  const endHref = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}${end === HOME_DESIGNS[0] ? '' : `?design=${end}`}`;
+  const endHref =
+    enterHref ??
+    `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}${end === HOME_DESIGNS[0] ? '' : `?design=${end}`}`;
   const finish = useCallback(() => {
     setFinishing(true);
     setTimeout(() => router.push(endHref), FINISH_MS);
@@ -412,6 +422,25 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               >
                 <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
               </span>
+              {/* The marketing nav, in from the first screen ("Virtual Labs Platform") on, hidden over the intro. */}
+              <nav
+                className={cn(
+                  'pointer-events-auto absolute left-1/2 top-[30px] hidden -translate-x-1/2 items-center gap-[clamp(18px,2.4vw,38px)] transition-opacity duration-500 lg:flex',
+                  introDone ? 'opacity-100' : 'pointer-events-none opacity-0'
+                )}
+                aria-hidden={!introDone}
+              >
+                {MENU_ITEMS.map((item) => (
+                  <Link
+                    key={item.caption}
+                    href={item.slug}
+                    tabIndex={introDone ? undefined : -1}
+                    className="text-primary-9 text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60"
+                  >
+                    {item.caption}
+                  </Link>
+                ))}
+              </nav>
               <div className="pointer-events-auto flex items-center gap-[12px]">
                 {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                 <button

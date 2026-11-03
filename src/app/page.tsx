@@ -1,6 +1,5 @@
-import LandingPage from '@/ui/segments/landing';
+import { BrainsLanding } from '@/ui/segments/landing/brains-landing';
 import { generateMetadataFromSanity } from '@/ui/segments/landing/metadata/metadata';
-import { EnumSection } from '@/ui/segments/landing/sections/sections';
 
 import type { Metadata } from 'next';
 
@@ -11,24 +10,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return metadata;
 }
 
-export default async function RootPage({
-  searchParams: promisedParams,
-}: {
-  searchParams: Promise<{
-    errorcode: string | undefined;
-    original_code: string | undefined;
-    description: string | undefined;
-  }>;
-}) {
-  const searchParams = await promisedParams;
-  return (
-    <LandingPage
-      section={EnumSection.Home}
-      error={{
-        errorcode: searchParams.errorcode,
-        originalCode: searchParams.original_code,
-        description: searchParams.description,
-      }}
-    />
-  );
+/** The platform's landing: the Fly brain walkthrough, in place of the marketing home page. */
+export default function RootPage() {
+  return <BrainsLanding />;
 }
+

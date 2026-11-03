@@ -4,21 +4,17 @@ import { usePathname, useSearchParams } from 'next/navigation';
 
 /**
  * The project home's designs: the home as on main, the first and so the one without a design in its
- * address, then the alternatives: the Figma rows of tutorials and examples, the scrolling walkthrough,
- * the models home the walkthroughs end on, and the walkthrough of the course's three brains, its landing
- * with the fly walking in or with the fly's nervous system alone.
+ * address, then the scrolling walkthrough and the two brains landings.
  */
-export const HOME_DESIGNS = ['main', 'rows', 'walkthrough', 'models', 'brains', 'fly-brain'] as const;
+export const HOME_DESIGNS = ['main', 'walkthrough', 'brains', 'fly-brain'] as const;
 export type THomeDesign = (typeof HOME_DESIGNS)[number];
 
-/** The designs Home's menu offers; the rest open only by their address. */
-export const HOME_MENU: readonly THomeDesign[] = ['main', 'brains', 'fly-brain'];
+/** The designs Home's menu offers; the two walkthroughs, the plain home staying off the menu. */
+export const HOME_MENU: readonly THomeDesign[] = ['walkthrough', 'brains', 'fly-brain'];
 
 /** What each design is called in Home's menu, and a line on what it shows. */
 export const HOME_DESIGN_CHOICES: Record<THomeDesign, { name: string; note: string }> = {
-  rows: { name: 'Start', note: 'Tutorials and examples, as in the design' },
   walkthrough: { name: 'Walkthrough', note: 'The platform, a screen at a time' },
-  models: { name: 'Models home', note: 'Shortcuts, the featured video and models' },
   brains: { name: 'Walking Fly (demo)', note: 'The brains walkthrough, a fly walking in with its brain' },
   'fly-brain': { name: 'Fly brain (demo)', note: 'The brains walkthrough, the fly’s brain and nerve cord turning' },
   main: { name: 'Home', note: 'The project home the platform has now' },

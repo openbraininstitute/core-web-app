@@ -6,9 +6,11 @@ import { ModelView } from '@/ui/segments/project/models/model-views';
 import { MODEL_MINIS } from '@/ui/segments/project/models/models';
 import { cn } from '@/utils/css-class';
 
-import { FLY_COLOR, L6_COLOR } from './brains';
-
 import type { TModel } from '@/ui/segments/project/models/models';
+
+/** The one colour an example is drawn in here: the microcircuit's pink and the fly brain's green. */
+const L6_COLOR = '#e64980';
+const FLY_COLOR = '#2f9e44';
 
 /** What each example is, said in a line or two, and where it is from. */
 const ABOUT: Record<TModel, { from: string; text: string }> = {
