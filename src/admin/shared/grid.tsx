@@ -2,9 +2,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 
+import { ApiError } from '@/api/error';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
 import { cn } from '@/utils/css-class';
-import { errorMessage } from '@/utils/error';
 
 import { isForbidden } from './errors';
 
@@ -38,14 +38,14 @@ export function pagedSource<Row>(
   };
 }
 
+// With no ApiError there was no readable response: a service error without CORS headers
+// reaches the browser as a network failure, whatever really went wrong.
 export function LoadFailure({ error, what }: { error: unknown; what: string }) {
-  return (
-    <p className="text-neutral-4 p-5">
-      {isForbidden(error)
-        ? `Your account can't read ${what}.`
-        : `Couldn't load ${what}: ${errorMessage(error)}`}
-    </p>
-  );
+  let reason = `Couldn't load ${what}: the service gave no readable response.`;
+  if (error instanceof ApiError) reason = `Couldn't load ${what}: ${error.message}`;
+  if (isForbidden(error)) reason = `Your account can't read ${what}.`;
+
+  return <p className="text-neutral-4 p-5">{reason}</p>;
 }
 
 // `what` is the plural noun for the loading, empty and error text. Filters belong outside the

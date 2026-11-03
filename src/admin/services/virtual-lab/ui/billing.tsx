@@ -108,7 +108,7 @@ export function Billing({ owner }: { owner: BillingOwner }) {
       width: { width: 170 },
       renderCell: (subscription) =>
         subscription.status === 'active' &&
-        subscription.type === 'paid' && (
+        subscription.type !== 'FREE' && (
           <CapabilityGate need="virtualLab.admin">
             <Button rounded variant="outline" size="sm" onClick={() => setCancelling(subscription)}>
               Cancel at period end
