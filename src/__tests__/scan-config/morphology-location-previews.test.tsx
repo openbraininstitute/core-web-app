@@ -93,6 +93,18 @@ describe('useMorphologyLocationPreviews', () => {
     expect(result.current.pending).toEqual(new Set(['second']));
   });
 
+  it('keeps an edited block on screen until its new locations arrive', async () => {
+    const { result, rerender } = render(configWith({ sampled: RANDOM }));
+    await waitFor(() => expect(result.current.locations).toHaveLength(1));
+
+    preview.mockReturnValue(new Promise(() => {}));
+    rerender({ config: configWith({ sampled: { ...RANDOM, random_seed: 1 } }) });
+    await waitFor(() => expect(preview).toHaveBeenCalledTimes(2));
+
+    expect(result.current.locations.map(({ entry }) => entry)).toEqual(['sampled']);
+    expect(result.current.pending).toEqual(new Set(['sampled']));
+  });
+
   it('does not refetch a block that did not change', async () => {
     const { result, rerender } = render(configWith({ first: RANDOM, second: CLUSTERED }));
     await waitFor(() => expect(result.current.locations).toHaveLength(2));

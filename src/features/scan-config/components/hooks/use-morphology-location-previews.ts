@@ -1,6 +1,11 @@
 'use client';
 
-import { type UseQueryResult, useQueries } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  type UseQueryResult,
+  useQueries,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
 import {
@@ -32,9 +37,6 @@ const NO_BLOCKS = '[]';
 
 type TPreviewResult = UseQueryResult<TPreviewedMorphologyLocation[]>;
 
-/** Where the query key holds a block's entry, which a placeholder must share. */
-const ENTRY_KEY_INDEX = 4;
-
 /**
  * Where each generated `morphology_locations` block would place its locations, before any
  * workflow runs.
@@ -56,6 +58,7 @@ export function useMorphologyLocationPreviews({
   enabled: boolean;
 }) {
   const ctx = useWorkspace();
+  const queryClient = useQueryClient();
   const dictionary = readLocationsDictionary(config);
   // Read through the dictionary, whose identity survives edits elsewhere in the form.
   const live = useMemo(
@@ -78,14 +81,7 @@ export function useMorphologyLocationPreviews({
   const queries = useMemo(
     () =>
       blocks.map(([entry, block]) => ({
-        queryKey: [
-          'morphology-locations-preview',
-          ctx.virtualLabId,
-          ctx.projectId,
-          entityId,
-          entry,
-          block,
-        ],
+        queryKey: [...entryKey(ctx.virtualLabId, ctx.projectId, entityId, entry), block],
         queryFn: async ({ signal }: { signal: AbortSignal }) => {
           try {
             return await previewMorphologyLocations({
@@ -105,11 +101,6 @@ export function useMorphologyLocationPreviews({
         staleTime: Infinity,
         // A 422 says the same on every try, and the backend is costly to ask.
         retry: false,
-        // Only the same block's last locations may stand in while it refetches.
-        placeholderData: (
-          previous: TPreviewedMorphologyLocation[] | undefined,
-          previousQuery?: { queryKey: readonly unknown[] }
-        ) => (previousQuery?.queryKey[ENTRY_KEY_INDEX] === entry ? previous : undefined),
         refetchOnWindowFocus: false,
       })),
     [blocks, ctx, entityId]
@@ -130,7 +121,13 @@ export function useMorphologyLocationPreviews({
         entries.push(entry);
         if (result.isFetching || current !== block) pending.add(entry);
         if (result.error) errors.set(entry, previewErrorReason(result.error));
-        result.data?.forEach((location, row) => {
+        // A changed key gets a new observer with no placeholder, so the block's last reply stands in.
+        const data =
+          result.data ??
+          (result.isPending
+            ? lastReply(queryClient, entryKey(ctx.virtualLabId, ctx.projectId, entityId, entry))
+            : undefined);
+        data?.forEach((location, row) => {
           locations.push({ ...location, entry, index: row, generated: true });
         });
       });
@@ -138,10 +135,35 @@ export function useMorphologyLocationPreviews({
       for (const entry of live.keys()) if (!entries.includes(entry)) pending.add(entry);
       return { entries, locations, errors, pending };
     },
-    [blocks, live]
+    [blocks, live, queryClient, ctx.virtualLabId, ctx.projectId, entityId]
   );
 
   return useQueries({ queries, combine });
+}
+
+/** A block's query key without its content, which every version of the block shares. */
+function entryKey(
+  virtualLabId: string | undefined,
+  projectId: string | undefined,
+  entityId: string,
+  entry: string
+) {
+  return ['morphology-locations-preview', virtualLabId, projectId, entityId, entry] as const;
+}
+
+/** The newest locations cached for any version of a block. */
+function lastReply(
+  queryClient: QueryClient,
+  key: readonly unknown[]
+): TPreviewedMorphologyLocation[] | undefined {
+  let newest: { at: number; data: TPreviewedMorphologyLocation[] } | undefined;
+  for (const query of queryClient.getQueryCache().findAll({ queryKey: key })) {
+    const { data, dataUpdatedAt } = query.state;
+    if (data && (!newest || dataUpdatedAt > newest.at)) {
+      newest = { at: dataUpdatedAt, data: data as TPreviewedMorphologyLocation[] };
+    }
+  }
+  return newest?.data;
 }
 
 function previewErrorReason(error: unknown): string {
