@@ -17,7 +17,6 @@ import {
   SCOPE_HEADER_RENDERER,
   ScopeHeader,
 } from '@/features/data-grid/bindings/entitycore/renderers/scope-header';
-import { ScopeToolbarToggles } from '@/features/data-grid/bindings/entitycore/renderers/scope-toolbar';
 import { ScopeFilter } from '@/features/data-grid/bindings/entitycore/scope-filter';
 import {
   createDefaultOperatorRegistry,
@@ -134,12 +133,7 @@ describe('scope header', () => {
       defaultPageSize: 20,
     });
     const ctx = { controller, operators: createDefaultOperatorRegistry() };
-    renderWithFlags(
-      <>
-        <ScopeHeader columnId="scope" label="Scope" ctx={ctx} />
-        <ScopeToolbarToggles controller={controller} />
-      </>
-    );
+    renderWithFlags(<ScopeHeader columnId="scope" label="Scope" ctx={ctx} />);
     const filter = () => {
       const value = controller.store.getSnapshot().filters.scope?.value;
       return value?.kind === FilterValueKind.Text ? value.text : undefined;
@@ -148,40 +142,47 @@ describe('scope header', () => {
     return { controller, filter, pressed };
   }
 
-  it('shows both and filters nothing by default', () => {
+  it('shows exactly three toggles, all on and filtering nothing by default', () => {
     const { filter, pressed } = renderHeader();
-    expect(pressed('scope-header-public')).toBe('true');
-    expect(pressed('scope-header-project')).toBe('true');
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+    for (const kind of ['public', 'project', 'published']) {
+      expect(pressed(`scope-header-${kind}`)).toBe('true');
+    }
     expect(filter()).toBeUndefined();
   });
 
-  it('keeps only the clicked side, and brings both back on a click on either', () => {
+  it('switching public data off keeps the project, made-public data included', () => {
     const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId('scope-header-public'));
-    expect(filter()).toBe(ScopeFilter.Public);
-    expect(pressed('scope-header-project')).toBe('false');
-
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBeUndefined();
-
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Project);
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBeUndefined();
-    expect(pressed('scope-header-public')).toBe('true');
-    expect(pressed('scope-header-project')).toBe('true');
-  });
-
-  it('keeps the toolbar marks in step with the header', () => {
-    const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-toolbar-project'));
     expect(filter()).toBe(ScopeFilter.Project);
     expect(pressed('scope-header-public')).toBe('false');
-    expect(pressed('scope-toolbar-public')).toBe('false');
+    expect(pressed('scope-header-published')).toBe('true');
+  });
 
+  it('switching the project off keeps public data', () => {
+    const { filter, pressed } = renderHeader();
+    fireEvent.click(screen.getByTestId('scope-header-project'));
+    expect(filter()).toBe(ScopeFilter.Public);
+    expect(pressed('scope-header-project')).toBe('false');
+    expect(pressed('scope-header-published')).toBe('true');
+  });
+
+  it('the made-public data alone, and back to everything', () => {
+    const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId('scope-header-public'));
+    fireEvent.click(screen.getByTestId('scope-header-project'));
+    expect(filter()).toBe(ScopeFilter.Published);
+    expect(pressed('scope-header-published')).toBe('true');
+    fireEvent.click(screen.getByTestId('scope-header-public'));
+    fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(filter()).toBeUndefined();
-    expect(pressed('scope-toolbar-public')).toBe('true');
+  });
+
+  it('cannot switch the made-public data off while public data is on', () => {
+    const { filter, pressed } = renderHeader();
+    fireEvent.click(screen.getByTestId('scope-header-published'));
+    expect(filter()).toBeUndefined();
+    expect(pressed('scope-header-published')).toBe('true');
   });
 
   it('keeps the selection while switching, so a picker keeps its picks', () => {
@@ -189,24 +190,6 @@ describe('scope header', () => {
     act(() => controller.store.dispatch({ type: GridActionType.SetSelection, ids: ['r1'] }));
     fireEvent.click(screen.getByTestId('scope-header-public'));
     expect(controller.store.getSnapshot().selection).toEqual(['r1']);
-  });
-
-  it('with one side chosen, can leave out either part of it, never both', async () => {
-    const { filter } = renderHeader();
-    expect(screen.getByTestId('scope-filter-trigger')).toHaveAttribute('aria-hidden', 'true');
-
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    fireEvent.click(screen.getByTestId('scope-filter-trigger'));
-    await screen.findByTestId('scope-filter-panel');
-
-    fireEvent.click(screen.getByTestId('scope-filter-joint'));
-    expect(filter()).toBe(ScopeFilter.Private);
-    expect(screen.getByTestId('scope-filter-single')).toBeDisabled();
-
-    fireEvent.click(screen.getByTestId('scope-filter-joint'));
-    fireEvent.click(screen.getByTestId('scope-filter-single'));
-    expect(filter()).toBe(ScopeFilter.Published);
-    expect(screen.getByTestId('scope-filter-joint')).toBeDisabled();
   });
 });
 

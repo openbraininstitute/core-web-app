@@ -90,19 +90,6 @@ export const projectScopeIconFlag = defineFlag<'two' | 'one'>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** How the Data table marks a project's data that was made public, and sorts or filters by scope. */
-export const scopeMarksFlag = defineFlag<'filter' | 'sort' | 'badge'>({
-  key: 'scope-marks',
-  defaultValue: 'filter',
-  values: ['filter', 'sort', 'badge'],
-  labels: [
-    'Both icons, filter button for one side',
-    'Both icons, sortable column',
-    'Badged icon, three toggles',
-  ],
-  description: 'Scope marks in the Data table',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
 /** A circuit past the small scales as morphologies and not only somas, where OBI-One can build its pack. */
 export const circuitMorphologiesFlag = defineFlag<boolean>({
   key: 'circuit-morphologies',
@@ -178,7 +165,6 @@ export const flags = [
   morphologyDebugFlag,
   emMeshDebugFlag,
   projectScopeIconFlag,
-  scopeMarksFlag,
   circuitMorphologiesFlag,
   learnFlag,
   aiButtonFlag,

@@ -7,7 +7,7 @@ import {
   ScopeTooltip,
 } from '@/features/data-grid/bindings/entitycore/renderers/scope-tooltip';
 import { EMPTY_PLACEHOLDER } from '@/features/data-grid/renderers/aggrid/empty-cell';
-import { projectScopeIconFlag, scopeMarksFlag, useFlag } from '@/features/feature-flags';
+import { projectScopeIconFlag, useFlag } from '@/features/feature-flags';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { cn } from '@/utils/css-class';
 
@@ -29,15 +29,6 @@ interface IScopeRow {
 /** The project mark: two people, or one while the `project-scope-icon` flag says so. */
 export function useProjectScopeIcon() {
   return useFlag(projectScopeIconFlag.key) === 'one' ? UserOutlined : TeamOutlined;
-}
-
-/**
- * Which design the scope marks use: both icons with a filter button for one side or a
- * sortable column, or a badged icon.
- */
-export function useScopeMarks() {
-  const marks = useFlag(scopeMarksFlag.key);
-  return marks === 'badge' || marks === 'sort' ? marks : 'filter';
 }
 
 /** A globe with a person badge: the project's own data, made public. */
