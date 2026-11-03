@@ -1,5 +1,3 @@
-import { isCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
-
 interface ReportTask {
   message: string;
   failure: boolean;
@@ -12,6 +10,9 @@ interface ReportTask {
 export class Report {
   private readonly tasks: ReportTask[] = [];
 
+  /** Whether the log is for someone: the debug flag is on. */
+  constructor(readonly debugging: boolean) {}
+
   logTask(message: string): this {
     this.tasks.push({ message, failure: false });
     return this;
@@ -22,9 +23,9 @@ export class Report {
     return this;
   }
 
-  /** Dump the log, for whoever switched the circuit viewer's debug flag on. */
+  /** Dump the log, for whoever switched the debug flag on. */
   debug() {
-    if (!isCircuitViewerDebugMode()) return;
+    if (!this.debugging) return;
 
     const { tasks } = this;
     const text = tasks.map((task) => `%c${task.message}`).join('\n');

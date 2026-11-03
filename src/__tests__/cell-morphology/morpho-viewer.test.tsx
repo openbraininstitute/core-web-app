@@ -1,12 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { type ComponentType, lazy, Suspense } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_BUMPS } from '@/features/entities/cell-morphology/morpho-viewer/constants';
 import { HELP } from '@/features/entities/cell-morphology/morpho-viewer/help/help-text';
 import { MorphoViewer } from '@/features/entities/cell-morphology/morpho-viewer/morpho-viewer';
 import { defaultFlags } from '@/features/feature-flags/config';
-import { morphologyDebugFlag } from '@/features/feature-flags/flags';
+import { debugFlag } from '@/features/feature-flags/flags';
 import { FlagsProvider } from '@/features/feature-flags/provider';
 
 import type { DistanceData } from '@/features/entities/cell-morphology/morpho-viewer/engine/colors';
@@ -175,16 +174,7 @@ vi.mock('@/features/entities/cell-morphology/morpho-viewer/export', () => {
 
 vi.mock('file-saver', () => ({ saveAs: h.saveAs }));
 
-vi.mock('next/dynamic', () => ({
-  default: (load: () => Promise<ComponentType<object>>) => {
-    const Lazy = lazy(() => load().then((component) => ({ default: component })));
-    return (props: object) => (
-      <Suspense fallback={null}>
-        <Lazy {...props} />
-      </Suspense>
-    );
-  },
-}));
+vi.mock('next/dynamic', () => import('@/__tests__/viewer-3d/lazy-next-dynamic'));
 
 const SUMMARY: MorphologySummary = {
   nodeCount: 10,
@@ -249,11 +239,12 @@ function meshStats(patch: Partial<MeshStats> = {}): MeshStats {
 
 async function renderViewer({ debug = true } = {}) {
   const view = render(
-    <FlagsProvider flags={{ ...defaultFlags, [morphologyDebugFlag.key]: debug }}>
+    <FlagsProvider flags={{ ...defaultFlags, [debugFlag.key]: debug }}>
       <MorphoViewer swc="1 1 0 0 0 5 -1" name="Cell A" />
     </FlagsProvider>
   );
   await screen.findByRole('button', { name: 'Viewer settings' });
+  if (debug) await screen.findByRole('button', { name: 'Debug' }, { timeout: 10_000 });
   return { ...view, viewer: h.viewers.at(-1)!, pool: h.pools.at(-1)! };
 }
 

@@ -121,6 +121,10 @@ Client hook that returns a single flag value.
 - A/B testing different implementations
 - Enable alpha/beta features (combine `defaultValue` and `visible` with environment-based logic)
 
+## Debug
+
+`debugFlag` turns on the Debug menus of the morphology, EM cell mesh and circuit viewers, whose code is fetched only with it on. It is not listed in production, where adding `"debug": true` to the JSON in the `feature-flags` cookie by hand has the same effect.
+
 ## Examples
 
 ### User-Controllable Feature

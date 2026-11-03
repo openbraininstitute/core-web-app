@@ -1,6 +1,5 @@
 import { Dataset, type Entity, Group, type File as H5File } from 'h5wasm';
 
-import { isCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import {
   createSurfaceSdf,
   isSomaSection,
@@ -254,7 +253,7 @@ async function readPopulation(
   // Diagnostic only, and up to `NEURITE_PROBE_LIMIT` SDF queries that each walk
   // every segment of their cell — so it runs for whoever is asking the question,
   // not for everyone.
-  if (isCircuitViewerDebugMode()) {
+  if (report.debugging) {
     probeNeuriteSynapses(report, populationName, coordinates, arrSectionId, arrTarget, surfaces);
   }
   const typePath = `edges/${populationName}/0/syn_type_id`;

@@ -94,6 +94,8 @@ export interface ICircuitViewerChromeProps {
    * pushes them down rather than covering them. Only mounted with the colour-by column.
    */
   legendSlotRef?: (element: HTMLElement | null) => void;
+  /** Takes the place beside the settings the view puts its Debug menu in; omit to leave it out. */
+  debugSlotRef?: (element: HTMLElement | null) => void;
   /**
    * How many cells of the population on show are selected, of how many, and
    * the way back to them all: said at the top centre while some are. With a
@@ -118,6 +120,7 @@ export function CircuitViewerChrome({
   colorByTarget,
   colorByNoneLabel,
   legendSlotRef,
+  debugSlotRef,
   selection,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
@@ -256,6 +259,7 @@ export function CircuitViewerChrome({
               inert={!showVizChrome || undefined}
             >
               <ViewerControlsMenu {...viz.menu} />
+              {debugSlotRef && <div ref={debugSlotRef} className="contents" />}
               {/* Ahead of the help icons, which come and go with the mode: in a
                   row anchored to the left edge, only what precedes an element can
                   move it, and the pill's own width changes as populations are
