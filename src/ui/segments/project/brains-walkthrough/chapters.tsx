@@ -17,7 +17,6 @@ import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walk
 export type TBrainScene =
   | 'opening'
   | 'multiplying'
-  | 'examples'
   | 'l6'
   | 'trio'
   | 'fly'
@@ -172,15 +171,6 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <StartNow />
       </>
     ),
-  },
-  {
-    id: 'examples',
-    label: 'Examples',
-    scene: 'examples',
-    wide: true,
-    title: 'Models across species and scales',
-    hero: true,
-    body: null,
   },
   {
     id: 'microcircuit',

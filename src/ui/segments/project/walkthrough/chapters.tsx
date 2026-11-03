@@ -261,6 +261,15 @@ export const CHAPTERS: IChapter[] = [
     ),
   },
   {
+    id: 'examples',
+    label: 'Examples',
+    scene: 'examples',
+    wide: true,
+    title: 'Models across species and scales',
+    hero: true,
+    body: null,
+  },
+  {
     id: 'next',
     label: 'Where next',
     scene: 'l6',

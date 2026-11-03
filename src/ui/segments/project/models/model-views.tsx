@@ -12,6 +12,7 @@ import { EmCellMeshViewer } from '@/features/entities/em-cell-mesh/viewer/em-mes
 import { meshAsset } from '@/features/entities/em-cell-mesh/viewer/mesh-asset';
 import { circuitMorphologiesFlag, FlagsProvider, useFlags } from '@/features/feature-flags';
 import { CANVAS_WHITE } from '@/features/scan-config/components/color-by/contrast';
+import { useSessionAtomValue } from '@/hooks/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { keyBuilder } from '@/ui/use-query-keys/data';
 
@@ -226,12 +227,16 @@ function MeshModelView({
   onReady?: () => void;
 }) {
   const context = useWorkspace();
+  const session = useSessionAtomValue();
   const { data: mesh, isError } = useQuery({
     queryKey: keyBuilder.entity({ id: example.meshId, context, type: EntityTypeDict.EMCellMesh }),
     queryFn: () => getEmCellMesh({ id: example.meshId, context }),
+    // Entity Core asks for a token; without a session — on the public landing — show the poster.
+    enabled: !!session,
   });
   const [picked, setPicked] = useState(false);
   const asset = meshAsset(mesh?.assets);
+  if (!session) return <Poster src={example.art} />;
   if (isError) return <Note>The mesh could not be loaded.</Note>;
   if (!mesh || !asset) return null;
   return (
