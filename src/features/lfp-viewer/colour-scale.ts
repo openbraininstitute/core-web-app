@@ -25,7 +25,8 @@ export function colourScale(limit: number): ColourScale {
 /** The 99.9th percentile of |V| over a field, sampled where it is large. */
 export function fieldLimit(field: LfpField): number {
   const { data, scale } = field;
-  const stride = Math.max(1, Math.floor(data.length / 200_000));
+  // Odd: min/max data alternates lows and highs, and an even stride would read one of them only.
+  const stride = Math.max(1, Math.floor(data.length / 200_000)) | 1;
   const sample = new Float32Array(Math.ceil(data.length / stride));
   for (let i = 0, j = 0; i < data.length; i += stride, j++) sample[j] = Math.abs(data[i]);
   sample.sort();

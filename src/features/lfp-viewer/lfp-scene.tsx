@@ -156,7 +156,7 @@ export function LfpScene({
           <span>+{formatUv(scale.limit)} µV</span>
         </div>
       </div>
-      {!positions && (
+      {(contacts.state === 'absent' || contacts.state === 'failed') && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-neutral-500">
           {contacts.state === 'failed'
             ? "Where this report's contacts are could not be read"

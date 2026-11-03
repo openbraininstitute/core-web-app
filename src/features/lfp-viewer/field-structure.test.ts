@@ -32,6 +32,17 @@ function lineAlong(axis: 0 | 1 | 2, contacts: number): Float32Array {
   return positions;
 }
 
+/** A cube of `side`³ contacts, 100 µm apart. */
+function volumeOf(side: number): Float32Array {
+  const positions: number[] = [];
+  for (let x = 0; x < side; x++) {
+    for (let y = 0; y < side; y++) {
+      for (let z = 0; z < side; z++) positions.push(x * 100, y * 100, z * 100);
+    }
+  }
+  return Float32Array.from(positions);
+}
+
 describe('describeField', () => {
   it('finds a signal every contact shares', () => {
     expect(describeField(fieldOf(8, (_, b) => 50 * sine(b))).sharedShare).toBeCloseTo(1, 3);
@@ -111,6 +122,32 @@ describe('fieldDirection', () => {
   it('gives none where the weights do not change with position', () => {
     expect(fieldDirection(new Float32Array(16), lineAlong(1, 16))).toBeNull();
   });
+
+  it('gives none for a source in the middle of a line, which no straight line follows', () => {
+    const mode = Float32Array.from({ length: 16 }, (_, c) => Math.abs(c - 7.5) - 4 + c * 1e-3);
+    expect(fieldDirection(mode, lineAlong(1, 16))).toBeNull();
+  });
+
+  it('gives none for a pattern a straight line fits no better than chance', () => {
+    const mode = Float32Array.from({ length: 27 }, (_, c) => (Math.sin(c * 12.9898) * 43758) % 1);
+    expect(fieldDirection(mode, volumeOf(3))).toBeNull();
+  });
+
+  it('keeps a weak trend that many contacts show to be real', () => {
+    const contacts = 512;
+    const positions = volumeOf(8);
+    const mode = Float32Array.from(
+      { length: contacts },
+      (_, c) => positions[c * 3 + 1] / 700 + ((Math.sin(c * 12.9898) * 43758) % 1)
+    );
+    expect(fieldDirection(mode, positions)?.[1]).toBeGreaterThan(0.9);
+  });
+
+  it('gives none for a field every contact shares, spread over a volume', () => {
+    const { mode } = describeField(fieldOf(27, (_, b) => 50 * sine(b)));
+    expect(mode.every((weight) => weight === 0)).toBe(true);
+    expect(fieldDirection(mode, volumeOf(3))).toBeNull();
+  });
 });
 
 describe('coordinatesAlong', () => {
@@ -137,25 +174,38 @@ describe('buildRows', () => {
     const contacts = 683;
     const coordinate = Float32Array.from({ length: contacts }, (_, c) => c);
     const rows = buildRows(contacts, coordinate, 'microns', noSwing);
-    expect(rows).toHaveLength(27);
-    expect(rows.every((r) => r.contacts.length >= 25 && r.contacts.length <= 26)).toBe(true);
+    expect(rows).toHaveLength(64);
+    expect(rows.every((r) => r.contacts.length >= 10 && r.contacts.length <= 11)).toBe(true);
     expect(rows.flatMap((r) => r.contacts).sort((a, b) => a - b)).toEqual(
       Array.from({ length: contacts }, (_, c) => c)
     );
     expect(rows[0].contacts[0]).toBe(contacts - 1);
   });
 
-  it('names a row of many by its middle position, or its place where it has none', () => {
+  it.each([
+    [64, 64],
+    [65, 64],
+    [1024, 64],
+    [5000, 71],
+  ])('gives %i contacts %i rows, with no drop past the first bins', (contacts, rows) => {
+    expect(buildRows(contacts, null, 'place', noSwing)).toHaveLength(rows);
+  });
+
+  it('names rows by position, or by place where they have none, once they are bins', () => {
     const coordinate = Float32Array.from({ length: 100 }, (_, c) => c - 50);
-    expect(buildRows(100, coordinate, 'microns', noSwing)[0].label).toBe('+44 µm');
-    expect(buildRows(100, coordinate, 'microns', noSwing)[9].label).toBe('−46 µm');
+    const rows = buildRows(100, coordinate, 'microns', noSwing);
+    expect(rows[0].contacts).toHaveLength(1);
+    expect(rows[0].label).toBe('+49 µm');
+    expect(rows[63].contacts).toHaveLength(2);
+    expect(rows[63].label).toBe('−50 µm');
     expect(buildRows(100, coordinate, 'place', noSwing)[0].label).toBe('#1');
   });
 
   it('leads a row with the contact the field swings most at', () => {
     const coordinate = Float32Array.from({ length: 100 }, (_, c) => c);
-    const rows = buildRows(100, coordinate, 'microns', (c) => (c === 95 ? 9 : 1));
-    expect(rows[0].lead).toBe(95);
+    const rows = buildRows(100, coordinate, 'microns', (c) => (c === 94 ? 9 : 1));
+    expect(rows[3].contacts).toEqual([95, 94]);
+    expect(rows[3].lead).toBe(94);
   });
 });
 
@@ -224,6 +274,13 @@ describe('withoutShared', () => {
   it('leaves no rounding noise where the contacts do not divide evenly', () => {
     const removed = withoutShared(fieldOf(7, (_, b) => 50 * sine(b)));
     expect(removed.data.every((v) => v === 0)).toBe(true);
+  });
+
+  it('does not stretch differences of a stored step, which are rounding, to the full scale', () => {
+    const field = fieldOf(2, (c, b) => 50 * sine(b) + (c === 0 && b % 2 === 0 ? 0.01 : 0));
+    const removed = withoutShared(field);
+    expect(removed.data.every((v) => v === 0)).toBe(true);
+    expect(removed.scale).toBe(field.scale);
   });
 
   it('keeps what differs, at a scale of its own', () => {

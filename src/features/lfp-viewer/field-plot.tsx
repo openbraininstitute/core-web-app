@@ -223,20 +223,29 @@ export function FieldPlot({
       g.textAlign = 'right';
       g.textBaseline = 'middle';
       traces.forEach((contact, row) => {
+        g.fillStyle = contact === selectedContact ? SELECTED : LABEL;
+        g.fillText(`e${contact}`, plot.left - 6, plot.top + (row + 0.5) * rowHeight);
+      });
+      // A window can fall between two bin centres: the bins either side carry the line across it.
+      const lineFrom = Math.max(0, first - 1);
+      const lineEnd = Math.min(source.bins, last + 1);
+      g.save();
+      g.beginPath();
+      g.rect(plot.left, 0, plotWidth, size.height);
+      g.clip();
+      traces.forEach((contact, row) => {
         const base = plot.top + (row + 0.5) * rowHeight;
         const at = traceField ? row : contact;
-        g.fillStyle = contact === selectedContact ? SELECTED : LABEL;
-        g.fillText(`e${contact}`, plot.left - 6, base);
         g.strokeStyle = contact === selectedContact ? SELECTED : INK;
         g.lineWidth = 1;
         g.beginPath();
         if (binsPerPx <= 1) {
-          for (let b = first; b < last; b++) {
+          for (let b = lineFrom; b < lineEnd; b++) {
             const [low, high] = extent(source, at, b, b + 1);
             const x = xOf(source.start + (b + 0.5) * source.binMs);
-            const v = source.kind === 'value' ? low : (low + high) / 2;
-            if (b === first) g.moveTo(x, base - v * pxPerUv);
-            else g.lineTo(x, base - v * pxPerUv);
+            if (b === lineFrom) g.moveTo(x, base - high * pxPerUv);
+            else g.lineTo(x, base - high * pxPerUv);
+            g.lineTo(x, base - low * pxPerUv);
           }
         } else {
           for (let px = 0; px < plotWidth; px++) {
@@ -249,6 +258,7 @@ export function FieldPlot({
         }
         g.stroke();
       });
+      g.restore();
     }
 
     // The time axis.

@@ -128,8 +128,7 @@ export function LfpViewer({
   if (status.data?.state === 'failed') {
     return <Empty className="p-2em" description="Summarising this LFP report failed" />;
   }
-  // Held for the contacts' positions too: they choose how the rows are ordered at first.
-  if (!summary.data || contacts.state === 'loading') {
+  if (!summary.data) {
     return sidePanel?.target ? (
       <LoadingFilePanes title={TRACES_TITLE} panelTitles={PANEL_TITLES} tableTitle={TABLE_TITLE} />
     ) : (
@@ -211,11 +210,12 @@ function LfpReportView({
         ) ?? null)
   );
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
-  // Read only while drawn. A contact's row at full resolution holds nothing of the mean to take off.
+  // Read only while drawn, and once positions are in, as they can change which contacts are traced.
+  // A contact's row at full resolution holds nothing of the mean to take off.
   const traceField = useTraceField(
     source,
     summary,
-    mode === 'traces' && !removeShared ? traces : []
+    mode === 'traces' && !removeShared && contacts.state !== 'loading' ? traces : []
   );
   const sharedPercent = Math.round(structure.sharedShare * 100);
 
@@ -384,7 +384,7 @@ function LfpReportView({
             />
           )}
           <SceneSpeedSelect speed={speed} onSpeedChange={setSpeed} />
-          {circuit && (
+          {sceneUp && positions && (
             <PillSelect
               label="3D hide below"
               value={String(hideBelowShare)}
