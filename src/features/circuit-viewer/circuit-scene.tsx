@@ -37,6 +37,7 @@ import {
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
   hasAnyLocation,
+  hasGeneratedBlock,
   type IFormBindingOptions,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
@@ -325,6 +326,10 @@ export function CircuitScene({
       ? reportedPositionless.names
       : NO_NAMES;
   const subjectUnplaceable = population !== undefined && positionless.has(population.name);
+  // Nothing of the population on show is drawn to colour.
+  const chromeColorBy = enableColorBy && !subjectUnplaceable;
+  // The chrome's place for the scene's legends; state, so the legends move in once it mounts.
+  const [legendSlot, setLegendSlot] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     onPopulationChange?.(population);
@@ -415,7 +420,9 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
     }) ||
-      hasAnyLocation(scanConfig));
+      hasAnyLocation(scanConfig) ||
+      // The flag that turns the preview on, so the controls show only with generated markers.
+      (Boolean(supportsExplicitLocations) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -711,9 +718,10 @@ export function CircuitScene({
   );
   const perCellProps = useMemo(
     () => ({
-      // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn there.
-      chromeTopRight: enableColorBy && colorByTarget === undefined,
+      // Under the colour-by key while the chrome draws its column, in the corner otherwise.
+      legendTarget: chromeColorBy ? legendSlot : undefined,
+      // Background-derived chrome theme, for the legends drawn over the viewer.
+      theme,
       morphologyLocations: {
         config: scanConfig,
         onConfigChange: setConfig,
@@ -726,8 +734,9 @@ export function CircuitScene({
       },
     }),
     [
-      enableColorBy,
-      colorByTarget,
+      chromeColorBy,
+      legendSlot,
+      theme,
       scanConfig,
       setConfig,
       selectedRootElement,
@@ -805,6 +814,7 @@ export function CircuitScene({
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
+        legendSlotRef={setLegendSlot}
         selection={sceneSelection}
         viz={{
           // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a
@@ -819,8 +829,7 @@ export function CircuitScene({
               }
             : menu,
           onResetView,
-          // Nothing of the population on show is drawn to colour.
-          colorBy: enableColorBy && !subjectUnplaceable ? colorBy : undefined,
+          colorBy: chromeColorBy ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,

@@ -481,3 +481,13 @@ export function morphologyLocationsColor(entry: string): string {
 
 /** Bounded so the viewer's palette texture stays small. */
 const MORPHOLOGY_LOCATION_COLOR_SLOTS = 12;
+
+/** A block's markers as drawn: its own colour while it is the open block, receded otherwise. */
+export function morphologyLocationMarkerColor(
+  entry: string,
+  openEntry: string | undefined,
+  background: string
+): string {
+  const color = morphologyLocationsColor(entry);
+  return entry === openEntry ? color : recedeMarkerColor(color, background);
+}

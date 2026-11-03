@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { morphologyLocationsColor } from '@/features/scan-config/components/color-by/palette';
 import {
   collectLocations,
+  hasGeneratedBlock,
+  readGeneratedBlocks,
   supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
@@ -66,6 +68,29 @@ describe('collectLocations', () => {
 
   it('is empty when there is no morphology-locations dictionary at all', () => {
     expect(collectLocations(null)).toEqual([]);
+  });
+});
+
+describe('readGeneratedBlocks', () => {
+  it('keeps only the blocks that describe how to sample', () => {
+    const dictionary = {
+      ...TWO_BLOCKS,
+      sampled: { type: 'RandomMorphologyLocations', number_of_locations: 20 },
+    };
+
+    expect(readGeneratedBlocks(dictionary).map(([entry]) => entry)).toEqual(['sampled']);
+  });
+});
+
+describe('hasGeneratedBlock', () => {
+  it('is true only when a block describes how to sample', () => {
+    const sampled = { type: 'RandomMorphologyLocations', number_of_locations: 20 };
+
+    const explicitOnly = { morphology_locations: TWO_BLOCKS } as unknown as Config;
+    const withSampled = { morphology_locations: { ...TWO_BLOCKS, sampled } } as unknown as Config;
+
+    expect(hasGeneratedBlock(explicitOnly)).toBe(false);
+    expect(hasGeneratedBlock(withSampled)).toBe(true);
   });
 });
 
