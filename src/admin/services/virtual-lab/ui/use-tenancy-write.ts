@@ -24,8 +24,9 @@ export function useTenancyWrite<Args>({
 
   return useMutation({
     mutationFn: write,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminQueryKeys.tenancy() });
+    // Awaited so a dialog stays pending until the page shows the new data.
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: adminQueryKeys.tenancy() });
       notification.success({ message: done, placement: 'topRight' });
       onSuccess?.();
     },

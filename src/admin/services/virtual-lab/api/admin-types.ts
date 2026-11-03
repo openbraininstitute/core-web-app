@@ -39,7 +39,7 @@ export type AdminLab = {
 };
 
 export type AdminLabUpdate = Partial<
-  Pick<AdminLab, 'name' | 'description' | 'entity'> & { reference_email: string }
+  Pick<AdminLab, 'name' | 'description' | 'entity'> & { reference_email: string | null }
 >;
 
 export type AdminMember = {

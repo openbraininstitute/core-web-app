@@ -50,7 +50,8 @@ export function LoadFailure({ error, what }: { error: unknown; what: string }) {
 
 // `what` is the plural noun for the loading, empty and error text. Filters belong outside the
 // grid: give it a `key` built from them, so a change returns to page 1. A column sorts only if
-// it says so, and its id is then the API's `order_by` value.
+// it says so, and its id is then the API's `order_by` value. A `renderCell` cell has no value, so
+// it only refreshes as a new row: put whatever such a cell shows into `getRowId`.
 export function AdminPagedGrid<Row>({
   what,
   columns,
@@ -132,8 +133,8 @@ export function AdminQueryGrid<Row>({
 }) {
   const { data: rows, error } = useQuery({ queryKey, queryFn });
 
+  if (rows) return <AdminRowsGrid {...grid} rows={rows} />;
   if (error) return <LoadFailure error={error} what={grid.what} />;
-  if (!rows) return <p className="text-neutral-4 p-5">Loading {grid.what}</p>;
 
-  return <AdminRowsGrid {...grid} rows={rows} />;
+  return <p className="text-neutral-4 p-5">Loading {grid.what}</p>;
 }

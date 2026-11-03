@@ -65,7 +65,9 @@ export function UsersList() {
         fill
         what="users"
         columns={COLUMNS}
-        getRowId={(user) => user.id}
+        getRowId={({ id, enabled, firstName, lastName }) =>
+          `${id}:${enabled}:${firstName}:${lastName}`
+        }
         dataSource={USERS_SOURCE}
         queryKey={adminQueryKeys.users()}
         params={params}

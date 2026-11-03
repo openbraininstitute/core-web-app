@@ -35,8 +35,13 @@ export function UserDetail({ userId }: { userId: string }) {
     queryFn: () => getUser(userId),
   });
 
-  if (error) return <LoadFailure error={error} what="this user" />;
-  if (!data) return <p className="text-neutral-4">Loading this user</p>;
+  if (!data) {
+    return error ? (
+      <LoadFailure error={error} what="this user" />
+    ) : (
+      <p className="text-neutral-4">Loading this user</p>
+    );
+  }
 
   const { user, groups, virtual_labs: labs, projects } = data;
 

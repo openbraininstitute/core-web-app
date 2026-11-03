@@ -33,6 +33,7 @@ export function useListFilters({ scoped }: { scoped?: boolean } = {}) {
     controls: (placeholder: string) => (
       <div className="flex items-center gap-3">
         <Input.Search
+          key={query}
           allowClear
           defaultValue={query}
           placeholder={placeholder}

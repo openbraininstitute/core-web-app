@@ -76,13 +76,21 @@ function LabActions({ lab }: { lab: AdminLab }) {
         Delete
       </Button>
       {open === 'edit' && (
-        <FormModal<AdminLabUpdate>
+        <FormModal<{
+          name: string;
+          description?: string;
+          reference_email?: string;
+          entity?: string;
+        }>
           title="Edit virtual lab"
           fields={[
             {
               name: 'name',
               label: 'Name',
-              rules: [{ required: true, message: 'Give it a name' }, { max: 250 }],
+              rules: [
+                { required: true, whitespace: true, message: 'Give it a name' },
+                { max: 250 },
+              ],
             },
             { name: 'description', label: 'Description', multiline: true },
             {
@@ -100,9 +108,9 @@ function LabActions({ lab }: { lab: AdminLab }) {
           }}
           okText="Save"
           pending={editWrite.isPending}
-          // The API validates the email, so a blank one has to stay out of the request.
+          // The API validates the email, so a blank one has to go as null, which clears it.
           onSubmit={({ reference_email: email, ...update }) =>
-            editWrite.mutate({ ...update, ...(email && { reference_email: email }) })
+            editWrite.mutate({ ...update, reference_email: email || null })
           }
           onClose={close}
         />
@@ -141,8 +149,13 @@ export function VlabHub({ vlabId }: { vlabId: string }) {
     queryFn: () => getLab(vlabId),
   });
 
-  if (error) return <LoadFailure error={error} what="this lab" />;
-  if (!lab) return <p className="text-neutral-4">Loading this lab</p>;
+  if (!lab) {
+    return error ? (
+      <LoadFailure error={error} what="this lab" />
+    ) : (
+      <p className="text-neutral-4">Loading this lab</p>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

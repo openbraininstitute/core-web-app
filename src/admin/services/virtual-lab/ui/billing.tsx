@@ -99,8 +99,11 @@ export function Billing({ owner }: { owner: BillingOwner }) {
       id: 'period',
       header: 'Current period',
       width: { flex: 2, minWidth: 340 },
+      // Free subscriptions never end, which the API stores as the year 9999.
       getValue: (s) =>
-        `${formatDateTime(s.current_period_start)} to ${formatDateTime(s.current_period_end)}`,
+        s.current_period_end.startsWith('9999')
+          ? `From ${formatDateTime(s.current_period_start)}, no end date`
+          : `${formatDateTime(s.current_period_start)} to ${formatDateTime(s.current_period_end)}`,
     },
     {
       id: 'actions',
@@ -125,7 +128,7 @@ export function Billing({ owner }: { owner: BillingOwner }) {
         <AdminPagedGrid<AdminSubscription>
           what="subscriptions"
           columns={subscriptionColumns}
-          getRowId={(subscription) => subscription.id}
+          getRowId={({ id, status }) => `${id}:${status}`}
           dataSource={SUBSCRIPTIONS_SOURCE}
           queryKey={adminQueryKeys.subscriptions()}
           params={owner}

@@ -75,7 +75,10 @@ function ProjectActions({ project }: { project: AdminProject }) {
             {
               name: 'name',
               label: 'Name',
-              rules: [{ required: true, message: 'Give it a name' }, { max: 250 }],
+              rules: [
+                { required: true, whitespace: true, message: 'Give it a name' },
+                { max: 250 },
+              ],
             },
             { name: 'description', label: 'Description', multiline: true },
           ]}
@@ -119,8 +122,13 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
     queryFn: () => getProject(projectId),
   });
 
-  if (error) return <LoadFailure error={error} what="this project" />;
-  if (!project) return <p className="text-neutral-4">Loading this project</p>;
+  if (!project) {
+    return error ? (
+      <LoadFailure error={error} what="this project" />
+    ) : (
+      <p className="text-neutral-4">Loading this project</p>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -165,7 +173,9 @@ export function ProjectDetail({ projectId }: { projectId: string }) {
           {
             key: 'members',
             label: 'Members',
-            content: (
+            content: project.deleted ? (
+              <p className="text-neutral-4">The API doesn't list members of a deleted project.</p>
+            ) : (
               <MembersGrid
                 place="this project"
                 what="members"

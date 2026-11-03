@@ -70,7 +70,7 @@ export function LabsList() {
         fill
         what="virtual labs"
         columns={COLUMNS}
-        getRowId={(lab) => lab.id}
+        getRowId={({ id, name, deleted }) => `${id}:${name}:${deleted}`}
         dataSource={LABS_SOURCE}
         queryKey={adminQueryKeys.labs()}
         params={params}

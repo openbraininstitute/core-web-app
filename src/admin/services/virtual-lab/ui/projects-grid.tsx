@@ -64,7 +64,7 @@ export function ProjectsGrid({
       fill={fill}
       what="projects"
       columns={COLUMNS}
-      getRowId={(project) => project.id}
+      getRowId={({ id, name, deleted }) => `${id}:${name}:${deleted}`}
       dataSource={PROJECTS_SOURCE}
       queryKey={adminQueryKeys.projects()}
       params={params}
