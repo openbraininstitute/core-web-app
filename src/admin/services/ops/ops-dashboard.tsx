@@ -104,7 +104,7 @@ const COLUMNS: Array<ISimpleColumn<ServiceRow>> = [
       const url = `${service.baseUrl}${service.healthPath}`;
       return (
         <code title={url} className="text-neutral-4 truncate text-sm">
-          {new URL(url).pathname}
+          {url.replace(/^https?:\/\/[^/]+/, '')}
         </code>
       );
     },
