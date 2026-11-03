@@ -397,6 +397,33 @@ describe('the location labels', () => {
     ]);
   });
 
+  it('keep the stored ones when generated blocks bring too many to label', () => {
+    const generated = Array.from({ length: 250 }, (_, index) => ({
+      section_id: 8,
+      offset: 0.5,
+      entry: 'sampled',
+      index,
+      generated: true,
+    }));
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      generatedLocations: generated,
+      showLabels: true,
+    });
+    const onScreen = {
+      type: SectionType.ApicalDendrite,
+      screen: { x: 0.1, y: 0.2 },
+      visible: true,
+    };
+
+    act(() => {
+      result.current.locations?.onMarkersOnScreen?.(generated.map(() => onScreen).concat(onScreen));
+      vi.advanceTimersByTime(20);
+    });
+
+    expect(result.current.labels.map(({ marker }) => marker.sonataSectionId)).toEqual([3]);
+  });
+
   it('are not asked for unless shown', () => {
     const { result } = render({ config: configWith([{ section_id: 3, offset: 0.5 }]) });
     expect(result.current.locations?.onMarkersOnScreen).toBeUndefined();

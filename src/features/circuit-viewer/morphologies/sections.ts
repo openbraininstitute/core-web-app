@@ -96,9 +96,29 @@ export function sectionNumbered(
   sonataId: number
 ): TreeSection | null {
   const sections = data.trees?.morphologies[cell]?.sections;
+  if (!sections) return null;
   return (
-    sections?.find((section) => section.sonataId === sonataId) ??
-    (sonataId === 0 ? sections?.find((section) => section.type === SectionType.Soma) : null) ??
+    sonataIndexOf(sections).get(sonataId) ??
+    (sonataId === 0 ? sections.find((section) => section.type === SectionType.Soma) : null) ??
     null
   );
+}
+
+// Weak, so an index goes with its tree. Markers are placed again on every morph frame, and a
+// generated block can hold 20,000 of them on a cell of 8,000 sections: a scan each would not keep up.
+const sonataIndexes = new WeakMap<readonly TreeSection[], Map<number, TreeSection>>();
+
+/** A tree's sections by SONATA number, the first one where two share it. */
+function sonataIndexOf(sections: readonly TreeSection[]): Map<number, TreeSection> {
+  let index = sonataIndexes.get(sections);
+  if (!index) {
+    index = new Map();
+    for (const section of sections) {
+      if (section.sonataId !== null && !index.has(section.sonataId)) {
+        index.set(section.sonataId, section);
+      }
+    }
+    sonataIndexes.set(sections, index);
+  }
+  return index;
 }

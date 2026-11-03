@@ -1,6 +1,6 @@
 'use client';
 
-import { RiArrowDownSLine, RiEyeLine, RiEyeOffLine } from '@remixicon/react';
+import { RiArrowDownSLine, RiErrorWarningLine, RiEyeLine, RiEyeOffLine } from '@remixicon/react';
 import { useState } from 'react';
 
 import { cn } from '@/utils/css-class';
@@ -17,6 +17,8 @@ export interface IViewerLegendEntry {
   color: string;
   /** Muted text after the label, e.g. a count. */
   detail?: string;
+  /** Why the row draws less than it should, shown as a warning icon after the label. */
+  warning?: string;
 }
 
 /**
@@ -102,7 +104,7 @@ export function ViewerLegend({
       </button>
       {open && (
         <ul className={cn(styles.panelReveal, 'flex flex-col gap-0.5 px-2 pt-0.5 pb-1.5')}>
-          {entries.map(({ key, label, color, detail }) => {
+          {entries.map(({ key, label, color, detail, warning }) => {
             const isHidden = hidden?.has(key) ?? false;
             const EyeIcon = isHidden ? RiEyeOffLine : RiEyeLine;
             return (
@@ -131,6 +133,12 @@ export function ViewerLegend({
                       style={mutedStyle}
                     >
                       {detail}
+                    </span>
+                  )}
+                  {warning && (
+                    <span title={warning} className="ml-1.5 inline-flex align-[-2px]">
+                      <RiErrorWarningLine aria-hidden className="size-3.5 text-amber-500" />
+                      <span className="sr-only">{warning}</span>
                     </span>
                   )}
                 </span>

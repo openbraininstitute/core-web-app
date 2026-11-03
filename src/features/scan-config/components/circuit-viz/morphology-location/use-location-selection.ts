@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppMessage } from '@/components/notification';
-import {
-  morphologyLocationsColor,
-  recedeMarkerColor,
-} from '@/features/scan-config/components/color-by/palette';
+import { morphologyLocationMarkerColor } from '@/features/scan-config/components/color-by/palette';
 import { DEFAULT_MORPHOLOGY_LOCATION_RADIUS } from '@/features/scan-config/components/color-by/use-viewer-config';
 import {
   collectLocations,
@@ -50,7 +47,10 @@ interface Options extends IFormBindingOptions {
 
 const NO_LOCATIONS: ITaggedLocation[] = [];
 
-/** Above this many markers the tags cover the cell, and tracking them costs a pass per frame. */
+/**
+ * Above this many markers the tags cover the cell, and tracking them costs a pass per frame. A
+ * generated block can reach it on its own, so it takes only its own tags away, not the stored ones.
+ */
 const MAX_LABELLED_MARKERS = 200;
 
 /** The morphology location under the pointer: one stored, or one a click would add. */
@@ -139,15 +139,23 @@ export function useLocationSelection({
   // In step: the view tells of a marker by its index.
   const { markers, stored } = useMemo(() => {
     const all: { markers: LocationMarker[]; stored: Stored[] } = { markers: [], stored: [] };
+    // Once a block: a generated one can hold thousands of markers, and receding a colour is not free.
+    const colors = new Map<string, string>();
+    const colorOf = (entry: string) => {
+      let color = colors.get(entry);
+      if (color === undefined) {
+        color = morphologyLocationMarkerColor(entry, selectedEntry, backgroundColor);
+        colors.set(entry, color);
+      }
+      return color;
+    };
     for (const cell of cells) {
       for (const location of storedLocations) {
-        const color = morphologyLocationsColor(location.entry);
         all.markers.push({
           cell,
           sonataId: location.section_id,
           offset: location.offset,
-          color:
-            location.entry === selectedEntry ? color : recedeMarkerColor(color, backgroundColor),
+          color: colorOf(location.entry),
         });
         all.stored.push({
           sonataId: location.section_id,
@@ -258,12 +266,18 @@ export function useLocationSelection({
     [canEdit, stored]
   );
 
+  const labelsGenerated = markers.length <= MAX_LABELLED_MARKERS;
+  const labelledCount = labelsGenerated
+    ? markers.length
+    : cells.length * ownMarkerRows(storedLocations);
+  const labelled = showLabels && labelledCount > 0 && labelledCount <= MAX_LABELLED_MARKERS;
+
   const pendingLabels = useRef<LocationLabel[] | null>(null);
   const labelFrame = useRef<number | null>(null);
   const onMarkersOnScreen = useCallback(
     (onScreen: readonly (MarkerOnScreen | null)[]) => {
       pendingLabels.current = onScreen.flatMap((marker, index) =>
-        marker && stored[index]
+        marker && stored[index] && (labelsGenerated || !stored[index].generated)
           ? [
               {
                 marker: { sectionType: marker.type, sonataSectionId: stored[index].sonataId },
@@ -279,7 +293,7 @@ export function useLocationSelection({
         if (pendingLabels.current) setLabels(pendingLabels.current);
       });
     },
-    [stored]
+    [stored, labelsGenerated]
   );
 
   useEffect(
@@ -289,8 +303,6 @@ export function useLocationSelection({
     },
     []
   );
-
-  const labelled = showLabels && markers.length > 0 && markers.length <= MAX_LABELLED_MARKERS;
 
   // Without `onPick` the view draws the markers read-only: no picking, no hand cursor.
   const locations = useMemo(
@@ -314,6 +326,13 @@ export function useLocationSelection({
     labels: labelled ? labels : [],
     pickMode,
   };
+}
+
+/** How many of `locations` are stored rather than generated. */
+function ownMarkerRows(locations: readonly ITaggedLocation[]): number {
+  let count = 0;
+  for (const location of locations) if (!location.generated) count++;
+  return count;
 }
 
 /** What the popover says of a hit. */

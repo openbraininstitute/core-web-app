@@ -1,7 +1,9 @@
 import { useCallback, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
+import { sectionNumbered } from '@/features/circuit-viewer/morphologies/sections';
 import { useCellClick } from '@/features/circuit-viewer/morphologies/use-cell-click';
 import { useTreeMorphologies } from '@/features/circuit-viewer/morphologies/use-tree-morphologies';
 import { DEFAULT_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
@@ -14,7 +16,6 @@ import {
   readEntry,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
-import { cn } from '@/utils/css-class';
 
 import { GeneratedLocationsLegend } from './morphology-location/generated-legend';
 import { MorphologyLocationLabels } from './morphology-location/labels';
@@ -32,8 +33,8 @@ import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
 } from '@/features/circuit-viewer/host-props';
-import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { Population } from '@/features/circuit-viewer/morphologies/types';
+import type { ViewerTheme } from '@/features/scan-config/components/color-by/contrast';
 import type { IFormBindingOptions } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { SmallCircuitSource } from './sources';
 
@@ -52,11 +53,11 @@ interface CircuitVizProps extends CircuitViewerHostProps, CircuitCellsHostProps 
   /** Morph the cell into a dendrogram of the same segments. */
   dendrogram?: boolean;
   /**
-   * Whether the host draws its own controls in the viewer's top-right corner.
-   * The legends sit below them when it does and take the corner themselves
-   * when it does not.
+   * The host chrome's top-right column, which the legends flow into under the colour-by key so
+   * the open key cannot cover them. Undefined when the host draws nothing there, and the legends
+   * take the corner themselves; null while it mounts.
    */
-  chromeTopRight?: boolean;
+  legendTarget?: HTMLElement | null;
   /** Background-derived chrome theme for the legends; null keeps the fixed light styling. */
   theme?: ViewerTheme | null;
 }
@@ -160,7 +161,7 @@ function CircuitVizView({
   spikes,
   onGlowAvailableChange,
   onEmptyClick,
-  chromeTopRight = false,
+  legendTarget,
   theme,
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
@@ -191,6 +192,17 @@ function CircuitVizView({
         : locationPreviews.locations.filter(({ entry }) => !hiddenLocationBlocks.has(entry)),
     [locationPreviews.locations, hiddenLocationBlocks]
   );
+  // A location is drawn only where the drawn tree has its section; one on the axon is not while axons are hidden.
+  const drawnGeneratedLocations = useMemo(() => {
+    const { data } = morphologies;
+    if (!data?.trees || morphologies.loaded < morphologies.total) return undefined;
+    const drawn = new Map<string, number>();
+    for (const { entry, section_id: sonataId } of locationPreviews.locations) {
+      const placed = locationCells.some((cell) => sectionNumbered(data, cell, sonataId) !== null);
+      drawn.set(entry, (drawn.get(entry) ?? 0) + (placed ? 1 : 0));
+    }
+    return drawn;
+  }, [morphologies, locationPreviews.locations, locationCells]);
   const { locations, hover, labels, pickMode } = useLocationSelection({
     ...morphologyLocations,
     cells: locationCells,
@@ -218,6 +230,30 @@ function CircuitVizView({
   // A morphology that cannot be read leaves its cell a soma; only a scene where none could be read is worth covering.
   const unread = morphologies.total > 0 && morphologies.failed === morphologies.total;
   const loading = !error && (!tree || morphologies.loaded < morphologies.total);
+
+  const legends = (
+    <>
+      <SynapseLegend
+        groups={synapses}
+        hidden={hiddenSynapses}
+        onToggle={toggleSynapseLabel}
+        theme={theme}
+      />
+      <GeneratedLocationsLegend
+        entries={locationPreviews.entries}
+        locations={locationPreviews.locations}
+        drawn={drawnGeneratedLocations}
+        errors={locationPreviews.errors}
+        pending={locationPreviews.pending}
+        // As the markers have it, so each swatch matches its block's markers.
+        openEntry={morphologyLocations?.selectedEntry}
+        backgroundColor={backgroundColor}
+        hidden={hiddenLocationBlocks}
+        onToggle={toggleLocationBlock}
+        theme={theme}
+      />
+    </>
+  );
 
   return (
     <div className="h-full w-full relative">
@@ -252,31 +288,18 @@ function CircuitVizView({
           onZoomChange={onZoomChange}
         />
       )}
-      {/* Below the host's own top-right controls when it draws any, in the corner otherwise. */}
-      <div
-        className={cn(
-          'pointer-events-none absolute right-3 z-10 flex flex-col items-stretch gap-2',
-          chromeTopRight ? 'top-14' : 'top-3'
-        )}
-      >
-        <SynapseLegend
-          groups={synapses}
-          hidden={hiddenSynapses}
-          onToggle={toggleSynapseLabel}
-          theme={theme}
-        />
-        <GeneratedLocationsLegend
-          locations={locationPreviews.locations}
-          hidden={hiddenLocationBlocks}
-          onToggle={toggleLocationBlock}
-          theme={theme}
-        />
-      </div>
+      {legendTarget === undefined ? (
+        <div className="pointer-events-none absolute top-3 right-3 z-10 flex flex-col items-stretch gap-2">
+          {legends}
+        </div>
+      ) : (
+        legendTarget && createPortal(legends, legendTarget)
+      )}
       <MorphologyLocationLabels labels={labels} />
       <MorphologyLocationPopover hover={hover} pickMode={pickMode} />
       {openLocationBlock && openLocationBlock.type !== EXPLICIT_BLOCK_TYPE && (
         <MorphologyLocationPreviewStatus
-          pending={locationPreviews.isPending}
+          pending={locationPreviews.pending.has(morphologyLocations?.selectedEntry ?? '')}
           error={locationPreviews.errors.get(morphologyLocations?.selectedEntry ?? '')}
         />
       )}

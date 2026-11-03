@@ -70,6 +70,29 @@ describe('useMorphologyLocationPreviews', () => {
     expect(result.current.locations).toEqual([]);
   });
 
+  it('gives a fixed reason for a failure the backend did not explain', async () => {
+    preview.mockRejectedValue(new TypeError('Failed to fetch'));
+    const { result } = render(configWith({ sampled: RANDOM }));
+
+    await waitFor(() =>
+      expect(result.current.errors.get('sampled')).toBe(
+        'The preview service could not be reached. Try again later.'
+      )
+    );
+  });
+
+  it('drops a deleted block at once, while another is still on its way', async () => {
+    const { result, rerender } = render(configWith({ first: RANDOM, second: CLUSTERED }));
+    await waitFor(() => expect(result.current.locations).toHaveLength(2));
+
+    preview.mockReturnValue(new Promise(() => {}));
+    rerender({ config: configWith({ second: { ...CLUSTERED, random_seed: 1 } }) });
+
+    expect(result.current.entries).toEqual(['second']);
+    expect(result.current.locations.map(({ entry }) => entry)).toEqual(['second']);
+    expect(result.current.pending).toEqual(new Set(['second']));
+  });
+
   it('does not refetch a block that did not change', async () => {
     const { result, rerender } = render(configWith({ first: RANDOM, second: CLUSTERED }));
     await waitFor(() => expect(result.current.locations).toHaveLength(2));
@@ -77,7 +100,7 @@ describe('useMorphologyLocationPreviews', () => {
     rerender({ config: configWith({ first: { ...RANDOM, random_seed: 1 }, second: CLUSTERED }) });
 
     await waitFor(() => expect(preview).toHaveBeenCalledTimes(3));
-    await waitFor(() => expect(result.current.isPending).toBe(false));
+    await waitFor(() => expect(result.current.pending.size).toBe(0));
     expect(preview).toHaveBeenLastCalledWith({ ...RANDOM, random_seed: 1 });
   });
 
