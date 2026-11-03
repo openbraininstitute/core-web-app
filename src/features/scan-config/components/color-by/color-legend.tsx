@@ -2,6 +2,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { ColorPicker } from 'antd';
 import { useEffect, useState } from 'react';
 
+import { PyramidalNeuronIcon } from '@/components/icons/PyramidalNeuron';
 import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
@@ -138,10 +139,12 @@ function CategoricalList({
               type="button"
               data-swatch-trigger
               aria-label={`Change color for ${entry.value}`}
-              className="size-3 shrink-0 rounded-full ring-1 ring-black/10"
-              style={{ backgroundColor: entry.color }}
+              className="flex size-5 shrink-0 items-center justify-center"
+              style={{ color: entry.color }}
               onClick={editable && !open ? () => setOpenValue(entry.value) : undefined}
-            />
+            >
+              <PyramidalNeuronIcon className="size-5" />
+            </button>
           );
 
           return (
