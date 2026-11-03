@@ -29,7 +29,7 @@ export const SCOPE_HEADER_RENDERER = 'scopeHeader';
  * label and filter: the globe for public data from other projects, the people for the
  * project's private data, and the globe with a badge for the project's data made public.
  * Each is coloured when its rows are shown and grey when not. All on (the default) filters
- * nothing.
+ * nothing, and a click then keeps only that kind.
  */
 export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
   const state = useGridState(ctx.controller);
@@ -40,22 +40,14 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
     <div className="flex h-full w-full items-center justify-center gap-0.5">
       {SCOPE_KINDS.map((kind) => {
         const isOn = shown.has(kind);
-        const next = toggled(shown, kind);
-        const heldByPublic = kind === 'published' && isOn && shown.has('public');
         return (
-          <ScopeTooltip
-            key={kind}
-            kind={kind}
-            canChangeProject
-            note={heldByPublic ? 'Shown while public data is: it is public too' : undefined}
-          >
+          <ScopeTooltip key={kind} kind={kind} canChangeProject>
             <button
               type="button"
               aria-pressed={isOn}
-              aria-disabled={!next}
               aria-label={SCOPE_LABELS[kind]}
               data-testid={`scope-header-${kind}`}
-              onClick={() => next && show(next)}
+              onClick={() => show(toggled(shown, kind))}
               className={cn(
                 'flex size-6 items-center justify-center rounded-full text-lg transition-colors',
                 'focus-visible:ring-primary-6 outline-none focus-visible:ring-2',
@@ -64,7 +56,7 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
                     ? SCOPE_COLORS.public
                     : SCOPE_COLORS.project
                   : 'text-gray-300 hover:text-gray-500',
-                next ? 'hover:bg-gray-100' : 'cursor-default'
+                'hover:bg-gray-100'
               )}
             >
               <ScopeMark kind={kind} muted={!isOn} />

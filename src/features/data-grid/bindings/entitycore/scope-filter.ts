@@ -150,20 +150,22 @@ export function filterShowing(kinds: Set<TScopeKind>): TScopeFilter | null {
 }
 
 /**
- * What switching `kind` would show, or null when it cannot be switched: the last one on
- * stays on, and the project's made-public data stays on while public data is, being
- * public too.
+ * What a click on `kind` shows. With everything on, a click keeps only that kind. After
+ * that a click adds a kind or takes one away, and the last one on goes back to everything.
+ * Public data with the project's private data but not its made-public data cannot be asked
+ * of the API, so adding either of those to the other shows everything.
  */
-export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> | null {
-  const next = new Set(shown);
-  if (!next.has(kind)) {
-    next.add(kind);
-    if (kind === 'public') next.add('published');
+export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> {
+  const all = new Set(SCOPE_KINDS);
+  if (shown.size === SCOPE_KINDS.length) return new Set([kind]);
+  if (shown.has(kind)) {
+    if (shown.size === 1) return all;
+    const next = new Set(shown);
+    next.delete(kind);
     return next;
   }
-  if (kind === 'published' && next.has('public')) return null;
-  next.delete(kind);
-  return next.size ? next : null;
+  const next = new Set(shown).add(kind);
+  return next.has('public') && next.has('project') ? all : next;
 }
 
 /** Filters the scope column to show exactly `kinds`. */

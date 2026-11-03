@@ -151,38 +151,35 @@ describe('scope header', () => {
     expect(filter()).toBeUndefined();
   });
 
-  it('switching public data off keeps the project, made-public data included', () => {
+  it.each([
+    ['public', ScopeFilter.PublicOnly],
+    ['project', ScopeFilter.Private],
+    ['published', ScopeFilter.Published],
+  ])('a click on %s with everything on keeps only that kind', (kind, expected) => {
     const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    expect(filter()).toBe(ScopeFilter.Project);
-    expect(pressed('scope-header-public')).toBe('false');
-    expect(pressed('scope-header-published')).toBe('true');
+    fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
+    expect(filter()).toBe(expected);
+    for (const other of ['public', 'project', 'published']) {
+      expect(pressed(`scope-header-${other}`)).toBe(String(other === kind));
+    }
   });
 
-  it('switching the project off keeps public data', () => {
-    const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-project'));
+  it('adds a second kind, and the last one off brings everything back', () => {
+    const { filter } = renderHeader();
+    fireEvent.click(screen.getByTestId('scope-header-published'));
+    fireEvent.click(screen.getByTestId('scope-header-public'));
     expect(filter()).toBe(ScopeFilter.Public);
-    expect(pressed('scope-header-project')).toBe('false');
-    expect(pressed('scope-header-published')).toBe('true');
-  });
-
-  it('the made-public data alone, and back to everything', () => {
-    const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId('scope-header-public'));
-    fireEvent.click(screen.getByTestId('scope-header-project'));
     expect(filter()).toBe(ScopeFilter.Published);
-    expect(pressed('scope-header-published')).toBe('true');
-    fireEvent.click(screen.getByTestId('scope-header-public'));
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBeUndefined();
-  });
-
-  it('cannot switch the made-public data off while public data is on', () => {
-    const { filter, pressed } = renderHeader();
     fireEvent.click(screen.getByTestId('scope-header-published'));
     expect(filter()).toBeUndefined();
-    expect(pressed('scope-header-published')).toBe('true');
+  });
+
+  it('public data with the private data, but not the made-public data, shows everything', () => {
+    const { filter } = renderHeader();
+    fireEvent.click(screen.getByTestId('scope-header-public'));
+    fireEvent.click(screen.getByTestId('scope-header-project'));
+    expect(filter()).toBeUndefined();
   });
 
   it('keeps the selection while switching, so a picker keeps its picks', () => {
