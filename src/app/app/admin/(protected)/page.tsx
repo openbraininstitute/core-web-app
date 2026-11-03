@@ -1,7 +1,15 @@
-import { redirect } from 'next/navigation';
+import { hasCapability } from '@/admin/capabilities/has-capability';
+import { requireCapability } from '@/admin/server/resolve';
+import { OpsDashboard } from '@/admin/services/ops/ops-dashboard';
+import { GlobalSearch } from '@/admin/services/virtual-lab/ui/global-search';
 
-import { ADMIN_ROOT } from '@/admin/shell/sections';
+export default async function AdminLandingPage() {
+  const capabilities = await requireCapability('ops.view');
 
-export default function AdminLandingPage() {
-  redirect(`${ADMIN_ROOT}/services`);
+  return (
+    <div className="flex flex-col gap-6">
+      {hasCapability(capabilities, 'virtualLab.read') && <GlobalSearch />}
+      <OpsDashboard />
+    </div>
+  );
 }

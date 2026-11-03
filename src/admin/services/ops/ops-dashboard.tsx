@@ -6,11 +6,10 @@ import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { config } from '@/config';
 import { Align } from '@/features/data-grid/core';
 import { SimpleGrid } from '@/features/data-grid/presets/simple-grid';
-import { Badge, STATUS_PILL_CLASS } from '@/ui/molecules/badge';
 import { Button } from '@/ui/molecules/button';
-import { cn } from '@/utils/css-class';
 
 import { adminQueryKeys } from '../../shared/query-keys';
+import { StatusPill } from '../../shared/status-pill';
 import { fetchServiceVersion, probeServiceHealth } from './health';
 import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
 
@@ -35,22 +34,12 @@ function StatusCell({ service }: { service: ServiceRow }) {
 
   if (!health) return <span className="text-neutral-4">Checking</span>;
 
-  const operational = health.status === 'operational';
-  return (
-    <Badge
-      rounded
-      variant="outline"
-      className={cn(
-        STATUS_PILL_CLASS,
-        operational
-          ? 'border-green-500 bg-green-50 text-green-700'
-          : 'border-red-500 bg-red-50 text-red-700'
-      )}
-    >
-      {operational
-        ? 'Operational'
-        : `Unreachable${health.httpStatus ? ` (${health.httpStatus})` : ''}`}
-    </Badge>
+  return health.status === 'operational' ? (
+    <StatusPill tone="good">Operational</StatusPill>
+  ) : (
+    <StatusPill tone="bad">
+      Unreachable{health.httpStatus ? ` (${health.httpStatus})` : ''}
+    </StatusPill>
   );
 }
 
