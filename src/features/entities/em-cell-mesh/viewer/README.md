@@ -181,7 +181,7 @@ The chrome ([chrome/em-viewer-chrome.tsx](chrome/em-viewer-chrome.tsx)) is laid 
 - Moving frames: the mesh, the occlusion, the resolution and the antialiasing, each chosen by the cost or set; the two budgets ("Cut down past" and "Stand-in past"); and Frame times, which shows what moving frames cost over the view, as the menu closes once the view is dragged ([chrome/frame-times.tsx](chrome/frame-times.tsx));
 - the GLB as stored, from the cache where it is there ([save-glb.ts](save-glb.ts)).
 
-It shows only where the `em-mesh-debug` flag is on (`emMeshDebugFlag` in `src/features/feature-flags/flags.ts`). The Feature Flags tab lists it in local, preview and staging, off by default. What the menus set lives in the viewer's settings for as long as the Overview is open.
+It shows only where the `debug` flag is on (`debugFlag` in `src/features/feature-flags/flags.ts`), and its code, with Frame times, is fetched only then. The Feature Flags tab lists it in local, preview and staging, off by default. What the menus set lives in the viewer's settings for as long as the Overview is open.
 
 ## Where to change what
 

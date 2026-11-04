@@ -176,7 +176,7 @@ flowchart TD
 - the controls ([chrome/debug-controls.tsx](chrome/debug-controls.tsx)): the POC's build parameters, a GPU switch and the bumps' shape;
 - the downloads.
 
-It shows only where the `morphology-debug` flag is on (`morphologyDebugFlag` in `src/features/feature-flags/flags.ts`). The Feature Flags tab lists it in local, preview and staging, off by default.
+It shows only where the `debug` flag is on (`debugFlag` in `src/features/feature-flags/flags.ts`), and its code is fetched only then. The Feature Flags tab lists it in local, preview and staging, off by default.
 
 The controls live in the viewer's settings (`build` and `bump`) for as long as the page is open. A change to the build rebuilds the mesh after the same pause as the eyes, and draws the processed skeleton again. The GPU switch is held off, with the reason, once the session has no GPU. `buildParams` in [constants.ts](constants.ts) turns the controls' units (µm, or × voxel) into the mesher's.
 

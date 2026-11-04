@@ -15,7 +15,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { pathwayNodeColors } from '@/features/circuit-viewer/pathway-colors';
 import { PathwayKey } from '@/features/circuit-viewer/pathway-key';
-import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
+import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -360,6 +360,8 @@ export function CircuitScene({
   const chromeColorBy = enableColorBy && !subjectUnplaceable;
   // The chrome's place for the scene's legends; state, so the legends move in once it mounts.
   const [legendSlot, setLegendSlot] = useState<HTMLElement | null>(null);
+  const debug = !!useFlag(debugFlag.key);
+  const [debugTarget, setDebugTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     onPopulationChange?.(population);
@@ -712,6 +714,7 @@ export function CircuitScene({
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
+      debugTarget,
     }),
     [
       config.showAxons,
@@ -731,6 +734,7 @@ export function CircuitScene({
       emptyHeard,
       handleEmptyClick,
       zoom.onZoomChange,
+      debugTarget,
     ]
   );
   const cellsProps = useMemo(
@@ -872,6 +876,7 @@ export function CircuitScene({
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
         legendSlotRef={setLegendSlot}
+        debugSlotRef={debug ? setDebugTarget : undefined}
         selection={sceneSelection}
         keys={
           hostKeys || matrix || (tableDriven && tableView === 'connectivity') ? (
