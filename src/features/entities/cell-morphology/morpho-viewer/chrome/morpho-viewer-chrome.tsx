@@ -1,6 +1,7 @@
 import { RiArrowDownSLine } from '@remixicon/react';
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { debugFlag, useFlag } from '@/features/feature-flags';
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
@@ -80,7 +81,9 @@ export function MorphoViewerChrome({
             hasMesh={mesh.layers.mesh !== null}
           />
           {debug && (
-            <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
+            <ErrorBoundary fallback={null}>
+              <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
+            </ErrorBoundary>
           )}
         </>
       }

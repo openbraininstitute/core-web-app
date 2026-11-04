@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useRef, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import {
   DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
@@ -402,15 +403,17 @@ export function CircuitCells({
       )}
       {/* Whatever the view: it stays open while another is made for the renderer it asked for. */}
       {debugTarget && !gaveUp && (
-        <CircuitDebug
-          target={debugTarget}
-          created={created}
-          choice={making.choice}
-          onChoice={(choice) => setMaking((was) => (was.choice === choice ? was : { choice }))}
-          cells={somas.positions.length / 3}
-          load={debugLoad}
-          theme={theme}
-        />
+        <ErrorBoundary fallback={null}>
+          <CircuitDebug
+            target={debugTarget}
+            created={created}
+            choice={making.choice}
+            onChoice={(choice) => setMaking((was) => (was.choice === choice ? was : { choice }))}
+            cells={somas.positions.length / 3}
+            load={debugLoad}
+            theme={theme}
+          />
+        </ErrorBoundary>
       )}
     </div>
   );

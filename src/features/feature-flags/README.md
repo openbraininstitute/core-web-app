@@ -125,6 +125,9 @@ Client hook that returns a single flag value.
 
 `debugFlag` turns on the Debug menus of the morphology, EM cell mesh and circuit viewers, whose code is fetched only with it on. It is not listed in production, where adding `"debug": true` to the JSON in the `feature-flags` cookie by hand has the same effect.
 
+- It also runs the synapses' diagnostics when a circuit's synapses load, up to 256 distance queries that each walk every segment of a cell. Synapses load more slowly with it on, so don't leave it on to look at something else.
+- It doesn't turn on the old neuron viewer's debug panel or the morphoviewer library's debug mode. They still read the `@openbraininstitute/morphoviewer:debug` key in localStorage.
+
 ## Examples
 
 ### User-Controllable Feature

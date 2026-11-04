@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { EmCellMeshViewerCard } from '@/features/entities/em-cell-mesh/detail-view';
@@ -257,7 +257,7 @@ async function renderViewer({ debug = true } = {}) {
     </FlagsProvider>
   );
   await screen.findByRole('button', { name: 'Viewer settings' });
-  if (debug) await screen.findByRole('button', { name: 'Debug' }, { timeout: 10_000 });
+  if (debug) await screen.findByRole('button', { name: 'Debug' });
   return { ...view, viewer: h.viewers.at(-1) as InstanceType<typeof h.FakeViewer> };
 }
 
@@ -317,6 +317,14 @@ beforeEach(() => {
   h.startError = null;
   localStorage.removeItem('em-mesh-color');
 });
+
+// Their first import can outlast a test.
+beforeAll(async () => {
+  await Promise.all([
+    import('@/features/entities/em-cell-mesh/viewer/chrome/debug-menu'),
+    import('@/features/entities/em-cell-mesh/viewer/chrome/frame-times'),
+  ]);
+}, 30_000);
 
 describe('meshAsset', () => {
   it('is the GLB cell surface mesh: not its OBJ copy, nor a LOD block', () => {
@@ -795,7 +803,7 @@ describe('EmCellMeshViewer', () => {
 
     expect(screen.queryByTestId('em-frame-times')).toBeNull();
     fireEvent.click(screen.getByRole('switch', { name: 'Frame times' }));
-    expect((await screen.findByTestId('em-frame-times', {}, { timeout: 10_000 })).textContent).toBe(
+    expect((await screen.findByTestId('em-frame-times')).textContent).toBe(
       'moving: full mesh · AO · 100% · AA6.2 ms GPU · 118 fpsfull frame: 12.5 ms'
     );
   });

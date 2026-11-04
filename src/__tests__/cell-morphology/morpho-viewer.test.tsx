@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_BUMPS } from '@/features/entities/cell-morphology/morpho-viewer/constants';
 import { HELP } from '@/features/entities/cell-morphology/morpho-viewer/help/help-text';
@@ -244,7 +244,7 @@ async function renderViewer({ debug = true } = {}) {
     </FlagsProvider>
   );
   await screen.findByRole('button', { name: 'Viewer settings' });
-  if (debug) await screen.findByRole('button', { name: 'Debug' }, { timeout: 10_000 });
+  if (debug) await screen.findByRole('button', { name: 'Debug' });
   return { ...view, viewer: h.viewers.at(-1)!, pool: h.pools.at(-1)! };
 }
 
@@ -275,6 +275,11 @@ beforeEach(() => {
 });
 
 // First, and in this order: the GPU's state lasts the session, as the module does.
+// Its first import can outlast a test.
+beforeAll(async () => {
+  await import('@/features/entities/cell-morphology/morpho-viewer/chrome/debug-menu');
+}, 30_000);
+
 describe('GPU', () => {
   // Before any other: the GPU is probed only once a session.
   it('starts no build that a change superseded while the GPU was probed', async () => {

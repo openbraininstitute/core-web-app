@@ -1,4 +1,5 @@
 import dynamic from 'next/dynamic';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import { debugFlag, useFlag } from '@/features/feature-flags';
 import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
@@ -66,13 +67,15 @@ export function EmViewerChrome({
             onLook={chooseLook}
           />
           {debug && (
-            <DebugMenu
-              viewer={viewer}
-              load={load}
-              name={name}
-              settings={settings}
-              update={update}
-            />
+            <ErrorBoundary fallback={null}>
+              <DebugMenu
+                viewer={viewer}
+                load={load}
+                name={name}
+                settings={settings}
+                update={update}
+              />
+            </ErrorBoundary>
           )}
         </>
       }
@@ -87,7 +90,11 @@ export function EmViewerChrome({
             theme={theme}
           />
         </div>
-        {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
+        {debug && settings.frameTimes && (
+          <ErrorBoundary fallback={null}>
+            <FrameTimes viewer={viewer} />
+          </ErrorBoundary>
+        )}
       </div>
       <LoadStatus load={load} name={name} theme={theme} />
     </ViewerChrome>

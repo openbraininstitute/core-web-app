@@ -288,7 +288,11 @@ function CircuitVizView({
           signals={signals}
           onZoomChange={onZoomChange}
           debugTarget={debugTarget}
-          debugLoad={morphologies}
+          debugLoad={{
+            loaded: morphologies.loaded,
+            failed: morphologies.failed,
+            total: morphologies.total,
+          }}
         />
       )}
       {legendTarget === undefined ? (

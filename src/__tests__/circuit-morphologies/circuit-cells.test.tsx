@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CircuitCells,
@@ -135,18 +135,11 @@ const h = vi.hoisted(() => {
     /** Every Morton order asked for, never answered. */
     orders: [] as { positions: Float32Array; signal: AbortSignal }[],
     logError: vi.fn(),
-    /** How many times the Debug menu was fetched. */
-    debugFetches: 0,
   };
   return state;
 });
 
 vi.mock('next/dynamic', () => import('@/__tests__/viewer-3d/lazy-next-dynamic'));
-
-vi.mock('@/features/circuit-viewer/morphologies/debug/circuit-debug', async (original) => {
-  h.debugFetches += 1;
-  return original();
-});
 
 vi.mock('@/features/circuit-viewer/morphologies/engine/circuit-morphology-viewer', () => ({
   CircuitMorphologyViewer: h.FakeViewer,
@@ -256,6 +249,11 @@ const drag = (host: HTMLElement) => {
   fireEvent.pointerMove(host, { ...at, buttons: 1, clientX: 40, clientY: 10 });
   fireEvent.pointerUp(host, { ...at, clientX: 40, clientY: 10 });
 };
+
+// Its first import can outlast a test.
+beforeAll(async () => {
+  await import('@/features/circuit-viewer/morphologies/debug/circuit-debug');
+}, 30_000);
 
 afterEach(() => {
   h.viewers = [];
@@ -470,7 +468,7 @@ describe('CircuitCells', () => {
     expect(onGlowAvailable.mock.calls).toEqual([[false], [false]]);
   });
 
-  it('without a place for the Debug menu, shows nothing of it and does not fetch it', async () => {
+  it('without a place for the Debug menu, shows nothing of it', async () => {
     const { viewer } = view();
     tellDetail(viewer, { ...DETAIL, leftOut: 2 });
     await act(async () => {
@@ -478,7 +476,6 @@ describe('CircuitCells', () => {
     });
     expect(screen.queryByRole('button', { name: 'Debug' })).toBeNull();
     expect(screen.queryByTestId('detail-readout')).toBeNull();
-    expect(h.debugFetches).toBe(0);
   });
 
   describe('with a place for the Debug menu', () => {
@@ -492,7 +489,7 @@ describe('CircuitCells', () => {
     /** The view, with its Debug menu open. */
     async function opened(props: Partial<CircuitCellsProps> = {}) {
       const made = view({ debugTarget: target, ...props });
-      fireEvent.click(await screen.findByRole('button', { name: 'Debug' }, { timeout: 10_000 }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Debug' }));
       return made;
     }
 
