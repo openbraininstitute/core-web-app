@@ -22,7 +22,7 @@ export interface NotebookProfile {
 
 /** Response of GET /profiles: the selectable sizes and the default used when none is sent. */
 export interface NotebookProfilesResponse {
-  default_profile: string;
+  default_profile: string | null;
   profiles: NotebookProfile[];
 }
 
