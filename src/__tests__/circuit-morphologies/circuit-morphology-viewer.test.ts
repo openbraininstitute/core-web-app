@@ -687,8 +687,13 @@ describe('the circuit morphology viewer', () => {
     const fade = faintMaterial.uniforms.uFade.value;
     expect([fade.x, fade.y, fade.z]).toEqual([105, 210, 300].map((v, i) => v - inner.centre[i]));
     expect(fade.w).toBeCloseTo(Math.hypot(5, 10) / Math.sqrt(3));
-    // No halo among somas, whatever the group asks.
+    // A halo where it is solid, none where it is hidden, at one size so that a contact part hidden stays one disc.
+    expect(solidMaterial.uniforms.uHalo.value).toBe(HALO_PX * inner.pixelRatio);
     expect(faintMaterial.uniforms.uHalo.value).toBe(0);
+    expect(solidMaterial.uniforms.uMinRadius.value).toBe(HALOED_LEAST_PX * inner.pixelRatio);
+    expect(faintMaterial.uniforms.uMinRadius.value).toBe(solidMaterial.uniforms.uMinRadius.value);
+    // What is over everything keeps its own look unless it asks.
+    expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
     expect(inner.scene.getObjectByName('contacts over morphologies')).toBeUndefined();
   });
 
@@ -740,7 +745,7 @@ describe('the circuit morphology viewer', () => {
       expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(minRadius(0));
     });
 
-    it('keeps the least radius of a contact with a halo as its radius changes, and lets it go with the morphologies', () => {
+    it('keeps the least radius of a contact with a halo as its radius changes, over somas and morphologies alike', () => {
       const { viewer, inner } = make();
       viewer.setSomas(somas());
       viewer.setElectrodes(groups(), null);
@@ -750,7 +755,7 @@ describe('the circuit morphology viewer', () => {
       expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(least);
 
       viewer.setData(null);
-      expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(minRadius(5));
+      expect(inner.materials.electrode.uniforms.uMinRadius.value).toBe(least);
     });
 
     it('changes over as morphologies replace the somas and as the somas come back', () => {
@@ -758,19 +763,20 @@ describe('the circuit morphology viewer', () => {
       viewer.setSomas(somas());
       viewer.setElectrodes(groups(), null);
       expect(shown(inner, 'contacts among the cells')).toBe(true);
-      expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
+      const hidden = named(inner, 'hidden contacts').material as THREE.ShaderMaterial;
+      expect(hidden.uniforms.uHalo.value).toBe(0);
 
       frames(inner);
       viewer.setData(circuit());
       expect(frames(inner)).toBeGreaterThan(0);
       expect(shown(inner, 'contacts over morphologies')).toBe(true);
       expect(shown(inner, 'contacts among the cells')).toBe(false);
-      expect(inner.materials.electrode.uniforms.uHalo.value).toBeGreaterThan(0);
+      expect(hidden.uniforms.uHalo.value).toBeGreaterThan(0);
 
       viewer.setData(null);
       expect(shown(inner, 'contacts over morphologies')).toBe(false);
       expect(shown(inner, 'contacts among the cells')).toBe(true);
-      expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
+      expect(hidden.uniforms.uHalo.value).toBe(0);
     });
   });
 

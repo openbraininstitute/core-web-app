@@ -459,6 +459,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uHalo: { value: 0 },
     uHaloColour: { value: new THREE.Vector3() },
   };
+  protected amongContactUniforms = {
+    ...this.electrodeUniforms,
+    uMinRadius: { value: minRadius(0) },
+    uHalo: { value: 0 },
+  };
   protected fadingContactUniforms = {
     ...this.electrodeUniforms,
     uMinRadius: { value: minRadius(0) },
@@ -1711,14 +1716,24 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     });
   }
 
-  /** Sets the halo and the least radius of contacts, which are only for those that ask for a halo over morphologies. */
+  /**
+   * Sets the halo and the least radius of contacts: those among the cells have both, but for the parts hidden among
+   * somas, which have no halo to read as behind what hides them, and the rest have them if they ask.
+   */
   private styleContacts(): void {
-    const { pixelRatio, electrodeUniforms: over, fadingContactUniforms: fading } = this;
-    const halo = this.drawsMorphologies ? HALO_PX * pixelRatio : 0;
+    const {
+      pixelRatio,
+      electrodeUniforms: over,
+      amongContactUniforms: among,
+      fadingContactUniforms: fading,
+    } = this;
+    const halo = HALO_PX * pixelRatio;
     const smallest = minRadius(over.uRadius.value);
-    const least = halo > 0 ? Math.max(smallest, HALOED_LEAST_PX * pixelRatio) : smallest;
+    const least = Math.max(smallest, HALOED_LEAST_PX * pixelRatio);
     const asked = this.electrodeGroups.some((group) => !group.among && group.halo);
-    fading.uHalo.value = halo;
+    among.uHalo.value = halo;
+    among.uMinRadius.value = least;
+    fading.uHalo.value = this.drawsMorphologies ? halo : 0;
     fading.uMinRadius.value = least;
     over.uHalo.value = asked ? halo : 0;
     over.uMinRadius.value = asked ? least : smallest;

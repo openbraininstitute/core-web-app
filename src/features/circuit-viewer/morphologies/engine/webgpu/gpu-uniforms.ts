@@ -62,6 +62,7 @@ export interface HeldUniforms {
   cloud: SomaCloudUniforms;
   segments: { uSegments: { value: number } };
   electrodes: ElectrodeUniforms;
+  amongContacts: ElectrodeUniforms;
   fadingContacts: ElectrodeUniforms;
   synapses: ElectrodeUniforms;
   markers: ElectrodeUniforms;
@@ -112,12 +113,14 @@ export class GpuUniforms {
   /** The fraction of the resolution the frame is drawn at, as the dots take it (`ElectrodeUniforms.uScale`). */
   readonly dotScale = uniform(1);
   readonly electrodes: DotUniforms;
+  readonly amongContacts: DotUniforms;
   readonly fadingContacts: DotUniforms;
   readonly synapses: DotUniforms;
   readonly markers: DotUniforms;
 
   constructor(private held: HeldUniforms) {
     this.electrodes = new DotUniforms(held.electrodes);
+    this.amongContacts = new DotUniforms(held.amongContacts);
     this.fadingContacts = new DotUniforms(held.fadingContacts);
     this.synapses = new DotUniforms(held.synapses);
     this.markers = new DotUniforms(held.markers);
@@ -150,6 +153,7 @@ export class GpuUniforms {
     this.haloColour.value.copy(this.held.electrodes.uHaloColour.value);
     this.dotScale.value = this.held.electrodes.uScale.value;
     this.electrodes.sync();
+    this.amongContacts.sync();
     this.fadingContacts.sync();
     this.synapses.sync();
     this.markers.sync();

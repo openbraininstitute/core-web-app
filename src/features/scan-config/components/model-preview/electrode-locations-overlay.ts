@@ -37,7 +37,7 @@ export interface ICircuitOverlayGroup {
   id: string;
   /** Drawn among the cells, faint where they hide it, rather than in front of everything. */
   among?: boolean;
-  /** Drawn with a halo over morphologies, as contacts among the cells are there. */
+  /** Drawn with a halo, as contacts among the cells are where nothing hides them. */
   halo?: boolean;
   /** `electrodes` = contact sites; `origin` = placement pivot marker. */
   kind?: 'electrodes' | 'origin';

@@ -23,6 +23,7 @@ function held() {
     cloud: somaCloudUniforms(),
     segments: { uSegments: { value: 0 } },
     electrodes: dots(5, 2),
+    amongContacts: dots(5, 2),
     fadingContacts: dots(5, 2),
     synapses: dots(0.5, 2),
     markers: dots(3, 6),

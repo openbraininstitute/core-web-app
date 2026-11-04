@@ -5,7 +5,8 @@
  * contact, so that it stands out on cells of its own colour.
  *
  * A contact may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: solid and
- * ringed where nothing is nearer the eye, faint where something is, and fainter the further it is across its array.
+ * ringed with a halo where nothing is nearer the eye, faint where something is, and fainter the further it is across
+ * its array.
  * Over morphologies that says little, as nearly every contact has a branch in front of it. There it is drawn over the
  * cells with a halo to stand out on them, and its depth shows in its size and opacity across the array.
  */

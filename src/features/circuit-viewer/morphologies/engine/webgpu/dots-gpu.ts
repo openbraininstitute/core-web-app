@@ -146,7 +146,7 @@ function voxelMaterial(share = 1): THREE.MeshBasicNodeMaterial {
 
 /** The electrodes', boxes', synapses' and markers' materials on WebGPU. */
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
-  const contactAmong = dotMaterial(u, u.electrodes, pixelRatio, { among: true, ringed: true });
+  const contactAmong = dotMaterial(u, u.amongContacts, pixelRatio, { among: true, ringed: true });
   contactAmong.depthWrite = true;
   const contactHidden = dotMaterial(u, u.fadingContacts, pixelRatio, {
     among: true,
