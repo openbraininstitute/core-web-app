@@ -66,6 +66,40 @@ import { IONS as CONC, E as EQUILIBRIUM, G_REST, KT, V_REST } from '../physics/m
 import { arrow, type Look, mathWidth, mathWords, SERIF } from '../ui/canvas';
 import StepCanvas, { type Frame } from '../ui/StepCanvas';
 
+/** The slides about active channels: two among the passive ones; then close in on a voltage-gated sodium channel — the
+ * protein and its pore, its gate, its voltage sensors and the field that holds them in, the potential rising, activation,
+ * deactivation, its second gate, inactivation, recovery and a second rise too soon; then along to a ligand-gated one —
+ * its ligand, activation and deactivation, desensitization; then the states such a channel moves between, a channel
+ * opening at random, and many together; and how such channels are characterized: a voltage clamp, the I–V curve it
+ * gives, a passive channel's straight line, why the active one's bends, and where it crosses zero. */
+const ACTIVE_STEPS = [
+  'activeChannels',
+  'closeUp',
+  'gate',
+  'sensor',
+  'held',
+  'rises',
+  'activates',
+  'deactivates',
+  'secondGate',
+  'inactivates',
+  'recovers',
+  'tooSoon',
+  'ligandGated',
+  'binds',
+  'desensitizes',
+  'channelStates',
+  'chance',
+  'together',
+  'clamp',
+  'peakIV',
+  'linear',
+  'bends',
+  'reverses',
+] as const;
+/** The slides about the sodium–potassium pump, after the action potential: why it is needed; it, close in; its round;
+ * the charge it moves; and the energy it uses. */
+const PUMP_STEPS = ['pumpNeed', 'pump', 'pumpCycle', 'electrogenic', 'pumpEnergy'] as const;
 export const PHYSICS2_STEPS = [
   'lipids',
   'membrane',
@@ -128,18 +162,52 @@ export const PHYSICS2_STEPS = [
   'pulls',
   'weighted',
   'nearer',
+  ...ACTIVE_STEPS,
+  'spikes',
+  'oneSpike',
+  'inputs',
+  'threshold',
+  'allOrNone',
+  'gated',
+  'upstroke',
+  'peak',
+  'downstroke',
+  'refractory',
+  'actionPotential',
+  'propagate',
+  ...PUMP_STEPS,
+  'first',
+  'inject',
+  'channel',
+  'opens',
+  'sodium',
+  'excess',
+  'rise',
+  'brief',
+  'resist',
+  'rc',
+  'capacitance',
+  'thickness',
+  'dielectric',
+  'ohm',
+  'charging',
+  'repel',
+  'along',
+  'spread',
+  'leak',
+  'soma',
+  'decay',
   'signal',
   'synapse',
   'release',
+  'bind',
+  'opening',
   'inflow',
   'glutamate',
   'ampa',
   'cancel',
-  'excess',
-  'repel',
-  'along',
-  'decay',
   'clearance',
+  'unbind',
   'deactivation',
   'desensitize',
   'factors',
@@ -823,41 +891,151 @@ interface Pose {
   /** How near the resting potential sits to each reversal potential, marked along the line; and how many of each ion's
    * channels are open, named under them. */
   nearer: number;
+  /** The action potential, after rest: a plot below of the membrane potential through it, again and again, the marker
+   * on the line above following it and each ion's pull swelling and shrinking with its conductance; inputs from
+   * synapses, a receptor opened briefly by neurotransmitter; the threshold; voltage-gated sodium and potassium
+   * channels; the spike's rise, as sodium flows in, and its fall, as potassium flows out; and the spike named. Then two
+   * neurons, the spike passed from one to the other; and, first, the one alone. */
+  /** Active channels, after rest: a voltage-gated channel and a ligand-gated one beside the passive ones, opening and
+   * shutting. Then the view closing in on the voltage-gated one, a sodium channel: the protein and its pore named; its
+   * gate opening and shutting, sodium through it while it is open; its voltage sensors, their positive charges; the
+   * charge lining the membrane, the field across it, and the field's push on the sensors; the membrane potential stepped
+   * up and back, again and again, a plot of it below, the sensors moving out, and with them the gate opening — activation
+   * — and shutting again — deactivation; its second gate; that swinging into the pore while the potential stays up —
+   * inactivation — and out again, slowly — recovery; and a second step up too soon. Then the view along the membrane to
+   * the ligand-gated one, its ligand coming and going, again and again: named; activation and deactivation; and
+   * desensitization. Then back, and, in the plot's place, the states such a channel moves between, the one it is in lit;
+   * the channel opening at random; and many such channels together, the share of them open. */
+  active: number;
+  closeUp: number;
+  onLigand: number;
+  protein: number;
+  swing: number;
+  sensors: number;
+  field: number;
+  stepV: number;
+  plot: number;
+  act: number;
+  deact: number;
+  lid: number;
+  inact: number;
+  recov: number;
+  twice: number;
+  ligand: number;
+  binding: number;
+  desen: number;
+  states: number;
+  flicker: number;
+  many: number;
+  /** In front of it all, a voltage clamp's steps and the currents through the channels at each; the peak of each
+   * plotted against its potential, the I–V curve; a constant conductance's straight line; the share of channels open at
+   * each potential, on a plot above it, and a cursor running across both; and the reversal potential, where the curve
+   * crosses zero. */
+  /** The action potential's own plots, in front of the membrane: a run of spikes, then close in on one; the inputs
+   * that start it; the threshold, and inputs short of it; inputs of four sizes, all or nothing; sodium's and
+   * potassium's conductances and a strip of membrane with their channels; the rise, and the runaway that drives it;
+   * the peak; the fall, and the dip below rest; the refractory period, a late input firing nothing; and all of it named
+   * together. */
+  apPanel: number;
+  apZoom: number;
+  apInputs: number;
+  apThresh: number;
+  apSizes: number;
+  apGated: number;
+  apUp: number;
+  apPeak: number;
+  apDown: number;
+  apRefract: number;
+  apSummary: number;
+  ivPanel: number;
+  ivPeaks: number;
+  ivLine: number;
+  ivBends: number;
+  ivReverse: number;
+  /** After the action potential: why the ions must be pumped back; the view closing in on the sodium–potassium pump in
+   * the membrane, named; its round — three sodium ions out, two potassium ions in, one ATP; the charge it moves; and the
+   * energy it uses. */
+  pumpNeed: number;
+  onPump: number;
+  pumpNamed: number;
+  pumping: number;
+  netCharge: number;
+  atpCost: number;
+  ap: number;
+  inputs: number;
+  thresh: number;
+  gated: number;
+  upstroke: number;
+  downstroke: number;
+  spikeNamed: number;
+  first: number;
   /** The membrane giving way to two neurons, each named; a spike running down the one's axon to the other; where they
-   * meet, named a synapse; the view diving in on it, and its parts named; the transmitter released and bound; and the
-   * receptors' channels open, ions flowing in. */
+   * meet, named a synapse; the view diving in on it, and its parts named; closer in, on the cleft and the dendrite
+   * under it; the transmitter released; bound to the receptors; their channels opening; and ions flowing in through
+   * them, chloride turned away. */
   scene: number;
   cells: number;
+  /** Before the synapse: two ways to inject current into this neuron, an electrode at its body and an ion channel in
+   * its dendrite, each named; and, close in, that channel named. Then the other neuron, and all of the synapse, come
+   * in with it. */
+  inject: number;
+  chan: number;
+  other: number;
   spike: number;
   contact: number;
   dive: number;
   parts: number;
+  onCleft: number;
   release: number;
+  bind: number;
+  opening: number;
   inflow: number;
-  /** The transmitter named glutamate, and its receptors AMPA and NMDA, the NMDA one darker; potassium flowing out
-   * through the AMPA receptors as sodium flows in; the view backing out a little to make room below; and there, the
-   * two currents on a line of potentials, cancelling between the two reversal potentials. */
+  /** The transmitter named glutamate, and its receptors AMPA; potassium flowing out through them as sodium flows in;
+   * the view backing out a little to make room below; and there, the two currents on a line of potentials, cancelling
+   * between the two reversal potentials. */
   glutamate: number;
   kout: number;
   room: number;
   currents: number;
-  /** The view sliding down onto the spine and the dendrite; positive charge collecting inside the spine's membrane,
-   * that outside pushed off, and the potential there rising; the potassium ions nearest pushed away from it; and those
-   * in the dendrite pushed along it, both ways. */
+  /** The view sliding down onto the dendrite; the negative charge lining its membrane inside, round the synapse,
+   * partly neutralized, and the positive charge outside reduced; the potential there rising; the potassium ions nearest
+   * pushed away from it; and those in the dendrite pushed along it, both ways. */
   low: number;
   excess: number;
+  rise: number;
   repelled: number;
   axial: number;
-  /** Positive charge collecting on the dendrite's membrane along it, thinning with distance; and potassium leaking out
-   * through its channels on the way, the rise in potential named at points along it, falling off. */
+  /** Positive charge collecting on the dendrite's membrane along it, thinning with distance; the potential at the
+   * synapse on a plot below, falling fast as the charge spreads; potassium leaking out through its channels on the way,
+   * the slower fall, with τ_m; the same at the soma, smaller and slower; and the rise in potential named at points along
+   * the dendrite, falling off. */
   accum: number;
+  quick: number;
   leaks: number;
+  slow: number;
+  soma: number;
+  ticks: number;
   /** How fast it all happens: a plot below the synapse, its time axis `span` ms long; glutamate cleared from the cleft
    * by transporters; the AMPA receptors' current; glutamate held, and the receptors desensitized; how the decay differs
-   * from synapse to synapse and with temperature; and the voltage, slower, charging the membrane. */
+   * from synapse to synapse and with temperature; and the voltage, slower, charging the membrane. And, after the
+   * glutamate is cleared: the AMPA current, decaying within a few ms; how briefly the receptors are open, the voltage rising only while they are; how fast it rises
+   * through channels of less resistance and of more; one rise, its time constant τ = R × C marked where it is 63% of
+   * the way up; the reversal potential it is headed for, the gap to it, and the current, the gap over the resistance,
+   * falling as it closes; and the rate of rise, I / C, steep at first and then shallower. */
   kinetics: number;
   span: number;
   clear: number;
+  epsc: number;
+  brief: number;
+  resist: number;
+  rc: number;
+  /** The membrane as a capacitor, on a panel below: the charge either side for 1 volt, as much as it holds per volt;
+   * thinner, and more charge for the same volt; and its area, thickness and dielectric constant named, C = ε × A / d. */
+  cap: number;
+  thin: number;
+  eps: number;
+  ohm: number;
+  slope: number;
   current: number;
   desens: number;
   types: number;
@@ -932,14 +1110,27 @@ const SWING: [number, number][] = [
   [8500, E_K - 29],
   [9600, E_K],
 ];
+/** The channel close in, open, sodium flowing in through it: as the slide about its sodium leaves it. */
+const CHANNEL_OPEN: Partial<Pose> = {
+  scene: 1,
+  cells: 1,
+  dive: 1,
+  parts: 1,
+  chan: 1,
+  opening: 1,
+  inflow: 1,
+};
 /** The synapse close in, at work, its receptors opening: as the slide about that leaves it. */
 const SYNAPSE_OPEN: Partial<Pose> = {
+  other: 1,
   scene: 1,
   cells: 1,
   dive: 1,
   parts: 1,
   spike: 1,
   release: 1,
+  bind: 1,
+  opening: 1,
   inflow: 1,
 };
 /** The last picture of the membrane, at rest, kept under the two neurons as they come in over it. */
@@ -952,6 +1143,51 @@ const AT_REST: Partial<Pose> = {
   vm: V_REST,
   weighted: 1,
   nearer: 1,
+};
+/** Close in on the voltage-gated sodium channel, named a protein: as the slide that closes in leaves it. */
+const CLOSE_UP: Partial<Pose> = { ...AT_REST, panel: 0, active: 1, closeUp: 1, protein: 1 };
+/** And its sensors, the field holding them in, and the potential stepped up, on the plot below: from activation on. */
+const STEPPED: Partial<Pose> = { ...CLOSE_UP, sensors: 1, field: 1, stepV: 1, plot: 1 };
+/** And everything about it but the second step too soon: as the slide about recovery leaves it. */
+const SODIUM_DONE: Partial<Pose> = { ...STEPPED, act: 1, deact: 1, lid: 1, inact: 1, recov: 1 };
+/** All of the active channels, behind the voltage clamp's plots: as the slide about many channels together leaves it. */
+const CHARACTERIZED: Partial<Pose> = {
+  ...SODIUM_DONE,
+  ligand: 1,
+  binding: 1,
+  desen: 1,
+  flicker: 1,
+  many: 1,
+};
+/** The action potential's own plots, in front of the membrane at rest. */
+const AP_PLOTS: Partial<Pose> = { ...AT_REST, panel: 0, apPanel: 1 };
+/** Close in on one spike, its inputs and threshold marked, its conductances and channels shown: from the rise on. */
+const AP_MECHANISM: Partial<Pose> = {
+  ...AP_PLOTS,
+  apZoom: 1,
+  apInputs: 1,
+  apThresh: 1,
+  apGated: 1,
+};
+/** The action potential going round, its spike named: as the slide that names it leaves it. */
+const SPIKING: Partial<Pose> = {
+  ap: 1,
+  inputs: 1,
+  thresh: 1,
+  gated: 1,
+  upstroke: 1,
+  downstroke: 1,
+  spikeNamed: 1,
+};
+/** Close in on the pump, named: as the slide that closes in on it leaves it. */
+const PUMP_CLOSE: Partial<Pose> = {
+  ...AT_REST,
+  panel: 0,
+  gated: 1,
+  pumpNeed: 1,
+  onPump: 1,
+  closeUp: 1,
+  pumpNamed: 1,
 };
 /** On the last slide about potassium alone, mV, at ms into the round: up to −70 mV, held, and back down to E_K as
  * potassium flows out, held there. */
@@ -989,6 +1225,401 @@ function keyed(keys: [number, number][], ms: number, log = false) {
   const e = smooth(clamp01((s - ta) / (tb - ta)));
   return log ? Math.exp(lerp(Math.log(va), Math.log(vb), e)) : lerp(va, vb, e);
 }
+
+/**
+ * The active channels' round, ms by the page's clock, slowed far down (a sodium channel opens within a fraction of a
+ * millisecond of the potential rising, and inactivates within about one): the membrane potential stepped up from rest
+ * for two seconds — and, on the slide about a second rise too soon, again half a second after — to this, mV; and the
+ * ligand there, for a second, or, on the slide about desensitization, for three.
+ */
+const ACT_MS = 6000;
+const V_STEPS: [number, number][] = [
+  [800, 2800],
+  [3300, 4300],
+];
+const V_STEPPED = -20;
+const BOUND: [number, number][] = [[800, 1900]];
+const BOUND_LONG: [number, number][] = [[800, 3800]];
+/** Where something that relaxes towards 1 while it is on and back towards 0 while it is off has got, `ms` into the
+ * round: from 0 at the round's start, with these time constants, ms, rising and falling. */
+function relaxAt(ms: number, on: [number, number][], up: number, down: number) {
+  let [x, at] = [0, 0];
+  const until = (to: number, rising: boolean) => {
+    x = Number(rising) + (x - Number(rising)) * Math.exp(-(to - at) / (rising ? up : down));
+    at = to;
+  };
+  for (const [from, to] of on) {
+    if (ms <= from) {
+      until(ms, false);
+      return x;
+    }
+    until(from, false);
+    if (ms <= to) {
+      until(ms, true);
+      return x;
+    }
+    until(to, true);
+  }
+  until(ms, false);
+  return x;
+}
+/**
+ * The voltage-gated sodium channel close in, `ms` into the round, the potential stepped up once — or, `twice` of the
+ * way, twice — and its second gate at work (`k`): the membrane potential, mV; how far out its voltage sensors have
+ * moved, quickly; how open its gate is, following them; and how far its second gate has swung into the pore — as one
+ * channel's does, all at once, soon after it opens, and out again slowly once the potential is back down. And so how
+ * open its pore is.
+ */
+function sodiumAt(ms: number, twice = 0, k = 1) {
+  const both = (up: number, down: number) =>
+    lerp(relaxAt(ms, V_STEPS.slice(0, 1), up, down), relaxAt(ms, V_STEPS, up, down), twice);
+  const act = both(120, 250);
+  const lid = k * smooth(clamp01((both(500, 1200) - 0.3) / 0.4));
+  return {
+    v: lerp(V_REST, V_STEPPED, both(40, 60)),
+    sensors: both(70, 140),
+    act,
+    lid,
+    open: act * (1 - lid),
+  };
+}
+/**
+ * The ligand-gated channel close in, `ms` into the round, its ligand there briefly — or, `long` of the way, for longer —
+ * and desensitizing (`k`): how far the ligand has come down into its binding sites, and gone again; how open the gate
+ * is, following it; how desensitized, all at once once it has been bound a while, and back slowly once it has gone; and
+ * so how open its pore is.
+ */
+function ligandAt(ms: number, long = 0, k = 1) {
+  const both = (f: (windows: [number, number][]) => number) => lerp(f(BOUND), f(BOUND_LONG), long);
+  const docked = both((windows) =>
+    Math.max(
+      ...windows.map(
+        ([from, to]) => smooth(clamp01((ms - from) / 250)) * (1 - smooth(clamp01((ms - to) / 300)))
+      )
+    )
+  );
+  // (the gate following the ligand once it is in place)
+  const later = (windows: [number, number][]) =>
+    windows.map(([from, to]): [number, number] => [from + 200, to]);
+  const act = both((windows) => relaxAt(ms, later(windows), 100, 200));
+  const numb =
+    k * smooth(clamp01((both((windows) => relaxAt(ms, later(windows), 700, 1500)) - 0.3) / 0.4));
+  return { docked, act, numb, open: act * (1 - numb) };
+}
+/**
+ * For the slides about chance: 120 sodium channels through the round's one step up, each a seeded walk between its
+ * states — 0 closed, 1 open, 2 inactivated — taken every 5 ms. At rest, one rarely opens, shuts again quickly, and
+ * recovers from inactivation after about 450 ms; while the potential is up, it opens after about 70 ms, shuts again after
+ * about 220 open, or inactivates after about 320. The first — the one drawn close in — opens three times before it
+ * inactivates, and recovers 660 ms after the step. And the share of them all open, through the round.
+ */
+const CHANCE_DT = 5;
+const CHANCES: Uint8Array[] = Array.from({ length: 120 }, (_, n) => {
+  const rnd = mulberry32(776 + n);
+  const states = new Uint8Array(ACT_MS / CHANCE_DT);
+  let s = 0;
+  for (let i = 0; i < states.length; i++) {
+    const up = i * CHANCE_DT >= V_STEPS[0][0] && i * CHANCE_DT < V_STEPS[0][1];
+    let rates: [number, number][] = [];
+    if (s === 0) rates = [[1, up ? 1 / 70 : 1 / 30000]];
+    else if (s === 1)
+      rates = up
+        ? [
+            [0, 1 / 220],
+            [2, 1 / 320],
+          ]
+        : [[0, 1 / 30]];
+    else if (!up) rates = [[0, 1 / 450]];
+    const total = rates.reduce((sum, [, r]) => sum + r, 0);
+    if (total > 0 && rnd() < 1 - Math.exp(-total * CHANCE_DT)) {
+      let pick = rnd() * total;
+      for (const [to, r] of rates) {
+        pick -= r;
+        if (pick <= 0) {
+          s = to;
+          break;
+        }
+      }
+    }
+    states[i] = s;
+  }
+  return states;
+});
+/** The share of them open, every 5 ms, averaged over 55 ms. */
+const SHARE_OPEN = (() => {
+  const raw = Array.from(
+    { length: ACT_MS / CHANCE_DT },
+    (_, i) => CHANCES.reduce((sum, states) => sum + Number(states[i] === 1), 0) / CHANCES.length
+  );
+  return raw.map((_, i) => {
+    const near = raw.slice(Math.max(0, i - 5), i + 6);
+    return near.reduce((sum, v) => sum + v, 0) / near.length;
+  });
+})();
+/** The first one's changes of state: [ms, state], from the round's start. */
+const CHANCE_FIRST: [number, number][] = (() => {
+  const changes: [number, number][] = [[0, 0]];
+  CHANCES[0].forEach((s, i) => {
+    if (s !== changes[changes.length - 1][1]) changes.push([i * CHANCE_DT, s]);
+  });
+  return changes;
+})();
+/** The share of the 120 open, `ms` into the round; and one of them, the `n`th, open (1) or not (0). */
+const shareOpenAt = (ms: number) =>
+  SHARE_OPEN[Math.min(SHARE_OPEN.length - 1, Math.max(0, Math.floor(ms / CHANCE_DT)))];
+const oneOpenAt = (n: number, ms: number) =>
+  Number(
+    CHANCES[n][Math.min(ACT_MS / CHANCE_DT - 1, Math.max(0, Math.floor(ms / CHANCE_DT)))] === 1
+  );
+/** The first one, the one drawn close in, `ms` into the round: how open its gate is and how far its second gate is in,
+ * each eased over 60 ms from the state before — its gate following its sensors while it is inactivated. */
+function chanceAt(ms: number) {
+  let j = 0;
+  while (j < CHANCE_FIRST.length - 1 && CHANCE_FIRST[j + 1][0] <= ms) j++;
+  const [since, s] = CHANCE_FIRST[j];
+  const was = j > 0 ? CHANCE_FIRST[j - 1][1] : 0;
+  const e = smooth(clamp01((ms - since) / 60));
+  const sensors = sodiumAt(ms).sensors;
+  const gate = (state: number) => (state === 1 ? 1 : state === 2 ? sensors : 0);
+  const act = lerp(gate(was), gate(s), e);
+  const lid = lerp(Number(was === 2), Number(s === 2), e);
+  return { act, lid, open: act * (1 - lid) };
+}
+
+/**
+ * For the slides about a channel's current–voltage curve: Hodgkin and Huxley's sodium channels (the squid axon at
+ * 6.3 °C, their rates in today's convention), with sodium's reversal potential here. Held at rest and stepped, at the
+ * start of a 5 ms window, to each of seven potentials, mV: how open they are (m³h) `t` ms into a step to V; and, at each
+ * potential from −90 to +100 mV, the peak of that, as a share of the most it reaches anywhere, and the peak current it
+ * passes — conductance times driving force — as a share of the largest inward one.
+ */
+const IV_STEPS = [-60, -35, -10, 15, 40, 65, 90];
+const IV_WINDOW = 5;
+function sodiumRates(V: number) {
+  const am = Math.abs(V + 40) < 1e-6 ? 1 : (0.1 * (V + 40)) / (1 - Math.exp(-(V + 40) / 10));
+  const bm = 4 * Math.exp(-(V + 65) / 18);
+  const ah = 0.07 * Math.exp(-(V + 65) / 20);
+  const bh = 1 / (1 + Math.exp(-(V + 35) / 10));
+  return { m: am / (am + bm), tm: 1 / (am + bm), h: ah / (ah + bh), th: 1 / (ah + bh) };
+}
+function openAfter(V: number, t: number) {
+  const [from, to] = [sodiumRates(V_REST), sodiumRates(V)];
+  const m = to.m + (from.m - to.m) * Math.exp(-t / to.tm);
+  const hh = to.h + (from.h - to.h) * Math.exp(-t / to.th);
+  return m * m * m * hh;
+}
+const IV_CURVE = (() => {
+  const peak = (V: number) => {
+    let best = 0;
+    for (let t = 0; t <= IV_WINDOW; t += 0.02) best = Math.max(best, openAfter(V, t));
+    return best;
+  };
+  const points = Array.from({ length: 191 }, (_, i) => ({ v: i - 90, g: peak(i - 90), i: 0 }));
+  const most = Math.max(...points.map((p) => p.g));
+  for (const p of points) {
+    p.g /= most;
+    p.i = p.g * (p.v - EQUILIBRIUM.Na);
+  }
+  const largest = Math.max(...points.map((p) => -p.i));
+  for (const p of points) p.i /= largest;
+  return { points, most, largest };
+})();
+/** The current `t` ms into a step to V, as a share of the largest inward peak; and its peak, on the curve. */
+const currentAfter = (V: number, t: number) =>
+  ((openAfter(V, t) / IV_CURVE.most) * (V - EQUILIBRIUM.Na)) / IV_CURVE.largest;
+const ivAt = (V: number) => {
+  const p = IV_CURVE.points;
+  const j = Math.min(p.length - 2, Math.max(0, Math.floor(V + 90)));
+  const f = clamp01(V + 90 - j);
+  return { g: lerp(p[j].g, p[j + 1].g, f), i: lerp(p[j].i, p[j + 1].i, f) };
+};
+/** Each step's colour: one hue, sodium's orange, light to dark as the potential rises on a light page, and dark to light
+ * on a dark one (each run checked: steps a reader can tell apart, the faintest still clear of the page). */
+const stepColour = (L: Look, j: number) =>
+  mix(
+    L.dark ? [124, 45, 18] : [242, 155, 109],
+    L.dark ? [254, 215, 170] : [106, 39, 16],
+    j / (IV_STEPS.length - 1)
+  );
+
+/**
+ * The sodium–potassium pump's round, ms, the same length as the active channels': its two halves open to the inside
+ * (0) or to the outside (1), shut to both halfway; three sodium ions coming from inside into its middle; ATP arriving at
+ * its foot, and its phosphate taken on as ADP goes; the halves turning to open outside, the sodium let go there; two
+ * potassium ions coming in from outside; the phosphate let go; the halves turning back, and the potassium let go
+ * inside. Each one's way, design px from the pump's middle, at ms into the round, and how much of it shows.
+ */
+type Way = [number, number, number][];
+const PUMP_NA: Way[] = [-12, 0, 12].map((x, j) => [
+  [0, x, 46],
+  [650, [-2.4, 2.4, 0][j], [-2.5, -2.5, 3][j]],
+  [2000, [-2.4, 2.4, 0][j], [-2.5, -2.5, 3][j]],
+  [2650, x * 1.2, -46],
+]);
+const PUMP_K: Way[] = [-9, 9].map((x, j) => [
+  [2400, x, -46],
+  [3050, [-2.3, 2.3][j], 0],
+  [4100, [-2.3, 2.3][j], 0],
+  [4750, x * 1.3, 46],
+]);
+const ATP_WAY: Way = [
+  [600, 30, 50],
+  [1050, 17.5, 33],
+];
+const ADP_WAY: Way = [
+  [1250, 17.5, 33],
+  [1900, 32, 50],
+];
+const PHOSPHATE_WAY: Way = [
+  [3150, 8.5, 27.5],
+  [3800, -20, 48],
+];
+/** Where along such a way, `ms` into the round, and how much shows — fading in at its start and out at its end, unless
+ * it is held (`hold`) at either. */
+function pumpWay(
+  way: Way,
+  ms: number,
+  hold: [boolean, boolean] = [false, false]
+): [number, number, number] {
+  const [t0, t1] = [way[0][0], way[way.length - 1][0]];
+  if (ms < t0 || ms > t1) return [0, 0, 0];
+  let j = 0;
+  while (j < way.length - 2 && ms > way[j + 1][0]) j++;
+  const [[ta, xa, ya], [tb, xb, yb]] = [way[j], way[j + 1]];
+  const e = smooth(clamp01((ms - ta) / (tb - ta)));
+  const shown = Math.min(
+    hold[0] ? 1 : clamp01((ms - t0) / 200),
+    hold[1] ? 1 : clamp01((t1 - ms) / 220)
+  );
+  return [lerp(xa, xb, e), lerp(ya, yb, e), shown];
+}
+/** How far the pump's halves have turned to open outside, `ms` into the round. */
+const pumpFace = (ms: number) =>
+  smooth(clamp01((ms - 1350) / 600)) * (1 - smooth(clamp01((ms - 3450) / 600)));
+/** Whether its phosphate is on it. */
+const phosphorylated = (ms: number) => ms >= 1250 && ms < 3150;
+
+/**
+ * For the slides about the action potential: Hodgkin and Huxley's model of a patch of membrane — its sodium,
+ * potassium and leak conductances, mS/cm², the squid axon's kinetics at 6.3 °C, and the reversal potentials here, the
+ * leak's set so that it rests at the resting potential — given inputs from synapses, each a brief inward current
+ * (ms, and its peak, µA/cm²), stepped every 0.01 ms. Every 0.1 ms of it: the membrane potential, mV; sodium's and
+ * potassium's conductances; and how far sodium's channels are from inactivated (h).
+ */
+const HH_G = { Na: 120, K: 36, L: 0.3 };
+const potassiumRates = (V: number) => {
+  const an = Math.abs(V + 55) < 1e-6 ? 0.1 : (0.01 * (V + 55)) / (1 - Math.exp(-(V + 55) / 10));
+  const bn = 0.125 * Math.exp(-(V + 65) / 80);
+  return { n: an / (an + bn), tn: 1 / (an + bn) };
+};
+const HH_REST = { ...sodiumRates(V_REST), n: potassiumRates(V_REST).n };
+const HH_LEAK =
+  V_REST +
+  (HH_G.Na * HH_REST.m ** 3 * HH_REST.h * (V_REST - EQUILIBRIUM.Na) +
+    HH_G.K * HH_REST.n ** 4 * (V_REST - EQUILIBRIUM.K)) /
+    HH_G.L;
+interface Run {
+  v: number[];
+  na: number[];
+  k: number[];
+  h: number[];
+}
+function hhRun(inputs: [number, number][], ms: number): Run {
+  const dt = 0.01;
+  let [V, { m, h }, { n }] = [V_REST, HH_REST, HH_REST];
+  const run: Run = { v: [], na: [], k: [], h: [] };
+  for (let i = 0; i <= ms / dt; i++) {
+    const t = i * dt;
+    let I = 0;
+    for (const [t0, peak] of inputs) {
+      const s = (t - t0) / 0.8;
+      if (s > 0) I += peak * s * Math.exp(1 - s);
+    }
+    const na = sodiumRates(V);
+    const kr = potassiumRates(V);
+    m += (dt * (na.m - m)) / na.tm;
+    h += (dt * (na.h - h)) / na.th;
+    n += (dt * (kr.n - n)) / kr.tn;
+    const [gNa, gK] = [HH_G.Na * m ** 3 * h, HH_G.K * n ** 4];
+    V += dt * (I - gNa * (V - EQUILIBRIUM.Na) - gK * (V - EQUILIBRIUM.K) - HH_G.L * (V - HH_LEAK));
+    if (i % 10 === 0) {
+      run.v.push(V);
+      run.na.push(gNa);
+      run.k.push(gK);
+      run.h.push(h);
+    }
+  }
+  return run;
+}
+/** Three inputs, 3 and 2 ms apart, each a few millivolts on its own: the first two alone peak 6 mV short of threshold,
+ * the third takes it past. */
+const burstAt = (t0: number, peak = 5.6): [number, number][] => [
+  [t0, peak],
+  [t0 + 3, peak],
+  [t0 + 5, peak],
+];
+/**
+ * The runs the slides show: the one followed — three inputs taking it past threshold, a spike at about 10 ms, and three
+ * more bursts of inputs, 25 ms apart, firing three spikes more; the first two inputs only, short of threshold; one
+ * input of each of four sizes, the smallest firing nothing and the others a spike each, sooner the bigger; and the
+ * spike, then a strong input 4 ms after it, in the refractory period, firing nothing.
+ */
+const AP_RUN = hhRun([...burstAt(3), ...burstAt(28), ...burstAt(53), ...burstAt(78)], 100);
+const AP_SHORT = hhRun(burstAt(3).slice(0, 2), 30);
+const AP_SIZES = [6, 10, 18, 36].map((peak) => hhRun([[3, peak]], 30));
+const AP_LATE = hhRun([...burstAt(3), [14, 40]], 30);
+/** A run's value `t` ms in, between its samples. */
+const runAt = (series: number[], t: number) => {
+  const j = Math.min(series.length - 2, Math.max(0, Math.floor(t / 0.1)));
+  return lerp(series[j], series[j + 1], clamp01(t / 0.1 - j));
+};
+const AP_MOST = { Na: Math.max(...AP_RUN.na), K: Math.max(...AP_RUN.k) };
+
+/** The membrane potential an action potential sets off from, mV. */
+const THRESHOLD = -55;
+/**
+ * The action potential's round, ms by the page's clock, slowed far down and not to scale: three inputs from synapses,
+ * the third taking the membrane past threshold; the spike, up as sodium channels open and back down past rest as they
+ * shut and potassium channels open; and rest. Through it, the membrane potential, mV; and how many times its resting
+ * conductance sodium's is, and potassium's.
+ */
+const AP_MS = 6000;
+const AP_INPUTS = [600, 1400, 2000];
+const AP_PEAK = 2380;
+const AP_V: [number, number][] = [
+  [0, V_REST],
+  [600, V_REST],
+  [760, V_REST + 6.5],
+  [1400, V_REST + 3],
+  [1560, V_REST + 11],
+  [2000, V_REST + 8],
+  [2160, THRESHOLD],
+  [AP_PEAK, 30],
+  [2900, -82],
+  [4300, V_REST],
+  [AP_MS, V_REST],
+];
+const AP_NA: [number, number][] = [
+  [0, 1],
+  [2160, 1],
+  [2260, 40],
+  [2420, 6],
+  [2650, 1],
+  [AP_MS, 1],
+];
+const AP_K: [number, number][] = [
+  [0, 1],
+  [2300, 1],
+  [2550, 3.5],
+  [3000, 3],
+  [4300, 1],
+  [AP_MS, 1],
+];
+/** How open, through the round: the voltage-gated sodium channel, opening fast past threshold and soon shut again; the
+ * voltage-gated potassium channel, opening later and staying open longer; and the receptor, a moment at each input. */
+const naGateAt = (ms: number) => bump(ms, 2140, 2440, 60);
+const kGateAt = (ms: number) => bump(ms, 2320, 3400, 160);
+const receptorAt = (ms: number) => Math.max(...AP_INPUTS.map((t0) => bump(ms, t0, t0 + 280, 60)));
 
 /** A step's picture, `t` ms into it and `typed` ms after its words typed out. */
 function poseFor(step: Physics2Step, t: number, typed: number, set: Concentrations = AS_IS): Pose {
@@ -1086,13 +1717,70 @@ function poseFor(step: Physics2Step, t: number, typed: number, set: Concentratio
     panel: 0,
     weighted: 0,
     nearer: 0,
+    active: 0,
+    closeUp: 0,
+    onLigand: 0,
+    protein: 0,
+    swing: 0,
+    sensors: 0,
+    field: 0,
+    stepV: 0,
+    plot: 0,
+    act: 0,
+    deact: 0,
+    lid: 0,
+    inact: 0,
+    recov: 0,
+    twice: 0,
+    ligand: 0,
+    binding: 0,
+    desen: 0,
+    states: 0,
+    flicker: 0,
+    many: 0,
+    apPanel: 0,
+    apZoom: 0,
+    apInputs: 0,
+    apThresh: 0,
+    apSizes: 0,
+    apGated: 0,
+    apUp: 0,
+    apPeak: 0,
+    apDown: 0,
+    apRefract: 0,
+    apSummary: 0,
+    ivPanel: 0,
+    ivPeaks: 0,
+    ivLine: 0,
+    ivBends: 0,
+    ivReverse: 0,
+    pumpNeed: 0,
+    onPump: 0,
+    pumpNamed: 0,
+    pumping: 0,
+    netCharge: 0,
+    atpCost: 0,
+    ap: 0,
+    inputs: 0,
+    thresh: 0,
+    gated: 0,
+    upstroke: 0,
+    downstroke: 0,
+    spikeNamed: 0,
+    first: 0,
     scene: 0,
     cells: 0,
+    inject: 0,
+    chan: 0,
+    other: 0,
     spike: 0,
     contact: 0,
     dive: 0,
     parts: 0,
+    onCleft: 0,
     release: 0,
+    bind: 0,
+    opening: 0,
     inflow: 0,
     glutamate: 0,
     kout: 0,
@@ -1100,13 +1788,27 @@ function poseFor(step: Physics2Step, t: number, typed: number, set: Concentratio
     currents: 0,
     low: 0,
     excess: 0,
+    rise: 0,
     repelled: 0,
     axial: 0,
     accum: 0,
+    quick: 0,
     leaks: 0,
+    slow: 0,
+    soma: 0,
+    ticks: 0,
     kinetics: 0,
     span: 5,
     clear: 0,
+    epsc: 0,
+    brief: 0,
+    resist: 0,
+    rc: 0,
+    cap: 0,
+    thin: 0,
+    eps: 0,
+    ohm: 0,
+    slope: 0,
     current: 0,
     desens: 0,
     types: 0,
@@ -1604,100 +2306,558 @@ function poseFor(step: Physics2Step, t: number, typed: number, set: Concentratio
       });
       P.nearer = phase(typed, 200, 800);
       break;
-    case 'signal':
-      // the membrane giving way to two neurons as the slide opens, each named; once the words have typed, a spike
-      // running down the other neuron's axon to this one, again and again
-      Object.assign(P, AT_REST, { scene: 1 });
+    case 'activeChannels':
+      // the potentials' line going as the slide opens; once the words have typed, a voltage-gated channel and a
+      // ligand-gated one beside the passive ones, opening and shutting through their round
+      Object.assign(P, AT_REST, { panel: 0 });
+      P.active = phase(typed, 200, 800);
+      break;
+    case 'closeUp':
+      // closing in on the voltage-gated one as the slide opens; once the words have typed, it named a protein, and
+      // its pore
+      Object.assign(P, AT_REST, { panel: 0, active: 1 });
+      P.closeUp = phase(t, 0, 1800);
+      P.protein = phase(typed, 200, 700);
+      break;
+    case 'gate':
+      // as close in; once the words have typed, its gate opening and shutting, again and again, and named, sodium
+      // passing through while it is open and turned back while it is shut
+      Object.assign(P, CLOSE_UP);
+      P.swing = phase(typed, 200, 600);
+      break;
+    case 'sensor':
+      // its gate shut again; once the words have typed, its voltage sensors picked out, their charges, and named
+      Object.assign(P, CLOSE_UP);
+      P.sensors = phase(typed, 200, 700);
+      break;
+    case 'held':
+      // as left; once the words have typed, the charge lining the membrane, the field across it, and its push on the
+      // sensors
+      Object.assign(P, CLOSE_UP, { sensors: 1 });
+      P.field = phase(typed, 200, 900);
+      break;
+    case 'rises':
+      // as left; once the words have typed, the membrane potential stepped up and back, again and again — the charge
+      // lining the membrane thinning, the field and its push weakening, the sensors moving out — and a plot of it below
+      Object.assign(P, CLOSE_UP, { sensors: 1, field: 1 });
+      P.stepV = phase(typed, 200, 600);
+      P.plot = phase(typed, 400, 700);
+      break;
+    case 'activates':
+      // as left; once the words have typed, the gate's opening named, and on the plot, how open it is, its rise named
+      Object.assign(P, STEPPED);
+      P.act = phase(typed, 200, 700);
+      break;
+    case 'deactivates':
+      // as left; once the words have typed, its shutting named, on the plot too
+      Object.assign(P, STEPPED, { act: 1 });
+      P.deact = phase(typed, 200, 700);
+      break;
+    case 'secondGate':
+      // as left; once the words have typed, its second gate, hanging on its tether inside, and named
+      Object.assign(P, STEPPED, { act: 1, deact: 1 });
+      P.lid = phase(typed, 200, 700);
+      break;
+    case 'inactivates':
+      // as left; once the words have typed, that gate swinging into the pore soon after it opens, while the potential
+      // stays up, and on the plot, how long it is plugged
+      Object.assign(P, STEPPED, { act: 1, deact: 1, lid: 1 });
+      P.inact = phase(typed, 200, 900);
+      break;
+    case 'recovers':
+      // as left; once the words have typed, its coming out again, slowly, named on the plot
+      Object.assign(P, STEPPED, { act: 1, deact: 1, lid: 1, inact: 1 });
+      P.recov = phase(typed, 200, 900);
+      break;
+    case 'tooSoon':
+      // as left; once the words have typed, a second step up soon after the first: the pore still plugged
+      Object.assign(P, SODIUM_DONE);
+      P.twice = phase(typed, 200, 900);
+      break;
+    case 'ligandGated':
+      // along the membrane to the ligand-gated channel as the slide opens, its ligand coming and going, again and
+      // again, the plot following it; once the words have typed, it and its ligand named
+      Object.assign(P, SODIUM_DONE);
+      P.onLigand = phase(t, 0, 1800);
+      P.ligand = phase(typed, 200, 700);
+      break;
+    case 'binds':
+      // as left; once the words have typed, its opening and shutting named, on the plot too
+      Object.assign(P, SODIUM_DONE, { onLigand: 1, ligand: 1 });
+      P.binding = phase(typed, 200, 700);
+      break;
+    case 'desensitizes':
+      // as left, the ligand staying longer; once the words have typed, it desensitizing while the ligand is still
+      // bound, greying, and that named
+      Object.assign(P, SODIUM_DONE, { onLigand: 1, ligand: 1, binding: 1 });
+      P.desen = phase(typed, 200, 900);
+      break;
+    case 'channelStates':
+      // back along the membrane to the sodium channel as the slide opens; once the words have typed, in the plot's
+      // place, the states such a channel moves between, the one it is in lit
+      Object.assign(P, SODIUM_DONE, { ligand: 1, binding: 1, desen: 1 });
+      P.onLigand = 1 - phase(t, 0, 1800);
+      P.states = phase(typed, 200, 800);
+      break;
+    case 'chance':
+      // the plot back; once the words have typed, the channel opening and shutting at random, as one channel does
+      Object.assign(P, SODIUM_DONE, { ligand: 1, binding: 1, desen: 1 });
+      P.flicker = phase(typed, 200, 700);
+      break;
+    case 'together':
+      // as left; once the words have typed, on the plot, the share of 120 such channels open, smooth
+      Object.assign(P, SODIUM_DONE, { ligand: 1, binding: 1, desen: 1, flicker: 1 });
+      P.many = phase(typed, 200, 900);
+      break;
+    case 'clamp':
+      // in front of it all, once the words have typed: a voltage clamp's seven steps, and the current at each, one
+      // after another picked out
+      Object.assign(P, CHARACTERIZED);
+      P.ivPanel = phase(typed, 200, 800);
+      break;
+    case 'peakIV':
+      // as left; once the words have typed, each step's peak current, dotted, and plotted against its potential
+      Object.assign(P, CHARACTERIZED, { ivPanel: 1 });
+      P.ivPeaks = phase(typed, 200, 1400);
+      break;
+    case 'linear':
+      // as left; once the words have typed, a constant conductance's straight line through the reversal potential
+      Object.assign(P, CHARACTERIZED, { ivPanel: 1, ivPeaks: 1 });
+      P.ivLine = phase(typed, 200, 800);
+      break;
+    case 'bends':
+      // as left; once the words have typed, the share of channels open at each potential, on a plot above, and a cursor
+      // running across both
+      Object.assign(P, CHARACTERIZED, { ivPanel: 1, ivPeaks: 1, ivLine: 1 });
+      P.ivBends = phase(typed, 200, 900);
+      break;
+    case 'reverses':
+      // as left; once the words have typed, the reversal potential marked where the curve crosses zero
+      Object.assign(P, CHARACTERIZED, { ivPanel: 1, ivPeaks: 1, ivLine: 1, ivBends: 1 });
+      P.ivReverse = phase(typed, 200, 800);
+      break;
+    case 'spikes':
+      // the action potential's own plots in front of the membrane: a run of spikes, again and again
+      Object.assign(P, AP_PLOTS);
+      break;
+    case 'oneSpike':
+      // closing in on the first spike as the slide opens
+      Object.assign(P, AP_PLOTS);
+      P.apZoom = phase(t, 0, 1600);
+      break;
+    case 'inputs':
+      // as left; once the words have typed, the inputs that start it marked under it
+      Object.assign(P, AP_PLOTS, { apZoom: 1 });
+      P.apInputs = phase(typed, 200, 700);
+      break;
+    case 'threshold':
+      // as left; once the words have typed, the threshold, and the first two inputs alone, short of it
+      Object.assign(P, AP_PLOTS, { apZoom: 1, apInputs: 1 });
+      P.apThresh = phase(typed, 200, 800);
+      break;
+    case 'allOrNone':
+      // as left; once the words have typed, one input of each of four sizes, and what each does
+      Object.assign(P, AP_PLOTS, { apZoom: 1, apInputs: 1, apThresh: 1 });
+      P.apSizes = phase(typed, 200, 900);
+      break;
+    case 'gated':
+      // the one run again; once the words have typed, sodium's and potassium's conductances under it, and a strip of
+      // membrane with their channels, following the dot along it
+      Object.assign(P, AP_PLOTS, { apZoom: 1, apInputs: 1, apThresh: 1 });
+      P.apGated = phase(typed, 200, 900);
+      break;
+    case 'upstroke':
+      // as left; once the words have typed, the rise shaded and named, and the runaway that drives it
+      Object.assign(P, AP_MECHANISM);
+      P.apUp = phase(typed, 200, 700);
+      break;
+    case 'peak':
+      // as left; once the words have typed, the peak named
+      Object.assign(P, AP_MECHANISM, { apUp: 1 });
+      P.apPeak = phase(typed, 200, 700);
+      break;
+    case 'downstroke':
+      // as left; once the words have typed, the fall shaded and named, and the dip below rest
+      Object.assign(P, AP_MECHANISM, { apUp: 1, apPeak: 1 });
+      P.apDown = phase(typed, 200, 700);
+      break;
+    case 'refractory':
+      // as left; once the words have typed, the refractory period shaded, and a strong input in it firing nothing
+      Object.assign(P, AP_MECHANISM, { apUp: 1, apPeak: 1, apDown: 1 });
+      P.apRefract = phase(typed, 200, 900);
+      break;
+    case 'actionPotential':
+      // as left, the late input gone; once the words have typed, every part of the spike named together
+      Object.assign(P, AP_MECHANISM, { apUp: 1, apPeak: 1, apDown: 1 });
+      P.apSummary = phase(typed, 200, 800);
+      break;
+    case 'propagate':
+      // the membrane giving way to two neurons as the slide opens; once the words have typed, each named, and a spike
+      // running down the one's axon to the other, again and again
+      Object.assign(P, AT_REST, { scene: 1, other: 1 });
       P.cells = phase(typed, 0, 600);
+      P.spike = phase(typed, 300, 400);
+      break;
+    case 'pumpNeed':
+      // the membrane again, the action potential going round as before; once the words have typed, what each spike
+      // moves named
+      Object.assign(P, AT_REST, SPIKING);
+      P.pumpNeed = phase(typed, 200, 800);
+      break;
+    case 'pump':
+      // closing in on the pump as the slide opens; once the words have typed, it named
+      Object.assign(P, AT_REST, { panel: 0, gated: 1, onPump: 1 });
+      P.closeUp = phase(t, 0, 1800);
+      P.pumpNamed = phase(typed, 200, 700);
+      break;
+    case 'pumpCycle':
+      // as left; once the words have typed, its round, again and again
+      Object.assign(P, PUMP_CLOSE);
+      P.pumping = phase(typed, 200, 600);
+      break;
+    case 'electrogenic':
+      // as left; once the words have typed, the charge each round carries out, counted
+      Object.assign(P, PUMP_CLOSE, { pumping: 1 });
+      P.netCharge = phase(typed, 200, 800);
+      break;
+    case 'pumpEnergy':
+      // as left; once the words have typed, the ATP it uses named
+      Object.assign(P, PUMP_CLOSE, { pumping: 1, netCharge: 1 });
+      P.atpCost = phase(typed, 200, 800);
+      break;
+    case 'first':
+      // the other neuron going as the slide opens, this one left
+      Object.assign(P, AT_REST, { scene: 1, cells: 1 });
+      P.first = phase(typed, 200, 600);
+      break;
+    case 'inject':
+      // this neuron, as left; once the words have typed, two ways to inject current into it, an electrode at its body
+      // and an ion channel in its dendrite, each named
+      Object.assign(P, AT_REST, { scene: 1, cells: 1 });
+      P.inject = phase(typed, 300, 900);
+      break;
+    case 'channel':
+      // as left; once the words have typed, the electrode going and the view diving in on the channel, and it and the
+      // dendrite named
+      Object.assign(P, AT_REST, { scene: 1, cells: 1, inject: 1 });
+      P.dive = phase(typed, 1300, 2600);
+      P.parts = phase(typed, 3700, 700);
+      P.chan = P.parts;
+      break;
+    case 'opens':
+      // the view closing in on the channel as the slide opens; once the words have typed, the channel opening briefly,
+      // again and again, its pore lit
+      Object.assign(P, AT_REST, {
+        scene: 1,
+        cells: 1,
+        dive: 1,
+        parts: 1,
+        chan: 1,
+        onCleft: 1,
+      });
+      P.opening = phase(typed, 200, 500);
+      break;
+    case 'sodium':
+      // as left; once the words have typed, sodium ions flowing in through it while it is open, and a chloride ion
+      // turned away
+      Object.assign(P, AT_REST, {
+        scene: 1,
+        cells: 1,
+        dive: 1,
+        parts: 1,
+        chan: 1,
+        onCleft: 1,
+        opening: 1,
+      });
+      P.inflow = phase(typed, 200, 500);
+      break;
+    case 'excess':
+      // the view sliding down onto the dendrite as the slide opens; once the words have typed, the negative charge
+      // lining its membrane inside round the channel partly neutralized, from the channel out, and the positive charge
+      // outside it drifting off
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { onCleft: 1 });
+      P.low = phase(t, 0, 1400);
+      P.excess = phase(typed, 200, 1800);
+      break;
+    case 'rise':
+      // as left; once the words have typed, the membrane potential round the channel rising, the dendrite glowing warm
+      // there
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { low: 1, excess: 1, onCleft: 1 });
+      P.rise = phase(typed, 200, 1400);
+      break;
+    case 'brief':
+      // back up at the channel, backed out a little to make room below; once the words have typed, a plot there: how
+      // long the channel is open, shaded, and the voltage rising only while it is
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { room: 1, span: 15 });
+      P.kinetics = phase(typed, 0, 600);
+      P.brief = phase(typed, 200, 900);
+      break;
+    case 'resist':
+      // as left, all but the voltage going; once the words have typed, how fast it rises through channels of less
+      // resistance and of more
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { room: 1, kinetics: 1, brief: 1, span: 5 });
+      P.resist = phase(typed, 200, 900);
+      break;
+    case 'rc':
+      // as left; once the words have typed, one rise, its time constant marked where it is 63% of the way up
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        room: 1,
+        kinetics: 1,
+        brief: 1,
+        resist: 1,
+        span: 5,
+      });
+      P.rc = phase(typed, 200, 900);
+      break;
+    case 'capacitance':
+      // as left; once the words have typed, the plot giving way to the membrane as a capacitor, the charge either side
+      // of it for 1 volt
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { room: 1, brief: 1, resist: 1, rc: 1, span: 5 });
+      P.kinetics = 1 - phase(typed, 200, 600);
+      P.cap = phase(typed, 400, 800);
+      break;
+    case 'thickness':
+      // as left; once the words have typed, the membrane thinner, and more charge either side for the same volt
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        room: 1,
+        brief: 1,
+        resist: 1,
+        rc: 1,
+        cap: 1,
+        span: 5,
+      });
+      P.thin = phase(typed, 200, 1000);
+      break;
+    case 'dielectric':
+      // as left; once the words have typed, its area, its thickness and the lipids' dielectric constant named:
+      // C = ε × A / d
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        room: 1,
+        brief: 1,
+        resist: 1,
+        rc: 1,
+        cap: 1,
+        thin: 1,
+        span: 5,
+      });
+      P.eps = phase(typed, 200, 900);
+      break;
+    case 'ohm':
+      // the capacitor giving way to the plot again, the words under it staying till the new ones come; the time
+      // constant's marks going; once the words have typed, the reversal potential the rise is headed for, the gap to
+      // it, and the current, the gap over the resistance, falling as it closes
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        room: 1,
+        kinetics: 1,
+        brief: 1,
+        resist: 1,
+        rc: 1,
+        eps: 1,
+        span: 5,
+      });
+      P.ohm = phase(typed, 200, 900);
+      break;
+    case 'charging':
+      // as left, the gap and the current going; once the words have typed, the rate of rise drawn on the curve, steep at
+      // first and shallower as the voltage nears the reversal potential
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        room: 1,
+        kinetics: 1,
+        brief: 1,
+        resist: 1,
+        rc: 1,
+        ohm: 1,
+        span: 5,
+      });
+      P.slope = phase(typed, 200, 900);
+      break;
+    case 'repel':
+      // the plot going, the view back down on the dendrite, close in, as the slide opens; once the words have typed,
+      // the potassium ions in the dendrite by the channel, pushed away
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { low: 1, excess: 1, rise: 1, onCleft: 1 });
+      P.repelled = phase(typed, 200, 900);
+      break;
+    case 'along':
+      // as left; once the words have typed, the view backing out along the dendrite as the potassium ions in it are
+      // pushed along it, both ways
+      Object.assign(P, AT_REST, CHANNEL_OPEN, { low: 1, excess: 1, rise: 1, repelled: 1 });
+      P.onCleft = 1 - phase(typed, 0, 1400);
+      P.axial = phase(typed, 200, 700);
+      P.accum = phase(typed, 900, 1600);
+      break;
+    case 'spread':
+      // the view backing out a little and up as the slide opens; once the words have typed, below it, the potential by
+      // the channel over 40 ms, falling fast as the charge spreads along the dendrite
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        low: 1,
+        excess: 1,
+        rise: 1,
+        repelled: 1,
+        axial: 1,
+        accum: 1,
+        room: 1,
+      });
+      P.quick = phase(typed, 200, 900);
+      break;
+    case 'leak':
+      // as left; once the words have typed, potassium leak channels along the dendrite, potassium leaking out through
+      // them, and on the plot, the slower fall, with τ_m
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        low: 1,
+        excess: 1,
+        rise: 1,
+        repelled: 1,
+        axial: 1,
+        accum: 1,
+        room: 1,
+        quick: 1,
+      });
+      P.leaks = phase(typed, 200, 800);
+      P.slow = phase(typed, 600, 900);
+      break;
+    case 'soma':
+      // as left; once the words have typed, on the plot, the same potential at the soma: smaller, and rising and falling
+      // more slowly, the two alike once the charge has spread
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        low: 1,
+        excess: 1,
+        rise: 1,
+        repelled: 1,
+        axial: 1,
+        accum: 1,
+        room: 1,
+        quick: 1,
+        leaks: 1,
+        slow: 1,
+      });
+      P.soma = phase(typed, 200, 900);
+      break;
+    case 'decay':
+      // as left; once the words have typed, the potential named at points along the dendrite, falling off with distance
+      // from the channel
+      Object.assign(P, AT_REST, CHANNEL_OPEN, {
+        low: 1,
+        excess: 1,
+        rise: 1,
+        repelled: 1,
+        axial: 1,
+        accum: 1,
+        room: 1,
+        quick: 1,
+        leaks: 1,
+        slow: 1,
+        soma: 1,
+      });
+      P.ticks = phase(typed, 200, 800);
+      break;
+    case 'signal':
+      // the view backing out from the dendrite to the whole of this neuron as the slide opens, and another neuron coming
+      // in beside it, named; once the words have typed, a spike running down its axon to this one, again and again
+      Object.assign(P, AT_REST, { scene: 1, cells: 1, other: 1 });
       P.spike = phase(typed, 300, 400);
       break;
     case 'synapse':
       // the two neurons, as left; once the words have typed, where they meet named, then the view diving in on it —
-      // the other neuron's terminal, the cleft and the spine on this one's dendrite — and those named
-      Object.assign(P, AT_REST, { scene: 1, cells: 1 });
+      // the other neuron's terminal, the cleft and the shaft of this one's dendrite — and those named
+      Object.assign(P, AT_REST, { scene: 1, cells: 1, other: 1 });
       P.contact = phase(typed, 200, 500);
       P.dive = phase(typed, 1300, 2600);
       P.parts = phase(typed, 3700, 700);
       break;
     case 'release':
       // close in, as left; once the words have typed, a spike arriving at the terminal, a vesicle emptying, and the
-      // transmitter crossing the cleft to bind to the receptors on the spine, again and again
-      Object.assign(P, AT_REST, { scene: 1, cells: 1, dive: 1, parts: 1 });
+      // transmitter spreading through the cleft, again and again
+      Object.assign(P, AT_REST, { scene: 1, cells: 1, other: 1, dive: 1, parts: 1 });
       P.spike = phase(typed, 200, 400);
       P.release = P.spike;
       break;
+    case 'bind':
+      // the view closing in on the cleft and the dendrite under it as the slide opens; once the words have typed, the
+      // transmitter crossing the cleft to bind to the receptors in the dendrite's membrane, and those named
+      Object.assign(P, AT_REST, {
+        scene: 1,
+        cells: 1,
+        other: 1,
+        dive: 1,
+        parts: 1,
+        onCleft: 1,
+        spike: 1,
+        release: 1,
+      });
+      P.bind = phase(typed, 200, 500);
+      break;
+    case 'opening':
+      // as left; once the words have typed, the bound receptors' channels opening, their pores lit
+      Object.assign(P, AT_REST, {
+        scene: 1,
+        cells: 1,
+        other: 1,
+        dive: 1,
+        parts: 1,
+        onCleft: 1,
+        spike: 1,
+        release: 1,
+        bind: 1,
+      });
+      P.opening = phase(typed, 200, 500);
+      break;
     case 'inflow':
-      // as left; once the words have typed, the bound receptors' channels opening, sodium ions flowing through them
-      // into the spine, and a chloride ion turned away
-      Object.assign(P, AT_REST, { scene: 1, cells: 1, dive: 1, parts: 1, spike: 1, release: 1 });
+      // as left; once the words have typed, sodium ions flowing through the open channels into the dendrite, and a
+      // chloride ion turned away
+      Object.assign(P, AT_REST, {
+        scene: 1,
+        cells: 1,
+        other: 1,
+        dive: 1,
+        parts: 1,
+        onCleft: 1,
+        spike: 1,
+        release: 1,
+        bind: 1,
+        opening: 1,
+      });
       P.inflow = phase(typed, 200, 500);
       break;
     case 'glutamate':
-      // as left; once the words have typed, the transmitter named glutamate, and the receptors AMPA and NMDA — sodium
-      // now through the AMPA ones only
-      Object.assign(P, AT_REST, SYNAPSE_OPEN);
+      // as left; once the words have typed, the transmitter named glutamate, and the receptors AMPA
+      Object.assign(P, AT_REST, SYNAPSE_OPEN, { onCleft: 1 });
       P.glutamate = phase(typed, 200, 700);
       break;
     case 'ampa':
       // as left; once the words have typed, potassium flowing out through the AMPA receptors as sodium flows in
-      Object.assign(P, AT_REST, SYNAPSE_OPEN, { glutamate: 1 });
+      Object.assign(P, AT_REST, SYNAPSE_OPEN, { onCleft: 1, glutamate: 1 });
       P.kout = phase(typed, 200, 600);
       break;
     case 'cancel':
-      // as left; once the words have typed, the view backing out a little and up, and below it the two currents on a
-      // line of potentials, pulling towards their reversal potentials and cancelling near 0 mV
+      // as left; once the words have typed, the view backing out, to a little further than before and up, and below it
+      // the two currents on a line of potentials, pulling towards their reversal potentials and cancelling near 0 mV
       Object.assign(P, AT_REST, SYNAPSE_OPEN, { glutamate: 1, kout: 1 });
       P.room = phase(typed, 200, 1200);
+      P.onCleft = 1 - P.room;
       P.currents = phase(typed, 900, 800);
       break;
-    case 'excess':
-      // the line of potentials going, the view sliding down onto the spine and its dendrite as the slide opens; once the
-      // words have typed, positive charge collecting inside the spine's membrane, that outside pushed off, the potential
-      // there rising
-      Object.assign(P, AT_REST, SYNAPSE_OPEN, { glutamate: 1, kout: 1 });
-      P.low = phase(t, 0, 1400);
-      P.excess = phase(typed, 200, 1800);
-      break;
-    case 'repel':
-      // as left; once the words have typed, the potassium ions in the spine, and the nearest pushed away
-      Object.assign(P, AT_REST, SYNAPSE_OPEN, { glutamate: 1, kout: 1, low: 1, excess: 1 });
-      P.repelled = phase(typed, 200, 900);
-      break;
-    case 'along':
-      // as left; once the words have typed, the potassium ions in the dendrite pushed along it, both ways
-      Object.assign(P, AT_REST, SYNAPSE_OPEN, {
-        glutamate: 1,
-        kout: 1,
-        low: 1,
-        excess: 1,
-        repelled: 1,
-      });
-      P.axial = phase(typed, 200, 700);
-      P.accum = phase(typed, 900, 1600);
-      break;
-    case 'decay':
-      // as left; once the words have typed, potassium channels along the dendrite, potassium leaking out through them,
-      // and the potential named at points along it, falling off with distance from the synapse
-      Object.assign(P, AT_REST, SYNAPSE_OPEN, {
-        glutamate: 1,
-        kout: 1,
-        low: 1,
-        excess: 1,
-        repelled: 1,
-        axial: 1,
-        accum: 1,
-      });
-      P.leaks = phase(typed, 200, 800);
-      break;
     case 'clearance':
-      // back up to the synapse, backed out a little to make room below; once the words have typed, transporters either
-      // side of the cleft taking up the glutamate, and below, how soon it is gone from the cleft
+      // the line of potentials giving way to a plot; once the words have typed, transporters either side of the cleft
+      // taking up the glutamate, and on the plot, how soon it is gone from the cleft
       Object.assign(P, AT_REST, SYNAPSE_OPEN, { glutamate: 1, kout: 1, room: 1, span: 5 });
       P.kinetics = phase(typed, 200, 700);
       P.clear = phase(typed, 400, 700);
       break;
+    case 'unbind':
+      // as left; once the words have typed, on the plot, the AMPA current, decaying within a few milliseconds
+      Object.assign(P, AT_REST, SYNAPSE_OPEN, {
+        glutamate: 1,
+        kout: 1,
+        room: 1,
+        kinetics: 1,
+        clear: 1,
+        span: 5,
+      });
+      P.epsc = phase(typed, 200, 800);
+      break;
     case 'deactivation':
-      // as left; once the words have typed, the receptors' current, falling as glutamate comes off them
+      // back up at the synapse, the plot below as the slide about clearance left it; once the words have typed, the
+      // receptors' current, falling as glutamate comes off them
       Object.assign(P, AT_REST, SYNAPSE_OPEN, {
         glutamate: 1,
         kout: 1,
@@ -1905,18 +3065,52 @@ const STILL_FIELD: readonly Physics2Step[] = [
   'pulls',
   'weighted',
   'nearer',
+  ...ACTIVE_STEPS,
+  'spikes',
+  'oneSpike',
+  'inputs',
+  'threshold',
+  'allOrNone',
+  'gated',
+  'upstroke',
+  'peak',
+  'downstroke',
+  'refractory',
+  'actionPotential',
+  'propagate',
+  ...PUMP_STEPS,
+  'first',
+  'inject',
+  'channel',
+  'opens',
+  'sodium',
+  'excess',
+  'rise',
+  'brief',
+  'resist',
+  'rc',
+  'capacitance',
+  'thickness',
+  'dielectric',
+  'ohm',
+  'charging',
+  'repel',
+  'along',
+  'spread',
+  'leak',
+  'soma',
+  'decay',
   'signal',
   'synapse',
   'release',
+  'bind',
+  'opening',
   'inflow',
   'glutamate',
   'ampa',
   'cancel',
-  'excess',
-  'repel',
-  'along',
-  'decay',
   'clearance',
+  'unbind',
   'deactivation',
   'desensitize',
   'factors',
@@ -2222,17 +3416,45 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
   const y = h / 2 - 10 * u;
   const [x0, x1] = [30 * u, w - 30 * u];
   const face = 13.6 * u;
+  // the action potential's voltage-gated channels, between the passive ones, and the receptor bringing a synapse's
+  // inputs, beyond them (not on a narrow screen, where there is no room); and, from the slide about active channels on,
+  // theirs: the voltage-gated one where the action potential's sodium channel will be, the ligand-gated one where its
+  // receptor will (on a narrow screen, where its potassium channel will)
+  const gatedPores = [w / 2 - 120 * u, w / 2 + 120 * u];
+  const receptorX = w / 2 + 360 * u;
+  const ligandX = narrow ? gatedPores[1] : receptorX;
+  // and, after the action potential, the sodium–potassium pump, between the passive sodium channel and the voltage-gated
+  const pumpX = w / 2 - 180 * u;
 
   // close in on the potassium channel, on the slide about the attraction across the membrane: all that is drawn of
   // the membrane, its channels and its ions larger, round the channel; the words over it stay as they are
   // — and, on the slides about each ion's field, closer still, centred on the pair a little way along from it
   const pairDx = (narrow ? 44 : 70) * u;
+  // — and, from the slide that closes in on an active channel, on that: the voltage-gated one, or, from the slide about
+  // ligand-gated channels, the ligand-gated one, backing out a little on the way along the membrane to it; as close as
+  // fits between the top of the figure and the foot — or the plot there, once there is one — the channel and its names
+  // in the middle of that room (the voltage-gated one, its second gate hanging under it, 80 design px tall; the
+  // ligand-gated one, its lobes over it, 98) — and closer still on a narrow screen, where the names are shorter
+  const hop = 4 * P.onLigand * (1 - P.onLigand);
+  const band = [34, lerp(h - 40 * u, h - 36 * u - 96 * Math.max(u, 0.85) - 10, P.plot)];
+  const fits = (tall: number) =>
+    Math.min(Math.max(Math.min(w / (narrow ? 150 : 230), (band[1] - band[0]) / tall), 1.8), 4.6);
+  // (the pump, its foot under it and ions coming and going, 84 tall)
+  const closeIn = lerp(lerp(fits(80), fits(98), P.onLigand), fits(84), P.onPump);
+  const closeY = (band[0] + band[1]) / 2 + lerp(lerp(-2, 7, P.onLigand), -6, P.onPump) * closeIn;
+  const closeZoom = (closeIn / u) ** (P.closeUp * (1 - 0.8 * hop));
+  const onActive = lerp(lerp(gatedPores[0], ligandX, P.onLigand), pumpX, P.onPump);
   // twice as close as it was first drawn (2.4, then 1.4 times that): close enough on slides 20 to 23, with ions to spare
-  const zoom = lerp(1, 4.8, P.zoom) * lerp(1, 1.4, P.closer) * lerp(1, ON_CHANNEL, P.onChannel);
-  // and on the last of them, the pairs lining the membrane, back over the channel the ion tries
-  const zx = w / 2 + P.closer * pairDx * (1 - P.recentre);
+  const zoom =
+    lerp(1, 4.8, P.zoom) * lerp(1, 1.4, P.closer) * lerp(1, ON_CHANNEL, P.onChannel) * closeZoom;
+  // and on the last of them, the pairs lining the membrane, back over the channel the ion tries — or the active channel
+  // drawn steadily in to the middle as the view closes in on it
+  const zxBefore = w / 2 + P.closer * pairDx * (1 - P.recentre);
+  const zx = onActive - ((1 - P.closeUp) * (onActive - zxBefore)) / closeZoom;
   // and, on the negative ion's field's slide, lowered onto it
-  const zy = y + P.lower * LOWER * u;
+  const zy = y + P.lower * LOWER * u - (P.closeUp * (closeY - y)) / zoom;
+  // (and the ions, the charge lining the membrane and the names, gone by halfway in, for less to look at as it closes)
+  const away = 1 - smooth(clamp01(2.2 * P.closeUp));
   const seen = (px: number, py: number): [number, number] => [
     w / 2 + zoom * (px - zx),
     y + zoom * (py - zy),
@@ -2267,11 +3489,25 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
     ctx.globalAlpha = 1;
   }
   const pores = CHANNELS.map((_, i) => w / 2 + (i - 1) * 240 * u);
+  // the action potential's round, from the slide about spikes on, and where in it the page's clock has got
+  const lt = g.still ? AP_PEAK : cycle(g.now, AP_MS) * AP_MS;
+  const receptorShown = narrow ? 0 : P.inputs;
+  // and the active channels', from the slide about them on
+  const gt = g.still ? activeStillMs(P) : cycle(g.now, ACT_MS) * ACT_MS;
   if (P.water > 0.01) drawWater(g, y, x0, x1, face, P.water, narrow);
   // the membrane: its lipids — or, from the slide about a channel open on, faded to two plain lines, its two faces,
   // broken where the channels are, and as thin however close in
   if (P.drawn > 0.01) {
-    const gaps = P.channels > 0.01 ? pores : [];
+    const gaps =
+      P.channels > 0.01
+        ? [
+            ...pores,
+            ...(P.gated > 0.01 ? gatedPores : []),
+            ...(receptorShown > 0.01 ? [receptorX] : []),
+            ...(P.active > 0.01 ? [gatedPores[0], ligandX] : []),
+            ...(P.onPump > 0.01 ? [pumpX] : []),
+          ]
+        : [];
     const end = lerp(x0, x1, P.drawn);
     membrane(g, y, x0, end, 1 - P.lines, gaps);
     if (P.lines > 0.01) {
@@ -2309,6 +3545,120 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
   CHANNELS.forEach((kind, i) =>
     channel(g, pores[i], y, P.channels * (kind === 'K' ? 1 : 0.7), openness[i], colourOf(kind, own))
   );
+  // on the slides about active channels: a voltage-gated channel and a ligand-gated one, opening and shutting through
+  // their round as they do close in, each named under it on the slide that brings them — and, close in, drawn again,
+  // in full, over this
+  if (P.active > 0.01) {
+    const na = activeSodium(P, gt);
+    const lg = activeLigand(P, gt);
+    channel(g, gatedPores[0], y, P.active, na.open, IONS.Na.colour);
+    channel(g, ligandX, y, P.active, lg.open, mix(TRANSMITTER, GREY, 0.8 * lg.numb));
+    for (const [x, colour] of [
+      [gatedPores[0], IONS.Na.colour],
+      [ligandX, TRANSMITTER],
+    ] as [number, RGB][])
+      say(
+        g,
+        'an active channel',
+        x,
+        y + face + 14 * u,
+        P.active * (1 - smooth(clamp01(3 * P.closeUp))),
+        11,
+        'center',
+        mix(colour, L.ink, 0.3)
+      );
+  }
+  // after the action potential, from the slide that closes in on it: the sodium–potassium pump, plainly, wider than a
+  // channel and with no pore — drawn in full close in
+  if (P.onPump > 0.01) {
+    ctx.globalAlpha = P.onPump;
+    ctx.beginPath();
+    ctx.roundRect(pumpX - 18 * u, y - 22 * u, 36 * u, 44 * u, 9 * u);
+    ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 0.98);
+    ctx.fill();
+    ctx.strokeStyle = rgba(L.ink, 0.5);
+    ctx.lineWidth = 1.5 / zoom;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  // from the slide about active channels on: a voltage-gated sodium channel and a voltage-gated potassium channel,
+  // between the passive ones, opening and shutting through the action potential's round, their ions passing while they
+  // are open — sodium in, then potassium out — and each named under it
+  if (P.gated > 0.01) {
+    channel(g, gatedPores[0], y, P.gated, naGateAt(lt), IONS.Na.colour);
+    channel(g, gatedPores[1], y, P.gated, kGateAt(lt), IONS.K.colour);
+    for (const [ion, x, from, every, count, inward] of [
+      ['Na', gatedPores[0], 2170, 90, 2, true],
+      ['K', gatedPores[1], 2380, 260, 3, false],
+    ] as [IonKind, number, number, number, number, boolean][])
+      for (let j = 0; j < count; j++) {
+        const sIon = (lt - (from + every * j)) / 300;
+        if (sIon < 0 || sIon > 1) continue;
+        const yy = y + (inward ? 1 : -1) * lerp(-44, 44, smooth(sIon)) * u;
+        disc(g, x, yy, 8 * u, IONS[ion].colour, 1, P.gated * Math.min(1, 5 * sIon, 5 * (1 - sIon)));
+      }
+    for (const [ion, x] of [
+      ['Na', gatedPores[0]],
+      ['K', gatedPores[1]],
+    ] as ['Na' | 'K', number][])
+      say(
+        g,
+        `${narrow ? 'gated' : 'voltage-gated'} ${IONS[ion].name}`,
+        x,
+        y + face + 14 * u,
+        P.gated,
+        11,
+        'center',
+        IONS[ion].colour
+      );
+  }
+  // and, from the slide about inputs on, beyond them, a receptor: at each of the round's inputs, neurotransmitter from
+  // another neuron dropping onto it, its channel opening a moment, and a sodium ion passing in
+  if (receptorShown > 0.01) {
+    channel(g, receptorX, y, receptorShown, receptorAt(lt), TRANSMITTER);
+    for (const t0 of AP_INPUTS) {
+      const fall = clamp01((lt - (t0 - 300)) / 300);
+      const shown =
+        lt > t0 - 300 ? receptorShown * (1 - smooth(clamp01((lt - (t0 + 200)) / 150))) : 0;
+      if (shown > 0.01) {
+        ctx.globalAlpha = shown;
+        ctx.fillStyle = rgba(TRANSMITTER, 0.95);
+        for (const side of [-1, 1]) {
+          ctx.beginPath();
+          ctx.arc(
+            receptorX + side * 6 * u,
+            lerp(y - 80 * u, y - 23 * u, smooth(fall)),
+            3.2 * u,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
+      const sIon = (lt - (t0 + 20)) / 260;
+      if (sIon > 0 && sIon < 1)
+        disc(
+          g,
+          receptorX,
+          y + lerp(-44, 44, smooth(sIon)) * u,
+          8 * u,
+          IONS.Na.colour,
+          1,
+          receptorShown * Math.min(1, 5 * sIon, 5 * (1 - sIon))
+        );
+    }
+    say(
+      g,
+      'a receptor: input from a synapse',
+      receptorX,
+      y + face + 14 * u,
+      receptorShown,
+      11,
+      'center',
+      mix(TRANSMITTER, L.ink, 0.3)
+    );
+  }
 
   // the ions, wandering on either side: outside above the membrane, inside below it — three pairs of the outside's,
   // on the slide reminding how charges push and pull, taken aside; and the inside's, on the slide of an imbalance,
@@ -2557,7 +3907,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
           (c.kind === 'A' ? 10.5 : 8) * u,
           colour,
           sign,
-          a * lerp(1, 0.6, P.onChannel)
+          a * lerp(1, 0.6, P.onChannel) * away
         );
         // (as its charge comes back only: not as the next slide, with one ion leaving, blends in)
         if (c.kind === 'K' && P.recharge > 0.01 && P.recharge < 0.99 && P.alone < 0.01) {
@@ -2651,7 +4001,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
       const shown = present(j);
       if (shown < 0.01) return;
       // greyed, right in on the channel
-      const faded = 0.9 * shown * lerp(1, 0.6, P.onChannel);
+      const faded = 0.9 * shown * lerp(1, 0.6, P.onChannel) * away;
       disc(
         g,
         x,
@@ -3710,7 +5060,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
     narrow
       ? 'Na^{+}, Cl^{−}: more outside; K^{+}: more inside'
       : 'sodium and chloride are many times more concentrated outside the cell, potassium inside',
-    P.listed * (1 - P.marked) * (1 - P.panel)
+    P.listed * (1 - P.marked) * (1 - P.panel) * (1 - P.active)
   );
   foot(
     narrow
@@ -3739,8 +5089,58 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
     narrow
       ? `rest: ${fromK} mV from E_{K}, ${fromNa} mV from E_{Na}`
       : `potassium is about ${Math.round(G_REST.K / G_REST.Na)} times as permeable as sodium at rest: the resting potential sits ${fromK} mV from E_{K}, but ${fromNa} mV from E_{Na}`,
-    P.nearer
+    P.nearer * (1 - P.ap) * (1 - P.active)
   );
+  foot(
+    narrow
+      ? 'each spike: Na^{+} in, K^{+} out'
+      : 'each spike lets a little sodium in and a little potassium out: over many, the concentrations would even out',
+    P.pumpNeed * (1 - smooth(clamp01(2 * P.closeUp)))
+  );
+  foot(
+    narrow
+      ? 'active channels open and shut'
+      : 'active channels open and shut in response to something, unlike passive ones, which stay open',
+    P.active * (1 - smooth(clamp01(2 * P.closeUp)))
+  );
+  for (const [wide, short, alpha] of [
+    [
+      'neurons signal with action potentials: brief spikes in the membrane potential',
+      'action potentials: brief spikes',
+      P.ap * (1 - P.inputs),
+    ],
+    [
+      "at each input, neurotransmitter opens a receptor's channel a moment, and positive ions flow in",
+      'a receptor opens a moment',
+      P.inputs * (1 - P.thresh),
+    ],
+    [
+      'each input raises the potential a little; together they take it past threshold',
+      'together, past threshold',
+      P.thresh * (1 - P.gated),
+    ],
+    [
+      'voltage-gated sodium and potassium channels: they open as the potential rises',
+      'voltage-gated Na^{+} and K^{+}',
+      P.gated * (1 - P.upstroke),
+    ],
+    [
+      'past threshold, sodium channels open: sodium rushes in, and the potential shoots up towards E_{Na}',
+      'Na^{+} channels open: up',
+      P.upstroke * (1 - P.downstroke),
+    ],
+    [
+      'they shut, and potassium channels open: potassium flows out, and the potential falls past rest',
+      'K^{+} channels open: down',
+      P.downstroke * (1 - P.spikeNamed),
+    ],
+    [
+      'the action potential: a spike about 1 ms long and 100 mV high',
+      'a spike: ~1 ms, ~100 mV',
+      P.spikeNamed * (1 - P.pumpNeed),
+    ],
+  ] as [string, string, number][])
+    foot(narrow ? short : wide, alpha);
   for (const p of pushes) {
     const [px, py] = seen(p.x, p.y);
     const [start, len] = [p.r * zoom + 3 * u, (14 + 22 * p.a) * u];
@@ -3891,7 +5291,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
     ctx.stroke();
     ctx.globalAlpha = 1;
   }
-  if (P.sides * (1 - P.zoom) > 0.01) {
+  if (P.sides * (1 - P.zoom) * away > 0.01) {
     // close to the membrane — and, once the ions are there, out past them, the further the more there are
     const off = lerp(lerp(17, 100, P.ions), 126, P.crowd) * u;
     const outside = narrow ? 'outside the cell' : 'outside the cell: the extracellular space';
@@ -3995,7 +5395,7 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
         `${IONS[kind].name} ${CONC[kind][side]} mM`,
         IONS[kind].colour,
       ]);
-    const listShown = 0.95 * P.sides * swap(P.listed) * (1 - P.zoom);
+    const listShown = 0.95 * P.sides * swap(P.listed) * (1 - P.zoom) * away;
     listed(
       [[narrow ? 'outside:' : 'outside the cell:', L.ink], ...each('out')],
       y - face - off,
@@ -4151,20 +5551,55 @@ function drawFigure(f: Frame<Physics2Step>, P: Pose, opened: number, crossing: C
       const width = mathWidth(ctx, text, 12.5 * g.ts);
       const left = Math.min(w - 6 - width, Math.max(6, pores[i] - width / 2));
       const ly = y + face + 38 * u;
-      ctx.globalAlpha = 0.85 * P.nearer;
+      ctx.globalAlpha = 0.85 * P.nearer * (1 - P.ap) * (1 - P.active);
       ctx.fillStyle = rgba(L.page, 1);
       ctx.beginPath();
       ctx.roundRect(left - 6 * u, ly - 11 * u, width + 12 * u, 22 * u, 8 * u);
       ctx.fill();
       ctx.globalAlpha = 1;
-      say(g, text, left, ly, 0.95 * P.nearer, 12.5, 'left', IONS[ion].colour);
+      say(
+        g,
+        text,
+        left,
+        ly,
+        0.95 * P.nearer * (1 - P.ap) * (1 - P.active),
+        12.5,
+        'left',
+        IONS[ion].colour
+      );
     }
   // the key, where the basic course's slide has its own: each kind in its colour, the positive ones and the negative
   if (P.key > 0.01) drawKey(g, P.key, narrow, own, P.dock);
   // and, on the last slides, the potentials, in the same corner
   if (P.plate > 0.01) drawPotentials(g, P, narrow, plateTop);
   // and, on the slides about every kind of ion, the reversal potentials' pulls, across the top
-  if (P.panel > 0.01) drawPulls(g, P, narrow, x0, x1);
+  if (P.panel > 0.01) {
+    const vm = lerp(P.vm, keyed(AP_V, lt), P.ap);
+    const gain = {
+      K: lerp(1, keyed(AP_K, lt), P.ap),
+      Na: lerp(1, keyed(AP_NA, lt), P.ap),
+      Cl: 1,
+    };
+    drawPulls(g, { ...P, vm }, narrow, x0, x1, gain);
+  }
+  // and, from the slide that closes in on an active channel on, that close in, over all of this; and, from the slide
+  // about the potential rising on, its round, on a plot below
+  if (P.closeUp > 0.01)
+    drawCloseUp(
+      g,
+      P,
+      narrow,
+      { zoom, zx, zy, y, near: P.closeUp * (1 - 0.8 * hop) },
+      { sodium: gatedPores[0], ligand: ligandX, pump: pumpX, pores },
+      gt
+    );
+  if (P.plot > 0.01) drawGating(g, P, narrow, gt);
+  // and, from the slide about a voltage clamp to the last about active channels, its plots in front of it all
+  if (P.ivPanel > 0.01) drawIV(g, P, narrow);
+  // and, from the slide about spikes on, the membrane potential through the round, on a plot below
+  if (P.ap > 0.01) drawSpike(g, P, narrow, lt);
+  // and, on the slides about the action potential, its own plots, in front of it all
+  if (P.apPanel > 0.01) drawAP(g, P, narrow);
   // and, from the slide about a signal arriving on, the membrane giving way to two neurons and the synapse between them
   if (P.scene > 0.001) {
     ctx.globalAlpha = P.scene;
@@ -4199,7 +5634,14 @@ function footNote(g: G, text: string, a: number, row = 0, colour: RGB = g.L.ink)
  * that is — and, last, what they come to. Then, at rest, each one's weight beside its pull: the resting potential is
  * the average of the reversal potentials, weighted so.
  */
-function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
+function drawPulls(
+  g: G,
+  P: Pose,
+  narrow: boolean,
+  x0: number,
+  x1: number,
+  gain: Record<'K' | 'Na' | 'Cl', number> = { K: 1, Na: 1, Cl: 1 }
+) {
   const { ctx, L } = g;
   // no smaller than this on a narrow screen, where the words would crowd
   const s = Math.max(g.u, 0.85);
@@ -4224,7 +5666,7 @@ function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
   // each, in its ion's colour
   if (P.nearer > 0.01)
     for (const ion of ['K', 'Na'] as const) {
-      ctx.globalAlpha = 0.35 * a * P.nearer;
+      ctx.globalAlpha = 0.35 * a * P.nearer * (1 - P.ap);
       ctx.strokeStyle = rgba(IONS[ion].colour, 1);
       ctx.lineWidth = 8 * s;
       ctx.lineCap = 'round';
@@ -4287,7 +5729,7 @@ function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
     `${narrow ? 'membrane' : 'membrane potential'}: ${value}`,
     mid,
     tiers[0],
-    a * (1 - P.weighted),
+    a * (1 - P.weighted * (1 - P.ap)),
     12.5,
     'center'
   );
@@ -4296,7 +5738,7 @@ function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
     `${narrow ? 'resting' : 'resting potential'}: ${value}`,
     mid,
     tiers[0],
-    a * P.weighted,
+    a * P.weighted * (1 - P.ap),
     12.5,
     'center'
   );
@@ -4305,9 +5747,16 @@ function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
   const reach = (narrow ? 95 : 150) * s;
   let net = 0;
   const rows: [string, string, RGB, number][] = PASSING.map((ion) => {
-    const pull = G_REST[ion] * (EQUILIBRIUM[ion] - P.vm);
+    // (its conductance as the action potential's round has it: at rest, as ever)
+    const conductance = G_REST[ion] * gain[ion];
+    const pull = conductance * (EQUILIBRIUM[ion] - P.vm);
     net += pull;
-    return [IONS[ion].name, `${IONS[ion].name} ×${G_REST[ion]}`, IONS[ion].colour, pull];
+    return [
+      IONS[ion].name,
+      `${IONS[ion].name} ×${Number(conductance.toPrecision(2))}`,
+      IONS[ion].colour,
+      pull,
+    ];
   });
   rows.push(['net', 'net', L.ink, net]);
   rows.forEach(([name, weighted, colour, pull], j) => {
@@ -4327,6 +5776,2424 @@ function drawPulls(g: G, P: Pose, narrow: boolean, x0: number, x1: number) {
       7 * s
     );
   });
+}
+
+/** The sodium channel close in, as each slide has it, `ms` into the round: the potential stepped up only from the slide
+ * about its rising on — but its gate opening and shutting all the same on the slide about the gate, and among the
+ * passive channels before the view closes in; its second gate at work from the slide about inactivation; and, from the
+ * slide about chance, opening and shutting at random. */
+function activeSodium(P: Pose, ms: number) {
+  const det = sodiumAt(ms, P.twice, P.inact);
+  let act = det.act * Math.max(P.stepV, P.swing, 1 - P.closeUp);
+  let lid = det.lid;
+  if (P.flicker > 0.001) {
+    const one = chanceAt(ms);
+    act = lerp(act, one.act, P.flicker);
+    lid = lerp(lid, one.lid, P.flicker);
+  }
+  return {
+    v: lerp(V_REST, det.v, P.stepV),
+    sensors: det.sensors * P.stepV,
+    act,
+    lid,
+    open: act * (1 - lid),
+  };
+}
+/** The ligand-gated channel close in, `ms` into the round: its ligand there briefly, or, from the slide about
+ * desensitization on, for longer, and desensitizing. */
+const activeLigand = (P: Pose, ms: number) => ligandAt(ms, P.desen, P.desen);
+/** With reduced motion, the moment of the active channels' round each slide is held at: one that shows what it says. */
+const activeStillMs = (P: Pose) => {
+  if (P.onPump > 0.5) return P.pumping > 0.5 ? 2150 : 300;
+  if (P.onLigand > 0.5) return P.desen > 0.5 ? 3000 : 1400;
+  if (P.flicker > 0.5) return 1100;
+  if (P.twice > 0.5) return 3700;
+  if (P.recov > 0.5) return 3600;
+  if (P.inact > 0.5) return 2300;
+  return P.stepV > 0.5 || P.swing > 0.5 || P.closeUp < 0.5 ? 1500 : 600;
+};
+/** A share, 0 to 1, of where along a row `j` falls, the same every time: which of the charge lining the membrane go
+ * first as the field weakens. */
+const rankOf = (j: number) => {
+  const s = Math.sin(j * 12.9898) * 43758.5453;
+  return s - Math.floor(s);
+};
+
+/** How often an ion sets off for an active channel's pore close in, ms; and, design px from the channel's middle at ms
+ * since it set off, its way down through the pore of the voltage-gated channel and in — or, the gate shut, to its mouth
+ * and back out again — and the same for the ligand-gated one, in under its lobes. */
+const PASS_EVERY = 300;
+const SODIUM_PASS: [number, number, number][] = [
+  [0, 10, -42],
+  [380, 0, -27],
+  [560, 0, -12],
+  [760, 0, 14],
+  [900, 0, 27],
+  [1150, -9, 44],
+];
+const SODIUM_BACK: [number, number, number][] = [
+  [0, 10, -42],
+  [380, 0, -28],
+  [700, 1.5, -29],
+  [1000, 12, -44],
+];
+const LIGAND_PASS: [number, number, number][] = [
+  [0, 30, -19.6],
+  [330, 9, -19.6],
+  [480, 0, -15],
+  [620, 0, -8],
+  [800, 0, 12],
+  [920, 0, 22],
+  [1150, -9, 38],
+];
+const LIGAND_BACK: [number, number, number][] = [
+  [0, 30, -19.6],
+  [380, 11, -19.6],
+  [700, 12, -20],
+  [1000, 30, -21],
+];
+/** Where along such a way it is, `age` ms in: steadily through the middle of it, easing at its two ends. */
+function wayAt(keys: [number, number, number][], age: number): [number, number] {
+  let j = 0;
+  while (j < keys.length - 2 && age > keys[j + 1][0]) j++;
+  const [[ta, xa, ya], [tb, xb, yb]] = [keys[j], keys[j + 1]];
+  const f = clamp01((age - ta) / (tb - ta));
+  const e = j === 0 || j === keys.length - 2 ? smooth(f) : f;
+  return [lerp(xa, xb, e), lerp(ya, yb, e)];
+}
+
+/** A smooth line through points, as Catmull–Rom would draw it, from a move to the first. */
+function curveThrough(ctx: CanvasRenderingContext2D, pts: [number, number][]) {
+  ctx.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [p0, p1, p2, p3] = [
+      pts[Math.max(0, i - 1)],
+      pts[i],
+      pts[i + 1],
+      pts[Math.min(pts.length - 1, i + 2)],
+    ];
+    ctx.bezierCurveTo(
+      p1[0] + (p2[0] - p0[0]) / 6,
+      p1[1] + (p2[1] - p0[1]) / 6,
+      p2[0] - (p3[0] - p1[0]) / 6,
+      p2[1] - (p3[1] - p1[1]) / 6,
+      p2[0],
+      p2[1]
+    );
+  }
+}
+
+/**
+ * The voltage-gated sodium channel close in, centred at (cx, cy), `k` px to a design px: two halves of its pore, round
+ * a pore that narrows to its selectivity filter near the outside, widens into a cavity, and shuts at its gate near the
+ * inside — apart there as far as `act`; beyond each, in the membrane, its voltage sensor, a rod with four positive
+ * charges, out as far as `sensors`, a linker from its foot to the gate; and, `lidShown`, its second gate, a ball on a
+ * tether from the left half's foot, swung into the pore's inner mouth as far as `lid`. `lit` picks the sensors out.
+ */
+function sodiumChannel(
+  g: G,
+  cx: number,
+  cy: number,
+  k: number,
+  a: number,
+  st: { sensors: number; act: number; lid: number },
+  lit: number,
+  lidShown: number
+) {
+  if (a < 0.01) return;
+  const { ctx, L } = g;
+  const o = st.act;
+  const at = (x: number, y: number): [number, number] => [cx + x * k, cy + y * k];
+  const body = mix(mix(L.page, L.ink, L.dark ? 0.2 : 0.1), IONS.Na.colour, 0.12);
+  const edge = rgba(mix(IONS.Na.colour, L.ink, 0.25), 0.9);
+  const lw = Math.max(1.4, 0.32 * k);
+  const rodY = lerp(4.5, -5.5, st.sensors);
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  for (const side of [-1, 1]) {
+    // the linker, from the sensor's foot round under the pore's half to its gate
+    ctx.beginPath();
+    ctx.moveTo(...at(side * 21.2, rodY + 10.5));
+    ctx.bezierCurveTo(
+      ...at(side * 21.5, rodY + 18),
+      ...at(side * 15, 29.5),
+      ...at(side * lerp(5, 8, o), 25.5)
+    );
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = Math.max(2, 1.1 * k);
+    ctx.stroke();
+    // the sensor's body, in the membrane beside the pore, and its rod
+    ctx.beginPath();
+    ctx.roundRect(cx + (side > 0 ? 16 : -26.5) * k, cy - 16 * k, 10.5 * k, 32 * k, 4.5 * k);
+    ctx.fillStyle = rgba(mix(body, L.ink, 0.05), 0.98);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(cx + (side * 21.2 - 2.4) * k, cy + (rodY - 10.5) * k, 4.8 * k, 21 * k, 2.4 * k);
+    ctx.fillStyle = rgba(mix(body, POS, 0.08 + 0.22 * lit), 1);
+    ctx.fill();
+    ctx.stroke();
+    // the pore's half: its inner face the pore's shape — wide at the outside, narrowing to the filter, widening into the
+    // cavity — and, near the inside, shut against the other half, or apart as far as the gate is open
+    const inner: [number, number][] = [
+      [8.4, -24],
+      [6.2, -19.5],
+      [3.9, -14.5],
+      [3.9, -10],
+      [5, -6],
+      [5, 4],
+      [lerp(1.4, 4.6, o), 10],
+      [lerp(0, 4.4, o), 15],
+      [lerp(2.6, 6.8, o), 21],
+    ];
+    ctx.beginPath();
+    curveThrough(
+      ctx,
+      inner.map(([x, y]) => at(side * x, y))
+    );
+    ctx.quadraticCurveTo(...at(side * lerp(6, 9, o), 25.5), ...at(side * 11, 25));
+    ctx.quadraticCurveTo(...at(side * 15.2, 24.5), ...at(side * 15.2, 20));
+    ctx.lineTo(...at(side * 15.2, -19.5));
+    ctx.quadraticCurveTo(...at(side * 15.2, -24.8), ...at(side * 11.5, -25));
+    ctx.closePath();
+    ctx.fillStyle = rgba(body, 0.98);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    // (its helices, faintly: one along the pore, one along its outside)
+    ctx.beginPath();
+    curveThrough(
+      ctx,
+      inner.slice(4).map(([x, y]) => at(side * (x + 3.4), y))
+    );
+    ctx.moveTo(...at(side * 11.8, -18));
+    ctx.lineTo(...at(side * 11.8, 19));
+    ctx.strokeStyle = rgba(L.ink, 0.1);
+    ctx.lineWidth = Math.max(1, 0.25 * k);
+    ctx.stroke();
+  }
+  // its second gate: a ball on a tether from the left half's foot, swinging up into the pore's inner mouth
+  if (lidShown > 0.01) {
+    const e = smooth(st.lid);
+    const angle = lerp(2.01, -0.26, e);
+    const [px, py] = [-11, 23.5];
+    const [bx, by] = [px + 11.65 * Math.cos(angle), py + 11.65 * Math.sin(angle)];
+    const tint = rgba(mix(IONS.Na.colour, L.ink, 0.35), 1);
+    ctx.globalAlpha = a * lidShown;
+    ctx.beginPath();
+    ctx.moveTo(...at(px, py));
+    ctx.quadraticCurveTo(
+      ...at((px + bx) / 2 - 0.2 * (by - py), (py + by) / 2 + 0.2 * (bx - px)),
+      ...at(bx, by)
+    );
+    ctx.strokeStyle = tint;
+    ctx.lineWidth = Math.max(1.6, 0.8 * k);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(...at(bx, by), 5 * k, 0, Math.PI * 2);
+    ctx.fillStyle = tint;
+    ctx.fill();
+  }
+  ctx.restore();
+  // the sensors' charges
+  for (const side of [-1, 1])
+    for (let c = 0; c < 4; c++)
+      disc(
+        g,
+        cx + side * 21.2 * k,
+        cy + (rodY - 7.5 + 5 * c) * k,
+        1.75 * k,
+        POS,
+        1,
+        a * (0.55 + 0.45 * lit)
+      );
+}
+
+/**
+ * The ligand-gated channel close in, centred at (cx, cy), `k` px to a design px: two halves of its pore, shut at its gate
+ * near the outside, apart there as far as it is `open`; over each, outside, two lobes with a binding site between them,
+ * which close on the ligand as far as it has `docked` — the ligand there, or coming and going — and, desensitized
+ * (`numb`), the lobes turned apart and the channel greyed, though the ligand is still bound.
+ */
+function ligandChannel(
+  g: G,
+  cx: number,
+  cy: number,
+  k: number,
+  a: number,
+  st: { docked: number; open: number; numb: number }
+) {
+  if (a < 0.01) return;
+  const { ctx, L } = g;
+  const o = st.open;
+  const at = (x: number, y: number): [number, number] => [cx + x * k, cy + y * k];
+  const tint = mix(TRANSMITTER, GREY, 0.7 * st.numb);
+  const body = mix(mix(L.page, L.ink, L.dark ? 0.2 : 0.1), tint, 0.12);
+  const edge = rgba(mix(tint, L.ink, 0.25), 0.9);
+  const lw = Math.max(1.4, 0.32 * k);
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.lineJoin = 'round';
+  for (const side of [-1, 1]) {
+    // the pore's half, shut against the other near the outside, or apart as far as the gate is open
+    const inner: [number, number][] = [
+      [6.6, -16.5],
+      [lerp(0.2, 4.4, o), -11],
+      [lerp(1.8, 4.4, o), -7],
+      [4.6, 0],
+      [4.4, 8],
+      [5.2, 14],
+      [6.8, 19.5],
+    ];
+    ctx.beginPath();
+    curveThrough(
+      ctx,
+      inner.map(([x, y]) => at(side * x, y))
+    );
+    ctx.quadraticCurveTo(...at(side * 9, 23.5), ...at(side * 13.5, 19));
+    ctx.lineTo(...at(side * 13.5, -13));
+    ctx.quadraticCurveTo(...at(side * 13.5, -17.2), ...at(side * 10, -17.2));
+    ctx.closePath();
+    ctx.fillStyle = rgba(body, 0.98);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    // its two lobes outside, and the binding site between them — all turned apart as it desensitizes — on two stalks
+    // down to the pore's half, with a gap between them for ions to come in under the lobes
+    ctx.save();
+    const [hx, hy] = at(side * 12, -17);
+    ctx.translate(hx, hy);
+    ctx.rotate(side * 0.22 * st.numb);
+    ctx.translate(-hx, -hy);
+    ctx.strokeStyle = edge;
+    ctx.lineCap = 'round';
+    ctx.lineWidth = Math.max(2, 1.3 * k);
+    ctx.beginPath();
+    for (const x of [4.5, 15]) {
+      ctx.moveTo(...at(side * x, -23.5));
+      ctx.lineTo(...at(side * (x - 0.8), -16.8));
+    }
+    ctx.stroke();
+    ctx.lineWidth = lw;
+    ctx.beginPath();
+    ctx.ellipse(...at(side * 10, -28), 8.2 * k, 5.6 * k, 0, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(mix(body, L.ink, 0.04), 0.98);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.stroke();
+    // (the upper one hinged at its outer end, open until the ligand docks)
+    ctx.save();
+    const [ux, uy] = at(side * 18.6, -35);
+    ctx.translate(ux, uy);
+    ctx.rotate(side * 0.5 * (1 - st.docked));
+    ctx.translate(-ux, -uy);
+    ctx.beginPath();
+    ctx.ellipse(...at(side * 11, -37.4), 7.2 * k, 5 * k, side * 0.12, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(mix(body, L.ink, 0.04), 0.98);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    // the ligand: a small molecule, down from outside into the binding site, and gone again
+    const shown = clamp01(1.6 * st.docked);
+    if (shown > 0.01) {
+      const [mx, my] = [
+        lerp(side * 12, side * 6.2, st.docked),
+        lerp(-58, -34.4, smooth(st.docked)),
+      ];
+      ctx.globalAlpha = a * shown;
+      ctx.fillStyle = rgba(TRANSMITTER, 0.95);
+      for (const [dx, dy] of [
+        [-1.2, 0.4],
+        [1.2, -0.5],
+      ]) {
+        ctx.beginPath();
+        ctx.arc(...at(mx + dx, my + dy), 2.1 * k, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = a;
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+/** ATP and the phosphate it gives the pump, where they are drawn: a dark yellow. */
+const ATP_COLOUR: RGB = [202, 138, 4];
+
+/**
+ * The sodium–potassium pump close in, centred at (cx, cy), `k` px to a design px: two halves round a cavity in its
+ * middle, open to the inside or, as far as `face`, to the outside — shut to both halfway — and, under its right half, its
+ * foot, where ATP docks and its phosphate is taken on.
+ */
+function pumpProtein(
+  g: G,
+  cx: number,
+  cy: number,
+  k: number,
+  a: number,
+  face: number,
+  phosphate: number
+) {
+  if (a < 0.01) return;
+  const { ctx, L } = g;
+  const at = (x: number, y: number): [number, number] => [cx + x * k, cy + y * k];
+  const body = mix(mix(L.page, L.ink, L.dark ? 0.2 : 0.1), [100, 116, 139], 0.12);
+  const edge = rgba(mix(L.ink, L.page, 0.35), 0.9);
+  const lw = Math.max(1.4, 0.32 * k);
+  const [top, bottom] = [0.4 + 5.2 * clamp01(2 * face - 1), 0.4 + 5.2 * clamp01(1 - 2 * face)];
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.lineJoin = 'round';
+  // its foot, under the right half
+  ctx.beginPath();
+  ctx.ellipse(...at(16, 31), 10.5 * k, 7.2 * k, -0.15, 0, Math.PI * 2);
+  ctx.fillStyle = rgba(mix(body, L.ink, 0.04), 0.98);
+  ctx.fill();
+  ctx.strokeStyle = edge;
+  ctx.lineWidth = lw;
+  ctx.stroke();
+  for (const side of [-1, 1]) {
+    const inner: [number, number][] = [
+      [top, -22],
+      [3.2, -13],
+      [5.4, -4],
+      [5.4, 4],
+      [3.2, 13],
+      [bottom, 22],
+    ];
+    ctx.beginPath();
+    curveThrough(
+      ctx,
+      inner.map(([x, y]) => at(side * x, y))
+    );
+    ctx.quadraticCurveTo(...at(side * (bottom + 3), 25.5), ...at(side * 11, 25.5));
+    ctx.quadraticCurveTo(...at(side * 18.5, 25.5), ...at(side * 18.5, 19));
+    ctx.lineTo(...at(side * 18.5, -19));
+    ctx.quadraticCurveTo(...at(side * 18.5, -25.5), ...at(side * 11, -25.5));
+    ctx.quadraticCurveTo(...at(side * (top + 3), -25.5), ...at(side * top, -22));
+    ctx.closePath();
+    ctx.fillStyle = rgba(body, 0.98);
+    ctx.fill();
+    ctx.strokeStyle = edge;
+    ctx.lineWidth = lw;
+    ctx.stroke();
+    // (its helices, faintly)
+    ctx.beginPath();
+    for (const x of [9, 14]) {
+      ctx.moveTo(...at(side * x, -20));
+      ctx.lineTo(...at(side * x, 20));
+    }
+    ctx.strokeStyle = rgba(L.ink, 0.1);
+    ctx.lineWidth = Math.max(1, 0.25 * k);
+    ctx.stroke();
+  }
+  ctx.restore();
+  // the phosphate, while it is on
+  if (phosphate > 0.01) atpMark(g, ...at(8.5, 27.5), k, a * phosphate, 'P');
+}
+/** ATP, ADP or a phosphate close in: a dark yellow pill or disc, named on it. */
+function atpMark(g: G, x: number, y: number, k: number, a: number, name: string) {
+  if (a < 0.01) return;
+  const { ctx } = g;
+  const half = (name === 'P' ? 2.6 : 5.6) * k;
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.roundRect(x - half, y - 2.6 * k, 2 * half, 5.2 * k, 2.6 * k);
+  ctx.fillStyle = rgba(ATP_COLOUR, 0.95);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  mathWords(
+    ctx,
+    name,
+    x,
+    y,
+    [255, 255, 255],
+    a,
+    Math.max(9, 3.3 * k) * g.ts,
+    'center',
+    null,
+    '600'
+  );
+}
+
+/** Words close in on a channel, haloed, and a fine line from them to what they name, ending in a dot. */
+function tag(
+  g: G,
+  text: string,
+  tx: number,
+  ty: number,
+  px: number,
+  py: number,
+  a: number,
+  align: CanvasTextAlign,
+  colour: RGB
+) {
+  if (a < 0.01) return;
+  const { ctx } = g;
+  const from = align === 'right' ? tx + 5 : align === 'left' ? tx - 5 : tx;
+  ctx.globalAlpha = 0.6 * a;
+  ctx.strokeStyle = rgba(colour, 1);
+  ctx.fillStyle = rgba(colour, 1);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(from, ty);
+  ctx.lineTo(px, py);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  say(g, text, tx, ty, a, 12, align, colour);
+}
+
+/**
+ * The active channels close in, over the membrane as first drawn: the page, as much as the view has closed in; the
+ * membrane's lipids, heads out, two tails each, broken where the channels are — the passive ones, as before, and the two
+ * active ones, in full; from the slide about the field on, the charge lining the membrane, fewer the less negative the
+ * potential, and the field across it, as strong; sodium ions through the active channels' pores while they are open —
+ * turned back at their mouths while they are shut; each part named as the slides come to it; and the words at the
+ * foot.
+ */
+function drawCloseUp(
+  g: G,
+  P: Pose,
+  narrow: boolean,
+  view: { zoom: number; zx: number; zy: number; y: number; near: number },
+  at: { sodium: number; ligand: number; pump: number; pores: number[] },
+  ms: number
+) {
+  const { ctx, w, h, L, u } = g;
+  const shown = smooth(clamp01((view.near - 0.5) / 0.35));
+  if (shown < 0.01) return;
+  const seen = (px: number, py: number): [number, number] => [
+    w / 2 + view.zoom * (px - view.zx),
+    view.y + view.zoom * (py - view.zy),
+  ];
+  const k = view.zoom * u;
+  const [, my] = seen(0, view.y);
+  const [sx] = seen(at.sodium, view.y);
+  const [lx] = seen(at.ligand, view.y);
+  const [px] = seen(at.pump, view.y);
+  // (the active channels in full only on their own slides: beside the pump, plainly)
+  const full = 1 - P.onPump;
+  const na = activeSodium(P, ms);
+  const lg = activeLigand(P, ms);
+  // the page, over the membrane as first drawn
+  ctx.globalAlpha = shown;
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 1;
+
+  // the membrane's lipids, every 9 px of it as first drawn — broken where the channels are
+  const gaps: [number, number][] = [
+    [sx, lerp(27, 18, P.onPump) * k],
+    [lx, lerp(15, 18, P.onPump) * k],
+    ...(P.onPump > 0.01 ? [[px, 20 * k] as [number, number]] : []),
+    ...at.pores.map((p): [number, number] => [seen(p, view.y)[0], 18 * k]),
+  ];
+  const origin = seen(0, view.y)[0];
+  const every = 9 * k;
+  const heads = new Path2D();
+  const tails = new Path2D();
+  for (let j = Math.floor(-origin / every) - 1; origin + j * every < w + every; j++) {
+    const x = origin + j * every;
+    if (gaps.some(([gx, half]) => Math.abs(x - gx) < half)) continue;
+    for (const side of [-1, 1]) {
+      heads.moveTo(x + 3.6 * k, my + side * 10 * k);
+      heads.arc(x, my + side * 10 * k, 3.6 * k, 0, Math.PI * 2);
+      for (const dx of [-1.3, 1.3]) {
+        tails.moveTo(x + dx * k, my + side * 6.4 * k);
+        tails.lineTo(x + dx * 0.7 * k, my + side * 1.2 * k);
+      }
+    }
+  }
+  ctx.globalAlpha = shown;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = rgba(L.ink, 0.22);
+  ctx.lineWidth = Math.max(1, 0.3 * k);
+  ctx.stroke(tails);
+  ctx.fillStyle = rgba(headOf(L), 0.95);
+  ctx.fill(heads);
+  ctx.strokeStyle = rgba(L.ink, 0.12);
+  ctx.lineWidth = 1;
+  ctx.stroke(heads);
+  ctx.globalAlpha = 1;
+  // the passive channels, as the membrane first had them, open — and, beside the pump, the active ones, plainly, shut
+  const plain = (x: number, colour: RGB, a: number, open: number) => {
+    if (a < 0.01 || x < -30 * k || x > w + 30 * k) return;
+    ctx.globalAlpha = a;
+    for (const side of [-1, 1]) {
+      ctx.beginPath();
+      ctx.roundRect(x + side * (7 + 4 * open) * k - 6 * k, my - 19 * k, 12 * k, 38 * k, 5 * k);
+      ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 0.98);
+      ctx.fill();
+      ctx.strokeStyle = rgba(colour, 0.85);
+      ctx.lineWidth = Math.max(1.5, 0.35 * k);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  };
+  at.pores.forEach((p, i) => plain(seen(p, view.y)[0], colourOf(CHANNELS[i], 0), shown, 1));
+  plain(sx, IONS.Na.colour, shown * P.onPump, 0);
+  plain(lx, TRANSMITTER, shown * P.onPump, 0);
+
+  // from the slide about the field on: the charge lining the membrane, a positive charge outside and a negative one
+  // inside every 12 px of it as first drawn — fewer, the less negative the potential (near the ligand-gated channel, at
+  // rest), those going drifting off — and between them, the field across it, as strong
+  const level = clamp01(lerp(na.v, V_REST, P.onLigand) / V_REST);
+  if (P.field > 0.01) {
+    const a = shown * P.field;
+    const clear = (x: number) =>
+      Math.abs(x - at.sodium) > 30 * u &&
+      Math.abs(x - at.ligand) > 22 * u &&
+      at.pores.every((p) => Math.abs(x - p) > 20 * u);
+    const span = 12 * u;
+    const [from, to] = [
+      Math.floor((view.zx - w / 2 / view.zoom) / span) - 1,
+      Math.ceil((view.zx + w / 2 / view.zoom) / span) + 1,
+    ];
+    for (let j = from; j <= to; j++) {
+      const x = (j + 0.5) * span;
+      if (j % 2 || !clear(x)) continue;
+      const [fx] = seen(x, view.y);
+      saber(
+        ctx,
+        L,
+        g.now,
+        fx,
+        my - 8 * k,
+        fx,
+        my + 8 * k,
+        FIELD,
+        a * (0.12 + 0.88 * level),
+        1,
+        0.5 * k,
+        2.6 * k,
+        j * 0.13,
+        1400
+      );
+    }
+    for (let j = from; j <= to; j++) {
+      const x = j * span;
+      if (!clear(x)) continue;
+      const kept = smooth(clamp01((level - 0.85 * rankOf(j)) / 0.12 + 0.5));
+      if (kept < 0.01) continue;
+      const [cx] = seen(x, view.y);
+      const off = (1 - kept) * 10 * k;
+      disc(g, cx, my - 16 * k - off, 2.3 * k, POS, 1, a * kept);
+      disc(g, cx, my + 16 * k + off, 2.3 * k, NEG, -1, a * kept);
+    }
+  }
+  // the two active channels, in full
+  sodiumChannel(g, sx, my, k, shown * full, na, P.sensors * (1 - P.field), P.lid);
+  ligandChannel(g, lx, my, k, shown * full, lg);
+  // the pump: its round, from the slide about it on — and, before that, open to the inside, empty
+  if (P.onPump > 0.01) {
+    const a = shown * P.onPump;
+    const go = P.pumping;
+    const phosphate = Number(phosphorylated(ms)) * go;
+    pumpProtein(g, px, my, k, a, pumpFace(ms) * go, phosphate);
+    const ion = (way: Way, kind: 'Na' | 'K', hold: [boolean, boolean]) => {
+      const [x, yy, s] = pumpWay(way, ms, hold);
+      disc(g, px + x * k, my + yy * k, 2.8 * k, IONS[kind].colour, 1, a * go * s);
+    };
+    for (const way of PUMP_NA) ion(way, 'Na', [false, false]);
+    for (const way of PUMP_K) ion(way, 'K', [false, false]);
+    const [ax, ay, as] = pumpWay(ATP_WAY, ms, [false, true]);
+    atpMark(g, px + ax * k, my + ay * k, k, a * go * as * Number(ms < 1250), 'ATP');
+    const [dx, dy, ds] = pumpWay(ADP_WAY, ms, [true, false]);
+    atpMark(g, px + dx * k, my + dy * k, k, a * go * ds, 'ADP');
+    const [fx, fy, fs] = pumpWay(PHOSPHATE_WAY, ms, [true, false]);
+    atpMark(g, px + fx * k, my + fy * k, k, a * go * fs, 'P');
+  }
+  // sodium ions through each one's pore while its gate is open, one after another — turned back at its mouth while
+  // it is shut (every other one, there) — only on their own slides
+  for (const [cx, openAt, pass, back, cross] of [
+    [sx, (t: number) => activeSodium(P, t).open, SODIUM_PASS, SODIUM_BACK, 700],
+    [lx, (t: number) => activeLigand(P, t).open, LIGAND_PASS, LIGAND_BACK, 560],
+  ] as [number, (t: number) => number, typeof SODIUM_PASS, typeof SODIUM_PASS, number][]) {
+    if (cx < -40 * k || cx > w + 40 * k) continue;
+    for (let j = 0; j < ACT_MS / PASS_EVERY; j++) {
+      const t0 = j * PASS_EVERY;
+      const age = (((ms - t0) % ACT_MS) + ACT_MS) % ACT_MS;
+      const through = openAt((t0 + cross) % ACT_MS) > 0.5;
+      if (!through && j % 2) continue;
+      const keys = through ? pass : back;
+      const end = keys[keys.length - 1][0];
+      if (age > end) continue;
+      const side = j % 4 < 2 ? 1 : -1;
+      const [qx, qy] = wayAt(keys, age);
+      disc(
+        g,
+        cx + side * qx * k,
+        my + qy * k,
+        3.1 * k,
+        IONS.Na.colour,
+        1,
+        shown * full * Math.min(1, age / 150, (end - age) / 200)
+      );
+    }
+  }
+
+  // the names, each on the slides that come to it
+  const ink = mix(L.ink, L.page, 0.15);
+  const naInk = mix(IONS.Na.colour, L.ink, 0.35);
+  const lgInk = mix(TRANSMITTER, L.ink, 0.35);
+  const side = (narrow ? 24 : 34) * k;
+  say(g, 'outside', 18 * u, my - 31 * k, 0.75 * shown, 15, 'left', ink);
+  say(g, 'inside', 18 * u, my + 31 * k, 0.75 * shown, 15, 'left', ink);
+  say(
+    g,
+    'membrane',
+    18 * u,
+    my,
+    0.9 * shown * P.protein * (1 - P.swing) * (1 - P.sensors),
+    12,
+    'left',
+    ink
+  );
+  // the voltage-gated channel
+  const sodiumNamed = shown * (1 - P.onLigand);
+  say(
+    g,
+    'an ion channel: a protein',
+    sx,
+    my - 32 * k,
+    sodiumNamed * P.protein * (1 - P.sensors),
+    12.5,
+    'center',
+    naInk
+  );
+  say(
+    g,
+    narrow ? 'voltage-gated Na^{+} channel' : 'a voltage-gated sodium channel',
+    sx,
+    my - 32 * k,
+    sodiumNamed * P.sensors,
+    12.5,
+    'center',
+    naInk
+  );
+  tag(
+    g,
+    'pore',
+    sx + side,
+    my - 3 * k,
+    sx + 1.5 * k,
+    my - 2 * k,
+    sodiumNamed * P.protein * (1 - P.swing) * (1 - P.sensors),
+    'left',
+    naInk
+  );
+  tag(
+    g,
+    na.act > 0.5 ? 'gate: open' : 'gate: shut',
+    sx + side,
+    my + 15 * k,
+    sx + 2 * k,
+    my + 15 * k,
+    sodiumNamed * P.swing * (1 - P.sensors),
+    'left',
+    naInk
+  );
+  tag(
+    g,
+    'voltage sensor',
+    sx - side,
+    my - 27 * k,
+    sx - 21.2 * k,
+    my + (lerp(4.5, -5.5, na.sensors) - 9) * k,
+    sodiumNamed * P.sensors * (1 - P.stepV),
+    'right',
+    naInk
+  );
+  // the field's push on the sensors, inward — weaker, the weaker the field
+  const push = sodiumNamed * P.field * (1 - P.act);
+  if (push > 0.01)
+    for (const s of [-1, 1]) {
+      const ax = sx + s * 29.5 * k;
+      arrow(
+        ctx,
+        ax,
+        my - 7 * k,
+        ax,
+        my + (-7 + 4 + 10 * level) * k,
+        POS,
+        0.85 * push,
+        Math.max(1.6, 0.5 * k),
+        2.6 * k
+      );
+    }
+  say(
+    g,
+    'pushed in',
+    sx + 29.5 * k,
+    my - 19 * k,
+    push * clamp01(2 * level - 0.4),
+    11,
+    'center',
+    mix(POS, L.ink, 0.3)
+  );
+  say(g, 'the field', sx + side + 18 * k, my + 2 * k, push, 11, 'left', mix(FIELD, L.ink, 0.25));
+  // its state, from the slide about activation on: open, shut, or plugged
+  const state = na.lid > 0.5 ? 'inactivated' : na.open > 0.5 ? 'open' : 'closed';
+  say(g, state, sx + side, my + 4 * k, sodiumNamed * P.act * (1 - P.many), 12.5, 'left', naInk);
+  tag(
+    g,
+    narrow ? 'Na^{+} in' : 'sodium flows in',
+    sx + side,
+    my + 33 * k,
+    sx + 3 * k,
+    my + 30 * k,
+    sodiumNamed * P.act * (1 - P.lid) * smooth(clamp01((na.open - 0.4) / 0.3)),
+    'left',
+    mix(IONS.Na.colour, L.ink, 0.2)
+  );
+  // its second gate
+  const lidAngle = lerp(2.01, -0.26, smooth(na.lid));
+  tag(
+    g,
+    'inactivation gate',
+    sx - side,
+    my + 36 * k,
+    sx + (-11 + 11.65 * Math.cos(lidAngle)) * k,
+    my + (23.5 + 11.65 * Math.sin(lidAngle)) * k,
+    sodiumNamed * P.lid * (1 - P.recov),
+    'right',
+    naInk
+  );
+  // the membrane potential, in the corner, from the slide about the field on
+  say(
+    g,
+    `membrane potential: ${Math.round(na.v)} mV`,
+    w - 18 * u,
+    24 * u,
+    sodiumNamed * P.field,
+    12.5,
+    'right',
+    mix(FIELD, L.ink, 0.25)
+  );
+  // the ligand-gated channel
+  const ligandNamed = shown * P.onLigand;
+  say(
+    g,
+    narrow ? 'ligand-gated channel' : 'a ligand-gated channel',
+    lx,
+    my - 52 * k,
+    ligandNamed * P.ligand,
+    12.5,
+    'center',
+    lgInk
+  );
+  tag(
+    g,
+    'ligand',
+    lx + side,
+    my - 44 * k,
+    lx + 7 * k,
+    my - 35 * k,
+    ligandNamed * P.ligand * (1 - P.binding) * smooth(lg.docked),
+    'left',
+    lgInk
+  );
+  tag(
+    g,
+    'binding site',
+    lx - side,
+    my - 44 * k,
+    lx - 7 * k,
+    my - 33 * k,
+    ligandNamed * P.ligand * (1 - P.binding),
+    'right',
+    lgInk
+  );
+  const ligandState = lg.numb > 0.5 ? 'desensitized' : lg.open > 0.5 ? 'open' : 'closed';
+  say(g, ligandState, lx + side, my + 4 * k, ligandNamed * P.ligand, 12.5, 'left', lgInk);
+
+  // the pump: named; its round's ions, out and in; the charge it carries out; and its ATP
+  const pumpShown = shown * P.onPump;
+  if (pumpShown > 0.01) {
+    const pumpInk = mix(L.ink, L.page, 0.1);
+    say(
+      g,
+      narrow ? 'Na^{+}–K^{+} pump' : 'the sodium–potassium pump',
+      px,
+      my - 32 * k,
+      pumpShown * P.pumpNamed,
+      12.5,
+      'center',
+      pumpInk
+    );
+    const [naInk, kInk] = [mix(IONS.Na.colour, L.ink, 0.3), mix(IONS.K.colour, L.ink, 0.3)];
+    const lw = Math.max(1.8, 0.5 * k);
+    arrow(
+      ctx,
+      px - 27 * k,
+      my + 13 * k,
+      px - 27 * k,
+      my - 15 * k,
+      IONS.Na.colour,
+      0.8 * pumpShown * P.pumping,
+      lw,
+      3 * k
+    );
+    say(
+      g,
+      narrow ? '3 Na^{+}' : '3 Na^{+} out',
+      px - 30 * k,
+      my - 19 * k,
+      pumpShown * P.pumping,
+      12,
+      'right',
+      naInk
+    );
+    arrow(
+      ctx,
+      px + 27 * k,
+      my - 15 * k,
+      px + 27 * k,
+      my + 13 * k,
+      IONS.K.colour,
+      0.8 * pumpShown * P.pumping,
+      lw,
+      3 * k
+    );
+    say(
+      g,
+      narrow ? '2 K^{+}' : '2 K^{+} in',
+      px + 30 * k,
+      my - 19 * k,
+      pumpShown * P.pumping,
+      12,
+      'left',
+      kInk
+    );
+    say(
+      g,
+      narrow ? 'net: one + out' : 'net: one positive charge out each round',
+      px,
+      my - 41 * k,
+      pumpShown * P.netCharge,
+      12,
+      'center',
+      mix(POS, L.ink, 0.3)
+    );
+    say(
+      g,
+      narrow ? 'one ATP a round' : 'one ATP each round',
+      px + 37 * k,
+      my + 43 * k,
+      pumpShown * P.atpCost,
+      12,
+      'left',
+      mix(ATP_COLOUR, L.ink, 0.3)
+    );
+    for (const [wide, short, alpha] of [
+      [
+        'the sodium–potassium pump: a protein using the energy of ATP to move ions against their gradients',
+        'a pump, run on ATP',
+        P.pumpNamed * (1 - P.pumping),
+      ],
+      [
+        'each round: three Na^{+} out, two K^{+} in, using one ATP',
+        '3 Na^{+} out, 2 K^{+} in',
+        P.pumping * (1 - P.netCharge),
+      ],
+      [
+        'one more positive charge out than in, each round: the inside a few millivolts more negative',
+        'net: one + out a round',
+        P.netCharge * (1 - P.atpCost),
+      ],
+      [
+        'pumping the ions back uses a large share of the brain’s energy',
+        'a large share of the brain’s energy',
+        P.atpCost,
+      ],
+    ] as [string, string, number][])
+      footNote(g, narrow ? short : wide, pumpShown * alpha);
+  }
+
+  // the words at the foot, as each slide comes to them
+  const sodiumFoot = shown * (1 - P.onLigand);
+  for (const [wide, short, alpha] of [
+    [
+      'an ion channel: a protein through the membrane, a pore through its middle',
+      'a protein, with a pore',
+      sodiumFoot * P.protein * (1 - P.swing) * (1 - P.sensors),
+    ],
+    [
+      'its gate: shut, no ions pass; open, they flow through',
+      'shut, none pass; open, they flow',
+      sodiumFoot * P.swing * (1 - P.sensors),
+    ],
+    [
+      'voltage sensors: parts of the protein, in the membrane, carrying positive charges',
+      'voltage sensors: positively charged',
+      sodiumFoot * P.sensors * (1 - P.field),
+    ],
+    [
+      'at rest, the field across the membrane pushes the sensors in, and the gate stays shut',
+      'at rest, the field pushes them in',
+      sodiumFoot * P.field * (1 - P.stepV),
+    ],
+    [
+      'the potential up: less charge lining the membrane, a weaker field, and the sensors move out',
+      'potential up: weaker field, sensors out',
+      sodiumFoot * P.stepV * (1 - P.act),
+    ],
+    [
+      'activation: the sensors pull the gate open, and sodium flows in',
+      'activation: open, sodium in',
+      sodiumFoot * P.act * (1 - P.deact),
+    ],
+    [
+      'deactivation: the potential back down, the sensors pushed back in, and the gate shut',
+      'deactivation: shut again',
+      sodiumFoot * P.deact * (1 - P.lid),
+    ],
+    [
+      'a second gate: the inactivation gate, a loop of the protein inside the cell',
+      'the inactivation gate',
+      sodiumFoot * P.lid * (1 - P.inact),
+    ],
+    [
+      'inactivation: soon after it opens, the second gate plugs the pore, while the potential stays up',
+      'inactivation: plugged',
+      sodiumFoot * P.inact * (1 - P.recov),
+    ],
+    [
+      'recovery: back at rest, the plug comes out again, slowly',
+      'recovery: slowly',
+      sodiumFoot * P.recov * (1 - P.twice) * (1 - P.ligand),
+    ],
+    [
+      'too soon, a second rise finds it still plugged: no sodium flows',
+      'too soon: still plugged',
+      sodiumFoot * P.twice * (1 - P.ligand),
+    ],
+    [
+      'ligand-gated: it opens when its ligand binds',
+      'opens when its ligand binds',
+      shown * P.onLigand * P.ligand * (1 - P.binding),
+    ],
+    [
+      'the ligand bound, the gate opens: activation; the ligand gone, it shuts: deactivation',
+      'bound, open; gone, shut',
+      shown * P.onLigand * P.binding * (1 - P.desen),
+    ],
+    [
+      'desensitization: shut, though the ligand is still bound',
+      'desensitized: shut, still bound',
+      shown * P.onLigand * P.desen,
+    ],
+    [
+      'closed, open, and inactivated or desensitized: the states an active channel moves between',
+      'closed, open, inactivated',
+      sodiumFoot * P.states * (1 - P.flicker),
+    ],
+    [
+      'one channel: open or shut at random, open more often while the potential is up',
+      'one channel: at random',
+      sodiumFoot * P.flicker * (1 - P.many),
+    ],
+    [
+      'many channels together: the share of them open rises and falls smoothly',
+      'many together: smooth',
+      sodiumFoot * P.many,
+    ],
+  ] as [string, string, number][])
+    footNote(g, narrow ? short : wide, alpha);
+}
+
+/**
+ * Below the active channel close in, a plot of its round, slowed far down, a dot where it has got to: the membrane
+ * potential, stepped up and back — or, for the ligand-gated channel, how bound its ligand is — and, under it, how far out
+ * the voltage sensors are, then how open the channel is, each part of that named as the slides come to it, the time it
+ * is inactivated or desensitized shaded; then that one channel, opening at random, and with it, faint, a few more such
+ * channels and, bold, the share of 120 of them open. And, on the slide about its states, in the plot's place, the states
+ * such a channel moves between, the one it is in lit.
+ */
+function drawGating(g: G, P: Pose, narrow: boolean, ms: number) {
+  const { ctx, w, h, L, u } = g;
+  const a = P.plot;
+  const s = Math.max(u, 0.85);
+  const [left, right] = [14, w - 14];
+  const top = h - 36 * u - 96 * s;
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.roundRect(left, top, right - left, 92 * s, 10 * s);
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fill();
+  ctx.strokeStyle = rgba(L.ink, 0.12);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  const traces = a * (1 - P.states);
+  const lig = P.onLigand;
+  if (traces > 0.01) {
+    const names = narrow ? 0 : 150 * s;
+    const [x0, x1] = [left + 18 * s + names, right - 18 * s];
+    const X = (t: number) => lerp(x0, x1, t / ACT_MS);
+    // the two rows, each [foot, top]
+    const rows: [number, number][] = [
+      [top + 38 * s, top + 16 * s],
+      [top + 82 * s, top + 52 * s],
+    ];
+    const Y = (row: number, v: number) => lerp(rows[row][0], rows[row][1], v);
+    const line = (
+      row: number,
+      f: (t: number) => number,
+      colour: RGB,
+      alpha: number,
+      width: number
+    ) => {
+      if (alpha < 0.01) return;
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = rgba(colour, 1);
+      ctx.lineWidth = width;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let i = 0; i <= 600; i++) {
+        const t = (i / 600) * ACT_MS;
+        if (i) ctx.lineTo(X(t), Y(row, f(t)));
+        else ctx.moveTo(X(t), Y(row, f(t)));
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    };
+    // where in the round a channel is in some state — plugged, or desensitized — shaded on the lower row
+    const shade = (inState: (t: number) => boolean, colour: RGB, alpha: number) => {
+      if (alpha < 0.01) return [] as [number, number][];
+      const spans: [number, number][] = [];
+      let from = -1;
+      for (let i = 0; i <= 300; i++) {
+        const t = (i / 300) * ACT_MS;
+        const on = i < 300 && inState(t);
+        if (on && from < 0) from = t;
+        if (!on && from >= 0) {
+          spans.push([from, t]);
+          from = -1;
+        }
+      }
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = rgba(colour, 0.13);
+      for (const [t0, t1] of spans)
+        ctx.fillRect(X(t0), rows[1][1] - 4 * s, X(t1) - X(t0), rows[1][0] - rows[1][1] + 8 * s);
+      ctx.globalAlpha = 1;
+      return spans;
+    };
+    const naInk = mix(IONS.Na.colour, L.ink, 0.3);
+    const lgInk = mix(TRANSMITTER, L.ink, 0.3);
+    const stim = mix(L.ink, L.page, 0.25);
+    // the voltage-gated channel's: the membrane potential, and how far out its sensors are, then how open it is
+    const vg = traces * clamp01(1 - 2 * lig);
+    const plugged = shade(
+      (t) => activeSodium(P, t).lid > 0.5,
+      IONS.Na.colour,
+      vg * P.inact * (1 - P.flicker)
+    );
+    const rise = (t: number) => (activeSodium(P, t).v - V_REST) / (V_STEPPED - V_REST);
+    line(0, rise, stim, 0.75 * vg, 1.6 * s);
+    const lower = (t: number) => {
+      const na = activeSodium(P, t);
+      return lerp(lerp(na.sensors, na.open, P.act), shareOpenAt(t), P.many);
+    };
+    for (let n = 1; n <= 6; n++)
+      line(1, (t) => oneOpenAt(n, t), IONS.Na.colour, 0.16 * vg * P.many, 1);
+    line(1, lower, IONS.Na.colour, vg, 2 * s);
+    // the ligand-gated channel's: how bound its ligand is, and how open it is
+    const lgShown = traces * clamp01(2 * lig - 1);
+    const numbed = shade((t) => activeLigand(P, t).numb > 0.5, GREY, lgShown * P.desen);
+    line(0, (t) => activeLigand(P, t).docked, stim, 0.75 * lgShown, 1.6 * s);
+    line(1, (t) => activeLigand(P, t).open, TRANSMITTER, lgShown, 2 * s);
+    // the dots, where the round has got to
+    const dot = (x: number, yy: number, alpha: number) => {
+      if (alpha < 0.01) return;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = rgba(L.ink, 0.85);
+      ctx.beginPath();
+      ctx.arc(x, yy, 3.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    };
+    dot(X(ms), Y(0, rise(ms)), vg);
+    dot(X(ms), Y(1, lower(ms)), vg);
+    dot(X(ms), Y(0, activeLigand(P, ms).docked), lgShown);
+    dot(X(ms), Y(1, activeLigand(P, ms).open), lgShown);
+    // the rows' names, on the left — or, on a narrow screen, over each row
+    const [nx, align] = narrow ? [x0, 'left' as const] : [left + 16 * s, 'left' as const];
+    const nameAt = (row: number) =>
+      narrow ? rows[row][1] - 8 * s : (rows[row][0] + rows[row][1]) / 2;
+    const name = (text: string, row: number, alpha: number, colour: RGB) =>
+      say(g, text, nx, nameAt(row), alpha, narrow ? 10.5 : 11.5, align, colour);
+    name('membrane potential', 0, vg, stim);
+    say(
+      g,
+      `${Math.round(activeSodium(P, ms).v)} mV`,
+      X(ms) + 7 * s,
+      Y(0, rise(ms)) - 7 * s,
+      vg,
+      10.5,
+      'left',
+      stim
+    );
+    name('voltage sensors: out', 1, vg * (1 - P.act), naInk);
+    name('channel open', 1, vg * P.act * (1 - P.flicker), naInk);
+    name(
+      narrow ? 'one channel open' : 'this one channel open',
+      1,
+      vg * P.flicker * (1 - P.many),
+      naInk
+    );
+    name(narrow ? 'share open' : 'share of 120 open', 1, vg * P.many, naInk);
+    name('ligand bound', 0, lgShown, stim);
+    name('channel open', 1, lgShown, lgInk);
+    // each part of the response named, as the slides come to it
+    const [on, off] = V_STEPS[0];
+    const mid = (rows[1][0] + rows[1][1]) / 2;
+    say(g, 'activation', X(on) - 5 * s, mid, vg * P.act * (1 - P.flicker), 11, 'right', naInk);
+    say(g, 'deactivation', X(off) + 5 * s, mid, vg * P.deact * (1 - P.inact), 11, 'left', naInk);
+    for (const [t0, t1] of plugged) {
+      const alpha = vg * P.inact * (1 - P.flicker);
+      say(
+        g,
+        'inactivated',
+        (X(t0) + X(Math.min(t1, off))) / 2,
+        rows[1][1] + 6 * s,
+        alpha * (1 - P.twice * Number(t0 > off)),
+        11,
+        'center',
+        naInk
+      );
+      if (t1 > off) say(g, 'recovered', X(t1) + 5 * s, mid, alpha * P.recov, 11, 'left', naInk);
+    }
+    say(
+      g,
+      narrow ? 'too soon' : 'too soon: still plugged',
+      X(V_STEPS[1][0]) + 5 * s,
+      rows[0][1] + 2 * s,
+      vg * P.twice,
+      11,
+      'left',
+      naInk
+    );
+    say(
+      g,
+      narrow ? 'at random' : 'open and shut at random',
+      X(off) + 5 * s,
+      mid,
+      vg * P.flicker * (1 - P.many),
+      11,
+      'left',
+      naInk
+    );
+    say(
+      g,
+      narrow ? 'smooth' : 'together: smooth',
+      X(off) + 5 * s,
+      mid,
+      vg * P.many,
+      11,
+      'left',
+      naInk
+    );
+    const [bound, unbound] = BOUND[0];
+    say(g, 'activation', X(bound + 200) - 5 * s, mid, lgShown * P.binding, 11, 'right', lgInk);
+    say(
+      g,
+      'deactivation',
+      X(unbound) + 5 * s,
+      mid,
+      lgShown * P.binding * (1 - P.desen),
+      11,
+      'left',
+      lgInk
+    );
+    for (const [t0, t1] of numbed)
+      say(
+        g,
+        'desensitized',
+        (X(t0) + X(t1)) / 2,
+        rows[1][1] + 6 * s,
+        lgShown * P.desen,
+        11,
+        'center',
+        lgInk
+      );
+    say(g, 'slowed down', right - 14 * s, top + 11 * s, 0.6 * traces, 10.5, 'right', stim);
+  }
+  // the states, in the plot's place: closed, open, and inactivated or desensitized, and the ways between them — the one
+  // the sodium channel is in lit
+  const st = a * P.states;
+  if (st < 0.01) return;
+  const width = right - left;
+  const boxes: [string, number][] = [
+    ['closed', left + 0.18 * width],
+    ['open', left + 0.5 * width],
+    [narrow ? 'inactivated' : 'inactivated or desensitized', left + 0.82 * width],
+  ];
+  const now = activeSodium(P, ms);
+  const lit = [Math.max(0, 1 - now.open - now.lid), now.open, now.lid];
+  const [by, bh] = [top + 18 * s, 22 * s];
+  const half = (text: string) => mathWidth(ctx, text, 12.5 * g.ts) / 2 + 12 * s;
+  boxes.forEach(([text, x], i) => {
+    ctx.globalAlpha = st;
+    ctx.beginPath();
+    ctx.roundRect(x - half(text), by, 2 * half(text), bh, 8 * s);
+    ctx.fillStyle = rgba(IONS.Na.colour, 0.16 * lit[i]);
+    ctx.fill();
+    ctx.strokeStyle = rgba(mix(L.ink, IONS.Na.colour, 0.6 * lit[i]), 0.5 + 0.4 * lit[i]);
+    ctx.lineWidth = 1.2 + 0.8 * lit[i];
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    say(g, text, x, by + bh / 2, st, 12.5, 'center');
+  });
+  const edge = (i: number, sign: number) => boxes[i][1] + sign * half(boxes[i][0]);
+  const ink = mix(L.ink, L.page, 0.2);
+  // closed to open, and back
+  arrow(
+    ctx,
+    edge(0, 1) + 4 * s,
+    by + 6 * s,
+    edge(1, -1) - 4 * s,
+    by + 6 * s,
+    ink,
+    0.75 * st,
+    1.4,
+    6 * s
+  );
+  arrow(
+    ctx,
+    edge(1, -1) - 4 * s,
+    by + 16 * s,
+    edge(0, 1) + 4 * s,
+    by + 16 * s,
+    ink,
+    0.75 * st,
+    1.4,
+    6 * s
+  );
+  const between = (edge(0, 1) + edge(1, -1)) / 2;
+  say(g, 'activation', between, by - 6 * s, st, 11, 'center');
+  say(g, 'deactivation', between, by + bh + 8 * s, st, 11, 'center');
+  // open to inactivated
+  arrow(
+    ctx,
+    edge(1, 1) + 4 * s,
+    by + bh / 2,
+    edge(2, -1) - 4 * s,
+    by + bh / 2,
+    ink,
+    0.75 * st,
+    1.4,
+    6 * s
+  );
+  say(
+    g,
+    narrow ? 'inactivation' : 'inactivation, or desensitization',
+    (edge(1, 1) + edge(2, -1)) / 2,
+    by - 6 * s,
+    st,
+    11,
+    'center'
+  );
+  // and, slowly, back to closed: recovery
+  const ry = by + bh + 26 * s;
+  ctx.globalAlpha = 0.75 * st;
+  ctx.strokeStyle = rgba(ink, 1);
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(boxes[2][1], by + bh + 4 * s);
+  ctx.lineTo(boxes[2][1], ry);
+  ctx.lineTo(boxes[0][1], ry);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  arrow(ctx, boxes[0][1], ry, boxes[0][1], by + bh + 4 * s, ink, 0.75 * st, 1.4, 6 * s);
+  say(g, 'recovery, slowly', (boxes[0][1] + boxes[2][1]) / 2, ry + 9 * s, st, 11, 'center');
+}
+
+/** Each voltage-clamp step's peak current: when in the step, ms, and how much, as on the curve. */
+const IV_PEAKS = IV_STEPS.map((V) => {
+  let [t, i] = [0, 0];
+  for (let s = 0; s <= IV_WINDOW; s += 0.01) {
+    const now = currentAfter(V, s);
+    if (Math.abs(now) > Math.abs(i)) [t, i] = [s, now];
+  }
+  return { t, i };
+});
+/** A potential as the slides write it: a sign, then the millivolts. */
+const mvSigned = (v: number) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(Math.round(v))} mV`;
+
+/**
+ * In front of the active channels close in, from the slide about a voltage clamp: on the left, the clamp's seven steps
+ * from rest, and under them the current through the sodium channels at each — inward down — one after another picked
+ * out; on the right, from the next slide, each step's peak current plotted against its potential, and the curve
+ * through them; a constant conductance's straight line through the reversal potential; above the curve, the share of
+ * channels open at each potential, a cursor running across both; and the reversal potential marked where the curve
+ * crosses zero. On a narrow screen the clamp is above the curve, and the share open comes in its place.
+ */
+function drawIV(g: G, P: Pose, narrow: boolean) {
+  const { ctx, w, h, L, u } = g;
+  const a = P.ivPanel;
+  const s = Math.max(u, 0.85);
+  ctx.globalAlpha = a;
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 1;
+  const ink = mix(L.ink, L.page, 0.12);
+  const faint = mix(L.ink, L.page, 0.5);
+  const naInk = mix(IONS.Na.colour, L.ink, 0.3);
+  const [top, bottom] = [30 * s, h - 46 * u];
+  const [left, right] = [16 * s, w - 16 * s];
+  // which step is picked out, one after another
+  const lit = g.still ? 2 : Math.floor(g.now / 1100) % IV_STEPS.length;
+  type Box = { x0: number; x1: number; y0: number; y1: number };
+  let clampBox: Box;
+  let ivBox: Box;
+  let gvBox: Box;
+  if (narrow) {
+    const split = lerp(top, bottom, 0.44);
+    clampBox = { x0: left + 30 * s, x1: right - 44 * s, y0: top, y1: split - 20 * s };
+    gvBox = { x0: left + 30 * s, x1: right - 10 * s, y0: top + 12 * s, y1: split - 26 * s };
+    ivBox = { x0: left + 30 * s, x1: right - 10 * s, y0: split + 6 * s, y1: bottom };
+  } else {
+    const mid = lerp(left, right, 0.44);
+    clampBox = { x0: left + 52 * s, x1: mid - 56 * s, y0: top, y1: bottom };
+    const gvTall = (bottom - top) * 0.34 * P.ivBends;
+    gvBox = { x0: mid + 40 * s, x1: right - 10 * s, y0: top + 12 * s, y1: top + gvTall - 26 * s };
+    ivBox = { x0: mid + 40 * s, x1: right - 10 * s, y0: top + gvTall, y1: bottom };
+  }
+  const line = (
+    pts: [number, number][],
+    colour: RGB,
+    alpha: number,
+    width: number,
+    dash: number[] = []
+  ) => {
+    if (alpha < 0.01 || pts.length < 2) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = rgba(colour, 1);
+    ctx.lineWidth = width;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    pts.forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
+    ctx.restore();
+  };
+  // a mark on a plot: a dot in its step's colour, ringed in the page
+  const dot = (x: number, y: number, r: number, colour: RGB, alpha: number) => {
+    if (alpha < 0.01) return;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    ctx.arc(x, y, r + 2, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(L.page, 1);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = rgba(colour, 1);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+
+  // the voltage clamp: the steps, and under them the currents
+  const clamp = a * (narrow ? 1 - P.ivBends : 1);
+  if (clamp > 0.01) {
+    const { x0, x1, y0, y1 } = clampBox;
+    const protoBottom = lerp(y0 + 14 * s, y1, 0.3);
+    const [cTop, cBottom] = [protoBottom + 34 * s, y1 - 18 * s];
+    const X = (t: number) => lerp(x0, x1, (t + 0.5) / (IV_WINDOW + 0.5));
+    const Vy = (v: number) => lerp(protoBottom, y0 + 14 * s, (v + 80) / 180);
+    const Iy = (i: number) => lerp(cBottom, cTop, (i + 1.08) / 1.78);
+    say(
+      g,
+      narrow ? 'potential, stepped' : 'the membrane potential, stepped from rest',
+      x0,
+      y0,
+      clamp,
+      11.5,
+      'left',
+      ink
+    );
+    IV_STEPS.forEach((V, j) => {
+      const on = j === lit;
+      line(
+        [
+          [X(-0.5), Vy(V_REST)],
+          [X(0), Vy(V_REST)],
+          [X(0), Vy(V)],
+          [X(IV_WINDOW), Vy(V)],
+        ],
+        stepColour(L, j),
+        clamp * (on ? 1 : 0.55),
+        (on ? 2.4 : 1.4) * s
+      );
+      say(g, mvSigned(V), x1 + 6 * s, Vy(V), clamp * (on ? 1 : 0.6), 10, 'left', ink);
+    });
+    say(
+      g,
+      narrow ? 'current' : 'the current through the channels',
+      x0,
+      cTop - 18 * s,
+      clamp,
+      11.5,
+      'left',
+      ink
+    );
+    line(
+      [
+        [X(-0.5), Iy(0)],
+        [X(IV_WINDOW), Iy(0)],
+      ],
+      faint,
+      0.7 * clamp,
+      1,
+      [3, 4]
+    );
+    say(g, narrow ? 'out' : 'outward', x0 - 8 * s, Iy(0.32), 0.8 * clamp, 10, 'right', faint);
+    say(g, narrow ? 'in' : 'inward', x0 - 8 * s, Iy(-0.55), 0.8 * clamp, 10, 'right', faint);
+    // the picked-out step last, over the others
+    for (const j of [...IV_STEPS.keys()].filter((n) => n !== lit).concat(lit)) {
+      const pts: [number, number][] = [];
+      for (let t = -0.5; t <= IV_WINDOW + 1e-6; t += 0.025)
+        pts.push([X(t), Iy(t < 0 ? 0 : currentAfter(IV_STEPS[j], t))]);
+      line(pts, stepColour(L, j), clamp * (j === lit ? 1 : 0.55), (j === lit ? 2.4 : 1.4) * s);
+    }
+    // each one's peak, from the slide that plots them
+    IV_PEAKS.forEach(({ t, i }, j) =>
+      dot(
+        X(t),
+        Iy(i),
+        (j === lit ? 5 : 3.8) * s,
+        stepColour(L, j),
+        clamp * clamp01(P.ivPeaks * IV_STEPS.length - j)
+      )
+    );
+    for (let t = 0; t <= IV_WINDOW; t++)
+      say(g, `${t}`, X(t), cBottom + 12 * s, 0.85 * clamp, 10, 'center', faint);
+    say(g, 'ms', X(IV_WINDOW) + 10 * s, cBottom + 12 * s, 0.85 * clamp, 10, 'left', faint);
+  }
+
+  // the I–V curve: each step's peak current against its potential
+  const iv = a * P.ivPeaks;
+  const { x0, x1, y0, y1 } = ivBox;
+  const VX = (v: number) => lerp(x0, x1, (v + 90) / 190);
+  const IY = (i: number) => lerp(y1, y0 + 16 * s, (i + 1.12) / 2.04);
+  if (iv > 0.01) {
+    say(
+      g,
+      narrow ? 'peak current' : 'the peak current at each potential',
+      x0,
+      y0,
+      iv,
+      11.5,
+      'left',
+      ink
+    );
+    line(
+      [
+        [x0, IY(0)],
+        [x1, IY(0)],
+      ],
+      faint,
+      0.8 * iv,
+      1
+    );
+    line(
+      [
+        [VX(0), y0 + 16 * s],
+        [VX(0), y1],
+      ],
+      faint,
+      0.8 * iv,
+      1
+    );
+    for (const v of [-80, -40, 40, 80]) {
+      line(
+        [
+          [VX(v), IY(0) - 3 * s],
+          [VX(v), IY(0) + 3 * s],
+        ],
+        faint,
+        0.8 * iv,
+        1
+      );
+      say(g, mvSigned(v).replace(' mV', ''), VX(v), IY(0) - 10 * s, 0.85 * iv, 10, 'center', faint);
+    }
+    say(
+      g,
+      narrow ? 'mV' : 'membrane potential, mV',
+      x1,
+      IY(0) + 16 * s,
+      0.85 * iv,
+      10,
+      'right',
+      faint
+    );
+    say(g, narrow ? 'out' : 'outward', VX(0) + 6 * s, y0 + 24 * s, 0.8 * iv, 10, 'left', faint);
+    say(g, narrow ? 'in' : 'inward', VX(0) + 6 * s, y1 - 4 * s, 0.8 * iv, 10, 'left', faint);
+    // a constant conductance's straight line, through the reversal potential, from the slide about it
+    const [vLow, vHigh] = [
+      EQUILIBRIUM.Na - 1.12 * IV_CURVE.largest,
+      EQUILIBRIUM.Na + 0.62 * IV_CURVE.largest,
+    ];
+    line(
+      [
+        [VX(vLow), IY(-1.12)],
+        [VX(vHigh), IY(0.62)],
+      ],
+      ink,
+      0.75 * iv * P.ivLine,
+      1.6 * s,
+      [6, 5]
+    );
+    say(
+      g,
+      narrow ? 'constant: straight' : 'a constant conductance: a straight line',
+      VX(vLow) + 10 * s,
+      IY(-1.04),
+      iv * P.ivLine,
+      11,
+      'left',
+      ink
+    );
+    // the curve, drawn on as the dots come
+    const reach = lerp(-90, 100, clamp01(P.ivPeaks * 1.15));
+    line(
+      IV_CURVE.points
+        .filter((p) => p.v <= reach && p.i <= 0.92)
+        .map((p): [number, number] => [VX(p.v), IY(p.i)]),
+      IONS.Na.colour,
+      iv,
+      2 * s
+    );
+    IV_STEPS.forEach((V, j) =>
+      dot(
+        VX(V),
+        IY(ivAt(V).i),
+        (j === lit ? 5.5 : 4.2) * s,
+        stepColour(L, j),
+        iv * clamp01(P.ivPeaks * IV_STEPS.length - j)
+      )
+    );
+    // the reversal potential, where the curve crosses zero
+    const rev = iv * P.ivReverse;
+    if (rev > 0.01) {
+      ctx.globalAlpha = rev;
+      ctx.strokeStyle = rgba(IONS.Na.colour, 1);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(VX(EQUILIBRIUM.Na), IY(0), 8 * s, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      say(
+        g,
+        narrow
+          ? `E_{Na}: ${mvSigned(EQUILIBRIUM.Na)}`
+          : `E_{Na} ≈ ${mvSigned(EQUILIBRIUM.Na)}: no current`,
+        VX(EQUILIBRIUM.Na) - 12 * s,
+        IY(0) - 22 * s,
+        rev,
+        11.5,
+        'right',
+        naInk
+      );
+    }
+  }
+
+  // the share of channels open at each potential, from the slide about why the curve bends — and a cursor across both
+  const gv = a * P.ivBends;
+  if (gv > 0.01) {
+    const { x0: gx0, x1: gx1, y0: gy0, y1: gy1 } = gvBox;
+    const GX = (v: number) => lerp(gx0, gx1, (v + 90) / 190);
+    const GY = (share: number) => lerp(gy1, gy0 + 14 * s, share);
+    say(
+      g,
+      narrow ? 'share open' : 'the share of channels open, at the peak',
+      gx0,
+      gy0,
+      gv,
+      11.5,
+      'left',
+      ink
+    );
+    line(
+      [
+        [gx0, GY(0)],
+        [gx1, GY(0)],
+      ],
+      faint,
+      0.8 * gv,
+      1
+    );
+    line(
+      [
+        [gx0, GY(1)],
+        [gx1, GY(1)],
+      ],
+      faint,
+      0.4 * gv,
+      1,
+      [3, 4]
+    );
+    say(g, 'all', gx0 - 6 * s, GY(1), 0.8 * gv, 10, 'right', faint);
+    say(g, 'none', gx0 - 6 * s, GY(0), 0.8 * gv, 10, 'right', faint);
+    line(
+      IV_CURVE.points.map((p): [number, number] => [GX(p.v), GY(p.g)]),
+      IONS.Na.colour,
+      gv,
+      2 * s
+    );
+    IV_STEPS.forEach((V, j) =>
+      dot(GX(V), GY(ivAt(V).g), (j === lit ? 5.5 : 4.2) * s, stepColour(L, j), gv)
+    );
+    // the cursor: at each potential in turn, the share open, and the current it passes there
+    const vc = g.still ? 0 : -90 + 190 * cycle(g.now, 6000);
+    const at = ivAt(vc);
+    line(
+      [
+        [GX(vc), gy0 + 14 * s],
+        [GX(vc), GY(0)],
+      ],
+      faint,
+      0.7 * gv,
+      1
+    );
+    if (!narrow)
+      line(
+        [
+          [VX(vc), y0 + 16 * s],
+          [VX(vc), y1],
+        ],
+        faint,
+        0.7 * gv,
+        1
+      );
+    dot(GX(vc), GY(at.g), 3.6 * s, L.ink, gv);
+    dot(VX(vc), IY(at.i), 3.6 * s, L.ink, gv);
+    if (!narrow)
+      say(
+        g,
+        `${Math.round(100 * at.g)}% open × driving force ${mvSigned(vc - EQUILIBRIUM.Na)}`,
+        VX(vc) + (vc > 20 ? -8 : 8) * s,
+        // (above the dot near the curve's trough, clear of the straight line's name)
+        IY(at.i) + (at.i < -0.45 ? -16 : 18) * s,
+        gv,
+        10.5,
+        vc > 20 ? 'right' : 'left',
+        ink
+      );
+  }
+
+  // the words at the foot, as each slide comes to them
+  for (const [wide, short, alpha] of [
+    [
+      "a voltage clamp: the potential held at each level in turn, and the current recorded — Hodgkin and Huxley's sodium channels",
+      'a voltage clamp',
+      1 - P.ivPeaks,
+    ],
+    [
+      "each step's peak current against its potential: the I–V curve, inward current down",
+      'the I–V curve',
+      P.ivPeaks * (1 - P.ivLine),
+    ],
+    [
+      'a constant conductance would give a straight line through the reversal potential: Ohm’s law',
+      'constant conductance: straight',
+      P.ivLine * (1 - P.ivBends),
+    ],
+    [
+      'the current is the share of channels open times the driving force, V − E_{Na}',
+      'share open × driving force',
+      P.ivBends * (1 - P.ivReverse),
+    ],
+    [
+      "at sodium's reversal potential, no current: below it sodium flows in, above it out",
+      'E_{Na}: no current',
+      P.ivReverse,
+    ],
+  ] as [string, string, number][])
+    footNote(g, narrow ? short : wide, a * alpha);
+}
+
+/** Each input size's colour: one hue, the synapse's green, light to dark as it grows — dark to light on a dark page
+ * (each run checked: steps a reader can tell apart, the faintest clear of the page). */
+const sizeColour = (L: Look, j: number) =>
+  mix(
+    L.dark ? [22, 101, 52] : [92, 194, 130],
+    L.dark ? [134, 239, 172] : [22, 101, 52],
+    j / (AP_SIZES.length - 1)
+  );
+/** When in the one followed the spike rises past threshold, peaks, dips lowest, and is back near rest, ms; and how long
+ * after it a strong input fires nothing. */
+const AP_PHASES = (() => {
+  const v = AP_RUN.v;
+  let peak = 0;
+  for (let j = 0; j < 300; j++) if (v[j] > v[peak]) peak = j;
+  let low = peak;
+  for (let j = peak; j < 300; j++) if (v[j] < v[low]) low = j;
+  let rise = peak;
+  while (rise > 0 && v[rise] - v[rise - 1] > 0.4) rise--;
+  let back = low;
+  while (back < 299 && v[back] < V_REST - 1) back++;
+  return {
+    rise: rise / 10,
+    peak: peak / 10,
+    low: low / 10,
+    back: back / 10,
+    refractory: [peak / 10, 16],
+  };
+})();
+
+/**
+ * The action potential's own plots, in front of the membrane: across the top, the membrane potential through the run
+ * followed — four spikes, or, close in, the first — with sodium's and potassium's reversal potentials, rest and the
+ * threshold marked, a dot running along it; the inputs that start it; inputs short of threshold, and inputs of four
+ * sizes; then, under it, sodium's and potassium's conductances, and a strip of membrane whose channels open, shut and
+ * inactivate with the dot, ions through those open; the rise shaded, and the runaway that drives it; the peak; the
+ * fall, and the dip below rest; the refractory period, and a strong input in it firing nothing; and every part of the
+ * spike named together.
+ */
+function drawAP(g: G, P: Pose, narrow: boolean) {
+  const { ctx, w, h, L, u } = g;
+  const a = P.apPanel;
+  const s = Math.max(u, 0.85);
+  ctx.globalAlpha = a;
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fillRect(0, 0, w, h);
+  ctx.globalAlpha = 1;
+  const ink = mix(L.ink, L.page, 0.12);
+  const faint = mix(L.ink, L.page, 0.5);
+  const [naInk, kInk] = [mix(IONS.Na.colour, L.ink, 0.3), mix(IONS.K.colour, L.ink, 0.3)];
+  // the window, ms: a hundred, four spikes; or, close in, thirty, the first; and the dot, slowed far down
+  const tMax = lerp(100, 30, P.apZoom);
+  const tc = g.still ? AP_PHASES.peak : cycle(g.now, AP_MS) * tMax;
+  const single = P.apZoom;
+  // the rows: the potential across the top — all the room, until the conductances and the channels come under it
+  const [left, right] = [16 * s, w - 16 * s];
+  const [x0, x1] = [left + (narrow ? 46 : 84) * s, right - 12 * s];
+  const vTop = 34 * s;
+  const vBottom = lerp(h - 64 * u, lerp(vTop, h - 46 * u, 0.5), P.apGated);
+  const [gTop, gBottom] = [vBottom + 34 * s, lerp(vBottom, h - 46 * u, 0.42) + 26 * s];
+  const [sTop, sBottom] = [gBottom + 12 * s, h - 50 * u];
+  const TX = (t: number) => lerp(x0, x1, t / tMax);
+  const VY = (v: number) => lerp(vBottom, vTop + 8 * s, (v + 95) / 165);
+  const line = (
+    pts: [number, number][],
+    colour: RGB,
+    alpha: number,
+    width: number,
+    dash: number[] = []
+  ) => {
+    if (alpha < 0.01 || pts.length < 2) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = rgba(colour, 1);
+    ctx.lineWidth = width;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.setLineDash(dash);
+    ctx.beginPath();
+    pts.forEach(([x, y], j) => (j ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    ctx.stroke();
+    ctx.restore();
+  };
+  const trace = (series: number[], Y: (v: number) => number, from = 0, to = tMax) => {
+    const pts: [number, number][] = [];
+    for (let t = from; t <= Math.min(to, (series.length - 1) / 10); t += 0.1)
+      pts.push([TX(t), Y(runAt(series, t))]);
+    return pts;
+  };
+  const shade = (t0: number, t1: number, colour: RGB, alpha: number, y0 = vTop, y1 = vBottom) => {
+    if (alpha < 0.01) return;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = rgba(colour, 0.12);
+    ctx.fillRect(TX(t0), y0, TX(t1) - TX(t0), y1 - y0);
+    ctx.globalAlpha = 1;
+  };
+  const named = (
+    text: string,
+    x: number,
+    y: number,
+    alpha: number,
+    align: CanvasTextAlign,
+    colour: RGB,
+    size = 11.5
+  ) => say(g, text, x, y, a * alpha, size, align, colour);
+
+  // the phases, close in, shaded as the slides come to them: the rise, the fall, and the refractory period
+  const { rise, peak, low, back, refractory } = AP_PHASES;
+  shade(rise, peak, IONS.Na.colour, a * single * Math.max(P.apUp * (1 - P.apPeak), P.apSummary));
+  shade(peak, low, IONS.K.colour, a * single * Math.max(P.apDown * (1 - P.apRefract), P.apSummary));
+  shade(refractory[0], refractory[1], faint, a * single * P.apRefract * (1 - P.apSummary));
+
+  // the reversal potentials, rest and the threshold, each named at the left
+  const refs: [number, string, string, RGB, number, number[]][] = [
+    [EQUILIBRIUM.Na, `E_{Na} ${mvSigned(EQUILIBRIUM.Na)}`, 'E_{Na}', IONS.Na.colour, 1, [6, 5]],
+    [EQUILIBRIUM.K, `E_{K} ${mvSigned(EQUILIBRIUM.K)}`, 'E_{K}', IONS.K.colour, 1, [6, 5]],
+    [V_REST, `rest ${mvSigned(V_REST)}`, 'rest', faint, 1, []],
+    [THRESHOLD, `threshold ${mvSigned(THRESHOLD)}`, 'thresh.', ink, P.apThresh, [2, 4]],
+  ];
+  for (const [v, wide, short, colour, shown, dash] of refs) {
+    line(
+      [
+        [x0, VY(v)],
+        [x1, VY(v)],
+      ],
+      colour,
+      0.55 * a * shown,
+      1.2,
+      dash
+    );
+    named(
+      narrow ? short : wide,
+      x0 - 6 * s,
+      VY(v),
+      0.9 * shown,
+      'right',
+      mix(colour, L.ink, 0.3),
+      10.5
+    );
+  }
+  named(narrow ? 'potential' : 'the membrane potential', x0, vTop - 12 * s, 1, 'left', ink);
+  // the time, under the potential
+  const every = tMax > 60 ? 20 : 5;
+  for (let t = 0; t <= tMax + 1e-6; t += every)
+    named(`${t}`, TX(t), vBottom + 12 * s, 0.85, 'center', faint, 10);
+  named('ms', TX(tMax) + 10 * s, vBottom + 12 * s, 0.85, 'left', faint, 10);
+
+  // the inputs that start each spike, under it
+  const inputs = [...burstAt(3), ...burstAt(28), ...burstAt(53), ...burstAt(78)].map(([t0]) => t0);
+  for (const t0 of inputs) {
+    if (t0 > tMax) continue;
+    const x = TX(t0 + 0.8);
+    arrow(
+      ctx,
+      x,
+      VY(-93),
+      x,
+      VY(-80),
+      TRANSMITTER,
+      0.85 * a * P.apInputs * (1 - P.apSizes),
+      1.8 * s,
+      6 * s
+    );
+  }
+  named(
+    narrow ? 'inputs' : 'inputs from synapses',
+    TX(3.8) - 8 * s,
+    VY(-81),
+    P.apInputs * (1 - P.apSizes) * (1 - P.apGated),
+    'right',
+    mix(TRANSMITTER, L.ink, 0.3),
+    10.5
+  );
+  // the one followed — dimmed while the inputs of four sizes are shown
+  line(
+    trace(AP_RUN.v, VY),
+    ink,
+    a * (1 - 0.75 * P.apSizes) * (1 - 0.5 * P.apRefract * (1 - P.apSummary)),
+    2 * s
+  );
+  // the first two inputs alone: short of threshold, faded away
+  line(
+    trace(AP_SHORT.v, VY, 0, 30),
+    faint,
+    0.9 * a * single * P.apThresh * (1 - P.apSizes) * (1 - P.apGated),
+    1.6 * s,
+    [5, 4]
+  );
+  named(
+    narrow ? 'two inputs: no spike' : 'two inputs only: short of threshold',
+    TX(6.6),
+    VY(-48),
+    single * P.apThresh * (1 - P.apSizes) * (1 - P.apGated),
+    'left',
+    faint,
+    10.5
+  );
+  // one input of each of four sizes: all or nothing
+  AP_SIZES.forEach((run, j) => {
+    line(trace(run.v, VY, 0, 30), sizeColour(L, j), a * single * P.apSizes, (j ? 1.8 : 1.5) * s);
+    // (its arrow as long as the input is big)
+    const ax = TX(3.8) - (j - 1.5) * 5 * s;
+    const tall = 3 + 3.2 * Math.sqrt([6, 10, 18, 36][j]);
+    arrow(
+      ctx,
+      ax,
+      VY(-93),
+      ax,
+      VY(-93 + tall),
+      sizeColour(L, j),
+      a * single * P.apSizes,
+      1.6 * s,
+      5 * s
+    );
+  });
+  named(
+    narrow ? 'too small: none' : 'too small: no spike',
+    TX(7),
+    VY(-60),
+    single * P.apSizes,
+    'left',
+    mix(sizeColour(L, 0), L.ink, 0.4),
+    10.5
+  );
+  named(
+    narrow ? 'bigger: sooner' : 'bigger: the same spike, sooner',
+    TX(7.4),
+    VY(42),
+    single * P.apSizes,
+    'left',
+    mix(sizeColour(L, 3), L.ink, 0.2),
+    10.5
+  );
+  // a strong input too soon after the spike, in the refractory period: nothing
+  const late = a * single * P.apRefract * (1 - P.apSummary);
+  line(trace(AP_LATE.v, VY, 13.6, 30), mix(TRANSMITTER, L.ink, 0.25), late, 2 * s);
+  arrow(ctx, TX(14.8), VY(-93), TX(14.8), VY(-70), TRANSMITTER, late, 2.2 * s, 7 * s);
+  named(
+    narrow ? 'too soon: no spike' : 'a strong input too soon: no spike',
+    TX(15.6),
+    VY(-60),
+    P.apRefract * (1 - P.apSummary) * single,
+    'left',
+    mix(TRANSMITTER, L.ink, 0.3),
+    10.5
+  );
+  named(
+    narrow ? 'refractory' : 'refractory period',
+    TX((refractory[0] + refractory[1]) / 2),
+    vTop + 4 * s,
+    P.apRefract * (1 - P.apSummary) * single,
+    'center',
+    faint,
+    10.5
+  );
+  // the parts of the spike, each named as the slides come to it — and all of them, on the last
+  const upNamed = single * Math.max(P.apUp * (1 - P.apPeak), P.apSummary);
+  const peakNamed = single * Math.max(P.apPeak * (1 - P.apDown), P.apSummary);
+  const downNamed = single * Math.max(P.apDown * (1 - P.apRefract), P.apSummary);
+  named(
+    narrow ? 'rise: Na^{+} in' : 'rise: sodium rushes in',
+    TX(rise) - 6 * s,
+    VY(-10),
+    upNamed,
+    'right',
+    naInk
+  );
+  named(
+    narrow
+      ? `peak ${mvSigned(runAt(AP_RUN.v, peak))}`
+      : `peak, ${mvSigned(runAt(AP_RUN.v, peak))}: Na^{+} channels inactivate, K^{+} channels open`,
+    TX(peak) + 8 * s,
+    VY(runAt(AP_RUN.v, peak)) - 2 * s,
+    peakNamed,
+    'left',
+    ink
+  );
+  named(
+    narrow ? 'fall: K^{+} out' : 'fall: potassium flows out',
+    TX(peak + 0.9) + 8 * s,
+    VY(-20),
+    downNamed,
+    'left',
+    kInk
+  );
+  named(
+    narrow ? 'below rest' : 'a dip below rest',
+    TX(low) + 6 * s,
+    VY(runAt(AP_RUN.v, low)) + 13 * s,
+    downNamed,
+    'left',
+    kInk,
+    10.5
+  );
+  named(
+    narrow ? 'back to rest' : 'back to rest',
+    TX(back),
+    VY(V_REST) - 10 * s,
+    single * P.apSummary,
+    'left',
+    faint,
+    10.5
+  );
+  // the dot, where the run has got to
+  const vc = runAt(AP_RUN.v, tc);
+  ctx.globalAlpha = a * (1 - P.apSizes);
+  ctx.fillStyle = rgba(L.ink, 0.9);
+  ctx.beginPath();
+  ctx.arc(TX(tc), VY(vc), 4 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // the runaway that drives the rise: the potential up, sodium channels open, sodium in — round an ellipse wide enough
+  // for the words, the arrows between them on a smaller one — lit while the potential is rising
+  const loop = a * single * P.apUp * (1 - P.apPeak);
+  if (loop > 0.01) {
+    const lit = tc > rise - 0.4 && tc < peak + 0.1 ? 1 : 0.7;
+    const [rx, ry] = [(narrow ? 66 : 118) * s, (narrow ? 36 : 46) * s];
+    const [cx, cy] = [lerp(x0, x1, narrow ? 0.68 : 0.68), lerp(vTop, vBottom, 0.36)];
+    const around = (angle: number, f: number): [number, number] => [
+      cx + f * rx * Math.cos(angle),
+      cy + f * ry * Math.sin(angle),
+    ];
+    const nodes: [string, string, number][] = [
+      ['the potential rises', 'potential up', -Math.PI / 2],
+      ['more Na^{+} channels open', 'Na^{+} open', Math.PI / 6],
+      ['more Na^{+} flows in', 'Na^{+} in', (5 * Math.PI) / 6],
+    ];
+    for (const [wide, short, angle] of nodes)
+      say(g, narrow ? short : wide, ...around(angle, 1), loop * lit, 11.5, 'center', naInk);
+    // the arrows round between them, clockwise, on an ellipse inside the words
+    ctx.save();
+    ctx.globalAlpha = loop * lit;
+    ctx.strokeStyle = rgba(IONS.Na.colour, 0.9);
+    ctx.fillStyle = rgba(IONS.Na.colour, 0.9);
+    ctx.lineWidth = 1.8 * s;
+    for (let j = 0; j < 3; j++) {
+      const [from, to] = [
+        -Math.PI / 2 + (j * 2 * Math.PI) / 3 + 0.55,
+        -Math.PI / 2 + ((j + 1) * 2 * Math.PI) / 3 - 0.55,
+      ];
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, 0.62 * rx, 0.62 * ry, 0, from, to);
+      ctx.stroke();
+      // its head, along the ellipse at its end
+      const [hx, hy] = around(to, 0.62);
+      const [tx, ty] = [-0.62 * rx * Math.sin(to), 0.62 * ry * Math.cos(to)];
+      const len = Math.hypot(tx, ty);
+      const [ux, uy] = [tx / len, ty / len];
+      ctx.beginPath();
+      ctx.moveTo(hx + 6 * s * ux, hy + 6 * s * uy);
+      ctx.lineTo(hx - 3 * s * ux - 4 * s * uy, hy - 3 * s * uy + 4 * s * ux);
+      ctx.lineTo(hx - 3 * s * ux + 4 * s * uy, hy - 3 * s * uy - 4 * s * ux);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+    say(
+      g,
+      narrow ? 'a runaway' : 'a runaway: each makes the next',
+      cx,
+      cy + ry + 24 * s,
+      loop,
+      10.5,
+      'center',
+      faint
+    );
+  }
+
+  // under it, from the slide about the channels: sodium's and potassium's conductances
+  const gs = a * P.apGated;
+  if (gs > 0.01) {
+    const GY = (v: number) => lerp(gBottom, gTop + 6 * s, v / AP_MOST.Na);
+    named(
+      narrow ? 'conductance' : 'how open each kind of channel is: its conductance',
+      x0,
+      gTop - 10 * s,
+      P.apGated,
+      'left',
+      ink
+    );
+    line(
+      [
+        [x0, GY(0)],
+        [x1, GY(0)],
+      ],
+      faint,
+      0.8 * gs,
+      1
+    );
+    line(trace(AP_RUN.na, GY), IONS.Na.colour, gs, 2 * s);
+    line(trace(AP_RUN.k, GY), IONS.K.colour, gs, 2 * s);
+    const kPeak = AP_RUN.k.slice(0, 300).indexOf(Math.max(...AP_RUN.k.slice(0, 300))) / 10;
+    named(
+      'sodium',
+      TX(peak) - 6 * s,
+      GY(AP_MOST.Na * 0.82),
+      single * P.apGated,
+      'right',
+      naInk,
+      10.5
+    );
+    named(
+      'potassium',
+      TX(kPeak) + 8 * s,
+      GY(runAt(AP_RUN.k, kPeak)) - 6 * s,
+      single * P.apGated,
+      'left',
+      kInk,
+      10.5
+    );
+    // the dot's time, across both plots
+    line(
+      [
+        [TX(tc), vTop],
+        [TX(tc), gBottom],
+      ],
+      faint,
+      0.35 * gs,
+      1
+    );
+
+    // and a strip of membrane, its channels following the dot: four sodium channels and four potassium channels — two of
+    // each on a narrow screen — as many open as the conductance says, sodium's plugged as they inactivate, and ions
+    // through those open; each as big as the strip and the room between them allow
+    const count = narrow ? 4 : 8;
+    const k = Math.min((sBottom - sTop) / 64, (x1 - x0 - 52 * s) / count / 46);
+    const ym = (sTop + sBottom) / 2;
+    const xs = Array.from({ length: count }, (_, j) =>
+      lerp(x0 + 26 * s, x1 - 26 * s, (j + 0.5) / count)
+    );
+    const heads = new Path2D();
+    for (let x = x0 - 30 * s; x < x1 + 8 * s; x += 9 * k) {
+      if (xs.some((cx) => Math.abs(cx - x) < 17 * k)) continue;
+      for (const side of [-1, 1]) {
+        heads.moveTo(x + 3.6 * k, ym + side * 10 * k);
+        heads.arc(x, ym + side * 10 * k, 3.6 * k, 0, Math.PI * 2);
+      }
+    }
+    ctx.globalAlpha = gs;
+    ctx.fillStyle = rgba(headOf(L), 0.95);
+    ctx.fill(heads);
+    ctx.globalAlpha = 1;
+    named('outside', left, ym - 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
+    named('inside', left, ym + 22 * k, 0.75 * P.apGated, 'left', faint, 10.5);
+    const stateAt = (t: number, sodium: boolean, q: number) => {
+      const th = (q + 0.5) / 4;
+      const share = sodium ? runAt(AP_RUN.na, t) / AP_MOST.Na : runAt(AP_RUN.k, t) / AP_MOST.K;
+      const open = smooth(clamp01((share - th) * 6 + 0.5));
+      const plugged = sodium
+        ? (1 - open) * smooth(clamp01((1 - runAt(AP_RUN.h, t) / HH_REST.h - th) * 6 + 0.5))
+        : 0;
+      return { open, plugged };
+    };
+    xs.forEach((cx, j) => {
+      const sodium = j % 2 === 0;
+      // (its place among its kind, as a share of four, whatever the count)
+      const q = (Math.floor(j / 2) * 4) / (count / 2);
+      const { open, plugged } = stateAt(tc, sodium, q);
+      const colour = sodium ? IONS.Na.colour : IONS.K.colour;
+      // the ions through it while it is open: sodium down and in, potassium up and out
+      for (let e = Math.floor((tc - 0.9) / 0.3); e <= Math.floor(tc / 0.3); e++) {
+        const t0 = e * 0.3;
+        if (t0 < 0 || stateAt(t0, sodium, q).open < 0.5) continue;
+        const p = (tc - t0) / 0.9;
+        if (p < 0 || p > 1) continue;
+        const yy = ym + (sodium ? 1 : -1) * lerp(-30, 30, p) * k;
+        disc(g, cx, yy, 3.2 * k, colour, 1, gs * Math.min(1, 5 * p, 5 * (1 - p)));
+      }
+      // the channel, at the strip's scale: two halves round the pore, apart as far as it is open
+      ctx.globalAlpha = gs;
+      for (const side of [-1, 1]) {
+        ctx.beginPath();
+        ctx.roundRect(cx + side * (7 + 4 * open) * k - 6 * k, ym - 19 * k, 12 * k, 38 * k, 5 * k);
+        ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 0.98);
+        ctx.fill();
+        ctx.strokeStyle = rgba(colour, 0.85);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // sodium's second gate: hanging below, or swung up into the pore while inactivated
+      if (sodium) {
+        const [bx, by] = [lerp(cx - 8 * k, cx, plugged), lerp(ym + 30 * k, ym + 21 * k, plugged)];
+        ctx.globalAlpha = gs;
+        ctx.strokeStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 0.8);
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 9 * k, ym + 19 * k);
+        ctx.quadraticCurveTo(cx - 13 * k, ym + 26 * k, bx, by);
+        ctx.stroke();
+        ctx.fillStyle = rgba(mix(IONS.Na.colour, L.ink, 0.35), 1);
+        ctx.beginPath();
+        ctx.arc(bx, by, 3.8 * k, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    });
+  }
+
+  // the words at the foot, as each slide comes to them
+  for (const [wide, short, alpha] of [
+    ['spikes: brief pulses in the membrane potential, again and again', 'spikes', 1 - P.apZoom],
+    [
+      `close in: a rise of over 100 mV and a fall back, within a few ms — from Hodgkin and Huxley's model`,
+      'one spike, close in',
+      P.apZoom * (1 - P.apInputs),
+    ],
+    [
+      'each input from a synapse lifts the potential a little, and fades',
+      'inputs: a little each',
+      P.apInputs * (1 - P.apThresh),
+    ],
+    [
+      `past the threshold, about ${mvSigned(THRESHOLD)}, a spike fires; short of it, the inputs fade away`,
+      'past threshold: a spike',
+      P.apThresh * (1 - P.apSizes) * (1 - P.apGated),
+    ],
+    [
+      'all or nothing: a bigger input fires the same spike, only sooner',
+      'all or nothing',
+      P.apSizes,
+    ],
+    [
+      'the conductances, and the channels: as many open as the conductance says',
+      'the channels behind it',
+      P.apGated * (1 - P.apUp),
+    ],
+    [
+      'the rise: sodium channels open, sodium flows in, the potential rises, more open — a runaway',
+      'a runaway rise',
+      P.apUp * (1 - P.apPeak),
+    ],
+    [
+      'the peak: the sodium channels inactivate and the slower potassium channels open',
+      'peak: Na^{+} shut, K^{+} open',
+      P.apPeak * (1 - P.apDown),
+    ],
+    [
+      'the fall: potassium flows out, the potential dips below rest, and the potassium channels shut again',
+      'the fall: K^{+} out',
+      P.apDown * (1 - P.apRefract) * (1 - P.apSummary),
+    ],
+    [
+      'the refractory period: the sodium channels still plugged, even a strong input fires nothing',
+      'refractory: nothing fires',
+      P.apRefract * (1 - P.apSummary),
+    ],
+    [
+      'the action potential: up as sodium flows in, down as potassium flows out',
+      'up: Na^{+} in; down: K^{+} out',
+      P.apSummary,
+    ],
+  ] as [string, string, number][])
+    footNote(g, narrow ? short : wide, a * alpha);
+}
+
+/**
+ * The membrane potential through the action potential's round, on a plot across the foot of the figure, from −90 to
+ * +40 mV, slowed far down and not to scale: three inputs from synapses, summing to threshold; the spike, up as sodium
+ * channels open and down past rest as they shut and potassium channels open; and a dot where the round has got to.
+ */
+function drawSpike(g: G, P: Pose, narrow: boolean, lt: number) {
+  const { ctx, w, h, L, u } = g;
+  const a = P.ap;
+  const s = Math.max(u, 0.85);
+  const [left, right] = [14, w - 14];
+  const top = h - 36 * u - 96 * s;
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.roundRect(left, top, right - left, 92 * s, 10 * s);
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fill();
+  ctx.strokeStyle = rgba(L.ink, 0.12);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  const [x0, x1] = [left + 20 * s, right - (narrow ? 20 : 200) * s];
+  const [base, peak] = [top + 76 * s, top + 14 * s];
+  const X = (ms: number) => lerp(x0, x1, ms / AP_MS);
+  const Y = (v: number) => lerp(base, peak, (v + 90) / 130);
+  // the threshold, dashed across
+  const thresh = a * P.thresh;
+  if (thresh > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = 0.6 * thresh;
+    ctx.strokeStyle = rgba(L.ink, 1);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4 * s, 4 * s]);
+    ctx.beginPath();
+    ctx.moveTo(x0, Y(THRESHOLD));
+    ctx.lineTo(x1, Y(THRESHOLD));
+    ctx.stroke();
+    ctx.restore();
+  }
+  // the potential through the round, and a dot where it has got to
+  const colour = mix(FIELD, L.ink, 0.45);
+  ctx.globalAlpha = a;
+  ctx.strokeStyle = rgba(colour, 1);
+  ctx.lineWidth = 2 * s;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  for (let i = 0; i <= 300; i++) {
+    const ms = (i / 300) * AP_MS;
+    if (i) ctx.lineTo(X(ms), Y(keyed(AP_V, ms)));
+    else ctx.moveTo(X(ms), Y(keyed(AP_V, ms)));
+  }
+  ctx.stroke();
+  ctx.fillStyle = rgba(L.ink, 0.85);
+  ctx.beginPath();
+  ctx.arc(X(lt), Y(keyed(AP_V, lt)), 4 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  // the inputs, an arrow up to each
+  const inputs = a * P.inputs;
+  if (inputs > 0.01)
+    for (const t0 of AP_INPUTS)
+      arrow(
+        ctx,
+        X(t0),
+        base + 12 * s,
+        X(t0),
+        Y(keyed(AP_V, t0)) + 4 * s,
+        TRANSMITTER,
+        0.8 * inputs,
+        1.4,
+        5 * s
+      );
+  say(
+    g,
+    narrow ? 'inputs' : 'inputs from synapses',
+    X(AP_INPUTS[0]) - 8 * s,
+    base + 6 * s,
+    inputs,
+    11,
+    'right',
+    mix(TRANSMITTER, L.ink, 0.3)
+  );
+  // and what each part is
+  if (narrow) say(g, 'threshold', x0 + 4 * s, Y(THRESHOLD) - 7 * s, thresh, 11, 'left');
+  else say(g, `threshold, about ${mV(THRESHOLD)}`, x1 + 8 * s, Y(THRESHOLD), thresh, 11, 'left');
+  say(
+    g,
+    narrow ? 'Na^{+} in' : 'Na^{+} rushes in',
+    X(2250) - 6 * s,
+    Y(-10),
+    a * P.upstroke,
+    11,
+    'right',
+    IONS.Na.colour
+  );
+  say(
+    g,
+    narrow ? 'K^{+} out' : 'K^{+} flows out',
+    X(2640) + 6 * s,
+    Y(-25),
+    a * P.downstroke,
+    11,
+    'left',
+    IONS.K.colour
+  );
+  say(
+    g,
+    narrow ? 'spike: ~1 ms' : 'the action potential: about 1 ms, 100 mV',
+    X(AP_PEAK) + 24 * s,
+    Y(30),
+    a * P.spikeNamed,
+    11.5,
+    'left',
+    colour
+  );
 }
 
 /** The lowest membrane potential the potentials' line shows, mV; it runs from there up to 0. */
@@ -4564,10 +8431,10 @@ const TRANSMITTER: RGB = [22, 163, 74];
  * when in it the spike arrives. */
 const SYN_MS = 5000;
 const ARRIVES = 1600;
-/** The receptors on the spine's head: how far along it from its middle, in q. */
+/** The receptors in the dendrite's upper membrane, under the cleft: how far along it from the cleft's middle, in q. */
 const RECEPTORS = [-3.6, 0, 3.6];
-/** The spine's head, an ellipse: its middle below the cleft's, and its half-width and half-height, all in q. */
-const HEAD = { y: 6.5, rx: 6.5, ry: 4.5 };
+/** This neuron's dendrite: how far its membrane is either side of its line, in q, at its left end and at its body. */
+const DENDRITE = [3.4, 4.6];
 /** The terminal's vesicles, in q from the cleft's middle; the one docked at the membrane last. */
 const SYN_VESICLES: [number, number][] = [
   [-5.6, -5.8],
@@ -4578,16 +8445,6 @@ const SYN_VESICLES: [number, number][] = [
   [-4, -3.6],
   [2.8, -4.2],
   [0, -3.1],
-];
-/** The other spines along the dendrite: how far along from the synapse's, as a share of the figure's width, and which
- * side, up (−1) or down (1). */
-const SPINES: [number, number][] = [
-  [-0.24, -1],
-  [-0.12, -1],
-  [0.12, -1],
-  [0.22, -1],
-  [-0.17, 1],
-  [0.06, 1],
 ];
 /** 0 outside `from` to `to`, rising and falling over `edge` at either end. */
 const bump = (t: number, from: number, to: number, edge: number) =>
@@ -4604,48 +8461,60 @@ const bezier = (p: [number, number][], t: number): [number, number] => {
 
 /**
  * Where the two neurons sit, from the figure's size: q, the synapse's scale; C, the middle of the cleft between them;
- * the other neuron's body; this one's, and its dendrite's line; and the axon's course — out of the one body, across,
- * and down into the terminal from straight above.
+ * the other neuron's body; this one's; its dendrite's line, its left end, and how far its membrane is either side of
+ * that line along it — its upper membrane, where the synapse is, 2q under the cleft's middle: the synapse is on its
+ * shaft; and the axon's course — out of the one body, across, and down into the terminal from straight above.
  */
 function synapseSite(w: number, h: number, u: number) {
   // (from afar, the neurons as large as the figure has room for; close in, the same synapse whatever this is)
   const q = 1.8 * Math.max(u, 0.75);
   const C: [number, number] = [0.56 * w, 0.5 * h];
   const pre: [number, number] = [0.13 * w, 0.24 * h];
-  const shaft = C[1] + 16.7 * q;
+  const [left, body] = [0.22 * w, 0.9 * w];
+  const half = (x: number) =>
+    lerp(DENDRITE[0], DENDRITE[1], clamp01((x - left) / (body - left))) * q;
+  const shaft = C[1] + 2 * q + half(C[0]);
   const axon: [number, number][] = [
     [pre[0] + 11 * q, pre[1] + 5 * q],
     [pre[0] + 0.24 * w, pre[1] - 10 * q],
     [C[0] - 1.8 * q, C[1] - 70 * q],
     [C[0] - 1.8 * q, C[1] - 13.6 * q],
   ];
-  return { q, C, pre, post: [0.9 * w, shaft + 4 * q] as [number, number], shaft, axon };
+  return { q, C, pre, post: [body, shaft + 4 * q] as [number, number], shaft, left, half, axon };
 }
 
 /**
- * Two neurons and the chemical synapse between them. Another neuron, upper left, in blue, its axon running across and
- * down to a spine on this neuron's dendrite, which runs to its body at the right; a spike, a glow, running down the axon
- * to the synapse. Then the view dives in on it, as far as fills the figure: the other neuron's terminal, full of
- * vesicles of transmitter; the narrow cleft; and the spine's head, with receptors in its membrane. Then, again and
- * again, a spike arriving, a vesicle emptying, the transmitter crossing the cleft and binding to the receptors; and,
- * bound, their channels opening — sodium ions flowing through into the spine, a chloride ion turned away.
+ * Two neurons and the excitatory synapse between them. Another neuron, upper left, in blue, its axon running across
+ * and down to this neuron's dendrite, right on its shaft, the dendrite running to its body at the right; a spike, a
+ * glow, running down the axon to the synapse. Then the view dives in on it, as far as fills the figure: the other
+ * neuron's terminal, full of vesicles of transmitter; the narrow cleft; and the dendrite's shaft, with receptors in its
+ * membrane. Then, again and again, a spike arriving, a vesicle emptying, the transmitter crossing the cleft and binding
+ * to the receptors; and, bound, their channels opening — sodium ions flowing through into the dendrite, a chloride ion
+ * turned away.
  */
 function drawSynapse(g: G, P: Pose, narrow: boolean) {
   const { ctx, w, h, L, u } = g;
   const a = P.scene;
-  const { q, C, pre, post, shaft, axon } = synapseSite(w, h, u);
+  const { q, C, pre, post, shaft, left, half, axon } = synapseSite(w, h, u);
   // the camera: from the whole of both neurons, diving in on the synapse, as far as fills the figure's height with it
   // from the axon arriving to the dendrite, the cleft a little above the middle
+  // — on the slides about its receptors and the charge they let in, closer still, on the cleft and the dendrite under
+  // it, as far as leaves room for the names either side
   // — and, on the slide about the two currents cancelling, backing out a little and up, to make room below
   const qz = Math.min(10, (h - 24) / 34);
   const full = qz / q;
   const dived = full ** P.dive;
   const e = (dived - 1) / (full - 1);
-  const Z = dived * full ** (-0.24 * P.room);
-  // — and, on the slides about the charge it lets in, sliding down onto the spine and its dendrite
+  const onCleft = Math.max(1, Math.min(2.2, w / 44 / qz)) ** P.onCleft;
+  const Z = dived * full ** (-0.24 * P.room) * onCleft;
+  // — and, on the slides about the charge it lets in, sliding down onto the dendrite
   const [ox, oy] = [
     lerp(C[0], w / 2, e),
-    lerp(C[1], h / 2 - (2.6 + 5.4 * P.low) * q * Z - 0.19 * h * P.room, e),
+    lerp(
+      C[1],
+      h / 2 - (2.6 + 3.8 * P.low + 0.8 * P.onCleft * (1 - P.low)) * q * Z - 0.19 * h * P.room,
+      e
+    ),
   ];
   const seen = (x: number, y: number): [number, number] => [
     ox + Z * (x - C[0]),
@@ -4660,16 +8529,13 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   const thisEdge = rgba(L.ink, 0.42);
   const preFill = rgba(mix(L.page, PRE, 0.2), 1);
   const preEdge = rgba(mix(PRE, L.ink, 0.35), 0.85);
-  // the spine's head: where on it each receptor sits, and which way it faces — straight out of the head
-  const [hx, hy] = [C[0], C[1] + HEAD.y * q];
-  const receptors = RECEPTORS.map((dx) => {
-    const t = -Math.acos(dx / HEAD.rx);
-    return {
-      x: hx + HEAD.rx * q * Math.cos(t),
-      y: hy + HEAD.ry * q * Math.sin(t),
-      turn: Math.atan2(Math.sin(t) / HEAD.ry, Math.cos(t) / HEAD.rx) + Math.PI / 2,
-    };
-  });
+  // where each receptor sits in the dendrite's upper membrane, under the cleft, and which way it faces — straight up
+  const receptors = RECEPTORS.map((dx) => ({
+    x: C[0] + dx * q,
+    y: shaft - half(C[0] + dx * q),
+    turn: 0,
+  }));
+  const top = shaft - half(C[0]);
   // where a point given in a receptor's own frame is — q along its face, and q in (out, to the cleft, is negative)
   const onReceptor = (i: number, along: number, inward: number): [number, number] => {
     const { x, y, turn } = receptors[i];
@@ -4677,11 +8543,11 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     return [x + (along * c - inward * s) * q, y + (along * s + inward * c) * q];
   };
   // (desensitized, they close early, the glutamate still bound)
-  const opened = P.inflow * bump(tc, ARRIVES + 850, lerp(4400, 3400, P.desens), 220);
+  const opened = P.opening * bump(tc, ARRIVES + 850, lerp(4400, 3400, P.desens), 220);
   const desensitized = P.desens * bump(tc, 3300, 4600, 220);
   const gap = (0.2 + 0.75 * opened) * q;
   const fused = P.release * bump(tc, ARRIVES + 60, 4900, 220);
-  const bound = P.release * bump(tc, ARRIVES + 650, 4600, 220);
+  const bound = P.bind * bump(tc, ARRIVES + 650, 4600, 220);
 
   ctx.save();
   ctx.translate(ox, oy);
@@ -4689,8 +8555,8 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   ctx.translate(-C[0], -C[1]);
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
-  const shape = (path: Path2D | null, fill: string, edge: string) => {
-    ctx.globalAlpha = a;
+  const shape = (path: Path2D | null, fill: string, edge: string, alpha = a) => {
+    ctx.globalAlpha = alpha;
     ctx.fillStyle = fill;
     ctx.strokeStyle = edge;
     ctx.lineWidth = hair;
@@ -4711,7 +8577,8 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     w0: number,
     w1: number,
     fill: string,
-    edge: string
+    edge: string,
+    alpha = a
   ) => {
     const d = Math.hypot(x1 - x0, y1 - y0) || 1;
     const [nx, ny] = [-(y1 - y0) / d, (x1 - x0) / d];
@@ -4721,28 +8588,19 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     ctx.lineTo(x1 - (nx * w1) / 2, y1 - (ny * w1) / 2);
     ctx.lineTo(x0 - (nx * w0) / 2, y0 - (ny * w0) / 2);
     ctx.closePath();
-    shape(null, fill, edge);
+    shape(null, fill, edge, alpha);
   };
 
-  // this neuron: its dendrite along the figure, thinning to its left end; its spines; its body at the right, an apical
-  // dendrite going up from it
-  const left = 0.22 * w;
+  // this neuron: its dendrite along the figure, the synapse on its shaft, thinning to its left end; its body at the
+  // right, an apical dendrite going up from it
   ctx.beginPath();
-  ctx.moveTo(left, shaft - 1.8 * q);
-  ctx.lineTo(post[0], shaft - 2.6 * q);
-  ctx.lineTo(post[0], shaft + 2.6 * q);
-  ctx.lineTo(left, shaft + 1.8 * q);
-  ctx.arc(left, shaft, 1.8 * q, Math.PI / 2, (3 * Math.PI) / 2);
+  ctx.moveTo(left, shaft - half(left));
+  ctx.lineTo(post[0], shaft - half(post[0]));
+  ctx.lineTo(post[0], shaft + half(post[0]));
+  ctx.lineTo(left, shaft + half(left));
+  ctx.arc(left, shaft, half(left), Math.PI / 2, (3 * Math.PI) / 2);
   ctx.closePath();
   shape(null, thisFill, thisEdge);
-  for (const [along, side] of SPINES) {
-    const x = C[0] + along * w;
-    const tip = shaft + side * 5.4 * q;
-    branch(x, shaft + side * 1.4 * q, x, tip, 0.9 * q, 0.8 * q, thisFill, thisEdge);
-    ctx.beginPath();
-    ctx.ellipse(x, tip + side * 1.2 * q, 2 * q, 1.6 * q, 0, 0, Math.PI * 2);
-    shape(null, thisFill, thisEdge);
-  }
   branch(
     post[0] - 1 * q,
     post[1] - 10 * q,
@@ -4771,23 +8629,9 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   ctx.quadraticCurveTo(post[0] - 9 * q, post[1] - 4 * q, post[0] - 12 * q, post[1] + 8 * q);
   ctx.closePath();
   shape(null, thisFill, thisEdge);
-  // the spine at the synapse, larger: a neck up out of the dendrite and a head, its membrane facing the cleft — its fill
-  // over the dendrite's edge where they join, its outline open there
-  const neck = 1.1 * q;
-  const t0 = Math.acos(neck / (HEAD.rx * q));
-  const spine = new Path2D();
-  spine.moveTo(hx - neck, shaft - 1.2 * q);
-  spine.lineTo(hx - neck, hy + HEAD.ry * q * Math.sin(Math.PI - t0));
-  spine.ellipse(hx, hy, HEAD.rx * q, HEAD.ry * q, 0, Math.PI - t0, 2 * Math.PI + t0);
-  spine.lineTo(hx + neck, shaft - 1.2 * q);
-  ctx.globalAlpha = a;
-  ctx.fillStyle = thisFill;
-  ctx.fill(spine);
-  ctx.strokeStyle = thisEdge;
-  ctx.lineWidth = hair;
-  ctx.stroke(spine);
 
-  // the other neuron: its dendrites, its body, and its axon, a tube, across and down into the terminal
+  // the other neuron, once it comes in: its dendrites, its body, and its axon, a tube, across and down into the terminal
+  const other = a * P.other;
   for (const [turn, len] of [
     [200, 26],
     [150, 22],
@@ -4805,11 +8649,12 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
       2.6 * q,
       0.5 * q,
       preFill,
-      preEdge
+      preEdge,
+      other
     );
   }
   const course = Array.from({ length: 49 }, (_, i) => bezier(axon, i / 48));
-  ctx.globalAlpha = a;
+  ctx.globalAlpha = other;
   for (const [width, colour] of [
     [2 * q + 2 * hair, preEdge],
     [2 * q, preFill],
@@ -4823,7 +8668,7 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   }
   ctx.beginPath();
   ctx.arc(pre[0], pre[1], 11 * q, 0, Math.PI * 2);
-  shape(null, preFill, preEdge);
+  shape(null, preFill, preEdge, other);
   // the terminal: a swelling at the axon's end, its membrane flat against the cleft
   const at = (dx: number, dy: number): [number, number] => [C[0] + dx * q, C[1] + dy * q];
   const terminal = new Path2D();
@@ -4837,13 +8682,13 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   terminal.bezierCurveTo(...at(-7.2, -9.6), ...at(-9, -8), ...at(-9, -5.8));
   terminal.bezierCurveTo(...at(-9, -3.8), ...at(-8.2, -1.6), ...at(-5.8, -1.6));
   terminal.closePath();
-  shape(terminal, rgba(mix(L.page, PRE, 0.14), 1), preEdge);
+  shape(terminal, rgba(mix(L.page, PRE, 0.14), 1), preEdge, other);
 
   if (near > 0.01) {
     // its vesicles, each full of transmitter — the docked one gone while it empties, its membrane open to the cleft
     SYN_VESICLES.forEach(([dx, dy], i) => {
       const docked = i === SYN_VESICLES.length - 1;
-      const shown = a * near * (docked ? 1 - fused : 1);
+      const shown = other * near * (docked ? 1 - fused : 1);
       if (shown < 0.01) return;
       const [vx, vy] = at(dx, dy);
       ctx.globalAlpha = shown;
@@ -4863,28 +8708,38 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
       }
     });
     if (fused > 0.01) {
-      ctx.globalAlpha = a * near * fused;
+      ctx.globalAlpha = other * near * fused;
       ctx.strokeStyle = rgba(L.ink, 0.45);
       ctx.lineWidth = hair;
       ctx.beginPath();
       ctx.arc(C[0], C[1] - 1.6 * q, 1.1 * q, Math.PI, 0);
       ctx.stroke();
     }
-    // the receptors, set in the spine's membrane: each two halves round a pore, apart when open, and two pockets on
-    // its outer end where the transmitter binds
+    // the receptors, set in the dendrite's membrane: each two halves round a pore, apart when open, and two pockets on
+    // its outer end where the transmitter binds — or, before the synapse comes in, the middle one alone, an ion channel
+    // edged in the colour of sodium, which it lets through
+    const tint = mix(IONS.Na.colour, TRANSMITTER, P.other);
     receptors.forEach(({ x, y, turn }, i) => {
-      const nmda = i === 0 ? P.glutamate : 0;
+      const own = a * near * (i === 1 ? 1 : P.other);
+      if (own < 0.01) return;
       // (greyed while desensitized: shut, though glutamate is bound)
-      const edge = rgba(
-        mix(mix(TRANSMITTER, L.ink, 0.45 * nmda), GREY, i ? 0.85 * desensitized : 0),
-        0.85
-      );
+      const edge = rgba(mix(tint, GREY, 0.85 * desensitized), 0.85);
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(turn);
-      ctx.scale(1 + 0.15 * nmda, 1 + 0.15 * nmda);
-      ctx.globalAlpha = a * near;
+      // on the slide about their channels, the pore lit as it opens
+      const lit = own * opened * (1 - P.inflow);
+      if (lit > 0.01) {
+        const glow = ctx.createLinearGradient(0, -2.2 * q, 0, 2 * q);
+        glow.addColorStop(0, rgba(tint, 0));
+        glow.addColorStop(0.5, rgba(tint, 0.45 * lit));
+        glow.addColorStop(1, rgba(tint, 0));
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = glow;
+        ctx.fillRect(-gap / 2, -2.2 * q, gap, 4.2 * q);
+      }
       for (const side of [-1, 1]) {
+        ctx.globalAlpha = own;
         ctx.beginPath();
         ctx.roundRect(
           side > 0 ? gap / 2 : -gap / 2 - 1.1 * q,
@@ -4893,11 +8748,12 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
           3.4 * q,
           0.45 * q
         );
-        ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22 + 0.12 * nmda), 1);
+        ctx.fillStyle = rgba(mix(L.page, L.ink, 0.22), 1);
         ctx.fill();
         ctx.strokeStyle = edge;
         ctx.lineWidth = hair;
         ctx.stroke();
+        ctx.globalAlpha = own * P.other;
         ctx.beginPath();
         ctx.arc(side * (gap / 2 + 0.55 * q), -2.05 * q, 0.34 * q, 0, Math.PI * 2);
         ctx.strokeStyle = rgba(TRANSMITTER, 0.7);
@@ -4909,8 +8765,8 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   ctx.restore();
   ctx.globalAlpha = 1;
 
-  // the transmitter: out of the emptied vesicle into the cleft — two molecules to each receptor's pockets, to stay
-  // bound a while, the rest wandering the cleft and gone
+  // the transmitter: out of the emptied vesicle into the cleft — once they bind, two molecules to each receptor's
+  // pockets, to stay bound a while, the rest wandering the cleft and gone
   if (P.release * near > 0.01)
     for (let j = 0; j < 18; j++) {
       const rnd = mulberry32(211 + 17 * j);
@@ -4918,27 +8774,31 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
       const start = ARRIVES + 80 + 160 * r3;
       if (tc < start) continue;
       const k = smooth((tc - start) / 520);
-      const ties = j < 2 * RECEPTORS.length;
-      const to: [number, number] = ties
+      const ties = j < 2 * RECEPTORS.length ? P.bind : 0;
+      const loose: [number, number] = [
+        lerp(C[0] + (r1 - 0.5) * 15 * q, C[0] + (r1 < 0.5 ? -9.6 : 9.6) * q, P.clear),
+        lerp(C[1] + (0.2 + (r2 - 0.5) * 1.8) * q, C[1] + 0.3 * q, P.clear),
+      ];
+      const pocket = ties
         ? onReceptor(Math.floor(j / 2), (j % 2 ? 1 : -1) * (gap / q / 2 + 0.55), -2.05)
-        : ([
-            lerp(C[0] + (r1 - 0.5) * 15 * q, C[0] + (r1 < 0.5 ? -9.6 : 9.6) * q, P.clear),
-            lerp(C[1] + (0.2 + (r2 - 0.5) * 1.8) * q, C[1] + 0.3 * q, P.clear),
-          ] as [number, number]);
-      const wander = ties ? 0 : 1 - P.clear;
+        : loose;
+      const to = [lerp(loose[0], pocket[0], ties), lerp(loose[1], pocket[1], ties)];
+      const wander = (1 - ties) * (1 - P.clear);
       const x = lerp(C[0], to[0], k) + wander * drift(g.now, r1 * 6, r2 * 6, 0.5 * q);
       const y = lerp(C[1] - 1.6 * q, to[1], k) + wander * drift(g.now, r2 * 6, r3 * 6, 0.25 * q);
       // (or, taken up, gone as soon as a transporter has it)
-      const gone = ties
-        ? 1 - smooth((tc - 4400) / 350)
-        : lerp(
-            1 - smooth((tc - 2900 - 500 * r1) / 450),
-            1 - smooth((tc - start - 560) / 200),
-            P.clear
-          );
+      const gone = lerp(
+        lerp(
+          1 - smooth((tc - 2900 - 500 * r1) / 450),
+          1 - smooth((tc - start - 560) / 200),
+          P.clear
+        ),
+        1 - smooth((tc - 4400) / 350),
+        ties
+      );
       const shown = a * P.release * near * gone * Math.min(1, (tc - start) / 120);
       if (shown < 0.01) continue;
-      const [sx, sy] = seen(x, y - (ties ? smooth((tc - 4400) / 350) * 1.2 * q : 0));
+      const [sx, sy] = seen(x, y - ties * smooth((tc - 4400) / 350) * 1.2 * q);
       ctx.globalAlpha = shown;
       ctx.beginPath();
       ctx.arc(sx, sy, 0.34 * q * Z, 0, Math.PI * 2);
@@ -4958,13 +8818,13 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
       ctx.arc(bx, by, 2.4 * q * Z, 0, Math.PI * 2);
       ctx.fill();
     });
-  // the receptors open: sodium ions from the cleft through their pores into the spine, one after another; and a
+  // the receptors open: sodium ions from the cleft through their pores into the dendrite, one after another; and a
   // chloride ion running at one and turned away, a ring where it is
   if (opened * near > 0.01) {
-    // which receptor the `j`th goes through: any, or, once they are named, the AMPA ones only
-    const via = (j: number) => (P.glutamate > 0.5 ? 1 + (j % 2) : j % 3);
-    // along a way through a receptor, in its frame: from the cleft beside it, to its mouth, through, and into the spine
-    // — or, outward, the same way back
+    // which receptor the `j`th goes through
+    const via = (j: number) => (P.other > 0.5 ? j % 3 : 1);
+    // along a way through a receptor, in its frame: from the cleft beside it, to its mouth, through, and into the
+    // dendrite — or, outward, the same way back
     const through = (i: number, s: number, side: number, out: boolean): [number, number] => {
       const steps: [number, number][] = [
         [side * 3.4, -1.3],
@@ -5057,59 +8917,75 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     }
   }
 
-  // the charge the receptors let in: round the spine's head, under its membrane, negative charge at rest, turning
-  // positive one place after another as the charge collects; and over it, outside, positive charge, pushed off as it
-  // does — round all the head but where the receptors sit, on top, and where the neck leaves it, below
-  const [hx0, hy0] = [C[0], C[1] + HEAD.y * q];
+  // the charge the receptors let in: under the dendrite's membrane round the synapse, above and below, negative charge
+  // at rest, neutralized one place after another, the nearest first, as far as part of the way along; and over it,
+  // outside, positive charge, no longer held there, drifting off — along the upper membrane either side of the
+  // receptors, and along the lower; and the potential round the synapse rising, a warmth there
   const shown = a * near * P.low;
   if (shown > 0.01) {
-    const glow = P.excess * 0.22;
+    const glow = P.rise * 0.22;
     if (glow > 0.01) {
-      const [gx, gy] = seen(hx0, hy0);
-      const r = HEAD.rx * q * Z;
+      const [gx, gy] = seen(C[0], shaft);
+      const r = 12 * q * Z;
       const warm = ctx.createRadialGradient(gx, gy, 0, gx, gy, r);
       warm.addColorStop(0, rgba(FIELD, glow * shown));
       warm.addColorStop(1, rgba(FIELD, 0));
       ctx.fillStyle = warm;
       ctx.beginPath();
-      ctx.ellipse(gx, gy, r, HEAD.ry * q * Z, 0, 0, Math.PI * 2);
+      ctx.ellipse(gx, gy, r, half(C[0]) * Z, 0, 0, Math.PI * 2);
       ctx.fill();
     }
-    const places = [
-      ...Array.from({ length: 7 }, (_, i) => lerp(-0.7, 1.15, i / 6)),
-      ...Array.from({ length: 7 }, (_, i) => lerp(2, 3.85, i / 6)),
+    // each place: how far along from the synapse, in q, and which membrane, the upper (−1) or the lower (1)
+    const places: [number, number][] = [
+      ...[6.6, 9.7, 12.8].flatMap((d): [number, number][] => [
+        [-d, -1],
+        [d, -1],
+      ]),
+      ...[0, 3.2, 6.4, 9.6, 12.8].flatMap((d): [number, number][] =>
+        d
+          ? [
+              [-d, 1],
+              [d, 1],
+            ]
+          : [[0, 1]]
+      ),
     ];
-    places.forEach((th, i) => {
-      const [c, sn] = [Math.cos(th), Math.sin(th)];
-      const flip = clamp01(1.6 * P.excess - (0.6 * (i % 7)) / 7);
-      const [ix, iy] = seen(hx0 + 0.78 * HEAD.rx * q * c, hy0 + 0.74 * HEAD.ry * q * sn);
+    for (const [d, side] of places) {
+      const x = C[0] + d * q;
+      const edge = shaft + side * half(x);
+      // (the lower membrane, further from the receptors, a little later)
+      const away = clamp01(((side < 0 ? Math.abs(d) : Math.hypot(d, 8)) - 6.6) / 8.5);
+      const gone = clamp01((0.75 * P.excess - away) / 0.15);
       const r = 0.42 * q * Z;
-      disc(g, ix, iy, r, NEG, -1, shown * (1 - flip));
-      disc(g, ix, iy, r, POS, 1, shown * flip);
-      const off = 1.22 + 0.32 * P.excess;
-      const [ox2, oy2] = seen(hx0 + off * HEAD.rx * q * c, hy0 + off * HEAD.ry * q * sn);
-      disc(g, ox2, oy2, r, POS, 1, shown * (1 - 0.35 * P.excess));
-    });
+      const [ix, iy] = seen(x, edge - side * 0.75 * q);
+      disc(g, ix, iy, r, NEG, -1, shown * (1 - gone));
+      const [ox2, oy2] = seen(x, edge + side * (0.75 + 1.4 * gone) * q);
+      disc(g, ox2, oy2, r, POS, 1, shown * (1 - gone));
+    }
   }
-  // the potassium ions inside — the most plentiful positive ions there: in the spine's head and neck, pushed away from
-  // the charge collecting, towards the neck; and in the dendrite, pushed along it, both ways, again and again
+  // the potassium ions inside — the most plentiful positive ions there: in the dendrite by the synapse, pushed away from
+  // the charge collecting under the receptors, down and out; and further along, pushed along it, both ways, again and
+  // again
   const inside = a * near * P.repelled;
   if (inside > 0.01) {
-    const SPINE_K: [number, number][] = [
-      [-3.2, 7.4],
-      [-0.6, 9.2],
-      [2.4, 8.4],
-      [4, 6.4],
-      [0.8, 5.8],
-      [0, 12.6],
+    const NEAR_K: [number, number][] = [
+      [-5.2, 4.2],
+      [-2, 5],
+      [1.6, 4.4],
+      [4.8, 5.2],
+      [-3.4, 6.8],
+      [2.8, 7],
     ];
-    SPINE_K.forEach(([dx, dy], i) => {
-      // away from the head's middle and down, towards the neck, as far as stays inside
-      const [px, py] = [dx * (1 - 0.35 * P.repelled), dy + (i < 5 ? 1.4 : 1.2) * P.repelled];
-      const [ix, iy] = seen(C[0] + px * q + drift(g.now, i, i * 2, 0.15 * q), C[1] + py * q);
-      disc(g, ix, iy, 0.62 * q * Z, IONS.K.colour, 1, inside);
-      const [ux, uy] = [-dx * 0.35, i < 5 ? 1.4 : 1.2];
+    NEAR_K.forEach(([dx, dy], i) => {
+      // away from the middle of the membrane under the receptors, as far as stays inside
+      const [ux, uy] = [dx, dy - (top - C[1]) / q];
       const d = Math.hypot(ux, uy) || 1;
+      const push = 1.1 * P.repelled;
+      const [ix, iy] = seen(
+        C[0] + (dx + (ux / d) * push) * q + drift(g.now, i, i * 2, 0.15 * q),
+        C[1] + (dy + (uy / d) * push) * q
+      );
+      disc(g, ix, iy, 0.62 * q * Z, IONS.K.colour, 1, inside);
       const r = 0.62 * q * Z;
       arrow(
         ctx,
@@ -5123,18 +8999,17 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
         6
       );
     });
-    // in the dendrite: each a way along from where the neck meets it, out to the left or the right, round and round
-    const [sy0] = [C[1] + 16.7 * q];
+    // in the dendrite: each a way along from the synapse, out to the left or the right, round and round
     for (let j = 0; j < 14; j++) {
       const side = j % 2 ? 1 : -1;
-      const span = 44;
+      const span = 40;
       const start = (j * 3.1) % span;
       const run = (start + (g.now / 1000) * 3.2 * P.axial) % span;
-      const along = 3 + run;
+      const along = 7 + run;
       const fade = Math.min(1, run / 3, (span - run) / 4);
       const [ix, iy] = seen(
         C[0] + side * along * q,
-        sy0 + (j % 3 ? (j % 3 === 1 ? -0.85 : 0.85) : 0) * q
+        shaft + (j % 3 ? (j % 3 === 1 ? -1.8 : 1.8) : 0) * q
       );
       disc(g, ix, iy, 0.62 * q * Z, IONS.K.colour, 1, inside * fade);
       // pushing the next one along
@@ -5151,52 +9026,49 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
         5
       );
     }
-    // and, once they are, two broad arrows along it, out either way from the spine
+    // and, once they are, two broad arrows along it, out either way from the synapse
     if (P.axial > 0.01)
       for (const side of [-1, 1]) {
-        const [x0, y0] = seen(C[0] + side * 4 * q, sy0);
-        const [x1] = seen(C[0] + side * 26 * q, sy0);
+        const [x0, y0] = seen(C[0] + side * 8 * q, shaft);
+        const [x1] = seen(C[0] + side * 30 * q, shaft);
         arrow(ctx, x0, y0, x1, y0, IONS.K.colour, 0.35 * a * near * P.axial, 6 * u, 18 * u);
       }
-    // the charge they carry collecting on the dendrite's membrane along it — the most near the spine, less further
-    // off — a warmth along it where the potential has risen
-    const half = (x: number) => lerp(1.8, 2.6, clamp01((x - left) / (post[0] - left))) * q;
+    // the charge they carry collecting on the dendrite's membrane along it, on from that round the synapse — less
+    // further off — a warmth along it where the potential has risen
     const fall = (d: number) => Math.exp(-d / 20);
     const along = a * near * P.accum;
     if (along > 0.01) {
       const [gx0] = seen(C[0] - 50 * q, 0);
       const [gx1] = seen(C[0] + 50 * q, 0);
-      const [, gy0] = seen(0, sy0 - half(C[0]));
-      const [, gy1] = seen(0, sy0 + half(C[0]));
+      const [, gy0] = seen(0, shaft - half(C[0]));
+      const [, gy1] = seen(0, shaft + half(C[0]));
       const warm = ctx.createLinearGradient(gx0, 0, gx1, 0);
       for (const k of [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1])
         warm.addColorStop(k, rgba(FIELD, 0.22 * along * fall(Math.abs(k - 0.5) * 100)));
       ctx.fillStyle = warm;
       ctx.fillRect(gx0, gy0, gx1 - gx0, gy1 - gy0);
-      for (let k = 0; k < 15; k++)
+      for (let k = 0; k < 11; k++)
         for (const side of [-1, 1]) {
-          const d = 3.5 + 3.2 * k;
+          const d = 16 + 3.2 * k;
           const x = C[0] + side * d * q;
           if (x < left || x > post[0]) continue;
           // as it spreads, outward
-          const come = clamp01((1.3 * P.accum - k / 15) * 4);
-          const shownHere = a * near * come * fall(d);
+          const come = clamp01((1.3 * P.accum - k / 11) * 4);
+          const shownHere = a * near * come * fall(d - 9);
           if (shownHere < 0.01) continue;
           for (const edge of [-1, 1]) {
-            const [mx2, my2] = seen(x, sy0 + edge * (half(x) - 0.62 * q));
+            const [mx2, my2] = seen(x, shaft + edge * (half(x) - 0.62 * q));
             disc(g, mx2, my2, 0.36 * q * Z, POS, 1, shownHere);
           }
         }
     }
-    // and potassium leaking out through channels in its lower membrane, all along it — clear of the spines below
+    // and potassium leaking out through channels in its lower membrane, all along it
     const leaking = a * near * P.leaks;
     if (leaking > 0.01) {
-      const below = SPINES.filter(([, side]) => side > 0).map(([along2]) => C[0] + along2 * w);
-      [-9, -21, -34, 9, 21, 34].forEach((d, i) => {
-        let xc = C[0] + d * q;
-        if (below.some((bx) => Math.abs(bx - xc) < 4 * q)) xc += Math.sign(d) * 7 * q;
+      [-17, -28, -39, 17, 28, 39].forEach((d, i) => {
+        const xc = C[0] + d * q;
         if (xc < left || xc > post[0]) return;
-        const [sx, sy] = seen(xc, sy0 + half(xc));
+        const [sx, sy] = seen(xc, shaft + half(xc));
         const [cw, ch, gp] = [0.9 * q * Z, 2.6 * q * Z, 0.6 * q * Z];
         ctx.globalAlpha = leaking;
         for (const side of [-1, 1]) {
@@ -5229,52 +9101,56 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
         );
       });
       // the potential at points along it, falling off away from the synapse, either way
-      for (const d of narrow ? [8, 16] : [15, 30])
-        for (const side of [-1, 1]) {
-          const x = C[0] + side * d * q;
-          const [tx, ty] = seen(x, sy0 - half(x));
-          ctx.globalAlpha = 0.8 * leaking;
-          ctx.strokeStyle = rgba(FIELD, 1);
-          ctx.lineWidth = 1.4;
-          ctx.beginPath();
-          ctx.moveTo(tx, ty - 1.4 * q * Z);
-          ctx.lineTo(tx, ty - 0.2 * q * Z);
-          ctx.stroke();
-          ctx.globalAlpha = 1;
-          say(
-            g,
-            mV(V_REST + 27 * fall(d)),
-            tx,
-            ty - 2.4 * q * Z,
-            leaking,
-            12,
-            'center',
-            mix(FIELD, L.ink, 0.25)
-          );
-        }
+      const ticked = a * near * P.ticks;
+      if (ticked > 0.01)
+        for (const d of narrow ? [14, 19] : [15, 30])
+          for (const side of [-1, 1]) {
+            const x = C[0] + side * d * q;
+            const [tx, ty] = seen(x, shaft - half(x));
+            ctx.globalAlpha = 0.8 * ticked;
+            ctx.strokeStyle = rgba(FIELD, 1);
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(tx, ty - 1.4 * q * Z);
+            ctx.lineTo(tx, ty - 0.2 * q * Z);
+            ctx.stroke();
+            ctx.globalAlpha = 1;
+            say(
+              g,
+              mV(V_REST + 27 * fall(d)),
+              tx,
+              ty - 2.4 * q * Z,
+              ticked,
+              12,
+              'center',
+              mix(FIELD, L.ink, 0.25)
+            );
+          }
     }
   }
-  // what each of those slides names
+  // what each of those slides names: above the dendrite either side of the terminal, and below it
   const fresh = a * near * P.low;
-  const [hl] = seen(C[0] - 7.8 * q, 0);
-  const [hr] = seen(C[0] + 9.2 * q, 0);
+  const [hl] = seen(C[0] - 10.4 * q, 0);
+  const [hr] = seen(C[0] + 10.4 * q, 0);
   const at2 = (dy: number) => seen(0, C[1] + dy * q)[1];
-  const potential = lerp(V_REST, -45, P.excess);
+  // (below the dendrite: close in, just under the charge outside it, clear of the words at the foot)
+  const under = lerp(at2(16.8), at2(12.4), P.onCleft);
+  const potential = lerp(V_REST, -45, P.rise);
   say(
     g,
-    narrow ? '+ inside' : 'positive charge collects inside',
-    hl - 6,
-    at2(HEAD.y),
+    narrow ? '− inside, neutralized' : 'part of the negative layer inside, neutralized',
+    hl,
+    at2(-3.4),
     fresh * P.excess,
     12.5,
     'right',
-    POS
+    NEG
   );
   say(
     g,
-    narrow ? '+ outside, pushed off' : 'positive charge outside, pushed off',
-    hr + 6,
-    at2(HEAD.y - 1.6),
+    narrow ? '+ outside, reduced' : 'less positive charge outside',
+    hr,
+    at2(-3.4),
     fresh * P.excess,
     12.5,
     'left',
@@ -5283,9 +9159,9 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   say(
     g,
     `${narrow ? 'here' : 'membrane potential here'}: ${mV(potential)}`,
-    hr + 6,
-    at2(HEAD.y + 2.4),
-    fresh * P.excess,
+    hr,
+    at2(-5.6),
+    fresh * P.rise,
     12.5,
     'left',
     mix(FIELD, L.ink, 0.25)
@@ -5293,11 +9169,11 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   say(
     g,
     narrow ? 'K^{+} pushed away' : 'potassium, the most plentiful positive ion inside, pushed away',
-    seen(C[0] - 2.4 * q, 0)[0] - 8,
-    at2(12.6),
+    w / 2,
+    under,
     fresh * P.repelled * (1 - P.axial),
     12.5,
-    'right',
+    'center',
     IONS.K.colour
   );
   say(
@@ -5306,7 +9182,7 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
       ? 'a net flow along, both ways'
       : 'a net flow of positive ions along the dendrite, each pushing the next',
     w / 2,
-    at2(21.8),
+    under,
     fresh * P.axial * clamp01(1 - 2 * P.leaks),
     12.5,
     'center',
@@ -5314,9 +9190,9 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   );
   say(
     g,
-    narrow ? 'K^{+} leaks out' : 'potassium leaks out through ion channels along the way',
+    narrow ? 'K^{+} leak channels' : 'K^{+} leak channels: potassium leaks out through them',
     w / 2,
-    at2(21.8),
+    under,
     fresh * clamp01(2 * P.leaks - 1),
     12.5,
     'center',
@@ -5325,9 +9201,16 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
   footNote(
     g,
     narrow
-      ? '+ collects inside: the potential rises'
-      : 'positive ions flowing in collect inside the membrane: the potential here rises, and positive charge outside is pushed off',
-    a * P.excess * (1 - P.repelled)
+      ? 'less − inside, less + outside'
+      : 'the positive ions flowing in neutralize part of the negative layer inside the membrane, and the positive charge outside is reduced',
+    a * P.excess * (1 - P.rise)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'the potential here rises'
+      : `so the membrane potential round the channel rises, from ${mV(V_REST)} to ${mV(-45)}`,
+    a * P.rise * (1 - P.repelled)
   );
   footNote(
     g,
@@ -5341,22 +9224,85 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     narrow
       ? '+ flows along, raising the potential'
       : 'each pushes the next: a net flow of positive charge along the dendrite, which collects on its membrane and raises the potential there too',
-    a * P.axial * (1 - P.leaks)
+    a * P.axial * (1 - P.quick)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'spreading out, it falls fast'
+      : 'as the charge spreads away along the dendrite, the potential by the channel falls fast',
+    a * P.quick * (1 - P.leaks)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'K^{+} leaking: slower, τ_{m}'
+      : 'potassium leaking out through K^{+} leak channels lowers it too, more slowly, with τ_{m} ≈ 10–30 ms',
+    a * P.leaks * (1 - P.soma)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'synapse: large, brief; soma: smaller, slower'
+      : 'large and brief by the channel, smaller and slower at the soma; once spread out, both fall with τ_{m}',
+    a * P.soma * (1 - P.ticks)
   );
   footNote(
     g,
     narrow
       ? 'leaking out, the rise fades with distance'
-      : 'potassium leaks out through ion channels along the way, so the rise in potential fades with distance from the synapse',
-    a * P.leaks
+      : 'potassium leaks out through ion channels along the way, so the rise in potential fades with distance from the channel',
+    a * P.ticks
   );
 
   // the words: each neuron named, from afar — and the spike
   const far = a * (1 - P.dive);
   const [px, py] = seen(...pre);
   const [qx, qy] = seen(...post);
-  say(g, 'another neuron', px, py + 26 * q, far * P.cells, 12.5, 'center', mix(PRE, L.ink, 0.35));
+  say(
+    g,
+    'another neuron',
+    px,
+    py + 26 * q,
+    far * P.cells * P.other,
+    12.5,
+    'center',
+    mix(PRE, L.ink, 0.35)
+  );
   say(g, 'this neuron', qx, qy + 24 * q, far * P.cells, 12.5, 'center');
+  // two ways to inject current into it: an electrode, a glass pipette from above with its tip at the body; and an ion
+  // channel in its dendrite, ringed
+  const injected = far * P.inject * (1 - P.other);
+  if (injected > 0.01) {
+    const [tx, ty] = seen(post[0] + 2.5 * q, post[1] - 12.5 * q);
+    const [bx, by] = seen(post[0] + 12 * q, post[1] - 62 * q);
+    const len = Math.hypot(bx - tx, by - ty) || 1;
+    const [nx, ny] = [-(by - ty) / len, (bx - tx) / len];
+    const [w0, w1] = [0.25 * q, 2.6 * q];
+    ctx.globalAlpha = injected;
+    ctx.beginPath();
+    ctx.moveTo(tx + nx * w0, ty + ny * w0);
+    ctx.lineTo(bx + nx * w1, by + ny * w1);
+    ctx.lineTo(bx - nx * w1, by - ny * w1);
+    ctx.lineTo(tx - nx * w0, ty - ny * w0);
+    ctx.closePath();
+    ctx.fillStyle = rgba(mix(L.page, [125, 211, 252], 0.35), 1);
+    ctx.fill();
+    ctx.strokeStyle = rgba(L.ink, 0.5);
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    say(g, 'an electrode', bx, by - 10, injected, 12.5, 'center');
+    const [cx, cy] = seen(C[0], top);
+    ctx.globalAlpha = 0.7 * injected;
+    ctx.strokeStyle = rgba(L.ink, 1);
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 12 * q, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    say(g, 'an ion channel', cx + 15 * q, cy - 13 * q, injected, 13, 'left');
+  }
   const [mx, my] = seen(...bezier(axon, 0.42));
   say(
     g,
@@ -5412,12 +9358,13 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     align: CanvasTextAlign,
     colour?: RGB
   ) => say(g, narrow ? short : text, x, yOf(dy), close * alpha, 12.5, align, colour);
+  // (gone once the view closes in on the cleft, and the terminal's top is out of it)
   named(
     'vesicles, full of neurotransmitter',
     'vesicles',
     lx - 10,
     -8.8,
-    P.release,
+    P.release * (1 - P.onCleft),
     'right',
     mix(TRANSMITTER, L.ink, 0.3)
   );
@@ -5426,7 +9373,7 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     'terminal',
     lx - 10,
     -5.6,
-    P.parts,
+    P.parts * P.other * (1 - P.onCleft),
     'right',
     mix(PRE, L.ink, 0.35)
   );
@@ -5448,23 +9395,23 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     'left',
     mix(TRANSMITTER, L.ink, 0.3)
   );
-  named('the synaptic cleft', 'cleft', rx + 10, 0.2, P.parts * before(P.kout), 'left');
+  named('the synaptic cleft', 'cleft', rx + 10, 0.2, P.parts * P.other * before(P.kout), 'left');
   named('potassium ions flow out', 'K^{+} out', rx + 10, 0.2, after(P.kout), 'left', IONS.K.colour);
   named(
     'receptors',
     'receptors',
     seen(C[0] + 6.4 * q, 0)[0] + 10,
     3.2,
-    P.release * (1 - P.inflow),
+    P.bind * before(P.opening),
     'left',
     mix(TRANSMITTER, L.ink, 0.3)
   );
   named(
-    'receptors, open',
-    'open',
+    'receptors: ion channels, open when bound',
+    'channels, open',
     seen(C[0] + 6.4 * q, 0)[0] + 10,
     3.2,
-    P.inflow * before(P.glutamate),
+    P.other * after(P.opening) * before(P.glutamate),
     'left',
     mix(TRANSMITTER, L.ink, 0.3)
   );
@@ -5496,21 +9443,38 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     mix(TRANSMITTER, L.ink, 0.3)
   );
   named(
-    'an NMDA receptor',
-    'NMDA',
-    seen(C[0] - 6.8 * q, 0)[0] - 10,
-    2.6,
-    P.glutamate,
-    'right',
-    mix(TRANSMITTER, L.ink, 0.55)
+    "this neuron's dendrite: the synapse is on its shaft",
+    'dendrite',
+    seen(C[0] + 7 * q, 0)[0] + 10,
+    6.6,
+    P.parts * P.other,
+    'left'
   );
   named(
-    "a spine, on this neuron's dendrite",
-    'spine',
+    "this neuron's dendrite",
+    'dendrite',
     seen(C[0] + 7 * q, 0)[0] + 10,
-    7.2,
-    P.parts,
+    6.6,
+    P.parts * (1 - P.other),
     'left'
+  );
+  named(
+    'an ion channel',
+    'a channel',
+    seen(C[0] + 3 * q, 0)[0] + 10,
+    3.2,
+    P.chan * (1 - P.other) * before(P.opening),
+    'left',
+    mix(IONS.Na.colour, L.ink, 0.3)
+  );
+  named(
+    'an ion channel, open for about 5 ms',
+    'open, ~5 ms',
+    seen(C[0] + 3 * q, 0)[0] + 10,
+    3.2,
+    (1 - P.other) * after(P.opening),
+    'left',
+    mix(IONS.Na.colour, L.ink, 0.3)
   );
   named(
     'sodium ions flow in',
@@ -5530,48 +9494,82 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     'right',
     IONS.Cl.colour
   );
-  named(
-    'the dendrite',
-    'dendrite',
-    seen(C[0] - 16 * q, 0)[0],
-    16.7,
-    P.parts * (1 - P.room),
-    'center'
-  );
   // and what each slide says of it
   footNote(
     g,
     narrow
       ? 'a spike runs down its axon'
       : "a signal, a spike, runs down the other neuron's axon towards this one",
-    a * P.cells * (1 - P.contact) * (1 - P.dive)
+    a * P.other * P.cells * (1 - P.contact) * (1 - P.dive)
   );
   footNote(
     g,
     narrow
-      ? 'terminal, cleft and spine'
-      : "a chemical synapse: the other neuron's terminal, a narrow cleft, and a spine on this neuron's dendrite",
+      ? 'first: current within a dendrite'
+      : 'first, how current flows within a neuron, starting with a dendrite',
+    a * P.first * (1 - P.inject)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'an electrode, or an ion channel'
+      : 'current can be injected through an electrode, or through an ion channel of another kind opening',
+    a * P.inject * (1 - P.dive)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'an ion channel in the dendrite'
+      : "an ion channel in the dendrite's membrane, which opens in certain circumstances",
+    a * P.chan * (1 - P.other) * (1 - P.opening)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'open for about 5 ms'
+      : 'say it opens briefly, for about 5 ms (slowed down here), and shuts again',
+    a * (1 - P.other) * P.opening * (1 - P.inflow)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'terminal, cleft and dendrite'
+      : "an excitatory synapse: the other neuron's terminal, a narrow cleft, and right across it the shaft of this neuron's dendrite",
     a * P.contact * (1 - P.release)
   );
   footNote(
     g,
     narrow
-      ? 'transmitter crosses the cleft and binds'
-      : 'a spike arrives; a vesicle empties its neurotransmitter into the cleft, and it binds to the receptors on the spine',
-    a * P.release * (1 - P.inflow)
+      ? 'a vesicle empties into the cleft'
+      : 'a spike arrives, and a vesicle empties its neurotransmitter into the cleft',
+    a * P.release * (1 - P.bind)
   );
   footNote(
     g,
     narrow
-      ? 'Na^{+} flows in; Cl^{−} is turned away'
-      : "bound, the receptors' channels open: sodium ions flow into the spine, while others, like chloride, are turned away",
-    a * P.inflow * (1 - P.glutamate)
+      ? 'the transmitter binds to receptors'
+      : "the neurotransmitter crosses the cleft and binds to receptors in this neuron's dendrite",
+    a * P.bind * (1 - P.opening)
   );
   footNote(
     g,
     narrow
-      ? 'AMPA and NMDA: positive ions only'
-      : 'glutamate binds AMPA and NMDA receptors: both let only positive ions (cations) through, and turn negative ones away',
+      ? 'bound, their channels open'
+      : 'each receptor holds an ion channel: when the neurotransmitter binds, the channel opens',
+    a * P.other * P.opening * (1 - P.inflow)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'Na^{+} in, Cl^{−} turned away'
+      : 'selective: sodium ions flow in, while chloride is turned away',
+    a * P.inflow * (1 - P.glutamate) * (1 - P.low) * (1 - P.room)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'glutamate opens AMPA receptors'
+      : 'one example: AMPA receptors, opened by the neurotransmitter glutamate',
     a * P.glutamate * (1 - P.kout)
   );
   footNote(
@@ -5595,7 +9593,70 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     narrow
       ? 'glutamate gone in about 1 ms'
       : 'glutamate leaves the cleft within about a millisecond: it diffuses out, and transporters take it up',
-    a * P.clear * (1 - P.current) * (1 - P.types)
+    a * P.kinetics * P.clear * (1 - P.epsc) * (1 - P.brief) * (1 - P.current) * (1 - P.types)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'the current decays in 1–5 ms'
+      : 'glutamate off, the channels take a while to shut, some shutting though still bound: the current decays in 1–5 ms',
+    a * P.epsc * (1 - P.brief)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'open briefly: a short rise'
+      : 'the channel is open only briefly, and the voltage rises only while it is',
+    a * P.brief * (1 - P.resist)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'less resistance: a faster rise'
+      : 'how fast the voltage rises depends on the resistance of the open channels: the less it is, the faster',
+    a * P.resist * (1 - P.rc)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'τ = R × C: 63% of the way'
+      : "the time constant τ, the time to rise 63% of the way, is that resistance times the membrane's capacitance",
+    a * P.rc * (1 - P.cap) * (1 - P.eps) * (1 - P.ohm)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'C = Q / V'
+      : 'capacitance: how much charge the membrane holds for each volt across it',
+    a * P.cap * (1 - P.thin)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'thinner: more charge per volt'
+      : 'about 1 µF/cm² in most neurons: the thinner the membrane, the more charge it holds per volt',
+    a * P.thin * (1 - P.eps)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'C = ε × A / d'
+      : 'C = ε × A / d: more area or a higher dielectric constant, more capacitance; a thicker membrane, less',
+    a * P.eps * (1 - P.ohm)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'I = (E − V) / R'
+      : "Ohm's law: the current is the gap between the reversal potential and the membrane potential, over the resistance",
+    a * P.ohm * (1 - P.slope)
+  );
+  footNote(
+    g,
+    narrow
+      ? 'it rises at I / C, slowing'
+      : 'the current charges the membrane: a charge ΔQ raises the voltage by ΔV = ΔQ / C, so it rises at I / C, slowing as it nears E',
+    a * P.slope
   );
   footNote(
     g,
@@ -5626,6 +9687,8 @@ function drawSynapse(g: G, P: Pose, narrow: boolean) {
     a * P.volt
   );
   if (P.kinetics > 0.01) drawKinetics(g, a * P.kinetics, P, narrow);
+  if (P.quick > 0.01) drawDecay(g, a * P.quick, P, narrow);
+  if (P.cap > 0.01) drawCapacitor(g, a * P.cap, P, narrow);
 }
 
 /** A rise then a fall, each exponential, `rise` and `fall` ms: as high at its peak as 1. */
@@ -5717,7 +9780,7 @@ function drawKinetics(g: G, a: number, P: Pose, narrow: boolean) {
       t < 20 ? 1 - Math.exp(-t / 0.05) : Math.exp(-(t - 20) / 0.35),
       P.desens
     );
-  const shownGlu = a * P.clear * (1 - P.types) * (1 - P.volt);
+  const shownGlu = a * P.clear * (1 - P.resist) * (1 - P.types) * (1 - P.volt);
   trace(
     glu,
     TRANSMITTER,
@@ -5725,6 +9788,14 @@ function drawKinetics(g: G, a: number, P: Pose, narrow: boolean) {
     narrow ? 'glutamate' : 'glutamate in the cleft',
     P.desens > 0.5 ? 12 : 0.5,
     P.desens > 0.5
+  );
+  // once glutamate unbinds, the AMPA current (the EPSC), decaying within a few ms
+  trace(
+    (t) => pulse(t, 0.25, 2.5),
+    IONS.Na.colour,
+    a * P.epsc * (1 - P.brief),
+    narrow ? 'EPSC' : 'AMPA current (EPSC): decays in about 1–5 ms',
+    2.6
   );
   // the AMPA receptors' current: falling within 1 to 3 ms — or, desensitizing, within about 10
   const fall = lerp(2, 6, P.desens);
@@ -5773,6 +9844,336 @@ function drawKinetics(g: G, a: number, P: Pose, narrow: boolean) {
     narrow ? 'voltage' : 'voltage: τ = r_{m}c_{m} ≈ 20 ms',
     30
   );
+  // after the glutamate is cleared: how long the receptors are open, shaded, and the voltage rising only while they
+  // are, then hardly falling
+  const OPEN_MS = 5;
+  const rising = (t: number, tau: number) => 1 - Math.exp(-Math.max(0, t) / tau);
+  const brief = a * P.brief * (1 - P.resist);
+  if (brief > 0.01) {
+    ctx.globalAlpha = 0.14 * brief;
+    ctx.fillStyle = rgba(TRANSMITTER, 1);
+    ctx.fillRect(X(0), peak, X(OPEN_MS) - X(0), base - peak);
+    ctx.globalAlpha = 1;
+    say(
+      g,
+      narrow ? 'open' : 'channel open',
+      X(OPEN_MS / 2),
+      peak - 6 * s,
+      brief,
+      11,
+      'center',
+      mix(TRANSMITTER, L.ink, 0.3)
+    );
+  }
+  const shut = rising(OPEN_MS, 2);
+  trace(
+    (t) => (t < OPEN_MS ? rising(t, 2) : shut * Math.exp(-(t - OPEN_MS) / 20)) / shut,
+    mix(FIELD, L.ink, 0.45),
+    brief,
+    narrow ? 'voltage' : 'voltage: rises only while it is open',
+    2.4
+  );
+  // how fast it rises with the channels' resistance: through less, faster; through more, slower
+  const resist = a * P.resist * (1 - P.rc);
+  for (const [tau, name, short, at, ink] of [
+    [0.35, 'less resistance: a fast rise', 'less R', 0.9, 0.15],
+    [1.2, '', '', 0, 0.45],
+    [3.2, 'more resistance: a slower rise', 'more R', 3.4, 0.75],
+  ] as [number, string, string, number, number][])
+    trace((t) => rising(t, tau), mix(FIELD, L.ink, ink), resist, narrow ? short : name, at);
+  // and one rise, its time constant marked: 63% of the way up, at τ
+  const rc = a * P.rc;
+  const TAU = 1.2;
+  trace((t) => rising(t, TAU), mix(FIELD, L.ink, 0.45), rc, 'voltage', 3.6);
+  // (going once the slides turn to what sets that rise)
+  const marks = rc * (1 - P.ohm);
+  if (marks > 0.01) {
+    const [tx, ty] = [X(TAU), Y(1 - Math.exp(-1))];
+    ctx.save();
+    ctx.globalAlpha = 0.55 * marks;
+    ctx.strokeStyle = rgba(L.ink, 1);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4 * s, 3 * s]);
+    ctx.beginPath();
+    ctx.moveTo(x0, ty);
+    ctx.lineTo(tx, ty);
+    ctx.lineTo(tx, base);
+    ctx.stroke();
+    ctx.restore();
+    say(g, '63%', x0 + 4 * s, ty - 7 * s, 0.8 * marks, 11, 'left');
+    say(g, 'τ', tx, base + 11 * s, marks, 11.5, 'center');
+    say(
+      g,
+      narrow ? 'τ = R × C' : 'the time constant: τ = R × C',
+      tx + 8 * s,
+      ty + 10 * s,
+      marks,
+      11.5,
+      'left',
+      mix(FIELD, L.ink, 0.25)
+    );
+  }
+  // what sets that rise: by Ohm's law, the current is the gap to the reversal potential E over the resistance, and so
+  // falls as the gap closes — the reversal potential dashed along the top, the gap a while in, and the current
+  const ohm = a * P.ohm;
+  if (ohm > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = 0.5 * ohm;
+    ctx.strokeStyle = rgba(TRANSMITTER, 1);
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([5 * s, 4 * s]);
+    ctx.beginPath();
+    ctx.moveTo(x0, Y(1));
+    ctx.lineTo(x1, Y(1));
+    ctx.stroke();
+    ctx.restore();
+    say(
+      g,
+      narrow ? 'E' : 'reversal potential E',
+      x1 + 6 * s,
+      Y(1),
+      ohm,
+      11.5,
+      'left',
+      mix(TRANSMITTER, L.ink, 0.3)
+    );
+  }
+  const gap = ohm * (1 - P.slope);
+  if (gap > 0.01) {
+    const tg = 0.8;
+    const gx = X(tg);
+    arrow(ctx, gx, Y(rising(tg, TAU)) - 2 * s, gx, Y(1) + 2 * s, L.ink, 0.7 * gap, 1.4, 5);
+    say(g, 'E − V', gx + 6 * s, Y((1 + rising(tg, TAU)) / 2), gap, 11.5, 'left');
+  }
+  trace(
+    (t) => Math.exp(-t / TAU),
+    IONS.Na.colour,
+    gap,
+    narrow ? 'current' : 'current: I = (E − V) / R',
+    2.6
+  );
+  // and, charging the capacitance, the voltage rising at I / C: lines along the rise, steep at first, then shallower
+  const slope = a * P.slope;
+  if (slope > 0.01)
+    for (const [t, from, to, name, short] of [
+      [0.12, 0, 0.55, 'rate of rise I / C: fast while the current is large', 'fast'],
+      [1.9, -0.6, 0.6, 'slower as V nears E', 'slower'],
+    ] as [number, number, number, string, string][]) {
+      const v = rising(t, TAU);
+      const k = (1 - v) / TAU;
+      ctx.globalAlpha = 0.8 * slope;
+      ctx.strokeStyle = rgba(L.ink, 1);
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(X(t + from), Y(v + k * from));
+      ctx.lineTo(X(t + to), Y(v + k * to));
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      say(g, narrow ? short : name, X(t + to) + 6 * s, Y(v + k * to) + 12 * s, slope, 11, 'left');
+    }
+}
+
+/**
+ * The membrane as a capacitor, on a panel across the foot of the figure: its two faces and the lipids between, and the
+ * charge either side for 1 volt across it, positive outside and negative inside — as much as it holds per volt; then
+ * thinner, and more charge for the same volt; then its area A, thickness d and the lipids' dielectric constant ε
+ * named: C = ε × A / d.
+ */
+function drawCapacitor(g: G, a: number, P: Pose, narrow: boolean) {
+  const { ctx, w, h, L, u } = g;
+  const s = Math.max(u, 0.85);
+  const [left, right] = [14, w - 14];
+  const top = h - 36 * u - 96 * s;
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.roundRect(left, top, right - left, 92 * s, 10 * s);
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fill();
+  ctx.strokeStyle = rgba(L.ink, 0.12);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  // the membrane: a slab along the panel, its lipid core between two faces — thinner on the slide about thickness
+  const [x0, x1] = [left + 30 * s, narrow ? right - 30 * s : lerp(left, right, 0.58)];
+  const mid = top + 50 * s;
+  const d = lerp(24, 12, P.thin) * s;
+  const [outer, inner] = [mid - d / 2, mid + d / 2];
+  ctx.fillStyle = rgba(mix(L.page, L.ink, 0.09), 1);
+  ctx.fillRect(x0, outer, x1 - x0, d);
+  ctx.strokeStyle = rgba(L.ink, 0.4);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x0, outer);
+  ctx.lineTo(x1, outer);
+  ctx.moveTo(x0, inner);
+  ctx.lineTo(x1, inner);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  // the charge either side for 1 volt: six pairs — or, thinner, eleven, the extra ones between
+  const r = 5 * s;
+  for (let i = 0; i < 11; i++) {
+    const shown = a * (i % 2 ? P.thin : 1);
+    if (shown < 0.01) continue;
+    const x = lerp(x0 + 14 * s, x1 - 14 * s, i / 10);
+    disc(g, x, outer - r - 2 * s, r, POS, 1, shown);
+    disc(g, x, inner + r + 2 * s, r, NEG, -1, shown);
+  }
+  // its thickness d, and, named last, its area A and the lipids' dielectric constant ε
+  const marked = a * P.thin;
+  if (marked > 0.01) {
+    const mx = x1 + 12 * s;
+    arrow(ctx, mx, mid, mx, outer, L.ink, 0.7 * marked, 1.2, 4 * s);
+    arrow(ctx, mx, mid, mx, inner, L.ink, 0.7 * marked, 1.2, 4 * s);
+    say(g, 'd', mx + 6 * s, mid, marked, 11.5, 'left');
+  }
+  const named = a * P.eps;
+  if (named > 0.01) {
+    const ay = outer - 2 * r - 9 * s;
+    const cx = (x0 + x1) / 2;
+    arrow(ctx, cx - 12 * s, ay, x0, ay, L.ink, 0.6 * named, 1.2, 4 * s);
+    arrow(ctx, cx + 12 * s, ay, x1, ay, L.ink, 0.6 * named, 1.2, 4 * s);
+    say(g, 'A', cx, ay, named, 11.5, 'center');
+    say(g, 'ε', cx, mid, named, 11.5, 'center');
+  }
+  // the words: what capacitance is; then, thinner, more per volt; then what sets it
+  if (narrow) {
+    for (const [text, alpha] of [
+      ['C = Q / V', a * (1 - P.thin)],
+      ['thinner: more per volt', a * P.thin * (1 - P.eps)],
+      ['C = ε × A / d', named],
+    ] as [string, number][])
+      say(g, text, w / 2, top + 10 * s, alpha, 11.5, 'center');
+    return;
+  }
+  const tx = x1 + 30 * s;
+  say(
+    g,
+    'the charge either side, for 1 volt across it',
+    tx,
+    mid - 14 * s,
+    a * (1 - P.eps),
+    11.5,
+    'left'
+  );
+  say(g, 'C = Q / V: the charge held per volt', tx, mid + 6 * s, a * (1 - P.thin), 11.5, 'left');
+  say(
+    g,
+    'thinner: more charge for the same volt',
+    tx,
+    mid + 6 * s,
+    marked * (1 - P.eps),
+    11.5,
+    'left'
+  );
+  say(g, 'C = ε × A / d', tx, mid - 14 * s, named, 13, 'left');
+  say(
+    g,
+    "A its area, d its thickness, ε the lipids' dielectric constant",
+    tx,
+    mid + 6 * s,
+    named,
+    11.5,
+    'left'
+  );
+}
+
+/**
+ * The membrane potential by the synapse, on a plot across the foot of the figure, 40 ms long, as a share of its peak:
+ * up within a millisecond as the current flows in, then down — fast at first, as the charge spreads along the
+ * dendrite, then slower, as potassium leaks out, with τ_m; and the same at the soma, smaller, rising and falling more
+ * slowly, the two alike once the charge has spread.
+ */
+function drawDecay(g: G, a: number, P: Pose, narrow: boolean) {
+  const { ctx, w, h, L, u } = g;
+  const s = Math.max(u, 0.85);
+  const [left, right] = [14, w - 14];
+  const top = h - 36 * u - 96 * s;
+  ctx.globalAlpha = a;
+  ctx.beginPath();
+  ctx.roundRect(left, top, right - left, 92 * s, 10 * s);
+  ctx.fillStyle = rgba(L.page, 1);
+  ctx.fill();
+  ctx.strokeStyle = rgba(L.ink, 0.12);
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  const [x0, x1] = [left + 20 * s, right - (narrow ? 20 : 200) * s];
+  const [base, peak] = [top + 70 * s, top + 14 * s];
+  const span = 40;
+  const X = (t: number) => lerp(x0, x1, t / span);
+  const Y = (v: number) => lerp(base, peak, v);
+  ctx.globalAlpha = 0.5 * a;
+  ctx.strokeStyle = rgba(L.ink, 1);
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x0, base);
+  ctx.lineTo(x1, base);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  say(g, '0', x0, base + 11 * s, 0.6 * a, 11, 'center');
+  say(g, `${span} ms`, x1, base + 11 * s, 0.6 * a, 11, 'center');
+  // at the synapse: up in a millisecond; then most of it gone in a few, the rest falling with τ_m
+  const local = (t: number) =>
+    t < 1 ? smooth(t) : 0.71 * Math.exp(-(t - 1) / 1.5) + 0.29 * Math.exp(-(t - 1) / 20);
+  // at the soma: a fifth as high, peaking at about 6 ms, then falling with τ_m
+  const SOMA_NORM = Math.exp(-0.297) - Math.exp(-2.376);
+  const atSoma = (t: number) => (0.2 * (Math.exp(-t / 20) - Math.exp(-t / 2.5))) / SOMA_NORM;
+  const curve = (f: (t: number) => number, colour: RGB, alpha: number) => {
+    if (alpha < 0.01) return;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = rgba(colour, 1);
+    ctx.lineWidth = 2 * s;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const t = (i / 200) * span;
+      if (i) ctx.lineTo(X(t), Y(clamp01(f(t))));
+      else ctx.moveTo(X(t), Y(clamp01(f(t))));
+    }
+    ctx.stroke();
+    ctx.restore();
+  };
+  const [synColour, somaColour] = [mix(FIELD, L.ink, 0.25), mix(L.page, L.ink, 0.6)];
+  curve(local, synColour, a);
+  curve(atSoma, somaColour, a * P.soma);
+  // what each part of the fall is: fast, as the charge spreads; slower, as potassium leaks out
+  say(
+    g,
+    narrow ? 'fast: spreading' : 'fast: the charge spreading along the dendrite',
+    X(3) + 6 * s,
+    Y(local(3)) - 8 * s,
+    a,
+    11,
+    'left',
+    synColour
+  );
+  say(
+    g,
+    narrow ? 'slower: τ_{m}' : 'slower: K^{+} leaking out, τ_{m} ≈ 10–30 ms',
+    X(22) + 6 * s,
+    Y(local(22)) - 10 * s,
+    a * P.slow,
+    11,
+    'left',
+    IONS.K.colour
+  );
+  // and which is which, at the side
+  if (narrow) return;
+  const key = (y: number, colour: RGB, text: string, alpha: number) => {
+    if (alpha < 0.01) return;
+    ctx.globalAlpha = alpha;
+    ctx.strokeStyle = rgba(colour, 1);
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(x1 + 14 * s, y);
+    ctx.lineTo(x1 + 28 * s, y);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    say(g, text, x1 + 34 * s, y, alpha, 11, 'left', mix(colour, L.ink, 0.2));
+  };
+  key(Y(0.8), synColour, 'by the channel', a * (1 - P.soma));
+  key(Y(0.8), synColour, 'by the channel: large, brief', a * P.soma);
+  key(Y(0.45), somaColour, 'at the soma: smaller, slower', a * P.soma);
 }
 
 /** The AMPA receptors' reversal potential, mV, sodium and potassium passing as easily as each other: from the physics
@@ -5884,34 +10285,141 @@ const LABELS: Record<Physics2Step, string> = {
     'Close in on the channel, the membrane lined with pairs: potassium ions come up out through the channel one after another, each moving over to join those lining the membrane outside, a negative ion inside drawn to it; the field across the membrane sweeps down brighter and stronger.',
   clearance:
     'Back up at the synapse, backed out a little: either side of the cleft, a transporter on an astrocyte wrapped round it takes up the glutamate that wanders out. Below, a plot over 5 milliseconds: glutamate in the cleft, a spike gone within about a millisecond.',
+  brief:
+    'Back up at the channel, backed out a little; below, a plot over 15 milliseconds: the 5 milliseconds the channel is open are shaded, and the voltage rises only during them, then hardly falls.',
+  resist:
+    'The plot now shows only the voltage rising, three ways: fast through channels of little resistance, slower through more, and slower still through more again.',
+  rc: "One rise of the voltage, a dashed line marking where it is 63% of the way up and when: the time constant τ, the open channels' resistance times the membrane's capacitance.",
+  capacitance:
+    'As before, and now the plot below gives way to the membrane as a capacitor: its two faces and the lipids between them, positive charge lining the outside and negative the inside, as much as it holds for 1 volt across it.',
+  thickness:
+    'As before, and now the membrane grows thinner, its thickness d marked, and more charge lines either side for the same 1 volt: the thinner the membrane, the greater its capacitance.',
+  dielectric:
+    "As before, and now the membrane's area A, its thickness d and the lipids' dielectric constant ε are named: C = ε × A / d.",
+  ohm: 'The capacitor gives way to the plot of the rise again; now the reversal potential E dashed along the top, where the rise is headed; the gap from the voltage up to it marked, E − V; and the current through the channels, I = (E − V) / R, largest at first and falling as the gap closes.',
+  charging:
+    'As before, the reversal potential dashed along the top; two lines lie along the rising voltage, steep at first and shallower later: it rises at I / C, slowing as it nears E.',
   deactivation:
-    "As before; the plot, now over 10 milliseconds, adds the AMPA receptors' current, rising fast and falling within 1 to 3 milliseconds as the glutamate comes off them and their channels close.",
+    "Back up at the synapse, the transporters at work, and below, the plot of glutamate in the cleft, now over 10 milliseconds; it adds the AMPA receptors' current, rising fast and falling within 1 to 3 milliseconds as the glutamate comes off them and their channels close.",
   desensitize:
     'As before, the plot now over 30 milliseconds: glutamate held in the cleft, dashed, and the AMPA current falling anyway within about 10 milliseconds; at the synapse, the AMPA receptors shut and grey while glutamate is still bound to them: desensitized.',
   factors:
     'The plot, over 15 milliseconds: the AMPA current at an auditory brainstem synapse, gone in under a millisecond; at a cortical or hippocampal synapse, 2 to 5 milliseconds; and, dashed, the same at room temperature, slower.',
   tau: "The plot, over 80 milliseconds: the brief AMPA current, and the voltage it makes, rising over a few milliseconds and falling over tens, with the membrane's time constant, τ = r_m c_m, about 20 milliseconds.",
   excess:
-    "The view slides down onto the spine and its dendrite. Round the spine's head, under its membrane, negative charges turn positive one after another as positive charge collects inside, the head glowing warm; positive charges just outside are pushed off; and the membrane potential here rises from −72 to −45 millivolts.",
+    "The view slides down onto the dendrite. Round the channel, the negative charges lining the dendrite's membrane inside, above and below, are neutralized one after another, the nearest first, part of the way along; the positive charges just outside them drift off.",
+  rise: 'As before, and now the dendrite glows warm round the channel, and the membrane potential there rises from −72 to −45 millivolts.',
   repel:
-    'As before, and now the potassium ions inside the spine, the most plentiful positive ions there, are shown, each pushed away from the charge collecting under the membrane, down towards the neck, an arrow on each.',
+    'Back down on the dendrite, close in; now the potassium ions in the dendrite by the channel, the most plentiful positive ions there, are shown, each pushed away from the charge collecting under it, down and out, an arrow on each.',
   along:
-    "As before, and now potassium ions in the dendrite flow along it away from the spine, both ways, again and again, each with a small arrow pushing the next, and a broad arrow out either side; positive charge collects on the dendrite's membrane along it, most near the spine, the dendrite glowing warm there.",
+    "The view backs out along the dendrite, and potassium ions in it flow along it away from the synapse, both ways, again and again, each with a small arrow pushing the next, and a broad arrow out either side; positive charge collects on the dendrite's membrane along it, most near the synapse, the dendrite glowing warm there.",
+  spread:
+    'The view backs out a little and up; below it, a plot over 40 milliseconds of the membrane potential by the channel: up within a millisecond, then most of the way back down within a few, fast, as the charge spreads away along the dendrite.',
+  leak: "As before, and now K⁺ leak channels along the dendrite's lower membrane, potassium ions leaking out through them now and then; on the plot, the slower part of the fall is named: potassium leaking out, with τ_m, about 10 to 30 milliseconds.",
+  soma: 'As before, and now on the plot the same potential at the soma: about a fifth as high, peaking at about 6 milliseconds and falling slowly; after about 10 milliseconds the two fall alike, with τ_m.',
   decay:
-    "As before, and now potassium channels along the dendrite's lower membrane, potassium ions leaking out through them now and then; the membrane potential named at points along the dendrite either way, −59 millivolts nearer the spine and −66 further off: the rise fades with distance.",
+    'As before, and now the membrane potential named at points along the dendrite either way, −59 millivolts nearer the synapse and −66 further off: the rise fades with distance.',
+  unbind:
+    'As before, and now on the plot the AMPA current, the EPSC, rising at once and decaying within a few milliseconds as the channels shut.',
   glutamate:
-    'As before, close in on the synapse at work; the transmitter is now named glutamate, and the receptors AMPA, the two on the right, through which sodium passes, and NMDA, the darker one on the left: both let only positive ions through.',
-  ampa: 'As before, and now, through the open AMPA receptors, potassium ions flow out of the spine into the cleft as sodium ions flow in, about as many each way.',
+    'As before, close in on the synapse at work; the transmitter is now named glutamate, and the receptors AMPA receptors, sodium passing through them.',
+  ampa: 'As before, and now, through the open AMPA receptors, potassium ions flow out of the dendrite into the cleft as sodium ions flow in, about as many each way.',
   cancel:
     "The view backs out a little and up; below it, a line of potentials from −100 millivolts to +80: potassium's reversal potential at −89, sodium's at +67, and the AMPA receptors' own marked between them, about 0 millivolts, with an arrow each way from it, potassium out and sodium in, as long as each other: the two currents cancel there.",
+  activeChannels:
+    "The potentials' line goes; beside the passive channels, two active channels appear in the membrane, opening and shutting again and again, each named.",
+  closeUp:
+    "The view closes in on one of them until it fills the figure: the membrane's two layers of lipids, heads out, and through them a protein, two halves round a pore — wide at the outside, narrow near it, wider in the middle, and shut near the inside — with a rod in the membrane beyond each half. It is named a protein, and its pore.",
+  gate: 'As before, and now its gate, where the pore is shut near the inside, opens and shuts, again and again, and is named. While it is open, sodium ions pass down through the pore into the cell; while it is shut, they come to the mouth of the pore and go away again.',
+  sensor:
+    'As before, the gate shut again, and now the voltage sensors are picked out: beyond each half of the pore, in the membrane, a rod carrying four positive charges, joined by a linker under the channel to its gate. It is named a voltage-gated sodium channel.',
+  held: 'As before, and now positive ions line the membrane outside and negative ions line it inside, and the field across the membrane between them is drawn as glowing arrows pointing in. Beside each sensor, an arrow shows the field pushing its positive charges inward; the membrane potential, in the corner, reads −70 millivolts.',
+  rises:
+    "As before, and now the membrane potential steps up to −20 millivolts and back, again and again, on a plot below too. As it rises, most of the ions lining the membrane drift off, the field's arrows and its push on the sensors fade, and the sensors slide outward; the gate opens with them.",
+  activates:
+    "As before, and now, while the gate is open, sodium ions flow in through the pore, and the channel's state is named beside it: open, or closed. On the plot, under the membrane potential, how open the channel is, rising soon after the step: activation.",
+  deactivates:
+    'As before, and now as the potential falls back the sensors slide in and the gate shuts; on the plot, the fall is named: deactivation.',
+  secondGate:
+    "As before, and now the channel's second gate is named: a ball on a tether, hanging from the inner end of the channel.",
+  inactivates:
+    'As before, and now, soon after the gate opens, the ball swings up into the inner mouth of the pore and plugs it while the potential stays up, so sodium stops flowing, and the channel is named inactivated. On the plot, its opening is brief, and the time it is plugged is shaded.',
+  recovers:
+    'As before, and now, after the potential falls back, the ball stays in the pore for a while, then swings out again; on the plot, the end of the shading is named: recovered.',
+  tooSoon:
+    'As before, and now a second step up comes soon after the first: the sensors move out and the gate opens, but the pore is still plugged, and no sodium flows. On the plot, no opening at the second step: too soon.',
+  ligandGated:
+    'The view backs out a little, slides along the membrane past the passive channels, and closes in on the ligand-gated channel: two halves round a pore, shut near the outside, each with two lobes above it and a binding site between them. Again and again, molecules of its ligand come down into the binding sites, and go; it and its ligand are named. The plot now shows the ligand bound, and how open the channel is.',
+  binds:
+    'As before: as the ligand binds, the lobes close on it, the gate opens, and sodium ions flow in; as it goes, the gate shuts. On the plot, the rise and the fall are named: activation and deactivation.',
+  desensitizes:
+    'As before, but now the ligand stays longer: soon after the channel opens, its lobes turn apart, it greys, and its gate shuts, though the ligand is still bound. On the plot, the time it is desensitized is shaded.',
+  channelStates:
+    "The view slides back along the membrane to the sodium channel, opening and being plugged as before. In the plot's place, the states: closed, open, and inactivated or desensitized, with arrows between them — activation and deactivation between closed and open, inactivation or desensitization from open, and recovery, slowly, back to closed — the state the channel is in lit.",
+  chance:
+    'The plot is back, and now, while the potential is up, the channel opens and shuts at random: three openings of different lengths, then it is plugged. On the plot, its opening is a run of square pulses.',
+  together:
+    'As before, and now on the plot, faintly, the openings of a few more such channels, each different, and in bold the share of 120 of them open: it rises smoothly soon after the step, then falls as they are plugged.',
+  clamp:
+    'In front of it all, two plots. Above, the membrane potential, held at rest and stepped to each of seven levels, from −60 to +90 millivolts, in shades of orange from light to dark. Below, the current through the sodium channels at each: inward, plotted down, rising to a peak within a millisecond and falling back as they inactivate — small at −60, largest near 0, almost none at +65, and outward, up, at +90. One step after another is picked out.',
+  peakIV:
+    "As before, and now each current's peak is dotted, and on the right the peaks are plotted against their potentials, a dot for each, and a curve drawn through them: near zero below −50 millivolts, dipping to its most inward near 0, and rising back through zero to outward above +67.",
+  linear:
+    'As before, and now a dashed straight line on the right, steep, through the point where the curve crosses zero: the current a constant conductance would pass. Near +67 millivolts and above, the curve follows it; lower, it falls away from it towards zero.',
+  bends:
+    'As before, and now above the curve, a second plot: the share of the channels open at each potential, from none below −60 millivolts, through about half at 0, to nearly all at +90. A cursor runs across both, a dot on each curve, and the share open times the driving force written beside it.',
+  reverses:
+    "As before, and now where the curve crosses zero, at sodium's reversal potential, about +67 millivolts, it is ringed and named: no current there.",
+  spikes:
+    'In front of the membrane, a plot of the membrane potential over 100 milliseconds: flat at rest, with four sharp spikes, each shooting up past 0 and falling back. A dot runs along it, and sodium’s and potassium’s reversal potentials and rest are marked as dashed lines.',
+  oneSpike:
+    'The plot closes in on the first spike, over 30 milliseconds: from rest at −72 millivolts it shoots up to about +58 within a millisecond, falls back below rest, and creeps back up.',
+  inputs:
+    'As before, and now green arrows under the trace mark three inputs from synapses, each lifting the potential a little; the third takes it into the spike.',
+  threshold:
+    'As before, and now a dotted line at the threshold, −55 millivolts, and, dashed, what the first two inputs alone do: lift the potential short of it, and fade away.',
+  allOrNone:
+    'The one run dimmed; in green, light to dark, the potential after one input of each of four sizes: the smallest lifts it a little and fades; the other three each fire the same spike, the bigger the input, the sooner.',
+  gated:
+    'The one run again, and under it now two plots: the conductances of sodium, in orange, rising fast at the spike and falling, and potassium, in purple, rising later and lasting longer. Under them, a strip of membrane with four sodium channels and four potassium channels, following the dot: as many open as the conductance says, ions passing through those open, sodium’s plugged by a ball after the spike.',
+  upstroke:
+    'As before, and now the rise is shaded and named, sodium rushing in, and beside it a cycle of three: the potential rises, more sodium channels open, more sodium flows in — lit while the potential is rising.',
+  peak: 'As before, and now the peak is named, about +58 millivolts: the sodium channels inactivate and the potassium channels open.',
+  downstroke:
+    'As before, and now the fall is shaded and named, potassium flowing out, and the dip below rest after it.',
+  refractory:
+    'As before, and now the few milliseconds after the spike are shaded, the refractory period, and a strong input there, marked by a big green arrow, lifts the potential only a little: no spike.',
+  actionPotential:
+    'As before, the late input gone, and every part of the spike named together: the rise as sodium rushes in, the peak, the fall as potassium flows out, the dip below rest, and back to rest.',
+  propagate:
+    "The membrane gives way to two neurons: another neuron, upper left, its axon running across and down to this neuron's dendrite. A spike, a yellow glow, runs down the axon to it, again and again: the action potential, passed on.",
+  pumpNeed:
+    'The membrane again, the action potential going round as before, sodium ions passing in through the voltage-gated sodium channel and potassium ions out through the potassium channel; at the foot, what each spike moves.',
+  pump: 'The view closes in on a protein in the membrane between the sodium channels, wider than a channel and with no pore through it: two halves round a cavity in its middle, open to the inside, and a foot under one half. It is named the sodium–potassium pump.',
+  pumpCycle:
+    'As before, and now its round, again and again: three sodium ions come into its cavity from inside; ATP docks at its foot, and as ADP leaves, a phosphate stays on; the halves turn to open to the outside, and the sodium ions leave there; two potassium ions come in from outside; the phosphate goes; the halves turn back, and the potassium ions leave inside. Arrows beside it: three sodium out, two potassium in.',
+  electrogenic: 'As before, and now over it: one positive charge out, net, each round.',
+  pumpEnergy: 'As before, and now by its foot: one ATP each round.',
+  first: 'The other neuron goes, leaving this one, its dendrite running to its body at the right.',
+  inject:
+    'This neuron, its dendrite running to its body at the right. Two ways to inject current into it are shown and named: an electrode, a glass pipette with its tip at the body, and an ion channel in its dendrite, ringed.',
+  channel:
+    "The electrode goes, and the view dives in on the ion channel, set in the upper membrane of the dendrite's shaft, shut; it and the dendrite are named.",
+  opens:
+    'The view closes in on the channel; it opens, its two halves parting round a lit pore, and shuts again, again and again: open for about 5 milliseconds, slowed down here.',
+  sodium:
+    'As before, and now sodium ions pass in through the open channel, one after another, while a chloride ion runs at it and is turned away.',
   signal:
-    "The membrane gives way to two neurons: another neuron, upper left, in blue, its axon running across and down to a spine on this neuron's dendrite, which runs to its body at the right. A spike, a yellow glow, runs down the axon to the synapse, again and again.",
+    "The view backs out from the dendrite to the whole of this neuron, and another neuron comes in, upper left, in blue, its axon running across and down to this neuron's dendrite, ending right on its shaft. A spike, a yellow glow, runs down the axon to the synapse, again and again.",
   synapse:
-    "Where the axon meets the spine is ringed and named a chemical synapse; the view dives in on it: the other neuron's presynaptic terminal, full of vesicles, a narrow synaptic cleft, and the head of a spine on this neuron's dendrite, receptors set in its membrane.",
+    "Where the axon meets the dendrite is ringed and named a chemical synapse; the view dives in on it: the other neuron's presynaptic terminal, full of vesicles, a narrow synaptic cleft, and the shaft of this neuron's dendrite, receptors set in its membrane.",
   release:
-    'Close in on the synapse: a spike arrives down the axon and the terminal flashes; a vesicle fuses with its membrane and empties its neurotransmitter into the cleft; the molecules cross it, two binding to each receptor on the spine, which glow, then let go; and again.',
+    'Close in on the synapse: a spike arrives down the axon and the terminal flashes; a vesicle fuses with its membrane and empties its neurotransmitter into the cleft, the molecules spreading through it and gone; and again.',
+  bind: "The view closes in on the cleft and the dendrite under it; the molecules cross the cleft, two binding to each receptor in the dendrite's membrane, which glow, then let go; and again.",
+  opening:
+    "As before, and now, bound, each receptor's channel opens, its two halves parting round a lit pore, then closes as the transmitter lets go; and again.",
   inflow:
-    "As before, and now, bound, the receptors' channels open: sodium ions from the cleft pass through them into the spine, one after another, while a chloride ion runs at one and is turned away; then the transmitter lets go and the channels close; and again.",
+    'As before, and now sodium ions from the cleft pass through the open channels into the dendrite, one after another, while a chloride ion runs at one and is turned away; and again.',
   water:
     'The same membrane, with the outside named above and the inside below, both filling with water molecules, each a blue oxygen with two paler blue hydrogens: neutral H₂O, tumbling slowly.',
   voltage:
