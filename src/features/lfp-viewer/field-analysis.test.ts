@@ -259,11 +259,33 @@ describe('contactLines', () => {
 
 describe('currentSourceDensity', () => {
   it('is −σ times the second derivative, in nA/mm³', () => {
-    // φ = z² µV at 10 µm: ∂²φ/∂z² is 2 µV/µm², so −0.3 S/m × 2e6 V/m² = −600,000 A/m³.
-    const rows = [0, 10, 20, 30, 40].map((z) => new Float64Array(8).fill((z * z) / 10));
+    // φ = ±z² µV at 10 µm: ∂²φ/∂z² is ±2 µV/µm², so ∓0.3 S/m × 2e6 V/m² = ∓600,000 A/m³.
+    const rows = [0, 10, 20, 30, 40].map((z) =>
+      Float64Array.from({ length: 8 }, (_, b) => ((b % 2 ? -1 : 1) * (z * z)) / 10)
+    );
     const result = currentSourceDensity(fieldOf(rows, 1, 10), 10);
     expect(result?.rows).toBe(3);
-    expect(result?.values.every((v) => Math.abs(v + 600_000) < 1)).toBe(true);
+    result?.values.forEach((v, i) => {
+      expect(Math.abs(v - (i % 2 ? 600_000 : -600_000))).toBeLessThan(1);
+    });
+  });
+
+  it('leaves out each contact’s mean over the run', () => {
+    const swing = [0, 40, 0, -40];
+    const offsets = [0, 300, -200, 500, 100];
+    const steady = offsets.map((offset) => new Float64Array(4).fill(offset));
+    expect(currentSourceDensity(fieldOf(steady), 20)?.values.every((v) => v === 0)).toBe(true);
+
+    const bare = currentSourceDensity(
+      fieldOf(offsets.map((_, c) => Float64Array.from(swing, (v) => v * (c === 2 ? -1 : 1)))),
+      20
+    );
+    const offset = currentSourceDensity(
+      fieldOf(offsets.map((o, c) => Float64Array.from(swing, (v) => v * (c === 2 ? -1 : 1) + o))),
+      20
+    );
+    expect(Array.from(offset?.values ?? [])).toEqual(Array.from(bare?.values ?? []));
+    expect(bare?.values.some((v) => v !== 0)).toBe(true);
   });
 
   it('is zero for a field that changes evenly along the line', () => {
@@ -272,10 +294,11 @@ describe('currentSourceDensity', () => {
   });
 
   it('makes a sink negative', () => {
-    const rows = [0, 0, -100, 0, 0].map((v) => new Float64Array(4).fill(v));
+    const rows = [0, 0, -100, 0, 0].map((v) => Float64Array.from([0, 0, v, 0]));
     const result = currentSourceDensity(fieldOf(rows), 20);
-    const middle = result?.values[result.times.length] ?? 0;
-    expect(middle).toBeLessThan(0);
+    const columns = result?.times.length ?? 0;
+    expect(result?.values[columns + 2]).toBeLessThan(0);
+    expect(result?.values[columns]).toBeGreaterThan(0);
   });
 
   it('averages a long run into at most 1,024 columns, centred', () => {

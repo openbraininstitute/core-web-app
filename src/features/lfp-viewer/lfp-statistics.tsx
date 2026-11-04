@@ -661,7 +661,7 @@ function CsdPlot({
           ? `${line.contacts.length} contacts, ${Number(line.spacing.toFixed(1))} µm apart${lines.length > 1 ? ` · line ${lines.indexOf(line) + 1} of ${lines.length}` : ''}`
           : undefined
       }
-      help="−σ ∂²φ/∂z² along the line holding the selected contact, as recorded: sinks in blue, sources in orange. It has no value at the line's two ends, and follows the field's zoom"
+      help="−σ ∂²φ/∂z² along the line holding the selected contact: sinks in blue, sources in orange. Each contact's mean over the run is taken off first, so this shows changes around it and not steady currents. It has no value at the line's two ends, and follows the field's zoom"
       visible={visible}
       figure={figure}
       empty={failed ? FAILED : line ? undefined : 'Needs contacts evenly spaced on a line'}

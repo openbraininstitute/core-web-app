@@ -399,6 +399,8 @@ export type CurrentSourceDensity = {
 /**
  * −σ ∂²φ/∂z² along a line of contacts, at full resolution then averaged into
  * columns: `field` holds the line's rows in order. Sinks come out negative.
+ * Each contact's mean over the run is left out, as a steady offset between
+ * contacts would otherwise read as a current that never changes.
  */
 export function currentSourceDensity(
   field: LfpField,
@@ -414,12 +416,15 @@ export function currentSourceDensity(
     const above = r * bins;
     const at = (r + 1) * bins;
     const below = (r + 2) * bins;
+    let total = 0;
+    for (let b = 0; b < bins; b++) total += data[above + b] - 2 * data[at + b] + data[below + b];
+    const mean = total / bins;
     for (let column = 0; column < columns; column++) {
       const from = Math.floor((column * bins) / columns);
       const to = Math.floor(((column + 1) * bins) / columns);
       let sum = 0;
       for (let b = from; b < to; b++) sum += data[above + b] - 2 * data[at + b] + data[below + b];
-      values[r * columns + column] = (sum / (to - from)) * perStep;
+      values[r * columns + column] = (sum / (to - from) - mean) * perStep;
     }
   }
   return {
