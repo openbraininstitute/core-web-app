@@ -83,7 +83,7 @@ function signOfLargest(values: ArrayLike<number>): 1 | -1 {
   return values[largest] < 0 ? -1 : 1;
 }
 
-function leadingVector(values: Float32Array, contacts: number, bins: number): Float32Array {
+export function leadingVector(values: Float32Array, contacts: number, bins: number): Float32Array {
   // Deterministic and with no symmetry the field could share.
   let vector = Float64Array.from({ length: contacts }, (_, c) => 1 + ((c * 7919) % 101) / 101);
   const inBins = new Float64Array(bins);

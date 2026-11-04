@@ -5,9 +5,10 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
-import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import {
   computeTicks,
+  drawChangeRules,
   drawEventMarks,
   formatTick,
   markerGroupAt,
@@ -330,6 +331,7 @@ export function FieldPlot({
     if (!g) return;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, width, height);
+    drawChangeRules(g, events, (time) => ((time - from) / (to - from)) * width, 0, height);
     groupsRef.current = drawEventMarks(
       g,
       { xMin: from, xMax: to, yMin: 0, yMax: 1 },
@@ -377,20 +379,11 @@ export function FieldPlot({
           if (drag) setDrag({ ...drag, x1: inPlot(x) });
           const group = drag
             ? undefined
-            : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, plot.bottom - plot.top);
-          setEventsHover((previous) => {
-            if (!group) return previous && null;
-            // The same markers keep their group, so the bands are not drawn again as the pointer moves.
-            const same =
-              previous !== null &&
-              previous.group.events.length === group.events.length &&
-              previous.group.events.every((event, i) => event === group.events[i]);
-            return {
-              group: same ? previous.group : group,
-              clientX: e.clientX,
-              clientY: e.clientY,
-            };
-          });
+            : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, {
+                width: plot.right - plot.left,
+                height: plot.bottom - plot.top,
+              });
+          setEventsHover((previous) => nextEventsHover(previous, group, e.clientX, e.clientY));
           if (
             x < plot.left ||
             x > plot.right ||
@@ -471,7 +464,7 @@ export function FieldPlot({
             }}
           />
         )}
-        {eventsHover && <TimelineCard hover={eventsHover} raster={false} />}
+        {eventsHover && <TimelineCard hover={eventsHover} />}
         {hover && !eventsHover && (
           <div className="pointer-events-none absolute top-1 right-3 rounded bg-white/90 px-1.5 py-0.5 text-[11px] text-neutral-600 tabular-nums shadow-sm">
             {hover}

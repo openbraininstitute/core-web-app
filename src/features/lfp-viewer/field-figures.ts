@@ -1,14 +1,15 @@
+import { DIVERGING_COLOURS } from '@/features/lfp-viewer/colour-scale';
 import { CONDUCTIVITY } from '@/features/lfp-viewer/field-analysis';
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
-  axisTitle,
+  axis,
   BASE_LAYOUT,
-  GRID_COLOR,
+  LEGEND_ABOVE,
   MEAN_INK,
   withAlpha,
 } from '@/features/spike-viewer/spike-statistics/figure-kit';
 
-import type { Data, Layout } from 'plotly.js-dist-min';
+import type { Data } from 'plotly.js-dist-min';
 import type { ColourStops } from '@/features/lfp-viewer/colour-scale';
 import type {
   Coherence,
@@ -34,29 +35,45 @@ const MATRIX_TICKS = 12;
 const COLOUR_BAR = { thickness: 10, outlinewidth: 0, tickfont: { size: 10 } };
 const PAPER_RIGHT_MARGIN = { ...BASE_LAYOUT.margin, r: 8 };
 
-const axis = (title: string, extra: Partial<Layout['xaxis']> = {}) => ({
-  title: axisTitle(title),
-  automargin: true,
-  gridcolor: GRID_COLOR,
-  zeroline: false,
-  ...extra,
-});
-
-/** Rows of a row-major matrix, as Plotly takes them. */
 function rowsOf(values: ArrayLike<number>, rows: number, columns: number) {
   return Array.from({ length: rows }, (_, r) =>
     Array.from({ length: columns }, (_, c) => values[r * columns + c])
   );
 }
 
-/** A contact's power over time, its bands up to where anything shows. */
-export function spectrogramFigure({
-  result,
-  window,
+function heatmap({
+  unit,
+  ...trace
 }: {
-  result: Spectrogram;
-  window: [number, number];
-}): Figure {
+  x: readonly number[];
+  y: readonly number[];
+  z: number[][];
+  text?: string[][];
+  zmin: number;
+  zmax: number;
+  colorscale: ColourStops;
+  unit: string;
+  hovertemplate: string;
+}): Data[] {
+  return [
+    {
+      ...trace,
+      type: 'heatmap',
+      zsmooth: false,
+      colorbar: { ...COLOUR_BAR, title: { text: unit, side: 'right', font: { size: 10 } } },
+    },
+  ] as unknown as Data[];
+}
+
+/** A figure's time axis follows a zoom; its data stays, so Plotly needn't read it again. */
+export function withTimeWindow(figure: Figure, window: [number, number]): Figure {
+  return {
+    ...figure,
+    layout: { ...figure.layout, xaxis: { ...figure.layout.xaxis, range: window } },
+  };
+}
+
+export function spectrogramFigure({ result }: { result: Spectrogram }): Figure {
   const { times, frequencies, decibels } = result;
   const columns = times.length;
   const bands = frequencies.length;
@@ -73,38 +90,31 @@ export function spectrogramFigure({
     }
   }
   return {
-    data: [
-      {
-        type: 'heatmap',
-        x: Array.from(times),
-        y: Array.from(frequencies),
-        z: rowsOf(decibels, bands, columns),
-        zmin: floor,
-        zmax: top,
-        zsmooth: false,
-        colorscale: POWER_COLOURS,
-        colorbar: { ...COLOUR_BAR, title: { text: 'dB', side: 'right', font: { size: 10 } } },
-        hovertemplate: '%{x:.1f} ms · %{y:.0f} Hz · %{z:.1f} dB<extra></extra>',
-      },
-    ] as unknown as Data[],
+    data: heatmap({
+      x: Array.from(times),
+      y: Array.from(frequencies.subarray(0, lastBand + 1)),
+      z: rowsOf(decibels, lastBand + 1, columns),
+      zmin: floor,
+      zmax: top,
+      colorscale: POWER_COLOURS,
+      unit: 'dB',
+      hovertemplate: '%{x:.1f} ms · %{y:.0f} Hz · %{z:.1f} dB<extra></extra>',
+    }),
     layout: {
       ...BASE_LAYOUT,
       margin: PAPER_RIGHT_MARGIN,
-      xaxis: axis('Time (ms)', { range: window }),
+      xaxis: axis('Time (ms)'),
       yaxis: axis('Frequency (Hz)', { range: [0, frequencies[lastBand]] }),
     },
   };
 }
 
-/** Correlation between rows of contacts, in the order the field draws them. */
 export function correlationFigure({
   matrix,
   rows,
-  colours,
 }: {
   matrix: Float32Array;
   rows: readonly FieldRow[];
-  colours: ColourStops;
 }): Figure {
   const n = rows.length;
   const indices = rows.map((_, r) => r);
@@ -112,46 +122,28 @@ export function correlationFigure({
   const tickvals = indices.filter((r) => r % every === 0);
   const ticktext = tickvals.map((r) => rows[r].label);
   const text = rows.map((a) => rows.map((b) => `${a.label} · ${b.label}`));
+  const labelled = { automargin: true, tickvals, ticktext, zeroline: false, showgrid: false };
   return {
-    data: [
-      {
-        type: 'heatmap',
-        x: indices,
-        y: indices,
-        z: rowsOf(matrix, n, n),
-        text,
-        zmin: -1,
-        zmax: 1,
-        zsmooth: false,
-        colorscale: colours,
-        colorbar: { ...COLOUR_BAR, title: { text: 'r', side: 'right', font: { size: 10 } } },
-        hovertemplate: '%{text}<br>r = %{z:.3f}<extra></extra>',
-      },
-    ] as unknown as Data[],
+    data: heatmap({
+      x: indices,
+      y: indices,
+      z: rowsOf(matrix, n, n),
+      text,
+      zmin: -1,
+      zmax: 1,
+      colorscale: DIVERGING_COLOURS,
+      unit: 'r',
+      hovertemplate: '%{text}<br>r = %{z:.3f}<extra></extra>',
+    }),
     layout: {
       ...BASE_LAYOUT,
       margin: PAPER_RIGHT_MARGIN,
-      xaxis: {
-        automargin: true,
-        tickvals,
-        ticktext,
-        tickangle: -45,
-        zeroline: false,
-        showgrid: false,
-      },
-      yaxis: {
-        automargin: true,
-        tickvals,
-        ticktext,
-        autorange: 'reversed',
-        zeroline: false,
-        showgrid: false,
-      },
+      xaxis: { ...labelled, tickangle: -45 },
+      yaxis: { ...labelled, autorange: 'reversed' },
     },
   };
 }
 
-/** How well each contact follows the reference, frequency by frequency. */
 export function coherenceFigure({
   result,
   contacts,
@@ -175,14 +167,13 @@ export function coherenceFigure({
     layout: {
       ...BASE_LAYOUT,
       showlegend: contacts.length > 1,
-      legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 10 } },
+      legend: LEGEND_ABOVE,
       xaxis: axis('Frequency (Hz)', { type: 'log' }),
       yaxis: axis(`Coherence with e${reference}`, { range: [0, 1.02] }),
     },
   };
 }
 
-/** A value against position along an axis, the selected contact marked on it. */
 export function profileFigure({
   points,
   measure,
@@ -231,50 +222,35 @@ export function profileFigure({
   };
 }
 
-/** The sinks and sources along a line of contacts, over time. */
 export function csdFigure({
   result,
   coordinates,
-  window,
-  colours,
 }: {
   result: CurrentSourceDensity;
   /** Of the rows, in µm along the line. */
   coordinates: readonly number[];
-  window: [number, number];
-  colours: ColourStops;
 }): Figure {
-  const { times, values, rows } = result;
-  const sorted = Float32Array.from(values, Math.abs).sort();
-  const limit = sorted[Math.floor((sorted.length - 1) * 0.995)] || 1;
+  const { times, values, rows, limit } = result;
   return {
-    data: [
-      {
-        type: 'heatmap',
-        x: Array.from(times),
-        y: coordinates,
-        z: rowsOf(values, rows, times.length),
-        zmin: -limit,
-        zmax: limit,
-        zsmooth: false,
-        colorscale: colours,
-        colorbar: {
-          ...COLOUR_BAR,
-          title: { text: 'nA/mm³', side: 'right', font: { size: 10 } },
-        },
-        hovertemplate: '%{x:.1f} ms · %{y:.0f} µm · %{z:.3g} nA/mm³<extra></extra>',
-      },
-    ] as unknown as Data[],
+    data: heatmap({
+      x: Array.from(times),
+      y: coordinates,
+      z: rowsOf(values, rows, times.length),
+      zmin: -limit,
+      zmax: limit,
+      colorscale: DIVERGING_COLOURS,
+      unit: 'nA/mm³',
+      hovertemplate: '%{x:.1f} ms · %{y:.0f} µm · %{z:.3g} nA/mm³<extra></extra>',
+    }),
     layout: {
       ...BASE_LAYOUT,
       margin: PAPER_RIGHT_MARGIN,
-      xaxis: axis(`Time (ms) · σ = ${CONDUCTIVITY} S/m assumed`, { range: window }),
+      xaxis: axis(`Time (ms) · σ = ${CONDUCTIVITY} S/m assumed`),
       yaxis: axis('Position along the line (µm)'),
     },
   };
 }
 
-/** The field around a trigger: the first contact with its standard error. */
 export function triggeredFigure({
   result,
   contacts,
@@ -286,15 +262,15 @@ export function triggeredFigure({
   const firstColour = PICK_COLORS[0];
   // Spikes at one moment share one stretch of the field: their spread says nothing.
   const band =
-    contacts.length > 0 && result.events > 1
+    result.events > 1
       ? [
           {
             type: 'scatter',
             mode: 'lines',
             x: [...x, ...x.slice().reverse()],
             y: [
-              ...x.map((_, i) => result.means[0][i] + result.errors[0][i]),
-              ...x.map((_, i) => result.means[0][i] - result.errors[0][i]).reverse(),
+              ...x.map((_, i) => result.means[0][i] + result.error[i]),
+              ...x.map((_, i) => result.means[0][i] - result.error[i]).reverse(),
             ],
             fill: 'toself',
             fillcolor: withAlpha(firstColour, 0.18),
@@ -320,7 +296,7 @@ export function triggeredFigure({
     layout: {
       ...BASE_LAYOUT,
       showlegend: contacts.length > 1,
-      legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 10 } },
+      legend: LEGEND_ABOVE,
       xaxis: axis('Time from the spike (ms)'),
       yaxis: axis(result.events > 1 ? 'Mean field (µV)' : 'Field (µV)'),
       shapes: [

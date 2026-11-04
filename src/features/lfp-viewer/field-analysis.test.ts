@@ -167,7 +167,7 @@ describe('triggeredAverage', () => {
     const peak = result.means[0].indexOf(Math.max(...result.means[0]));
     expect(result.lags[peak]).toBe(5);
     expect(result.means[0][peak]).toBeGreaterThan(1400);
-    expect(result.errors[0][peak]).toBeLessThan(10);
+    expect(result.error[peak]).toBeLessThan(10);
   });
 
   it('leaves out triggers whose window leaves the run', () => {
@@ -268,6 +268,7 @@ describe('currentSourceDensity', () => {
     result?.values.forEach((v, i) => {
       expect(Math.abs(v - (i % 2 ? 600_000 : -600_000))).toBeLessThan(1);
     });
+    expect(result?.limit).toBeCloseTo(600_000, -1);
   });
 
   it('leaves out each contact’s mean over the run', () => {
@@ -378,7 +379,7 @@ describe('rowCorrelation', () => {
 describe('matrixOverRows', () => {
   it('reorders a matrix as the rows go', () => {
     const matrix = [1, 0.5, 0.25, 0.5, 1, 0.75, 0.25, 0.75, 1];
-    const out = matrixOverRows(matrix, 3, [row([2]), row([0])]);
+    const out = matrixOverRows(matrix, 3, [row([2]), row([0])], 1);
     expect(Array.from(out)).toEqual([1, 0.25, 0.25, 1]);
   });
 

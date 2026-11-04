@@ -219,23 +219,17 @@ export class AxisOverlay {
     rect: PlotRect,
     events: readonly TimelineEvent[]
   ) {
-    const xAt = (t: number) =>
-      rect.x + ((t - bounds.xMin) / (bounds.xMax - bounds.xMin)) * rect.width;
     ctx.save();
     ctx.beginPath();
     ctx.rect(rect.x, rect.y, rect.width, rect.height);
     ctx.clip();
-    ctx.strokeStyle = TIMELINE_COLORS.manipulation;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    for (const e of events) {
-      if (e.kind !== 'manipulation') continue;
-      const px = Math.round(xAt(e.start)) + 0.5;
-      ctx.moveTo(px, rect.y);
-      ctx.lineTo(px, rect.y + rect.height);
-    }
-    ctx.stroke();
+    drawChangeRules(
+      ctx,
+      events,
+      (t) => rect.x + ((t - bounds.xMin) / (bounds.xMax - bounds.xMin)) * rect.width,
+      rect.y,
+      rect.y + rect.height
+    );
     ctx.restore();
   }
 
@@ -308,7 +302,8 @@ function fitted(ctx: CanvasRenderingContext2D, text: string, width: number): str
 export const EVENT_TOP_ZONE_PX = 18;
 export const EVENT_BOTTOM_ZONE_PX = 10;
 /** How near a marker, sideways, a pointer has to be to read it. */
-export const EVENT_HIT_PX = 7;
+const EVENT_HIT_PX = 7;
+const RULE_HIT_PX = 4;
 
 /**
  * Markers that fall in one place along the axis - onsets, or offsets, along
@@ -327,27 +322,54 @@ export type MarkerGroup = {
   label?: { x: number; width: number };
 };
 
-/** The markers at a point of the plot, in px from its top left, of a plot `height` tall. */
+/** A dashed rule from each synaptic change's onset, between `top` and `bottom` in px. */
+export function drawChangeRules(
+  ctx: CanvasRenderingContext2D,
+  events: readonly TimelineEvent[],
+  xAt: (time: number) => number,
+  top: number,
+  bottom: number
+) {
+  ctx.save();
+  ctx.strokeStyle = TIMELINE_COLORS.manipulation;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  ctx.beginPath();
+  for (const e of events) {
+    if (e.kind !== 'manipulation') continue;
+    const px = Math.round(xAt(e.start)) + 0.5;
+    ctx.moveTo(px, top);
+    ctx.lineTo(px, bottom);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/**
+ * The markers at a point of the plot, in px from its top left: by marker or name
+ * along the top or bottom, or - with `alongRules` - anywhere along a change's rule.
+ */
 export function markerGroupAt(
   groups: readonly MarkerGroup[],
   x: number,
   y: number,
-  height: number
+  { width, height }: { width: number; height: number },
+  alongRules = true
 ): MarkerGroup | undefined {
+  if (x < 0 || x > width || y < 0 || y > height) return undefined;
   const inTop = y <= EVENT_TOP_ZONE_PX;
   const inBottom = y >= height - EVENT_BOTTOM_ZONE_PX;
-  return (
-    groups.find((g) => {
-      if (g.top ? !inTop : !inBottom) return false;
-      const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
-      return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
-    }) ??
-    groups.find(
-      (g) =>
-        g.edge === 'start' &&
-        Math.abs(x - g.x) <= 4 &&
-        g.events.some((e) => e.kind === 'manipulation')
-    )
+  const marked = groups.find((g) => {
+    if (g.top ? !inTop : !inBottom) return false;
+    const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
+    return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
+  });
+  if (marked || !alongRules) return marked;
+  return groups.find(
+    (g) =>
+      g.edge === 'start' &&
+      Math.abs(x - g.x) <= RULE_HIT_PX &&
+      g.events.some((e) => e.kind === 'manipulation')
   );
 }
 

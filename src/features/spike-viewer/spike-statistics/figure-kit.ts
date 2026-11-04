@@ -21,6 +21,21 @@ export const BASE_LAYOUT: Partial<Layout> = {
 
 export const axisTitle = (text: string) => ({ text, font: { size: 11 } });
 
+export const axis = (title: string, extra: Partial<Layout['xaxis']> = {}) => ({
+  title: axisTitle(title),
+  automargin: true,
+  gridcolor: GRID_COLOR,
+  zeroline: false,
+  ...extra,
+});
+
+export const LEGEND_ABOVE: Partial<Layout['legend']> = {
+  orientation: 'h',
+  x: 0,
+  y: 1.12,
+  font: { size: 10 },
+};
+
 export function compact(value: number): string {
   return Number.isInteger(value) ? value.toLocaleString() : String(Number(value.toPrecision(3)));
 }

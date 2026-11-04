@@ -25,8 +25,8 @@ import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
 import { LfpStatistics } from '@/features/lfp-viewer/lfp-statistics';
 import {
   useContactPositions,
+  useContactRows,
   useLfpSummary,
-  useTraceField,
 } from '@/features/lfp-viewer/use-lfp-summary';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
 import {
@@ -206,11 +206,13 @@ function LfpReportView({
   const traces = useMemo(() => tracedContacts(rows, ticked), [rows, ticked]);
   // Read only while drawn, and once positions are in, as they can change which contacts are traced.
   // A contact's row at full resolution holds nothing of the mean to take off.
-  const traceField = useTraceField(
+  const traceField = useContactRows(
     source,
     summary,
-    mode === 'traces' && !removeShared && contacts.state !== 'loading' ? traces : []
-  );
+    mode === 'traces' && !removeShared && total.kind !== 'value' && contacts.state !== 'loading'
+      ? traces
+      : []
+  ).field;
   const sharedPercent = Math.round(structure.sharedShare * 100);
 
   // The player: one clock, moving every view's cursor outside React.
@@ -263,7 +265,10 @@ function LfpReportView({
     if (sceneUp && !sliding) setSceneMounted(true);
   }, [sceneUp, sliding]);
 
-  const shownWindow: [number, number] = timeWindow ?? [start, end];
+  const shownWindow = useMemo<[number, number]>(
+    () => timeWindow ?? [start, end],
+    [timeWindow, start, end]
+  );
 
   const transport = (left: number, right: number) => (
     <div className="relative h-10 shrink-0">

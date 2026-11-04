@@ -111,7 +111,7 @@ export function useLfpSummary(source: LfpSummarySource) {
   return { status, summary };
 }
 
-export type ContactRows = {
+type ContactRows = {
   /** A row per contact asked for, in that order, once every one is in. */
   field: LfpField | null;
   failed: boolean;
@@ -174,19 +174,6 @@ export function useContactRows(
   }, [total, read, contacts, index, axis]);
 }
 
-/** Traced contacts' rows where the overview is coarser: null where it is what they would read. */
-export function useTraceField(
-  source: LfpSummarySource,
-  summary: LfpSummary,
-  traces: readonly number[]
-): LfpField | null {
-  const coarser = summary.total.kind !== 'value';
-  return useContactRows(source, summary, coarser ? traces : NOTHING_TRACED).field;
-}
-
-const NOTHING_TRACED: readonly number[] = [];
-
-/** The correlation the summary holds between every pair of contacts, read when asked for. */
 export function useStoredCorrelation(
   source: LfpSummarySource,
   summary: LfpSummary,
@@ -196,7 +183,7 @@ export function useStoredCorrelation(
   const queryClient = useQueryClient();
   return useQuery({
     queryKey: ['lfp-summary', 'correlation', source.resultId, source.assetId, sha256],
-    enabled: enabled && !!index.correlation,
+    enabled,
     staleTime: Infinity,
     gcTime: 60_000,
     queryFn: async ({ signal }) => {

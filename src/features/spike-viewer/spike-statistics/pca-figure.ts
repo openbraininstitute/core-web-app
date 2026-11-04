@@ -1,10 +1,9 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
-  axisTitle,
+  axis,
   BASE_LAYOUT,
   cellCount,
   compact,
-  GRID_COLOR,
   MEAN_INK,
   OTHER_COLOR,
 } from '@/features/spike-viewer/spike-statistics/figure-kit';
@@ -196,12 +195,6 @@ export function pcaFigure(pca: SpikePca, rowCount: number, split: PcaSplit, colo
   const names = pca.explained.map(
     (share, c) => `PC${c + 1} · ${Number((share * 100).toPrecision(2))}% of the variance`
   );
-  const axis = (label: string) => ({
-    title: axisTitle(label),
-    automargin: true,
-    gridcolor: GRID_COLOR,
-    zeroline: false,
-  });
   return {
     data: data as Data[],
     tooltip,

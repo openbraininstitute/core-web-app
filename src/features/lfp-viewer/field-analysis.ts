@@ -1,3 +1,6 @@
+import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
+import { coordinatesAlong, leadingVector } from '@/features/lfp-viewer/field-structure';
+
 import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 
@@ -13,9 +16,7 @@ const MAX_TRIGGERS = 10_000;
 const MAX_CSD_COLUMNS = 1024;
 /** Fewer contacts on a line leave too few second differences to read a profile from. */
 const MIN_LINE_CONTACTS = 5;
-/** How far a contact can lie from a line and still be on it. */
 const ON_LINE_UM = 1;
-/** How far a gap can differ from the line's typical one, as a share of it. */
 const EVEN_GAP_SHARE = 0.05;
 const MAX_PROFILE_BINS = 64;
 /** The usual figure for cortex, in S/m. */
@@ -81,7 +82,6 @@ function powerOfTwoBelow(value: number): number {
   return 2 ** Math.floor(Math.log2(Math.max(1, value)));
 }
 
-/** A segment of `values` at `from`, its mean off and windowed, into `re`, with `im` cleared. */
 function loadSegment(
   values: ArrayLike<number>,
   from: number,
@@ -123,10 +123,7 @@ export function spectrogram(
     Math.max(MIN_SPECTROGRAM_SEGMENT, powerOfTwoBelow((steps / 32) * Math.SQRT2))
   );
   if (steps < segment) return null;
-  const hop = Math.max(
-    segment / 4,
-    Math.ceil((steps - segment) / (MAX_SPECTROGRAM_COLUMNS - 1)) || 1
-  );
+  const hop = Math.max(segment / 4, Math.ceil((steps - segment) / (MAX_SPECTROGRAM_COLUMNS - 1)));
   const columns = Math.floor((steps - segment) / hop) + 1;
   const bands = segment / 2 + 1;
   const fs = 1000 / dtMs;
@@ -182,7 +179,7 @@ export function coherenceWith(
   if (steps < n * 2) return null;
   const available = Math.floor((steps - n) / (n / 2)) + 1;
   const segments = Math.min(available, MAX_COHERENCE_AVERAGES);
-  const hop = Math.floor((steps - n) / Math.max(1, segments - 1));
+  const hop = Math.floor((steps - n) / (segments - 1));
   const bands = n / 2;
   const window = hann(n);
   const refRe = new Float64Array(n);
@@ -231,9 +228,9 @@ export type TriggeredAverage = {
   lags: Float64Array;
   /** µV, one per row of the field, each as long as `lags`. */
   means: Float32Array[];
-  /** The standard error of each mean. */
-  errors: Float32Array[];
-  /** How many triggers went in: those with their whole window inside the run, at most 10,000. */
+  /** The standard error of the first row's mean. */
+  error: Float32Array;
+  /** How many triggers went in: those with their whole window inside the run, at most `MAX_TRIGGERS`. */
   triggers: number;
   /** How many separate moments they fall at, half a window apart: a volley is one, however many spikes. */
   events: number;
@@ -252,7 +249,6 @@ function separateEvents(centres: readonly number[], apart: number): number {
   return events;
 }
 
-/** The field around each trigger, averaged: `field` at full resolution, a row per contact. */
 export function triggeredAverage(
   field: LfpField,
   triggers: ArrayLike<number>,
@@ -272,32 +268,31 @@ export function triggeredAverage(
   );
 
   const means: Float32Array[] = [];
-  const errors: Float32Array[] = [];
+  let error = new Float32Array(length);
+  const squares = new Float64Array(length);
   for (let contact = 0; contact < field.contacts; contact++) {
     const sum = new Float64Array(length);
-    const squares = new Float64Array(length);
     const row = contact * field.bins;
     for (const centre of picked) {
       const first = row + centre - half;
       for (let i = 0; i < length; i++) {
         const v = field.data[first + i] * field.scale;
         sum[i] += v;
-        squares[i] += v * v;
+        if (contact === 0) squares[i] += v * v;
       }
     }
     means.push(Float32Array.from(sum, (s) => (count > 0 ? s / count : 0)));
-    errors.push(
-      Float32Array.from(sum, (s, i) => {
-        if (count < 2) return 0;
+    if (contact === 0 && count > 1) {
+      error = Float32Array.from(sum, (s, i) => {
         const variance = (squares[i] - (s * s) / count) / (count - 1);
         return Math.sqrt(Math.max(0, variance) / count);
-      })
-    );
+      });
+    }
   }
   return {
     lags: Float64Array.from({ length }, (_, i) => (i - half) * field.binMs),
     means,
-    errors,
+    error,
     triggers: picked.length,
     events: separateEvents(picked, half),
   };
@@ -306,41 +301,22 @@ export function triggeredAverage(
 /** The axis contacts spread along most, its largest component positive. Null if they don't. */
 export function arrayAxis(positions: Float32Array): [number, number, number] | null {
   const count = positions.length / 3;
-  const mean = [0, 0, 0];
+  const mean = extentOf(positions)?.mean;
+  if (!mean) return null;
+  const centred = new Float32Array(positions.length);
   for (let c = 0; c < count; c++) {
-    for (let k = 0; k < 3; k++) mean[k] += positions[c * 3 + k] / count;
+    for (let k = 0; k < 3; k++) centred[k * count + c] = positions[c * 3 + k] - mean[k];
   }
-  const covariance = new Float64Array(9);
-  for (let c = 0; c < count; c++) {
-    for (let a = 0; a < 3; a++) {
-      for (let b = 0; b < 3; b++) {
-        covariance[a * 3 + b] +=
-          (positions[c * 3 + a] - mean[a]) * (positions[c * 3 + b] - mean[b]);
-      }
-    }
-  }
-  if (covariance[0] + covariance[4] + covariance[8] <= 0) return null;
-  // Off every axis at the start, which a covariance's main axis can be orthogonal to otherwise.
-  let axis = [0.57, 0.58, 0.59];
-  for (let iteration = 0; iteration < 100; iteration++) {
-    const next = [0, 1, 2].map(
-      (a) =>
-        covariance[a * 3] * axis[0] +
-        covariance[a * 3 + 1] * axis[1] +
-        covariance[a * 3 + 2] * axis[2]
-    );
-    const norm = Math.hypot(next[0], next[1], next[2]);
-    if (norm === 0) return null;
-    axis = next.map((v) => v / norm);
-  }
-  const largest = axis.reduce((best, v) => (Math.abs(v) > Math.abs(best) ? v : best), 0);
-  const sign = largest < 0 ? -1 : 1;
-  return [axis[0] * sign, axis[1] * sign, axis[2] * sign];
+  if (centred.every((v) => v === 0)) return null;
+  const [x, y, z] = leadingVector(centred, 3, count);
+  return [x, y, z];
 }
 
 export type ContactLine = {
   /** Along the line, from its lowest coordinate. */
   contacts: number[];
+  /** Theirs along the array's main axis, in µm from its centre. */
+  coordinates: number[];
   /** The gap between neighbours, in µm. */
   spacing: number;
 };
@@ -354,11 +330,11 @@ export function contactLines(positions: Float32Array): ContactLine[] {
   const axis = arrayAxis(positions);
   if (!axis) return [];
   const count = positions.length / 3;
+  const along = coordinatesAlong(positions, axis);
   const groups: { offset: [number, number, number]; members: { contact: number; at: number }[] }[] =
     [];
   for (let c = 0; c < count; c++) {
-    const at =
-      positions[c * 3] * axis[0] + positions[c * 3 + 1] * axis[1] + positions[c * 3 + 2] * axis[2];
+    const at = along[c];
     const offset: [number, number, number] = [
       positions[c * 3] - at * axis[0],
       positions[c * 3 + 1] - at * axis[1],
@@ -381,7 +357,11 @@ export function contactLines(positions: Float32Array): ContactLine[] {
     const spacing = [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)];
     if (spacing <= 0) continue;
     if (gaps.every((gap) => Math.abs(gap - spacing) <= spacing * EVEN_GAP_SHARE)) {
-      lines.push({ contacts: members.map((m) => m.contact), spacing });
+      lines.push({
+        contacts: members.map((m) => m.contact),
+        coordinates: members.map((m) => m.at),
+        spacing,
+      });
     }
   }
   return lines;
@@ -394,6 +374,8 @@ export type CurrentSourceDensity = {
   values: Float32Array;
   /** The rows: the line's contacts without its two ends. */
   rows: number;
+  /** The 99.5th percentile of |values|, for a colour scale that one outlier doesn't flatten. */
+  limit: number;
 };
 
 /**
@@ -411,22 +393,31 @@ export function currentSourceDensity(
   const rows = contacts - 2;
   const columns = Math.min(bins, MAX_CSD_COLUMNS);
   const perStep = (-CSD_UNIT * scale) / (spacing * spacing);
-  const values = new Float32Array(rows * columns);
-  for (let r = 0; r < rows; r++) {
-    const above = r * bins;
-    const at = (r + 1) * bins;
-    const below = (r + 2) * bins;
+  const blocks = new Float64Array(contacts * columns);
+  for (let c = 0; c < contacts; c++) {
+    const row = c * bins;
     let total = 0;
-    for (let b = 0; b < bins; b++) total += data[above + b] - 2 * data[at + b] + data[below + b];
-    const mean = total / bins;
     for (let column = 0; column < columns; column++) {
       const from = Math.floor((column * bins) / columns);
       const to = Math.floor(((column + 1) * bins) / columns);
       let sum = 0;
-      for (let b = from; b < to; b++) sum += data[above + b] - 2 * data[at + b] + data[below + b];
-      values[r * columns + column] = (sum / (to - from) - mean) * perStep;
+      for (let b = from; b < to; b++) sum += data[row + b];
+      total += sum;
+      blocks[c * columns + column] = sum / (to - from);
+    }
+    const mean = total / bins;
+    for (let column = 0; column < columns; column++) blocks[c * columns + column] -= mean;
+  }
+  const values = new Float32Array(rows * columns);
+  for (let r = 0; r < rows; r++) {
+    for (let column = 0; column < columns; column++) {
+      const above = blocks[r * columns + column];
+      const at = blocks[(r + 1) * columns + column];
+      const below = blocks[(r + 2) * columns + column];
+      values[r * columns + column] = (above - 2 * at + below) * perStep;
     }
   }
+  const sorted = Float32Array.from(values, Math.abs).sort();
   return {
     times: Float64Array.from(
       { length: columns },
@@ -434,6 +425,7 @@ export function currentSourceDensity(
     ),
     values,
     rows,
+    limit: sorted[Math.floor((sorted.length - 1) * 0.995)] || 1,
   };
 }
 
@@ -441,7 +433,7 @@ export type ProfilePoint = { at: number; value: number };
 
 /**
  * A value over positions along an axis, from low to high: each contact's where
- * there are few places, else their means over at most 64 stretches of the axis.
+ * there are few places, else their means over stretches of the axis.
  */
 export function profileAlong(
   coordinate: ArrayLike<number>,
@@ -489,7 +481,6 @@ function rowSignals(field: LfpField, rows: readonly FieldRow[]): Float64Array[] 
   });
 }
 
-/** The correlation between rows' mean signals in `field`, row-major. */
 export function rowCorrelation(field: LfpField, rows: readonly FieldRow[]): Float32Array {
   const signals = rowSignals(field, rows);
   const centred = signals.map((signal) => {
@@ -507,12 +498,10 @@ export function rowCorrelation(field: LfpField, rows: readonly FieldRow[]): Floa
   for (let a = 0; a < n; a++) {
     for (let b = a; b < n; b++) {
       const norm = centred[a].norm * centred[b].norm;
+      if (norm <= 0) continue;
       let sum = 0;
-      if (norm > 0) {
-        for (let i = 0; i < centred[a].off.length; i++)
-          sum += centred[a].off[i] * centred[b].off[i];
-      }
-      const r = norm > 0 ? sum / norm : 0;
+      for (let i = 0; i < centred[a].off.length; i++) sum += centred[a].off[i] * centred[b].off[i];
+      const r = sum / norm;
       matrix[a * n + b] = r;
       matrix[b * n + a] = r;
     }
@@ -520,12 +509,11 @@ export function rowCorrelation(field: LfpField, rows: readonly FieldRow[]): Floa
   return matrix;
 }
 
-/** A contact × contact matrix as rows × rows: the mean over each pair of rows' contacts. */
 export function matrixOverRows(
   matrix: ArrayLike<number>,
   contacts: number,
   rows: readonly FieldRow[],
-  scale = 1
+  scale: number
 ): Float32Array {
   const n = rows.length;
   const out = new Float32Array(n * n);

@@ -1,8 +1,8 @@
 import { PICK_COLORS } from '@/features/sonata-viewer/constants';
 import {
-  axisTitle,
+  axis,
   BASE_LAYOUT,
-  GRID_COLOR,
+  LEGEND_ABOVE,
   MEAN_INK,
 } from '@/features/spike-viewer/spike-statistics/figure-kit';
 
@@ -64,22 +64,9 @@ export function psdFigure({
     layout: {
       ...BASE_LAYOUT,
       showlegend: true,
-      legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 10 } },
-      xaxis: {
-        type: 'log',
-        title: axisTitle(`Frequency (Hz) · Nyquist ${Number(nyquist.toPrecision(4))} Hz`),
-        automargin: true,
-        gridcolor: GRID_COLOR,
-        zeroline: false,
-      },
-      yaxis: {
-        type: 'log',
-        title: axisTitle('Power (µV²/Hz)'),
-        automargin: true,
-        gridcolor: GRID_COLOR,
-        zeroline: false,
-        exponentformat: 'power',
-      },
+      legend: LEGEND_ABOVE,
+      xaxis: axis(`Frequency (Hz) · Nyquist ${Number(nyquist.toPrecision(4))} Hz`, { type: 'log' }),
+      yaxis: axis('Power (µV²/Hz)', { type: 'log', exponentformat: 'power' }),
     },
   };
 }

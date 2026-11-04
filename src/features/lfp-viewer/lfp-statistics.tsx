@@ -1,11 +1,11 @@
 'use client';
 
 import { Spin } from 'antd';
+import { throttle } from 'es-toolkit';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 
 import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { DIVERGING_COLOURS } from '@/features/lfp-viewer/colour-scale';
 import {
   arrayAxis,
   coherenceWith,
@@ -24,11 +24,13 @@ import {
   profileFigure,
   spectrogramFigure,
   triggeredFigure,
+  withTimeWindow,
 } from '@/features/lfp-viewer/field-figures';
 import { coordinatesAlong } from '@/features/lfp-viewer/field-structure';
 import { psdFigure } from '@/features/lfp-viewer/psd-figure';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useContactRows, useStoredCorrelation } from '@/features/lfp-viewer/use-lfp-summary';
+import { reportStem } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
 import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
@@ -37,6 +39,7 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 import type { ReactNode } from 'react';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
+import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 import type { LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
@@ -56,7 +59,6 @@ const MAX_COMPARED = 8;
 const DEFAULT_COMPARED = 4;
 const HALF_WINDOWS_MS = [5, 10, 20, 50, 100];
 const DEFAULT_HALF_WINDOW_MS = 20;
-/** How often a plot of the player's time is drawn again. */
 const CURSOR_REDRAW_MS = 100;
 
 type PlotKind =
@@ -67,7 +69,8 @@ type PlotKind =
   | 'coherence'
   | 'profile'
   | 'csd';
-type ProfileMeasure = 'ptp' | 'rms' | 'min' | 'max' | 'at-time';
+const STORED_MEASURES = { ptp: 'Peak-to-peak', rms: 'RMS', min: 'Min', max: 'Max' };
+type ProfileMeasure = keyof typeof STORED_MEASURES | 'at-time';
 
 type StatisticsProps = {
   source: LfpSummarySource;
@@ -98,10 +101,26 @@ type FrameProps = {
   figure: Figure | null;
   /** Said in the plot's place where there is no figure; a spinner if not given. */
   empty?: string;
-  timeline?: { events: readonly TimelineEvent[]; timeCursor: TimeCursor; raster: boolean };
+  timeline?: { events: readonly TimelineEvent[]; timeCursor: TimeCursor };
+  /** The time axis's range, for a figure of time that follows the field's zoom. */
+  timeWindow?: [number, number];
 };
 
-function PlotFrame({ picker, controls, note, help, visible, figure, empty, timeline }: FrameProps) {
+function PlotFrame({
+  picker,
+  controls,
+  note,
+  help,
+  visible,
+  figure,
+  empty,
+  timeline,
+  timeWindow,
+}: FrameProps) {
+  const shown = useMemo(
+    () => (figure && timeWindow ? withTimeWindow(figure, timeWindow) : figure),
+    [figure, timeWindow]
+  );
   return (
     <div className="flex h-full min-h-0 flex-col p-2">
       <div className="shrink-0 px-1 pb-1">
@@ -119,7 +138,7 @@ function PlotFrame({ picker, controls, note, help, visible, figure, empty, timel
         </CollapsingControls>
       </div>
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        {figure && visible && <StatisticsPlot figure={figure} timeline={timeline} />}
+        {shown && visible && <StatisticsPlot figure={shown} timeline={timeline} />}
         {!figure && empty && (
           <p className="max-w-sm p-4 text-center text-sm text-neutral-500">{empty}</p>
         )}
@@ -129,19 +148,17 @@ function PlotFrame({ picker, controls, note, help, visible, figure, empty, timel
   );
 }
 
-/** The contacts to compare: those ticked, else a few spread along the rows, leaving out `except`. */
 function comparedContacts(
   rows: readonly FieldRow[],
   ticked: readonly number[],
-  except: number | null,
-  count: number
+  except: number | null
 ): number[] {
   const chosen = ticked.filter((c) => c !== except);
-  if (chosen.length > 0) return chosen.slice(0, count);
+  if (chosen.length > 0) return chosen.slice(0, MAX_COMPARED - 1);
   const leads = rows.map((row) => row.lead).filter((c) => c !== except);
-  const stride = Math.max(1, leads.length / count);
+  const stride = Math.max(1, leads.length / DEFAULT_COMPARED);
   return Array.from(
-    { length: Math.min(count, leads.length) },
+    { length: Math.min(DEFAULT_COMPARED, leads.length) },
     (_, i) => leads[Math.floor(i * stride)]
   );
 }
@@ -150,24 +167,10 @@ function usePlayerTime(timeCursor: TimeCursor, active: boolean): number | null {
   const [time, setTime] = useState<number | null>(null);
   useEffect(() => {
     if (!active) return;
-    let last = 0;
-    let pending: ReturnType<typeof setTimeout> | undefined;
-    const unsubscribe = timeCursor.subscribe((t) => {
-      clearTimeout(pending);
-      const wait = last + CURSOR_REDRAW_MS - performance.now();
-      if (wait <= 0) {
-        last = performance.now();
-        setTime(t);
-      } else {
-        // The last time of a drag has to land, however soon after the one before.
-        pending = setTimeout(() => {
-          last = performance.now();
-          setTime(t);
-        }, wait);
-      }
-    });
+    const update = throttle(setTime, CURSOR_REDRAW_MS);
+    const unsubscribe = timeCursor.subscribe(update);
     return () => {
-      clearTimeout(pending);
+      update.cancel();
       unsubscribe();
     };
   }, [timeCursor, active]);
@@ -182,7 +185,6 @@ export function LfpStatistics(props: StatisticsProps) {
   const { summary, positions, spikeFiles } = props;
   const [plot, setPlot] = useState<PlotKind>('psd');
   const lines = useMemo(() => (positions ? contactLines(positions) : []), [positions]);
-  const noPositions = 'Needs the contacts’ positions';
   const picker = (
     <PillSelect
       label="Plot"
@@ -193,32 +195,23 @@ export function LfpStatistics(props: StatisticsProps) {
         {
           value: 'triggered',
           label: 'Spike-triggered average',
-          disabled: spikeFiles.length === 0,
-          detail: spikeFiles.length === 0 ? 'This simulation has no spikes' : undefined,
+          ...whyNot(spikeFiles.length === 0 && NO_SPIKES),
         },
         { value: 'correlation', label: 'Correlation' },
         {
           value: 'coherence',
           label: 'Coherence',
-          disabled: summary.index.contacts < 2,
-          detail: summary.index.contacts < 2 ? 'Needs two contacts' : undefined,
+          ...whyNot(summary.index.contacts < 2 && 'Needs two contacts'),
         },
         {
           value: 'profile',
           label: 'Depth profile',
-          disabled: !positions,
-          detail: positions ? undefined : noPositions,
+          ...whyNot(!positions && NO_POSITIONS),
         },
         {
           value: 'csd',
           label: 'Current source density',
-          disabled: lines.length === 0,
-          detail:
-            lines.length > 0
-              ? undefined
-              : positions
-                ? 'Needs contacts evenly spaced on a line'
-                : noPositions,
+          ...whyNot(lines.length === 0 && (positions ? NO_LINE : NO_POSITIONS)),
         },
       ]}
       onChange={(v) => setPlot(v as PlotKind)}
@@ -238,6 +231,16 @@ type PlotProps = StatisticsProps & { picker: ReactNode };
 
 const FAILED = 'The summary could not be read';
 const PICK_A_CONTACT = 'Pick a contact in the table';
+const NO_POSITIONS = 'Needs the contacts’ positions';
+const NO_LINE = 'Needs contacts evenly spaced on a line';
+const NO_SPIKES = 'This simulation has no spikes';
+const TRIGGERED_HELP =
+  'The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes whose window leaves the recording are left out, and at most 10,000 are used, evenly. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks';
+
+const whyNot = (reason: string | false) => ({
+  disabled: reason !== false,
+  detail: reason === false ? undefined : reason,
+});
 
 function SpectrumPlot({ picker, summary, selectedContact, ticked, visible }: PlotProps) {
   const { index, psd } = summary;
@@ -284,10 +287,7 @@ function SpectrogramPlot({
     () => (field ? spectrogram(field.data, field.scale, field.binMs, field.start) : null),
     [field]
   );
-  const figure = useMemo(
-    () => (result ? spectrogramFigure({ result, window }) : null),
-    [result, window]
-  );
+  const figure = useMemo(() => (result ? spectrogramFigure({ result }) : null), [result]);
   const empty =
     selectedContact === null
       ? PICK_A_CONTACT
@@ -304,7 +304,8 @@ function SpectrogramPlot({
       visible={visible}
       figure={figure}
       empty={empty}
-      timeline={{ events: timeline, timeCursor, raster: false }}
+      timeline={{ events: timeline, timeCursor }}
+      timeWindow={window}
     />
   );
 }
@@ -321,10 +322,7 @@ function TriggeredPlot(props: PlotProps) {
         value={file?.asset.id ?? ''}
         options={spikeFiles.map((f) => ({
           value: f.asset.id,
-          label:
-            f.asset.label === AssetLabel.replay_spikes
-              ? (f.asset.path.split('/').at(-1) ?? f.asset.path).replace(/\.h5$/i, '')
-              : 'Circuit spikes',
+          label: f.asset.label === AssetLabel.replay_spikes ? reportStem(f) : 'Circuit spikes',
           detail: f.asset.label === AssetLabel.replay_spikes ? 'Input' : undefined,
         }))}
         onChange={setChosenId}
@@ -342,10 +340,10 @@ function TriggeredPlot(props: PlotProps) {
       <PlotFrame
         picker={picker}
         controls={controls}
-        help=""
+        help={TRIGGERED_HELP}
         visible={visible}
         figure={null}
-        empty="This simulation has no spikes"
+        empty={NO_SPIKES}
       />
     );
   }
@@ -424,7 +422,7 @@ function TriggeredFigure({
             }`
           : undefined
       }
-      help="The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes whose window leaves the recording are left out, and at most 10,000 are used, evenly. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks"
+      help={TRIGGERED_HELP}
       visible={visible}
       figure={figure}
       empty={empty}
@@ -453,7 +451,7 @@ function CorrelationPlot({
     return rowCorrelation(field, rows);
   }, [useStored, stored.data, index.contacts, rows, field]);
   const figure = useMemo(
-    () => (matrix ? correlationFigure({ matrix, rows, colours: DIVERGING_COLOURS }) : null),
+    () => (matrix ? correlationFigure({ matrix, rows }) : null),
     [matrix, rows]
   );
   const note = useMemo(() => {
@@ -497,13 +495,7 @@ function CoherencePlot({
   visible,
 }: PlotProps) {
   const others = useMemo(
-    () =>
-      comparedContacts(
-        rows,
-        ticked,
-        selectedContact,
-        ticked.length > 0 ? MAX_COMPARED - 1 : DEFAULT_COMPARED
-      ),
+    () => comparedContacts(rows, ticked, selectedContact),
     [rows, ticked, selectedContact]
   );
   const contacts = useMemo(
@@ -512,7 +504,7 @@ function CoherencePlot({
   );
   const { field, failed } = useContactRows(source, summary, contacts);
   const result = useMemo(() => {
-    if (!field || field.contacts < 2) return null;
+    if (!field || others.length === 0) return null;
     const row = (r: number) => field.data.subarray(r * field.bins, (r + 1) * field.bins);
     return coherenceWith(
       row(0),
@@ -530,12 +522,12 @@ function CoherencePlot({
   const empty =
     selectedContact === null
       ? PICK_A_CONTACT
-      : failed
-        ? FAILED
-        : field && field.contacts >= 2 && !result
-          ? 'This run is too short for coherence'
-          : others.length === 0
-            ? 'Needs another contact'
+      : others.length === 0
+        ? 'Needs another contact'
+        : failed
+          ? FAILED
+          : field && !result
+            ? 'This run is too short for coherence'
             : undefined;
   return (
     <PlotFrame
@@ -571,24 +563,24 @@ function ProfilePlot({
     () => (positions && axis ? coordinatesAlong(positions, axis) : null),
     [positions, axis]
   );
-  const time = usePlayerTime(timeCursor, measure === 'at-time');
+  const atTime = measure === 'at-time';
+  const time = usePlayerTime(timeCursor, atTime);
   const column = index.stats.indexOf(measure);
   const value = useMemo(() => {
-    if (measure === 'at-time') {
+    if (atTime) {
       const bin = time === null ? 0 : binAt(field, time);
       return (contact: number) => fieldValue(field, contact, bin);
     }
     return (contact: number) => stats[contact * index.stats.length + column];
-  }, [measure, time, field, stats, index.stats.length, column]);
-  const atTime = measure === 'at-time';
+  }, [atTime, time, field, stats, index.stats.length, column]);
   const figure = useMemo(() => {
     if (!coordinate || !axis) return null;
-    const labels = { ptp: 'Peak-to-peak (µV)', rms: 'RMS (µV)', min: 'Min (µV)', max: 'Max (µV)' };
     return profileFigure({
       points: profileAlong(coordinate, value),
-      measure: atTime
-        ? `Field at ${time === null ? 'the start' : `${time.toFixed(1)} ms`} (µV)`
-        : labels[measure as keyof typeof labels],
+      measure:
+        measure === 'at-time'
+          ? `Field at ${time === null ? 'the start' : `${time.toFixed(1)} ms`} (µV)`
+          : `${STORED_MEASURES[measure]} (µV)`,
       axisLabel: `Along (${axis.map((d) => d.toFixed(2)).join(', ')}), µm`,
       selected:
         selectedContact === null
@@ -605,16 +597,13 @@ function ProfilePlot({
           label="Measure"
           value={measure}
           options={[
-            { value: 'ptp', label: 'Peak-to-peak' },
-            { value: 'rms', label: 'RMS' },
-            { value: 'min', label: 'Min' },
-            { value: 'max', label: 'Max' },
+            ...Object.entries(STORED_MEASURES).map(([value, label]) => ({ value, label })),
             { value: 'at-time', label: 'At the player’s time' },
           ]}
           onChange={(v) => setMeasure(v as ProfileMeasure)}
         />
       }
-      note={atTime && removeShared ? 'shared signal removed' : atTime ? undefined : 'as recorded'}
+      note={atTime ? (removeShared ? 'shared signal removed' : undefined) : 'as recorded'}
       help="A value against position along the field's direction, or the array's longest axis where no line follows the field. Many contacts are averaged into stretches of the axis"
       visible={visible}
       figure={figure}
@@ -627,31 +616,24 @@ function CsdPlot({
   picker,
   source,
   summary,
-  positions,
   selectedContact,
   lines,
   timeline,
   timeCursor,
   window,
   visible,
-}: PlotProps & { lines: ReturnType<typeof contactLines> }) {
+}: PlotProps & { lines: ContactLine[] }) {
   const line =
     lines.find((l) => selectedContact !== null && l.contacts.includes(selectedContact)) ?? lines[0];
-  const contacts = line?.contacts;
-  const { field, failed } = useContactRows(source, summary, contacts ?? NO_CONTACTS);
+  const { field, failed } = useContactRows(source, summary, line?.contacts ?? []);
   const result = useMemo(
     () => (field && line ? currentSourceDensity(field, line.spacing) : null),
     [field, line]
   );
-  const coordinates = useMemo(() => {
-    const axis = positions ? arrayAxis(positions) : null;
-    if (!positions || !axis || !contacts) return [];
-    const along = coordinatesAlong(positions, axis);
-    return contacts.slice(1, -1).map((c) => along[c]);
-  }, [positions, contacts]);
   const figure = useMemo(
-    () => (result ? csdFigure({ result, coordinates, window, colours: DIVERGING_COLOURS }) : null),
-    [result, coordinates, window]
+    () =>
+      result && line ? csdFigure({ result, coordinates: line.coordinates.slice(1, -1) }) : null,
+    [result, line]
   );
   return (
     <PlotFrame
@@ -664,10 +646,9 @@ function CsdPlot({
       help="−σ ∂²φ/∂z² along the line holding the selected contact: sinks in blue, sources in orange. Each contact's mean over the run is taken off first, so this shows changes around it and not steady currents. It has no value at the line's two ends, and follows the field's zoom"
       visible={visible}
       figure={figure}
-      empty={failed ? FAILED : line ? undefined : 'Needs contacts evenly spaced on a line'}
-      timeline={{ events: timeline, timeCursor, raster: false }}
+      empty={failed ? FAILED : line ? undefined : NO_LINE}
+      timeline={{ events: timeline, timeCursor }}
+      timeWindow={window}
     />
   );
 }
-
-const NO_CONTACTS: readonly number[] = [];

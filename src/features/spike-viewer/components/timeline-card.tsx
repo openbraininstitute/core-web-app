@@ -8,6 +8,7 @@ import { cn } from '@/utils/css-class';
 import { fullscreenPopupContainer } from '@/utils/fullscreen';
 
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
+import type { MarkerGroup } from '@/features/spike-viewer/renderer/axis-overlay';
 import type { EventsHover } from '@/features/spike-viewer/renderer/raster-renderer';
 
 const KIND = { stimulus: 'Stimulus', recording: 'Recording', manipulation: 'Manipulation' };
@@ -17,6 +18,21 @@ const COLOR = {
   manipulation: TIMELINE_COLORS.manipulation,
 };
 
+/** The same markers keep their group, so their bands are not drawn again as the pointer moves. */
+export function nextEventsHover(
+  previous: EventsHover | null,
+  group: MarkerGroup | undefined,
+  clientX: number,
+  clientY: number
+): EventsHover | null {
+  if (!group) return null;
+  const same =
+    previous !== null &&
+    previous.group.events.length === group.events.length &&
+    previous.group.events.every((event, i) => event === group.events[i]);
+  return { group: same ? previous.group : group, clientX, clientY };
+}
+
 /**
  * The card for a marker of the config's timings under the pointer: when, and
  * each block it stands for with every one of its settings - side by side
@@ -24,11 +40,11 @@ const COLOR = {
  */
 export function TimelineCard({
   hover,
-  raster = true,
+  clickHint = false,
 }: {
   hover: EventsHover;
-  /** Whether there is a raster for a click to set the window of. */
-  raster?: boolean;
+  /** Say what a click on the marker does, where it does anything. */
+  clickHint?: boolean;
 }) {
   const { group, clientX, clientY } = hover;
   const blocks = group.events;
@@ -64,7 +80,7 @@ export function TimelineCard({
           <BlockSection key={`${event.name}-${i}`} event={event} framed={blocks.length > 1} />
         ))}
       </div>
-      {raster && (
+      {clickHint && (
         <div className="mt-2 text-[10px] text-neutral-400">
           {blocks.every((e) => e.end === e.start)
             ? 'Click to start the raster’s window here'

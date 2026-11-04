@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
-import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import {
+  drawChangeRules,
   drawEventMarks,
   markerGroupAt,
-  TIMELINE_COLORS,
 } from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
@@ -40,7 +40,6 @@ export function PlotTimeline({
   events,
   timeCursor,
   onHoverChange,
-  raster,
 }: {
   /** The Plotly graph once it has drawn; nothing is shown before. */
   graph: HTMLElement | null;
@@ -48,8 +47,6 @@ export function PlotTimeline({
   timeCursor?: TimeCursor;
   /** Told whether a marker is under the pointer, so the plot's own card can give way. */
   onHoverChange?: (hovering: boolean) => void;
-  /** Whether there is a raster for a click on a marker to set the window of. */
-  raster?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -113,19 +110,7 @@ export function PlotTimeline({
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
     // A dashed rule from each synaptic change's onset, as behind the raster's spikes.
-    ctx.save();
-    ctx.strokeStyle = TIMELINE_COLORS.manipulation;
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 3]);
-    ctx.beginPath();
-    for (const e of events) {
-      if (e.kind !== 'manipulation') continue;
-      const x = Math.round(((e.start - xMin) / (xMax - xMin)) * w) + 0.5;
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, h);
-    }
-    ctx.stroke();
-    ctx.restore();
+    drawChangeRules(ctx, events, (time) => ((time - xMin) / (xMax - xMin)) * w, 0, h);
     groupsRef.current = drawEventMarks(
       ctx,
       { xMin, xMax, yMin: 0, yMax: 1 },
@@ -165,22 +150,16 @@ export function PlotTimeline({
       const layout = (graph as DrawnGraph)._fullLayout;
       if (!layout) return undefined;
       const box = graph.getBoundingClientRect();
-      const x = clientX - box.left - layout._size.l;
-      const y = clientY - box.top - layout._size.t;
-      if (x < 0 || x > layout._size.w || y < 0 || y > layout._size.h) return undefined;
-      return markerGroupAt(groupsRef.current, x, y, layout._size.h);
+      return markerGroupAt(
+        groupsRef.current,
+        clientX - box.left - layout._size.l,
+        clientY - box.top - layout._size.t,
+        { width: layout._size.w, height: layout._size.h }
+      );
     };
     const onMove = (e: PointerEvent) => {
       const group = groupAt(e.clientX, e.clientY);
-      setHover((previous) => {
-        if (!group) return previous === null ? previous : null;
-        // The same markers keep their group, so the bands are not drawn again as the pointer moves.
-        const same =
-          previous !== null &&
-          previous.group.events.length === group.events.length &&
-          previous.group.events.every((event, i) => event === group.events[i]);
-        return { group: same ? previous.group : group, clientX: e.clientX, clientY: e.clientY };
-      });
+      setHover((previous) => nextEventsHover(previous, group, e.clientX, e.clientY));
     };
     const onLeave = () => setHover(null);
     graph.addEventListener('pointermove', onMove);
@@ -210,7 +189,7 @@ export function PlotTimeline({
           style={{ color: TIME_CURSOR_COLOR }}
         />
       </div>
-      {hover && <TimelineCard hover={hover} raster={raster} />}
+      {hover && <TimelineCard hover={hover} />}
     </>
   );
 }

@@ -29,7 +29,11 @@ import {
 } from '@/features/offline-auth-management';
 import { useModelQuery } from '@/features/scan-config/components/atoms';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
-import { FileViewer, hasStatistics } from '@/features/scan-config/components/file-viewer';
+import {
+  FileViewer,
+  hasStatistics,
+  isSpikeFile,
+} from '@/features/scan-config/components/file-viewer';
 import {
   SimulationFiles,
   useSimulationResultFiles,
@@ -269,14 +273,7 @@ export function SimulationsTab({
       ? [shownReport, ...reports]
       : reports;
   }, [resultFiles, activeSimulation, shownReport, lfpViewer]);
-  const spikeFiles = useMemo(
-    () =>
-      reportFiles.filter(
-        ({ asset }) =>
-          asset.label === AssetLabel.spike_report || asset.label === AssetLabel.replay_spikes
-      ),
-    [reportFiles]
-  );
+  const spikeFiles = useMemo(() => reportFiles.filter(isSpikeFile), [reportFiles]);
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;

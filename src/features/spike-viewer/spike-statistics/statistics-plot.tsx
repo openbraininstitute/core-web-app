@@ -45,7 +45,7 @@ export default function StatisticsPlot({
 }: {
   figure: Figure;
   onPointClick?: (customdata: unknown) => void;
-  timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor; raster?: boolean };
+  timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor };
 }) {
   const [tip, setTip] = useState<PlacedTooltip>();
   const [graph, setGraph] = useState<HTMLElement | null>(null);
@@ -117,7 +117,6 @@ export default function StatisticsPlot({
           events={timeline.events}
           timeCursor={timeline.timeCursor}
           onHoverChange={setTimingHovered}
-          raster={timeline.raster}
         />
       )}
       {tip && figure.tooltip && !timingHovered && <TooltipCard {...tip} />}
