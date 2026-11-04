@@ -443,7 +443,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private table: CellTable | null = null;
   private colors: CellColors | null = null;
   private defaultColor = DEFAULT_NEURON_COLOR;
-  private blueRamp = true;
   protected background = CANVAS_LIGHT;
   /** The offset taken off the data's positions; the electrodes come in the circuit's own frame. */
   private centre: Vec3 = [0, 0, 0];
@@ -1292,12 +1291,6 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.paint();
   }
 
-  setBlueRamp(on: boolean): void {
-    if (on === this.blueRamp) return;
-    this.blueRamp = on;
-    this.paint();
-  }
-
   get moving(): boolean {
     return this.drawnMoving;
   }
@@ -1983,7 +1976,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   private paint(): void {
     if (!this.table) return;
-    this.table.paint(this.colors, this.defaultColor, this.blueRamp);
+    this.table.paint(this.colors, this.defaultColor);
     const sections = this.table.sectionColors;
     if (sections) setSectionColours(this.uniforms, sections);
     this.invalidate();

@@ -719,7 +719,7 @@ export function CircuitScene({
             highlightedCell: sceneHighlightedCell,
             nodeColors: overrideColors ?? (enableColorBy ? nodeColors : undefined),
             defaultColor,
-            blueRamp: uncolouredCells === undefined,
+            uncolouredCells,
             recededColor,
             onPopulationClick: handlePopulationClick,
             onSubjectCellClick: sceneCellClick,

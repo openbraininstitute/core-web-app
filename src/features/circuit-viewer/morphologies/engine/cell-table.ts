@@ -128,9 +128,9 @@ export class CellTable {
   /**
    * Paints each cell in its column's colour, or in `own` where the cell has no column or the column has no colour of
    * its own. A cell in section colours takes its soma's colour, and `sectionColors` becomes the last section colours in
-   * the palette. A soma in `own` runs along the blue ramp instead, unless `blueRamp` is off.
+   * the palette. A soma in `own` runs along the blue ramp instead.
    */
-  paint(colors: CellColors | null, own: string, blueRamp = true): void {
+  paint(colors: CellColors | null, own: string): void {
     const ownRgba = opaque(own);
     const readable = (color: string) => (chroma.valid(color) ? opaque(color) : ownRgba);
     this.sectionColors = null;
@@ -148,7 +148,7 @@ export class CellTable {
       // Past the end of either array, the cell has no column.
       const rgba = (byCell && columns[byCell[cell]]) ?? ownRgba;
       for (let k = 0; k < 4; k++) this.texels[4 * cell + k] = rgba[k];
-      const own = blueRamp && rgba === ownRgba ? 255 : 0;
+      const own = rgba === ownRgba ? 255 : 0;
       if (own === this.shadeTexels[2 * cell + 1]) continue;
       this.shadeTexels[2 * cell + 1] = own;
       ownChanged = true;

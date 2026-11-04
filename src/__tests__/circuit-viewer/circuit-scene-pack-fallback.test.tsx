@@ -140,11 +140,11 @@ describe('CircuitScene, for a host with a colour scale of its own', () => {
     render(<CircuitScene circuit={micro} largeCircuit uncolouredCells={NEUTRAL_NEURON_COLOR} />);
     expect(h.large?.defaultColor).toBe(NEUTRAL_NEURON_COLOR);
     expect(chroma(NEUTRAL_NEURON_COLOR).get('hsl.s')).toBeLessThan(0.1);
-    expect(h.large?.blueRamp).toBe(false);
+    expect(h.large?.uncolouredCells).toBe(NEUTRAL_NEURON_COLOR);
 
     render(<CircuitScene circuit={micro} largeCircuit />);
     expect(chroma(h.large?.defaultColor ?? '').get('hsl.s')).toBeGreaterThan(0.5);
-    expect(h.large?.blueRamp).toBe(true);
+    expect(h.large?.uncolouredCells).toBeUndefined();
   });
 });
 

@@ -67,8 +67,6 @@ export interface CircuitCellsProps {
   cellColors: CellColors;
   /** What a morphology with no colour of its own is drawn in; such a soma runs along the somas view's ramp. */
   defaultColor: string;
-  /** Off, such a soma takes `defaultColor` as well. */
-  blueRamp?: boolean;
   /** Highlight the cell the pointer is over. */
   cellHover?: boolean;
   /** Called with the cell that is clicked. */
@@ -126,7 +124,6 @@ export function CircuitCells({
   axons = true,
   cellColors,
   defaultColor,
-  blueRamp = true,
   cellHover = false,
   onCellClick,
   onEmptyClick,
@@ -207,7 +204,6 @@ export function CircuitCells({
   const colors = useLatest(cellColors);
   useEffect(() => viewer?.setDark(theme.isDark), [viewer, theme.isDark]);
   useEffect(() => viewer?.setDefaultColor(defaultColor), [viewer, defaultColor]);
-  useEffect(() => viewer?.setBlueRamp(blueRamp), [viewer, blueRamp]);
   useEffect(() => viewer?.setSomaRadius(somaRadius), [viewer, somaRadius]);
   useEffect(() => {
     if (!viewer || !crowding) return;
