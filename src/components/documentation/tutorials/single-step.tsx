@@ -2,7 +2,7 @@ import { PortableText } from 'next-sanity';
 
 import useMouseHover from '@/hooks/useMouveHover';
 import secondsToMMSS from '@/util/convert-seconds-to-minutes';
-import playVideoAtTime from '@/util/play-video-at-time';
+import playVideoAtTime, { type VideoHandle } from '@/util/play-video-at-time';
 import { classNames } from '@/util/utils';
 
 import type { RefObject } from 'react';
@@ -21,7 +21,7 @@ export default function SingleStep({
   content: StepProps;
   videoTime: number;
   setVideoTime: (time: number) => void;
-  videoRef: RefObject<HTMLVideoElement>;
+  videoRef: RefObject<VideoHandle>;
   nextStepTime?: number;
   index: number;
 }) {

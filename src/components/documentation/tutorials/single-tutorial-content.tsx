@@ -6,21 +6,20 @@ import { useRef, useState } from 'react';
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
 import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
 import TextContentBloc from '@/components/documentation/tutorials/TextContentBloc';
+import YouTubePlayer from '@/components/documentation/tutorials/youtube-player';
+import { parseYouTubeId } from '@/utils/youtube';
+
+import type { VideoHandle } from '@/util/play-video-at-time';
 
 export default function SingleTutorialContent() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const videoRef = useRef<HTMLVideoElement>(null!);
+  const videoRef = useRef<VideoHandle>(null!);
   const [videoTime, setVideoTime] = useState<number>(0);
 
   const content = useSanityForSingleTutorial({ slug });
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setVideoTime(Math.floor(videoRef.current.currentTime));
-    }
-  };
+  const youTubeId = parseYouTubeId(content?.url);
 
   if (!content) {
     return (
@@ -38,18 +37,13 @@ export default function SingleTutorialContent() {
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
       <div className="mb-4 w-full">
-        {content.url ? (
-          <video
-            playsInline
-            loop
-            controls
-            className="border-primary-7 h-auto w-full rounded-lg border border-solid"
-            src={content.url}
-            ref={videoRef}
-            onTimeUpdate={handleTimeUpdate}
-          >
-            <track kind="captions" srcLang="en" label="English captions" />
-          </video>
+        {youTubeId ? (
+          <YouTubePlayer
+            id={youTubeId}
+            handleRef={videoRef}
+            onTime={setVideoTime}
+            className="border-primary-7 aspect-video w-full overflow-hidden rounded-lg border border-solid"
+          />
         ) : (
           <p className="text-primary-9">Video URL not available.</p>
         )}

@@ -78,7 +78,7 @@ export default async function Page({ params }: ServerSideComponentProp<{ slug: s
   return (
     <ViewTransition enter="vt-slide-up-enter" exit="vt-slide-down-exit">
       <div className="relative w-full h-[522.19px] overflow-hidden rounded-xl">
-        <VideoPlayer url={video?.url} />
+        <VideoPlayer url={video?.url} title={video?.title} />
       </div>
     </ViewTransition>
   );
