@@ -78,9 +78,14 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
 }
 
 const WITH_SCOPE_COLUMN = new WeakMap<TAnyEntityGridDefinition, TAnyEntityGridDefinition>();
+const WITHOUT_SCOPE_COLUMN = new WeakMap<TAnyEntityGridDefinition, TAnyEntityGridDefinition>();
+
+const hasScopeColumn = (definition: TAnyEntityGridDefinition) =>
+  definition.schema.columns.some((c) => c.id === SCOPE_COLUMN_ID);
 
 /** The definition with {@link scopeColumn} added, cached so every mount sees one object. */
 export function withScopeColumn(definition: TAnyEntityGridDefinition): TAnyEntityGridDefinition {
+  if (hasScopeColumn(definition)) return definition;
   let extended = WITH_SCOPE_COLUMN.get(definition);
   if (!extended) {
     extended = {
@@ -90,4 +95,23 @@ export function withScopeColumn(definition: TAnyEntityGridDefinition): TAnyEntit
     WITH_SCOPE_COLUMN.set(definition, extended);
   }
   return extended;
+}
+
+/** The definition less {@link scopeColumn}, for a listing that shows no scope; cached too. */
+export function withoutScopeColumn(
+  definition: TAnyEntityGridDefinition
+): TAnyEntityGridDefinition {
+  if (!hasScopeColumn(definition)) return definition;
+  let reduced = WITHOUT_SCOPE_COLUMN.get(definition);
+  if (!reduced) {
+    reduced = {
+      ...definition,
+      schema: {
+        ...definition.schema,
+        columns: definition.schema.columns.filter((c) => c.id !== SCOPE_COLUMN_ID),
+      },
+    };
+    WITHOUT_SCOPE_COLUMN.set(definition, reduced);
+  }
+  return reduced;
 }

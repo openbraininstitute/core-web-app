@@ -5,6 +5,7 @@ import { WorkspaceSection } from '@/constants';
 import { buildCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import {
   scopeColumn,
+  withoutScopeColumn,
   withScopeColumn,
 } from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { serializeQuery } from '@/features/data-grid/bindings/entitycore/query-serializer';
@@ -60,9 +61,16 @@ describe('scope column', () => {
     expect(resolved[0]?.id).toBe('scope');
   });
 
-  it('leaves the registered definition alone and hands back one object per definition', () => {
-    expect(morphology().schema.columns.some((c) => c.id === 'scope')).toBe(false);
-    expect(withScopeColumn(morphology())).toBe(withScopeColumn(morphology()));
+  it('comes with every registered definition, as one object per definition', () => {
+    expect(morphology().schema.columns.some((c) => c.id === 'scope')).toBe(true);
+    expect(morphology()).toBe(morphology());
+    expect(withScopeColumn(morphology())).toBe(morphology());
+  });
+
+  it('is dropped, as one object, by a listing that shows no scope', () => {
+    const reduced = withoutScopeColumn(morphology());
+    expect(reduced.schema.columns.some((c) => c.id === 'scope')).toBe(false);
+    expect(withoutScopeColumn(morphology())).toBe(reduced);
   });
 
   it.each([

@@ -30,7 +30,10 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // whose body imports THIS host; going through the barrel would form a module-init
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
-import { withScopeColumn } from '@/features/data-grid/bindings/entitycore/columns/scope';
+import {
+  withoutScopeColumn,
+  withScopeColumn,
+} from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
   createDefaultOperatorRegistry,
@@ -613,7 +616,7 @@ export function EntityDataGrid({
 export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
   const definition = props.requireScopeSelector
     ? withScopeColumn(props.definition)
-    : props.definition;
+    : withoutScopeColumn(props.definition);
   const isExplore =
     (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
     !props.mainTableProps?.selectionType;

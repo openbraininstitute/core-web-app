@@ -269,7 +269,12 @@ async function resolveEntityCount({
   variant?: IListingVariant;
 }) {
   if (!entity) return undefined;
-  const saved = await savedListingParams(extendedType, savedFilters, variant);
+  const saved = await savedListingParams(
+    extendedType,
+    savedFilters,
+    variant,
+    baseQuery.context.projectId
+  );
   // the pinned params win over the user's, as in the grid's request
   const query = { ...baseQuery, filters: { ...saved, ...baseQuery.filters } };
   if (entity.api.query.count) return entity.api.query.count(query);

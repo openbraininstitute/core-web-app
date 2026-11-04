@@ -126,8 +126,7 @@ describe('species switch vs the saved column layout', () => {
 
     // the user unticks a column in the chooser
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
-    const checkboxes = await screen.findAllByRole('checkbox');
-    fireEvent.click(checkboxes[2]);
+    fireEvent.click(await screen.findByRole('checkbox', { name: 'Brain region' }));
     expect(readSlice(local, LAYOUT_KEY).hiddenColumns).toContain(HIDDEN_COLUMN_ID);
 
     // …then switches species, which resets the browse state
@@ -150,9 +149,8 @@ describe('species switch vs the saved column layout', () => {
 
     const { unmount } = mountListing(store);
     fireEvent.click(await screen.findByRole('button', { name: 'Columns' }));
-    const checkboxes = await screen.findAllByRole('checkbox');
-    const label = checkboxes[2].closest('label')?.textContent ?? '';
-    fireEvent.click(checkboxes[2]);
+    const label = 'Brain region';
+    fireEvent.click(await screen.findByRole('checkbox', { name: label }));
     await act(async () => {
       store.set(speciesSelectionModeAtom, SpeciesSelectionMode.All);
     });
