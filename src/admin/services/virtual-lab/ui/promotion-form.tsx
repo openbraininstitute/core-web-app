@@ -72,6 +72,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           min: 1,
           placeholder: 'No limit',
           extra: "Once set, this can be changed but not removed. Can't be below the uses per user.",
+          dependencies: ['max_uses_per_user_per_period'],
           rules: [
             ({ getFieldValue }) => ({
               validator: async (_, value) => {
@@ -87,6 +88,7 @@ export function PromotionCreate({ onClose }: { onClose: () => void }) {
           name: 'valid_until',
           label: 'Valid until',
           kind: 'datetime',
+          dependencies: ['valid_from'],
           rules: [
             ...REQUIRED,
             ({ getFieldValue }) => ({

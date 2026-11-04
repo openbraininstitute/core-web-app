@@ -70,7 +70,8 @@ export async function getCourseSeatBatches(courseId: string) {
     const { batches } = await read<{ batches: AdminSeatBatch[] }>('/seats/batches', {
       course_id: courseId,
     });
-    return batches;
+    // The API orders them by their random ID.
+    return [...batches].sort((a, b) => b.created_at.localeCompare(a.created_at));
   } catch (error) {
     if (isNotFound(error)) return [];
     throw error;

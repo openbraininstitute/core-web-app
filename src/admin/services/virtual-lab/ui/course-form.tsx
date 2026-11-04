@@ -41,29 +41,43 @@ const DATE_FIELDS: FormModalField[] = [
     name: 'last_drop_date',
     label: 'Last date to drop',
     kind: 'datetime',
+    dependencies: ['start_date'],
     rules: [REQUIRED, after('start_date', 'start')],
   },
   {
     name: 'end_date',
     label: 'Ends',
     kind: 'datetime',
+    dependencies: ['last_drop_date'],
     rules: [REQUIRED, after('last_drop_date', 'last date to drop')],
   },
 ];
 
 type CourseDateValues = { start_date: Dayjs; last_drop_date: Dayjs; end_date: Dayjs };
 
-function useInstitutionOptions() {
-  const { data } = useQuery({
+function useInstitutionField(): FormModalField {
+  const { data, error, isPending } = useQuery({
     queryKey: adminQueryKeys.institutions({ query: '' }),
     queryFn: () => searchInstitutions(),
   });
-  return data?.map(({ id, name }) => ({ value: id, label: name }));
+
+  let extra: string | undefined;
+  if (isPending) extra = 'Loading institutions';
+  if (error) extra = "Couldn't load the institutions, so this can't be chosen right now.";
+
+  return {
+    name: 'institution_id',
+    label: 'Institution',
+    kind: 'select',
+    options: data?.map(({ id, name }) => ({ value: id, label: name })),
+    extra,
+    rules: [REQUIRED],
+  };
 }
 
 export function CourseCreate({ onClose }: { onClose: () => void }) {
   const router = useRouter();
-  const institutions = useInstitutionOptions();
+  const institutionField = useInstitutionField();
   const write = useTenancyWrite({
     write: createCourse,
     done: 'Course created as a draft',
@@ -89,13 +103,7 @@ export function CourseCreate({ onClose }: { onClose: () => void }) {
           extra: 'A project in that lab.',
           rules: [REQUIRED, UUID_RULE],
         },
-        {
-          name: 'institution_id',
-          label: 'Institution',
-          kind: 'select',
-          options: institutions,
-          rules: [REQUIRED],
-        },
+        institutionField,
         ...DATE_FIELDS,
       ]}
       okText="Create"
@@ -114,7 +122,9 @@ export function CourseCreate({ onClose }: { onClose: () => void }) {
 }
 
 export function CourseEdit({ course, onClose }: { course: AdminCourse; onClose: () => void }) {
-  const institutions = useInstitutionOptions();
+  const institutionField = useInstitutionField();
+  // Seats keep the institution they were provisioned under, so only a draft can safely change it.
+  const isDraft = course.status === 'draft';
   const write = useTenancyWrite({
     write: (update: AdminCourseUpdate) => updateCourse(course.id, update),
     done: 'Course updated',
@@ -126,21 +136,10 @@ export function CourseEdit({ course, onClose }: { course: AdminCourse; onClose: 
     date.isSame(parsed(iso)) ? iso : date.toISOString();
 
   return (
-    <FormModal<CourseDateValues & { institution_id: string }>
+    <FormModal<CourseDateValues & { institution_id?: string }>
       title={`Edit the course of ${course.virtual_lab_name}`}
       description="Changing the end date also moves the end of the lab's Pro discount."
-      fields={[
-        {
-          name: 'institution_id',
-          label: 'Institution',
-          kind: 'select',
-          options: institutions ?? [
-            { value: course.institution_id, label: course.institution_name },
-          ],
-          rules: [REQUIRED],
-        },
-        ...DATE_FIELDS,
-      ]}
+      fields={isDraft ? [institutionField, ...DATE_FIELDS] : DATE_FIELDS}
       initialValues={{
         institution_id: course.institution_id,
         start_date: parsed(course.start_date),
@@ -157,7 +156,7 @@ export function CourseEdit({ course, onClose }: { course: AdminCourse; onClose: 
       }) => {
         const update = changedFields<AdminCourseUpdate>(
           {
-            institution_id: institution,
+            institution_id: institution ?? course.institution_id,
             start_date: unlessSame(start, course.start_date),
             last_drop_date: unlessSame(lastDrop, course.last_drop_date),
             end_date: unlessSame(end, course.end_date),

@@ -69,6 +69,14 @@ describe('education client', () => {
     );
   });
 
+  it('puts the newest batch first', async () => {
+    const older = { batch_id: 'older', created_at: '2026-01-01T00:00:00Z' };
+    const newer = { batch_id: 'newer', created_at: '2026-02-01T00:00:00Z' };
+    api.get.mockResolvedValueOnce({ batches: [older, newer] });
+
+    await expect(getCourseSeatBatches('c')).resolves.toEqual([newer, older]);
+  });
+
   it('treats a 404 as a course with no batches', async () => {
     api.get.mockRejectedValueOnce(apiError(404));
     await expect(getCourseSeatBatches('c')).resolves.toEqual([]);

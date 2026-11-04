@@ -43,9 +43,11 @@ function LabOverview({ lab }: { lab: AdminLab }) {
       </Detail>
       <Detail label="Compute cell">{lab.compute_cell}</Detail>
       {lab.course && (
-        <Detail label="Course">
-          <AdminLink kind="course" id={lab.course.id} />
-        </Detail>
+        <CapabilityGate need="virtualLab.admin">
+          <Detail label="Course">
+            <AdminLink kind="course" id={lab.course.id} />
+          </Detail>
+        </CapabilityGate>
       )}
       <Detail label="Projects">{lab.projects_count}</Detail>
       <Detail label="Created">{formatDateTime(lab.created_at)}</Detail>

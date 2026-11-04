@@ -84,7 +84,7 @@ export function CoursesList() {
           key={gridKey}
           what="courses"
           columns={COLUMNS}
-          getRowId={({ id, status }) => `${id}:${status}`}
+          getRowId={({ id, status, virtual_lab_name: name }) => `${id}:${status}:${name}`}
           queryKey={adminQueryKeys.courses({ query })}
           queryFn={() => searchCourses(query)}
           onRowClick={(course) => router.push(adminHref('course', course.id))}

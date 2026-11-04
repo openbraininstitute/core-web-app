@@ -7,6 +7,7 @@ import { useState } from 'react';
 import { Button } from '@/ui/molecules/button';
 
 import { Detail, DetailId, DetailList } from '../../../shared/detail-list';
+import { isNotFound } from '../../../shared/errors';
 import { FormModal } from '../../../shared/form-modal';
 import { asUtc, formatDateTime } from '../../../shared/format';
 import { AdminQueryGrid, LoadFailure } from '../../../shared/grid';
@@ -196,6 +197,8 @@ function CourseActions({ course }: { course: AdminCourse }) {
               kind: 'integer',
               min: 1,
               placeholder: 'All unused seats',
+              extra:
+                "Left blank, every unused seat moves. They can't be moved back until the target course is past its last date to drop.",
             },
           ]}
           okText="Transfer"
@@ -240,7 +243,8 @@ export function CourseDetail({ courseId }: { courseId: string }) {
     queryFn: () => getCourse(courseId),
   });
 
-  if (!course) {
+  // A deleted course is really gone, whatever the cache still holds.
+  if (!course || isNotFound(error)) {
     return error ? (
       <LoadFailure error={error} what="this course" />
     ) : (

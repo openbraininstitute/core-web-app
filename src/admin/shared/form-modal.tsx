@@ -15,6 +15,8 @@ export type FormModalField = {
   placeholder?: string;
   extra?: ReactNode;
   rules?: Rule[];
+  // Other fields this one's rules read, so it validates again when they change.
+  dependencies?: string[];
 };
 
 function fieldControl({ kind = 'text', min, max, options, placeholder }: FormModalField) {
@@ -83,7 +85,10 @@ export function FormModal<Values extends Record<string, unknown>>({
         layout="vertical"
         requiredMark={false}
         initialValues={initialValues}
-        onFinish={onSubmit}
+        // Enter submits a form too, and the disabled OK button doesn't stop that.
+        onFinish={(values) => {
+          if (!pending) onSubmit(values);
+        }}
       >
         {fields.map((field) => (
           // Form.Item's own `extra` makes the form jump when a field is first touched.
@@ -92,6 +97,7 @@ export function FormModal<Values extends Record<string, unknown>>({
               name={field.name}
               label={field.label}
               rules={field.rules}
+              dependencies={field.dependencies}
               valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
               style={{ marginBottom: 0 }}
             >
