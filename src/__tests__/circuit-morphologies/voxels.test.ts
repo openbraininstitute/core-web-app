@@ -65,6 +65,28 @@ describe('writeVoxels', () => {
     );
   });
 
+  it('has only what changed uploaded, and says if anything did', () => {
+    const geometry = voxelGeometry(1);
+    const layer = {
+      centres: Float32Array.of(0.1, 0.2, 0.3),
+      sizes: Float32Array.of(1, 2, 3),
+      looks: Float32Array.of(0.1, 0.2, 0.3, 0.4),
+    };
+    expect(writeVoxels(layer, [0.5, 0.5, 0.5], geometry)).toBe(true);
+    const versions = () =>
+      ['aCentre', 'aSize', 'aLook'].map(
+        (name) => (geometry.getAttribute(name) as THREE.BufferAttribute).version
+      );
+    const written = versions();
+
+    expect(writeVoxels(layer, [0.5, 0.5, 0.5], geometry)).toBe(false);
+    expect(versions()).toEqual(written);
+
+    const recoloured = { ...layer, looks: Float32Array.of(0.9, 0.2, 0.3, 0.4) };
+    expect(writeVoxels(recoloured, [0.5, 0.5, 0.5], geometry)).toBe(true);
+    expect(versions()).toEqual([written[0], written[1], written[2] + 1]);
+  });
+
   it('makes a box of faces of their own, so that each can be shaded', () => {
     const geometry = voxelGeometry(1);
     expect(geometry.getAttribute('position').count).toBe(24);

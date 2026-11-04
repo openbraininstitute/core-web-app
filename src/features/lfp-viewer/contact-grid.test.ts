@@ -4,6 +4,7 @@ import { levelOf, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
 import {
   contactGrid,
   openingSliceAxis,
+  placeVoxels,
   slicePosition,
   voxelsOf,
 } from '@/features/lfp-viewer/contact-grid';
@@ -114,7 +115,7 @@ describe('voxelsOf', () => {
     levels[0] = SCENE_LEVELS - 1;
     levels[1] = 0;
     levels[2] = levelOf(0.5);
-    const { centres, sizes, looks } = voxelsOf(positions, grid, levels, null);
+    const { centres, sizes, looks } = voxelsOf(placeVoxels(positions, grid, null), levels);
     expect(Array.from(centres)).toEqual(Array.from(positions));
     expect(sizes[0]).toBeCloseTo(grid.pitch[0] * 0.85, 3);
     expect(looks[3]).toBeCloseTo(0.55, 5);
@@ -124,13 +125,22 @@ describe('voxelsOf', () => {
     expect(looks[15]).toBe(0);
   });
 
+  it('keeps where the boxes are when only the colours change', () => {
+    const placement = placeVoxels(positions, grid, null);
+    const quiet = voxelsOf(placement, new Uint8Array(contacts).fill(levelOf(0)));
+    const loud = voxelsOf(placement, new Uint8Array(contacts).fill(SCENE_LEVELS - 1));
+    expect(loud.centres).toBe(quiet.centres);
+    expect(loud.sizes).toBe(quiet.sizes);
+    expect(loud.looks).not.toEqual(quiet.looks);
+  });
+
   it('draws a slice as opaque tiles on its plane, the quiet ones too', () => {
     const levels = new Uint8Array(contacts).fill(levelOf(0));
     for (const axis of [0, 1, 2]) {
       let total = 0;
       for (let index = 0; index < grid.slices[axis]; index++) {
         const slice = { axis, index };
-        const { centres, sizes, looks } = voxelsOf(positions, grid, levels, slice);
+        const { centres, sizes, looks } = voxelsOf(placeVoxels(positions, grid, slice), levels);
         total += centres.length / 3;
         for (let i = axis; i < centres.length; i += 3) {
           expect(centres[i]).toBeCloseTo(slicePosition(grid, slice), 3);

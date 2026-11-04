@@ -164,21 +164,38 @@ export function growRoundDots(
 ): void {
   for (const { coordinates: xyz } of groups) {
     for (let i = 0; i + 2 < xyz.length; i += 3) {
-      growRound(box, xyz[i] - centre[0], xyz[i + 1] - centre[1], xyz[i + 2] - centre[2], radius);
+      growRound(
+        box,
+        xyz[i] - centre[0],
+        xyz[i + 1] - centre[1],
+        xyz[i + 2] - centre[2],
+        radius,
+        radius,
+        radius
+      );
     }
   }
 }
 
-function growRound(box: THREE.Box3, x: number, y: number, z: number, reach: number): void {
+/** Grows `box` round what is at x, y, z and reaches that far from there along each axis. */
+export function growRound(
+  box: THREE.Box3,
+  x: number,
+  y: number,
+  z: number,
+  reachX: number,
+  reachY: number,
+  reachZ: number
+): void {
   box.min.set(
-    Math.min(box.min.x, x - reach),
-    Math.min(box.min.y, y - reach),
-    Math.min(box.min.z, z - reach)
+    Math.min(box.min.x, x - reachX),
+    Math.min(box.min.y, y - reachY),
+    Math.min(box.min.z, z - reachZ)
   );
   box.max.set(
-    Math.max(box.max.x, x + reach),
-    Math.max(box.max.y, y + reach),
-    Math.max(box.max.z, z + reach)
+    Math.max(box.max.x, x + reachX),
+    Math.max(box.max.y, y + reachY),
+    Math.max(box.max.z, z + reachZ)
   );
 }
 

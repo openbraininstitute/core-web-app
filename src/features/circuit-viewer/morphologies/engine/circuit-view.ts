@@ -105,8 +105,6 @@ const MARKER_MIN_RADIUS = 3;
 /** How far from a marker's centre, in CSS pixels, a point still counts as on it, as in morphoviewer. */
 const MARKER_REACH = 9;
 /** A synapse's radius in µm, and the least radius it is drawn with in device pixels, as in the small-circuit view. */
-/** Drawn after the synapses, and before the electrodes at 1. */
-const VOXELS_ORDER = 0.75;
 const SYNAPSE_RADIUS = 0.5;
 const SYNAPSE_MIN_RADIUS = 2;
 /** How long the nudge lasts, in ms, and how much nearer it brings the view at its peak, as in morphoviewer. */
@@ -1399,11 +1397,14 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.electrodeGroups = electrodes;
     this.highlightedElectrode = highlighted;
     this.drawElectrodes();
+    this.bound();
   }
 
   setVoxels(voxels: VoxelLayer | null): void {
+    const before = this.voxelLayer;
     this.voxelLayer = voxels;
     this.drawVoxels();
+    if (voxels?.centres !== before?.centres || voxels?.sizes !== before?.sizes) this.bound();
   }
 
   setSynapses(groups: readonly SynapseGroup[]): void {
@@ -1415,6 +1416,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   setElectrodeRadius(radius: number): void {
     this.electrodeUniforms.uRadius.value = radius;
     this.electrodeUniforms.uMinRadius.value = minRadius(radius);
+    this.bound();
     if (this.electrodes?.visible) this.invalidate();
   }
 
@@ -1615,29 +1617,25 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 1,
       highlighted: this.highlightedElectrode,
     });
-    this.bound();
   }
 
-  /** Draws the boxes in a mesh drawn after the cells and before the contacts, made larger only when they outgrow it. */
+  /**
+   * Draws the boxes in a mesh drawn after the synapses and before the contacts, made larger only when they outgrow it.
+   * Asks for a frame only where that changed what is drawn.
+   */
   private drawVoxels(): void {
     const layer = this.voxelLayer;
     const count = layer ? layer.centres.length / 3 : 0;
     if (count === 0 && !this.voxels?.visible) return;
-    let mesh = this.voxels;
-    if (!mesh || count > mesh.geometry.getAttribute('aCentre').count) {
-      mesh?.geometry.dispose();
-      if (mesh) this.letGo(mesh);
-      mesh = quads(voxelGeometry(count), this.materials.voxel);
-      mesh.name = 'voxels';
-      mesh.renderOrder = VOXELS_ORDER;
-      this.scene.add(mesh);
-      this.voxels = mesh;
-    }
-    mesh.geometry.instanceCount = count;
-    mesh.visible = count > 0;
-    if (layer) writeVoxels(layer, this.centre, mesh.geometry);
-    this.bound();
-    this.invalidate();
+    const changed = !this.voxels || count !== this.voxels.geometry.instanceCount;
+    const mesh = this.fitted(this.voxels, 'aCentre', count, () => voxelGeometry(count), {
+      material: this.materials.voxel,
+      name: 'voxels',
+      order: 0.75,
+    });
+    this.voxels = mesh;
+    const written = layer !== null && writeVoxels(layer, this.centre, mesh.geometry);
+    if (written || changed) this.invalidate();
   }
 
   /** Draws the synapses where the circuit's frame puts them, after the cells, which hide the synapses behind them. */
@@ -1686,24 +1684,22 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const count = countDots(groups);
     if (count === 0 && !mesh?.visible) return mesh;
     const changed = !mesh || count !== mesh.geometry.instanceCount;
-    let dots = mesh;
-    if (!dots || count > dots.geometry.getAttribute('aContact').count) {
-      dots?.geometry.dispose();
-      if (dots) this.letGo(dots);
-      const geometry = quadGeometry(count);
-      geometry
-        .setAttribute(
-          'aContact',
-          new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
-        )
-        .setAttribute('aLook', new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4));
-      dots = quads(geometry, material);
-      dots.name = name;
-      dots.renderOrder = order;
-      this.scene.add(dots);
-    }
-    dots.geometry.instanceCount = count;
-    dots.visible = count > 0;
+    const dots = this.fitted(
+      mesh,
+      'aContact',
+      count,
+      () =>
+        quadGeometry(count)
+          .setAttribute(
+            'aContact',
+            new THREE.InstancedBufferAttribute(new Float32Array(3 * count), 3)
+          )
+          .setAttribute(
+            'aLook',
+            new THREE.InstancedBufferAttribute(new Float32Array(4 * count), 4)
+          ),
+      { material, name, order }
+    );
     const contacts = dots.geometry.getAttribute('aContact') as THREE.InstancedBufferAttribute;
     const looks = dots.geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
     const written = writeDots(
@@ -1719,6 +1715,28 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     }
     if (written || changed) this.invalidate();
     return dots;
+  }
+
+  /** `mesh` set to draw `count` instances, or a new one in its place if they outgrow its `attribute`. */
+  private fitted(
+    mesh: Quads | null,
+    attribute: string,
+    count: number,
+    makeGeometry: () => THREE.InstancedBufferGeometry,
+    { material, name, order }: { material: THREE.Material; name: string; order: number }
+  ): Quads {
+    let fit = mesh;
+    if (!fit || count > fit.geometry.getAttribute(attribute).count) {
+      fit?.geometry.dispose();
+      if (fit) this.letGo(fit);
+      fit = quads(makeGeometry(), material);
+      fit.name = name;
+      fit.renderOrder = order;
+      this.scene.add(fit);
+    }
+    fit.geometry.instanceCount = count;
+    fit.visible = count > 0;
+    return fit;
   }
 
   /** How the tier writes rows of the glow straight to the GPU; without one, three uploads them. */

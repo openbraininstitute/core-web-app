@@ -6,6 +6,8 @@
 
 import * as THREE from 'three';
 
+import { growRound } from './electrodes';
+
 import type { Vec3, VoxelLayer } from '../types';
 
 /** Below this opacity a box is left out rather than drawn too faint to see. */
@@ -79,28 +81,49 @@ export function growRoundVoxels(
   centre: Vec3
 ): void {
   for (let i = 0; i < centres.length; i += 3) {
-    for (let axis = 0; axis < 3; axis++) {
-      const at = centres[i + axis] - centre[axis];
-      const half = sizes[i + axis] / 2;
-      box.min.setComponent(axis, Math.min(box.min.getComponent(axis), at - half));
-      box.max.setComponent(axis, Math.max(box.max.getComponent(axis), at + half));
-    }
+    growRound(
+      box,
+      centres[i] - centre[0],
+      centres[i + 1] - centre[1],
+      centres[i + 2] - centre[2],
+      sizes[i] / 2,
+      sizes[i + 1] / 2,
+      sizes[i + 2] / 2
+    );
   }
 }
 
-/** Writes the layer's boxes into `geometry`, with `centre` taken off where they are. */
+/** Writes values into `attribute`, to be uploaded only if one differs. Says whether one did. */
+function writeChanged(
+  attribute: THREE.BufferAttribute,
+  length: number,
+  valueAt: (i: number) => number
+): boolean {
+  const array = attribute.array as Float32Array;
+  let changed = false;
+  for (let i = 0; i < length; i++) {
+    const value = Math.fround(valueAt(i));
+    if (array[i] === value) continue;
+    array[i] = value;
+    changed = true;
+  }
+  if (changed) attribute.needsUpdate = true;
+  return changed;
+}
+
+/** Writes the layer's boxes into `geometry`, with `centre` taken off where they are. Says whether that changed it. */
 export function writeVoxels(
   { centres, sizes, looks }: VoxelLayer,
   centre: Vec3,
   geometry: THREE.InstancedBufferGeometry
-): void {
-  const placed = geometry.getAttribute('aCentre') as THREE.InstancedBufferAttribute;
-  const sized = geometry.getAttribute('aSize') as THREE.InstancedBufferAttribute;
-  const looked = geometry.getAttribute('aLook') as THREE.InstancedBufferAttribute;
-  for (let i = 0; i < centres.length; i++) placed.array[i] = centres[i] - centre[i % 3];
-  (sized.array as Float32Array).set(sizes);
-  (looked.array as Float32Array).set(looks);
-  placed.needsUpdate = true;
-  sized.needsUpdate = true;
-  looked.needsUpdate = true;
+): boolean {
+  const attribute = (name: string) => geometry.getAttribute(name) as THREE.BufferAttribute;
+  const placed = writeChanged(
+    attribute('aCentre'),
+    centres.length,
+    (i) => centres[i] - centre[i % 3]
+  );
+  const sized = writeChanged(attribute('aSize'), sizes.length, (i) => sizes[i]);
+  const looked = writeChanged(attribute('aLook'), looks.length, (i) => looks[i]);
+  return placed || sized || looked;
 }

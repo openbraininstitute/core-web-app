@@ -1,5 +1,6 @@
 'use client';
 
+import { Slider } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
@@ -14,12 +15,13 @@ import {
 import {
   contactGrid,
   openingSliceAxis,
+  placeVoxels,
   slicePosition,
   voxelsOf,
 } from '@/features/lfp-viewer/contact-grid';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
-import { PillSelect } from '@/ui/molecules/select/pill-select';
+import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -89,8 +91,8 @@ export function LfpScene({
   const [levels, setLevels] = useState<Uint8Array | null>(null);
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const grid = useMemo(() => (positions ? contactGrid(positions) : null), [positions]);
-  const [chosenView, setChosenView] = useState<ContactView | null>(null);
-  const view = grid ? (chosenView ?? 'voxels') : 'points';
+  const [chosenView, setChosenView] = useState<ContactView>('voxels');
+  const view = grid ? chosenView : 'points';
   const [chosenAxis, setChosenAxis] = useState<number | null>(null);
   const [chosenIndex, setChosenIndex] = useState<number | null>(null);
   const slice = useMemo(() => {
@@ -127,14 +129,18 @@ export function LfpScene({
     };
   }, [active, timeCursor, field, scale, hideBelow]);
 
+  const fieldLevels = levels?.length === field.contacts ? levels : null;
+  const coloured = fieldLevels !== null;
+  // Points alone take their groups from the levels, so voxels and slices keep the same groups as they recolour.
+  const pointLevels = view === 'points' ? fieldLevels : null;
   const drawn = useMemo<ICircuitOverlayGroup[] | undefined>(() => {
-    if (!positions || !levels || levels.length !== field.contacts) return undefined;
+    if (!positions || !coloured) return undefined;
     const byLevel: number[][] = LEVEL_COLORS.map(() => []);
     const selected: number[] = [];
     for (let c = 0; c < field.contacts; c++) {
       const xyz = [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
       if (c === selectedContact) selected.push(...xyz);
-      else if (view === 'points') byLevel[levels[c]].push(...xyz);
+      else if (pointLevels) byLevel[pointLevels[c]].push(...xyz);
     }
     const groups = byLevel.flatMap((coordinates, level) =>
       coordinates.length === 0
@@ -157,13 +163,14 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field.contacts, levels, selectedContact, view]);
+  }, [positions, field.contacts, coloured, pointLevels, selectedContact]);
+  const placement = useMemo(
+    () => (positions && grid && view !== 'points' ? placeVoxels(positions, grid, slice) : null),
+    [positions, grid, view, slice]
+  );
   const voxels = useMemo(
-    () =>
-      positions && grid && levels && levels.length === field.contacts && view !== 'points'
-        ? voxelsOf(positions, grid, levels, slice)
-        : null,
-    [positions, grid, levels, field.contacts, view, slice]
+    () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
+    [placement, fieldLevels]
   );
   const electrodes = useMemo(() => ({ drawn, voxels }), [drawn, voxels]);
 
@@ -189,8 +196,9 @@ export function LfpScene({
             onChange={(v) => setChosenView(v as ContactView)}
           />
           {slice && (
-            <div className="flex items-center gap-2 rounded-full bg-white/90 py-1 pr-3 pl-1 text-xs text-neutral-600 shadow-sm">
+            <PillGroup>
               <PillSelect
+                segment
                 label="Along"
                 value={String(slice.axis)}
                 options={AXES.flatMap((name, axis) =>
@@ -201,19 +209,21 @@ export function LfpScene({
                   setChosenIndex(null);
                 }}
               />
-              <input
-                type="range"
-                aria-label="Slice position"
-                className="accent-primary-8 w-32"
-                min={0}
-                max={grid.slices[slice.axis] - 1}
-                value={slice.index}
-                onChange={(e) => setChosenIndex(Number(e.target.value))}
-              />
-              <span className="tabular-nums">
-                {AXES[slice.axis]} = {slicePosition(grid, slice).toFixed(0)} µm
-              </span>
-            </div>
+              <div className="flex items-center gap-3 px-2.5">
+                <Slider
+                  ariaLabelForHandle="Slice position"
+                  className="!my-0 w-32"
+                  min={0}
+                  max={grid.slices[slice.axis] - 1}
+                  value={slice.index}
+                  onChange={setChosenIndex}
+                  tooltip={{ open: false }}
+                />
+                <span className="text-xs font-normal whitespace-nowrap text-neutral-600 tabular-nums">
+                  {AXES[slice.axis]} = {slicePosition(grid, slice).toFixed(0)} µm
+                </span>
+              </div>
+            </PillGroup>
           )}
         </div>
       )}
