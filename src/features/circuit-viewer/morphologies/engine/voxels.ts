@@ -72,6 +72,22 @@ export function voxelGeometry(instances: number): THREE.InstancedBufferGeometry 
   return geometry;
 }
 
+/** Grows `box` round the layer's boxes, with `centre` taken off where they are. */
+export function growRoundVoxels(
+  box: THREE.Box3,
+  { centres, sizes }: VoxelLayer,
+  centre: Vec3
+): void {
+  for (let i = 0; i < centres.length; i += 3) {
+    for (let axis = 0; axis < 3; axis++) {
+      const at = centres[i + axis] - centre[axis];
+      const half = sizes[i + axis] / 2;
+      box.min.setComponent(axis, Math.min(box.min.getComponent(axis), at - half));
+      box.max.setComponent(axis, Math.max(box.max.getComponent(axis), at + half));
+    }
+  }
+}
+
 /** Writes the layer's boxes into `geometry`, with `centre` taken off where they are. */
 export function writeVoxels(
   { centres, sizes, looks }: VoxelLayer,

@@ -27,7 +27,14 @@ import {
 import { CellTable, type GlowRowsWriter, somaTexture } from './cell-table';
 import { DETAIL_PIXELS, pixelSpan } from './detail';
 import { DetailStream } from './detail-stream';
-import { countDots, type DotGroup, drawnRadius, minRadius, writeDots } from './electrodes';
+import {
+  countDots,
+  type DotGroup,
+  drawnRadius,
+  growRoundDots,
+  minRadius,
+  writeDots,
+} from './electrodes';
 import {
   AXON,
   CELL_MASK,
@@ -49,7 +56,7 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
-import { voxelGeometry, writeVoxels } from './voxels';
+import { growRoundVoxels, voxelGeometry, writeVoxels } from './voxels';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -1608,6 +1615,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 1,
       highlighted: this.highlightedElectrode,
     });
+    this.bound();
   }
 
   /** Draws the boxes in a mesh drawn after the cells and before the contacts, made larger only when they outgrow it. */
@@ -1628,6 +1636,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     mesh.geometry.instanceCount = count;
     mesh.visible = count > 0;
     if (layer) writeVoxels(layer, this.centre, mesh.geometry);
+    this.bound();
     this.invalidate();
   }
 
@@ -1736,13 +1745,16 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /**
    * Sets `bounds` round everything there is: every soma of the cloud, drawn or not and as large as one glowing in full,
-   * and the morphologies.
+   * the morphologies, the electrodes and the boxes.
    */
   private bound(): void {
     const all = new THREE.Box3();
     const box = this.cloud?.box;
     if (box) all.copy(this.somaBox(box, this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL)));
     if (this.layer) all.union(this.shifted(this.layer.data.bounds));
+    // What the camera's clip range is to keep, as they may lie far from the cells. It frames the cells alone.
+    growRoundDots(all, this.electrodeGroups, this.centre, this.electrodeUniforms.uRadius.value);
+    if (this.voxelLayer) growRoundVoxels(all, this.voxelLayer, this.centre);
     if (!all.isEmpty()) this.bounds.copy(all);
   }
 

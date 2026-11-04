@@ -155,6 +155,33 @@ export function writeDots(
   return changed;
 }
 
+/** Grows `box` round the dots of `groups`, each reaching `radius` µm from where it is, with `centre` taken off. */
+export function growRoundDots(
+  box: THREE.Box3,
+  groups: readonly DotGroup[],
+  centre: Vec3,
+  radius: number
+): void {
+  for (const { coordinates: xyz } of groups) {
+    for (let i = 0; i + 2 < xyz.length; i += 3) {
+      growRound(box, xyz[i] - centre[0], xyz[i + 1] - centre[1], xyz[i + 2] - centre[2], radius);
+    }
+  }
+}
+
+function growRound(box: THREE.Box3, x: number, y: number, z: number, reach: number): void {
+  box.min.set(
+    Math.min(box.min.x, x - reach),
+    Math.min(box.min.y, y - reach),
+    Math.min(box.min.z, z - reach)
+  );
+  box.max.set(
+    Math.max(box.max.x, x + reach),
+    Math.max(box.max.y, y + reach),
+    Math.max(box.max.z, z + reach)
+  );
+}
+
 export function countDots(groups: readonly DotGroup[]): number {
   let count = 0;
   for (const group of groups) count += Math.floor(group.coordinates.length / 3);
