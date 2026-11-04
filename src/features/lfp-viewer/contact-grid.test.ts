@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { VoxelOrder } from '@/features/circuit-viewer/morphologies/engine/voxels';
 import { levelOf, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
 import {
   contactGrid,
@@ -154,6 +155,58 @@ describe('contactGrid, on what a real array may hold', () => {
     const grid = contactGrid(Float32Array.from(points));
     expect(grid?.pitch[0]).toBeCloseTo(20, 3);
     expect(grid?.pitch[2]).toBeCloseTo(30, 1);
+  });
+});
+
+describe('placeVoxels', () => {
+  const positions = offsetPlanes();
+  const grid = contactGrid(positions);
+  if (!grid) throw new Error('no grid');
+
+  it('nests the boxes in planes of rows, along the stack first', () => {
+    const { lattice, centres } = placeVoxels(positions, grid, null);
+    expect(lattice.axes).toEqual([1, 0, 2]);
+    expect(lattice.planes.length).toBe(grid.slices[1] + 1);
+    expect(lattice.rows.at(-1)).toBe(centres.length / 3);
+    for (let plane = 0; plane + 1 < lattice.planes.length; plane++) {
+      const [first, end] = [
+        lattice.rows[lattice.planes[plane]],
+        lattice.rows[lattice.planes[plane + 1]],
+      ];
+      for (let box = first; box < end; box++) {
+        expect(centres[box * 3 + 1]).toBeCloseTo(centres[first * 3 + 1], 3);
+      }
+    }
+  });
+
+  it('keeps each contact with its colour, whatever the contacts come in', () => {
+    const contacts = positions.length / 3;
+    const shuffled = new Float32Array(positions.length);
+    for (let contact = 0; contact < contacts; contact++) {
+      const from = contacts - 1 - contact;
+      shuffled.set(positions.subarray(from * 3, from * 3 + 3), contact * 3);
+    }
+    const reversedGrid = contactGrid(shuffled);
+    if (!reversedGrid) throw new Error('no grid');
+    const placement = placeVoxels(shuffled, reversedGrid, null);
+    const levels = new Uint8Array(contacts);
+    levels[contacts - 1] = SCENE_LEVELS - 1;
+    const { centres, looks } = voxelsOf(placement, levels);
+    const loudest = placement.shown.indexOf(contacts - 1);
+    expect(loudest).toBe(0);
+    expect(Array.from(centres.subarray(0, 3))).toEqual(Array.from(positions.subarray(0, 3)));
+    expect(looks[3]).toBeCloseTo(0.55, 5);
+    expect(looks[7]).toBeCloseTo(0.55, 5);
+    expect(Array.from(looks.subarray(0, 3))).not.toEqual(Array.from(looks.subarray(4, 7)));
+  });
+
+  it.each([0, 1, 2])('orders every box of a slice along axis %d once', (axis) => {
+    for (let index = 0; index < grid.slices[axis]; index++) {
+      const placement = placeVoxels(positions, grid, { axis, index });
+      const order = new VoxelOrder(placement);
+      order.seenFrom([200, 900, -300]);
+      expect(new Set(order.boxes).size).toBe(placement.shown.length);
+    }
   });
 });
 

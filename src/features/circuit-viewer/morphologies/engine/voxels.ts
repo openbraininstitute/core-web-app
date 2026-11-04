@@ -6,6 +6,8 @@
 
 import * as THREE from 'three';
 
+import { lowerBound } from '@/utils/sorted';
+
 import { growRound } from './electrodes';
 
 import type { Vec3, VoxelLayer } from '../types';
@@ -93,37 +95,151 @@ export function growRoundVoxels(
   }
 }
 
+/**
+ * Visits `count` groups, ascending along an axis, far to near from an eye there: those on either side of it from the
+ * outside in, then the one it is at. A group's side is told by the middle of the gap to the next, not by its centre, as
+ * an eye past the centre of a box is still on that box's side of the gap.
+ */
+function farToNear(
+  count: number,
+  placeOf: (group: number) => number,
+  eye: number,
+  visit: (group: number) => void
+): void {
+  if (count === 0) return;
+  let nearest = 0;
+  while (nearest + 1 < count && (placeOf(nearest) + placeOf(nearest + 1)) / 2 < eye) nearest++;
+  for (let group = 0; group < nearest; group++) visit(group);
+  for (let group = count - 1; group > nearest; group--) visit(group);
+  visit(nearest);
+}
+
+/**
+ * The order to blend a layer's boxes in, far to near. Boxes that do not overlap are separated by a gap along some axis,
+ * and the one on the eye's side of it goes later, so this holds whatever their shape, unlike their centres' depth, and
+ * changes only as the eye crosses a gap. Walking the lattice takes no sort.
+ */
+export class VoxelOrder {
+  /** The box to draw at each place. */
+  readonly boxes: Uint32Array;
+  private readonly lattice: VoxelLayer['lattice'];
+  private readonly centres: Float32Array;
+  /** Per level of the lattice, the middles of all its gaps, ascending. */
+  private readonly gaps: Float64Array[];
+  private readonly crossed = [-1, -1, -1];
+
+  constructor({ centres, lattice }: Pick<VoxelLayer, 'centres' | 'lattice'>) {
+    this.centres = centres;
+    this.lattice = lattice;
+    this.boxes = new Uint32Array(centres.length / 3);
+    this.gaps = this.gapsOf();
+  }
+
+  private placeOf(box: number, level: number): number {
+    return this.centres[box * 3 + this.lattice.axes[level]];
+  }
+
+  private gapsOf(): Float64Array[] {
+    const { planes, rows } = this.lattice;
+    const gaps: number[][] = [[], [], []];
+    const between = (level: number, a: number, b: number) =>
+      gaps[level].push((this.placeOf(a, level) + this.placeOf(b, level)) / 2);
+    for (let plane = 0; plane + 1 < planes.length; plane++) {
+      if (plane + 2 < planes.length) between(0, rows[planes[plane]], rows[planes[plane + 1]]);
+      for (let row = planes[plane]; row + 1 < planes[plane + 1]; row++) {
+        between(1, rows[row], rows[row + 1]);
+      }
+    }
+    for (let row = 0; row + 1 < rows.length; row++) {
+      for (let box = rows[row]; box + 1 < rows[row + 1]; box++) between(2, box, box + 1);
+    }
+    return gaps.map((middles) => Float64Array.from(middles).sort());
+  }
+
+  /** Orders the boxes for an eye there, in their frame. Says whether that may have changed the order. */
+  seenFrom(eye: Vec3): boolean {
+    const { axes } = this.lattice;
+    let same = true;
+    for (let level = 0; level < 3; level++) {
+      const crossed = lowerBound(this.gaps[level], eye[axes[level]]);
+      if (crossed !== this.crossed[level]) same = false;
+      this.crossed[level] = crossed;
+    }
+    if (same) return false;
+    this.walk(eye);
+    return true;
+  }
+
+  private walk(eye: Vec3): void {
+    const { axes, planes, rows } = this.lattice;
+    let place = 0;
+    farToNear(
+      planes.length - 1,
+      (plane) => this.placeOf(rows[planes[plane]], 0),
+      eye[axes[0]],
+      (plane) => {
+        const firstRow = planes[plane];
+        farToNear(
+          planes[plane + 1] - firstRow,
+          (row) => this.placeOf(rows[firstRow + row], 1),
+          eye[axes[1]],
+          (row) => {
+            const first = rows[firstRow + row];
+            farToNear(
+              rows[firstRow + row + 1] - first,
+              (box) => this.placeOf(first + box, 2),
+              eye[axes[2]],
+              (box) => {
+                this.boxes[place++] = first + box;
+              }
+            );
+          }
+        );
+      }
+    );
+  }
+}
+
 /** Writes values into `attribute`, to be uploaded only if one differs. Says whether one did. */
 function writeChanged(
   attribute: THREE.BufferAttribute,
-  length: number,
-  valueAt: (i: number) => number
+  order: Uint32Array,
+  stride: number,
+  valueAt: (box: number, part: number) => number
 ): boolean {
   const array = attribute.array as Float32Array;
   let changed = false;
-  for (let i = 0; i < length; i++) {
-    const value = Math.fround(valueAt(i));
-    if (array[i] === value) continue;
-    array[i] = value;
-    changed = true;
+  for (let place = 0; place < order.length; place++) {
+    for (let part = 0; part < stride; part++) {
+      const value = Math.fround(valueAt(order[place], part));
+      const i = place * stride + part;
+      if (array[i] === value) continue;
+      array[i] = value;
+      changed = true;
+    }
   }
   if (changed) attribute.needsUpdate = true;
   return changed;
 }
 
-/** Writes the layer's boxes into `geometry`, with `centre` taken off where they are. Says whether that changed it. */
+/**
+ * Writes the layer's boxes into `geometry` in the given order, with `centre` taken off where they are. Says whether
+ * that changed it.
+ */
 export function writeVoxels(
   { centres, sizes, looks }: VoxelLayer,
   centre: Vec3,
+  order: Uint32Array,
   geometry: THREE.InstancedBufferGeometry
 ): boolean {
   const attribute = (name: string) => geometry.getAttribute(name) as THREE.BufferAttribute;
   const placed = writeChanged(
     attribute('aCentre'),
-    centres.length,
-    (i) => centres[i] - centre[i % 3]
+    order,
+    3,
+    (box, part) => centres[box * 3 + part] - centre[part]
   );
-  const sized = writeChanged(attribute('aSize'), sizes.length, (i) => sizes[i]);
-  const looked = writeChanged(attribute('aLook'), looks.length, (i) => looks[i]);
+  const sized = writeChanged(attribute('aSize'), order, 3, (box, part) => sizes[box * 3 + part]);
+  const looked = writeChanged(attribute('aLook'), order, 4, (box, part) => looks[box * 4 + part]);
   return placed || sized || looked;
 }

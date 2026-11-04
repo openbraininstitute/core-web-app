@@ -4,9 +4,18 @@ import { describe, expect, it } from 'vitest';
 import { growRoundDots } from '@/features/circuit-viewer/morphologies/engine/electrodes';
 import {
   growRoundVoxels,
+  VoxelOrder,
   voxelGeometry,
   writeVoxels,
 } from '@/features/circuit-viewer/morphologies/engine/voxels';
+
+import type { Vec3, VoxelLattice } from '@/features/circuit-viewer/morphologies/types';
+
+const NO_LATTICE: VoxelLattice = {
+  axes: [0, 1, 2],
+  planes: new Uint32Array(0),
+  rows: new Uint32Array(0),
+};
 
 describe('the box round what is drawn beside the cells', () => {
   const cells = () => new THREE.Box3(new THREE.Vector3(-1, -1, -1), new THREE.Vector3(1, 1, 1));
@@ -31,6 +40,7 @@ describe('the box round what is drawn beside the cells', () => {
         centres: Float32Array.of(0, -50, 0),
         sizes: Float32Array.of(4, 10, 6),
         looks: new Float32Array(4),
+        lattice: NO_LATTICE,
       },
       [0, 0, 0]
     );
@@ -54,8 +64,10 @@ describe('writeVoxels', () => {
         centres: Float32Array.of(10, 20, 30, 40, 50, 60),
         sizes: Float32Array.of(1, 2, 3, 4, 5, 6),
         looks: Float32Array.of(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8),
+        lattice: NO_LATTICE,
       },
       [10, 10, 10],
+      Uint32Array.of(0, 1),
       geometry
     );
     expect(Array.from(geometry.getAttribute('aCentre').array)).toEqual([0, 10, 20, 30, 40, 50]);
@@ -65,25 +77,47 @@ describe('writeVoxels', () => {
     );
   });
 
+  it('writes the boxes in the order given', () => {
+    const geometry = voxelGeometry(2);
+    writeVoxels(
+      {
+        centres: Float32Array.of(1, 2, 3, 4, 5, 6),
+        sizes: Float32Array.of(7, 8, 9, 10, 11, 12),
+        looks: Float32Array.of(0.5, 0.5, 0.5, 0.5, 0.25, 0.25, 0.25, 0.25),
+        lattice: NO_LATTICE,
+      },
+      [0, 0, 0],
+      Uint32Array.of(1, 0),
+      geometry
+    );
+    expect(Array.from(geometry.getAttribute('aCentre').array)).toEqual([4, 5, 6, 1, 2, 3]);
+    expect(Array.from(geometry.getAttribute('aSize').array)).toEqual([10, 11, 12, 7, 8, 9]);
+    expect(Array.from(geometry.getAttribute('aLook').array)).toEqual([
+      0.25, 0.25, 0.25, 0.25, 0.5, 0.5, 0.5, 0.5,
+    ]);
+  });
+
   it('has only what changed uploaded, and says if anything did', () => {
     const geometry = voxelGeometry(1);
     const layer = {
       centres: Float32Array.of(0.1, 0.2, 0.3),
       sizes: Float32Array.of(1, 2, 3),
       looks: Float32Array.of(0.1, 0.2, 0.3, 0.4),
+      lattice: NO_LATTICE,
     };
-    expect(writeVoxels(layer, [0.5, 0.5, 0.5], geometry)).toBe(true);
+    const order = Uint32Array.of(0);
+    expect(writeVoxels(layer, [0.5, 0.5, 0.5], order, geometry)).toBe(true);
     const versions = () =>
       ['aCentre', 'aSize', 'aLook'].map(
         (name) => (geometry.getAttribute(name) as THREE.BufferAttribute).version
       );
     const written = versions();
 
-    expect(writeVoxels(layer, [0.5, 0.5, 0.5], geometry)).toBe(false);
+    expect(writeVoxels(layer, [0.5, 0.5, 0.5], order, geometry)).toBe(false);
     expect(versions()).toEqual(written);
 
     const recoloured = { ...layer, looks: Float32Array.of(0.9, 0.2, 0.3, 0.4) };
-    expect(writeVoxels(recoloured, [0.5, 0.5, 0.5], geometry)).toBe(true);
+    expect(writeVoxels(recoloured, [0.5, 0.5, 0.5], order, geometry)).toBe(true);
     expect(versions()).toEqual([written[0], written[1], written[2] + 1]);
   });
 
@@ -92,5 +126,158 @@ describe('writeVoxels', () => {
     expect(geometry.getAttribute('position').count).toBe(24);
     expect(geometry.getAttribute('normal').count).toBe(24);
     expect(geometry.instanceCount).toBe(1);
+  });
+});
+
+describe('VoxelOrder', () => {
+  /** Planes along y, each its own lattice offset from the next, of flat boxes, as the CA1 array is. */
+  function offsetPlanes() {
+    const size: Vec3 = [94, 44, 94];
+    const offsets = [
+      [0, 0],
+      [37, 11],
+      [-23, 52],
+    ];
+    const centres: number[] = [];
+    const planes: number[] = [];
+    const rows: number[] = [];
+    offsets.forEach(([dx, dz], plane) => {
+      planes.push(rows.length);
+      for (let x = 0; x < 4; x++) {
+        rows.push(centres.length / 3);
+        for (let z = 0; z < 4; z++) centres.push(dx + x * 110, plane * 51.3, dz + z * 110);
+      }
+    });
+    planes.push(rows.length);
+    rows.push(centres.length / 3);
+    return {
+      size,
+      centres: Float32Array.from(centres),
+      lattice: {
+        axes: [1, 0, 2] as Vec3,
+        planes: Uint32Array.from(planes),
+        rows: Uint32Array.from(rows),
+      },
+    };
+  }
+
+  function randoms(seed: number) {
+    let state = seed;
+    return () => {
+      state = (state * 1664525 + 1013904223) % 4294967296;
+      return state / 4294967296;
+    };
+  }
+
+  function eyes(count: number, spread: number, seed = 7): Vec3[] {
+    const random = randoms(seed);
+    return Array.from({ length: count }, () => [
+      (random() - 0.3) * spread,
+      (random() - 0.5) * spread,
+      (random() - 0.3) * spread,
+    ]);
+  }
+
+  /** Ray by ray from the eye, how many times a box in front of another is drawn before it. */
+  function wrongWayRound(
+    layer: ReturnType<typeof offsetPlanes>,
+    eye: Vec3,
+    order: ArrayLike<number>
+  ) {
+    const boxes = layer.centres.length / 3;
+    const placeOf = new Array<number>(boxes);
+    for (let place = 0; place < boxes; place++) placeOf[order[place]] = place;
+    const half = new THREE.Vector3(...layer.size).multiplyScalar(0.5);
+    const bounds = Array.from({ length: boxes }, (_, box) => {
+      const middle = new THREE.Vector3().fromArray(layer.centres, box * 3);
+      return new THREE.Box3(middle.clone().sub(half), middle.clone().add(half));
+    });
+    const from = new THREE.Vector3(...eye);
+    const ray = new THREE.Ray();
+    const hit = new THREE.Vector3();
+    const random = randoms(11);
+    let wrong = 0;
+    for (let far = 0; far < boxes; far++) {
+      for (let sample = 0; sample < 6; sample++) {
+        const point = new THREE.Vector3(
+          bounds[far].min.x + random() * layer.size[0],
+          bounds[far].min.y + random() * layer.size[1],
+          bounds[far].min.z + random() * layer.size[2]
+        );
+        ray.set(from, point.clone().sub(from).normalize());
+        const reach = from.distanceTo(point);
+        for (let near = 0; near < boxes; near++) {
+          if (near === far || placeOf[near] > placeOf[far]) continue;
+          if (ray.intersectBox(bounds[near], hit) && from.distanceTo(hit) < reach) wrong++;
+        }
+      }
+    }
+    return wrong;
+  }
+
+  it.each([
+    ['around the array', 4000],
+    ['among the boxes', 700],
+  ])('blends no box before one behind it, seen from %s', (_, spread) => {
+    const layer = offsetPlanes();
+    const order = new VoxelOrder(layer);
+    for (const eye of eyes(30, spread)) {
+      order.seenFrom(eye);
+      expect(new Set(order.boxes).size).toBe(layer.centres.length / 3);
+      expect(wrongWayRound(layer, eye, order.boxes)).toBe(0);
+    }
+  });
+
+  it('is what the check finds wrong in boxes left as they come, or in order of their centres', () => {
+    const layer = offsetPlanes();
+    const boxes = layer.centres.length / 3;
+    const asTheyCome = Array.from({ length: boxes }, (_, box) => box);
+    const all = eyes(30, 4000);
+    expect(
+      all.reduce((sum, eye) => sum + wrongWayRound(layer, eye, asTheyCome), 0)
+    ).toBeGreaterThan(0);
+    const byDistance = (eye: Vec3) =>
+      asTheyCome.toSorted((a, b) => {
+        const distance = (box: number) =>
+          new THREE.Vector3()
+            .fromArray(layer.centres, box * 3)
+            .distanceTo(new THREE.Vector3(...eye));
+        return distance(b) - distance(a);
+      });
+    expect(
+      all.reduce((sum, eye) => sum + wrongWayRound(layer, eye, byDistance(eye)), 0)
+    ).toBeGreaterThan(0);
+  });
+
+  it('says the order changed only when the eye crosses a gap, and then only', () => {
+    const layer = offsetPlanes();
+    const order = new VoxelOrder(layer);
+    expect(order.seenFrom([60, 300, 60])).toBe(true);
+    const before = Array.from(order.boxes);
+    // The gaps along x and z are 110 apart, offset by plane, so these move the eye within one cell.
+    expect(order.seenFrom([61, 900, 59])).toBe(false);
+    expect(Array.from(order.boxes)).toEqual(before);
+    expect(order.seenFrom([60, -300, 60])).toBe(true);
+    expect(Array.from(order.boxes)).not.toEqual(before);
+  });
+
+  it('never keeps an order that a fresh one would differ from', () => {
+    const layer = offsetPlanes();
+    const kept = new VoxelOrder(layer);
+    for (const eye of eyes(300, 1500, 3)) {
+      kept.seenFrom(eye);
+      const fresh = new VoxelOrder(layer);
+      fresh.seenFrom(eye);
+      expect(Array.from(kept.boxes)).toEqual(Array.from(fresh.boxes));
+    }
+  });
+
+  it('has nothing to order in an empty layer', () => {
+    const order = new VoxelOrder({
+      centres: new Float32Array(0),
+      lattice: { axes: [0, 1, 2], planes: Uint32Array.of(0), rows: Uint32Array.of(0) },
+    });
+    expect(() => order.seenFrom([0, 0, 0])).not.toThrow();
+    expect(order.boxes.length).toBe(0);
   });
 });

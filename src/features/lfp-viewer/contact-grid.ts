@@ -1,7 +1,7 @@
 import { positionOfLevel, rgbAt, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
 import { median } from '@/features/viewer-3d/engine/motion-quality';
 
-import type { VoxelLayer } from '@/features/circuit-viewer/morphologies/types';
+import type { VoxelLattice, VoxelLayer } from '@/features/circuit-viewer/morphologies/types';
 
 type Triple<T> = [T, T, T];
 
@@ -36,6 +36,8 @@ export type ContactGrid = {
   pitch: Triple<number>;
   /** Slices along x, y and z. */
   slices: Triple<number>;
+  /** The axis the planes are stacked along. */
+  stack: number;
   /** Where each slice along x, y and z is, in µm. Along the stack, these are its planes, however far apart. */
   places: Triple<number[]>;
   /** Per axis, the slice each contact is in. Every contact is in one, whatever its plane's offset. */
@@ -155,7 +157,7 @@ export function contactGrid(positions: Float32Array): ContactGrid | null {
       ? planes[stack]
       : Array.from({ length: count }, (_, index) => planes[axis][0] + index * pitch[axis])
   ) as Triple<number[]>;
-  return { pitch, slices: slices as Triple<number>, places, sliceOf };
+  return { pitch, slices: slices as Triple<number>, stack, places, sliceOf };
 }
 
 /** Where a slice of the grid is along its axis, in µm. */
@@ -170,12 +172,30 @@ export function openingSliceAxis({ slices }: ContactGrid): number {
     .reduce((a, b) => (slices[b] < slices[a] ? b : a));
 }
 
-export type VoxelPlacement = Pick<VoxelLayer, 'centres' | 'sizes'> & {
+export type VoxelPlacement = Pick<VoxelLayer, 'centres' | 'sizes' | 'lattice'> & {
   /** The contact each box is of. */
   shown: number[];
   /** A slice's tiles, as against voxels whose opacity follows |V|. */
   tiled: boolean;
 };
+
+/** Sorts contacts into planes of rows, and says where each of those starts. */
+function latticeOf(shown: number[], { stack, sliceOf }: ContactGrid): VoxelLattice {
+  const [u, v] = [0, 1, 2].filter((axis) => axis !== stack);
+  const [plane, row, along] = [sliceOf[stack], sliceOf[u], sliceOf[v]];
+  shown.sort((a, b) => plane[a] - plane[b] || row[a] - row[b] || along[a] - along[b]);
+  const planes: number[] = [];
+  const rows: number[] = [];
+  shown.forEach((contact, i) => {
+    const before = shown[i - 1];
+    const startsPlane = i === 0 || plane[contact] !== plane[before];
+    if (startsPlane) planes.push(rows.length);
+    if (startsPlane || row[contact] !== row[before]) rows.push(i);
+  });
+  planes.push(rows.length);
+  rows.push(shown.length);
+  return { axes: [stack, u, v], planes: Uint32Array.from(planes), rows: Uint32Array.from(rows) };
+}
 
 /**
  * Where the grid's contacts are drawn as boxes: all of them, or those of one slice as a sheet of
@@ -191,6 +211,7 @@ export function placeVoxels(
   for (let contact = 0; contact < contacts; contact++) {
     if (!slice || grid.sliceOf[slice.axis][contact] === slice.index) shown.push(contact);
   }
+  const lattice = latticeOf(shown, grid);
   const size = grid.pitch.map((step, axis) =>
     !slice ? step * VOXEL_FILL : step * (axis === slice.axis ? TILE_THICKNESS : TILE_FILL)
   );
@@ -203,12 +224,12 @@ export function placeVoxels(
     }
     if (slice) centres[i * 3 + slice.axis] = slicePosition(grid, slice);
   });
-  return { shown, centres, sizes, tiled: slice !== null };
+  return { shown, centres, sizes, lattice, tiled: slice !== null };
 }
 
 /** Placed boxes at their contacts' colour levels: tiles opaque, voxels the more opaque the larger |V|. */
 export function voxelsOf(
-  { shown, centres, sizes, tiled }: VoxelPlacement,
+  { shown, centres, sizes, lattice, tiled }: VoxelPlacement,
   levels: Uint8Array
 ): VoxelLayer {
   const looks = new Float32Array(shown.length * 4);
@@ -217,5 +238,5 @@ export function voxelsOf(
     looks.set(LEVEL_RGB[level], i * 4);
     looks[i * 4 + 3] = tiled ? TILE_OPACITY : LEVEL_OPACITY[level];
   });
-  return { centres, sizes, looks };
+  return { centres, sizes, looks, lattice };
 }

@@ -213,6 +213,19 @@ export interface ElectrodeTransform {
 }
 
 /** Boxes drawn through the cells, each with its own size, colour and opacity. */
+/**
+ * How a layer's boxes nest, for drawing them far to near: planes of rows of boxes, each ascending along its axis. No
+ * two boxes overlap, as far as the order is to hold.
+ */
+export interface VoxelLattice {
+  /** The axes along which the planes follow each other, the rows of a plane, and the boxes of a row. */
+  axes: Vec3;
+  /** The first row of each plane, then the number of rows. */
+  planes: Uint32Array;
+  /** The first box of each row, then the number of boxes. */
+  rows: Uint32Array;
+}
+
 export interface VoxelLayer {
   /** Three floats each: x, y and z in µm in the circuit's frame. */
   centres: Float32Array;
@@ -220,6 +233,7 @@ export interface VoxelLayer {
   sizes: Float32Array;
   /** Four floats each: its colour in sRGB and its opacity. */
   looks: Float32Array;
+  lattice: VoxelLattice;
 }
 
 /** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */

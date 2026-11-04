@@ -56,7 +56,7 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
-import { growRoundVoxels, voxelGeometry, writeVoxels } from './voxels';
+import { growRoundVoxels, VoxelOrder, voxelGeometry, writeVoxels } from './voxels';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -106,6 +106,8 @@ const MARKER_MIN_RADIUS = 3;
 const MARKER_REACH = 9;
 /** A synapse's radius in µm, and the least radius it is drawn with in device pixels, as in the small-circuit view. */
 const SYNAPSE_RADIUS = 0.5;
+/** How far back an orthographic view sees the boxes from, far past any circuit, as its rays do not meet. */
+const ORTHOGRAPHIC_EYE_UM = 1e8;
 const SYNAPSE_MIN_RADIUS = 2;
 /** How long the nudge lasts, in ms, and how much nearer it brings the view at its peak, as in morphoviewer. */
 const NUDGE_MS = 900;
@@ -434,6 +436,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   };
   private electrodes: Quads | null = null;
   private voxelLayer: VoxelLayer | null = null;
+  private voxelOrder: VoxelOrder | null = null;
   private voxels: Quads | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
@@ -898,6 +901,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
    * This runs here, not in `work`, because the camera's near and far planes are set for the frame first.
    */
   protected override beforeDraw(moving: boolean): void {
+    this.orderVoxels();
     this.shapeCloud();
     this.cutDown(moving);
     const detailed = this.layer?.detailed;
@@ -1408,6 +1412,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   setVoxels(voxels: VoxelLayer | null): void {
     const before = this.voxelLayer;
     this.voxelLayer = voxels;
+    if (voxels?.centres !== before?.centres) this.voxelOrder = voxels && new VoxelOrder(voxels);
     this.drawVoxels();
     if (voxels?.centres !== before?.centres || voxels?.sizes !== before?.sizes) this.bound();
   }
@@ -1639,8 +1644,30 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 0.75,
     });
     this.voxels = mesh;
-    const written = layer !== null && writeVoxels(layer, this.centre, mesh.geometry);
+    const order = this.voxelOrder;
+    order?.seenFrom(this.voxelEye());
+    const written =
+      layer !== null &&
+      order !== null &&
+      writeVoxels(layer, this.centre, order.boxes, mesh.geometry);
     if (written || changed) this.invalidate();
+  }
+
+  /** Where the boxes are seen from, in their frame: for an orthographic view, from far back along its direction. */
+  private voxelEye(): Vec3 {
+    const { camera, centre } = this;
+    const eye = camera.position.clone();
+    if (camera instanceof THREE.OrthographicCamera) {
+      eye.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), -ORTHOGRAPHIC_EYE_UM);
+    }
+    return [eye.x + centre[0], eye.y + centre[1], eye.z + centre[2]];
+  }
+
+  /** Part of this frame, so that it asks for none. */
+  private orderVoxels(): void {
+    const { voxelLayer: layer, voxelOrder: order, voxels } = this;
+    if (!layer || !order || !voxels || !order.seenFrom(this.voxelEye())) return;
+    writeVoxels(layer, this.centre, order.boxes, voxels.geometry);
   }
 
   /** Draws the synapses where the circuit's frame puts them, after the cells, which hide the synapses behind them. */
