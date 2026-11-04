@@ -458,7 +458,7 @@ function LfpReportView({
             top={{
               title: SCENE_TITLE,
               keepsSize: true,
-              boxClassName: 'px-2 pt-2',
+              boxClassName: 'p-2',
               content: sceneMounted && (
                 <LfpScene
                   circuit={circuit}
