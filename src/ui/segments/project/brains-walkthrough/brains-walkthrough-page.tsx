@@ -1,7 +1,5 @@
 'use client';
 
-import { PackView } from '@/ui/segments/project/models/pack-view';
-import { L6_PACK } from '@/ui/segments/project/models/repo-packs';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { FadingStage } from '@/ui/segments/project/walkthrough/stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
@@ -10,19 +8,14 @@ import { AgentReady } from './agent-ready';
 import {
   ANALYSIS_VIDEO,
   BrainsOpening,
-  BrainTrio,
   CONFIGURATION_VIDEO,
   EarlyAdopters,
-  FlyInBrain,
-  HumanWithBrain,
-  MicronsCircuit,
-  MouseInBrain,
   NotebooksVideo,
   StageVideo,
   TEACHING_VIDEO,
   VirtualLabsPreview,
 } from './brain-views';
-import { CNS_ON_FIRST_SCREEN, L6_COLOR } from './brains';
+import { CNS_ON_FIRST_SCREEN } from './brains';
 import {
   BRAIN_CHAPTERS,
   BRAIN_INTRO,
@@ -32,6 +25,7 @@ import {
 } from './chapters';
 import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { LandingThemes, ThemeNav } from './landing-themes';
+import { ModelMosaic } from './model-mosaic';
 import { MultiplyingBrains } from './multiplying-brains';
 
 import type { TBrainScene } from './chapters';
@@ -92,7 +86,6 @@ export function BrainsWalkthroughPage({
       stage={(chapter) => (
         <FadingStage
           scene={chapter.scene}
-          wide={(scene) => scene === 'trio'}
           // The first screen, on its grid.
           full={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.
@@ -114,13 +107,8 @@ function BrainScene({ scene }: { scene: TBrainScene }) {
   if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} />;
   if (scene === 'analysis') return <StageVideo video={ANALYSIS_VIDEO} />;
   if (scene === 'notebooks') return <NotebooksVideo />;
+  if (scene === 'models') return <ModelMosaic />;
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join') return <EarlyAdopters />;
-  // As the other walkthrough's first screen has it.
-  if (scene === 'l6') return <PackView pack={L6_PACK} color={L6_COLOR} frameZoom={0.33} spin />;
-  if (scene === 'trio') return <BrainTrio />;
-  if (scene === 'fly') return <FlyInBrain />;
-  if (scene === 'mouse') return <MouseInBrain />;
-  if (scene === 'microns') return <MicronsCircuit />;
-  return <HumanWithBrain />;
+  return null;
 }

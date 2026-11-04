@@ -1,5 +1,3 @@
-import { Actions } from '@/ui/segments/project/walkthrough/bits';
-
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
 import { ConfigurationRecording, StartNow, VirtualLabsPoints } from './brain-views';
@@ -8,6 +6,7 @@ import { ChapterAction } from './chapter-action';
 
 import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walkthrough';
 
+import mosaic from './model-mosaic.module.css';
 import grid from './opening-grid.module.css';
 import labs from './virtual-labs.module.css';
 
@@ -15,12 +14,7 @@ import labs from './virtual-labs.module.css';
 export type TBrainScene =
   | 'opening'
   | 'multiplying'
-  | 'l6'
-  | 'trio'
-  | 'fly'
-  | 'mouse'
-  | 'microns'
-  | 'human'
+  | 'models'
   | 'analysis'
   | 'configuration'
   | 'notebooks'
@@ -188,122 +182,28 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     after: <ChapterAction label="Browse notebooks" destination="notebooks" />,
   },
   {
-    id: 'microcircuit',
+    id: 'build',
     theme: 'Build',
-    label: 'Microcircuit',
-    scene: 'l6',
-    title: 'A cortical microcircuit, neuron by neuron',
+    label: 'Build',
+    scene: 'models',
+    title: 'Build brain models, across scales',
     hero: true,
-    column: labs.chapter,
+    titleClass: SERIF_TITLE,
+    column: `${VIDEO_CHAPTER} ${mosaic.chapter}`,
     body: (
       <>
         <p>
-          Closer in, a piece of cortex as a model: every neuron reconstructed, each in its place,
-          and wired to the others by synapses, ready to simulate in your browser.
+          Explore models across species: rat, mouse, human and fruit fly (FlyWire), from single
+          neurons and small circuits to brain regions and whole brains.
         </p>
-        <p className="text-[12px] text-neutral-500">
-          On screen: layer 6 of a column of rat somatosensory cortex, neuron by neuron.
+        <p>Customize models for hypothesis testing and disease modelling.</p>
+        <p>
+          Create neuronal skeletons from H01 and MICrONS electron microscopy reconstructions as a
+          starting point for new models.
         </p>
       </>
     ),
-    after: <ChapterAction label="Explore brain circuits" destination="data" />,
-  },
-  {
-    id: 'fly',
-    theme: 'Build',
-    label: 'Fruit fly',
-    scene: 'fly',
-    kicker: 'A fruit fly’s brain',
-    title: 'A whole brain, neuron by neuron',
-    column: labs.chapter,
-    body: (
-      <>
-        <p>
-          FlyWire traced every neuron in an adult fruit fly&apos;s brain from electron microscopy:
-          about 140,000 of them, and the 50 million or so synapses between them.
-        </p>
-        <p>
-          Inside the brain here are those neurons, drawn where they run within 20 µm of its surface,
-          each in its place.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Explore fly brain data" destination="data" />,
-  },
-  {
-    id: 'mouse',
-    theme: 'Build',
-    label: 'Mouse',
-    scene: 'mouse',
-    kicker: 'A mouse’s brain',
-    title: 'A piece of cortex, cell by cell',
-    column: labs.chapter,
-    body: (
-      <>
-        <p>
-          A mouse&apos;s brain has some 70 million neurons. Under the surface of its somatosensory
-          cortex, where touch from the hind limb arrives, sits a model of the deepest layer of the
-          cortex: layer 6 of a column, every one of its neurons reconstructed and wired by synapses.
-        </p>
-        <p>
-          The model was built from a rat&apos;s cortex, shown here in a mouse&apos;s brain for
-          scale.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Explore cortical models" destination="data" />,
-  },
-  {
-    id: 'microns',
-    theme: 'Build',
-    label: 'MICrONS',
-    scene: 'microns',
-    kicker: 'A mouse’s visual cortex',
-    title: 'A cubic millimetre, synapse by synapse',
-    column: labs.chapter,
-    body: (
-      <>
-        <p>
-          MICrONS imaged a cubic millimetre of a mouse&apos;s visual cortex by electron microscopy
-          and traced it cell by cell: more than 200,000 cells, and the 500 million synapses between
-          them.
-        </p>
-        <p>
-          On the platform it is a circuit of 50,948 of those neurons, through the whole depth of the
-          cortex, wired by the synapses traced between them. Its 877 proofread neurons are drawn
-          whole from their reconstructions.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Explore MICrONS data" destination="data" />,
-  },
-  {
-    id: 'human',
-    theme: 'Build',
-    label: 'Human',
-    scene: 'human',
-    kicker: 'A human’s brain',
-    title: 'A human neuron, traced from electron microscopy',
-    body: (
-      <>
-        <p>
-          A human brain has some 86 billion neurons. This pyramidal cell comes from H01: a cubic
-          millimetre of human temporal cortex, cut into thousands of slices, imaged at nanometre
-          resolution and traced cell by cell.
-        </p>
-        <p>
-          Its surface can be skeletonized into a morphology, the first step to a model that can be
-          simulated.
-        </p>
-      </>
-    ),
-    column: labs.chapter,
-    after: (
-      <>
-        <ChapterAction label="Explore human neurons" destination="data" />
-        <Actions model="human" />
-      </>
-    ),
+    after: <ChapterAction label="Build a brain model" destination="workflows" />,
   },
   {
     id: 'join',
@@ -321,7 +221,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
 ];
 
-/** Navigation order and active groups follow the chapters, including every Build model. */
+/** Navigation order and active groups follow the chapters. */
 export const BRAIN_THEMES = [...new Set(BRAIN_CHAPTERS.map((chapter) => chapter.theme))];
 export const BRAIN_THEME_LINKS: Record<string, string> = Object.fromEntries(
   BRAIN_CHAPTERS.toReversed().map((chapter) => [chapter.theme, chapter.id])
