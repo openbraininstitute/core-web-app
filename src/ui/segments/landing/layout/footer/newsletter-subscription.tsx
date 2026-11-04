@@ -174,6 +174,7 @@ export default function NewsLetterSubscription({ className }: NewsLetterSubscrip
         <Form.Item name="email" noStyle>
           <Input
             type="email"
+            aria-label="Email address"
             placeholder="Enter your email here..."
             autoComplete="email"
             data-testid="footer-newsletter-email"

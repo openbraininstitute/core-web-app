@@ -18,7 +18,9 @@ export default function SocialMediaLinks({ className, links }: SocialMediaLinksP
         <a
           key={link.url}
           href={link.url}
-          target="_BLANK"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={link.title || link.url.replace(/^https?:\/\/(www\.)?/, '').split('/')[0]}
           data-testid={
             link.title
               ? `footer-social-${link.title.toLowerCase().replaceAll(' ', '-')}`
