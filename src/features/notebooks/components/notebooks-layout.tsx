@@ -56,6 +56,7 @@ export function NotebooksLayout({ children }: Props) {
   });
   const notification = useAppNotification();
   const [loading, setLoading] = useState(false);
+  const [sizeMenuOpen, setSizeMenuOpen] = useState(false);
   const [isGridAnimating, setIsGridAnimating] = useState(false);
   const breakpoint = useDefaultBreakpoint();
   const { mdv, setMdv } = useMiniDetailView();
@@ -173,12 +174,18 @@ export function NotebooksLayout({ children }: Props) {
 
             <Dropdown
               trigger={['click']}
+              placement="bottomRight"
+              open={sizeMenuOpen && !loading}
+              onOpenChange={setSizeMenuOpen}
               disabled={loading}
               popupRender={() => (
                 <SessionSizePanel
                   profiles={profiles}
                   defaultProfile={defaultProfile}
-                  onSelect={handleRunNotebook}
+                  onSelect={(profile) => {
+                    setSizeMenuOpen(false);
+                    handleRunNotebook(profile);
+                  }}
                 />
               )}
             >
@@ -189,11 +196,12 @@ export function NotebooksLayout({ children }: Props) {
                 data-testid="open-jupyterhub-button"
               >
                 <div>Open JupyterHub</div>
-                {!loading && (
+                {loading ? (
+                  <LoadingOutlined className="size-5 text-[#F37726]" />
+                ) : (
                   <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
                 )}
-                {loading && <LoadingOutlined className="text-[#F37726]" />}
-                {!loading && <DownOutlined className="text-xs" />}
+                <DownOutlined className="text-xs" />
               </button>
             </Dropdown>
           </div>
