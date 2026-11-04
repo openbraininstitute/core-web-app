@@ -6,9 +6,7 @@ import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import {
   drawEventMarks,
-  EVENT_BOTTOM_ZONE_PX,
-  EVENT_HIT_PX,
-  EVENT_TOP_ZONE_PX,
+  markerGroupAt,
   TIMELINE_COLORS,
 } from '@/features/spike-viewer/renderer/axis-overlay';
 
@@ -167,22 +165,7 @@ export function PlotTimeline({
       const x = clientX - box.left - layout._size.l;
       const y = clientY - box.top - layout._size.t;
       if (x < 0 || x > layout._size.w || y < 0 || y > layout._size.h) return undefined;
-      const inTop = y <= EVENT_TOP_ZONE_PX;
-      const inBottom = y >= layout._size.h - EVENT_BOTTOM_ZONE_PX;
-      const groups = groupsRef.current;
-      return (
-        groups.find((g) => {
-          if (g.top ? !inTop : !inBottom) return false;
-          const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
-          return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
-        }) ??
-        groups.find(
-          (g) =>
-            g.edge === 'start' &&
-            Math.abs(x - g.x) <= 4 &&
-            g.events.some((e) => e.kind === 'manipulation')
-        )
-      );
+      return markerGroupAt(groupsRef.current, x, y, layout._size.h);
     };
     const onMove = (e: PointerEvent) => {
       const group = groupAt(e.clientX, e.clientY);

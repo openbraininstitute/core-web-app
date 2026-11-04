@@ -327,6 +327,30 @@ export type MarkerGroup = {
   label?: { x: number; width: number };
 };
 
+/** The markers at a point of the plot, in px from its top left, of a plot `height` tall. */
+export function markerGroupAt(
+  groups: readonly MarkerGroup[],
+  x: number,
+  y: number,
+  height: number
+): MarkerGroup | undefined {
+  const inTop = y <= EVENT_TOP_ZONE_PX;
+  const inBottom = y >= height - EVENT_BOTTOM_ZONE_PX;
+  return (
+    groups.find((g) => {
+      if (g.top ? !inTop : !inBottom) return false;
+      const named = g.label !== undefined && x >= g.label.x && x <= g.label.x + g.label.width;
+      return named || Math.abs(x - g.x) <= EVENT_HIT_PX;
+    }) ??
+    groups.find(
+      (g) =>
+        g.edge === 'start' &&
+        Math.abs(x - g.x) <= 4 &&
+        g.events.some((e) => e.kind === 'manipulation')
+    )
+  );
+}
+
 /** How near, sideways, markers have to fall to be read as one. */
 const GROUP_PX = 3;
 const MIXED_COLOR = '#475569';

@@ -3,7 +3,6 @@
 import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import { maxBy } from 'es-toolkit';
-import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -23,7 +22,7 @@ import {
   withoutShared,
 } from '@/features/lfp-viewer/field-structure';
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
-import { psdFigure } from '@/features/lfp-viewer/psd-figure';
+import { LfpStatistics } from '@/features/lfp-viewer/lfp-statistics';
 import {
   useContactPositions,
   useLfpSummary,
@@ -64,16 +63,9 @@ import type { ContactPositions, LfpSummary } from '@/features/lfp-viewer/use-lfp
 import type { SimulationReport } from '@/features/sonata-viewer/simulation-reports-context';
 import type { WorkspaceContext } from '@/types/common';
 
-const StatisticsPlot = dynamic(
-  () => import('@/features/spike-viewer/spike-statistics/statistics-plot'),
-  { ssr: false, loading: () => <Spin className="m-auto" /> }
-);
-
 /** "Hide below" in 3D, as shares of the scale's limit. */
 const HIDE_BELOW_SHARES = [0, 0.05, 0.1, 0.25];
 const GAINS = [0.5, 1, 2, 4, 8];
-/** Spectra drawn beside the mean at most. */
-const MAX_SPECTRA = 8;
 const TRACES_TITLE = 'Extracellular field';
 const TABLE_TITLE = 'Electrodes';
 const SCENE_TITLE = '3D Player';
@@ -172,7 +164,8 @@ function LfpReportView({
   contacts: ContactPositions;
 }) {
   const { positions, blocks } = contacts;
-  const { index, total, stats, psd } = summary;
+  const { index, total, stats } = summary;
+  const { spikeFiles, timeline } = useSimulation();
   const start = index.time.start;
   const end = start + index.time.steps * index.time.dt;
   const structure = useMemo(() => describeField(total), [total]);
@@ -271,25 +264,6 @@ function LfpReportView({
   }, [sceneUp, sliding]);
 
   const shownWindow: [number, number] = timeWindow ?? [start, end];
-  const spectraOf = useMemo(
-    () =>
-      ticked.length > 0
-        ? ticked.slice(0, MAX_SPECTRA)
-        : selectedContact !== null
-          ? [selectedContact]
-          : [],
-    [ticked, selectedContact]
-  );
-  const figure = useMemo(
-    () =>
-      psdFigure({
-        frequencies: index.psd_frequencies,
-        psd,
-        contacts: spectraOf,
-        dtMs: index.time.dt,
-      }),
-    [index, psd, spectraOf]
-  );
 
   const transport = (left: number, right: number) => (
     <div className="relative h-10 shrink-0">
@@ -428,6 +402,7 @@ function LfpReportView({
         onContactClick={setSelectedContact}
         onSeek={moveTo}
         timeCursor={timeCursor}
+        events={timeline}
         footer={transport}
       />
     </>
@@ -496,18 +471,23 @@ function LfpReportView({
             bottom={{
               title: STATISTICS_TITLE,
               content: (
-                <div className="flex h-full min-h-0 flex-col p-2">
-                  <div className="text-primary-9 px-1 text-xs font-semibold">
-                    Power spectrum{' '}
-                    <span className="font-normal text-neutral-400">
-                      · Welch, whole run
-                      {spectraOf.length > 0 && ` · ${spectraOf.map((c) => `e${c}`).join(', ')}`}
-                    </span>
-                  </div>
-                  <div className="min-h-0 flex-1">
-                    {plotsUp && !sliding && <StatisticsPlot figure={figure} />}
-                  </div>
-                </div>
+                <LfpStatistics
+                  source={source}
+                  summary={summary}
+                  field={field}
+                  removeShared={removeShared}
+                  scale={scale}
+                  rows={rows}
+                  positions={positions}
+                  direction={direction}
+                  selectedContact={selectedContact}
+                  ticked={ticked}
+                  spikeFiles={spikeFiles}
+                  timeline={timeline}
+                  timeCursor={timeCursor}
+                  window={shownWindow}
+                  visible={plotsUp && !sliding}
+                />
               ),
             }}
           />,

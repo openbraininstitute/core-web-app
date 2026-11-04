@@ -2,6 +2,15 @@ import type { LfpField } from '@/features/lfp-viewer/summary';
 
 /** Negative, a sink, in blue; positive, a source, in orange; near zero, pale grey. */
 const STOPS = ['#08306b', '#2171b5', '#9ecae1', '#f2f2f2', '#fdae6b', '#e6550d', '#7f2704'];
+
+/** A colour scale as Plotly takes it: positions from 0 to 1, each with its colour. */
+export type ColourStops = [number, string][];
+
+export const DIVERGING_COLOURS: ColourStops = STOPS.map((colour, i) => [
+  i / (STOPS.length - 1),
+  colour,
+]);
+
 /** Below this |V| the scale is close to linear; above it, logarithmic. */
 const CORE_UV = 10;
 /** Colours the contacts of the 3D scene are binned into: odd, so zero has its own. */

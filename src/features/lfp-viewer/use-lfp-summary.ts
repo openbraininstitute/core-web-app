@@ -111,40 +111,50 @@ export function useLfpSummary(source: LfpSummarySource) {
   return { status, summary };
 }
 
+export type ContactRows = {
+  /** A row per contact asked for, in that order, once every one is in. */
+  field: LfpField | null;
+  failed: boolean;
+};
+
+const NO_ROWS: ContactRows = { field: null, failed: false };
+
 /**
- * The traced contacts at full resolution, where the overview is coarser: each
- * contact's own row of the total, read by range once and kept, packed in the
- * order of `traces` once every one is in.
+ * Contacts at full resolution: from the overview where it is already that,
+ * else each contact's own row of the total, read by range once and kept.
  */
-export function useTraceField(
+export function useContactRows(
   source: LfpSummarySource,
   summary: LfpSummary,
-  traces: readonly number[]
-): LfpField | null {
+  contacts: readonly number[]
+): ContactRows {
   const { index, total, sha256 } = summary;
   const axis = index.axes[0];
   const queryClient = useQueryClient();
   const combine = useCallback(
-    (results: UseQueryResult<Int16Array>[]) =>
-      results.length > 0 && results.every((r) => r.data)
-        ? rowsField(
-            index,
-            axis,
-            0,
-            results.map((r) => r.data as Int16Array)
-          )
-        : null,
+    (results: UseQueryResult<Int16Array>[]): ContactRows => ({
+      field:
+        results.length > 0 && results.every((r) => r.data)
+          ? rowsField(
+              index,
+              axis,
+              0,
+              results.map((r) => r.data as Int16Array)
+            )
+          : null,
+      failed: results.some((r) => r.isError),
+    }),
     [index, axis]
   );
-  return useQueries({
+  const read = useQueries({
     queries:
       total.kind === 'value'
         ? []
-        : traces.map((contact) => ({
+        : contacts.map((contact) => ({
             queryKey: ['lfp-summary', 'row', source.resultId, source.assetId, sha256, contact],
             staleTime: Infinity,
             gcTime: 60_000,
-            queryFn: async ({ signal }) =>
+            queryFn: async ({ signal }: { signal: AbortSignal }) =>
               readRow(
                 await buildLfpSummaryRequest(source, sha256),
                 index,
@@ -155,6 +165,51 @@ export function useTraceField(
               ).catch(askStatusIfChanged(queryClient, source, sha256)),
           })),
     combine,
+  });
+  return useMemo(() => {
+    if (total.kind !== 'value') return read;
+    if (contacts.length === 0) return NO_ROWS;
+    const rows = contacts.map((c) => total.data.subarray(c * total.bins, (c + 1) * total.bins));
+    return { field: rowsField(index, axis, 0, rows), failed: false };
+  }, [total, read, contacts, index, axis]);
+}
+
+/** Traced contacts' rows where the overview is coarser: null where it is what they would read. */
+export function useTraceField(
+  source: LfpSummarySource,
+  summary: LfpSummary,
+  traces: readonly number[]
+): LfpField | null {
+  const coarser = summary.total.kind !== 'value';
+  return useContactRows(source, summary, coarser ? traces : NOTHING_TRACED).field;
+}
+
+const NOTHING_TRACED: readonly number[] = [];
+
+/** The correlation the summary holds between every pair of contacts, read when asked for. */
+export function useStoredCorrelation(
+  source: LfpSummarySource,
+  summary: LfpSummary,
+  enabled: boolean
+) {
+  const { index, sha256 } = summary;
+  const queryClient = useQueryClient();
+  return useQuery({
+    queryKey: ['lfp-summary', 'correlation', source.resultId, source.assetId, sha256],
+    enabled: enabled && !!index.correlation,
+    staleTime: Infinity,
+    gcTime: 60_000,
+    queryFn: async ({ signal }) => {
+      const stored = index.correlation;
+      if (!stored) throw new Error('The LFP summary has no correlation');
+      const bytes = await readSlice(
+        await buildLfpSummaryRequest(source, sha256),
+        datasetOf(index, stored.dataset),
+        [],
+        signal
+      ).catch(askStatusIfChanged(queryClient, source, sha256));
+      return { values: new Int16Array(bytes), scale: stored.scale };
+    },
   });
 }
 

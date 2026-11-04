@@ -5,13 +5,22 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { COLOUR_TABLE } from '@/features/lfp-viewer/colour-scale';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
-import { computeTicks, formatTick } from '@/features/spike-viewer/renderer/axis-overlay';
+import { TimelineCard } from '@/features/spike-viewer/components/timeline-card';
+import {
+  computeTicks,
+  drawEventMarks,
+  formatTick,
+  markerGroupAt,
+} from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { ReactNode } from 'react';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
 import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
+import type { MarkerGroup } from '@/features/spike-viewer/renderer/axis-overlay';
+import type { EventsHover } from '@/features/spike-viewer/renderer/raster-renderer';
 
 export type FieldPlotMode = 'traces' | 'map';
 
@@ -22,6 +31,7 @@ const LABEL = '#8c8c8c';
 const SELECTED = '#f5222d';
 /** A drag shorter than this is a click. */
 const DRAG_PX = 4;
+const NO_EVENTS: readonly TimelineEvent[] = [];
 
 type Props = {
   mode: FieldPlotMode;
@@ -41,6 +51,8 @@ type Props = {
   onContactClick: (contact: number) => void;
   onSeek: (timeInMs: number) => void;
   timeCursor: TimeCursor;
+  /** When the simulation's stimuli, recordings and synaptic changes happen. */
+  events: readonly TimelineEvent[];
   /** Under the plot, lined up with it: given the plot's left and right edges. */
   footer: (left: number, right: number) => ReactNode;
 };
@@ -102,6 +114,7 @@ export function FieldPlot({
   onContactClick,
   onSeek,
   timeCursor,
+  events,
   footer,
 }: Props) {
   const boxRef = useRef<HTMLDivElement>(null);
@@ -110,6 +123,10 @@ export function FieldPlot({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [drag, setDrag] = useState<{ x0: number; x1: number } | null>(null);
   const [hover, setHover] = useState<string | null>(null);
+  const marksRef = useRef<HTMLCanvasElement>(null);
+  const groupsRef = useRef<MarkerGroup[]>([]);
+  const [eventsHover, setEventsHover] = useState<EventsHover | null>(null);
+  const hoveredEvents = eventsHover?.group.events ?? NO_EVENTS;
 
   useLayoutEffect(() => {
     const box = boxRef.current;
@@ -299,6 +316,30 @@ export function FieldPlot({
     selectedContact,
   ]);
 
+  // On a canvas of their own: a hover draws their bands anew, which needn't draw the traces.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the plot's edges follow from size
+  useEffect(() => {
+    const canvas = marksRef.current;
+    if (!canvas || size.width === 0) return;
+    const width = plot.right - plot.left;
+    const height = plot.bottom - plot.top;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    const g = canvas.getContext('2d');
+    if (!g) return;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, width, height);
+    groupsRef.current = drawEventMarks(
+      g,
+      { xMin: from, xMax: to, yMin: 0, yMax: 1 },
+      width,
+      height,
+      events,
+      hoveredEvents
+    );
+  }, [size, from, to, events, hoveredEvents]);
+
   // The player's time, moved outside React.
   // biome-ignore lint/correctness/useExhaustiveDependencies: xOf follows from size, from and to
   useEffect(
@@ -334,6 +375,22 @@ export function FieldPlot({
           const x = localX(e);
           const y = localY(e);
           if (drag) setDrag({ ...drag, x1: inPlot(x) });
+          const group = drag
+            ? undefined
+            : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, plot.bottom - plot.top);
+          setEventsHover((previous) => {
+            if (!group) return previous && null;
+            // The same markers keep their group, so the bands are not drawn again as the pointer moves.
+            const same =
+              previous !== null &&
+              previous.group.events.length === group.events.length &&
+              previous.group.events.every((event, i) => event === group.events[i]);
+            return {
+              group: same ? previous.group : group,
+              clientX: e.clientX,
+              clientY: e.clientY,
+            };
+          });
           if (
             x < plot.left ||
             x > plot.right ||
@@ -363,7 +420,10 @@ export function FieldPlot({
           }
           setHover(`${name} · ${t.toFixed(1)} ms · ${uv.toFixed(1)} µV`);
         }}
-        onPointerLeave={() => setHover(null)}
+        onPointerLeave={() => {
+          setHover(null);
+          setEventsHover(null);
+        }}
         onPointerUp={(e) => {
           if (!drag) return;
           setDrag(null);
@@ -380,6 +440,16 @@ export function FieldPlot({
         onDoubleClick={() => onWindowChange(null)}
       >
         <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+        <canvas
+          ref={marksRef}
+          className="pointer-events-none absolute"
+          style={{
+            left: plot.left,
+            top: plot.top,
+            width: Math.max(0, plot.right - plot.left),
+            height: Math.max(0, plot.bottom - plot.top),
+          }}
+        />
         <div
           ref={cursorRef}
           className="pointer-events-none absolute w-px"
@@ -401,7 +471,8 @@ export function FieldPlot({
             }}
           />
         )}
-        {hover && (
+        {eventsHover && <TimelineCard hover={eventsHover} />}
+        {hover && !eventsHover && (
           <div className="pointer-events-none absolute top-1 right-3 rounded bg-white/90 px-1.5 py-0.5 text-[11px] text-neutral-600 tabular-nums shadow-sm">
             {hover}
           </div>

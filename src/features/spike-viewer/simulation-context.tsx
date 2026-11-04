@@ -3,7 +3,10 @@
 import { createContext, useContext, useMemo } from 'react';
 
 import type { ReactNode } from 'react';
-import type { TSupportedEntitiesForScanConfiguration } from '@/features/scan-config/types';
+import type {
+  TAssetBackedFile,
+  TSupportedEntitiesForScanConfiguration,
+} from '@/features/scan-config/types';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 import type { SimulationRun } from '@/features/spike-viewer/time-window';
 
@@ -25,8 +28,11 @@ type SimulationContextValue = {
   simulationPicker: ReactNode;
   /** When the simulation's stimuli, recordings and synaptic changes happen, from its config. */
   timeline: readonly TimelineEvent[];
+  /** The simulation's spike files, its inputs' among them, for a viewer that lines others up with them. */
+  spikeFiles: readonly TAssetBackedFile[];
 };
 
+const NO_SPIKE_FILES: readonly TAssetBackedFile[] = [];
 const NO_TIMELINE: readonly TimelineEvent[] = [];
 
 /**
@@ -49,6 +55,7 @@ const SimulationContext = createContext<SimulationContextValue>({
   neuronSets: null,
   simulationPicker: null,
   timeline: NO_TIMELINE,
+  spikeFiles: NO_SPIKE_FILES,
 });
 
 export function SimulationProvider({
@@ -57,6 +64,7 @@ export function SimulationProvider({
   neuronSets,
   simulationPicker = null,
   timeline = NO_TIMELINE,
+  spikeFiles = NO_SPIKE_FILES,
   children,
 }: {
   model: TSupportedEntitiesForScanConfiguration | null | undefined;
@@ -64,6 +72,7 @@ export function SimulationProvider({
   neuronSets?: SimulationNeuronSets | null;
   simulationPicker?: ReactNode;
   timeline?: readonly TimelineEvent[];
+  spikeFiles?: readonly TAssetBackedFile[];
   children: ReactNode;
 }) {
   const value = useMemo(
@@ -73,8 +82,9 @@ export function SimulationProvider({
       neuronSets: neuronSets ?? null,
       simulationPicker,
       timeline,
+      spikeFiles,
     }),
-    [model, run, neuronSets, simulationPicker, timeline]
+    [model, run, neuronSets, simulationPicker, timeline, spikeFiles]
   );
 
   return <SimulationContext.Provider value={value}>{children}</SimulationContext.Provider>;

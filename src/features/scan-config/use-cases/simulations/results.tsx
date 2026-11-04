@@ -269,6 +269,14 @@ export function SimulationsTab({
       ? [shownReport, ...reports]
       : reports;
   }, [resultFiles, activeSimulation, shownReport, lfpViewer]);
+  const spikeFiles = useMemo(
+    () =>
+      reportFiles.filter(
+        ({ asset }) =>
+          asset.label === AssetLabel.spike_report || asset.label === AssetLabel.replay_spikes
+      ),
+    [reportFiles]
+  );
   const activeSimulationJobIdFromLaunch = activeSimulation
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
@@ -547,6 +555,7 @@ export function SimulationsTab({
                     neuronSets={neuronSets}
                     simulationPicker={simulationPicker}
                     timeline={timeline}
+                    spikeFiles={spikeFiles}
                   >
                     <FileViewer
                       file={selectedFile}
