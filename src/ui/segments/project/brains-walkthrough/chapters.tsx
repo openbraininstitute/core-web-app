@@ -29,6 +29,8 @@ export type TBrainScene =
 
 export interface IBrainChapter extends IWalkthroughChapter {
   scene: TBrainScene;
+  /** Bottom navigation group; consecutive model chapters share Build. */
+  theme: string;
 }
 
 /** The first screens' titles, in the logo's serif, which has one weight. */
@@ -49,6 +51,7 @@ const VIRTUAL_LABS_WORDS = <VirtualLabsPoints />;
 export const BRAIN_CHAPTERS: IBrainChapter[] = [
   {
     id: 'start',
+    theme: 'Virtual Labs',
     label: 'Start',
     scene: 'opening',
     title: 'Virtual Labs Platform',
@@ -75,6 +78,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'agents',
+    theme: 'Leverage AI',
     label: 'AI',
     scene: 'multiplying',
     title: (
@@ -99,6 +103,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'teach',
+    theme: 'Learn & Teach',
     label: 'Learn & Teach',
     scene: 'teaching',
     kicker: 'For students and educators',
@@ -121,6 +126,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'simulate',
+    theme: 'Simulate',
     label: 'Simulate',
     scene: 'configuration',
     title: 'Configure simulations & neuroscience workflows',
@@ -142,6 +148,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'analysis',
+    theme: 'Explore',
     label: 'Analysis',
     scene: 'analysis',
     title: 'Interactive tools for analysis',
@@ -163,6 +170,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'notebooks',
+    theme: 'Notebooks',
     label: 'Notebooks',
     scene: 'notebooks',
     title: 'Jupyter notebooks for interacting with data',
@@ -180,20 +188,8 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     after: <ChapterAction label="Browse notebooks" destination="notebooks" />,
   },
   {
-    id: 'join',
-    label: 'Get started',
-    scene: 'join',
-    title: 'Get started',
-    hero: true,
-    body: (
-      <>
-        <p>Free to start, with 100 credits for your first simulations.</p>
-        <StartNow />
-      </>
-    ),
-  },
-  {
     id: 'microcircuit',
+    theme: 'Build',
     label: 'Microcircuit',
     scene: 'l6',
     title: 'A cortical microcircuit, neuron by neuron',
@@ -214,6 +210,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'fly',
+    theme: 'Build',
     label: 'Fruit fly',
     scene: 'fly',
     kicker: 'A fruit fly’s brain',
@@ -235,6 +232,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'mouse',
+    theme: 'Build',
     label: 'Mouse',
     scene: 'mouse',
     kicker: 'A mouse’s brain',
@@ -257,6 +255,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'microns',
+    theme: 'Build',
     label: 'MICrONS',
     scene: 'microns',
     kicker: 'A mouse’s visual cortex',
@@ -280,6 +279,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
   },
   {
     id: 'human',
+    theme: 'Build',
     label: 'Human',
     scene: 'human',
     kicker: 'A human’s brain',
@@ -305,4 +305,27 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
       </>
     ),
   },
+  {
+    id: 'join',
+    theme: 'Get started',
+    label: 'Get started',
+    scene: 'join',
+    title: 'Get started',
+    hero: true,
+    body: (
+      <>
+        <p>Free to start, with 100 credits for your first simulations.</p>
+        <StartNow />
+      </>
+    ),
+  },
 ];
+
+/** Navigation order and active groups follow the chapters, including every Build model. */
+export const BRAIN_THEMES = [...new Set(BRAIN_CHAPTERS.map((chapter) => chapter.theme))];
+export const BRAIN_THEME_LINKS: Record<string, string> = Object.fromEntries(
+  BRAIN_CHAPTERS.toReversed().map((chapter) => [chapter.theme, chapter.id])
+);
+export const BRAIN_THEME_UNDERLINES: Record<number, string> = Object.fromEntries(
+  BRAIN_CHAPTERS.map((chapter, index) => [index, chapter.theme])
+);

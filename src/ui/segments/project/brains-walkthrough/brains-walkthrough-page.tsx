@@ -23,7 +23,13 @@ import {
   VirtualLabsPreview,
 } from './brain-views';
 import { CNS_ON_FIRST_SCREEN, L6_COLOR } from './brains';
-import { BRAIN_CHAPTERS, BRAIN_INTRO, SERIF_TITLE } from './chapters';
+import {
+  BRAIN_CHAPTERS,
+  BRAIN_INTRO,
+  BRAIN_THEME_LINKS,
+  BRAIN_THEME_UNDERLINES,
+  SERIF_TITLE,
+} from './chapters';
 import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { LandingThemes, ThemeNav } from './landing-themes';
 import { MultiplyingBrains } from './multiplying-brains';
@@ -34,24 +40,6 @@ import type { TBrainScene } from './chapters';
 const LANDING_STAY_MS = 4000;
 /** The analysis screen, behind which the Male CNS turns. */
 const ANALYSIS_AT = BRAIN_CHAPTERS.findIndex((chapter) => chapter.scene === 'analysis');
-/** The landing's words with a screen of their own, by its chapter id: underlined on it, and taking the page there. */
-const THEME_LINKS: Record<string, string> = {
-  'Virtual Labs': 'start',
-  Simulate: 'simulate',
-  'Leverage AI': 'agents',
-  Explore: 'analysis',
-  'Learn & Teach': 'teach',
-  Build: 'microcircuit',
-};
-/** The word each screen is about, by its index: its own, and the models' screens Build's. */
-const THEME_UNDERLINES: Record<number, string> = Object.fromEntries(
-  BRAIN_CHAPTERS.flatMap((chapter, i) => {
-    const own = Object.entries(THEME_LINKS).find(([, id]) => id === chapter.id)?.[0];
-    const models = ['microcircuit', 'fly', 'mouse', 'microns', 'human'].includes(chapter.id);
-    return own ? [[i, own]] : models ? [[i, 'Build']] : [];
-  })
-);
-
 /**
  * The second walkthrough: the brain modeling course's three brains, a fruit fly's, a mouse's and a
  * human's, turning, and inside each what the platform holds of it. Over its landing the fly's nervous
@@ -91,8 +79,8 @@ export function BrainsWalkthroughPage({
           <ThemeNav
             entered={state.entered}
             chapter={state.chapter}
-            underlines={THEME_UNDERLINES}
-            links={THEME_LINKS}
+            underlines={BRAIN_THEME_UNDERLINES}
+            links={BRAIN_THEME_LINKS}
             goTo={state.goTo}
           />
         </>

@@ -3,20 +3,7 @@ import { Fragment, useEffect, useRef } from 'react';
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { cn } from '@/utils/css-class';
 
-/**
- * What the platform is for, along the landing's foot and the first screens', in the order of the screens they
- * are about: the platform, AI, learning and teaching, simulating, exploring results, and so on.
- */
-const THEMES = [
-  'Virtual Labs',
-  'Leverage AI',
-  'Learn & Teach',
-  'Simulate',
-  'Explore',
-  'Build',
-  'Collaborate',
-  'Share',
-];
+import { BRAIN_THEMES } from './chapters';
 
 /** Where the line of the platform's uses runs along the foot of the page: the landing's, and the screens' after. */
 export const THEMES_FOOT = 'inset-x-0 bottom-[clamp(20px,4.5vh,44px)] flex justify-center';
@@ -48,14 +35,19 @@ function ThemeLine({
       )}
       style={{ fontFamily: SERIF }}
     >
-      {THEMES.map((theme, i) => {
+      {BRAIN_THEMES.map((theme, i) => {
         const word = (
           <span
             data-fly={theme}
             className={cn(
-              links && 'underline decoration-[1.5px] underline-offset-[0.2em] transition-[text-decoration-color,color] duration-500'
+              links &&
+                'underline decoration-[1.5px] underline-offset-[0.2em] transition-[text-decoration-color,color] duration-500'
             )}
-            style={links ? { textDecorationColor: theme === underlined ? 'currentColor' : 'transparent' } : undefined}
+            style={
+              links
+                ? { textDecorationColor: theme === underlined ? 'currentColor' : 'transparent' }
+                : undefined
+            }
           >
             {theme}
           </span>
@@ -72,6 +64,7 @@ function ThemeLine({
               <button
                 type="button"
                 onClick={() => goTo(to)}
+                aria-current={theme === underlined ? 'location' : undefined}
                 className="pointer-events-auto cursor-pointer italic hover:text-[#002766] stacked:-my-[8px] stacked:py-[8px]"
               >
                 {word}
@@ -116,12 +109,21 @@ export function ThemeNav({
     const line = rail.current;
     const word = underlined ? line?.querySelector<HTMLElement>(`[data-fly="${underlined}"]`) : null;
     if (!line || !word) return;
-    const seen = word.getBoundingClientRect();
-    const box = line.getBoundingClientRect();
-    line.scrollTo({
-      left: line.scrollLeft + seen.left + seen.width / 2 - box.left - box.width / 2,
-      behavior: 'smooth',
-    });
+    const centerActive = () => {
+      const seen = word.getBoundingClientRect();
+      const box = line.getBoundingClientRect();
+      line.scrollTo({
+        left: line.scrollLeft + seen.left + seen.width / 2 - box.left - box.width / 2,
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'instant'
+          : 'smooth',
+      });
+    };
+    const resized = new ResizeObserver(centerActive);
+    resized.observe(line);
+    resized.observe(word);
+    centerActive();
+    return () => resized.disconnect();
   }, [underlined]);
   return (
     <div
