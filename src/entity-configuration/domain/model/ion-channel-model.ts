@@ -40,7 +40,7 @@ export const IonChannelModel: EntityCoreTypeConfig<IIonChannelModel> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
-    DetailViewSectionsDict.Workflow,
+    DetailViewSectionsDict.Configuration,
     DetailViewSectionsDict.RelatedArtifacts,
   ],
   isBookmarkable: false,

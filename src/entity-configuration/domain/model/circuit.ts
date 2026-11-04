@@ -68,7 +68,7 @@ export const Circuit: EntityCoreTypeConfig<ICircuit> = {
   detailViewSections: [
     DetailViewSectionsDict.Overview,
     DetailViewSectionsDict.Analysis,
-    DetailViewSectionsDict.Workflow,
+    DetailViewSectionsDict.Configuration,
     DetailViewSectionsDict.RelatedPublications,
     DetailViewSectionsDict.RelatedArtifacts,
   ],

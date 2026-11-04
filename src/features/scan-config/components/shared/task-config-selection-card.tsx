@@ -1,6 +1,6 @@
 import { RiArrowRightSLine } from '@remixicon/react';
 import { Checkbox } from 'antd';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import {
   ActivityStatus,
@@ -50,6 +50,11 @@ export function TaskConfigSelectionCard({
   onCheckedChange,
 }: Props) {
   const [copyHovered, setCopyHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selected) cardRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selected]);
   const color = executionStatusColorMap[execStatus ?? ActivityStatus.CREATED] ?? fallbackColor;
   const isSelectable =
     !execStatus || execStatus === ActivityStatus.CREATED || execStatus === ActivityStatus.ERROR;
@@ -57,6 +62,7 @@ export function TaskConfigSelectionCard({
   return (
     /* biome-ignore lint/a11y/useSemanticElements: The card contains nested controls, so a button wrapper would be invalid. */
     <div
+      ref={cardRef}
       data-testid={`scan-config-coordinate-${configId}`}
       className={cn(
         'group flex-none cursor-pointer rounded-2xl border border-gray-200',

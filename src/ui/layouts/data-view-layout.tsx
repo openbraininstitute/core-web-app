@@ -1,4 +1,5 @@
 import { includes } from 'es-toolkit/compat';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
@@ -6,11 +7,14 @@ import { tryCatch } from '@/api/utils';
 import { config } from '@/config';
 import { ViewVariant, WorkspaceScope } from '@/constants';
 import { EntityTypeGroup } from '@/entity-configuration/domain/group';
-import { getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
+import { circuitTypes, getEntityByExtendedType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
+import { resolveGeneratingWorkflow } from '@/entity-configuration/domain/resolve-generating-workflow';
 import { ScanConfigTopBarProvider } from '@/features/scan-config/components/top-bar/context';
+import { ScanConfigConfigSearchParam } from '@/features/scan-config/helpers';
 import { resolveEntityVariant } from '@/features/views/listing/variants/registry';
 import { BreadcrumbChip, BreadcrumbTrail } from '@/ui/molecules/breadcrumb';
+import { Button } from '@/ui/molecules/button';
 import { TopBar } from '@/ui/molecules/top-bar';
 import ActionMenu from '@/ui/segments/action-menu';
 import { DownloadPanel as CircuitDownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
@@ -27,32 +31,16 @@ import {
   getWorkflow,
   listActivities,
 } from '@/ui/segments/workflows/config';
+import {
+  buildWorkflowActivityConfigurationHref,
+  buildWorkflowActivityResultsHref,
+} from '@/ui/segments/workflows/elements/workflow-activity-actions';
 import { cn } from '@/utils/css-class';
 import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { PropsWithChildren, ReactNode } from 'react';
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { WorkspaceContext } from '@/types/common';
-
-/**
- * Entity types whose Workflow tab renders a campaign's scan-config editor (or its "no
- * configuration found" fallback), so it gets the light page background instead of the blue
- * detail panel, same as e-model's.
- */
-const WORKFLOW_TAB_PLAIN_CONTENT_TYPES = [
-  ExtendedEntitiesTypeDict.Emodel,
-  ExtendedEntitiesTypeDict.EFeatureExtractionResult,
-  ExtendedEntitiesTypeDict.Memodel,
-  ExtendedEntitiesTypeDict.IonChannelModel,
-  ExtendedEntitiesTypeDict.Circuit,
-  ExtendedEntitiesTypeDict.Microcircuit,
-  ExtendedEntitiesTypeDict.SmallMicrocircuit,
-  ExtendedEntitiesTypeDict.PairedNeuronCircuit,
-  ExtendedEntitiesTypeDict.WholeBrain,
-  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
-  ExtendedEntitiesTypeDict.SingleNeuronSynaptome,
-  ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
-] as const;
 
 const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.MemodelCircuitSimulation,
@@ -74,6 +62,15 @@ const LeftMenuUnsupportedEntityTypes = [
   ExtendedEntitiesTypeDict.EModelOptimizationCampaign,
   ExtendedEntitiesTypeDict.EModelValidationCampaign,
 ] as const;
+
+/** Models that link to the workflow that generated them from the top bar. */
+const WorkflowLinkEntityTypes: TExtendedEntitiesTypeDict[] = [
+  ExtendedEntitiesTypeDict.Emodel,
+  ExtendedEntitiesTypeDict.Memodel,
+  ExtendedEntitiesTypeDict.IonChannelModel,
+  ExtendedEntitiesTypeDict.SingleNeuronCircuit,
+  ...circuitTypes,
+];
 
 export async function DataViewLayout({
   children,
@@ -140,8 +137,42 @@ export async function DataViewLayout({
   // the close lives at the far end of the details page's top bar, never inside the breadcrumb
   const closePage =
     origin === 'data' ? <ClosePage url={parentLink} variant={chromeVariant} /> : undefined;
+
+  const generating = includes(WorkflowLinkEntityTypes, type)
+    ? (await tryCatch(resolveGeneratingWorkflow(id, virtualLabId, projectId))).data
+    : null;
+  const workflowLinkOptions = generating && {
+    activity: generating.workflowActivity,
+    listEntityType: generating.workflow.targetType,
+    workspace: context,
+    row: generating.campaign,
+  };
+  const workflowConfigHref =
+    workflowLinkOptions && buildWorkflowActivityConfigurationHref(workflowLinkOptions);
+  const workflowOutputHref =
+    workflowLinkOptions &&
+    buildWorkflowActivityResultsHref({
+      ...workflowLinkOptions,
+      query: { [ScanConfigConfigSearchParam]: generating.coordinateConfig.id },
+    });
+
   // the same top bar row the workflows pages use, above the container: breadcrumb start, close end
-  const topBar = <TopBar start={breadcrumbs} end={closePage} />;
+  const topBar = (
+    <TopBar
+      start={breadcrumbs}
+      end={
+        <div className="flex items-center gap-2">
+          {workflowConfigHref && (
+            <WorkflowLink href={workflowConfigHref}>Workflow config</WorkflowLink>
+          )}
+          {workflowOutputHref && (
+            <WorkflowLink href={workflowOutputHref}>Workflow output</WorkflowLink>
+          )}
+          {closePage}
+        </div>
+      }
+    />
+  );
 
   if (includes(LeftMenuUnsupportedEntityTypes, type)) {
     if (useClassicLayout) {
@@ -208,9 +239,9 @@ export async function DataViewLayout({
   return (
     <DataViewFrame topBar={topBar} className="overflow-hidden rounded-2xl bg-white">
       <DetailViewBody
-        // the Workflow tab is a campaign's scan-config editor (or its fallback message), styled
-        // for a light page background rather than the blue detail panel
-        plainContentSection={includes(WORKFLOW_TAB_PLAIN_CONTENT_TYPES, type)}
+        // the e-feature result's Workflow tab is a campaign's scan-config editor, styled for a
+        // light page background rather than the blue detail panel
+        plainContentSection={type === ExtendedEntitiesTypeDict.EFeatureExtractionResult}
         nameDisplay={
           <EntityNameDisplay
             name={entity.name}
@@ -238,6 +269,14 @@ export async function DataViewLayout({
       </DetailViewBody>
       {downloadPanel}
     </DataViewFrame>
+  );
+}
+
+function WorkflowLink({ href, children }: PropsWithChildren<{ href: string }>) {
+  return (
+    <Button asChild variant="outline" size="sm" rounded>
+      <Link href={href}>{children}</Link>
+    </Button>
   );
 }
 

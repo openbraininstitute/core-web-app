@@ -134,6 +134,9 @@ export const ScanConfigModeSearchParam = 'mode' as const;
 /** query param holding the editor's active tab (`?tab=simulations`). */
 export const ScanConfigTabSearchParam = 'tab' as const;
 
+/** query param holding the task config the results tabs open on (`?config={taskConfigId}`). */
+export const ScanConfigConfigSearchParam = 'config' as const;
+
 /** each activity's results tab — the one tab that is not `configuration`. */
 export const ScanConfigResultsTab = {
   [ScanConfigActivity.Simulate]: {

@@ -279,7 +279,10 @@ export function buildMEModelConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.Memodel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.Memodel,
-    fromIdTypeByBrowseType: {},
+    // the e-model is picked in the editor; this only lets a detail page's Build action seed it
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Emodel]: ScanConfigFromIdType.EModelFromID,
+    },
     generatedApiPath: ScanConfigGeneratedApiPath.MEModelBuild,
   };
 }
@@ -314,9 +317,11 @@ export function validateEModelConfigureBinding(): TScanConfigConfigureBinding {
   return {
     browseType: ExtendedEntitiesTypeDict.Emodel,
     scanConfigEntityType: ExtendedEntitiesTypeDict.Emodel,
-    // The e-model validation scan-config has no `model_identifier` field, so there is no
-    // FromID selection to write under `initialize` — configure opens with nothing picked.
-    fromIdTypeByBrowseType: {},
+    // The e-model validation scan-config has no `model_identifier` field; the e-model is picked in
+    // the editor, this only lets a detail page's Validate action seed it.
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.Emodel]: ScanConfigFromIdType.EModelFromID,
+    },
     generatedApiPath: ScanConfigGeneratedApiPath.EModelValidation,
   };
 }
