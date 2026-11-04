@@ -4,7 +4,7 @@ import { useRouter } from '@bprogress/next';
 import { useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'motion/react';
 import { parseAsString, type SingleParserBuilder, useQueryStates } from 'nuqs';
-import { use } from 'react';
+import { use, useState } from 'react';
 
 import { SCOPE_QUERY_PARAMS, WorkspaceScope } from '@/constants';
 import { useDisableElementOverflow } from '@/ui/hooks/use-disable-element-overflow';
@@ -49,13 +49,13 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     }
   );
 
+  // The Type row, under the category picked, which stays picked with the row shut.
+  const [typesOpen, setTypesOpen] = useState(true);
+  const collapseTypes = () => setTypesOpen(false);
+
   const onSelectCategory = (value: TActivityValue | null) => {
     updateWorkflowState(() => ({ activity: value, entityType: null }));
-  };
-
-  // Back to the categories alone, for whatever else the page is being used for.
-  const deselectCategory = () => {
-    if (activity) onSelectCategory(null);
+    setTypesOpen(true);
   };
 
   const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
@@ -102,12 +102,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           }}
           onClick={(event) => {
             // On the window itself, between its cards and buttons.
-            if (!(event.target as Element).closest('button, [role="button"]')) deselectCategory();
+            if (!(event.target as Element).closest('button, [role="button"]')) collapseTypes();
           }}
         >
           <CategoryMenu current={activity} onItemClick={onSelectCategory} />
           <AnimatePresence>
-            {activity && (
+            {activity && typesOpen && (
               <motion.div
                 initial={{ opacity: 0, height: 0, y: -20 }}
                 animate={{ opacity: 1, height: 'auto', y: 0 }}
@@ -143,8 +143,8 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
           }}
           // The table in use: under the pointer, or typed into. Not on focus, which its search box
           // takes for itself as it mounts, while a link may have opened a category.
-          onPointerEnter={deselectCategory}
-          onKeyDownCapture={deselectCategory}
+          onPointerEnter={collapseTypes}
+          onKeyDownCapture={collapseTypes}
         >
           <WorkflowActivity />
         </motion.div>

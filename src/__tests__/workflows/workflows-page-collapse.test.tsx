@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import Page from '@/app/app/virtual-lab/[virtualLabId]/[projectId]/workflows/page';
 
+import type { ComponentProps } from 'react';
+
 vi.mock('@bprogress/next', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('@tanstack/react-query', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@tanstack/react-query')>()),
@@ -17,18 +19,37 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
   useNextStepOnboarding: () => {},
   workflowTour: {},
 }));
+// Rows gone at once, with no exit to wait for.
+vi.mock('motion/react', () => ({
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
+  motion: {
+    div: ({
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
+      transition: _transition,
+      ...props
+    }: ComponentProps<'div'> & Record<string, unknown>) => <div {...props} />,
+  },
+}));
 vi.mock('@/ui/segments/workflows/elements/category-menu', async () => {
   const { MenuItem } = await import('@/ui/segments/workflows/elements/menu-item');
   return {
-    CategoryMenu: ({ current }: { current: string | null }) => (
+    CategoryMenu: ({
+      current,
+      onItemClick,
+    }: {
+      current: string | null;
+      onItemClick: (value: string | null) => void;
+    }) => (
       <>
         <MenuItem
           testId="card"
-          title={current ?? 'nothing picked'}
-          value={null}
+          title={`picked: ${current}`}
+          value={current}
           disabled={false}
-          active={false}
-          onClick={() => {}}
+          active={current !== null}
+          onClick={onItemClick}
         />
         <MenuItem
           testId="disabled-card"
@@ -36,7 +57,7 @@ vi.mock('@/ui/segments/workflows/elements/category-menu', async () => {
           value={null}
           disabled
           active={false}
-          onClick={() => {}}
+          onClick={onItemClick}
         />
         <button type="button" data-testid="carousel-button" />
         <h1 data-testid="heading">Category</h1>
@@ -44,7 +65,9 @@ vi.mock('@/ui/segments/workflows/elements/category-menu', async () => {
     ),
   };
 });
-vi.mock('@/ui/segments/workflows/elements/types-menu', () => ({ TypesMenu: () => null }));
+vi.mock('@/ui/segments/workflows/elements/types-menu', () => ({
+  TypesMenu: () => <div data-testid="types" />,
+}));
 vi.mock('@/ui/segments/workflows/elements/workflow-activity', () => ({
   WorkflowActivity: () => <input aria-label="search" />,
 }));
@@ -60,30 +83,33 @@ async function page() {
       </NuqsTestingAdapter>
     );
   });
-  expect(screen.getByTestId('card')).toHaveTextContent('simulate');
+  expect(screen.getByTestId('types')).toBeInTheDocument();
 }
 
-const deselected = () => screen.findByText('nothing picked');
-const stillPicked = async () => {
-  await act(async () => {});
-  expect(screen.getByTestId('card')).toHaveTextContent('simulate');
-};
+function expectCollapsed() {
+  expect(screen.queryByTestId('types')).toBeNull();
+  expect(screen.getByTestId('card')).toHaveTextContent('picked: simulate');
+}
+function expectOpen() {
+  expect(screen.getByTestId('types')).toBeInTheDocument();
+  expect(screen.getByTestId('card')).toHaveTextContent('picked: simulate');
+}
 
-describe('the workflows page’s category', () => {
-  it('is deselected by a click on the top window’s white space', async () => {
+describe('the workflows page’s Type row', () => {
+  it('shuts on a click on the top window’s white space, the category staying picked', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
 
-    expect(await deselected()).toBeInTheDocument();
+    expectCollapsed();
   });
 
-  it('is deselected by a click on a heading, which is no control', async () => {
+  it('shuts on a click on a heading, which is no control', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('heading'));
 
-    expect(await deselected()).toBeInTheDocument();
+    expectCollapsed();
   });
 
   it('stays through a click on a card, a disabled one or a button', async () => {
@@ -93,23 +119,23 @@ describe('the workflows page’s category', () => {
     fireEvent.click(screen.getByTestId('disabled-card'));
     fireEvent.click(screen.getByTestId('carousel-button'));
 
-    await stillPicked();
+    expectOpen();
   });
 
-  it('is deselected by the pointer coming over the table', async () => {
+  it('shuts as the pointer comes over the table, the category staying picked', async () => {
     await page();
 
     fireEvent.pointerEnter(screen.getByTestId('workflow-activity-content'));
 
-    expect(await deselected()).toBeInTheDocument();
+    expectCollapsed();
   });
 
-  it('is deselected by typing in the table', async () => {
+  it('shuts on typing in the table', async () => {
     await page();
 
     fireEvent.keyDown(screen.getByLabelText('search'), { key: 'a' });
 
-    expect(await deselected()).toBeInTheDocument();
+    expectCollapsed();
   });
 
   it('stays while the table takes focus of itself, as its search box does on mounting', async () => {
@@ -117,6 +143,18 @@ describe('the workflows page’s category', () => {
 
     fireEvent.focus(screen.getByLabelText('search'));
 
-    await stillPicked();
+    expectOpen();
+  });
+
+  it('opens again on a click on the category', async () => {
+    await page();
+    fireEvent.pointerEnter(screen.getByTestId('workflow-activity-content'));
+    expectCollapsed();
+
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('card'));
+    });
+
+    expectOpen();
   });
 });
