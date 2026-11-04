@@ -3,8 +3,10 @@
 import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
+import YouTubePlayer from '@/components/documentation/tutorials/youtube-player';
 import { listBox } from '@/features/learn/ui/category-tiles';
 import { cn } from '@/utils/css-class';
+import { parseYouTubeId } from '@/utils/youtube';
 
 import type { TTutorial } from '@/ui/segments/project/get-started/query';
 
@@ -209,21 +211,30 @@ function TutorialPlayer({
 }) {
   const [played, setPlayed] = useState(false);
   const title = sentence(tutorial.title);
+  const youTubeId = parseYouTubeId(tutorial.url);
   return (
     <section className="flex min-h-0 w-full flex-1 flex-col gap-[16px] overflow-y-auto">
       <div className="relative overflow-hidden rounded-[12px] bg-[#002766]">
         {/* not autoplaying, since the section opens on one */}
-        <video
-          controls
-          playsInline
-          preload="metadata"
-          poster={tutorial.posterImage ?? undefined}
-          src={tutorial.url}
-          onPlay={() => setPlayed(true)}
-          className="aspect-video w-full object-contain"
-        >
-          <track kind="captions" srcLang="en" label="English captions" />
-        </video>
+        {youTubeId ? (
+          <YouTubePlayer
+            id={youTubeId}
+            onPlay={() => setPlayed(true)}
+            className="aspect-video w-full text-white"
+          />
+        ) : (
+          <video
+            controls
+            playsInline
+            preload="metadata"
+            poster={tutorial.posterImage ?? undefined}
+            src={tutorial.url}
+            onPlay={() => setPlayed(true)}
+            className="aspect-video w-full object-contain"
+          >
+            <track kind="captions" srcLang="en" label="English captions" />
+          </video>
+        )}
         {/* over the poster, clear of the controls along the bottom */}
         <div
           aria-hidden={played}
