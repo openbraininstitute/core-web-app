@@ -138,6 +138,7 @@ export const MICRONS_FRAME: FrameBox = {
   up: [0, -1, 0],
 };
 
-/** The cortical microcircuit's one colour in this walkthrough, and the fly's brain's. */
+/** The cortical microcircuit's one colour in this walkthrough, the fly's brain's, and MICrONS's. */
 export const L6_COLOR = '#e64980';
 export const FLY_COLOR = '#2f9e44';
+export const MICRONS_COLOR = '#7048e8';

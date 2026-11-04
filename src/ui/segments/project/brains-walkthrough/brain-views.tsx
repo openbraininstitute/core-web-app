@@ -6,6 +6,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
 import { ModelView } from '@/ui/segments/project/models/model-views';
+import { PackView } from '@/ui/segments/project/models/pack-view';
+import { FLY_PACK, L6_PACK, MICRONS_PACK } from '@/ui/segments/project/models/repo-packs';
 import {
   useWalkthroughActions,
   useWalkthroughEntered,
@@ -30,6 +32,7 @@ import {
   H01_MARK,
   IN_PLACE,
   L6_COLOR,
+  MICRONS_COLOR,
   MICRONS_FRAME,
   MOUSE_FRAME,
   MOUSE_PLACE,
@@ -38,77 +41,62 @@ import {
 } from './brains';
 import { Turntable } from './turntable';
 
-import type { OwnPack } from '@/features/viewer-3d/bare';
 import type { TBrainMesh } from './brains';
 
 import '@/styles/learn.css';
 
 /**
- * The FlyWire neurons inside the fly's brain, turning together: the circuit's own 3D view, framed
- * on the brain, with the course's fly brain as glass over it; colour-by goes in `colorSlot`.
+ * The FlyWire neurons nearest the surface of the fly's brain, turning together: their pack in the repo, framed on the
+ * brain, with the course's fly brain as glass over it.
  */
-export function FlyInBrain({ colorSlot = null }: { colorSlot?: HTMLElement | null }) {
+export function FlyInBrain() {
   return (
     <ViewOverlay
       frame={FLY_FRAME}
       render={(view) => <BrainGlass view={view} brain="fly" place={FLY_PLACE} />}
     >
-      <ModelView model="fly" colorSlot={colorSlot} frameZoom={1} color={FLY_COLOR} />
+      <PackView pack={FLY_PACK} color={FLY_COLOR} frameZoom={1} spin />
     </ViewOverlay>
   );
 }
 
 /**
- * The layer 6 microcircuit in the mouse's brain, in its right hindlimb somatosensory cortex, turning
- * together: the circuit's own 3D view, framed on the brain, with the course's mouse brain as glass.
+ * The layer 6 microcircuit in the mouse's brain, in its right hindlimb somatosensory cortex, turning together: its pack
+ * in the repo, framed on the brain, with the course's mouse brain as glass.
  */
-export function MouseInBrain({ colorSlot = null }: { colorSlot?: HTMLElement | null }) {
+export function MouseInBrain() {
   return (
     <ViewOverlay
       frame={MOUSE_FRAME}
       render={(view) => <BrainGlass view={view} brain="root" place={MOUSE_PLACE} />}
     >
-      <ModelView model="l6" colorSlot={colorSlot} frameZoom={1} color={L6_COLOR} />
+      <PackView pack={L6_PACK} color={L6_COLOR} frameZoom={1} spin />
     </ViewOverlay>
   );
 }
 
 /**
- * The layer 6 microcircuit in a rat's brain, where it was built from, in its right hindlimb
- * somatosensory cortex, turning together: the circuit's own 3D view, framed on the brain, with the
- * Waxholm rat atlas's brain as glass.
+ * The layer 6 microcircuit in a rat's brain, where it was built from, in its right hindlimb somatosensory cortex,
+ * turning together: its pack in the repo, framed on the brain, with the Waxholm rat atlas's brain as glass.
  */
-export function RatInBrain({ colorSlot = null }: { colorSlot?: HTMLElement | null }) {
+export function RatInBrain() {
   return (
     <ViewOverlay
       frame={RAT_FRAME}
       render={(view) => <BrainGlass view={view} brain="rat" place={RAT_PLACE} />}
     >
-      <ModelView model="l6" colorSlot={colorSlot} frameZoom={1} color={L6_COLOR} />
+      <PackView pack={L6_PACK} color={L6_COLOR} frameZoom={1} spin />
     </ViewOverlay>
   );
 }
 
-/**
- * MICrONS_v1's pack, served by the app, as the circuit has none stored and its project is not ours to store one in:
- * its 877 proofread neurons whole, every neurite (all typed dendrite in its skeletons), at one coarse level (1 µm),
- * and its other 50,071 neurons as somas (build_microns_pack.py in the home_page group, with obi-one's pack writer,
- * from the circuit's open-data files). 7.0 MB, 1.05M segments.
- */
-const MICRONS_PACK: OwnPack = {
-  id: 'microns',
-  url: '/static/walkthrough/microns.mpack',
-  size: 7046502,
-  sha256: '0c919739cdd7f2e799b7c09e4fc8049df6cae2cdeeb3f71da1414aa703787899',
-};
-
 const NOTHING_OVER = () => null;
 
-/** MICrONS as a circuit, upright, turning about the cortex's depth: its somas, and its proofread neurons whole. */
-export function MicronsCircuit({ colorSlot = null }: { colorSlot?: HTMLElement | null }) {
+/** MICrONS upright, turning about the cortex's depth: its pack in the repo, its somas and its proofread neurons whole. */
+export function MicronsCircuit() {
   return (
-    <ViewOverlay frame={MICRONS_FRAME} render={NOTHING_OVER} pack={MICRONS_PACK}>
-      <ModelView model="microns" colorSlot={colorSlot} frameZoom={0.85} />
+    <ViewOverlay frame={MICRONS_FRAME} render={NOTHING_OVER}>
+      <PackView pack={MICRONS_PACK} color={MICRONS_COLOR} frameZoom={0.85} spin />
     </ViewOverlay>
   );
 }

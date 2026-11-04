@@ -1,5 +1,4 @@
 import { CANVAS_WHITE } from '@/features/scan-config/components/color-by/contrast';
-import { FLY_PACK, L6_PACK } from '@/ui/segments/project/models/repo-packs';
 
 import type { EmViewerSettings } from '@/features/entities/em-cell-mesh/viewer/use-em-viewer-settings';
 import type { ViewerConfig } from '@/features/scan-config/components/color-by/types';
@@ -8,7 +7,6 @@ import type {
   TProjectHomeGetStartedCard,
   TTutorial,
 } from '@/ui/segments/project/get-started/query';
-import type { RepoPack } from '@/ui/segments/project/models/repo-packs';
 
 /** What the stage can show, picked from the row below it. */
 export type TStartItem =
@@ -57,8 +55,6 @@ export interface ICircuitExample {
   population?: string;
   /** A picture of it for its card; a plain tile without one. */
   art?: string;
-  /** What stands in for it, in one colour, where it cannot be read: signed out, or in another project. */
-  repoPack?: RepoPack;
 }
 
 /** Shared results + tests on staging, where the two private circuits live with their morphology packs. */
@@ -85,7 +81,6 @@ export const CIRCUIT_EXAMPLES: Array<{ key: string } & ICircuitExample> = [
     viewerDefaults: { ...HOME_VIEWER, colorByProperty: { S1nonbarrel_neurons: 'mtype' } },
     frameZoom: 0.33,
     art: '/images/start/examples/nbs1-hex0-l6.jpg',
-    repoPack: L6_PACK,
   },
   {
     key: 'flywire-1pct',
@@ -96,7 +91,6 @@ export const CIRCUIT_EXAMPLES: Array<{ key: string } & ICircuitExample> = [
     // Its morphologies reach past the somas it is framed on.
     frameZoom: 0.85,
     art: '/images/start/examples/flywire-1pct.jpg',
-    repoPack: FLY_PACK,
   },
   {
     // Public, and with no morphology pack: its somas.

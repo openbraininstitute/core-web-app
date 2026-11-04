@@ -7,7 +7,6 @@ import { config } from '@/config';
 import { WorkspaceMainPages } from '@/constants';
 import { learnFlag, useFlag } from '@/features/feature-flags';
 import { SECTION_TYPE_COLORS } from '@/features/scan-config/components/color-by/palette';
-import { useSessionAtomValue } from '@/hooks/hooks';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { ModelActions, PillLink } from '@/ui/segments/project/models/actions';
 import { MODEL_CIRCUITS } from '@/ui/segments/project/models/models';
@@ -53,26 +52,8 @@ export function ScrollHint() {
 }
 
 /**
- * Words that hold only where the circuit itself is on show, to colour and to click on: otherwise, signed out or in
- * another project, its pack in the repo stands in, only to be turned, and `otherwise` is said in their place.
- */
-export function WhereReadable({
-  scene,
-  otherwise = null,
-  children,
-}: {
-  scene: TModelCircuit;
-  otherwise?: ReactNode;
-  children: ReactNode;
-}) {
-  const { readable } = useModelCircuit(MODEL_CIRCUITS[scene]);
-  return readable ? children : otherwise;
-}
-
-/**
  * A circuit's size, and Data and Simulate for it (Data alone, for one with no models to `simulate`);
- * in another project, where it can be opened, in the walkthrough of that `design`; signed out, nothing, as there is no
- * project to open it in.
+ * in another project, where it can be opened, in the walkthrough of that `design`.
  */
 export function CircuitFacts({
   scene,
@@ -85,10 +66,8 @@ export function CircuitFacts({
 }) {
   const example = MODEL_CIRCUITS[scene];
   const { circuit, readable } = useModelCircuit(example);
-  const session = useSessionAtomValue();
   const home = example.workspace;
   if (!readable && home) {
-    if (!session) return null;
     return (
       <p className="text-[12px] leading-[18px] text-neutral-500">
         This circuit lives in the Shared results + tests project.{' '}
@@ -98,7 +77,7 @@ export function CircuitFacts({
         >
           Open the walkthrough there
         </Link>{' '}
-        to explore it in full.
+        to turn it in 3D.
       </p>
     );
   }
@@ -157,7 +136,8 @@ export function CourseLink({ design = 'walkthrough' }: { design?: THomeDesign })
   const learn = useFlag(learnFlag.key) === true;
   const { virtualLabId, projectId } = useWorkspace();
   if (!learn) return null;
-  const from = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}?design=${design}`;
+  // Back to the public landing, where there is no project.
+  const from = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}?design=${design}` : '/';
   return (
     <Row>
       <PillLink primary href={`/app/learn/brain-modeling?from=${encodeURIComponent(from)}`}>
@@ -186,8 +166,10 @@ export function SectionLink({
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { label, path } = SECTIONS[section];
+  // With no project, as on the public landing, the platform's entry, where signing in picks one.
+  const href = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${path}` : config.ROOT_ROUTE;
   return (
-    <PillLink primary={primary} href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${path}`}>
+    <PillLink primary={primary} href={href}>
       {label}
     </PillLink>
   );

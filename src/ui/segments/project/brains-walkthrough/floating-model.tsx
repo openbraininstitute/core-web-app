@@ -468,10 +468,9 @@ const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
   />
 );
 /**
- * The male fly's whole central nervous system, the Male CNS connectome's 164,606 point neurons, over the whole
- * page behind the words and recording of the screen `at`, faint, turning there. It is read unseen and still on
- * the screen before, to be drawn by the time its own comes, and let go of past the screen after; the viewer's
- * word that it is loading is not shown.
+ * The male fly's whole central nervous system, its surface's neurons, over the whole page behind the words and
+ * recording of the screen `at`, faint, turning there. It is read unseen and still on the screen before, to be drawn
+ * by the time its own comes, and let go of past the screen after; the viewer's word that it is loading is not shown.
  */
 export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
   if (chapter < at - 1 || chapter > at + 1) return null;
@@ -485,7 +484,9 @@ export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
         on ? 'opacity-40' : 'opacity-0'
       )}
     >
-      <ModelView model="cns" pickable={false} frameZoom={0.85} spin={on} />
+      <ViewOverlay frame={CNS_FRAME} render={NOTHING_OVER} detailPixels={DETAIL_PIXELS}>
+        <PackView pack={CNS_PACK} color={FLY_BLUE} frameZoom={0.85} spin={on} />
+      </ViewOverlay>
     </div>
   );
 }

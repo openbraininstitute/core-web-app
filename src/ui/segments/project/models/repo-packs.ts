@@ -38,3 +38,17 @@ export const FLY_PACK: RepoPack = {
   sha256: '64facca47840f75a9191b3a3642458b3874aff515c7e8eb8c94bfd75f55be15c',
   population: { name: 'flywire_brain', cells: 1379 },
 };
+
+/**
+ * MICrONS_v1's pack, as the circuit has none stored and its project is not ours to store one in: its 877 proofread
+ * neurons whole, every neurite (all typed dendrite in its skeletons), at one coarse level (1 µm), and its other 50,071
+ * neurons as somas (build_microns_pack.py in the home_page group, with obi-one's pack writer, from the circuit's
+ * open-data files). 7.0 MB, 1.05M segments.
+ */
+export const MICRONS_PACK: RepoPack = {
+  id: 'microns',
+  url: '/static/walkthrough/microns.mpack',
+  size: 7046502,
+  sha256: '0c919739cdd7f2e799b7c09e4fc8049df6cae2cdeeb3f71da1414aa703787899',
+  population: { name: 'microns_intrinsic', cells: 50948 },
+};

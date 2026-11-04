@@ -413,34 +413,36 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         {/* Over the intro too: the ways in are there from the first. */}
         {fullscreen && (
             <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px]">
-              <span
-                data-walkthrough-logo
-                className={cn(
-                  'shrink-0 transition-opacity duration-500',
-                  introDone ? 'opacity-100' : 'opacity-0'
-                )}
-              >
-                <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
-              </span>
-              {/* The marketing nav, in from the first screen ("Virtual Labs Platform") on, hidden over the intro. */}
-              <nav
-                className={cn(
-                  'pointer-events-auto absolute left-1/2 top-[30px] hidden -translate-x-1/2 items-center gap-[clamp(18px,2.4vw,38px)] transition-opacity duration-500 lg:flex',
-                  introDone ? 'opacity-100' : 'pointer-events-none opacity-0'
-                )}
-                aria-hidden={!introDone}
-              >
-                {MENU_ITEMS.map((item) => (
-                  <Link
-                    key={item.caption}
-                    href={item.slug}
-                    tabIndex={introDone ? undefined : -1}
-                    className="text-primary-9 text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60"
-                  >
-                    {item.caption}
-                  </Link>
-                ))}
-              </nav>
+              <div className="flex items-center gap-[clamp(24px,3vw,48px)]">
+                <span
+                  data-walkthrough-logo
+                  className={cn(
+                    'shrink-0 transition-opacity duration-500',
+                    introDone ? 'opacity-100' : 'opacity-0'
+                  )}
+                >
+                  <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
+                </span>
+                {/* The marketing nav, beside the logo, in from the first screen on, hidden over the intro. */}
+                <nav
+                  className={cn(
+                    'hidden items-center gap-[clamp(18px,2.4vw,38px)] transition-opacity duration-500 lg:flex',
+                    introDone ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+                  )}
+                  aria-hidden={!introDone}
+                >
+                  {MENU_ITEMS.map((item) => (
+                    <Link
+                      key={item.caption}
+                      href={item.slug}
+                      tabIndex={introDone ? undefined : -1}
+                      className="text-primary-9 text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60"
+                    >
+                      {item.caption}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
               <div className="pointer-events-auto flex items-center gap-[12px]">
                 {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                 <button
@@ -813,7 +815,7 @@ function Intro({
         {tail && (
           // A blank line before it.
           <em className="mt-[1.12em] block">
-            <Typed text={tail} keys={out('next', tail)} caret={shown('next')} />
+            <Typed text={tail} keys={out('next', tail)} caret={phase === 'next'} />
           </em>
         )}
       </h1>
