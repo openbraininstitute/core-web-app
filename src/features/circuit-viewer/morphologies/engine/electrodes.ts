@@ -31,7 +31,7 @@ export const HALOED_LEAST_PX = 3;
 /** How opaque a hidden contact is on the near side of its array, and on the far side. */
 export const HIDDEN_OPACITIES = [0.6, 0.2] as const;
 /** How opaque a contact over morphologies is on the near side of its array and on the far side, and how large. */
-export const OVER_OPACITIES = [1, 0.55] as const;
+export const OVER_OPACITIES = [1, 0.35] as const;
 export const OVER_SIZES = [1.25, 0.8] as const;
 /** The share of the depth range that contacts over the cells are squeezed into, in front of all else. */
 export const FRONT_DEPTH = 0.001;
