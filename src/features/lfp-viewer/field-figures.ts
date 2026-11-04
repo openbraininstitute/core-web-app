@@ -65,11 +65,18 @@ function heatmap({
   ] as unknown as Data[];
 }
 
-/** A figure's time axis follows a zoom; its data stays, so Plotly needn't read it again. */
+/**
+ * A figure's time axis follows a zoom; its data stays, so Plotly needn't read it
+ * again, and a zoom of the plot's other axis stays too.
+ */
 export function withTimeWindow(figure: Figure, window: [number, number]): Figure {
   return {
     ...figure,
-    layout: { ...figure.layout, xaxis: { ...figure.layout.xaxis, range: window } },
+    layout: {
+      ...figure.layout,
+      uirevision: 'time-figure',
+      xaxis: { ...figure.layout.xaxis, range: window, uirevision: window.join() },
+    },
   };
 }
 
@@ -216,6 +223,8 @@ export function profileFigure({
     ] as Data[],
     layout: {
       ...BASE_LAYOUT,
+      // Frames at the player's time keep a zoom of the plot; a new measure starts afresh.
+      uirevision: range ? 'at-time' : measure,
       xaxis: axis(measure, range ? { range, zeroline: true, zerolinecolor: '#cbd5e1' } : {}),
       yaxis: axis(axisLabel),
     },
@@ -260,29 +269,22 @@ export function triggeredFigure({
 }): Figure {
   const x = Array.from(result.lags);
   const firstColour = PICK_COLORS[0];
-  // Spikes at one moment share one stretch of the field: their spread says nothing.
-  const band =
-    result.events > 1
-      ? [
-          {
-            type: 'scatter',
-            mode: 'lines',
-            x: [...x, ...x.slice().reverse()],
-            y: [
-              ...x.map((_, i) => result.means[0][i] + result.error[i]),
-              ...x.map((_, i) => result.means[0][i] - result.error[i]).reverse(),
-            ],
-            fill: 'toself',
-            fillcolor: withAlpha(firstColour, 0.18),
-            line: { width: 0, color: firstColour },
-            hoverinfo: 'skip',
-            showlegend: false,
-          },
-        ]
-      : [];
   return {
     data: [
-      ...band,
+      {
+        type: 'scatter',
+        mode: 'lines',
+        x: [...x, ...x.slice().reverse()],
+        y: [
+          ...x.map((_, i) => result.means[0][i] + result.error[i]),
+          ...x.map((_, i) => result.means[0][i] - result.error[i]).reverse(),
+        ],
+        fill: 'toself',
+        fillcolor: withAlpha(firstColour, 0.18),
+        line: { width: 0, color: firstColour },
+        hoverinfo: 'skip',
+        showlegend: false,
+      },
       ...contacts.map((contact, i) => ({
         type: 'scatter',
         mode: 'lines',

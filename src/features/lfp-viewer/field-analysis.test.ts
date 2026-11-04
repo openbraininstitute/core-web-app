@@ -147,8 +147,10 @@ describe('coherenceWith', () => {
     expect(result?.values[0].every((v) => v === 0)).toBe(true);
   });
 
-  it('has nothing to say of a run under two segments', () => {
+  it('has nothing to say of a run with too few segments to average', () => {
     expect(coherenceWith(new Float64Array(100), [new Float64Array(100)], 1)).toBeNull();
+    expect(coherenceWith(new Float64Array(128), [new Float64Array(128)], 1)).toBeNull();
+    expect(coherenceWith(new Float64Array(288), [new Float64Array(288)], 1)).not.toBeNull();
   });
 });
 
@@ -168,6 +170,24 @@ describe('triggeredAverage', () => {
     expect(result.lags[peak]).toBe(5);
     expect(result.means[0][peak]).toBeGreaterThan(1400);
     expect(result.error[peak]).toBeLessThan(10);
+  });
+
+  it('counts the spikes of one moment as one in the standard error', () => {
+    const signal = new Float64Array(600);
+    signal.fill(30, 290, 310);
+    signal.fill(60, 490, 510);
+    const volleys = [100, 300, 500].flatMap((t) => new Array<number>(1000).fill(t));
+    const result = triggeredAverage(fieldOf([signal]), volleys, 5);
+    expect(result.events).toBe(3);
+    expect(result.means[0][5]).toBeCloseTo(30, 3);
+    expect(result.error[5]).toBeCloseTo(Math.sqrt(300), 3);
+  });
+
+  it('has no standard error from a single moment', () => {
+    const signal = Float64Array.from({ length: 100 }, (_, i) => i % 7);
+    const result = triggeredAverage(fieldOf([signal]), [40, 41, 42], 5);
+    expect(result.events).toBe(1);
+    expect(result.error.every((v) => v === 0)).toBe(true);
   });
 
   it('leaves out triggers whose window leaves the run', () => {

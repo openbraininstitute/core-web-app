@@ -38,7 +38,6 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ReactNode } from 'react';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
-import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
 import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
@@ -60,6 +59,8 @@ const DEFAULT_COMPARED = 4;
 const HALF_WINDOWS_MS = [5, 10, 20, 50, 100];
 const DEFAULT_HALF_WINDOW_MS = 20;
 const CURSOR_REDRAW_MS = 100;
+/** What reading a line's rows at full resolution may hold in the query cache; it is held twice. */
+const MAX_LINE_READ_BYTES = 512 * 2 ** 20;
 
 type PlotKind =
   | 'psd'
@@ -78,7 +79,6 @@ type StatisticsProps = {
   /** As the field pane draws it: with its shared signal off, if that is chosen. */
   field: LfpField;
   removeShared: boolean;
-  scale: ColourScale;
   rows: readonly FieldRow[];
   positions: Float32Array | null;
   direction: FieldDirection | null;
@@ -235,7 +235,7 @@ const NO_POSITIONS = 'Needs the contacts’ positions';
 const NO_LINE = 'Needs contacts evenly spaced on a line';
 const NO_SPIKES = 'This simulation has no spikes';
 const TRIGGERED_HELP =
-  'The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes whose window leaves the recording are left out, and at most 10,000 are used, evenly. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks';
+  'The field around each spike, averaged, as recorded: the selected contact with its standard error, counting spikes at one moment as one, and those ticked. Spikes whose window leaves the recording are left out, and at most 10,000 are used, evenly. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks';
 
 const whyNot = (reason: string | false) => ({
   disabled: reason !== false,
@@ -466,18 +466,21 @@ function CorrelationPlot({
         high = Math.max(high, matrix[a * n + b]);
       }
     }
-    const kept = useStored
+    const source = useStored
       ? 'as recorded'
       : removeShared
         ? 'shared signal removed'
         : 'from the overview';
+    const grouped = rows.some((row) => row.contacts.length > 1);
+    const measure = useStored ? 'contact pairs averaged' : 'rows’ mean signals';
+    const kept = grouped ? `${measure} · ${source}` : source;
     return n > 1 ? `r from ${low.toFixed(2)} to ${high.toFixed(2)} · ${kept}` : kept;
   }, [matrix, rows, useStored, removeShared]);
   return (
     <PlotFrame
       picker={picker}
       note={note}
-      help="How alike contacts are over the whole run, in the field's rows and order. It follows Shared signal: where most of the field is shared every pair reads near 1, so remove it to see what differs"
+      help="How alike contacts are over the whole run, in the field's rows and order. It follows Shared signal: where most of the field is shared every pair reads near 1, so remove it to see what differs. Where a row holds several contacts, the recorded matrix averages their pairs and otherwise the rows’ mean signals are compared, which reads higher as noise cancels"
       visible={visible}
       figure={figure}
       empty={stored.isError ? FAILED : undefined}
@@ -546,7 +549,6 @@ function ProfilePlot({
   summary,
   field,
   removeShared,
-  scale,
   positions,
   direction,
   selectedContact,
@@ -554,7 +556,8 @@ function ProfilePlot({
   visible,
 }: PlotProps) {
   const { index, stats } = summary;
-  const [measure, setMeasure] = useState<ProfileMeasure>('ptp');
+  const measures = Object.entries(STORED_MEASURES).filter(([name]) => index.stats.includes(name));
+  const [measure, setMeasure] = useState(() => (measures[0]?.[0] ?? 'at-time') as ProfileMeasure);
   const axis = useMemo(
     () => direction?.axis ?? (positions ? arrayAxis(positions) : null),
     [direction, positions]
@@ -565,6 +568,13 @@ function ProfilePlot({
   );
   const atTime = measure === 'at-time';
   const time = usePlayerTime(timeCursor, atTime);
+  // The field's largest, as its colour scale's limit leaves its peaks off the axis.
+  const limit = useMemo(() => {
+    if (!atTime) return 0;
+    let largest = 0;
+    for (const v of field.data) largest = Math.max(largest, Math.abs(v));
+    return largest * field.scale || 1;
+  }, [atTime, field]);
   const column = index.stats.indexOf(measure);
   const value = useMemo(() => {
     if (atTime) {
@@ -586,9 +596,9 @@ function ProfilePlot({
         selectedContact === null
           ? null
           : { at: coordinate[selectedContact], value: value(selectedContact) },
-      range: atTime ? [-scale.limit, scale.limit] : undefined,
+      range: atTime ? [-limit, limit] : undefined,
     });
-  }, [coordinate, axis, value, measure, atTime, time, selectedContact, scale.limit]);
+  }, [coordinate, axis, value, measure, atTime, time, selectedContact, limit]);
   return (
     <PlotFrame
       picker={picker}
@@ -597,7 +607,7 @@ function ProfilePlot({
           label="Measure"
           value={measure}
           options={[
-            ...Object.entries(STORED_MEASURES).map(([value, label]) => ({ value, label })),
+            ...measures.map(([value, label]) => ({ value, label })),
             { value: 'at-time', label: 'At the player’s time' },
           ]}
           onChange={(v) => setMeasure(v as ProfileMeasure)}
@@ -625,7 +635,12 @@ function CsdPlot({
 }: PlotProps & { lines: ContactLine[] }) {
   const line =
     lines.find((l) => selectedContact !== null && l.contacts.includes(selectedContact)) ?? lines[0];
-  const { field, failed } = useContactRows(source, summary, line?.contacts ?? []);
+  const tooLong =
+    !!line &&
+    summary.total.kind !== 'value' &&
+    line.contacts.length * summary.index.time.steps * Int16Array.BYTES_PER_ELEMENT >
+      MAX_LINE_READ_BYTES;
+  const { field, failed } = useContactRows(source, summary, !line || tooLong ? [] : line.contacts);
   const result = useMemo(
     () => (field && line ? currentSourceDensity(field, line.spacing) : null),
     [field, line]
@@ -646,7 +661,15 @@ function CsdPlot({
       help="−σ ∂²φ/∂z² along the line holding the selected contact: sinks in blue, sources in orange. Each contact's mean over the run is taken off first, so this shows changes around it and not steady currents. It has no value at the line's two ends, and follows the field's zoom"
       visible={visible}
       figure={figure}
-      empty={failed ? FAILED : line ? undefined : NO_LINE}
+      empty={
+        tooLong
+          ? `${line.contacts.length} contacts of ${summary.index.time.steps.toLocaleString()} steps are too much to read here`
+          : failed
+            ? FAILED
+            : line
+              ? undefined
+              : NO_LINE
+      }
       timeline={{ events: timeline, timeCursor }}
       timeWindow={window}
     />

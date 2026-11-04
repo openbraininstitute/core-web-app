@@ -481,7 +481,6 @@ function LfpReportView({
                   summary={summary}
                   field={field}
                   removeShared={removeShared}
-                  scale={scale}
                   rows={rows}
                   positions={positions}
                   direction={direction}

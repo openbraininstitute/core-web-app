@@ -11,6 +11,7 @@ const MIN_COHERENCE_SEGMENT = 64;
 const MAX_COHERENCE_SEGMENT = 1 << 14;
 /** Coherence is 1 at every frequency from a single segment, so it needs many. */
 const COHERENCE_SEGMENTS = 16;
+const MIN_COHERENCE_AVERAGES = 8;
 const MAX_COHERENCE_AVERAGES = 256;
 const MAX_TRIGGERS = 10_000;
 const MAX_CSD_COLUMNS = 1024;
@@ -176,8 +177,8 @@ export function coherenceWith(
     MAX_COHERENCE_SEGMENT,
     Math.max(MIN_COHERENCE_SEGMENT, powerOfTwoBelow(steps / COHERENCE_SEGMENTS))
   );
-  if (steps < n * 2) return null;
   const available = Math.floor((steps - n) / (n / 2)) + 1;
+  if (available < MIN_COHERENCE_AVERAGES) return null;
   const segments = Math.min(available, MAX_COHERENCE_AVERAGES);
   const hop = Math.floor((steps - n) / (segments - 1));
   const bands = n / 2;
@@ -228,7 +229,7 @@ export type TriggeredAverage = {
   lags: Float64Array;
   /** µV, one per row of the field, each as long as `lags`. */
   means: Float32Array[];
-  /** The standard error of the first row's mean. */
+  /** The standard error of the first row's mean, with spikes of one moment counted as one. */
   error: Float32Array;
   /** How many triggers went in: those with their whole window inside the run, at most `MAX_TRIGGERS`. */
   triggers: number;
@@ -236,17 +237,43 @@ export type TriggeredAverage = {
   events: number;
 };
 
-function separateEvents(centres: readonly number[], apart: number): number {
-  const sorted = [...centres].sort((a, b) => a - b);
+/**
+ * Spikes of one moment share one stretch of the field, so they don't count as
+ * independent: a cluster-robust standard error, with each moment a cluster.
+ */
+function errorOverEvents(
+  field: LfpField,
+  centres: readonly number[],
+  half: number,
+  mean: Float32Array
+): { error: Float32Array; events: number } {
+  const length = mean.length;
+  const sorted = Float64Array.from(centres).sort();
+  const squares = new Float64Array(length);
+  const residual = new Float64Array(length);
+  const closeEvent = () => {
+    for (let i = 0; i < length; i++) squares[i] += residual[i] * residual[i];
+    residual.fill(0);
+  };
   let events = 0;
-  let last = -Infinity;
+  let start = -Infinity;
   for (const centre of sorted) {
-    if (centre - last >= apart) {
+    if (centre - start >= half) {
+      closeEvent();
       events++;
-      last = centre;
+      start = centre;
+    }
+    for (let i = 0; i < length; i++) {
+      residual[i] += field.data[centre - half + i] * field.scale - mean[i];
     }
   }
-  return events;
+  closeEvent();
+  if (events < 2) return { error: new Float32Array(length), events };
+  const correction = events / (events - 1);
+  return {
+    error: Float32Array.from(squares, (s) => Math.sqrt(s * correction) / sorted.length),
+    events,
+  };
 }
 
 export function triggeredAverage(
@@ -268,33 +295,22 @@ export function triggeredAverage(
   );
 
   const means: Float32Array[] = [];
-  let error = new Float32Array(length);
-  const squares = new Float64Array(length);
   for (let contact = 0; contact < field.contacts; contact++) {
     const sum = new Float64Array(length);
     const row = contact * field.bins;
     for (const centre of picked) {
       const first = row + centre - half;
       for (let i = 0; i < length; i++) {
-        const v = field.data[first + i] * field.scale;
-        sum[i] += v;
-        if (contact === 0) squares[i] += v * v;
+        sum[i] += field.data[first + i] * field.scale;
       }
     }
     means.push(Float32Array.from(sum, (s) => (count > 0 ? s / count : 0)));
-    if (contact === 0 && count > 1) {
-      error = Float32Array.from(sum, (s, i) => {
-        const variance = (squares[i] - (s * s) / count) / (count - 1);
-        return Math.sqrt(Math.max(0, variance) / count);
-      });
-    }
   }
   return {
     lags: Float64Array.from({ length }, (_, i) => (i - half) * field.binMs),
     means,
-    error,
     triggers: picked.length,
-    events: separateEvents(picked, half),
+    ...errorOverEvents(field, picked, half, means[0]),
   };
 }
 

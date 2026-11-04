@@ -420,14 +420,16 @@ export function FieldPlot({
         onPointerUp={(e) => {
           if (!drag) return;
           setDrag(null);
-          if (Math.abs(drag.x1 - drag.x0) < DRAG_PX) {
+          // From the event, as the last move may not have been drawn yet.
+          const x1 = inPlot(localX(e));
+          if (Math.abs(x1 - drag.x0) < DRAG_PX) {
             onSeek(timeOf(drag.x0));
             const row = mode === 'map' ? rows[rowOf(localY(e))] : undefined;
             if (row) onContactClick(row.lead);
             return;
           }
-          const a = timeOf(Math.min(drag.x0, drag.x1));
-          const b = timeOf(Math.max(drag.x0, drag.x1));
+          const a = timeOf(Math.min(drag.x0, x1));
+          const b = timeOf(Math.max(drag.x0, x1));
           if (b - a >= (traceField ?? field).binMs * 2) onWindowChange([a, b]);
         }}
         onDoubleClick={() => onWindowChange(null)}
