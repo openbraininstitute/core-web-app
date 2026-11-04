@@ -79,6 +79,8 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
     cellColors: { palette: [], columnByCell: new Uint16Array(0) },
     hidden: [],
     locationCells: [],
+    locationFirstCell: 0,
+    locationNodeCount: 0,
     error: null,
     anchor: null,
     ...overrides,

@@ -1,7 +1,5 @@
-import { saveAs } from 'file-saver';
 import React from 'react';
 
-import { useCircuitViewerDebugMode } from '@/features/circuit-viewer/debug-mode';
 import { cellColorsOf, pointingOut } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { MorphologiesStatus } from '@/features/circuit-viewer/morphologies/load-status';
@@ -20,7 +18,6 @@ import { usePublishAnchor } from '@/features/scan-config/components/model-previe
 import { usePlacedScene } from '@/features/scan-config/components/model-preview/use-placed-scene';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 import { useBareViewer, useViewOverlay } from '@/features/viewer-3d/bare';
-import { Button } from '@/ui/molecules/button';
 import { cn } from '@/utils/css-class';
 
 import { useSomaRadius } from './hooks';
@@ -33,9 +30,6 @@ import type { Fallback } from '@/features/circuit-viewer/morphologies/engine/cre
 import type { CircuitRepresentation } from '@/features/scan-config/components/color-by/types';
 
 import styles from './large-circuit-preview.module.css';
-
-/** Somas per JSON part of the debug download (see its `handleDownload`). */
-const DOWNLOAD_CHUNK = 65_536;
 
 export interface LargeCircuitPreviewProps extends CircuitViewerHostProps, CircuitCellsHostProps {
   className?: string;
@@ -100,43 +94,25 @@ export function LargeCircuitPreview({
   spikes,
   onGlowAvailableChange,
   onEmptyClick,
+  debugTarget,
 }: LargeCircuitPreviewProps) {
-  const debugMode = useCircuitViewerDebugMode();
   const bare = useBareViewer();
   const speciesRadius = useSomaRadius(circuit);
   const somaRadius = speciesRadius * somaSizeScale;
   // Somas only: positions are all that is read, for every population at once,
   // and they are kept across selection changes, so selecting a population
   // recolours the somas in place and the camera stays where the user left it.
-  const { placed, download, subject, anchor, hidden, hasContext, error, somas, receded } =
-    usePlacedScene({
-      circuit,
-      population,
-      populations,
-      hiddenPopulations,
-      recededColor,
-      onPositionlessPopulationsChange,
-    });
+  const { placed, download, anchor, hidden, hasContext, error, somas, receded } = usePlacedScene({
+    circuit,
+    population,
+    populations,
+    hiddenPopulations,
+    recededColor,
+    onPositionlessPopulationsChange,
+  });
   const subjectName = population?.name;
 
   usePublishAnchor(anchor);
-  const handleDownload = () => {
-    if (!subject) return;
-    const { count, positions: coords } = subject;
-    // One JSON part per chunk of somas, concatenated by the Blob itself: no
-    // tuple object per node, and no single region-sized string on the main
-    // thread.
-    const parts: string[] = ['['];
-    for (let start = 0; start < count; start += DOWNLOAD_CHUNK) {
-      let part = '';
-      for (let node = start; node < Math.min(count, start + DOWNLOAD_CHUNK); node++) {
-        part += `${node === 0 ? '' : ','}[${coords[node * 3]},${coords[node * 3 + 1]},${coords[node * 3 + 2]}]`;
-      }
-      parts.push(part);
-    }
-    parts.push(']');
-    saveAs(new Blob(parts, { type: 'application/json' }), `${circuit.id}.json`);
-  };
 
   const handleCellClick = useCellClick(
     somas.populations,
@@ -239,14 +215,9 @@ export function LargeCircuitPreview({
           onZoomChange={onZoomChange}
           onLeftOut={setLeftOut}
           onFallback={setFallback}
+          debugTarget={debugTarget}
+          debugLoad={{ pack, load: morphologies.load, stopped: morphologies.stopped }}
         />
-      )}
-      {drawable && debugMode && subject && (
-        <div className="absolute left-0 top-0 z-3">
-          <Button onClick={handleDownload} className={styles.downloadButton}>
-            Download {subject.count} nodes
-          </Button>
-        </div>
       )}
       {!bare && (
         <MorphologiesStatus

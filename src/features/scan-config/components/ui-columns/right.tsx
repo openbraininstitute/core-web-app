@@ -21,11 +21,13 @@ import {
   useScanConfigSettingsPanel,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { useBlockTypeToConfigKey } from '@/features/scan-config/components/hooks/schema';
 import {
   RightPreviewModeDict,
   resolveHostNeuronOpacity,
   resolveRightPreviewMode,
 } from '@/features/scan-config/components/model-preview/helpers';
+import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
@@ -189,6 +191,7 @@ function CircuitModelPreviewPane({
   selectedRootElement,
   selectedEntry,
   onCreateEntry,
+  schema,
   defaultNeuronOpacity,
   viewerFeatures,
   locked,
@@ -197,6 +200,7 @@ function CircuitModelPreviewPane({
   entity: TSupportedEntitiesForScanConfiguration;
   config: Config;
   setConfig: RightProps['setConfig'];
+  schema: ConfigSchema;
   selectedRootElement: string;
   selectedEntry: string;
   onCreateEntry: (rootElement: string, block: Record<string, unknown>) => void;
@@ -209,6 +213,14 @@ function CircuitModelPreviewPane({
   // render; `config` already changes on each form edit, the rest rarely.
   //
   // Omitting `onConfigChange` while locked is what makes 3D editing read-only.
+  const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
+  const locationBlockTypes = useMemo(
+    () =>
+      Object.keys(blockTypeToConfigKey).filter(
+        (type) => blockTypeToConfigKey[type] === MORPHOLOGY_LOCATIONS_CONFIG_KEY
+      ),
+    [blockTypeToConfigKey]
+  );
   const form = useMemo(
     () => ({
       config,
@@ -216,8 +228,17 @@ function CircuitModelPreviewPane({
       selectedRootElement,
       selectedEntry,
       onCreateEntry: locked ? undefined : onCreateEntry,
+      locationBlockTypes,
     }),
-    [config, setConfig, selectedRootElement, selectedEntry, onCreateEntry, locked]
+    [
+      config,
+      setConfig,
+      selectedRootElement,
+      selectedEntry,
+      onCreateEntry,
+      locked,
+      locationBlockTypes,
+    ]
   );
 
   return (
@@ -381,6 +402,7 @@ export function Right({
           selectedRootElement={selectedRootElement}
           selectedEntry={selectedEntry}
           onCreateEntry={onCreateEntry}
+          schema={schema}
           defaultNeuronOpacity={defaultNeuronOpacity}
           viewerFeatures={viewerFeatures}
           locked={locked}

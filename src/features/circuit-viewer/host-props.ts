@@ -52,6 +52,8 @@ export interface CircuitViewerHostProps {
   onEmptyClick?: () => void;
   /** Told whether spiking cells can give off light, whenever that changes. */
   onGlowAvailableChange?: (available: boolean) => void;
+  /** Where the view puts its Debug menu; null or omitted, there is none and its code is not fetched. */
+  debugTarget?: HTMLElement | null;
 }
 
 /** The cells of a circuit both circuit hosts draw, and what is told of clicks on them. */

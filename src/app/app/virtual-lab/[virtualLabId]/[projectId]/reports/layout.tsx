@@ -15,7 +15,7 @@ export default async function Page({
         <div id="notebook-left-menu" className="w-full">
           <ConditionalLeftMenu className="w-full" />
         </div>
-        <div id="notebook-main-content" className="secondary-scrollbar w-full overflow-y-auto">
+        <div id="notebook-main-content" className="secondary-scrollbar w-full overflow-y-auto pr-3">
           {children}
         </div>
       </ReportsInnerLayout>
