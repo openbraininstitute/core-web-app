@@ -39,6 +39,9 @@ function activityFromSection(section: TWorkspaceSection): TActivityValue | null 
   if (section === WorkspaceSection.ProcessWorkflow) {
     return WorkflowActivityDictValue.process;
   }
+  if (section === WorkspaceSection.SpikeSortingWorkflow) {
+    return WorkflowActivityDictValue.spikeSorting;
+  }
   return null;
 }
 

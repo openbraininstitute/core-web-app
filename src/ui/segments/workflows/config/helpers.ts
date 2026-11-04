@@ -257,6 +257,7 @@ const sectionToActivity: Partial<Record<TWorkspaceSection, TActivityValue>> = {
   [WorkspaceSection.SimulateWorkflow]: WorkspaceSection.SimulateWorkflow,
   [WorkspaceSection.ExtractWorkflow]: WorkspaceSection.ExtractWorkflow,
   [WorkspaceSection.ProcessWorkflow]: WorkspaceSection.ProcessWorkflow,
+  [WorkspaceSection.SpikeSortingWorkflow]: WorkspaceSection.SpikeSortingWorkflow,
 };
 
 /**

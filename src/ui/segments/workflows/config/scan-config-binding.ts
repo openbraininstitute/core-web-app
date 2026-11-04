@@ -28,6 +28,11 @@ export const ScanConfigGeneratedApiPath = {
   IonChannelModelSimulation: 'ion-channel-model-simulation-scan-config-generate-grid',
   CircuitExtraction: 'circuit-extraction-scan-config-generate-grid',
   EFeatureExtraction: 'e-model-e-feature-extraction-scan-config-generate-grid',
+  AindEphysPreprocessing: 'ainde-phys-preprocessing-scan-config-generate-grid',
+  AindEphysSpikeSortingSpykingCircus2:
+    'ainde-phys-spike-sorting-spyking-circus-2-scan-config-generate-grid',
+  AindEphysSpikeSortingKilosort4: 'ainde-phys-spike-sorting-kilosort-4-scan-config-generate-grid',
+  AindEphysSpikeSortingLupin: 'ainde-phys-spike-sorting-lupin-scan-config-generate-grid',
   Skeletonization: 'skeletonization-scan-config-generate-grid',
   EMSynapseMapping: 'em-synapse-mapping-scan-config-generate-grid',
   CreateExtracellularRecordingArray:
@@ -198,6 +203,30 @@ export function extractEFeaturesConfigureBinding(): TScanConfigConfigureBinding 
     },
     generatedApiPath: ScanConfigGeneratedApiPath.EFeatureExtraction,
     schemaMappingKey: SchemaMappingKeyDict.ElectricalCellRecordings,
+  };
+}
+
+export function spikeSortingPreprocessingConfigureBinding(): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.ExtracellularRecording,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.ExtracellularRecording,
+    fromIdTypeByBrowseType: {
+      [ExtendedEntitiesTypeDict.ExtracellularRecording]:
+        ScanConfigFromIdType.ExtracellularRecordingFromID,
+    },
+    generatedApiPath: ScanConfigGeneratedApiPath.AindEphysPreprocessing,
+  };
+}
+
+export function spikeSortingSorterConfigureBinding(
+  generatedApiPath: string
+): TScanConfigConfigureBinding {
+  return {
+    browseType: ExtendedEntitiesTypeDict.AindEphysPreprocessingResult,
+    scanConfigEntityType: ExtendedEntitiesTypeDict.ExtracellularRecording,
+    // the input is a task result, picked in the editor: nothing to write under `initialize`
+    fromIdTypeByBrowseType: {},
+    generatedApiPath,
   };
 }
 

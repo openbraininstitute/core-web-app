@@ -227,6 +227,7 @@ const ModelIdentifierSelector = {
   [ExtendedEntitiesTypeDict.Circuit]: 'CircuitFromID',
   [ExtendedEntitiesTypeDict.UniversalCellMorphology]: 'CellMorphologyFromID',
   [ExtendedEntitiesTypeDict.ElectricalCellRecording]: 'ElectricalCellRecordingFromID',
+  [ExtendedEntitiesTypeDict.ExtracellularRecording]: 'ExtracellularRecordingFromID',
   [ExtendedEntitiesTypeDict.IonChannelRecording]: 'IonChannelRecordingFromID',
 };
 
@@ -238,7 +239,7 @@ export function unionVariantDefaults(variant: TBlock): Record<string, ConfigValu
   return defaults;
 }
 
-function buildInitialConfigState(
+export function buildInitialConfigState(
   schema: ConfigSchema,
   initialConfig: Config | undefined,
   model: TSupportedEntitiesForScanConfiguration | Nullish
@@ -303,6 +304,10 @@ function buildInitialConfigState(
               { type: EntityTypeDict.CellMorphology },
               () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.UniversalCellMorphology]
             )
+            .with(
+              { type: EntityTypeDict.ExtracellularRecording },
+              () => ModelIdentifierSelector[ExtendedEntitiesTypeDict.ExtracellularRecording]
+            )
             .otherwise(() => {
               throw new Error(`Unsupported entity type: ${model.type}`);
             });
@@ -353,11 +358,16 @@ function buildInitialConfigState(
       state[k] = initialConfigforKey;
     } else if (v.ui_element === ScanConfigUIElementDict.BlockUnion) {
       // a lone variant has nothing to pick, and an empty block carries no discriminator to parse
+      // a union declaring a default starts on it, rather than asking for a choice most leave alone
       const [onlyVariant, ...otherVariants] = v.oneOf;
-      state[k] =
-        isEmpty(initialConfigforKey) && onlyVariant && !otherVariants.length
-          ? unionVariantDefaults(onlyVariant)
-          : initialConfigforKey;
+      const declared = (v as { default?: Record<string, ConfigValue> }).default;
+      if (!isEmpty(initialConfigforKey)) {
+        state[k] = initialConfigforKey;
+      } else if (onlyVariant && !otherVariants.length) {
+        state[k] = unionVariantDefaults(onlyVariant);
+      } else {
+        state[k] = declared ?? initialConfigforKey;
+      }
     } else {
       const nestedState: Record<string, Record<string, ConfigValue>> = {};
 

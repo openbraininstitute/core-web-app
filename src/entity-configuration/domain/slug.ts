@@ -7,6 +7,9 @@ const ExperimentalEntitySlug = {
   ExperimentalSynapsesPerConnection: 'synapse-per-connection',
   EMCellMesh: 'em-cell-mesh',
   EFeatureExtractionResult: 'intracellular-efeature-extraction',
+  ExtracellularRecording: 'extracellular-recording',
+  AindEphysPreprocessingResult: 'extracellular-preprocessing-result',
+  AindEphysSpikeSortingResult: 'spike-sorting-result',
 } as const;
 
 export const ModelEntitySlug = {
@@ -50,6 +53,10 @@ const SimulationEntitySlug = {
 const ExtractionEntitySlug = {
   CircuitExtraction: 'circuit-extraction',
   EFeatureExtraction: 'intracellular-efeature-extraction',
+  AindEphysPreprocessing: 'extracellular-preprocessing',
+  AindEphysSpikeSortingSpykingCircus2: 'spike-sorting-spykingcircus2',
+  AindEphysSpikeSortingKilosort4: 'spike-sorting-kilosort4',
+  AindEphysSpikeSortingLupin: 'spike-sorting-lupin',
 } as const;
 
 const ProcessingEntitySlug = {

@@ -42,6 +42,10 @@ export const NotAllowedResultsActionEntityTypes: TExtendedEntitiesTypeDict[] = [
   ExtendedEntitiesTypeDict.IonChannelModelSimulation,
   ExtendedEntitiesTypeDict.SkeletonizationCampaign,
   ExtendedEntitiesTypeDict.EFeatureExtractionCampaign,
+  ExtendedEntitiesTypeDict.AindEphysPreprocessingCampaign,
+  ExtendedEntitiesTypeDict.AindEphysSpikeSortingSpykingCircus2Campaign,
+  ExtendedEntitiesTypeDict.AindEphysSpikeSortingKilosort4Campaign,
+  ExtendedEntitiesTypeDict.AindEphysSpikeSortingLupinCampaign,
 ];
 
 /** minimal row shape shared by workflow activity tables (campaigns, task configs) */

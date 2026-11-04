@@ -18,6 +18,7 @@ const WORKFLOW_PICKER_SECTIONS = new Set<TWorkspaceSection>([
   WorkspaceSection.SimulateWorkflow,
   WorkspaceSection.ExtractWorkflow,
   WorkspaceSection.ProcessWorkflow,
+  WorkspaceSection.SpikeSortingWorkflow,
 ]);
 
 const BLOCKED_LIFECYCLE_REASONS: Partial<Record<TEntityLifecycleStatus, string>> = {

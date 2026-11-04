@@ -32,6 +32,8 @@ const scanConfigFromIdTypeToEntityType = {
     ExtendedEntitiesTypeDict.SimulatableExtracellularRecordingArray,
   [ScanConfigFromIdType.ElectricalCellRecordingFromID]:
     ExtendedEntitiesTypeDict.ElectricalCellRecording,
+  [ScanConfigFromIdType.ExtracellularRecordingFromID]:
+    ExtendedEntitiesTypeDict.ExtracellularRecording,
   [ScanConfigFromIdType.IonChannelRecordingFromID]: ExtendedEntitiesTypeDict.IonChannelRecording,
 } as const satisfies Record<TScanConfigFromIdType, TExtendedEntitiesTypeDict>;
 

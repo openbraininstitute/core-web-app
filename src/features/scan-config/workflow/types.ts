@@ -59,6 +59,11 @@ export type TScanConfigEntitySource =
 export type TScanConfigCampaignSource = {
   searchParam?: string;
   resolve: TCampaignResolver;
+  /**
+   * for workflows sharing a task config type, whose lists hold each other's campaigns: a stored
+   * form whose `type` is another workflow's schema reopens in that workflow
+   */
+  formTypeNamesWorkflow?: boolean;
 };
 
 export type TWorkflowTaskTypeBindings = {

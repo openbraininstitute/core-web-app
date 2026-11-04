@@ -80,7 +80,8 @@ type TCase = {
 };
 
 const base = `/app/virtual-lab/${workspace.virtualLabId}/${workspace.projectId}/workflows`;
-const { build, simulate, extract, optimize, validate, process } = WorkflowActivityDictValue;
+const { build, simulate, extract, optimize, validate, process, spikeSorting } =
+  WorkflowActivityDictValue;
 
 const cases: TCase[] = [
   // source models: a new configure session, entity pre-selected ───
@@ -204,6 +205,16 @@ const cases: TCase[] = [
     },
     href: `${base}/simulate/configure/whole-brain-circuit-simulation/{session}?panel=configuration`,
     selects: { type: ExtendedEntitiesTypeDict.WholeBrain, id: ENTITY_ID },
+  },
+  {
+    name: 'extracellular recording → preprocessing',
+    fixture: { entity: { type: EntityTypeDict.ExtracellularRecording } },
+    covers: {
+      activity: spikeSorting,
+      targetType: ExtendedEntitiesTypeDict.AindEphysPreprocessingCampaign,
+    },
+    href: `${base}/spike-sorting/configure/aind-ephys-preprocessing-campaign/{session}`,
+    selects: { type: ExtendedEntitiesTypeDict.ExtracellularRecording, id: ENTITY_ID },
   },
   {
     name: 'EM cell mesh → skeletonization',
@@ -480,6 +491,10 @@ const cases: TCase[] = [
  */
 const UNREACHABLE_FROM_AN_ENTITY_ID: ReadonlySet<string> = new Set([
   `${build}/${ExtendedEntitiesTypeDict.SingleNeuronSynaptome}`,
+  // their input is a task result, picked in the editor
+  `${spikeSorting}/${ExtendedEntitiesTypeDict.AindEphysSpikeSortingSpykingCircus2Campaign}`,
+  `${spikeSorting}/${ExtendedEntitiesTypeDict.AindEphysSpikeSortingKilosort4Campaign}`,
+  `${spikeSorting}/${ExtendedEntitiesTypeDict.AindEphysSpikeSortingLupinCampaign}`,
 ]);
 
 function applyFixture(fixture: TFixture) {

@@ -241,6 +241,7 @@ export enum AssetStatus {
 }
 
 export enum AssetLabel {
+  task_result = 'task_result',
   brain_atlas_annotation = 'brain_atlas_annotation',
   brain_atlas_region_mesh = 'brain_atlas_region_mesh',
   campaign_generation_config = 'campaign_generation_config',

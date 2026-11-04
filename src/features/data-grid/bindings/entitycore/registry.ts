@@ -1,3 +1,7 @@
+import {
+  aindEphysPreprocessingResultGridDefinition,
+  aindEphysSpikeSortingResultGridDefinition,
+} from '@/features/data-grid/bindings/entitycore/schemas/aind-ephys-result';
 import { analysisNotebookResultGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-result';
 import { analysisNotebookTemplateGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/analysis-notebook-template';
 import { cellMorphologyGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/cell-morphology';
@@ -12,6 +16,7 @@ import { emodelValidationResultGridDefinition } from '@/features/data-grid/bindi
 import { experimentalBoutonDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-bouton-density';
 import { experimentalNeuronDensityGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-neuron-density';
 import { experimentalSynapsesPerConnectionGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/experimental-synapses-per-connection';
+import { extracellularRecordingGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/extracellular-recording';
 import { extracellularRecordingArrayGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/extracellular-recording-array';
 import { ionChannelModelGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-model';
 import { ionChannelRecordingGridDefinition } from '@/features/data-grid/bindings/entitycore/schemas/ion-channel-recording';
@@ -76,6 +81,9 @@ const definitions: Record<string, TAnyEntityGridDefinition> = {
   [analysisNotebookTemplateGridDefinition.dataType]: analysisNotebookTemplateGridDefinition,
   [analysisNotebookResultGridDefinition.dataType]: analysisNotebookResultGridDefinition,
   [efeatureExtractionResultGridDefinition.dataType]: efeatureExtractionResultGridDefinition,
+  [extracellularRecordingGridDefinition.dataType]: extracellularRecordingGridDefinition,
+  [aindEphysPreprocessingResultGridDefinition.dataType]: aindEphysPreprocessingResultGridDefinition,
+  [aindEphysSpikeSortingResultGridDefinition.dataType]: aindEphysSpikeSortingResultGridDefinition,
   [emodelValidationResultGridDefinition.dataType]: emodelValidationResultGridDefinition,
   [extracellularRecordingArrayGridDefinition.dataType]: extracellularRecordingArrayGridDefinition,
   [singleNeuronSimulationGridDefinition.dataType]: singleNeuronSimulationGridDefinition,

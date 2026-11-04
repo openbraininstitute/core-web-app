@@ -57,6 +57,7 @@ function ScanConfigWorkflowContextValueProvider({
 }: TScanConfigWorkflowPageProps & { entity: TResolvedScanConfigEntity }) {
   const campaign = useWorkflowCampaign({
     campaignSource: definition.campaign,
+    scanConfig,
     workspace,
     searchParams,
   });

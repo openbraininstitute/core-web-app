@@ -7,6 +7,7 @@ import { match } from 'ts-pattern';
 import { getCellMorphology, getEmCellMesh, getMEModel } from '@/api/entitycore/queries';
 import { downloadAsset } from '@/api/entitycore/queries/assets';
 import { getElectricalCellRecording } from '@/api/entitycore/queries/experimental/electrical-cell-recording';
+import { getExtracellularRecording } from '@/api/entitycore/queries/experimental/extracellular-recording';
 import { getIonChannelRecording } from '@/api/entitycore/queries/experimental/ion-channel-recording';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getCircuit } from '@/api/entitycore/queries/model/circuit';
@@ -33,6 +34,7 @@ import type {
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEMCellMesh } from '@/api/entitycore/types/entities/em-cell-mesh';
 import type { IExecutionActivity } from '@/api/entitycore/types/entities/execution';
+import type { IExtracellularRecording } from '@/api/entitycore/types/entities/extracellular-recording';
 import type { IonChannelModel } from '@/api/entitycore/types/entities/ion-channel';
 import type { ISimulation } from '@/api/entitycore/types/entities/simulation';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
@@ -246,6 +248,7 @@ export function useModelQuery({
     | IEMCellMesh
     | ICellMorphology
     | IElectricalCellRecording
+    | IExtracellularRecording
     | IIonChannelRecording,
     Error,
     | ICircuit
@@ -254,6 +257,7 @@ export function useModelQuery({
     | IEMCellMesh
     | ICellMorphology
     | IElectricalCellRecording
+    | IExtracellularRecording
     | IIonChannelRecording
   >({
     // @ts-expect-error this query won't start without the id
@@ -273,6 +277,8 @@ export function useModelQuery({
           .with(EntityTypeDict.CellMorphology, () => getCellMorphology(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.ElectricalCellRecording, () => getElectricalCellRecording(params))
+          // @ts-expect-error this query won't start without the id
+          .with(EntityTypeDict.ExtracellularRecording, () => getExtracellularRecording(params))
           // @ts-expect-error this query won't start without the id
           .with(EntityTypeDict.IonChannelRecording, () => getIonChannelRecording(params))
           .otherwise((entityType) => {

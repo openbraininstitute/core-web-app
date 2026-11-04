@@ -49,6 +49,7 @@ export const WorkflowActivityDictValue = {
   optimize: 'optimize',
   validate: 'validate',
   process: 'process',
+  spikeSorting: 'spike-sorting',
 } as const;
 
 export const WorkspaceSection = {
@@ -62,6 +63,7 @@ export const WorkspaceSection = {
   ProcessWorkflow: WorkflowActivityDictValue.process,
   OptimizeWorkflow: WorkflowActivityDictValue.optimize,
   ValidateWorkflow: WorkflowActivityDictValue.validate,
+  SpikeSortingWorkflow: WorkflowActivityDictValue.spikeSorting,
 } as const;
 
 export type TWorkspaceSection = (typeof WorkspaceSection)[keyof typeof WorkspaceSection];

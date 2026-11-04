@@ -32,6 +32,8 @@ function scanConfigActivityToWorkspaceSection(activity: TScanConfigActivity): TW
       return WorkspaceSection.OptimizeWorkflow;
     case ScanConfigActivity.Validate:
       return WorkspaceSection.ValidateWorkflow;
+    case ScanConfigActivity.SpikeSorting:
+      return WorkspaceSection.SpikeSortingWorkflow;
     default:
       return WorkspaceSection.GeneralWorkflow;
   }

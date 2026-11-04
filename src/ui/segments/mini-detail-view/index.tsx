@@ -351,6 +351,7 @@ export function MiniDetailViewRenderer<T extends EntityCoreObjectTypes>({
           WorkspaceSection.SimulateWorkflow,
           WorkspaceSection.ExtractWorkflow,
           WorkspaceSection.ProcessWorkflow,
+          WorkspaceSection.SpikeSortingWorkflow,
           // only reached from Optimize's and Validate's scan-config pickers, which hide "Use model"
           WorkspaceSection.OptimizeWorkflow,
           WorkspaceSection.ValidateWorkflow

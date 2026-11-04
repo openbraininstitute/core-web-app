@@ -1,4 +1,8 @@
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import {
+  viewDefForAindEphysPreprocessingResult,
+  viewDefForAindEphysSpikeSortingResult,
+} from '@/entity-configuration/definitions/view-defs/experimental/aind-ephys-result';
 import { viewDefForCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/cell-morphology';
 import { viewDefForEFeatureExtractionResult } from '@/entity-configuration/definitions/view-defs/experimental/efeature-extraction-result';
 import { viewDefForElectricalCellRecording } from '@/entity-configuration/definitions/view-defs/experimental/electrical-cell-recording';
@@ -6,6 +10,7 @@ import { viewDefForEMCellMesh } from '@/entity-configuration/definitions/view-de
 import { viewDefForExperimentalBoutonDensity } from '@/entity-configuration/definitions/view-defs/experimental/experimental-bouton-density';
 import { viewDefForExperimentalNeuronDensity } from '@/entity-configuration/definitions/view-defs/experimental/experimental-neuron-density';
 import { viewDefForExperimentalSynapsesPerConnection } from '@/entity-configuration/definitions/view-defs/experimental/experimental-synapses-per-connection';
+import { viewDefForExtracellularRecording } from '@/entity-configuration/definitions/view-defs/experimental/extracellular-recording';
 import { viewDefForIonChannelRecording } from '@/entity-configuration/definitions/view-defs/experimental/ion-channel-recording';
 import { viewDefForUniversalCellMorphology } from '@/entity-configuration/definitions/view-defs/experimental/universal-cell-morphology';
 
@@ -22,4 +27,7 @@ export const ViewsDefinition: { [key: string]: ViewDefinitionConfig } = {
     viewDefForExperimentalSynapsesPerConnection,
   [ExtendedEntitiesTypeDict.EMCellMesh]: viewDefForEMCellMesh,
   [ExtendedEntitiesTypeDict.EFeatureExtractionResult]: viewDefForEFeatureExtractionResult,
+  [ExtendedEntitiesTypeDict.ExtracellularRecording]: viewDefForExtracellularRecording,
+  [ExtendedEntitiesTypeDict.AindEphysPreprocessingResult]: viewDefForAindEphysPreprocessingResult,
+  [ExtendedEntitiesTypeDict.AindEphysSpikeSortingResult]: viewDefForAindEphysSpikeSortingResult,
 };

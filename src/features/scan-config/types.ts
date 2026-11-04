@@ -45,6 +45,7 @@ export const ScanConfigActivity = {
   Build: 'build',
   Optimize: 'optimize',
   Validate: 'validate',
+  SpikeSorting: 'spike-sorting',
 } as const;
 
 export type TScanConfigActivity = (typeof ScanConfigActivity)[keyof typeof ScanConfigActivity];
@@ -86,13 +87,19 @@ export type TValidateScanConfigTabs = {
   __activity: 'validate';
 };
 
+export type TSpikeSortingScanConfigTabs = {
+  id: keyof typeof SpikeSortingScanConfigTabs;
+  __activity: 'spike-sorting';
+};
+
 export type TScanConfigTabs =
   | Prettify<TSimulateScanConfigTabs>
   | Prettify<TExtractScanConfigTabs>
   | Prettify<TProcessScanConfigTabs>
   | Prettify<TBuildScanConfigTabs>
   | Prettify<TOptimizeScanConfigTabs>
-  | Prettify<TValidateScanConfigTabs>;
+  | Prettify<TValidateScanConfigTabs>
+  | Prettify<TSpikeSortingScanConfigTabs>;
 
 export const SimulateScanConfigTabs = {
   ...BaseScanConfigTabs,
@@ -119,6 +126,11 @@ export const ValidateScanConfigTabs = {
   validations: 'validations',
 } as const;
 
+export const SpikeSortingScanConfigTabs = {
+  ...BaseScanConfigTabs,
+  results: 'results',
+} as const;
+
 export const ScanConfigTabs = {
   [ScanConfigActivity.Simulate]: SimulateScanConfigTabs,
   [ScanConfigActivity.Extract]: ExtractScanConfigTabs,
@@ -126,6 +138,7 @@ export const ScanConfigTabs = {
   [ScanConfigActivity.Build]: BuildScanConfigTabs,
   [ScanConfigActivity.Optimize]: OptimizeScanConfigTabs,
   [ScanConfigActivity.Validate]: ValidateScanConfigTabs,
+  [ScanConfigActivity.SpikeSorting]: SpikeSortingScanConfigTabs,
 } as const;
 
 export const ScanConfigDefaultTab = {
@@ -147,6 +160,10 @@ export const SchemaNameDict = {
   // extraction
   CircuitExtractionScanConfig: 'CircuitExtractionScanConfig',
   EModelEFeatureExtractionScanConfig: 'EModelEFeatureExtractionScanConfig',
+  AINDEPhysPreprocessingScanConfig: 'AINDEPhysPreprocessingScanConfig',
+  AINDEPhysSpikeSortingSpykingCircus2ScanConfig: 'AINDEPhysSpikeSortingSpykingCircus2ScanConfig',
+  AINDEPhysSpikeSortingKilosort4ScanConfig: 'AINDEPhysSpikeSortingKilosort4ScanConfig',
+  AINDEPhysSpikeSortingLupinScanConfig: 'AINDEPhysSpikeSortingLupinScanConfig',
   // build
   EMSynapseMappingScanConfig: 'EMSynapseMappingScanConfig',
   ExtracellularRecordingArrayScanConfig: 'CreateExtracellularRecordingArrayScanConfig',
@@ -207,6 +224,9 @@ export const ScanConfigUIElementDict = {
   NeuronSetCombination: 'neuron_set_combination',
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
   FloatOptional: 'float_optional',
+  IntOptional: 'int_optional',
+  IntListOptional: 'int_list_optional',
+  JsonObject: 'json_object',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
   PerNeuronMorphologyLocationSelection: 'per_neuron_morphology_location_selection',
@@ -566,6 +586,21 @@ export interface StringListInput extends TBlockElement {
 }
 
 /** Nullable list of strings (`anyOf: [{ array of string }, { null }]`); `null` means unset. */
+export interface IntOptional extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IntOptional;
+  anyOf: [{ type: 'integer'; minimum?: number; maximum?: number }, { type: 'null' }];
+}
+
+export interface IntListOptional extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.IntListOptional;
+  anyOf: [{ type: 'array'; items: { type: 'integer' } }, { type: 'null' }];
+}
+
+export interface JsonObject extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.JsonObject;
+  type: 'object';
+}
+
 export interface StringListOptional extends TBlockElement {
   ui_element: typeof ScanConfigUIElementDict.StringListOptional;
   anyOf: [{ type: 'array'; items: { type: 'string' } }, { type: 'null' }];
@@ -765,6 +800,9 @@ export type ParamSchema =
   | FloatParameterSweep
   | IntParameterSweep
   | FloatOptional
+  | IntOptional
+  | IntListOptional
+  | JsonObject
   | TSelectEFeaturesByProtocol
   | TIonChannelModelProperties
   | Reference
@@ -854,6 +892,7 @@ export const ActivityCustomFileRenderer = {
   Default: 'default',
   TaskConfigurationViewer: 'task-configuration-viewer',
   TaskLogsViewer: 'task-logs-viewer',
+  RecordingTraces: 'recording-traces',
 } as const;
 
 export type TActivityCustomFileRenderer =
@@ -890,11 +929,16 @@ export type TEntityMiniDetailFile = TActivityCustomFileBase & {
   dataType: TExtendedEntitiesTypeDict;
 };
 
-export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile;
+/** A row that stands for a preprocessing result's traces, read from the folder it holds. */
+export type TRecordingTracesFile = TActivityCustomFileBase & {
+  renderer: typeof ActivityCustomFileRenderer.RecordingTraces;
+};
+
+export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile | TRecordingTracesFile;
 
 /** True for a row backed by a file asset; false for an entity mini-detail row. */
 export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {
-  return file.renderer !== ActivityCustomFileRenderer.MiniDetailView && 'asset' in file;
+  return 'asset' in file;
 }
 
 const Point3DSchema = z.tuple([z.number(), z.number(), z.number()]);
@@ -948,6 +992,7 @@ export type TSupportedEntityTypesForScanConfiguration =
   | typeof ExtendedEntitiesTypeDict.CellMorphology
   | typeof ExtendedEntitiesTypeDict.UniversalCellMorphology
   | typeof ExtendedEntitiesTypeDict.ElectricalCellRecording
+  | typeof ExtendedEntitiesTypeDict.ExtracellularRecording
   | typeof ExtendedEntitiesTypeDict.Emodel
   | typeof ExtendedEntitiesTypeDict.IonChannelRecording
   | typeof ExtendedEntitiesTypeDict.WholeBrain;

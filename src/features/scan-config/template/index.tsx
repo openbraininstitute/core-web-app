@@ -45,8 +45,10 @@ import { cn } from '@/utils/css-class';
 import type { ScanConfigTemplateProps } from '@/features/scan-config/template/types';
 import type { ScanConfigTemplateState } from '@/features/scan-config/template/use-scan-config-template';
 
-/** Optimize and Validate share one results tab; this is the only thing that differs. */
+/** Activities sharing a results tab differ only in this. */
 const TASK_NOUN = {
+  [ScanConfigActivity.Extract]: { singular: 'extraction', plural: 'extractions' },
+  [ScanConfigActivity.SpikeSorting]: { singular: 'spike sorting', plural: 'spike sortings' },
   [ScanConfigActivity.Optimize]: { singular: 'optimization', plural: 'optimizations' },
   [ScanConfigActivity.Validate]: { singular: 'validation', plural: 'validations' },
 } as const satisfies Record<string, TTaskNoun>;
@@ -203,7 +205,7 @@ function ScanConfigResults({
         />
       </Suspense>
     ))
-    .with(ScanConfigActivity.Extract, () =>
+    .with(P.union(ScanConfigActivity.Extract, ScanConfigActivity.SpikeSorting), (activity) =>
       props.taskTypeBindings ? (
         <Suspense>
           <ExtractionTab
@@ -211,6 +213,7 @@ function ScanConfigResults({
             campaignOriginAction={props.campaignOriginAction}
             campaignId={state.campaignId}
             taskTypeBindings={props.taskTypeBindings}
+            noun={TASK_NOUN[activity]}
           />
         </Suspense>
       ) : null

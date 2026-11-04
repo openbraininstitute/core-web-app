@@ -60,6 +60,8 @@ export function dataBrowseListingUsesBrainRegionHierarchy(extendedType: TExtende
   // entities it was derived from -- so constraining the query by the hierarchy finds nothing
   if (
     extendedType === ExtendedEntitiesTypeDict.EFeatureExtractionResult ||
+    extendedType === ExtendedEntitiesTypeDict.AindEphysPreprocessingResult ||
+    extendedType === ExtendedEntitiesTypeDict.AindEphysSpikeSortingResult ||
     extendedType === ExtendedEntitiesTypeDict.EModelOptimizationCampaign ||
     extendedType === ExtendedEntitiesTypeDict.EModelValidationResult
   ) {

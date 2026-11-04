@@ -23,7 +23,10 @@ export function FloatOptional({
   exclusiveMax,
   onChange,
   disabled,
+  integer = false,
 }: {
+  /** Whole numbers only: the element is then `int_optional`. */
+  integer?: boolean;
   value: number | null;
   min: number | undefined;
   max: number | undefined;
@@ -49,11 +52,14 @@ export function FloatOptional({
   return (
     <div
       className="relative"
-      data-scan-config-block-element={ScanConfigUIElementDict.FloatOptional}
+      data-scan-config-block-element={
+        integer ? ScanConfigUIElementDict.IntOptional : ScanConfigUIElementDict.FloatOptional
+      }
     >
       <InputNumber
         data-testid="scan-config-optional-value"
         controls={false}
+        precision={integer ? 0 : undefined}
         disabled={disabled}
         status={errorMessage ? 'error' : undefined}
         value={value}

@@ -14,6 +14,7 @@ import {
   type SchemaName,
   SchemaNameDict,
   SimulateScanConfigTabs,
+  SpikeSortingScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   ValidateScanConfigTabs,
@@ -160,6 +161,10 @@ export const ScanConfigResultsTab = {
     id: ValidateScanConfigTabs.validations,
     __activity: ScanConfigActivity.Validate,
   },
+  [ScanConfigActivity.SpikeSorting]: {
+    id: SpikeSortingScanConfigTabs.results,
+    __activity: ScanConfigActivity.SpikeSorting,
+  },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 
 /** each activity's configuration tab — the editor's landing tab. */
@@ -187,6 +192,10 @@ export const ScanConfigConfigurationTab = {
   [ScanConfigActivity.Validate]: {
     id: ValidateScanConfigTabs.configuration,
     __activity: ScanConfigActivity.Validate,
+  },
+  [ScanConfigActivity.SpikeSorting]: {
+    id: SpikeSortingScanConfigTabs.configuration,
+    __activity: ScanConfigActivity.SpikeSorting,
   },
 } as const satisfies Record<TScanConfigActivity, TScanConfigTabs>;
 

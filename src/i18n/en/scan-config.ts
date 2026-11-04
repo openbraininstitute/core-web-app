@@ -21,6 +21,16 @@ export const messages: Record<TScanConfigActivity, Record<string, string>> = {
     InsufficientCreditsNonAdmin:
       "You don't have enough credits to launch such extraction. Please contact your administrator",
   },
+  [ScanConfigActivity.SpikeSorting]: {
+    CoordinateCountFailed: 'An error occurred generating the spike sorting campaign coordinates',
+    ScanConfigGenerateGridFailed: 'An error occurred generating the spike sorting campaign',
+    ScanConfigGenerateGridCampaignIdFailed: 'An error occurred updating the spike sorting',
+    Generate: 'Generate spike sorting(s)',
+    New: 'New spike sorting campaign',
+    GenerateNewCampaign: 'Generate new spike sorting campaign',
+    InsufficientCreditsNonAdmin:
+      "You don't have enough credits to launch such spike sorting. Please contact your administrator",
+  },
   [ScanConfigActivity.Process]: {
     CoordinateCountFailed: 'An error occurred generating the skeletonization campaign coordinates',
     ScanConfigGenerateGridFailed: 'An error occurred generating the skeletonization campaign',

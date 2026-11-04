@@ -28,6 +28,7 @@ const LOW_CREDITS_SUBJECT: Record<TScanConfigActivity, string> = {
   [ScanConfigActivity.Build]: 'build the model',
   [ScanConfigActivity.Optimize]: 'run the optimization',
   [ScanConfigActivity.Validate]: 'run the validation',
+  [ScanConfigActivity.SpikeSorting]: 'run the spike sorting',
 };
 
 const FAILURE_MESSAGE_KEY: Record<string, string> = {

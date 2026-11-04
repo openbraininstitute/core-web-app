@@ -6,6 +6,7 @@ import { ExtractionWorkflows } from './extract';
 import { OptimizeWorkflows } from './optimize';
 import { ProcessingWorkflows } from './process';
 import { SimulateWorkflows } from './simulate';
+import { SpikeSortingWorkflows } from './spike-sorting';
 import { ValidationWorkflows } from './validate';
 
 import type { TActivityEntry, TActivityValue } from '../types';
@@ -66,6 +67,14 @@ export const ActivityRegistry: Record<TActivityValue, TActivityEntry> = {
     disabled: false,
     workflows: ProcessingWorkflows,
   },
+  [WorkflowActivityDictValue.spikeSorting]: {
+    value: WorkflowActivityDictValue.spikeSorting,
+    label: 'Spike sorting',
+    name: 'Spike sorting',
+    order: 7,
+    disabled: false,
+    workflows: SpikeSortingWorkflows,
+  },
 };
 
 /**
@@ -80,4 +89,5 @@ export const ActivityValues = {
   Optimize: WorkflowActivityDictValue.optimize,
   Validate: WorkflowActivityDictValue.validate,
   'Process Data': WorkflowActivityDictValue.process,
+  'Spike Sorting': WorkflowActivityDictValue.spikeSorting,
 } as const;

@@ -3,6 +3,7 @@ export * from './experimental/bouton-density';
 export * from './experimental/cell-morphology';
 export * from './experimental/electrical-cell-recording';
 export * from './experimental/em-cell-mesh';
+export * from './experimental/extracellular-recording';
 export * from './experimental/ion-channel-recording';
 export * from './experimental/neuron-density';
 export * from './experimental/synapses-per-connection';

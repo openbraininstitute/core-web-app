@@ -17,6 +17,7 @@ import {
   ScanConfigActivity,
   ScanConfigTabs,
   SimulateScanConfigTabs,
+  type SpikeSortingScanConfigTabs,
   type TScanConfigActivity,
   type TScanConfigTabs,
   ValidateScanConfigTabs,
@@ -73,6 +74,11 @@ export function toScanConfigTab(activity: TScanConfigActivity, id: string): TSca
       return {
         __activity: ScanConfigActivity.Validate,
         id: id as keyof typeof ValidateScanConfigTabs,
+      };
+    case ScanConfigActivity.SpikeSorting:
+      return {
+        __activity: ScanConfigActivity.SpikeSorting,
+        id: id as keyof typeof SpikeSortingScanConfigTabs,
       };
     default:
       return {

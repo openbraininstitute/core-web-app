@@ -21,6 +21,10 @@ export * from '@/entity-configuration/definitions/list-expanded-view-defs/types'
 export const listExpandedViewRegistry: ListExpandedViewRegistry = {
   [ExtendedEntitiesTypeDict.CircuitExtractionCampaign]: TaskViewConfig,
   [ExtendedEntitiesTypeDict.EFeatureExtractionCampaign]: TaskViewConfig,
+  [ExtendedEntitiesTypeDict.AindEphysPreprocessingCampaign]: TaskViewConfig,
+  [ExtendedEntitiesTypeDict.AindEphysSpikeSortingSpykingCircus2Campaign]: TaskViewConfig,
+  [ExtendedEntitiesTypeDict.AindEphysSpikeSortingKilosort4Campaign]: TaskViewConfig,
+  [ExtendedEntitiesTypeDict.AindEphysSpikeSortingLupinCampaign]: TaskViewConfig,
   [ExtendedEntitiesTypeDict.MemodelCircuitSimulation]: memodelCircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.MicrocircuitSimulation]: microcircuitSimulationExpandedViewConfig,
   [ExtendedEntitiesTypeDict.PairedNeuronCircuitSimulation]:

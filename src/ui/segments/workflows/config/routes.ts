@@ -45,6 +45,22 @@ function toWorkflowRouteTypeSegment(targetType: TExtendedEntitiesTypeDict) {
   return makePathParamUrlFromExtendedType({ extendedType: targetType }).pathParam;
 }
 
+/** the same configure page, in another workflow */
+export function swapWorkflowInConfigurePath({
+  pathname,
+  from,
+  to,
+}: {
+  pathname: string;
+  from: TExtendedEntitiesTypeDict;
+  to: TExtendedEntitiesTypeDict;
+}): string {
+  return pathname.replace(
+    `/configure/${toWorkflowRouteTypeSegment(from)}/`,
+    `/configure/${toWorkflowRouteTypeSegment(to)}/`
+  );
+}
+
 function workflowWorkspaceBasePath(workspace: WorkspaceContext) {
   return `${config.ROOT_ROUTE}/${workspace.virtualLabId}/${workspace.projectId}/workflows`;
 }

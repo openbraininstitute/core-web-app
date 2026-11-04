@@ -1,14 +1,25 @@
 import { AnalysisNotebookResult } from '@/entity-configuration/domain/analysis-notebook-result';
 import { AnalysisNotebookTemplate } from '@/entity-configuration/domain/analysis-notebook-template';
+import {
+  AindEphysPreprocessingResult,
+  AindEphysSpikeSortingResult,
+} from '@/entity-configuration/domain/experimental/aind-ephys-result';
 import { BoutonDensity } from '@/entity-configuration/domain/experimental/bouton-density';
 import { CellMorphology } from '@/entity-configuration/domain/experimental/cell-morphology';
 import { EFeatureExtractionResult } from '@/entity-configuration/domain/experimental/efeature-extraction-result';
 import { ElectricalCellRecording } from '@/entity-configuration/domain/experimental/electrical-cell-recording';
 import { EmCellMesh } from '@/entity-configuration/domain/experimental/em-cell-mesh';
+import { ExtracellularRecording } from '@/entity-configuration/domain/experimental/extracellular-recording';
 import { IonChannelRecording } from '@/entity-configuration/domain/experimental/ion-channel-recording';
 import { NeuronDensity } from '@/entity-configuration/domain/experimental/neuron-density';
 import { SynapsesPerConnection } from '@/entity-configuration/domain/experimental/synapses-per-connection';
 import { UniversalCellMorphology } from '@/entity-configuration/domain/experimental/universal-cell-morphology';
+import {
+  AindEphysPreprocessingCampaign,
+  AindEphysSpikeSortingKilosort4Campaign,
+  AindEphysSpikeSortingLupinCampaign,
+  AindEphysSpikeSortingSpykingCircus2Campaign,
+} from '@/entity-configuration/domain/extraction/aind-ephys-campaign';
 import { EFeatureExtractionCampaign } from '@/entity-configuration/domain/extraction/efeature-extraction-campaign';
 import { CircuitExtractionCampaign } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import { BrainRegion } from '@/entity-configuration/domain/model/brain-region';
@@ -65,6 +76,9 @@ export const EntityCoreExperimentalConfiguration = {
   SynapsesPerConnection,
   EmCellMesh,
   EFeatureExtractionResult,
+  ExtracellularRecording,
+  AindEphysPreprocessingResult,
+  AindEphysSpikeSortingResult,
 } as const;
 
 export const EntityCoreModelConfiguration = {
@@ -109,6 +123,10 @@ const EntityCoreSimulationConfiguration = {
 const EntityCoreExtractionConfiguration = {
   CircuitExtractionCampaign,
   EFeatureExtractionCampaign,
+  AindEphysPreprocessingCampaign,
+  AindEphysSpikeSortingSpykingCircus2Campaign,
+  AindEphysSpikeSortingKilosort4Campaign,
+  AindEphysSpikeSortingLupinCampaign,
 };
 
 const EntityCoreProcessingConfiguration = {

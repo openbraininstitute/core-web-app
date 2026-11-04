@@ -1,6 +1,10 @@
 export const ObiOneTaskTypeDict = {
   CircuitExtraction: 'circuit_extraction',
   EFeatureExtraction: 'efeature_extraction',
+  AindEphysPreprocessing: 'aind_ephys_preprocessing',
+  AindEphysSpikeSortingSpykingCircus2: 'aind_ephys_spikesorting_spykingcircus2',
+  AindEphysSpikeSortingKilosort4: 'aind_ephys_spikesorting_kilosort4',
+  AindEphysSpikeSortingLupin: 'aind_ephys_spikesorting_lupin',
   CircuitSimulation: 'circuit_simulation',
   CircuitSimulationBrian2: 'circuit_simulation_brian2_machine',
   Skeletonization: 'morphology_skeletonization',
