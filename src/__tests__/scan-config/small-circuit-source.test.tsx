@@ -98,6 +98,8 @@ type TProps = {
   populations?: NodePopulation[];
   hiddenPopulations?: string[];
   recededColor?: string;
+  shownCells?: Uint8Array;
+  highlightedCell?: number;
 };
 
 function render(
@@ -220,6 +222,28 @@ describe('useSmallCircuitSource', () => {
     );
     const { result } = render([DEFAULT, OTHER]);
     expect(result.current.locationCells).toEqual([0, 2]);
+  });
+
+  // OBI-One places a per-neuron row's node id on the circuit's one biophysical population, whichever is on show.
+  it('keeps locations on the biophysical population while another is on show', () => {
+    placed([INPUTS, placement([10, 0, 0])], [DEFAULT, placement([0, 0, 0, 1, 0, 0], ['a', 'b'])]);
+    const { result } = render([INPUTS, DEFAULT], INPUTS);
+    expect(result.current.locationCells).toEqual([1, 2]);
+    expect(result.current.locationFirstCell).toBe(1);
+    expect(result.current.locationNodeCount).toBe(2);
+  });
+
+  it('leaves out cells the nodes table filters, but not one a hovered row points out', () => {
+    placed([DEFAULT, placement([0, 0, 0, 1, 0, 0, 2, 0, 0], ['a', 'b', 'c'])]);
+    const { result, rerender } = render([DEFAULT]);
+    const shownCells = Uint8Array.of(1, 0, 1);
+    rerender({ population: DEFAULT, populations: [DEFAULT], shownCells });
+    const cells = result.current.locationCells;
+    expect(cells).toEqual([0, 2]);
+
+    rerender({ population: DEFAULT, populations: [DEFAULT], shownCells, highlightedCell: 2 });
+    // The same array: a hover must not rebuild the markers.
+    expect(result.current.locationCells).toBe(cells);
   });
 
   it('draws nothing until every population is placed', () => {
