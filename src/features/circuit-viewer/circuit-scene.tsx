@@ -41,9 +41,9 @@ import {
   hasAnyLocation,
   hasGeneratedBlock,
   type IFormBindingOptions,
+  isStoredLocationsBlockOpen,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
-  supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
@@ -289,7 +289,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockTypes,
+    singleMorphology,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -448,19 +449,20 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
     !largeCircuit &&
-    (supportsMorphologyLocationPicking({
+    (isStoredLocationsBlockOpen({
       config: scanConfig,
       selectedRootElement,
       selectedEntry,
     }) ||
       hasAnyLocation(scanConfig) ||
       // The flag that turns the preview on, so the controls show only with generated markers.
-      (Boolean(supportsExplicitLocations) && hasGeneratedBlock(scanConfig)));
+      (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -778,7 +780,8 @@ export function CircuitScene({
         selectedRootElement,
         selectedEntry,
         onCreateEntry,
-        supportsExplicitLocations,
+        explicitLocationsBlockTypes,
+        singleMorphology,
         markerRadius: config.morphologyLocationRadius,
         showLabels: config.showMorphologyLocationLabels,
       },
@@ -792,7 +795,8 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
     ]

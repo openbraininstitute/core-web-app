@@ -1,8 +1,15 @@
+import { match, P } from 'ts-pattern';
+
 import { EntityTypeDict } from '@/api/entitycore/types';
 import {
   CircuitScaleDictionary,
   type TCircuitScaleDictionary,
 } from '@/api/entitycore/types/entities/circuit';
+import {
+  EXPLICIT_BLOCK_TYPE,
+  PER_NEURON_EXPLICIT_BLOCK_TYPE,
+  type TExplicitLocationsBlockType,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
 /**
  * Compose the electrode-overlays kill-switch for {@link CircuitPreview}.
@@ -51,14 +58,43 @@ export function resolveEnableCellHover(options: {
   return options.scale !== CircuitScaleDictionary.Single;
 }
 
-/**
- * Whether explicit morphology locations may be picked on this model.
- */
-export function resolveEnableMorphologyLocations(model: {
+/** Whether the model is one morphology: an MEModel, or a single-neuron circuit. */
+export function resolveSingleMorphology(model: {
   type?: string;
   scale?: TCircuitScaleDictionary;
 }): boolean {
   if (model.type === EntityTypeDict.Memodel) return true;
-  if (model.type !== EntityTypeDict.Circuit) return false;
-  return model.scale === CircuitScaleDictionary.Single;
+  return model.type === EntityTypeDict.Circuit && model.scale === CircuitScaleDictionary.Single;
+}
+
+/**
+ * The blocks a 3D pick may fill with morphology locations on this model, the one a new block
+ * takes first; empty when none.
+ *
+ * The model says which blocks a pick can fill: an MEModel has no node ids, so only the plain
+ * explicit block; a single-neuron circuit fills either; a circuit drawing several neurons only
+ * the per-neuron block, since a bare section id means a different branch on every morphology.
+ * The schema says which of those the workflow takes, so a block the backend would reject is
+ * never created.
+ */
+export function resolveExplicitLocationsBlockTypes(
+  model: { type?: string; scale?: TCircuitScaleDictionary },
+  acceptedBlockTypes: readonly string[]
+): TExplicitLocationsBlockType[] {
+  const candidates = match(model)
+    .returnType<TExplicitLocationsBlockType[]>()
+    .with({ type: EntityTypeDict.Memodel }, () => [EXPLICIT_BLOCK_TYPE])
+    .with({ type: EntityTypeDict.Circuit, scale: CircuitScaleDictionary.Single }, () => [
+      EXPLICIT_BLOCK_TYPE,
+      PER_NEURON_EXPLICIT_BLOCK_TYPE,
+    ])
+    .with(
+      {
+        type: EntityTypeDict.Circuit,
+        scale: P.union(CircuitScaleDictionary.PairNeuron, CircuitScaleDictionary.SmallMicrocircuit),
+      },
+      () => [PER_NEURON_EXPLICIT_BLOCK_TYPE]
+    )
+    .otherwise(() => []);
+  return candidates.filter((type) => acceptedBlockTypes.includes(type));
 }

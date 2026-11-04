@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useSetAtom } from 'jotai';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { populationRanges } from '@/features/circuit-viewer/morphologies/cell-colors';
@@ -12,7 +13,8 @@ import { DEFAULT_ELECTRODE_RADIUS } from '@/features/scan-config/components/colo
 import { useMorphologyLocationPreviews } from '@/features/scan-config/components/hooks/use-morphology-location-previews';
 import { usePublishAnchor } from '@/features/scan-config/components/model-preview/circuit-scene-anchor';
 import {
-  EXPLICIT_BLOCK_TYPE,
+  hiddenLocationNodesAtom,
+  isExplicitLocationsBlockType,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   readEntry,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
@@ -228,13 +230,24 @@ function CircuitVizView({
   onBallClick,
   onBallHover,
 }: TCircuitVizViewProps) {
-  const { tree, cellColors, hidden, locationCells, error, synapses, anchor, download } = source;
+  const {
+    tree,
+    cellColors,
+    hidden,
+    locationCells,
+    locationFirstCell,
+    locationNodeCount,
+    error,
+    synapses,
+    anchor,
+    download,
+  } = source;
   const morphologies = useTreeMorphologies(tree, { axons: showAxons, hidden });
   const locationPreviews = useMorphologyLocationPreviews({
     config: morphologyLocations?.config,
     entityId,
     // The same single-morphology models the preview endpoint accepts.
-    enabled: Boolean(morphologyLocations?.supportsExplicitLocations),
+    enabled: Boolean(morphologyLocations?.singleMorphology),
   });
   const openLocationBlock =
     morphologyLocations?.selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
@@ -265,9 +278,11 @@ function CircuitVizView({
     }
     return drawn;
   }, [morphologies, locationPreviews.locations, locationCells]);
-  const { locations, hover, labels, pickMode } = useLocationSelection({
+  usePublishHiddenLocationNodes(locationCells, locationFirstCell, locationNodeCount);
+  const { locations, hover, labels, pickMode, blockType } = useLocationSelection({
     ...morphologyLocations,
     cells: locationCells,
+    firstCell: locationFirstCell,
     backgroundColor,
     generatedLocations: visibleGeneratedLocations,
   });
@@ -407,8 +422,8 @@ function CircuitVizView({
         legendTarget && createPortal(legends, legendTarget)
       )}
       <MorphologyLocationLabels labels={labels} />
-      <MorphologyLocationPopover hover={hover} pickMode={pickMode} />
-      {openLocationBlock && openLocationBlock.type !== EXPLICIT_BLOCK_TYPE && (
+      <MorphologyLocationPopover hover={hover} pickMode={pickMode} blockType={blockType} />
+      {openLocationBlock && !isExplicitLocationsBlockType(openLocationBlock.type) && (
         <MorphologyLocationPreviewStatus
           pending={locationPreviews.pending.has(morphologyLocations?.selectedEntry ?? '')}
           error={locationPreviews.errors.get(morphologyLocations?.selectedEntry ?? '')}
@@ -452,6 +467,30 @@ function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
   const next = new Set(set);
   if (!next.delete(key)) next.add(key);
   return next;
+}
+
+/**
+ * Tells the form which nodes of the population locations are placed on carry no marker, so it can grey their rows out:
+ * filtered out in the nodes table, without a morphology, or in a hidden population.
+ */
+function usePublishHiddenLocationNodes(
+  drawn: readonly number[],
+  firstCell: number,
+  nodeCount: number
+) {
+  const setHiddenNodes = useSetAtom(hiddenLocationNodesAtom);
+  useEffect(() => {
+    const shown = new Set(drawn);
+    const hidden = new Set<number>();
+    for (let node = 0; node < nodeCount; node++) if (!shown.has(firstCell + node)) hidden.add(node);
+    // Kept when unchanged, so the form does not render again for nothing.
+    setHiddenNodes((previous) =>
+      previous.size === hidden.size && [...hidden].every((id) => previous.has(id))
+        ? previous
+        : hidden
+    );
+  }, [drawn, firstCell, nodeCount, setHiddenNodes]);
+  useEffect(() => () => setHiddenNodes(new Set()), [setHiddenNodes]);
 }
 
 type TMemodelVizProps = Omit<TCircuitVizViewProps, 'source' | 'onCellClick' | 'entityId'> & {

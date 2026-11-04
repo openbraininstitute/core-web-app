@@ -482,6 +482,14 @@ export function morphologyLocationsColor(entry: string): string {
 /** Bounded so the viewer's palette texture stays small. */
 const MORPHOLOGY_LOCATION_COLOR_SLOTS = 12;
 
+/**
+ * Colour for a per-neuron location's marker, by the node id it sits on, so points read as
+ * belonging to their neuron. Skips slot 0: that blue is the neuron's own default colour.
+ */
+export function morphologyLocationsNeuronColor(nodeId: number): string {
+  return categoricalColor(1 + (nodeId % (MORPHOLOGY_LOCATION_COLOR_SLOTS - 1)));
+}
+
 /** A block's markers as drawn: its own colour while it is the open block, receded otherwise. */
 export function morphologyLocationMarkerColor(
   entry: string,
