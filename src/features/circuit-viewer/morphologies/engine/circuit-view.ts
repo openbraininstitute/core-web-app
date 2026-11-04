@@ -544,6 +544,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     return this.cloud?.shown === true && !this.translucent;
   }
 
+  /** Whether boxes are drawn over the cells. */
+  protected get drawsVoxels(): boolean {
+    return this.voxels?.visible === true;
+  }
+
   /** Whether the tier draws ambient occlusion. */
   protected get occludes(): boolean {
     return false;
@@ -1762,18 +1767,18 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Sets `bounds` round everything there is: every soma of the cloud, drawn or not and as large as one glowing in full,
-   * the morphologies, the electrodes and the boxes.
+   * Sets `bounds` round the cells: every soma of the cloud, drawn or not and as large as one glowing in full, and the
+   * morphologies. `clipBounds` also takes in the electrodes and the boxes, however far they lie from the cells.
    */
   private bound(): void {
     const all = new THREE.Box3();
     const box = this.cloud?.box;
     if (box) all.copy(this.somaBox(box, this.cloudUniforms.uRadius.value * (1 + GLOW_SWELL)));
     if (this.layer) all.union(this.shifted(this.layer.data.bounds));
-    // What the camera's clip range is to keep, as they may lie far from the cells. It frames the cells alone.
+    if (!all.isEmpty()) this.bounds.copy(all);
     growRoundDots(all, this.electrodeGroups, this.centre, this.electrodeUniforms.uRadius.value);
     if (this.voxelLayer) growRoundVoxels(all, this.voxelLayer, this.centre);
-    if (!all.isEmpty()) this.bounds.copy(all);
+    this.clipBounds = all.isEmpty() ? null : all;
   }
 
   /** Shows the cloud and its pick, or hides them while the morphologies take their place. */

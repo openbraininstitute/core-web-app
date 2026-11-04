@@ -43,7 +43,7 @@ describe('contactGrid', () => {
     const grid = contactGrid(lattice(6, 5, 7, [20, 30, 40]));
     expect(grid?.pitch).toEqual([20, 30, 40]);
     expect(grid?.slices).toEqual([6, 5, 7]);
-    expect(grid?.first).toEqual([0, 0, 0]);
+    expect(grid?.places.map((places) => places[0])).toEqual([0, 0, 0]);
   });
 
   it('reads the planes of a stack whose lattices are offset from each other', () => {
@@ -101,6 +101,57 @@ describe('contactGrid', () => {
     expect(stack && openingSliceAxis(stack)).toBe(1);
     const plane = contactGrid(lattice(6, 8, 1, [20, 30, 0]));
     expect(plane && openingSliceAxis(plane)).toBe(0);
+  });
+});
+
+describe('contactGrid, on what a real array may hold', () => {
+  function planes(zs: number[]) {
+    const points: number[] = [];
+    for (const z of zs) {
+      for (let x = 0; x < 6; x++) {
+        for (let y = 0; y < 6; y++) points.push(x * 20, y * 30, z);
+      }
+    }
+    return Float32Array.from(points);
+  }
+
+  it('gives each plane of a stack its own slice, however far apart they are', () => {
+    const zs = [0, 100, 150, 200, 500];
+    const grid = contactGrid(planes(zs));
+    expect(grid?.slices[2]).toBe(zs.length);
+    expect(grid?.places[2]).toEqual(zs);
+    expect(new Set(grid?.sliceOf[2]).size).toBe(zs.length);
+  });
+
+  it('keeps a column whole where its plane is offset by half a step, whatever the rounding', () => {
+    const points: number[] = [];
+    for (let plane = 0; plane < 2; plane++) {
+      for (let x = 0; x < 6; x++) {
+        for (let z = 0; z < 6; z++) {
+          const jitter = z % 2 === 0 ? 0.01 : -0.01;
+          points.push(plane * 55 + x * 110 + (plane === 1 ? jitter : 0), plane * 50, z * 110);
+        }
+      }
+    }
+    const grid = contactGrid(Float32Array.from(points));
+    if (!grid) throw new Error('no grid');
+    const column = Array.from({ length: 6 }, (_, z) => grid.sliceOf[0][36 + z]);
+    expect(new Set(column).size).toBe(1);
+  });
+
+  it('keeps a row whole where it lies on a rounding boundary', () => {
+    const points: number[] = [];
+    for (let plane = 0; plane < 2; plane++) {
+      for (let x = 0; x < 6; x++) {
+        for (let z = 0; z < 6; z++) {
+          const jitter = x % 2 === 0 ? 0.01 : -0.01;
+          points.push(x * 20, plane * 50, 10.5 + z * 30 + jitter);
+        }
+      }
+    }
+    const grid = contactGrid(Float32Array.from(points));
+    expect(grid?.pitch[0]).toBeCloseTo(20, 3);
+    expect(grid?.pitch[2]).toBeCloseTo(30, 1);
   });
 });
 

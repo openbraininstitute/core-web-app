@@ -59,6 +59,8 @@ export abstract class SceneView implements ViewControls {
     new THREE.Vector3(-50, -50, -50),
     new THREE.Vector3(50, 50, 50)
   );
+  /** Where the clip range is to keep more than `bounds`, such as what is drawn far from what the view frames. */
+  protected clipBounds: THREE.Box3 | null = null;
   /** Points (x, y, z after one another) that `resetView` fits into the view instead of the corners of `bounds`. */
   protected fitPoints: Float32Array | null = null;
   /** The canvas's size in CSS pixels, as `resize` left it. */
@@ -408,7 +410,7 @@ export abstract class SceneView implements ViewControls {
     const camera = this.camera;
     const target = this.controls.target;
     const d = camera.position.distanceTo(target);
-    const radius = orbitRadius(this.bounds) || 50;
+    const radius = orbitRadius(this.clipBounds ?? this.bounds) || 50;
     // A near plane fixed at the framing distance would cut fibres tens of µm away on a mm-scale cell.
     const { near, far } =
       this.projection === 'perspective'

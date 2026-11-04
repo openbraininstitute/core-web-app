@@ -36,8 +36,8 @@ export type ContactGrid = {
   pitch: Triple<number>;
   /** Slices along x, y and z. */
   slices: Triple<number>;
-  /** Where the first slice along x, y and z is, in µm. */
-  first: Triple<number>;
+  /** Where each slice along x, y and z is, in µm. Along the stack, these are its planes, however far apart. */
+  places: Triple<number[]>;
   /** Per axis, the slice each contact is in. Every contact is in one, whatever its plane's offset. */
   sliceOf: Triple<Uint16Array>;
 };
@@ -79,19 +79,13 @@ function rowSteps(
   along: Float32Array,
   across: Float32Array
 ): { steps: number[]; inRows: number } {
-  const rows = new Map<number, number[]>();
-  for (const contact of plane) {
-    const key = Math.round(across[contact] / PLANE_TOLERANCE_UM);
-    const row = rows.get(key);
-    if (row) row.push(along[contact]);
-    else rows.set(key, [along[contact]]);
-  }
+  const places = Float32Array.from(plane, (contact) => across[contact]);
   const steps: number[] = [];
   let inRows = 0;
-  for (const row of rows.values()) {
-    if (row.length < 2) continue;
-    inRows += row.length;
-    row.sort((a, b) => a - b);
+  for (const members of membersOfPlanes(places, planesOf(places))) {
+    if (members.length < 2) continue;
+    inRows += members.length;
+    const row = members.map((member) => along[plane[member]]).sort((a, b) => a - b);
     for (let i = 1; i < row.length; i++) {
       if (row[i] - row[i - 1] > PLANE_TOLERANCE_UM) steps.push(row[i] - row[i - 1]);
     }
@@ -141,18 +135,31 @@ export function contactGrid(positions: Float32Array): ContactGrid | null {
       ? median(planes[stack].slice(1).map((plane, i) => plane - planes[stack][i]))
       : Math.min(alongU.step, alongV.step);
 
-  const first: Triple<number> = [planes[0][0], planes[1][0], planes[2][0]];
-  const sliceOf = values.map((along, axis) =>
-    Uint16Array.from(along, (value) => Math.round((value - first[axis]) / pitch[axis]))
-  ) as Triple<Uint16Array>;
+  const sliceOf = values.map((along, axis) => {
+    if (axis === stack) {
+      const ofContact = new Uint16Array(contacts);
+      members.forEach((plane, index) => {
+        for (const contact of plane) ofContact[contact] = index;
+      });
+      return ofContact;
+    }
+    // Over the tolerance, as a plane offset by half a step lies between two slices: all of its contacts take the next.
+    const start = planes[axis][0] - PLANE_TOLERANCE_UM;
+    return Uint16Array.from(along, (value) => Math.round((value - start) / pitch[axis]));
+  }) as Triple<Uint16Array>;
   const slices = sliceOf.map((of) => of.reduce((most, slice) => Math.max(most, slice), 0) + 1);
   if (slices.filter((count) => count >= MIN_SLICES).length < 2) return null;
-  return { pitch, slices: slices as Triple<number>, first, sliceOf };
+  const places = slices.map((count, axis) =>
+    axis === stack
+      ? planes[stack]
+      : Array.from({ length: count }, (_, index) => planes[axis][0] + index * pitch[axis])
+  ) as Triple<number[]>;
+  return { pitch, slices: slices as Triple<number>, places, sliceOf };
 }
 
 /** Where a slice of the grid is along its axis, in µm. */
-export function slicePosition({ first, pitch }: ContactGrid, { axis, index }: GridSlice): number {
-  return first[axis] + index * pitch[axis];
+export function slicePosition({ places }: ContactGrid, { axis, index }: GridSlice): number {
+  return places[axis][index];
 }
 
 /** The axis with the fewest slices of those that have more than one: the stack's, as a rule. */
