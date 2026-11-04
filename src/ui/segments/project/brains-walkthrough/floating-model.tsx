@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ViewOverlay } from '@/features/viewer-3d/bare';
 import { ModelView } from '@/ui/segments/project/models/model-views';
+import { PackView } from '@/ui/segments/project/models/pack-view';
+import { FLY_PACK, L6_PACK } from '@/ui/segments/project/models/repo-packs';
 import { cn } from '@/utils/css-class';
 
 import { CNS_FRAME, FLY_FRAME, L6_COLOR, L6_FRAME } from './brains';
@@ -14,9 +16,9 @@ import { FlyBody, FlyStageProvider } from './walking-fly';
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { CircuitSpikes, ISpikeReplayBinding } from '@/features/circuit-viewer/types';
-import type { FramedView, OwnPack } from '@/features/viewer-3d/bare';
+import type { FramedView } from '@/features/viewer-3d/bare';
 import type { FrameBox } from '@/features/viewer-3d/engine/scene-view';
-import type { TModel } from '@/ui/segments/project/models/models';
+import type { RepoPack } from '@/ui/segments/project/models/repo-packs';
 
 /**
  * Where a floating model is, by when: in its place but not shown while its view builds it, off the page
@@ -237,19 +239,6 @@ function Floating({
   );
 }
 
-/**
- * The microcircuit's pack made lighter for this view, served by the app: the coarsest level alone, which is all
- * it draws at this size, and dendrites alone, as it hides axons; the morphologies of the outer ring of cells by
- * distance from the column's axis and of a fifth of the rest, the others somas, which looks no different from
- * outside. 20.3 MB against the stored pack's 170.8 MB (build_light_pack.py in the home_page group, from the
- * circuit's morphologies, with obi-one's pack writer).
- */
-const L6_PACK: OwnPack = {
-  id: 'l6-outer-dendrites',
-  url: '/static/walkthrough/l6-outer-dendrites.mpack',
-  size: 20263125,
-  sha256: '23cf345c12ed95b401eb368eefbdf37bf543aa8ce6414533889676cbc6570807',
-};
 /** Made-up activity for the microcircuit: bursts of a cell and its 50 nearest neighbours, a second or so apart. */
 const L6_ACTIVITY = '/static/walkthrough/l6-activity.json';
 
@@ -262,7 +251,6 @@ function ActiveMicrocircuit({ started, onBuilt }: { started: boolean; onBuilt: (
     <FlashingCircuit
       started={started}
       onBuilt={onBuilt}
-      model="l6"
       color={L6_COLOR}
       frame={L6_FRAME}
       frameZoom={0.95}
@@ -301,22 +289,9 @@ function useActivity(url: string): CircuitSpikes | null {
   return activity;
 }
 
-/**
- * The whole FlyWire brain's surface, served by the app, from the whole-brain circuit built on this machine
- * (drosophila_brain, 137,712 neurons, not on the platform): every neuron cut to what lies within 20 µm of the
- * brain's surface, at one coarse level (2 µm), its neurites all drawn, numbered along a curve through space
- * into the 1,379 cells of the staging pilot the page shows, each a hundred or so neighbouring neurons that light
- * together (build_fly_surface_pack.py --order space, in the home_page group). 8.8 MB, 1.11M segments.
- */
-const FLY_PACK: OwnPack = {
-  id: 'fly-surface',
-  url: '/static/walkthrough/fly-surface.mpack',
-  size: 8797881,
-  sha256: '64facca47840f75a9191b3a3642458b3874aff515c7e8eb8c94bfd75f55be15c',
-};
 /** The fly's brain in one blue, which its lit groups stand out of, as the viewer lights them in cyan. */
 const FLY_BLUE = '#2558c9';
-/** The cells of the pilot the page shows, which the pack's neurons are numbered into. */
+/** The cells the pack's neurons are numbered into. */
 const FLY_CELLS = 1379;
 /** How long the made-up activity runs before it starts again, s. */
 const FLASH_SECONDS = 60;
@@ -350,13 +325,13 @@ function flashes(cells: number): CircuitSpikes {
 const FLY_FLASHES = flashes(FLY_CELLS);
 
 /**
- * A circuit of the platform's in one colour, shaded as it turns, its cells lighting up as `flashes` has them,
- * round and round, once it is sent in: still until then, as it reads its finest only at rest.
+ * A pack in the repo in one colour, shaded as it turns, its cells lighting up as `flashes` has them, round and round,
+ * once it is sent in: still until then, as it reads its finest only at rest. All of it is served by the app, so it
+ * comes signed out as signed in.
  */
 function FlashingCircuit({
   started,
   onBuilt,
-  model,
   color,
   frame,
   frameZoom,
@@ -369,11 +344,10 @@ function FlashingCircuit({
 }: {
   started: boolean;
   onBuilt: () => void;
-  model: TModel;
   color: string;
   frame: FrameBox;
   frameZoom: number;
-  pack: OwnPack;
+  pack: RepoPack;
   flashes: CircuitSpikes | null;
   /** Simulated ms played a second. */
   speed?: number;
@@ -432,18 +406,15 @@ function FlashingCircuit({
           frame={frame}
           render={over ?? (bodies ? catchView : NOTHING_OVER)}
           detailPixels={DETAIL_PIXELS}
-          pack={pack}
           onBuilt={onBuilt}
         >
-          <ModelView
-            model={model}
+          <PackView
+            pack={pack}
             color={body === null ? color : PICKED_REST_COLOR}
             frameZoom={frameZoom}
-            aoMoving
             spin={started}
-            pickable={!!bodies}
+            aoMoving
             // Not singled out in the view, which would hide the rest: the skeleton over it is its highlight.
-            highlightedCell={null}
             onCellPick={bodies ? setPicked : undefined}
             spikes={spikes}
           />
@@ -488,7 +459,6 @@ const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
   <FlashingCircuit
     started={started}
     onBuilt={onBuilt}
-    model="fly"
     color={FLY_BLUE}
     frame={FLY_FRAME}
     // The frame's box, 839 x 411 um from in front, across the brain's width in its view, a quarter wider.
@@ -498,10 +468,9 @@ const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
   />
 );
 /**
- * The male fly's whole central nervous system, the Male CNS connectome's 164,606 point neurons, over the whole
- * page behind the words and recording of the screen `at`, faint, turning there. It is read unseen and still on
- * the screen before, to be drawn by the time its own comes, and let go of past the screen after; the viewer's
- * word that it is loading is not shown.
+ * The male fly's whole central nervous system, its surface's neurons, over the whole page behind the words and
+ * recording of the screen `at`, faint, turning there. It is read unseen and still on the screen before, to be drawn
+ * by the time its own comes, and let go of past the screen after; the viewer's word that it is loading is not shown.
  */
 export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
   if (chapter < at - 1 || chapter > at + 1) return null;
@@ -515,15 +484,16 @@ export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
         on ? 'opacity-40' : 'opacity-0'
       )}
     >
-      <ModelView model="cns" pickable={false} frameZoom={0.85} spin={on} />
+      <ViewOverlay frame={CNS_FRAME} render={NOTHING_OVER} detailPixels={DETAIL_PIXELS}>
+        <PackView pack={CNS_PACK} color={FLY_BLUE} frameZoom={0.85} spin={on} />
+      </ViewOverlay>
     </div>
   );
 }
 
 /**
  * Whether a click on the Male CNS picks a neuron, drawn whole over the rest gone faint. That wants its pack a
- * neuron to a cell, hosted on the Male CNS LIF circuit itself, whose 55 MB of nodes the page then has to fetch
- * before the model can come; without it, the pack in neighbourhoods hosted on the small FlyWire pilot, in at once.
+ * neuron to a cell; without it, the pack in neighbourhoods, which is lighter.
  */
 const CNS_PICKING = false;
 
@@ -532,21 +502,23 @@ const CNS_PICKING = false;
  * Male CNS LIF circuit: each cut to what lies within 20 µm of the surface of the brain and nerve cord, at one
  * coarse level (2 µm), its neurites all drawn (fetch_malecns_swc.py, then build_malecns_surface_pack.py, in the
  * home_page group); 1.68M segments, from the 151,787 neurons that reach within 20 µm of the surface. Numbered
- * along a curve through space into the 1,379 cells of the staging FlyWire pilot the page hosts it on, each a
- * hundred or so neighbouring neurons (11.8 MB); or, for picking, a cell to each neuron in the circuit's own
- * order, for the circuit itself to host it (--per-neuron, 14.2 MB).
+ * along a curve through space into 1,379 cells, each a hundred or so neighbouring neurons, under the name and number
+ * of the staging FlyWire pilot's population, which used to host it (11.8 MB); or, for picking, a cell to each neuron
+ * in the circuit's own order (--per-neuron, 14.2 MB).
  */
-const CNS_PACK: OwnPack = {
+const CNS_PACK: RepoPack = {
   id: 'male-cns-surface',
   url: '/static/walkthrough/male-cns-surface.mpack?v=db2ab7db',
   size: 11821250,
   sha256: 'db2ab7dba849c67a8a2787f1fc156e6b9188f46e99c36bd900e424da927ac97f',
+  population: { name: 'flywire_brain', cells: 1379 },
 };
-const CNS_NEURON_PACK: OwnPack = {
+const CNS_NEURON_PACK: RepoPack = {
   id: 'male-cns-neurons',
   url: '/static/walkthrough/male-cns-neurons.mpack?v=8ff90a0b',
   size: 14156003,
   sha256: '8ff90a0b07e791ed9a9ea5f9d7373c0588f865404b8034cd9eefee157b657598',
+  population: { name: 'drosophila', cells: 164606 },
 };
 /**
  * The Male CNS LIF model's own activity: the paper's canonical run, the left sugar neurons driven at 150 Hz, its
@@ -578,7 +550,6 @@ function ActiveMaleCns({
     <FlashingCircuit
       started={started}
       onBuilt={onBuilt}
-      model={CNS_PICKING ? 'cns' : 'fly'}
       color={FLY_BLUE}
       frame={CNS_FRAME}
       // The frame's box, 737 x 1015 um from below, up the CNS's height in its view, a quarter taller.

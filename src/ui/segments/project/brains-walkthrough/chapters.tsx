@@ -1,10 +1,4 @@
-import {
-  Actions,
-  CircuitFacts,
-  CourseLink,
-  Row,
-  SectionLink,
-} from '@/ui/segments/project/walkthrough/bits';
+import { Actions, CourseLink, Row, SectionLink } from '@/ui/segments/project/walkthrough/bits';
 
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
@@ -194,7 +188,6 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     id: 'fly',
     label: 'Fruit fly',
     scene: 'fly',
-    colorBy: true,
     kicker: 'A fruit fly’s brain',
     title: 'A whole brain, neuron by neuron',
     body: (
@@ -204,19 +197,16 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           about 140,000 of them, and the 50 million or so synapses between them.
         </p>
         <p>
-          Inside the brain here is a 1% sample of those neurons, each in its place, built from its
-          reconstruction into a model that can be simulated, and wired by the synapses between them.
-          Colour them by their class, and click any one to find out more.
+          Inside the brain here are those neurons, drawn where they run within 20 µm of its surface,
+          each in its place.
         </p>
       </>
     ),
-    after: <CircuitFacts scene="fly" design="brains" />,
   },
   {
     id: 'mouse',
     label: 'Mouse',
     scene: 'mouse',
-    colorBy: true,
     kicker: 'A mouse’s brain',
     title: 'A piece of cortex, cell by cell',
     body: (
@@ -228,17 +218,15 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
         <p>
           The model was built from a rat&apos;s cortex, shown here in a mouse&apos;s brain for
-          scale. Colour its neurons by their type, and click any one to find out more.
+          scale.
         </p>
       </>
     ),
-    after: <CircuitFacts scene="l6" design="brains" />,
   },
   {
     id: 'microns',
     label: 'MICrONS',
     scene: 'microns',
-    colorBy: true,
     kicker: 'A mouse’s visual cortex',
     title: 'A cubic millimetre, synapse by synapse',
     body: (
@@ -250,12 +238,10 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <p>
           On the platform it is a circuit of 50,948 of those neurons, through the whole depth of the
           cortex, wired by the synapses traced between them. Its 877 proofread neurons are drawn whole
-          from their reconstructions. Colour them by layer or type, and click any one to find out more.
+          from their reconstructions.
         </p>
       </>
     ),
-    // Anatomy alone: there are no electrical models to simulate it with.
-    after: <CircuitFacts scene="microns" design="brains" simulate={false} />,
   },
   {
     id: 'human',
@@ -272,7 +258,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
         <p>
           Its surface can be skeletonized into a morphology, the first step to a model that can be
-          simulated. Click it for its details.
+          simulated.
         </p>
       </>
     ),

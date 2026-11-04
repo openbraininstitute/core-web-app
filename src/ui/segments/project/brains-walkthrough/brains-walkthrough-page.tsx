@@ -1,6 +1,7 @@
 'use client';
 
-import { ModelView } from '@/ui/segments/project/models/model-views';
+import { PackView } from '@/ui/segments/project/models/pack-view';
+import { L6_PACK } from '@/ui/segments/project/models/repo-packs';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { FadingStage } from '@/ui/segments/project/walkthrough/stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
@@ -95,7 +96,7 @@ export function BrainsWalkthroughPage({
       // The landing's words along the foot are its way between the screens, the way on above them.
       pager={false}
       footer="clamp(64px,9.5vh,88px)"
-      stage={(chapter, colorSlot) => (
+      stage={(chapter) => (
         <FadingStage
           scene={chapter.scene}
           wide={(scene) => scene === 'trio'}
@@ -103,19 +104,15 @@ export function BrainsWalkthroughPage({
           full={(scene) => scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.
           passThrough={(scene) => scene === 'opening'}
-          draw={(scene, leaving) => (
-            <BrainScene
-              scene={scene}
-              colorSlot={leaving || !chapter.colorBy ? null : colorSlot}
-            />
-          )}
+          draw={(scene) => <BrainScene scene={scene} />}
         />
       )}
     />
   );
 }
 
-function BrainScene({ scene, colorSlot }: { scene: TBrainScene; colorSlot: HTMLElement | null }) {
+/** A screen's stage. Its models are drawn from packs in the repo, the same signed in or not. */
+function BrainScene({ scene }: { scene: TBrainScene }) {
   if (scene === 'opening') return <BrainsOpening />;
   if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} />;
   if (scene === 'multiplying') return <MultiplyingBrains />;
@@ -125,10 +122,10 @@ function BrainScene({ scene, colorSlot }: { scene: TBrainScene; colorSlot: HTMLE
   // Getting started, beside the early adopters already on the platform.
   if (scene === 'join') return <EarlyAdopters />;
   // As the other walkthrough's first screen has it.
-  if (scene === 'l6') return <ModelView model="l6" colorSlot={colorSlot} color={L6_COLOR} />;
+  if (scene === 'l6') return <PackView pack={L6_PACK} color={L6_COLOR} frameZoom={0.33} spin />;
   if (scene === 'trio') return <BrainTrio />;
-  if (scene === 'fly') return <FlyInBrain colorSlot={colorSlot} />;
-  if (scene === 'mouse') return <MouseInBrain colorSlot={colorSlot} />;
-  if (scene === 'microns') return <MicronsCircuit colorSlot={colorSlot} />;
+  if (scene === 'fly') return <FlyInBrain />;
+  if (scene === 'mouse') return <MouseInBrain />;
+  if (scene === 'microns') return <MicronsCircuit />;
   return <HumanWithBrain />;
 }
