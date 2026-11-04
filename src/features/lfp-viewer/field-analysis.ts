@@ -1,5 +1,6 @@
 import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
 import { coordinatesAlong, leadingVector } from '@/features/lfp-viewer/field-structure';
+import { median } from '@/features/viewer-3d/engine/motion-quality';
 
 import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
@@ -370,7 +371,7 @@ export function contactLines(positions: Float32Array): ContactLine[] {
     if (members.length < MIN_LINE_CONTACTS) continue;
     members.sort((a, b) => a.at - b.at);
     const gaps = members.slice(1).map((m, i) => m.at - members[i].at);
-    const spacing = [...gaps].sort((a, b) => a - b)[Math.floor(gaps.length / 2)];
+    const spacing = median(gaps);
     if (spacing <= 0) continue;
     if (gaps.every((gap) => Math.abs(gap - spacing) <= spacing * EVEN_GAP_SHARE)) {
       lines.push({
@@ -462,21 +463,21 @@ export function profileAlong(
     low = Math.min(low, coordinate[c]);
     high = Math.max(high, coordinate[c]);
   }
-  const bins = high > low ? MAX_PROFILE_BINS : 1;
-  const atSum = new Float64Array(bins);
-  const valueSum = new Float64Array(bins);
-  const inBin = new Uint32Array(bins);
+  const span = high - low || 1;
+  const atSum = new Float64Array(MAX_PROFILE_BINS);
+  const valueSum = new Float64Array(MAX_PROFILE_BINS);
+  const inBin = new Uint32Array(MAX_PROFILE_BINS);
   for (let c = 0; c < count; c++) {
-    const bin =
-      high > low
-        ? Math.min(bins - 1, Math.floor(((coordinate[c] - low) / (high - low)) * bins))
-        : 0;
+    const bin = Math.min(
+      MAX_PROFILE_BINS - 1,
+      Math.floor(((coordinate[c] - low) / span) * MAX_PROFILE_BINS)
+    );
     atSum[bin] += coordinate[c];
     valueSum[bin] += value(c);
     inBin[bin]++;
   }
   const points: ProfilePoint[] = [];
-  for (let bin = 0; bin < bins; bin++) {
+  for (let bin = 0; bin < MAX_PROFILE_BINS; bin++) {
     if (inBin[bin] > 0)
       points.push({ at: atSum[bin] / inBin[bin], value: valueSum[bin] / inBin[bin] });
   }

@@ -346,6 +346,31 @@ export function drawChangeRules(
 }
 
 /**
+ * Sizes `canvas` to a plot of `width` by `height` px showing `from` to `to`, and
+ * draws on it each change's rule and the event marks. Returns the groups as drawn.
+ */
+export function drawTimelineMarks(
+  canvas: HTMLCanvasElement,
+  from: number,
+  to: number,
+  width: number,
+  height: number,
+  events: readonly TimelineEvent[],
+  hovered: readonly TimelineEvent[]
+): MarkerGroup[] {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(width * dpr);
+  canvas.height = Math.round(height * dpr);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return [];
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  drawChangeRules(ctx, events, (time) => ((time - from) / (to - from)) * width, 0, height);
+  const view = { xMin: from, xMax: to, yMin: 0, yMax: 1 };
+  return drawEventMarks(ctx, view, width, height, events, hovered);
+}
+
+/**
  * The markers at a point of the plot, in px from its top left: by marker or name
  * along the top or bottom, or - with `alongRules` - anywhere along a change's rule.
  */

@@ -90,6 +90,8 @@ type StatisticsProps = {
   window: [number, number];
   /** Whether the pane is on show and settled, so that a plot can be drawn. */
   visible: boolean;
+  /** Whether the pane is on show, settled or not: shut, a plot reads nothing. */
+  open: boolean;
 };
 
 type FrameProps = {
@@ -277,12 +279,13 @@ function SpectrogramPlot({
   timeCursor,
   window,
   visible,
+  open,
 }: PlotProps) {
   const contacts = useMemo(
     () => (selectedContact === null ? [] : [selectedContact]),
     [selectedContact]
   );
-  const { field, failed } = useContactRows(source, summary, contacts);
+  const { field, failed } = useContactRows(source, summary, contacts, open);
   const result = useMemo(
     () => (field ? spectrogram(field.data, field.scale, field.binMs, field.start) : null),
     [field]
@@ -366,6 +369,7 @@ function TriggeredFigure({
   selectedContact,
   ticked,
   visible,
+  open,
   file,
   controls,
   halfWindow,
@@ -380,7 +384,7 @@ function TriggeredFigure({
     if (selectedContact === null) return ticked.slice(0, MAX_COMPARED);
     return [selectedContact, ...ticked.filter((c) => c !== selectedContact)].slice(0, MAX_COMPARED);
   }, [selectedContact, ticked]);
-  const { field, failed } = useContactRows(source, summary, contacts);
+  const { field, failed } = useContactRows(source, summary, contacts, open);
   const triggers = useMemo(() => {
     if (!spikes) return null;
     const populations = spikes.populations.map((p) => p.timestamps);
@@ -496,6 +500,7 @@ function CoherencePlot({
   selectedContact,
   ticked,
   visible,
+  open,
 }: PlotProps) {
   const others = useMemo(
     () => comparedContacts(rows, ticked, selectedContact),
@@ -505,7 +510,7 @@ function CoherencePlot({
     () => (selectedContact === null ? [] : [selectedContact, ...others]),
     [selectedContact, others]
   );
-  const { field, failed } = useContactRows(source, summary, contacts);
+  const { field, failed } = useContactRows(source, summary, contacts, open);
   const result = useMemo(() => {
     if (!field || others.length === 0) return null;
     const row = (r: number) => field.data.subarray(r * field.bins, (r + 1) * field.bins);
@@ -567,7 +572,7 @@ function ProfilePlot({
     [positions, axis]
   );
   const atTime = measure === 'at-time';
-  const time = usePlayerTime(timeCursor, atTime);
+  const time = usePlayerTime(timeCursor, atTime && visible);
   // The field's largest, as its colour scale's limit leaves its peaks off the axis.
   const limit = useMemo(() => {
     if (!atTime) return 0;
@@ -632,6 +637,7 @@ function CsdPlot({
   timeCursor,
   window,
   visible,
+  open,
 }: PlotProps & { lines: ContactLine[] }) {
   const line =
     lines.find((l) => selectedContact !== null && l.contacts.includes(selectedContact)) ?? lines[0];
@@ -640,7 +646,12 @@ function CsdPlot({
     summary.total.kind !== 'value' &&
     line.contacts.length * summary.index.time.steps * Int16Array.BYTES_PER_ELEMENT >
       MAX_LINE_READ_BYTES;
-  const { field, failed } = useContactRows(source, summary, !line || tooLong ? [] : line.contacts);
+  const { field, failed } = useContactRows(
+    source,
+    summary,
+    !line || tooLong ? [] : line.contacts,
+    open
+  );
   const result = useMemo(
     () => (field && line ? currentSourceDensity(field, line.spacing) : null),
     [field, line]

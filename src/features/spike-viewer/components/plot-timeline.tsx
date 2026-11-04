@@ -4,11 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
-import {
-  drawChangeRules,
-  drawEventMarks,
-  markerGroupAt,
-} from '@/features/spike-viewer/renderer/axis-overlay';
+import { drawTimelineMarks, markerGroupAt } from '@/features/spike-viewer/renderer/axis-overlay';
 
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -97,28 +93,12 @@ export function PlotTimeline({
     }
     const { l, t, w, h } = layout._size;
     const [xMin, xMax] = layout.xaxis.range;
-    const dpr = window.devicePixelRatio || 1;
     canvas.style.display = 'block';
     canvas.style.left = `${l}px`;
     canvas.style.top = `${t}px`;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
-    canvas.width = Math.round(w * dpr);
-    canvas.height = Math.round(h * dpr);
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    // A dashed rule from each synaptic change's onset, as behind the raster's spikes.
-    drawChangeRules(ctx, events, (time) => ((time - xMin) / (xMax - xMin)) * w, 0, h);
-    groupsRef.current = drawEventMarks(
-      ctx,
-      { xMin, xMax, yMin: 0, yMax: 1 },
-      w,
-      h,
-      events,
-      hovered
-    );
+    groupsRef.current = drawTimelineMarks(canvas, xMin, xMax, w, h, events, hovered);
   }, [graph, events, hovered]);
 
   // After every draw of the plot - a zoom, a resize, new lines - both are placed anew.

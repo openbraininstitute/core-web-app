@@ -1,5 +1,6 @@
 import { positionOfLevel, rgbAt, SCENE_LEVELS } from '@/features/lfp-viewer/colour-scale';
 import { median } from '@/features/viewer-3d/engine/motion-quality';
+import { upperBound } from '@/utils/sorted';
 
 import type {
   Vec3,
@@ -90,9 +91,7 @@ function planesOf(values: Float32Array): number[] {
 function membersOfPlanes(values: Float32Array, planes: number[]): number[][] {
   const members: number[][] = planes.map(() => []);
   values.forEach((value, contact) => {
-    let plane = planes.length - 1;
-    while (plane > 0 && value < planes[plane]) plane--;
-    members[plane].push(contact);
+    members[Math.max(0, upperBound(planes, value) - 1)].push(contact);
   });
   return members;
 }

@@ -491,6 +491,7 @@ function LfpReportView({
                   timeCursor={timeCursor}
                   window={shownWindow}
                   visible={plotsUp && !sliding}
+                  open={plotsUp}
                 />
               ),
             }}

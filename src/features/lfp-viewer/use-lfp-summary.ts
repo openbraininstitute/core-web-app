@@ -121,12 +121,13 @@ const NO_ROWS: ContactRows = { field: null, failed: false };
 
 /**
  * Contacts at full resolution: from the overview where it is already that,
- * else each contact's own row of the total, read by range once and kept.
+ * else each contact's own row of the total, read by range once and kept, while `enabled`.
  */
 export function useContactRows(
   source: LfpSummarySource,
   summary: LfpSummary,
-  contacts: readonly number[]
+  contacts: readonly number[],
+  enabled = true
 ): ContactRows {
   const { index, total, sha256 } = summary;
   const axis = index.axes[0];
@@ -154,6 +155,7 @@ export function useContactRows(
             queryKey: ['lfp-summary', 'row', source.resultId, source.assetId, sha256, contact],
             staleTime: Infinity,
             gcTime: 60_000,
+            enabled,
             queryFn: async ({ signal }: { signal: AbortSignal }) =>
               readRow(
                 await buildLfpSummaryRequest(source, sha256),

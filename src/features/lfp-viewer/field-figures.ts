@@ -32,6 +32,26 @@ const POWER_COLOURS: ColourStops = [
 /** The range of power a spectrogram shows below its strongest. */
 const SPECTROGRAM_RANGE_DB = 50;
 const MATRIX_TICKS = 12;
+/** A contact's line, in its place among the contacts picked. */
+export function contactTrace(
+  contact: number,
+  place: number,
+  x: number[],
+  y: ArrayLike<number>,
+  hovertemplate: string,
+  width = 1.5
+) {
+  return {
+    type: 'scatter',
+    mode: 'lines',
+    name: `e${contact}`,
+    x,
+    y,
+    line: { color: PICK_COLORS[place % PICK_COLORS.length], width },
+    hovertemplate,
+  };
+}
+
 const COLOUR_BAR = { thickness: 10, outlinewidth: 0, tickfont: { size: 10 } };
 const PAPER_RIGHT_MARGIN = { ...BASE_LAYOUT.margin, r: 8 };
 
@@ -162,15 +182,15 @@ export function coherenceFigure({
 }): Figure {
   const x = Array.from(result.frequencies);
   return {
-    data: contacts.map((contact, i) => ({
-      type: 'scatter',
-      mode: 'lines',
-      name: `e${contact}`,
-      x,
-      y: Array.from(result.values[i]),
-      line: { color: PICK_COLORS[i % PICK_COLORS.length], width: 1.5 },
-      hovertemplate: `%{x:.1f} Hz · %{y:.3f}<extra>e${contact} with e${reference}</extra>`,
-    })) as Data[],
+    data: contacts.map((contact, i) =>
+      contactTrace(
+        contact,
+        i,
+        x,
+        Array.from(result.values[i]),
+        `%{x:.1f} Hz · %{y:.3f}<extra>e${contact} with e${reference}</extra>`
+      )
+    ) as Data[],
     layout: {
       ...BASE_LAYOUT,
       showlegend: contacts.length > 1,
@@ -285,15 +305,16 @@ export function triggeredFigure({
         hoverinfo: 'skip',
         showlegend: false,
       },
-      ...contacts.map((contact, i) => ({
-        type: 'scatter',
-        mode: 'lines',
-        name: `e${contact}`,
-        x,
-        y: Array.from(result.means[i]),
-        line: { color: PICK_COLORS[i % PICK_COLORS.length], width: i === 0 ? 2 : 1.5 },
-        hovertemplate: `%{x:.1f} ms · %{y:.3g} µV<extra>e${contact}</extra>`,
-      })),
+      ...contacts.map((contact, i) =>
+        contactTrace(
+          contact,
+          i,
+          x,
+          Array.from(result.means[i]),
+          `%{x:.1f} ms · %{y:.3g} µV<extra>e${contact}</extra>`,
+          i === 0 ? 2 : 1.5
+        )
+      ),
     ] as Data[],
     layout: {
       ...BASE_LAYOUT,

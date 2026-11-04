@@ -212,7 +212,6 @@ export interface ElectrodeTransform {
   rotation: { x: number; y: number; z: number };
 }
 
-/** Boxes drawn through the cells, each with its own size, colour and opacity. */
 /**
  * How a layer's boxes nest, for drawing them far to near: planes of rows of boxes, each ascending along its axis. No
  * two boxes overlap, as far as the order is to hold.
@@ -229,6 +228,7 @@ export interface VoxelLattice {
 /** Where a layer's x, y and z point in the circuit's frame: unit vectors at right angles, right-handed. */
 export type VoxelFrame = readonly [Vec3, Vec3, Vec3];
 
+/** Boxes drawn through the cells, each with its own size, colour and opacity. */
 export interface VoxelLayer {
   /** Three floats each: x, y and z in µm in the layer's frame. */
   centres: Float32Array;

@@ -8,8 +8,7 @@ import { TIME_CURSOR_COLOR } from '@/features/sonata-viewer/time-cursor';
 import { nextEventsHover, TimelineCard } from '@/features/spike-viewer/components/timeline-card';
 import {
   computeTicks,
-  drawChangeRules,
-  drawEventMarks,
+  drawTimelineMarks,
   formatTick,
   markerGroupAt,
 } from '@/features/spike-viewer/renderer/axis-overlay';
@@ -139,20 +138,21 @@ export function FieldPlot({
     return () => observer.disconnect();
   }, []);
 
+  const right = Math.max(MARGIN.left + 1, size.width - MARGIN.right);
+  const bottom = Math.max(MARGIN.top + 1, size.height - MARGIN.bottom);
   const plot = {
     left: MARGIN.left,
-    right: Math.max(MARGIN.left + 1, size.width - MARGIN.right),
+    right,
     top: MARGIN.top,
-    bottom: Math.max(MARGIN.top + 1, size.height - MARGIN.bottom),
+    bottom,
+    width: right - MARGIN.left,
+    height: bottom - MARGIN.top,
   };
-  const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * (plot.right - plot.left);
-  const timeOf = (x: number) => from + ((x - plot.left) / (plot.right - plot.left)) * (to - from);
+  const xOf = (t: number) => plot.left + ((t - from) / (to - from)) * plot.width;
+  const timeOf = (x: number) => from + ((x - plot.left) / plot.width) * (to - from);
   const rowCount = mode === 'map' ? rows.length : traces.length;
   const rowOf = (y: number) =>
-    Math.min(
-      rowCount - 1,
-      Math.max(0, Math.floor(((y - plot.top) / (plot.bottom - plot.top)) * rowCount))
-    );
+    Math.min(rowCount - 1, Math.max(0, Math.floor(((y - plot.top) / plot.height) * rowCount)));
 
   // The map's image, a pixel per row and bin over the whole run; a window crops it.
   const mapImage = useMemo(() => {
@@ -184,8 +184,7 @@ export function FieldPlot({
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, size.width, size.height);
     g.font = '10px sans-serif';
-    const plotWidth = plot.right - plot.left;
-    const plotHeight = plot.bottom - plot.top;
+    const { width: plotWidth, height: plotHeight } = plot;
 
     const [firstBin, lastBin] = binRange(field, from, to);
     if (mode === 'map' && mapImage && lastBin > firstBin) {
@@ -322,21 +321,12 @@ export function FieldPlot({
   useEffect(() => {
     const canvas = marksRef.current;
     if (!canvas || size.width === 0) return;
-    const width = plot.right - plot.left;
-    const height = plot.bottom - plot.top;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(width * dpr);
-    canvas.height = Math.round(height * dpr);
-    const g = canvas.getContext('2d');
-    if (!g) return;
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    g.clearRect(0, 0, width, height);
-    drawChangeRules(g, events, (time) => ((time - from) / (to - from)) * width, 0, height);
-    groupsRef.current = drawEventMarks(
-      g,
-      { xMin: from, xMax: to, yMin: 0, yMax: 1 },
-      width,
-      height,
+    groupsRef.current = drawTimelineMarks(
+      canvas,
+      from,
+      to,
+      plot.width,
+      plot.height,
       events,
       hoveredEvents
     );
@@ -379,10 +369,7 @@ export function FieldPlot({
           if (drag) setDrag({ ...drag, x1: inPlot(x) });
           const group = drag
             ? undefined
-            : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, {
-                width: plot.right - plot.left,
-                height: plot.bottom - plot.top,
-              });
+            : markerGroupAt(groupsRef.current, x - plot.left, y - plot.top, plot);
           setEventsHover((previous) => nextEventsHover(previous, group, e.clientX, e.clientY));
           if (
             x < plot.left ||
@@ -441,8 +428,8 @@ export function FieldPlot({
           style={{
             left: plot.left,
             top: plot.top,
-            width: Math.max(0, plot.right - plot.left),
-            height: Math.max(0, plot.bottom - plot.top),
+            width: plot.width,
+            height: plot.height,
           }}
         />
         <div
@@ -450,7 +437,7 @@ export function FieldPlot({
           className="pointer-events-none absolute w-px"
           style={{
             top: plot.top,
-            height: Math.max(0, plot.bottom - plot.top),
+            height: plot.height,
             background: TIME_CURSOR_COLOR,
             display: 'none',
           }}
@@ -462,7 +449,7 @@ export function FieldPlot({
               left: Math.min(drag.x0, drag.x1),
               width: Math.abs(drag.x1 - drag.x0),
               top: plot.top,
-              height: plot.bottom - plot.top,
+              height: plot.height,
             }}
           />
         )}

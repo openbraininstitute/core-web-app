@@ -1,4 +1,4 @@
-import { PICK_COLORS } from '@/features/sonata-viewer/constants';
+import { contactTrace } from '@/features/lfp-viewer/field-figures';
 import {
   axis,
   BASE_LAYOUT,
@@ -48,15 +48,9 @@ export function psdFigure({
       line: { color: MEAN_INK, width: 2 },
       hovertemplate: '%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>mean</extra>',
     },
-    ...contacts.map((c, i) => ({
-      type: 'scatter',
-      mode: 'lines',
-      name: `e${c}`,
-      x,
-      y: row(c),
-      line: { color: PICK_COLORS[i % PICK_COLORS.length], width: 1.5 },
-      hovertemplate: `%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>e${c}</extra>`,
-    })),
+    ...contacts.map((c, i) =>
+      contactTrace(c, i, x, row(c), `%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>e${c}</extra>`)
+    ),
   ];
 
   return {
