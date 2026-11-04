@@ -36,15 +36,6 @@ export const extracellularRecordingArrayBuildFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-export const smallScalesViaLaunchSystemFlag = defineFlag<boolean>({
-  key: 'small-scales-via-launch-system',
-  defaultValue: false,
-  values: [true, false],
-  description:
-    'Launch single neuron, synaptome, paired neurons and small microcircuit simulations via the launch system',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
 export const memodelBuildViaLaunchSystemFlag = defineFlag<boolean>({
   key: 'memodel-build-via-launch-system',
   defaultValue: false,
@@ -149,7 +140,6 @@ export const flags = [
   extractionActivityFlag,
   brainRegionSimulationFlag,
   extracellularRecordingArrayBuildFlag,
-  smallScalesViaLaunchSystemFlag,
   memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
   morphologyDebugFlag,

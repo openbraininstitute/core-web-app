@@ -20,8 +20,6 @@ import { getLatestSimulationExecution } from '@/entity-configuration/domain/simu
 import { resolveSimulationLaunchTarget } from '@/entity-configuration/domain/simulation/utils';
 import { NodesTableKeeper } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import { NodesSessionKeeper } from '@/features/circuit-nodes/hooks/nodes-session-keeper';
-import { useFlag } from '@/features/feature-flags';
-import { smallScalesViaLaunchSystemFlag } from '@/features/feature-flags/flags';
 import { isLowCreditsError, useLowCredits } from '@/features/low-credits';
 import {
   OfflineTokenConsentModal,
@@ -105,12 +103,10 @@ export function SimulationsTab({
     id: simulations[0]?.entity_id,
   });
 
-  const smallScalesViaLaunchSystem = !!useFlag(smallScalesViaLaunchSystemFlag.key);
   const launchTarget = resolveSimulationLaunchTarget({
     entityType: entityType ?? null,
     scale: get(model, 'scale', null),
     targetSimulator: get(model, 'target_simulator', null),
-    smallScalesViaLaunchSystem,
   });
 
   const [simRequestInProgress, setSimRequestInProgress] = useState<boolean>(false);
@@ -270,7 +266,6 @@ export function SimulationsTab({
     ? jobIdMap.get(activeSimulation.id)
     : undefined;
 
-  // Only launch-system executions have an `execution_id`, so this doesn't need the flag.
   const { data: recoveredJobId } = useQuery({
     queryKey: ['scan-config-simulation-execution-id', context, activeSimulation?.id],
     queryFn: async () => {
@@ -329,7 +324,7 @@ export function SimulationsTab({
         setSimulationStatus(simId, ActivityStatus.PENDING);
         nSubmissions += 1;
       } catch (error) {
-        log('error', 'Failed to submit a simulation');
+        log('error', 'Failed to submit a simulation', error);
         if (isLowCreditsError(error)) {
           lowFundsError = true;
         }
@@ -410,10 +405,7 @@ export function SimulationsTab({
   };
 
   const simTaskType =
-    launchTarget?.taskType ??
-    (entityType === EntityTypeDict.IonChannelModel
-      ? ObiOneTaskTypeDict.IonChannelModelSimulationExecution
-      : ObiOneTaskTypeDict.CircuitSimulation);
+    launchTarget?.taskType ?? ObiOneTaskTypeDict.IonChannelModelSimulationExecution;
 
   const costModalItems = useMemo(
     () =>
@@ -431,13 +423,14 @@ export function SimulationsTab({
     onConfirm: run,
   });
 
-  // Me-models on the small-scale simulator have no cost estimator.
-  const onLaunch = (simIds: string[]) => {
-    if (entityType === EntityTypeDict.Memodel && !launchTarget) {
-      run(simIds);
+  // Bluenaas only runs ion channel models. Without a target, such as when the model failed to load,
+  // nothing launches.
+  const onLaunch = () => {
+    if (launchTarget || entityType === EntityTypeDict.IonChannelModel) {
+      openModal();
       return;
     }
-    openModal();
+    notification.error({ message: messages.SimulationLaunchTargetError, duration: 20 });
   };
 
   const onToggleSelectAll = (checked: boolean) => {
@@ -448,7 +441,7 @@ export function SimulationsTab({
     ? `(${resolvedSelectedSimulationIds.length})`
     : '';
 
-  // Until the model resolves, Launch would go to the small-scale simulator.
+  // Until the model resolves, Launch has no target.
   const loading = simulationsLoading || modelLoading;
 
   return (
