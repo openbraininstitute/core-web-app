@@ -86,6 +86,16 @@ const taskResultStrategy: TOutputStrategy = {
           } as const,
         ]
       : []),
+    ...(extendedType === ExtendedEntitiesTypeDict.AindEphysSpikeSortingResult
+      ? [
+          {
+            id: `${entity.id}-units`,
+            entity,
+            name: 'Sorted units',
+            renderer: ActivityCustomFileRenderer.SortedUnits,
+          } as const,
+        ]
+      : []),
     ...(extendedType ? makeMiniDetailFile(entity, extendedType) : []),
     ...assetsOf(entity).map((asset) => ({
       id: asset.id,

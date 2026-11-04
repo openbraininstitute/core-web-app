@@ -53,7 +53,7 @@ export function nodesOpenParams(
     buildRequest: () =>
       buildAssetDownloadRequest({
         ctx,
-        entityType: EntityTypeDict.Circuit,
+        entityType: population.entityType ?? EntityTypeDict.Circuit,
         entityId: circuitId,
         id: circuitAssetId,
         assetPath: population.file,

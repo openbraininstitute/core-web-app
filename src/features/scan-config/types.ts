@@ -893,6 +893,7 @@ export const ActivityCustomFileRenderer = {
   TaskConfigurationViewer: 'task-configuration-viewer',
   TaskLogsViewer: 'task-logs-viewer',
   RecordingTraces: 'recording-traces',
+  SortedUnits: 'sorted-units',
 } as const;
 
 export type TActivityCustomFileRenderer =
@@ -934,7 +935,16 @@ export type TRecordingTracesFile = TActivityCustomFileBase & {
   renderer: typeof ActivityCustomFileRenderer.RecordingTraces;
 };
 
-export type TActivityCustomFile = TAssetBackedFile | TEntityMiniDetailFile | TRecordingTracesFile;
+/** A row that stands for a sorting result's units and spikes, read from the folder it holds. */
+export type TSortedUnitsFile = TActivityCustomFileBase & {
+  renderer: typeof ActivityCustomFileRenderer.SortedUnits;
+};
+
+export type TActivityCustomFile =
+  | TAssetBackedFile
+  | TEntityMiniDetailFile
+  | TRecordingTracesFile
+  | TSortedUnitsFile;
 
 /** True for a row backed by a file asset; false for an entity mini-detail row. */
 export function isAssetBackedFile(file: TActivityCustomFile): file is TAssetBackedFile {

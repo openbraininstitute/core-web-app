@@ -60,6 +60,39 @@ describe('workflow output strategies', () => {
     );
   });
 
+  it('opens a sorting result on its units, ahead of the folder they are read from', () => {
+    const strategy = resolveOutputStrategy({ id: 't', type: EntityTypeDict.TaskResult });
+    const folder = { id: 'a-1', label: 'task_result', path: 'task_result' };
+    const entity = { id: 'result', type: EntityTypeDict.TaskResult, assets: [folder] };
+
+    const files =
+      strategy?.toFiles({
+        ...makeResolved(entity as never, 'task-result'),
+        extendedType: ExtendedEntitiesTypeDict.AindEphysSpikeSortingResult,
+      }) ?? [];
+
+    expect(files[0]).toMatchObject({
+      name: 'Sorted units',
+      renderer: ActivityCustomFileRenderer.SortedUnits,
+    });
+    expect(isAssetBackedFile(files[0])).toBe(false);
+  });
+
+  it('offers units on no other task result', () => {
+    const strategy = resolveOutputStrategy({ id: 't', type: EntityTypeDict.TaskResult });
+    const entity = { id: 'result', type: EntityTypeDict.TaskResult, assets: [] };
+
+    const files =
+      strategy?.toFiles({
+        ...makeResolved(entity as never, 'task-result'),
+        extendedType: ExtendedEntitiesTypeDict.AindEphysPreprocessingResult,
+      }) ?? [];
+
+    expect(files.map((file) => file.renderer)).not.toContain(
+      ActivityCustomFileRenderer.SortedUnits
+    );
+  });
+
   it('has no strategy for a ref with no type, rather than guessing one', () => {
     // the typeless case is handled by resolveStrategyForRef, which looks the type up first
     expect(resolveOutputStrategy({ id: 'd' })).toBeNull();
@@ -124,9 +157,9 @@ describe('workflow output strategies', () => {
     expect(files?.map((file) => file.id)).toEqual(['result-id', 'asset-1']);
     const first = files?.[0];
     expect(first?.renderer).toBe(ActivityCustomFileRenderer.MiniDetailView);
-    expect(first && !isAssetBackedFile(first) ? first.dataType : undefined).toBe(
-      ExtendedEntitiesTypeDict.EFeatureExtractionResult
-    );
+    expect(
+      first?.renderer === ActivityCustomFileRenderer.MiniDetailView ? first.dataType : ''
+    ).toBe(ExtendedEntitiesTypeDict.EFeatureExtractionResult);
   });
 
   it('shows an entity output as a single mini-detail row', () => {

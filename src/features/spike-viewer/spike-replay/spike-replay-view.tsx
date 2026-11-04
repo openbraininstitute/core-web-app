@@ -61,6 +61,7 @@ import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen'
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
+import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { TimeAxis } from '@/features/spike-viewer/renderer/raster-renderer';
 import type { Notice } from '@/features/spike-viewer/spike-replay/replay-notice';
@@ -101,6 +102,10 @@ const DEFAULT_MARKER_SIZE = 4;
  * one — the nodes table — would be a second, contradicting control.
  */
 const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
+const SCENE_FEATURES_WITH_ELECTRODES: Partial<IEntityViewerFeatures> = {
+  ...SCENE_FEATURES,
+  electrodes: true,
+};
 
 interface SpikeReplayViewProps {
   data: SpikeData;
@@ -113,6 +118,10 @@ interface SpikeReplayViewProps {
    * spikes off this thread. Omit it to have the view start one of its own.
    */
   session?: SpikeSession | null;
+  /** The electrodes to draw in the scene beside each population's cells. */
+  electrodes?: Record<string, ICircuitOverlayGroup[]>;
+  /** What the table of cells is called. */
+  tableTitle?: string;
 }
 
 /**
@@ -127,7 +136,14 @@ interface SpikeReplayViewProps {
  * then on, so switching views never tears down the WebGL context and
  * re-downloads every morphology. Without a subject it never mounts at all.
  */
-export function SpikeReplayView({ data, subject, reportPath, session }: SpikeReplayViewProps) {
+export function SpikeReplayView({
+  data,
+  subject,
+  reportPath,
+  session,
+  electrodes,
+  tableTitle = 'Neuron Table',
+}: SpikeReplayViewProps) {
   const { timeline } = useSimulation();
   // Every pass over the spikes - the cells on show, the replay's arrays, the
   // statistics - is the file's worker's, so none of them holds up the page.
@@ -665,6 +681,12 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
     </div>
   );
 
+  const sceneElectrodes = useMemo(
+    () =>
+      electrodes && populationName ? { overlays: electrodes[populationName] ?? [] } : undefined,
+    [electrodes, populationName]
+  );
+
   // The scene's colour-by is in its corner docked, else in the header row.
   // A circuit's renderer waits on whether Bluenaas has its pack.
   const scene = sceneMounted &&
@@ -674,7 +696,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
         {...subject}
         largeCircuit={circuit !== undefined && !drawsEachCell}
         active={showScene}
-        features={SCENE_FEATURES}
+        features={electrodes ? SCENE_FEATURES_WITH_ELECTRODES : SCENE_FEATURES}
+        electrodes={sceneElectrodes}
         // Only a name the config backs with cells. A name the scene
         // cannot draw would make it fall back on its own — with no name
         // it falls back deliberately, to the same default, and the
@@ -741,7 +764,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
             }}
             bottom={
               statistics && {
-                title: 'Neuron Table',
+                title: tableTitle,
                 boxClassName: 'px-3 pt-1 pb-2',
                 content: statistics,
               }
@@ -789,11 +812,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
           {/* With the rule shut over either column, one bar naming its panes, in the strip it leaves */}
           {sidePanel.fileStrip &&
             createPortal(
-              <ShutPaneBar
-                upright
-                title={['Raster', 'Neuron Table']}
-                onOpen={sidePanel.openColumns}
-              />,
+              <ShutPaneBar upright title={['Raster', tableTitle]} onOpen={sidePanel.openColumns} />,
               sidePanel.fileStrip
             )}
           {sidePanel.panelStrip &&

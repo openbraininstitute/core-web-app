@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { useMorphologyPackStatus } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
 import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 
@@ -60,6 +61,13 @@ afterEach(() => {
 });
 
 describe('useMorphologyPackStatus', () => {
+  it('asks nothing for a task result drawn as a circuit, which has no pack', () => {
+    const { result } = render({ ...MICRO, type: EntityTypeDict.TaskResult });
+
+    expect(result.current).toBeNull();
+    expect(h.request).not.toHaveBeenCalled();
+  });
+
   it("asks Bluenaas for the circuit's pack in the route's workspace, undefined until it answers", async () => {
     const { result } = render(MICRO);
     expect(result.current).toBeUndefined();

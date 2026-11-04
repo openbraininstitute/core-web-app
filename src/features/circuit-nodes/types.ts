@@ -1,3 +1,4 @@
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type { ICircuitSonataConfiguration } from '@/api/entitycore/types/entities/circuit';
 
 export const ColumnKindDict = {
@@ -185,6 +186,8 @@ export type NodePopulation = {
   name: string;
   type: string;
   file: string;
+  /** The entity the file is an asset of, where that is not a circuit. */
+  entityType?: TEntityTypeDict;
 };
 
 export type EdgePopulation = {

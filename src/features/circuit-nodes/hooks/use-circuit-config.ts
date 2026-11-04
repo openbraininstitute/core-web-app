@@ -7,6 +7,7 @@ import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { resolveCircuitAssetPath } from '@/utils/circuit-manifest';
 
+import type { TEntityTypeDict } from '@/api/entitycore/types';
 import type {
   ICircuit,
   ICircuitSonataConfiguration,
@@ -29,7 +30,8 @@ const CIRCUIT_CONFIG_PATH = 'circuit_config.json';
  */
 export function parseSonataConfig(
   raw: ICircuitSonataConfiguration,
-  circuitAssetId: string
+  circuitAssetId: string,
+  entityType?: TEntityTypeDict
 ): ParsedCircuitConfig {
   const nodes: NodePopulation[] = [];
   const edges: EdgePopulation[] = [];
@@ -39,7 +41,7 @@ export function parseSonataConfig(
   for (const entry of raw.networks?.nodes ?? []) {
     const file = filePath(entry.nodes_file ?? '');
     for (const [name, pop] of Object.entries(entry.populations ?? {})) {
-      nodes.push({ name, type: pop.type, file });
+      nodes.push({ name, type: pop.type, file, entityType });
     }
   }
   for (const entry of raw.networks?.edges ?? []) {
@@ -68,14 +70,14 @@ export function useCircuitConfig(circuit: ICircuit | undefined) {
       if (!circuit || !asset) throw new Error('Missing circuit or sonata_circuit asset');
       const response = await downloadAsset({
         ctx: context,
-        entityType: EntityTypeDict.Circuit,
+        entityType: circuit.type ?? EntityTypeDict.Circuit,
         entityId: circuit.id,
         id: asset.id,
         assetPath: CIRCUIT_CONFIG_PATH,
         asRawResponse: true,
       });
       const raw = (await response.json()) as ICircuitSonataConfiguration;
-      return parseSonataConfig(raw, asset.id);
+      return parseSonataConfig(raw, asset.id, circuit.type);
     },
   });
 

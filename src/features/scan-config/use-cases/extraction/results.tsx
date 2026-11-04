@@ -13,6 +13,7 @@ import { TaskLaunchButton } from '@/features/scan-config/components/shared/task-
 import { useTaskTabState } from '@/features/scan-config/components/shared/use-task-tab-state';
 import { ActivityCustomFileRenderer } from '@/features/scan-config/types';
 import { InOutFiles } from '@/features/scan-config/use-cases/extraction/in-out-files';
+import { SortedUnitsViewer } from '@/features/spike-viewer/sorted-units/sorted-units-viewer';
 import { TaskConfigurationViewer, TaskLogsViewer } from '@/features/task-logs-stream';
 import { isTerminalActivityStatus } from '@/features/task-runner';
 import { useTaskLaunchMutation } from '@/features/task-runner/hooks/mutations';
@@ -173,6 +174,15 @@ export function ExtractionTab({
                 source={{ kind: 'preprocessed', entityId: selectedFile.entity.id }}
                 context={context}
               />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.SortedUnits && (
+              <div className="h-full w-full">
+                <SortedUnitsViewer
+                  key={selectedFile.entity.id}
+                  entity={selectedFile.entity}
+                  context={context}
+                />
+              </div>
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
               <div className="h-full w-full">

@@ -79,6 +79,8 @@ const DEFAULT_TABLE_HEIGHT_RATIO = 0.4;
 export interface IElectrodeOverlayOptions {
   /** Stored recording array supplying the overlays when there is no live config. */
   arrayEntity?: TElectrodeArrayEntity | null;
+  /** Electrodes the host already has, drawn in place of the stored or configured ones. */
+  overlays?: ICircuitOverlayGroup[];
   /**
    * Electrode ids to draw. Omit to draw every overlay (scan-config behaviour);
    * pass an explicit list — `[]` included — to hand visibility to the host, which
@@ -263,7 +265,7 @@ export function CircuitScene({
     explicitLocationsBlockTypes,
     singleMorphology,
   } = form ?? {};
-  const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
+  const { arrayEntity, overlays: hostOverlays, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   // An MEModel is one cell with no nodes file: nothing to colour by, list, or highlight.
   const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
@@ -429,7 +431,7 @@ export function CircuitScene({
       (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
-    overlays,
+    overlays: placedOverlays,
     available: electrodesAvailable,
     draggableOverlayIds,
     overlayIdByBlockPath,
@@ -438,6 +440,7 @@ export function CircuitScene({
     arrayEntity: enableElectrodes ? arrayEntity : undefined,
   });
 
+  const overlays = hostOverlays ?? placedOverlays;
   const scopedOverlays = useMemo(
     () => scopeOverlaysToSelection(overlays, visibleOverlayIds),
     [overlays, visibleOverlayIds]
@@ -468,7 +471,7 @@ export function CircuitScene({
     menu,
     onResetView,
   } = useCircuitColorBy(circuit, {
-    supportsElectrodes: enableElectrodes && electrodesAvailable,
+    supportsElectrodes: enableElectrodes && (electrodesAvailable || hostOverlays !== undefined),
     supportsMorphologyLocations: hasMorphologyLocationsOnScreen,
     drawsSomas: largeCircuit,
     supportsMorphologies,

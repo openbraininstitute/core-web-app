@@ -15,6 +15,8 @@ type UseSpikeTraceArgs = {
   entityId: string;
   entityType: TEntityTypeDict;
   asset: IAsset;
+  /** The spike file within `asset`, where that is a directory. */
+  assetPath?: string;
   ctx?: WorkspaceContext;
 };
 
@@ -27,6 +29,7 @@ export default function useSpikeTrace({
   entityId,
   entityType,
   asset,
+  assetPath,
   ctx,
 }: UseSpikeTraceArgs): [SpikeData | null, Error | null, SpikeSession | null] {
   // Kept with its file: the session of a file before has ended, and would leave every question hanging.
@@ -46,17 +49,29 @@ export default function useSpikeTrace({
       context: ctx,
       entityId,
       assetId: asset.id,
-      assetPath: asset.path,
+      assetPath: assetPath ?? asset.path,
       assetType: entityType,
       asRawResponse: false,
     }),
-    queryFn: () =>
-      downloadAsset<ArrayBuffer>({
-        entityType,
-        entityId,
-        id: asset.id,
-        ctx,
-      }),
+    // Raw where it is a file of a directory, whose stored content type may decode to a Blob.
+    queryFn: async () =>
+      assetPath
+        ? (
+            await downloadAsset({
+              entityType,
+              entityId,
+              id: asset.id,
+              assetPath,
+              ctx,
+              asRawResponse: true,
+            })
+          ).arrayBuffer()
+        : downloadAsset<ArrayBuffer>({
+            entityType,
+            entityId,
+            id: asset.id,
+            ctx,
+          }),
     staleTime: Infinity,
     refetchOnWindowFocus: false,
   });

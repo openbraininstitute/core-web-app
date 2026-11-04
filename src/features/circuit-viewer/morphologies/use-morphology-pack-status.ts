@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { CircuitScaleDictionary, type ICircuit } from '@/api/entitycore/types/entities/circuit';
+import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import {
   type MorphologyPackStatus,
   requestMorphologyPack,
@@ -15,14 +16,14 @@ const FAILED: MorphologyPackStatus = { state: 'failed' };
 
 /**
  * The circuit's morphology pack as Bluenaas has it, its build queued the first time it is asked for: `undefined` until
- * Bluenaas answers, `null` where it is not asked (no circuit, a single cell, the `circuit-morphologies` flag off, no
- * project). With `poll`, asked again every 10 s while it builds.
+ * Bluenaas answers, `null` where it is not asked (no circuit, a single cell, a task result drawn as a circuit, the
+ * `circuit-morphologies` flag off, no project). With `poll`, asked again every 10 s while it builds.
  *
  * Gone once nothing reads it, so the next visit asks again: a pair or small circuit switches to its pack then, never
  * during the visit it was built in.
  */
 export function useMorphologyPackStatus(
-  circuit: Pick<ICircuit, 'id' | 'scale'> | undefined,
+  circuit: (Pick<ICircuit, 'id' | 'scale'> & Partial<Pick<ICircuit, 'type'>>) | undefined,
   { poll = false }: { poll?: boolean } = {}
 ): MorphologyPackStatus | null | undefined {
   const flag = !!useFlag(circuitMorphologiesFlag.key);
@@ -31,6 +32,7 @@ export function useMorphologyPackStatus(
     flag &&
     circuit !== undefined &&
     circuit.scale !== CircuitScaleDictionary.Single &&
+    circuit.type !== EntityTypeDict.TaskResult &&
     !!ctx.virtualLabId &&
     !!ctx.projectId;
   const { data, isError } = useQuery({
