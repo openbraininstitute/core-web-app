@@ -138,6 +138,13 @@ export const MICRONS_FRAME: FrameBox = {
   up: [0, -1, 0],
 };
 
+/**
+ * The Virtual Labs screen as it was until 2026-11-04, which may come back: true has the Male CNS stay on from the
+ * landing, gliding over to the right of that screen with its caption, and the recording under the words. False has the
+ * Male CNS on the landing alone, leaving with it, and the recording on the right.
+ */
+export const CNS_ON_FIRST_SCREEN: boolean = false;
+
 /** The cortical microcircuit's one colour in this walkthrough, the fly's brain's, and MICrONS's. */
 export const L6_COLOR = '#e64980';
 export const FLY_COLOR = '#2f9e44';

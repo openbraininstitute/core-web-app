@@ -117,7 +117,7 @@ export function AgentPrompts() {
       ref={rootRef}
       // Beside the stage, ending a gutter short of the multiplying brains' canvas (the stage's 62% of the page,
       // that canvas inset from it), less the column's own left padding.
-      className="flex flex-col gap-[12px] pt-[4px] pb-[6px] lg:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)]"
+      className="flex flex-col gap-[12px] pt-[4px] pb-[6px] beside:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)]"
     >
       {PROMPTS.map((prompt, i) => {
         const on = i === state.box;

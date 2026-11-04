@@ -20,8 +20,9 @@ import {
   NotebooksVideo,
   StageVideo,
   TEACHING_VIDEO,
+  VIRTUAL_LABS_VIDEO,
 } from './brain-views';
-import { L6_COLOR } from './brains';
+import { CNS_ON_FIRST_SCREEN, L6_COLOR } from './brains';
 import { BRAIN_CHAPTERS, BRAIN_INTRO, SERIF_TITLE } from './chapters';
 import { AgentReady } from './agent-ready';
 import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
@@ -30,6 +31,8 @@ import { MultiplyingBrains } from './multiplying-brains';
 
 import type { TBrainScene } from './chapters';
 
+/** How long the landing stands once its words are out before the page scrolls on by itself, ms. */
+const LANDING_STAY_MS = 4000;
 /** The analysis screen, behind which the Male CNS turns. */
 const ANALYSIS_AT = BRAIN_CHAPTERS.findIndex((chapter) => chapter.scene === 'analysis');
 /** The landing's words with a screen of their own, by its chapter id: underlined on it, and taking the page there. */
@@ -72,6 +75,10 @@ export function BrainsWalkthroughPage({
       introTail="for everyone."
       introFoot={<AgentReady />}
       introBase={<LandingThemes />}
+      // On to the first screen by itself, but not ahead of the fly, whose walk takes longer.
+      introStay={walking ? undefined : LANDING_STAY_MS}
+      // The microcircuit, and the Male CNS where it is the landing's alone: neither would be seen again.
+      introFloats={CNS_ON_FIRST_SCREEN ? 1 : 2}
       // The first screen's title, as the intro's words rise into it.
       firstTitleClass={SERIF_TITLE}
       // In-app, the home as main has it is uncovered as it ends; on the landing, Enter leads to the app.
@@ -101,9 +108,9 @@ export function BrainsWalkthroughPage({
           scene={chapter.scene}
           wide={(scene) => scene === 'trio'}
           // The first screen, on its grid.
-          full={(scene) => scene === 'opening'}
+          full={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.
-          passThrough={(scene) => scene === 'opening'}
+          passThrough={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           draw={(scene) => <BrainScene scene={scene} />}
         />
       )}
@@ -113,7 +120,17 @@ export function BrainsWalkthroughPage({
 
 /** A screen's stage. Its models are drawn from packs in the repo, the same signed in or not. */
 function BrainScene({ scene }: { scene: TBrainScene }) {
-  if (scene === 'opening') return <BrainsOpening />;
+  if (scene === 'opening') {
+    return CNS_ON_FIRST_SCREEN ? (
+      <BrainsOpening />
+    ) : (
+      // A little smaller than on the other screens, out to the page's margin, as far in as the words are.
+      <StageVideo
+        video={VIRTUAL_LABS_VIDEO}
+        className="beside:right-[clamp(32px,5vw,88px)] beside:left-[23%] beside:justify-end"
+      />
+    );
+  }
   if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} />;
   if (scene === 'multiplying') return <MultiplyingBrains />;
   if (scene === 'teaching') return <StageVideo video={TEACHING_VIDEO} />;

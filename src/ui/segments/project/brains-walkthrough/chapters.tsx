@@ -2,7 +2,8 @@ import { Actions, CourseLink, Row, SectionLink } from '@/ui/segments/project/wal
 
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
-import { ConfigurationRecording, StartNow } from './brain-views';
+import { ConfigurationRecording, StartNow, VirtualLabsPoints } from './brain-views';
+import { CNS_ON_FIRST_SCREEN } from './brains';
 import grid from './opening-grid.module.css';
 
 import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walkthrough';
@@ -33,6 +34,9 @@ export const SERIF_TITLE = 'font-[family-name:var(--font-DMSerifText)] font-norm
 /** What the walkthrough opens on, under the logo, before its first screen's own title takes its place. */
 export const BRAIN_INTRO = 'The Era of brain simulation has arrived...';
 
+/** A word on the platform, on its first screen. */
+const VIRTUAL_LABS_WORDS = <VirtualLabsPoints />;
+
 /** The walkthrough of the course's three brains, and of the models the platform holds inside each. */
 export const BRAIN_CHAPTERS: IBrainChapter[] = [
   {
@@ -42,19 +46,30 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     title: 'Virtual Labs Platform',
     hero: true,
     titleClass: SERIF_TITLE,
-    // The left column of the screen's layout: a word on the platform and the recording.
-    column: `${grid.grid} lg:w-[calc(var(--grid-x0)+var(--grid-col))] lg:max-w-none lg:pt-(--grid-y0)`,
-    top: true,
-    body: (
-      <>
-        <p className="max-w-[42em] text-[clamp(15px,1.15vw,17px)] leading-[1.6] text-neutral-600">
-          An open virtual laboratory for neuroscience, in your browser. Explore data across species,
-          build and simulate brain models from single neurons to whole brains, and share the results
-          with your team.
-        </p>
-        <ConfigurationRecording className="mt-[6px] w-full max-w-[calc(50vh*1512/948)]" />
-      </>
-    ),
+    ...(CNS_ON_FIRST_SCREEN
+      ? {
+          // The left column of the screen's layout: a word on the platform and the recording.
+          column: `${grid.grid} beside:w-[calc(var(--grid-x0)+var(--grid-col))] beside:max-w-none beside:pt-(--grid-y0)`,
+          top: true,
+          body: (
+            <>
+              {VIRTUAL_LABS_WORDS}
+              <ConfigurationRecording className="mt-[6px] w-full max-w-[calc(50vh*1512/948)]" />
+            </>
+          ),
+        }
+      : {
+          // Its letters' tops, a quarter of an em down its line, level with the video's.
+          titleClass: `${SERIF_TITLE} beside:whitespace-nowrap beside:-mt-[0.25em]`,
+          top: true,
+          // As wide as its title on one line, 9 of its ems, centred in the room left of the video, which starts at
+          // 52.26vw: the stage's 38vw, and 23% of its 62vw. Its top level with the video's: half way down the page less
+          // half the video's height, 0.5622 of its width, which is the stage's 47.74vw less the margin; or 10vh, where
+          // the height holds it.
+          column:
+            'beside:w-[clamp(360px,39.6vw,576px)] beside:max-w-none beside:pl-0 beside:ml-[calc(26.13vw_-_clamp(360px,39.6vw,576px)_/_2)] beside:pt-[max(10vh,calc(50vh_-_13.42vw_+_0.2811_*_clamp(32px,5vw,88px)))]',
+          body: VIRTUAL_LABS_WORDS,
+        }),
   },
   {
     id: 'simulate',
@@ -88,7 +103,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     hero: true,
     titleClass: SERIF_TITLE,
     // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
-    column: 'lg:w-[52%] lg:max-w-[720px]',
+    column: 'beside:w-[52%] beside:max-w-[720px]',
     body: (
       <>
         <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">

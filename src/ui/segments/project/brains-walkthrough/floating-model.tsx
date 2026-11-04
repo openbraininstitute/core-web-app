@@ -8,7 +8,13 @@ import { PackView } from '@/ui/segments/project/models/pack-view';
 import { FLY_PACK, L6_PACK } from '@/ui/segments/project/models/repo-packs';
 import { cn } from '@/utils/css-class';
 
-import { CNS_FRAME, FLY_FRAME, L6_COLOR, L6_FRAME } from './brains';
+import {
+  CNS_FRAME,
+  CNS_ON_FIRST_SCREEN,
+  FLY_FRAME,
+  L6_COLOR,
+  L6_FRAME,
+} from './brains';
 import styles from './floating-model.module.css';
 import { NeuronSkeleton } from './neuron-skeleton';
 import grid from './opening-grid.module.css';
@@ -49,12 +55,15 @@ const L6_MOVES: Moves = {
   // Out along the tilted column's side, its dendrites' tips just past the corner, to come in at once.
   off: { transform: L6_OFF, opacity: 1 },
   in: IN,
-  // Up and away with the landing, as it scrolls on to the first screen.
+  // Away with the landing, as it goes on to the first screen.
   out: { transform: 'translateY(-100vh)', opacity: 1 },
 };
 
-/** A page below, with the first screen, which scrolls up into view as the landing goes. */
-const FLY_BELOW: CSSProperties = { transform: 'translateY(100vh)', opacity: 1 };
+/** A page on, with the first screen, which comes into view as the landing goes. */
+const FLY_BELOW: CSSProperties = {
+  transform: 'translateY(100vh)',
+  opacity: 1,
+};
 const FLY_MOVES: Moves = {
   building: BUILDING,
   off: FLY_BELOW,
@@ -87,6 +96,24 @@ const FLY_CNS_MOVES: Moves = {
   off: FLY_ON_LANDING,
   in: IN,
   out: FLY_ON_LANDING,
+};
+/**
+ * The Male CNS on the landing alone, as the microcircuit is: away with it as it goes on to the first screen, by more
+ * than a page, as its view runs off the landing's edge, by a quarter of a page at the most.
+ */
+const awayWithTheLanding = (at: string): CSSProperties => ({
+  transform: `translateY(-125vh) ${at}`,
+  opacity: 1,
+});
+const CNS_LANDING_MOVES: Moves = {
+  ...CNS_MOVES,
+  in: CNS_ON_LANDING,
+  out: awayWithTheLanding(CNS_LANDING_AT),
+};
+const FLY_LANDING_MOVES: Moves = {
+  ...FLY_CNS_MOVES,
+  in: FLY_ON_LANDING,
+  out: awayWithTheLanding(FLY_LANDING_AT),
 };
 const FLY_FIRST_IN = 'opacity 0.3s ease-out';
 /** The CNS's drift on the first screen; standing in the fly on the landing, it does not drift. */
@@ -134,6 +161,7 @@ function Floating({
   tilt,
   behind = false,
   firstIn,
+  turnsOverLanding,
   view,
   revealed,
   ready,
@@ -159,6 +187,8 @@ function Floating({
   behind?: boolean;
   /** How it comes the first time, where not drifting in from off the page. */
   firstIn?: string;
+  /** Turned by hand over the landing; by default, where on show over the landing alone. */
+  turnsOverLanding?: boolean;
   /** Its view, told whether it has been sent in yet, and to tell once it is built. */
   view: (started: boolean, onBuilt: () => void) => ReactNode;
 }) {
@@ -196,9 +226,9 @@ function Floating({
   if (chapter > 1) return null;
   const move = !started ? 'building' : !sliding ? 'off' : shown ? 'in' : 'out';
   const place = move === 'in' && on === 'both' && !entered && landing ? landing : moves[move];
-  // Turned by hand while on show, over the landing only where on show over it alone; otherwise inert, so that
-  // what is under it has the pointer.
-  const live = chapter === 0 && move === 'in' && (on !== 'both' || entered);
+  // Turned by hand while on show, over the landing as `turnsOverLanding` says. Otherwise inert, so that what is under
+  // it has the pointer.
+  const live = chapter === 0 && move === 'in' && (entered || (turnsOverLanding ?? on === 'landing'));
   const transition =
     move === 'building' || move === 'off'
       ? 'none'
@@ -629,11 +659,11 @@ export function FloatingFlyBrain(state: FloatingState) {
 }
 
 /**
- * The male fly's whole central nervous system over the landing and the first screen, its surface's neurons in
- * blue, lit as its model's neurons fire: over the landing inside NeuroMechFly's body, walking in along the bottom
- * right and turning to face the page (or, without the fly, in the bottom right corner, drifting in once built),
- * then over the first screen's right column, standing from the brain down the nerve cord and turning about it,
- * gliding there as the landing scrolls away and back as it comes again.
+ * The male fly's whole central nervous system over the landing, its surface's neurons in blue, lit as its model's
+ * neurons fire: inside NeuroMechFly's body, walking in along the bottom right and turning to face the page, or, without
+ * the fly, in the bottom right corner, drifting in once built. It goes up and away with the landing; or, with
+ * `CNS_ON_FIRST_SCREEN`, glides as the landing scrolls away to the first screen's right column, standing from the brain
+ * down the nerve cord and turning about it, and back as the landing comes again.
  */
 export function FloatingMaleCns({
   walking,
@@ -658,11 +688,21 @@ export function FloatingMaleCns({
   return (
     <Floating
       {...state}
-      on="both"
-      behind
-      moves={walking ? FLY_CNS_MOVES : CNS_MOVES}
-      landing={walking ? FLY_ON_LANDING : CNS_ON_LANDING}
+      on={CNS_ON_FIRST_SCREEN ? 'both' : 'landing'}
+      behind={CNS_ON_FIRST_SCREEN}
+      moves={
+        CNS_ON_FIRST_SCREEN
+          ? walking
+            ? FLY_CNS_MOVES
+            : CNS_MOVES
+          : walking
+            ? FLY_LANDING_MOVES
+            : CNS_LANDING_MOVES
+      }
+      landing={CNS_ON_FIRST_SCREEN ? (walking ? FLY_ON_LANDING : CNS_ON_LANDING) : undefined}
       firstIn={walking ? FLY_FIRST_IN : undefined}
+      // In the fly's body, the walk has the camera.
+      turnsOverLanding={!walking}
       // Over the right of the first screen, all but its height.
       className={cn(grid.grid, grid.cns)}
       drift={walking ? (entered ? FLY_CNS_DRIFT : STILL) : CNS_DRIFT}

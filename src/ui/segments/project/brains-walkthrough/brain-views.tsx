@@ -22,6 +22,7 @@ import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-part
 import { cn } from '@/utils/css-class';
 
 import { BrainGlass } from './brain-glass';
+import { serifItalic } from './fonts';
 import grid from './opening-grid.module.css';
 import {
   brainFrame,
@@ -250,6 +251,15 @@ export const CONFIGURATION_VIDEO = {
   poster: '/images/start/walkthrough/simulation-configuration.jpg',
 };
 
+/**
+ * The Virtual Labs screen's working video, straight cuts of the user's recordings: a neuron skeletonized, then a
+ * simulation's results (harness/labs_video/make.sh in the home_page group, which lists them).
+ */
+export const VIRTUAL_LABS_VIDEO = {
+  src: '/images/start/walkthrough/virtual-labs.mp4',
+  poster: '/images/start/walkthrough/virtual-labs.jpg',
+};
+
 /** The recording of a simulation being set up, in a column of words, coming in once the intro is over. */
 export function ConfigurationRecording({ className }: { className?: string }) {
   const entered = useWalkthroughEntered();
@@ -270,6 +280,60 @@ export function ConfigurationRecording({ className }: { className?: string }) {
   );
 }
 
+
+const VIRTUAL_LABS_POINTS = [
+  'Explore data across species',
+  'Build and simulate brain models',
+  'Share the results with your team',
+];
+/**
+ * When the first point comes after the landing starts to leave, as the page comes to rest, and how long each stays, ms.
+ * For now, the video's 9 s between the three, not yet in time with what it shows.
+ */
+const POINTS_MS = { first: 1000, each: 3000 };
+
+/** What a Virtual Lab is for, a point at a time, each in place of the last, round and round once the intro is over. */
+export function VirtualLabsPoints() {
+  const entered = useWalkthroughEntered();
+  const [on, setOn] = useState<number | null>(null);
+  useEffect(() => {
+    if (!entered) return;
+    let next = 0;
+    const show = () => {
+      setOn(next);
+      next = (next + 1) % VIRTUAL_LABS_POINTS.length;
+    };
+    let round: ReturnType<typeof setInterval> | undefined;
+    const first = setTimeout(() => {
+      show();
+      round = setInterval(show, POINTS_MS.each);
+    }, POINTS_MS.first);
+    return () => {
+      clearTimeout(first);
+      clearInterval(round);
+      setOn(null);
+    };
+  }, [entered]);
+  return (
+    <ul className={cn(serifItalic.className, 'text-primary-9 grid text-[clamp(22px,2vw,30px)] leading-[1.25]')}>
+      {VIRTUAL_LABS_POINTS.map((point, i) => (
+        <li
+          key={point}
+          aria-hidden={i !== on}
+          // The last gone before the next comes, as in one place the two together cannot be read.
+          className={cn(
+            'col-start-1 row-start-1',
+            i === on
+              ? 'opacity-100 [transition:opacity_400ms_ease-out_250ms]'
+              : 'opacity-0 [transition:opacity_250ms_ease-in]'
+          )}
+        >
+          {point}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 /** A classroom workshop on the platform, from the public homepage's tour (core-web-app#2032). */
 export const TEACHING_VIDEO = {
@@ -353,10 +417,21 @@ export function NotebooksVideo() {
   return <StageVideo video={{ src, poster: '' }} />;
 }
 
-/** A recording across the stage beside a screen's words, in the middle of its height. */
-export function StageVideo({ video }: { video: { src: string; poster: string } }) {
+/** A recording across the stage beside a screen's words, in the middle of its height; `className` to place it otherwise. */
+export function StageVideo({
+  video,
+  className,
+}: {
+  video: { src: string; poster: string };
+  className?: string;
+}) {
   return (
-    <div className="absolute inset-y-[10vh] right-[clamp(110px,12vw,210px)] left-[2%] flex items-center justify-center">
+    <div
+      className={cn(
+        'absolute inset-y-[10vh] right-[clamp(110px,12vw,210px)] left-[2%] flex items-center justify-center',
+        className
+      )}
+    >
       <video
         src={video.src}
         poster={video.poster || undefined}

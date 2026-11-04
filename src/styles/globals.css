@@ -21,6 +21,16 @@
 */
 @custom-variant quiet-notes (&:where([data-notes="quiet"] *));
 
+/*
+  The walkthroughs' words beside their stage: where the window is wide, or landscape, as it stays however far it is
+  zoomed in, which narrows it for the page. A phone held upright stacks them.
+*/
+@custom-variant beside {
+  @media (min-width: 64rem), (orientation: landscape) {
+    @slot;
+  }
+}
+
 /* @import './tailwind-preflight.css' layer(base); */
 
 /* @import 'tailwindcss'; */

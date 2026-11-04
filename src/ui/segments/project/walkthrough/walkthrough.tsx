@@ -1,5 +1,6 @@
 'use client';
 
+import { RiArrowDownSLine } from '@remixicon/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -18,6 +19,15 @@ import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/ui/molecules/dropdown-menu';
 import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { MENU_ITEMS } from '@/ui/segments/landing/constants';
 import { cn } from '@/utils/css-class';
@@ -98,6 +108,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   introTail,
   introFoot,
   introBase,
+  introStay,
+  introFloats = 1,
   firstTitleClass,
   pager = true,
   footer,
@@ -146,6 +158,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   introFoot?: ReactNode;
   /** Along the intro's foot: a line of the host's own. */
   introBase?: ReactNode;
+  /** How long the intro stands once its words are out before going on to the first screen by itself, ms. */
+  introStay?: number;
+  /** How many of what floats over the intro call `ready`: it waits for them all. */
+  introFloats?: number;
   /** The first chapter's title, where the intro's words come to rest, set apart from the others: a class, such as a face. */
   firstTitleClass?: string;
 }) {
@@ -174,8 +190,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     setIntroLeft(true);
   }, [root]);
   // What floats over the intro built, for the intro to start with it.
-  const [floated, setFloated] = useState(false);
-  const floatReady = useCallback(() => setFloated(true), []);
+  const [floated, setFloated] = useState(0);
+  const floatReady = useCallback(() => setFloated((built) => built + 1), []);
   // Back to the intro from the first screen, by the wheel, a key or its arrow.
   const backToIntro = useCallback(() => {
     setIntroState('returning');
@@ -365,8 +381,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             foot={introFoot}
             base={introBase}
             returning={introState === 'returning'}
-            ready={!floating || floated}
+            ready={!floating || floated >= introFloats}
             asked={enterAsked}
+            stay={accountFlow ? undefined : introStay}
             onLeave={leaveIntro}
             onDone={finishIntro}
           />
@@ -413,46 +430,26 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         {/* Over the intro too: the ways in are there from the first. */}
         {fullscreen && (
             <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px]">
-              <div className="flex items-center gap-[clamp(24px,3vw,48px)]">
-                <span
-                  data-walkthrough-logo
-                  className={cn(
-                    'shrink-0 transition-opacity duration-500',
-                    introDone ? 'opacity-100' : 'opacity-0'
-                  )}
-                >
-                  <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
-                </span>
-                {/* The marketing nav, beside the logo, in from the first screen on, hidden over the intro. */}
-                <nav
-                  className={cn(
-                    'hidden items-center gap-[clamp(18px,2.4vw,38px)] transition-opacity duration-500 lg:flex',
-                    introDone ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-                  )}
-                  aria-hidden={!introDone}
-                >
-                  {MENU_ITEMS.map((item) => (
-                    <Link
-                      key={item.caption}
-                      href={item.slug}
-                      tabIndex={introDone ? undefined : -1}
-                      className="text-primary-9 text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60"
-                    >
-                      {item.caption}
-                    </Link>
-                  ))}
-                </nav>
-              </div>
-              <div className="pointer-events-auto flex items-center gap-[12px]">
+              <span
+                data-walkthrough-logo
+                className={cn(
+                  'shrink-0 transition-opacity duration-500',
+                  introDone ? 'opacity-100' : 'opacity-0'
+                )}
+              >
+                <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
+              </span>
+              <div className="pointer-events-auto flex items-center gap-[20px]">
+                <FindOutMore shown={introDone} />
                 {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                 <button
                   type="button"
                   onClick={finish}
-                  className="border-primary-9 text-primary-9 hover:bg-primary-9 rounded-full border-[1.5px] px-[20px] py-[9px] text-[14px] leading-[18px] font-semibold transition-colors hover:text-white"
+                  className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110"
                 >
                   Enter the platform
                 </button>
-                {account ? (
+                {account && (
                   <AccountChip
                     account={account}
                     onSignOut={() => {
@@ -464,14 +461,6 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                       setAccount(null);
                     }}
                   />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAccountFlow('signup')}
-                    className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110"
-                  >
-                    Sign up
-                  </button>
                 )}
               </div>
             </div>
@@ -493,8 +482,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 chapter.wide
                   ? 'items-start'
                   : chapter.top
-                    ? 'items-end lg:items-start'
-                    : 'items-end lg:items-center'
+                    ? 'items-end beside:items-start'
+                    : 'items-end beside:items-center'
               )}
             >
               <ChapterText
@@ -527,6 +516,54 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       {finishing && endUnder}
       {inBrowser && createPortal(page, document.body)}
     </>
+  );
+}
+
+/**
+ * All the site's pages as one menu in the top bar, under the headings of its own menu, in from the first screen on,
+ * hidden over the intro. Not modal: the page goes on scrolling under it.
+ */
+function FindOutMore({ shown }: { shown: boolean }) {
+  return (
+    <div
+      aria-hidden={!shown}
+      inert={!shown || undefined}
+      className={cn(
+        'hidden transition-opacity duration-500 sm:block',
+        shown ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+      )}
+    >
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger className="group text-primary-9 flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60">
+          Find out more
+          <RiArrowDownSLine className="size-[18px] transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        </DropdownMenuTrigger>
+        {/* Down clear of Enter the platform, which it runs under. */}
+        <DropdownMenuContent
+          align="start"
+          sideOffset={14}
+          className="border-neutral-1 w-44 rounded-xl bg-white p-1"
+        >
+          {MENU_ITEMS.map((item) => (
+            <DropdownMenuGroup key={item.caption}>
+              {item.submenu && (
+                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-[11px] leading-[16px] font-semibold tracking-[0.12em] text-neutral-500 uppercase">
+                  {item.caption}
+                </DropdownMenuLabel>
+              )}
+              {(item.submenu ?? [item]).map((page) => (
+                <DropdownMenuItem key={page.slug} asChild className="cursor-pointer rounded-lg px-3 py-1.5">
+                  <Link href={page.slug} className="text-primary-9 text-[14px] leading-[18px]">
+                    {page.caption}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+              {item.submenu && <DropdownMenuSeparator className="bg-neutral-200" />}
+            </DropdownMenuGroup>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
@@ -597,10 +634,10 @@ function ChapterText({
       className={cn(
         'flex w-full flex-col gap-[18px] transition-[opacity,translate] duration-700 ease-out',
         wide
-          ? 'px-[clamp(20px,5vw,88px)] pt-[clamp(100px,14vh,150px)] lg:max-w-[1400px]'
+          ? 'px-[clamp(20px,5vw,88px)] pt-[clamp(100px,14vh,150px)] beside:max-w-[1400px]'
           : cn(
               'bg-white/90 px-[20px] pt-[20px] pb-[88px]',
-              'lg:w-[40%] lg:max-w-[540px] lg:bg-transparent lg:py-[72px] lg:pr-0 lg:pl-[clamp(32px,5vw,88px)]'
+              'beside:w-[38%] beside:max-w-[540px] beside:bg-transparent beside:py-[72px] beside:pr-0 beside:pl-[clamp(32px,5vw,88px)]'
             ),
         on ? 'pointer-events-auto translate-y-0 opacity-100' : 'translate-y-[24px] opacity-0',
         column
@@ -665,8 +702,8 @@ const SCROLL = `transform ${INTRO.scroll}ms ${SCROLL_EASE}`;
 
 /**
  * The walkthrough's opening: the logo alone in the middle of a white page, `title` fading in under it and
- * `tail` under that; all held there until a click, a turn of the wheel or a key. Then it scrolls up and away
- * as a page would, the first screen coming up from under it. Scrolled back up to, it comes down again.
+ * `tail` under that; all held there until a click, a turn of the wheel or a key, or for `stay`. Then it scrolls up
+ * and away as a page would, the first screen coming up from under it. Scrolled back up to, it comes down again.
  */
 function Intro({
   title,
@@ -676,6 +713,7 @@ function Intro({
   returning = false,
   ready = true,
   asked = 0,
+  stay,
   onLeave,
   onDone,
 }: {
@@ -692,6 +730,8 @@ function Intro({
   ready?: boolean;
   /** Entering asked for from outside: each new count enters, as a click would. */
   asked?: number;
+  /** How long it stands once all of it is out before leaving by itself, ms; without it, until asked. */
+  stay?: number;
   /** Told as it starts to leave for the first screen. */
   onLeave?: () => void;
   onDone: () => void;
@@ -760,6 +800,31 @@ function Intro({
     askedBefore.current = asked;
     begin();
   }, [asked, begin]);
+  // On by itself the first time only: not when scrolled back up to, nor unseen in another tab, nor with motion reduced;
+  // and not before what floats over it is built, however long that takes, or it would never be seen. A pointer held
+  // down, turning what floats over it, puts it off until `stay` after it comes up.
+  useEffect(() => {
+    if (phase !== 'waiting' || returning || !ready || stay === undefined) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const hold = () => clearTimeout(timer);
+    const wait = () => {
+      hold();
+      if (!document.hidden) timer = setTimeout(begin, stay);
+    };
+    wait();
+    window.addEventListener('pointerdown', hold, true);
+    window.addEventListener('pointerup', wait, true);
+    window.addEventListener('pointercancel', wait, true);
+    document.addEventListener('visibilitychange', wait);
+    return () => {
+      hold();
+      window.removeEventListener('pointerdown', hold, true);
+      window.removeEventListener('pointerup', wait, true);
+      window.removeEventListener('pointercancel', wait, true);
+      document.removeEventListener('visibilitychange', wait);
+    };
+  }, [phase, returning, ready, stay, begin]);
   useEffect(() => {
     const ask = (e: Event) => {
       e.preventDefault();

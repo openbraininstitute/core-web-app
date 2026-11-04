@@ -76,7 +76,7 @@ export function FadingStage<S extends string>({
               ? 'absolute inset-0'
               : wide?.(layer.scene)
                 ? 'absolute inset-x-0 top-[33%] bottom-0'
-                : 'absolute inset-x-0 top-0 h-[55%] lg:inset-y-0 lg:left-auto lg:h-full lg:w-[62%]',
+                : 'absolute inset-x-0 top-0 h-[55%] beside:inset-y-0 beside:left-auto beside:h-full beside:w-[62%]',
             layer.leaving
               ? 'pointer-events-none opacity-0 transition-opacity duration-700'
               : cn('animate-fade-in', passThrough?.(layer.scene) ? 'pointer-events-none' : 'pointer-events-auto')
