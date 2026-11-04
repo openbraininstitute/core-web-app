@@ -2,8 +2,8 @@
 
 import { PortableText } from 'next-sanity';
 
+import { learnFonts } from '@/features/learn/fonts';
 import Menu from '@/ui/segments/landing/layout/menu/menu';
-import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { classNames } from '@/util/utils';
 
 import HeaderNews from './header-news';
@@ -48,8 +48,8 @@ const portableTextComponents = {
 
 export default function NewsPageClient({ className, newsItem }: NewsPageProps) {
   return (
-    <div className={classNames(className, styles.pageContent)}>
-      <Menu scrollHasStarted section={EnumSection.News} />
+    <div className={classNames(className, learnFonts, styles.pageContent)}>
+      <Menu />
       <HeaderNews content={newsItem} />
       <div className={styles.content}>
         <PortableText value={newsItem.articleContent} components={portableTextComponents} />

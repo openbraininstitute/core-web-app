@@ -1,8 +1,6 @@
 'use client';
 
-import { RiArrowDownSLine, RiMenuLine } from '@remixicon/react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   createContext,
   useCallback,
@@ -19,17 +17,8 @@ import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/ui/molecules/dropdown-menu';
 import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
-import { MENU_ITEMS } from '@/ui/segments/landing/constants';
+import { FindOutMore } from '@/ui/segments/landing/layout/find-out-more';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
@@ -543,59 +532,6 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       {finishing && endUnder}
       {inBrowser && createPortal(page, document.body)}
     </>
-  );
-}
-
-/**
- * All the site's pages as one menu in the top bar, under the headings of its own menu, in from the first screen on,
- * hidden over the intro; on a phone, where its words do not fit beside the logo and the way in, by its mark alone. Not
- * modal: the page goes on scrolling under it.
- */
-function FindOutMore({ shown }: { shown: boolean }) {
-  return (
-    <div
-      aria-hidden={!shown}
-      inert={!shown || undefined}
-      className={cn(
-        'transition-opacity duration-500',
-        shown ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-      )}
-    >
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          aria-label="Find out more"
-          className="group text-primary-9 flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]"
-        >
-          <RiMenuLine className="size-[26px] sm:hidden" />
-          <span className="max-sm:hidden">Find out more</span>
-          <RiArrowDownSLine className="size-[18px] transition-transform duration-200 group-data-[state=open]:rotate-180 max-sm:hidden" />
-        </DropdownMenuTrigger>
-        {/* Down clear of Enter the platform, which it runs under. */}
-        <DropdownMenuContent
-          align="start"
-          sideOffset={14}
-          className="border-neutral-1 w-44 rounded-xl bg-white p-1"
-        >
-          {MENU_ITEMS.map((item) => (
-            <DropdownMenuGroup key={item.caption}>
-              {item.submenu && (
-                <DropdownMenuLabel className="px-3 pt-2 pb-1 text-[11px] leading-[16px] font-semibold tracking-[0.12em] text-neutral-500 uppercase">
-                  {item.caption}
-                </DropdownMenuLabel>
-              )}
-              {(item.submenu ?? [item]).map((page) => (
-                <DropdownMenuItem key={page.slug} asChild className="cursor-pointer rounded-lg px-3 py-1.5">
-                  <Link href={page.slug} className="text-primary-9 text-[14px] leading-[18px]">
-                    {page.caption}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-              {item.submenu && <DropdownMenuSeparator className="bg-neutral-200" />}
-            </DropdownMenuGroup>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
   );
 }
 

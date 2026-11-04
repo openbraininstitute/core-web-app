@@ -28,7 +28,7 @@ const FOOTER_LINKS: FooterLink[] = [
   { label: 'Pricing', href: '/pricing' },
   { label: 'News', href: '/news' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Login', href: '/app/virtual-lab' },
+  { label: 'Go to platform', href: '/app/virtual-lab' },
   { label: 'Terms and conditions', href: '/terms' },
   { label: 'Financing policy', href: '/financing' },
   { label: 'Privacy policy', href: '/privacy' },

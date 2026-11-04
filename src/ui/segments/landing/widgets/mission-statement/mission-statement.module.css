@@ -40,10 +40,10 @@ a.missionStatement {
 
 .missionStatement > div.background {
   position: relative;
-  background-color: var(--color-primary);
+  background-color: var(--color-neutral-light);
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--color-primary);
   font-size: 48px;
   min-width: 240px;
   min-height: 240px;

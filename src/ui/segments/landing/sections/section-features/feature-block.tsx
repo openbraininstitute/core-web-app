@@ -22,28 +22,19 @@ export default function FeatureBlock({ content, id, inViewOptions, onInView }: F
     if (isInView && onInView) onInView(id);
   }, [isInView, onInView, id]);
 
-  const isDark = content.theme === 'dark';
-  const style: React.CSSProperties = {
-    ...(content.backgroundColor && { backgroundColor: content.backgroundColor }),
-    ...(content.backgroundImage && {
-      backgroundImage: `url(${content.backgroundImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    }),
-  };
+  const isDark = false;
 
   return (
     <div
       ref={ref}
       className="relative w-screen md:w-full min-h-screen md:h-dvh md:min-h-0 md:snap-start flex flex-col lg:flex-row items-center gap-12 flex-nowrap py-[16vh] px-4 sm:px-8 lg:px-32"
-      style={style}
       id={`feature-block-${id}`}
     >
       <aside className="relative w-full lg:w-1/3" style={{ color: isDark ? '#fff' : '#002766' }}>
         <div className="relative leading-1.2 font-normal">
           <h2
             className="relative text-5xl! lg:text-7xl!"
-            style={{ color: isDark ? '#91D5FF' : '#A5A5A5' }}
+            style={{ color: isDark ? '#91D5FF' : '#8fa3bf' }}
           >
             {content.titleH2}
           </h2>

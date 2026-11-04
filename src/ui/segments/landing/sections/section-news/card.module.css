@@ -68,23 +68,24 @@
 .text > a.button {
   all: unset;
   cursor: pointer;
-  border: 1px solid var(--color-neutral);
+  color: #fff;
+  background-color: var(--color-primary);
+  border-radius: 999px;
   display: flex;
   flex-wrap: nowrap;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   gap: 1em;
-  padding: 0 2em;
-  height: 3em;
-  min-height: 3em;
+  padding: 0 23px;
+  height: 46px;
+  min-height: 46px;
   margin-top: 1em;
-  transition: all 0.3s;
+  transition: background-color 0.2s;
 }
 
 .text > a.button:hover {
-  color: #fffe;
-  background-color: var(--color-primary);
+  background-color: #00428b;
 }
 
 .image {

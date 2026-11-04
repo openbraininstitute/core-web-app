@@ -3,7 +3,7 @@ a.hoverableButton,
 .hoverableButton {
   background: #fff;
   color: var(--color-primary);
-  transition: all 0.5s;
+  transition: all 0.3s;
 }
 
 button.hoverableButton:hover,
@@ -24,31 +24,46 @@ a.hoverableButton[disabled] {
 }
 
 button.squareButton,
+a.squareButton,
+button.roundedButton,
+a.roundedButton {
+  background: var(--color-primary);
+}
+
+button.squareButton:hover,
+a.squareButton:hover,
+button.roundedButton:hover,
+a.roundedButton:hover {
+  background: #00428b;
+}
+
+button.squareButton,
 a.squareButton {
   display: inline-block;
-  color: var(--color-primary);
-  border: 1px solid currentColor !important;
-  line-height: 3;
-  padding: 0.8em 2em !important;
+  color: #fff;
+  border: none !important;
+  border-radius: 999px;
+  line-height: 1.4;
+  padding: 13px 23px !important;
   white-space: nowrap;
-  transition: all 0.5s ease-in-out;
+  transition: background-color 0.2s;
 }
 
 button.roundedButton,
 a.roundedButton {
   display: inline-block;
-  color: var(--color-primary);
-  border: 1px solid currentColor;
-  line-height: 3;
-  padding: 0 2em;
+  color: #fff;
+  border: none;
+  line-height: 1.4;
+  padding: 13px 23px;
   white-space: nowrap;
-  border-radius: 99vmax;
+  border-radius: 999px;
 }
 
 @media (max-width: 480px) {
   button.squareButton,
   a.squareButton {
-    padding: 0 1em;
+    padding: 11px 19px !important;
   }
 }
 

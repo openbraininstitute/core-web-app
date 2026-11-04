@@ -1,5 +1,6 @@
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 
+import { learnFonts } from '@/features/learn/fonts';
 import { InvitationErrorDialog } from '@/ui/segments/invites/error-dialog';
 import { classNames } from '@/util/utils';
 
@@ -33,7 +34,7 @@ export default function LandingPageShell({
 
   return (
     <div
-      className={classNames(className, styles.landingPage, isFeatures && 'landing-features-snap')}
+      className={classNames(className, learnFonts, styles.landingPage, isFeatures && 'landing-features-snap')}
     >
       <AntdRegistry>{children}</AntdRegistry>
       {error?.errorcode && <InvitationErrorDialog error={error} />}

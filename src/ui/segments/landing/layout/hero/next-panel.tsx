@@ -20,7 +20,7 @@ export default function NextPanel({ className, testId, children }: NextPanelProp
       type="button"
       aria-label={children ?? 'Button'}
       data-testid={testId}
-      onClick={handleNextPage}
+      onClick={(e) => handleNextPage(e.currentTarget)}
     >
       <div>{children}</div>
       <div className={styles.ruler} />
@@ -29,13 +29,14 @@ export default function NextPanel({ className, testId, children }: NextPanelProp
 }
 
 /**
- * Scroll down of a whole page height.
+ * Scroll to what comes under the hero it is at the foot of, clear of the top bar.
  */
-function handleNextPage() {
+function handleNextPage(button: HTMLElement) {
   const menu = document.getElementById(ID_MENU);
   const height = menu?.clientHeight ?? 0;
+  const foot = button.parentElement?.parentElement?.getBoundingClientRect().bottom ?? window.innerHeight;
   window.scrollTo({
-    top: window.innerHeight - height,
+    top: window.scrollY + foot - height,
     behavior: 'smooth',
   });
 }

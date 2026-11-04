@@ -43,14 +43,12 @@ export default function FeatureScroller({ blocks }: FeatureScrollerProps) {
     });
   };
 
-  const activeBlock = blocks[activeSection];
-  const isActiveThemeDark = activeBlock?.theme === 'dark';
-  const activeDotClass = isActiveThemeDark ? 'bg-white' : 'bg-primary-9';
-  const inactiveDotClass = isActiveThemeDark ? 'bg-primary-6' : 'bg-neutral-3';
+  const activeDotClass = 'bg-primary-9';
+  const inactiveDotClass = 'bg-neutral-3';
 
   return (
     <>
-      <nav className="fixed right-5 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-4">
+      <nav className="fixed right-5 top-1/2 z-40 flex -translate-y-1/2 flex-col gap-4 max-md:hidden">
         {blocks.map((block, index) => (
           <button
             key={block.titleH1 ?? block.titleH2 ?? `section-${index}`}

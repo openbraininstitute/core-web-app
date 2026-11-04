@@ -9,7 +9,6 @@ import ProgressiveImage from '@/ui/segments/landing/components/progressive-image
 import { EnumSection } from '@/ui/segments/landing/sections/sections';
 import { getSection } from '@/ui/segments/landing/utils';
 import { classNames } from '@/util/utils';
-import useFullHeight from '@/utils/use-full-height';
 
 import NextPanel from './next-panel';
 
@@ -36,12 +35,13 @@ export default function HeroClient({ className, section, data }: HeroClientProps
     next,
   } = data;
   const [videoReady, setVideoReady] = React.useState(false);
-  const height = useFullHeight();
+  const hasMedia = backgroundType === 'video' || (backgroundType === 'image' && Boolean(imageURL));
   const sectionSlug = getSection(section).slug.replace(/^\//, '') || 'home';
   const heroTestIdPrefix = `landing-${sectionSlug}-hero`;
   return (
-    <div className={classNames(className, styles.hero)} style={{ height }}>
-      <div className={classNames(styles.background)}>
+    <div className={classNames(className, styles.hero, hasMedia ? styles.withMedia : styles.wordsOnly)}>
+      {hasMedia && (
+      <div className={styles.media}>
         {backgroundType === 'video' && (
           <>
             {posterURL && posterWidth && posterHeight && (
@@ -70,12 +70,13 @@ export default function HeroClient({ className, section, data }: HeroClientProps
             src={imageURL}
             alt=""
             fill
-            sizes="100vw"
+            sizes="(max-width: 1024px) 100vw, 62vw"
             preload
             data-testid={`${heroTestIdPrefix}-image`}
           />
         )}
       </div>
+      )}
       {section === EnumSection.ComingSoon ? (
         <div className={styles.comingSoon}>
           <ComingSoon />
@@ -127,10 +128,10 @@ function ComingSoon() {
     >
       <div className="flex flex-col items-start justify-start">
         <div className="animate-fade-in mb-6">
-          <h1 className="mb-4 font-serif text-4xl font-bold tracking-[0.040em] text-white select-none sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
+          <h1 className="mb-4 font-serif text-4xl font-bold tracking-[0.040em] text-primary-9 select-none sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl">
             Releasing soon
           </h1>
-          <p className="mx-auto mr-4 max-w-3xl text-justify text-lg font-medium text-white select-none sm:text-left md:text-xl">
+          <p className="mx-auto mr-4 max-w-3xl text-justify text-lg font-medium text-primary-9 select-none sm:text-left md:text-xl">
             The platform will be launched soon with access to features such as single cell modeling
             and experiment design in addition to access to notebooks
           </p>
