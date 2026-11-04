@@ -24,4 +24,8 @@ export const adminQueryKeys = {
   billing: () => BILLING,
   plans: () => [...BILLING, 'plans'] as const,
   creditRates: () => [...BILLING, 'credit-rates'] as const,
+  promotions: () => [...BILLING, 'promotions'] as const,
+  promotionAnalytics: () => [...BILLING, 'promotions', 'analytics'] as const,
+  promotion: ({ id }: { id: string }) => [...BILLING, 'promotion', id] as const,
+  promotionUsage: ({ id }: { id: string }) => [...BILLING, 'promotion', id, 'usage'] as const,
 };

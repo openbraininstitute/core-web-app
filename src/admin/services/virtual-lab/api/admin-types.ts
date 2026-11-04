@@ -189,3 +189,72 @@ export type AdminCreditRate = {
 export type AdminCreditRateUpdate = Partial<
   Pick<AdminCreditRate, 'rate' | 'discount_pct' | 'max_credits' | 'active'>
 >;
+
+export type AdminPromotion = {
+  id: string;
+  code: string;
+  description: string | null;
+  credits_amount: number;
+  validity_period_days: number;
+  max_uses_per_user_per_period: number;
+  max_total_uses: number | null;
+  current_total_uses: number;
+  active: boolean;
+  valid_from: string;
+  valid_until: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+};
+
+export type AdminPromotionCreate = Pick<
+  AdminPromotion,
+  | 'code'
+  | 'credits_amount'
+  | 'validity_period_days'
+  | 'max_uses_per_user_per_period'
+  | 'active'
+  | 'valid_from'
+  | 'valid_until'
+> & { description?: string; max_total_uses?: number };
+
+// The API skips a null here, so neither field can be cleared with one: send '' for the
+// description, and a limit can't be removed at all.
+export type AdminPromotionUpdate = {
+  description?: string;
+  active?: boolean;
+  valid_until?: string;
+  max_total_uses?: number;
+};
+
+export type AdminPromotionRedemption = {
+  id: string;
+  user_id: string;
+  virtual_lab_id: string;
+  virtual_lab_name: string | null;
+  credits_granted: number;
+  status: string;
+  redeemed_at: string;
+  error_message: string | null;
+};
+
+export type AdminPromotionUsage = {
+  statistics: {
+    total_redemptions: number;
+    completed: number;
+    pending: number;
+    failed: number;
+    total_credits_distributed: number;
+    unique_users: number;
+    unique_virtual_labs: number;
+  };
+  recent_redemptions: AdminPromotionRedemption[];
+};
+
+export type AdminPromotionAnalytics = {
+  total_promotions: number;
+  active_promotions: number;
+  expired_promotions: number;
+  total_redemptions: number;
+  total_credits_distributed: number;
+};
