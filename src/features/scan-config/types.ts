@@ -34,6 +34,7 @@ export const SchemaMappingKeyDict = {
   Circuit: 'Circuit',
   IonChannelModel: 'IonChannelModel',
   ElectricalCellRecordings: 'ElectricalCellRecordings',
+  ExtracellularRecording: 'ExtracellularRecording',
 } as const;
 
 export type TSchemaMappingKey = (typeof SchemaMappingKeyDict)[keyof typeof SchemaMappingKeyDict];
@@ -204,6 +205,7 @@ export const ScanConfigUIElementDict = {
   IntParameterSweep: 'int_parameter_sweep',
   Reference: 'reference',
   EntityPropertyDropdown: 'entity_property_dropdown',
+  EntityPropertyMultiSelect: 'entity_property_multi_select',
   NeuronIds: 'neuron_ids',
   BooleanInput: 'boolean_input',
   DiscreteProbabilities: 'discrete_probabilities',
@@ -224,9 +226,6 @@ export const ScanConfigUIElementDict = {
   NeuronSetCombination: 'neuron_set_combination',
   MorphologySectionTypeSelection: 'morphology_section_type_selection',
   FloatOptional: 'float_optional',
-  IntOptional: 'int_optional',
-  IntListOptional: 'int_list_optional',
-  JsonObject: 'json_object',
   SelectEFeaturesByProtocol: 'select_efeatures_by_protocol',
   MorphologyLocationSelection: 'morphology_location_selection',
   PerNeuronMorphologyLocationSelection: 'per_neuron_morphology_location_selection',
@@ -586,19 +585,13 @@ export interface StringListInput extends TBlockElement {
 }
 
 /** Nullable list of strings (`anyOf: [{ array of string }, { null }]`); `null` means unset. */
-export interface IntOptional extends TBlockElement {
-  ui_element: typeof ScanConfigUIElementDict.IntOptional;
-  anyOf: [{ type: 'integer'; minimum?: number; maximum?: number }, { type: 'null' }];
-}
-
-export interface IntListOptional extends TBlockElement {
-  ui_element: typeof ScanConfigUIElementDict.IntListOptional;
-  anyOf: [{ type: 'array'; items: { type: 'integer' } }, { type: 'null' }];
-}
-
-export interface JsonObject extends TBlockElement {
-  ui_element: typeof ScanConfigUIElementDict.JsonObject;
-  type: 'object';
+export interface EntityPropertyMultiSelect extends TBlockElement {
+  ui_element: typeof ScanConfigUIElementDict.EntityPropertyMultiSelect;
+  type: 'array';
+  items: { type: 'string' };
+  property: string;
+  /** Key into `schema.property_endpoints`. */
+  property_group: string;
 }
 
 export interface StringListOptional extends TBlockElement {
@@ -800,9 +793,7 @@ export type ParamSchema =
   | FloatParameterSweep
   | IntParameterSweep
   | FloatOptional
-  | IntOptional
-  | IntListOptional
-  | JsonObject
+  | EntityPropertyMultiSelect
   | TSelectEFeaturesByProtocol
   | TIonChannelModelProperties
   | Reference

@@ -128,6 +128,11 @@ export function parseSchemaMappingConfiguration(resp: unknown) {
   return configSchema.parse(resp);
 }
 
+/** A mapped-properties endpoint's path, with the entity in its one placeholder. */
+export function mappedPropertiesPath(endpoint: string | undefined, entityId: string | undefined) {
+  return `/declared${endpoint}`.replace(/\{\w+\}/, entityId ?? '');
+}
+
 export function useSchemaMappingConfiguration({
   entityId,
   workspace,
@@ -144,7 +149,7 @@ export function useSchemaMappingConfiguration({
     queryFn: async () => {
       const api = await obioneApi();
 
-      const resp = await api.get(`/declared${endpoint}`.replace('{circuit_id}', entityId ?? ''), {
+      const resp = await api.get(mappedPropertiesPath(endpoint, entityId), {
         headers: {
           ...getEntityCoreContext(workspace).headers,
         },
@@ -154,7 +159,7 @@ export function useSchemaMappingConfiguration({
 
       return validatedData;
     },
-    enabled: !!endpoint && isSchemaLoaded,
+    enabled: !!endpoint && !!entityId && isSchemaLoaded,
     refetchOnWindowFocus: false,
     staleTime: SCHEMA_MAPPING_CONFIGURATION_STALE_TIME_MS,
     select: (validatedData) => {

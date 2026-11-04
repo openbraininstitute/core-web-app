@@ -203,7 +203,8 @@ export function useScanConfiguration({
       isSchemaLoaded:
         !loadingSchema &&
         !!schema &&
-        resolved?.effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit,
+        (resolved?.effectiveSchemaMappingKey === SchemaMappingKeyDict.Circuit ||
+          resolved?.effectiveSchemaMappingKey === SchemaMappingKeyDict.ExtracellularRecording),
     });
 
   const isLoading = loadingConfiguration || isEntityLoading || loadingSchema;

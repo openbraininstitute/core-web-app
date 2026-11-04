@@ -215,6 +215,7 @@ export function spikeSortingPreprocessingConfigureBinding(): TScanConfigConfigur
         ScanConfigFromIdType.ExtracellularRecordingFromID,
     },
     generatedApiPath: ScanConfigGeneratedApiPath.AindEphysPreprocessing,
+    schemaMappingKey: SchemaMappingKeyDict.ExtracellularRecording,
   };
 }
 

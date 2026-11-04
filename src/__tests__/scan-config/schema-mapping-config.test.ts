@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseSchemaMappingConfiguration } from '@/features/scan-config/components/hooks/schema';
+import {
+  mappedPropertiesPath,
+  parseSchemaMappingConfiguration,
+} from '@/features/scan-config/components/hooks/schema';
+import { valuesOutsideOptions } from '@/features/scan-config/components/ui-elements/entity-property-multi-select';
 
 const defaultUsability = {
   ShowElectricFieldStimuli: false,
@@ -13,7 +17,38 @@ const defaultUsability = {
   ShowDeprecatedBlocks: false,
 } as const;
 
+describe('mappedPropertiesPath', () => {
+  it.each([
+    ['/mapped-circuit-properties/{circuit_id}', '/declared/mapped-circuit-properties/id'],
+    [
+      '/mapped-extracellular-recording-properties/{recording_id}',
+      '/declared/mapped-extracellular-recording-properties/id',
+    ],
+  ])('puts the entity in %s', (endpoint, path) => {
+    expect(mappedPropertiesPath(endpoint, 'id')).toBe(path);
+  });
+});
+
+describe('valuesOutsideOptions', () => {
+  const options = [{ value: 'Raw/AP0', label: 'AP0' }];
+
+  it('names what the entity does not have', () => {
+    expect(valuesOutsideOptions(['Raw/AP0', 'Raw/AP9'], options)).toEqual(['Raw/AP9']);
+  });
+
+  it('says nothing before the options have arrived', () => {
+    expect(valuesOutsideOptions(['Raw/AP9'], [])).toEqual([]);
+  });
+});
+
 describe('parseSchemaMappingConfiguration', () => {
+  it('accepts a recording that gives only its channels', () => {
+    const channels = [{ value: 'Raw/AP0', label: 'AP0' }];
+    const parsed = parseSchemaMappingConfiguration({ Channels: channels, usability: {} });
+
+    expect(parsed.Channels).toEqual(channels);
+  });
+
   it('accepts Circuit mapped-circuit-properties with NodePropertyUniqueValuesByPopulation', () => {
     const parsed = parseSchemaMappingConfiguration({
       NodeSet: ['AllNeurons'],

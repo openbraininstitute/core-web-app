@@ -18,10 +18,10 @@ import {
   type TDistributionParameter,
 } from '@/features/scan-config/components/ui-elements/distance-function/distribution-parameter-list';
 import { EntityPropertyDropdown } from '@/features/scan-config/components/ui-elements/entity-property-dropdown';
+import { EntityPropertyMultiSelect } from '@/features/scan-config/components/ui-elements/entity-property-multi-select';
 import { ETypeSelector } from '@/features/scan-config/components/ui-elements/etype-selector';
 import { FloatInput } from '@/features/scan-config/components/ui-elements/float-input';
 import { FloatOptional } from '@/features/scan-config/components/ui-elements/float-optional';
-import { IntListOptional } from '@/features/scan-config/components/ui-elements/int-list-optional';
 import {
   IonChannelModelProperties,
   recordingIdsOf,
@@ -31,7 +31,6 @@ import { CircuitGlobal } from '@/features/scan-config/components/ui-elements/ion
 import { CircuitRange } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/circuit/range';
 import { Global } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/global';
 import { Range } from '@/features/scan-config/components/ui-elements/ion-channel-variable-modification/me-model/range';
-import { JsonObject } from '@/features/scan-config/components/ui-elements/json-object';
 import { ModelIdentifier } from '@/features/scan-config/components/ui-elements/model-identifier';
 import {
   ModelIdentifierGrouped,
@@ -269,39 +268,17 @@ export function UIElementRender({
       }
     )
     .with(
-      { paramSchema: { ui_element: ScanConfigUIElementDict.IntOptional } },
-      ({ paramSchema }) => {
-        const bounds = numericSchemaBounds(paramSchema);
-        return (
-          <FloatOptional
-            integer
-            min={bounds.min}
-            max={bounds.max}
-            exclusiveMin={bounds.exclusiveMin}
-            exclusiveMax={bounds.exclusiveMax}
-            disabled={disabled}
-            value={typeof value === 'number' ? value : null}
-            onChange={(next) => {
-              setState({ ...state, [k]: next });
-            }}
-          />
-        );
-      }
+      { paramSchema: { ui_element: ScanConfigUIElementDict.EntityPropertyMultiSelect } },
+      ({ paramSchema }) => (
+        <EntityPropertyMultiSelect
+          disabled={disabled}
+          schemaMappingConfig={schemaMappingConfig}
+          property={paramSchema.property}
+          value={isStringArray(value) ? value : []}
+          onChange={(next) => setState({ ...state, [k]: next })}
+        />
+      )
     )
-    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.IntListOptional } }, () => (
-      <IntListOptional
-        disabled={disabled}
-        value={Array.isArray(value) ? (value as unknown as number[]) : null}
-        onChange={(next) => setState({ ...state, [k]: next })}
-      />
-    ))
-    .with({ paramSchema: { ui_element: ScanConfigUIElementDict.JsonObject } }, () => (
-      <JsonObject
-        disabled={disabled}
-        value={isPlainObject(value) ? (value as unknown as Record<string, unknown>) : null}
-        onChange={(next) => setState({ ...state, [k]: next as unknown as ConfigValue })}
-      />
-    ))
     .with(
       { paramSchema: { ui_element: ScanConfigUIElementDict.FloatOptional } },
       ({ paramSchema }) => {
