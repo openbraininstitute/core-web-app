@@ -64,6 +64,17 @@ export function buildRunTargets(deploymentEnv: string): NotebookRunTarget[] {
  * deployments it also exposes the single-pod AWS run target. `openJupyterHub` opens a bare
  * JupyterHub session (used by the Results "Open notebook" action).
  */
+export function useNotebookProfiles(enabled = true) {
+  const { data } = useQuery({
+    queryKey: ['notebook-profiles'],
+    queryFn: () => getNotebookProfiles(),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+  const profiles: NotebookProfilesResponse['profiles'] = data?.profiles ?? [];
+  return { profiles, defaultProfile: data?.default_profile ?? null };
+}
+
 export function useRunNotebook({
   id,
   assets,
@@ -87,16 +98,7 @@ export function useRunNotebook({
     enabled: Boolean(virtualLabId) && enabled,
   });
 
-  // Session size profiles offered by the notebook service (e.g. S, M, L, XL).
-  const { data: profilesData } = useQuery({
-    queryKey: ['notebook-profiles'],
-    queryFn: () => getNotebookProfiles(),
-    enabled,
-    staleTime: 5 * 60 * 1000,
-  });
-  const profiles: NotebookProfilesResponse['profiles'] = profilesData?.profiles ?? [];
-  // Profile the service uses when none is sent; the UI highlights it as default.
-  const defaultProfile = profilesData?.default_profile ?? null;
+  const { profiles, defaultProfile } = useNotebookProfiles(enabled);
 
   const runTargets = buildRunTargets(config.DEPLOYMENT_ENV);
 

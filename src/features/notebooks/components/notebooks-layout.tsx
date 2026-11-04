@@ -1,7 +1,8 @@
 'use client';
 
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import { DownOutlined, LoadingOutlined, PlusOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
+import { Dropdown } from 'antd';
 import { domAnimation, LazyMotion, m } from 'framer-motion';
 import Image from 'next/image';
 import { type ReactNode, useCallback, useRef, useState } from 'react';
@@ -12,7 +13,9 @@ import { getVirtualLab } from '@/api/virtual-lab-svc/queries/virtual-lab';
 import { useAppNotification } from '@/components/notification';
 import { type TWorkspaceScope, WorkspaceScope } from '@/constants';
 import { NotebookLeftMenu } from '@/features/notebooks/components/notebook-left-menu';
+import { SessionSizePanel } from '@/features/notebooks/components/session-size-panel';
 import { SyncNotebookModal } from '@/features/notebooks/components/update-notebook-modal';
+import { useNotebookProfiles } from '@/features/notebooks/hooks/use-run-notebook';
 import { startEmptyNotebook } from '@/services/notebooks';
 import { useDefaultBreakpoint } from '@/ui/hooks/create-break-point';
 import { useScope } from '@/ui/hooks/use-scope';
@@ -73,14 +76,21 @@ export function NotebooksLayout({ children }: Props) {
     enabled: Boolean(virtualLabId),
   });
 
-  async function handleRunNotebook() {
+  const { profiles, defaultProfile } = useNotebookProfiles();
+
+  async function handleRunNotebook(profile?: string) {
     setLoading(true);
     if (virtualLabData == null) {
       setLoading(false);
       throw new Error(`Could not fetch virtual lab data`);
     }
     try {
-      const retval = await startEmptyNotebook(virtualLabId, projectId, virtualLabData.compute_cell);
+      const retval = await startEmptyNotebook(
+        virtualLabId,
+        projectId,
+        virtualLabData.compute_cell,
+        profile
+      );
       notification.success({
         message: `Notebook starting`,
         key: 'notebook-started-successfully',
@@ -161,19 +171,31 @@ export function NotebooksLayout({ children }: Props) {
                 </Button>
               )}
 
-            <button
+            <Dropdown
+              trigger={['click']}
               disabled={loading}
-              type="button"
-              className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
-              data-testid="open-jupyterhub-button"
-              onClick={handleRunNotebook}
-            >
-              <div>Open JupyterHub</div>
-              {!loading && (
-                <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+              popupRender={() => (
+                <SessionSizePanel
+                  profiles={profiles}
+                  defaultProfile={defaultProfile}
+                  onSelect={handleRunNotebook}
+                />
               )}
-              {loading && <LoadingOutlined className="text-[#F37726]" />}
-            </button>
+            >
+              <button
+                disabled={loading}
+                type="button"
+                className="flex h-[40px] items-center justify-between gap-2 rounded-full border border-[#F37726] bg-white px-5 text-[#F37726] transition-colors hover:bg-orange-50"
+                data-testid="open-jupyterhub-button"
+              >
+                <div>Open JupyterHub</div>
+                {!loading && (
+                  <Image src="/images/jupyter.svg" alt="Jupyter hub" width={20} height={20} />
+                )}
+                {loading && <LoadingOutlined className="text-[#F37726]" />}
+                {!loading && <DownOutlined className="text-xs" />}
+              </button>
+            </Dropdown>
           </div>
         </div>
 
