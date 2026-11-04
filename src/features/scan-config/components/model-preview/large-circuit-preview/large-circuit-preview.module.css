@@ -5,10 +5,6 @@
   height: 100%;
   color: #fff;
 
-  button.downloadButton {
-    width: auto;
-  }
-
   > .spinner {
     color: #000;
     background-color: transparent;

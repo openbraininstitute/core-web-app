@@ -5,6 +5,7 @@ import { SectionType } from '@/features/circuit-viewer/section-type';
 import { useLocationSelection } from '@/features/scan-config/components/circuit-viz/morphology-location/use-location-selection';
 import {
   morphologyLocationsColor,
+  morphologyLocationsNeuronColor,
   recedeMarkerColor,
 } from '@/features/scan-config/components/color-by/palette';
 import {
@@ -56,9 +57,11 @@ function render(overrides: Partial<TOptions>) {
       selectedRootElement: 'morphology_locations',
       selectedEntry: 'block',
       cells: CELLS,
+      firstCell: 0,
       backgroundColor: BACKGROUND,
       // A single neuron or a synaptome, which is where explicit locations are taken.
-      supportsExplicitLocations: true,
+      explicitLocationsBlockTypes: ['ExplicitMorphologyLocations'],
+      singleMorphology: true,
       ...overrides,
     })
   );
@@ -174,7 +177,7 @@ describe('a location picked', () => {
 
   // The view picks on whatever cell the tap landed near, and a circuit scene holds every population's cells.
   it.each([
-    ['a cell the block has nothing to do with', { cell: 7 }, /another population/i],
+    ['a cell the block has nothing to do with', { cell: 7 }, /biophysical population/i],
     ['a section with no SONATA number', { sonataId: null }, /section ids/i],
     ['an axon', { type: SectionType.Axon }, /Axon is not supported yet/],
     ['the soma', { type: SectionType.Soma, sonataId: 0 }, /Soma is not supported yet/],
@@ -203,6 +206,40 @@ describe('a location picked', () => {
   });
 });
 
+describe('the generated locations', () => {
+  const SAMPLED = {
+    morphology_locations: { sampled: { type: 'RandomMorphologyLocations' } },
+  } as unknown as Config;
+  const GENERATED = [{ section_id: 3, offset: 0.4, entry: 'sampled', index: 0, generated: true }];
+
+  it('are drawn beside the stored ones', () => {
+    const { result } = render({ config: SAMPLED, generatedLocations: GENERATED });
+
+    expect(result.current.locations?.markers).toEqual([
+      expect.objectContaining({ cell: 4, sonataId: 3, offset: 0.4 }),
+    ]);
+  });
+
+  it('refuse to be edited, since they move with their block', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const onCreateEntry = vi.fn();
+    const { result } = render({
+      config: SAMPLED,
+      selectedEntry: 'sampled',
+      generatedLocations: GENERATED,
+      onConfigChange,
+      onCreateEntry,
+    });
+
+    act(() => result.current.locations?.onPick?.(marker(0)));
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(onCreateEntry).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/change its parameters/i);
+  });
+});
+
 describe('the locations on a model that takes no explicit locations', () => {
   it('pick nothing, wherever the form is', () => {
     const onCreateEntry = vi.fn();
@@ -210,7 +247,7 @@ describe('the locations on a model that takes no explicit locations', () => {
       ...elsewhere,
       config: EMPTY,
       onCreateEntry,
-      supportsExplicitLocations: false,
+      explicitLocationsBlockTypes: [],
     });
 
     expect(result.current.pickMode).toBe(null);
@@ -221,7 +258,7 @@ describe('the locations on a model that takes no explicit locations', () => {
     const { result } = render({
       config: configWith([{ section_id: 3, offset: 0.1 }]),
       onConfigChange: vi.fn(),
-      supportsExplicitLocations: false,
+      explicitLocationsBlockTypes: [],
     });
 
     expect(result.current.pickMode).toBe(null);
@@ -363,9 +400,223 @@ describe('the location labels', () => {
     ]);
   });
 
+  it('keep the stored ones when generated blocks bring too many to label', () => {
+    const generated = Array.from({ length: 250 }, (_, index) => ({
+      section_id: 8,
+      offset: 0.5,
+      entry: 'sampled',
+      index,
+      generated: true,
+    }));
+    const { result } = render({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      generatedLocations: generated,
+      showLabels: true,
+    });
+    const onScreen = {
+      type: SectionType.ApicalDendrite,
+      screen: { x: 0.1, y: 0.2 },
+      visible: true,
+    };
+
+    act(() => {
+      result.current.locations?.onMarkersOnScreen?.(generated.map(() => onScreen).concat(onScreen));
+      vi.advanceTimersByTime(20);
+    });
+
+    expect(result.current.labels.map(({ marker }) => marker.sonataSectionId)).toEqual([3]);
+  });
+
   it('are not asked for unless shown', () => {
     const { result } = render({ config: configWith([{ section_id: 3, offset: 0.5 }]) });
     expect(result.current.locations?.onMarkersOnScreen).toBeUndefined();
     expect(result.current.labels).toEqual([]);
+  });
+});
+
+describe('per-neuron explicit locations', () => {
+  const PER_NEURON = 'PerNeuronExplicitMorphologyLocations' as const;
+  // The population on show starts at scene index 10, so its nodes 0 and 7 are cells 10 and 17.
+  const FIRST = 10;
+  const NEURONS = [FIRST, FIRST + 7];
+
+  function perNeuronConfig(locations: unknown[]): Config {
+    return { morphology_locations: { block: { type: PER_NEURON, locations } } } as Config;
+  }
+
+  function renderPerNeuron(overrides: Partial<TOptions>) {
+    return render({
+      cells: NEURONS,
+      firstCell: FIRST,
+      explicitLocationsBlockTypes: [PER_NEURON],
+      singleMorphology: false,
+      ...overrides,
+    });
+  }
+
+  it('keeps the node id, and drops a row that has none', () => {
+    const rows = readLocations(
+      readEntry(
+        perNeuronConfig([
+          { node_id: 7, section_id: 3, offset: 0.5 },
+          { section_id: 3, offset: 0.5 },
+        ]),
+        'block'
+      )
+    );
+
+    expect(rows).toEqual([{ node_id: 7, section_id: 3, offset: 0.5 }]);
+  });
+
+  it('draws a row on its own neuron only, in that neuron’s colour', () => {
+    const { result } = renderPerNeuron({
+      config: perNeuronConfig([{ node_id: 7, section_id: 3, offset: 0.5 }]),
+      onConfigChange: vi.fn(),
+    });
+
+    expect(result.current.locations?.markers).toEqual([
+      { cell: FIRST + 7, sonataId: 3, offset: 0.5, color: morphologyLocationsNeuronColor(7) },
+    ]);
+    expect(morphologyLocationsNeuronColor(0)).not.toBe(morphologyLocationsNeuronColor(7));
+  });
+
+  it('draws nothing for a row whose neuron is not drawn', () => {
+    const { result } = renderPerNeuron({
+      config: perNeuronConfig([{ node_id: 3, section_id: 3, offset: 0.5 }]),
+      onConfigChange: vi.fn(),
+    });
+
+    expect(result.current.locations?.markers).toEqual([]);
+  });
+
+  it('keeps markers in step with their rows past a row that is not drawn', () => {
+    const config = perNeuronConfig([
+      { node_id: 3, section_id: 3, offset: 0.5 },
+      { node_id: 0, section_id: 3, offset: 0.5 },
+      { node_id: 7, section_id: 3, offset: 0.5 },
+    ]);
+    let next: Config | undefined;
+    const { result } = renderPerNeuron({
+      config,
+      onConfigChange: (updater) => {
+        next = updater(config);
+      },
+    });
+
+    // Node 3 is not drawn, so marker 1 is node 7's.
+    act(() => result.current.locations?.onPick?.(marker(1)));
+
+    expect(readLocations(readEntry(next, 'block'))).toEqual([
+      { node_id: 3, section_id: 3, offset: 0.5 },
+      { node_id: 0, section_id: 3, offset: 0.5 },
+    ]);
+  });
+
+  it('records the neuron a click landed on', () => {
+    const config = perNeuronConfig([{ node_id: 0, section_id: 3, offset: 0.5 }]);
+    let next: Config | undefined;
+    const { result } = renderPerNeuron({
+      config,
+      onConfigChange: (updater) => {
+        next = updater(config);
+      },
+    });
+
+    act(() => result.current.locations?.onPick?.(spot({ cell: FIRST + 7, offset: 0.25 })));
+
+    expect(readLocations(readEntry(next, 'block'))).toEqual([
+      { node_id: 0, section_id: 3, offset: 0.5 },
+      { node_id: 7, section_id: 3, offset: 0.25 },
+    ]);
+  });
+
+  it('removes the clicked neuron’s row, not another neuron’s at the same spot', () => {
+    const config = perNeuronConfig([
+      { node_id: 0, section_id: 3, offset: 0.5 },
+      { node_id: 7, section_id: 3, offset: 0.5 },
+    ]);
+    let next: Config | undefined;
+    const { result } = renderPerNeuron({
+      config,
+      onConfigChange: (updater) => {
+        next = updater(config);
+      },
+    });
+
+    act(() => result.current.locations?.onPick?.(marker(1)));
+
+    expect(readLocations(readEntry(next, 'block'))).toEqual([
+      { node_id: 0, section_id: 3, offset: 0.5 },
+    ]);
+  });
+
+  it('starts a per-neuron block while the form is on locations with none open', () => {
+    const onCreateEntry = vi.fn();
+    const { result } = renderPerNeuron({ selectedEntry: undefined, config: EMPTY, onCreateEntry });
+
+    act(() => result.current.locations?.onPick?.(spot({ cell: FIRST + 7, offset: 0.25 })));
+
+    expect(onCreateEntry).toHaveBeenCalledWith('morphology_locations', {
+      type: PER_NEURON,
+      locations: [{ node_id: 7, section_id: 3, offset: 0.25 }],
+    });
+  });
+
+  it('names the neuron under the pointer, and on each label', () => {
+    vi.useFakeTimers();
+    try {
+      const { result } = renderPerNeuron({
+        config: perNeuronConfig([{ node_id: 7, section_id: 3, offset: 0.5 }]),
+        onConfigChange: vi.fn(),
+        showLabels: true,
+      });
+
+      act(() => result.current.locations?.onHover?.(spot({ cell: FIRST + 7 })));
+      expect(result.current.hover?.nodeId).toBe(7);
+      // Another population's cell has no node id a row could name.
+      act(() => result.current.locations?.onHover?.(spot({ cell: 2 })));
+      expect(result.current.hover?.nodeId).toBeUndefined();
+      expect(result.current.hover?.foreign).toBe(true);
+
+      act(() => {
+        result.current.locations?.onMarkersOnScreen?.([
+          { type: SectionType.BasalDendrite, screen: { x: 0.1, y: 0.2 }, visible: true },
+        ]);
+        vi.advanceTimersByTime(20);
+      });
+      expect(result.current.labels[0]?.marker.nodeId).toBe(7);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not write a per-neuron pick into a plain explicit block', () => {
+    const { result } = renderPerNeuron({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange: vi.fn(),
+    });
+
+    expect(result.current.pickMode).toBe(null);
+  });
+
+  it('says an open plain block cannot be edited here, rather than to open it', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const { result } = renderPerNeuron({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange,
+      onCreateEntry: vi.fn(),
+    });
+
+    act(() => result.current.locations?.onPick?.(marker(0)));
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/cannot be edited from the 3D viewer/);
+  });
+
+  it('leaves cell clicks to the scene elsewhere in the form', () => {
+    const { result } = renderPerNeuron({ ...elsewhere, config: EMPTY, onCreateEntry: vi.fn() });
+
+    expect(result.current.pickMode).toBe(null);
   });
 });

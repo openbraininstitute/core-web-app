@@ -13,7 +13,7 @@ import {
   morphologyPackNote,
   useMorphologyPackStatus,
 } from '@/features/circuit-viewer/morphologies/use-morphology-pack-status';
-import { circuitMorphologiesFlag, useFlag } from '@/features/feature-flags';
+import { circuitMorphologiesFlag, debugFlag, useFlag } from '@/features/feature-flags';
 import {
   CircuitVisualization,
   MemodelVisualization,
@@ -37,10 +37,11 @@ import {
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview';
 import {
   hasAnyLocation,
+  hasGeneratedBlock,
   type IFormBindingOptions,
+  isStoredLocationsBlockOpen,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
-  supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
@@ -259,7 +260,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    supportsExplicitLocations,
+    explicitLocationsBlockTypes,
+    singleMorphology,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -325,6 +327,12 @@ export function CircuitScene({
       ? reportedPositionless.names
       : NO_NAMES;
   const subjectUnplaceable = population !== undefined && positionless.has(population.name);
+  // Nothing of the population on show is drawn to colour.
+  const chromeColorBy = enableColorBy && !subjectUnplaceable;
+  // The chrome's place for the scene's legends; state, so the legends move in once it mounts.
+  const [legendSlot, setLegendSlot] = useState<HTMLElement | null>(null);
+  const debug = !!useFlag(debugFlag.key);
+  const [debugTarget, setDebugTarget] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     onPopulationChange?.(population);
@@ -405,17 +413,20 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
     !largeCircuit &&
-    (supportsMorphologyLocationPicking({
+    (isStoredLocationsBlockOpen({
       config: scanConfig,
       selectedRootElement,
       selectedEntry,
     }) ||
-      hasAnyLocation(scanConfig));
+      hasAnyLocation(scanConfig) ||
+      // The flag that turns the preview on, so the controls show only with generated markers.
+      (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -653,6 +664,7 @@ export function CircuitScene({
       // Subscribed only while the slider is shown: the viewer reports every zoom change, and
       // with the slider off that is a render per frame of a scroll-zoom for nothing on screen.
       onZoomChange: config.showZoomSlider ? zoom.onZoomChange : undefined,
+      debugTarget,
     }),
     [
       config.showAxons,
@@ -672,6 +684,7 @@ export function CircuitScene({
       emptyHeard,
       handleEmptyClick,
       zoom.onZoomChange,
+      debugTarget,
     ]
   );
   const cellsProps = useMemo(
@@ -711,29 +724,33 @@ export function CircuitScene({
   );
   const perCellProps = useMemo(
     () => ({
-      // The colour-by toolbar is what sits in the viewer's top-right, so the
-      // synapse legend drops below it exactly when that toolbar is drawn there.
-      chromeTopRight: enableColorBy && colorByTarget === undefined,
+      // Under the colour-by key while the chrome draws its column, in the corner otherwise.
+      legendTarget: chromeColorBy ? legendSlot : undefined,
+      // Background-derived chrome theme, for the legends drawn over the viewer.
+      theme,
       morphologyLocations: {
         config: scanConfig,
         onConfigChange: setConfig,
         selectedRootElement,
         selectedEntry,
         onCreateEntry,
-        supportsExplicitLocations,
+        explicitLocationsBlockTypes,
+        singleMorphology,
         markerRadius: config.morphologyLocationRadius,
         showLabels: config.showMorphologyLocationLabels,
       },
     }),
     [
-      enableColorBy,
-      colorByTarget,
+      chromeColorBy,
+      legendSlot,
+      theme,
       scanConfig,
       setConfig,
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      supportsExplicitLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
     ]
@@ -805,6 +822,8 @@ export function CircuitScene({
         fullscreen={fullscreen}
         colorByTarget={colorByTarget}
         colorByNoneLabel={colorByNoneLabel}
+        legendSlotRef={setLegendSlot}
+        debugSlotRef={debug ? setDebugTarget : undefined}
         selection={sceneSelection}
         viz={{
           // A replay's afterglow and glow are set with the rest of how the scene is drawn; the menu leaves out a
@@ -819,8 +838,7 @@ export function CircuitScene({
               }
             : menu,
           onResetView,
-          // Nothing of the population on show is drawn to colour.
-          colorBy: enableColorBy && !subjectUnplaceable ? colorBy : undefined,
+          colorBy: chromeColorBy ? colorBy : undefined,
           populations: populationsControl,
           electrodesInteractive: overlaysInteractive,
           morphologyLocationsInteractive: canPickMorphologyLocations,

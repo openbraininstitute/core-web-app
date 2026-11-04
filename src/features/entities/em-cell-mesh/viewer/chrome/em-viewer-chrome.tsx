@@ -1,9 +1,10 @@
-import { emMeshDebugFlag, useFlag } from '@/features/feature-flags';
+import dynamic from 'next/dynamic';
+import { ErrorBoundary } from 'react-error-boundary';
+
+import { debugFlag, useFlag } from '@/features/feature-flags';
 import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
 import { ViewerChrome } from '@/features/viewer-3d/chrome/viewer-chrome';
 
-import { DebugMenu } from './debug-menu';
-import { FrameTimes } from './frame-times';
 import { LoadStatus } from './load-status';
 import { MeshColorMenu } from './mesh-color-menu';
 import { SettingsMenu } from './settings-menu';
@@ -12,6 +13,9 @@ import type { Look } from '@/features/viewer-3d/engine/looks';
 import type { EmMeshViewer } from '../engine/em-mesh-viewer';
 import type { EmMeshLoad } from '../use-em-mesh';
 import type { EmViewerSettings, UpdateEmSettings } from '../use-em-viewer-settings';
+
+const DebugMenu = dynamic(() => import('./debug-menu').then((m) => m.DebugMenu), { ssr: false });
+const FrameTimes = dynamic(() => import('./frame-times').then((m) => m.FrameTimes), { ssr: false });
 
 interface EmViewerChromeProps {
   viewer: EmMeshViewer;
@@ -42,7 +46,7 @@ export function EmViewerChrome({
   name,
   wheelHint,
 }: EmViewerChromeProps) {
-  const debug = useFlag(emMeshDebugFlag.key);
+  const debug = useFlag(debugFlag.key);
   const look = viewer.looks.find((l) => l.id === settings.look) ?? viewer.looks[0];
   const theme = lookTheme(look, settings.dark);
 
@@ -63,13 +67,15 @@ export function EmViewerChrome({
             onLook={chooseLook}
           />
           {debug && (
-            <DebugMenu
-              viewer={viewer}
-              load={load}
-              name={name}
-              settings={settings}
-              update={update}
-            />
+            <ErrorBoundary fallback={null}>
+              <DebugMenu
+                viewer={viewer}
+                load={load}
+                name={name}
+                settings={settings}
+                update={update}
+              />
+            </ErrorBoundary>
           )}
         </>
       }
@@ -84,7 +90,11 @@ export function EmViewerChrome({
             theme={theme}
           />
         </div>
-        {debug && settings.frameTimes && <FrameTimes viewer={viewer} />}
+        {debug && settings.frameTimes && (
+          <ErrorBoundary fallback={null}>
+            <FrameTimes viewer={viewer} />
+          </ErrorBoundary>
+        )}
       </div>
       <LoadStatus load={load} name={name} theme={theme} />
     </ViewerChrome>

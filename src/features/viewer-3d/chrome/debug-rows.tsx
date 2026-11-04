@@ -12,8 +12,8 @@ export function DebugMenuShell({
 }: {
   testId: string;
   body: ReactNode;
-  /** The downloads, given the way to close the menu. */
-  footer(close: () => void): ReactNode;
+  /** The downloads, given the way to close the menu, where it has any. */
+  footer?(close: () => void): ReactNode;
 }) {
   return (
     <ChromeMenu
@@ -26,9 +26,11 @@ export function DebugMenuShell({
       {(close) => (
         <div className="flex max-h-[min(50rem,calc(100vh-6rem))] flex-col">
           <div className="min-h-0 overflow-y-auto">{body}</div>
-          <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
-            {footer(close)}
-          </div>
+          {footer && (
+            <div className="flex shrink-0 flex-col gap-1 border-t border-neutral-200 p-2 text-neutral-700">
+              {footer(close)}
+            </div>
+          )}
         </div>
       )}
     </ChromeMenu>
@@ -99,9 +101,4 @@ export function DownloadRow({
       </span>
     </button>
   );
-}
-
-/** `name` without what a file name cannot hold. */
-export function fileName(name: string, fallback: string): string {
-  return name.replace(/[\\/:*?"<>|]+/g, '_').trim() || fallback;
 }

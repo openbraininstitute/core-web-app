@@ -6,6 +6,7 @@ import HeaderSliderTimestamps from './header-slider-timestamps';
 import SingleStep from './single-step';
 
 import type { StepProps } from '@/components/documentation/type';
+import type { VideoHandle } from '@/util/play-video-at-time';
 
 type ActiveSteps = {
   first: number;
@@ -21,7 +22,7 @@ export default function SliderTimestamps({
   content: StepProps[];
   videoTime: number;
   setVideoTime: (time: number) => void;
-  videoRef: RefObject<HTMLVideoElement>;
+  videoRef: RefObject<VideoHandle>;
 }) {
   const [activeSteps, setActiveSteps] = useState<ActiveSteps>({
     first: 0,
