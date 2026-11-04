@@ -7,7 +7,7 @@ The 3D view of a circuit, a simulation's spikes over it and the electrodes place
 
 In short:
 
-- A circuit shows first as its somas, one per cell, coloured by the property chosen. Its morphologies come from its morphology pack: one file Bluenaas builds for each circuit the first time it is asked, with the morphologies simplified at three levels, placed and cut into boxes of space. The viewer reads the coarsest level first, then finer levels box by box where the view needs them.
+- A circuit shows first as its somas, one per cell, coloured by the property chosen. Its morphologies come from its morphology pack: one file Bluenaas builds for each circuit the first time it is asked, with the morphologies simplified at three levels (two for the largest circuits), placed and cut into boxes of space. The viewer reads the coarsest level first, then finer levels box by box where the view needs them.
 - WebGPU culls on the GPU what is hidden and draws up to 4M segments finer than the coarsest level, which it keeps drawn where it fits. WebGL 2 draws up to 2M segments, chosen by what is in the frame and how large it is on screen. Where the morphologies in view come to more than that, their somas are drawn instead, and the status says to zoom in.
 - A single cell, and a pair or small circuit without a pack, are drawn a morphology per cell, read from OBI-One one cell at a time, with section ids for picking a location.
 - The morphologies are behind the `circuit-morphologies` flag (`circuitMorphologiesFlag`), off by default, offered in local, preview and staging. Without it, circuits above small scale are drawn as somas only.
