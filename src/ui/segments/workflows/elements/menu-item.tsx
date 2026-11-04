@@ -36,18 +36,18 @@ export function MenuItem<T>({
       className={cn(
         'flex flex-col border-white bg-white px-4 py-2',
         'shadow-[16px_16px_30px_0px_#0000000,-12px_-8px_32px_0px_#FFFFFF52]',
-        'h-full cursor-pointer select-none',
-        'group hover:bg-primary-9 hover:text-white',
-        {
-          'pointer-events-none cursor-not-allowed border! border-gray-200 bg-gray-100/50': disabled,
-        },
+        'h-full select-none',
+        // A disabled card still takes its clicks, for nothing: they are not on what is behind it.
+        disabled
+          ? 'cursor-not-allowed border! border-gray-200 bg-gray-100/50'
+          : 'group cursor-pointer hover:bg-primary-9 hover:text-white',
         { 'bg-primary-9 text-white!': active },
         className
       )}
       role="button"
       data-testid={testId}
       aria-disabled={disabled}
-      onClick={() => onClick(value)}
+      onClick={disabled ? undefined : () => onClick(value)}
     >
       <CardTitle
         className={cn(

@@ -61,9 +61,7 @@ export function ActivityAndTypeSelectors({
     }
   };
 
-  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | TAllWorkflows | null) => {
-    // the only type under All, so picking it changes nothing
-    if (v === ALL_WORKFLOWS) return;
+  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | null) => {
     onEntityTypeChange(v);
     onNavigate?.(v);
   };
@@ -82,14 +80,18 @@ export function ActivityAndTypeSelectors({
           onSelect={handleActivitySelect}
           includeAll={Boolean(onAllSelect)}
         />
-      </div>
-      <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
-        Type
-        <EntityTypeSelectScrollable
-          category={activity}
-          value={entityType}
-          onSelect={handleEntityTypeSelect}
-        />
+        {/* All has no types to narrow it by. */}
+        {activity && activity !== ALL_WORKFLOWS && (
+          <>
+            <span aria-hidden className="bg-neutral-2 mr-2 h-5 w-px" />
+            Type
+            <EntityTypeSelectScrollable
+              category={activity}
+              value={entityType === ALL_WORKFLOWS ? null : entityType}
+              onSelect={handleEntityTypeSelect}
+            />
+          </>
+        )}
       </div>
     </div>
   );

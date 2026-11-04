@@ -34,9 +34,9 @@ export function EntityTypeSelectScrollable({
   category,
   onSelect,
 }: {
-  category: TActivityValue | TAllWorkflows | null;
-  value: TExtendedEntitiesTypeDict | TAllWorkflows | null;
-  onSelect: (v: TExtendedEntitiesTypeDict | TAllWorkflows | null) => void;
+  category: TActivityValue | null;
+  value: TExtendedEntitiesTypeDict | null;
+  onSelect: (v: TExtendedEntitiesTypeDict | null) => void;
 }) {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
@@ -45,7 +45,7 @@ export function EntityTypeSelectScrollable({
   return (
     <Select
       value={value ?? undefined}
-      onValueChange={(v: TExtendedEntitiesTypeDict | TAllWorkflows) => onSelect(v)}
+      onValueChange={(v: TExtendedEntitiesTypeDict) => onSelect(v)}
     >
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
@@ -63,11 +63,6 @@ export function EntityTypeSelectScrollable({
         side="bottom"
         sideOffset={3}
       >
-        {category === ALL_WORKFLOWS && (
-          <SelectItem value={ALL_WORKFLOWS} className={ALL_ITEM_CLASS}>
-            All
-          </SelectItem>
-        )}
         {groupWorkflowsByEntityGroup(
           listWorkflows({
             activity: category,

@@ -53,6 +53,11 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
     updateWorkflowState(() => ({ activity: value, entityType: null }));
   };
 
+  // Back to the categories alone, for whatever else the page is being used for.
+  const deselectCategory = () => {
+    if (activity) onSelectCategory(null);
+  };
+
   const onSelectType = async (value: TExtendedEntitiesTypeDict | null) => {
     if (!activity || !value) return;
 
@@ -95,6 +100,10 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             duration: 0.2,
             ease: 'easeInOut',
           }}
+          onClick={(event) => {
+            // On the window itself, between its cards and buttons.
+            if (!(event.target as Element).closest('button, [role="button"]')) deselectCategory();
+          }}
         >
           <CategoryMenu current={activity} onItemClick={onSelectCategory} />
           <AnimatePresence>
@@ -132,6 +141,10 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             duration: 0.2,
             ease: 'easeInOut',
           }}
+          // The table in use: under the pointer, or typed into. Not on focus, which its search box
+          // takes for itself as it mounts, while a link may have opened a category.
+          onPointerEnter={deselectCategory}
+          onKeyDownCapture={deselectCategory}
         >
           <WorkflowActivity />
         </motion.div>
