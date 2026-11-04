@@ -1,54 +1,30 @@
 import { virtualLabRootApi } from '@/api/virtual-lab-svc/utils';
-import { compactRecord } from '@/utils/dictionary';
+
+import { deleteAt, getEnveloped, getJson, JSON_HEADERS, patchJson, postJson } from './request';
 
 import type {
+  AdminCreditRate,
+  AdminCreditRateUpdate,
   AdminLab,
   AdminLabInvite,
   AdminLabUpdate,
   AdminMember,
   AdminPaymentsPage,
+  AdminPlan,
+  AdminPlanUpdate,
   AdminProject,
   AdminProjectUpdate,
   AdminSubscription,
   AdminUser,
   AdminUserDetails,
-  BillingOwner,
+  ComputeCell,
   DeletedScope,
-  MessageEnvelope,
   Paged,
   PageParams,
+  PaymentFilters,
+  SubscriptionFilters,
   UserRole,
 } from './admin-types';
-
-const JSON_HEADERS = { 'Content-Type': 'application/json', accept: 'application/json' };
-const ACCEPT_HEADERS = { accept: 'application/json' };
-
-async function getJson<T>(path: string, params?: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  return api.get<T>(`/admin${path}`, {
-    headers: ACCEPT_HEADERS,
-    ...(params && { queryParams: compactRecord(params) }),
-  });
-}
-
-async function getEnveloped<T>(path: string) {
-  return (await getJson<MessageEnvelope<T>>(path)).data;
-}
-
-async function patchJson(path: string, body: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  await api.patch(`/admin${path}`, { headers: JSON_HEADERS, body });
-}
-
-async function deleteAt(path: string) {
-  const api = await virtualLabRootApi();
-  await api.delete(`/admin${path}`, { headers: ACCEPT_HEADERS });
-}
-
-async function postJson(path: string, body?: Record<string, unknown>) {
-  const api = await virtualLabRootApi();
-  await api.post(`/admin${path}`, { headers: JSON_HEADERS, ...(body && { body }) });
-}
 
 export const listLabs = (params: PageParams & DeletedScope & { query?: string }) =>
   getJson<Paged<AdminLab>>('/labs', params);
@@ -102,11 +78,30 @@ export const searchUsers = (params: PageParams & { query?: string }) =>
 
 export const getUser = (userId: string) => getJson<AdminUserDetails>(`/users/${userId}`);
 
-export const listSubscriptions = (params: PageParams & BillingOwner) =>
+export const listSubscriptions = (params: PageParams & SubscriptionFilters) =>
   getJson<Paged<AdminSubscription>>('/subscriptions', params);
 
 export const cancelSubscription = (subscriptionId: string, reason: string) =>
   postJson(`/subscriptions/${subscriptionId}/cancel`, { reason });
 
-export const listPayments = (params: PageParams & BillingOwner) =>
+export const listPayments = (params: PageParams & PaymentFilters) =>
   getJson<AdminPaymentsPage>('/payments', params);
+
+export const listPlans = () => getJson<AdminPlan[]>('/plans');
+
+export const updatePlan = (planId: string, update: AdminPlanUpdate) =>
+  patchJson(`/plans/${planId}`, update);
+
+export const listCreditRates = () => getJson<AdminCreditRate[]>('/credit-rates');
+
+export const updateCreditRate = (rateId: string, update: AdminCreditRateUpdate) =>
+  patchJson(`/credit-rates/${rateId}`, update);
+
+// A service-admin route outside /admin: no admin equivalent exists.
+export async function updateComputeCell(vlabId: string, computeCell: ComputeCell) {
+  const api = await virtualLabRootApi();
+  await api.patch(`/virtual-labs/${vlabId}/compute-cell`, {
+    headers: JSON_HEADERS,
+    body: { compute_cell: computeCell },
+  });
+}

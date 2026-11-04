@@ -1,6 +1,6 @@
 'use client';
 
-import { Form, Input, Modal } from 'antd';
+import { DatePicker, Form, Input, InputNumber, Modal, Select, Switch } from 'antd';
 
 import type { Rule } from 'antd/es/form';
 import type { ReactNode } from 'react';
@@ -8,13 +8,43 @@ import type { ReactNode } from 'react';
 export type FormModalField = {
   name: string;
   label: string;
-  multiline?: boolean;
+  kind?: 'text' | 'multiline' | 'integer' | 'switch' | 'select' | 'datetime';
+  min?: number;
+  max?: number;
+  options?: { value: string; label: string }[];
+  placeholder?: string;
+  extra?: ReactNode;
   rules?: Rule[];
 };
 
+function fieldControl({ kind = 'text', min, max, options, placeholder }: FormModalField) {
+  switch (kind) {
+    case 'multiline':
+      return <Input.TextArea rows={3} placeholder={placeholder} />;
+    case 'integer':
+      return (
+        <InputNumber
+          min={min}
+          max={max}
+          precision={0}
+          placeholder={placeholder}
+          className="w-full"
+        />
+      );
+    case 'switch':
+      return <Switch />;
+    case 'select':
+      return <Select options={options} />;
+    case 'datetime':
+      return <DatePicker showTime className="w-full" />;
+    default:
+      return <Input placeholder={placeholder} />;
+  }
+}
+
 // Edits, reasons and typed confirmations are all a short form in a modal. It stays mounted
 // only while open, so `initialValues` are always the current ones.
-export function FormModal<Values extends Record<string, string | undefined>>({
+export function FormModal<Values extends Record<string, unknown>>({
   title,
   description,
   fields,
@@ -55,10 +85,20 @@ export function FormModal<Values extends Record<string, string | undefined>>({
         initialValues={initialValues}
         onFinish={onSubmit}
       >
-        {fields.map(({ name, label, multiline, rules }) => (
-          <Form.Item key={name} name={name} label={label} rules={rules}>
-            {multiline ? <Input.TextArea rows={3} /> : <Input />}
-          </Form.Item>
+        {fields.map((field) => (
+          // Form.Item's own `extra` makes the form jump when a field is first touched.
+          <div key={field.name} className="mb-6">
+            <Form.Item
+              name={field.name}
+              label={field.label}
+              rules={field.rules}
+              valuePropName={field.kind === 'switch' ? 'checked' : 'value'}
+              style={{ marginBottom: 0 }}
+            >
+              {fieldControl(field)}
+            </Form.Item>
+            {field.extra && <div className="text-neutral-4 mt-1 text-sm">{field.extra}</div>}
+          </div>
         ))}
       </Form>
     </Modal>

@@ -5,10 +5,11 @@ import { useState } from 'react';
 import { Button } from '@/ui/molecules/button';
 
 import { FormModal } from '../../../shared/form-modal';
-import { formatDateTime } from '../../../shared/format';
+import { formatDateTime, formatMoney } from '../../../shared/format';
 import { AdminPagedGrid, pagedSource, toPageParams } from '../../../shared/grid';
 import { adminQueryKeys } from '../../../shared/query-keys';
 import { StatusPill } from '../../../shared/status-pill';
+import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { cancelSubscription, listPayments, listSubscriptions } from '../api/admin';
 import { useTenancyWrite } from './use-tenancy-write';
@@ -17,15 +18,11 @@ import type { IGridDataSource } from '@/features/data-grid/core';
 import type { ISimpleColumn } from '@/features/data-grid/presets/simple-grid';
 import type { AdminPayment, AdminSubscription, BillingOwner } from '../api/admin-types';
 
-const SUBSCRIPTIONS_SOURCE = pagedSource<AdminSubscription>((params) =>
-  listSubscriptions(params as Parameters<typeof listSubscriptions>[0])
-);
+const SUBSCRIPTIONS_SOURCE = pagedSource<AdminSubscription>(listSubscriptions);
 
 const PAYMENTS_SOURCE: IGridDataSource<AdminPayment> = {
   fetch: async (query) => {
-    const { payments, total_count: total } = await listPayments(
-      toPageParams(query) as Parameters<typeof listPayments>[0]
-    );
+    const { payments, total_count: total } = await listPayments(toPageParams(query));
     return { rows: payments, total };
   },
 };
@@ -41,8 +38,7 @@ const PAYMENT_COLUMNS: Array<ISimpleColumn<AdminPayment>> = [
     id: 'amount',
     header: 'Amount',
     width: { width: 140 },
-    // Amounts arrive as integer cents.
-    getValue: (p) => `${(p.amount_paid / 100).toFixed(2)} ${p.currency.toUpperCase()}`,
+    getValue: (payment) => formatMoney(payment.amount_paid, payment.currency),
   },
   {
     id: 'credits',
@@ -55,6 +51,12 @@ const PAYMENT_COLUMNS: Array<ISimpleColumn<AdminPayment>> = [
     header: 'Type',
     width: { width: 140 },
     getValue: (payment) => payment.payment_type,
+  },
+  {
+    id: 'card',
+    header: 'Card',
+    width: { width: 150 },
+    getValue: (payment) => `${payment.card_brand} ${payment.card_last4}`,
   },
   { id: 'status', header: 'Status', width: { width: 140 }, getValue: (payment) => payment.status },
   {
@@ -75,7 +77,35 @@ const PAYMENT_COLUMNS: Array<ISimpleColumn<AdminPayment>> = [
   },
 ];
 
-export function Billing({ owner }: { owner: BillingOwner }) {
+const PAYMENT_LAB_COLUMN: ISimpleColumn<AdminPayment> = {
+  id: 'lab',
+  header: 'Virtual lab',
+  width: { width: 140 },
+  renderCell: (payment) => <AdminLink kind="vlab" id={payment.virtual_lab_id} />,
+};
+
+const SUBSCRIPTION_OWNER_COLUMNS: Array<ISimpleColumn<AdminSubscription>> = [
+  {
+    id: 'lab',
+    header: 'Virtual lab',
+    width: { width: 140 },
+    renderCell: (subscription) => <AdminLink kind="vlab" id={subscription.virtual_lab_id} />,
+  },
+  {
+    id: 'user',
+    header: 'User',
+    width: { width: 140 },
+    renderCell: (subscription) => <AdminLink kind="user" id={subscription.user_id} />,
+  },
+];
+
+type BillingGridProps = {
+  params: Record<string, unknown>;
+  // A list across owners says whose each row is, and fills the page.
+  acrossOwners?: boolean;
+};
+
+export function SubscriptionsGrid({ params, acrossOwners }: BillingGridProps) {
   const [cancelling, setCancelling] = useState<AdminSubscription | null>(null);
   const write = useTenancyWrite({
     write: ({ id, reason }: { id: string; reason: string }) => cancelSubscription(id, reason),
@@ -84,7 +114,7 @@ export function Billing({ owner }: { owner: BillingOwner }) {
     onSuccess: () => setCancelling(null),
   });
 
-  const subscriptionColumns: Array<ISimpleColumn<AdminSubscription>> = [
+  const columns: Array<ISimpleColumn<AdminSubscription>> = [
     {
       id: 'status',
       header: 'Status',
@@ -95,6 +125,7 @@ export function Billing({ owner }: { owner: BillingOwner }) {
     },
     { id: 'type', header: 'Type', width: { width: 100 }, getValue: (s) => s.type },
     { id: 'tier', header: 'Tier', width: { width: 110 }, getValue: (s) => s.tier },
+    ...(acrossOwners ? SUBSCRIPTION_OWNER_COLUMNS : []),
     {
       id: 'period',
       header: 'Current period',
@@ -122,29 +153,16 @@ export function Billing({ owner }: { owner: BillingOwner }) {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <section className="flex flex-col gap-2">
-        <h2 className="text-primary-9 font-semibold">Subscriptions</h2>
-        <AdminPagedGrid<AdminSubscription>
-          what="subscriptions"
-          columns={subscriptionColumns}
-          getRowId={({ id, status }) => `${id}:${status}`}
-          dataSource={SUBSCRIPTIONS_SOURCE}
-          queryKey={adminQueryKeys.subscriptions()}
-          params={owner}
-        />
-      </section>
-      <section className="flex flex-col gap-2">
-        <h2 className="text-primary-9 font-semibold">Payments</h2>
-        <AdminPagedGrid<AdminPayment>
-          what="payments"
-          columns={PAYMENT_COLUMNS}
-          getRowId={(payment) => payment.id}
-          dataSource={PAYMENTS_SOURCE}
-          queryKey={adminQueryKeys.payments()}
-          params={owner}
-        />
-      </section>
+    <>
+      <AdminPagedGrid<AdminSubscription>
+        fill={acrossOwners}
+        what="subscriptions"
+        columns={columns}
+        getRowId={({ id, status }) => `${id}:${status}`}
+        dataSource={SUBSCRIPTIONS_SOURCE}
+        queryKey={adminQueryKeys.subscriptions()}
+        params={params}
+      />
       {cancelling && (
         <FormModal
           title="Cancel this subscription at the end of its period?"
@@ -153,7 +171,7 @@ export function Billing({ owner }: { owner: BillingOwner }) {
             {
               name: 'reason',
               label: 'Reason',
-              multiline: true,
+              kind: 'multiline',
               rules: [{ required: true, message: 'Give a reason' }],
             },
           ]}
@@ -164,6 +182,35 @@ export function Billing({ owner }: { owner: BillingOwner }) {
           onClose={() => setCancelling(null)}
         />
       )}
+    </>
+  );
+}
+
+export function PaymentsGrid({ params, acrossOwners }: BillingGridProps) {
+  return (
+    <AdminPagedGrid<AdminPayment>
+      fill={acrossOwners}
+      what="payments"
+      columns={acrossOwners ? [PAYMENT_LAB_COLUMN, ...PAYMENT_COLUMNS] : PAYMENT_COLUMNS}
+      getRowId={(payment) => payment.id}
+      dataSource={PAYMENTS_SOURCE}
+      queryKey={adminQueryKeys.payments()}
+      params={params}
+    />
+  );
+}
+
+export function Billing({ owner }: { owner: BillingOwner }) {
+  return (
+    <div className="flex flex-col gap-6">
+      <section className="flex flex-col gap-2">
+        <h2 className="text-primary-9 font-semibold">Subscriptions</h2>
+        <SubscriptionsGrid params={owner} />
+      </section>
+      <section className="flex flex-col gap-2">
+        <h2 className="text-primary-9 font-semibold">Payments</h2>
+        <PaymentsGrid params={owner} />
+      </section>
     </div>
   );
 }

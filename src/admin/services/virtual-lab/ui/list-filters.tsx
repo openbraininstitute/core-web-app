@@ -3,6 +3,7 @@
 import { Input, Segmented } from 'antd';
 import { parseAsString, parseAsStringLiteral, useQueryState } from 'nuqs';
 
+import type { ReactNode } from 'react';
 import type { DeletedScope } from '../api/admin-types';
 
 const SCOPES = ['live', 'all', 'deleted'] as const;
@@ -30,7 +31,7 @@ export function useListFilters({ scoped }: { scoped?: boolean } = {}) {
   return {
     params: { query: query || undefined, ...SCOPE_PARAMS[scope] },
     gridKey: `${query}:${scope}`,
-    controls: (placeholder: string) => (
+    controls: (placeholder: string, extra?: ReactNode) => (
       <div className="flex items-center gap-3">
         <Input.Search
           key={query}
@@ -47,6 +48,7 @@ export function useListFilters({ scoped }: { scoped?: boolean } = {}) {
             onChange={(value) => setScope(value as (typeof SCOPES)[number])}
           />
         )}
+        {extra}
       </div>
     ),
   };

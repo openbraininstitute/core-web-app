@@ -80,7 +80,7 @@ function ProjectActions({ project }: { project: AdminProject }) {
                 { max: 250 },
               ],
             },
-            { name: 'description', label: 'Description', multiline: true },
+            { name: 'description', label: 'Description', kind: 'multiline' },
           ]}
           initialValues={{ name: project.name, description: project.description ?? undefined }}
           okText="Save"

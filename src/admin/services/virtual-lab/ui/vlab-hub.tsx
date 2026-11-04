@@ -16,13 +16,13 @@ import { adminQueryKeys } from '../../../shared/query-keys';
 import { AdminLink } from '../../../shell/admin-link';
 import { CapabilityGate } from '../../../shell/capability-gate';
 import { ADMIN_ROOT } from '../../../shell/sections';
-import { deleteLab, getLab, updateLab } from '../api/admin';
+import { deleteLab, getLab, updateComputeCell, updateLab } from '../api/admin';
 import { Billing } from './billing';
 import { LabMembers } from './lab-members';
 import { ProjectsGrid } from './projects-grid';
 import { useTenancyWrite } from './use-tenancy-write';
 
-import type { AdminLab, AdminLabUpdate } from '../api/admin-types';
+import type { AdminLab, AdminLabUpdate, ComputeCell } from '../api/admin-types';
 
 const LABS_HREF = `${ADMIN_ROOT}/virtual-labs`;
 
@@ -51,13 +51,19 @@ function LabOverview({ lab }: { lab: AdminLab }) {
 
 function LabActions({ lab }: { lab: AdminLab }) {
   const router = useRouter();
-  const [open, setOpen] = useState<'edit' | 'delete' | null>(null);
+  const [open, setOpen] = useState<'edit' | 'cell' | 'delete' | null>(null);
   const close = () => setOpen(null);
 
   const editWrite = useTenancyWrite({
     write: (update: AdminLabUpdate) => updateLab(lab.id, update),
     done: 'Lab updated',
     failed: "Couldn't update the lab",
+    onSuccess: close,
+  });
+  const cellWrite = useTenancyWrite({
+    write: (cell: ComputeCell) => updateComputeCell(lab.id, cell),
+    done: 'Compute cell changed',
+    failed: "Couldn't change the compute cell",
     onSuccess: close,
   });
   const deleteWrite = useTenancyWrite({
@@ -71,6 +77,9 @@ function LabActions({ lab }: { lab: AdminLab }) {
     <CapabilityGate need="virtualLab.admin">
       <Button rounded variant="outline" size="sm" onClick={() => setOpen('edit')}>
         Edit
+      </Button>
+      <Button rounded variant="outline" size="sm" onClick={() => setOpen('cell')}>
+        Change compute cell
       </Button>
       <Button rounded variant="outline" size="sm" onClick={() => setOpen('delete')}>
         Delete
@@ -92,7 +101,7 @@ function LabActions({ lab }: { lab: AdminLab }) {
                 { max: 250 },
               ],
             },
-            { name: 'description', label: 'Description', multiline: true },
+            { name: 'description', label: 'Description', kind: 'multiline' },
             {
               name: 'reference_email',
               label: 'Reference email',
@@ -111,6 +120,30 @@ function LabActions({ lab }: { lab: AdminLab }) {
           // The API validates the email, so a blank one has to go as null, which clears it.
           onSubmit={({ reference_email: email, ...update }) =>
             editWrite.mutate({ ...update, reference_email: email || null })
+          }
+          onClose={close}
+        />
+      )}
+      {open === 'cell' && (
+        <FormModal<{ compute_cell: ComputeCell }>
+          title="Change compute cell"
+          description="Decides where this lab's jobs start from now on. It doesn't move jobs that are already running."
+          fields={[
+            {
+              name: 'compute_cell',
+              label: 'Compute cell',
+              kind: 'select',
+              options: [
+                { value: 'cell_a', label: 'Cell A' },
+                { value: 'cell_b', label: 'Cell B' },
+              ],
+            },
+          ]}
+          initialValues={{ compute_cell: lab.compute_cell }}
+          okText="Change"
+          pending={cellWrite.isPending}
+          onSubmit={({ compute_cell: cell }) =>
+            cell === lab.compute_cell ? close() : cellWrite.mutate(cell)
           }
           onClose={close}
         />
