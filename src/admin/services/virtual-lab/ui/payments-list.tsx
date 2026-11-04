@@ -23,6 +23,12 @@ const shallow = { shallow: true };
 // The payment date column has no time zone, and the API answers 500 to a date with an offset.
 const naiveUtc = (date: Dayjs) => date.toISOString().slice(0, -1);
 
+// These come from the URL, so a mangled link must not take the page down.
+function parseDay(value: string) {
+  const day = dayjs(value);
+  return value && day.isValid() ? day : null;
+}
+
 export function PaymentsList() {
   const { params, gridKey, controls } = useListFilters();
   const [type, setType] = useQueryState(
@@ -31,6 +37,8 @@ export function PaymentsList() {
   );
   const [from, setFrom] = useQueryState('from', parseAsString.withDefault('').withOptions(shallow));
   const [to, setTo] = useQueryState('to', parseAsString.withDefault('').withOptions(shallow));
+  const fromDay = parseDay(from);
+  const toDay = parseDay(to);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -44,7 +52,7 @@ export function PaymentsList() {
             onChange={(value) => setType(value as (typeof TYPES)[number])}
           />
           <DatePicker.RangePicker
-            value={[from ? dayjs(from) : null, to ? dayjs(to) : null]}
+            value={[fromDay, toDay]}
             onChange={(dates) => {
               setFrom(dates?.[0]?.format(DATE_FORMAT) ?? '');
               setTo(dates?.[1]?.format(DATE_FORMAT) ?? '');
@@ -58,8 +66,8 @@ export function PaymentsList() {
         params={{
           card_last4: params.query,
           payment_type: type === 'any' ? undefined : type,
-          start_date: from ? naiveUtc(dayjs(from).startOf('day')) : undefined,
-          end_date: to ? naiveUtc(dayjs(to).endOf('day')) : undefined,
+          start_date: fromDay ? naiveUtc(fromDay.startOf('day')) : undefined,
+          end_date: toDay ? naiveUtc(toDay.endOf('day')) : undefined,
         }}
       />
     </div>

@@ -173,7 +173,16 @@ export function PromotionEdit({
           min: 1,
           placeholder: 'No limit',
           extra: hasLimit ? 'This can be changed, but the API has no way to remove it.' : undefined,
-          rules: hasLimit ? [{ required: true, message: 'Give a limit' }] : undefined,
+          rules: [
+            ...(hasLimit ? [{ required: true, message: 'Give a limit' }] : []),
+            {
+              validator: async (_, value) => {
+                if (value && value < promotion.max_uses_per_user_per_period) {
+                  throw new Error("Can't be below the uses per user");
+                }
+              },
+            },
+          ],
         },
         { name: 'active', label: 'Active', kind: 'switch' },
       ]}

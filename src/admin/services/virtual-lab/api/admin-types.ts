@@ -160,6 +160,7 @@ export type AdminPlan = {
   yearly_discount: number | null;
   monthly_credits: number;
   yearly_credits: number;
+  updated_at: string;
 };
 
 export type AdminPlanUpdate = Partial<
@@ -184,6 +185,7 @@ export type AdminCreditRate = {
   rate: string;
   discount_pct: number;
   active: boolean;
+  updated_at: string;
 };
 
 export type AdminCreditRateUpdate = Partial<

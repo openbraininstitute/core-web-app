@@ -40,6 +40,14 @@ function EditButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+const DISCOUNT_WARNING =
+  'Has to match the Stripe coupon: this changes the price customers are quoted, while the coupon sets what they are charged.';
+
+function planPrice(plan: AdminPlan, amount: number, discount: number | null, credits: number) {
+  const price = `${formatMoney(amount, plan.currency)}, ${credits} credits`;
+  return discount ? `${price}, ${formatMoney(discount, plan.currency)} off` : price;
+}
+
 function PlanEdit({ plan, onClose }: { plan: AdminPlan; onClose: () => void }) {
   const write = useBillingWrite({
     write: (update: AdminPlanUpdate) => updatePlan(plan.id, update),
@@ -74,8 +82,20 @@ function PlanEdit({ plan, onClose }: { plan: AdminPlan; onClose: () => void }) {
           min: 0,
           rules: [{ required: true, message: 'Give a number' }],
         },
-        { name: 'monthly_discount', label: 'Monthly discount, in cents', kind: 'integer', min: 0 },
-        { name: 'yearly_discount', label: 'Yearly discount, in cents', kind: 'integer', min: 0 },
+        {
+          name: 'monthly_discount',
+          label: 'Monthly discount, in cents',
+          kind: 'integer',
+          min: 0,
+          extra: DISCOUNT_WARNING,
+        },
+        {
+          name: 'yearly_discount',
+          label: 'Yearly discount, in cents',
+          kind: 'integer',
+          min: 0,
+          extra: DISCOUNT_WARNING,
+        },
       ]}
       initialValues={{
         name: plan.name,
@@ -118,16 +138,16 @@ function PlansTab() {
     {
       id: 'monthly',
       header: 'Monthly',
-      width: { flex: 1, minWidth: 230 },
+      width: { flex: 1, minWidth: 300 },
       getValue: (plan) =>
-        `${formatMoney(plan.monthly_amount, plan.currency)}, ${plan.monthly_credits} credits`,
+        planPrice(plan, plan.monthly_amount, plan.monthly_discount, plan.monthly_credits),
     },
     {
       id: 'yearly',
       header: 'Yearly',
-      width: { flex: 1, minWidth: 230 },
+      width: { flex: 1, minWidth: 300 },
       getValue: (plan) =>
-        `${formatMoney(plan.yearly_amount, plan.currency)}, ${plan.yearly_credits} credits`,
+        planPrice(plan, plan.yearly_amount, plan.yearly_discount, plan.yearly_credits),
     },
     {
       id: 'actions',
@@ -142,7 +162,7 @@ function PlansTab() {
       <AdminQueryGrid<AdminPlan>
         what="plans"
         columns={columns}
-        getRowId={({ id, name, active }) => `${id}:${name}:${active}`}
+        getRowId={({ id, updated_at: updatedAt }) => `${id}:${updatedAt}`}
         queryKey={adminQueryKeys.plans()}
         queryFn={listPlans}
       />
@@ -190,7 +210,7 @@ function CreditRateEdit({ rate, onClose }: { rate: AdminCreditRate; onClose: () 
           name: 'max_credits',
           label: 'Up to credits',
           kind: 'integer',
-          min: 1,
+          min: rate.min_credits,
           placeholder: 'No upper limit',
         },
         { name: 'active', label: 'Active', kind: 'switch' },
@@ -261,7 +281,7 @@ function CreditRatesTab() {
       <AdminQueryGrid<AdminCreditRate>
         what="credit rates"
         columns={columns}
-        getRowId={({ id, active }) => `${id}:${active}`}
+        getRowId={({ id, updated_at: updatedAt }) => `${id}:${updatedAt}`}
         queryKey={adminQueryKeys.creditRates()}
         queryFn={listCreditRates}
       />

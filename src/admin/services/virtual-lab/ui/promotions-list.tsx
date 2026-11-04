@@ -27,8 +27,8 @@ export const PROMOTIONS_HREF = `${ADMIN_ROOT}/promotions`;
 const STATUSES = ['any', 'active', 'inactive'] as const;
 const STATUS_OPTIONS = [
   { value: 'any', label: 'Any status' },
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+  { value: 'active', label: 'Switched on' },
+  { value: 'inactive', label: 'Switched off' },
 ];
 
 const PROMOTIONS_SOURCE: IGridDataSource<AdminPromotion> = {
@@ -42,11 +42,16 @@ const PROMOTIONS_SOURCE: IGridDataSource<AdminPromotion> = {
   },
 };
 
-// The API's `active` only says it wasn't switched off: the code may still be past its dates.
+// The API's `active` only says it wasn't switched off: the code may be outside its dates.
 export function PromotionStatus({ promotion }: { promotion: AdminPromotion }) {
-  if (!promotion.active) return <StatusPill tone="neutral">Inactive</StatusPill>;
-  if (new Date(asUtc(promotion.valid_until)) < new Date()) {
+  const now = new Date();
+
+  if (!promotion.active) return <StatusPill tone="neutral">Switched off</StatusPill>;
+  if (new Date(asUtc(promotion.valid_until)) < now) {
     return <StatusPill tone="warn">Expired</StatusPill>;
+  }
+  if (new Date(asUtc(promotion.valid_from)) > now) {
+    return <StatusPill tone="neutral">Scheduled</StatusPill>;
   }
   return <StatusPill tone="good">Active</StatusPill>;
 }
@@ -133,7 +138,7 @@ export function PromotionsList() {
         fill
         what="promotions"
         columns={COLUMNS}
-        getRowId={({ id, active, code }) => `${id}:${active}:${code}`}
+        getRowId={({ id, updated_at: updatedAt }) => `${id}:${updatedAt}`}
         dataSource={PROMOTIONS_SOURCE}
         queryKey={adminQueryKeys.promotions()}
         params={{
