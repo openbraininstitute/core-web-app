@@ -79,7 +79,7 @@ export class CircuitMorphologyViewer extends CircuitView {
         soma: idMaterial('soma', uniforms, spotUniforms),
       },
       electrode: electrodeMaterial(this.electrodeUniforms, pixelRatio),
-      ...contactMaterials(this.electrodeUniforms, this.hiddenContactUniforms, pixelRatio),
+      ...contactMaterials(this.electrodeUniforms, this.fadingContactUniforms, pixelRatio),
       ...voxelMaterials(),
       synapse: electrodeMaterial(this.synapseUniforms, pixelRatio, { among: true }),
       marker: electrodeMaterial(this.markerUniforms, pixelRatio),

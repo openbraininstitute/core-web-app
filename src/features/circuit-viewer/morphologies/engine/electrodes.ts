@@ -6,6 +6,8 @@
  *
  * A contact may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: solid and
  * ringed where nothing is nearer the eye, faint where something is, and fainter the further it is across its array.
+ * Over morphologies that says little, as nearly every contact has a branch in front of it. There it is drawn over the
+ * cells with a halo to stand out on them, and its depth shows in its size and opacity across the array.
  */
 
 import chroma from 'chroma-js';
@@ -22,9 +24,17 @@ const HIGHLIGHT_LIGHTEN = 0.55;
 const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
 export const RING_PX = 1;
+/** The halo's width, in CSS pixels, outside the ring. */
+export const HALO_PX = 1.5;
+/** The least radius, in CSS pixels, of a contact with a halo, whose colour must show inside it however far the zoom. */
+export const HALOED_LEAST_PX = 3;
 /** How opaque a hidden contact is on the near side of its array, and on the far side. */
-export const FAINT_NEAR = 0.6;
-export const FAINT_FAR = 0.2;
+export const HIDDEN_OPACITIES = [0.6, 0.2] as const;
+/** How opaque a contact over morphologies is on the near side of its array and on the far side, and how large. */
+export const OVER_OPACITIES = [1, 0.55] as const;
+export const OVER_SIZES = [1.25, 0.8] as const;
+/** The share of the depth range that contacts over the cells are squeezed into, in front of all else. */
+export const FRONT_DEPTH = 0.001;
 const LEAST_FADE_REACH_UM = 1;
 
 export interface ElectrodeUniforms {
@@ -41,6 +51,10 @@ export interface ElectrodeUniforms {
   uScale: { value: number };
   /** Where opacity falls with depth: xyz the array's middle, w how far from it, in µm, the fade runs; w 0 for none. */
   uFade: { value: THREE.Vector4 };
+  /** The halo's width, in device pixels of the full resolution; 0 for none. */
+  uHalo: { value: number };
+  /** The halo's colour, in sRGB. */
+  uHaloColour: { value: THREE.Vector3 };
 }
 
 /** The least radius in device pixels for contacts `radius` µm wide, counted the way the somas view counts it. */
@@ -65,39 +79,50 @@ uniform float uRing;
 uniform float uLift;
 uniform float uScale;
 uniform vec4 uFade;
+uniform float uHalo;
+uniform vec2 uOpacities;
+uniform vec2 uSizes;
+uniform float uFront;
 in vec3 aContact;
 in vec4 aLook;
 out vec3 vColour;
 out vec2 vCorner;
 out float vInner;
+out float vRingEnd;
 out float vOpacity;
 ${PIXEL_UM}
 void main() {
 	vec3 c = ( modelViewMatrix * vec4( aContact, 1.0 ) ).xyz;
 	float um = pixelUm( c.z ) * uScale;
-	float r = max( uRadius * aLook.a, uMinRadius * um );
-	float outer = r + uRing * um;
+	float away = clamp( 0.5 + ( ( modelViewMatrix * vec4( uFade.xyz, 1.0 ) ).z - c.z ) / ( 2.0 * uFade.w ), 0.0, 1.0 );
+	bool fades = uFade.w > 0.0;
+	float r = max( uRadius * aLook.a, uMinRadius * um ) * ( fades ? mix( uSizes.x, uSizes.y, away ) : 1.0 );
+	float outer = r + ( uRing + uHalo ) * um;
 	vInner = r / outer;
+	vRingEnd = ( r + uRing * um ) / outer;
 	vColour = aLook.rgb;
 	vCorner = position.xy;
-	float away = clamp( 0.5 + ( ( modelViewMatrix * vec4( uFade.xyz, 1.0 ) ).z - c.z ) / ( 2.0 * uFade.w ), 0.0, 1.0 );
-	vOpacity = uFade.w > 0.0 ? mix( ${FAINT_NEAR.toFixed(3)}, ${FAINT_FAR.toFixed(3)}, away ) : 1.0;
+	vOpacity = fades ? mix( uOpacities.x, uOpacities.y, away ) : 1.0;
 	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
+	// Clip z runs from -w to w here: to just past -w, keeping the order among the contacts.
+	gl_Position.z = mix( gl_Position.z, ${FRONT_DEPTH.toFixed(4)} * gl_Position.z - ${(1 - FRONT_DEPTH).toFixed(4)} * gl_Position.w, uFront );
 }
 `;
 
 // The colours as they came, in sRGB: no tone mapping and no conversion.
 const FRAGMENT = /* glsl */ `
 uniform vec3 uRingColour;
+uniform vec3 uHaloColour;
 in vec3 vColour;
 in vec2 vCorner;
 in float vInner;
+in float vRingEnd;
 in float vOpacity;
 
 void main() {
 	float d = length( vCorner );
 	if ( d > 1.0 ) discard;
-	gl_FragColor = vec4( d > vInner ? uRingColour : vColour, vOpacity );
+	gl_FragColor = vec4( d > vRingEnd ? uHaloColour : d > vInner ? uRingColour : vColour, vOpacity );
 }
 `;
 
@@ -131,13 +156,28 @@ export function drawWhereHidden(material: THREE.Material): void {
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
   pixelRatio: number,
-  { among = false, ringed = !among }: { among?: boolean; ringed?: boolean } = {}
+  {
+    among = false,
+    ringed = !among,
+    opacities = [1, 1],
+    sizes = [1, 1],
+    front = false,
+  }: {
+    among?: boolean;
+    ringed?: boolean;
+    opacities?: readonly [number, number];
+    sizes?: readonly [number, number];
+    front?: boolean;
+  } = {}
 ): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...uniforms,
       uRing: { value: ringed ? RING_PX * pixelRatio : 0 },
       uLift: { value: among ? 1 : 0 },
+      uOpacities: { value: new THREE.Vector2(...opacities) },
+      uSizes: { value: new THREE.Vector2(...sizes) },
+      uFront: { value: front ? 1 : 0 },
     },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -148,17 +188,36 @@ export function electrodeMaterial(
   return material;
 }
 
-/** The materials of contacts drawn among the cells: where nothing is nearer the eye, and where something is. */
+/** Has `material` draw in front of all else, blended over it, with the nearest of its own dots over the rest. */
+export function drawInFront(material: THREE.Material): void {
+  blendOver(material);
+  material.depthTest = true;
+  material.depthWrite = true;
+}
+
+/**
+ * The materials of contacts drawn among the cells, where nothing is nearer the eye and where something is, and over
+ * morphologies.
+ */
 export function contactMaterials(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
-  hiddenUniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
+  fadingUniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
   pixelRatio: number
 ) {
   const contactAmong = electrodeMaterial(uniforms, pixelRatio, { among: true, ringed: true });
   contactAmong.depthWrite = true;
-  const contactHidden = electrodeMaterial(hiddenUniforms, pixelRatio, { among: true });
+  const contactHidden = electrodeMaterial(fadingUniforms, pixelRatio, {
+    among: true,
+    opacities: HIDDEN_OPACITIES,
+  });
   drawWhereHidden(contactHidden);
-  return { contactAmong, contactHidden };
+  const contactOver = electrodeMaterial(fadingUniforms, pixelRatio, {
+    opacities: OVER_OPACITIES,
+    sizes: OVER_SIZES,
+    front: true,
+  });
+  drawInFront(contactOver);
+  return { contactAmong, contactHidden, contactOver };
 }
 
 /**

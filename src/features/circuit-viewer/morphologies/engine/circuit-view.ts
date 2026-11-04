@@ -33,6 +33,8 @@ import {
   drawnRadius,
   fadeAcross,
   growRoundDots,
+  HALO_PX,
+  HALOED_LEAST_PX,
   minRadius,
   writeDots,
 } from './electrodes';
@@ -99,6 +101,9 @@ import type { UploadsOf } from './segment-arena';
  * colour.
  */
 const FOREGROUND: ThemeColors = { light: '#1a1a1a', dark: '#ffffff' };
+/** The halo round contacts over morphologies. */
+const HALO: ThemeColors = { light: '#ffffff', dark: '#1a1a1a' };
+const NO_DOTS: readonly ElectrodeGroup[] = [];
 
 /** How far around the pixel asked for a pick looks, in CSS pixels, as the somas view does. */
 const PICK_REACH = 4;
@@ -328,6 +333,8 @@ export interface CircuitMaterials {
   /** A contact among the cells where nothing is nearer the eye, and where something is. */
   contactAmong: THREE.Material;
   contactHidden: THREE.Material;
+  /** A contact among the cells where those are morphologies. */
+  contactOver: THREE.Material;
   voxel: THREE.Material;
   /** Boxes among the cells, where nothing is nearer the eye and where something is. */
   voxelAmong: THREE.Material;
@@ -449,14 +456,19 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRingColour: { value: new THREE.Vector3() },
     uScale: { value: 1 },
     uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uHalo: { value: 0 },
+    uHaloColour: { value: new THREE.Vector3() },
   };
-  protected hiddenContactUniforms = {
+  protected fadingContactUniforms = {
     ...this.electrodeUniforms,
+    uMinRadius: { value: minRadius(0) },
     uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uHalo: { value: 0 },
   };
   private electrodes: Quads | null = null;
   private contactsAmong: Quads | null = null;
   private contactsHidden: Quads | null = null;
+  private contactsOver: Quads | null = null;
   private voxelLayer: VoxelLayer | null = null;
   private voxelOrder: VoxelOrder | null = null;
   private voxels: Quads | null = null;
@@ -470,6 +482,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRingColour: this.electrodeUniforms.uRingColour,
     uScale: this.electrodeUniforms.uScale,
     uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uHalo: { value: 0 },
+    uHaloColour: this.electrodeUniforms.uHaloColour,
   };
   private synapseDots: Quads | null = null;
   private markers: readonly LocationMarker[] = [];
@@ -482,6 +496,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uRingColour: this.electrodeUniforms.uRingColour,
     uScale: this.electrodeUniforms.uScale,
     uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uHalo: { value: 0 },
+    uHaloColour: this.electrodeUniforms.uHaloColour,
   };
   private markerDots: Quads | null = null;
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
@@ -539,6 +555,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       this.uniforms.uSpikeHue.value.set(r, g, b, hue ? 1 : 0);
       this.dark = dark;
       this.electrodeUniforms.uRingColour.value.fromArray(chroma(FOREGROUND[theme]).gl());
+      this.electrodeUniforms.uHaloColour.value.fromArray(chroma(HALO[theme]).gl());
     };
     // A gesture takes over the view: otherwise the nudge's zoom would stop the gesture's glide every frame.
     this.controls.addEventListener('start', () => {
@@ -681,6 +698,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.electrodes?.geometry.dispose();
     this.contactsAmong?.geometry.dispose();
     this.contactsHidden?.geometry.dispose();
+    this.contactsOver?.geometry.dispose();
     this.voxels?.geometry.dispose();
     this.markerDots?.geometry.dispose();
     this.synapseDots?.geometry.dispose();
@@ -737,8 +755,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.showCloud(data === null);
     if (!data) {
       // Without the somas, the morphologies were all there was.
-      if (under) this.bound();
-      else this.clear();
+      if (under) {
+        this.bound();
+        this.drawElectrodes();
+      } else this.clear();
       return;
     }
 
@@ -806,6 +826,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
     if (under) {
       this.uniforms.uShift.value.fromArray(data.centre).sub(new THREE.Vector3(...this.centre));
+      this.drawElectrodes();
     } else {
       this.centre = data.centre;
       this.drawElectrodes();
@@ -1459,9 +1480,10 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   setElectrodeRadius(radius: number): void {
     this.electrodeUniforms.uRadius.value = radius;
-    this.electrodeUniforms.uMinRadius.value = minRadius(radius);
+    this.styleContacts();
     this.bound();
-    if (this.electrodes?.visible || this.contactsAmong?.visible) this.invalidate();
+    const { electrodes, contactsAmong, contactsOver } = this;
+    if (electrodes?.visible || contactsAmong?.visible || contactsOver?.visible) this.invalidate();
   }
 
   electrodeAt(x: number, y: number): ElectrodeHit | null {
@@ -1652,13 +1674,17 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
 
   /**
    * Draws the contacts as they are now in meshes drawn after the cells, made larger only when the contacts outgrow
-   * them: those among the cells, the hidden parts first, then the rest over everything. Asks for a frame only where
-   * that changed what is drawn.
+   * them: those among the cells, the hidden parts first, or over morphologies, whose branches hide nearly all of them,
+   * then the rest over everything. Asks for a frame only where that changed what is drawn.
    */
   private drawElectrodes(): void {
     const highlighted = this.highlightedElectrode;
-    const among = this.electrodeGroups.filter((group) => group.among);
-    fadeAcross(among, this.centre, this.hiddenContactUniforms.uFade.value);
+    const groups = this.electrodeGroups.filter((group) => group.among);
+    const over = this.electrodeGroups.filter((group) => !group.among);
+    const overBranches = this.drawsMorphologies;
+    const among = overBranches ? NO_DOTS : groups;
+    this.styleContacts();
+    fadeAcross(groups, this.centre, this.fadingContactUniforms.uFade.value);
     this.contactsHidden = this.drawDots(this.contactsHidden, among, {
       material: this.materials.contactHidden,
       name: 'hidden contacts',
@@ -1671,13 +1697,31 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 0.9,
       highlighted,
     });
-    const over = this.electrodeGroups.filter((group) => !group.among);
+    this.contactsOver = this.drawDots(this.contactsOver, overBranches ? groups : NO_DOTS, {
+      material: this.materials.contactOver,
+      name: 'contacts over morphologies',
+      order: 0.95,
+      highlighted,
+    });
     this.electrodes = this.drawDots(this.electrodes, over, {
       material: this.materials.electrode,
       name: 'electrodes',
       order: 1,
       highlighted,
     });
+  }
+
+  /** Sets the halo and the least radius of contacts, which are only for those that ask for a halo over morphologies. */
+  private styleContacts(): void {
+    const { pixelRatio, electrodeUniforms: over, fadingContactUniforms: fading } = this;
+    const halo = this.drawsMorphologies ? HALO_PX * pixelRatio : 0;
+    const smallest = minRadius(over.uRadius.value);
+    const least = halo > 0 ? Math.max(smallest, HALOED_LEAST_PX * pixelRatio) : smallest;
+    const asked = this.electrodeGroups.some((group) => !group.among && group.halo);
+    fading.uHalo.value = halo;
+    fading.uMinRadius.value = least;
+    over.uHalo.value = asked ? halo : 0;
+    over.uMinRadius.value = asked ? least : smallest;
   }
 
   /**

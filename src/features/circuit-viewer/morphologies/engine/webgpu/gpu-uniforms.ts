@@ -44,13 +44,15 @@ export class DotUniforms {
   readonly radius = uniform(0);
   readonly minRadius = uniform(0);
   readonly fade = uniform(new THREE.Vector4(0, 0, 0, 0));
+  readonly halo = uniform(0);
 
-  constructor(private from: Omit<ElectrodeUniforms, 'uRingColour' | 'uScale'>) {}
+  constructor(private from: Omit<ElectrodeUniforms, 'uRingColour' | 'uHaloColour' | 'uScale'>) {}
 
   sync(): void {
     this.radius.value = this.from.uRadius.value;
     this.minRadius.value = this.from.uMinRadius.value;
     this.fade.value.copy(this.from.uFade.value);
+    this.halo.value = this.from.uHalo.value;
   }
 }
 
@@ -60,7 +62,7 @@ export interface HeldUniforms {
   cloud: SomaCloudUniforms;
   segments: { uSegments: { value: number } };
   electrodes: ElectrodeUniforms;
-  hiddenContacts: ElectrodeUniforms;
+  fadingContacts: ElectrodeUniforms;
   synapses: ElectrodeUniforms;
   markers: ElectrodeUniforms;
 }
@@ -106,16 +108,17 @@ export class GpuUniforms {
   readonly radius = uniform(1);
   readonly opacity = uniform(1);
   readonly ringColour = uniform(new THREE.Vector3());
+  readonly haloColour = uniform(new THREE.Vector3());
   /** The fraction of the resolution the frame is drawn at, as the dots take it (`ElectrodeUniforms.uScale`). */
   readonly dotScale = uniform(1);
   readonly electrodes: DotUniforms;
-  readonly hiddenContacts: DotUniforms;
+  readonly fadingContacts: DotUniforms;
   readonly synapses: DotUniforms;
   readonly markers: DotUniforms;
 
   constructor(private held: HeldUniforms) {
     this.electrodes = new DotUniforms(held.electrodes);
-    this.hiddenContacts = new DotUniforms(held.hiddenContacts);
+    this.fadingContacts = new DotUniforms(held.fadingContacts);
     this.synapses = new DotUniforms(held.synapses);
     this.markers = new DotUniforms(held.markers);
   }
@@ -144,9 +147,10 @@ export class GpuUniforms {
     this.radius.value = c.uRadius.value;
     this.opacity.value = c.uOpacity.value;
     this.ringColour.value.copy(this.held.electrodes.uRingColour.value);
+    this.haloColour.value.copy(this.held.electrodes.uHaloColour.value);
     this.dotScale.value = this.held.electrodes.uScale.value;
     this.electrodes.sync();
-    this.hiddenContacts.sync();
+    this.fadingContacts.sync();
     this.synapses.sync();
     this.markers.sync();
   }

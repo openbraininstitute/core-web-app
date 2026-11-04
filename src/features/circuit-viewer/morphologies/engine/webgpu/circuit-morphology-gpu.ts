@@ -135,7 +135,7 @@ export class CircuitMorphologyGPU extends CircuitView {
         cloud: this.cloudUniforms,
         segments: this.spotUniforms,
         electrodes: this.electrodeUniforms,
-        hiddenContacts: this.hiddenContactUniforms,
+        fadingContacts: this.fadingContactUniforms,
         synapses: this.synapseUniforms,
         markers: this.markerUniforms,
       });

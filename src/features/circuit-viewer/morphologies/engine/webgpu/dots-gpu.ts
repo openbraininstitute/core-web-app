@@ -9,6 +9,7 @@ import {
   positionGeometry,
   step,
   varying,
+  vec2,
   vec3,
   vec4,
   viewport,
@@ -16,7 +17,16 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { blendOver, drawWhereHidden, FAINT_FAR, FAINT_NEAR, RING_PX } from '../electrodes';
+import {
+  blendOver,
+  drawInFront,
+  drawWhereHidden,
+  FRONT_DEPTH,
+  HIDDEN_OPACITIES,
+  OVER_OPACITIES,
+  OVER_SIZES,
+  RING_PX,
+} from '../electrodes';
 import { HIDDEN_SHARE, LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
@@ -24,27 +34,34 @@ import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
  * A dot's corner in clip space, as `electrodes.ts` places it; the second column holds where its ring starts, as a share
- * of the whole radius, and its opacity.
+ * of the whole radius, its opacity, and where its halo starts.
  */
 const dotQuad = wgslFn(
   /* wgsl */ `
 fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32, fade: vec4f) -> mat4x4f {
+           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32, fade: vec4f, halo: f32,
+           opacities: vec2f, sizes: vec2f, front: f32) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp) * scale;
-  let r = max(radius * look.a, minRadius * um);
-  let outer = r + ring * um;
   let away = clamp(0.5 + ((modelView * vec4f(fade.xyz, 1.0)).z - c.z) / (2.0 * fade.w), 0.0, 1.0);
-  let opacity = select(1.0, mix(${FAINT_NEAR.toFixed(3)}, ${FAINT_FAR.toFixed(3)}, away), fade.w > 0.0);
-  return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, opacity, 0.0, 0.0),
+  let fades = fade.w > 0.0;
+  let r = max(radius * look.a, minRadius * um) * select(1.0, mix(sizes.x, sizes.y, away), fades);
+  let outer = r + (ring + halo) * um;
+  let opacity = select(1.0, mix(opacities.x, opacities.y, away), fades);
+  let place = projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
+  // Clip z runs from 0 to w here: to just past 0, keeping the order among the contacts.
+  let z = place.z * mix(1.0, ${FRONT_DEPTH.toFixed(4)}, front);
+  return mat4x4f(vec4f(place.x, place.y, z, place.w), vec4f(r / outer, opacity, (r + ring * um) / outer, 0.0),
                  vec4f(0.0), vec4f(0.0));
 }`,
   [VIEW]
 );
 
 const dotColour = wgslFn(/* wgsl */ `
-fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f, opacity: f32) -> vec4f {
-  return vec4f(select(colour, ringColour, length(corner) > inner), opacity);
+fn dotColour(corner: vec2f, inner: f32, ringEnd: f32, colour: vec3f, ringColour: vec3f, haloColour: vec3f,
+             opacity: f32) -> vec4f {
+  let d = length(corner);
+  return vec4f(select(select(colour, ringColour, d > inner), haloColour, d > ringEnd), opacity);
 }`);
 
 /**
@@ -56,7 +73,19 @@ function dotMaterial(
   u: GpuUniforms,
   dots: DotUniforms,
   pixelRatio: number,
-  { among = false, ringed = !among }: { among?: boolean; ringed?: boolean } = {}
+  {
+    among = false,
+    ringed = !among,
+    opacities = [1, 1],
+    sizes = [1, 1],
+    front = false,
+  }: {
+    among?: boolean;
+    ringed?: boolean;
+    opacities?: readonly [number, number];
+    sizes?: readonly [number, number];
+    front?: boolean;
+  } = {}
 ): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
   const quad = typed<'mat4'>(
@@ -73,6 +102,10 @@ function dotMaterial(
       lift: among ? 1 : 0,
       scale: u.dotScale,
       fade: dots.fade,
+      halo: dots.halo,
+      opacities: vec2(...opacities),
+      sizes: vec2(...sizes),
+      front: front ? 1 : 0,
     })
   ).toVar();
   const corner = varying(positionGeometry.xy);
@@ -83,8 +116,10 @@ function dotMaterial(
     dotColour({
       corner,
       inner: varying(col(quad, 1).x),
+      ringEnd: varying(col(quad, 1).z),
       colour: varying(look.xyz),
       ringColour: u.ringColour,
+      haloColour: u.haloColour,
       opacity: varying(col(quad, 1).y),
     })
   );
@@ -113,8 +148,17 @@ function voxelMaterial(share = 1): THREE.MeshBasicNodeMaterial {
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
   const contactAmong = dotMaterial(u, u.electrodes, pixelRatio, { among: true, ringed: true });
   contactAmong.depthWrite = true;
-  const contactHidden = dotMaterial(u, u.hiddenContacts, pixelRatio, { among: true });
+  const contactHidden = dotMaterial(u, u.fadingContacts, pixelRatio, {
+    among: true,
+    opacities: HIDDEN_OPACITIES,
+  });
   drawWhereHidden(contactHidden);
+  const contactOver = dotMaterial(u, u.fadingContacts, pixelRatio, {
+    opacities: OVER_OPACITIES,
+    sizes: OVER_SIZES,
+    front: true,
+  });
+  drawInFront(contactOver);
   const voxelAmong = voxelMaterial();
   voxelAmong.depthTest = true;
   const voxelHidden = voxelMaterial(HIDDEN_SHARE);
@@ -123,6 +167,7 @@ export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
     contactAmong,
     contactHidden,
+    contactOver,
     voxel: voxelMaterial(),
     voxelAmong,
     voxelHidden,

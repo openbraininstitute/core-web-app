@@ -162,6 +162,7 @@ export function LfpScene({
         id: 'lfp-selected',
         color: SELECTED_COLOR,
         coordinates: Float32Array.from(selected),
+        halo: true,
       });
     }
     return groups;
