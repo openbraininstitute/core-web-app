@@ -11,6 +11,7 @@ import {
   viewerTheme,
 } from '@/features/scan-config/components/color-by/contrast';
 
+import type { ColorByControls } from '@/features/scan-config/components/color-by/use-circuit-color-by';
 import type { ViewerControlsMenuProps } from '@/features/scan-config/components/color-by/viewer-controls-menu';
 
 const MENU: ViewerControlsMenuProps = {
@@ -19,6 +20,18 @@ const MENU: ViewerControlsMenuProps = {
   onBackgroundDarkChange: vi.fn(),
   hasSavedConfig: false,
   onResetConfig: vi.fn(),
+};
+
+const COLOR_BY: ColorByControls = {
+  selectedProperty: null,
+  onSelectProperty: vi.fn(),
+  properties: [{ name: 'mtype', kind: 'string', label: 'M-type' }],
+  propertiesLoading: false,
+  mapping: null,
+  legendLoading: false,
+  propertiesError: false,
+  onRetryProperties: vi.fn(),
+  onChangeCategoryColor: vi.fn(),
 };
 
 const swatchOf = (label: string) => {
@@ -37,11 +50,14 @@ describe('PathwayKey', () => {
     expect(screen.getByText('Other neurons')).toBeInTheDocument();
   });
 
-  it('sits in the chrome top right, with a color-by or without', () => {
+  it.each([
+    ['with a color-by', COLOR_BY],
+    ['without', undefined],
+  ])('sits in the chrome top right, %s', (_, colorBy) => {
     render(
       <CircuitViewerChrome
         vizActive
-        viz={{ menu: MENU, onResetView: vi.fn() }}
+        viz={{ menu: MENU, onResetView: vi.fn(), colorBy }}
         keys={<PathwayKey background={CANVAS_LIGHT} />}
       />
     );
@@ -49,5 +65,20 @@ describe('PathwayKey', () => {
     const key = screen.getByTestId('pathway-key');
     expect(key.parentElement?.className).toContain('right-3');
     expect(within(key).getByText(/hover a matrix cell/i)).toBeInTheDocument();
+  });
+
+  it("keeps the scene's legends under it in the color-by column", () => {
+    const legendSlotRef = vi.fn<(element: HTMLElement | null) => void>();
+    render(
+      <CircuitViewerChrome
+        vizActive
+        viz={{ menu: MENU, onResetView: vi.fn(), colorBy: COLOR_BY }}
+        legendSlotRef={legendSlotRef}
+        keys={<PathwayKey background={CANVAS_LIGHT} />}
+      />
+    );
+
+    const slot = legendSlotRef.mock.lastCall?.[0];
+    expect(slot?.previousElementSibling).toBe(screen.getByTestId('pathway-key'));
   });
 });
