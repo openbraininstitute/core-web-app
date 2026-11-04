@@ -5,6 +5,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
+import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
+import { getClient } from '@/services/sanity/client';
+import {
+  ProjectHomeGetStartedQuery,
+  type TProjectHomeData,
+} from '@/ui/segments/project/get-started/query';
 import { ModelView } from '@/ui/segments/project/models/model-views';
 import { PackView } from '@/ui/segments/project/models/pack-view';
 import { FLY_PACK, L6_PACK, MICRONS_PACK } from '@/ui/segments/project/models/repo-packs';
@@ -12,18 +18,10 @@ import {
   useWalkthroughActions,
   useWalkthroughEntered,
 } from '@/ui/segments/project/walkthrough/walkthrough';
-import { getAdoptersContent } from '@/services/sanity/api/get-adopters-content';
-import { getClient } from '@/services/sanity/client';
-import {
-  ProjectHomeGetStartedQuery,
-  type TProjectHomeData,
-} from '@/ui/segments/project/get-started/query';
 import { keyBuilder as keyBuilderExternal } from '@/ui/use-query-keys/third-parties';
 import { cn } from '@/utils/css-class';
 
 import { BrainGlass } from './brain-glass';
-import { serifItalic } from './fonts';
-import grid from './opening-grid.module.css';
 import {
   brainFrame,
   COURSE_FRONT,
@@ -43,6 +41,9 @@ import {
 import { Turntable } from './turntable';
 
 import type { TBrainMesh } from './brains';
+
+import grid from './opening-grid.module.css';
+import labs from './virtual-labs.module.css';
 
 import '@/styles/learn.css';
 
@@ -177,7 +178,7 @@ export function HumanWithBrain({ compact = false }: { compact?: boolean }) {
       >
         <BrainAlone brain="human" mark={H01_MARK} onMark={onMark} />
       </div>
-      <svg aria-hidden className="pointer-events-none absolute inset-0 h-full w-full">
+      <svg aria-hidden="true" className="pointer-events-none absolute inset-0 h-full w-full">
         <line ref={lineRef} stroke="#d6336c" strokeWidth="1" strokeDasharray="3 3" />
       </svg>
       <div
@@ -195,7 +196,12 @@ export function HumanWithBrain({ compact = false }: { compact?: boolean }) {
 
 const TRIO = [
   { brain: 'fly', name: 'Fruit fly', neurons: '~140,000 neurons', inside: 'FlyWire neurons' },
-  { brain: 'root', name: 'Mouse', neurons: '~70 million neurons', inside: 'A cortical microcircuit' },
+  {
+    brain: 'root',
+    name: 'Mouse',
+    neurons: '~70 million neurons',
+    inside: 'A cortical microcircuit',
+  },
   { brain: 'human', name: 'Human', neurons: '~86 billion neurons', inside: 'An H01 neuron' },
 ] as const;
 
@@ -260,6 +266,59 @@ export const VIRTUAL_LABS_VIDEO = {
   poster: '/images/start/walkthrough/virtual-labs.jpg',
 };
 
+/** The platform recording, framed as the product itself rather than a floating thumbnail. */
+export function VirtualLabsPreview() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => {
+      if (preference.matches) {
+        videoRef.current?.pause();
+        setPaused(true);
+      }
+    };
+    update();
+    preference.addEventListener('change', update);
+    return () => preference.removeEventListener('change', update);
+  }, []);
+  return (
+    <figure className={labs.preview}>
+      <div className={labs.previewHeader}>
+        <span className={labs.previewLabel}>Your Virtual Lab</span>
+        <button
+          type="button"
+          className={labs.playback}
+          onClick={() => {
+            const video = videoRef.current;
+            if (!video) return;
+            if (video.paused) void video.play().catch(() => setPaused(true));
+            else video.pause();
+          }}
+        >
+          {paused ? 'Play preview' : 'Pause preview'}
+        </button>
+      </div>
+      <video
+        ref={videoRef}
+        src={VIRTUAL_LABS_VIDEO.src}
+        poster={VIRTUAL_LABS_VIDEO.poster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        onPlay={() => setPaused(false)}
+        onPause={() => setPaused(true)}
+        aria-label="Virtual Labs platform walkthrough"
+        className={labs.video}
+      />
+      <figcaption className={labs.previewCaption}>
+        Real models. Interactive simulations. One workspace.
+      </figcaption>
+    </figure>
+  );
+}
+
 /** The recording of a simulation being set up, in a column of words, coming in once the intro is over. */
 export function ConfigurationRecording({ className }: { className?: string }) {
   const entered = useWalkthroughEntered();
@@ -280,58 +339,61 @@ export function ConfigurationRecording({ className }: { className?: string }) {
   );
 }
 
-
 const VIRTUAL_LABS_POINTS = [
-  'Explore data across species',
-  'Build and simulate brain models',
-  'Share the results with your team',
+  {
+    title: 'Explore data across species',
+    detail: 'Discover neurons, circuits and whole-brain models.',
+  },
+  {
+    title: 'Build and simulate brain models',
+    detail: 'Go from a scientific question to a simulation.',
+  },
+  {
+    title: 'Share the results with your team',
+    detail: 'Keep your data and discoveries in one shared lab.',
+  },
 ];
-/**
- * When the first point comes after the landing starts to leave, as the page comes to rest, and how long each stays, ms.
- * For now, the video's 9 s between the three, not yet in time with what it shows.
- */
-const POINTS_MS = { first: 1000, each: 3000 };
 
-/** What a Virtual Lab is for, a point at a time, each in place of the last, round and round once the intro is over. */
+/** All benefits stay readable; the emphasis builds as the introduction finishes. */
 export function VirtualLabsPoints() {
   const entered = useWalkthroughEntered();
-  const [on, setOn] = useState<number | null>(null);
+  const actions = useWalkthroughActions();
+  const [shown, setShown] = useState(0);
   useEffect(() => {
     if (!entered) return;
-    let next = 0;
-    const show = () => {
-      setOn(next);
-      next = (next + 1) % VIRTUAL_LABS_POINTS.length;
-    };
-    let round: ReturnType<typeof setInterval> | undefined;
-    const first = setTimeout(() => {
-      show();
-      round = setInterval(show, POINTS_MS.each);
-    }, POINTS_MS.first);
+    const timers = VIRTUAL_LABS_POINTS.map((_, i) =>
+      setTimeout(() => setShown(i + 1), 600 + i * 900)
+    );
     return () => {
-      clearTimeout(first);
-      clearInterval(round);
-      setOn(null);
+      timers.forEach(clearTimeout);
+      setShown(0);
     };
   }, [entered]);
   return (
-    <ul className={cn(serifItalic.className, 'text-primary-9 grid text-[clamp(22px,2vw,30px)] leading-[1.25]')}>
-      {VIRTUAL_LABS_POINTS.map((point, i) => (
-        <li
-          key={point}
-          aria-hidden={i !== on}
-          // The last gone before the next comes, as in one place the two together cannot be read.
-          className={cn(
-            'col-start-1 row-start-1',
-            i === on
-              ? 'opacity-100 [transition:opacity_400ms_ease-out_250ms]'
-              : 'opacity-0 [transition:opacity_250ms_ease-in]'
-          )}
-        >
-          {point}
-        </li>
-      ))}
-    </ul>
+    <div className={labs.content}>
+      <p className={labs.introduction}>
+        A shared workspace for exploring, building and simulating the brain.
+      </p>
+      <ul className={labs.benefits}>
+        {VIRTUAL_LABS_POINTS.map(({ title, detail }, i) => (
+          <li key={title} className={labs.benefit} data-revealed={i < shown}>
+            <span className={labs.check} aria-hidden="true">
+              ✓
+            </span>
+            <div>
+              <p className={labs.benefitTitle}>{title}</p>
+              <p className={labs.detail}>{detail}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className={labs.action}>
+        <button type="button" onClick={actions?.enter} className={labs.button}>
+          Explore the platform <span aria-hidden="true">↗</span>
+        </button>
+        <span className={labs.note}>In your browser. Nothing to install.</span>
+      </div>
+    </div>
   );
 }
 
@@ -479,7 +541,10 @@ export function BrainsOpening() {
       <div aria-hidden className={grid.fade} />
       {/* Set as the brain modelling course names its brains on its first slide: italic serif, in its ink. */}
       <p
-        className={cn(grid.caption, 'flex flex-col items-center gap-[3px] text-center text-[#1e293b] italic')}
+        className={cn(
+          grid.caption,
+          'flex flex-col items-center gap-[3px] text-center text-[#1e293b] italic'
+        )}
         style={{ fontFamily: SERIF }}
       >
         <span className="text-[22px] leading-[28px]">Fly brain and central nervous system</span>

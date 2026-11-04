@@ -1,12 +1,15 @@
-import { Actions, CourseLink, Row, SectionLink } from '@/ui/segments/project/walkthrough/bits';
+import { Actions, Row, SectionLink } from '@/ui/segments/project/walkthrough/bits';
 
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
 import { ConfigurationRecording, StartNow, VirtualLabsPoints } from './brain-views';
 import { CNS_ON_FIRST_SCREEN } from './brains';
-import grid from './opening-grid.module.css';
+import { ChapterAction } from './chapter-action';
 
 import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walkthrough';
+
+import grid from './opening-grid.module.css';
+import labs from './virtual-labs.module.css';
 
 /** What the stage shows beside a chapter: the three brains, or one with what the platform holds of it inside. */
 export type TBrainScene =
@@ -60,14 +63,9 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         }
       : {
           // Its letters' tops, a quarter of an em down its line, level with the video's.
-          titleClass: `${SERIF_TITLE} beside:whitespace-nowrap beside:-mt-[0.25em]`,
+          titleClass: `${SERIF_TITLE} ${labs.title}`,
           top: true,
-          // As wide as its title on one line, 9 of its ems, centred in the room left of the video, which starts at
-          // 52.26vw: the stage's 38vw, and 23% of its 62vw. Its top level with the video's: half way down the page less
-          // half the video's height, 0.5622 of its width, which is the stage's 47.74vw less the margin; or 10vh, where
-          // the height holds it.
-          column:
-            'beside:w-[clamp(360px,39.6vw,576px)] beside:max-w-none beside:pl-0 beside:ml-[calc(26.13vw_-_clamp(360px,39.6vw,576px)_/_2)] beside:pt-[max(10vh,calc(50vh_-_13.42vw_+_0.2811_*_clamp(32px,5vw,88px)))]',
+          column: labs.words,
           body: VIRTUAL_LABS_WORDS,
         }),
   },
@@ -77,6 +75,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'configuration',
     title: 'Configure simulations & neuroscience workflows',
     hero: true,
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -84,11 +83,12 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           neuron sets, chosen beside the circuit in 3D and its table of neurons.
         </p>
         <p>
-          Give any parameter a list of values to scan it, then generate and launch the whole campaign
-          at once.
+          Give any parameter a list of values to scan it, then generate and launch the whole
+          campaign at once.
         </p>
       </>
     ),
+    after: <ChapterAction label="Configure a simulation" destination="workflows" />,
   },
   {
     id: 'agents',
@@ -103,7 +103,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     hero: true,
     titleClass: SERIF_TITLE,
     // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
-    column: 'beside:w-[52%] beside:max-w-[720px]',
+    column: `${labs.chapter} beside:w-[52%] beside:max-w-[720px]`,
     body: (
       <>
         <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">
@@ -112,6 +112,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <AgentPrompts />
       </>
     ),
+    after: <ChapterAction label="Try the platform with AI" destination="platform" />,
   },
   {
     id: 'analysis',
@@ -119,6 +120,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'analysis',
     title: 'Interactive tools for analysis',
     hero: true,
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -126,11 +128,12 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           PSTHs and spike statistics, beside the circuit in 3D.
         </p>
         <p>
-          Filter the neurons in the table and every plot follows, ordered and grouped by cell type or
-          by any property of the circuit.
+          Filter the neurons in the table and every plot follows, ordered and grouped by cell type
+          or by any property of the circuit.
         </p>
       </>
     ),
+    after: <ChapterAction label="Explore simulation results" destination="data" />,
   },
   {
     id: 'teach',
@@ -139,6 +142,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     kicker: 'For educators',
     title: 'Teach neuroscience by doing',
     hero: true,
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -151,6 +155,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
+    after: <ChapterAction label="Start teaching" destination="learn" />,
   },
   {
     id: 'notebooks',
@@ -158,6 +163,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'notebooks',
     title: 'Jupyter notebooks for interacting with data',
     hero: true,
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -167,6 +173,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <p>Start from the platform&apos;s own notebooks, or write your own and share them.</p>
       </>
     ),
+    after: <ChapterAction label="Browse notebooks" destination="notebooks" />,
   },
   {
     id: 'join',
@@ -187,17 +194,19 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'l6',
     title: 'A cortical microcircuit, neuron by neuron',
     hero: true,
+    column: labs.chapter,
     body: (
       <>
         <p>
-          Closer in, a piece of cortex as a model: every neuron reconstructed, each in its place, and
-          wired to the others by synapses, ready to simulate in your browser.
+          Closer in, a piece of cortex as a model: every neuron reconstructed, each in its place,
+          and wired to the others by synapses, ready to simulate in your browser.
         </p>
         <p className="text-[12px] text-neutral-500">
           On screen: layer 6 of a column of rat somatosensory cortex, neuron by neuron.
         </p>
       </>
     ),
+    after: <ChapterAction label="Explore brain circuits" destination="data" />,
   },
   {
     id: 'fly',
@@ -205,6 +214,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'fly',
     kicker: 'A fruit fly’s brain',
     title: 'A whole brain, neuron by neuron',
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -217,6 +227,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
+    after: <ChapterAction label="Explore fly brain data" destination="data" />,
   },
   {
     id: 'mouse',
@@ -224,6 +235,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'mouse',
     kicker: 'A mouse’s brain',
     title: 'A piece of cortex, cell by cell',
+    column: labs.chapter,
     body: (
       <>
         <p>
@@ -237,6 +249,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
+    after: <ChapterAction label="Explore cortical models" destination="data" />,
   },
   {
     id: 'microns',
@@ -244,19 +257,22 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'microns',
     kicker: 'A mouse’s visual cortex',
     title: 'A cubic millimetre, synapse by synapse',
+    column: labs.chapter,
     body: (
       <>
         <p>
-          MICrONS imaged a cubic millimetre of a mouse&apos;s visual cortex by electron microscopy and
-          traced it cell by cell: more than 200,000 cells, and the 500 million synapses between them.
+          MICrONS imaged a cubic millimetre of a mouse&apos;s visual cortex by electron microscopy
+          and traced it cell by cell: more than 200,000 cells, and the 500 million synapses between
+          them.
         </p>
         <p>
           On the platform it is a circuit of 50,948 of those neurons, through the whole depth of the
-          cortex, wired by the synapses traced between them. Its 877 proofread neurons are drawn whole
-          from their reconstructions.
+          cortex, wired by the synapses traced between them. Its 877 proofread neurons are drawn
+          whole from their reconstructions.
         </p>
       </>
     ),
+    after: <ChapterAction label="Explore MICrONS data" destination="data" />,
   },
   {
     id: 'human',
@@ -277,7 +293,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
-    after: <Actions model="human" />,
+    column: labs.chapter,
+    after: (
+      <>
+        <ChapterAction label="Explore human neurons" destination="data" />
+        <Actions model="human" />
+      </>
+    ),
   },
   {
     id: 'next',
@@ -296,11 +318,13 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
       </>
     ),
     after: (
-      <Row>
-        <CourseLink design="brains" />
-        <SectionLink section="data" />
-        <SectionLink section="workflows" />
-      </Row>
+      <>
+        <ChapterAction label="Start learning" destination="learn" />
+        <Row>
+          <SectionLink section="data" />
+          <SectionLink section="workflows" />
+        </Row>
+      </>
     ),
   },
 ];

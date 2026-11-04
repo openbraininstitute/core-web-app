@@ -6,25 +6,24 @@ import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { FadingStage } from '@/ui/segments/project/walkthrough/stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
 
+import { AgentReady } from './agent-ready';
 import {
+  ANALYSIS_VIDEO,
   BrainsOpening,
-  BrainAlone,
   BrainTrio,
+  CONFIGURATION_VIDEO,
   EarlyAdopters,
   FlyInBrain,
   HumanWithBrain,
-  ANALYSIS_VIDEO,
-  CONFIGURATION_VIDEO,
   MicronsCircuit,
   MouseInBrain,
   NotebooksVideo,
   StageVideo,
   TEACHING_VIDEO,
-  VIRTUAL_LABS_VIDEO,
+  VirtualLabsPreview,
 } from './brain-views';
 import { CNS_ON_FIRST_SCREEN, L6_COLOR } from './brains';
 import { BRAIN_CHAPTERS, BRAIN_INTRO, SERIF_TITLE } from './chapters';
-import { AgentReady } from './agent-ready';
 import { CnsBackdrop, FloatingMaleCns, FloatingMicrocircuit } from './floating-model';
 import { LandingThemes, ThemeNav } from './landing-themes';
 import { MultiplyingBrains } from './multiplying-brains';
@@ -121,15 +120,7 @@ export function BrainsWalkthroughPage({
 /** A screen's stage. Its models are drawn from packs in the repo, the same signed in or not. */
 function BrainScene({ scene }: { scene: TBrainScene }) {
   if (scene === 'opening') {
-    return CNS_ON_FIRST_SCREEN ? (
-      <BrainsOpening />
-    ) : (
-      // A little smaller than on the other screens, out to the page's margin, as far in as the words are.
-      <StageVideo
-        video={VIRTUAL_LABS_VIDEO}
-        className="beside:right-[clamp(32px,5vw,88px)] beside:left-[23%] beside:justify-end"
-      />
-    );
+    return CNS_ON_FIRST_SCREEN ? <BrainsOpening /> : <VirtualLabsPreview />;
   }
   if (scene === 'configuration') return <StageVideo video={CONFIGURATION_VIDEO} />;
   if (scene === 'multiplying') return <MultiplyingBrains />;
