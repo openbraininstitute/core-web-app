@@ -43,6 +43,11 @@ export default function VideoBlocks({
               allow="encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
+          ) : value.url ? (
+            // file URLs keep playing until Sanity holds only YouTube links
+            <video className="h-auto w-full rounded-lg" src={value.url} controls title={title}>
+              <track kind="captions" src="" />
+            </video>
           ) : (
             <p>Video URL not available.</p>
           )}

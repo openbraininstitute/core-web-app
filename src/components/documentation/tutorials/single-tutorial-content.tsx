@@ -6,8 +6,7 @@ import { useRef, useState } from 'react';
 import { useSanityForSingleTutorial } from '@/components/documentation/tutorials/fetch-single-tutorial';
 import SliderTimestamps from '@/components/documentation/tutorials/slider-timestamps';
 import TextContentBloc from '@/components/documentation/tutorials/TextContentBloc';
-import YouTubePlayer from '@/components/documentation/tutorials/youtube-player';
-import { parseYouTubeId } from '@/utils/youtube';
+import TutorialVideo from '@/components/documentation/tutorials/tutorial-video';
 
 import type { VideoHandle } from '@/util/play-video-at-time';
 
@@ -19,7 +18,6 @@ export default function SingleTutorialContent() {
   const [videoTime, setVideoTime] = useState<number>(0);
 
   const content = useSanityForSingleTutorial({ slug });
-  const youTubeId = parseYouTubeId(content?.url);
 
   if (!content) {
     return (
@@ -37,16 +35,7 @@ export default function SingleTutorialContent() {
         <h1 className="text-3xl font-bold">{content.title}</h1>
       </header>
       <div className="mb-4 w-full">
-        {youTubeId ? (
-          <YouTubePlayer
-            id={youTubeId}
-            handleRef={videoRef}
-            onTime={setVideoTime}
-            className="border-primary-7 aspect-video w-full overflow-hidden rounded-lg border border-solid"
-          />
-        ) : (
-          <p className="text-primary-9">Video URL not available.</p>
-        )}
+        <TutorialVideo url={content.url} videoRef={videoRef} onTime={setVideoTime} />
       </div>
       {(content.steps?.length ?? 0) > 0 && (
         <SliderTimestamps

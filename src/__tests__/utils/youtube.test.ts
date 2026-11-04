@@ -10,6 +10,7 @@ describe('parseYouTubeId', () => {
     'https://www.youtube.com/embed/dQw4w9WgXcQ',
     'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
     'https://www.youtube.com/shorts/dQw4w9WgXcQ',
+    'https://www.youtube.com/live/dQw4w9WgXcQ',
     ' dQw4w9WgXcQ ',
   ])('extracts the id from %s', (input) => {
     expect(parseYouTubeId(input)).toBe('dQw4w9WgXcQ');
@@ -22,6 +23,9 @@ describe('parseYouTubeId', () => {
     'https://player.vimeo.com/progressive_redirect/playback/1129107045/rendition/1080p/file.mp4',
     'https://evilyoutube.com/watch?v=dQw4w9WgXcQ',
     'https://www.youtube.com/watch?v=short',
+    'https://www.youtube.com/embed/videoseries?list=PLabc',
+    'https://www.youtube.com/c/abcdefghijk',
+    'https://www.youtube.com/user/abcdefghijk',
   ])('rejects %s', (input) => {
     expect(parseYouTubeId(input)).toBeNull();
   });
