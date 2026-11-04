@@ -17,8 +17,8 @@ import ObiLogo from '@/features/learn/components/ui/ObiLogo';
 import { learnFonts } from '@/features/learn/fonts';
 import { BareViewers } from '@/features/viewer-3d/bare';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
-import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { FindOutMore } from '@/ui/segments/landing/layout/find-out-more';
+import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
@@ -272,7 +272,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     setTimeout(() => router.push(endHref), FINISH_MS);
   }, [router, endHref]);
   // For a chapter's own buttons, as the top bar's.
-  const actions = useMemo(() => ({ enter: finish, signUp: () => setAccountFlow('signup') }), [finish]);
+  const actions = useMemo(
+    () => ({ enter: finish, signUp: () => setAccountFlow('signup') }),
+    [finish]
+  );
   // The runway past the last chapter, crossing the middle of the scroller, is the end.
   useEffect(() => {
     if (active === chapters.length) finish();
@@ -359,171 +362,176 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
   const page = (
     <EnteredContext.Provider value={introDone || introLeft}>
-    <ActionsContext.Provider value={actions}>
-    <BareViewers>
-      <div
-        ref={setRoot}
-        className={cn(
-          'text-primary-9 bg-white transition-[opacity,scale] ease-in-out',
-          fullscreen ? 'fixed inset-0 z-[45] overflow-x-hidden overflow-y-auto overscroll-y-contain' : 'relative min-h-full',
-          // Lifted away, the home under it uncovered.
-          finishing && 'pointer-events-none scale-[1.04] opacity-0',
-          learnFonts
-        )}
-        style={
-          {
-            '--chapter-h': height ? `${height}px` : 'calc(100vh - 6rem)',
-            // Held upright, a stage's video across the page, under the top bar, lower the taller the screen.
-            '--stage-video-h': 'min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.32))',
-            '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
-            fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
-            transitionDuration: `${FINISH_MS}ms`,
-          } as CSSProperties
-        }
-      >
-        {floating?.({
-          entered: introDone || introLeft,
-          revealed: introDone,
-          chapter: on,
-          enter: askEnter,
-          ready: floatReady,
-          goTo,
-        })}
-        {intro && !introDone && (
-          <Intro
-            key={introState}
-            title={intro}
-            tail={introTail}
-            foot={introFoot}
-            base={introBase}
-            returning={introState === 'returning'}
-            ready={!floating || floated >= introFloats}
-            asked={enterAsked}
-            stay={accountFlow ? undefined : introStay}
-            onLeave={leaveIntro}
-            onDone={finishIntro}
-          />
-        )}
-        {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
-        <div
-          className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
-          style={underIntro}
-        >
-          {stage(chapter, colorSlot, goTo)}
-          {!fullscreen && (
-            <div className="pointer-events-auto">
-              <Progress chapters={chapters} active={on} onGo={go} />
-            </div>
-          )}
-        </div>
-        {/* Over what floats over the page, so that it is always to hand. */}
-        {fullscreen && pager && (
-          <SidePager chapters={chapters} active={on} onGo={go} shown={introDone} />
-        )}
-        {fullscreen && (
-          <SlideArrows
-            onUp={on > 0 ? () => go(on - 1) : intro ? backToIntro : null}
-            onDown={() => go(on + 1)}
-            last={on === chapters.length - 1}
-            shown={introDone}
-            bottom={footer}
-          />
-        )}
-        {fullscreen && (
-          <AccountFlow
-            mode={accountFlow}
-            onClose={closeAccountFlow}
-            onSignedIn={setAccount}
-            onEnter={() => {
-              setAccountFlow(null);
-              finish();
-            }}
-            onLearn={() =>
-              router.push(`/app/learn/brain-modeling?from=${encodeURIComponent(window.location.href)}`)
+      <ActionsContext.Provider value={actions}>
+        <BareViewers>
+          <div
+            ref={setRoot}
+            className={cn(
+              'text-primary-9 bg-white transition-[opacity,scale] ease-in-out',
+              fullscreen
+                ? 'fixed inset-0 z-[45] overflow-x-hidden overflow-y-auto overscroll-y-contain'
+                : 'relative min-h-full',
+              // Lifted away, the home under it uncovered.
+              finishing && 'pointer-events-none scale-[1.04] opacity-0',
+              learnFonts
+            )}
+            style={
+              {
+                '--chapter-h': height ? `${height}px` : 'calc(100vh - 6rem)',
+                // Held upright, a stage's video across the page, under the top bar, lower the taller the screen.
+                '--stage-video-h':
+                  'min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.32))',
+                '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
+                fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
+                transitionDuration: `${FINISH_MS}ms`,
+              } as CSSProperties
             }
-          />
-        )}
-        {/* Over the intro too: the ways in are there from the first. */}
-        {fullscreen && (
-            <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]">
-              <span
-                data-walkthrough-logo
-                className={cn(
-                  'shrink-0 transition-opacity duration-500',
-                  introDone ? 'opacity-100' : 'opacity-0'
-                )}
-              >
-                <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
-              </span>
-              <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
-                <FindOutMore shown={introDone} />
-                {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
-                <button
-                  type="button"
-                  onClick={finish}
-                  className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]"
-                >
-                  Enter the platform
-                </button>
-                {account && (
-                  <AccountChip
-                    account={account}
-                    onSignOut={() => {
-                      try {
-                        localStorage.removeItem('walkthrough/dummy-account');
-                      } catch {
-                        // Gone from the page, at least.
-                      }
-                      setAccount(null);
-                    }}
-                  />
-                )}
-              </div>
-            </div>
-        )}
-        <div
-          className="pointer-events-none relative z-10"
-          style={{ marginTop: 'calc(var(--chapter-h) * -1)', ...underIntro }}
-        >
-          {chapters.map((chapter, index) => (
-            <section
-              key={chapter.id}
-              id={`walkthrough-${chapter.id}`}
-              data-index={index}
-              ref={(section) => {
-                sections.current[index] = section;
-              }}
-              className={cn(
-                'flex min-h-(--chapter-h)',
-                chapter.wide
-                  ? 'items-start'
-                  : chapter.top
-                    ? 'items-end beside:items-start'
-                    : 'items-end beside:items-center'
-              )}
-            >
-              <ChapterText
-                chapter={chapter}
-                on={index === on}
-                bold={bold}
-                first={index === 0}
-                firstClass={firstTitleClass}
-                onColorSlot={setColorSlot}
+          >
+            {floating?.({
+              entered: introDone || introLeft,
+              revealed: introDone,
+              chapter: on,
+              enter: askEnter,
+              ready: floatReady,
+              goTo,
+            })}
+            {intro && !introDone && (
+              <Intro
+                key={introState}
+                title={intro}
+                tail={introTail}
+                foot={introFoot}
+                base={introBase}
+                returning={introState === 'returning'}
+                ready={!floating || floated >= introFloats}
+                asked={enterAsked}
+                stay={accountFlow ? undefined : introStay}
+                onLeave={leaveIntro}
+                onDone={finishIntro}
               />
-            </section>
-          ))}
-          {/* Past the last chapter, the way on to the home. */}
-          <section
-            data-index={chapters.length}
-            ref={(section) => {
-              sections.current[chapters.length] = section;
-            }}
-            className="h-[60vh]"
-          />
-        </div>
-      </div>
-    </BareViewers>
-    </ActionsContext.Provider>
+            )}
+            {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
+            <div
+              className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
+              style={underIntro}
+            >
+              {stage(chapter, colorSlot, goTo)}
+              {!fullscreen && (
+                <div className="pointer-events-auto">
+                  <Progress chapters={chapters} active={on} onGo={go} />
+                </div>
+              )}
+            </div>
+            {/* Over what floats over the page, so that it is always to hand. */}
+            {fullscreen && pager && (
+              <SidePager chapters={chapters} active={on} onGo={go} shown={introDone} />
+            )}
+            {fullscreen && (
+              <SlideArrows
+                onUp={on > 0 ? () => go(on - 1) : intro ? backToIntro : null}
+                onDown={() => go(on + 1)}
+                last={on === chapters.length - 1}
+                shown={introDone}
+                bottom={footer}
+              />
+            )}
+            {fullscreen && (
+              <AccountFlow
+                mode={accountFlow}
+                onClose={closeAccountFlow}
+                onSignedIn={setAccount}
+                onEnter={() => {
+                  setAccountFlow(null);
+                  finish();
+                }}
+                onLearn={() =>
+                  router.push(
+                    `/app/learn/brain-modeling?from=${encodeURIComponent(window.location.href)}`
+                  )
+                }
+              />
+            )}
+            {/* Over the intro too: the ways in are there from the first. */}
+            {fullscreen && (
+              <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]">
+                <span
+                  data-walkthrough-logo
+                  className={cn(
+                    'shrink-0 transition-opacity duration-500',
+                    introDone ? 'opacity-100' : 'opacity-0'
+                  )}
+                >
+                  <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
+                </span>
+                <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
+                  <FindOutMore shown={introDone} />
+                  {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
+                  <button
+                    type="button"
+                    onClick={finish}
+                    className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]"
+                  >
+                    Enter the platform
+                  </button>
+                  {account && (
+                    <AccountChip
+                      account={account}
+                      onSignOut={() => {
+                        try {
+                          localStorage.removeItem('walkthrough/dummy-account');
+                        } catch {
+                          // Gone from the page, at least.
+                        }
+                        setAccount(null);
+                      }}
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+            <div
+              className="pointer-events-none relative z-10"
+              style={{ marginTop: 'calc(var(--chapter-h) * -1)', ...underIntro }}
+            >
+              {chapters.map((chapter, index) => (
+                <section
+                  key={chapter.id}
+                  id={`walkthrough-${chapter.id}`}
+                  data-index={index}
+                  ref={(section) => {
+                    sections.current[index] = section;
+                  }}
+                  className={cn(
+                    'flex min-h-(--chapter-h)',
+                    chapter.wide
+                      ? 'items-start'
+                      : chapter.top
+                        ? 'items-end beside:items-start'
+                        : 'items-end beside:items-center'
+                  )}
+                >
+                  <ChapterText
+                    chapter={chapter}
+                    on={index === on}
+                    bold={bold}
+                    first={index === 0}
+                    firstClass={firstTitleClass}
+                    onColorSlot={setColorSlot}
+                  />
+                </section>
+              ))}
+              {/* Past the last chapter, the way on to the home. */}
+              <section
+                data-index={chapters.length}
+                ref={(section) => {
+                  sections.current[chapters.length] = section;
+                }}
+                className="h-[60vh]"
+              />
+            </div>
+          </div>
+        </BareViewers>
+      </ActionsContext.Provider>
     </EnteredContext.Provider>
   );
   if (!fullscreen) return page;
@@ -623,7 +631,7 @@ function ChapterText({
           className={cn(
             heroClass(wide, bold),
             first && cn(wide && 'whitespace-nowrap', firstClass),
-            titleClass,
+            titleClass
           )}
         >
           {title}
@@ -732,14 +740,14 @@ function Intro({
       phase === 'hold'
         ? [INTRO.hold, () => setPhase('logo')]
         : phase === 'logo'
-        ? [INTRO.logo, () => setPhase('title')]
-        : phase === 'title'
-          ? [typingMs(title), () => setPhase('next')]
-          : phase === 'next'
-            ? [typingMs(tail ?? ''), () => setPhase('waiting')]
-            : phase === 'returning'
-              ? [INTRO.scroll, () => setPhase('waiting')]
-              : [INTRO.scroll, () => done.current()];
+          ? [INTRO.logo, () => setPhase('title')]
+          : phase === 'title'
+            ? [typingMs(title), () => setPhase('next')]
+            : phase === 'next'
+              ? [typingMs(tail ?? ''), () => setPhase('waiting')]
+              : phase === 'returning'
+                ? [INTRO.scroll, () => setPhase('waiting')]
+                : [INTRO.scroll, () => done.current()];
     const timer = setTimeout(then, wait);
     return () => clearTimeout(timer);
   }, [phase, title, tail]);
@@ -751,7 +759,8 @@ function Intro({
   useEffect(() => {
     if (typing === null) return;
     const timer = setInterval(
-      () => setTyped((was) => (was.keys < typing.length ? { line: typing, keys: was.keys + 1 } : was)),
+      () =>
+        setTyped((was) => (was.keys < typing.length ? { line: typing, keys: was.keys + 1 } : was)),
       INTRO.key
     );
     return () => clearInterval(timer);
@@ -796,19 +805,43 @@ function Intro({
     };
   }, [phase, returning, ready, stay, begin]);
   useEffect(() => {
-    const ask = (e: Event) => {
+    const ask = (e: Event, forward: boolean) => {
       e.preventDefault();
       e.stopPropagation();
+      // Ignore the gesture that brought the intro back, including its remaining momentum.
+      if (!forward || phaseNow.current === 'back' || phaseNow.current === 'returning') return;
       begin();
     };
+    const onWheel = (e: WheelEvent) => ask(e, e.deltaY > 0);
+    const onKey = (e: KeyboardEvent) => {
+      const typing = (e.target as HTMLElement | null)?.closest(
+        'input, textarea, select, [contenteditable="true"], [role="combobox"], [role="listbox"]'
+      );
+      if (typing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      const forward = ['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key);
+      const backward = ['ArrowUp', 'ArrowLeft', 'PageUp', 'Home'].includes(e.key);
+      if (forward || backward) ask(e, forward);
+    };
+    let touchY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches.length === 1 ? e.touches[0].clientY : null;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      // An upward swipe advances. A downward pull, or the tail of one begun on the
+      // first chapter before this intro mounted, keeps the opening screen visible.
+      if (e.touches.length !== 1) return;
+      ask(e, touchY !== null && touchY - e.touches[0].clientY > 10);
+    };
     const options = { capture: true, passive: false };
-    window.addEventListener('wheel', ask, options);
-    window.addEventListener('keydown', ask, options);
-    window.addEventListener('touchmove', ask, options);
+    window.addEventListener('wheel', onWheel, options);
+    window.addEventListener('keydown', onKey, options);
+    window.addEventListener('touchstart', onTouchStart, { capture: true, passive: true });
+    window.addEventListener('touchmove', onTouchMove, options);
     return () => {
-      window.removeEventListener('wheel', ask, options);
-      window.removeEventListener('keydown', ask, options);
-      window.removeEventListener('touchmove', ask, options);
+      window.removeEventListener('wheel', onWheel, options);
+      window.removeEventListener('keydown', onKey, options);
+      window.removeEventListener('touchstart', onTouchStart, true);
+      window.removeEventListener('touchmove', onTouchMove, options);
     };
   }, [begin]);
 
@@ -849,7 +882,11 @@ function Intro({
           'text-primary-9 text-center whitespace-nowrap stacked:px-[20px] stacked:text-balance stacked:whitespace-normal'
         )}
       >
-        <Typed text={title} keys={out('title', title)} caret={phase === 'title' || (!tail && shown('title'))} />
+        <Typed
+          text={title}
+          keys={out('title', title)}
+          caret={phase === 'title' || (!tail && shown('title'))}
+        />
         {tail && (
           // A blank line before it.
           <em className="mt-[1.12em] block squat:mt-[0.5em]">
@@ -866,7 +903,7 @@ function Intro({
       >
         {foot}
         <svg
-          aria-hidden
+          aria-hidden="true"
           viewBox="0 0 24 24"
           className="h-[22px] w-[22px] animate-bounce"
           fill="none"
@@ -1027,7 +1064,7 @@ function SlideArrows({
 }) {
   const chevron = (d: string) => (
     <svg
-      aria-hidden
+      aria-hidden="true"
       viewBox="0 0 24 24"
       className="size-[26px]"
       fill="none"

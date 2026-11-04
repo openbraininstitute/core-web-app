@@ -112,8 +112,8 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           your own simulations in the browser, with nothing to install.
         </p>
         <p>
-          Give your class a Virtual Lab, share models, data and notebooks with your students, and
-          teach from the courses.
+          Give your class a Virtual Lab, share models, data and notebooks with your students, teach
+          from the courses, and create exercises compatible with Moodle.
         </p>
       </>
     ),
