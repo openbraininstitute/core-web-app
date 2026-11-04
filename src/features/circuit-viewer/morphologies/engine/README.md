@@ -134,6 +134,7 @@ With morphologies, each soma is a quad ray-cast as a sphere ([impostors.ts](impo
 - **The cell table** ([cell-table.ts](cell-table.ts)): a texel a cell, in rows of 2,048, the widest texture WebGL 2 promises. Its colour, or none for hidden, or by section; a glow texture rewritten each frame of a replay for the cells lit, only the rows they are in uploaded (on WebGPU written to three's texture straight, as three would upload it whole); the crowding. A segment's word keeps the cell in 24 bits (`CELL_MASK`), so a view takes 16.7M cells at most.
 - **Spikes** ([spike-light.ts](spike-light.ts)): the time since a cell's last spike is read back from its glow, which falls by e every afterglow. From it, a band runs out from the soma along the fibres at 400 µm a second of the wall clock, the whole cell kept a quarter lit behind it. In the cloud, a soma swells and is drawn opaque. On WebGL 2 the band is always drawn on the morphologies. On WebGPU it is drawn while the scene settings' Spike glow switch is on, with a bloom and a line drawn through the cells in front of a lit one.
 - **Electrodes, synapses and markers** ([electrodes.ts](electrodes.ts)): discs with a ring, drawn over the cells; synapses depth-tested among them. Their hits are tested on the page, not on the GPU.
+- **Voxels** ([voxels.ts](voxels.ts)): a host's boxes, each with its own size, colour and opacity, blended over the cells and under the electrodes, as a report's field through the tissue. They are not picked. They are not sorted by depth either: at their opacities the order has not shown, and a host's boxes are few.
 
 ## Settings
 
@@ -183,6 +184,7 @@ soma-cloud.ts              the somas alone, in pieces
 cell-table.ts              a texel a cell: colour, glow, crowding
 spike-light.ts             how a spike lights a cell
 electrodes.ts              electrodes, synapses and markers as discs
+voxels.ts                  a host's translucent boxes
 webgpu/
   circuit-morphology-gpu.ts   the WebGPU tier: the frame, its fallbacks, the timing
   arena-gpu.ts             the arena's buffers, shared with three

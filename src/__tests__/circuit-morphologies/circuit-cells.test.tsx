@@ -34,6 +34,7 @@ const h = vi.hoisted(() => {
     pick = vi.fn(async (_x: number, _y: number): Promise<number | null> => 4);
     moving = false;
     setElectrodes = vi.fn();
+    setVoxels = vi.fn();
     setElectrodeRadius = vi.fn();
     /** Every point is on array A's first contact. */
     electrodeAt = vi.fn(

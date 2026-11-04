@@ -49,6 +49,7 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
+import { voxelGeometry, writeVoxels } from './voxels';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -74,6 +75,7 @@ import type {
   SectionSpot,
   SynapseGroup,
   Vec3,
+  VoxelLayer,
 } from '../types';
 import type { UploadsOf } from './segment-arena';
 
@@ -96,6 +98,8 @@ const MARKER_MIN_RADIUS = 3;
 /** How far from a marker's centre, in CSS pixels, a point still counts as on it, as in morphoviewer. */
 const MARKER_REACH = 9;
 /** A synapse's radius in µm, and the least radius it is drawn with in device pixels, as in the small-circuit view. */
+/** Drawn after the synapses, and before the electrodes at 1. */
+const VOXELS_ORDER = 0.75;
 const SYNAPSE_RADIUS = 0.5;
 const SYNAPSE_MIN_RADIUS = 2;
 /** How long the nudge lasts, in ms, and how much nearer it brings the view at its peak, as in morphoviewer. */
@@ -306,6 +310,7 @@ export interface CircuitMaterials {
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
+  voxel: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
 }
@@ -423,6 +428,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uScale: { value: 1 },
   };
   private electrodes: Quads | null = null;
+  private voxelLayer: VoxelLayer | null = null;
+  private voxels: Quads | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
     uViewport: this.uniforms.uViewport,
@@ -633,6 +640,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     ]);
     for (const material of materials) material.dispose();
     this.electrodes?.geometry.dispose();
+    this.voxels?.geometry.dispose();
     this.markerDots?.geometry.dispose();
     this.synapseDots?.geometry.dispose();
     this.spikeTimeListeners.clear();
@@ -760,6 +768,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     } else {
       this.centre = data.centre;
       this.drawElectrodes();
+      this.drawVoxels();
       this.drawSynapses();
     }
     this.drawMarkers();
@@ -955,6 +964,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.wholeCloud();
     this.bound();
     this.drawElectrodes();
+    this.drawVoxels();
     this.drawSynapses();
     if (reframe) this.resetView();
     if (!ordered) return;
@@ -1384,6 +1394,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.drawElectrodes();
   }
 
+  setVoxels(voxels: VoxelLayer | null): void {
+    this.voxelLayer = voxels;
+    this.drawVoxels();
+  }
+
   setSynapses(groups: readonly SynapseGroup[]): void {
     if (groups === this.synapseGroups) return;
     this.synapseGroups = groups;
@@ -1593,6 +1608,27 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 1,
       highlighted: this.highlightedElectrode,
     });
+  }
+
+  /** Draws the boxes in a mesh drawn after the cells and before the contacts, made larger only when they outgrow it. */
+  private drawVoxels(): void {
+    const layer = this.voxelLayer;
+    const count = layer ? layer.centres.length / 3 : 0;
+    if (count === 0 && !this.voxels?.visible) return;
+    let mesh = this.voxels;
+    if (!mesh || count > mesh.geometry.getAttribute('aCentre').count) {
+      mesh?.geometry.dispose();
+      if (mesh) this.letGo(mesh);
+      mesh = quads(voxelGeometry(count), this.materials.voxel);
+      mesh.name = 'voxels';
+      mesh.renderOrder = VOXELS_ORDER;
+      this.scene.add(mesh);
+      this.voxels = mesh;
+    }
+    mesh.geometry.instanceCount = count;
+    mesh.visible = count > 0;
+    if (layer) writeVoxels(layer, this.centre, mesh.geometry);
+    this.invalidate();
   }
 
   /** Draws the synapses where the circuit's frame puts them, after the cells, which hide the synapses behind them. */

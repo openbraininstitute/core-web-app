@@ -1,15 +1,23 @@
 import {
   attribute,
   cameraProjectionMatrix,
+  dot,
+  float,
+  max,
   modelViewMatrix,
+  normalGeometry,
   positionGeometry,
+  step,
   varying,
+  vec3,
+  vec4,
   viewport,
   wgslFn,
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
 import { RING_PX } from '../electrodes';
+import { blendOver, LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
@@ -82,10 +90,26 @@ function dotMaterial(
   return material;
 }
 
-/** The electrodes', synapses' and markers' materials on WebGPU. */
+/** The boxes of `voxels.ts` on WebGPU, with their colours written as given, in sRGB. */
+function voxelMaterial(): THREE.MeshBasicNodeMaterial {
+  const look = attribute('aLook', 'vec4');
+  const shade = float(SHADE_LEAST).add(
+    float(1 - SHADE_LEAST).mul(max(dot(normalGeometry, vec3(...SHADED_FROM)), 0))
+  );
+  const material = new THREE.MeshBasicNodeMaterial();
+  material.positionNode = attribute('aCentre', 'vec3').add(
+    positionGeometry.mul(attribute('aSize', 'vec3')).mul(step(LEAST_OPACITY, look.a))
+  );
+  material.colorNode = vec4(look.xyz.mul(shade), look.a);
+  blendOver(material);
+  return material;
+}
+
+/** The electrodes', boxes', synapses' and markers' materials on WebGPU. */
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
   return {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
+    voxel: voxelMaterial(),
     synapse: dotMaterial(u, u.synapses, pixelRatio, true),
     marker: dotMaterial(u, u.markers, pixelRatio),
   };

@@ -80,6 +80,7 @@ export function LargeCircuitPreview({
   signals,
   onZoomChange,
   overlays,
+  voxels,
   overlaysInteractive = false,
   onOverlayTransform,
   highlightedOverlayId = null,
@@ -220,6 +221,7 @@ export function LargeCircuitPreview({
           cellHover={pointed.hover && (features?.cellHover ?? true)}
           onCellClick={canPickPopulation ? handleCellClick : undefined}
           electrodes={overlays}
+          voxels={voxels}
           electrodeRadius={electrodeRadius}
           selectedElectrode={highlightedOverlayId}
           onElectrodeTransform={overlaysInteractive ? onOverlayTransform : undefined}

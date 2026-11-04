@@ -63,7 +63,7 @@ import type {
   CircuitCellsHostProps,
   CircuitViewerHostProps,
 } from '@/features/circuit-viewer/host-props';
-import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type { ElectrodeTransform, VoxelLayer } from '@/features/circuit-viewer/morphologies/types';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ICircuitViewerChromeProps } from '@/features/scan-config/components/color-by/circuit-viewer-chrome';
 import type { IViewerModeOption } from '@/features/scan-config/components/color-by/mode-toggle';
@@ -90,6 +90,8 @@ export interface IElectrodeOverlayOptions {
    * contacts coloured by a recorded field: not scoped, styled or toggled from the menu.
    */
   drawn?: ICircuitOverlayGroup[];
+  /** Boxes of a field, drawn through the cells and under the groups. */
+  voxels?: VoxelLayer | null;
 }
 
 /** The MEModel on show. Only its id and name are read here. */
@@ -267,7 +269,12 @@ export function CircuitScene({
     onCreateEntry,
     supportsExplicitLocations,
   } = form ?? {};
-  const { arrayEntity, visibleIds: visibleOverlayIds, drawn: drawnOverlays } = electrodes ?? {};
+  const {
+    arrayEntity,
+    visibleIds: visibleOverlayIds,
+    drawn: drawnOverlays,
+    voxels,
+  } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
   // An MEModel is one cell with no nodes file: nothing to colour by, list, or highlight.
   const enableColorBy = Boolean(circuit) && (features?.colorBy ?? true);
@@ -657,6 +664,7 @@ export function CircuitScene({
       spin: config.spin,
       signals,
       overlays: styledOverlays,
+      voxels,
       overlaysInteractive,
       onOverlayTransform: handleOverlayTransform,
       highlightedOverlayId,
@@ -680,6 +688,7 @@ export function CircuitScene({
       config.showZoomSlider,
       signals,
       styledOverlays,
+      voxels,
       overlaysInteractive,
       handleOverlayTransform,
       highlightedOverlayId,

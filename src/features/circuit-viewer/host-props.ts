@@ -1,7 +1,7 @@
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { NodePopulation } from '@/features/circuit-nodes/types';
-import type { ElectrodeTransform } from '@/features/circuit-viewer/morphologies/types';
+import type { ElectrodeTransform, VoxelLayer } from '@/features/circuit-viewer/morphologies/types';
 import type { CircuitViewerSignals } from '@/features/circuit-viewer/signals';
 import type { ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
@@ -21,6 +21,8 @@ export interface CircuitViewerHostProps {
   onZoomChange?: (zoom: number) => void;
   /** World-coordinate electrode overlays, drawn and moved alike over the somas and over the morphologies. */
   overlays?: ICircuitOverlayGroup[];
+  /** Boxes of a field, drawn through the cells and under the overlays. */
+  voxels?: VoxelLayer | null;
   /**
    * Enable left-drag (translate) / right-drag or Alt/Shift (rotate) on overlays.
    * Why gated: only when `setConfig` exists so 3D edits can write the form.
