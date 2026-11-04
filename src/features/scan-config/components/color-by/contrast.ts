@@ -9,7 +9,7 @@ import type { CSSProperties } from 'react';
  */
 export const BACKGROUND_ADAPTIVE = true;
 
-export const CANVAS_LIGHT = '#ffffff';
+export const CANVAS_LIGHT = '#e4e7ed';
 export const CANVAS_DARK = '#000000';
 
 /** minimum WCAG contrast ratio a mark must keep against the background. */
@@ -57,7 +57,7 @@ export function backgroundIsDark(background: string): boolean {
 
 /**
  * keep a color's hue + chroma but push lightness toward the side that reads on
- * a black or white canvas. Cheap and deterministic; safe to call per color.
+ * the dark or light canvas. Cheap and deterministic; safe to call per color.
  */
 export function adaptColorToBackground(color: string, background: string): string {
   let parsed: chroma.Color;
@@ -85,7 +85,7 @@ export function adaptColorToBackground(color: string, background: string): strin
   return chroma.oklch(clamp01(l), chromaC, hue).hex();
 }
 
-/** chrome theme for a black or white canvas background */
+/** chrome theme for the dark or light canvas background */
 export function themeFromBackground(background: string): ViewerTheme {
   return viewerTheme(backgroundIsDark(background));
 }

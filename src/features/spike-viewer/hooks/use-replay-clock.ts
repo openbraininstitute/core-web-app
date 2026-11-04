@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
+  DEFAULT_SPIKE_GLOW,
+  DEFAULT_SPIKE_SPEED,
+} from '@/features/circuit-viewer/spike-clock';
 import { createTimeCursor } from '@/features/sonata-viewer/time-cursor';
 import { useSceneTime } from '@/features/spike-viewer/components/scene-time';
 
-/** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
-const DEFAULT_SPEED = 100;
-/** Wall-clock seconds for a spike to fade to `1/e`. */
-const DEFAULT_AFTERGLOW_IN_SECONDS = 0.25;
 /** How often the readout and scrubber catch up with the viewer's clock. */
 const READOUT_INTERVAL_IN_MS = 100;
 
@@ -29,8 +30,9 @@ export function useReplayClock({
   playTo: number;
 }) {
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(DEFAULT_SPEED);
-  const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_AFTERGLOW_IN_SECONDS);
+  const [speed, setSpeed] = useState(DEFAULT_SPIKE_SPEED);
+  const [afterglowInSeconds, setAfterglowInSeconds] = useState(DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS);
+  const [glow, setGlow] = useState(DEFAULT_SPIKE_GLOW);
   const [seekToMs, setSeekToMs] = useState<number | undefined>();
   // False until the viewer has painted a frame. It arrives on a dynamic
   // chunk, so for a while there is no child to receive anything.
@@ -124,6 +126,8 @@ export function useReplayClock({
     setSpeed,
     afterglowInSeconds,
     setAfterglowInSeconds,
+    glow,
+    setGlow,
     seekToMs,
     readoutTimeInMs,
     liveTimeRef,

@@ -16,7 +16,7 @@ import {
   useShuttingSplit,
 } from '@/features/circuit-viewer/pane-resize-handle';
 import { useCellFocus } from '@/features/circuit-viewer/use-cell-focus';
-import { circuitDrawsMorphologies } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { FullscreenButton } from '@/features/scan-config/components/color-by/chrome-button';
 import { ModeToggle } from '@/features/scan-config/components/color-by/mode-toggle';
 import { useResultsSidePanel } from '@/features/scan-config/components/shared/results-layout';
@@ -144,6 +144,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
 
   const circuit = subject?.circuit;
   const memodel = subject?.memodel;
+  const drawsEachCell = useCircuitDrawsEachCell(circuit);
   const {
     config: circuitConfig,
     isLoading: configLoading,
@@ -219,15 +220,12 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // Read off the same nodes session. Unknown until it is ready, and replayed in
   // the meantime: switching population mid-play should not pause on a download.
   const positioned = nodesStatus === 'ready' && nodeColumns ? hasPositions(nodeColumns) : undefined;
-  // The per-cell viewer cannot light an input population yet: it draws one as
-  // a cloud of somas with no brightness of their own.
-  const drawsEachCell = circuit !== undefined && circuitDrawsMorphologies(circuit.scale);
   // Where the 3D view has nothing to show for these spikes at all, it drops
   // away and the raster has the panel, the way it does with no subject.
   const rasterOnly =
     recorded === undefined
       ? undefined
-      : rasterOnlyReason(listed, nodesStatus === 'error', positioned, drawsEachCell);
+      : rasterOnlyReason(listed, nodesStatus === 'error', positioned);
   const offers3D = !!subject && rasterOnly === undefined;
 
   // Decided against the host's own copy of the circuit config — the same
@@ -345,15 +343,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   }, [windowCells, shownCells]);
   // The table row under the pointer, else the cell clicked in the scene or the
   // raster: pointed out in both, and found in the table.
-  const {
-    handleHoveredCell,
-    handleCellClick,
-    handleScenePointerDown,
-    handleScenePointerUp,
-    focusedCell,
-    highlightedCell,
-    releaseCell,
-  } = useCellFocus({ scope: populationName, tableShown: docked || showStatistics });
+  const { handleHoveredCell, handleCellClick, focusedCell, highlightedCell, releaseCell } =
+    useCellFocus({ scope: populationName, tableShown: docked || showStatistics });
 
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
@@ -440,6 +431,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
     setSpeed,
     afterglowInSeconds,
     setAfterglowInSeconds,
+    glow,
+    setGlow,
     seekToMs,
     readoutTimeInMs,
     liveTimeRef,
@@ -673,42 +666,48 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   );
 
   // The scene's colour-by is in its corner docked, else in the header row.
-  const scene = sceneMounted && subject && (
-    <CircuitScene
-      {...subject}
-      largeCircuit={circuit !== undefined && !drawsEachCell}
-      active={showScene}
-      features={SCENE_FEATURES}
-      // Only a name the config backs with cells. A name the scene
-      // cannot draw would make it fall back on its own — with no name
-      // it falls back deliberately, to the same default, and the
-      // notice in the header explains what is on show. An MEModel
-      // resolves no populations, so the name means nothing to it.
-      populationName={replayable ? populationName : undefined}
-      // The population above the panes is the one being replayed,
-      // and the spikes' cell indices are relative to it. The
-      // circuit's other populations are not drawn here.
-      showUnselectedPopulations={false}
-      colorByTarget={docked ? undefined : colorBySlot}
-      // It colours the raster too, where every spike in one colour is uniform.
-      colorByNoneLabel="Uniform"
-      shownCells={sceneCells}
-      highlightedCell={highlightedCell ?? undefined}
-      selection={sceneSelection}
-      onCellClick={handleCellClick}
-      onNodeColorsChange={setSceneColors}
-      spikes={{
-        data: spikes ?? undefined,
-        timeInMs: seekToMs,
-        onTimeChange: handleTimeChange,
-        playing,
-        onPlayingChange: setPlaying,
-        speed,
-        afterglowInSeconds,
-        onAfterglowChange: setAfterglowInSeconds,
-      }}
-    />
-  );
+  // A circuit's renderer waits on whether Bluenaas has its pack.
+  const scene = sceneMounted &&
+    subject &&
+    (circuit === undefined || drawsEachCell !== undefined) && (
+      <CircuitScene
+        {...subject}
+        largeCircuit={circuit !== undefined && !drawsEachCell}
+        active={showScene}
+        features={SCENE_FEATURES}
+        // Only a name the config backs with cells. A name the scene
+        // cannot draw would make it fall back on its own — with no name
+        // it falls back deliberately, to the same default, and the
+        // notice in the header explains what is on show. An MEModel
+        // resolves no populations, so the name means nothing to it.
+        populationName={replayable ? populationName : undefined}
+        // The population above the panes is the one being replayed,
+        // and the spikes' cell indices are relative to it. The
+        // circuit's other populations are not drawn here.
+        showUnselectedPopulations={false}
+        colorByTarget={docked ? undefined : colorBySlot}
+        // It colours the raster too, where every spike in one colour is uniform.
+        colorByNoneLabel="Uniform"
+        shownCells={sceneCells}
+        highlightedCell={highlightedCell ?? undefined}
+        selection={sceneSelection}
+        onCellClick={handleCellClick}
+        onEmptyClick={releaseCell}
+        onNodeColorsChange={setSceneColors}
+        spikes={{
+          data: spikes ?? undefined,
+          timeInMs: seekToMs,
+          onTimeChange: handleTimeChange,
+          playing,
+          onPlayingChange: setPlaying,
+          speed,
+          afterglowInSeconds,
+          onAfterglowChange: setAfterglowInSeconds,
+          glow,
+          onGlowChange: setGlow,
+        }}
+      />
+    );
 
   if (docked && sidePanel) {
     const panelTitles = ['3D Player', 'Statistics'];
@@ -759,12 +758,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                   keepsSize: true,
                   boxClassName: 'overflow-hidden',
                   content: (
-                    <div
-                      id="spike-replay-scene"
-                      className="relative flex min-h-0 flex-1 flex-col"
-                      onPointerDownCapture={handleScenePointerDown}
-                      onPointerUpCapture={handleScenePointerUp}
-                    >
+                    <div id="spike-replay-scene" className="relative flex min-h-0 flex-1 flex-col">
                       <div className="relative min-h-0 flex-1">
                         {scene}
                         {replayable && (
@@ -845,8 +839,6 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
               style={{ bottom: isSplit ? splitHeight + SPLIT_GUTTER_IN_PX : 0 }}
               aria-hidden={!showScene}
               inert={!showScene || undefined}
-              onPointerDownCapture={handleScenePointerDown}
-              onPointerUpCapture={handleScenePointerUp}
             >
               {scene}
               {replayable && (

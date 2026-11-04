@@ -22,6 +22,7 @@ import { panelStyle } from './contrast';
 import { type IViewerModeOption, ModeToggle } from './mode-toggle';
 import { ViewerControlsMenu } from './viewer-controls-menu';
 
+import type { CSSProperties } from 'react';
 import type { ViewerTheme } from './contrast';
 import type { ColorByControls, PopulationsControls } from './use-circuit-color-by';
 import type { ViewerControlsMenuProps } from './viewer-controls-menu';
@@ -32,6 +33,15 @@ import styles from './chrome-animations.module.css';
 const LEFT_TOP = 12;
 const GAP = 8;
 const LEFT_HEIGHT = 32 + GAP + 32;
+// `top-3`, a button's `size-8` and `gap-2`, in rem as the root font is not 16px.
+const BESIDE_RECENTRE = '3.25rem';
+
+/** A viewer's status beside the re-centre button, clear of the Populations pill, colour key and hidden notice. */
+export const STATUS_PLACE: CSSProperties = {
+  top: BESIDE_RECENTRE,
+  left: BESIDE_RECENTRE,
+  maxWidth: `calc(100% - ${BESIDE_RECENTRE} - 16rem)`,
+};
 
 export interface ICircuitViewerChromeProps {
   /** The view-mode pill. Omit when the host has only one view to offer. */
@@ -80,6 +90,11 @@ export interface ICircuitViewerChromeProps {
   /** What colouring by no property is called; see `ColorByDropdown`'s `noneLabel`. */
   colorByNoneLabel?: string;
   /**
+   * Receives the place under the colour-by key where the scene's legends go, so the open key
+   * pushes them down rather than covering them. Only mounted with the colour-by column.
+   */
+  legendSlotRef?: (element: HTMLElement | null) => void;
+  /**
    * How many cells of the population on show are selected, of how many, and
    * the way back to them all: said at the top centre while some are. With a
    * cell `held`, the way back lets that one go first.
@@ -102,6 +117,7 @@ export function CircuitViewerChrome({
   viz,
   colorByTarget,
   colorByNoneLabel,
+  legendSlotRef,
   selection,
 }: ICircuitViewerChromeProps) {
   const colorBy = viz?.colorBy;
@@ -210,13 +226,15 @@ export function CircuitViewerChrome({
         </div>
       )}
       {/* What the scene is made of: which populations are in it, the table
-          listing the one on show, and how it is drawn. */}
+          listing the one on show, and how it is drawn. Only the rows take the
+          pointer: the column is as wide as its widest row, and the status
+          beside the re-centre button sits inside that box. */}
       <div
         ref={leftRef}
         data-testid="viewer-chrome-left"
-        className="pointer-events-auto absolute left-3 top-3 flex flex-col items-start gap-2"
+        className="pointer-events-none absolute left-3 top-3 flex flex-col items-start gap-2"
       >
-        <div className="flex items-center gap-2">
+        <div className="pointer-events-auto flex items-center gap-2">
           {modeToggle && <ModeToggle options={modeToggle} />}
           {table && (
             <ChromeButton
@@ -251,7 +269,6 @@ export function CircuitViewerChrome({
                   onSelect={populations.onSelect}
                   positionless={populations.positionless}
                   theme={theme}
-                  autoOpen={showVizChrome}
                 />
               )}
               {viz.menu.onToggleElectrodes &&
@@ -263,7 +280,7 @@ export function CircuitViewerChrome({
         </div>
         {viz && (
           <div
-            className={cn(!showVizChrome && 'invisible pointer-events-none')}
+            className={cn('pointer-events-auto', !showVizChrome && 'invisible pointer-events-none')}
             aria-hidden={!showVizChrome}
             inert={!showVizChrome || undefined}
           >
@@ -403,6 +420,8 @@ export function CircuitViewerChrome({
               />
             </div>
           )}
+          {/* Hidden while empty, so it adds no gap under the key. */}
+          <div ref={legendSlotRef} className="flex flex-col items-stretch gap-2 empty:hidden" />
         </div>
       )}
 

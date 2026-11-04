@@ -12,6 +12,7 @@ import { GridActionType } from '@/features/data-grid/core/state/grid-state';
 import { GridStateStore } from '@/features/data-grid/core/state/grid-state-store';
 
 import type { IStoredColumnLayout } from '@/features/data-grid/core/domain/column-layout';
+import type { TFilterModel } from '@/features/data-grid/core/domain/filter-model';
 import type { IGridContext } from '@/features/data-grid/core/domain/grid-context';
 import type { IGridQuery } from '@/features/data-grid/core/domain/query';
 import type { IResolvedColumn } from '@/features/data-grid/core/domain/resolve-schema';
@@ -53,6 +54,17 @@ export function buildGridQuery(
     freeTextSearch: state.freeTextSearch || undefined,
     params,
   };
+}
+
+/**
+ * Repair persisted filters before use: missing/stale `targetId`s are filled in and orphaned
+ * `adv:…` keys pruned, which would otherwise serialize verbatim as bogus query params.
+ */
+export function repairPersistedFilters<Row>(
+  filters: TFilterModel,
+  schema: IGridSchema<Row>
+): TFilterModel {
+  return pruneAdvancedFilters(hydrateFilterTargetIds(filters, schema), schema);
 }
 
 export function createInitialState<Row>(
@@ -123,14 +135,9 @@ export class GridController<Row> {
           dropPinnedColumns(declared, storedLayout.columnOrder)
         ),
       };
-      // Repair missing/stale `targetId`s and prune orphaned `adv:…` keys, which
-      // would otherwise serialize verbatim as bogus query params.
       hydrated = {
         ...hydrated,
-        filters: pruneAdvancedFilters(
-          hydrateFilterTargetIds(hydrated.filters, options.schema),
-          options.schema
-        ),
+        filters: repairPersistedFilters(hydrated.filters, options.schema),
       };
       // Drop persisted page sizes that are no longer offered (e.g. legacy 50/100).
       // Only after hydration so intentional preset page sizes outside the dropdown

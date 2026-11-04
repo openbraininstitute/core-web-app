@@ -4,10 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PopulationWithoutPositionsError } from '@/features/circuit-nodes/population-utils';
 import { LargeCircuitPreview } from '@/features/scan-config/components/model-preview/large-circuit-preview/large-circuit-preview';
 
-import type { MorphoViewerSomasOnlyProps } from '@openbraininstitute/morphoviewer';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { usePopulationsPlacement } from '@/features/circuit-nodes/hooks/use-populations-placement';
 import type { NodeGeometry, NodePopulation } from '@/features/circuit-nodes/types';
+import type { CircuitCellsProps } from '@/features/circuit-viewer/morphologies/circuit-cells';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 
 const CORTEX: NodePopulation = { name: 'cortex', type: 'biophysical', file: 'nodes.h5' };
@@ -37,7 +37,7 @@ const fixtures = vi.hoisted(() => ({
   placement: { placed: [], failures: new Map(), settled: true, download: null } as Placement,
   noNames: new Set<string>() as ReadonlySet<string>,
   /** Every set of props the viewer has been rendered with, in order. */
-  rendered: [] as MorphoViewerSomasOnlyProps[],
+  rendered: [] as CircuitCellsProps[],
 }));
 
 // `positionless` is left out where a test has none, as most do.
@@ -46,12 +46,22 @@ type Placement = Omit<ReturnType<typeof usePopulationsPlacement>, 'positionless'
 
 // The real one is a `next/dynamic` import of a WebGL renderer. What the
 // preview hands it is the thing under test.
-vi.mock('@/morpho-viewer', () => ({
-  MorphoViewerCircuitMultipleNeuronsSomaOnly: (props: MorphoViewerSomasOnlyProps) => {
+// The status's client, which Try again asks for the pack's status again.
+vi.mock('@tanstack/react-query', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tanstack/react-query')>();
+  const client = new actual.QueryClient();
+  return { ...actual, useQueryClient: () => client };
+});
+
+vi.mock('@/features/circuit-viewer/morphologies/lazy-circuit-cells', () => ({
+  LazyCircuitCells: (props: CircuitCellsProps) => {
     fixtures.rendered.push(props);
     return null;
   },
-  useMorphoViewerDebugMode: () => false,
+}));
+
+vi.mock('next/navigation', () => ({
+  useParams: () => ({ virtualLabId: 'lab', projectId: 'project' }),
 }));
 
 vi.mock('@/features/circuit-nodes/hooks/use-circuit-config', () => ({
@@ -97,7 +107,7 @@ function draw(props: TProps) {
 }
 
 /** The props the viewer was last rendered with. */
-function lastRender(): MorphoViewerSomasOnlyProps {
+function lastRender(): CircuitCellsProps {
   const props = fixtures.rendered.at(-1);
   if (!props) throw new Error('The viewer was never rendered');
   return props;
@@ -105,12 +115,13 @@ function lastRender(): MorphoViewerSomasOnlyProps {
 
 /**
  * The colour each soma ends up sampling, read back through the palette. `null`
- * means the viewer's own occlusion ramp, `false` a soma the viewer does not
+ * means the viewer's own crowding ramp, `false` a soma the viewer does not
  * draw at all, and `undefined` a column the palette does not reach.
  */
-function paints(props: MorphoViewerSomasOnlyProps): (string | null | false | undefined)[] {
+function paints(
+  props: CircuitCellsProps
+): (CircuitCellsProps['cellColors']['palette'][number] | undefined)[] {
   const colors = props.cellColors;
-  if (!colors) throw new Error('The viewer was given no cellColors');
   return [...colors.columnByCell].map((column) => colors.palette[column]);
 }
 
@@ -135,12 +146,17 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(props)).toEqual(['#aaa', '#bbb', '#ccc']);
     // Declared order, and positions follow it, so a soma keeps its index
     // whichever population is selected.
-    expect(props.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1, 9, 9, 9]));
+    expect(props.somas.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1, 9, 9, 9]));
+    expect(props.somas.populations).toEqual([
+      { name: 'cortex', cells: 2 },
+      { name: 'vpm', cells: 1 },
+    ]);
+    expect(props.data).toBeNull();
   });
 
-  // The viewer treats a new `positions` array as a new scene and resets the
-  // camera, so a selection change must not touch it.
-  it('hands back the same positions when only the selection changes', () => {
+  // Other somas are a new scene to the viewer, whose crowding it works out
+  // again, so a selection change must not touch them.
+  it('hands back the same somas when only the selection changes', () => {
     const { rerender } = draw({
       population: CORTEX,
       nodeColors: asNodeColors(['#aaa', '#bbb']),
@@ -153,7 +169,7 @@ describe('LargeCircuitPreview colours', () => {
     );
     const second = lastRender();
 
-    expect(second.positions).toBe(first.positions);
+    expect(second.somas).toBe(first.somas);
     expect(paints(second)).toEqual(['#ccc', '#ccc', '#ddd']);
   });
 
@@ -162,7 +178,7 @@ describe('LargeCircuitPreview colours', () => {
   it('gives one palette column to each distinct colour', () => {
     draw({ population: CORTEX, nodeColors: asNodeColors(['#aaa', '#aaa']), recededColor: '#ccc' });
 
-    expect(lastRender().cellColors?.palette).toEqual(['#aaa', '#ccc']);
+    expect(lastRender().cellColors.palette).toEqual(['#aaa', '#ccc']);
   });
 
   // Colour-by is off, but another population is receded, so the scene still
@@ -174,8 +190,8 @@ describe('LargeCircuitPreview colours', () => {
     expect(paints(lastRender())).toEqual([null, null, '#ccc']);
   });
 
-  // Nothing to colour by, so the viewer keeps its own depth-shaded blue, which
-  // is how a single-population circuit has always looked.
+  // Nothing to colour by, so the viewer keeps its own blue ramp, which is how a
+  // single-population circuit has always looked.
   it('says nothing when there is one population and no colour-by', () => {
     fixtures.placement = {
       placed: [{ population: CORTEX, geometry: placement([0, 0, 0, 1, 1, 1]) }],
@@ -185,11 +201,11 @@ describe('LargeCircuitPreview colours', () => {
     };
     draw({ population: CORTEX });
 
-    expect(lastRender().cellColors?.palette).toEqual([]);
+    expect(lastRender().cellColors.palette).toEqual([]);
   });
   // The regression test for the whole design: hiding is a repaint, not a new
-  // scene. If `positions` changes identity here, the viewer refits the camera
-  // and the user loses the view they were standing at.
+  // scene. If the somas change identity here, the viewer takes them for others
+  // and works out their crowding again.
   it('takes a population out of the scene without moving the somas that stay', () => {
     const props: TProps = {
       population: CORTEX,
@@ -202,7 +218,7 @@ describe('LargeCircuitPreview colours', () => {
     rerender(preview({ ...props, hiddenPopulations: ['vpm'] }));
     const second = lastRender();
 
-    expect(second.positions).toBe(first.positions);
+    expect(second.somas).toBe(first.somas);
     // `false`, not a transparent colour: the viewer skips the soma outright,
     // and derives what is unpickable from the same entry.
     expect(paints(second)).toEqual(['#aaa', '#bbb', false]);
@@ -251,7 +267,7 @@ describe('LargeCircuitPreview colours', () => {
       onPositionlessPopulationsChange,
     });
 
-    expect(lastRender().positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
+    expect(lastRender().somas.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
     // The chrome says why the selection is missing, and the rest receding
     // keeps it from passing for the selection.
     expect(paints(lastRender())).toEqual(['#ccc', '#ccc']);
@@ -298,8 +314,8 @@ describe('LargeCircuitPreview colours', () => {
     };
     draw({ population: VPM, populations: [VPM], spikes: { data } });
 
-    expect(lastRender().positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
-    expect(lastRender().spikes).toBe(data);
+    expect(lastRender().somas.positions).toEqual(new Float32Array([0, 0, 0, 1, 1, 1]));
+    expect(lastRender().spikes?.data).toBe(data);
   });
 
   it('covers the canvas only once no population at all could be placed', () => {
@@ -314,9 +330,8 @@ describe('LargeCircuitPreview colours', () => {
     expect(container.textContent).toContain('nodes.h5 could not be opened');
   });
 
-  // The viewer builds its pick buffer on the first click, which at region scale
-  // is a second copy of every position. With nothing pickable left on screen,
-  // that is a copy paid for nothing.
+  // With nothing left on screen that a click could select, there is no click to
+  // listen for.
   it('withdraws the click handler once the only other population is hidden', () => {
     const props: TProps = { population: CORTEX, onPopulationClick: vi.fn() };
     const { rerender } = draw(props);
@@ -336,6 +351,6 @@ describe('LargeCircuitPreview colours', () => {
     const second = lastRender();
 
     expect(second.somaRadius).toBe(5);
-    expect(second.positions).toBe(first.positions);
+    expect(second.somas).toBe(first.somas);
   });
 });

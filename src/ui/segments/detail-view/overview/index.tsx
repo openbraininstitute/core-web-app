@@ -13,8 +13,6 @@ import {
   ExtendedEntitiesTypeDict,
   type TExtendedEntitiesTypeDict,
 } from '@/api/entitycore/types/extended-entity-type';
-import { AssetLabel } from '@/api/entitycore/types/shared/global';
-import { getAssetElement } from '@/api/entitycore/utils';
 import { tryCatch } from '@/api/utils';
 import { ViewVariant } from '@/constants';
 import { EntityCoreFields } from '@/entity-configuration/definitions/fields-defs/enums';
@@ -77,7 +75,6 @@ import EModelOverview from '@/ui/segments/detail-view/overview/e-model';
 import { Field } from '@/ui/segments/detail-view/overview/field';
 import IonChannelModelOverview from '@/ui/segments/detail-view/overview/ion-channel-model';
 import SubjectDetails from '@/ui/segments/detail-view/overview/subject-details';
-import { Visualization as CircuitViz } from '@/ui/segments/explore/circuit/elements/visualization';
 import { EFeatureExtractionResultPreview } from '@/ui/segments/mini-detail-view/previews/efeature-extraction-result-preview';
 import { findScanConfigRegistryByTargetType } from '@/ui/segments/workflows/config/scan-config-registry';
 import { cn } from '@/utils/css-class';
@@ -606,15 +603,6 @@ export default async function Overview({
     ExtendedEntitiesTypeDict.SynthesizedCellMorphology,
   ] as const;
 
-  // Only treat a circuit as having a visualization when the image asset actually exists,
-  // so a missing image skips the block entirely (no red error box, no leftover margin).
-  const circuitVisualizationAsset = circuitTypes.includes(extendedType)
-    ? getAssetElement({
-        assets: (entity as ICircuit).assets,
-        filter: (i) => i.label === AssetLabel.circuit_visualization,
-      })
-    : undefined;
-
   // Only a mesh with a GLB has a viewer.
   const meshGlb =
     extendedType === ExtendedEntitiesTypeDict.EMCellMesh
@@ -622,7 +610,6 @@ export default async function Overview({
       : null;
 
   const hasVisualization =
-    (circuitTypes.includes(extendedType) && Boolean(circuitVisualizationAsset)) ||
     includes(morphologyTypes, extendedType) ||
     Boolean(meshGlb) ||
     extendedType === ExtendedEntitiesTypeDict.ElectricalCellRecording ||
@@ -669,9 +656,6 @@ export default async function Overview({
       data-testid="visualizations"
       className={cn({ 'mb-8': !isSimulationPage })}
     >
-      <div className="bg-white rounded-md">
-        {circuitTypes.includes(extendedType) && <CircuitViz circuit={entity as ICircuit} />}
-      </div>
       {includes(morphologyTypes, extendedType) && (
         <CellMorphologyViewer entity={entity as ICellMorphology} />
       )}
@@ -703,12 +687,10 @@ export default async function Overview({
     </div>
   ) : null;
 
-  // Synaptome (beta) is scale='single' and usually has no circuit_visualization
-  // image, so it never enters `visualizations` above. Show the interactive 3D
-  // viewer directly under the entity description instead.
   const circuitViewerSection =
-    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit ? (
-      <CircuitDetailViewer circuit={entity as ICircuit} />
+    extendedType === ExtendedEntitiesTypeDict.SingleNeuronCircuit ||
+    circuitTypes.includes(extendedType) ? (
+      <CircuitDetailViewer circuit={entity as ICircuit} extendedType={extendedType} />
     ) : null;
 
   const subjectSection =

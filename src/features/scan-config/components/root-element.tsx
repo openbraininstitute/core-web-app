@@ -6,6 +6,7 @@ import { Chevron, CountBadge, LeftMenuTab } from '@/features/scan-config/compone
 import { EModelOptimisationMechanismsTabList } from '@/features/scan-config/components/emodel-optimisation-mechanisms-tabs';
 import { useFieldErrorsForPath } from '@/features/scan-config/components/hooks/field-errors';
 import { isRootBlock } from '@/features/scan-config/components/hooks/schema';
+import { renderMathInText } from '@/features/scan-config/components/shared/render-math-in-text';
 import { isPlainObject } from '@/features/scan-config/components/utils';
 import { useRootElementDiff } from '@/features/scan-config/hooks/use-root-element-diff';
 import {
@@ -284,7 +285,8 @@ function SelectedUnionVariantLabel({
   rootElement: string;
   fallbackTitle?: string;
 }) {
-  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion) return fallbackTitle;
+  if (rootElementSchema.ui_element !== ScanConfigUIElementDict.BlockUnion)
+    return fallbackTitle && renderMathInText(fallbackTitle);
 
   const unionSchema = rootElementSchema as IRootBlockUnion;
   const discriminatorProp = unionSchema.discriminator
@@ -304,5 +306,6 @@ function SelectedUnionVariantLabel({
       })
     : undefined;
 
-  return selectedVariant?.title ?? fallbackTitle;
+  const title = selectedVariant?.title ?? fallbackTitle;
+  return title && renderMathInText(title);
 }

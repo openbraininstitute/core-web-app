@@ -2,7 +2,7 @@
 import * as Comlink from 'comlink';
 import createDecoderModule from 'draco3dgltf/draco_decoder_gltf_nodejs.js';
 
-import { GLB_CACHE } from './asset-cache';
+import { GLB_CACHE } from './caches';
 import { createDecodeApi } from './worker-apis';
 
 const WASM_URL = new URL('draco3dgltf/draco_decoder_gltf.wasm', import.meta.url);

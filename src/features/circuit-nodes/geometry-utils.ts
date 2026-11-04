@@ -3,6 +3,13 @@ import type { NodeGeometry } from '@/features/circuit-nodes/types';
 /** What a node with no orientation column is drawn with: no rotation at all. */
 export const IDENTITY_QUATERNION: [x: number, y: number, z: number, w: number] = [0, 0, 0, 1];
 
+/** `q` made of unit length, as a rotation; no rotation where it has no length to make. */
+export function unitQuaternion(q: ArrayLike<number>): [x: number, y: number, z: number, w: number] {
+  const length = Math.hypot(q[0], q[1], q[2], q[3]);
+  if (!(length > 0 && Number.isFinite(length))) return IDENTITY_QUATERNION;
+  return [q[0] / length, q[1] / length, q[2] / length, q[3] / length];
+}
+
 /** Where a cell sits and how it is turned, which is what puts its morphology in the world. */
 export type NodePlacement = {
   center: [x: number, y: number, z: number];
@@ -17,10 +24,7 @@ export type NodePlacement = {
  * which leaves every consumer doing the same stride arithmetic. Doing it here
  * means a change to the layout is a change to this file.
  */
-export function positionAt(
-  geometry: NodeGeometry,
-  index: number
-): [x: number, y: number, z: number] {
+function positionAt(geometry: NodeGeometry, index: number): [x: number, y: number, z: number] {
   const { positions } = geometry;
   return [positions[index * 3], positions[index * 3 + 1], positions[index * 3 + 2]];
 }
@@ -38,13 +42,9 @@ export function placementAt(geometry: NodeGeometry, index: number): NodePlacemen
   const { orientations } = geometry;
   return {
     center: positionAt(geometry, index),
+    // As the viewer turns the morphology, so that what is placed on it lands on it.
     orientation: orientations
-      ? [
-          orientations[index * 4],
-          orientations[index * 4 + 1],
-          orientations[index * 4 + 2],
-          orientations[index * 4 + 3],
-        ]
+      ? unitQuaternion(orientations.subarray(index * 4, index * 4 + 4))
       : IDENTITY_QUATERNION,
   };
 }

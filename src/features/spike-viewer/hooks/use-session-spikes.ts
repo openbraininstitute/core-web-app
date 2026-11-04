@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 
+import type { CircuitSpikes } from '@/features/circuit-viewer/types';
 import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
 import type { KeptSpikes } from '@/features/spike-viewer/spike-store';
-import type { MorphoViewerSpikes } from '@/morpho-viewer';
 
 /**
  * The spikes of `name`'s cells that `cells` flags, cut by the file's worker;
@@ -46,11 +46,11 @@ export function useViewerSpikes(
   name: string | undefined,
   cells: Uint8Array | undefined,
   { min, max }: { min: number; max: number }
-): MorphoViewerSpikes | null {
+): CircuitSpikes | null {
   const [replay, setReplay] = useState<{
     session: SpikeSession;
     name: string;
-    spikes: MorphoViewerSpikes | null;
+    spikes: CircuitSpikes | null;
   }>();
   useEffect(() => {
     if (!session || !name) return;

@@ -71,6 +71,21 @@ export function useLoadableValue<T>(atom: Atom<T>) {
   return useAtomValue(loadableAtom);
 }
 
+/**
+ * Debounces a value, publishing it only once it has held still for `delayMs`.
+ *
+ * @param value - Value to debounce
+ * @param delayMs - Quiet period before the value is published
+ */
+export function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(id);
+  }, [value, delayMs]);
+  return debounced;
+}
+
 export function useEnsuredPath() {
   const path = usePathname();
   if (!path) throw new Error('Invalid pathname');

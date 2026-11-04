@@ -6,7 +6,7 @@ import { cn } from '@/utils/css-class';
 import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
 
 import type { TMorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
-import type { MorphoViewerMorphologyLocationHover } from '@/morpho-viewer';
+import type { LocationHover } from './use-location-selection';
 
 /** Gap between the point and the popover, so the dot stays visible under it. */
 const OFFSET_PX = 14;
@@ -29,14 +29,16 @@ export function MorphologyLocationPopover({
   hover,
   pickMode,
 }: {
-  hover: MorphoViewerMorphologyLocationHover | null;
+  hover: LocationHover | null;
   pickMode: TMorphologyLocationPickModeDict;
 }) {
   if (!hover) return null;
 
   const isPreview = hover.kind === 'preview';
   const typeLabel = sectionTypeLabel(hover.sectionType);
-  const showPrompt = !isPreview || isTargetableSectionType(hover.sectionType);
+  // A generated location moves with its block's parameters, so a click has nothing to offer.
+  const generated = hover.generated === true;
+  const showPrompt = isPreview ? isTargetableSectionType(hover.sectionType) : !generated;
   const prompt = clickPrompt(isPreview, pickMode);
 
   // Flip to the other side near an edge so the popover is never clipped by the canvas.

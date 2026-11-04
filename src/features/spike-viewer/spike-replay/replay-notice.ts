@@ -4,7 +4,7 @@ import type { NodePopulation } from '@/features/circuit-nodes/types';
 import type { SpikePopulation } from '@/features/spike-viewer/spike-trace';
 
 /** Why the 3D view has nothing to show for the population chosen. */
-export type RasterOnlyReason = 'nodes-error' | 'no-positions' | 'per-cell-input';
+export type RasterOnlyReason = 'nodes-error' | 'no-positions';
 
 export type Notice = { text: string; warning: boolean };
 
@@ -20,15 +20,13 @@ export function listedCellPopulation(
 export function rasterOnlyReason(
   listed: NodePopulation | undefined,
   nodesFailed: boolean,
-  positioned: boolean | undefined,
-  drawsEachCell: boolean
+  positioned: boolean | undefined
 ): RasterOnlyReason | undefined {
   if (listed === undefined) return undefined;
   if (positioned === false) return 'no-positions';
   if (listed.type !== NodePopulationType.Virtual) return undefined;
   // The scene's error panel would be about an input it may never have drawn.
   if (nodesFailed) return 'nodes-error';
-  if (drawsEachCell) return 'per-cell-input';
   return undefined;
 }
 
@@ -37,11 +35,6 @@ export function rasterOnlyNote(reason: RasterOnlyReason, name: string | undefine
     return {
       text: `The nodes of “${name}” could not be read, so its spikes can’t be shown in 3D.`,
       warning: true,
-    };
-  if (reason === 'per-cell-input')
-    return {
-      text: '3D replay of input populations isn’t available for small circuits yet.',
-      warning: false,
     };
   return {
     text: `“${name}” has no positions (x/y/z), so its spikes can’t be shown in 3D.`,

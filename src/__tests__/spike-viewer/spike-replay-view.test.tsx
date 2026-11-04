@@ -11,6 +11,9 @@ const fixtures = vi.hoisted(() => ({
     columns: ColumnMeta[] | undefined;
   },
   scene: vi.fn(),
+  flags: {} as Record<string, boolean>,
+  /** Whether Bluenaas has the circuit's pack ready. */
+  packReady: false,
 }));
 
 // `@tolokoban/tgd` runs WebGL and WASM setup at module scope; the raster pair
@@ -20,6 +23,18 @@ vi.mock('@/features/circuit-viewer/circuit-scene', () => ({
     fixtures.scene(props);
     return null;
   },
+}));
+vi.mock('@/features/feature-flags', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/features/feature-flags')>()),
+  useFlag: (key: string) => fixtures.flags[key],
+}));
+vi.mock('@/features/circuit-viewer/morphologies/use-morphology-pack-status', () => ({
+  useMorphologyPackStatus: (circuit: unknown) =>
+    circuit
+      ? fixtures.packReady
+        ? { state: 'ready', size: 1, sha256: 'ab12' }
+        : { state: 'building' }
+      : null,
 }));
 vi.mock('@/features/spike-viewer/components/raster-plot', () => ({ default: () => null }));
 vi.mock('@/features/spike-viewer/components/raster-plot-controls', () => ({
@@ -50,6 +65,8 @@ vi.mock('@/ui/segments/app-setup/discover-app', () => ({
   useNextStepOnboarding,
 }));
 
+import { CircuitScaleDictionary } from '@/api/entitycore/types/entities/circuit';
+import { circuitMorphologiesFlag } from '@/features/feature-flags/flags';
 import { SpikeReplayView } from '@/features/spike-viewer/spike-replay/spike-replay-view';
 
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
@@ -73,14 +90,18 @@ function spikes(...names: string[]): SpikeData {
 }
 
 function circuitOf(scale: string): TSceneSubject {
-  return { circuit: { id: 'c1', assets: [], scale } } as unknown as TSceneSubject;
+  return { circuit: { id: 'c1', scale } } as unknown as TSceneSubject;
 }
 
 const LARGE = circuitOf('microcircuit');
 const SMALL = circuitOf('small');
 
 /** The props the 3D scene was last rendered with. */
-function lastScene(): { populationName?: string; spikes: { data?: unknown } } {
+function lastScene(): {
+  populationName?: string;
+  largeCircuit?: boolean;
+  spikes: { data?: unknown };
+} {
   return fixtures.scene.mock.calls.at(-1)?.[0];
 }
 
@@ -101,6 +122,8 @@ beforeEach(() => {
   fixtures.nodes = [POINTS];
   fixtures.session = { status: 'ready', columns: POSITIONED };
   fixtures.scene.mockClear();
+  fixtures.flags = {};
+  fixtures.packReady = false;
 });
 
 describe('SpikeReplayView', () => {
@@ -119,6 +142,19 @@ describe('SpikeReplayView', () => {
       condition: true,
       tour: 'simulation-spike-replay',
     });
+  });
+
+  it.each([
+    [false, true, false],
+    [true, true, true],
+    [true, false, false],
+  ])('replays over a small microcircuit from the pack only with the flag (%s) and the pack ready (%s)', (flag, ready, large) => {
+    fixtures.flags = { [circuitMorphologiesFlag.key]: flag };
+    fixtures.packReady = ready;
+    const small = circuitOf(CircuitScaleDictionary.SmallMicrocircuit);
+    render(<SpikeReplayView data={spikes('points')} subject={small} />);
+
+    expect(lastScene()).toMatchObject({ largeCircuit: large });
   });
 
   it('holds the announcement back when there is nothing to replay over', () => {
@@ -155,31 +191,18 @@ describe('SpikeReplayView with input spikes', () => {
     );
   });
 
-  it('shows only the raster for an input population on the per-cell viewer', () => {
-    render(<SpikeReplayView data={spikes('VPM')} subject={SMALL} />);
-
-    expect(screen.getByRole('status')).toHaveTextContent(
-      '3D replay of input populations isn’t available for small circuits yet.'
-    );
-    expect(screen.queryByRole('button', { name: 'Play spike replay' })).toBeNull();
-    expect(screen.queryByRole('button', { name: '3D spike replay' })).toBeNull();
-  });
-
-  it('brings the 3D back, in the mode left, when the circuit’s cells are picked again', () => {
+  it('lights an input population’s own somas on the per-cell viewer too', () => {
     render(<SpikeReplayView data={spikes('cortex', 'VPM')} subject={SMALL} />);
     fireEvent.click(screen.getByRole('button', { name: '3D spike replay' }));
 
     choose('VPM');
-    expect(screen.queryByRole('button', { name: 'Play spike replay' })).toBeNull();
-    expect(screen.queryByRole('button', { name: '3D spike replay' })).toBeNull();
-
-    choose('cortex');
     expect(screen.getByRole('button', { name: 'Play spike replay' })).toBeEnabled();
     expect(screen.getByRole('button', { name: '3D spike replay' })).toHaveAttribute(
       'aria-pressed',
       'true'
     );
     expect(screen.queryByRole('status')).toBeNull();
+    expect(lastScene().populationName).toBe('VPM');
   });
 
   it('shows only the raster for a population with no positions', () => {
