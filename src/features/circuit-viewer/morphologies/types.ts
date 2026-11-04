@@ -226,14 +226,19 @@ export interface VoxelLattice {
   rows: Uint32Array;
 }
 
+/** Where a layer's x, y and z point in the circuit's frame: unit vectors at right angles, right-handed. */
+export type VoxelFrame = readonly [Vec3, Vec3, Vec3];
+
 export interface VoxelLayer {
-  /** Three floats each: x, y and z in µm in the circuit's frame. */
+  /** Three floats each: x, y and z in µm in the layer's frame. */
   centres: Float32Array;
-  /** Three floats each: its width along x, y and z in µm. */
+  /** Three floats each: its width along x, y and z of the layer's frame in µm. */
   sizes: Float32Array;
   /** Four floats each: its colour in sRGB and its opacity. */
   looks: Float32Array;
   lattice: VoxelLattice;
+  /** How the layer's frame is turned from the circuit's, which it is otherwise. */
+  frame?: VoxelFrame | null;
 }
 
 /** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */

@@ -4,12 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { growRoundDots } from '@/features/circuit-viewer/morphologies/engine/electrodes';
 import {
   growRoundVoxels,
+  turnToVoxelFrame,
   VoxelOrder,
   voxelGeometry,
   writeVoxels,
 } from '@/features/circuit-viewer/morphologies/engine/voxels';
 
-import type { Vec3, VoxelLattice } from '@/features/circuit-viewer/morphologies/types';
+import type { Vec3, VoxelFrame, VoxelLattice } from '@/features/circuit-viewer/morphologies/types';
 
 const NO_LATTICE: VoxelLattice = {
   axes: [0, 1, 2],
@@ -48,6 +49,40 @@ describe('the box round what is drawn beside the cells', () => {
     expect(box.max.toArray()).toEqual([2, 1, 3]);
   });
 
+  it('reaches every corner of boxes turned from the circuit’s frame, and no further than it must', () => {
+    const matrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(0.3, -0.7, 1.1));
+    const axes = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    matrix.extractBasis(axes[0], axes[1], axes[2]);
+    const frame = axes.map((axis) => axis.toArray()) as unknown as VoxelFrame;
+    const layer = {
+      centres: Float32Array.of(10, -20, 30),
+      sizes: Float32Array.of(4, 10, 6),
+      looks: new Float32Array(4),
+      lattice: NO_LATTICE,
+      frame,
+    };
+    const centre: Vec3 = [1, 2, 3];
+    const box = new THREE.Box3();
+    growRoundVoxels(box, layer, centre);
+
+    const corners = new THREE.Box3();
+    for (const sx of [-2, 2]) {
+      for (const sy of [-5, 5]) {
+        for (const sz of [-3, 3]) {
+          corners.expandByPoint(
+            new THREE.Vector3(10 + sx, -20 + sy, 30 + sz)
+              .applyMatrix4(matrix)
+              .sub(new THREE.Vector3(...centre))
+          );
+        }
+      }
+    }
+    for (const part of [0, 1, 2]) {
+      expect(box.min.getComponent(part)).toBeCloseTo(corners.min.getComponent(part), 4);
+      expect(box.max.getComponent(part)).toBeCloseTo(corners.max.getComponent(part), 4);
+    }
+  });
+
   it('starts from nothing where there are no cells', () => {
     const box = new THREE.Box3();
     growRoundDots(box, [{ color: '#000', coordinates: Float32Array.of(5, 6, 7) }], [0, 0, 0], 1);
@@ -75,6 +110,49 @@ describe('writeVoxels', () => {
     expect(geometry.getAttribute('aLook').array).toEqual(
       Float32Array.of(0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8)
     );
+  });
+
+  it('draws a turned layer’s boxes where they are in the circuit, once its mesh is turned', () => {
+    const matrix = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(2.1, 0.4, -0.9));
+    const axes = [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()];
+    matrix.extractBasis(axes[0], axes[1], axes[2]);
+    const frame = axes.map((axis) => axis.toArray()) as unknown as VoxelFrame;
+    const inLayer = new THREE.Vector3(10, -20, 30);
+    const inCircuit = inLayer.clone().applyMatrix4(matrix);
+    const centre: Vec3 = [100, 200, 300];
+    const geometry = voxelGeometry(1);
+    writeVoxels(
+      {
+        centres: Float32Array.from(inLayer.toArray()),
+        sizes: Float32Array.of(1, 1, 1),
+        looks: new Float32Array(4),
+        lattice: NO_LATTICE,
+        frame,
+      },
+      centre,
+      Uint32Array.of(0),
+      geometry
+    );
+    const mesh = new THREE.Mesh();
+    turnToVoxelFrame(mesh, frame);
+    mesh.updateMatrixWorld();
+    const drawn = new THREE.Vector3(
+      ...(geometry.getAttribute('aCentre').array as Float32Array)
+    ).applyMatrix4(mesh.matrixWorld);
+    const expected = inCircuit.sub(new THREE.Vector3(...centre));
+    expect(drawn.distanceTo(expected)).toBeLessThan(1e-3);
+  });
+
+  it('turns a mesh back once its layer lies along the axes again', () => {
+    const mesh = new THREE.Mesh();
+    turnToVoxelFrame(mesh, [
+      [0, 1, 0],
+      [-1, 0, 0],
+      [0, 0, 1],
+    ]);
+    expect(mesh.quaternion.equals(new THREE.Quaternion())).toBe(false);
+    turnToVoxelFrame(mesh, null);
+    expect(mesh.quaternion.equals(new THREE.Quaternion())).toBe(true);
   });
 
   it('writes the boxes in the order given', () => {

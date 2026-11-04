@@ -14,9 +14,10 @@ import {
 } from '@/features/lfp-viewer/colour-scale';
 import {
   contactGrid,
+  gridAxisNames,
   openingSliceAxis,
   placeVoxels,
-  slicePosition,
+  sliceLabel,
   voxelsOf,
 } from '@/features/lfp-viewer/contact-grid';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
@@ -35,7 +36,6 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false, colo
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const SELECTED_COLOR = '#000000';
-const AXES = ['x', 'y', 'z'];
 const CONTACT_VIEWS = [
   { value: 'voxels', label: 'Voxels' },
   { value: 'slice', label: 'Slice' },
@@ -165,8 +165,8 @@ export function LfpScene({
     return groups;
   }, [positions, field.contacts, coloured, pointLevels, selectedContact]);
   const placement = useMemo(
-    () => (positions && grid && view !== 'points' ? placeVoxels(positions, grid, slice) : null),
-    [positions, grid, view, slice]
+    () => (grid && view !== 'points' ? placeVoxels(grid, slice) : null),
+    [grid, view, slice]
   );
   const voxels = useMemo(
     () => (placement && fieldLevels ? voxelsOf(placement, fieldLevels) : null),
@@ -201,7 +201,7 @@ export function LfpScene({
                 segment
                 label="Along"
                 value={String(slice.axis)}
-                options={AXES.flatMap((name, axis) =>
+                options={gridAxisNames(grid).flatMap((name, axis) =>
                   grid.slices[axis] > 1 ? [{ value: String(axis), label: name }] : []
                 )}
                 onChange={(v) => {
@@ -220,7 +220,7 @@ export function LfpScene({
                   tooltip={{ open: false }}
                 />
                 <span className="text-xs font-normal whitespace-nowrap text-neutral-600 tabular-nums">
-                  {AXES[slice.axis]} = {slicePosition(grid, slice).toFixed(0)} µm
+                  {sliceLabel(grid, slice)}
                 </span>
               </div>
             </PillGroup>

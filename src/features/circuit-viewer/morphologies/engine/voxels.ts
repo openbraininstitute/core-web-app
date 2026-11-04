@@ -10,8 +10,13 @@ import { lowerBound } from '@/utils/sorted';
 
 import { growRound } from './electrodes';
 
-import type { Vec3, VoxelLayer } from '../types';
+import type { Vec3, VoxelFrame, VoxelLayer } from '../types';
 
+const IDENTITY_FRAME: VoxelFrame = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+];
 /** Below this opacity a box is left out rather than drawn too faint to see. */
 export const LEAST_OPACITY = 0.004;
 /** The faces are shaded from this direction, so that a box reads as one: from this much light to all of it. */
@@ -76,21 +81,45 @@ export function voxelGeometry(instances: number): THREE.InstancedBufferGeometry 
   return geometry;
 }
 
-/** Grows `box` round the layer's boxes, with `centre` taken off where they are. */
+/** A place in the circuit's frame, in the frame of a layer. */
+export function inVoxelFrame(point: Vec3, frame: VoxelLayer['frame']): Vec3 {
+  if (!frame) return point;
+  const along = ([x, y, z]: Vec3) => point[0] * x + point[1] * y + point[2] * z;
+  return [along(frame[0]), along(frame[1]), along(frame[2])];
+}
+
+/** Turns the mesh of a layer from the circuit's frame to its own. */
+export function turnToVoxelFrame(mesh: THREE.Object3D, frame: VoxelLayer['frame']): void {
+  if (!frame) {
+    mesh.quaternion.identity();
+    return;
+  }
+  const [x, y, z] = frame.map((axis) => new THREE.Vector3(...axis));
+  mesh.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+}
+
+/** Grows `box` round the layer's boxes, with `centre` taken off where they are, however they are turned. */
 export function growRoundVoxels(
   box: THREE.Box3,
-  { centres, sizes }: VoxelLayer,
+  { centres, sizes, frame }: VoxelLayer,
   centre: Vec3
 ): void {
+  const [xAxis, yAxis, zAxis] = frame ?? IDENTITY_FRAME;
+  const inCircuit = (a: number, b: number, c: number, part: number) =>
+    a * xAxis[part] + b * yAxis[part] + c * zAxis[part];
+  const reach = (a: number, b: number, c: number, part: number) =>
+    (Math.abs(xAxis[part]) * a + Math.abs(yAxis[part]) * b + Math.abs(zAxis[part]) * c) / 2;
   for (let i = 0; i < centres.length; i += 3) {
+    const [cx, cy, cz] = [centres[i], centres[i + 1], centres[i + 2]];
+    const [sx, sy, sz] = [sizes[i], sizes[i + 1], sizes[i + 2]];
     growRound(
       box,
-      centres[i] - centre[0],
-      centres[i + 1] - centre[1],
-      centres[i + 2] - centre[2],
-      sizes[i] / 2,
-      sizes[i + 1] / 2,
-      sizes[i + 2] / 2
+      inCircuit(cx, cy, cz, 0) - centre[0],
+      inCircuit(cx, cy, cz, 1) - centre[1],
+      inCircuit(cx, cy, cz, 2) - centre[2],
+      reach(sx, sy, sz, 0),
+      reach(sx, sy, sz, 1),
+      reach(sx, sy, sz, 2)
     );
   }
 }
@@ -223,21 +252,22 @@ function writeChanged(
 }
 
 /**
- * Writes the layer's boxes into `geometry` in the given order, with `centre` taken off where they are. Says whether
- * that changed it.
+ * Writes the layer's boxes into `geometry` in the given order, with `centre`, in the circuit's frame, taken off where
+ * they are. Says whether that changed it.
  */
 export function writeVoxels(
-  { centres, sizes, looks }: VoxelLayer,
+  { centres, sizes, looks, frame }: VoxelLayer,
   centre: Vec3,
   order: Uint32Array,
   geometry: THREE.InstancedBufferGeometry
 ): boolean {
   const attribute = (name: string) => geometry.getAttribute(name) as THREE.BufferAttribute;
+  const framed = inVoxelFrame(centre, frame);
   const placed = writeChanged(
     attribute('aCentre'),
     order,
     3,
-    (box, part) => centres[box * 3 + part] - centre[part]
+    (box, part) => centres[box * 3 + part] - framed[part]
   );
   const sized = writeChanged(attribute('aSize'), order, 3, (box, part) => sizes[box * 3 + part]);
   const looked = writeChanged(attribute('aLook'), order, 4, (box, part) => looks[box * 4 + part]);

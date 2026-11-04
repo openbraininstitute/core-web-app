@@ -56,7 +56,14 @@ import {
   somaCloudUniforms,
 } from './soma-cloud';
 import { NEON, SPIKE_HUE } from './spike-light';
-import { growRoundVoxels, VoxelOrder, voxelGeometry, writeVoxels } from './voxels';
+import {
+  growRoundVoxels,
+  inVoxelFrame,
+  turnToVoxelFrame,
+  VoxelOrder,
+  voxelGeometry,
+  writeVoxels,
+} from './voxels';
 
 import type { SectionType } from '@/features/circuit-viewer/section-type';
 import type { CircuitSpikes } from '@/features/circuit-viewer/types';
@@ -1644,6 +1651,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order: 0.75,
     });
     this.voxels = mesh;
+    turnToVoxelFrame(mesh, layer?.frame);
     const order = this.voxelOrder;
     order?.seenFrom(this.voxelEye());
     const written =
@@ -1656,11 +1664,12 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   /** Where the boxes are seen from, in their frame: for an orthographic view, from far back along its direction. */
   private voxelEye(): Vec3 {
     const { camera, centre } = this;
+    const layerFrame = this.voxelLayer?.frame;
     const eye = camera.position.clone();
     if (camera instanceof THREE.OrthographicCamera) {
       eye.addScaledVector(camera.getWorldDirection(new THREE.Vector3()), -ORTHOGRAPHIC_EYE_UM);
     }
-    return [eye.x + centre[0], eye.y + centre[1], eye.z + centre[2]];
+    return inVoxelFrame([eye.x + centre[0], eye.y + centre[1], eye.z + centre[2]], layerFrame);
   }
 
   /** Part of this frame, so that it asks for none. */
