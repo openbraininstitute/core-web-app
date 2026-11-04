@@ -17,19 +17,11 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import {
-  blendOver,
-  drawInFront,
-  drawWhereHidden,
-  FRONT_DEPTH,
-  HIDDEN_OPACITIES,
-  OVER_OPACITIES,
-  OVER_SIZES,
-  RING_PX,
-} from '../electrodes';
-import { HIDDEN_SHARE, LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
+import { contactMaterials, FRONT_DEPTH, RING_PX } from '../electrodes';
+import { LEAST_OPACITY, SHADE_LEAST, SHADED_FROM, voxelMaterials } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
+import type { DotOptions } from '../electrodes';
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
@@ -79,13 +71,7 @@ function dotMaterial(
     opacities = [1, 1],
     sizes = [1, 1],
     front = false,
-  }: {
-    among?: boolean;
-    ringed?: boolean;
-    opacities?: readonly [number, number];
-    sizes?: readonly [number, number];
-    front?: boolean;
-  } = {}
+  }: DotOptions = {}
 ): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
   const quad = typed<'mat4'>(
@@ -140,37 +126,17 @@ function voxelMaterial(share = 1): THREE.MeshBasicNodeMaterial {
     positionGeometry.mul(attribute('aSize', 'vec3')).mul(step(LEAST_OPACITY, look.a))
   );
   material.colorNode = vec4(look.xyz.mul(shade), look.a.mul(share));
-  blendOver(material);
   return material;
 }
 
 /** The electrodes', boxes', synapses' and markers' materials on WebGPU. */
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
-  const contactAmong = dotMaterial(u, u.amongContacts, pixelRatio, { among: true, ringed: true });
-  contactAmong.depthWrite = true;
-  const contactHidden = dotMaterial(u, u.fadingContacts, pixelRatio, {
-    among: true,
-    opacities: HIDDEN_OPACITIES,
-  });
-  drawWhereHidden(contactHidden);
-  const contactOver = dotMaterial(u, u.fadingContacts, pixelRatio, {
-    opacities: OVER_OPACITIES,
-    sizes: OVER_SIZES,
-    front: true,
-  });
-  drawInFront(contactOver);
-  const voxelAmong = voxelMaterial();
-  voxelAmong.depthTest = true;
-  const voxelHidden = voxelMaterial(HIDDEN_SHARE);
-  drawWhereHidden(voxelHidden);
   return {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
-    contactAmong,
-    contactHidden,
-    contactOver,
-    voxel: voxelMaterial(),
-    voxelAmong,
-    voxelHidden,
+    ...contactMaterials(u.amongContacts, u.fadingContacts, (dots, options) =>
+      dotMaterial(u, dots, pixelRatio, options)
+    ),
+    ...voxelMaterials(voxelMaterial),
     synapse: dotMaterial(u, u.synapses, pixelRatio, { among: true }),
     marker: dotMaterial(u, u.markers, pixelRatio),
   };

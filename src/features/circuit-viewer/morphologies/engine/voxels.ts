@@ -12,7 +12,7 @@ import * as THREE from 'three';
 
 import { lowerBound } from '@/utils/sorted';
 
-import { blendOver, drawWhereHidden, growRound } from './electrodes';
+import { blendOver, drawWhereHidden } from './electrodes';
 
 import type { Vec3, VoxelFrame, VoxelLayer } from '../types';
 
@@ -52,23 +52,27 @@ void main() {
 }
 `;
 
-function voxelMaterial(share = 1): THREE.ShaderMaterial {
-  const material = new THREE.ShaderMaterial({
+export function voxelMaterial(share = 1): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
     uniforms: { uShare: { value: share } },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
   });
-  blendOver(material);
-  return material;
 }
 
-/** The boxes' materials: through the cells, and among them where nothing is nearer the eye and where something is. */
-export function voxelMaterials() {
-  const voxelAmong = voxelMaterial();
+/**
+ * The boxes' materials, each made by the tier's `make`: through the cells, and among them where nothing is nearer the
+ * eye and where something is.
+ */
+export function voxelMaterials<M extends THREE.Material>(make: (share?: number) => M) {
+  const voxel = make();
+  blendOver(voxel);
+  const voxelAmong = make();
+  blendOver(voxelAmong);
   voxelAmong.depthTest = true;
-  const voxelHidden = voxelMaterial(HIDDEN_SHARE);
+  const voxelHidden = make(HIDDEN_SHARE);
   drawWhereHidden(voxelHidden);
-  return { voxel: voxelMaterial(), voxelAmong, voxelHidden };
+  return { voxel, voxelAmong, voxelHidden };
 }
 
 /** One box, `instances` times; the shaders place each by the attributes `writeVoxels` fills. */
@@ -110,22 +114,15 @@ export function growRoundVoxels(
   centre: Vec3
 ): void {
   const [xAxis, yAxis, zAxis] = frame ?? IDENTITY_FRAME;
-  const inCircuit = (a: number, b: number, c: number, part: number) =>
-    a * xAxis[part] + b * yAxis[part] + c * zAxis[part];
-  const reach = (a: number, b: number, c: number, part: number) =>
-    (Math.abs(xAxis[part]) * a + Math.abs(yAxis[part]) * b + Math.abs(zAxis[part]) * c) / 2;
   for (let i = 0; i < centres.length; i += 3) {
-    const [cx, cy, cz] = [centres[i], centres[i + 1], centres[i + 2]];
-    const [sx, sy, sz] = [sizes[i], sizes[i + 1], sizes[i + 2]];
-    growRound(
-      box,
-      inCircuit(cx, cy, cz, 0) - centre[0],
-      inCircuit(cx, cy, cz, 1) - centre[1],
-      inCircuit(cx, cy, cz, 2) - centre[2],
-      reach(sx, sy, sz, 0),
-      reach(sx, sy, sz, 1),
-      reach(sx, sy, sz, 2)
-    );
+    for (let part = 0; part < 3; part++) {
+      const [x, y, z] = [xAxis[part], yAxis[part], zAxis[part]];
+      const at = centres[i] * x + centres[i + 1] * y + centres[i + 2] * z - centre[part];
+      const reach =
+        (Math.abs(x) * sizes[i] + Math.abs(y) * sizes[i + 1] + Math.abs(z) * sizes[i + 2]) / 2;
+      box.min.setComponent(part, Math.min(box.min.getComponent(part), at - reach));
+      box.max.setComponent(part, Math.max(box.max.getComponent(part), at + reach));
+    }
   }
 }
 

@@ -21,6 +21,9 @@ const dots = () => ({
   uMinRadius: { value: 1 },
   uRingColour: { value: new THREE.Vector3() },
   uScale: { value: 1 },
+  uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uHalo: { value: 0 },
+  uHaloColour: { value: new THREE.Vector3() },
 });
 const uniforms = () =>
   new GpuUniforms({
@@ -28,6 +31,8 @@ const uniforms = () =>
     cloud: somaCloudUniforms(),
     segments: { uSegments: { value: 0 } },
     electrodes: dots(),
+    amongContacts: dots(),
+    fadingContacts: dots(),
     synapses: dots(),
     markers: dots(),
   });

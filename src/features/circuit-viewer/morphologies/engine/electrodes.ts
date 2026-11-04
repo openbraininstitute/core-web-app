@@ -149,6 +149,14 @@ export function drawWhereHidden(material: THREE.Material): void {
   material.depthFunc = THREE.GreaterDepth;
 }
 
+export interface DotOptions {
+  among?: boolean;
+  ringed?: boolean;
+  opacities?: readonly [number, number];
+  sizes?: readonly [number, number];
+  front?: boolean;
+}
+
 /**
  * The contacts' material, with a ring one CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
  * synapses are, have no ring unless `ringed`, and anything nearer the eye hides them. The shader moves them towards the
@@ -163,13 +171,7 @@ export function electrodeMaterial(
     opacities = [1, 1],
     sizes = [1, 1],
     front = false,
-  }: {
-    among?: boolean;
-    ringed?: boolean;
-    opacities?: readonly [number, number];
-    sizes?: readonly [number, number];
-    front?: boolean;
-  } = {}
+  }: DotOptions = {}
 ): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -190,7 +192,7 @@ export function electrodeMaterial(
 }
 
 /** Has `material` draw in front of all else, blended over it, with the nearest of its own dots over the rest. */
-export function drawInFront(material: THREE.Material): void {
+function drawInFront(material: THREE.Material): void {
   blendOver(material);
   material.depthTest = true;
   material.depthWrite = true;
@@ -198,21 +200,18 @@ export function drawInFront(material: THREE.Material): void {
 
 /**
  * The materials of contacts drawn among the cells, where nothing is nearer the eye and where something is, and over
- * morphologies.
+ * morphologies, each made by the tier's `make`.
  */
-export function contactMaterials(
-  uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
-  fadingUniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
-  pixelRatio: number
+export function contactMaterials<U, M extends THREE.Material>(
+  uniforms: U,
+  fadingUniforms: U,
+  make: (uniforms: U, options: DotOptions) => M
 ) {
-  const contactAmong = electrodeMaterial(uniforms, pixelRatio, { among: true, ringed: true });
+  const contactAmong = make(uniforms, { among: true, ringed: true });
   contactAmong.depthWrite = true;
-  const contactHidden = electrodeMaterial(fadingUniforms, pixelRatio, {
-    among: true,
-    opacities: HIDDEN_OPACITIES,
-  });
+  const contactHidden = make(fadingUniforms, { among: true, opacities: HIDDEN_OPACITIES });
   drawWhereHidden(contactHidden);
-  const contactOver = electrodeMaterial(fadingUniforms, pixelRatio, {
+  const contactOver = make(fadingUniforms, {
     opacities: OVER_OPACITIES,
     sizes: OVER_SIZES,
     front: true,
@@ -282,41 +281,14 @@ export function growRoundDots(
   centre: Vec3,
   radius: number
 ): void {
+  const corner = new THREE.Vector3();
   for (const { coordinates: xyz } of groups) {
     for (let i = 0; i + 2 < xyz.length; i += 3) {
-      growRound(
-        box,
-        xyz[i] - centre[0],
-        xyz[i + 1] - centre[1],
-        xyz[i + 2] - centre[2],
-        radius,
-        radius,
-        radius
-      );
+      corner.set(xyz[i] - centre[0], xyz[i + 1] - centre[1], xyz[i + 2] - centre[2]);
+      box.expandByPoint(corner.addScalar(-radius));
+      box.expandByPoint(corner.addScalar(2 * radius));
     }
   }
-}
-
-/** Grows `box` round what is at x, y, z and reaches that far from there along each axis. */
-export function growRound(
-  box: THREE.Box3,
-  x: number,
-  y: number,
-  z: number,
-  reachX: number,
-  reachY: number,
-  reachZ: number
-): void {
-  box.min.set(
-    Math.min(box.min.x, x - reachX),
-    Math.min(box.min.y, y - reachY),
-    Math.min(box.min.z, z - reachZ)
-  );
-  box.max.set(
-    Math.max(box.max.x, x + reachX),
-    Math.max(box.max.y, y + reachY),
-    Math.max(box.max.z, z + reachZ)
-  );
 }
 
 export function countDots(groups: readonly DotGroup[]): number {
