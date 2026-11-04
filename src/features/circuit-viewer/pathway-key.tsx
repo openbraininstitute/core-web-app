@@ -39,7 +39,7 @@ export function PathwayKey({
         className={cn('mb-1.5', !theme && 'text-neutral-500')}
         style={theme ? mutedStyle(theme) : undefined}
       >
-        Hover a matrix cell to show its pathway
+        Hover a matrix cell to show its pathway, click to filter to it
       </p>
       <ul className="flex flex-col gap-1">
         {entries.map(({ label, color }) => (

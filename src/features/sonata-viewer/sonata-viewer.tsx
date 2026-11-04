@@ -81,6 +81,7 @@ import type { ComponentType } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { ISimulationResult } from '@/api/entitycore/types/entities/simulation-result';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { ColumnValues, ParsedCircuitConfig } from '@/features/circuit-nodes/types';
 import type { Compartment } from '@/features/sonata-viewer/compartment-rows';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
@@ -633,13 +634,23 @@ export function SonataReportView({
   // Until the table says, what its scope lists unfiltered.
   const tableRows =
     rows?.population === populationName ? rows.cells : scope === 'all' ? null : recordedNodes;
+  const narrowedTo = useMemo(
+    () => (pickedCells.length > 0 ? pickedCells.map((c) => c.nodeId) : tableRows),
+    [pickedCells, tableRows]
+  );
   const sceneCells = useMemo(() => {
-    const ids = pickedCells.length > 0 ? pickedCells.map((c) => c.nodeId) : tableRows;
-    if (!ids || rowCount === 0) return null;
+    if (!narrowedTo || rowCount === 0) return null;
     const flags = new Uint8Array(rowCount);
-    for (const id of ids) if (id < rowCount) flags[id] = 1;
+    for (const id of narrowedTo) if (id < rowCount) flags[id] = 1;
     return flags;
-  }, [pickedCells, tableRows, rowCount]);
+  }, [narrowedTo, rowCount]);
+  // A connectivity matrix in the table's place keeps to the same cells, and tells the scene its
+  // pathway under the pointer.
+  const matrixCells = useMemo(
+    () => narrowedTo && Uint32Array.from(new Set(narrowedTo)).sort(),
+    [narrowedTo]
+  );
+  const [matrix, setMatrix] = useState<SceneMatrix>();
   const sceneCount = useMemo(() => {
     let n = 0;
     for (const flag of sceneCells ?? []) n += flag;
@@ -835,6 +846,7 @@ export function SonataReportView({
         }
         onLocationClick={handleLocationClick}
         onLocationHover={handleLocationHover}
+        matrix={matrix}
       />
     ) : null;
 
@@ -921,6 +933,17 @@ export function SonataReportView({
     compartmentNote,
     compartmentPlaces,
     extraColumns: neuronSetColumns,
+    matrixCells,
+    onMatrixChange: setMatrix,
+    onClearPicks: () => setPickedCells([]),
+    reset: {
+      picked: pickedCells.length > 0 || timeWindow !== null,
+      onReset: () => {
+        setPickedCells([]);
+        handleTimeWindowChange(null);
+      },
+    },
+    resetRequest,
     headerExtra: docked && timeWindow && (
       <WindowChip
         name="Trace window"
@@ -1021,15 +1044,7 @@ export function SonataReportView({
                       onChange={setChosenPopulation}
                     />
                   ),
-                  reset: {
-                    picked: pickedCells.length > 0 || timeWindow !== null,
-                    onReset: () => {
-                      setPickedCells([]);
-                      handleTimeWindowChange(null);
-                    },
-                  },
                   focusRow: focusedRow,
-                  resetRequest,
                 }}
               />
             ),

@@ -97,6 +97,30 @@ function runRules(groups: ConnectivityGroups): Partial<Shape>[] {
   });
 }
 
+/** A pathway's rows, as a person reads them. */
+export function pathwayName(groups: ConnectivityGroups, pre: number, post: number): string {
+  const runOf = (row: number) => groups.runs?.find((r) => row >= r.start && row <= r.end);
+  const name = (row: number) => [groups.labels[row], runOf(row)?.label].filter(Boolean).join(' · ');
+  return `${name(pre)} → ${name(post)}`;
+}
+
+/** A ring round a square, in two colours so it reads over all of the scale's blues. */
+function squareRing({ pre, post }: { pre: number; post: number }): Partial<Shape>[] {
+  const box = {
+    type: 'rect' as const,
+    xref: 'x' as const,
+    yref: 'y' as const,
+    x0: post - 0.5,
+    x1: post + 0.5,
+    y0: pre - 0.5,
+    y1: pre + 0.5,
+  };
+  return [
+    { ...box, line: { color: '#ffffff', width: 4 } },
+    { ...box, line: { color: '#111827', width: 1.5 } },
+  ];
+}
+
 /**
  * The matrix as a heatmap: presynaptic rows down, postsynaptic columns across,
  * each cell the measure from the one to the other. A cell of nothing is left
@@ -106,11 +130,17 @@ export function connectivityFigure({
   groups,
   measure,
   axis,
+  pinned,
+  pickable = false,
 }: {
   groups: ConnectivityGroups;
   measure: ConnectivityMeasure;
   /** What the rows are: a property's values, or neurons in its order. */
   axis: string;
+  /** The square pinned, ringed. */
+  pinned?: { pre: number; post: number } | null;
+  /** Whether a click on a square does anything, which its card then says. */
+  pickable?: boolean;
 }): Figure {
   const n = groups.labels.length;
   const z = Array.from({ length: n }, (_, pre) =>
@@ -162,16 +192,15 @@ export function connectivityFigure({
     xaxis: { ...axisBase, title: axisTitle(`Postsynaptic ${axis}`) },
     // The first row on top, as a matrix is read.
     yaxis: { ...axisBase, title: axisTitle(`Presynaptic ${axis}`), range: [n - 0.5, -0.5] },
-    shapes: runRules(groups),
+    shapes: [...runRules(groups), ...(pinned ? squareRing(pinned) : [])],
+    // A square pinned or let go of leaves the matrix zoomed as it is.
+    uirevision: `${axis}/${n}`,
   };
 
   const tooltip = (point: HoverPoint) => {
     const [pre, post] = Array.isArray(point.pointNumber) ? point.pointNumber : [];
     if (pre === undefined || post === undefined) return null;
     const cell = pre * n + post;
-    const runOf = (row: number) => groups.runs?.find((r) => row >= r.start && row <= r.end);
-    const name = (row: number) =>
-      [groups.labels[row], runOf(row)?.label].filter(Boolean).join(' · ');
     const pairs = possiblePairs(groups, pre, post);
     const connections = groups.connections[cell];
     const synapses = groups.synapses?.[cell];
@@ -196,9 +225,14 @@ export function connectivityFigure({
     }
     const neurons = (row: number) => groups.sizes[row].toLocaleString();
     return {
-      title: `${name(pre)} → ${name(post)}`,
+      title: pathwayName(groups, pre, post),
       subtitle: groups.by === 'property' ? `${neurons(pre)} → ${neurons(post)} neurons` : undefined,
       rows,
+      hint: !pickable
+        ? undefined
+        : pinned?.pre === pre && pinned.post === post
+          ? 'Click to stop filtering to this pathway'
+          : 'Click to filter the table and 3D view to this pathway',
     };
   };
 

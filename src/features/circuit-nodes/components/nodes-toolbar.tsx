@@ -25,11 +25,39 @@ const contentCls = 'bg-white border-gray-200';
 
 const itemCls = 'text-primary-9 text-sm data-[state=checked]:font-bold';
 
-type Props = {
+type ViewProps = {
   view: ViewMode;
   onViewChange: (view: ViewMode) => void;
   /** Whether the circuit has a connectivity matrix to show. */
   connectivity?: boolean;
+};
+
+/** What a nodes table shows: its rows, or the circuit's connectivity matrix. */
+export function NodesViewSelect({ view, onViewChange, connectivity = false }: ViewProps) {
+  return (
+    <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
+      <SelectTrigger
+        className={cn(triggerCls, styles.viewSelect, 'px-3')}
+        icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent className={contentCls}>
+        <SelectItem value="nodes" className={itemCls}>
+          Nodes
+        </SelectItem>
+        <SelectItem value="connectivity" disabled={!connectivity} className={itemCls}>
+          {connectivity ? 'Connectivity' : 'Connectivity (no matrix)'}
+        </SelectItem>
+        <SelectItem value="edges" disabled className={itemCls}>
+          Edges (coming soon)
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
+type Props = ViewProps & {
   /** The node populations, or the matrices' edge populations while connectivity is on show. */
   populations: readonly { name: string; type?: string }[];
   populationName: string | undefined;
@@ -41,7 +69,7 @@ type Props = {
 export function NodesToolbar({
   view,
   onViewChange,
-  connectivity = false,
+  connectivity,
   populations,
   populationName,
   onPopulationChange,
@@ -50,25 +78,7 @@ export function NodesToolbar({
   return (
     <div className={styles.toolbar}>
       <div className={styles.toolbarGroup}>
-        <Select value={view} onValueChange={(v) => onViewChange(v as ViewMode)}>
-          <SelectTrigger
-            className={cn(triggerCls, styles.viewSelect, 'px-3')}
-            icon={<RiArrowDownSLine className="text-primary-9 size-4 opacity-100" />}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className={contentCls}>
-            <SelectItem value="nodes" className={itemCls}>
-              Nodes
-            </SelectItem>
-            <SelectItem value="connectivity" disabled={!connectivity} className={itemCls}>
-              {connectivity ? 'Connectivity' : 'Connectivity (no matrix)'}
-            </SelectItem>
-            <SelectItem value="edges" disabled className={itemCls}>
-              Edges (coming soon)
-            </SelectItem>
-          </SelectContent>
-        </Select>
+        <NodesViewSelect view={view} onViewChange={onViewChange} connectivity={connectivity} />
       </div>
 
       <div className={cn(styles.toolbarGroup, styles.toolbarGroupGrow)}>

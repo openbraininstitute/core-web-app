@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   cellValue,
   connectivityFigure,
+  pathwayName,
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
 
 import type { ConnectivityGroups } from '@/features/circuit-nodes/connectivity/connectivity-groups';
@@ -62,6 +63,43 @@ describe('connectivityFigure', () => {
       { label: 'Synapses', value: '9', strong: false },
       { label: 'Synapses per connection', value: '3', strong: false },
     ]);
+  });
+
+  it('rings a pinned square, in two colours, leaving the plot zoomed as it is', () => {
+    const plain = connectivityFigure({ groups: GROUPS, measure: 'connections', axis: 'mtype' });
+    const ringed = connectivityFigure({
+      groups: GROUPS,
+      measure: 'connections',
+      axis: 'mtype',
+      pinned: { pre: 0, post: 1 },
+    });
+
+    expect(plain.layout.shapes).toEqual([]);
+    const box = { type: 'rect', x0: 0.5, x1: 1.5, y0: -0.5, y1: 0.5 };
+    expect(ringed.layout.shapes).toEqual([
+      expect.objectContaining(box),
+      expect.objectContaining(box),
+    ]);
+    expect(ringed.layout.uirevision).toBe(plain.layout.uirevision);
+  });
+
+  it('says on a square’s card what a click does, only where it does anything', () => {
+    const hintOf = (args: { pickable?: boolean; pinned?: { pre: number; post: number } }) =>
+      connectivityFigure({
+        groups: GROUPS,
+        measure: 'connections',
+        axis: 'mtype',
+        ...args,
+      }).tooltip?.({ pointNumber: [0, 1] })?.hint;
+
+    expect(hintOf({})).toBeUndefined();
+    expect(hintOf({ pickable: true })).toMatch(/filter the table and 3D view/);
+    expect(hintOf({ pickable: true, pinned: { pre: 0, post: 1 } })).toMatch(/stop filtering/);
+    expect(hintOf({ pickable: true, pinned: { pre: 1, post: 1 } })).toMatch(/filter the table/);
+  });
+
+  it('names a pathway by its rows', () => {
+    expect(pathwayName(GROUPS, 1, 0)).toBe('B → A');
   });
 
   it('names the runs of an order down the axes, with a rule between each', () => {

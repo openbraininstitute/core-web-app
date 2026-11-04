@@ -57,10 +57,12 @@ import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
 import { useCellFocus } from './use-cell-focus';
 
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { TablePathway } from '@/features/circuit-nodes/circuit-nodes-table';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { NodePopulation, ViewMode } from '@/features/circuit-nodes/types';
 import type {
   CircuitCellsHostProps,
@@ -195,6 +197,13 @@ interface ICircuitSceneOptions {
   onLocationClick?: (key: number) => void;
   /** Told the key of the ball under the pointer, and null once it leaves them. */
   onLocationHover?: (key: number | null) => void;
+  /**
+   * A connectivity matrix the host shows in a table of its own beside the scene, while it is up:
+   * the pathway under the pointer is coloured over the rest, with the key to that.
+   */
+  matrix?: SceneMatrix;
+  /** The host's own keys, first in the top-right corner: what else colours the scene. */
+  keys?: ReactNode;
   /** Morph the cell into a dendrogram of the same segments. MEModels only. */
   dendrogram?: boolean;
   /**
@@ -267,6 +276,8 @@ export function CircuitScene({
   locationMarkers,
   onLocationClick,
   onLocationHover,
+  matrix,
+  keys: hostKeys,
   dendrogram = false,
   populationName: hostPopulationName,
   onPopulationChange,
@@ -511,15 +522,15 @@ export function CircuitScene({
     return { ...nodeColorsOverride, palette, flatColumns: [fadedColumn] };
   }, [nodeColorsOverride, fadedColumn, config.backgroundColor]);
   // A pathway pointed at in the matrix beside the scene, over any other colours while it is.
+  const pointedPathway = matrix ? matrix.pathway : tableDriven ? tablePathway : null;
   const pathwayColors = useMemo(
     () =>
-      tableDriven &&
-      tablePathway &&
-      tablePathway.circuitId === circuit?.id &&
-      tablePathway.population === population?.name
-        ? pathwayNodeColors({ ...tablePathway, background: config.backgroundColor })
+      pointedPathway &&
+      pointedPathway.circuitId === circuit?.id &&
+      pointedPathway.population === population?.name
+        ? pathwayNodeColors({ ...pointedPathway, background: config.backgroundColor })
         : undefined,
-    [tableDriven, tablePathway, circuit?.id, population?.name, config.backgroundColor]
+    [pointedPathway, circuit?.id, population?.name, config.backgroundColor]
   );
   const overrideColors = pathwayColors ?? faintenedOverride;
 
@@ -859,8 +870,13 @@ export function CircuitScene({
         legendSlotRef={setLegendSlot}
         selection={sceneSelection}
         keys={
-          tableDriven && tableView === 'connectivity' ? (
-            <PathwayKey background={config.backgroundColor} theme={theme} />
+          hostKeys || matrix || (tableDriven && tableView === 'connectivity') ? (
+            <>
+              {hostKeys}
+              {(matrix || (tableDriven && tableView === 'connectivity')) && (
+                <PathwayKey background={config.backgroundColor} theme={theme} />
+              )}
+            </>
           ) : undefined
         }
         viz={{

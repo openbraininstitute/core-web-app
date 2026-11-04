@@ -8,6 +8,11 @@ import {
   KeptNodesGrid,
   KeptNodesGridPlaceholder,
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import {
+  TableOrMatrix,
+  useTableMatrixView,
+} from '@/features/circuit-nodes/connectivity/table-matrix';
+import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import {
   compartmentHeaderRow,
@@ -23,6 +28,7 @@ import type { IDatasource } from 'ag-grid-community';
 import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { PickAllState, PinnedColumn } from '@/features/circuit-nodes/components/nodes-grid';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type {
   ColumnMeta,
   FilterModel,
@@ -115,6 +121,12 @@ type Props = {
   headerExtra?: ReactNode;
   /** A cell to bring into view, such as one clicked in a scene; a new key asks again. */
   focusRow?: { nodeId: number; key: number };
+  /** The cells a connectivity matrix in the table's place keeps to: null for every one. */
+  matrixCells?: Uint32Array | null;
+  /** Told of a connectivity matrix in the table's place, for the scene beside it. */
+  onMatrixChange?: (matrix: SceneMatrix | undefined) => void;
+  /** Lets the picked cells go, as a pathway clicked in the matrix takes their place. */
+  onClearPicks?: () => void;
 };
 
 /** Cells open on their compartments at first while the report recorded no more than this many in all. */
@@ -154,7 +166,14 @@ export function ReportNodesTable({
   headerStart,
   headerExtra,
   focusRow,
+  matrixCells,
+  onMatrixChange,
+  onClearPicks,
 }: Props) {
+  const matrixView = useTableMatrixView(circuit);
+  // The matrix's way back to every neuron: the table's own reset, which it is still there for,
+  // and past the cells the report recorded.
+  const [matrixResets, setMatrixResets] = useState(0);
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === population.name);
   const sessionKey = nodePopulation
     ? nodesSessionKey(circuit.id, circuitConfig?.circuitAssetId ?? '', nodePopulation.name)
@@ -167,6 +186,7 @@ export function ReportNodesTable({
     datasource,
     error,
     progress,
+    getColumn,
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
@@ -239,6 +259,31 @@ export function ReportNodesTable({
   const [filter, setFilter] = useAtom(filterAtom);
   const filterModel = filter?.session === sessionKey ? filter.model : NO_FILTER;
   const filtering = Object.keys(filterModel).length > 0;
+  const setFilterModel = useCallback(
+    (model: FilterModel) => setFilter({ session: sessionKey, model }),
+    [sessionKey, setFilter]
+  );
+  const matrixPin = useMatrixPin({
+    scope: sessionKey,
+    ready,
+    rowCount,
+    filterModel,
+    setFilterModel,
+    clearTicks: onClearPicks,
+    setDerivedColumns,
+  });
+  const gridColumns = useMemo(
+    () =>
+      tableColumns && matrixPin.columns.length > 0
+        ? [...matrixPin.columns, ...tableColumns]
+        : tableColumns,
+    [tableColumns, matrixPin.columns]
+  );
+  // Another pathway under the same filter means other rows, which are paged in again.
+  const gridVersion = useMemo(
+    () => ({ statistics: pinnedVersion, pathway: matrixPin.pinned }),
+    [pinnedVersion, matrixPin.pinned]
+  );
 
   // The rows, and their traces: the scope and the filter both narrow them. The
   // statistics move with the traces' window, and a filter on them with it.
@@ -416,61 +461,78 @@ export function ReportNodesTable({
       </Centered>
     );
   }
-  if (error) {
-    return (
-      <Centered>
-        <Empty description={`The circuit’s nodes could not be read: ${error.message}`} />
-      </Centered>
-    );
-  }
-  if (!shownSource || !columns) {
-    const percent =
-      progress?.total && progress.total > 0
-        ? ` ${Math.round((progress.received / progress.total) * 100)}%`
-        : '';
-    // The table kept from the view before, over the same cells, until this one's is ready.
-    return (
-      <KeptNodesGridPlaceholder
-        session={sessionKey}
-        fallback={
-          <Centered>
-            <Spin tip={`Loading the circuit’s nodes…${percent}`}>
-              <div className="size-12" />
-            </Spin>
-          </Centered>
-        }
-      />
-    );
-  }
+  const percent =
+    progress?.total && progress.total > 0
+      ? ` ${Math.round((progress.received / progress.total) * 100)}%`
+      : '';
 
   return (
-    <KeptNodesGrid
-      session={sessionKey}
-      filterScope="voltage"
-      downloadName={`${population.name}-voltages`}
-      columns={tableColumns ?? columns}
-      rowCount={scope === 'all' ? rowCount : recordedCount}
-      filteredCount={filtering ? filteredCount : null}
-      datasource={shownSource}
-      onFilterModelChange={(model) => setFilter({ session: sessionKey, model })}
-      initialFilterModel={filterModel}
-      pinnedColumns={pinnedColumns}
-      pinnedVersion={pinnedVersion}
-      scope={scopeSwitch}
-      resetRequest={resetRequest}
-      reset={reset}
+    <TableOrMatrix
+      view={matrixView}
+      circuit={circuit}
+      population={nodePopulation.name}
+      rowCount={rowCount}
+      cells={matrixCells}
+      nodeColumns={columns && { columns, getColumn }}
+      onReset={() => {
+        setMatrixResets((n) => n + 1);
+        onScopeChange?.('all');
+      }}
+      onMatrixChange={onMatrixChange}
+      pin={matrixPin}
       headerStart={headerStart}
-      headerExtra={headerExtra}
-      focusRow={focusRow}
-      rowIndexOf={rowAmongListed}
-      onRowClick={onCellClick}
-      selectedNodeIds={selectedNodeIds}
-      pickColumn
-      pickAll={pickAll}
-      onRowHover={onCellHover}
-      onNestingToggle={nests ? toggleOpen : undefined}
-      selectedNestedRows={selectedTraces}
-    />
+    >
+      {error ? (
+        <Centered>
+          <Empty description={`The circuit’s nodes could not be read: ${error.message}`} />
+        </Centered>
+      ) : !shownSource || !columns ? (
+        // The table kept from the view before, over the same cells, until this one's is ready.
+        <KeptNodesGridPlaceholder
+          session={sessionKey}
+          fallback={
+            <Centered>
+              <Spin tip={`Loading the circuit’s nodes…${percent}`}>
+                <div className="size-12" />
+              </Spin>
+            </Centered>
+          }
+        />
+      ) : (
+        <KeptNodesGrid
+          session={sessionKey}
+          filterScope={`voltage:${matrixPin.key}`}
+          downloadName={`${population.name}-voltages`}
+          columns={gridColumns ?? columns}
+          rowCount={scope === 'all' ? rowCount : recordedCount}
+          filteredCount={filtering ? filteredCount : null}
+          datasource={shownSource}
+          onFilterModelChange={setFilterModel}
+          initialFilterModel={filterModel}
+          pinnedColumns={pinnedColumns}
+          pinnedVersion={gridVersion}
+          scope={scopeSwitch}
+          resetRequest={(resetRequest ?? 0) + matrixResets}
+          reset={reset}
+          headerStart={
+            <>
+              {matrixView.menu}
+              {headerStart}
+            </>
+          }
+          headerExtra={headerExtra}
+          focusRow={focusRow}
+          rowIndexOf={rowAmongListed}
+          onRowClick={onCellClick}
+          selectedNodeIds={selectedNodeIds}
+          pickColumn
+          pickAll={pickAll}
+          onRowHover={onCellHover}
+          onNestingToggle={nests ? toggleOpen : undefined}
+          selectedNestedRows={selectedTraces}
+        />
+      )}
+    </TableOrMatrix>
   );
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { RiResetLeftLine } from '@remixicon/react';
+import { RiCloseLine } from '@remixicon/react';
 import { Empty, Spin } from 'antd';
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -10,6 +10,7 @@ import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/compone
 import {
   connectivityFigure,
   MEASURES,
+  pathwayName,
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
 import {
   defaultGrouping,
@@ -38,6 +39,7 @@ import type {
   NodeProperty,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityEntry } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import type { MatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
 import type { HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
 
@@ -156,7 +158,7 @@ function SelectionNote({
   onReset: () => void;
 }) {
   return (
-    <span className="ml-auto flex items-center gap-2">
+    <span className="flex items-center gap-2">
       <span
         className={cn(PILL_CLASS, 'font-normal whitespace-nowrap text-neutral-500 hover:bg-white')}
       >
@@ -171,7 +173,35 @@ function SelectionNote({
         aria-label="Show every neuron again"
         className={ROUND_PILL_CLASS}
       >
-        <RiResetLeftLine className="size-4" />
+        <RiCloseLine className="size-4" />
+      </button>
+    </span>
+  );
+}
+
+/** That the table and the view beside it keep to a pathway clicked, and the way back. */
+function PinnedNote({ name, onClear }: { name: string; onClear: () => void }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <span
+        className={cn(
+          PILL_CLASS,
+          'min-w-0 font-normal whitespace-nowrap text-neutral-500 hover:bg-white'
+        )}
+      >
+        Filtered to
+        <strong className="text-primary-9 min-w-0 truncate font-semibold" title={name}>
+          {name}
+        </strong>
+      </span>
+      <button
+        type="button"
+        onClick={onClear}
+        title="Stop filtering to this pathway"
+        aria-label="Stop filtering to this pathway"
+        className={ROUND_PILL_CLASS}
+      >
+        <RiCloseLine className="size-4" />
       </button>
     </span>
   );
@@ -190,6 +220,7 @@ export function ConnectivityView({
   selection,
   nodeColumns,
   onPathwayChange,
+  pin,
   headerSlot,
 }: {
   circuitId: string;
@@ -207,6 +238,8 @@ export function ConnectivityView({
    * matrix of the selection's population, whose neurons a view beside it draws.
    */
   onPathwayChange?: (pathway: MatrixPathway | null) => void;
+  /** Given, a square clicked pins its pathway: only for a matrix of the selection's population. */
+  pin?: MatrixPin;
   headerSlot: HTMLElement | null;
 }) {
   // A matrix past what the browser can hold is never asked for, and a large one only once
@@ -299,6 +332,7 @@ export function ConnectivityView({
       selection={selection}
       nodeColumns={nodeColumns}
       onPathwayChange={onPathwayChange}
+      pin={pin}
       headerSlot={headerSlot}
     />
   );
@@ -311,6 +345,7 @@ function ReadyMatrix({
   selection,
   nodeColumns,
   onPathwayChange,
+  pin,
   headerSlot,
 }: {
   summary: ConnectivitySummary;
@@ -323,6 +358,7 @@ function ReadyMatrix({
   selection: MatrixSelection | undefined;
   nodeColumns: NodeColumns | undefined;
   onPathwayChange: ((pathway: MatrixPathway | null) => void) | undefined;
+  pin: MatrixPin | undefined;
   headerSlot: HTMLElement | null;
 }) {
   const categorical = summary.properties.filter((p) => p.kind === 'categorical');
@@ -342,10 +378,13 @@ function ReadyMatrix({
       rowCount: selection.rowCount,
       neurons: summary.neurons,
     });
-  const cells =
+  // A pathway pinned narrows what is beside the matrix, not the matrix, which stays as it was.
+  const pinned = ofTable ? (pin?.pinned ?? null) : null;
+  const selected =
     ofTable && selection.cells && selection.cells.length < selection.rowCount
       ? selection.cells
       : null;
+  const cells = pinned ? pinned.matrixCells : selected;
   const pathwayTo = ofTable ? onPathwayChange : undefined;
   const neurons = cells ? cells.length : summary.neurons;
 
@@ -414,7 +453,14 @@ function ReadyMatrix({
   useLayoutEffect(() => {
     pathwayToRef.current = pathwayTo;
   });
+  // Pinned, a pathway stays coloured beside the matrix, whatever is under the pointer.
+  useEffect(() => {
+    if (!pinned) return;
+    pathwayToRef.current?.({ pre: pinned.pre, post: pinned.post });
+    return () => pathwayToRef.current?.(null);
+  }, [pinned]);
   const hoverPathway = (point: HoverPoint | null) => {
+    if (pinned) return;
     const groups = current?.groups;
     const [pre, post] = point && Array.isArray(point.pointNumber) ? point.pointNumber : [];
     const key = groups && pre !== undefined && post !== undefined ? `${pre}/${post}` : null;
@@ -434,11 +480,38 @@ function ReadyMatrix({
     [current]
   );
 
+  const pinnedSquare = pinned?.square.matrix === requestKey ? pinned.square : null;
+  const pinPathway = (point: HoverPoint) => {
+    const groups = current?.groups;
+    const [pre, post] = Array.isArray(point.pointNumber) ? point.pointNumber : [];
+    if (!pin || !groups || pre === undefined || post === undefined) return;
+    if (pinnedSquare?.pre === pre && pinnedSquare.post === post) {
+      pin.onPick(null);
+      return;
+    }
+    pin.onPick({
+      pre: rowMembers(groups, pre),
+      post: rowMembers(groups, post),
+      square: { matrix: requestKey, pre, post },
+      name: pathwayName(groups, pre, post),
+      matrixCells: cells,
+    });
+  };
+  const pickable = ofTable && pin !== undefined;
+
   const byNeuron = groupBy === BY_NEURON;
   const axis = byNeuron ? `neurons${orderBy === MATRIX_ORDER ? '' : ` by ${orderBy}`}` : groupBy;
   const figure = useMemo(
-    () => current?.groups && connectivityFigure({ groups: current.groups, measure, axis }),
-    [current, measure, axis]
+    () =>
+      current?.groups &&
+      connectivityFigure({
+        groups: current.groups,
+        measure,
+        axis,
+        pinned: pinnedSquare,
+        pickable,
+      }),
+    [current, measure, axis, pinnedSquare, pickable]
   );
   const measures = MEASURES.filter(
     (m) =>
@@ -465,64 +538,76 @@ function ReadyMatrix({
           ),
           headerSlot
         )}
-      <div className="flex flex-wrap items-center gap-2 py-2">
-        <PillSelect
-          label="Group by"
-          value={groupBy}
-          onChange={(value) => {
-            setGroupBy(value);
-            // A neuron to a neuron is connected or not: how many synapses says more.
-            if (value === BY_NEURON && neurons <= MAX_NEURON_ROWS && measure === 'probability') {
-              setMeasure(summary.synapses === null ? 'connections' : 'synapses');
-            }
-          }}
-          options={[
-            ...categorical.map((p) => ({
-              value: p.name,
-              label: p.name,
-              detail: `${p.values?.length ?? 0}`,
-            })),
-            ...fromNodes.map((c) => ({
-              value: c.name,
-              label: c.name,
-              detail: c.ranges ? 'ranges' : undefined,
-            })),
-            {
-              // no grouping: a row per neuron
-              value: BY_NEURON,
-              label: 'None',
-              detail: neurons.toLocaleString(),
-            },
-          ]}
-        />
-        {byNeuron && (
+      <div className="flex items-start gap-2 py-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
           <PillSelect
-            label="Order by"
-            value={orderBy}
-            onChange={setOrderBy}
+            label="Group by"
+            value={groupBy}
+            onChange={(value) => {
+              setGroupBy(value);
+              // A neuron to a neuron is connected or not: how many synapses says more.
+              if (value === BY_NEURON && neurons <= MAX_NEURON_ROWS && measure === 'probability') {
+                setMeasure(summary.synapses === null ? 'connections' : 'synapses');
+              }
+            }}
             options={[
-              { value: MATRIX_ORDER, label: 'Node id' },
-              ...categorical.map((p) => ({ value: p.name, label: p.name })),
-              ...fromNodes.map((c) => ({ value: c.name, label: c.name })),
+              ...categorical.map((p) => ({
+                value: p.name,
+                label: p.name,
+                detail: `${p.values?.length ?? 0}`,
+              })),
+              ...fromNodes.map((c) => ({
+                value: c.name,
+                label: c.name,
+                detail: c.ranges ? 'ranges' : undefined,
+              })),
+              {
+                // no grouping: a row per neuron
+                value: BY_NEURON,
+                label: 'None',
+                detail: neurons.toLocaleString(),
+              },
             ]}
           />
-        )}
-        <PillSelect
-          label="Show"
-          value={measure}
-          onChange={(value) => setMeasure(value as ConnectivityMeasure)}
-          options={measures.map((m) => ({ value: m.value, label: m.label }))}
-        />
-        {byNeuron && neurons > MAX_NEURON_ROWS && (
-          <span
-            className="text-xs text-neutral-400"
-            title={`Too many neurons for a row each: the ${neurons.toLocaleString()} are split into ${MAX_NEURON_ROWS} rows and columns, each a run of consecutive neurons in the Order by order.`}
-          >
-            About {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons per row and column
+          {byNeuron && (
+            <PillSelect
+              label="Order by"
+              value={orderBy}
+              onChange={setOrderBy}
+              options={[
+                { value: MATRIX_ORDER, label: 'Node id' },
+                ...categorical.map((p) => ({ value: p.name, label: p.name })),
+                ...fromNodes.map((c) => ({ value: c.name, label: c.name })),
+              ]}
+            />
+          )}
+          <PillSelect
+            label="Show"
+            value={measure}
+            onChange={(value) => setMeasure(value as ConnectivityMeasure)}
+            options={measures.map((m) => ({ value: m.value, label: m.label }))}
+          />
+          {byNeuron && neurons > MAX_NEURON_ROWS && (
+            <span
+              className="text-xs text-neutral-400"
+              title={`Too many neurons for a row each: the ${neurons.toLocaleString()} are split into ${MAX_NEURON_ROWS} rows and columns, each a run of consecutive neurons in the Order by order.`}
+            >
+              About {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons per row and
+              column
+            </span>
+          )}
+        </div>
+        {((cells && selection) || (pinned && pin)) && (
+          <span className="flex max-w-[60%] min-w-0 shrink-0 items-center gap-2">
+            {cells && selection && (
+              <SelectionNote
+                count={cells.length}
+                total={summary.neurons}
+                onReset={selection.onReset}
+              />
+            )}
+            {pinned && pin && <PinnedNote name={pinned.name} onClear={() => pin.onPick(null)} />}
           </span>
-        )}
-        {cells && selection && (
-          <SelectionNote count={cells.length} total={summary.neurons} onReset={selection.onReset} />
         )}
       </div>
       <div className="relative min-h-0 flex-1">
@@ -533,7 +618,11 @@ function ReadyMatrix({
         ) : cells?.length === 0 ? (
           <Empty description="None of the matrix's neurons are selected" />
         ) : figure ? (
-          <StatisticsPlot figure={figure} onPointHover={pathwayTo && hoverPathway} />
+          <StatisticsPlot
+            figure={figure}
+            onPointHover={pathwayTo && hoverPathway}
+            onPointClick={pickable ? pinPathway : undefined}
+          />
         ) : (
           <div className="flex h-full items-center justify-center">
             <Spin />

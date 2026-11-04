@@ -35,7 +35,7 @@ const CONFIG: Partial<Config> = {
 
 /**
  * One of the statistics' figures, filling its box; see `figures.ts` for what
- * each draws. `onPointClick` is told the `customdata` of a point clicked, and
+ * each draws. `onPointClick` is told the point clicked, and
  * `onPointHover` the point under the pointer, null once it leaves them. A
  * figure over time can carry the config's timings and the player's time over it.
  */
@@ -46,7 +46,7 @@ export default function StatisticsPlot({
   timeline,
 }: {
   figure: Figure;
-  onPointClick?: (customdata: unknown) => void;
+  onPointClick?: (point: HoverPoint) => void;
   onPointHover?: (point: HoverPoint | null) => void;
   timeline?: { events: readonly TimelineEvent[]; timeCursor?: TimeCursor };
 }) {
@@ -62,7 +62,10 @@ export default function StatisticsPlot({
       if (setsAxisRange(event as Readonly<Record<string, unknown>>)) zoomed();
     },
     onDoubleClick: zoomedOut,
-    onClick: (event) => onPointClick?.(event.points[0]?.customdata),
+    onClick: (event) => {
+      const point = event.points[0] as HoverPoint | undefined;
+      if (point) onPointClick?.(point);
+    },
     onHover: (event) => {
       const point = event.points[0] as HoverPoint | undefined;
       onPointHover?.(point ?? null);

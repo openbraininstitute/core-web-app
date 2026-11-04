@@ -7,9 +7,9 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 import {
   RiArrowRightSLine,
   RiCheckLine,
+  RiCloseLine,
   RiDownload2Line,
   RiLoader4Line,
-  RiResetLeftLine,
   RiSubtractLine,
   RiTable3,
 } from '@remixicon/react';
@@ -1084,7 +1084,7 @@ export function NodesGrid({
           aria-label={reset.picked ? 'Clear the filters and the ticks' : 'Clear the filters'}
           className={ROUND_PILL_CLASS}
         >
-          <RiResetLeftLine className="size-4" />
+          <RiCloseLine className="size-4" />
         </button>
       )}
       {/* Each a switch between every row and the ones it keeps: All | Spiking. */}
@@ -1229,6 +1229,17 @@ export function NodesGrid({
 
 export function defaultVisibleColumnSet(columns: ColumnMeta[]): Set<string> {
   return new Set(columns.map((c) => c.name));
+}
+
+/** The columns on show once a table's change: new ones on, the others as they were. */
+export function withNewColumnsOn(
+  columns: readonly ColumnMeta[],
+  before: ReadonlySet<string>,
+  visible: ReadonlySet<string>
+): Set<string> {
+  return new Set(
+    columns.filter((c) => !before.has(c.name) || visible.has(c.name)).map((c) => c.name)
+  );
 }
 
 function defaultColumnOrder(columns: ColumnMeta[]): string[] {

@@ -25,7 +25,7 @@ vi.mock('@/features/circuit-nodes/components/nodes-grid', () => ({
     fixtures.grid(props);
     return null;
   },
-  defaultVisibleColumnSet: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
+  withNewColumnsOn: (columns: { name: string }[]) => new Set(columns.map((c) => c.name)),
 }));
 vi.mock('@/features/circuit-nodes/components/nodes-toolbar', () => ({ NodesToolbar: () => null }));
 vi.mock('@/utils/logger', async (importOriginal) => ({

@@ -17,6 +17,7 @@ import { cn } from '@/utils/css-class';
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
@@ -95,6 +96,8 @@ type Props = {
   onLocationClick?: (key: number) => void;
   /** Told the key of the location's ball under the pointer, and null once it leaves them. */
   onLocationHover?: (key: number | null) => void;
+  /** A connectivity matrix in the table beside the scene, whose pathway it colours. */
+  matrix?: SceneMatrix;
 };
 
 /**
@@ -134,6 +137,7 @@ export function VoltageScene({
   highlightedLocation,
   onLocationClick,
   onLocationHover,
+  matrix,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -357,6 +361,8 @@ export function VoltageScene({
             locationMarkers={locationMarkers}
             onLocationClick={onLocationClick}
             onLocationHover={onLocationHover}
+            matrix={matrix}
+            keys={valueRange && <RampLegend range={valueRange} units={units} />}
           />
         )}
         {!frames && (
@@ -366,7 +372,6 @@ export function VoltageScene({
             </Spin>
           </div>
         )}
-        {valueRange && <RampLegend range={valueRange} units={units} />}
         {frames && <SceneTime labelRef={sceneTime.ref} playing={playing} onPlayingChange={play} />}
       </div>
       {docked ? (
@@ -404,10 +409,10 @@ export function SceneSpeedSelect({
   );
 }
 
-/** The ramp and the values at its ends, in the scene's top corner, clear of its axes. */
+/** The ramp and the values at its ends, for the scene's top corner, clear of its axes. */
 function RampLegend({ range, units }: { range: [number, number]; units: string }) {
   return (
-    <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
+    <div className="pointer-events-none rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
       <div
         className="h-2 w-36 rounded-full"
         style={{ background: `linear-gradient(to right, ${RAMP_STOPS.join(', ')})` }}

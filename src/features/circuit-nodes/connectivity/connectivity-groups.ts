@@ -286,6 +286,15 @@ export function defaultGrouping(properties: readonly PropertySummary[]): string 
 }
 
 /**
+ * Whether an edge population joins a node population to itself, as its name says its ends
+ * (`source__target__type`); undefined for a name that does not say.
+ */
+export function connectsItself(edgePopulation: string, nodePopulation: string) {
+  const [source, target, kind] = edgePopulation.split('__');
+  return kind === undefined ? undefined : source === nodePopulation && target === nodePopulation;
+}
+
+/**
  * Whether a selection of a node population's neurons is of the matrix's: the
  * population at both ends of the edge population, as its name says them
  * (`source__target__type`), else one of as many neurons.
@@ -301,7 +310,5 @@ export function selectionApplies({
   rowCount: number;
   neurons: number;
 }): boolean {
-  const [source, target, kind] = edgePopulation.split('__');
-  if (kind !== undefined) return source === nodePopulation && target === nodePopulation;
-  return rowCount === neurons;
+  return connectsItself(edgePopulation, nodePopulation) ?? rowCount === neurons;
 }

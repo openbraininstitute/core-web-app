@@ -5,13 +5,14 @@ import { Empty } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/components/loading';
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import { NodesGrid, withNewColumnsOn } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
 import { ConnectivityView } from '@/features/circuit-nodes/connectivity/connectivity-view';
 import {
   connectivityAsset,
   useConnectivityEntries,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
@@ -120,6 +121,7 @@ export default function CircuitNodesTable({
     datasource,
     status,
     getColumn,
+    setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
     isLoading: workerLoading,
@@ -142,6 +144,20 @@ export default function CircuitNodesTable({
     getFilteredIndices,
   });
   const { shown, filterError, clearTicks, setFilterModel } = ticks;
+  const matrixPin = useMatrixPin({
+    scope,
+    ready: status === 'ready',
+    rowCount,
+    filterModel: ticks.filterModel,
+    setFilterModel,
+    clearTicks,
+    setDerivedColumns,
+  });
+  // The grid's columns: the file's, and the pinned pathway's while there is one.
+  const gridColumns = useMemo(
+    () => (columns && matrixPin.columns.length > 0 ? [...matrixPin.columns, ...columns] : columns),
+    [columns, matrixPin.columns]
+  );
   // Every neuron on show again, the way the grid's reset does it, for a view in the grid's place.
   const resetSelection = () => {
     clearTicks();
@@ -228,12 +244,13 @@ export default function CircuitNodesTable({
   const lastColumnsKeyRef = useRef<string>('');
 
   useEffect(() => {
-    if (!columns || columns.length === 0) return;
-    const key = columns.map((c) => c.name).join('|');
+    if (!gridColumns || gridColumns.length === 0) return;
+    const key = gridColumns.map((c) => c.name).join('|');
     if (key === lastColumnsKeyRef.current) return;
+    const before = new Set(lastColumnsKeyRef.current.split('|'));
     lastColumnsKeyRef.current = key;
-    setVisibleColumns(defaultVisibleColumnSet(columns));
-  }, [columns]);
+    setVisibleColumns((visible) => withNewColumnsOn(gridColumns, before, visible));
+  }, [gridColumns]);
 
   return (
     <div className={cn(styles.root, className)}>
@@ -283,6 +300,8 @@ export default function CircuitNodesTable({
                   }
                 ))
             }
+            // Only with a view beside the table, whose grid is told its filter.
+            pin={cells ? matrixPin : undefined}
             headerSlot={headerSlot}
           />
         ) : (
@@ -293,7 +312,7 @@ export default function CircuitNodesTable({
             workerLoading,
             downloadProgress,
             hasPopulation: !!population,
-            columns,
+            columns: gridColumns,
             rowCount,
             filteredCount,
             datasource,

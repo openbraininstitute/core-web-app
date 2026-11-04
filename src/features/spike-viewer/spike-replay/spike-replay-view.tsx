@@ -59,6 +59,7 @@ import { classNames } from '@/util/utils';
 import { FullscreenPortalScope, useFullscreenElement } from '@/utils/fullscreen';
 
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { TSceneSubject } from '@/features/circuit-viewer/circuit-scene';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { SpikeSession } from '@/features/spike-viewer/hooks/use-spike-session';
@@ -349,6 +350,8 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
   // What the scene is narrowed to, said over it with the way back to every
   // cell: the cell clicked, else those the table and the raster's window keep.
   const [resetRequest, setResetRequest] = useState(0);
+  // A connectivity matrix in the table's place, whose pathway under the pointer the scene colours.
+  const [matrix, setMatrix] = useState<SceneMatrix>();
   const selectedCount = useMemo(() => {
     if (focusedCell) return 1;
     if (!sceneCells) return null;
@@ -556,6 +559,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
         timeCursor={playheadCursor}
         // Docked, the table's header names the population, so the raster's box keeps one line.
         headerStart={docked && !dockedOpen ? populationPill : undefined}
+        onMatrixChange={setMatrix}
       />
     ) : null;
 
@@ -719,6 +723,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
         onCellClick={handleCellClick}
         onEmptyClick={releaseCell}
         onNodeColorsChange={setSceneColors}
+        matrix={matrix}
         spikes={{
           data: spikes ?? undefined,
           timeInMs: seekToMs,
