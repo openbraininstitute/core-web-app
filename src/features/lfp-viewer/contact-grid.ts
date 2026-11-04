@@ -136,16 +136,17 @@ export function contactGrid(positions: Float32Array): ContactGrid | null {
       : Math.min(alongU.step, alongV.step);
 
   const sliceOf = values.map((along, axis) => {
-    if (axis === stack) {
-      const ofContact = new Uint16Array(contacts);
-      members.forEach((plane, index) => {
-        for (const contact of plane) ofContact[contact] = index;
-      });
-      return ofContact;
-    }
-    // Over the tolerance, as a plane offset by half a step lies between two slices: all of its contacts take the next.
-    const start = planes[axis][0] - PLANE_TOLERANCE_UM;
-    return Uint16Array.from(along, (value) => Math.round((value - start) / pitch[axis]));
+    const ofContact = new Uint16Array(contacts);
+    members.forEach((plane, index) => {
+      // Decided once a plane, which may lie half a step between two slices, so that its columns stay whole.
+      const start = plane.reduce((least, contact) => Math.min(least, along[contact]), Infinity);
+      const offset = Math.round((start - planes[axis][0]) / pitch[axis]);
+      for (const contact of plane) {
+        ofContact[contact] =
+          axis === stack ? index : offset + Math.round((along[contact] - start) / pitch[axis]);
+      }
+    });
+    return ofContact;
   }) as Triple<Uint16Array>;
   const slices = sliceOf.map((of) => of.reduce((most, slice) => Math.max(most, slice), 0) + 1);
   if (slices.filter((count) => count >= MIN_SLICES).length < 2) return null;

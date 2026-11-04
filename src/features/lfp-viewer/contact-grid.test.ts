@@ -123,13 +123,15 @@ describe('contactGrid, on what a real array may hold', () => {
     expect(new Set(grid?.sliceOf[2]).size).toBe(zs.length);
   });
 
-  it('keeps a column whole where its plane is offset by half a step, whatever the rounding', () => {
+  it.each([
+    55, 54,
+  ])('keeps a column whole where its plane is offset by about half a step: %d µm of 110', (offset) => {
     const points: number[] = [];
     for (let plane = 0; plane < 2; plane++) {
       for (let x = 0; x < 6; x++) {
         for (let z = 0; z < 6; z++) {
           const jitter = z % 2 === 0 ? 0.01 : -0.01;
-          points.push(plane * 55 + x * 110 + (plane === 1 ? jitter : 0), plane * 50, z * 110);
+          points.push(plane * offset + x * 110 + (plane === 1 ? jitter : 0), plane * 50, z * 110);
         }
       }
     }
