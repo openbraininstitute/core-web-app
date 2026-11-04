@@ -32,6 +32,7 @@ export type AdminLab = {
   created_at: string;
   updated_at: string | null;
   projects_count: number | null;
+  course: { id: string } | null;
   owner_id: string;
   deleted: boolean;
   deleted_at: string | null;
@@ -259,4 +260,39 @@ export type AdminPromotionAnalytics = {
   expired_promotions: number;
   total_redemptions: number;
   total_credits_distributed: number;
+};
+
+export type CourseStatus = 'draft' | 'active' | 'voided';
+
+export type AdminCourse = {
+  id: string;
+  virtual_lab_id: string;
+  virtual_lab_name: string;
+  institution_id: string;
+  institution_name: string;
+  template_project_id: string;
+  status: CourseStatus;
+  start_date: string;
+  last_drop_date: string;
+  end_date: string;
+};
+
+type CourseDates = Pick<AdminCourse, 'start_date' | 'last_drop_date' | 'end_date'>;
+
+export type AdminCourseCreate = CourseDates &
+  Pick<AdminCourse, 'virtual_lab_id' | 'template_project_id' | 'institution_id'>;
+
+// The API refuses a null in any of these.
+export type AdminCourseUpdate = Partial<CourseDates & Pick<AdminCourse, 'institution_id'>>;
+
+export type AdminInstitution = { id: string; name: string; contact_email: string };
+
+export type AdminInstitutionUpdate = Partial<Pick<AdminInstitution, 'name' | 'contact_email'>>;
+
+export type AdminSeatBatch = {
+  batch_id: string;
+  created_at: string;
+  expiry_date: string;
+  number_of_seats: number;
+  seats: { is_consumed: boolean; credit_value: number }[];
 };

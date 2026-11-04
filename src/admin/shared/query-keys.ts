@@ -21,6 +21,11 @@ export const adminQueryKeys = {
   subscriptions: () => [...TENANCY, 'subscriptions'] as const,
   payments: () => [...TENANCY, 'payments'] as const,
   search: ({ query }: { query: string }) => [...TENANCY, 'search', query] as const,
+  courses: ({ query }: { query: string }) => [...TENANCY, 'courses', query] as const,
+  course: ({ courseId }: { courseId: string }) => [...TENANCY, 'course', courseId] as const,
+  courseBatches: ({ courseId }: { courseId: string }) =>
+    [...TENANCY, 'course', courseId, 'batches'] as const,
+  institutions: ({ query }: { query: string }) => [...TENANCY, 'institutions', query] as const,
   billing: () => BILLING,
   plans: () => [...BILLING, 'plans'] as const,
   creditRates: () => [...BILLING, 'credit-rates'] as const,

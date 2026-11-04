@@ -100,11 +100,13 @@ export function AdminRowsGrid<Row>({
   columns,
   rows,
   getRowId,
+  onRowClick,
 }: {
   what: string;
   columns: Array<ISimpleColumn<Row>>;
   rows: Row[];
   getRowId: (row: Row) => string;
+  onRowClick?: (row: Row) => void;
 }) {
   return (
     <div className="border-neutral-2 rounded-lg border bg-white">
@@ -114,6 +116,7 @@ export function AdminRowsGrid<Row>({
         getRowId={getRowId}
         rowHeight={ROW_HEIGHT}
         noRowsText={`No ${what}`}
+        onRowClick={onRowClick}
       />
     </div>
   );
@@ -130,6 +133,7 @@ export function AdminQueryGrid<Row>({
   getRowId: (row: Row) => string;
   queryKey: QueryKey;
   queryFn: () => Promise<Row[]>;
+  onRowClick?: (row: Row) => void;
 }) {
   const { data: rows, error } = useQuery({ queryKey, queryFn });
 

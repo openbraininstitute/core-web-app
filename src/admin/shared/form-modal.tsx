@@ -34,7 +34,7 @@ function fieldControl({ kind = 'text', min, max, options, placeholder }: FormMod
     case 'switch':
       return <Switch />;
     case 'select':
-      return <Select options={options} />;
+      return <Select showSearch optionFilterProp="label" options={options} />;
     case 'datetime':
       return <DatePicker showTime className="w-full" />;
     default:

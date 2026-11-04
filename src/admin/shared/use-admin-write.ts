@@ -7,30 +7,30 @@ import { errorMessage } from '@/utils/error';
 
 import type { QueryKey } from '@tanstack/react-query';
 
-export type AdminWriteOptions<Args> = {
-  write: (args: Args) => Promise<unknown>;
+export type AdminWriteOptions<Args, Result> = {
+  write: (args: Args) => Promise<Result>;
   done: string;
   failed: string;
-  onSuccess?: () => void;
+  onSuccess?: (result: Result) => void;
 };
 
-export function useAdminWrite<Args>({
+export function useAdminWrite<Args, Result>({
   refreshes,
   write,
   done,
   failed,
   onSuccess,
-}: AdminWriteOptions<Args> & { refreshes: QueryKey }) {
+}: AdminWriteOptions<Args, Result> & { refreshes: QueryKey }) {
   const notification = useAppNotification();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: write,
     // Awaited so a dialog stays pending until the page shows the new data.
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await queryClient.invalidateQueries({ queryKey: refreshes });
       notification.success({ message: done, placement: 'topRight' });
-      onSuccess?.();
+      onSuccess?.(result);
     },
     onError: (error) =>
       notification.error({

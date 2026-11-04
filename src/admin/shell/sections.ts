@@ -15,6 +15,8 @@ export const ADMIN_NAV: { label: string; items: AdminNavItem[] }[] = [
       { label: 'Virtual labs', href: `${ADMIN_ROOT}/virtual-labs`, need: 'virtualLab.read' },
       { label: 'Projects', href: `${ADMIN_ROOT}/projects`, need: 'virtualLab.read' },
       { label: 'Users', href: `${ADMIN_ROOT}/users`, need: 'virtualLab.read' },
+      { label: 'Courses', href: `${ADMIN_ROOT}/courses`, need: 'virtualLab.admin' },
+      { label: 'Institutions', href: `${ADMIN_ROOT}/institutions`, need: 'virtualLab.admin' },
     ],
   },
   {

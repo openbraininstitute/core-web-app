@@ -42,6 +42,11 @@ function LabOverview({ lab }: { lab: AdminLab }) {
           `${lab.reference_email} (${lab.email_verified ? 'verified' : 'unverified'})`}
       </Detail>
       <Detail label="Compute cell">{lab.compute_cell}</Detail>
+      {lab.course && (
+        <Detail label="Course">
+          <AdminLink kind="course" id={lab.course.id} />
+        </Detail>
+      )}
       <Detail label="Projects">{lab.projects_count}</Detail>
       <Detail label="Created">{formatDateTime(lab.created_at)}</Detail>
       <Detail label="Updated">{lab.updated_at && formatDateTime(lab.updated_at)}</Detail>
