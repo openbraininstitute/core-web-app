@@ -137,7 +137,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   );
 
   const toolbarSlots = useMemo(
-    () => (props.variant ? undefined : { left: <CircuitViewToggle dataKey={dataKey} /> }),
+    // a scale shows the toggle on the flat list, greyed out, rather than hiding it
+    () => ({ left: <CircuitViewToggle dataKey={dataKey} disabled={!!props.variant} /> }),
     [dataKey, props.variant]
   );
 
