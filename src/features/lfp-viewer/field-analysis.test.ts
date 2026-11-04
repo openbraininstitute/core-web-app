@@ -182,6 +182,14 @@ describe('triggeredAverage', () => {
     expect(result.triggers).toBeGreaterThan(9_000);
   });
 
+  it('counts a volley as one event, however many spikes it holds', () => {
+    const volley = Float64Array.from({ length: 500 }, (_, i) => 200 + i * 0.001);
+    const field = fieldOf([new Float64Array(1000)]);
+    expect(triggeredAverage(field, volley, 20).events).toBe(1);
+    expect(triggeredAverage(field, [100, 300, 500], 20).events).toBe(3);
+    expect(triggeredAverage(field, [500, 100, 300, 101], 20).events).toBe(3);
+  });
+
   it('is flat with no triggers', () => {
     const result = triggeredAverage(fieldOf([new Float64Array(100)]), [], 5);
     expect(result.triggers).toBe(0);

@@ -5,7 +5,7 @@ const MAX_SPECTROGRAM_COLUMNS = 600;
 const MIN_SPECTROGRAM_SEGMENT = 32;
 const MAX_SPECTROGRAM_SEGMENT = 4096;
 const MIN_COHERENCE_SEGMENT = 64;
-const MAX_COHERENCE_SEGMENT = 1 << 16;
+const MAX_COHERENCE_SEGMENT = 1 << 14;
 /** Coherence is 1 at every frequency from a single segment, so it needs many. */
 const COHERENCE_SEGMENTS = 16;
 const MAX_COHERENCE_AVERAGES = 256;
@@ -235,7 +235,22 @@ export type TriggeredAverage = {
   errors: Float32Array[];
   /** How many triggers went in: those with their whole window inside the run, at most 10,000. */
   triggers: number;
+  /** How many separate moments they fall at, half a window apart: a volley is one, however many spikes. */
+  events: number;
 };
+
+function separateEvents(centres: readonly number[], apart: number): number {
+  const sorted = [...centres].sort((a, b) => a - b);
+  let events = 0;
+  let last = -Infinity;
+  for (const centre of sorted) {
+    if (centre - last >= apart) {
+      events++;
+      last = centre;
+    }
+  }
+  return events;
+}
 
 /** The field around each trigger, averaged: `field` at full resolution, a row per contact. */
 export function triggeredAverage(
@@ -282,6 +297,7 @@ export function triggeredAverage(
     means,
     errors,
     triggers: picked.length,
+    events: separateEvents(picked, half),
   };
 }
 

@@ -43,7 +43,7 @@ const axis = (title: string, extra: Partial<Layout['xaxis']> = {}) => ({
 });
 
 /** Rows of a row-major matrix, as Plotly takes them. */
-function rowsOf(values: ArrayLike<number> & { subarray?: unknown }, rows: number, columns: number) {
+function rowsOf(values: ArrayLike<number>, rows: number, columns: number) {
   return Array.from({ length: rows }, (_, r) =>
     Array.from({ length: columns }, (_, c) => values[r * columns + c])
   );
@@ -53,11 +53,9 @@ function rowsOf(values: ArrayLike<number> & { subarray?: unknown }, rows: number
 export function spectrogramFigure({
   result,
   window,
-  colours = POWER_COLOURS,
 }: {
   result: Spectrogram;
   window: [number, number];
-  colours?: ColourStops;
 }): Figure {
   const { times, frequencies, decibels } = result;
   const columns = times.length;
@@ -84,7 +82,7 @@ export function spectrogramFigure({
         zmin: floor,
         zmax: top,
         zsmooth: false,
-        colorscale: colours,
+        colorscale: POWER_COLOURS,
         colorbar: { ...COLOUR_BAR, title: { text: 'dB', side: 'right', font: { size: 10 } } },
         hovertemplate: '%{x:.1f} ms · %{y:.0f} Hz · %{z:.1f} dB<extra></extra>',
       },
@@ -152,8 +150,6 @@ export function correlationFigure({
     },
   };
 }
-
-const NEUTRAL = '#334155';
 
 /** How well each contact follows the reference, frequency by frequency. */
 export function coherenceFigure({
@@ -288,8 +284,9 @@ export function triggeredFigure({
 }): Figure {
   const x = Array.from(result.lags);
   const firstColour = PICK_COLORS[0];
+  // Spikes at one moment share one stretch of the field: their spread says nothing.
   const band =
-    contacts.length > 0
+    contacts.length > 0 && result.events > 1
       ? [
           {
             type: 'scatter',
@@ -325,7 +322,7 @@ export function triggeredFigure({
       showlegend: contacts.length > 1,
       legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 10 } },
       xaxis: axis('Time from the spike (ms)'),
-      yaxis: axis('Mean field (µV)'),
+      yaxis: axis(result.events > 1 ? 'Mean field (µV)' : 'Field (µV)'),
       shapes: [
         {
           type: 'line',
@@ -334,7 +331,7 @@ export function triggeredFigure({
           yref: 'paper',
           y0: 0,
           y1: 1,
-          line: { color: NEUTRAL, width: 1, dash: 'dot' },
+          line: { color: MEAN_INK, width: 1, dash: 'dot' },
         },
       ],
     },

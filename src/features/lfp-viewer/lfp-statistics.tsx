@@ -4,6 +4,7 @@ import { Spin } from 'antd';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useState } from 'react';
 
+import { AssetLabel } from '@/api/entitycore/types/shared/global';
 import { DIVERGING_COLOURS } from '@/features/lfp-viewer/colour-scale';
 import {
   arrayAxis,
@@ -57,7 +58,6 @@ const HALF_WINDOWS_MS = [5, 10, 20, 50, 100];
 const DEFAULT_HALF_WINDOW_MS = 20;
 /** How often a plot of the player's time is drawn again. */
 const CURSOR_REDRAW_MS = 100;
-const INPUT_SPIKES = 'replay_spikes';
 
 type PlotKind =
   | 'psd'
@@ -322,10 +322,10 @@ function TriggeredPlot(props: PlotProps) {
         options={spikeFiles.map((f) => ({
           value: f.asset.id,
           label:
-            f.asset.label === INPUT_SPIKES
+            f.asset.label === AssetLabel.replay_spikes
               ? (f.asset.path.split('/').at(-1) ?? f.asset.path).replace(/\.h5$/i, '')
               : 'Circuit spikes',
-          detail: f.asset.label === INPUT_SPIKES ? 'Input' : undefined,
+          detail: f.asset.label === AssetLabel.replay_spikes ? 'Input' : undefined,
         }))}
         onChange={setChosenId}
       />
@@ -419,7 +419,9 @@ function TriggeredFigure({
       controls={controls}
       note={
         result
-          ? `${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes`
+          ? `${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes${
+              result.events === 1 ? ' · one moment, so a single trial and not an average' : ''
+            }`
           : undefined
       }
       help="The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks"
