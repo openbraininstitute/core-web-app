@@ -45,8 +45,8 @@ vi.mock('@/ui/segments/workflows/elements/category-menu', async () => {
       <>
         <MenuItem
           testId="card"
-          title={`picked: ${current}`}
-          value={current}
+          title={`lit: ${current}`}
+          value="simulate"
           disabled={false}
           active={current !== null}
           onClick={onItemClick}
@@ -86,30 +86,31 @@ async function page() {
   expect(screen.getByTestId('types')).toBeInTheDocument();
 }
 
-function expectCollapsed() {
+async function expectCollapsed() {
+  expect(await screen.findByText('lit: null')).toBeInTheDocument();
   expect(screen.queryByTestId('types')).toBeNull();
-  expect(screen.getByTestId('card')).toHaveTextContent('picked: simulate');
 }
-function expectOpen() {
+async function expectOpen() {
+  await act(async () => {});
   expect(screen.getByTestId('types')).toBeInTheDocument();
-  expect(screen.getByTestId('card')).toHaveTextContent('picked: simulate');
+  expect(screen.getByTestId('card')).toHaveTextContent('lit: simulate');
 }
 
-describe('the workflows page’s Type row', () => {
-  it('shuts on a click on the top window’s white space, the category staying picked', async () => {
+describe('the workflows page’s top window', () => {
+  it('deselects the category and shuts the Type row on a click on its white space', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
 
-    expectCollapsed();
+    await expectCollapsed();
   });
 
-  it('shuts on a click on a heading, which is no control', async () => {
+  it('does so on a click on a heading, which is no control', async () => {
     await page();
 
     fireEvent.click(screen.getByTestId('heading'));
 
-    expectCollapsed();
+    await expectCollapsed();
   });
 
   it('stays through a click on a card, a disabled one or a button', async () => {
@@ -119,42 +120,28 @@ describe('the workflows page’s Type row', () => {
     fireEvent.click(screen.getByTestId('disabled-card'));
     fireEvent.click(screen.getByTestId('carousel-button'));
 
-    expectOpen();
+    await expectOpen();
   });
 
-  it('shuts as the pointer comes over the table, the category staying picked', async () => {
+  it('is left alone by the table, under the pointer or in use', async () => {
     await page();
 
     fireEvent.pointerEnter(screen.getByTestId('workflow-activity-content'));
-
-    expectCollapsed();
-  });
-
-  it('shuts on typing in the table', async () => {
-    await page();
-
-    fireEvent.keyDown(screen.getByLabelText('search'), { key: 'a' });
-
-    expectCollapsed();
-  });
-
-  it('stays while the table takes focus of itself, as its search box does on mounting', async () => {
-    await page();
-
     fireEvent.focus(screen.getByLabelText('search'));
+    fireEvent.keyDown(screen.getByLabelText('search'), { key: 'a' });
+    fireEvent.click(screen.getByLabelText('search'));
 
-    expectOpen();
+    await expectOpen();
   });
 
-  it('opens again on a click on the category', async () => {
+  it('opens again on a click on a category', async () => {
     await page();
-    fireEvent.pointerEnter(screen.getByTestId('workflow-activity-content'));
-    expectCollapsed();
+    fireEvent.click(screen.getByTestId('workflow-scrollable-selector'));
+    await expectCollapsed();
 
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('card'));
-    });
+    fireEvent.click(screen.getByTestId('card'));
 
-    expectOpen();
+    expect(await screen.findByText('lit: simulate')).toBeInTheDocument();
+    expect(screen.getByTestId('types')).toBeInTheDocument();
   });
 });
