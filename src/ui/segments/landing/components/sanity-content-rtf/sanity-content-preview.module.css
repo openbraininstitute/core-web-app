@@ -70,3 +70,13 @@
     order: 1;
   }
 }
+
+/* Where the page is held a section at a time, the band is the whole screen, over its section's padding. */
+@media (min-width: 768px) {
+  :global(.landing-page-snap) .sanityContentPreview {
+    min-height: 100dvh;
+    margin: -64px 0 -48px;
+    padding: 0;
+    align-content: center;
+  }
+}

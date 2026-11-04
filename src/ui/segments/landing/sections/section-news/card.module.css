@@ -111,3 +111,22 @@
     width: 100%;
   }
 }
+
+/* Two to a screen on the news page. */
+@media (min-width: 768px) {
+  .card > h1 {
+    margin-bottom: 0.5em;
+  }
+
+  .subtitle {
+    margin-bottom: 0.8em;
+  }
+
+  .content {
+    height: 196px;
+  }
+
+  .text > div > span {
+    -webkit-line-clamp: 4;
+  }
+}

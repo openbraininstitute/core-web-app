@@ -139,6 +139,14 @@
   place-items: center;
 }
 
+/* A whole screen, where the page is held a section at a time. */
+@media (min-width: 768px) {
+  :global(.landing-page-snap) .withMedia,
+  :global(.landing-page-snap) .wordsOnly {
+    min-height: 100dvh;
+  }
+}
+
 /* Upright on a phone, as the walkthrough's screens: the picture across the page, and the words under it. */
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .withMedia {

@@ -476,7 +476,7 @@
   }
 
   @media (min-width: 768px) {
-    html:has(.landing-features-snap) {
+    html:has(.landing-page-snap) {
       scroll-snap-type: y mandatory;
     }
   }

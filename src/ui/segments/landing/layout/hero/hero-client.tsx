@@ -39,7 +39,10 @@ export default function HeroClient({ className, section, data }: HeroClientProps
   const sectionSlug = getSection(section).slug.replace(/^\//, '') || 'home';
   const heroTestIdPrefix = `landing-${sectionSlug}-hero`;
   return (
-    <div className={classNames(className, styles.hero, hasMedia ? styles.withMedia : styles.wordsOnly)}>
+    <div
+      data-page-section
+      className={classNames(className, styles.hero, hasMedia ? styles.withMedia : styles.wordsOnly)}
+    >
       {hasMedia && (
       <div className={styles.media}>
         {backgroundType === 'video' && (

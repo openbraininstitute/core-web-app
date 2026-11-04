@@ -155,3 +155,10 @@
     margin-left: 0;
   }
 }
+
+/* A stop for a page held a section at a time: without one, the scroll could never reach the footer. */
+@media (min-width: 768px) {
+  .footerPanel {
+    scroll-snap-align: end;
+  }
+}
