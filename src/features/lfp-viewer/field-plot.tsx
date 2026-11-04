@@ -471,7 +471,7 @@ export function FieldPlot({
             }}
           />
         )}
-        {eventsHover && <TimelineCard hover={eventsHover} />}
+        {eventsHover && <TimelineCard hover={eventsHover} raster={false} />}
         {hover && !eventsHover && (
           <div className="pointer-events-none absolute top-1 right-3 rounded bg-white/90 px-1.5 py-0.5 text-[11px] text-neutral-600 tabular-nums shadow-sm">
             {hover}

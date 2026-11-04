@@ -178,8 +178,7 @@ describe('triggeredAverage', () => {
   it('thins triggers to at most 10,000', () => {
     const triggers = Float64Array.from({ length: 30_000 }, (_, i) => i / 10 + 20);
     const result = triggeredAverage(fieldOf([new Float64Array(4000)]), triggers, 5);
-    expect(result.triggers).toBeLessThanOrEqual(10_000);
-    expect(result.triggers).toBeGreaterThan(9_000);
+    expect(result.triggers).toBe(10_000);
   });
 
   it('counts a volley as one event, however many spikes it holds', () => {

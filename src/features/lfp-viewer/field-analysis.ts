@@ -265,8 +265,11 @@ export function triggeredAverage(
     const centre = Math.round((triggers[i] - field.start) / field.binMs);
     if (centre - half >= 0 && centre + half < field.bins) usable.push(centre);
   }
-  const stride = Math.max(1, Math.ceil(usable.length / MAX_TRIGGERS));
-  const picked = usable.filter((_, i) => i % stride === 0);
+  const count = Math.min(usable.length, MAX_TRIGGERS);
+  const picked = Array.from(
+    { length: count },
+    (_, i) => usable[Math.floor((i * usable.length) / count)]
+  );
 
   const means: Float32Array[] = [];
   const errors: Float32Array[] = [];
@@ -282,7 +285,6 @@ export function triggeredAverage(
         squares[i] += v * v;
       }
     }
-    const count = picked.length;
     means.push(Float32Array.from(sum, (s) => (count > 0 ? s / count : 0)));
     errors.push(
       Float32Array.from(sum, (s, i) => {

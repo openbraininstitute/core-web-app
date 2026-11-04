@@ -98,7 +98,7 @@ type FrameProps = {
   figure: Figure | null;
   /** Said in the plot's place where there is no figure; a spinner if not given. */
   empty?: string;
-  timeline?: { events: readonly TimelineEvent[]; timeCursor: TimeCursor };
+  timeline?: { events: readonly TimelineEvent[]; timeCursor: TimeCursor; raster: boolean };
 };
 
 function PlotFrame({ picker, controls, note, help, visible, figure, empty, timeline }: FrameProps) {
@@ -304,7 +304,7 @@ function SpectrogramPlot({
       visible={visible}
       figure={figure}
       empty={empty}
-      timeline={{ events: timeline, timeCursor }}
+      timeline={{ events: timeline, timeCursor, raster: false }}
     />
   );
 }
@@ -419,12 +419,12 @@ function TriggeredFigure({
       controls={controls}
       note={
         result
-          ? `${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes${
+          ? `${result.triggers.toLocaleString()} of ${(triggers?.length ?? 0).toLocaleString()} spikes used${
               result.events === 1 ? ' · one moment, so a single trial and not an average' : ''
             }`
           : undefined
       }
-      help="The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks"
+      help="The field around each spike, averaged, as recorded: the selected contact with its standard error, and those ticked. Spikes whose window leaves the recording are left out, and at most 10,000 are used, evenly. Spikes driven by a shared stimulus share its response, so read this beside the stimulus marks"
       visible={visible}
       figure={figure}
       empty={empty}
@@ -665,7 +665,7 @@ function CsdPlot({
       visible={visible}
       figure={figure}
       empty={failed ? FAILED : line ? undefined : 'Needs contacts evenly spaced on a line'}
-      timeline={{ events: timeline, timeCursor }}
+      timeline={{ events: timeline, timeCursor, raster: false }}
     />
   );
 }

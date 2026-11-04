@@ -22,7 +22,14 @@ const COLOR = {
  * each block it stands for with every one of its settings - side by side
  * where there are several. On the page, not in the raster, which would clip it.
  */
-export function TimelineCard({ hover }: { hover: EventsHover }) {
+export function TimelineCard({
+  hover,
+  raster = true,
+}: {
+  hover: EventsHover;
+  /** Whether there is a raster for a click to set the window of. */
+  raster?: boolean;
+}) {
   const { group, clientX, clientY } = hover;
   const blocks = group.events;
   const columns = blocks.length === 1 ? 1 : blocks.length <= 4 ? 2 : 3;
@@ -57,11 +64,13 @@ export function TimelineCard({ hover }: { hover: EventsHover }) {
           <BlockSection key={`${event.name}-${i}`} event={event} framed={blocks.length > 1} />
         ))}
       </div>
-      <div className="mt-2 text-[10px] text-neutral-400">
-        {blocks.every((e) => e.end === e.start)
-          ? 'Click to start the raster’s window here'
-          : `Click to set the raster to ${blocks.length > 1 ? 'their window' : 'this window'}`}
-      </div>
+      {raster && (
+        <div className="mt-2 text-[10px] text-neutral-400">
+          {blocks.every((e) => e.end === e.start)
+            ? 'Click to start the raster’s window here'
+            : `Click to set the raster to ${blocks.length > 1 ? 'their window' : 'this window'}`}
+        </div>
+      )}
     </div>,
     fullscreenPopupContainer()
   );

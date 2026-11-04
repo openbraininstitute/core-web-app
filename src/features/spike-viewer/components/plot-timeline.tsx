@@ -40,6 +40,7 @@ export function PlotTimeline({
   events,
   timeCursor,
   onHoverChange,
+  raster,
 }: {
   /** The Plotly graph once it has drawn; nothing is shown before. */
   graph: HTMLElement | null;
@@ -47,6 +48,8 @@ export function PlotTimeline({
   timeCursor?: TimeCursor;
   /** Told whether a marker is under the pointer, so the plot's own card can give way. */
   onHoverChange?: (hovering: boolean) => void;
+  /** Whether there is a raster for a click on a marker to set the window of. */
+  raster?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -207,7 +210,7 @@ export function PlotTimeline({
           style={{ color: TIME_CURSOR_COLOR }}
         />
       </div>
-      {hover && <TimelineCard hover={hover} />}
+      {hover && <TimelineCard hover={hover} raster={raster} />}
     </>
   );
 }
