@@ -2,13 +2,17 @@
  * Draws boxes of a field through the cells: each has its own size, colour and opacity, is drawn over what is nearer the
  * eye, and is blended over what is behind it. A box with no opacity draws nothing. Unlike the dots of `electrodes.ts`,
  * a box has its size in µm whatever the zoom, and only the faces towards the eye are drawn, so that a box counts once.
+ *
+ * A layer may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: a face at its
+ * own opacity where nothing is nearer the eye, and fainter where something is. The hidden pass goes first, which keeps
+ * the blending far to near: at any pixel, what is hidden lies behind the surface there, and the rest in front of it.
  */
 
 import * as THREE from 'three';
 
 import { lowerBound } from '@/utils/sorted';
 
-import { blendOver, growRound } from './electrodes';
+import { blendOver, drawWhereHidden, growRound } from './electrodes';
 
 import type { Vec3, VoxelFrame, VoxelLayer } from '../types';
 
@@ -22,6 +26,8 @@ export const LEAST_OPACITY = 0.004;
 /** The faces are shaded from this direction, so that a box reads as one: from this much light to all of it. */
 export const SHADED_FROM = [0.35, 0.85, 0.4] as const;
 export const SHADE_LEAST = 0.78;
+/** How much of its opacity a face keeps where something nearer the eye hides it. */
+export const HIDDEN_SHARE = 0.35;
 
 const VERTEX = /* glsl */ `
 in vec3 aCentre;
@@ -38,17 +44,31 @@ void main() {
 
 // The colours as they came, in sRGB: no tone mapping and no conversion.
 const FRAGMENT = /* glsl */ `
+uniform float uShare;
 in vec4 vLook;
 
 void main() {
-	gl_FragColor = vLook;
+	gl_FragColor = vec4( vLook.rgb, vLook.a * uShare );
 }
 `;
 
-export function voxelMaterial(): THREE.ShaderMaterial {
-  const material = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT });
+function voxelMaterial(share = 1): THREE.ShaderMaterial {
+  const material = new THREE.ShaderMaterial({
+    uniforms: { uShare: { value: share } },
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+  });
   blendOver(material);
   return material;
+}
+
+/** The boxes' materials: through the cells, and among them where nothing is nearer the eye and where something is. */
+export function voxelMaterials() {
+  const voxelAmong = voxelMaterial();
+  voxelAmong.depthTest = true;
+  const voxelHidden = voxelMaterial(HIDDEN_SHARE);
+  drawWhereHidden(voxelHidden);
+  return { voxel: voxelMaterial(), voxelAmong, voxelHidden };
 }
 
 /** One box, `instances` times; the shaders place each by the attributes `writeVoxels` fills. */

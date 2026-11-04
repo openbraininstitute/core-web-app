@@ -17,7 +17,7 @@ import {
 import * as THREE from 'three/webgpu';
 
 import { blendOver, drawWhereHidden, FAINT_FAR, FAINT_NEAR, RING_PX } from '../electrodes';
-import { LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
+import { HIDDEN_SHARE, LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
@@ -95,7 +95,7 @@ function dotMaterial(
 }
 
 /** The boxes of `voxels.ts` on WebGPU, with their colours written as given, in sRGB. */
-function voxelMaterial(): THREE.MeshBasicNodeMaterial {
+function voxelMaterial(share = 1): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
   const shade = float(SHADE_LEAST).add(
     float(1 - SHADE_LEAST).mul(max(dot(normalGeometry, vec3(...SHADED_FROM)), 0))
@@ -104,7 +104,7 @@ function voxelMaterial(): THREE.MeshBasicNodeMaterial {
   material.positionNode = attribute('aCentre', 'vec3').add(
     positionGeometry.mul(attribute('aSize', 'vec3')).mul(step(LEAST_OPACITY, look.a))
   );
-  material.colorNode = vec4(look.xyz.mul(shade), look.a);
+  material.colorNode = vec4(look.xyz.mul(shade), look.a.mul(share));
   blendOver(material);
   return material;
 }
@@ -115,11 +115,17 @@ export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
   contactAmong.depthWrite = true;
   const contactHidden = dotMaterial(u, u.hiddenContacts, pixelRatio, { among: true });
   drawWhereHidden(contactHidden);
+  const voxelAmong = voxelMaterial();
+  voxelAmong.depthTest = true;
+  const voxelHidden = voxelMaterial(HIDDEN_SHARE);
+  drawWhereHidden(voxelHidden);
   return {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
     contactAmong,
     contactHidden,
     voxel: voxelMaterial(),
+    voxelAmong,
+    voxelHidden,
     synapse: dotMaterial(u, u.synapses, pixelRatio, { among: true }),
     marker: dotMaterial(u, u.markers, pixelRatio),
   };

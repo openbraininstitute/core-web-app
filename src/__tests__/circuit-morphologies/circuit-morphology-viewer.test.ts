@@ -12,6 +12,7 @@ import {
 } from '@/features/circuit-viewer/morphologies/engine/impostors';
 import { BLOCK, roomFor } from '@/features/circuit-viewer/morphologies/engine/segment-arena';
 import { NEON } from '@/features/circuit-viewer/morphologies/engine/spike-light';
+import { HIDDEN_SHARE } from '@/features/circuit-viewer/morphologies/engine/voxels';
 import {
   type MortonSorted,
   mortonSorted,
@@ -34,6 +35,8 @@ import type {
   CircuitSomas,
   ElectrodeGroup,
   MorphologyChunks,
+  VoxelFrame,
+  VoxelLayer,
 } from '@/features/circuit-viewer/morphologies/types';
 import type { Sections } from '@/features/scan-config/types';
 import type { Look } from '@/features/viewer-3d/engine/looks';
@@ -674,6 +677,75 @@ describe('the circuit morphology viewer', () => {
     const fade = faintMaterial.uniforms.uFade.value;
     expect([fade.x, fade.y, fade.z]).toEqual([5, 10, 0]);
     expect(fade.w).toBeCloseTo(Math.hypot(5, 10) / Math.sqrt(3));
+  });
+
+  describe('boxes among the cells', () => {
+    const layer = (boxes: number, among: boolean): VoxelLayer => ({
+      centres: new Float32Array(3 * boxes).fill(100),
+      sizes: new Float32Array(3 * boxes).fill(10),
+      looks: new Float32Array(4 * boxes).fill(0.5),
+      lattice: {
+        axes: [0, 1, 2],
+        planes: Uint32Array.of(0, boxes),
+        rows: Uint32Array.from({ length: boxes + 1 }, (_, i) => i),
+      },
+      among,
+    });
+    const hiddenOf = (inner: Internals) => inner.scene.getObjectByName('hidden voxels') as Quads;
+    const boxesOf = (inner: Internals) => inner.scene.getObjectByName('voxels') as Quads;
+
+    it('draws them whole where nothing is nearer, fainter first where something is, in one order', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(2, true));
+
+      const whole = boxesOf(inner);
+      const hidden = hiddenOf(inner);
+      expect(hidden.renderOrder).toBeLessThan(whole.renderOrder);
+      expect(hidden.geometry).toBe(whole.geometry);
+
+      const wholeMaterial = whole.material as THREE.ShaderMaterial;
+      expect(wholeMaterial.depthFunc).toBe(THREE.LessEqualDepth);
+      expect([wholeMaterial.depthTest, wholeMaterial.depthWrite]).toEqual([true, false]);
+      expect(wholeMaterial.uniforms.uShare.value).toBe(1);
+
+      const hiddenMaterial = hidden.material as THREE.ShaderMaterial;
+      expect(hiddenMaterial.depthFunc).toBe(THREE.GreaterDepth);
+      expect([hiddenMaterial.depthTest, hiddenMaterial.depthWrite]).toEqual([true, false]);
+      expect(hiddenMaterial.blending).toBe(THREE.CustomBlending);
+      expect(hiddenMaterial.uniforms.uShare.value).toBe(HIDDEN_SHARE);
+    });
+
+    it('follows the boxes into a larger mesh, and turns with them', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(1, true));
+      const frame: VoxelFrame = [
+        [0, 1, 0],
+        [-1, 0, 0],
+        [0, 0, 1],
+      ];
+      viewer.setVoxels({ ...layer(3, true), frame });
+
+      expect(hiddenOf(inner).geometry).toBe(boxesOf(inner).geometry);
+      expect(hiddenOf(inner).geometry.instanceCount).toBe(3);
+      expect(hiddenOf(inner).quaternion.equals(boxesOf(inner).quaternion)).toBe(true);
+      expect(hiddenOf(inner).quaternion.w).not.toBe(1);
+    });
+
+    it('stops with them, and draws a layer that is not among the cells over them all alike', () => {
+      const { viewer, inner } = make();
+      viewer.setData(circuit());
+      viewer.setVoxels(layer(1, true));
+      const hidden = hiddenOf(inner);
+
+      viewer.setVoxels(null);
+      expect([boxesOf(inner).visible, hidden.visible]).toEqual([false, false]);
+
+      viewer.setVoxels(layer(1, false));
+      expect(hidden.visible).toBe(false);
+      expect((boxesOf(inner).material as THREE.ShaderMaterial).depthTest).toBe(false);
+    });
   });
 
   it('leaves the passes among the cells undrawn for a host that asks for none', () => {

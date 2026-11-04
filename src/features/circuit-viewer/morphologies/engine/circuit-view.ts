@@ -329,6 +329,9 @@ export interface CircuitMaterials {
   contactAmong: THREE.Material;
   contactHidden: THREE.Material;
   voxel: THREE.Material;
+  /** Boxes among the cells, where nothing is nearer the eye and where something is. */
+  voxelAmong: THREE.Material;
+  voxelHidden: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
 }
@@ -457,6 +460,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   private voxelLayer: VoxelLayer | null = null;
   private voxelOrder: VoxelOrder | null = null;
   private voxels: Quads | null = null;
+  /** The boxes of `voxels` again, where something nearer the eye hides them. */
+  private hiddenVoxels: Quads | null = null;
   private synapseGroups: readonly SynapseGroup[] = [];
   protected synapseUniforms = {
     uViewport: this.uniforms.uViewport,
@@ -1683,14 +1688,21 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     const layer = this.voxelLayer;
     const count = layer ? layer.centres.length / 3 : 0;
     if (count === 0 && !this.voxels?.visible) return;
-    const changed = !this.voxels || count !== this.voxels.geometry.instanceCount;
+    const among = layer?.among === true;
+    const material = among ? this.materials.voxelAmong : this.materials.voxel;
+    const changed =
+      !this.voxels ||
+      count !== this.voxels.geometry.instanceCount ||
+      material !== this.voxels.material;
     const mesh = this.fitted(this.voxels, 'aCentre', count, () => voxelGeometry(count), {
-      material: this.materials.voxel,
+      material,
       name: 'voxels',
       order: 0.75,
     });
+    mesh.material = material;
     this.voxels = mesh;
     turnToVoxelFrame(mesh, layer?.frame);
+    this.drawHiddenVoxels(mesh, among, layer);
     const order = this.voxelOrder;
     order?.seenFrom(this.voxelEye());
     const written =
@@ -1698,6 +1710,21 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
       order !== null &&
       writeVoxels(layer, this.centre, order.boxes, mesh.geometry);
     if (written || changed) this.invalidate();
+  }
+
+  /** Draws the boxes of `mesh`, in the order written there, before it, where something nearer the eye hides them. */
+  private drawHiddenVoxels(mesh: Quads, among: boolean, layer: VoxelLayer | null): void {
+    if (!among && !this.hiddenVoxels) return;
+    if (among && this.hiddenVoxels?.geometry !== mesh.geometry) {
+      if (this.hiddenVoxels) this.letGo(this.hiddenVoxels);
+      this.hiddenVoxels = quads(mesh.geometry, this.materials.voxelHidden);
+      this.hiddenVoxels.name = 'hidden voxels';
+      this.hiddenVoxels.renderOrder = 0.7;
+      this.scene.add(this.hiddenVoxels);
+    }
+    const hidden = this.hiddenVoxels as Quads;
+    hidden.visible = among && mesh.visible;
+    turnToVoxelFrame(hidden, layer?.frame);
   }
 
   /** Where the boxes are seen from, in their frame: for an orthographic view, from far back along its direction. */

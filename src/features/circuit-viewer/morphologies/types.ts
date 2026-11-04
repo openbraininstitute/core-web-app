@@ -239,6 +239,8 @@ export interface VoxelLayer {
   lattice: VoxelLattice;
   /** How the layer's frame is turned from the circuit's, which it is otherwise. */
   frame?: VoxelFrame | null;
+  /** Drawn among the cells, fainter where they hide it, rather than over them all alike. */
+  among?: boolean;
 }
 
 /** Synapses in one colour: three floats each, x, y and z in µm in the circuit's frame. */

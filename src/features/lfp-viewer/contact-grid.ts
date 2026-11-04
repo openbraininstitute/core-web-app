@@ -373,5 +373,5 @@ export function voxelsOf(
     looks.set(LEVEL_RGB[level], i * 4);
     looks[i * 4 + 3] = tiled ? TILE_OPACITY : LEVEL_OPACITY[level];
   });
-  return { centres, sizes, looks, lattice, frame };
+  return { centres, sizes, looks, lattice, frame, among: true };
 }
