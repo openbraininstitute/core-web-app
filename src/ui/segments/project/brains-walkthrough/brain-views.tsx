@@ -42,6 +42,7 @@ import { Turntable } from './turntable';
 
 import type { TBrainMesh } from './brains';
 
+import getStarted from './get-started.module.css';
 import grid from './opening-grid.module.css';
 import labs from './virtual-labs.module.css';
 
@@ -375,7 +376,9 @@ export function VirtualLabsPoints() {
             className={labs.benefit}
             style={
               entered
-                ? { animation: `fade-in 600ms ease-out ${POINTS_MS.first + i * POINTS_MS.gap}ms both` }
+                ? {
+                    animation: `fade-in 600ms ease-out ${POINTS_MS.first + i * POINTS_MS.gap}ms both`,
+                  }
                 : { opacity: 0 }
             }
           >
@@ -418,8 +421,17 @@ export function EarlyAdopters() {
     queryKey: ['walkthrough', 'early-adopters'],
     queryFn: getAdoptersContent,
   });
+  if (!adopters.length) return null;
   return (
-    <div className="absolute inset-y-[10vh] right-[clamp(110px,12vw,210px)] left-[2%] flex items-center justify-center">
+    <div className={getStarted.customers}>
+      <div className="w-full">
+        <h2 className="text-primary-9 text-[24px] leading-[1.25] font-semibold stacked:text-[20px]">
+          Our customers
+        </h2>
+        <p className="mt-[6px] text-[14px] leading-[1.5] text-neutral-600 stacked:text-[13px]">
+          Organizations already using the Open Brain Platform.
+        </p>
+      </div>
       <ul className="flex w-full flex-wrap justify-center gap-[clamp(14px,1.6vw,24px)]">
         {adopters.map((adopter, i) => (
           <li
@@ -506,24 +518,13 @@ export function StageVideo({
   );
 }
 
-/** Into the platform, or a sign-up first: the walkthrough's own buttons, large. */
+/** One clear next step into the platform's sign-in and account creation flow. */
 export function StartNow() {
   const actions = useWalkthroughActions();
   return (
-    <div className="flex flex-wrap items-center gap-[14px] pt-[10px]">
-      <button
-        type="button"
-        onClick={actions?.signUp}
-        className="bg-green-main rounded-full px-[30px] py-[14px] text-[17px] leading-[22px] font-semibold text-white shadow-[0_6px_18px_rgba(0,140,5,0.28)] transition-[filter] hover:brightness-110"
-      >
-        Sign up
-      </button>
-      <button
-        type="button"
-        onClick={actions?.enter}
-        className="rounded-full border-2 border-[#002766] px-[28px] py-[12px] text-[17px] leading-[22px] font-semibold text-[#002766] transition-colors hover:bg-[#002766] hover:text-white"
-      >
-        Enter the platform
+    <div className="pt-[10px]">
+      <button type="button" onClick={actions?.enter} className={labs.button}>
+        Try the platform <span aria-hidden="true">↗</span>
       </button>
     </div>
   );

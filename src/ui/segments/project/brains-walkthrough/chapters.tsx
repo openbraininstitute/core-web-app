@@ -6,6 +6,7 @@ import { ChapterAction } from './chapter-action';
 
 import type { IWalkthroughChapter } from '@/ui/segments/project/walkthrough/walkthrough';
 
+import getStarted from './get-started.module.css';
 import mosaic from './model-mosaic.module.css';
 import grid from './opening-grid.module.css';
 import labs from './virtual-labs.module.css';
@@ -212,6 +213,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     scene: 'join',
     title: 'Get started',
     hero: true,
+    column: getStarted.words,
     body: (
       <>
         <p>Free to start, with 100 credits for your first simulations.</p>

@@ -1,0 +1,37 @@
+.words,
+.customers {
+  --join-top: clamp(120px, 36vh, 340px);
+}
+
+.customers {
+  position: absolute;
+  top: var(--join-top);
+  left: 2%;
+  right: clamp(110px, 12vw, 210px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+@media (min-width: 64rem), (orientation: landscape) {
+  .words {
+    align-self: flex-start;
+    padding-top: var(--join-top);
+  }
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .customers {
+    inset-inline: 20px;
+    top: 88px;
+    gap: 18px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .words,
+  .customers {
+    --join-top: 100px;
+  }
+}
