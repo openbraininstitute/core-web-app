@@ -26,6 +26,7 @@ const h = vi.hoisted(() => {
     setData = vi.fn();
     setCellColors = vi.fn();
     setDefaultColor = vi.fn();
+    setBlueRamp = vi.fn();
     zoom = 1;
     setZoom = vi.fn();
     pixelScaleListeners = new Set<(scale: number | null) => void>();

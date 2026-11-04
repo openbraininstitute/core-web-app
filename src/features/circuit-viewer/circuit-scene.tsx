@@ -55,6 +55,7 @@ import { PaneResizeHandle } from './pane-resize-handle';
 import { useSceneTablePane } from './scene-table-pane';
 import { useCellFocus } from './use-cell-focus';
 
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -153,6 +154,10 @@ interface ICircuitSceneOptions {
   colorByTarget?: HTMLElement | null;
   /** What colouring by no property is called in the colour-by control, where "All" would mislead. */
   colorByNoneLabel?: string;
+  /** The colour of cells coloured by no property, as it is, where blue would mislead; blue when omitted. */
+  uncolouredCells?: string;
+  /** A key of the host's: under the colour-by key, or in that corner where there is none. */
+  legend?: ReactNode;
   /**
    * One flag per cell of the population on show, 0 for a cell filtered out:
    * left undrawn, but kept in its place, so spikes still find theirs.
@@ -247,6 +252,8 @@ export function CircuitScene({
   fullscreen,
   colorByTarget,
   colorByNoneLabel,
+  uncolouredCells,
+  legend,
   shownCells,
   highlightedCell,
   onCellClick,
@@ -483,6 +490,7 @@ export function CircuitScene({
     morphologiesNote,
     defaultRepresentation: smallForThePack ? 'morphologies' : undefined,
     defaultNeuronOpacity,
+    uncolouredCells,
     population,
     subject: memodel,
   });
@@ -711,6 +719,7 @@ export function CircuitScene({
             highlightedCell: sceneHighlightedCell,
             nodeColors: overrideColors ?? (enableColorBy ? nodeColors : undefined),
             defaultColor,
+            blueRamp: uncolouredCells === undefined,
             recededColor,
             onPopulationClick: handlePopulationClick,
             onSubjectCellClick: sceneCellClick,
@@ -728,6 +737,7 @@ export function CircuitScene({
       enableColorBy,
       nodeColors,
       defaultColor,
+      uncolouredCells,
       recededColor,
       handlePopulationClick,
       sceneCellClick,
@@ -855,6 +865,12 @@ export function CircuitScene({
           zoom: config.showZoomSlider ? zoom : undefined,
         }}
       />
+      {legend &&
+        (chromeColorBy ? (
+          legendSlot && createPortal(legend, legendSlot)
+        ) : (
+          <div className="pointer-events-none absolute top-3 right-3 z-10">{legend}</div>
+        ))}
 
       {paneTable?.target &&
         circuit &&

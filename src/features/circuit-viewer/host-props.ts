@@ -84,6 +84,8 @@ export interface CircuitCellsHostProps {
   nodeColors?: NodeColors;
   /** Colour for a cell with no colour of its own. */
   defaultColor?: string;
+  /** Off, a soma with no colour of its own takes `defaultColor`, not the blue ramp by crowding. */
+  blueRamp?: boolean;
   /** Colour for the cells of the populations that are not on show. */
   recededColor?: string;
   /** Called with the population name when a cell of another population is clicked. */

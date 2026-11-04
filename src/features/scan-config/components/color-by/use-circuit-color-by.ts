@@ -41,6 +41,8 @@ interface Options {
    * Defaults to full opacity when omitted.
    */
   defaultNeuronOpacity?: number;
+  /** The colour of cells coloured by no property, as it is, where blue would mislead; blue when omitted. */
+  uncolouredCells?: string;
   /** SONATA population whose H5 columns drive colour-by and the nodes table */
   population?: NodePopulation;
   /** What is on show when it is not a circuit. Names the saved config and the snapshot. */
@@ -105,6 +107,7 @@ export function useCircuitColorBy(
     morphologiesNote,
     defaultRepresentation,
     defaultNeuronOpacity,
+    uncolouredCells,
     population,
     subject,
   }: Options = {}
@@ -146,7 +149,10 @@ export function useCircuitColorBy(
     () => (BACKGROUND_ADAPTIVE ? viewerTheme(backgroundDark) : null),
     [backgroundDark]
   );
-  const defaultColor = useMemo(() => defaultNeuronColor(adaptiveBackground), [adaptiveBackground]);
+  const defaultColor = useMemo(
+    () => uncolouredCells ?? defaultNeuronColor(adaptiveBackground),
+    [adaptiveBackground, uncolouredCells]
+  );
   const recededColor = useMemo(
     () => recededNeuronColor(config.backgroundColor),
     [config.backgroundColor]

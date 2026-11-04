@@ -71,6 +71,7 @@ export function LargeCircuitPreview({
   onSubjectCellClick,
   nodeColors,
   defaultColor = DEFAULT_NEURON_COLOR,
+  blueRamp,
   recededColor,
   onPopulationClick,
   onPositionlessPopulationsChange,
@@ -218,6 +219,7 @@ export function LargeCircuitPreview({
           axons={showAxons}
           cellColors={cellColors}
           defaultColor={defaultColor}
+          blueRamp={blueRamp}
           cellHover={pointed.hover && (features?.cellHover ?? true)}
           onCellClick={canPickPopulation ? handleCellClick : undefined}
           electrodes={overlays}

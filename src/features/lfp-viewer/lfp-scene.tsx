@@ -22,6 +22,7 @@ import {
 } from '@/features/lfp-viewer/contact-grid';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { NEUTRAL_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
 import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -32,7 +33,7 @@ import type { ContactPositions } from '@/features/lfp-viewer/use-lfp-summary';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 
-const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false, colorBy: false };
+const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const SELECTED_COLOR = '#000000';
@@ -185,6 +186,18 @@ export function LfpScene({
           showUnselectedPopulations={false}
           electrodes={electrodes}
           active={active}
+          colorByNoneLabel="Uniform"
+          uncolouredCells={NEUTRAL_NEURON_COLOR}
+          legend={
+            <div className="rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
+              <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />
+              <div className="mt-0.5 flex justify-between tabular-nums">
+                <span>−{formatUv(scale.limit)}</span>
+                <span>0</span>
+                <span>+{formatUv(scale.limit)} µV</span>
+              </div>
+            </div>
+          }
         />
       )}
       {grid && (
@@ -227,14 +240,6 @@ export function LfpScene({
           )}
         </div>
       )}
-      <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
-        <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />
-        <div className="mt-0.5 flex justify-between tabular-nums">
-          <span>−{formatUv(scale.limit)}</span>
-          <span>0</span>
-          <span>+{formatUv(scale.limit)} µV</span>
-        </div>
-      </div>
       {(contacts.state === 'absent' || contacts.state === 'failed') && (
         <div className="pointer-events-none absolute inset-x-0 bottom-3 text-center text-xs text-neutral-500">
           {contacts.state === 'failed'

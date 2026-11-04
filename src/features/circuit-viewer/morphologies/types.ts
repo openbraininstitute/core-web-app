@@ -329,6 +329,8 @@ export interface CircuitMorphologyView extends ViewControls {
   /** Null draws every cell in the default colour. The same object again paints nothing: hand over a new one. */
   setCellColors(colors: CellColors | null): void;
   setDefaultColor(color: string): void;
+  /** Whether a soma in the default colour runs along the blue ramp by crowding, as it does at first, or takes that colour. */
+  setBlueRamp(on: boolean): void;
   /** Draw this cell apart from the rest; null draws none so. */
   setHighlight(cell: number | null): void;
   /**
