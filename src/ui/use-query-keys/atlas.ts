@@ -1,6 +1,11 @@
 const prefix = 'atlas';
 export const keyBuilderAtlas = {
   atlas: ({ atlasId }: { atlasId: string }) => [prefix, { atlasId }],
+  regionEntry: ({ atlasId, brainRegionId }: { atlasId: string; brainRegionId: string }) => [
+    prefix,
+    'region-entry',
+    { atlasId, brainRegionId },
+  ],
   byId: (atlasId: string) => [prefix, 'by-id', { atlasId }],
   all: () => [prefix, 'all'],
 };

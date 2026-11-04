@@ -42,4 +42,6 @@ export interface IBrainAtlasFilter
     StainFilter,
     EntityAuthorization {}
 
-export interface IBrainAtlasRegionFilter extends SharedFilter, PaginationFilter {}
+export interface IBrainAtlasRegionFilter extends SharedFilter, PaginationFilter {
+  brain_region_id?: string;
+}

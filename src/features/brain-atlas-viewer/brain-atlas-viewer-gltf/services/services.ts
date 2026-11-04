@@ -5,7 +5,7 @@ import { AssetContentType } from '@/api/entitycore/types/shared/global';
 import { entityCoreApi } from '@/api/entitycore/utils';
 import { config } from '@/config';
 import { fetchPointCloud } from '@/features/brain-atlas-viewer/api';
-import { ensureBrainRegionAtlasData } from '@/features/brain-atlas-viewer/queries';
+import { ensureBrainAtlasRegionEntry } from '@/features/brain-atlas-viewer/queries';
 import { log } from '@/utils/logger';
 
 import { RegionMeshNotAvailableError } from './errors';
@@ -50,8 +50,7 @@ async function getBrainRegionMeshArrayBufferQuery({
     atlasId,
     regionId,
   });
-  const atlas = await getAtlas({ atlasId, queryClient });
-  const entity = atlas.data.find((elem) => elem.brain_region_id === regionId);
+  const entity = await ensureBrainAtlasRegionEntry(queryClient, atlasId, regionId);
   if (!entity) {
     throw new RegionMeshNotAvailableError(
       regionId,
@@ -87,10 +86,6 @@ async function getBrainRegionMeshArrayBufferQuery({
     throw new Error(`Unable to download asset "${asset.id}" for entity "${entity.id}"!`);
   }
   return mesh;
-}
-
-async function getAtlas({ atlasId, queryClient }: { atlasId: string; queryClient: QueryClient }) {
-  return ensureBrainRegionAtlasData(queryClient, atlasId);
 }
 
 const cachePointClouds = new Map<number, Promise<Float32Array>>();

@@ -41,3 +41,36 @@ export async function ensureBrainRegionAtlasData(queryClient: QueryClient, atlas
 
   return queryClient.ensureQueryData(brainRegionAtlasQueryOptions(atlasId));
 }
+
+function brainAtlasRegionEntryQueryOptions(atlasId: string, brainRegionId: string) {
+  return queryOptions<IBrainAtlasRegion | null>({
+    queryKey: keyBuilderAtlas.regionEntry({ atlasId, brainRegionId }),
+    queryFn: async () => {
+      const result = await getBrainAtlasRegions({
+        atlasId,
+        filters: { brain_region_id: brainRegionId, page_size: 1 },
+      });
+      return result.data?.[0] ?? null;
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Resolves the atlas entry of a single brain region. Reuses the full atlas when it is already
+ * loaded, otherwise asks the API for that region only instead of paginating the whole atlas.
+ */
+export async function ensureBrainAtlasRegionEntry(
+  queryClient: QueryClient,
+  atlasId: string,
+  brainRegionId: string
+): Promise<IBrainAtlasRegion | null> {
+  const fullAtlas = queryClient.getQueryData(brainRegionAtlasQueryOptions(atlasId).queryKey);
+  if (fullAtlas) {
+    return fullAtlas.data.find((entry) => entry.brain_region_id === brainRegionId) ?? null;
+  }
+
+  return queryClient.ensureQueryData(brainAtlasRegionEntryQueryOptions(atlasId, brainRegionId));
+}
