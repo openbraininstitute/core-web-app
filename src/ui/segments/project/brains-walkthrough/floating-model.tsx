@@ -5,16 +5,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ViewOverlay } from '@/features/viewer-3d/bare';
 import { ModelView } from '@/ui/segments/project/models/model-views';
 import { PackView } from '@/ui/segments/project/models/pack-view';
-import { FLY_PACK, L6_PACK } from '@/ui/segments/project/models/repo-packs';
+import { FLY_PACK } from '@/ui/segments/project/models/repo-packs';
 import { cn } from '@/utils/css-class';
 
-import {
-  CNS_FRAME,
-  CNS_ON_FIRST_SCREEN,
-  FLY_FRAME,
-  L6_COLOR,
-  L6_FRAME,
-} from './brains';
+import { CNS_FRAME, CNS_ON_FIRST_SCREEN, FLY_FRAME } from './brains';
 import styles from './floating-model.module.css';
 import { NeuronSkeleton } from './neuron-skeleton';
 import grid from './opening-grid.module.css';
@@ -136,28 +130,51 @@ const GLIDE = 'transform 1000ms cubic-bezier(0.65, 0, 0.35, 1), opacity 0.6s eas
 const driftIn = (ms: number) => `transform 20s cubic-bezier(0.2, 0.55, 0.3, 1) ${ms}ms`;
 
 /**
- * Where the landing's brains are images, not live views: a phone, or anything small held upright. Their packs are 31 MB
- * together, and the landing stays until they are built, which on a phone's connection could be a minute or more. Asked
- * once, in the browser: what floats over the page only mounts there.
+ * The landing's brains are images, not live views: nobody needs to turn them, and the views' packs are 31 MB together,
+ * which the landing would stay for. Made by harness/phone_stills in the group, from those views, turning.
  */
-const STILLS_WHERE =
-  '(max-width: 63.999rem) and (orientation: portrait), (max-width: 63.999rem) and (pointer: coarse)';
-function useStills(): boolean {
-  const [stills] = useState(() => window.matchMedia(STILLS_WHERE).matches);
-  return stills;
-}
+const stillSet = (name: string, small: number, large: number) =>
+  `/images/start/walkthrough/${name}.webp ${small}w, /images/start/walkthrough/${name}-large.webp ${large}w`;
+const L6_SET = stillSet('landing-microcircuit', 970, 1796);
+const CNS_SET = stillSet('landing-male-cns', 574, 1148);
 
-/** A brain as an image, from harness/phone_stills in the group; built once it is in, for the intro to start with it. */
-const stillView = (src: string) =>
+/** A brain as an image at `at` in its box, across `sizes` of the page; built once it is in, for the intro to start with it. */
+const stillView = (set: string, sizes: string, at: CSSProperties) =>
   function StillView(_started: boolean, onBuilt: () => void) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- Made to size, and its load is what the intro waits for.
-      <img src={src} alt="" draggable={false} onLoad={onBuilt} onError={onBuilt} className="size-full object-contain" />
+      <div className="relative size-full">
+        {/* eslint-disable-next-line @next/next/no-img-element -- Made to size, and its load is what the intro waits for. */}
+        <img
+          srcSet={set}
+          sizes={sizes}
+          alt=""
+          draggable={false}
+          onLoad={onBuilt}
+          onError={onBuilt}
+          className="absolute object-contain"
+          style={at}
+        />
+      </div>
     );
   };
-const L6_STILL = stillView('/images/start/walkthrough/landing-microcircuit.webp');
-const CNS_STILL = stillView('/images/start/walkthrough/landing-male-cns.webp');
-/** The images' way in: the landing is on a phone a little while, and they cost nothing to wait for. */
+const WHOLE_BOX: CSSProperties = { left: 0, top: 0, width: '100%', height: '100%' };
+/** Where each was in the square of the view it was made from, tilted as it was: on a large screen, that same square. */
+const L6_IN_VIEW: CSSProperties = { left: '15.18%', top: '18.21%', width: '64.14%', height: '71.71%' };
+const CNS_IN_VIEW: CSSProperties = { left: '22.18%', top: '11.29%', width: '53.64%', height: '74.29%' };
+const L6_STILL = stillView(L6_SET, '93vh', L6_IN_VIEW);
+const CNS_STILL = stillView(CNS_SET, '48vh', CNS_IN_VIEW);
+const L6_STILL_PHONE = stillView(L6_SET, '95vw', WHOLE_BOX);
+const CNS_STILL_PHONE = stillView(CNS_SET, '50vw', WHOLE_BOX);
+
+/** A phone, or anything small held upright, where the images have places of their own. Asked once, in the browser: what floats over the page only mounts there. */
+const SMALL_SCREEN =
+  '(max-width: 63.999rem) and (orientation: portrait), (max-width: 63.999rem) and (pointer: coarse)';
+function useSmallScreen(): boolean {
+  const [small] = useState(() => window.matchMedia(SMALL_SCREEN).matches);
+  return small;
+}
+
+/** The images' way in on a phone, where the landing is on a little while. */
 const STILL_IN = 'transform 6s cubic-bezier(0.2, 0.55, 0.3, 1)';
 const L6_STILL_MOVES: Moves = { ...L6_MOVES, off: { transform: 'translate(-60%, -60%)', opacity: 1 } };
 const CNS_STILL_MOVES: Moves = {
@@ -300,30 +317,6 @@ function Floating({
     </div>
   );
 }
-
-/** Made-up activity for the microcircuit: bursts of a cell and its 50 nearest neighbours, a second or so apart. */
-const L6_ACTIVITY = '/static/walkthrough/l6-activity.json';
-
-/** The microcircuit, pink, its local groups lighting up in turn, once the activity is in. */
-function ActiveMicrocircuit({ started, onBuilt }: { started: boolean; onBuilt: () => void }) {
-  const flashes = useActivity(L6_ACTIVITY);
-  // As large as in a box of 93vh x 133vh at 1.15: the frame's box, 2617 x 3366 um across the view, fills the
-  // square's height rather than that box's width.
-  return (
-    <FlashingCircuit
-      started={started}
-      onBuilt={onBuilt}
-      color={L6_COLOR}
-      frame={L6_FRAME}
-      frameZoom={0.95}
-      pack={L6_PACK}
-      flashes={flashes}
-    />
-  );
-}
-const L6_VIEW = (started: boolean, onBuilt: () => void) => (
-  <ActiveMicrocircuit started={started} onBuilt={onBuilt} />
-);
 
 /** Activity the app serves, `{cells, times, ms}`, as spikes to replay, once it is in. */
 function useActivity(url: string): CircuitSpikes | null {
@@ -530,27 +523,23 @@ const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
   />
 );
 /**
- * The male fly's whole central nervous system, its surface's neurons, over the whole page behind the words and
- * recording of the screen `at`, faint, turning there. It is read unseen and still on the screen before, to be drawn
- * by the time its own comes, and let go of past the screen after; the viewer's word that it is loading is not shown.
- * Not where the landing's brains are images: faint behind a video, it is not worth its pack on a phone.
+ * The male fly's whole central nervous system over the whole page behind the words and recording of the screen `at`,
+ * faint, in place by the time its own comes. Not on a phone: behind a video there, it would only be in the way.
  */
 export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
-  const stills = useStills();
-  if (stills || chapter < at - 1 || chapter > at + 1) return null;
-  const on = chapter === at;
+  const small = useSmallScreen();
+  if (small || chapter < at - 1 || chapter > at + 1) return null;
   return (
     <div
       aria-hidden
       inert
       className={cn(
-        'pointer-events-none fixed inset-0 z-0 transition-opacity duration-1000 ease-out [&_[data-testid=visualization-loading]]:hidden',
-        on ? 'opacity-40' : 'opacity-0'
+        'pointer-events-none fixed inset-0 z-0 flex items-center justify-center transition-opacity duration-1000 ease-out',
+        chapter === at ? 'opacity-40' : 'opacity-0'
       )}
     >
-      <ViewOverlay frame={CNS_FRAME} render={NOTHING_OVER} detailPixels={DETAIL_PIXELS}>
-        <PackView pack={CNS_PACK} color={FLY_BLUE} frameZoom={0.85} spin={on} />
-      </ViewOverlay>
+      {/* eslint-disable-next-line @next/next/no-img-element -- Made to size. */}
+      <img srcSet={CNS_SET} sizes="62vh" alt="" className="h-[85%] w-auto object-contain" />
     </div>
   );
 }
@@ -650,13 +639,12 @@ const MOUSE_VIEW = (_started: boolean, onBuilt: () => void) => (
 );
 
 /**
- * The pink cortical microcircuit over the landing, turning in its own 3D view about its column, shaded as
- * it turns, and tilted 40 degrees across the top left corner: in from out of that corner once built,
- * taller than the screen, and back into it as the first screen is entered.
+ * The pink cortical microcircuit over the landing, tilted 40 degrees across the top left corner: in from out of that
+ * corner once its image is in, taller than the screen, and back into it as the first screen is entered.
  */
 export function FloatingMicrocircuit(state: FloatingState) {
-  const stills = useStills();
-  if (stills) {
+  const small = useSmallScreen();
+  if (small) {
     return (
       <Floating
         {...state}
@@ -665,8 +653,8 @@ export function FloatingMicrocircuit(state: FloatingState) {
         firstIn={STILL_IN}
         turnsOverLanding={false}
         // Across the top left corner, as the live one is, its ends running off the two edges.
-        className="top-[calc(var(--still)*-0.32)] left-[calc(var(--still)*-0.37)] h-[calc(var(--still)*1.089)] w-(--still) [--still:min(95vw,calc(var(--chapter-h)*0.44))] squat:[--still:calc(var(--chapter-h)*0.9)]"
-        view={L6_STILL}
+        className="top-[calc(var(--still)*-0.32)] left-[calc(var(--still)*-0.37)] h-[calc(var(--still)*1.118)] w-(--still) [--still:min(95vw,calc(var(--chapter-h)*0.44))] squat:[--still:calc(var(--chapter-h)*0.9)]"
+        view={L6_STILL_PHONE}
       />
     );
   }
@@ -675,11 +663,10 @@ export function FloatingMicrocircuit(state: FloatingState) {
       {...state}
       on="landing"
       moves={L6_MOVES}
-      // A square sized by the height alone, so the column keeps its shape and, turned by hand, never meets
-      // its view's edges; its middle near the top left corner, clear of the landing's words.
+      turnsOverLanding={false}
+      // A square sized by the height alone; its middle near the top left corner, clear of the landing's words.
       className="top-[-62.5vh] left-[calc(8vw-72.5vh)] h-[145vh] w-[145vh]"
-      tilt={40}
-      view={L6_VIEW}
+      view={L6_STILL}
     />
   );
 }
@@ -725,7 +712,7 @@ export function FloatingMaleCns({
   walking: boolean;
 }) {
   const { entered } = state;
-  const stills = useStills();
+  const small = useSmallScreen();
   const view = useCallback(
     (started: boolean, onBuilt: () => void) =>
       walking ? (
@@ -735,7 +722,7 @@ export function FloatingMaleCns({
       ),
     [walking, entered]
   );
-  if (stills) {
+  if (small) {
     return (
       <Floating
         {...state}
@@ -745,7 +732,21 @@ export function FloatingMaleCns({
         turnsOverLanding={false}
         // On its side, under the landing's words, in from the right, where its nerve cord's cut end runs off the page.
         tilt={-82}
-        className="top-[calc(var(--chapter-h)*0.745-var(--cns)*0.5)] left-[calc(100vw-var(--cns)*0.6555)] h-(--cns) w-[calc(var(--cns)*0.551)] [--cns:min(77vw,calc(var(--chapter-h)*0.34))] squat:top-[calc(var(--chapter-h)*0.6-var(--cns)*0.5)] squat:[--cns:calc(var(--chapter-h)*0.55)]"
+        className="top-[calc(var(--chapter-h)*0.745-var(--cns)*0.5)] left-[calc(100vw-var(--cns)*0.741)] h-(--cns) w-[calc(var(--cns)*0.722)] [--cns:min(70vw,calc(var(--chapter-h)*0.3))] squat:top-[calc(var(--chapter-h)*0.6-var(--cns)*0.5)] squat:[--cns:calc(var(--chapter-h)*0.5)]"
+        view={CNS_STILL_PHONE}
+      />
+    );
+  }
+  if (!walking && !CNS_ON_FIRST_SCREEN) {
+    return (
+      <Floating
+        {...state}
+        on="landing"
+        moves={CNS_LANDING_MOVES}
+        turnsOverLanding={false}
+        // In the bottom right corner, as the old live view's square was.
+        className={cn(grid.grid, grid.cns)}
+        drift={CNS_DRIFT}
         view={CNS_STILL}
       />
     );
