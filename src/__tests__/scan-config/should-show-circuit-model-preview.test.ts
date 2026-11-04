@@ -68,7 +68,9 @@ function legacyHostNeuronOpacity(options: {
     : undefined;
 }
 
-const ACTIVITIES = Object.values(ScanConfigActivity);
+const ACTIVITIES = Object.values(ScanConfigActivity).filter(
+  (activity) => activity !== ScanConfigActivity.SpikeSorting
+);
 const ENTITY_TYPES = [
   ExtendedEntitiesTypeDict.Circuit,
   ExtendedEntitiesTypeDict.Memodel,
@@ -200,6 +202,7 @@ describe('RightPreviewModeDict', () => {
       EntityPreview: 'entity-preview',
       IonChannel: 'ion-channel',
       EFeatures: 'efeatures',
+      Recording: 'recording',
       CircuitModel: 'circuit-model',
       Empty: 'empty',
     });

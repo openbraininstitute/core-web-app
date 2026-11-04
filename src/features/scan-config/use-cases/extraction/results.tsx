@@ -1,8 +1,10 @@
 'use client';
 
+import { capitalize } from 'es-toolkit/compat';
 import { useMemo } from 'react';
 
 import { ViewVariant, WorkspaceSection } from '@/constants';
+import { RecordingViewer } from '@/features/recording-viewer';
 import { useCostConfirmation } from '@/features/scan-config/components/cost-confirmation-modal';
 import { FileViewer } from '@/features/scan-config/components/file-viewer';
 import { ResultsLayout } from '@/features/scan-config/components/shared/results-layout';
@@ -21,6 +23,7 @@ import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
 import type { TTaskConfigMeta } from '@/entity-configuration/domain/extraction/extraction-campaign';
 import type { TScanConfigCampaignOriginActionDict } from '@/features/scan-config/helpers';
+import type { TTaskNoun } from '@/features/scan-config/use-cases/optimization/results';
 import type { TWorkflowTaskTypeBindings } from '@/features/scan-config/workflow/types';
 
 type Props = {
@@ -29,6 +32,8 @@ type Props = {
   isCampaignIdChanged: boolean;
   /** obi-one + entitycore task types for this workflow (from its definition) */
   taskTypeBindings: TWorkflowTaskTypeBindings;
+  /** wording for the run (extraction or spike sorting); the tab is shared */
+  noun: TTaskNoun;
 };
 
 export function ExtractionTab({
@@ -36,6 +41,7 @@ export function ExtractionTab({
   campaignOriginAction,
   isCampaignIdChanged,
   taskTypeBindings,
+  noun,
 }: Props) {
   const context = useWorkspace();
 
@@ -43,9 +49,9 @@ export function ExtractionTab({
     context,
     obiOneTaskType: taskTypeBindings.obiOne,
     executionActivityType: taskTypeBindings.execution,
-    notificationKey: 'extraction-config-error',
-    failureMessage: 'We ran into a problem launching your extraction. Please try again later.',
-    logTopic: 'Extraction',
+    notificationKey: `${noun.singular}-config-error`,
+    failureMessage: `We ran into a problem launching your ${noun.singular}. Please try again later.`,
+    logTopic: capitalize(noun.singular),
     requiresConsent: true,
   });
 
@@ -98,7 +104,7 @@ export function ExtractionTab({
   const { openModal, modal: costConfirmationModal } = useCostConfirmation({
     items: costModalItems,
     taskType: taskTypeBindings.obiOne,
-    workflowLabel: 'extractions',
+    workflowLabel: noun.plural,
     context,
     onConfirm: onRun,
   });
@@ -133,7 +139,7 @@ export function ExtractionTab({
               onExecutionLoad={act.onExecutionLoad}
             />
             <TaskLaunchButton
-              label="Launch extractions"
+              label={`Launch ${noun.plural}`}
               countLabel={launchBtnLabelPrefix}
               pending={runExtractionPending}
               disabled={runExtractionPending || resolvedSelectedConfigIds.length === 0}
@@ -161,6 +167,12 @@ export function ExtractionTab({
           <>
             {selectedFile?.renderer === ActivityCustomFileRenderer.Default && (
               <FileViewer file={selectedFile} className="h-full w-full" context={context} />
+            )}
+            {selectedFile?.renderer === ActivityCustomFileRenderer.RecordingTraces && (
+              <RecordingViewer
+                source={{ kind: 'preprocessed', entityId: selectedFile.entity.id }}
+                context={context}
+              />
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.MiniDetailView && (
               <div className="h-full w-full">

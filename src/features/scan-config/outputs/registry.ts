@@ -2,6 +2,7 @@ import { hasAssets } from '@/api/entitycore/guards';
 import { getEntity } from '@/api/entitycore/queries/general/entity';
 import { getTaskResult } from '@/api/entitycore/queries/task';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
+import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import { AssetContentType, AssetLabel } from '@/api/entitycore/types/shared/global';
 import { getExtendedTypeByTaskResultType } from '@/entity-configuration/domain/helpers';
 import { retrieveEntity } from '@/entity-configuration/domain/requests';
@@ -75,6 +76,16 @@ const taskResultStrategy: TOutputStrategy = {
     };
   },
   toFiles: ({ entity, extendedType }) => [
+    ...(extendedType === ExtendedEntitiesTypeDict.AindEphysPreprocessingResult
+      ? [
+          {
+            id: `${entity.id}-traces`,
+            entity,
+            name: 'Processed traces',
+            renderer: ActivityCustomFileRenderer.RecordingTraces,
+          } as const,
+        ]
+      : []),
     ...(extendedType ? makeMiniDetailFile(entity, extendedType) : []),
     ...assetsOf(entity).map((asset) => ({
       id: asset.id,

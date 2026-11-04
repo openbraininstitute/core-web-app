@@ -10,6 +10,7 @@ import { ViewVariant, WorkspaceSection } from '@/constants';
 import { resolveViewerFeaturesForEntityType } from '@/entity-configuration/domain/helpers';
 import { useFlag } from '@/features/feature-flags';
 import { electrodeOverlaysFlag } from '@/features/feature-flags/flags';
+import { recordingSourceOfConfig } from '@/features/recording-viewer/source';
 import { useScanConfigWorkflowEditorField } from '@/features/scan-config/bridge/editor-context';
 import {
   ScanConfigEntityPreviewOrigin,
@@ -29,6 +30,7 @@ import {
 } from '@/features/scan-config/components/model-preview/helpers';
 import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
+import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
 import { cn } from '@/utils/css-class';
@@ -66,6 +68,30 @@ const EFeaturesPreviewPanel = dynamic(
     ).then((m) => m.EFeaturesPreviewPanel),
   { ssr: false }
 );
+
+const RecordingViewer = dynamic(() => import('@/features/recording-viewer/recording-viewer'), {
+  ssr: false,
+});
+
+/** The traces of the recording the form works on: raw before preprocessing, processed after. */
+function RecordingPreviewPane({ config }: { config: Config }) {
+  const context = useWorkspace();
+  const source = recordingSourceOfConfig(config);
+  return (
+    <div
+      id="scan-config-controls-right-recording"
+      className="h-full min-h-0 overflow-hidden rounded-xl bg-white"
+    >
+      {source ? (
+        <RecordingViewer source={source} context={context} />
+      ) : (
+        <div className="flex h-full items-center justify-center p-8 text-center text-neutral-400">
+          Pick a recording in Initialize to see its traces and electrodes here.
+        </div>
+      )}
+    </div>
+  );
+}
 
 type RightProps = {
   activity: TScanConfigActivity;
@@ -393,6 +419,7 @@ export function Right({
         <EFeaturesPreviewPanel config={config} schema={schema} />
       </div>
     ))
+    .with(RightPreviewModeDict.Recording, () => <RecordingPreviewPane config={config} />)
     .with(RightPreviewModeDict.CircuitModel, () =>
       entity ? (
         <CircuitModelPreviewPane

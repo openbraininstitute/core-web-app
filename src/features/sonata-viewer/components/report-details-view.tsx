@@ -1,4 +1,5 @@
 import { Empty } from 'antd';
+import { startCase } from 'es-toolkit/compat';
 import Plotly from 'plotly.js-dist-min';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import createPlotlyComponent from 'react-plotly.js/factory';
@@ -32,8 +33,11 @@ import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
 
 const Plot = createPlotlyComponent(Plotly);
 
+/** What the plot asks of whatever holds the traces. */
+export type TraceSource = Pick<Remote<SonataWorkerImpl>, 'getNodeTrace' | 'getValueRange'>;
+
 /** Past this many lines one plot stops being readable; the table narrows it down. */
-const MAX_SHARED_TRACES = 30;
+export const MAX_SHARED_TRACES = 30;
 const DESIRED_POINTS = 1200;
 const REFETCH_DELAY_MS = 120;
 /** Headroom above and below the population's extremes, as a share of their span. */
@@ -171,9 +175,12 @@ export default function ReportDetailsView({
   cellRows,
   onCellClick,
   events,
+  lineNoun = 'cell',
 }: {
   population: PopulationMetadata;
-  worker: Remote<SonataWorkerImpl>;
+  worker: TraceSource;
+  /** What each line stands for, in its card and its hint. */
+  lineNoun?: string;
   /** A time to mark on the plot, such as a scene playing the recording above it. */
   timeCursor?: TimeCursor;
   /** The config's timings, marked over the traces as over the raster. */
@@ -242,6 +249,7 @@ export default function ReportDetailsView({
         cellRows={cellRows}
         onCellClick={onCellClick}
         events={events}
+        lineNoun={lineNoun}
       />
     </div>
   );
@@ -261,9 +269,11 @@ function SharedTracesPlot({
   cellRows,
   onCellClick,
   events,
+  lineNoun,
 }: {
   population: PopulationMetadata;
-  worker: Remote<SonataWorkerImpl>;
+  worker: TraceSource;
+  lineNoun: string;
   timeCursor?: TimeCursor;
   events?: readonly TimelineEvent[];
   onTimeAxisChange?: (axis: TracesTimeAxis) => void;
@@ -624,7 +634,8 @@ function SharedTracesPlot({
           population={population}
           valueLabel={valueLabel}
           cellRows={cellRows}
-          hint={onCellClick && clickHint(lines, population, tip.traceIndex)}
+          lineNoun={lineNoun}
+          hint={onCellClick && clickHint(lines, population, tip.traceIndex, lineNoun)}
         />
       )}
       <ZoomHint visible={hintUp} />
@@ -637,12 +648,14 @@ function TraceCard({
   hover,
   population,
   valueLabel,
+  lineNoun,
   cellRows,
   hint,
 }: {
   hover: TraceHover;
   population: PopulationMetadata;
   valueLabel: string;
+  lineNoun: string;
   cellRows?: CellRowSource;
   hint?: string;
 }) {
@@ -653,7 +666,7 @@ function TraceCard({
       clientX={hover.clientX}
       clientY={hover.clientY}
       card={{
-        title: `Node ${trace?.label ?? hover.traceIndex}`,
+        title: `${lineNoun === 'cell' ? 'Node' : startCase(lineNoun)} ${trace?.label ?? hover.traceIndex}`,
         subtitle: population.name,
         swatch: hover.color,
         rows: [
@@ -672,13 +685,18 @@ function TraceCard({
 }
 
 /** What a click on a line does: picks its cell alone, or lets it go where it is already that. */
-function clickHint(lines: Line[], population: PopulationMetadata, traceIndex: number): string {
+function clickHint(
+  lines: Line[],
+  population: PopulationMetadata,
+  traceIndex: number,
+  lineNoun: string
+): string {
   const nodeId = population.traces[traceIndex]?.nodeId;
   const picked = lines.filter((line) => line.slot !== null && !line.preview);
   const alone =
     picked.length > 0 &&
     picked.every((line) => population.traces[line.traceIndex]?.nodeId === nodeId);
-  return alone ? 'Click to show every cell again' : 'Click to pick this cell alone';
+  return alone ? `Click to show every ${lineNoun} again` : `Click to pick this ${lineNoun} alone`;
 }
 
 /** The parts of Plotly's laid-out graph the cursor reads. */
