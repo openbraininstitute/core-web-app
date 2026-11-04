@@ -26,6 +26,7 @@ import {
   MODEL_MESHES,
 } from './models';
 import { MemodelCard, MeshCard, NodeCard } from './neuron-card';
+import { PackView } from './pack-view';
 import { useModelCircuit } from './use-model-circuit';
 
 import type { NodePopulation } from '@/features/circuit-nodes/types';
@@ -131,7 +132,10 @@ export function ModelView({
   return <CellModelView flat={flat} />;
 }
 
-/** A circuit's cells, its morphologies where it has them; in another project, its picture. */
+/**
+ * A circuit's cells, its morphologies where it has them. Where it cannot be read, signed out or in another project, its
+ * pack in the repo, where it has one and is on show in one colour; otherwise its picture.
+ */
 function CircuitModelView({
   example,
   colorSlot,
@@ -161,7 +165,21 @@ function CircuitModelView({
   const picked = hosted ? (highlightedCell ?? null) : own;
   const setPicked = onCellPick ?? setOwn;
 
-  if (!readable) return <Poster src={example.art} />;
+  if (!readable) {
+    const { repoPack, viewerDefaults, frameZoom, art } = example;
+    const color = viewerDefaults.neuronColor;
+    if (!repoPack || !color) return <Poster src={art} />;
+    return (
+      <PackView
+        pack={repoPack}
+        color={color}
+        frameZoom={frameZoom}
+        spin={viewerDefaults.spin ?? false}
+        aoMoving={viewerDefaults.aoMoving}
+        spikes={spikes}
+      />
+    );
+  }
   if (isError) return <Note>The circuit could not be loaded.</Note>;
   if (!circuit) return null;
   return (

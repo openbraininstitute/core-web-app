@@ -4,20 +4,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ViewOverlay } from '@/features/viewer-3d/bare';
 import { ModelView } from '@/ui/segments/project/models/model-views';
+import { PackView } from '@/ui/segments/project/models/pack-view';
+import { FLY_PACK, L6_PACK } from '@/ui/segments/project/models/repo-packs';
 import { cn } from '@/utils/css-class';
 
 import { CNS_FRAME, FLY_FRAME, L6_COLOR, L6_FRAME } from './brains';
 import styles from './floating-model.module.css';
 import { NeuronSkeleton } from './neuron-skeleton';
 import grid from './opening-grid.module.css';
-import { PackView } from './pack-view';
 import { FlyBody, FlyStageProvider } from './walking-fly';
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { CircuitSpikes, ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { FramedView } from '@/features/viewer-3d/bare';
 import type { FrameBox } from '@/features/viewer-3d/engine/scene-view';
-import type { RepoPack } from './pack-view';
+import type { RepoPack } from '@/ui/segments/project/models/repo-packs';
 
 /**
  * Where a floating model is, by when: in its place but not shown while its view builds it, off the page
@@ -238,20 +239,6 @@ function Floating({
   );
 }
 
-/**
- * The microcircuit's pack made lighter for this view, served by the app: the coarsest level alone, which is all
- * it draws at this size, and dendrites alone, as it hides axons; the morphologies of the outer ring of cells by
- * distance from the column's axis and of a fifth of the rest, the others somas, which looks no different from
- * outside. 20.3 MB against the stored pack's 170.8 MB (build_light_pack.py in the home_page group, from the
- * circuit's morphologies, with obi-one's pack writer).
- */
-const L6_PACK: RepoPack = {
-  id: 'l6-outer-dendrites',
-  url: '/static/walkthrough/l6-outer-dendrites.mpack',
-  size: 20263125,
-  sha256: '23cf345c12ed95b401eb368eefbdf37bf543aa8ce6414533889676cbc6570807',
-  population: { name: 'S1nonbarrel_neurons', cells: 11032 },
-};
 /** Made-up activity for the microcircuit: bursts of a cell and its 50 nearest neighbours, a second or so apart. */
 const L6_ACTIVITY = '/static/walkthrough/l6-activity.json';
 
@@ -302,21 +289,6 @@ function useActivity(url: string): CircuitSpikes | null {
   return activity;
 }
 
-/**
- * The whole FlyWire brain's surface, served by the app, from the whole-brain circuit built on this machine
- * (drosophila_brain, 137,712 neurons, not on the platform): every neuron cut to what lies within 20 µm of the
- * brain's surface, at one coarse level (2 µm), its neurites all drawn, numbered along a curve through space
- * into 1,379 cells, each a hundred or so neighbouring neurons that light together, under the name and number of the
- * staging pilot's population, which used to host it (build_fly_surface_pack.py --order space, in the home_page
- * group). 8.8 MB, 1.11M segments.
- */
-const FLY_PACK: RepoPack = {
-  id: 'fly-surface',
-  url: '/static/walkthrough/fly-surface.mpack',
-  size: 8797881,
-  sha256: '64facca47840f75a9191b3a3642458b3874aff515c7e8eb8c94bfd75f55be15c',
-  population: { name: 'flywire_brain', cells: 1379 },
-};
 /** The fly's brain in one blue, which its lit groups stand out of, as the viewer lights them in cyan. */
 const FLY_BLUE = '#2558c9';
 /** The cells the pack's neurons are numbered into. */
@@ -441,6 +413,7 @@ function FlashingCircuit({
             color={body === null ? color : PICKED_REST_COLOR}
             frameZoom={frameZoom}
             spin={started}
+            aoMoving
             // Not singled out in the view, which would hide the rest: the skeleton over it is its highlight.
             onCellPick={bodies ? setPicked : undefined}
             spikes={spikes}

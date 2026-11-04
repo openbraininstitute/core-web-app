@@ -4,6 +4,7 @@ import {
   CourseLink,
   Row,
   SectionLink,
+  WhereReadable,
 } from '@/ui/segments/project/walkthrough/bits';
 
 import { AgentPrompts } from './agent-prompts';
@@ -204,9 +205,14 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           about 140,000 of them, and the 50 million or so synapses between them.
         </p>
         <p>
-          Inside the brain here is a 1% sample of those neurons, each in its place, built from its
-          reconstruction into a model that can be simulated, and wired by the synapses between them.
-          Colour them by their class, and click any one to find out more.
+          <WhereReadable
+            scene="fly"
+            otherwise="Inside the brain here are those neurons, drawn where they run within 20 µm of its surface, each in its place."
+          >
+            Inside the brain here is a 1% sample of those neurons, each in its place, built from its
+            reconstruction into a model that can be simulated, and wired by the synapses between them.
+            Colour them by their class, and click any one to find out more.
+          </WhereReadable>
         </p>
       </>
     ),
@@ -228,7 +234,11 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
         <p>
           The model was built from a rat&apos;s cortex, shown here in a mouse&apos;s brain for
-          scale. Colour its neurons by their type, and click any one to find out more.
+          scale.
+          <WhereReadable scene="l6">
+            {' '}
+            Colour its neurons by their type, and click any one to find out more.
+          </WhereReadable>
         </p>
       </>
     ),
