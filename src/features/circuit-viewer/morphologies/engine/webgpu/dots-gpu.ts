@@ -16,45 +16,47 @@ import {
 } from 'three/tsl';
 import * as THREE from 'three/webgpu';
 
-import { RING_PX } from '../electrodes';
-import { blendOver, LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
+import { blendOver, drawWhereHidden, FAINT_FAR, FAINT_NEAR, RING_PX } from '../electrodes';
+import { LEAST_OPACITY, SHADE_LEAST, SHADED_FROM } from '../voxels';
 import { col, typed, VIEW } from './cells-wgsl';
 
 import type { DotUniforms, GpuUniforms } from './gpu-uniforms';
 
 /**
  * A dot's corner in clip space, as `electrodes.ts` places it; the second column holds where its ring starts, as a share
- * of the whole radius.
+ * of the whole radius, and its opacity.
  */
 const dotQuad = wgslFn(
   /* wgsl */ `
 fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, projection: mat4x4f, vp: vec4f,
-           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32) -> mat4x4f {
+           radius: f32, minRadius: f32, ring: f32, lift: f32, scale: f32, fade: vec4f) -> mat4x4f {
   let c = (modelView * vec4f(contact, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp) * scale;
   let r = max(radius * look.a, minRadius * um);
   let outer = r + ring * um;
-  return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, 0.0, 0.0, 0.0),
+  let away = clamp(0.5 + ((modelView * vec4f(fade.xyz, 1.0)).z - c.z) / (2.0 * fade.w), 0.0, 1.0);
+  let opacity = select(1.0, mix(${FAINT_NEAR.toFixed(3)}, ${FAINT_FAR.toFixed(3)}, away), fade.w > 0.0);
+  return mat4x4f(projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0), vec4f(r / outer, opacity, 0.0, 0.0),
                  vec4f(0.0), vec4f(0.0));
 }`,
   [VIEW]
 );
 
 const dotColour = wgslFn(/* wgsl */ `
-fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f) -> vec4f {
-  return vec4f(select(colour, ringColour, length(corner) > inner), 1.0);
+fn dotColour(corner: vec2f, inner: f32, colour: vec3f, ringColour: vec3f, opacity: f32) -> vec4f {
+  return vec4f(select(colour, ringColour, length(corner) > inner), opacity);
 }`);
 
 /**
  * Dots of `electrodes.ts` on WebGPU, with their colours written as given, in sRGB. By default they are drawn in front
  * of the cells, with a ring a CSS pixel wide on a screen of `pixelRatio`. With `among`, they are drawn among the cells,
- * with no ring, hidden by what is nearer the eye, and brought towards the eye by their radius.
+ * with no ring unless `ringed`, hidden by what is nearer the eye, and brought towards the eye by their radius.
  */
 function dotMaterial(
   u: GpuUniforms,
   dots: DotUniforms,
   pixelRatio: number,
-  among = false
+  { among = false, ringed = !among }: { among?: boolean; ringed?: boolean } = {}
 ): THREE.MeshBasicNodeMaterial {
   const look = attribute('aLook', 'vec4');
   const quad = typed<'mat4'>(
@@ -67,9 +69,10 @@ function dotMaterial(
       vp: viewport,
       radius: dots.radius,
       minRadius: dots.minRadius,
-      ring: among ? 0 : RING_PX * pixelRatio,
+      ring: ringed ? RING_PX * pixelRatio : 0,
       lift: among ? 1 : 0,
       scale: u.dotScale,
+      fade: dots.fade,
     })
   ).toVar();
   const corner = varying(positionGeometry.xy);
@@ -82,6 +85,7 @@ function dotMaterial(
       inner: varying(col(quad, 1).x),
       colour: varying(look.xyz),
       ringColour: u.ringColour,
+      opacity: varying(col(quad, 1).y),
     })
   );
   material.maskNode = corner.length().lessThanEqual(1);
@@ -107,10 +111,16 @@ function voxelMaterial(): THREE.MeshBasicNodeMaterial {
 
 /** The electrodes', boxes', synapses' and markers' materials on WebGPU. */
 export function dotMaterials(u: GpuUniforms, pixelRatio: number) {
+  const contactAmong = dotMaterial(u, u.electrodes, pixelRatio, { among: true, ringed: true });
+  contactAmong.depthWrite = true;
+  const contactHidden = dotMaterial(u, u.hiddenContacts, pixelRatio, { among: true });
+  drawWhereHidden(contactHidden);
   return {
     electrode: dotMaterial(u, u.electrodes, pixelRatio),
+    contactAmong,
+    contactHidden,
     voxel: voxelMaterial(),
-    synapse: dotMaterial(u, u.synapses, pixelRatio, true),
+    synapse: dotMaterial(u, u.synapses, pixelRatio, { among: true }),
     marker: dotMaterial(u, u.markers, pixelRatio),
   };
 }

@@ -3,6 +3,9 @@
  * in front of the cells even where they are nearer the eye. A contact is as wide as its radius in µm, but never under
  * a pixel or two across, so a probe stays visible from afar. A ring in the theme's foreground colour goes round each
  * contact, so that it stands out on cells of its own colour.
+ *
+ * A contact may be drawn among the cells instead, in two passes whose depth tests are each other's opposite: solid and
+ * ringed where nothing is nearer the eye, faint where something is, and fainter the further it is across its array.
  */
 
 import chroma from 'chroma-js';
@@ -19,6 +22,10 @@ const HIGHLIGHT_LIGHTEN = 0.55;
 const UNREADABLE = '#808080';
 /** The ring's width, in CSS pixels, outside the disc. */
 export const RING_PX = 1;
+/** How opaque a hidden contact is on the near side of its array, and on the far side. */
+export const FAINT_NEAR = 0.6;
+export const FAINT_FAR = 0.2;
+const LEAST_FADE_REACH_UM = 1;
 
 export interface ElectrodeUniforms {
   /** A contact's radius, in µm. */
@@ -32,6 +39,8 @@ export interface ElectrodeUniforms {
    * the full resolution, so a frame drawn at less still draws them as wide on screen.
    */
   uScale: { value: number };
+  /** Where opacity falls with depth: xyz the array's middle, w how far from it, in µm, the fade runs; w 0 for none. */
+  uFade: { value: THREE.Vector4 };
 }
 
 /** The least radius in device pixels for contacts `radius` µm wide, counted the way the somas view counts it. */
@@ -55,11 +64,13 @@ uniform float uMinRadius;
 uniform float uRing;
 uniform float uLift;
 uniform float uScale;
+uniform vec4 uFade;
 in vec3 aContact;
 in vec4 aLook;
 out vec3 vColour;
 out vec2 vCorner;
 out float vInner;
+out float vOpacity;
 ${PIXEL_UM}
 void main() {
 	vec3 c = ( modelViewMatrix * vec4( aContact, 1.0 ) ).xyz;
@@ -69,6 +80,8 @@ void main() {
 	vInner = r / outer;
 	vColour = aLook.rgb;
 	vCorner = position.xy;
+	float away = clamp( 0.5 + ( ( modelViewMatrix * vec4( uFade.xyz, 1.0 ) ).z - c.z ) / ( 2.0 * uFade.w ), 0.0, 1.0 );
+	vOpacity = uFade.w > 0.0 ? mix( ${FAINT_NEAR.toFixed(3)}, ${FAINT_FAR.toFixed(3)}, away ) : 1.0;
 	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
 }
 `;
@@ -79,28 +92,51 @@ uniform vec3 uRingColour;
 in vec3 vColour;
 in vec2 vCorner;
 in float vInner;
+in float vOpacity;
 
 void main() {
 	float d = length( vCorner );
 	if ( d > 1.0 ) discard;
-	gl_FragColor = vec4( d > vInner ? uRingColour : vColour, 1.0 );
+	gl_FragColor = vec4( d > vInner ? uRingColour : vColour, vOpacity );
 }
 `;
 
 /**
+ * Blending set out in full on `material`: three blends a material marked transparent only after every opaque one,
+ * whatever its order, and the contacts are to be drawn over these boxes.
+ */
+export function blendOver(material: THREE.Material): void {
+  material.blending = THREE.CustomBlending;
+  material.blendEquation = THREE.AddEquation;
+  material.blendSrc = THREE.SrcAlphaFactor;
+  material.blendDst = THREE.OneMinusSrcAlphaFactor;
+  material.blendSrcAlpha = THREE.OneFactor;
+  material.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
+  material.depthTest = false;
+  material.depthWrite = false;
+}
+
+/** Has `material` draw only where something nearer the eye is drawn already, blended over it. */
+export function drawWhereHidden(material: THREE.Material): void {
+  blendOver(material);
+  material.depthTest = true;
+  material.depthFunc = THREE.GreaterDepth;
+}
+
+/**
  * The contacts' material, with a ring one CSS pixel wide on a screen of `pixelRatio`. Dots drawn `among` the cells, as
- * synapses are, have no ring, and anything nearer the eye hides them. The shader moves them towards the eye by their
- * radius, so that they sit on the surface they lie on rather than inside it.
+ * synapses are, have no ring unless `ringed`, and anything nearer the eye hides them. The shader moves them towards the
+ * eye by their radius, so that they sit on the surface they lie on rather than inside it.
  */
 export function electrodeMaterial(
   uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
   pixelRatio: number,
-  { among = false } = {}
+  { among = false, ringed = !among }: { among?: boolean; ringed?: boolean } = {}
 ): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...uniforms,
-      uRing: { value: among ? 0 : RING_PX * pixelRatio },
+      uRing: { value: ringed ? RING_PX * pixelRatio : 0 },
       uLift: { value: among ? 1 : 0 },
     },
     vertexShader: VERTEX,
@@ -112,6 +148,19 @@ export function electrodeMaterial(
   return material;
 }
 
+/** The materials of contacts drawn among the cells: where nothing is nearer the eye, and where something is. */
+export function contactMaterials(
+  uniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
+  hiddenUniforms: ElectrodeUniforms & Pick<ImpostorUniforms, 'uViewport'>,
+  pixelRatio: number
+) {
+  const contactAmong = electrodeMaterial(uniforms, pixelRatio, { among: true, ringed: true });
+  contactAmong.depthWrite = true;
+  const contactHidden = electrodeMaterial(hiddenUniforms, pixelRatio, { among: true });
+  drawWhereHidden(contactHidden);
+  return { contactAmong, contactHidden };
+}
+
 /**
  * Dots in one colour, three floats each in the circuit's frame: an electrode array's contacts, a group of synapses, or
  * a location marker. Only an electrode array has an `id`, by which it is highlighted.
@@ -120,6 +169,17 @@ export interface DotGroup {
   id?: string;
   color: string;
   coordinates: ArrayLike<number>;
+}
+
+/** Sets `fade` to run across the dots of `groups`, with `centre` taken off: from one side to the other, seen face on. */
+export function fadeAcross(groups: readonly DotGroup[], centre: Vec3, fade: THREE.Vector4): void {
+  const box = new THREE.Box3();
+  growRoundDots(box, groups, centre, 0);
+  if (box.isEmpty()) return;
+  const middle = box.getCenter(new THREE.Vector3());
+  const half = box.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+  const reach = Math.max(half.length() / Math.sqrt(3), LEAST_FADE_REACH_UM);
+  fade.set(middle.x, middle.y, middle.z, reach);
 }
 
 /**

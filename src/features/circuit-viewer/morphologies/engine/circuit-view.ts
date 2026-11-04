@@ -31,6 +31,7 @@ import {
   countDots,
   type DotGroup,
   drawnRadius,
+  fadeAcross,
   growRoundDots,
   minRadius,
   writeDots,
@@ -324,6 +325,9 @@ export interface CircuitMaterials {
   /** The lit cells drawn over the frame, through what covers them, where the tier draws them (`throughs`). */
   through?: { segment: THREE.Material[]; soma: THREE.Material };
   electrode: THREE.Material;
+  /** A contact among the cells where nothing is nearer the eye, and where something is. */
+  contactAmong: THREE.Material;
+  contactHidden: THREE.Material;
   voxel: THREE.Material;
   synapse: THREE.Material;
   marker: THREE.Material;
@@ -441,8 +445,15 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: minRadius(0) },
     uRingColour: { value: new THREE.Vector3() },
     uScale: { value: 1 },
+    uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+  };
+  protected hiddenContactUniforms = {
+    ...this.electrodeUniforms,
+    uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
   };
   private electrodes: Quads | null = null;
+  private contactsAmong: Quads | null = null;
+  private contactsHidden: Quads | null = null;
   private voxelLayer: VoxelLayer | null = null;
   private voxelOrder: VoxelOrder | null = null;
   private voxels: Quads | null = null;
@@ -453,6 +464,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: SYNAPSE_MIN_RADIUS },
     uRingColour: this.electrodeUniforms.uRingColour,
     uScale: this.electrodeUniforms.uScale,
+    uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
   };
   private synapseDots: Quads | null = null;
   private markers: readonly LocationMarker[] = [];
@@ -464,6 +476,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     uMinRadius: { value: MARKER_MIN_RADIUS },
     uRingColour: this.electrodeUniforms.uRingColour,
     uScale: this.electrodeUniforms.uScale,
+    uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
   };
   private markerDots: Quads | null = null;
   private markerListeners = new Set<(markers: readonly (MarkerOnScreen | null)[]) => void>();
@@ -661,6 +674,8 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     ]);
     for (const material of materials) material.dispose();
     this.electrodes?.geometry.dispose();
+    this.contactsAmong?.geometry.dispose();
+    this.contactsHidden?.geometry.dispose();
     this.voxels?.geometry.dispose();
     this.markerDots?.geometry.dispose();
     this.synapseDots?.geometry.dispose();
@@ -1441,7 +1456,7 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     this.electrodeUniforms.uRadius.value = radius;
     this.electrodeUniforms.uMinRadius.value = minRadius(radius);
     this.bound();
-    if (this.electrodes?.visible) this.invalidate();
+    if (this.electrodes?.visible || this.contactsAmong?.visible) this.invalidate();
   }
 
   electrodeAt(x: number, y: number): ElectrodeHit | null {
@@ -1631,15 +1646,32 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
   }
 
   /**
-   * Draws the contacts as they are now in a mesh drawn after the cells and over them, made larger only when the
-   * contacts outgrow it. Asks for a frame only where that changed what is drawn.
+   * Draws the contacts as they are now in meshes drawn after the cells, made larger only when the contacts outgrow
+   * them: those among the cells, the hidden parts first, then the rest over everything. Asks for a frame only where
+   * that changed what is drawn.
    */
   private drawElectrodes(): void {
-    this.electrodes = this.drawDots(this.electrodes, this.electrodeGroups, {
+    const highlighted = this.highlightedElectrode;
+    const among = this.electrodeGroups.filter((group) => group.among);
+    fadeAcross(among, this.centre, this.hiddenContactUniforms.uFade.value);
+    this.contactsHidden = this.drawDots(this.contactsHidden, among, {
+      material: this.materials.contactHidden,
+      name: 'hidden contacts',
+      order: 0.8,
+      highlighted,
+    });
+    this.contactsAmong = this.drawDots(this.contactsAmong, among, {
+      material: this.materials.contactAmong,
+      name: 'contacts among the cells',
+      order: 0.9,
+      highlighted,
+    });
+    const over = this.electrodeGroups.filter((group) => !group.among);
+    this.electrodes = this.drawDots(this.electrodes, over, {
       material: this.materials.electrode,
       name: 'electrodes',
       order: 1,
-      highlighted: this.highlightedElectrode,
+      highlighted,
     });
   }
 

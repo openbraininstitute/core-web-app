@@ -353,7 +353,10 @@ export interface CircuitMorphologyView extends ViewControls {
   markerAt(x: number, y: number): ({ index: number } & MarkerOnScreen) | null;
   /** Told where each marker is drawn after every frame, null for one that is not; a frame is drawn for a new listener. */
   onMarkersOnScreen(listener: (markers: readonly (MarkerOnScreen | null)[]) => void): () => void;
-  /** Draw these electrodes in front of the cells, whatever is nearer the eye; the array `highlighted` larger and lighter. */
+  /**
+   * Draw these electrodes in front of the cells, whatever is nearer the eye, or `among` them, faint where they are
+   * hidden; the array `highlighted` larger and lighter.
+   */
   setElectrodes(electrodes: readonly ElectrodeGroup[], highlighted: string | null): void;
   /** A contact's radius, in µm. */
   setElectrodeRadius(radius: number): void;

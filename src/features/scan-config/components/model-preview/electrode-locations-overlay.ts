@@ -35,6 +35,8 @@ export interface ICircuitOverlayGroup {
    * Contacts and origin spheres share this so one drag moves the whole array.
    */
   id: string;
+  /** Drawn among the cells, faint where they hide it, rather than in front of everything. */
+  among?: boolean;
   /** `electrodes` = contact sites; `origin` = placement pivot marker. */
   kind?: 'electrodes' | 'origin';
   /** Placement origin (rotation pivot) in world XYZ. */

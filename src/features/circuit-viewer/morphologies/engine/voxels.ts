@@ -8,7 +8,7 @@ import * as THREE from 'three';
 
 import { lowerBound } from '@/utils/sorted';
 
-import { growRound } from './electrodes';
+import { blendOver, growRound } from './electrodes';
 
 import type { Vec3, VoxelFrame, VoxelLayer } from '../types';
 
@@ -44,21 +44,6 @@ void main() {
 	gl_FragColor = vLook;
 }
 `;
-
-/**
- * Blending set out in full on `material`: three blends a material marked transparent only after every opaque one,
- * whatever its order, and the contacts are to be drawn over these boxes.
- */
-export function blendOver(material: THREE.Material): void {
-  material.blending = THREE.CustomBlending;
-  material.blendEquation = THREE.AddEquation;
-  material.blendSrc = THREE.SrcAlphaFactor;
-  material.blendDst = THREE.OneMinusSrcAlphaFactor;
-  material.blendSrcAlpha = THREE.OneFactor;
-  material.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
-  material.depthTest = false;
-  material.depthWrite = false;
-}
 
 export function voxelMaterial(): THREE.ShaderMaterial {
   const material = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT });

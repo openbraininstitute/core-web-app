@@ -143,7 +143,7 @@ export function LfpScene({
       if (c === selectedContact) selected.push(...xyz);
       else if (pointLevels) byLevel[pointLevels[c]].push(...xyz);
     }
-    const groups = byLevel.flatMap((coordinates, level) =>
+    const groups: ICircuitOverlayGroup[] = byLevel.flatMap((coordinates, level) =>
       coordinates.length === 0
         ? []
         : [
@@ -152,6 +152,7 @@ export function LfpScene({
               id: `lfp-level-${level}`,
               color: LEVEL_COLORS[level],
               coordinates: Float32Array.from(coordinates),
+              among: true,
             },
           ]
     );

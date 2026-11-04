@@ -638,6 +638,53 @@ describe('the circuit morphology viewer', () => {
     ]);
   });
 
+  it('draws contacts among the cells solid where nothing is nearer, faint where something is, and the rest over them', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    const [a, b] = arrays();
+    frames(inner);
+    viewer.setElectrodes([{ ...a, among: true }, b], null);
+    expect(frames(inner)).toBe(1);
+
+    expect(inner.electrodes?.geometry.instanceCount).toBe(1);
+    const solid = inner.scene.getObjectByName('contacts among the cells') as Quads;
+    const faint = inner.scene.getObjectByName('hidden contacts') as Quads;
+    for (const mesh of [solid, faint]) {
+      expect(mesh.geometry.instanceCount).toBe(2);
+      expect(rounded(mesh.geometry.getAttribute('aContact').array)).toEqual([10, 20, 0, 0, 0, 0]);
+    }
+    // After the cells, the hidden parts first, and under what is over everything.
+    expect(faint.renderOrder).toBeLessThan(solid.renderOrder);
+    expect(solid.renderOrder).toBeLessThan(inner.electrodes?.renderOrder ?? 0);
+
+    const solidMaterial = solid.material as THREE.ShaderMaterial;
+    expect(solidMaterial.depthFunc).toBe(THREE.LessEqualDepth);
+    expect([solidMaterial.depthTest, solidMaterial.depthWrite]).toEqual([true, true]);
+    expect(solidMaterial.uniforms.uRing.value).toBeGreaterThan(0);
+    expect(solidMaterial.uniforms.uFade.value.w).toBe(0);
+
+    const faintMaterial = faint.material as THREE.ShaderMaterial;
+    expect(faintMaterial.depthFunc).toBe(THREE.GreaterDepth);
+    expect([faintMaterial.depthTest, faintMaterial.depthWrite]).toEqual([true, false]);
+    expect(faintMaterial.blending).toBe(THREE.CustomBlending);
+    expect(faintMaterial.uniforms.uRing.value).toBe(0);
+    // Both passes place a contact at the same depth, so that each of its pixels gets one of them.
+    expect(faintMaterial.uniforms.uLift.value).toBe(solidMaterial.uniforms.uLift.value);
+    // Round the middle of the contacts among the cells, from one side to the other seen face on.
+    const fade = faintMaterial.uniforms.uFade.value;
+    expect([fade.x, fade.y, fade.z]).toEqual([5, 10, 0]);
+    expect(fade.w).toBeCloseTo(Math.hypot(5, 10) / Math.sqrt(3));
+  });
+
+  it('leaves the passes among the cells undrawn for a host that asks for none', () => {
+    const { viewer, inner } = make();
+    viewer.setData(circuit());
+    viewer.setElectrodes(arrays(), null);
+    expect(inner.scene.getObjectByName('contacts among the cells')).toBeUndefined();
+    expect(inner.scene.getObjectByName('hidden contacts')).toBeUndefined();
+    expect(inner.materials.electrode.uniforms.uFade.value.w).toBe(0);
+  });
+
   it('draws synapses after the cells and among them, behind what is nearer, centred as the data is', () => {
     const { viewer, inner } = make();
     viewer.setData(circuit());

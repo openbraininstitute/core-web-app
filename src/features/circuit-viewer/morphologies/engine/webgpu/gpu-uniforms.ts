@@ -43,12 +43,14 @@ const TUBE_FROM_PX = 48;
 export class DotUniforms {
   readonly radius = uniform(0);
   readonly minRadius = uniform(0);
+  readonly fade = uniform(new THREE.Vector4(0, 0, 0, 0));
 
   constructor(private from: Omit<ElectrodeUniforms, 'uRingColour' | 'uScale'>) {}
 
   sync(): void {
     this.radius.value = this.from.uRadius.value;
     this.minRadius.value = this.from.uMinRadius.value;
+    this.fade.value.copy(this.from.uFade.value);
   }
 }
 
@@ -58,6 +60,7 @@ export interface HeldUniforms {
   cloud: SomaCloudUniforms;
   segments: { uSegments: { value: number } };
   electrodes: ElectrodeUniforms;
+  hiddenContacts: ElectrodeUniforms;
   synapses: ElectrodeUniforms;
   markers: ElectrodeUniforms;
 }
@@ -106,11 +109,13 @@ export class GpuUniforms {
   /** The fraction of the resolution the frame is drawn at, as the dots take it (`ElectrodeUniforms.uScale`). */
   readonly dotScale = uniform(1);
   readonly electrodes: DotUniforms;
+  readonly hiddenContacts: DotUniforms;
   readonly synapses: DotUniforms;
   readonly markers: DotUniforms;
 
   constructor(private held: HeldUniforms) {
     this.electrodes = new DotUniforms(held.electrodes);
+    this.hiddenContacts = new DotUniforms(held.hiddenContacts);
     this.synapses = new DotUniforms(held.synapses);
     this.markers = new DotUniforms(held.markers);
   }
@@ -141,6 +146,7 @@ export class GpuUniforms {
     this.ringColour.value.copy(this.held.electrodes.uRingColour.value);
     this.dotScale.value = this.held.electrodes.uScale.value;
     this.electrodes.sync();
+    this.hiddenContacts.sync();
     this.synapses.sync();
     this.markers.sync();
   }
