@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { getMEModel } from '@/api/entitycore/queries/model/me-model';
 import { EntityTypeDict } from '@/api/entitycore/types/entity-type';
 import { ExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
+import { config } from '@/config';
 import { WorkflowActivityDictValue } from '@/constants';
 import { getWorkflowLifecycleBlockReason } from '@/entity-configuration/domain/workflow-lifecycle-eligibility';
 import { useFlags } from '@/features/feature-flags';
@@ -84,6 +85,8 @@ function WorkflowAction({
 }
 
 function dataHref(ctx: WorkspaceContext, entityId: string, dataType: TExtendedEntitiesTypeDict) {
+  // With no project, as on the public landing, the platform's entry, where signing in picks one.
+  if (!ctx.projectId) return config.ROOT_ROUTE;
   return `${resolveExploreDetailsPageUrl({ ctx, entityId, dataType })}/overview`;
 }
 
@@ -174,13 +177,15 @@ function MeshActions({ model }: { model: TModelMesh }) {
       </PillLink>
       <WorkflowAction
         makeHref={() =>
-          buildConfigureUrlForEntity({
-            activity: WorkflowActivityDictValue.process,
-            targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
-            workspace,
-            entityId: meshId,
-            entityType: ExtendedEntitiesTypeDict.EMCellMesh,
-          })
+          workspace.projectId
+            ? buildConfigureUrlForEntity({
+                activity: WorkflowActivityDictValue.process,
+                targetType: ExtendedEntitiesTypeDict.SkeletonizationCampaign,
+                workspace,
+                entityId: meshId,
+                entityType: ExtendedEntitiesTypeDict.EMCellMesh,
+              })
+            : config.ROOT_ROUTE
         }
       >
         Skeletonize

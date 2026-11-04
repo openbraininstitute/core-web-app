@@ -136,7 +136,8 @@ export function CourseLink({ design = 'walkthrough' }: { design?: THomeDesign })
   const learn = useFlag(learnFlag.key) === true;
   const { virtualLabId, projectId } = useWorkspace();
   if (!learn) return null;
-  const from = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}?design=${design}`;
+  // Back to the public landing, where there is no project.
+  const from = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}?design=${design}` : '/';
   return (
     <Row>
       <PillLink primary href={`/app/learn/brain-modeling?from=${encodeURIComponent(from)}`}>
@@ -165,8 +166,10 @@ export function SectionLink({
 }) {
   const { virtualLabId, projectId } = useWorkspace();
   const { label, path } = SECTIONS[section];
+  // With no project, as on the public landing, the platform's entry, where signing in picks one.
+  const href = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${path}` : config.ROOT_ROUTE;
   return (
-    <PillLink primary={primary} href={`${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/${path}`}>
+    <PillLink primary={primary} href={href}>
       {label}
     </PillLink>
   );
