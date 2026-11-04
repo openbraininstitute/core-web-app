@@ -18,6 +18,7 @@ import { GenericEvent } from '@/util/generic-event';
 import { logError } from '@/utils/logger';
 
 import { type CameraController, setCamera } from './camera';
+import { configureLocalDracoDecoder } from './draco';
 import { makeColor } from './hooks';
 import { RegionMeshNotAvailableError } from './services/errors';
 import { getCachedBrainRegionMeshArrayBuffer, getPointCouldData } from './services/services';
@@ -393,6 +394,7 @@ export class Painter {
     const { context, group, regionPainters } = this;
     if (!context || !group || !data || regionPainters.has(region.id)) return null;
     try {
+      configureLocalDracoDecoder();
       const asset = await TgdDataGlb.parse(data);
       // start() ran during parse(): the captured `context` is now a deleted
       // TgdContext. Bail before touching it so we never throw
