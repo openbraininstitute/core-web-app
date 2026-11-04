@@ -7,11 +7,19 @@ import {
   formatUv,
   hexAt,
   levelOf,
+  positionOfLevel,
   SCALE_GRADIENT,
   SCENE_LEVELS,
 } from '@/features/lfp-viewer/colour-scale';
+import {
+  contactGrid,
+  openingSliceAxis,
+  slicePosition,
+  voxelsOf,
+} from '@/features/lfp-viewer/contact-grid';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
+import { PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
@@ -25,9 +33,15 @@ const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false, colo
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const SELECTED_COLOR = '#000000';
-const LEVEL_COLORS = Array.from({ length: SCENE_LEVELS }, (_, i) =>
-  hexAt((i / (SCENE_LEVELS - 1)) * 2 - 1)
-);
+const AXES = ['x', 'y', 'z'];
+const CONTACT_VIEWS = [
+  { value: 'voxels', label: 'Voxels' },
+  { value: 'slice', label: 'Slice' },
+  { value: 'points', label: 'Points' },
+] as const;
+type ContactView = (typeof CONTACT_VIEWS)[number]['value'];
+
+const LEVEL_COLORS = Array.from({ length: SCENE_LEVELS }, (_, i) => hexAt(positionOfLevel(i)));
 
 /** Each contact's colour level at a bin; under `hideBelow` µV, zero's, so its ring still shows it. */
 function levelsAt(field: LfpField, scale: ColourScale, bin: number, hideBelow: number): Uint8Array {
@@ -74,6 +88,17 @@ export function LfpScene({
   const { positions } = contacts;
   const [levels, setLevels] = useState<Uint8Array | null>(null);
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
+  const grid = useMemo(() => (positions ? contactGrid(positions) : null), [positions]);
+  const [chosenView, setChosenView] = useState<ContactView | null>(null);
+  const view = grid ? (chosenView ?? 'voxels') : 'points';
+  const [chosenAxis, setChosenAxis] = useState<number | null>(null);
+  const [chosenIndex, setChosenIndex] = useState<number | null>(null);
+  const slice = useMemo(() => {
+    if (!grid || view !== 'slice') return null;
+    const axis = chosenAxis ?? openingSliceAxis(grid);
+    const last = grid.slices[axis] - 1;
+    return { axis, index: Math.min(chosenIndex ?? Math.floor(last / 2), last) };
+  }, [grid, view, chosenAxis, chosenIndex]);
 
   // Recoloured only while on screen, and drawn again only where a contact's colour changed.
   useEffect(() => {
@@ -109,7 +134,7 @@ export function LfpScene({
     for (let c = 0; c < field.contacts; c++) {
       const xyz = [positions[c * 3], positions[c * 3 + 1], positions[c * 3 + 2]];
       if (c === selectedContact) selected.push(...xyz);
-      else byLevel[levels[c]].push(...xyz);
+      else if (view === 'points') byLevel[levels[c]].push(...xyz);
     }
     const groups = byLevel.flatMap((coordinates, level) =>
       coordinates.length === 0
@@ -132,8 +157,15 @@ export function LfpScene({
       });
     }
     return groups;
-  }, [positions, field.contacts, levels, selectedContact]);
-  const electrodes = useMemo(() => ({ drawn }), [drawn]);
+  }, [positions, field.contacts, levels, selectedContact, view]);
+  const voxels = useMemo(
+    () =>
+      positions && grid && levels && levels.length === field.contacts && view !== 'points'
+        ? voxelsOf(positions, grid, levels, slice)
+        : null,
+    [positions, grid, levels, field.contacts, view, slice]
+  );
+  const electrodes = useMemo(() => ({ drawn, voxels }), [drawn, voxels]);
 
   return (
     <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
@@ -147,6 +179,43 @@ export function LfpScene({
           electrodes={electrodes}
           active={active}
         />
+      )}
+      {grid && (
+        <div className="absolute top-3 left-12 flex flex-col items-start gap-2">
+          <PillSelect
+            label="Contacts"
+            value={view}
+            options={[...CONTACT_VIEWS]}
+            onChange={(v) => setChosenView(v as ContactView)}
+          />
+          {slice && (
+            <div className="flex items-center gap-2 rounded-full bg-white/90 py-1 pr-3 pl-1 text-xs text-neutral-600 shadow-sm">
+              <PillSelect
+                label="Along"
+                value={String(slice.axis)}
+                options={AXES.flatMap((name, axis) =>
+                  grid.slices[axis] > 1 ? [{ value: String(axis), label: name }] : []
+                )}
+                onChange={(v) => {
+                  setChosenAxis(Number(v));
+                  setChosenIndex(null);
+                }}
+              />
+              <input
+                type="range"
+                aria-label="Slice position"
+                className="accent-primary-8 w-32"
+                min={0}
+                max={grid.slices[slice.axis] - 1}
+                value={slice.index}
+                onChange={(e) => setChosenIndex(Number(e.target.value))}
+              />
+              <span className="tabular-nums">
+                {AXES[slice.axis]} = {slicePosition(grid, slice).toFixed(0)} µm
+              </span>
+            </div>
+          )}
+        </div>
       )}
       <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
         <div className="h-2 w-40 rounded-full" style={{ background: SCALE_GRADIENT }} />

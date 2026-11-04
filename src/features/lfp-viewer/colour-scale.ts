@@ -47,7 +47,7 @@ export function formatUv(uv: number): string {
 }
 
 /** A position on the scale's colour, as RGB. */
-function rgbAt(position: number): [number, number, number] {
+export function rgbAt(position: number): [number, number, number] {
   const at = ((position + 1) / 2) * (STOPS.length - 1);
   const i = Math.min(STOPS.length - 2, Math.max(0, Math.floor(at)));
   const f = Math.min(1, Math.max(0, at - i));
@@ -71,6 +71,11 @@ export function hexAt(position: number): string {
   return `#${rgbAt(position)
     .map((c) => c.toString(16).padStart(2, '0'))
     .join('')}`;
+}
+
+/** Where a scene level falls on the scale, from −1 to 1. */
+export function positionOfLevel(level: number): number {
+  return (level / (SCENE_LEVELS - 1)) * 2 - 1;
 }
 
 /** The scene level a position is binned into. */
