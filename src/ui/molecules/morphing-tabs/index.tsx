@@ -90,6 +90,8 @@ const MIN_TAB_WIDTH = 132;
 const TAB_HEIGHT = 48;
 const TAB_RADIUS = 24;
 const RAIL_HEIGHT = 48;
+/** The pill the tabs share without a surface; the rail's room under it is for the raised tab's shadow. */
+const SHARED_PILL_HEIGHT = TAB_HEIGHT - 8;
 const SURFACE_INSET = 4;
 const LIQUID_JOIN = 24;
 const PANEL_RADIUS = 28;
@@ -293,6 +295,8 @@ export function MorphingTabs({
 }: MorphingTabsProps) {
   const reduce = Boolean(useReducedMotion());
   const hasEnd = Boolean(railEnd);
+  // What the rail takes from the panel, and centres what is beside the tabs in.
+  const railRoom = surfaceless ? SHARED_PILL_HEIGHT : RAIL_HEIGHT;
   const uid = useId();
 
   // 0 with the rail out, 1 folded away; the rail's clip and the surface's top
@@ -322,9 +326,9 @@ export function MorphingTabs({
     for (const animation of panel.getAnimations()) {
       if (animation.id === SHIFT.id) animation.cancel();
     }
-    const from = (railCollapsed ? RAIL_HEIGHT : -RAIL_HEIGHT) + under;
+    const from = (railCollapsed ? railRoom : -railRoom) + under;
     panel.animate([{ transform: `translateY(${from}px)` }, { transform: 'none' }], SHIFT);
-  }, [railCollapsed, reduce]);
+  }, [railCollapsed, railRoom, reduce]);
 
   const [internalValue, setInternalValue] = useState<string | null>(
     defaultValue ?? items[0]?.id ?? null
@@ -486,7 +490,7 @@ export function MorphingTabs({
             <span
               aria-hidden
               className="absolute top-0 rounded-full bg-white/60"
-              style={{ left: slotStart, width: tabsWidth, height: TAB_HEIGHT - 8 }}
+              style={{ left: slotStart, width: tabsWidth, height: SHARED_PILL_HEIGHT }}
             />
           )}
           {items.map((item, index) => {
@@ -603,7 +607,7 @@ export function MorphingTabs({
             <div
               data-slot="morphing-tabs-rail-slots"
               className="pointer-events-none absolute z-30 flex items-center gap-4 overflow-hidden"
-              style={{ left: SURFACE_INSET, right: railRight, top: 0, height: RAIL_HEIGHT }}
+              style={{ left: SURFACE_INSET, right: railRight, top: 0, height: railRoom }}
             >
               <div className={cn('flex min-w-0 [&>*]:pointer-events-auto', classNames?.railStart)}>
                 {railStart}
@@ -632,7 +636,7 @@ export function MorphingTabs({
                 left: slotStart + tabsWidth + RAIL_GAP,
                 right: SURFACE_INSET + endReserve,
                 top: 0,
-                height: RAIL_HEIGHT,
+                height: railRoom,
               }}
             >
               <div
@@ -650,7 +654,7 @@ export function MorphingTabs({
               ref={endRef}
               data-slot="morphing-tabs-rail-end"
               className={cn('absolute z-30 flex items-center', classNames?.railEnd)}
-              style={{ right: SURFACE_INSET, top: 0, height: RAIL_HEIGHT }}
+              style={{ right: SURFACE_INSET, top: 0, height: railRoom }}
             >
               {railEnd}
             </div>
@@ -663,7 +667,7 @@ export function MorphingTabs({
         id={`${uid}-panel`}
         role="tabpanel"
         aria-labelledby={`${uid}-tab-${safeId(activeId ?? 'empty')}`}
-        style={{ marginTop: railCollapsed ? 0 : RAIL_HEIGHT }}
+        style={{ marginTop: railCollapsed ? 0 : railRoom }}
         className={cn(
           'relative z-20 mx-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] text-[#181818]',
           classNames?.content

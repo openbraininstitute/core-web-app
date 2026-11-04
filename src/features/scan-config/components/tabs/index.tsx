@@ -22,6 +22,7 @@ import {
   ValidateScanConfigTabs,
 } from '@/features/scan-config/types';
 import { MorphingTabs, type MorphingTabsItem } from '@/ui/molecules/morphing-tabs';
+import { cn } from '@/utils/css-class';
 
 import type { ReactNode } from 'react';
 
@@ -144,7 +145,7 @@ export function ScanConfigTabsPanel({
       value={tab.id}
       onValueChange={(id) => id && setTab(toScanConfigTab(activity, id))}
       ariaLabel={`${activity} workflow`}
-      className={className}
+      className={cn('scan-config-tabs', className)}
       classNames={{ label: 'capitalize' }}
     />
   );

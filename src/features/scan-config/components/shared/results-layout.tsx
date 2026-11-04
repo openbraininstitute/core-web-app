@@ -106,7 +106,7 @@ const PANEL_STRIP_CLASS = 'pt-px pb-3 pl-[12px] pr-px';
  * the bar comes up where the tabs were, so what it spans rises a little to meet it,
  * played as a move (DROP) rather than eased as a margin.
  */
-const BAR_ROOM = 43.5;
+const BAR_ROOM = 35.5;
 
 /** Inside the two left columns' window, clear of its rounded edges as the configuration's are. */
 const WINDOWED = 'mt-[calc(0.75rem+1px)] mb-6';
