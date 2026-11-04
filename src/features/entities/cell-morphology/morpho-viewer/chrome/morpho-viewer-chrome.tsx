@@ -1,7 +1,9 @@
 import { RiArrowDownSLine } from '@remixicon/react';
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
-import { morphologyDebugFlag, useFlag } from '@/features/feature-flags';
+import { debugFlag, useFlag } from '@/features/feature-flags';
 import { panelStyle } from '@/features/scan-config/components/color-by/contrast';
 import { GIZMO_SIZE } from '@/features/viewer-3d/chrome/axes-gizmo';
 import { lookTheme } from '@/features/viewer-3d/chrome/look-theme';
@@ -9,7 +11,6 @@ import { ViewerChrome } from '@/features/viewer-3d/chrome/viewer-chrome';
 import { cn } from '@/utils/css-class';
 
 import { ColorByMenu } from './color-by-menu';
-import { DebugMenu } from './debug-menu';
 import { NeuritesKey } from './neurites-key';
 import { SettingsMenu } from './settings-menu';
 import { BuildStatus } from './status';
@@ -20,6 +21,8 @@ import type { MorphologyMeshState } from '../use-morphology-mesh';
 import type { ViewerActions, ViewerSettings } from '../use-viewer-settings';
 
 import styles from '@/features/scan-config/components/color-by/chrome-animations.module.css';
+
+const DebugMenu = dynamic(() => import('./debug-menu').then((m) => m.DebugMenu), { ssr: false });
 
 interface MorphoViewerChromeProps {
   viewer: Viewer;
@@ -53,7 +56,7 @@ export function MorphoViewerChrome({
   distanceError,
 }: MorphoViewerChromeProps) {
   const [keyOpen, setKeyOpen] = useState(true);
-  const debug = useFlag(morphologyDebugFlag.key);
+  const debug = useFlag(debugFlag.key);
   const { update } = actions;
   const look = viewer.looks.find((l) => l.id === settings.look) ?? viewer.looks[0];
   const theme = lookTheme(look, settings.dark);
@@ -78,7 +81,9 @@ export function MorphoViewerChrome({
             hasMesh={mesh.layers.mesh !== null}
           />
           {debug && (
-            <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
+            <ErrorBoundary fallback={null}>
+              <DebugMenu name={name} state={mesh} settings={settings} update={update} look={look} />
+            </ErrorBoundary>
           )}
         </>
       }

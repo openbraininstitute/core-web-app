@@ -167,6 +167,7 @@ function CircuitVizView({
   theme,
   onCellClick,
   defaultColor = DEFAULT_NEURON_COLOR,
+  debugTarget,
 }: TCircuitVizViewProps) {
   const {
     tree,
@@ -301,6 +302,12 @@ function CircuitVizView({
           spin={spin}
           signals={signals}
           onZoomChange={onZoomChange}
+          debugTarget={debugTarget}
+          debugLoad={{
+            loaded: morphologies.loaded,
+            failed: morphologies.failed,
+            total: morphologies.total,
+          }}
         />
       )}
       {legendTarget === undefined ? (

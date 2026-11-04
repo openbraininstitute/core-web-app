@@ -62,21 +62,12 @@ export const electrodeOverlaysFlag = defineFlag<boolean>({
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
-/** The morphology viewer's Debug menu: the statistics of the file and the mesh, and the mesh exports. */
-export const morphologyDebugFlag = defineFlag<boolean>({
-  key: 'morphology-debug',
+/** The 3D viewers' Debug menus, fetched only with this on, and the circuit viewer's diagnostics in the console. */
+export const debugFlag = defineFlag<boolean>({
+  key: 'debug',
   defaultValue: false,
   values: [true, false],
-  description: 'Morphology viewer debug menu (statistics and mesh export)',
-  visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
-});
-
-/** The EM cell mesh viewer's Debug menu: the load's timings and memory, and how the mesh on show is chosen. */
-export const emMeshDebugFlag = defineFlag<boolean>({
-  key: 'em-mesh-debug',
-  defaultValue: false,
-  values: [true, false],
-  description: 'EM cell mesh viewer debug menu (load timings, memory and mesh choice)',
+  description: 'Debug menus in the morphology, EM cell mesh and circuit viewers',
   visible: () => ['local', 'preview', 'staging'].includes(config.DEPLOYMENT_ENV),
 });
 
@@ -152,8 +143,7 @@ export const flags = [
   smallScalesViaLaunchSystemFlag,
   memodelBuildViaLaunchSystemFlag,
   electrodeOverlaysFlag,
-  morphologyDebugFlag,
-  emMeshDebugFlag,
+  debugFlag,
   circuitMorphologiesFlag,
   learnFlag,
   aiButtonFlag,

@@ -1,12 +1,8 @@
 import { saveAs } from 'file-saver';
 import { useState } from 'react';
 
-import {
-  DebugMenuShell,
-  DownloadRow,
-  FailedNote,
-  fileName,
-} from '@/features/viewer-3d/chrome/debug-rows';
+import { DebugMenuShell, DownloadRow, FailedNote } from '@/features/viewer-3d/chrome/debug-rows';
+import { fileName } from '@/features/viewer-3d/chrome/file-name';
 import { errorMessage } from '@/utils/error';
 import { logError } from '@/utils/logger';
 

@@ -62,7 +62,7 @@ Coordinates are shifted so the soma centre is the origin (the bounding-box centr
 
 ## Build parameters
 
-The POC had a control for each of these. The platform builds with the POC's defaults, `DEFAULT_BUILD` in `../constants.ts`; the voxel is 10^−0.9 ≈ 0.126 µm. The Debug menu, behind the `morphology-debug` flag, has the POC's controls for them, but not for the neurite types, which the eyes set.
+The POC had a control for each of these. The platform builds with the POC's defaults, `DEFAULT_BUILD` in `../constants.ts`; the voxel is 10^−0.9 ≈ 0.126 µm. The Debug menu, behind the `debug` flag, has the POC's controls for them, but not for the neurite types, which the eyes set.
 
 | Parameter | In the platform | Meaning |
 | --- | --- | --- |
