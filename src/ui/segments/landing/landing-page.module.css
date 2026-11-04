@@ -1,5 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Gabarito:wght@400..900&display=swap");
 
+/* The pages held a section at a time; the shell sets the class. */
+@media (min-width: 768px) {
+  html:has(:global(.landing-page-snap)) {
+    scroll-snap-type: y mandatory;
+  }
+}
+
 .landingPage {
   --color-background: #fff;
   --color-on-bakground: #000;

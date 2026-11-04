@@ -475,12 +475,6 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  @media (min-width: 768px) {
-    html:has(.landing-page-snap) {
-      scroll-snap-type: y mandatory;
-    }
-  }
-
   .ant-tabs-top > .ant-tabs-nav::before {
     @apply border-none;
   }
