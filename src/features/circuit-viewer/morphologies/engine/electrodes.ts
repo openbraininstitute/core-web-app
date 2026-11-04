@@ -50,7 +50,7 @@ export interface ElectrodeUniforms {
    * the full resolution, so a frame drawn at less still draws them as wide on screen.
    */
   uScale: { value: number };
-  /** Where opacity falls with depth: xyz the array's middle, w how far from it, in µm, the fade runs; w 0 for none. */
+  /** Where opacity and size fall with depth, if they do: xyz the array's middle, w how far from it, in µm, the fade runs. */
   uFade: { value: THREE.Vector4 };
   /** The halo's width, in device pixels of the full resolution; 0 for none. */
   uHalo: { value: number };
@@ -96,14 +96,13 @@ void main() {
 	vec3 c = ( modelViewMatrix * vec4( aContact, 1.0 ) ).xyz;
 	float um = pixelUm( c.z ) * uScale;
 	float away = clamp( 0.5 + ( ( modelViewMatrix * vec4( uFade.xyz, 1.0 ) ).z - c.z ) / ( 2.0 * uFade.w ), 0.0, 1.0 );
-	bool fades = uFade.w > 0.0;
-	float r = max( uRadius * aLook.a, uMinRadius * um ) * ( fades ? mix( uSizes.x, uSizes.y, away ) : 1.0 );
+	float r = max( uRadius * aLook.a, uMinRadius * um ) * mix( uSizes.x, uSizes.y, away );
 	float outer = r + ( uRing + uHalo ) * um;
 	vInner = r / outer;
 	vRingEnd = ( r + uRing * um ) / outer;
 	vColour = aLook.rgb;
 	vCorner = position.xy;
-	vOpacity = fades ? mix( uOpacities.x, uOpacities.y, away ) : 1.0;
+	vOpacity = mix( uOpacities.x, uOpacities.y, away );
 	gl_Position = projectionMatrix * vec4( c.xy + position.xy * outer, c.z + uLift * r, 1.0 );
 	// Clip z runs from -w to w here: to just past -w, keeping the order among the contacts.
 	gl_Position.z = mix( gl_Position.z, ${FRONT_DEPTH.toFixed(4)} * gl_Position.z - ${(1 - FRONT_DEPTH).toFixed(4)} * gl_Position.w, uFront );

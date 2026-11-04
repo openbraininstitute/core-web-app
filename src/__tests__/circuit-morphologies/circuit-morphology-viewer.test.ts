@@ -674,7 +674,8 @@ describe('the circuit morphology viewer', () => {
     expect(solidMaterial.depthFunc).toBe(THREE.LessEqualDepth);
     expect([solidMaterial.depthTest, solidMaterial.depthWrite]).toEqual([true, true]);
     expect(solidMaterial.uniforms.uRing.value).toBeGreaterThan(0);
-    expect(solidMaterial.uniforms.uFade.value.w).toBe(0);
+    expect(solidMaterial.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
+    expect(solidMaterial.uniforms.uSizes.value.toArray()).toEqual([1, 1]);
 
     const faintMaterial = faint.material as THREE.ShaderMaterial;
     expect(faintMaterial.depthFunc).toBe(THREE.GreaterDepth);
@@ -738,7 +739,7 @@ describe('the circuit morphology viewer', () => {
       viewer.setData(circuit());
       viewer.setElectrodes(groups(), null);
       expect(inner.materials.electrode.uniforms.uHalo.value).toBe(HALO_PX * inner.pixelRatio);
-      expect(inner.materials.electrode.uniforms.uFade.value.w).toBe(0);
+      expect(inner.materials.electrode.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
 
       viewer.setElectrodes(arrays(), null);
       expect(inner.materials.electrode.uniforms.uHalo.value).toBe(0);
@@ -855,7 +856,7 @@ describe('the circuit morphology viewer', () => {
     viewer.setElectrodes(arrays(), null);
     expect(inner.scene.getObjectByName('contacts among the cells')).toBeUndefined();
     expect(inner.scene.getObjectByName('hidden contacts')).toBeUndefined();
-    expect(inner.materials.electrode.uniforms.uFade.value.w).toBe(0);
+    expect(inner.materials.electrode.uniforms.uOpacities.value.toArray()).toEqual([1, 1]);
   });
 
   it('draws synapses after the cells and among them, behind what is nearer, centred as the data is', () => {

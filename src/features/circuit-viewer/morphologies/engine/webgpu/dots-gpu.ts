@@ -36,10 +36,9 @@ fn dotQuad(contact: vec3f, look: vec4f, corner: vec2f, modelView: mat4x4f, proje
   let c = (modelView * vec4f(contact, 1.0)).xyz;
   let um = pixelUm(c.z, projection, vp) * scale;
   let away = clamp(0.5 + ((modelView * vec4f(fade.xyz, 1.0)).z - c.z) / (2.0 * fade.w), 0.0, 1.0);
-  let fades = fade.w > 0.0;
-  let r = max(radius * look.a, minRadius * um) * select(1.0, mix(sizes.x, sizes.y, away), fades);
+  let r = max(radius * look.a, minRadius * um) * mix(sizes.x, sizes.y, away);
   let outer = r + (ring + halo) * um;
-  let opacity = select(1.0, mix(opacities.x, opacities.y, away), fades);
+  let opacity = mix(opacities.x, opacities.y, away);
   let place = projection * vec4f(c.xy + corner * outer, c.z + lift * r, 1.0);
   // Clip z runs from 0 to w here: to just past 0, keeping the order among the contacts.
   let z = place.z * mix(1.0, ${FRONT_DEPTH.toFixed(4)}, front);

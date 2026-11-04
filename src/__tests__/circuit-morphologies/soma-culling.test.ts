@@ -21,7 +21,7 @@ const dots = () => ({
   uMinRadius: { value: 1 },
   uRingColour: { value: new THREE.Vector3() },
   uScale: { value: 1 },
-  uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uFade: { value: new THREE.Vector4() },
   uHalo: { value: 0 },
   uHaloColour: { value: new THREE.Vector3() },
 });

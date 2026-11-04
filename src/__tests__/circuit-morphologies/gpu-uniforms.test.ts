@@ -12,7 +12,7 @@ const dots = (radius: number, minRadius: number) => ({
   uMinRadius: { value: minRadius },
   uRingColour: { value: new THREE.Vector3(0.1, 0.2, 0.3) },
   uScale: { value: 1 },
-  uFade: { value: new THREE.Vector4(0, 0, 0, 0) },
+  uFade: { value: new THREE.Vector4() },
   uHalo: { value: 0 },
   uHaloColour: { value: new THREE.Vector3() },
 });
