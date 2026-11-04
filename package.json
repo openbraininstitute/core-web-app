@@ -45,7 +45,6 @@
     "@jupyter-kit/react": "^3.0.0",
     "@jupyter-kit/theme-default": "^3.0.0",
     "@lezer/javascript": "^1.5.4",
-    "@loaders.gl/core": "4.4.1",
     "@monaco-editor/react": "^4.7.0",
     "@octokit/core": "^7.0.6",
     "@openbraininstitute/morphoviewer": "0.38.1",
