@@ -136,16 +136,19 @@ export interface IFormBindingOptions {
   /** The block types the form's morphology-locations dictionary accepts, from its schema. */
   locationBlockTypes?: readonly string[];
   /**
-   * The block a 3D pick writes to on this model, if any: explicit on one neuron, per-neuron on
-   * several. Off unless the host says otherwise.
+   * The blocks a 3D pick may fill on this model, the one a new block takes first: explicit on
+   * one neuron, per-neuron on several. None unless the host says otherwise.
    */
-  explicitLocationsBlockType?: TExplicitLocationsBlockType | null;
-  /** The model is one morphology, the only kind the generated-locations preview endpoint takes. */
-  previewsGeneratedLocations?: boolean;
+  explicitLocationsBlockTypes?: readonly TExplicitLocationsBlockType[];
+  /**
+   * The model is one morphology: the generated-locations preview takes it, and a pick from
+   * anywhere in the form may start a block, cell clicks having little else to do there.
+   */
+  singleMorphology?: boolean;
 }
 
-/** Whether the form selection is a block holding stored locations. */
-export function supportsMorphologyLocationPicking({
+/** Whether the form has a block of stored locations open. */
+export function isStoredLocationsBlockOpen({
   config,
   selectedRootElement,
   selectedEntry,
@@ -165,46 +168,47 @@ export type TMorphologyLocationPickModeDict =
   | (typeof MorphologyLocationPickModeDict)[keyof typeof MorphologyLocationPickModeDict]
   | null;
 
-/** One rule for whether picking is on, used by both the viewer host and the pick handler. */
-export function morphologyLocationPickMode({
+/**
+ * The block type a pick writes: the open block's, where this model can fill it, so a block of
+ * either kind is extended in place; else the one a new block takes. Null when picks fill none.
+ */
+export function locationPickBlockType({
   config,
   selectedRootElement,
   selectedEntry,
-  onConfigChange,
-  onCreateEntry,
-  explicitLocationsBlockType,
-}: IFormBindingOptions): TMorphologyLocationPickModeDict {
-  if (!explicitLocationsBlockType) return null;
+  explicitLocationsBlockTypes = [],
+}: IFormBindingOptions): TExplicitLocationsBlockType | null {
+  const open =
+    selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
+      ? readEntry(config, selectedEntry)?.type
+      : undefined;
+  const fillable = explicitLocationsBlockTypes.find((type) => type === open);
+  return fillable ?? explicitLocationsBlockTypes[0] ?? null;
+}
 
-  // Only the block this model's picks are shaped for: a per-neuron row cannot go into an
-  // explicit block, nor the reverse.
-  if (
-    selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY &&
-    readEntry(config, selectedEntry)?.type === explicitLocationsBlockType
-  ) {
+/** One rule for whether picking is on, used by both the viewer host and the pick handler. */
+export function morphologyLocationPickMode(
+  options: IFormBindingOptions
+): TMorphologyLocationPickModeDict {
+  const { config, selectedRootElement, selectedEntry, onConfigChange, onCreateEntry } = options;
+  const type = locationPickBlockType(options);
+  if (!type) return null;
+
+  const onLocations = selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY;
+  // Only a block this model's picks are shaped for: a per-neuron row cannot go into an explicit
+  // block, nor the reverse.
+  if (onLocations && readEntry(config, selectedEntry)?.type === type) {
     return onConfigChange ? MorphologyLocationPickModeDict.Edit : null;
   }
+  // Among several neurons a cell click holds a cell or switches population, so a pick starts a
+  // block only while the form is on morphology locations.
+  if (!onLocations && !options.singleMorphology) return null;
   return onCreateEntry && readLocationsDictionary(config) !== null
     ? MorphologyLocationPickModeDict.Create
     : null;
 }
 
-/** The block types a form's schema accepts under `morphology_locations`. */
-export function readLocationBlockTypes(schema: unknown): string[] {
-  const variants = (
-    schema as {
-      properties?: Record<string, { additionalProperties?: { oneOf?: unknown[] } } | undefined>;
-    }
-  )?.properties?.[MORPHOLOGY_LOCATIONS_CONFIG_KEY]?.additionalProperties?.oneOf;
-  if (!Array.isArray(variants)) return [];
-  return variants.flatMap((variant) => {
-    const type = (variant as { properties?: { type?: { const?: unknown } } })?.properties?.type
-      ?.const;
-    return typeof type === 'string' ? [type] : [];
-  });
-}
-
-/** Node ids of the population on show that the 3D viewer is not drawing, published for the form. */
+/** Node ids of the population locations are placed on that carry no marker, published for the form. */
 export const hiddenLocationNodesAtom = atom<ReadonlySet<number>>(new Set<number>());
 
 /** Set while the pointer is on the "add locations from the 3D viewer" hint. */

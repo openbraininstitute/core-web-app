@@ -24,11 +24,6 @@ export function pointingOut(
   };
 }
 
-/** Whether the view draws the cell numbered `cell`: a `false` column takes it out. */
-export function isCellDrawn({ palette, columnByCell }: CellColors, cell: number): boolean {
-  return cell >= columnByCell.length || palette[columnByCell[cell]] !== false;
-}
-
 /** Each population's cells in the page's numbering, from its first to the one after its last. */
 export function populationRanges(
   populations: readonly Population[]

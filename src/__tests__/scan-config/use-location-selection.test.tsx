@@ -60,7 +60,8 @@ function render(overrides: Partial<TOptions>) {
       firstCell: 0,
       backgroundColor: BACKGROUND,
       // A single neuron or a synaptome, which is where explicit locations are taken.
-      explicitLocationsBlockType: 'ExplicitMorphologyLocations',
+      explicitLocationsBlockTypes: ['ExplicitMorphologyLocations'],
+      singleMorphology: true,
       ...overrides,
     })
   );
@@ -176,7 +177,7 @@ describe('a location picked', () => {
 
   // The view picks on whatever cell the tap landed near, and a circuit scene holds every population's cells.
   it.each([
-    ['a cell the block has nothing to do with', { cell: 7 }, /another population/i],
+    ['a cell the block has nothing to do with', { cell: 7 }, /biophysical population/i],
     ['a section with no SONATA number', { sonataId: null }, /section ids/i],
     ['an axon', { type: SectionType.Axon }, /Axon is not supported yet/],
     ['the soma', { type: SectionType.Soma, sonataId: 0 }, /Soma is not supported yet/],
@@ -246,7 +247,7 @@ describe('the locations on a model that takes no explicit locations', () => {
       ...elsewhere,
       config: EMPTY,
       onCreateEntry,
-      explicitLocationsBlockType: null,
+      explicitLocationsBlockTypes: [],
     });
 
     expect(result.current.pickMode).toBe(null);
@@ -257,7 +258,7 @@ describe('the locations on a model that takes no explicit locations', () => {
     const { result } = render({
       config: configWith([{ section_id: 3, offset: 0.1 }]),
       onConfigChange: vi.fn(),
-      explicitLocationsBlockType: null,
+      explicitLocationsBlockTypes: [],
     });
 
     expect(result.current.pickMode).toBe(null);
@@ -447,7 +448,8 @@ describe('per-neuron explicit locations', () => {
     return render({
       cells: NEURONS,
       firstCell: FIRST,
-      explicitLocationsBlockType: PER_NEURON,
+      explicitLocationsBlockTypes: [PER_NEURON],
+      singleMorphology: false,
       ...overrides,
     });
   }
@@ -548,9 +550,9 @@ describe('per-neuron explicit locations', () => {
     ]);
   });
 
-  it('starts a per-neuron block when none is open', () => {
+  it('starts a per-neuron block while the form is on locations with none open', () => {
     const onCreateEntry = vi.fn();
-    const { result } = renderPerNeuron({ ...elsewhere, config: EMPTY, onCreateEntry });
+    const { result } = renderPerNeuron({ selectedEntry: undefined, config: EMPTY, onCreateEntry });
 
     act(() => result.current.locations?.onPick?.(spot({ cell: FIRST + 7, offset: 0.25 })));
 
@@ -574,6 +576,7 @@ describe('per-neuron explicit locations', () => {
       // Another population's cell has no node id a row could name.
       act(() => result.current.locations?.onHover?.(spot({ cell: 2 })));
       expect(result.current.hover?.nodeId).toBeUndefined();
+      expect(result.current.hover?.foreign).toBe(true);
 
       act(() => {
         result.current.locations?.onMarkersOnScreen?.([
@@ -592,6 +595,27 @@ describe('per-neuron explicit locations', () => {
       config: configWith([{ section_id: 3, offset: 0.5 }]),
       onConfigChange: vi.fn(),
     });
+
+    expect(result.current.pickMode).toBe(null);
+  });
+
+  it('says an open plain block cannot be edited here, rather than to open it', () => {
+    infos.length = 0;
+    const onConfigChange = vi.fn();
+    const { result } = renderPerNeuron({
+      config: configWith([{ section_id: 3, offset: 0.5 }]),
+      onConfigChange,
+      onCreateEntry: vi.fn(),
+    });
+
+    act(() => result.current.locations?.onPick?.(marker(0)));
+
+    expect(onConfigChange).not.toHaveBeenCalled();
+    expect(infos.join(' ')).toMatch(/cannot be edited from the 3D viewer/);
+  });
+
+  it('leaves cell clicks to the scene elsewhere in the form', () => {
+    const { result } = renderPerNeuron({ ...elsewhere, config: EMPTY, onCreateEntry: vi.fn() });
 
     expect(result.current.pickMode).toBe(null);
   });

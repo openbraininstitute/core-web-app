@@ -15,6 +15,7 @@ import {
   type IStoredLocation,
   type ITaggedLocation,
   isExplicitLocationsBlockType,
+  locationPickBlockType,
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   MorphologyLocationPickModeDict,
   morphologyLocationPickMode,
@@ -22,6 +23,7 @@ import {
   readEntry,
   readLocations,
   readLocationsDictionary,
+  type TExplicitLocationsBlockType,
   type TMorphologyLocationPickModeDict,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 
@@ -71,6 +73,8 @@ export interface LocationHover {
   generated?: boolean;
   /** The SONATA node id the location is on, where the block stores one per row. */
   nodeId?: number;
+  /** On a cell of another population, where a click places nothing. */
+  foreign?: boolean;
 }
 
 /** A stored location's tag, where its marker is drawn. */
@@ -98,7 +102,7 @@ const pickable: LocationOptions['pickable'] = (spot) => isTargetableSectionType(
 
 /**
  * Two-way binding between the 3D view and an `ExplicitMorphologyLocations` or `PerNeuronExplicitMorphologyLocations`
- * block, whichever `explicitLocationsBlockType` names.
+ * block: the open one where this model can fill it, else the first of `explicitLocationsBlockTypes`.
  *
  * Clicking a neurite adds a location to the open block, and the block's rows come back as markers. The config is the
  * only source of truth, so the list and the 3D view cannot drift apart. With no block open, a click creates one. Locations previewed from
@@ -116,7 +120,8 @@ export function useLocationSelection({
   selectedRootElement,
   selectedEntry,
   onCreateEntry,
-  explicitLocationsBlockType,
+  explicitLocationsBlockTypes,
+  singleMorphology,
   cells,
   firstCell,
   backgroundColor,
@@ -128,24 +133,29 @@ export function useLocationSelection({
   hover: LocationHover | null;
   labels: LocationLabel[];
   pickMode: TMorphologyLocationPickModeDict;
+  /** The block type a pick writes, so the popover can name a new one. */
+  blockType: TExplicitLocationsBlockType | null;
 } {
   const message = useAppMessage();
   const [hover, setHover] = useState<LocationHover | null>(null);
   const [labels, setLabels] = useState<LocationLabel[]>([]);
-  const pickMode = morphologyLocationPickMode({
+  const binding = {
     config,
     selectedRootElement,
     selectedEntry,
     onConfigChange,
     onCreateEntry,
-    explicitLocationsBlockType,
-  });
+    explicitLocationsBlockTypes,
+    singleMorphology,
+  };
+  const pickMode = morphologyLocationPickMode(binding);
+  const blockType = locationPickBlockType(binding);
   const canEdit = pickMode === MorphologyLocationPickModeDict.Edit;
-  const perNeuron = explicitLocationsBlockType === PER_NEURON_EXPLICIT_BLOCK_TYPE;
-  // A pick's neuron, where the block stores one: only cells of the population on show have node ids rows can name.
-  const nodeIdOf = useCallback(
-    (cell: number) => (perNeuron && cells.includes(cell) ? cell - firstCell : undefined),
-    [perNeuron, cells, firstCell]
+  const perNeuron = blockType === PER_NEURON_EXPLICIT_BLOCK_TYPE;
+  // A cell's node id, or null off the population locations are placed on, whose node ids no row can name.
+  const nodeOf = useCallback(
+    (cell: number) => (cells.includes(cell) ? cell - firstCell : null),
+    [cells, firstCell]
   );
   // Read through the dictionary, not `config`: an edit elsewhere in the form must not rebuild the markers.
   const dictionary = readLocationsDictionary(config);
@@ -221,8 +231,13 @@ export function useLocationSelection({
           );
           return;
         }
-        if (!canEdit || existing.entry !== selectedEntry) {
+        if (existing.entry !== selectedEntry) {
           message.info(`That location belongs to "${existing.entry}". Open that block to edit it.`);
+          return;
+        }
+        // Open, but of a kind this model's picks cannot fill: plain rows on several neurons, say.
+        if (!canEdit) {
+          message.info(`"${existing.entry}" cannot be edited from the 3D viewer on this model.`);
           return;
         }
         if (ownLocationCount <= 1) {
@@ -238,10 +253,9 @@ export function useLocationSelection({
         const { spot } = hit;
         // The view picks on whatever cell the tap landed near, and the scene holds every population's cells. Only
         // these carry section ids the rows can be read against.
-        if (!cells.includes(spot.cell)) {
-          message.info(
-            'That cell belongs to another population. Select it to place a location there.'
-          );
+        const node = nodeOf(spot.cell);
+        if (node === null) {
+          message.info('Locations are placed on the circuit’s biophysical population only.');
           return;
         }
         if (spot.sonataId === null) {
@@ -257,16 +271,16 @@ export function useLocationSelection({
           return;
         }
         location = {
-          // The cell the tap landed on, checked above to be of the population on show, is the neuron it belongs to.
-          ...(perNeuron ? { node_id: spot.cell - firstCell } : {}),
+          // The cell the tap landed on is the neuron the point belongs to.
+          ...(perNeuron ? { node_id: node } : {}),
           section_id: spot.sonataId,
           offset: Number(spot.offset.toFixed(4)),
         };
       }
       if (!canEdit) {
-        if (!explicitLocationsBlockType) return;
+        if (!blockType) return;
         onCreateEntry?.(MORPHOLOGY_LOCATIONS_CONFIG_KEY, {
-          type: explicitLocationsBlockType,
+          type: blockType,
           locations: [location],
         });
         return;
@@ -282,11 +296,10 @@ export function useLocationSelection({
       ownLocationCount,
       canEdit,
       onCreateEntry,
-      cells,
-      firstCell,
+      nodeOf,
       stored,
       perNeuron,
-      explicitLocationsBlockType,
+      blockType,
     ]
   );
 
@@ -300,7 +313,7 @@ export function useLocationSelection({
     (hit: LocationHit | null) => {
       clearTimeout(restTimer.current);
       restTimer.current = undefined;
-      const next = hit && hoverOf(hit, stored, nodeIdOf);
+      const next = hit && hoverOf(hit, stored, nodeOf, perNeuron);
 
       if (next && !canEdit && !hoverVisible.current) {
         restTimer.current = setTimeout(() => {
@@ -314,7 +327,7 @@ export function useLocationSelection({
       hoverVisible.current = next !== null;
       setHover(next);
     },
-    [canEdit, stored, nodeIdOf]
+    [canEdit, stored, nodeOf, perNeuron]
   );
 
   const labelsGenerated = markers.length <= MAX_LABELLED_MARKERS;
@@ -378,6 +391,7 @@ export function useLocationSelection({
     hover: pickMode ? hover : null,
     labels: labelled ? labels : [],
     pickMode,
+    blockType,
   };
 }
 
@@ -385,17 +399,20 @@ export function useLocationSelection({
 function hoverOf(
   hit: LocationHit,
   stored: readonly Stored[],
-  nodeIdOf: (cell: number) => number | undefined
+  nodeOf: (cell: number) => number | null,
+  perNeuron: boolean
 ): LocationHover | null {
   if ('spot' in hit) {
     const { spot } = hit;
+    const node = nodeOf(spot.cell);
     return {
       kind: 'preview',
       sectionType: spot.type,
       sonataSectionId: spot.sonataId ?? undefined,
       offset: spot.offset,
       screen: spot.screen,
-      nodeId: nodeIdOf(spot.cell),
+      nodeId: perNeuron && node !== null ? node : undefined,
+      foreign: node === null || undefined,
     };
   }
   const location = stored[hit.marker];

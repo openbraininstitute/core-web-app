@@ -58,8 +58,8 @@ export function resolveEnableCellHover(options: {
   return options.scale !== CircuitScaleDictionary.Single;
 }
 
-/** Whether the model is one morphology, the only kind the generated-locations preview takes. */
-export function resolvePreviewsGeneratedLocations(model: {
+/** Whether the model is one morphology: an MEModel, or a single-neuron circuit. */
+export function resolveSingleMorphology(model: {
   type?: string;
   scale?: TCircuitScaleDictionary;
 }): boolean {
@@ -68,7 +68,8 @@ export function resolvePreviewsGeneratedLocations(model: {
 }
 
 /**
- * The block a 3D pick writes morphology locations to on this model, or null when none.
+ * The blocks a 3D pick may fill with morphology locations on this model, the one a new block
+ * takes first; empty when none.
  *
  * The model says which blocks a pick can fill: an MEModel has no node ids, so only the plain
  * explicit block; a single-neuron circuit fills either; a circuit drawing several neurons only
@@ -76,10 +77,10 @@ export function resolvePreviewsGeneratedLocations(model: {
  * The schema says which of those the workflow takes, so a block the backend would reject is
  * never created.
  */
-export function resolveExplicitLocationsBlockType(
+export function resolveExplicitLocationsBlockTypes(
   model: { type?: string; scale?: TCircuitScaleDictionary },
   acceptedBlockTypes: readonly string[]
-): TExplicitLocationsBlockType | null {
+): TExplicitLocationsBlockType[] {
   const candidates = match(model)
     .returnType<TExplicitLocationsBlockType[]>()
     .with({ type: EntityTypeDict.Memodel }, () => [EXPLICIT_BLOCK_TYPE])
@@ -95,5 +96,5 @@ export function resolveExplicitLocationsBlockType(
       () => [PER_NEURON_EXPLICIT_BLOCK_TYPE]
     )
     .otherwise(() => []);
-  return candidates.find((type) => acceptedBlockTypes.includes(type)) ?? null;
+  return candidates.filter((type) => acceptedBlockTypes.includes(type));
 }

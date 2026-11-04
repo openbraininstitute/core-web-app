@@ -80,6 +80,7 @@ function source(overrides: Partial<SmallCircuitSource>): SmallCircuitSource {
     hidden: [],
     locationCells: [],
     locationFirstCell: 0,
+    locationNodeCount: 0,
     error: null,
     anchor: null,
     ...overrides,

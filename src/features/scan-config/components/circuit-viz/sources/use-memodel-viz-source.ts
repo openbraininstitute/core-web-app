@@ -41,6 +41,7 @@ export function useMemodelVisualizationSource({
     hidden: NOTHING_HIDDEN,
     locationCells: THE_CELL,
     locationFirstCell: 0,
+    locationNodeCount: 1,
     error: null,
     anchor: ORIGIN,
   };

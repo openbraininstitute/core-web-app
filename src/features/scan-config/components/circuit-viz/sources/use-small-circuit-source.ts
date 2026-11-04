@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 
 import { circuitMorphologyPath } from '@/api/one/circuit-visualization';
+import { pickDefaultPopulation } from '@/features/circuit-nodes/population-utils';
 import {
   cellColorsOf,
   pointingOut,
@@ -154,24 +155,32 @@ export function useSmallCircuitSource({
   const tree = built ?? (error ? null : shown);
   if (tree !== shown) setShown(tree);
 
-  // Sliced to the population on show: matched against another's morphologies, a location would mark every cell whose
-  // sections number the same way. None while it is hidden, whose cells are not drawn.
-  const locationRange = useMemo(
-    () =>
-      tree
-        ? populationRanges(tree.somas.populations).find(({ name }) => name === populationName)
-        : undefined,
-    [tree, populationName]
-  );
+  // Sliced to the population OBI-One places locations on, its default: the one biophysical population, whichever is on
+  // show. Matched against another's morphologies, a location would mark every cell whose sections number the same way.
+  const targetName = useMemo(() => pickDefaultPopulation([...populations])?.name, [populations]);
+  const ranges = useMemo(() => (tree ? populationRanges(tree.somas.populations) : []), [tree]);
+  const locationRange = ranges.find(({ name }) => name === targetName);
+  // Not on a cell the nodes table filters out, nor on a hidden population, whose cells are not drawn. Not narrowed by a
+  // hovered row, which only points a cell out: that would rebuild every marker as the pointer moves.
   const locationCells = useMemo(() => {
-    const range = locationRange;
-    if (!tree || !range || hidden.has(range.name)) return [];
-    return Array.from({ length: range.end - range.first }, (_, i) => range.first + i).filter(
-      (cell) => tree.requests[cell] !== null
-    );
-  }, [tree, locationRange, hidden]);
+    if (!tree || !locationRange || hidden.has(locationRange.name)) return [];
+    const filter = locationRange.name === populationName ? shownCells : undefined;
+    const cells: number[] = [];
+    for (let i = 0; i < locationRange.end - locationRange.first; i++) {
+      const cell = locationRange.first + i;
+      if (tree.requests[cell] !== null && (!filter || filter[i] === 1)) cells.push(cell);
+    }
+    return cells;
+  }, [tree, locationRange, hidden, populationName, shownCells]);
 
-  const pointed = pointingOut(highlightedCell, locationCells.length > 0, recededColor);
+  // Whether the population on show draws morphologies, which decides how a cell is pointed out among them.
+  const onShowRange = ranges.find(({ name }) => name === populationName);
+  const drawsMorphologies =
+    !!tree &&
+    !!onShowRange &&
+    !hidden.has(onShowRange.name) &&
+    tree.requests.slice(onShowRange.first, onShowRange.end).some((request) => request !== null);
+  const pointed = pointingOut(highlightedCell, drawsMorphologies, recededColor);
   const cellColors = useMemo(
     () =>
       cellColorsOf({
@@ -230,6 +239,7 @@ export function useSmallCircuitSource({
     hidden: hiddenPopulations,
     locationCells,
     locationFirstCell: locationRange?.first ?? 0,
+    locationNodeCount: locationRange ? locationRange.end - locationRange.first : 0,
     download,
     error,
     synapses,

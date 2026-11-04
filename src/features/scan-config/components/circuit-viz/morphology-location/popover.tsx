@@ -1,11 +1,17 @@
 import { RiCursorHand } from '@remixicon/react';
 
-import { MorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import {
+  MorphologyLocationPickModeDict,
+  PER_NEURON_EXPLICIT_BLOCK_TYPE,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { cn } from '@/utils/css-class';
 
 import { isTargetableSectionType, sectionTypeLabel } from '../section-type-label';
 
-import type { TMorphologyLocationPickModeDict } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import type {
+  TExplicitLocationsBlockType,
+  TMorphologyLocationPickModeDict,
+} from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import type { LocationHover } from './use-location-selection';
 
 /** Gap between the point and the popover, so the dot stays visible under it. */
@@ -15,11 +21,11 @@ const OFFSET_PX = 14;
 function clickPrompt(
   isPreview: boolean,
   pickMode: TMorphologyLocationPickModeDict,
-  perNeuron: boolean
+  blockType: TExplicitLocationsBlockType | null
 ): string {
   if (!isPreview) return 'Click again to remove';
   if (pickMode === MorphologyLocationPickModeDict.Create)
-    return perNeuron
+    return blockType === PER_NEURON_EXPLICIT_BLOCK_TYPE
       ? 'Add to new Per Neuron Explicit Morphology Locations'
       : 'Add to new Explicit Morphology Locations';
   return 'Click to add a location';
@@ -35,9 +41,12 @@ function clickPrompt(
 export function MorphologyLocationPopover({
   hover,
   pickMode,
+  blockType,
 }: {
   hover: LocationHover | null;
   pickMode: TMorphologyLocationPickModeDict;
+  /** The block a pick writes, which a new one is named after. */
+  blockType: TExplicitLocationsBlockType | null;
 }) {
   if (!hover) return null;
 
@@ -45,8 +54,11 @@ export function MorphologyLocationPopover({
   const typeLabel = sectionTypeLabel(hover.sectionType);
   // A generated location moves with its block's parameters, so a click has nothing to offer.
   const generated = hover.generated === true;
-  const showPrompt = isPreview ? isTargetableSectionType(hover.sectionType) : !generated;
-  const prompt = clickPrompt(isPreview, pickMode, hover.nodeId !== undefined);
+  // Nothing to offer on another population's cell, where a click places nothing.
+  const showPrompt = isPreview
+    ? isTargetableSectionType(hover.sectionType) && !hover.foreign
+    : !generated;
+  const prompt = clickPrompt(isPreview, pickMode, blockType);
 
   // Flip to the other side near an edge so the popover is never clipped by the canvas.
   const flipX = hover.screen.x > 0.65;

@@ -39,9 +39,9 @@ import {
   hasAnyLocation,
   hasGeneratedBlock,
   type IFormBindingOptions,
+  isStoredLocationsBlockOpen,
   morphologyLocationPickMode,
   morphologyLocationsHintHoveredAtom,
-  supportsMorphologyLocationPicking,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import {
   electrodeBlockPath,
@@ -260,8 +260,8 @@ export function CircuitScene({
     selectedRootElement,
     selectedEntry,
     onCreateEntry,
-    explicitLocationsBlockType,
-    previewsGeneratedLocations,
+    explicitLocationsBlockTypes,
+    singleMorphology,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -411,19 +411,20 @@ export function CircuitScene({
       selectedEntry,
       onConfigChange: setConfig,
       onCreateEntry,
-      explicitLocationsBlockType,
+      explicitLocationsBlockTypes,
+      singleMorphology,
     }) !== null;
   // Gated on markers, not on picking, so the menu stays out of blocks with nothing to show.
   const hasMorphologyLocationsOnScreen =
     !largeCircuit &&
-    (supportsMorphologyLocationPicking({
+    (isStoredLocationsBlockOpen({
       config: scanConfig,
       selectedRootElement,
       selectedEntry,
     }) ||
       hasAnyLocation(scanConfig) ||
       // The flag that turns the preview on, so the controls show only with generated markers.
-      (Boolean(previewsGeneratedLocations) && hasGeneratedBlock(scanConfig)));
+      (Boolean(singleMorphology) && hasGeneratedBlock(scanConfig)));
 
   const {
     overlays,
@@ -729,8 +730,8 @@ export function CircuitScene({
         selectedRootElement,
         selectedEntry,
         onCreateEntry,
-        explicitLocationsBlockType,
-        previewsGeneratedLocations,
+        explicitLocationsBlockTypes,
+        singleMorphology,
         markerRadius: config.morphologyLocationRadius,
         showLabels: config.showMorphologyLocationLabels,
       },
@@ -744,8 +745,8 @@ export function CircuitScene({
       selectedRootElement,
       selectedEntry,
       onCreateEntry,
-      explicitLocationsBlockType,
-      previewsGeneratedLocations,
+      explicitLocationsBlockTypes,
+      singleMorphology,
       config.morphologyLocationRadius,
       config.showMorphologyLocationLabels,
     ]

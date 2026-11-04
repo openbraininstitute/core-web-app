@@ -14,7 +14,7 @@ import type { ViewerTheme } from './contrast';
 
 /**
  * in-house flag for manual color editing. When off, swatches are plain (read-only)
- * dots. Editing is not always required, so it lives behind this flag.
+ * icons. Editing is not always required, so it lives behind this flag.
  */
 const COLOR_EDITING_ENABLED = true;
 
@@ -143,7 +143,8 @@ function CategoricalList({
               style={{ color: entry.color }}
               onClick={editable && !open ? () => setOpenValue(entry.value) : undefined}
             >
-              <PyramidalNeuronIcon className="size-5" />
+              {/* A faint dark halo, so a pale colour's thin strokes still read on the light panel. */}
+              <PyramidalNeuronIcon className="size-5 drop-shadow-[0_0_0.5px_rgba(0,0,0,0.45)]" />
             </button>
           );
 

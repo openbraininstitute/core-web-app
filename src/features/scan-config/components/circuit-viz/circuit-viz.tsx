@@ -2,7 +2,6 @@ import { useSetAtom } from 'jotai';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { isCellDrawn } from '@/features/circuit-viewer/morphologies/cell-colors';
 import { LazyCircuitCells } from '@/features/circuit-viewer/morphologies/lazy-circuit-cells';
 import { PLACEHOLDER_SOMA_RADIUS } from '@/features/circuit-viewer/morphologies/load/place-trees';
 import { sectionNumbered } from '@/features/circuit-viewer/morphologies/sections';
@@ -175,6 +174,7 @@ function CircuitVizView({
     hidden,
     locationCells,
     locationFirstCell,
+    locationNodeCount,
     error,
     synapses,
     anchor,
@@ -185,7 +185,7 @@ function CircuitVizView({
     config: morphologyLocations?.config,
     entityId,
     // The same single-morphology models the preview endpoint accepts.
-    enabled: Boolean(morphologyLocations?.previewsGeneratedLocations),
+    enabled: Boolean(morphologyLocations?.singleMorphology),
   });
   const openLocationBlock =
     morphologyLocations?.selectedRootElement === MORPHOLOGY_LOCATIONS_CONFIG_KEY
@@ -216,21 +216,10 @@ function CircuitVizView({
     }
     return drawn;
   }, [morphologies, locationPreviews.locations, locationCells]);
-  // A location is not drawn on a neuron the view is not drawing: one the nodes table filters out, say.
-  const filteredLocationCells = useMemo(
-    () => locationCells.filter((cell) => isCellDrawn(cellColors, cell)),
-    [locationCells, cellColors]
-  );
-  // Kept while the same cells stay drawn: the colours change on every row hovered in the nodes table, and new cells
-  // would rebuild every marker. State rather than a ref: React Compiler will not read a ref in render.
-  const [drawnLocationCells, setDrawnLocationCells] = useState(filteredLocationCells);
-  if (!sameCells(filteredLocationCells, drawnLocationCells)) {
-    setDrawnLocationCells(filteredLocationCells);
-  }
-  usePublishHiddenLocationNodes(locationCells, drawnLocationCells, locationFirstCell);
-  const { locations, hover, labels, pickMode } = useLocationSelection({
+  usePublishHiddenLocationNodes(locationCells, locationFirstCell, locationNodeCount);
+  const { locations, hover, labels, pickMode, blockType } = useLocationSelection({
     ...morphologyLocations,
-    cells: drawnLocationCells,
+    cells: locationCells,
     firstCell: locationFirstCell,
     backgroundColor,
     generatedLocations: visibleGeneratedLocations,
@@ -322,7 +311,7 @@ function CircuitVizView({
         legendTarget && createPortal(legends, legendTarget)
       )}
       <MorphologyLocationLabels labels={labels} />
-      <MorphologyLocationPopover hover={hover} pickMode={pickMode} />
+      <MorphologyLocationPopover hover={hover} pickMode={pickMode} blockType={blockType} />
       {openLocationBlock && !isExplicitLocationsBlockType(openLocationBlock.type) && (
         <MorphologyLocationPreviewStatus
           pending={locationPreviews.pending.has(morphologyLocations?.selectedEntry ?? '')}
@@ -369,28 +358,27 @@ function toggled(set: ReadonlySet<string>, key: string): ReadonlySet<string> {
   return next;
 }
 
-function sameCells(a: readonly number[], b: readonly number[]): boolean {
-  return a.length === b.length && a.every((cell, i) => cell === b[i]);
-}
-
-/** Tells the form which neurons of the population on show the view is not drawing, so it can grey their rows out. */
+/**
+ * Tells the form which nodes of the population locations are placed on carry no marker, so it can grey their rows out:
+ * filtered out in the nodes table, without a morphology, or in a hidden population.
+ */
 function usePublishHiddenLocationNodes(
-  cells: readonly number[],
   drawn: readonly number[],
-  firstCell: number
+  firstCell: number,
+  nodeCount: number
 ) {
   const setHiddenNodes = useSetAtom(hiddenLocationNodesAtom);
   useEffect(() => {
     const shown = new Set(drawn);
     const hidden = new Set<number>();
-    for (const cell of cells) if (!shown.has(cell)) hidden.add(cell - firstCell);
-    // Kept when unchanged, so the form does not render again on every recolour.
+    for (let node = 0; node < nodeCount; node++) if (!shown.has(firstCell + node)) hidden.add(node);
+    // Kept when unchanged, so the form does not render again for nothing.
     setHiddenNodes((previous) =>
       previous.size === hidden.size && [...hidden].every((id) => previous.has(id))
         ? previous
         : hidden
     );
-  }, [cells, drawn, firstCell, setHiddenNodes]);
+  }, [drawn, firstCell, nodeCount, setHiddenNodes]);
   useEffect(() => () => setHiddenNodes(new Set()), [setHiddenNodes]);
 }
 

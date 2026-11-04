@@ -21,12 +21,13 @@ import {
   useScanConfigSettingsPanel,
   useSetScanConfigSettingsPanel,
 } from '@/features/scan-config/bridge/settings-panel';
+import { useBlockTypeToConfigKey } from '@/features/scan-config/components/hooks/schema';
 import {
   RightPreviewModeDict,
   resolveHostNeuronOpacity,
   resolveRightPreviewMode,
 } from '@/features/scan-config/components/model-preview/helpers';
-import { readLocationBlockTypes } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import { MORPHOLOGY_LOCATIONS_CONFIG_KEY } from '@/features/scan-config/components/model-preview/morphology-locations-block';
 import { resolveEntityIdsFromConfigForm } from '@/features/scan-config/workflow/workflow-schema-selection';
 import { Skeleton } from '@/ui/molecules/skeleton';
 import { MiniDetailViewRenderer } from '@/ui/segments/mini-detail-view';
@@ -212,7 +213,14 @@ function CircuitModelPreviewPane({
   // render; `config` already changes on each form edit, the rest rarely.
   //
   // Omitting `onConfigChange` while locked is what makes 3D editing read-only.
-  const locationBlockTypes = useMemo(() => readLocationBlockTypes(schema), [schema]);
+  const blockTypeToConfigKey = useBlockTypeToConfigKey(schema);
+  const locationBlockTypes = useMemo(
+    () =>
+      Object.keys(blockTypeToConfigKey).filter(
+        (type) => blockTypeToConfigKey[type] === MORPHOLOGY_LOCATIONS_CONFIG_KEY
+      ),
+    [blockTypeToConfigKey]
+  );
   const form = useMemo(
     () => ({
       config,

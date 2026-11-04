@@ -20,13 +20,14 @@ export type TSmallCircuitSource = {
   /** The populations taken out of the scene, whose morphologies are not read while they are. */
   hidden: readonly string[];
   /**
-   * The cells a stored morphology location applies to: those of the population on show that have a morphology. A
-   * location is a section id and an offset with no cell of its own, so it can only be read against one population's
-   * morphologies.
+   * The cells a stored morphology location is drawn on: those of the population OBI-One places locations on that have
+   * a morphology and are drawn. A plain location has no cell of its own, so it is read against one population only.
    */
   locationCells: readonly number[];
-  /** The scene index of node 0 of the population on show: a cell's SONATA node id is its index less this. */
+  /** The scene index of node 0 of that population: a cell's SONATA node id is its index less this. */
   locationFirstCell: number;
+  /** How many nodes that population has, drawn or not; 0 until it is placed. */
+  locationNodeCount: number;
   /** Node-file bytes still coming, so the viewer can say what it is waiting for. An MEModel reads no node files. */
   download?: DownloadProgress | null;
   /** What the source failed at: the circuit's config or the placement of every population. */
