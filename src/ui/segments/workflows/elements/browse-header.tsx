@@ -6,9 +6,11 @@ import {
   CategorySelectScrollable,
   EntityTypeSelectScrollable,
 } from '@/ui/segments/workflows/elements/selectors';
+import { ALL_WORKFLOWS } from '@/ui/segments/workflows/elements/workflow-activity-all';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
+import type { TAllWorkflows } from '@/ui/segments/workflows/elements/workflow-activity-all';
 
 const WorkflowScope = {
   Public: 'public',
@@ -18,11 +20,16 @@ const WorkflowScope = {
 export type WorkflowScopeKeys = (typeof WorkflowScope)[keyof typeof WorkflowScope];
 
 interface WorkflowMenuProps {
-  activity: TActivityValue | null;
-  entityType: TExtendedEntitiesTypeDict | null;
+  activity: TActivityValue | TAllWorkflows | null;
+  entityType: TExtendedEntitiesTypeDict | TAllWorkflows | null;
   onActivityChange: (activity: TActivityValue | null) => void;
   onEntityTypeChange: (entityType: TExtendedEntitiesTypeDict | null) => void;
   onNavigate?: (entityType: TExtendedEntitiesTypeDict | null) => void;
+  /**
+   * Offers All / All first, every workflow's runs at once (legacy ones aside), and is called
+   * instead of the two above when it is picked. Without it the menus hold no All.
+   */
+  onAllSelect?: () => void;
 }
 
 export function ActivityAndTypeSelectors({
@@ -31,10 +38,15 @@ export function ActivityAndTypeSelectors({
   onActivityChange,
   onEntityTypeChange,
   onNavigate,
+  onAllSelect,
 }: WorkflowMenuProps) {
   const featureFlags = useFlags();
 
-  const handleActivitySelect = (v: TActivityValue | null) => {
+  const handleActivitySelect = (v: TActivityValue | TAllWorkflows | null) => {
+    if (v === ALL_WORKFLOWS) {
+      onAllSelect?.();
+      return;
+    }
     onActivityChange(v);
     if (v) {
       const type =
@@ -63,15 +75,23 @@ export function ActivityAndTypeSelectors({
     >
       <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
         Category
-        <CategorySelectScrollable value={activity} onSelect={handleActivitySelect} />
-      </div>
-      <div className="border-gray-90 shadow-sm flex items-center justify-center gap-2 rounded-full bg-white py-1 pr-1 pl-5">
-        Type
-        <EntityTypeSelectScrollable
-          category={activity}
-          value={entityType}
-          onSelect={handleEntityTypeSelect}
+        <CategorySelectScrollable
+          value={activity}
+          onSelect={handleActivitySelect}
+          includeAll={Boolean(onAllSelect)}
         />
+        {/* All has no types to narrow it by. */}
+        {activity && activity !== ALL_WORKFLOWS && (
+          <>
+            <span aria-hidden className="bg-neutral-2 mr-2 h-5 w-px" />
+            Type
+            <EntityTypeSelectScrollable
+              category={activity}
+              value={entityType === ALL_WORKFLOWS ? null : entityType}
+              onSelect={handleEntityTypeSelect}
+            />
+          </>
+        )}
       </div>
     </div>
   );

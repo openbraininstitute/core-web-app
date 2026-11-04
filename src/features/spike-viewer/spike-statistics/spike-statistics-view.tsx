@@ -9,6 +9,11 @@ import {
   KeptNodesGrid,
   KeptNodesGridPlaceholder,
 } from '@/features/circuit-nodes/components/kept-nodes-grid';
+import {
+  TableOrMatrix,
+  useTableMatrixView,
+} from '@/features/circuit-nodes/connectivity/table-matrix';
+import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { nodesSessionKey, useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
 import { useNeuronSetColumns } from '@/features/spike-viewer/neuron-set-columns';
@@ -36,8 +41,10 @@ import { psthSeriesFigure } from '@/features/spike-viewer/spike-statistics/time-
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
 
 import type { IDatasource } from 'ag-grid-community';
+import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { QuickFilter } from '@/features/circuit-nodes/components/nodes-grid';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
 import type { ScopedFilter, ScopedTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
 import type { FilterModel, ParsedCircuitConfig, SortItem } from '@/features/circuit-nodes/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
@@ -87,6 +94,10 @@ type Props = {
   /** The config's timings and the player's time, marked over the PSTHs as over the raster. */
   events?: readonly TimelineEvent[];
   timeCursor?: TimeCursor;
+  /** At the start of the table's header, such as the population on show. */
+  headerStart?: ReactNode;
+  /** Told of a connectivity matrix in the table's place, for the scene beside it. */
+  onMatrixChange?: (matrix: SceneMatrix | undefined) => void;
 };
 
 /** The raster window's cells, as a column of the session's, filtered on out of sight. */
@@ -148,7 +159,12 @@ export function SpikeStatisticsView({
   resetRequest,
   events,
   timeCursor,
+  headerStart,
+  onMatrixChange,
 }: Props) {
+  const matrixView = useTableMatrixView(circuit);
+  // The matrix's way back to every neuron: the table's own reset, which it is still there for.
+  const [matrixResets, setMatrixResets] = useState(0);
   const nodePopulation = circuitConfig?.nodes.find((n) => n.name === populationName);
   // What everything read from the session is tagged with, so nothing a previous
   // population left behind - a column, a filter, its rows - is read against this one.
@@ -355,6 +371,28 @@ export function SpikeStatisticsView({
   useEffect(() => {
     if (cellsOnShow !== undefined) onShownCellsChange?.(cellsOnShow);
   }, [cellsOnShow, onShownCellsChange]);
+  const matrixPin = useMatrixPin({
+    scope: sessionKey,
+    ready,
+    rowCount,
+    filterModel,
+    setFilterModel,
+    clearTicks,
+    setDerivedColumns,
+  });
+  const gridColumns = useMemo(
+    () =>
+      tableColumns && matrixPin.columns.length > 0
+        ? [...matrixPin.columns, ...tableColumns]
+        : tableColumns,
+    [tableColumns, matrixPin.columns]
+  );
+  // Another pathway under the same filter means other rows, which are paged in again.
+  const statisticsVersion = tableShown?.version;
+  const gridVersion = useMemo(
+    () => ({ statistics: statisticsVersion, pathway: matrixPin.pinned }),
+    [statisticsVersion, matrixPin.pinned]
+  );
 
   // The plots are over the same cells as the raster and replay - the ticked
   // ones, else those the filter keeps - within the raster window's.
@@ -474,7 +512,18 @@ export function SpikeStatisticsView({
   );
 
   const table = (
-    <div className="flex h-full min-h-0 flex-col">
+    <TableOrMatrix
+      view={matrixView}
+      circuit={circuit}
+      population={nodePopulation.name}
+      rowCount={rowCount}
+      cells={plotCells}
+      nodeColumns={columns && { columns, getColumn }}
+      onReset={() => setMatrixResets((n) => n + 1)}
+      onMatrixChange={onMatrixChange}
+      pin={matrixPin}
+      headerStart={headerStart}
+    >
       {error ? (
         <Centered>
           <Empty description={`The nodes could not be read: ${error.message}`} />
@@ -494,13 +543,14 @@ export function SpikeStatisticsView({
       ) : (
         <KeptNodesGrid
           session={sessionKey}
-          filterScope="spikes"
-          columns={tableColumns ?? columns}
+          downloadName={`${nodePopulation.name}-spike-statistics`}
+          filterScope={`spikes:${matrixPin.key}`}
+          columns={gridColumns ?? columns}
           rowCount={tableShown.rowCount}
           filteredCount={Object.keys(filterModel).length > 0 ? filteredCount : null}
           datasource={tableShown.source}
           pinnedColumns={PINNED_COLUMNS}
-          pinnedVersion={tableShown.version}
+          pinnedVersion={gridVersion}
           onFilterModelChange={setFilterModel}
           initialFilterModel={filterModel}
           onRowClick={toggleTick}
@@ -514,6 +564,12 @@ export function SpikeStatisticsView({
               if (windowOn) onClearWindow?.();
             },
           }}
+          headerStart={
+            <>
+              {matrixView.menu}
+              {headerStart}
+            </>
+          }
           headerExtra={
             windowOn && (
               <WindowChip
@@ -530,10 +586,10 @@ export function SpikeStatisticsView({
           focusRow={focusedCell}
           rowIndexOf={tableShown.windowed ? rowInWindow : getRowIndex}
           markedNodeId={heldCell}
-          resetRequest={resetRequest}
+          resetRequest={(resetRequest ?? 0) + matrixResets}
         />
       )}
-    </div>
+    </TableOrMatrix>
   );
 
   const plots = (

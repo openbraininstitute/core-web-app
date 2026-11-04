@@ -14,10 +14,20 @@ import {
   listActivities,
   listWorkflows,
 } from '@/ui/segments/workflows/config';
+import {
+  ALL_WORKFLOWS,
+  type TAllWorkflows,
+} from '@/ui/segments/workflows/elements/workflow-activity-all';
 import { cn } from '@/utils/css-class';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
+
+/** The All entry, styled as the menus' other entries. */
+const ALL_ITEM_CLASS = cn(
+  'text-primary-9 text-lg font-bold cursor-pointer',
+  'data-highlighted:text-primary-7!'
+);
 
 export function EntityTypeSelectScrollable({
   value,
@@ -41,7 +51,7 @@ export function EntityTypeSelectScrollable({
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
         data-testid="workflow-type-filter"
@@ -92,19 +102,25 @@ export function EntityTypeSelectScrollable({
 export function CategorySelectScrollable({
   value,
   onSelect,
+  includeAll = false,
 }: {
-  value: TActivityValue | null;
-  onSelect: (v: TActivityValue | null) => void;
+  value: TActivityValue | TAllWorkflows | null;
+  onSelect: (v: TActivityValue | TAllWorkflows | null) => void;
+  /** offers All first: every workflow's runs at once, legacy ones aside */
+  includeAll?: boolean;
 }) {
   const featureFlags = useFlags();
   const breakpoint = useDefaultBreakpoint();
   return (
-    <Select value={value ?? undefined} onValueChange={(v: TActivityValue) => onSelect(v)}>
+    <Select
+      value={value ?? undefined}
+      onValueChange={(v: TActivityValue | TAllWorkflows) => onSelect(v)}
+    >
       <SelectTrigger
         size={breakpoint === 'l' ? 'sm' : 'default'}
         className={cn(
           'focus-visible:ring-neutral-2 bg-transparent shadow-none focus-visible:shadow-none focus-visible:ring-1',
-          'min-w-36 rounded-full border-none text-lg cursor-pointer',
+          'rounded-full border-none text-lg cursor-pointer',
           "[&>span[data-slot='select-value']]:text-primary-9 [&>span[data-slot='select-value']]:font-bold"
         )}
         data-testid="workflow-category-filter"
@@ -118,6 +134,11 @@ export function CategorySelectScrollable({
         side="bottom"
         sideOffset={3}
       >
+        {includeAll && (
+          <SelectItem value={ALL_WORKFLOWS} className={ALL_ITEM_CLASS}>
+            All
+          </SelectItem>
+        )}
         {listActivities(featureFlags).map(({ label, value: _value, disabled }) => (
           <SelectItem
             key={`category-${_value}`}

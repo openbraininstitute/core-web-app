@@ -1,20 +1,31 @@
 'use client';
 
-import { Empty, Progress, Spin } from 'antd';
+import { RiAddLine } from '@remixicon/react';
+import { Empty } from 'antd';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import { defaultVisibleColumnSet, NodesGrid } from '@/features/circuit-nodes/components/nodes-grid';
+import { CenteredSpin, DownloadProgress } from '@/features/circuit-nodes/components/loading';
+import { NodesGrid, withNewColumnsOn } from '@/features/circuit-nodes/components/nodes-grid';
 import { NodesToolbar } from '@/features/circuit-nodes/components/nodes-toolbar';
+import { ConnectivityView } from '@/features/circuit-nodes/connectivity/connectivity-view';
+import {
+  connectivityAsset,
+  useConnectivityEntries,
+} from '@/features/circuit-nodes/connectivity/use-connectivity';
+import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
+import { neuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 import { resolvePopulation } from '@/features/circuit-nodes/population-utils';
 import { GenericError } from '@/ui/molecules/generic-error';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 import { cn } from '@/utils/css-class';
-import { formatBytes } from '@/utils/format';
+import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
+import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
 import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
@@ -40,6 +51,27 @@ export type TableCells = {
   heldCell?: number | null;
   /** A reset of the filters and ticks asked for from the scene: a new number each time. */
   resetRequest?: number;
+  /**
+   * Given, the neurons on show, while they are neither all of them nor none, can be made a
+   * neuron set: a property set where their values say exactly which they are, else their ids.
+   */
+  onCreateNeuronSet?: (block: NeuronSetBlock) => void;
+  /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
+  onPathwayChange?: (pathway: TablePathway | null) => void;
+  /** Told what the table shows, its nodes or the connectivity matrix: nodes once it is gone. */
+  onViewChange?: (view: ViewMode) => void;
+};
+
+/**
+ * A pathway between two groups of a population's neurons, by node index: where it
+ * starts and where it ends. Named with its circuit and population, as the cells are.
+ */
+export type TablePathway = {
+  circuitId: string;
+  population: string;
+  rowCount: number;
+  pre: Uint32Array;
+  post: Uint32Array;
 };
 
 type Props = {
@@ -61,8 +93,14 @@ export default function CircuitNodesTable({
 }: Props) {
   const { config, isLoading: configLoading, error: configError } = useCircuitConfig(circuit);
 
-  const [view, setView] = useState<ViewMode>('nodes');
+  const [chosenView, setView] = useState<ViewMode>('nodes');
+  // A circuit without a matrix, such as the next one shown here, has its nodes on show.
+  const view = chosenView === 'connectivity' && !connectivityAsset(circuit) ? 'nodes' : chosenView;
   const [internalPopulationName, setInternalPopulationName] = useState<string | undefined>();
+  const connectivity = useConnectivityEntries(circuit, view === 'connectivity');
+  const [edgePopulation, setEdgePopulation] = useState<string | undefined>();
+  const matrix =
+    connectivity.entries?.find((e) => e.population === edgePopulation) ?? connectivity.entries?.[0];
 
   const isControlled = onPopulationChange !== undefined;
   const selectedPopulationName = isControlled ? controlledPopulationName : internalPopulationName;
@@ -73,7 +111,8 @@ export default function CircuitNodesTable({
     [config, selectedPopulationName]
   );
 
-  const enabled = view === 'nodes';
+  // Kept open beside the matrix, so the table and its ticks are as they were on the way back.
+  const enabled = view !== 'edges';
 
   const {
     rowCount,
@@ -81,6 +120,8 @@ export default function CircuitNodesTable({
     columns,
     datasource,
     status,
+    getColumn,
+    setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
     isLoading: workerLoading,
@@ -102,8 +143,70 @@ export default function CircuitNodesTable({
     rowCount,
     getFilteredIndices,
   });
-  const { shown, filterError } = ticks;
+  const { shown, filterError, clearTicks, setFilterModel } = ticks;
+  const matrixPin = useMatrixPin({
+    scope,
+    ready: status === 'ready',
+    rowCount,
+    filterModel: ticks.filterModel,
+    setFilterModel,
+    clearTicks,
+    setDerivedColumns,
+  });
+  // The grid's columns: the file's, and the pinned pathway's while there is one.
+  const gridColumns = useMemo(
+    () => (columns && matrixPin.columns.length > 0 ? [...matrixPin.columns, ...columns] : columns),
+    [columns, matrixPin.columns]
+  );
+  // Every neuron on show again, the way the grid's reset does it, for a view in the grid's place.
+  const resetSelection = () => {
+    clearTicks();
+    setFilterModel({});
+  };
+  // A reset asked for from the 3D view goes to the grid, which is not up beside the matrix.
+  const resetRequest = cells?.resetRequest;
+  const seenResetRef = useRef(resetRequest);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: only a new request resets
+  useEffect(() => {
+    if (resetRequest === seenResetRef.current) return;
+    seenResetRef.current = resetRequest;
+    if (resetRequest && view === 'connectivity') resetSelection();
+  }, [resetRequest]);
+  // The neurons on show as a neuron set, where they are some but not all of them.
+  const [makingSet, setMakingSet] = useState(false);
+  const onCreateNeuronSet = cells?.onCreateNeuronSet;
+  const setOfShown =
+    onCreateNeuronSet &&
+    population &&
+    columns &&
+    shown &&
+    shown.length > 0 &&
+    shown.length < rowCount
+      ? () => {
+          setMakingSet(true);
+          neuronSetBlock({
+            population,
+            cells: shown,
+            rowCount,
+            ticked: ticks.ticked.size > 0,
+            filterModel: ticks.filterModel,
+            columns,
+            getColumn,
+          })
+            .then(({ block }) => onCreateNeuronSet(block))
+            .catch((error: unknown) =>
+              logError('The neurons on show could not be made a neuron set:', error)
+            )
+            .finally(() => setMakingSet(false));
+        }
+      : undefined;
   const onShownCellsChange = cells?.onShownCellsChange;
+  const onPathwayChange = cells?.onPathwayChange;
+  const onViewChange = cells?.onViewChange;
+  useEffect(() => {
+    onViewChange?.(view);
+    return () => onViewChange?.('nodes');
+  }, [view, onViewChange]);
   useEffect(() => {
     if (shown === undefined || !population) return;
     onShownCellsChange?.({
@@ -136,41 +239,107 @@ export default function CircuitNodesTable({
   };
 
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(new Set());
+  // The grid's count and buttons go up into the toolbar, beside the population.
+  const [headerSlot, setHeaderSlot] = useState<HTMLDivElement | null>(null);
   const lastColumnsKeyRef = useRef<string>('');
 
   useEffect(() => {
-    if (!columns || columns.length === 0) return;
-    const key = columns.map((c) => c.name).join('|');
+    if (!gridColumns || gridColumns.length === 0) return;
+    const key = gridColumns.map((c) => c.name).join('|');
     if (key === lastColumnsKeyRef.current) return;
+    const before = new Set(lastColumnsKeyRef.current.split('|'));
     lastColumnsKeyRef.current = key;
-    setVisibleColumns(defaultVisibleColumnSet(columns));
-  }, [columns]);
+    setVisibleColumns((visible) => withNewColumnsOn(gridColumns, before, visible));
+  }, [gridColumns]);
 
   return (
     <div className={cn(styles.root, className)}>
       <NodesToolbar
         view={view}
         onViewChange={setView}
-        populations={config?.nodes ?? []}
-        populationName={population?.name}
-        onPopulationChange={setSelectedPopulationName}
+        connectivity={!!connectivity.asset}
+        populations={
+          view === 'connectivity'
+            ? (connectivity.entries ?? []).map((e) => ({ name: e.population }))
+            : (config?.nodes ?? [])
+        }
+        populationName={view === 'connectivity' ? matrix?.population : population?.name}
+        onPopulationChange={view === 'connectivity' ? setEdgePopulation : setSelectedPopulationName}
+        slotRef={setHeaderSlot}
       />
-      <div className={styles.body}>
-        {renderBody({
-          configError,
-          configLoading,
-          workerError,
-          workerLoading,
-          downloadProgress,
-          hasPopulation: !!population,
-          columns,
-          rowCount,
-          filteredCount,
-          datasource,
-          visibleColumns,
-          setVisibleColumns,
-          selection,
-        })}
+      <div className={cn(styles.body, 'relative')}>
+        {view === 'connectivity' ? (
+          <ConnectivityView
+            circuitId={circuit.id}
+            assetId={connectivity.asset?.id}
+            entry={matrix}
+            listing={{
+              isLoading: connectivity.isLoading,
+              error: connectivity.error,
+              empty: connectivity.entries?.length === 0,
+            }}
+            selection={
+              population && {
+                cells: shown,
+                population: population.name,
+                rowCount,
+                onReset: resetSelection,
+              }
+            }
+            nodeColumns={columns && { columns, getColumn }}
+            onPathwayChange={
+              onPathwayChange &&
+              population &&
+              ((pathway) =>
+                onPathwayChange(
+                  pathway && {
+                    circuitId: circuit.id,
+                    population: population.name,
+                    rowCount,
+                    ...pathway,
+                  }
+                ))
+            }
+            // Only with a view beside the table, whose grid is told its filter.
+            pin={cells ? matrixPin : undefined}
+            headerSlot={headerSlot}
+          />
+        ) : (
+          renderBody({
+            configError,
+            configLoading,
+            workerError,
+            workerLoading,
+            downloadProgress,
+            hasPopulation: !!population,
+            columns: gridColumns,
+            rowCount,
+            filteredCount,
+            datasource,
+            visibleColumns,
+            setVisibleColumns,
+            selection,
+            downloadName: population?.name,
+            headerSlot,
+          })
+        )}
+        {/* Over the rows' bottom right, while the neurons on show can be made a set. */}
+        {setOfShown && view === 'nodes' && (
+          <button
+            type="button"
+            onClick={setOfShown}
+            disabled={makingSet}
+            title={`Add the ${shown?.length.toLocaleString()} neurons on show as a neuron set`}
+            className={cn(
+              PILL_CLASS,
+              'absolute right-6 bottom-6 z-20 shrink-0 bg-purple-600 text-white shadow-lg',
+              'hover:bg-purple-700 disabled:opacity-60'
+            )}
+          >
+            Create neuron set
+            <RiAddLine className="size-4" />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -209,6 +378,8 @@ function renderBody({
   visibleColumns,
   setVisibleColumns,
   selection,
+  downloadName,
+  headerSlot,
 }: {
   configError: Error | null;
   configLoading: boolean;
@@ -223,6 +394,8 @@ function renderBody({
   visibleColumns: Set<string>;
   setVisibleColumns: (next: Set<string>) => void;
   selection: GridSelection | undefined;
+  downloadName: string | undefined;
+  headerSlot: HTMLDivElement | null;
 }) {
   if (configError) {
     return (
@@ -257,7 +430,7 @@ function renderBody({
     );
   }
   if (workerLoading || !columns || !datasource) {
-    return <DownloadProgress progress={downloadProgress} />;
+    return <DownloadProgress progress={downloadProgress} what="nodes" />;
   }
   return (
     <NodesGrid
@@ -267,49 +440,9 @@ function renderBody({
       datasource={datasource}
       visibleColumns={visibleColumns}
       onVisibleColumnsChange={setVisibleColumns}
+      downloadName={downloadName}
+      headerSlot={headerSlot}
       {...selection}
     />
-  );
-}
-
-function CenteredSpin({ label }: { label: string }) {
-  return (
-    <div className={styles.centered}>
-      <Spin tip={label} size="large" className="[&_.ant-spin-dot-item]:bg-primary-6!">
-        <div className={styles.spinBox} />
-      </Spin>
-    </div>
-  );
-}
-
-function DownloadProgress({
-  progress,
-}: {
-  progress: ReturnType<typeof useNodesWorker>['progress'];
-}) {
-  // No bytes yet (or no Content-Length to compute a percent): fall back to the indeterminate spinner.
-  if (!progress) return <CenteredSpin label="Loading nodes…" />;
-  if (!progress.total) {
-    return <CenteredSpin label={`Downloading nodes… ${formatBytes(progress.received, 0)}`} />;
-  }
-
-  const percent = Math.round((progress.received / progress.total) * 100);
-  return (
-    <div className={styles.centered}>
-      <div style={{ width: 280 }} className="text-center">
-        <div className="mb-1 text-sm text-primary-9">
-          Downloading nodes…{' '}
-          <span className="tabular-nums">
-            {formatBytes(progress.received, 0)} / {formatBytes(progress.total, 0)}
-          </span>
-        </div>
-        <Progress
-          type="line"
-          percent={percent}
-          strokeColor="var(--color-primary-6)"
-          className="[&_.ant-progress-text]:text-primary-9!"
-        />
-      </div>
-    </div>
   );
 }

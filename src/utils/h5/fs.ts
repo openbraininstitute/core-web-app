@@ -43,7 +43,7 @@ function isHDF5Signature(head: Uint8Array): boolean {
  * A ceiling here turns that into a sentence. It is deliberately not the
  * theoretical maximum: leaving room for h5wasm's own working set is the point.
  */
-const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
+export const MAX_ASSET_BYTES = 2 * 1024 * 1024 * 1024;
 
 function formatSize(bytes: number): string {
   return `${(bytes / 1024 / 1024 / 1024).toFixed(1)} GiB`;

@@ -22,6 +22,8 @@ export type ColumnMeta = {
   library?: string[];
   /** What a header calls it, for a column a host added; the file's go by their names. */
   label?: string;
+  /** What a menu lists it under, where it is no neuron's property, such as a compartment's. */
+  heading?: string;
 };
 
 export type SortDirection = 'asc' | 'desc';
@@ -211,7 +213,7 @@ export type ParsedCircuitConfig = {
   raw: ICircuitSonataConfiguration;
 };
 
-export type ViewMode = 'nodes' | 'edges';
+export type ViewMode = 'nodes' | 'connectivity' | 'edges';
 
 export const CIRCUIT_H5_CACHE = 'obi-circuit-h5-v1';
 

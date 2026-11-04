@@ -95,6 +95,12 @@ export default function Page({ params }: ServerSideComponentProp<WorkspaceContex
             duration: 0.2,
             ease: 'easeInOut',
           }}
+          onClick={(event) => {
+            // On the window itself, between its cards and buttons: back to the categories alone.
+            if (activity && !(event.target as Element).closest('button, [role="button"]')) {
+              onSelectCategory(null);
+            }
+          }}
         >
           <CategoryMenu current={activity} onItemClick={onSelectCategory} />
           <AnimatePresence>

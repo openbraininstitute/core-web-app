@@ -17,10 +17,12 @@ import { cn } from '@/utils/css-class';
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { SceneMatrix } from '@/features/circuit-nodes/connectivity/table-matrix';
+import type { SceneLocationMarker } from '@/features/scan-config/components/circuit-viz/circuit-viz';
 import type { NodeColors } from '@/features/scan-config/components/color-by/types';
 import type { TracesTimeAxis } from '@/features/sonata-viewer/components/report-details-view';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
-import type { CellFrames } from '@/features/sonata-viewer/types';
+import type { CellFrames, TraceFrames } from '@/features/sonata-viewer/types';
 
 /** Plasma, low to high: a perceptual ramp on which a spike's peak flashes bright. */
 const RAMP_STOPS = ['#0d0887', '#5c01a6', '#9c179e', '#cc4778', '#ed7953', '#fdb42f', '#f0f921'];
@@ -28,6 +30,15 @@ const RAMP_STEPS = 32;
 const RAMP = Array.from({ length: RAMP_STEPS }, (_, i) => mix(RAMP_STOPS, i / (RAMP_STEPS - 1)));
 /** The population's cells the report did not record: drawn faint, in the scene's ghost colour. */
 const UNRECORDED = '#e5e7eb';
+/**
+ * The recorded cells while their locations play as balls: plain, so the balls carry the values.
+ * Dark enough that the viewer's hover, which adds a cell's colour to itself, stays off white.
+ */
+const PLAIN = '#5c677a';
+/** A ball's colour while its values load. */
+const UNPLAYED = '#9ca3af';
+/** The other balls while one is pointed out. */
+const FADED_BALL = '#e5e7eb';
 /** Colours change at most this often while playing; the clock itself moves every frame. */
 const RECOLOR_MS = 50;
 /** Simulated milliseconds per wall-clock second: a 1 s recording plays in 10 s. */
@@ -70,7 +81,30 @@ type Props = {
    */
   transportTarget?: HTMLElement | null;
   timeAxis?: TracesTimeAxis | null;
+  /**
+   * The report's locations on its cells, each at a section and an offset along it, played as
+   * balls in their own values while the cells are drawn plain: a compartment set's.
+   */
+  locations?: readonly SceneLocation[];
+  /** The locations' values over the run, a column each in their order; null while they load. */
+  locationFrames?: TraceFrames | null;
+  /** The locations to show by key, such as those picked; all of those on the cells shown without. */
+  shownLocations?: ReadonlySet<number> | null;
+  /** A location to point out by key, such as the table row under the pointer: the rest faded. */
+  highlightedLocation?: number;
+  /** Told the key of a location's ball clicked. */
+  onLocationClick?: (key: number) => void;
+  /** Told the key of the location's ball under the pointer, and null once it leaves them. */
+  onLocationHover?: (key: number | null) => void;
+  /** A connectivity matrix in the table beside the scene, whose pathway it colours. */
+  matrix?: SceneMatrix;
 };
+
+/**
+ * A location a report recorded: its key, such as the trace it plays, its cell's node index,
+ * its SONATA section id, and its offset along that section.
+ */
+export type SceneLocation = { key: number; nodeId: number; sectionId: number; offset: number };
 
 /**
  * A voltage report played over the circuit: each recorded cell coloured by its
@@ -97,6 +131,13 @@ export function VoltageScene({
   onSpeedChange,
   transportTarget,
   timeAxis = null,
+  locations,
+  locationFrames = null,
+  shownLocations,
+  highlightedLocation,
+  onLocationClick,
+  onLocationHover,
+  matrix,
 }: Props) {
   const start = frames?.times[0] ?? 0;
   const end = frames ? frames.times[frames.times.length - 1] : 0;
@@ -166,23 +207,62 @@ export function VoltageScene({
     setPlaying(!playing);
   };
 
+  const rampStep = useCallback(
+    (value: number) => {
+      const [low, high] = valueRange ?? [0, 1];
+      const share = (value - low) / (high > low ? high - low : 1);
+      return Math.min(RAMP_STEPS - 1, Math.max(0, Math.round(share * (RAMP_STEPS - 1))));
+    },
+    [valueRange]
+  );
+  const ballsPlay = (locations?.length ?? 0) > 0;
   const nodeColors = useMemo<NodeColors | undefined>(() => {
     if (!frames || !valueRange) return undefined;
-    const [low, high] = valueRange;
-    const span = high > low ? high - low : 1;
     const columnByNode = new Uint16Array(cellCount).fill(RAMP_STEPS);
     const offset = frame * frames.nodeIds.length;
     for (let c = 0; c < frames.nodeIds.length; c++) {
       const node = frames.nodeIds[c];
       if (node >= cellCount) continue;
-      const share = (frames.values[offset + c] - low) / span;
-      columnByNode[node] = Math.min(
-        RAMP_STEPS - 1,
-        Math.max(0, Math.round(share * (RAMP_STEPS - 1)))
-      );
+      // With balls on its locations, a cell is drawn plain: they carry its values.
+      columnByNode[node] = ballsPlay ? RAMP_STEPS + 1 : rampStep(frames.values[offset + c]);
     }
-    return { palette: [...RAMP, UNRECORDED], columnByNode };
-  }, [frames, valueRange, cellCount, frame]);
+    return { palette: [...RAMP, UNRECORDED, PLAIN], columnByNode };
+  }, [frames, valueRange, cellCount, frame, ballsPlay, rampStep]);
+
+  // Each location's ball in its value at the time on show, the frames' nearest: those on the
+  // cells shown, or those picked, the one pointed out alone in colour.
+  const locationMarkers = useMemo<SceneLocationMarker[] | undefined>(() => {
+    if (!locations || locations.length === 0) return undefined;
+    const time = frames?.times[frame] ?? 0;
+    const times = locationFrames?.times;
+    const step = times && times.length > 1 ? times[1] - times[0] : 1;
+    const at = times
+      ? Math.min(times.length - 1, Math.max(0, Math.round((time - times[0]) / step)))
+      : 0;
+    return locations.flatMap((location, i) => {
+      if (
+        shownLocations ? !shownLocations.has(location.key) : shownCells?.[location.nodeId] === 0
+      ) {
+        return [];
+      }
+      const color =
+        highlightedLocation !== undefined && highlightedLocation !== location.key
+          ? FADED_BALL
+          : locationFrames
+            ? RAMP[rampStep(locationFrames.values[at * locations.length + i])]
+            : UNPLAYED;
+      return [{ ...location, color }];
+    });
+  }, [
+    locations,
+    locationFrames,
+    frames,
+    frame,
+    rampStep,
+    shownLocations,
+    shownCells,
+    highlightedLocation,
+  ]);
 
   // The scrubber lies across its own track, measured, unless it is under the traces' axis.
   const [track, setTrack] = useState<HTMLDivElement | null>(null);
@@ -278,6 +358,11 @@ export function VoltageScene({
             onEmptyClick={onEmptyClick}
             selection={selection}
             active={active}
+            locationMarkers={locationMarkers}
+            onLocationClick={onLocationClick}
+            onLocationHover={onLocationHover}
+            matrix={matrix}
+            keys={valueRange && <RampLegend range={valueRange} units={units} />}
           />
         )}
         {!frames && (
@@ -287,7 +372,6 @@ export function VoltageScene({
             </Spin>
           </div>
         )}
-        {valueRange && <RampLegend range={valueRange} units={units} />}
         {frames && <SceneTime labelRef={sceneTime.ref} playing={playing} onPlayingChange={play} />}
       </div>
       {docked ? (
@@ -325,10 +409,10 @@ export function SceneSpeedSelect({
   );
 }
 
-/** The ramp and the values at its ends, in the scene's top corner, clear of its axes. */
+/** The ramp and the values at its ends, for the scene's top corner, clear of its axes. */
 function RampLegend({ range, units }: { range: [number, number]; units: string }) {
   return (
-    <div className="pointer-events-none absolute top-3 right-3 rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
+    <div className="pointer-events-none rounded-lg bg-white/90 px-2.5 py-1.5 text-[10px] text-neutral-500 shadow-sm">
       <div
         className="h-2 w-36 rounded-full"
         style={{ background: `linear-gradient(to right, ${RAMP_STOPS.join(', ')})` }}
