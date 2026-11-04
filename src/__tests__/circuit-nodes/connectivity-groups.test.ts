@@ -3,9 +3,13 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultGrouping,
   groupConnectivity,
+  lineMembers,
+  lineSpan,
   possiblePairs,
-  rowMembers,
+  sameSquare,
   selectionApplies,
+  sideWindow,
+  squareOf,
   summarizeConnectivity,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import { connectivityEntries } from '@/features/circuit-nodes/connectivity/use-connectivity';
@@ -46,12 +50,14 @@ describe('groupConnectivity by a property', () => {
   const groups = groupConnectivity(MATRIX, { by: 'property', property: 'mtype' });
 
   it('makes a row of each value in use, layer 2/3 before layer 2, and one of none', () => {
-    expect(groups.labels).toEqual(['L23_PC', 'L2_TPC', 'L4_TPC', 'None']);
-    expect([...groups.sizes]).toEqual([2, 1, 1, 1]);
+    expect(groups.pre.labels).toEqual(['L23_PC', 'L2_TPC', 'L4_TPC', 'None']);
+    expect([...groups.pre.sizes]).toEqual([2, 1, 1, 1]);
+    expect(groups.post).toBe(groups.pre);
+    expect(groups.places).toBe(4);
   });
 
   it('sums the connections and synapses from each row to each other', () => {
-    const n = groups.labels.length;
+    const n = groups.pre.labels.length;
     // L23_PC to itself: 20 → 40 and 40 → 20.
     expect(groups.connections[at(n, 0, 0)]).toBe(2);
     expect(groups.synapses?.[at(n, 0, 0)]).toBe(10);
@@ -61,10 +67,11 @@ describe('groupConnectivity by a property', () => {
     // None (50) to L4_TPC (10).
     expect(groups.synapses?.[at(n, 3, 2)]).toBe(5);
     expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(6);
+    expect(groups.totals).toEqual({ connections: 6, synapses: 21 });
   });
 
   it('lists the node ids of each row', () => {
-    expect([0, 1, 2, 3].map((row) => [...rowMembers(groups, row)])).toEqual([
+    expect([0, 1, 2, 3].map((row) => [...lineMembers(groups.pre, row)])).toEqual([
       [20, 40],
       [30],
       [10],
@@ -83,16 +90,16 @@ describe('groupConnectivity neuron by neuron', () => {
   it('puts each neuron in a row of its own, by node id', () => {
     const groups = groupConnectivity(MATRIX, { by: 'neuron', orderBy: null, maxRows: 10 });
 
-    expect([...(groups.nodeIds ?? [])]).toEqual([10, 20, 30, 40, 50]);
-    expect(groups.labels[0]).toBe('Neuron 10');
+    expect([...groups.pre.members.nodeIds]).toEqual([10, 20, 30, 40, 50]);
+    expect(groups.pre.labels[0]).toBe('Neuron 10');
     expect(groups.runs).toBeNull();
     expect(groups.synapses?.[at(5, 1, 3)]).toBe(4);
   });
 
-  it('orders the neurons by a property, and says which rows each value takes', () => {
+  it('orders the neurons by a property, and says which places each value takes', () => {
     const groups = groupConnectivity(MATRIX, { by: 'neuron', orderBy: 'mtype', maxRows: 10 });
 
-    expect([...(groups.nodeIds ?? [])]).toEqual([20, 40, 30, 10, 50]);
+    expect([...groups.post.members.nodeIds]).toEqual([20, 40, 30, 10, 50]);
     expect(groups.runs).toEqual([
       { label: 'L23_PC', start: 0, end: 1 },
       { label: 'L2_TPC', start: 2, end: 2 },
@@ -106,15 +113,124 @@ describe('groupConnectivity neuron by neuron', () => {
   it('shares rows between neurons next in the order past the most rows', () => {
     const groups = groupConnectivity(MATRIX, { by: 'neuron', orderBy: 'mtype', maxRows: 2 });
 
-    expect(groups.labels).toEqual(['3 neurons', '2 neurons']);
-    expect(groups.nodeIds).toBeNull();
+    expect(groups.pre.labels).toEqual(['3 neurons', '2 neurons']);
+    // By neurons, whatever lines they share.
     expect(groups.runs?.map((r) => [r.label, r.start, r.end])).toEqual([
-      ['L23_PC', 0, 0],
-      ['L2_TPC', 0, 0],
-      ['L4_TPC', 1, 1],
-      ['None', 1, 1],
+      ['L23_PC', 0, 1],
+      ['L2_TPC', 2, 2],
+      ['L4_TPC', 3, 3],
+      ['None', 4, 4],
     ]);
     expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(6);
+  });
+});
+
+describe('groupConnectivity zoomed in', () => {
+  // By node id: rows of nodes 20 and 30, and columns of two neurons each from node 10.
+  const groups = groupConnectivity(MATRIX, {
+    by: 'neuron',
+    orderBy: null,
+    maxRows: 300,
+    window: { pre: { start: 1, end: 3, step: 1 }, post: { start: 0, end: 5, step: 2 } },
+  });
+
+  it('draws each side’s stretch, as lines of its own size', () => {
+    expect(groups.places).toBe(5);
+    expect(groups.pre.labels).toEqual(['Neuron 20', 'Neuron 30']);
+    expect(groups.post.labels).toEqual(['2 neurons', '2 neurons', '1 neuron']);
+    expect([...groups.post.sizes]).toEqual([2, 2, 1]);
+  });
+
+  it('counts from each row to each column, row by row', () => {
+    // 20 → 40 is row 0, column 1; 30 → 10 and 30 → 20 are row 1, column 0.
+    expect([...groups.connections]).toEqual([0, 1, 0, 2, 0, 0]);
+    expect([...(groups.synapses ?? [])]).toEqual([0, 4, 0, 4, 0, 0]);
+  });
+
+  it('still counts everything drawn in its totals', () => {
+    expect(groups.totals).toEqual({ connections: 6, synapses: 21 });
+  });
+
+  it('lists the node ids of each row and column', () => {
+    expect([...lineMembers(groups.pre, 1)]).toEqual([30]);
+    expect([...lineMembers(groups.post, 1)]).toEqual([30, 40]);
+    expect([...lineMembers(groups.post, 2)]).toEqual([50]);
+  });
+
+  it('counts a neuron in both a row and a column as no pair with itself', () => {
+    // Node 20 onto nodes 10 and 20, then node 30 onto those two.
+    expect(possiblePairs(groups, 0, 0)).toBe(1);
+    expect(possiblePairs(groups, 1, 0)).toBe(2);
+    // Node 30 onto nodes 30 and 40.
+    expect(possiblePairs(groups, 1, 1)).toBe(1);
+  });
+
+  it('knows a square by its places, whatever is in view', () => {
+    expect(lineSpan(groups.post, 2)).toEqual({ start: 4, end: 5 });
+    const square = squareOf(groups, 1, 0);
+    expect(square).toEqual({ pre: { start: 2, end: 3 }, post: { start: 0, end: 2 } });
+
+    const closer = groupConnectivity(MATRIX, {
+      by: 'neuron',
+      orderBy: null,
+      maxRows: 300,
+      window: { pre: { start: 2, end: 3, step: 1 }, post: { start: 0, end: 2, step: 2 } },
+    });
+    expect(sameSquare(square, squareOf(closer, 0, 0))).toBe(true);
+    expect(sameSquare(square, squareOf(groups, 0, 0))).toBe(false);
+  });
+
+  it('counts only the selected neurons in its totals', () => {
+    const selected = groupConnectivity(
+      MATRIX,
+      {
+        by: 'neuron',
+        orderBy: null,
+        maxRows: 300,
+        window: { pre: { start: 0, end: 1, step: 1 }, post: { start: 0, end: 1, step: 1 } },
+      },
+      Uint32Array.from([20, 30, 40])
+    );
+
+    expect(selected.places).toBe(3);
+    // 20 → 40, 40 → 20 and 30 → 20; 10 → 20 and 50 → 10 leave out a neuron.
+    expect(selected.totals).toEqual({ connections: 3, synapses: 13 });
+  });
+});
+
+describe('sideWindow', () => {
+  const wholeOf = (places: number) => sideWindow([-0.5, places - 0.5], places, 300);
+
+  it('takes all of a side that fits, whatever it shows', () => {
+    expect(sideWindow([10, 20], 300, 300)).toEqual({ start: 0, end: 300, step: 1 });
+  });
+
+  it('shares lines between just enough neurons, and lines the whole side up from its start', () => {
+    expect(wholeOf(4870)).toEqual({ start: 0, end: 4870, step: 17 });
+    expect(wholeOf(301)).toEqual({ start: 0, end: 301, step: 2 });
+  });
+
+  it('reaches single neurons once few enough are in view', () => {
+    expect(sideWindow([99.5, 199.5], 4870, 300)).toEqual({ start: 100, end: 200, step: 1 });
+  });
+
+  it('takes in a neuron only partly in view', () => {
+    expect(sideWindow([10.2, 20.7], 4870, 300)).toEqual({ start: 10, end: 22, step: 1 });
+  });
+
+  it('lines stretches up on multiples of their lines, so a pan moves whole squares', () => {
+    expect(sideWindow([1000, 2000], 4870, 300)).toEqual({ start: 1000, end: 2004, step: 4 });
+    expect(sideWindow([1001, 2001], 4870, 300)).toEqual({ start: 1000, end: 2004, step: 4 });
+  });
+
+  it('reads an axis running either way', () => {
+    expect(sideWindow([199.5, 99.5], 4870, 300)).toEqual(sideWindow([99.5, 199.5], 4870, 300));
+  });
+
+  it('keeps to the side, zoomed out past it or panned off it', () => {
+    expect(sideWindow([-500, 9000], 4870, 300)).toEqual(wholeOf(4870));
+    expect(sideWindow([6000, 6100], 4870, 300)).toEqual({ start: 4869, end: 4870, step: 1 });
+    expect(sideWindow([-200, -100], 4870, 300)).toEqual({ start: 0, end: 1, step: 1 });
   });
 });
 
@@ -125,8 +241,8 @@ describe('groupConnectivity over a selection', () => {
   it('keeps to the selected neurons and the values they take', () => {
     const groups = groupConnectivity(MATRIX, { by: 'property', property: 'mtype' }, cells);
 
-    expect(groups.labels).toEqual(['L23_PC', 'L2_TPC']);
-    expect([...groups.sizes]).toEqual([2, 1]);
+    expect(groups.pre.labels).toEqual(['L23_PC', 'L2_TPC']);
+    expect([...groups.pre.sizes]).toEqual([2, 1]);
   });
 
   it('counts only the connections between selected neurons', () => {
@@ -140,7 +256,7 @@ describe('groupConnectivity over a selection', () => {
   it('draws only the selected neurons one by one', () => {
     const groups = groupConnectivity(MATRIX, { by: 'neuron', orderBy: null, maxRows: 10 }, cells);
 
-    expect([...(groups.nodeIds ?? [])]).toEqual([20, 30, 40]);
+    expect([...groups.pre.members.nodeIds]).toEqual([20, 30, 40]);
     expect(groups.connections.reduce((a, b) => a + b, 0)).toBe(3);
   });
 
@@ -151,7 +267,7 @@ describe('groupConnectivity over a selection', () => {
       new Uint32Array(0)
     );
 
-    expect(groups.labels).toEqual([]);
+    expect(groups.pre.labels).toEqual([]);
   });
 });
 
@@ -169,8 +285,8 @@ describe('groupConnectivity by a property from outside the matrix', () => {
   it('groups the neurons by their node ids’ values, in the property’s own order', () => {
     const groups = groupConnectivity(MATRIX, { by: 'property', property: 'depth' }, null, [depth]);
 
-    expect(groups.labels).toEqual(['0–100', '100–200', 'None']);
-    expect([...groups.sizes]).toEqual([2, 2, 1]);
+    expect(groups.pre.labels).toEqual(['0–100', '100–200', 'None']);
+    expect([...groups.pre.sizes]).toEqual([2, 2, 1]);
     // 20 → 40 and 40 → 20 are within the second range.
     expect(groups.connections[at(3, 1, 1)]).toBe(2);
   });
@@ -183,7 +299,7 @@ describe('groupConnectivity by a property from outside the matrix', () => {
       [depth]
     );
 
-    expect([...(groups.nodeIds ?? [])]).toEqual([10, 30, 20, 40, 50]);
+    expect([...groups.pre.members.nodeIds]).toEqual([10, 30, 20, 40, 50]);
   });
 });
 

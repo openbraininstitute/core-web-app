@@ -14,7 +14,7 @@ const L5: FilterModel = { mtype: { filterType: 'set', values: ['L5_TPC'] } };
 const PINNED: PinnedPathway = {
   pre: Uint32Array.from([0, 1]),
   post: Uint32Array.from([1, 4]),
-  square: { matrix: 'm', pre: 0, post: 1 },
+  square: { matrix: 'm', pre: { start: 0, end: 1 }, post: { start: 1, end: 2 } },
   name: 'A → B',
   matrixCells: null,
 };
@@ -76,7 +76,7 @@ describe('useMatrixPin', () => {
     expect(clearTicks).toHaveBeenCalled();
     expect(result.current.pin.pinned).toBe(PINNED);
     expect(result.current.pin.columns.map((c) => c.name)).toEqual([COLUMN]);
-    expect(result.current.pin.key).toBe('m/0/1');
+    expect(result.current.pin.key).toBe('m/0-1/1-2');
   });
 
   it('lets go of the pathway alone, the other filters staying', async () => {

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 import { logError } from '@/utils/logger';
 
+import type { PathwaySquare } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { MatrixPathway } from '@/features/circuit-nodes/connectivity/connectivity-view';
 import type {
   ColumnFilter,
@@ -24,8 +25,8 @@ const NO_COLUMNS: ColumnMeta[] = [];
 
 /** A pathway clicked in a connectivity matrix, which the table and what is beside it keep to. */
 export type PinnedPathway = MatrixPathway & {
-  /** The square it was clicked in: the matrix as then asked for, and its row and column. */
-  square: { matrix: string; pre: number; post: number };
+  /** The square it was clicked in, and the matrix it is of, as then asked for. */
+  square: PathwaySquare & { matrix: string };
   name: string;
   /** What the matrix was over, which it stays over: the pathway narrows what is beside it. */
   matrixCells: Uint32Array | null;
@@ -109,12 +110,15 @@ export function useMatrixPin({
       .catch((error: unknown) => logError('The table could not be filtered to a pathway:', error));
   };
 
+  const square = pinned?.square;
   return {
     pinned,
     onPick,
     /** The column to list, while a pathway is pinned. */
     columns: pinned ? PINNED_COLUMNS : NO_COLUMNS,
     /** Says which pathway: for a grid that stays up, to take its filter on. */
-    key: pinned ? `${pinned.square.matrix}/${pinned.square.pre}/${pinned.square.post}` : '',
+    key: square
+      ? `${square.matrix}/${square.pre.start}-${square.pre.end}/${square.post.start}-${square.post.end}`
+      : '',
   };
 }

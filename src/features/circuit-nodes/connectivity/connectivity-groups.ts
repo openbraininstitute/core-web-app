@@ -3,6 +3,12 @@ import type {
   VertexProperty,
 } from '@/features/circuit-nodes/connectivity/connectivity-h5';
 
+/** Places along a side of the matrix, `end` not included. */
+export type PlaceSpan = { start: number; end: number };
+
+/** A stretch of a side, drawn as lines (rows or columns) of `step` places each. */
+export type SideWindow = PlaceSpan & { step: number };
+
 /** How the matrix is drawn: its neurons grouped by a property, or one by one in an order. */
 export type ConnectivityRequest =
   | { by: 'property'; property: string }
@@ -10,31 +16,46 @@ export type ConnectivityRequest =
       by: 'neuron';
       /** A property whose values order the neurons, else their order in the matrix. */
       orderBy: string | null;
-      /** The most rows: past it, neurons next to each other in the order share one. */
+      /** The most lines a side has: past it, neurons next to each other in the order share one. */
       maxRows: number;
+      /** The stretch of each side zoomed to, else all of it. */
+      window?: { pre: SideWindow; post: SideWindow };
     };
 
-/** The rows a value of the order takes, both ends included. */
+/** The places a value of the order takes, both ends included. */
 export type RowRun = { label: string; start: number; end: number };
 
+/** One side of the matrix, its rows or its columns: what is in view, and what each line holds. */
+export type MatrixSide = SideWindow & {
+  labels: string[];
+  sizes: Float64Array;
+  /** The node ids of each line's neurons: line l's run from `offsets[l]` to `offsets[l + 1]`. */
+  members: { offsets: Uint32Array; nodeIds: Uint32Array };
+};
+
 /**
- * The matrix over rows of neurons, the same down as across: what each row
- * holds and, row by row from the presynaptic one, the connections and synapses
- * from one row's neurons to another's.
+ * The matrix over lines of neurons: the presynaptic side down and the postsynaptic across, and,
+ * row by row, the connections and synapses from each row's neurons to each column's.
+ *
+ * A side's places are the same whatever is in view, so a zoom moves nothing: a place per value
+ * of the property, or per neuron in the order.
  */
 export type ConnectivityGroups = {
   by: ConnectivityRequest['by'];
-  labels: string[];
-  sizes: Float64Array;
+  /** How many places each side has in all. */
+  places: number;
+  pre: MatrixSide;
+  post: MatrixSide;
   connections: Float64Array;
   synapses: Float64Array | null;
-  /** Neuron by neuron, in an order: the rows each of its values takes. */
+  /** Between all the neurons drawn, whether in view or not. */
+  totals: { connections: number; synapses: number | null };
+  /** Neuron by neuron, in an order: the places each of its values takes. */
   runs: RowRun[] | null;
-  /** Neuron by neuron, one in each row: its node id. */
-  nodeIds: Float64Array | null;
-  /** The node ids of each row's neurons: row r's run from `offsets[r]` to `offsets[r + 1]`. */
-  members: { offsets: Uint32Array; nodeIds: Uint32Array };
 };
+
+/** A square of the matrix, by the places its row and column take. */
+export type PathwaySquare = { pre: PlaceSpan; post: PlaceSpan };
 
 /**
  * A property of the neurons from outside the matrix, such as a column of the node
@@ -67,6 +88,10 @@ function byCharacters(a: string, b: string): number {
 
 /** What a neuron with no value of a property is filed under. */
 const NO_VALUE = 'None';
+
+/** A neuron's line where it has none: left out of the matrix, or out of view on that side. */
+const LEFT_OUT = -2;
+const OUT_OF_VIEW = -1;
 
 /** The values a categorical property takes, in order: among the `included` neurons, where given. */
 function valuesInUse(
@@ -105,7 +130,7 @@ export function summarizeConnectivity(matrix: ConnectivityMatrix): ConnectivityS
 
 /**
  * Each neuron's value of a categorical property, as its place among the values
- * in use; -1 for a neuron left out.
+ * in use; `LEFT_OUT` for a neuron left out.
  */
 function rankedValues(
   property: Extract<VertexProperty, { kind: 'categorical' }>,
@@ -115,7 +140,7 @@ function rankedValues(
   const rankOfCode = property.library.map((value) => values.indexOf(value));
   const none = values.indexOf(NO_VALUE);
   const ranks = Int32Array.from(property.codes, (code, neuron) => {
-    if (included && !included[neuron]) return -1;
+    if (included && !included[neuron]) return LEFT_OUT;
     return code < 0 ? none : rankOfCode[code];
   });
   return { values, ranks };
@@ -155,32 +180,36 @@ function countRows(rowOf: Int32Array, rows: number): Float64Array {
 }
 
 /**
- * The rows of the matrix: a neuron's row (-1 if left out), how many neurons
- * each holds and what it is called. By a property, a row per value; neuron by
- * neuron, a row per neuron in the order asked for, or per run of them past
- * `maxRows`.
+ * What of a side to draw while it shows `visible`, in its places: lines of as few neurons as
+ * `maxRows` lets, lined up on multiples of their size, so a pan moves whole squares.
  */
-function rowsOf(
+export function sideWindow(
+  visible: readonly [number, number],
+  places: number,
+  maxRows: number
+): SideWindow {
+  if (places <= maxRows) return { start: 0, end: places, step: 1 };
+  const [low, high] = visible[0] < visible[1] ? visible : [visible[1], visible[0]];
+  // A place is drawn half a place either side of its number.
+  const from = Math.min(places - 1, Math.max(0, Math.floor(low + 0.5)));
+  const to = Math.max(from + 1, Math.min(places, Math.ceil(high + 0.5)));
+  const step = Math.ceil((to - from) / maxRows);
+  return {
+    start: Math.floor(from / step) * step,
+    end: Math.min(places, Math.ceil(to / step) * step),
+    step,
+  };
+}
+
+/** The neurons in the order asked for, and the places each value of that order takes. */
+function neuronsInOrder(
   matrix: ConnectivityMatrix,
-  request: ConnectivityRequest,
+  orderBy: string | null,
   included: Uint8Array | null,
   outside: readonly NodeProperty[]
 ) {
   const { size, nodeIds } = matrix;
-  if (request.by === 'property') {
-    const property = categorical(matrix, request.property, outside);
-    if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
-    const { values, ranks } = rankedValues(property, included);
-    return {
-      rowOf: ranks,
-      sizes: countRows(ranks, values.length),
-      labels: values,
-      runs: null,
-      ids: null,
-    };
-  }
-
-  const property = categorical(matrix, request.orderBy, outside);
+  const property = categorical(matrix, orderBy, outside);
   const ordered = property ? rankedValues(property, included) : null;
   const order = Array.from({ length: size }, (_, i) => i)
     .filter((neuron) => !included || included[neuron])
@@ -188,33 +217,86 @@ function rowsOf(
       (a, b) =>
         (ordered ? ordered.ranks[a] - ordered.ranks[b] : 0) || nodeIds[a] - nodeIds[b] || a - b
     );
-  const count = order.length;
-  const rows = Math.max(1, Math.min(count, request.maxRows));
-  const rowOf = new Int32Array(size).fill(-1);
-  order.forEach((neuron, rank) => {
-    rowOf[neuron] = Math.floor((rank * rows) / count);
-  });
+  if (!ordered) return { order, runs: null };
 
   const runs: RowRun[] = [];
-  if (ordered) {
-    for (const neuron of order) {
-      const label = ordered.values[ordered.ranks[neuron]];
-      const last = runs.at(-1);
-      if (last?.label === label) last.end = rowOf[neuron];
-      else runs.push({ label, start: rowOf[neuron], end: rowOf[neuron] });
-    }
+  order.forEach((neuron, place) => {
+    const label = ordered.values[ordered.ranks[neuron]];
+    const last = runs.at(-1);
+    if (last?.label === label) last.end = place;
+    else runs.push({ label, start: place, end: place });
+  });
+  return { order, runs };
+}
+
+function neuronCount(n: number): string {
+  return n === 1 ? '1 neuron' : `${n.toLocaleString()} neurons`;
+}
+
+/** A stretch of the order as lines of neurons, whose places run on from one line to the next. */
+function neuronSide(window: SideWindow, order: readonly number[], nodeIds: Float64Array) {
+  const { start, end, step } = window;
+  const count = end - start;
+  const lines = Math.ceil(count / step);
+  const sizes = Float64Array.from({ length: lines }, (_, line) =>
+    Math.min(step, count - line * step)
+  );
+  const ids = Uint32Array.from({ length: count }, (_, i) => nodeIds[order[start + i]]);
+  return {
+    ...window,
+    labels: step === 1 ? Array.from(ids, (id) => `Neuron ${id}`) : Array.from(sizes, neuronCount),
+    sizes,
+    members: {
+      offsets: Uint32Array.from({ length: lines + 1 }, (_, line) => Math.min(line * step, count)),
+      nodeIds: ids,
+    },
+  };
+}
+
+/** Each neuron's line on a side showing `window`, or why it has none. */
+function linesOf({ start, end, step }: SideWindow, order: readonly number[], size: number) {
+  const lineOf = new Int32Array(size).fill(LEFT_OUT);
+  order.forEach((neuron, place) => {
+    lineOf[neuron] =
+      place >= start && place < end ? Math.floor((place - start) / step) : OUT_OF_VIEW;
+  });
+  return lineOf;
+}
+
+/** The connections and synapses from each row to each column, and between all the neurons drawn. */
+function countLines(
+  { pre, post, size, synapses: weights }: ConnectivityMatrix,
+  rowOf: Int32Array,
+  columnOf: Int32Array,
+  rows: number,
+  columns: number
+) {
+  const connections = new Float64Array(rows * columns);
+  const synapses = weights ? new Float64Array(rows * columns) : null;
+  let allConnections = 0;
+  let allSynapses = 0;
+  for (let e = 0; e < pre.length; e++) {
+    if (pre[e] >= size || post[e] >= size) continue;
+    const from = rowOf[pre[e]];
+    const to = columnOf[post[e]];
+    if (from === LEFT_OUT || to === LEFT_OUT) continue;
+    allConnections += 1;
+    if (weights) allSynapses += weights[e];
+    if (from < 0 || to < 0) continue;
+    const cell = from * columns + to;
+    connections[cell] += 1;
+    if (synapses && weights) synapses[cell] += weights[e];
   }
-  const sizes = countRows(rowOf, rows);
-  const ids = rows === count ? Float64Array.from(order, (neuron) => nodeIds[neuron]) : null;
-  const labels = ids
-    ? Array.from(ids, (id) => `Neuron ${id}`)
-    : Array.from(sizes, (n) => `${n.toLocaleString()} neurons`);
-  return { rowOf, sizes, labels, runs: ordered ? runs : null, ids };
+  return {
+    connections,
+    synapses,
+    totals: { connections: allConnections, synapses: weights ? allSynapses : null },
+  };
 }
 
 /**
  * The matrix as `request` asks for it: its connections and synapses, summed by
- * rows. Given `cells`, node ids, only those neurons and the connections between
+ * lines. Given `cells`, node ids, only those neurons and the connections between
  * them are counted. `outside` are properties to group or order by besides the
  * matrix's own.
  */
@@ -225,29 +307,49 @@ export function groupConnectivity(
   outside: readonly NodeProperty[] = []
 ): ConnectivityGroups {
   const included = cells ? includedNeurons(matrix, cells) : null;
-  const { rowOf, sizes, labels, runs, ids } = rowsOf(matrix, request, included, outside);
-  const n = labels.length;
-  const connections = new Float64Array(n * n);
-  const synapses = matrix.synapses ? new Float64Array(n * n) : null;
-  const { pre, post, size } = matrix;
-  for (let e = 0; e < pre.length; e++) {
-    if (pre[e] >= size || post[e] >= size) continue;
-    const from = rowOf[pre[e]];
-    const to = rowOf[post[e]];
-    if (from < 0 || to < 0) continue;
-    const cell = from * n + to;
-    connections[cell] += 1;
-    if (synapses && matrix.synapses) synapses[cell] += matrix.synapses[e];
+
+  if (request.by === 'property') {
+    const property = categorical(matrix, request.property, outside);
+    if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
+    const { values, ranks } = rankedValues(property, included);
+    const n = values.length;
+    const sizes = countRows(ranks, n);
+    const side: MatrixSide = {
+      start: 0,
+      end: n,
+      step: 1,
+      labels: values,
+      sizes,
+      members: membersOf(ranks, sizes, matrix.nodeIds),
+    };
+    return {
+      by: 'property',
+      places: n,
+      pre: side,
+      post: side,
+      runs: null,
+      ...countLines(matrix, ranks, ranks, n, n),
+    };
   }
+
+  const { order, runs } = neuronsInOrder(matrix, request.orderBy, included, outside);
+  const places = order.length;
+  const whole = sideWindow([-0.5, places - 0.5], places, request.maxRows);
+  const pre = neuronSide(request.window?.pre ?? whole, order, matrix.nodeIds);
+  const post = neuronSide(request.window?.post ?? whole, order, matrix.nodeIds);
   return {
-    by: request.by,
-    labels,
-    sizes,
-    connections,
-    synapses,
+    by: 'neuron',
+    places,
+    pre,
+    post,
     runs,
-    nodeIds: ids,
-    members: membersOf(rowOf, sizes, matrix.nodeIds),
+    ...countLines(
+      matrix,
+      linesOf(pre, order, matrix.size),
+      linesOf(post, order, matrix.size),
+      pre.labels.length,
+      post.labels.length
+    ),
   };
 }
 
@@ -265,16 +367,43 @@ function membersOf(rowOf: Int32Array, sizes: Float64Array, nodeIds: Float64Array
   return { offsets, nodeIds: ids };
 }
 
-/** The node ids of a row's neurons. */
-export function rowMembers(groups: ConnectivityGroups, row: number): Uint32Array {
-  const { offsets, nodeIds } = groups.members;
-  return nodeIds.subarray(offsets[row], offsets[row + 1]);
+/** The node ids of a row's or column's neurons. */
+export function lineMembers(side: MatrixSide, line: number): Uint32Array {
+  const { offsets, nodeIds } = side.members;
+  return nodeIds.subarray(offsets[line], offsets[line + 1]);
 }
 
-/** The pairs of distinct neurons from one row to another: a neuron makes no pair with itself. */
-export function possiblePairs(groups: ConnectivityGroups, pre: number, post: number): number {
-  const { sizes } = groups;
-  return sizes[pre] * sizes[post] - (pre === post ? sizes[pre] : 0);
+/** The places a line takes along its side. */
+export function lineSpan(side: SideWindow, line: number): PlaceSpan {
+  const start = side.start + line * side.step;
+  return { start, end: Math.min(start + side.step, side.end) };
+}
+
+/** The square a row and column cross at, which stays where it is whatever comes into view. */
+export function squareOf(groups: ConnectivityGroups, row: number, column: number): PathwaySquare {
+  return { pre: lineSpan(groups.pre, row), post: lineSpan(groups.post, column) };
+}
+
+export function sameSquare(a: PathwaySquare, b: PathwaySquare): boolean {
+  return (
+    a.pre.start === b.pre.start &&
+    a.pre.end === b.pre.end &&
+    a.post.start === b.post.start &&
+    a.post.end === b.post.end
+  );
+}
+
+/** How many neurons a row and column have in common: a neuron makes no pair with itself. */
+function sharedNeurons(groups: ConnectivityGroups, row: number, column: number): number {
+  // Each value of a property is one place, however many neurons it holds.
+  if (groups.by === 'property') return row === column ? groups.pre.sizes[row] : 0;
+  const { pre, post } = squareOf(groups, row, column);
+  return Math.max(0, Math.min(pre.end, post.end) - Math.max(pre.start, post.start));
+}
+
+/** The pairs of distinct neurons from a row to a column. */
+export function possiblePairs(groups: ConnectivityGroups, row: number, column: number): number {
+  return groups.pre.sizes[row] * groups.post.sizes[column] - sharedNeurons(groups, row, column);
 }
 
 /** The property a matrix is first grouped by: the finest of the usual ones it has. */

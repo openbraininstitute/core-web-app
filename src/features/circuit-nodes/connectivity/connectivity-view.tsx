@@ -14,8 +14,11 @@ import {
 } from '@/features/circuit-nodes/connectivity/connectivity-figure';
 import {
   defaultGrouping,
-  rowMembers,
+  lineMembers,
+  sameSquare,
   selectionApplies,
+  sideWindow,
+  squareOf,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import {
   nodeColumnOptions,
@@ -37,11 +40,12 @@ import type {
   ConnectivityRequest,
   ConnectivitySummary,
   NodeProperty,
+  SideWindow,
 } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { ConnectivityEntry } from '@/features/circuit-nodes/connectivity/use-connectivity';
 import type { MatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import type { ColumnMeta, ColumnValues } from '@/features/circuit-nodes/types';
-import type { HoverPoint } from '@/features/spike-viewer/spike-statistics/figures';
+import type { HoverPoint, PlotRanges } from '@/features/spike-viewer/spike-statistics/figures';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
 
@@ -62,8 +66,10 @@ const StatisticsPlot = dynamic(
 const BY_NEURON = '__neuron';
 /** The order-by that keeps the matrix's own order. */
 const MATRIX_ORDER = '__matrix';
-/** Neuron by neuron, the most rows: past it, neurons next in the order share one. */
+/** Neuron by neuron, the most rows or columns in view: past it, neurons next in the order share one. */
 const MAX_NEURON_ROWS = 300;
+/** How long a click waits to see if it is half of a double click, as long as Plotly gives one. */
+const DOUBLE_CLICK_MS = 300;
 
 function requestOf(groupBy: string, orderBy: string): ConnectivityRequest {
   return groupBy === BY_NEURON
@@ -109,10 +115,22 @@ function selectionId(cells: Uint32Array | null): number {
   return id;
 }
 
-function sum(values: ArrayLike<number>): number {
-  let total = 0;
-  for (let i = 0; i < values.length; i++) total += values[i];
-  return total;
+function sameWindow(a: SideWindow, b: SideWindow): boolean {
+  return a.start === b.start && a.end === b.end && a.step === b.step;
+}
+
+function neuronsEach(n: number): string {
+  return n === 1 ? 'one neuron' : `${n.toLocaleString()} neurons`;
+}
+
+/** What each row and column holds, while neurons share them. */
+function sharingNote({ pre, post }: ConnectivityGroups): string | null {
+  if (pre.step === 1 && post.step === 1) return null;
+  const each =
+    pre.step === post.step
+      ? `Each row and column is ${neuronsEach(pre.step)}`
+      : `Each row is ${neuronsEach(pre.step)} and each column ${neuronsEach(post.step)}`;
+  return `${each}. Zoom in for single neurons`;
 }
 
 /**
@@ -420,17 +438,29 @@ function ReadyMatrix({
     .filter((read): read is NodeProperty => !!read && !(read instanceof Error));
   const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}/${missing.length}`;
 
-  // Kept with the request it answers, so a change never draws the last one's rows.
+  // What of the order is in view, neuron by neuron, kept with the matrix it is of.
+  const [zoom, setZoom] = useState<{
+    key: string;
+    window: { pre: SideWindow; post: SideWindow };
+  } | null>(null);
+  const zoomedTo = zoom?.key === requestKey ? zoom.window : null;
+
+  // Kept with the request it answers, so a change never draws the last one's rows. Another zoom
+  // of the same matrix leaves the last one's up, stretched by the plot, until its lines come.
   const [answer, setAnswer] = useState<{
     key: string;
     groups?: ConnectivityGroups;
     error?: Error;
   } | null>(null);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the key says what the answer is to
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the keys say what the answer is to
   useEffect(() => {
     if (missing.length > 0) return;
     let live = true;
-    group(request, cells, outsideProperties)
+    group(
+      zoomedTo && request.by === 'neuron' ? { ...request, window: zoomedTo } : request,
+      cells,
+      outsideProperties
+    )
       .then((groups) => live && setAnswer({ key: requestKey, groups }))
       .catch((error: unknown) => {
         if (live) {
@@ -443,8 +473,21 @@ function ReadyMatrix({
     return () => {
       live = false;
     };
-  }, [group, requestKey]);
+  }, [group, requestKey, JSON.stringify(zoomedTo)]);
   const current = answer?.key === requestKey ? answer : null;
+
+  const zoomMatrix = ({ x, y }: PlotRanges) => {
+    const places = current?.groups?.places;
+    if (places === undefined) return;
+    const whole = sideWindow([-0.5, places - 0.5], places, MAX_NEURON_ROWS);
+    const pre = sideWindow(y, places, MAX_NEURON_ROWS);
+    const post = sideWindow(x, places, MAX_NEURON_ROWS);
+    setZoom(
+      sameWindow(pre, whole) && sameWindow(post, whole)
+        ? null
+        : { key: requestKey, window: { pre, post } }
+    );
+  };
 
   // The pathway under the pointer, told once per cell, and let go of with the rows it was of.
   // Told through the latest callback, which a host may make anew on each render.
@@ -467,7 +510,9 @@ function ReadyMatrix({
     if (key === hoveredRef.current) return;
     hoveredRef.current = key;
     pathwayToRef.current?.(
-      groups && key ? { pre: rowMembers(groups, pre), post: rowMembers(groups, post) } : null
+      groups && key
+        ? { pre: lineMembers(groups.pre, pre), post: lineMembers(groups.post, post) }
+        : null
     );
   };
   // biome-ignore lint/correctness/useExhaustiveDependencies: let go with the rows it was of
@@ -485,19 +530,28 @@ function ReadyMatrix({
     const groups = current?.groups;
     const [pre, post] = Array.isArray(point.pointNumber) ? point.pointNumber : [];
     if (!pin || !groups || pre === undefined || post === undefined) return;
-    if (pinnedSquare?.pre === pre && pinnedSquare.post === post) {
+    const square = squareOf(groups, pre, post);
+    if (pinnedSquare && sameSquare(pinnedSquare, square)) {
       pin.onPick(null);
       return;
     }
     pin.onPick({
-      pre: rowMembers(groups, pre),
-      post: rowMembers(groups, post),
-      square: { matrix: requestKey, pre, post },
+      pre: lineMembers(groups.pre, pre),
+      post: lineMembers(groups.post, post),
+      square: { ...square, matrix: requestKey },
       name: pathwayName(groups, pre, post),
       matrixCells: cells,
     });
   };
   const pickable = ofTable && pin !== undefined;
+  // A double click zooms out, and its first press is not a pick.
+  const pickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pickAfterClick = (point: HoverPoint) => {
+    clearTimeout(pickTimer.current);
+    pickTimer.current = setTimeout(() => pinPathway(point), DOUBLE_CLICK_MS);
+  };
+  const dropPick = () => clearTimeout(pickTimer.current);
+  useEffect(() => () => clearTimeout(pickTimer.current), []);
 
   const byNeuron = groupBy === BY_NEURON;
   const axis = byNeuron ? `neurons${orderBy === MATRIX_ORDER ? '' : ` by ${orderBy}`}` : groupBy;
@@ -510,9 +564,11 @@ function ReadyMatrix({
         axis,
         pinned: pinnedSquare,
         pickable,
+        revision: requestKey,
       }),
-    [current, measure, axis, pinnedSquare, pickable]
+    [current, measure, axis, pinnedSquare, pickable, requestKey]
   );
+  const sharing = current?.groups ? sharingNote(current.groups) : null;
   const measures = MEASURES.filter(
     (m) =>
       summary.synapses !== null || (m.value !== 'synapses' && m.value !== 'synapsesPerConnection')
@@ -526,8 +582,8 @@ function ReadyMatrix({
             <Summary
               neurons={neurons}
               of={summary.neurons}
-              connections={current?.groups && sum(current.groups.connections)}
-              synapses={current?.groups?.synapses && sum(current.groups.synapses)}
+              connections={current?.groups?.totals.connections}
+              synapses={current?.groups?.totals.synapses}
             />
           ) : (
             <Summary
@@ -587,13 +643,12 @@ function ReadyMatrix({
             onChange={(value) => setMeasure(value as ConnectivityMeasure)}
             options={measures.map((m) => ({ value: m.value, label: m.label }))}
           />
-          {byNeuron && neurons > MAX_NEURON_ROWS && (
+          {sharing && (
             <span
               className="text-xs text-neutral-400"
-              title={`Too many neurons for a row each: the ${neurons.toLocaleString()} are split into ${MAX_NEURON_ROWS} rows and columns, each a run of consecutive neurons in the Order by order.`}
+              title="Too many neurons in view for a row each, so neurons next to each other in the Order by order share one. Zooming in counts the matrix again, down to one neuron a row."
             >
-              About {Math.ceil(neurons / MAX_NEURON_ROWS).toLocaleString()} neurons per row and
-              column
+              {sharing}
             </span>
           )}
         </div>
@@ -621,7 +676,9 @@ function ReadyMatrix({
           <StatisticsPlot
             figure={figure}
             onPointHover={pathwayTo && hoverPathway}
-            onPointClick={pickable ? pinPathway : undefined}
+            onPointClick={pickable ? pickAfterClick : undefined}
+            onPointDoubleClick={pickable ? dropPick : undefined}
+            onRangesChange={byNeuron ? zoomMatrix : undefined}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

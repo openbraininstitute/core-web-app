@@ -88,7 +88,7 @@ const CIRCUIT = { id: 'c1', assets: [] } as unknown as ICircuit;
 const PINNED: PinnedPathway = {
   pre: Uint32Array.from([0]),
   post: Uint32Array.from([1]),
-  square: { matrix: 'm', pre: 0, post: 1 },
+  square: { matrix: 'm', pre: { start: 0, end: 1 }, post: { start: 1, end: 2 } },
   name: 'A → B',
   matrixCells: null,
 };

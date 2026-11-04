@@ -49,15 +49,19 @@ const api = {
   ): Promise<ConnectivityGroups> {
     if (!matrix) throw new Error('No connectivity matrix open; call open() first');
     const groups = groupConnectivity(matrix, request, cells, outside);
-    const buffers = [
-      groups.sizes,
-      groups.connections,
-      groups.synapses,
-      groups.nodeIds,
-      groups.members.offsets,
-      groups.members.nodeIds,
-    ].flatMap((array) => (array ? [array.buffer as ArrayBuffer] : []));
-    return Comlink.transfer(groups, buffers);
+    // A set: grouped by a property, the two sides are one, and a buffer goes over only once.
+    const buffers = new Set(
+      [
+        groups.connections,
+        groups.synapses,
+        ...[groups.pre, groups.post].flatMap((side) => [
+          side.sizes,
+          side.members.offsets,
+          side.members.nodeIds,
+        ]),
+      ].flatMap((array) => (array ? [array.buffer as ArrayBuffer] : []))
+    );
+    return Comlink.transfer(groups, [...buffers]);
   },
 };
 

@@ -65,7 +65,7 @@ const POPULATION = {
 const PINNED: PinnedPathway = {
   pre: Uint32Array.from([0]),
   post: Uint32Array.from([1]),
-  square: { matrix: 'm', pre: 0, post: 1 },
+  square: { matrix: 'm', pre: { start: 0, end: 1 }, post: { start: 1, end: 2 } },
   name: 'A → B',
   matrixCells: null,
 };
@@ -153,14 +153,14 @@ describe('a report’s table of cells', () => {
     expect(onClearPicks).toHaveBeenCalled();
     expect(h.grid?.columns[0].name).toBe('matrix:pathway');
     expect(h.grid?.initialFilterModel).toHaveProperty('matrix:pathway');
-    expect(h.grid?.filterScope).toBe('voltage:m/0/1');
+    expect(h.grid?.filterScope).toBe('voltage:m/0-1/1-2');
     expect(h.grid?.pinnedVersion).not.toBe(before?.pinnedVersion);
 
-    const another = { ...PINNED, square: { ...PINNED.square, post: 0 } };
+    const another = { ...PINNED, square: { ...PINNED.square, post: { start: 0, end: 1 } } };
     const pinnedVersion = h.grid?.pinnedVersion;
     await act(async () => h.view?.pin?.onPick(another));
 
-    expect(h.grid?.filterScope).toBe('voltage:m/0/0');
+    expect(h.grid?.filterScope).toBe('voltage:m/0-1/0-1');
     expect(h.grid?.pinnedVersion).not.toBe(pinnedVersion);
   });
 });
