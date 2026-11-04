@@ -71,9 +71,11 @@ export default async function SanityContentWidget({ value }: SanityContentWidget
     }
     case 'contributors':
       return <WidgetContributorsPanel />;
+    // The Team section presents the group photo without individual profiles.
+    case 'memberTeam':
+      return null;
     case 'memberBoard':
-    case 'memberExecutiveBoard':
-    case 'memberTeam': {
+    case 'memberExecutiveBoard': {
       const data = await getMembers();
       return <WidgetCompanyMembers group={value.name} data={data} />;
     }
