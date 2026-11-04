@@ -135,6 +135,38 @@ const GLIDE = 'transform 1000ms cubic-bezier(0.65, 0, 0.35, 1), opacity 0.6s eas
 /** The first way in, drifting from off the page and slowing as it comes to rest, after `ms`. */
 const driftIn = (ms: number) => `transform 20s cubic-bezier(0.2, 0.55, 0.3, 1) ${ms}ms`;
 
+/**
+ * Where the landing's brains are images, not live views: a phone, or anything small held upright. Their packs are 31 MB
+ * together, and the landing stays until they are built, which on a phone's connection could be a minute or more. Asked
+ * once, in the browser: what floats over the page only mounts there.
+ */
+const STILLS_WHERE =
+  '(max-width: 63.999rem) and (orientation: portrait), (max-width: 63.999rem) and (pointer: coarse)';
+function useStills(): boolean {
+  const [stills] = useState(() => window.matchMedia(STILLS_WHERE).matches);
+  return stills;
+}
+
+/** A brain as an image, from harness/phone_stills in the group; built once it is in, for the intro to start with it. */
+const stillView = (src: string) =>
+  function StillView(_started: boolean, onBuilt: () => void) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- Made to size, and its load is what the intro waits for.
+      <img src={src} alt="" draggable={false} onLoad={onBuilt} onError={onBuilt} className="size-full object-contain" />
+    );
+  };
+const L6_STILL = stillView('/images/start/walkthrough/landing-microcircuit.webp');
+const CNS_STILL = stillView('/images/start/walkthrough/landing-male-cns.webp');
+/** The images' way in: the landing is on a phone a little while, and they cost nothing to wait for. */
+const STILL_IN = 'transform 6s cubic-bezier(0.2, 0.55, 0.3, 1)';
+const L6_STILL_MOVES: Moves = { ...L6_MOVES, off: { transform: 'translate(-60%, -60%)', opacity: 1 } };
+const CNS_STILL_MOVES: Moves = {
+  building: BUILDING,
+  off: { transform: 'translate(70%, 30%)', opacity: 1 },
+  in: IN,
+  out: { transform: 'translateY(-125vh)', opacity: 1 },
+};
+
 const NOTHING_OVER = () => null;
 /** How coarse a level of the pack may be, in device pixels: twice the viewer's own, in sooner, the same to see. */
 const DETAIL_PIXELS = 4;
@@ -501,9 +533,11 @@ const FLY_VIEW = (started: boolean, onBuilt: () => void) => (
  * The male fly's whole central nervous system, its surface's neurons, over the whole page behind the words and
  * recording of the screen `at`, faint, turning there. It is read unseen and still on the screen before, to be drawn
  * by the time its own comes, and let go of past the screen after; the viewer's word that it is loading is not shown.
+ * Not where the landing's brains are images: faint behind a video, it is not worth its pack on a phone.
  */
 export function CnsBackdrop({ chapter, at }: FloatingState & { at: number }) {
-  if (chapter < at - 1 || chapter > at + 1) return null;
+  const stills = useStills();
+  if (stills || chapter < at - 1 || chapter > at + 1) return null;
   const on = chapter === at;
   return (
     <div
@@ -621,6 +655,21 @@ const MOUSE_VIEW = (_started: boolean, onBuilt: () => void) => (
  * taller than the screen, and back into it as the first screen is entered.
  */
 export function FloatingMicrocircuit(state: FloatingState) {
+  const stills = useStills();
+  if (stills) {
+    return (
+      <Floating
+        {...state}
+        on="landing"
+        moves={L6_STILL_MOVES}
+        firstIn={STILL_IN}
+        turnsOverLanding={false}
+        // Across the top left corner, as the live one is, its ends running off the two edges.
+        className="top-[calc(var(--still)*-0.32)] left-[calc(var(--still)*-0.37)] h-[calc(var(--still)*1.089)] w-(--still) [--still:min(95vw,calc(var(--chapter-h)*0.44))] squat:[--still:calc(var(--chapter-h)*0.9)]"
+        view={L6_STILL}
+      />
+    );
+  }
   return (
     <Floating
       {...state}
@@ -676,6 +725,7 @@ export function FloatingMaleCns({
   walking: boolean;
 }) {
   const { entered } = state;
+  const stills = useStills();
   const view = useCallback(
     (started: boolean, onBuilt: () => void) =>
       walking ? (
@@ -685,6 +735,21 @@ export function FloatingMaleCns({
       ),
     [walking, entered]
   );
+  if (stills) {
+    return (
+      <Floating
+        {...state}
+        on="landing"
+        moves={CNS_STILL_MOVES}
+        firstIn={STILL_IN}
+        turnsOverLanding={false}
+        // On its side, under the landing's words, in from the right, where its nerve cord's cut end runs off the page.
+        tilt={-82}
+        className="top-[calc(var(--chapter-h)*0.745-var(--cns)*0.5)] left-[calc(100vw-var(--cns)*0.6555)] h-(--cns) w-[calc(var(--cns)*0.551)] [--cns:min(77vw,calc(var(--chapter-h)*0.34))] squat:top-[calc(var(--chapter-h)*0.6-var(--cns)*0.5)] squat:[--cns:calc(var(--chapter-h)*0.55)]"
+        view={CNS_STILL}
+      />
+    );
+  }
   return (
     <Floating
       {...state}

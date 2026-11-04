@@ -1,19 +1,18 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { cn } from '@/utils/css-class';
 
 /**
  * What the platform is for, along the landing's foot and the first screens', in the order of the screens they
- * are about: the platform, simulating, AI, exploring results, teaching, and so on.
+ * are about: the platform, AI, learning and teaching, simulating, exploring results, and so on.
  */
 const THEMES = [
   'Virtual Labs',
-  'Simulate',
   'Leverage AI',
+  'Learn & Teach',
+  'Simulate',
   'Explore',
-  'Teach',
-  'Learn',
   'Build',
   'Collaborate',
   'Share',
@@ -40,7 +39,13 @@ function ThemeLine({
 }) {
   return (
     <p
-      className="flex flex-wrap items-center justify-center gap-x-[14px] gap-y-[4px] px-[20px] text-[clamp(14px,1.15vw,18px)] leading-[1.4] text-neutral-500 italic"
+      className={cn(
+        'flex flex-wrap items-center justify-center gap-x-[14px] gap-y-[4px] px-[20px] text-[clamp(14px,1.15vw,18px)] leading-[1.4] text-neutral-500 italic',
+        // Upright on a phone: over the screens one line, running off the page, to swipe along; on the landing, all of it.
+        links
+          ? 'stacked:mx-auto stacked:w-max stacked:flex-nowrap stacked:whitespace-nowrap'
+          : 'stacked:gap-x-[8px] stacked:text-[13px]'
+      )}
       style={{ fontFamily: SERIF }}
     >
       {THEMES.map((theme, i) => {
@@ -67,7 +72,7 @@ function ThemeLine({
               <button
                 type="button"
                 onClick={() => goTo(to)}
-                className="pointer-events-auto cursor-pointer italic hover:text-[#002766]"
+                className="pointer-events-auto cursor-pointer italic hover:text-[#002766] stacked:-my-[8px] stacked:py-[8px]"
               >
                 {word}
               </button>
@@ -104,14 +109,34 @@ export function ThemeNav({
   links: Record<string, string>;
   goTo: (id: string) => void;
 }) {
+  const rail = useRef<HTMLDivElement>(null);
+  const underlined = entered ? underlines[chapter] : undefined;
+  // Where the line runs off the page, the word on in its middle.
+  useEffect(() => {
+    const line = rail.current;
+    const word = underlined ? line?.querySelector<HTMLElement>(`[data-fly="${underlined}"]`) : null;
+    if (!line || !word) return;
+    const seen = word.getBoundingClientRect();
+    const box = line.getBoundingClientRect();
+    line.scrollTo({
+      left: line.scrollLeft + seen.left + seen.width / 2 - box.left - box.width / 2,
+      behavior: 'smooth',
+    });
+  }, [underlined]);
   return (
     <div
+      ref={rail}
       aria-hidden={!entered}
       inert={!entered || undefined}
-      className={cn('pointer-events-none fixed z-[66] transition-opacity duration-500', THEMES_FOOT)}
+      className={cn(
+        'pointer-events-none fixed z-[66] transition-opacity duration-500',
+        THEMES_FOOT,
+        // Upright on a phone, a band along the foot, for a screen's words to pass under, its ends fading.
+        'stacked:pointer-events-auto stacked:bottom-0 stacked:block stacked:overflow-x-auto stacked:bg-white/90 stacked:pt-[8px] stacked:pb-[12px] stacked:[mask-image:linear-gradient(90deg,transparent,#000_20px,#000_calc(100%-20px),transparent)] stacked:[scrollbar-width:none] squat:bottom-0 squat:bg-white/90 squat:pt-[6px] squat:pb-[8px]'
+      )}
       style={{ opacity: entered ? 1 : 0 }}
     >
-      <ThemeLine underlined={entered ? underlines[chapter] : undefined} links={links} goTo={goTo} />
+      <ThemeLine underlined={underlined} links={links} goTo={goTo} />
     </div>
   );
 }

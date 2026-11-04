@@ -1,6 +1,6 @@
 'use client';
 
-import { RiArrowDownSLine } from '@remixicon/react';
+import { RiArrowDownSLine, RiMenuLine } from '@remixicon/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -82,6 +82,9 @@ const SNAP_AFTER_MS = 140;
 
 /** How long the first screen must have been at the top before scrolling up brings the intro back, ms. */
 const AT_TOP_MS = 500;
+
+/** How far a finger must pull down from the top of the first screen to bring the intro back, px. */
+const PULL_PX = 60;
 
 /** The page's scroller, which the walkthrough is a screen of at a time. */
 const SCROLLER = '#workspace-body';
@@ -229,7 +232,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   }, [root, fullscreen]);
 
   // Up from the top of the first screen, the intro again: by the wheel once the page has rested at the
-  // top a moment, so that a scroll up from the second screen does not run on into it, or by ← or ↑.
+  // top a moment, so that a scroll up from the second screen does not run on into it, by ← or ↑, or by a finger
+  // pulled down.
   useEffect(() => {
     if (!intro || !introDone || !root) return;
     let topSince = root.scrollTop <= 1 ? performance.now() : Number.POSITIVE_INFINITY;
@@ -244,12 +248,26 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     const onKey = (e: KeyboardEvent) => {
       if ((e.key === 'ArrowLeft' || e.key === 'ArrowUp') && root.scrollTop <= 1) back();
     };
+    // Told as the finger lifts: while it still moves, the intro would take that for a way in again.
+    let pulledFrom: number | null = null;
+    const onTouchStart = (e: TouchEvent) => {
+      const rested = root.scrollTop <= 1 && performance.now() - topSince > AT_TOP_MS;
+      pulledFrom = rested ? e.touches[0].clientY : null;
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      if (pulledFrom !== null && e.changedTouches[0].clientY - pulledFrom > PULL_PX) back();
+      pulledFrom = null;
+    };
     root.addEventListener('scroll', onScroll, { passive: true });
     root.addEventListener('wheel', onWheel, { passive: true });
+    root.addEventListener('touchstart', onTouchStart, { passive: true });
+    root.addEventListener('touchend', onTouchEnd, { passive: true });
     window.addEventListener('keydown', onKey);
     return () => {
       root.removeEventListener('scroll', onScroll);
       root.removeEventListener('wheel', onWheel);
+      root.removeEventListener('touchstart', onTouchStart);
+      root.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKey);
     };
   }, [intro, introDone, root, backToIntro]);
@@ -298,9 +316,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     const settle = () => {
       const now = root.scrollTop;
       const top = root.getBoundingClientRect().top;
-      const stops = sections.current
-        .filter((section): section is HTMLElement => section !== null)
-        .map((section) => Math.round(section.getBoundingClientRect().top - top + now));
+      const screen = root.clientHeight;
+      const placed = sections.current.filter((section): section is HTMLElement => section !== null);
+      // Taller than the screen, as on a small phone, a chapter is read down through, its foot a stop as well.
+      const boxes = placed.map((section) => section.getBoundingClientRect());
+      if (boxes.some((box) => box.top - top < 0 && box.bottom - top >= screen - 2)) return;
+      const stops = boxes.flatMap((box) => {
+        const at = Math.round(box.top - top + now);
+        return box.height > screen + 2 ? [at, at + Math.round(box.height - screen)] : [at];
+      });
       if (stops.length === 0 || stops.some((stop) => Math.abs(stop - now) <= 2)) return;
       const nearest = stops.reduce((best, stop) =>
         Math.abs(stop - now) < Math.abs(best - now) ? stop : best
@@ -352,7 +376,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         ref={setRoot}
         className={cn(
           'text-primary-9 bg-white transition-[opacity,scale] ease-in-out',
-          fullscreen ? 'fixed inset-0 z-[45] overflow-x-hidden overflow-y-auto' : 'relative min-h-full',
+          fullscreen ? 'fixed inset-0 z-[45] overflow-x-hidden overflow-y-auto overscroll-y-contain' : 'relative min-h-full',
           // Lifted away, the home under it uncovered.
           finishing && 'pointer-events-none scale-[1.04] opacity-0',
           learnFonts
@@ -360,6 +384,9 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         style={
           {
             '--chapter-h': height ? `${height}px` : 'calc(100vh - 6rem)',
+            // Held upright, a stage's video across the page, under the top bar, lower the taller the screen.
+            '--stage-video-h': 'min(calc((100vw - 32px) * 0.5625), calc(var(--chapter-h) * 0.32))',
+            '--stage-video-top': 'max(60px, calc(var(--chapter-h) * 0.35 - 160px))',
             fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
             transitionDuration: `${FINISH_MS}ms`,
           } as CSSProperties
@@ -429,7 +456,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         )}
         {/* Over the intro too: the ways in are there from the first. */}
         {fullscreen && (
-            <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px]">
+            <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]">
               <span
                 data-walkthrough-logo
                 className={cn(
@@ -437,15 +464,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   introDone ? 'opacity-100' : 'opacity-0'
                 )}
               >
-                <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766]" />
+                <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
               </span>
-              <div className="pointer-events-auto flex items-center gap-[20px]">
+              <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
                 <FindOutMore shown={introDone} />
                 {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                 <button
                   type="button"
                   onClick={finish}
-                  className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110"
+                  className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]"
                 >
                   Enter the platform
                 </button>
@@ -521,7 +548,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
 /**
  * All the site's pages as one menu in the top bar, under the headings of its own menu, in from the first screen on,
- * hidden over the intro. Not modal: the page goes on scrolling under it.
+ * hidden over the intro; on a phone, where its words do not fit beside the logo and the way in, by its mark alone. Not
+ * modal: the page goes on scrolling under it.
  */
 function FindOutMore({ shown }: { shown: boolean }) {
   return (
@@ -529,14 +557,18 @@ function FindOutMore({ shown }: { shown: boolean }) {
       aria-hidden={!shown}
       inert={!shown || undefined}
       className={cn(
-        'hidden transition-opacity duration-500 sm:block',
+        'transition-opacity duration-500',
         shown ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
       )}
     >
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger className="group text-primary-9 flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60">
-          Find out more
-          <RiArrowDownSLine className="size-[18px] transition-transform duration-200 group-data-[state=open]:rotate-180" />
+        <DropdownMenuTrigger
+          aria-label="Find out more"
+          className="group text-primary-9 flex items-center gap-[4px] text-[14px] leading-[18px] font-semibold whitespace-nowrap transition-opacity hover:opacity-60 max-sm:-m-[9px] max-sm:p-[9px]"
+        >
+          <RiMenuLine className="size-[26px] sm:hidden" />
+          <span className="max-sm:hidden">Find out more</span>
+          <RiArrowDownSLine className="size-[18px] transition-transform duration-200 group-data-[state=open]:rotate-180 max-sm:hidden" />
         </DropdownMenuTrigger>
         {/* Down clear of Enter the platform, which it runs under. */}
         <DropdownMenuContent
@@ -684,7 +716,9 @@ function ChapterText({
 /** A hero title's type: smaller across a wide chapter's top, and bold or light. */
 function heroClass(wide: boolean | undefined, bold: boolean): string {
   return cn(
-    wide ? 'text-[clamp(26px,2.5vw,40px)]' : 'text-[clamp(40px,4.4vw,64px)]',
+    wide
+      ? 'text-[clamp(26px,2.5vw,40px)]'
+      : 'text-[clamp(40px,4.4vw,64px)] stacked:text-[clamp(28px,8.2vw,44px)] stacked:text-balance squat:text-[clamp(26px,3.6vw,32px)]',
     'leading-[1.12] tracking-[-0.02em]',
     bold ? 'font-bold' : 'font-light'
   );
@@ -858,7 +892,7 @@ function Intro({
       data-walkthrough-intro
       onClick={begin}
       className={cn(
-        'fixed inset-0 z-[60] flex cursor-pointer flex-col items-center justify-center bg-white',
+        'fixed inset-0 z-[60] flex cursor-pointer flex-col items-center justify-center bg-white stacked:pb-[11vh]',
         phase === 'leaving' && 'pointer-events-none'
       )}
       style={{
@@ -870,22 +904,25 @@ function Intro({
         className="mb-[clamp(20px,4vh,40px)]"
         style={{ opacity: phase === 'hold' ? 0 : 1, transition: fade(1200) }}
       >
-        <ObiLogo className="block h-[clamp(90px,16vh,150px)] w-auto text-[#002766]" />
+        <ObiLogo className="block h-[clamp(90px,16vh,150px)] w-auto text-[#002766] stacked:h-[clamp(64px,24vw,130px)] squat:h-[64px]" />
       </div>
       <h1
         aria-label={tail ? `${title} ${tail}` : title}
-        className={cn(heroClass(true, true), 'text-primary-9 text-center whitespace-nowrap')}
+        className={cn(
+          heroClass(true, true),
+          'text-primary-9 text-center whitespace-nowrap stacked:px-[20px] stacked:text-balance stacked:whitespace-normal'
+        )}
       >
         <Typed text={title} keys={out('title', title)} caret={phase === 'title' || (!tail && shown('title'))} />
         {tail && (
           // A blank line before it.
-          <em className="mt-[1.12em] block">
+          <em className="mt-[1.12em] block squat:mt-[0.5em]">
             <Typed text={tail} keys={out('next', tail)} caret={phase === 'next'} />
           </em>
         )}
       </h1>
       <div
-        className="text-primary-9 absolute bottom-[20vh] flex flex-col items-center gap-[10px]"
+        className="text-primary-9 absolute bottom-[20vh] flex flex-col items-center gap-[10px] stacked:bottom-[56px] stacked:gap-[4px] squat:hidden"
         style={{
           opacity: phase === 'waiting' || phase === 'leaving' ? 1 : 0,
           transition: fade(700),
@@ -907,7 +944,7 @@ function Intro({
       </div>
       {base && (
         <div
-          className="absolute inset-x-0 bottom-[clamp(20px,4.5vh,44px)] flex justify-center"
+          className="absolute inset-x-0 bottom-[clamp(20px,4.5vh,44px)] flex justify-center stacked:bottom-[12px]"
           style={{ opacity: shown('next') ? 1 : 0, transition: fade(900, 900) }}
         >
           {base}
@@ -1030,12 +1067,12 @@ function flyShared(root: HTMLElement, intro: HTMLElement, first: HTMLElement) {
 
 /** A way back or on: a bare chevron, with room round it to be pointed at. */
 const ARROW =
-  'pointer-events-auto flex size-[40px] items-center justify-center text-primary-9 transition-opacity duration-200 hover:opacity-60';
+  'pointer-events-auto flex size-[40px] items-center justify-center text-primary-9 transition-opacity duration-200 hover:opacity-60 stacked:rounded-full stacked:bg-white/85';
 
 /**
  * A screen back, up at the top of the page, and a screen on, down at its foot, both in the middle: back from
  * the first to the intro where there is one, and on from the last to where the walkthrough leads. Not over
- * the intro.
+ * the intro. On a phone, the way back gives way to the top bar: a finger takes the page back.
  */
 function SlideArrows({
   onUp,
@@ -1070,16 +1107,16 @@ function SlideArrows({
     <div
       inert={!shown || undefined}
       className={cn(
-        'pointer-events-none fixed inset-x-0 top-[clamp(16px,2.6vh,26px)] bottom-[clamp(16px,2.6vh,26px)] z-[66] flex flex-col items-center justify-between transition-opacity duration-500',
+        'pointer-events-none fixed inset-x-0 top-[clamp(16px,2.6vh,26px)] bottom-[var(--arrows-foot,clamp(16px,2.6vh,26px))] z-[66] flex flex-col items-center justify-between transition-opacity duration-500 stacked:bottom-[36px] squat:hidden max-sm:items-end max-sm:pr-[10px]',
         shown ? 'opacity-100' : 'opacity-0'
       )}
-      style={bottom ? { bottom } : undefined}
+      style={bottom ? ({ '--arrows-foot': bottom } as CSSProperties) : undefined}
     >
       <button
         type="button"
         aria-label="Previous screen"
         onClick={() => onUp?.()}
-        className={cn(ARROW, !onUp && 'pointer-events-none invisible')}
+        className={cn(ARROW, 'max-sm:invisible', !onUp && 'pointer-events-none invisible')}
       >
         {chevron('M6 15l6-6 6 6')}
       </button>

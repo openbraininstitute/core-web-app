@@ -177,7 +177,7 @@ export function MultiplyingBrains() {
     };
   }, []);
   return (
-    <div className="absolute inset-x-[clamp(16px,4vw,72px)] top-[10vh] bottom-[10vh]">
+    <div className="absolute inset-x-[clamp(16px,4vw,72px)] top-[10vh] bottom-[10vh] stacked:top-[60px] stacked:bottom-auto stacked:h-[max(110px,calc(var(--chapter-h)-505px))]">
       <canvas ref={canvasRef} className="block size-full" />
     </div>
   );

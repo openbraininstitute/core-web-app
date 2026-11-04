@@ -33,35 +33,10 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  list-style: none;
-  padding: 0;
+  list-style: disc;
+  padding: 0 0 0 1.1em;
   margin: 0;
-}
-
-.benefit {
-  display: flex;
-  align-items: flex-start;
-  gap: 13px;
-}
-
-.check {
-  display: grid;
-  flex: 0 0 23px;
-  height: 23px;
-  margin-top: 1px;
-  place-items: center;
-  border-radius: 50%;
-  background: #edf2f8;
-  color: #395575;
-  font-size: 13px;
-  transition:
-    background-color 500ms ease-out,
-    color 500ms ease-out;
-}
-
-.benefit[data-revealed="true"] .check {
-  color: #176533;
-  background: #e7f4eb;
+  color: #002766;
 }
 
 .benefitTitle {
@@ -175,7 +150,7 @@
     width: 100%;
     max-width: none;
     margin: 0;
-    padding: 12px 24px 132px;
+    padding: 12px 20px 96px;
     align-self: flex-end;
     background: white;
     gap: 12px;
@@ -200,11 +175,6 @@
     gap: 12px;
   }
 
-  .benefit {
-    align-items: center;
-    gap: 10px;
-  }
-
   .benefitTitle {
     font-size: 14px;
   }
@@ -224,9 +194,11 @@
   }
 
   .preview {
-    top: 105px;
-    left: 24px;
-    right: 24px;
+    top: var(--stage-video-top);
+    left: 16px;
+    right: 16px;
+    max-width: 600px;
+    margin-inline: auto;
     transform: none;
     padding: 7px;
   }
@@ -243,7 +215,7 @@
 
 @media (max-height: 740px) and (orientation: portrait) {
   .words {
-    padding-bottom: 120px;
+    padding-bottom: 88px;
     gap: 9px;
   }
 
@@ -252,9 +224,7 @@
   }
 
   .preview {
-    top: 94px;
-    max-width: 260px;
-    margin-inline: auto;
+    top: 60px;
   }
 
   .note {
@@ -262,8 +232,19 @@
   }
 }
 
+@media (max-height: 650px) and (orientation: portrait) {
+  .preview {
+    max-width: 260px;
+  }
+}
+
+@media (max-height: 600px) and (orientation: portrait) {
+  .introduction {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .check,
   .button {
     transition: none;
   }
@@ -300,6 +281,17 @@
     padding: 9px 16px;
     font-size: 13px;
   }
+
+  .preview {
+    top: calc(50% + 6px);
+    right: clamp(110px, 18vw, 210px);
+    padding: 7px;
+  }
+
+  .previewHeader {
+    padding: 1px 4px 7px;
+    font-size: 10px;
+  }
 }
 
 .chapterAction {
@@ -309,7 +301,7 @@
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .chapter {
-    padding-bottom: 132px;
+    padding-bottom: 96px;
     gap: 14px;
   }
 

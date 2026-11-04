@@ -31,6 +31,20 @@
   }
 }
 
+/* What `beside` is not: a phone, or a small tablet, held upright, with the words under the stage. */
+@custom-variant stacked {
+  @media (max-width: 63.999rem) and (orientation: portrait) {
+    @slot;
+  }
+}
+
+/* A phone on its side: beside, with little height. */
+@custom-variant squat {
+  @media (orientation: landscape) and (max-height: 31.25rem) {
+    @slot;
+  }
+}
+
 /* @import './tailwind-preflight.css' layer(base); */
 
 /* @import 'tailwindcss'; */

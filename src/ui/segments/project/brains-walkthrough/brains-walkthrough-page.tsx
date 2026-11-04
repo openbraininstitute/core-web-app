@@ -40,9 +40,8 @@ const THEME_LINKS: Record<string, string> = {
   Simulate: 'simulate',
   'Leverage AI': 'agents',
   Explore: 'analysis',
-  Teach: 'teach',
+  'Learn & Teach': 'teach',
   Build: 'microcircuit',
-  Learn: 'next',
 };
 /** The word each screen is about, by its index: its own, and the models' screens Build's. */
 const THEME_UNDERLINES: Record<number, string> = Object.fromEntries(

@@ -1,4 +1,4 @@
-import { Actions, Row, SectionLink } from '@/ui/segments/project/walkthrough/bits';
+import { Actions } from '@/ui/segments/project/walkthrough/bits';
 
 import { AgentPrompts } from './agent-prompts';
 import { AiSparkles } from './agent-ready';
@@ -37,6 +37,11 @@ export const SERIF_TITLE = 'font-[family-name:var(--font-DMSerifText)] font-norm
 /** What the walkthrough opens on, under the logo, before its first screen's own title takes its place. */
 export const BRAIN_INTRO = 'The Era of brain simulation has arrived...';
 
+/** Upright on a phone, a screen's words straight under its stage's video, rather than at the foot of the page. */
+const UNDER_VIDEO =
+  'stacked:self-start stacked:bg-transparent stacked:pt-[calc(var(--stage-video-top)+var(--stage-video-h)+22px)]';
+const VIDEO_CHAPTER = `${labs.chapter} ${UNDER_VIDEO}`;
+
 /** A word on the platform, on its first screen. */
 const VIRTUAL_LABS_WORDS = <VirtualLabsPoints />;
 
@@ -62,7 +67,6 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
           ),
         }
       : {
-          // Its letters' tops, a quarter of an em down its line, level with the video's.
           titleClass: `${SERIF_TITLE} ${labs.title}`,
           top: true,
           column: labs.words,
@@ -70,12 +74,58 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         }),
   },
   {
+    id: 'agents',
+    label: 'AI',
+    scene: 'multiplying',
+    title: (
+      <>
+        Perform Neuroscience at the speed of thought
+        <AiSparkles className="ml-[0.18em] inline-block size-[0.8em] -translate-y-[0.06em] align-baseline" />
+      </>
+    ),
+    hero: true,
+    titleClass: SERIF_TITLE,
+    // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
+    column: `${labs.chapter} beside:w-[52%] beside:max-w-[720px] squat:py-[56px]`,
+    body: (
+      <>
+        <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">
+          AI assistant, MCP server, Plugins + Connectors
+        </p>
+        <AgentPrompts />
+      </>
+    ),
+    after: <ChapterAction label="Try the platform with AI" destination="platform" />,
+  },
+  {
+    id: 'teach',
+    label: 'Learn & Teach',
+    scene: 'teaching',
+    kicker: 'For students and educators',
+    title: 'Learn & teach neuroscience by doing',
+    hero: true,
+    column: VIDEO_CHAPTER,
+    body: (
+      <>
+        <p>
+          Start with the course Introduction to brain modeling: explore real brain models and run
+          your own simulations in the browser, with nothing to install.
+        </p>
+        <p>
+          Give your class a Virtual Lab, share models, data and notebooks with your students, and
+          teach from the courses.
+        </p>
+      </>
+    ),
+    after: <ChapterAction label="Start learning" destination="learn" />,
+  },
+  {
     id: 'simulate',
     label: 'Simulate',
     scene: 'configuration',
     title: 'Configure simulations & neuroscience workflows',
     hero: true,
-    column: labs.chapter,
+    column: VIDEO_CHAPTER,
     body: (
       <>
         <p>
@@ -91,36 +141,12 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     after: <ChapterAction label="Configure a simulation" destination="workflows" />,
   },
   {
-    id: 'agents',
-    label: 'AI',
-    scene: 'multiplying',
-    title: (
-      <>
-        Perform Neuroscience at the speed of thought
-        <AiSparkles className="ml-[0.18em] inline-block size-[0.8em] -translate-y-[0.06em] align-baseline" />
-      </>
-    ),
-    hero: true,
-    titleClass: SERIF_TITLE,
-    // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
-    column: `${labs.chapter} beside:w-[52%] beside:max-w-[720px]`,
-    body: (
-      <>
-        <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">
-          AI assistant, MCP server, Plugins + Connectors
-        </p>
-        <AgentPrompts />
-      </>
-    ),
-    after: <ChapterAction label="Try the platform with AI" destination="platform" />,
-  },
-  {
     id: 'analysis',
     label: 'Analysis',
     scene: 'analysis',
     title: 'Interactive tools for analysis',
     hero: true,
-    column: labs.chapter,
+    column: VIDEO_CHAPTER,
     body: (
       <>
         <p>
@@ -136,34 +162,12 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     after: <ChapterAction label="Explore simulation results" destination="data" />,
   },
   {
-    id: 'teach',
-    label: 'Teach',
-    scene: 'teaching',
-    kicker: 'For educators',
-    title: 'Teach neuroscience by doing',
-    hero: true,
-    column: labs.chapter,
-    body: (
-      <>
-        <p>
-          Bring the platform into the classroom: students explore real brain models and run their
-          own simulations in the browser, with nothing to install.
-        </p>
-        <p>
-          Give your class a Virtual Lab, share models, data and notebooks with your students, and
-          teach from the courses.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Start teaching" destination="learn" />,
-  },
-  {
     id: 'notebooks',
     label: 'Notebooks',
     scene: 'notebooks',
     title: 'Jupyter notebooks for interacting with data',
     hero: true,
-    column: labs.chapter,
+    column: VIDEO_CHAPTER,
     body: (
       <>
         <p>
@@ -298,32 +302,6 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
       <>
         <ChapterAction label="Explore human neurons" destination="data" />
         <Actions model="human" />
-      </>
-    ),
-  },
-  {
-    id: 'next',
-    label: 'Learn',
-    scene: 'trio',
-    wide: true,
-    kicker: 'Your turn',
-    title: 'Learn, then simulate',
-    body: (
-      <>
-        <p>
-          The course Introduction to brain modeling starts from these three brains. The data and
-          models are in Data, and Workflows builds and simulates more.
-        </p>
-        <p className="text-[12px] text-neutral-500">Scroll on, or press →, for your home page.</p>
-      </>
-    ),
-    after: (
-      <>
-        <ChapterAction label="Start learning" destination="learn" />
-        <Row>
-          <SectionLink section="data" />
-          <SectionLink section="workflows" />
-        </Row>
       </>
     ),
   },

@@ -353,22 +353,16 @@ const VIRTUAL_LABS_POINTS = [
     detail: 'Keep your data and discoveries in one shared lab.',
   },
 ];
+/**
+ * When the first point comes after the landing starts to leave, as the page comes to rest, and the gap to the next, ms.
+ * For now, the three spread over the video's 9 s, not yet in time with what it shows.
+ */
+const POINTS_MS = { first: 1000, gap: 3000 };
 
-/** All benefits stay readable; the emphasis builds as the introduction finishes. */
+/** What a Virtual Lab is for, as bullets coming one after another once the intro is over, and again if it comes back. */
 export function VirtualLabsPoints() {
   const entered = useWalkthroughEntered();
   const actions = useWalkthroughActions();
-  const [shown, setShown] = useState(0);
-  useEffect(() => {
-    if (!entered) return;
-    const timers = VIRTUAL_LABS_POINTS.map((_, i) =>
-      setTimeout(() => setShown(i + 1), 600 + i * 900)
-    );
-    return () => {
-      timers.forEach(clearTimeout);
-      setShown(0);
-    };
-  }, [entered]);
   return (
     <div className={labs.content}>
       <p className={labs.introduction}>
@@ -376,14 +370,17 @@ export function VirtualLabsPoints() {
       </p>
       <ul className={labs.benefits}>
         {VIRTUAL_LABS_POINTS.map(({ title, detail }, i) => (
-          <li key={title} className={labs.benefit} data-revealed={i < shown}>
-            <span className={labs.check} aria-hidden="true">
-              ✓
-            </span>
-            <div>
-              <p className={labs.benefitTitle}>{title}</p>
-              <p className={labs.detail}>{detail}</p>
-            </div>
+          <li
+            key={title}
+            className={labs.benefit}
+            style={
+              entered
+                ? { animation: `fade-in 600ms ease-out ${POINTS_MS.first + i * POINTS_MS.gap}ms both` }
+                : { opacity: 0 }
+            }
+          >
+            <p className={labs.benefitTitle}>{title}</p>
+            <p className={labs.detail}>{detail}</p>
           </li>
         ))}
       </ul>
@@ -491,6 +488,8 @@ export function StageVideo({
     <div
       className={cn(
         'absolute inset-y-[10vh] right-[clamp(110px,12vw,210px)] left-[2%] flex items-center justify-center',
+        // Upright, across the page, for a screen's words to start under it (`UNDER_VIDEO`).
+        'stacked:inset-x-[16px] stacked:top-(--stage-video-top) stacked:bottom-auto stacked:h-(--stage-video-h)',
         className
       )}
     >
@@ -501,7 +500,7 @@ export function StageVideo({
         muted
         loop
         playsInline
-        className="max-h-full max-w-full rounded-[14px] border border-neutral-200 object-contain shadow-[0_24px_60px_rgba(0,39,102,0.14)]"
+        className="max-h-full max-w-full rounded-[14px] border border-neutral-200 object-contain shadow-[0_24px_60px_rgba(0,39,102,0.14)] stacked:shadow-[0_10px_30px_rgba(0,39,102,0.12)]"
       />
     </div>
   );
