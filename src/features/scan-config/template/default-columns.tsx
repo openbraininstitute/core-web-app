@@ -34,7 +34,9 @@ type Props = {
  * half the width at least.
  */
 export function DefaultConfigColumns({ props, state }: Props) {
-  const boxed = props.activity === ScanConfigActivity.Simulate;
+  const boxed =
+    props.activity === ScanConfigActivity.Simulate ||
+    props.activity === ScanConfigActivity.SpikeSorting;
   const { gridRef, template, shut, onEdgeDrag, reset } = useCollapsingColumns();
   // Opening a block, from the list or the table's Neuron Set, shows its form again.
   const opened = `${state.selectedRootElement}/${state.selectedEntry}`;
@@ -79,7 +81,13 @@ export function DefaultConfigColumns({ props, state }: Props) {
           className={cn('mt-px mb-3', shut === 'both' && 'ml-px')}
         />
       )}
-      <PreviewColumn boxed={boxed} edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}>
+      <PreviewColumn
+        boxed={boxed}
+        titles={
+          props.activity === ScanConfigActivity.SpikeSorting ? RECORDING_TITLES : SCENE_TITLES
+        }
+        edge={{ gridRef, onDrag: onEdgeDrag, onReset: reset }}
+      >
         <Right
           activity={props.activity}
           entityType={props.entityType}
@@ -106,10 +114,13 @@ export function DefaultConfigColumns({ props, state }: Props) {
  */
 export function PreviewColumn({
   boxed,
+  titles,
   edge,
   children,
 }: {
   boxed: boolean;
+  /** What the panes' bars say once they are shut. */
+  titles: { top: string; bottom: string };
   /** The grab bar on its left edge, which the columns before it give way to. */
   edge?: {
     gridRef: RefObject<HTMLDivElement | null>;
@@ -145,7 +156,7 @@ export function PreviewColumn({
           split="config"
           bottomShare={0.4}
           top={{
-            title: '3D View',
+            title: titles.top,
             keepsSize: true,
             boxClassName: 'overflow-hidden',
             content: children,
@@ -153,7 +164,7 @@ export function PreviewColumn({
           bottom={
             table.shown
               ? {
-                  title: 'Neuron Table',
+                  title: titles.bottom,
                   boxClassName: 'px-3 pt-1 pb-2',
                   content: <div ref={table.setTarget} className="flex h-full min-h-0 flex-col" />,
                 }
@@ -164,5 +175,8 @@ export function PreviewColumn({
     </SceneTablePaneProvider>
   );
 }
+
+const SCENE_TITLES = { top: '3D View', bottom: 'Neuron Table' };
+const RECORDING_TITLES = { top: 'Traces', bottom: 'Electrodes' };
 
 export const DEFAULT_COLUMNS_GRID = 'grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]';

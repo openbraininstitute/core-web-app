@@ -78,10 +78,7 @@ function RecordingPreviewPane({ config }: { config: Config }) {
   const context = useWorkspace();
   const source = recordingSourceOfConfig(config);
   return (
-    <div
-      id="scan-config-controls-right-recording"
-      className="h-full min-h-0 overflow-hidden rounded-xl bg-white"
-    >
+    <div id="scan-config-controls-right-recording" className="h-full min-h-0 overflow-hidden">
       {source ? (
         <RecordingViewer source={source} context={context} />
       ) : (

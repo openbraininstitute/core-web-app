@@ -1,3 +1,4 @@
+import { contactsOf } from '../trace-layout';
 import { fetchRange, resolveRequest } from './ranged-file';
 
 import type { ElectrodeColumn, FileRequest, PreprocessedFiles, RecordingReader } from '../types';
@@ -164,6 +165,7 @@ export async function openPreprocessedRecording({
       units: 'µV',
       channelNames,
       electrodes: { columns, rows },
+      contacts: contactsOf(rows, 'x', 'y', 'group'),
     },
     read: async (startFrame, count) => {
       const start = fileOffset + startFrame * frameBytes;

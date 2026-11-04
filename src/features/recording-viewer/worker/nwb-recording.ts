@@ -1,6 +1,8 @@
 import { startCase } from 'es-toolkit/compat';
 import { Dataset, type File, Group } from 'h5wasm';
 
+import { contactsOf } from '../trace-layout';
+
 import type { ElectrodeColumn, ElectrodeTable, RecordingReader } from '../types';
 
 const ELECTRODES_PATH = 'general/extracellular_ephys/electrodes';
@@ -127,7 +129,9 @@ export function openNwbRecordings(file: File): RecordingReader[] {
             String((labelKey ? row[labelKey] : null) ?? index)
           ),
           electrodes,
+          contacts: contactsOf(electrodes.rows, 'rel_x', 'rel_y', 'group_name'),
         },
+        chunkFrames: data.metadata?.chunks?.[0] ?? undefined,
         read: async (startFrame, count) => {
           const raws = data.slice([
             [startFrame, startFrame + count],

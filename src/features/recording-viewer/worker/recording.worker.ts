@@ -4,8 +4,10 @@ import { File, ready } from 'h5wasm';
 import { lttbDownsample } from '@/utils/lttb';
 
 import { openPreprocessedRecording } from './binary-recording';
+import { traceEnvelopes } from './envelopes';
 import { openNwbRecordings } from './nwb-recording';
 import { mountRangedFile, resolveRequest, xhrRangeReader } from './ranged-file';
+import { readWindow } from './read-window';
 
 import type {
   DownsampleRequest,
@@ -14,9 +16,6 @@ import type {
 } from '@/features/sonata-viewer/types';
 import type { FileRequest, PreprocessedFiles, RecordingInfo, RecordingReader } from '../types';
 import type { MountFS } from './ranged-file';
-
-/** The most values a window of traces holds: about 200 MB of them in memory. */
-export const MAX_WINDOW_VALUES = 50_000_000;
 
 type LoadedWindow = {
   name: string;
@@ -31,6 +30,9 @@ export class RecordingWorkerImpl {
   private readers = new Map<string, RecordingReader>();
   private file: File | null = null;
   private loaded: LoadedWindow | null = null;
+  /** Which load is the latest: a newer one stops an older one at its next piece. */
+  private loadId = 0;
+  private loadProgress = 1;
 
   async openNwb({
     request,
@@ -64,7 +66,7 @@ export class RecordingWorkerImpl {
 
   /**
    * Reads a window of a recording, which the plot then draws as a report's whole run. It may be
-   * shorter than asked: at the end of the recording, or past what a window can hold.
+   * shorter than asked at the end of the recording, and is reduced past what memory should hold.
    */
   async loadWindow(
     recording: string,
@@ -83,29 +85,45 @@ export class RecordingWorkerImpl {
     );
     const numFrames = Math.max(
       1,
-      Math.min(
-        info.numFrames - startFrame,
-        Math.round(durationSeconds * info.samplingFrequency),
-        Math.floor(MAX_WINDOW_VALUES / info.numChannels)
-      )
+      Math.min(info.numFrames - startFrame, Math.round(durationSeconds * info.samplingFrequency))
     );
-    const values = await reader.read(startFrame, numFrames);
-    const dt = 1 / info.samplingFrequency;
-    const startTime = info.startTime + startFrame * dt;
+    this.loadId += 1;
+    const id = this.loadId;
+    this.loadProgress = 0;
+    const read = await readWindow(reader, startFrame, numFrames, {
+      isCurrent: () => id === this.loadId,
+      onProgress: (fraction) => {
+        this.loadProgress = fraction;
+      },
+    });
+    const dt = (1 / info.samplingFrequency) * (numFrames / read.numFrames);
+    const startTime = info.startTime + startFrame / info.samplingFrequency;
     const name = `${recording} @ ${startTime}+${numFrames}`;
-    this.loaded = { name, values, numChannels: info.numChannels, numFrames, startTime, dt };
+    this.loaded = {
+      name,
+      values: read.values,
+      numChannels: info.numChannels,
+      numFrames: read.numFrames,
+      startTime,
+      dt,
+    };
     return {
       name,
       traces: info.channelNames.map((label, nodeId) => ({ nodeId, elementId: null, label })),
       nodeCount: info.numChannels,
       timeConfig: {
         startTime,
-        endTime: startTime + (numFrames - 1) * dt,
+        endTime: startTime + (read.numFrames - 1) * dt,
         timeStep: dt,
         units: 's',
       },
       dataUnits: info.units,
     };
+  }
+
+  /** How far along the latest window's read is, from 0 to 1. */
+  async getLoadProgress() {
+    return this.loadProgress;
   }
 
   private window(name: string): LoadedWindow {
@@ -127,6 +145,12 @@ export class RecordingWorkerImpl {
       y[i] = values[(first + i) * numChannels + req.traceIndex];
     }
     return lttbDownsample(x, y, req.desiredPoints);
+  }
+
+  /** The window's traces reduced to `width` pixels per channel, for drawing them all at once. */
+  async getEnvelopes(name: string, width: number) {
+    const { values, numChannels, numFrames } = this.window(name);
+    return traceEnvelopes(values, numChannels, numFrames, width);
   }
 
   async getValueRange(name: string): Promise<[number, number]> {

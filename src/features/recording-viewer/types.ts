@@ -1,3 +1,5 @@
+import type { Contact } from './trace-layout';
+
 /** Where a recording's traces are read from. */
 export type RecordingSource =
   /** The raw traces of an extracellular recording's NWB file. */
@@ -26,6 +28,8 @@ export type RecordingInfo = {
   units: string;
   channelNames: string[];
   electrodes: ElectrodeTable;
+  /** Where each channel sits on its probe, if the recording says. */
+  contacts: Contact[] | null;
 };
 
 /** A preprocessed recording's files, by their path under its folder. */
@@ -39,4 +43,6 @@ export type RecordingReader = {
   info: RecordingInfo;
   /** `numFrames` frames from `startFrame`, frame by frame, in `info.units`. */
   read(startFrame: number, numFrames: number): Promise<Float32Array>;
+  /** The frames a stored chunk holds, which reads of long stretches should fall in step with. */
+  chunkFrames?: number;
 };
