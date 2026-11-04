@@ -90,7 +90,7 @@ type StatisticsProps = {
   window: [number, number];
   /** Whether the pane is on show and settled, so that a plot can be drawn. */
   visible: boolean;
-  /** Whether the pane is on show, settled or not: shut, a plot reads nothing. */
+  /** Whether the pane is on show, settled or not: shut, a plot reads no contact's row. */
   open: boolean;
 };
 
