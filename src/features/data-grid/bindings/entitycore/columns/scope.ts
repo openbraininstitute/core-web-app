@@ -65,6 +65,7 @@ export function scopeColumn<Row>(): IColumnModel<Row> {
               { id: ScopeFilter.Project, label: 'This project' },
               { id: ScopeFilter.Published, label: "This project's, made public" },
               { id: ScopeFilter.Private, label: "This project's, not public" },
+              { id: ScopeFilter.NotPublished, label: "All but this project's made public" },
             ],
           },
           description: "Public data, this project's data, or both",

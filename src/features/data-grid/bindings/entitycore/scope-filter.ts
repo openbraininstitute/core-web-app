@@ -21,6 +21,8 @@ export const ScopeFilter = {
   Published: 'published',
   /** the project's data that is not public */
   Private: 'private',
+  /** everything but the project's made-public data */
+  NotPublished: 'not-published',
 } as const;
 export type TScopeFilter = (typeof ScopeFilter)[keyof typeof ScopeFilter];
 
@@ -34,6 +36,7 @@ const SCOPE_PARAMS: Record<TScopeFilter, (projectId?: string) => Record<string, 
     ...(projectId && { authorized_project_id: projectId }),
   }),
   [ScopeFilter.Private]: () => ({ authorized_public: 'false' }),
+  [ScopeFilter.NotPublished]: () => ({}),
 };
 
 export function isScopeFilter(value: string): value is TScopeFilter {
@@ -47,7 +50,7 @@ export function scopeFilterParams(value: string, projectId?: string): Record<str
 
 /** The rows a scope filter value leaves out that no param can: the made-public data. */
 export function scopeFilterExcept(value: string, projectId?: string) {
-  return value === ScopeFilter.PublicOnly && projectId
+  return (value === ScopeFilter.PublicOnly || value === ScopeFilter.NotPublished) && projectId
     ? SCOPE_PARAMS[ScopeFilter.Published](projectId)
     : undefined;
 }
@@ -101,39 +104,8 @@ const SHOWN: Record<TScopeFilter, TScopeKind[]> = {
   [ScopeFilter.Published]: ['published'],
   [ScopeFilter.PublicFromProject]: ['published'],
   [ScopeFilter.Private]: ['project'],
+  [ScopeFilter.NotPublished]: ['public', 'project'],
 };
-
-/**
- * Which mark a filter value keeps on (none for both), and which of its rows: those
- * bearing that mark alone, and those bearing both, the project's made-public data.
- */
-export interface IScopeView {
-  side: 'public' | 'project' | null;
-  single: boolean;
-  joint: boolean;
-}
-
-const VIEWS: Record<TScopeFilter, IScopeView> = {
-  [ScopeFilter.Public]: { side: 'public', single: true, joint: true },
-  [ScopeFilter.PublicOnly]: { side: 'public', single: true, joint: false },
-  [ScopeFilter.PublicFromProject]: { side: 'public', single: false, joint: true },
-  [ScopeFilter.Project]: { side: 'project', single: true, joint: true },
-  [ScopeFilter.Private]: { side: 'project', single: true, joint: false },
-  [ScopeFilter.Published]: { side: 'project', single: false, joint: true },
-};
-
-/** The view a filter value gives, both marks on for none (or an unknown one). */
-export function scopeView(value: string | undefined): IScopeView {
-  return value && isScopeFilter(value) ? VIEWS[value] : { side: null, single: true, joint: true };
-}
-
-/** The filter value giving a view; null for both marks on. */
-export function viewFilter({ side, single, joint }: IScopeView): TScopeFilter | null {
-  const match = Object.entries(VIEWS).find(
-    ([, view]) => view.side === side && view.single === single && view.joint === joint
-  );
-  return (match?.[0] as TScopeFilter | undefined) ?? null;
-}
 
 /** The kinds a filter value shows, all three for none (or an unknown one). */
 export function shownBy(value: string | undefined): Set<TScopeKind> {
@@ -149,23 +121,11 @@ export function filterShowing(kinds: Set<TScopeKind>): TScopeFilter | null {
   return (match?.[0] as TScopeFilter | undefined) ?? null;
 }
 
-/**
- * What a click on `kind` shows. With everything on, a click keeps only that kind. After
- * that a click adds a kind or takes one away, and the last one on goes back to everything.
- * Public data with the project's private data but not its made-public data cannot be asked
- * of the API, so adding either of those to the other shows everything.
- */
-export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> {
-  const all = new Set(SCOPE_KINDS);
-  if (shown.size === SCOPE_KINDS.length) return new Set([kind]);
-  if (shown.has(kind)) {
-    if (shown.size === 1) return all;
-    const next = new Set(shown);
-    next.delete(kind);
-    return next;
-  }
-  const next = new Set(shown).add(kind);
-  return next.has('public') && next.has('project') ? all : next;
+/** What a click on `kind` shows: that kind switched alone, or null for the last one on. */
+export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> | null {
+  const next = new Set(shown);
+  if (!next.delete(kind)) next.add(kind);
+  return next.size ? next : null;
 }
 
 /** Filters the scope column to show exactly `kinds`. */

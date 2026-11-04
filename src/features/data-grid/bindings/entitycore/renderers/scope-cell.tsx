@@ -24,6 +24,8 @@ export const SCOPE_COLORS = { public: 'text-green-600', project: 'text-primary-4
 interface IScopeRow {
   authorized_public?: boolean | null;
   authorized_project_id?: string | null;
+  /** false on a hierarchy row shown only for its matching children */
+  isFiltered?: boolean;
 }
 
 /** The project mark: two people, or one while the `project-scope-icon` flag says so. */
@@ -49,7 +51,12 @@ function GlobeWithProjectBadge({ muted }: { muted?: boolean }) {
       </g>
       {/* the ring cuts the badge out of the globe */}
       <circle cx="16.5" cy="16.5" r="7.5" className="fill-white" />
-      <circle cx="16.5" cy="16.5" r="6.5" className={muted ? 'fill-gray-300' : 'fill-primary-4'} />
+      <circle
+        cx="16.5"
+        cy="16.5"
+        r="6.5"
+        className={cn('scope-badge', muted ? 'fill-gray-300' : 'fill-primary-4')}
+      />
       <circle cx="16.5" cy="14.2" r="2.2" fill="white" />
       <path d="M12.4 21c.4-2.4 2-3.6 4.1-3.6s3.7 1.2 4.1 3.6z" fill="white" />
     </svg>
@@ -58,14 +65,15 @@ function GlobeWithProjectBadge({ muted }: { muted?: boolean }) {
 
 /**
  * A globe, people, or for the project's made-public data a globe with a person
- * badge; `muted` leaves the colour to the parent. Colours sit
+ * badge; `muted` leaves the colour to the parent, as do greyed rows through the
+ * `scope-mark` and `scope-badge` classes. Colours sit
  * on wrappers: on the icon itself a colour class ties with antd's `.anticon { color:
  * inherit }`, and whichever stylesheet loaded last wins.
  */
 export function ScopeMark({ kind, muted }: { kind: TScopeKind; muted?: boolean }) {
   const ProjectIcon = useProjectScopeIcon();
   const tint = (scope: keyof typeof SCOPE_COLORS) =>
-    cn('inline-flex', !muted && SCOPE_COLORS[scope]);
+    cn('scope-mark inline-flex', !muted && SCOPE_COLORS[scope]);
   if (kind === 'published') {
     return (
       <span className={tint('public')}>
@@ -104,7 +112,7 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
       {/* the icon is the trigger, so the card hangs from it and not from the cell's edge */}
       <ScopeTooltip kind={kind} delayDuration={200}>
         <span data-testid={`scope-cell-${kind}`} className="inline-flex">
-          <ScopeMark kind={kind} />
+          <ScopeMark kind={kind} muted={row.isFiltered === false} />
         </span>
       </ScopeTooltip>
     </span>

@@ -126,6 +126,7 @@ const SHOWS: Record<TScopeFilter, (row: IRow) => boolean> = {
   [ScopeFilter.Project]: (row) => row.authorized_project_id === PROJECT,
   [ScopeFilter.Published]: (row) => kindOf(row) === 'published',
   [ScopeFilter.Private]: (row) => kindOf(row) === 'project',
+  [ScopeFilter.NotPublished]: (row) => kindOf(row) !== 'published',
 };
 
 /** What a view should list: the order's kind first, the rest by date, then the filter. */
