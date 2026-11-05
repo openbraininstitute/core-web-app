@@ -1,3 +1,5 @@
+import { auth } from '@/auth';
+
 import PaddedBlock from './components/padded-block';
 import VerticalSpace from './components/vertical-space';
 import LandingPageShell from './landing-page-shell';
@@ -16,9 +18,12 @@ export type LandingPageProps = {
 };
 
 export default async function LandingPage({ className, section, error }: LandingPageProps) {
+  const session = await auth();
+  const isAuthenticated = Boolean(session?.user && !session.error);
+
   return (
     <LandingPageShell className={className} section={section} error={error}>
-      <Menu section={section} />
+      <Menu section={section} isAuthenticated={isAuthenticated} />
       <HeroServer section={section} />
       <PaddedBlock>
         <SectionRouter section={section} />
