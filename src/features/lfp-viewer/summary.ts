@@ -5,37 +5,43 @@ import { ApiError } from '@/api/error';
 const datasetSchema = z.object({
   offset: z.number().int().nonnegative(),
   shape: z.array(z.number().int().nonnegative()),
-  dtype: z.enum(['<i2', '<f4']),
+  dtype: z.enum(['<i2', '<f4', '<u8']),
 });
+
+const ITEM_BYTES = { '<i2': 2, '<f4': 4, '<u8': 8 };
 
 const axisSchema = z.object({
   name: z.string(),
   groups: z.array(z.string()).min(1),
   /** µV per int16 unit, one per group. */
   scales: z.array(z.number()),
-  /** Full resolution first, then min/max over ever more steps. */
+  /** A group's part in the total's variance; only groups have it. */
+  shares: z.array(z.number()).optional(),
+  /** Full resolution first, then the overview: the total's by min/max over ever more steps, a group's by means, which add up. */
   levels: z
     .array(
       z.object({
         step: z.number().int().positive(),
-        kind: z.enum(['value', 'min_max']),
+        kind: z.enum(['value', 'mean', 'min_max']),
         dataset: z.string(),
+        /** Where its rows lie, each deflated in a chunk of its own, if they are. */
+        chunks: z.string().optional(),
       })
     )
     .min(1),
   stats: z.string(),
   psd: z.string(),
+  psd_frequencies: z.array(z.number()),
 });
 
 export const lfpSummaryIndexSchema = z.object({
   format: z.literal('lfp-summary'),
-  version: z.literal(1),
+  version: z.literal(2),
   populations: z.array(z.string()),
   time: z.object({ start: z.number(), dt: z.number().positive(), steps: z.number().int() }),
   units: z.string(),
   contacts: z.number().int().nonnegative(),
   stats: z.array(z.string()),
-  psd_frequencies: z.array(z.number()),
   axes: z.array(axisSchema).min(1),
   correlation: z.object({ dataset: z.string(), scale: z.number() }).optional(),
   datasets: z.record(z.string(), datasetSchema),
@@ -53,8 +59,8 @@ export type LfpField = {
   /** Simulated milliseconds per bin. */
   binMs: number;
   start: number;
-  /** A min/max level holds two values per bin, the lower first. */
-  kind: 'value' | 'min_max';
+  /** A value per step, or per bin as a mean. A min/max level holds two per bin, the lower first. */
+  kind: 'value' | 'mean' | 'min_max';
   data: Int16Array;
   scale: number;
 };
@@ -74,7 +80,7 @@ export function sliceOf(
   leading: readonly number[],
   count = 1
 ): { offset: number; length: number; shape: number[] } {
-  const itemSize = entry.dtype === '<i2' ? 2 : 4;
+  const itemSize = ITEM_BYTES[entry.dtype];
   const strides = entry.shape.map((_, i) => entry.shape.slice(i + 1).reduce((a, b) => a * b, 1));
   if (leading.length === 0) {
     return {
@@ -113,14 +119,12 @@ export function isLfpSummaryChanged(error: unknown) {
   );
 }
 
-/** A slice of a dataset's bytes, read with one range request. */
-export async function readSlice(
+async function readRange(
   request: LfpSummaryRequest,
-  entry: LfpDataset,
-  leading: readonly number[] = [],
+  offset: number,
+  length: number,
   signal?: AbortSignal
 ): Promise<ArrayBuffer> {
-  const { offset, length } = sliceOf(entry, leading);
   const response = await fetch(request.url, {
     headers: { ...request.headers, Range: `bytes=${offset}-${offset + length - 1}` },
     signal,
@@ -134,7 +138,40 @@ export async function readSlice(
   return bytes;
 }
 
-/** The level an axis is overviewed at: its coarsest, under the format's 2,048 bins. */
+/** A slice of a dataset's bytes, read with one range request. */
+export function readSlice(
+  request: LfpSummaryRequest,
+  entry: LfpDataset,
+  leading: readonly number[] = [],
+  signal?: AbortSignal
+): Promise<ArrayBuffer> {
+  const { offset, length } = sliceOf(entry, leading);
+  return readRange(request, offset, length, signal);
+}
+
+/** A chunk's int16 values: HDF5's deflate and shuffle filters undone. */
+export async function inflateRow(chunk: ArrayBuffer): Promise<Int16Array> {
+  const stream = new Response(chunk).body?.pipeThrough(new DecompressionStream('deflate'));
+  const shuffled = new Uint8Array(await new Response(stream).arrayBuffer());
+  const steps = shuffled.length / 2;
+  const row = new Int16Array(steps);
+  for (let i = 0; i < steps; i++) row[i] = shuffled[i] | (shuffled[steps + i] << 8);
+  return row;
+}
+
+/** Where an axis's rows lie: group × contact × (offset, size). Null if they are not in chunks. */
+export async function readChunkTable(
+  request: LfpSummaryRequest,
+  index: LfpSummaryIndex,
+  axis: LfpAxis,
+  signal?: AbortSignal
+): Promise<BigUint64Array | null> {
+  const { chunks } = axis.levels[0];
+  if (!chunks) return null;
+  return new BigUint64Array(await readSlice(request, datasetOf(index, chunks), [], signal));
+}
+
+/** The level an axis is overviewed at: its coarsest, at most the format's 2,048 bins. */
 export function overviewLevel(axis: LfpAxis) {
   return axis.levels[axis.levels.length - 1];
 }
@@ -168,8 +205,14 @@ export async function readRow(
   axis: LfpAxis,
   group: number,
   contact: number,
+  table: BigUint64Array | null = null,
   signal?: AbortSignal
 ): Promise<Int16Array> {
+  if (table) {
+    const at = (group * index.contacts + contact) * 2;
+    const chunk = await readRange(request, Number(table[at]), Number(table[at + 1]), signal);
+    return inflateRow(chunk);
+  }
   const entry = datasetOf(index, axis.levels[0].dataset);
   return new Int16Array(await readSlice(request, entry, [group, contact], signal));
 }
@@ -177,11 +220,10 @@ export async function readRow(
 /** Contacts' full-resolution rows as one field, a row each in the order given. */
 export function rowsField(
   index: LfpSummaryIndex,
-  axis: LfpAxis,
-  group: number,
+  scale: number,
   rows: readonly Int16Array[]
 ): LfpField {
-  const steps = datasetOf(index, axis.levels[0].dataset).shape[2];
+  const { steps } = index.time;
   const data = new Int16Array(rows.length * steps);
   rows.forEach((row, i) => {
     data.set(row, i * steps);
@@ -193,14 +235,64 @@ export function rowsField(
     start: index.time.start,
     kind: 'value',
     data,
-    scale: axis.scales[group],
+    scale,
   };
+}
+
+/**
+ * Fields of one shape added up, as µV can be and a min/max level's can't. Each group has a
+ * scale of its own, so the sum takes one of its own too.
+ */
+export function sumFields(fields: readonly LfpField[]): LfpField {
+  if (fields.length === 1) return fields[0];
+  const sum = new Float64Array(fields[0].data.length);
+  for (const { data, scale } of fields) {
+    for (let i = 0; i < sum.length; i++) sum[i] += data[i] * scale;
+  }
+  let peak = 0;
+  for (const value of sum) peak = Math.max(peak, Math.abs(value));
+  const scale = peak > 0 ? peak / 32767 : 1;
+  return { ...fields[0], scale, data: Int16Array.from(sum, (value) => Math.round(value / scale)) };
+}
+
+/** A field's stats, per contact in the order of `names`, from its values as they stand. */
+export function fieldStats(field: LfpField, names: readonly string[]): Float32Array {
+  const stats = new Float32Array(field.contacts * names.length);
+  for (let c = 0; c < field.contacts; c++) {
+    let low = Infinity;
+    let high = -Infinity;
+    let lowest = 0;
+    let sum = 0;
+    let squares = 0;
+    for (let b = 0; b < field.bins; b++) {
+      const value = field.data[c * field.bins + b] * field.scale;
+      if (value < low) {
+        low = value;
+        lowest = b;
+      }
+      high = Math.max(high, value);
+      sum += value;
+      squares += value * value;
+    }
+    const measures: Record<string, number> = {
+      min: low,
+      max: high,
+      ptp: high - low,
+      rms: Math.sqrt(squares / field.bins),
+      mean: sum / field.bins,
+      trough_ms: field.start + lowest * field.binMs,
+    };
+    names.forEach((name, i) => {
+      stats[c * names.length + i] = measures[name] ?? 0;
+    });
+  }
+  return stats;
 }
 
 /** A contact's value in a bin, in µV: of a min/max bin, the one further from zero. */
 export function fieldValue(field: LfpField, contact: number, bin: number): number {
   const at = contact * field.bins + bin;
-  if (field.kind === 'value') return field.data[at] * field.scale;
+  if (field.kind !== 'min_max') return field.data[at] * field.scale;
   const low = field.data[at * 2];
   const high = field.data[at * 2 + 1];
   return (Math.abs(high) > Math.abs(low) ? high : low) * field.scale;

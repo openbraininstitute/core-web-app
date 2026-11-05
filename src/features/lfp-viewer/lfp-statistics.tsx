@@ -14,6 +14,7 @@ import {
   matrixOverRows,
   profileAlong,
   rowCorrelation,
+  rowSpectra,
   spectrogram,
   triggeredAverage,
 } from '@/features/lfp-viewer/field-analysis';
@@ -30,7 +31,11 @@ import {
 import { coordinatesAlong } from '@/features/lfp-viewer/field-structure';
 import { psdFigure } from '@/features/lfp-viewer/psd-figure';
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
-import { useContactRows, useStoredCorrelation } from '@/features/lfp-viewer/use-lfp-summary';
+import {
+  isTotalField,
+  useContactRows,
+  useStoredCorrelation,
+} from '@/features/lfp-viewer/use-lfp-summary';
 import { reportStem } from '@/features/scan-config/use-cases/simulations/report-picker';
 import { CollapsingControls } from '@/features/spike-viewer/components/collapsing-controls';
 import { PlotHelp } from '@/features/spike-viewer/components/raster-plot-controls';
@@ -43,7 +48,7 @@ import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
-import type { LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
+import type { ChosenField, LfpSummary } from '@/features/lfp-viewer/use-lfp-summary';
 import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
 import type { TimelineEvent } from '@/features/spike-viewer/config-timeline';
@@ -78,6 +83,7 @@ type ProfileMeasure = keyof typeof STORED_MEASURES | 'at-time';
 type StatisticsProps = {
   source: LfpSummarySource;
   summary: LfpSummary;
+  chosen: ChosenField;
   /** As the field pane draws it: with its shared signal off, if that is chosen. */
   field: LfpField;
   removeShared: boolean;
@@ -250,8 +256,18 @@ const whyNot = (reason: string | false) => ({
   detail: reason === false ? undefined : reason,
 });
 
-function SpectrumPlot({ picker, summary, selectedContact, ticked, visible }: PlotProps) {
-  const { index, psd } = summary;
+function SpectrumPlot({
+  picker,
+  source,
+  summary,
+  chosen,
+  selectedContact,
+  ticked,
+  visible,
+  open,
+}: PlotProps) {
+  const { index } = summary;
+  const { spectra } = chosen;
   const contacts = useMemo(
     () =>
       ticked.length > 0
@@ -261,17 +277,21 @@ function SpectrumPlot({ picker, summary, selectedContact, ticked, visible }: Plo
           : [],
     [ticked, selectedContact]
   );
-  const figure = useMemo(
-    () => psdFigure({ frequencies: index.psd_frequencies, psd, contacts, dtMs: index.time.dt }),
-    [index, psd, contacts]
-  );
+  // Groups added up have no stored spectrum, so their contacts' are worked out from their rows.
+  const { field, failed } = useContactRows(source, summary, chosen, spectra ? [] : contacts, open);
+  const figure = useMemo(() => {
+    const dtMs = index.time.dt;
+    if (spectra) return psdFigure({ ...spectra, contacts, dtMs });
+    return field ? psdFigure({ ...rowSpectra(field), contacts, dtMs, onlyTheseRows: true }) : null;
+  }, [index, spectra, field, contacts]);
   return (
     <PlotFrame
       picker={picker}
       note={`Welch, whole run${contacts.length > 0 ? ` · ${contacts.map((c) => `e${c}`).join(', ')}` : ''}`}
-      help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded"
+      help="Power at each frequency over the whole run: the mean of all contacts, and the selected contact or those ticked, as recorded. Groups added up show only the selected or ticked, as spectra don't add"
       visible={visible}
       figure={figure}
+      empty={!spectra && contacts.length === 0 ? PICK_A_CONTACT : failed ? FAILED : undefined}
     />
   );
 }
@@ -280,6 +300,7 @@ function SpectrogramPlot({
   picker,
   source,
   summary,
+  chosen,
   selectedContact,
   timeline,
   timeCursor,
@@ -291,7 +312,7 @@ function SpectrogramPlot({
     () => (selectedContact === null ? [] : [selectedContact]),
     [selectedContact]
   );
-  const { field, failed } = useContactRows(source, summary, contacts, open);
+  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
   const result = useMemo(
     () => (field ? spectrogram(field.data, field.scale, field.binMs, field.start) : null),
     [field]
@@ -372,6 +393,7 @@ function TriggeredFigure({
   picker,
   source,
   summary,
+  chosen,
   selectedContact,
   ticked,
   visible,
@@ -390,7 +412,7 @@ function TriggeredFigure({
     if (selectedContact === null) return ticked.slice(0, MAX_COMPARED);
     return [selectedContact, ...ticked.filter((c) => c !== selectedContact)].slice(0, MAX_COMPARED);
   }, [selectedContact, ticked]);
-  const { field, failed } = useContactRows(source, summary, contacts, open);
+  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
   const triggers = useMemo(() => {
     if (!spikes) return null;
     const populations = spikes.populations.map((p) => p.timestamps);
@@ -444,13 +466,14 @@ function CorrelationPlot({
   picker,
   source,
   summary,
+  chosen,
   field,
   removeShared,
   rows,
   visible,
 }: PlotProps) {
   const { index } = summary;
-  const useStored = !removeShared && !!index.correlation;
+  const useStored = !removeShared && !!index.correlation && isTotalField(chosen.choice);
   const stored = useStoredCorrelation(source, summary, useStored);
   const matrix = useMemo(() => {
     if (useStored) {
@@ -502,6 +525,7 @@ function CoherencePlot({
   picker,
   source,
   summary,
+  chosen,
   rows,
   selectedContact,
   ticked,
@@ -516,7 +540,7 @@ function CoherencePlot({
     () => (selectedContact === null ? [] : [selectedContact, ...others]),
     [selectedContact, others]
   );
-  const { field, failed } = useContactRows(source, summary, contacts, open);
+  const { field, failed } = useContactRows(source, summary, chosen, contacts, open);
   const result = useMemo(() => {
     if (!field || others.length === 0) return null;
     const row = (r: number) => field.data.subarray(r * field.bins, (r + 1) * field.bins);
@@ -558,6 +582,7 @@ function CoherencePlot({
 function ProfilePlot({
   picker,
   summary,
+  chosen,
   field,
   removeShared,
   positions,
@@ -567,7 +592,8 @@ function ProfilePlot({
   timeCursor,
   visible,
 }: PlotProps) {
-  const { index, stats } = summary;
+  const { index } = summary;
+  const { stats } = chosen;
   const measures = Object.entries(STORED_MEASURES).filter(([name]) => index.stats.includes(name));
   const [measure, setMeasure] = useState(() => (measures[0]?.[0] ?? 'at-time') as ProfileMeasure);
   const axis = useMemo(
@@ -625,7 +651,15 @@ function ProfilePlot({
           onChange={(v) => setMeasure(v as ProfileMeasure)}
         />
       }
-      note={atTime ? (removeShared ? 'shared signal removed' : undefined) : 'as recorded'}
+      note={
+        atTime
+          ? removeShared
+            ? 'shared signal removed'
+            : undefined
+          : chosen.spectra
+            ? 'as recorded'
+            : 'from the overview'
+      }
       help="A value against position along the field's direction, or the array's longest axis where no line follows the field, a grid's own if it is one. Many contacts are averaged into stretches of the axis"
       visible={visible}
       figure={figure}
@@ -638,6 +672,7 @@ function CsdPlot({
   picker,
   source,
   summary,
+  chosen,
   selectedContact,
   lines,
   timeline,
@@ -650,12 +685,16 @@ function CsdPlot({
     lines.find((l) => selectedContact !== null && l.contacts.includes(selectedContact)) ?? lines[0];
   const tooLong =
     !!line &&
-    summary.total.kind !== 'value' &&
-    line.contacts.length * summary.index.time.steps * Int16Array.BYTES_PER_ELEMENT >
+    chosen.field.kind !== 'value' &&
+    line.contacts.length *
+      chosen.choice.groups.length *
+      summary.index.time.steps *
+      Int16Array.BYTES_PER_ELEMENT >
       MAX_LINE_READ_BYTES;
   const { field, failed } = useContactRows(
     source,
     summary,
+    chosen,
     !line || tooLong ? [] : line.contacts,
     open
   );

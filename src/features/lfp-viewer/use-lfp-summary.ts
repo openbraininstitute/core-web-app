@@ -1,5 +1,5 @@
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
   buildLfpSummaryRequest,
@@ -9,13 +9,16 @@ import {
 import { contactPositions } from '@/features/lfp-viewer/contacts';
 import {
   datasetOf,
+  fieldStats,
   isLfpSummaryChanged,
   lfpSummaryIndexSchema,
   overviewLevel,
+  readChunkTable,
   readField,
   readRow,
   readSlice,
   rowsField,
+  sumFields,
 } from '@/features/lfp-viewer/summary';
 import { arrayLocationsQuery } from '@/features/scan-config/components/model-preview/electrode-locations-asset';
 
@@ -38,9 +41,29 @@ export type LfpSummary = {
   total: LfpField;
   /** Per contact, the index's `stats` columns. */
   stats: Float32Array;
-  /** Per contact, the power at each of the index's `psd_frequencies`, in µV²/Hz. */
+  /** Per contact, the power at each of the total's `psd_frequencies`, in µV²/Hz. */
   psd: Float32Array;
 };
+
+/** Which field is drawn: some of an axis's groups, added up. The total is the first axis's only group. */
+export type FieldChoice = { axis: number; groups: readonly number[] };
+
+export const TOTAL_FIELD: FieldChoice = { axis: 0, groups: [0] };
+
+export const isTotalField = (choice: FieldChoice) => choice.axis === 0;
+
+/** What is known of the field chosen without reading its rows. */
+export type ChosenField = {
+  choice: FieldChoice;
+  /** At its overview level. */
+  field: LfpField;
+  /** Per contact, the index's `stats` columns: over the overview's bins where groups are added up. */
+  stats: Float32Array;
+  /** Per contact, stored for one group: the power of a sum is not the sum of the powers. */
+  spectra: { frequencies: readonly number[]; psd: Float32Array } | null;
+};
+
+type GroupFieldData = { field: LfpField; stats: Float32Array; psd: Float32Array };
 
 export const statusKey = ({ resultId, assetId }: LfpSummarySource) => [
   'lfp-summary',
@@ -111,6 +134,98 @@ export function useLfpSummary(source: LfpSummarySource) {
   return { status, summary };
 }
 
+function summedGroups(
+  index: LfpSummaryIndex,
+  choice: FieldChoice,
+  groups: readonly GroupFieldData[]
+): ChosenField {
+  if (groups.length === 1) {
+    const [{ field, stats, psd }] = groups;
+    const frequencies = index.axes[choice.axis].psd_frequencies;
+    return { choice, field, stats, spectra: { frequencies, psd } };
+  }
+  const field = sumFields(groups.map((group) => group.field));
+  return { choice, field, stats: fieldStats(field, index.stats), spectra: null };
+}
+
+/**
+ * The field chosen, read once and kept per group. While it is being read the
+ * one before stays on show, so that picking a group doesn't blank the panes.
+ */
+export function useChosenField(
+  source: LfpSummarySource,
+  summary: LfpSummary,
+  choice: FieldChoice
+): { chosen: ChosenField; loading: boolean; failed: boolean } {
+  const { index, sha256, total, stats, psd } = summary;
+  const axis = index.axes[choice.axis];
+  const queryClient = useQueryClient();
+  const totalField = useMemo<ChosenField>(
+    () => ({
+      choice: TOTAL_FIELD,
+      field: total,
+      stats,
+      spectra: { frequencies: index.axes[0].psd_frequencies, psd },
+    }),
+    [total, stats, psd, index]
+  );
+  const combine = useCallback(
+    (results: UseQueryResult<GroupFieldData>[]) => ({
+      ready:
+        results.length > 0 && results.every((r) => r.data)
+          ? summedGroups(
+              index,
+              choice,
+              results.map((r) => r.data as GroupFieldData)
+            )
+          : null,
+      failed: results.some((r) => r.isError),
+    }),
+    [index, choice]
+  );
+  const read = useQueries({
+    queries: isTotalField(choice)
+      ? []
+      : choice.groups.map((group) => ({
+          queryKey: [
+            'lfp-summary',
+            'group',
+            source.resultId,
+            source.assetId,
+            sha256,
+            axis.name,
+            group,
+          ],
+          staleTime: Infinity,
+          gcTime: 5 * 60_000,
+          queryFn: async ({ signal }: { signal: AbortSignal }): Promise<GroupFieldData> => {
+            try {
+              const request = await buildLfpSummaryRequest(source, sha256);
+              const [field, groupStats, groupPsd] = await Promise.all([
+                readField(request, index, axis, group, overviewLevel(axis), signal),
+                readSlice(request, datasetOf(index, axis.stats), [group], signal),
+                readSlice(request, datasetOf(index, axis.psd), [group], signal),
+              ]);
+              return {
+                field,
+                stats: new Float32Array(groupStats),
+                psd: new Float32Array(groupPsd),
+              };
+            } catch (error) {
+              return askStatusIfChanged(queryClient, source, sha256)(error);
+            }
+          },
+        })),
+    combine,
+  });
+  const wanted = isTotalField(choice) ? totalField : read.ready;
+  const [shown, setShown] = useState(totalField);
+  useEffect(() => {
+    if (wanted) setShown(wanted);
+  }, [wanted]);
+  return { chosen: wanted ?? shown, loading: !wanted && !read.failed, failed: read.failed };
+}
+
 type ContactRows = {
   /** A row per contact asked for, in that order, once every one is in. */
   field: LfpField | null;
@@ -121,59 +236,88 @@ const NO_ROWS: ContactRows = { field: null, failed: false };
 
 /**
  * Contacts at full resolution: from the overview where it is already that,
- * else each contact's own row of the total, read by range once and kept, while `enabled`.
+ * else each contact's own row of each group chosen, read by range once and kept, while `enabled`.
  */
 export function useContactRows(
   source: LfpSummarySource,
   summary: LfpSummary,
+  { choice, field: overview }: ChosenField,
   contacts: readonly number[],
   enabled = true
 ): ContactRows {
-  const { index, total, sha256 } = summary;
-  const axis = index.axes[0];
+  const { index, sha256 } = summary;
+  const axis = index.axes[choice.axis];
   const queryClient = useQueryClient();
   const combine = useCallback(
     (results: UseQueryResult<Int16Array>[]): ContactRows => ({
       field:
         results.length > 0 && results.every((r) => r.data)
-          ? rowsField(
-              index,
-              axis,
-              0,
-              results.map((r) => r.data as Int16Array)
+          ? sumFields(
+              choice.groups.map((group, g) =>
+                rowsField(
+                  index,
+                  axis.scales[group],
+                  contacts.map((_, c) => results[c * choice.groups.length + g].data as Int16Array)
+                )
+              )
             )
           : null,
       failed: results.some((r) => r.isError),
     }),
-    [index, axis]
+    [index, axis, choice, contacts]
   );
   const read = useQueries({
     queries:
-      total.kind === 'value'
+      overview.kind === 'value'
         ? []
-        : contacts.map((contact) => ({
-            queryKey: ['lfp-summary', 'row', source.resultId, source.assetId, sha256, contact],
-            staleTime: Infinity,
-            gcTime: 60_000,
-            enabled,
-            queryFn: async ({ signal }: { signal: AbortSignal }) =>
-              readRow(
-                await buildLfpSummaryRequest(source, sha256),
-                index,
-                axis,
-                0,
+        : contacts.flatMap((contact) =>
+            choice.groups.map((group) => ({
+              queryKey: [
+                'lfp-summary',
+                'row',
+                source.resultId,
+                source.assetId,
+                sha256,
+                axis.name,
+                group,
                 contact,
-                signal
-              ).catch(askStatusIfChanged(queryClient, source, sha256)),
-          })),
+              ],
+              staleTime: Infinity,
+              gcTime: 60_000,
+              enabled,
+              queryFn: async ({ signal }: { signal: AbortSignal }) => {
+                try {
+                  const request = await buildLfpSummaryRequest(source, sha256);
+                  const table = await queryClient.fetchQuery({
+                    queryKey: [
+                      'lfp-summary',
+                      'chunks',
+                      source.resultId,
+                      source.assetId,
+                      sha256,
+                      axis.name,
+                    ],
+                    staleTime: Infinity,
+                    gcTime: 60_000,
+                    queryFn: () => readChunkTable(request, index, axis),
+                  });
+                  return await readRow(request, index, axis, group, contact, table, signal);
+                } catch (error) {
+                  return askStatusIfChanged(queryClient, source, sha256)(error);
+                }
+              },
+            }))
+          ),
     combine,
   });
   return useMemo(() => {
-    if (total.kind !== 'value') return read;
+    if (overview.kind !== 'value') return read;
     if (contacts.length === 0) return NO_ROWS;
-    const rows = contacts.map((c) => total.data.subarray(c * total.bins, (c + 1) * total.bins));
-    return { field: rowsField(index, axis, 0, rows), failed: false };
-  }, [total, read, contacts, index, axis]);
+    const rows = contacts.map((c) =>
+      overview.data.subarray(c * overview.bins, (c + 1) * overview.bins)
+    );
+    return { field: rowsField(index, overview.scale, rows), failed: false };
+  }, [overview, read, contacts, index]);
 }
 
 export function useStoredCorrelation(

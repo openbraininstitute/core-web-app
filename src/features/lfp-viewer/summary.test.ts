@@ -1,3 +1,5 @@
+import { deflateSync } from 'node:zlib';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/api/error';
@@ -5,13 +7,18 @@ import { ApiError } from '@/api/error';
 import { contactPositions, recordingArrayId } from './contacts';
 import {
   binAt,
+  fieldStats,
   fieldValue,
+  inflateRow,
   isLfpSummaryChanged,
   LfpSummaryChangedError,
+  lfpSummaryIndexSchema,
+  readChunkTable,
   readRow,
   readSlice,
   rowsField,
   sliceOf,
+  sumFields,
 } from './summary';
 
 import type { LfpAxis, LfpDataset, LfpField, LfpSummaryIndex } from './summary';
@@ -30,6 +37,11 @@ describe('sliceOf', () => {
       length: 30,
       shape: [3, 5],
     });
+  });
+
+  it('counts eight bytes a value for the table of chunks', () => {
+    const table: LfpDataset = { offset: 8, shape: [2, 3, 2], dtype: '<u8' };
+    expect(sliceOf(table, [])).toEqual({ offset: 8, length: 96, shape: [2, 3, 2] });
   });
 
   it('counts four bytes a value for float32', () => {
@@ -107,11 +119,199 @@ describe('readRow and rowsField', () => {
     } as unknown as LfpAxis;
     const request = { url: 'u', headers: {} };
     const rows = await Promise.all([3, 1].map((c) => readRow(request, index, axis, 0, c)));
-    const field = rowsField(index, axis, 0, rows);
+    const field = rowsField(index, axis.scales[0], rows);
     expect(Array.from(field.data)).toEqual([
       1030, 1030, 1030, 1030, 1030, 1010, 1010, 1010, 1010, 1010,
     ]);
     expect(field).toMatchObject({ contacts: 2, bins: 5, binMs: 0.5, kind: 'value', scale: 0.25 });
+  });
+});
+
+/** A row as HDF5's shuffle and deflate filters leave it. */
+function deflated(values: readonly number[]): ArrayBuffer {
+  const bytes = new Uint8Array(Int16Array.from(values).buffer);
+  const shuffled = new Uint8Array(bytes.length);
+  values.forEach((_, i) => {
+    shuffled[i] = bytes[i * 2];
+    shuffled[values.length + i] = bytes[i * 2 + 1];
+  });
+  const stream = deflateSync(shuffled);
+  return stream.buffer.slice(
+    stream.byteOffset,
+    stream.byteOffset + stream.byteLength
+  ) as ArrayBuffer;
+}
+
+describe('inflateRow', () => {
+  it('undoes the deflate and the shuffle, the signs too', async () => {
+    const values = [1, -2, 300, -32768, 32767, 0];
+    expect(Array.from(await inflateRow(deflated(values)))).toEqual(values);
+  });
+});
+
+describe('rows in chunks', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const chunks: Record<number, ArrayBuffer> = {
+    500: deflated([1, 2, 3]),
+    900: deflated([7, 8, 9]),
+  };
+  const size = (offset: number) => BigInt(chunks[offset].byteLength);
+  // Group x contact x (offset, size): 2 groups, 2 contacts
+  const table = BigUint64Array.from([
+    BigInt(500),
+    size(500),
+    BigInt(0),
+    BigInt(0),
+    BigInt(0),
+    BigInt(0),
+    BigInt(900),
+    size(900),
+  ]);
+  const index = {
+    contacts: 2,
+    time: { start: 0, dt: 0.1, steps: 3 },
+    datasets: { '/lfp/mtype/chunks': { offset: 40, shape: [2, 2, 2], dtype: '<u8' } },
+  } as unknown as LfpSummaryIndex;
+  const axis = {
+    levels: [{ step: 1, kind: 'value', dataset: '/lfp/mtype/level0', chunks: '/lfp/mtype/chunks' }],
+    scales: [1, 1],
+  } as unknown as LfpAxis;
+  const request = { url: 'u', headers: {} };
+
+  it('reads a row by the offset and size of its chunk', async () => {
+    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
+      const range = (init.headers as Record<string, string>).Range;
+      const offset = Number(range.slice('bytes='.length).split('-')[0]);
+      return new Response(chunks[offset], { status: 206 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const row = await readRow(request, index, axis, 1, 1, table);
+
+    expect(Array.from(row)).toEqual([7, 8, 9]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+      Range: `bytes=900-${900 + chunks[900].byteLength - 1}`,
+    });
+  });
+
+  it('reads the table once, and none for an axis of plain rows', async () => {
+    const fetchMock = vi.fn(async () => new Response(table.buffer, { status: 206 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await readChunkTable(request, index, axis)).toEqual(table);
+    expect(fetchMock.mock.calls[0]).toEqual([
+      'u',
+      expect.objectContaining({ headers: { Range: 'bytes=40-103' } }),
+    ]);
+    const plain = { ...axis, levels: [{ step: 1, kind: 'value', dataset: 'x' }] } as LfpAxis;
+    expect(await readChunkTable(request, index, plain)).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('sumFields', () => {
+  const field = (scale: number, data: number[]): LfpField => ({
+    contacts: 1,
+    bins: data.length,
+    binMs: 1,
+    start: 0,
+    kind: 'mean',
+    scale,
+    data: Int16Array.from(data),
+  });
+
+  it('leaves one field as it is', () => {
+    const one = field(2, [1, 2]);
+    expect(sumFields([one])).toBe(one);
+  });
+
+  it('adds in µV, across scales, at a scale of its own', () => {
+    const sum = sumFields([field(0.5, [32767, -100]), field(2, [1000, 100])]);
+    expect(sum.kind).toBe('mean');
+    expect(fieldValue(sum, 0, 0)).toBeCloseTo(16383.5 + 2000, 0);
+    expect(fieldValue(sum, 0, 1)).toBeCloseTo(-50 + 200, 0);
+    expect(Math.max(...Array.from(sum.data, Math.abs))).toBe(32767);
+  });
+
+  it('keeps a silent sum readable', () => {
+    const sum = sumFields([field(0.5, [0, 0]), field(2, [0, 0])]);
+    expect(Array.from(sum.data)).toEqual([0, 0]);
+    expect(sum.scale).toBe(1);
+  });
+});
+
+describe('fieldStats', () => {
+  it('gives the columns asked for, per contact, in µV and ms', () => {
+    const field: LfpField = {
+      contacts: 2,
+      bins: 4,
+      binMs: 2,
+      start: 10,
+      kind: 'mean',
+      scale: 0.5,
+      data: Int16Array.from([2, -6, 4, 0, 0, 0, 0, 0]),
+    };
+    const names = ['min', 'max', 'ptp', 'rms', 'mean', 'trough_ms'];
+    const stats = fieldStats(field, names);
+    expect(Array.from(stats.subarray(0, 6))).toEqual([
+      -3,
+      2,
+      5,
+      expect.closeTo(Math.sqrt(14 / 4), 5),
+      0,
+      12,
+    ]);
+    expect(Array.from(stats.subarray(6, 11))).toEqual([0, 0, 0, 0, 0]);
+  });
+});
+
+describe('the index', () => {
+  const index = {
+    format: 'lfp-summary',
+    version: 2,
+    populations: ['pop'],
+    time: { start: 0, dt: 0.1, steps: 30000 },
+    units: 'uV',
+    contacts: 216,
+    stats: ['min'],
+    axes: [
+      {
+        name: 'total',
+        groups: ['total'],
+        scales: [1],
+        levels: [
+          { step: 1, kind: 'value', dataset: '/lfp/total/level0' },
+          { step: 16, kind: 'min_max', dataset: '/lfp/total/level4' },
+        ],
+        stats: '/lfp/total/stats',
+        psd: '/lfp/total/psd',
+        psd_frequencies: [0, 1],
+      },
+      {
+        name: 'mtype',
+        groups: ['A', 'B'],
+        scales: [1, 2],
+        shares: [0.25, 0.75],
+        levels: [
+          { step: 1, kind: 'value', dataset: '/lfp/mtype/level0', chunks: '/lfp/mtype/chunks' },
+          { step: 16, kind: 'mean', dataset: '/lfp/mtype/level4' },
+        ],
+        stats: '/lfp/mtype/stats',
+        psd: '/lfp/mtype/psd',
+        psd_frequencies: [1, 2],
+      },
+    ],
+    datasets: { '/lfp/mtype/chunks': { offset: 0, shape: [2, 216, 2], dtype: '<u8' } },
+  };
+
+  it('takes a summary with group fields', () => {
+    expect(lfpSummaryIndexSchema.parse(index).axes[1].levels[1].kind).toBe('mean');
+  });
+
+  it('refuses a summary of the format before', () => {
+    expect(() => lfpSummaryIndexSchema.parse({ ...index, version: 1 })).toThrow();
   });
 });
 
@@ -127,6 +327,16 @@ describe('fieldValue', () => {
     const field: LfpField = {
       ...base,
       kind: 'value',
+      bins: 3,
+      data: Int16Array.from([1, 2, 3, 4, 5, 6]),
+    };
+    expect(fieldValue(field, 1, 2)).toBe(3);
+  });
+
+  it('scales a mean over its bin', () => {
+    const field: LfpField = {
+      ...base,
+      kind: 'mean',
       bins: 3,
       data: Int16Array.from([1, 2, 3, 4, 5, 6]),
     };

@@ -14,6 +14,8 @@ import type { LfpField } from '@/features/lfp-viewer/summary';
 const MAX_SPECTROGRAM_COLUMNS = 600;
 const MIN_SPECTROGRAM_SEGMENT = 32;
 const MAX_SPECTROGRAM_SEGMENT = 4096;
+const MIN_SPECTRUM_SEGMENT = 256;
+const MAX_SPECTRUM_SEGMENT = 1 << 16;
 const MIN_COHERENCE_SEGMENT = 64;
 const MAX_COHERENCE_SEGMENT = 1 << 14;
 /** Coherence is 1 at every frequency from a single segment, so it needs many. */
@@ -165,6 +167,43 @@ export function spectrogram(
     frequencies: Float64Array.from({ length: bands }, (_, band) => (band * fs) / segment),
     decibels,
   };
+}
+
+/**
+ * Each row's power spectrum over the run, as the summary's: a one-sided Hann density with each
+ * segment's mean off, half overlapping, over segments of about a quarter of the run.
+ */
+export function rowSpectra(field: LfpField): { frequencies: number[]; psd: Float32Array } {
+  const n = powerOfTwoBelow(
+    Math.min(
+      field.bins,
+      Math.max(MIN_SPECTRUM_SEGMENT, Math.min(MAX_SPECTRUM_SEGMENT, field.bins / 4))
+    )
+  );
+  const bands = n / 2 + 1;
+  const fs = 1000 / field.binMs;
+  const window = hann(n);
+  let squares = 0;
+  for (const w of window) squares += w * w;
+  const norm = (field.scale * field.scale) / (fs * squares);
+  const re = new Float64Array(n);
+  const im = new Float64Array(n);
+  const psd = new Float32Array(field.contacts * bands);
+  const hop = Math.max(1, n / 2);
+  const segments = Math.floor((field.bins - n) / hop) + 1;
+  for (let r = 0; r < field.contacts; r++) {
+    const row = field.data.subarray(r * field.bins, (r + 1) * field.bins);
+    for (let s = 0; s < segments; s++) {
+      loadSegment(row, s * hop, window, re, im);
+      fft(re, im);
+      for (let band = 0; band < bands; band++) {
+        const edge = band === 0 || band === bands - 1;
+        const density = (re[band] * re[band] + im[band] * im[band]) * norm * (edge ? 1 : 2);
+        psd[r * bands + band] += density / segments;
+      }
+    }
+  }
+  return { frequencies: Array.from({ length: bands }, (_, band) => (band * fs) / n), psd };
 }
 
 export type Coherence = {

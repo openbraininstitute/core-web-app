@@ -11,6 +11,7 @@ import { colourScale, fieldLimit, formatUv } from '@/features/lfp-viewer/colour-
 import { contactGrid } from '@/features/lfp-viewer/contact-grid';
 import { recordingArrayId } from '@/features/lfp-viewer/contacts';
 import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
+import { FieldFromControls } from '@/features/lfp-viewer/field-from';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
 import {
   describeField,
@@ -25,6 +26,9 @@ import {
 import { LfpScene } from '@/features/lfp-viewer/lfp-scene';
 import { LfpStatistics } from '@/features/lfp-viewer/lfp-statistics';
 import {
+  isTotalField,
+  TOTAL_FIELD,
+  useChosenField,
   useContactPositions,
   useContactRows,
   useLfpSummary,
@@ -165,7 +169,7 @@ function LfpReportView({
   contacts: ContactPositions;
 }) {
   const { positions, blocks } = contacts;
-  const { index, total, stats } = summary;
+  const { index, total } = summary;
   const { spikeFiles, timeline } = useSimulation();
   const start = index.time.start;
   const end = start + index.time.steps * index.time.dt;
@@ -177,8 +181,13 @@ function LfpReportView({
     [structure, positions]
   );
 
+  const [choice, setChoice] = useState(TOTAL_FIELD);
+  const { chosen, loading, failed } = useChosenField(source, summary, choice);
   const [removeShared, setRemoveShared] = useState(false);
-  const field = useMemo(() => (removeShared ? withoutShared(total) : total), [removeShared, total]);
+  const field = useMemo(
+    () => (removeShared ? withoutShared(chosen.field) : chosen.field),
+    [removeShared, chosen.field]
+  );
   const scale = useMemo(() => colourScale(fieldLimit(field)), [field]);
   const [hideBelowShare, setHideBelowShare] = useState(0);
 
@@ -186,9 +195,10 @@ function LfpReportView({
   const [chosenOrder, setChosenOrder] = useState<RowOrder | null>(null);
   const order = chosenOrder ?? openingOrder(structure, direction);
   const ptp = index.stats.indexOf('ptp');
+  // Rows stay as the total has them, so that they don't jump about between groups.
   const swing = useCallback(
-    (contact: number) => (ptp < 0 ? 0 : stats[contact * index.stats.length + ptp]),
-    [index.stats, ptp, stats]
+    (contact: number) => (ptp < 0 ? 0 : summary.stats[contact * index.stats.length + ptp]),
+    [index.stats, ptp, summary.stats]
   );
   const rows = useMemo(
     () => fieldRows(order, structure, positions, direction, swing),
@@ -212,11 +222,20 @@ function LfpReportView({
   const traceField = useContactRows(
     source,
     summary,
-    mode === 'traces' && !removeShared && total.kind !== 'value' && contacts.state !== 'loading'
+    chosen,
+    mode === 'traces' &&
+      !removeShared &&
+      chosen.field.kind !== 'value' &&
+      contacts.state !== 'loading'
       ? traces
       : []
   ).field;
-  const sharedPercent = Math.round(structure.sharedShare * 100);
+  const sharedShare = useMemo(
+    () =>
+      isTotalField(chosen.choice) ? structure.sharedShare : describeField(chosen.field).sharedShare,
+    [chosen, structure]
+  );
+  const sharedPercent = Math.round(sharedShare * 100);
 
   // The player: one clock, moving every view's cursor outside React.
   const timeCursor = useMemo(() => createTimeCursor(), []);
@@ -315,15 +334,20 @@ function LfpReportView({
                 {order === 'along' &&
                   direction &&
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
+                {loading && ' · reading the field'}
+                {failed && ' · that field could not be read'}
               </span>
               <PlotHelp>
                 Drag to zoom · Double-click to reset · Click to move the player there; in the map,
                 to pick the row&apos;s contact · Tick contacts in the table to draw their traces ·
-                Removing the shared signal leaves the table and spectra as recorded
+                Removing the shared signal leaves the table and spectra as recorded · A group of
+                cells&apos; overview holds means over its bins, the total&apos;s their extremes, so
+                zoomed out the total&apos;s peaks read higher
               </PlotHelp>
             </>
           }
         >
+          <FieldFromControls index={index} choice={choice} onChange={setChoice} />
           <PillSelect
             label="View"
             value={mode}
@@ -420,7 +444,7 @@ function LfpReportView({
     <ElectrodesTable
       contacts={index.contacts}
       statNames={index.stats}
-      stats={stats}
+      stats={chosen.stats}
       positions={positions}
       blocks={blocks}
       ticked={ticked}
@@ -487,6 +511,7 @@ function LfpReportView({
                 <LfpStatistics
                   source={source}
                   summary={summary}
+                  chosen={chosen}
                   field={field}
                   removeShared={removeShared}
                   rows={rows}

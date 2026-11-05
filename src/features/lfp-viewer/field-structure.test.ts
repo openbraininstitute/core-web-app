@@ -11,6 +11,7 @@ import {
   tracedContacts,
   withoutShared,
 } from './field-structure';
+import { fieldValue } from './summary';
 
 import type { LfpField } from './summary';
 
@@ -299,6 +300,22 @@ describe('tracedContacts', () => {
 });
 
 describe('withoutShared', () => {
+  it('takes one value a bin off a field of means', () => {
+    const removed = withoutShared({
+      contacts: 2,
+      bins: 2,
+      binMs: 1,
+      start: 0,
+      kind: 'mean',
+      scale: 1,
+      data: Int16Array.from([300, 100, 100, 300]),
+    });
+    expect(removed.kind).toBe('mean');
+    expect(fieldValue(removed, 0, 0) + fieldValue(removed, 1, 0)).toBeCloseTo(0);
+    expect(fieldValue(removed, 0, 0)).toBeCloseTo(100, 3);
+    expect(fieldValue(removed, 0, 1)).toBeCloseTo(-100, 3);
+  });
+
   it('leaves nothing of a signal every contact shares', () => {
     const removed = withoutShared(fieldOf(4, (_, b) => 50 * sine(b)));
     expect(removed.data.every((v) => v === 0)).toBe(true);

@@ -10,6 +10,7 @@ import {
   matrixOverRows,
   profileAlong,
   rowCorrelation,
+  rowSpectra,
   spectrogram,
   triggeredAverage,
 } from './field-analysis';
@@ -44,6 +45,48 @@ const row = (contacts: number[], label = `e${contacts[0]}`): FieldRow => ({
   contacts,
   lead: contacts[0],
   label,
+});
+
+describe('rowSpectra', () => {
+  it('finds a sine at its frequency and keeps its power', () => {
+    const dt = 0.1;
+    const steps = 8192;
+    const data = Int16Array.from({ length: steps * 2 }, (_, i) =>
+      i < steps ? Math.round(1000 * Math.sin((2 * Math.PI * 500 * i * dt) / 1000)) : 0
+    );
+    const { frequencies, psd } = rowSpectra({
+      contacts: 2,
+      bins: steps,
+      binMs: dt,
+      start: 0,
+      kind: 'value',
+      data,
+      scale: 0.01,
+    });
+    const bands = frequencies.length;
+    const row = psd.subarray(0, bands);
+    const peak = row.indexOf(Math.max(...row));
+    const width = frequencies[1];
+    expect(Math.abs(frequencies[peak] - 500)).toBeLessThanOrEqual(width);
+    // Parseval: the density sums to the variance, here of a 10 µV sine
+    const power = row.reduce((sum, value) => sum + value * width, 0);
+    expect(power).toBeCloseTo(50, 0);
+    expect(Math.max(...psd.subarray(bands))).toBe(0);
+  });
+
+  it('takes a run shorter than a segment', () => {
+    const { frequencies, psd } = rowSpectra({
+      contacts: 1,
+      bins: 100,
+      binMs: 1,
+      start: 0,
+      kind: 'value',
+      data: Int16Array.from({ length: 100 }, (_, i) => i % 7),
+      scale: 1,
+    });
+    expect(frequencies).toHaveLength(33);
+    expect(psd).toHaveLength(33);
+  });
 });
 
 describe('fft', () => {

@@ -65,7 +65,7 @@ function measuredValues(field: LfpField): { values: Float32Array; bins: number }
       for (let i = from; i < to; i++) {
         const at = c * field.bins + i;
         sum +=
-          field.kind === 'value'
+          field.kind !== 'min_max'
             ? field.data[at]
             : (field.data[at * 2] + field.data[at * 2 + 1]) / 2;
       }
@@ -277,7 +277,7 @@ export function tracedContacts(rows: readonly FieldRow[], ticked: readonly numbe
 
 export function withoutShared(field: LfpField): LfpField {
   const { contacts, bins, kind, data } = field;
-  const perContact = bins * (kind === 'value' ? 1 : 2);
+  const perContact = bins * (kind === 'min_max' ? 2 : 1);
   const mean = new Float64Array(perContact);
   for (let c = 0; c < contacts; c++) {
     for (let i = 0; i < perContact; i++) mean[i] += data[c * perContact + i];

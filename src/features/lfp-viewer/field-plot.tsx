@@ -62,7 +62,7 @@ function extent(field: LfpField, contact: number, from: number, to: number): [nu
   let low = Infinity;
   let high = -Infinity;
   const row = contact * field.bins;
-  if (field.kind === 'value') {
+  if (field.kind !== 'min_max') {
     for (let b = from; b < to; b++) {
       const v = field.data[row + b];
       if (v < low) low = v;

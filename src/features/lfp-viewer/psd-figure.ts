@@ -12,25 +12,28 @@ import type { Figure } from '@/features/spike-viewer/spike-statistics/figures';
 /**
  * Welch power spectra on log axes: the mean over every contact in slate, and
  * each of `contacts` in a colour of its own. 0 Hz is left out, as a log axis
- * cannot hold it.
+ * cannot hold it. `psd` holds every contact, or, with `onlyTheseRows`, just
+ * `contacts`' in their order, with no mean to draw.
  */
 export function psdFigure({
   frequencies,
   psd,
   contacts,
   dtMs,
+  onlyTheseRows = false,
 }: {
   frequencies: readonly number[];
   /** Contact × frequency, µV²/Hz. */
   psd: Float32Array;
   contacts: readonly number[];
   dtMs: number;
+  onlyTheseRows?: boolean;
 }): Figure {
   const bands = frequencies.length;
   const total = psd.length / bands;
   const from = frequencies[0] === 0 ? 1 : 0;
   const x = frequencies.slice(from);
-  const row = (c: number) => Array.from(psd.subarray(c * bands + from, (c + 1) * bands));
+  const row = (r: number) => Array.from(psd.subarray(r * bands + from, (r + 1) * bands));
   const mean = x.map((_, i) => {
     let sum = 0;
     for (let c = 0; c < total; c++) sum += psd[c * bands + from + i];
@@ -39,17 +42,27 @@ export function psdFigure({
   const nyquist = 1000 / dtMs / 2;
 
   const data = [
-    {
-      type: 'scatter',
-      mode: 'lines',
-      name: `Mean of ${total.toLocaleString()} contacts`,
-      x,
-      y: mean,
-      line: { color: MEAN_INK, width: 2 },
-      hovertemplate: '%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>mean</extra>',
-    },
+    ...(onlyTheseRows
+      ? []
+      : [
+          {
+            type: 'scatter',
+            mode: 'lines',
+            name: `Mean of ${total.toLocaleString()} contacts`,
+            x,
+            y: mean,
+            line: { color: MEAN_INK, width: 2 },
+            hovertemplate: '%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>mean</extra>',
+          },
+        ]),
     ...contacts.map((c, i) =>
-      contactTrace(c, i, x, row(c), `%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>e${c}</extra>`)
+      contactTrace(
+        c,
+        i,
+        x,
+        row(onlyTheseRows ? i : c),
+        `%{x:.1f} Hz · %{y:.3g} µV²/Hz<extra>e${c}</extra>`
+      )
     ),
   ];
 
