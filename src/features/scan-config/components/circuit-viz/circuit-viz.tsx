@@ -18,6 +18,7 @@ import {
   MORPHOLOGY_LOCATIONS_CONFIG_KEY,
   readEntry,
 } from '@/features/scan-config/components/model-preview/morphology-locations-block';
+import { UnplacedPopulationsNotice } from '@/features/scan-config/components/shared/unplaced-populations-notice';
 import { VisualizationLoadingIndicator } from '@/features/scan-config/components/shared/visualization-loading-indicator';
 
 import { GeneratedLocationsLegend } from './morphology-location/generated-legend';
@@ -49,6 +50,7 @@ import type { SmallCircuitSource } from './sources';
 /** Nothing hidden, shared so the initial state is one object rather than one per viewer. */
 const EMPTY_LABELS: ReadonlySet<string> = new Set();
 const NO_POPULATIONS: Population[] = [];
+const NO_POPULATION_NAMES: readonly string[] = [];
 
 interface CircuitVizProps extends CircuitViewerHostProps, CircuitCellsHostProps {
   /**
@@ -239,6 +241,8 @@ function CircuitVizView({
     locationFirstCell,
     locationNodeCount,
     error,
+    unplaced,
+    retry,
     synapses,
     anchor,
     download,
@@ -442,6 +446,9 @@ function CircuitVizView({
           morphologies={{ loaded: morphologies.loaded, total: morphologies.total }}
         />
       )}
+      {!error && (
+        <UnplacedPopulationsNotice names={unplaced ?? NO_POPULATION_NAMES} onRetry={retry} />
+      )}
       {(error || unread) && (
         <div
           role="alert"
@@ -453,11 +460,11 @@ function CircuitVizView({
             </summary>
             <div>{error?.message ?? 'The morphologies could not be read.'}</div>
           </details>
-          {/* What the source failed at, the circuit's config or its placement, is not read again from here. */}
-          {!error && (
+          {/* Of what the source failed at, only node files that could not be read are asked for again. */}
+          {(!error || (retry && unplaced?.length)) && (
             <button
               type="button"
-              onClick={morphologies.retry}
+              onClick={error ? retry : morphologies.retry}
               className="rounded-full bg-white px-3 py-1 text-sm text-primary-9 shadow-md ring-1 ring-black/5 hover:bg-neutral-100"
             >
               Try again

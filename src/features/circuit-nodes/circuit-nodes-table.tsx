@@ -132,6 +132,7 @@ export default function CircuitNodesTable({
     isLoading: workerLoading,
     progress: downloadProgress,
     error: workerError,
+    retry: retryNodes,
   } = useNodesWorker({
     enabled,
     circuitId: circuit.id,
@@ -320,6 +321,7 @@ export default function CircuitNodesTable({
             configError,
             configLoading,
             workerError,
+            retryNodes,
             workerLoading,
             downloadProgress,
             hasPopulation: !!population,
@@ -379,6 +381,7 @@ function renderBody({
   configError,
   configLoading,
   workerError,
+  retryNodes,
   workerLoading,
   downloadProgress,
   hasPopulation,
@@ -395,6 +398,7 @@ function renderBody({
   configError: Error | null;
   configLoading: boolean;
   workerError: Error | null;
+  retryNodes: () => void;
   workerLoading: boolean;
   downloadProgress: ReturnType<typeof useNodesWorker>['progress'];
   hasPopulation: boolean;
@@ -428,7 +432,7 @@ function renderBody({
   }
   if (workerError) {
     return (
-      <div className={styles.centered}>
+      <div className={cn(styles.centered, 'flex-col gap-3')}>
         <GenericError
           content={
             <>
@@ -437,6 +441,9 @@ function renderBody({
             </>
           }
         />
+        <button type="button" className={PILL_CLASS} onClick={retryNodes}>
+          Try again
+        </button>
       </div>
     );
   }

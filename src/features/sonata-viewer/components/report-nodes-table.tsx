@@ -23,6 +23,7 @@ import {
   nestedLayout,
   shownIndexOf,
 } from '@/features/sonata-viewer/compartment-rows';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ReactNode } from 'react';
@@ -191,6 +192,7 @@ export function ReportNodesTable({
     getFilteredIndices,
     getRowIndex,
     getRowOrder,
+    retry: retryNodes,
   } = useNodesWorker({
     enabled: nodePopulation !== undefined,
     circuitId: circuit.id,
@@ -484,7 +486,11 @@ export function ReportNodesTable({
     >
       {error ? (
         <Centered>
-          <Empty description={`The circuit’s nodes could not be read: ${error.message}`} />
+          <Empty description={`The circuit’s nodes could not be read: ${error.message}`}>
+            <button type="button" className={PILL_CLASS} onClick={retryNodes}>
+              Try again
+            </button>
+          </Empty>
         </Centered>
       ) : !shownSource || !columns ? (
         // The table kept from the view before, over the same cells, until this one's is ready.

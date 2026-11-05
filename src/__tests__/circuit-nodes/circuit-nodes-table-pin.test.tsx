@@ -13,6 +13,8 @@ import type { PinnedPathway } from '@/features/circuit-nodes/connectivity/use-ma
 import type { FilterModel, ViewMode } from '@/features/circuit-nodes/types';
 
 const h = vi.hoisted(() => ({
+  workerError: null as Error | null,
+  retry: vi.fn(),
   grid: null as ComponentProps<typeof NodesGrid> | null,
   view: null as ComponentProps<typeof ConnectivityView> | null,
   // Stable, as the worker's own are.
@@ -80,7 +82,8 @@ vi.mock('@/features/circuit-nodes/hooks/use-nodes-worker', () => ({
     getRowIndex: vi.fn(),
     isLoading: false,
     progress: null,
-    error: null,
+    error: h.workerError,
+    retry: h.retry,
   }),
 }));
 
@@ -111,6 +114,24 @@ beforeEach(() => {
   h.grid = null;
   h.view = null;
   vi.mocked(CELLS.onShownCellsChange).mockClear();
+});
+
+describe('the circuit’s nodes table, where its file could not be read', () => {
+  it('says why, and reads it again', () => {
+    h.workerError = new Error('The download stopped: nothing arrived for 30 seconds');
+    render(
+      <Provider store={createStore()}>
+        <CircuitNodesTable circuit={CIRCUIT} />
+      </Provider>
+    );
+    expect(screen.getByText(/The download stopped/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+
+    expect(h.retry).toHaveBeenCalledOnce();
+    h.workerError = null;
+    h.retry.mockClear();
+  });
 });
 
 describe('the circuit’s nodes table and its matrix', () => {

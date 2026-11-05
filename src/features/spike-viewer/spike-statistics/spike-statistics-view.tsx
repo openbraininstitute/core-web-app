@@ -39,6 +39,7 @@ import {
 } from '@/features/spike-viewer/spike-statistics/statistics-plots';
 import { psthSeriesFigure } from '@/features/spike-viewer/spike-statistics/time-course-figures';
 import { WindowChip } from '@/features/spike-viewer/spike-statistics/window-chip';
+import { PILL_CLASS } from '@/ui/molecules/select/pill-select';
 
 import type { IDatasource } from 'ag-grid-community';
 import type { ReactNode } from 'react';
@@ -182,6 +183,7 @@ export function SpikeStatisticsView({
     setDerivedColumns,
     getFilteredIndices,
     getRowIndex,
+    retry: retryNodes,
   } = useNodesWorker({
     enabled: nodePopulation !== undefined,
     circuitId: circuit.id,
@@ -526,7 +528,11 @@ export function SpikeStatisticsView({
     >
       {error ? (
         <Centered>
-          <Empty description={`The nodes could not be read: ${error.message}`} />
+          <Empty description={`The nodes could not be read: ${error.message}`}>
+            <button type="button" className={PILL_CLASS} onClick={retryNodes}>
+              Try again
+            </button>
+          </Empty>
         </Centered>
       ) : !tableShown || !columns ? (
         // The table kept from the view before, over the same cells, until this one's is ready.
