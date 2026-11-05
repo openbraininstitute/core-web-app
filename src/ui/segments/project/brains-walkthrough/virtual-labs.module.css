@@ -98,16 +98,13 @@
   right: clamp(110px, 12vw, 210px);
   transform: translateY(-50%);
   margin: 0;
-  padding: 10px;
-  border-radius: 14px;
-  background: #edf2f8;
 }
 
 .previewHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 6px 13px;
+  padding: 0 0 10px;
   gap: 8px;
   font-size: 12px;
   line-height: 1.4;
@@ -119,10 +116,9 @@
 }
 
 .playback {
+  display: inline-flex;
   padding: 3px 0 3px 8px;
   cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .playback:hover {
@@ -134,15 +130,11 @@
   width: 100%;
   aspect-ratio: 1512 / 850;
   object-fit: cover;
-  border-radius: 7px;
+  /* The recording's edges are as white as the page, so it keeps the other slides' hairline and shadow. */
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
   background: white;
-}
-
-.previewCaption {
-  padding: 12px 6px 3px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: #465873;
+  box-shadow: 0 24px 60px rgb(0 39 102 / 14%);
 }
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
@@ -200,16 +192,11 @@
     max-width: 600px;
     margin-inline: auto;
     transform: none;
-    padding: 7px;
   }
 
   .previewHeader {
-    padding: 1px 4px 7px;
+    padding: 0 0 6px;
     font-size: 10px;
-  }
-
-  .previewCaption {
-    display: none;
   }
 }
 
@@ -272,8 +259,7 @@
   }
 
   .detail,
-  .note,
-  .previewCaption {
+  .note {
     display: none;
   }
 
@@ -285,11 +271,10 @@
   .preview {
     top: calc(50% + 6px);
     right: clamp(110px, 18vw, 210px);
-    padding: 7px;
   }
 
   .previewHeader {
-    padding: 1px 4px 7px;
+    padding: 0 0 6px;
     font-size: 10px;
   }
 }

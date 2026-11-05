@@ -1,5 +1,6 @@
 'use client';
 
+import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -267,7 +268,7 @@ export const VIRTUAL_LABS_VIDEO = {
   poster: '/images/start/walkthrough/virtual-labs.jpg',
 };
 
-/** The platform recording, framed as the product itself rather than a floating thumbnail. */
+/** The platform recording, on the page itself, with its label and playback control. */
 export function VirtualLabsPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
@@ -290,6 +291,8 @@ export function VirtualLabsPreview() {
         <button
           type="button"
           className={labs.playback}
+          aria-label={paused ? 'Play preview' : 'Pause preview'}
+          title={paused ? 'Play preview' : 'Pause preview'}
           onClick={() => {
             const video = videoRef.current;
             if (!video) return;
@@ -297,7 +300,7 @@ export function VirtualLabsPreview() {
             else video.pause();
           }}
         >
-          {paused ? 'Play preview' : 'Pause preview'}
+          {paused ? <RiPlayFill size={16} /> : <RiPauseFill size={16} />}
         </button>
       </div>
       <video
@@ -313,9 +316,6 @@ export function VirtualLabsPreview() {
         aria-label="Virtual Labs platform walkthrough"
         className={labs.video}
       />
-      <figcaption className={labs.previewCaption}>
-        Real models. Interactive simulations. One workspace.
-      </figcaption>
     </figure>
   );
 }
