@@ -1,6 +1,7 @@
 import { logError } from '@/utils/logger';
 
 import ViewError from '../error';
+import PageSection from '../page-section';
 import SanityContentImage from './sanity-content-image/sanity-content-image';
 import SanityContentItems from './sanity-content-items';
 import { SanityContentMultipleButton } from './sanity-content-multiple-button/sanity-content-multiple-button';
@@ -11,6 +12,7 @@ import SanityContentVerticalDivider from './sanity-content-vertical-space';
 import SanityContentVideo from './sanity-content-video/sanity-content-video';
 import SanityContentWidget from './sanity-content-widget';
 
+import type { ReactNode } from 'react';
 import type {
   ContentForRichText,
   ContentForRichTextImage,
@@ -29,17 +31,27 @@ interface SanityContentRTFProps {
   value: ContentForRichText;
 }
 
+/** The page's items in sections: one from each title on, and each band on its own. */
 export default function SanityContentRTF({ sectionSlug, value }: SanityContentRTFProps) {
   let storyTitleIndex = 0;
+  const sections: ReactNode[][] = [];
+  let open = false;
 
-  return value.map((item, index) => {
+  value.forEach((item, index) => {
     const testId =
       sectionSlug === 'the-real-digital-brain-story' && item._type === 'titleHeadline'
         ? `story-chapter-${storyTitleIndex++}`
         : undefined;
-
-    return renderItem(item, index, sectionSlug, testId);
+    const band = item._type === 'previewBlock';
+    if (!open || band || item._type === 'titleHeadline') sections.push([]);
+    sections[sections.length - 1].push(renderItem(item, index, sectionSlug, testId));
+    open = !band;
   });
+
+  return sections.map((items, index) => (
+    // eslint-disable-next-line react/no-array-index-key -- The page's order is its identity.
+    <PageSection key={index}>{items}</PageSection>
+  ));
 }
 
 function renderItem(

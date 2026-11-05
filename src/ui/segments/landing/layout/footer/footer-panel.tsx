@@ -14,51 +14,62 @@ interface FooterPanelProps {
   socialMediaLinks: ContentForSocialMediaLink[];
 }
 
-interface FooterLink {
-  label: string;
-  href: string;
-}
-
-const FOOTER_LINKS: FooterLink[] = [
+const FOOTER_LINKS = [
   { label: 'About OBI', href: '/about' },
-  { label: 'Our story', href: '/the-real-digital-brain-story' },
-  { label: 'Mission', href: '/mission' },
   { label: 'Team', href: '/team' },
-  { label: 'Gallery', href: '/gallery' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'News', href: '/news' },
   { label: 'Contact', href: '/contact' },
-  { label: 'Login', href: '/app/virtual-lab' },
-  { label: 'Terms and conditions', href: '/terms' },
+];
+
+const LEGAL_LINKS = [
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Terms', href: '/terms' },
   { label: 'Financing policy', href: '/financing' },
-  { label: 'Privacy policy', href: '/privacy' },
 ];
 
 export default function FooterPanel({ className, socialMediaLinks }: FooterPanelProps) {
   return (
-    <div className={classNames(className, styles.footerPanel)} data-testid="site-footer">
-      <div className={styles.title}>
-        <h2>Open Brain Institute</h2>
-        <div className={styles.copyright}>
-          Copyright © {new Date().getFullYear()} - Open Brain Institute
+    <footer className={classNames(className, styles.footerPanel)} data-testid="site-footer">
+      <div className={styles.main}>
+        <div className={styles.identity}>
+          <Link href="/" className={styles.brand}>
+            Open Brain Institute
+          </Link>
+          <small className={styles.copyright}>© {new Date().getFullYear()}</small>
         </div>
-      </div>
-      <div className={styles.links}>
-        {FOOTER_LINKS.map((link) => (
-          <div key={link.href} className={styles.section}>
+        <nav className={styles.links} aria-label="Footer navigation">
+          {FOOTER_LINKS.map((link) => (
             <Link
+              key={link.href}
               href={link.href}
               data-testid={`footer-link-${link.href.slice(1).replaceAll('/', '-')}`}
             >
               {link.label}
             </Link>
-          </div>
-        ))}
-        <div className={styles.socialmedia}>
-          <SocialMediaLinks links={socialMediaLinks} />
-        </div>
+          ))}
+        </nav>
       </div>
-      <NewsLetterSubscription className={styles.subscribe} />
-    </div>
+      <div className={styles.bottom}>
+        <nav className={styles.legal} aria-label="Legal information">
+          {LEGAL_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              data-testid={`footer-link-${link.href.slice(1)}`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <SocialMediaLinks className={styles.socialmedia} links={socialMediaLinks} />
+        <details className={styles.newsletter}>
+          <summary>
+            Email updates <span aria-hidden="true">+</span>
+          </summary>
+          <NewsLetterSubscription className={styles.subscribe} />
+        </details>
+      </div>
+    </footer>
   );
 }

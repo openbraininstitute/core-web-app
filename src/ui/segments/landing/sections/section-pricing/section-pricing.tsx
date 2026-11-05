@@ -1,4 +1,5 @@
 import PriceTable from '@/ui/segments/help/priceList/price-table';
+import PageSection from '@/ui/segments/landing/components/page-section';
 import { styleBlockFullWidth } from '@/ui/segments/landing/styles';
 import Plans from '@/ui/segments/plans';
 import { classNames } from '@/util/utils';
@@ -15,7 +16,10 @@ interface SectionPricingProps {
 export default function SectionPricing({ prices, creditsPacks, plans }: SectionPricingProps) {
   return (
     <>
-      <Plans plans={plans} />
+      <PageSection>
+        <Plans plans={plans} />
+      </PageSection>
+      <PageSection>
       <div
         className={classNames('flex w-full flex-col', styleBlockFullWidth)}
         style={{
@@ -33,6 +37,7 @@ export default function SectionPricing({ prices, creditsPacks, plans }: SectionP
           </div>
         )}
       </div>
+      </PageSection>
     </>
   );
 }

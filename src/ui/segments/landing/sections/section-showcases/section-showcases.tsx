@@ -1,4 +1,5 @@
 import ShowcaseCard from '@/app/showcases/ShowcaseCard';
+import PageSection from '@/ui/segments/landing/components/page-section';
 import { styleBlockFullWidth } from '@/ui/segments/landing/styles';
 
 import type { OBIShowcaseProjectType } from '@/ui/segments/reports/obi-showcases/types';
@@ -19,6 +20,7 @@ export default function SectionShowcases({ projects }: SectionShowcasesProps) {
   }
 
   return (
+    <PageSection>
     <div className={styleBlockFullWidth}>
       <div className="w-full space-y-8 px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid w-full grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -28,5 +30,6 @@ export default function SectionShowcases({ projects }: SectionShowcasesProps) {
         </div>
       </div>
     </div>
+    </PageSection>
   );
 }

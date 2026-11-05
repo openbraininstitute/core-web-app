@@ -1,17 +1,25 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Gabarito:wght@400..900&display=swap");
 
+/* The pages held a section at a time; the shell sets the class. */
+@media (min-width: 768px) {
+  html:has(:global(.landing-page-snap)) {
+    scroll-snap-type: y mandatory;
+  }
+}
+
 .landingPage {
   --color-background: #fff;
   --color-on-bakground: #000;
   --color-neutral: var(--Colors-Gray-4, #bfbfbf);
-  --color-neutral-light: var(--Colors-Gray-4, #f0f0f0);
+  --color-neutral-light: #edf2f8;
+  --color-body: #465873;
   --color-on-neutral: var(--color-on-bakground);
-  --color-primary: var(--Colors-Blue-8, #003a8c);
+  --color-primary: #002766;
   --color-primary-light: var(--Colors-Blue-8, #1897e6);
   --color-on-primary: var(--color-background);
   --font-serif: "DM Serif Text", serif;
-  --font-sans-serif: "Gabarito", sans-serif;
-  --font-size-M: 19px;
+  --font-sans-serif: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-size-M: 17px;
   --font-size-S: calc(0.8 * var(--font-size-M));
   --font-size-M-plus: calc(1.2 * var(--font-size-M));
   --font-size-L: calc(1.5 * var(--font-size-M));
@@ -28,11 +36,12 @@
 
   width: 100%;
   max-width: 100vw;
+  overflow-x: clip;
   margin: 0;
   padding: 0;
   color: var(--color-primary);
   background-color: var(--color-background);
-  font-family: "Gabarito", serif;
+  font-family: var(--font-sans-serif);
   font-optical-sizing: auto;
   font-weight: normal;
   font-style: normal;
@@ -40,11 +49,14 @@
   font-size: var(--font-size-M);
 }
 
-.landingPage a,
-.landingPage button {
-  cursor: pointer;
-  font-size: var(--font-size-M);
-  box-sizing: border-box;
+/* In a layer, for utilities on a link or a button to win: the top bar's, set as the walkthrough's. */
+@layer base {
+  .landingPage a,
+  .landingPage button {
+    cursor: pointer;
+    font-size: var(--font-size-M);
+    box-sizing: border-box;
+  }
 }
 
 .landingPage :global(.font-gabarito) {
@@ -149,4 +161,20 @@
 .landingPage big {
   font-weight: bold;
   font-size: 110%;
+}
+
+/* The plans' way to get in touch, a pill here: the checkout in the app, which shares the plans, keeps its own. */
+.landingPage a[href^="mailto:subscription@"] {
+  border: none;
+  border-radius: 999px;
+  padding: 13px 0;
+  color: #fff;
+  background-color: var(--color-primary);
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.landingPage a[href^="mailto:subscription@"]:hover {
+  background-color: #00428b;
 }

@@ -1,0 +1,297 @@
+.words {
+  width: 34%;
+  max-width: 490px;
+  margin-left: clamp(32px, 5vw, 88px);
+  padding: 0 36px 0 0;
+  align-self: center;
+  background: transparent;
+  gap: 22px;
+}
+
+.title {
+  max-width: 9em;
+  font-size: clamp(40px, 4.2vw, 62px);
+  line-height: 1.06;
+  text-wrap: balance;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.introduction {
+  max-width: 35ch;
+  color: #465873;
+  font-size: clamp(16px, 1.3vw, 19px);
+  line-height: 1.55;
+  text-wrap: pretty;
+}
+
+.benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  list-style: disc;
+  padding: 0 0 0 1.1em;
+  margin: 0;
+  color: #002766;
+}
+
+.benefitTitle {
+  color: #002766;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.detail {
+  margin-top: 3px;
+  color: #526178;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.action {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 3px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 28px;
+  border-radius: 999px;
+  background: #008a05;
+  color: white;
+  padding: 13px 23px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 200ms ease-out;
+}
+
+.button:hover {
+  background: #007504;
+}
+
+.button:focus-visible,
+.playback:focus-visible {
+  outline: 3px solid #096dd9;
+  outline-offset: 4px;
+}
+
+.note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #526178;
+}
+
+.preview {
+  position: absolute;
+  top: 50%;
+  left: 2%;
+  right: clamp(110px, 12vw, 210px);
+  transform: translateY(-50%);
+  margin: 0;
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 10px;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #38516f;
+}
+
+.previewLabel {
+  font-weight: 600;
+}
+
+.playback {
+  display: inline-flex;
+  padding: 3px 0 3px 8px;
+  cursor: pointer;
+}
+
+.playback:hover {
+  color: #002766;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1512 / 850;
+  object-fit: cover;
+  /* The recording's edges are as white as the page, so it keeps the other slides' hairline and shadow. */
+  border: 1px solid #e5e5e5;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 24px 60px rgb(0 39 102 / 14%);
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .words {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 12px 20px 96px;
+    align-self: flex-end;
+    background: white;
+    gap: 12px;
+  }
+
+  .title {
+    max-width: none;
+    font-size: clamp(30px, 7vw, 42px);
+  }
+
+  .content {
+    gap: 17px;
+  }
+
+  .introduction {
+    max-width: 40ch;
+    font-size: 15px;
+    line-height: 1.45;
+  }
+
+  .benefits {
+    gap: 12px;
+  }
+
+  .benefitTitle {
+    font-size: 14px;
+  }
+
+  .detail {
+    display: none;
+  }
+
+  .action {
+    gap: 7px;
+    padding-top: 0;
+  }
+
+  .button {
+    padding: 11px 19px;
+    font-size: 14px;
+  }
+
+  .preview {
+    top: var(--stage-video-top);
+    left: 16px;
+    right: 16px;
+    max-width: 600px;
+    margin-inline: auto;
+    transform: none;
+  }
+
+  .previewHeader {
+    padding: 0 0 6px;
+    font-size: 10px;
+  }
+}
+
+@media (max-height: 740px) and (orientation: portrait) {
+  .words {
+    padding-bottom: 88px;
+    gap: 9px;
+  }
+
+  .content {
+    gap: 12px;
+  }
+
+  .preview {
+    top: 60px;
+  }
+
+  .note {
+    display: none;
+  }
+}
+
+@media (max-height: 650px) and (orientation: portrait) {
+  .preview {
+    max-width: 260px;
+  }
+}
+
+@media (max-height: 600px) and (orientation: portrait) {
+  .introduction {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .button {
+    transition: none;
+  }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+  .words {
+    gap: 12px;
+    padding: 70px 20px 80px 0;
+  }
+
+  .title {
+    max-width: none;
+    font-size: clamp(24px, 3.1vw, 32px);
+  }
+
+  .content,
+  .benefits {
+    gap: 10px;
+  }
+
+  .introduction,
+  .benefitTitle {
+    font-size: 13px;
+  }
+
+  .detail,
+  .note {
+    display: none;
+  }
+
+  .button {
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+
+  .preview {
+    top: calc(50% + 6px);
+    right: clamp(110px, 18vw, 210px);
+  }
+
+  .previewHeader {
+    padding: 0 0 6px;
+    font-size: 10px;
+  }
+}
+
+.chapterAction {
+  display: flex;
+  padding-top: 6px;
+}
+
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .chapter {
+    padding-bottom: 96px;
+    gap: 14px;
+  }
+
+  .chapter h1 {
+    font-size: clamp(28px, 6vw, 40px);
+    text-wrap: balance;
+  }
+}
