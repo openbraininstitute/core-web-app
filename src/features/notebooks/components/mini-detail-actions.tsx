@@ -127,6 +127,7 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
     });
 
   const [pendingDownload, setPendingDownload] = useState(false);
+  const [openSizeMenu, setOpenSizeMenu] = useState<string | null>(null);
 
   const handleDownload = async () => {
     setPendingDownload(true);
@@ -297,11 +298,16 @@ export function NotebookActions<T extends EntityCoreObjectTypes>({
             <Dropdown
               key={target.key}
               trigger={['click']}
+              open={openSizeMenu === target.key}
+              onOpenChange={(open) => setOpenSizeMenu(open ? target.key : null)}
               popupRender={() => (
                 <SessionSizePanel
                   profiles={profiles}
                   defaultProfile={defaultProfile}
-                  onSelect={(profileName) => run(target, profileName)}
+                  onSelect={(profileName) => {
+                    setOpenSizeMenu(null);
+                    run(target, profileName);
+                  }}
                 />
               )}
             >
