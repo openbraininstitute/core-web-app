@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SERVICE_CATALOG, serviceBaseUrl } from './service-catalog';
+import { SERVICE_CATALOG, serviceBaseUrl } from '@/admin/services/ops/service-catalog';
 
 describe('serviceBaseUrl', () => {
   it('probes auth-manager at the root, not under /v1', () => {

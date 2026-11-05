@@ -12,7 +12,7 @@ const { authMock, getUserGroupsMock } = vi.hoisted(() => ({
 vi.mock('@/auth', () => ({ auth: authMock }));
 vi.mock('@/admin/server/groups', () => ({ getUserGroups: getUserGroupsMock }));
 
-import { GET } from './route';
+import { GET } from '@/app/api/admin/capabilities/route';
 
 const SESSION = { user: { id: 'sub-1' }, accessToken: 'tok' } as unknown as Session;
 

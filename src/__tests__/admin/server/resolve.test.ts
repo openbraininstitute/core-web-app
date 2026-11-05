@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { requireCapability } from './resolve';
+import { requireCapability } from '@/admin/server/resolve';
 
 const { authMock, getUserGroupsMock, redirectMock } = vi.hoisted(() => ({
   authMock: vi.fn(),
@@ -11,7 +11,7 @@ const { authMock, getUserGroupsMock, redirectMock } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/auth', () => ({ auth: authMock }));
-vi.mock('./groups', () => ({ getUserGroups: getUserGroupsMock }));
+vi.mock('@/admin/server/groups', () => ({ getUserGroups: getUserGroupsMock }));
 vi.mock('next/navigation', () => ({ redirect: redirectMock }));
 
 beforeEach(() => {

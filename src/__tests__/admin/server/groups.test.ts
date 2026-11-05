@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { __resetGroupsCacheForTests, getUserGroups } from './groups';
+import { __resetGroupsCacheForTests, getUserGroups } from '@/admin/server/groups';
 
 import type { Session } from 'next-auth';
 
