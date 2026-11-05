@@ -23,7 +23,8 @@ vi.mock('@/features/feature-flags', async (importOriginal) => ({
 
 vi.mock('next/navigation', () => ({ useParams: () => h.params }));
 
-vi.mock('@/api/small-scale-simulator/circuit/morphology-pack', () => ({
+vi.mock('@/api/small-scale-simulator/circuit/morphology-pack', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/api/small-scale-simulator/circuit/morphology-pack')>()),
   requestMorphologyPack: h.request,
 }));
 

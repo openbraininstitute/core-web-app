@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { NodePopulationType } from '@/api/entitycore/types/entities/circuit';
+import { MorphologyPackState } from '@/api/small-scale-simulator/circuit/morphology-pack';
 import { CircuitNodesTable } from '@/features/circuit-nodes';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { NO_NAMES, resolvePopulation } from '@/features/circuit-nodes/population-utils';
@@ -280,7 +281,7 @@ export function CircuitScene({
   const packStatus = useMorphologyPackStatus(drawnLarge ? circuit : undefined, {
     poll: !smallForThePack,
   });
-  const pack = packStatus?.state === 'ready' ? packStatus : null;
+  const pack = packStatus?.state === MorphologyPackState.Ready ? packStatus : null;
   const [fellBackFor, setFellBackFor] = useState<string | null>(null);
   const largeCircuit = drawnLarge && fellBackFor !== circuit?.id;
 
