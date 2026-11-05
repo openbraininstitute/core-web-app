@@ -1,7 +1,13 @@
 import { extentOf } from '@/features/circuit-viewer/morphologies/extent';
-import { coordinatesAlong, leadingVector } from '@/features/lfp-viewer/field-structure';
+import {
+  coordinatesAlong,
+  leadingVector,
+  signOfLargest,
+} from '@/features/lfp-viewer/field-structure';
 import { median } from '@/features/viewer-3d/engine/motion-quality';
 
+import type { Vec3 } from '@/features/circuit-viewer/morphologies/types';
+import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 
@@ -20,6 +26,11 @@ const MAX_CSD_COLUMNS = 1024;
 const MIN_LINE_CONTACTS = 5;
 const ON_LINE_UM = 1;
 const EVEN_GAP_SHARE = 0.05;
+const CIRCUIT_AXES: Vec3[] = [
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+];
 const MAX_PROFILE_BINS = 64;
 /** The usual figure for cortex, in S/m. */
 export const CONDUCTIVITY = 0.3;
@@ -315,8 +326,28 @@ export function triggeredAverage(
   };
 }
 
-/** The axis contacts spread along most, its largest component positive. Null if they don't. */
-export function arrayAxis(positions: Float32Array): [number, number, number] | null {
+/**
+ * A grid's axes, each with its largest component positive: those with the most slices first, and of
+ * those the nearest `towards`, as a cube has no longest.
+ */
+function gridAxes({ frame, slices }: ContactGrid, towards: Vec3 | null = null): Vec3[] {
+  const nearness = ([x, y, z]: Vec3) =>
+    towards ? Math.abs(x * towards[0] + y * towards[1] + z * towards[2]) : 0;
+  return (frame ?? CIRCUIT_AXES)
+    .map((axis, i) => ({ axis, slices: slices[i], nearness: nearness(axis) }))
+    .sort((a, b) => b.slices - a.slices || b.nearness - a.nearness)
+    .map(({ axis }) => {
+      const sign = signOfLargest(axis);
+      return [axis[0] * sign, axis[1] * sign, axis[2] * sign];
+    });
+}
+
+/**
+ * The axis contacts spread along most, its largest component positive: one of a grid's own, as the
+ * spread of a cube is the same every way. Null if they don't spread.
+ */
+export function arrayAxis(positions: Float32Array, grid: ContactGrid | null = null): Vec3 | null {
+  if (grid) return gridAxes(grid)[0];
   const count = positions.length / 3;
   const mean = extentOf(positions)?.mean;
   if (!mean) return null;
@@ -330,22 +361,36 @@ export function arrayAxis(positions: Float32Array): [number, number, number] | n
 }
 
 export type ContactLine = {
+  /** The direction it runs in, in the circuit's frame. */
+  axis: Vec3;
   /** Along the line, from its lowest coordinate. */
   contacts: number[];
-  /** Theirs along the array's main axis, in µm from its centre. */
+  /** Theirs along `axis`, in µm from the array's centre. */
   coordinates: number[];
   /** The gap between neighbours, in µm. */
   spacing: number;
 };
 
 /**
- * The evenly spaced lines of contacts along the array's main axis, as a probe
- * has one of and a grid many: what a second derivative along that axis can be
- * read from. Empty where contacts are scattered.
+ * The evenly spaced lines of contacts along one axis, as a probe has one of and
+ * a grid many: what a second derivative along that axis can be read from. That
+ * is the array's main axis, or the first of a grid's to hold any, as the planes
+ * of a stack may lie offset from each other. Empty where contacts are scattered.
  */
-export function contactLines(positions: Float32Array): ContactLine[] {
-  const axis = arrayAxis(positions);
-  if (!axis) return [];
+export function contactLines(
+  positions: Float32Array,
+  grid: ContactGrid | null = null,
+  towards: Vec3 | null = null
+): ContactLine[] {
+  const axes = grid ? gridAxes(grid, towards) : [arrayAxis(positions)];
+  for (const axis of axes) {
+    const lines = axis ? linesAlong(positions, axis) : [];
+    if (lines.length > 0) return lines;
+  }
+  return [];
+}
+
+function linesAlong(positions: Float32Array, axis: Vec3): ContactLine[] {
   const count = positions.length / 3;
   const along = coordinatesAlong(positions, axis);
   const groups: { offset: [number, number, number]; members: { contact: number; at: number }[] }[] =
@@ -375,6 +420,7 @@ export function contactLines(positions: Float32Array): ContactLine[] {
     if (spacing <= 0) continue;
     if (gaps.every((gap) => Math.abs(gap - spacing) <= spacing * EVEN_GAP_SHARE)) {
       lines.push({
+        axis,
         contacts: members.map((m) => m.contact),
         coordinates: members.map((m) => m.at),
         spacing,

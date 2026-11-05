@@ -201,6 +201,11 @@ export function coherenceFigure({
   };
 }
 
+/** Position along a direction in the circuit, as an axis's title. */
+export function alongLabel(direction: readonly number[]): string {
+  return `Along (${direction.map((d) => d.toFixed(2)).join(', ')}), µm`;
+}
+
 export function profileFigure({
   points,
   measure,
@@ -254,10 +259,12 @@ export function profileFigure({
 export function csdFigure({
   result,
   coordinates,
+  axisLabel,
 }: {
   result: CurrentSourceDensity;
   /** Of the rows, in µm along the line. */
   coordinates: readonly number[];
+  axisLabel: string;
 }): Figure {
   const { times, values, rows, limit } = result;
   return {
@@ -275,7 +282,7 @@ export function csdFigure({
       ...BASE_LAYOUT,
       margin: PAPER_RIGHT_MARGIN,
       xaxis: axis(`Time (ms) · σ = ${CONDUCTIVITY} S/m assumed`),
-      yaxis: axis('Position along the line (µm)'),
+      yaxis: axis(axisLabel),
     },
   };
 }

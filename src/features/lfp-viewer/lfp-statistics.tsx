@@ -18,6 +18,7 @@ import {
   triggeredAverage,
 } from '@/features/lfp-viewer/field-analysis';
 import {
+  alongLabel,
   coherenceFigure,
   correlationFigure,
   csdFigure,
@@ -38,6 +39,7 @@ import { PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ReactNode } from 'react';
 import type { LfpSummarySource } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
+import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { ContactLine } from '@/features/lfp-viewer/field-analysis';
 import type { FieldDirection, FieldRow } from '@/features/lfp-viewer/field-structure';
 import type { LfpField } from '@/features/lfp-viewer/summary';
@@ -81,6 +83,7 @@ type StatisticsProps = {
   removeShared: boolean;
   rows: readonly FieldRow[];
   positions: Float32Array | null;
+  grid: ContactGrid | null;
   direction: FieldDirection | null;
   selectedContact: number | null;
   ticked: readonly number[];
@@ -184,9 +187,12 @@ function usePlayerTime(timeCursor: TimeCursor, active: boolean): number | null {
  * it needs from the summary only once picked.
  */
 export function LfpStatistics(props: StatisticsProps) {
-  const { summary, positions, spikeFiles } = props;
+  const { summary, positions, grid, direction, spikeFiles } = props;
   const [plot, setPlot] = useState<PlotKind>('psd');
-  const lines = useMemo(() => (positions ? contactLines(positions) : []), [positions]);
+  const lines = useMemo(
+    () => (positions ? contactLines(positions, grid, direction?.axis) : []),
+    [positions, grid, direction]
+  );
   const picker = (
     <PillSelect
       label="Plot"
@@ -555,6 +561,7 @@ function ProfilePlot({
   field,
   removeShared,
   positions,
+  grid,
   direction,
   selectedContact,
   timeCursor,
@@ -564,8 +571,8 @@ function ProfilePlot({
   const measures = Object.entries(STORED_MEASURES).filter(([name]) => index.stats.includes(name));
   const [measure, setMeasure] = useState(() => (measures[0]?.[0] ?? 'at-time') as ProfileMeasure);
   const axis = useMemo(
-    () => direction?.axis ?? (positions ? arrayAxis(positions) : null),
-    [direction, positions]
+    () => direction?.axis ?? (positions ? arrayAxis(positions, grid) : null),
+    [direction, positions, grid]
   );
   const coordinate = useMemo(
     () => (positions && axis ? coordinatesAlong(positions, axis) : null),
@@ -596,7 +603,7 @@ function ProfilePlot({
         measure === 'at-time'
           ? `Field at ${time === null ? 'the start' : `${time.toFixed(1)} ms`} (µV)`
           : `${STORED_MEASURES[measure]} (µV)`,
-      axisLabel: `Along (${axis.map((d) => d.toFixed(2)).join(', ')}), µm`,
+      axisLabel: alongLabel(axis),
       selected:
         selectedContact === null
           ? null
@@ -619,7 +626,7 @@ function ProfilePlot({
         />
       }
       note={atTime ? (removeShared ? 'shared signal removed' : undefined) : 'as recorded'}
-      help="A value against position along the field's direction, or the array's longest axis where no line follows the field. Many contacts are averaged into stretches of the axis"
+      help="A value against position along the field's direction, or the array's longest axis where no line follows the field, a grid's own if it is one. Many contacts are averaged into stretches of the axis"
       visible={visible}
       figure={figure}
       empty={axis ? undefined : 'The contacts all lie in one place'}
@@ -658,7 +665,13 @@ function CsdPlot({
   );
   const figure = useMemo(
     () =>
-      result && line ? csdFigure({ result, coordinates: line.coordinates.slice(1, -1) }) : null,
+      result && line
+        ? csdFigure({
+            result,
+            coordinates: line.coordinates.slice(1, -1),
+            axisLabel: alongLabel(line.axis),
+          })
+        : null,
     [result, line]
   );
   return (

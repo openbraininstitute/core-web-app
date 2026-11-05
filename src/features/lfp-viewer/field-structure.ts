@@ -75,7 +75,7 @@ function measuredValues(field: LfpField): { values: Float32Array; bins: number }
   return { values, bins };
 }
 
-function signOfLargest(values: ArrayLike<number>): 1 | -1 {
+export function signOfLargest(values: ArrayLike<number>): 1 | -1 {
   let largest = 0;
   for (let i = 1; i < values.length; i++) {
     if (Math.abs(values[i]) > Math.abs(values[largest])) largest = i;

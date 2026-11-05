@@ -13,7 +13,6 @@ import {
   SCENE_LEVELS,
 } from '@/features/lfp-viewer/colour-scale';
 import {
-  contactGrid,
   gridAxisNames,
   openingSliceAxis,
   placeVoxels,
@@ -28,6 +27,7 @@ import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
+import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 import type { ContactPositions } from '@/features/lfp-viewer/use-lfp-summary';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
@@ -66,6 +66,7 @@ type Props = {
   field: LfpField;
   scale: ColourScale;
   contacts: ContactPositions;
+  grid: ContactGrid | null;
   /** Below this |V|, in µV, a contact is drawn as at zero. */
   hideBelow: number;
   selectedContact: number | null;
@@ -83,6 +84,7 @@ export function LfpScene({
   field,
   scale,
   contacts,
+  grid,
   hideBelow,
   selectedContact,
   timeCursor,
@@ -91,7 +93,6 @@ export function LfpScene({
   const { positions } = contacts;
   const [levels, setLevels] = useState<Uint8Array | null>(null);
   const drawsEachCell = useCircuitDrawsEachCell(circuit);
-  const grid = useMemo(() => (positions ? contactGrid(positions) : null), [positions]);
   const [chosenView, setChosenView] = useState<ContactView>('voxels');
   const view = grid ? chosenView : 'points';
   const [chosenAxis, setChosenAxis] = useState<number | null>(null);

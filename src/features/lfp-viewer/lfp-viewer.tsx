@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom';
 
 import { ShutPaneBar } from '@/features/circuit-viewer/pane-resize-handle';
 import { colourScale, fieldLimit, formatUv } from '@/features/lfp-viewer/colour-scale';
+import { contactGrid } from '@/features/lfp-viewer/contact-grid';
 import { recordingArrayId } from '@/features/lfp-viewer/contacts';
 import { ElectrodesTable } from '@/features/lfp-viewer/electrodes-table';
 import { FieldPlot } from '@/features/lfp-viewer/field-plot';
@@ -169,6 +170,7 @@ function LfpReportView({
   const start = index.time.start;
   const end = start + index.time.steps * index.time.dt;
   const structure = useMemo(() => describeField(total), [total]);
+  const grid = useMemo(() => (positions ? contactGrid(positions) : null), [positions]);
   const direction = useMemo(
     () => (positions ? fieldDirection(structure.mode, positions) : null),
     [structure, positions]
@@ -466,6 +468,7 @@ function LfpReportView({
                   field={field}
                   scale={scale}
                   contacts={contacts}
+                  grid={grid}
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
                   timeCursor={timeCursor}
@@ -483,6 +486,7 @@ function LfpReportView({
                   removeShared={removeShared}
                   rows={rows}
                   positions={positions}
+                  grid={grid}
                   direction={direction}
                   selectedContact={selectedContact}
                   ticked={ticked}

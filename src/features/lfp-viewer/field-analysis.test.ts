@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { contactGrid } from './contact-grid';
 import {
   arrayAxis,
   coherenceWith,
@@ -274,6 +275,93 @@ describe('contactLines', () => {
 
   it('leaves out a line too short to read', () => {
     expect(contactLines(probe(4))).toEqual([]);
+  });
+});
+
+describe('contactLines, on a grid', () => {
+  function lattice(steps: number[][], counts: number[], at = [0, 0, 0]) {
+    const points: number[] = [];
+    for (let i = 0; i < counts[0]; i++) {
+      for (let j = 0; j < counts[1]; j++) {
+        for (let k = 0; k < counts[2]; k++) {
+          for (let axis = 0; axis < 3; axis++) {
+            points.push(at[axis] + i * steps[0][axis] + j * steps[1][axis] + k * steps[2][axis]);
+          }
+        }
+      }
+    }
+    return Float32Array.from(points);
+  }
+  const SQUARE = [
+    [108, 0, 0],
+    [0, 108, 0],
+    [0, 0, 108],
+  ];
+  /** The array of a real report, turned away from x, y and z. */
+  const TURNED = [
+    [64.48, -15.14, 85.31],
+    [45.19, -84.85, -49.22],
+    [-73.92, -65.08, 44.32],
+  ];
+  const linesOf = (positions: Float32Array, towards: [number, number, number] | null = null) =>
+    contactLines(positions, contactGrid(positions), towards);
+  const nearness = (axis: readonly number[], step: number[]) =>
+    Math.abs(axis[0] * step[0] + axis[1] * step[1] + axis[2] * step[2]) / Math.hypot(...step);
+
+  it('finds the columns of a cube, whose spread has no main axis', () => {
+    const positions = lattice(SQUARE, [6, 6, 6]);
+    const lines = linesOf(positions);
+    expect(lines).toHaveLength(36);
+    expect(lines.every((l) => l.contacts.length === 6)).toBe(true);
+    expect(lines[0].spacing).toBeCloseTo(108, 3);
+    expect(lines[0].axis).toEqual([1, 0, 0]);
+    expect(arrayAxis(positions, contactGrid(positions))).toEqual([1, 0, 0]);
+  });
+
+  it('finds them on a cube turned off the circuit’s axes', () => {
+    const positions = lattice(TURNED, [6, 6, 6], [3829.72, -831.91, -2697.09]);
+    const lines = linesOf(positions);
+    expect(lines).toHaveLength(36);
+    expect(lines.every((l) => l.contacts.length === 6)).toBe(true);
+    expect(lines[0].spacing).toBeCloseTo(108, 0);
+    expect(Math.max(...TURNED.map((step) => nearness(lines[0].axis, step)))).toBeGreaterThan(
+      0.9999
+    );
+    const axis = arrayAxis(positions, contactGrid(positions)) ?? [0, 0, 0];
+    expect(Math.max(...TURNED.map((step) => nearness(axis, step)))).toBeGreaterThan(0.9999);
+  });
+
+  it('points each axis with its largest component positive', () => {
+    const positions = lattice(TURNED, [6, 6, 6], [3829.72, -831.91, -2697.09]);
+    const axis = linesOf(positions)[0].axis;
+    expect(Math.max(...axis.map(Math.abs))).toBe(Math.max(...axis));
+  });
+
+  it('takes the cube’s axis nearest the direction it is asked for', () => {
+    expect(linesOf(lattice(SQUARE, [6, 6, 6]), [0.1, 0.9, 0.2])[0].axis).toEqual([0, 1, 0]);
+    const turned = lattice(TURNED, [6, 6, 6], [3829.72, -831.91, -2697.09]);
+    const towards = TURNED[2].map((v) => v / 108) as [number, number, number];
+    expect(nearness(linesOf(turned, towards)[0].axis, TURNED[2])).toBeGreaterThan(0.9999);
+  });
+
+  it('keeps to the axis with the most slices, whatever the direction', () => {
+    const lines = linesOf(lattice(SQUARE, [5, 5, 41]), [1, 0, 0]);
+    expect(lines).toHaveLength(25);
+    expect(lines[0].axis).toEqual([0, 0, 1]);
+  });
+
+  it('passes over an axis that the offset of a stack’s planes leaves no line on', () => {
+    const points: number[] = [];
+    for (let plane = 0; plane < 8; plane++) {
+      for (let x = 0; x < 5; x++) {
+        for (let y = 0; y < 5; y++)
+          points.push(plane * 7 + x * 100, plane * 5 + y * 100, plane * 50);
+      }
+    }
+    const lines = linesOf(Float32Array.from(points));
+    expect(lines).toHaveLength(40);
+    expect(lines[0].axis[2]).toBe(0);
+    expect(lines[0].spacing).toBeCloseTo(100, 3);
   });
 });
 
