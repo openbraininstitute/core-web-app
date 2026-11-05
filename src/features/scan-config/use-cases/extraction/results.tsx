@@ -170,10 +170,13 @@ export function ExtractionTab({
               <FileViewer file={selectedFile} className="h-full w-full" context={context} />
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.RecordingTraces && (
-              <RecordingViewer
-                source={{ kind: 'preprocessed', entityId: selectedFile.entity.id }}
-                context={context}
-              />
+              <div className="h-full w-full">
+                <RecordingViewer
+                  key={selectedFile.entity.id}
+                  source={{ kind: 'preprocessed', entityId: selectedFile.entity.id }}
+                  context={context}
+                />
+              </div>
             )}
             {selectedFile?.renderer === ActivityCustomFileRenderer.SortedUnits && (
               <div className="h-full w-full">
