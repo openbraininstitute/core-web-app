@@ -87,6 +87,12 @@ describe("the culling's counts and its failures", () => {
     expect(drawn.every((quads) => quads.indirectOffset === 0)).toBe(true);
   });
 
+  it('stores its samples, which a GPU with memoryless ones could not flush part way through', () => {
+    const { culling } = cullingOn();
+    expect(culling.targetOf(16, 8).storeMultisampledColorBuffer).not.toBe(false);
+    expect(culling.targetOf(16, 8).storeMultisampledDepthBuffer).not.toBe(false);
+  });
+
   it('lets go of its targets with its arena', () => {
     const { culling } = cullingOn();
     const target = culling.targetOf(16, 8);
