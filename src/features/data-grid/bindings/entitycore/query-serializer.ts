@@ -9,9 +9,11 @@ import {
 } from '@/features/data-grid/core';
 
 import type {
+  IColumnFilter,
   IFilterEntry,
   IGridQuery,
   IGridSchema,
+  IGridWorkspace,
   TFilterModel,
   TSortModel,
 } from '@/features/data-grid/core';
@@ -21,6 +23,8 @@ export type TEntitycoreParams = Record<string, unknown>;
 export interface ISerializeOptions {
   /** how the free-text search maps to the API (entitycore `ilike_search` vs `search`) */
   searchMode?: 'ilike' | 'plain';
+  /** for columns whose filter needs it to build their params (`toParams`) */
+  workspace?: IGridWorkspace;
 }
 
 /** "contains" ilike: escape `%`/`_`, then wrap the term in `%…%`. */
@@ -99,6 +103,8 @@ const STRATEGIES: Record<string, Strategy> = {
 interface ColumnLookup {
   /** backend field for a filter entry, resolved from its ACTIVE target */
   filterField(columnId: string, targetId?: string): string;
+  /** a column's own value → params mapping, when it has one */
+  filterParams(columnId: string): IColumnFilter['toParams'];
   sortFields(columnId: string): string[];
 }
 
@@ -108,6 +114,9 @@ export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
   // resolve to a field the same way — one strategy table serves both.
   const advanced = advancedFilterDefsByKey(schema);
   return {
+    filterParams(columnId) {
+      return byId.get(columnId)?.filter?.toParams;
+    },
     filterField(columnId, targetId) {
       if (isAdvancedFilterKey(columnId)) {
         // An orphaned key (schema changed after state was persisted) resolves to '' so
@@ -121,15 +130,26 @@ export function buildColumnLookup<Row>(schema: IGridSchema<Row>): ColumnLookup {
     },
     sortFields(columnId) {
       const c = byId.get(columnId);
+      // sorted by fetching groups of rows instead (see the paged data source)
+      if (c?.sortOrders) return [];
       const sf = c?.sortField ?? c?.field ?? columnId;
       return Array.isArray(sf) ? sf : [sf];
     },
   };
 }
 
-function serializeFilters(filters: TFilterModel, lookup: ColumnLookup): TEntitycoreParams {
+function serializeFilters(
+  filters: TFilterModel,
+  lookup: ColumnLookup,
+  workspace: ISerializeOptions['workspace'] = {}
+): TEntitycoreParams {
   const out: TEntitycoreParams = {};
   for (const entry of Object.values(filters)) {
+    const toParams = lookup.filterParams(entry.columnId);
+    if (toParams && entry.value.kind === FilterValueKind.Text) {
+      Object.assign(out, toParams(entry.value.text, workspace));
+      continue;
+    }
     const strategy = STRATEGIES[entry.operator];
     if (!strategy) continue;
     const field = lookup.filterField(entry.columnId, entry.targetId);
@@ -159,7 +179,7 @@ export function serializeQuery<Row>(
   const params: TEntitycoreParams = {
     page: query.page,
     page_size: query.pageSize,
-    ...serializeFilters(query.filters, lookup),
+    ...serializeFilters(query.filters, lookup, options.workspace),
     ...(query.params ?? {}),
   };
 

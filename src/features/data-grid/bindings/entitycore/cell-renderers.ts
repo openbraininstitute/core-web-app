@@ -7,6 +7,12 @@ import {
   LifecycleStatusCell,
 } from '@/features/data-grid/bindings/entitycore/renderers/lifecycle-status-cell';
 import { registerSharedRenderers } from '@/features/data-grid/bindings/entitycore/renderers/register';
+import {
+  SCOPE_HEADER_RENDERER,
+  SCOPE_RENDERER,
+  ScopeCell,
+  ScopeHeader,
+} from '@/features/data-grid/bindings/entitycore/renderers/scope-cells';
 import { CellRendererRegistry } from '@/features/data-grid/react';
 
 import type { TAnyEntityGridDefinition } from '@/features/data-grid/bindings/entitycore/registry';
@@ -22,6 +28,8 @@ export function buildCellRenderers(definition: TAnyEntityGridDefinition): CellRe
   const registry = new CellRendererRegistry();
   registry.register(LIFECYCLE_STATUS_RENDERER, LifecycleStatusCell);
   registry.register(DESCRIPTION_RENDERER, DescriptionCell);
+  registry.register(SCOPE_RENDERER, ScopeCell);
+  registry.registerHeader(SCOPE_HEADER_RENDERER, ScopeHeader);
   registerSharedRenderers(registry);
   definition.registerCellRenderers?.(registry);
   return registry;

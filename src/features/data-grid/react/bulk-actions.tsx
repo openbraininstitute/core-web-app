@@ -26,6 +26,8 @@ export interface IBulkActionsProps<Row> {
   selectedCount: number;
   /** host-provided actions (download / delete buttons) receiving the selection */
   children: (args: IBulkActionsRenderArgs<Row>) => ReactNode;
+  /** render the actions with nothing selected too, for buttons that stay in place */
+  keepWhenEmpty?: boolean;
   className?: string;
 }
 
@@ -53,7 +55,7 @@ export function accumulateSeenRows<Row>(
 /**
  * Bridges the store's id-only, cross-page selection to host-owned bulk-action buttons,
  * keeping an id→row cache so they receive full rows. Renders nothing until a row is
- * selected.
+ * selected, unless `keepWhenEmpty`.
  */
 export function BulkActions<Row>({
   controller,
@@ -61,6 +63,7 @@ export function BulkActions<Row>({
   selection,
   selectedCount,
   children,
+  keepWhenEmpty = false,
   className,
 }: IBulkActionsProps<Row>) {
   const getRowId = controller.schema.getRowId;
@@ -73,7 +76,7 @@ export function BulkActions<Row>({
     setCache(accumulateSeenRows(cache, rows, selection, getRowId));
   }
 
-  if (selection.length === 0) return null;
+  if (selection.length === 0 && !keepWhenEmpty) return null;
 
   const selectedRows = selection
     .map((id) => cache.get(id))

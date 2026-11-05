@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { config } from '@/config';
 import {
   DATA_GROUP_QUERY_PARAM,
+  DATA_SECTION_SCOPE,
   SCOPE_QUERY_PARAMS,
   type TViewVariant,
   ViewVariant,
@@ -22,7 +23,6 @@ import { isBrowser } from '@/utils/environment';
 import { resolveBaseEntityType, resolveConcreteEntityPathParam } from '@/utils/url-builder';
 
 import type { TExtendedEntitiesTypeDict } from '@/api/entitycore/types/extended-entity-type';
-import type { TWorkspaceScope } from '@/constants';
 import type { TEntityTypeGroup } from '@/entity-configuration/domain/group';
 import type { IListingVariant } from '@/features/views/listing/variants/types';
 
@@ -46,7 +46,6 @@ export function DataBreadcrumb({
   type,
   title,
   group,
-  scope,
   name,
   variant,
 }: {
@@ -54,7 +53,6 @@ export function DataBreadcrumb({
   variant?: IListingVariant;
   type: TExtendedEntitiesTypeDict;
   group: TEntityTypeGroup;
-  scope: TWorkspaceScope;
   title: string;
   /** The entity's own name, trailing the trail as plain (non-clickable) text. */
   name: string;
@@ -70,7 +68,7 @@ export function DataBreadcrumb({
       projectId,
       section: WorkspaceSection.Data,
       dataType: listingType,
-      scope,
+      scope: DATA_SECTION_SCOPE,
       id: listingInstanceId(undefined, variantOfListing),
     }).dataKey;
   const dataKey = keyFor();
@@ -94,9 +92,11 @@ export function DataBreadcrumb({
 
   const dataHome = `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}/data`;
   const typeHome = `${dataHome}/browse/entity/${resolveConcreteEntityPathParam(type)}`;
-  const listingQuery = { [DATA_GROUP_QUERY_PARAM]: group, [SCOPE_QUERY_PARAMS]: scope };
+  const listingQuery = { [DATA_GROUP_QUERY_PARAM]: group };
   const withQuery = (path: string, set: Record<string, string> = {}) => {
     const query = new URLSearchParams(queryParams);
+    // the listings hold both scopes, so no scope param carries over
+    query.delete(SCOPE_QUERY_PARAMS);
     for (const [key, value] of Object.entries(set)) query.set(key, value);
     const search = query.toString();
     return search ? `${path}?${search}` : path;

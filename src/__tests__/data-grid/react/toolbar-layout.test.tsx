@@ -44,6 +44,23 @@ describe('DataGridToolbar', () => {
     ]);
   });
 
+  it('puts a call to action first in the left cluster, ahead of the pickers', () => {
+    render(
+      <DataGridToolbar
+        slots={{
+          action: <div data-testid="action" />,
+          left: <div data-testid="extra-left" />,
+          search: <div data-testid="search" />,
+        }}
+      />
+    );
+
+    expect(order(['action', 'extra-left', 'search'])).toEqual(['action', 'extra-left', 'search']);
+    expect(screen.getByTestId('action').parentElement).toBe(
+      screen.getByTestId('extra-left').parentElement
+    );
+  });
+
   it('puts the entity-type selector FIRST in the left cluster, ahead of the scope tabs', () => {
     render(
       <DataGridToolbar

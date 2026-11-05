@@ -1,7 +1,7 @@
 import { snakeCase } from 'es-toolkit/compat';
 import { notFound } from 'next/navigation';
 
-import { WorkspaceScope, WorkspaceSection } from '@/constants';
+import { DATA_LISTING_PROPS, WorkspaceScope } from '@/constants';
 import { BrowseEntityScope } from '@/features/views/listing/browse-entity';
 import { DATA_BROWSE_LISTING_PROPS } from '@/features/views/listing/data-browse-entities';
 import { getVariantGroup, resolveListingVariant } from '@/features/views/listing/variants/registry';
@@ -31,7 +31,7 @@ export default async function Page({
     // `key` remounts between sibling sub-items so an open mini-detail panel does not leak.
     <BrowseEntityScope
       key={variant.slug}
-      section={WorkspaceSection.Data}
+      {...DATA_LISTING_PROPS}
       dataType={group.dataType}
       variantSlug={variant.slug}
       {...(group.listingProps ?? DATA_BROWSE_LISTING_PROPS)}

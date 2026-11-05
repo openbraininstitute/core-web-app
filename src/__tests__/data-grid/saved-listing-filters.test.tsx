@@ -111,6 +111,24 @@ describe('saved listing filters', () => {
   });
 });
 
+// regression: the registry had no scope column, so a saved toggle went out as `scope=…` (422)
+it('sends a saved scope filter as the authorized params', async () => {
+  const saved = {
+    freeTextSearch: '',
+    filters: {
+      scope: {
+        columnId: 'scope',
+        operator: OperatorId.Eq,
+        value: { kind: FilterValueKind.Text, text: 'published' },
+      },
+    },
+  };
+  await expect(savedListingParams(CIRCUIT, saved, undefined, 'proj')).resolves.toEqual({
+    authorized_public: 'true',
+    authorized_project_id: 'proj',
+  });
+});
+
 describe('the sidebar count and the grid send the same filters', () => {
   it('for a variant listing, after the load-time filter repair', async () => {
     const definition = getEntityGridDefinition(CIRCUIT);
