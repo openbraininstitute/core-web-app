@@ -35,6 +35,7 @@ const read = (counts: CullTally, marked = [0, 0], rest = 1) => ({
 const ARENA = { marked: { size: 8 } } as unknown as ArenaBuffers;
 const camera = new THREE.OrthographicCamera();
 const shift = new THREE.Vector3();
+const cells = new THREE.DataTexture();
 
 function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const { gpu, device, renderer } = fakeGpu(options);
@@ -42,14 +43,22 @@ function cullingOn(options?: Parameters<typeof fakeGpu>[0]) {
   const culling = new Culling(renderer, device, arenaStorage(), counted);
   culling.setArena(ARENA);
   culling.targetOf(16, 8);
-  const run = (rest = 1) => culling.run(camera, shift, 12, HOLE, 100, rest);
+  const run = (rest = 1, hiding = false) =>
+    culling.run(camera, shift, 12, HOLE, 100, rest, cells, hiding);
   /** The next read mapped, finding `counts` and the blocks `marked`. */
   const map = async (counts: CullTally, marked?: number[]) => {
     gpu.found = wordsOf(counts, marked);
     gpu.maps.shift()?.();
     await Promise.resolve();
   };
-  return { culling, counted, run, map, maps: gpu.maps };
+  return {
+    culling,
+    counted,
+    run,
+    map,
+    maps: gpu.maps,
+    writes: vi.mocked(device.queue.writeBuffer),
+  };
 }
 
 const A = { tested: 300, kept: 200, drawn: 100 };
@@ -166,5 +175,40 @@ describe("the culling's counts and its failures", () => {
     for (let k = 0; k < 8; k++) await map(A);
     expect(maps).toHaveLength(0);
     expect(counted).toHaveBeenCalledExactlyOnceWith(null);
+  });
+});
+
+describe('the culling while the cell table hides cells', () => {
+  /** Where the last write of the draws' arguments starts, in bytes and in words of what it writes. */
+  const lastReset = (writes: ReturnType<typeof cullingOn>['writes']) => {
+    const [, offset, , dataOffset] = writes.mock.calls.at(-1) ?? [];
+    return { offset, dataOffset };
+  };
+
+  it('starts every list again where none is hidden', () => {
+    const { run, writes } = cullingOn();
+    run();
+    expect(lastReset(writes)).toEqual({ offset: 0, dataOffset: 0 });
+  });
+
+  it('starts only the seen lists again, so the kept list still hides what comes back', () => {
+    const { run, writes } = cullingOn();
+    run(1, true);
+    expect(lastReset(writes)).toEqual({ offset: DRAWS.seenFlat, dataOffset: DRAWS.seenFlat / 4 });
+  });
+
+  it('counts nothing as kept from an arena before, even in tests that leave the kept list alone', () => {
+    const { culling, writes } = cullingOn();
+    writes.mockClear();
+    culling.setArena(ARENA);
+    const [, offset, data] = writes.mock.calls.at(-1) ?? [];
+    expect(offset).toBe(0);
+    expect((data as Uint32Array).length).toBe(20);
+  });
+
+  it('fails for good where three made no texture of the cell table', () => {
+    const { culling, run } = cullingOn({ textures: false });
+    expect(run(1, true)).toBe(false);
+    expect(culling.failed).toBe(true);
   });
 });

@@ -1211,6 +1211,11 @@ export abstract class CircuitView extends SceneView implements CircuitMorphology
     );
   }
 
+  /** Whether the last paint of the cell table may have hidden cells. */
+  protected get hidesCells(): boolean {
+    return this.table?.hides ?? false;
+  }
+
   setCellColors(colors: CellColors | null): void {
     // The somas may have come with them.
     if (colors === this.colors) return;
