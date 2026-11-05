@@ -12,7 +12,6 @@ import { config } from '@/config';
 import { useLowCredits } from '@/features/low-credits';
 import {
   getNotebookProfiles,
-  type NotebookProfilesResponse,
   type NotebookStartResponse,
   startEmptyNotebook,
   startNotebook,
@@ -70,9 +69,12 @@ export function useNotebookProfiles(enabled = true) {
     queryFn: () => getNotebookProfiles(),
     enabled,
     staleTime: 5 * 60 * 1000,
+    select: (response) => ({
+      profiles: response.profiles ?? [],
+      defaultProfile: response.default_profile ?? null,
+    }),
   });
-  const profiles: NotebookProfilesResponse['profiles'] = data?.profiles ?? [];
-  return { profiles, defaultProfile: data?.default_profile ?? null };
+  return data ?? { profiles: [], defaultProfile: null };
 }
 
 export function useRunNotebook({
