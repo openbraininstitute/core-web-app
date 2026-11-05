@@ -1,5 +1,6 @@
 'use client';
 
+import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -297,6 +298,8 @@ export function VirtualLabsPreview() {
         <button
           type="button"
           className={labs.playback}
+          aria-label={paused ? 'Play preview' : 'Pause preview'}
+          title={paused ? 'Play preview' : 'Pause preview'}
           onClick={() => {
             const video = videoRef.current;
             if (!video) return;
@@ -304,7 +307,7 @@ export function VirtualLabsPreview() {
             else video.pause();
           }}
         >
-          {paused ? 'Play preview' : 'Pause preview'}
+          {paused ? <RiPlayFill size={16} /> : <RiPauseFill size={16} />}
         </button>
       </div>
       <video
@@ -320,9 +323,6 @@ export function VirtualLabsPreview() {
         aria-label="Virtual Labs platform walkthrough"
         className={labs.video}
       />
-      <figcaption className={labs.previewCaption}>
-        Real models. Interactive simulations. One workspace.
-      </figcaption>
     </figure>
   );
 }
