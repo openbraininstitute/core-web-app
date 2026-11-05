@@ -334,6 +334,8 @@ function LfpReportView({
                 {order === 'along' &&
                   direction &&
                   ` · along (${direction.axis.map((d) => d.toFixed(2)).join(', ')})`}
+                {!chosen.spectra &&
+                  ` · table over ${Number(chosen.field.binMs.toFixed(2))} ms means, so peaks read lower`}
                 {loading && ' · reading the field'}
                 {failed && ' · that field could not be read'}
               </span>

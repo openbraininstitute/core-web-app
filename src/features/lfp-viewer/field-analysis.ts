@@ -576,7 +576,7 @@ function rowSignals(field: LfpField, rows: readonly FieldRow[]): Float64Array[] 
     for (const contact of row.contacts) {
       for (let b = 0; b < bins; b++) {
         const at = contact * bins + b;
-        signal[b] += kind === 'value' ? data[at] : (data[at * 2] + data[at * 2 + 1]) / 2;
+        signal[b] += kind === 'min_max' ? (data[at * 2] + data[at * 2 + 1]) / 2 : data[at];
       }
     }
     return signal;

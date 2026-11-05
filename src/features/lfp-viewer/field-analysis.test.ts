@@ -47,6 +47,27 @@ const row = (contacts: number[], label = `e${contacts[0]}`): FieldRow => ({
   label,
 });
 
+describe('rowCorrelation of a field of means', () => {
+  it('reads one value a bin', () => {
+    const matrix = rowCorrelation(
+      {
+        contacts: 2,
+        bins: 3,
+        binMs: 1,
+        start: 0,
+        kind: 'mean',
+        scale: 1,
+        data: Int16Array.from([1, 2, 3, 3, 2, 1]),
+      },
+      [
+        { lead: 0, contacts: [0] },
+        { lead: 1, contacts: [1] },
+      ] as unknown as FieldRow[]
+    );
+    expect(Array.from(matrix)).toEqual([1, -1, -1, 1]);
+  });
+});
+
 describe('rowSpectra', () => {
   it('finds a sine at its frequency and keeps its power', () => {
     const dt = 0.1;
