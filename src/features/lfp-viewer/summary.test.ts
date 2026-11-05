@@ -1,5 +1,3 @@
-import { deflateSync } from 'node:zlib';
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ApiError } from '@/api/error';
@@ -14,12 +12,15 @@ import {
   LfpSummaryChangedError,
   lfpSummaryIndexSchema,
   readChunkTable,
-  readRow,
+  readRanges,
+  readRows,
   readSlice,
+  rowRange,
   rowsField,
   sliceOf,
   sumFields,
 } from './summary';
+import { answeringRanges, deflated } from './test-ranges';
 
 import type { LfpAxis, LfpDataset, LfpField, LfpSummaryIndex } from './summary';
 
@@ -108,21 +109,6 @@ describe('rowsField', () => {
   });
 });
 
-/** A row as HDF5's shuffle and deflate filters leave it. */
-function deflated(values: readonly number[]): ArrayBuffer {
-  const bytes = new Uint8Array(Int16Array.from(values).buffer);
-  const shuffled = new Uint8Array(bytes.length);
-  values.forEach((_, i) => {
-    shuffled[i] = bytes[i * 2];
-    shuffled[values.length + i] = bytes[i * 2 + 1];
-  });
-  const stream = deflateSync(shuffled);
-  return stream.buffer.slice(
-    stream.byteOffset,
-    stream.byteOffset + stream.byteLength
-  ) as ArrayBuffer;
-}
-
 describe('inflateRow', () => {
   it('undoes the deflate and the shuffle, the signs too', async () => {
     const values = [1, -2, 300, -32768, 32767, 0];
@@ -160,21 +146,23 @@ describe('rows in chunks', () => {
   } as unknown as LfpAxis;
   const request = { url: 'u', headers: {} };
 
-  it('reads a row by the offset and size of its chunk', async () => {
-    const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
-      const range = (init.headers as Record<string, string>).Range;
-      const offset = Number(range.slice('bytes='.length).split('-')[0]);
-      return new Response(chunks[offset], { status: 206 });
-    });
+  it('reads rows by the offset and size of their chunks, in one request', async () => {
+    const file = new Uint8Array(1000);
+    file.set(new Uint8Array(chunks[500]), 500);
+    file.set(new Uint8Array(chunks[900]), 900);
+    const fetchMock = vi.fn(answeringRanges(file));
     vi.stubGlobal('fetch', fetchMock);
 
-    const row = await readRow(request, index, 1, 1, table);
+    const rows = await readRows(request, [
+      rowRange(index, table, 1, 1),
+      rowRange(index, table, 0, 0),
+    ]);
 
-    expect(Array.from(row)).toEqual([7, 8, 9]);
+    expect(rows.map((row) => Array.from(row))).toEqual([
+      [7, 8, 9],
+      [1, 2, 3],
+    ]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
-      Range: `bytes=900-${900 + chunks[900].byteLength - 1}`,
-    });
   });
 
   it('reads the table once, and refuses an axis of plain rows', async () => {
@@ -189,6 +177,61 @@ describe('rows in chunks', () => {
     const plain = { ...axis, levels: [{ step: 1, kind: 'value', dataset: 'x' }] } as LfpAxis;
     await expect(readChunkTable(request, index, plain)).rejects.toThrow();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('readRanges', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  // Bytes that hold the delimiter's own characters, so that they are not taken for it
+  const file = new TextEncoder().encode('--b0undary'.repeat(30));
+  const request = { url: 'u', headers: {} };
+  const text = (bytes: Uint8Array) => new TextDecoder().decode(bytes);
+
+  it('takes each range from the part that holds it, merged or not, in the order asked', async () => {
+    vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
+    const asked = [
+      { offset: 200, length: 5 },
+      { offset: 3, length: 4 },
+      { offset: 7, length: 3 },
+    ];
+
+    const parts = await readRanges(request, asked);
+
+    expect(parts.map(text)).toEqual(
+      asked.map(({ offset, length }) => text(file.slice(offset, offset + length)))
+    );
+  });
+
+  it('reads a range merged into one part by its Content-Range', async () => {
+    vi.stubGlobal('fetch', vi.fn(answeringRanges(file)));
+
+    const parts = await readRanges(request, [
+      { offset: 10, length: 2 },
+      { offset: 12, length: 3 },
+    ]);
+
+    expect(parts.map(text)).toEqual([text(file.slice(10, 12)), text(file.slice(12, 15))]);
+  });
+
+  it('asks for at most 100 ranges a request, as more would be answered with the whole file', async () => {
+    const fetchMock = vi.fn(answeringRanges(file));
+    vi.stubGlobal('fetch', fetchMock);
+    const asked = Array.from({ length: 150 }, (_, i) => ({ offset: i * 2, length: 1 }));
+
+    const parts = await readRanges(request, asked);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(parts.map((p) => p[0])).toEqual(asked.map(({ offset }) => file[offset]));
+  });
+
+  it('refuses an answer with the whole file', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(file, { status: 200 }))
+    );
+
+    await expect(readRanges(request, [{ offset: 0, length: 1 }])).rejects.toThrow('by range');
   });
 });
 

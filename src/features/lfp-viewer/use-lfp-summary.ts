@@ -16,8 +16,9 @@ import {
   readChunkTable,
   readField,
   readGroupStats,
-  readRow,
+  readRows,
   readSlice,
+  rowRange,
   rowsField,
   sumFields,
 } from '@/features/lfp-viewer/summary';
@@ -41,8 +42,8 @@ import type { WorkspaceContext } from '@/types/common';
 /** How often a summary being built is asked after. */
 const BUILDING_POLL_MS = 5000;
 
-/** The rows one view may ask for: each takes a request, and a server answers about 5 a second. */
-export const MAX_ROW_READS = 64;
+/** The rows one view may ask for: read together, so what they cost is their bytes, about 35 KB each on a long run. */
+export const MAX_ROW_READS = 256;
 
 export type LfpSummary = GroupStats & {
   sha256: string;
@@ -183,20 +184,76 @@ const groupStatsQuery = (at: AxisRead, group: number) => ({
     readingSummary(at, (request) => readGroupStats(request, at.index, at.axis, group, signal)),
 });
 
-const rowQuery = (at: AxisRead, group: number, contact: number) => ({
+const chunkTable = (at: AxisRead, request: LfpSummaryRequest) =>
+  at.queryClient.fetchQuery({
+    queryKey: summaryKey(at.source, 'chunks', at.sha256, at.axis.name),
+    staleTime: Infinity,
+    gcTime: 60_000,
+    queryFn: () => readChunkTable(request, at.index, at.axis),
+  });
+
+type RowAsked = {
+  at: AxisRead;
+  group: number;
+  contact: number;
+  resolve: (row: Int16Array) => void;
+  reject: (error: unknown) => void;
+};
+
+/** By summary, the rows asked for since it was last read from. */
+const rowsAsked = new Map<string, RowAsked[]>();
+
+async function readRowsAsked(asked: readonly RowAsked[]) {
+  try {
+    const rows = await readingSummary(asked[0].at, async (request) => {
+      const tables = new Map<string, Promise<BigUint64Array>>();
+      const tableOf = (at: AxisRead) => {
+        const table = tables.get(at.axis.name) ?? chunkTable(at, request);
+        tables.set(at.axis.name, table);
+        return table;
+      };
+      const ranges = await Promise.all(
+        asked.map(async ({ at, group, contact }) =>
+          rowRange(at.index, await tableOf(at), group, contact)
+        )
+      );
+      return readRows(request, ranges);
+    });
+    asked.forEach(({ resolve }, i) => {
+      resolve(rows[i]);
+    });
+  } catch (error) {
+    for (const { reject } of asked) reject(error);
+  }
+}
+
+/**
+ * A contact's row, read with every other row of its summary asked for at the same moment, as a
+ * view's are: in one request, so with one check of the reader's access.
+ */
+function askRow(at: AxisRead, group: number, contact: number): Promise<Int16Array> {
+  const key = summaryKey(at.source, 'rows', at.sha256).join('/');
+  return new Promise((resolve, reject) => {
+    const row = { at, group, contact, resolve, reject };
+    const asked = rowsAsked.get(key);
+    if (asked) {
+      asked.push(row);
+      return;
+    }
+    const batch = [row];
+    rowsAsked.set(key, batch);
+    setTimeout(() => {
+      rowsAsked.delete(key);
+      readRowsAsked(batch);
+    });
+  });
+}
+
+export const rowQuery = (at: AxisRead, group: number, contact: number) => ({
   queryKey: summaryKey(at.source, 'row', at.sha256, at.axis.name, group, contact),
   staleTime: Infinity,
   gcTime: 60_000,
-  queryFn: ({ signal }: { signal: AbortSignal }) =>
-    readingSummary(at, async (request) => {
-      const table = await at.queryClient.fetchQuery({
-        queryKey: summaryKey(at.source, 'chunks', at.sha256, at.axis.name),
-        staleTime: Infinity,
-        gcTime: 60_000,
-        queryFn: () => readChunkTable(request, at.index, at.axis),
-      });
-      return readRow(request, at.index, group, contact, table, signal);
-    }),
+  queryFn: () => askRow(at, group, contact),
 });
 
 const oneGroup = (

@@ -1,12 +1,14 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { LfpSummaryChangedError } from './summary';
+import { answeringRanges, deflated } from './test-ranges';
 import {
   askStatusIfChanged,
   hasStoredCorrelation,
   MAX_ROW_READS,
   overRowLimit,
+  rowQuery,
   statsFromOverview,
   statusKey,
 } from './use-lfp-summary';
@@ -16,8 +18,13 @@ import type {
   LfpSummaryStatus,
 } from '@/api/small-scale-simulator/simulation-result/lfp-summary';
 import type { WorkspaceContext } from '@/types/common';
-import type { LfpSummaryIndex } from './summary';
+import type { LfpAxis, LfpSummaryIndex } from './summary';
 import type { ChosenField } from './use-lfp-summary';
+
+vi.mock('@/api/small-scale-simulator/simulation-result/lfp-summary', async (importOriginal) => ({
+  ...(await importOriginal<object>()),
+  buildLfpSummaryRequest: async () => ({ url: 'u', headers: {} }),
+}));
 
 const source: LfpSummarySource = {
   ctx: {} as WorkspaceContext,
@@ -140,5 +147,51 @@ describe('askStatusIfChanged', () => {
 
     expect(queryFn).not.toHaveBeenCalled();
     stop();
+  });
+});
+
+describe('rowQuery', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it('reads the rows asked for at one moment in one request, after their chunk table', async () => {
+    const rows = [
+      [1, 2],
+      [3, 4],
+      [5, 6],
+    ].map((values) => new Uint8Array(deflated(values)));
+    // The table (1 group, 3 contacts, offset and size each) first, the rows apart from each other
+    const offsets = [100, 200, 300];
+    const file = new Uint8Array(400);
+    const table = new BigUint64Array(6);
+    rows.forEach((row, c) => {
+      file.set(row, offsets[c]);
+      table[c * 2] = BigInt(offsets[c]);
+      table[c * 2 + 1] = BigInt(row.length);
+    });
+    file.set(new Uint8Array(table.buffer), 0);
+    const fetchMock = vi.fn(answeringRanges(file));
+    vi.stubGlobal('fetch', fetchMock);
+    const axis = {
+      name: 'mtype',
+      levels: [{ step: 1, kind: 'value', dataset: '/l0', chunks: '/lfp/mtype/chunks' }],
+    } as unknown as LfpAxis;
+    const index = {
+      contacts: 3,
+      datasets: { '/lfp/mtype/chunks': { offset: 0, shape: [1, 3, 2], dtype: '<u8' } },
+    } as unknown as LfpSummaryIndex;
+    const queryClient = new QueryClient();
+    const at = { queryClient, source, sha256: 'a', index, axis };
+
+    const read = await Promise.all(
+      [2, 0, 1].map((contact) => queryClient.fetchQuery(rowQuery(at, 0, contact)))
+    );
+
+    expect(read.map((row) => Array.from(row))).toEqual([
+      [5, 6],
+      [1, 2],
+      [3, 4],
+    ]);
+    // The table, then every row at once
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

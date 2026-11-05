@@ -10,6 +10,9 @@ const datasetSchema = z.object({
 
 const ITEM_BYTES = { '<i2': 2, '<f4': 4, '<u8': 8 };
 
+/** Past Starlette's 100 ranges a request is answered with the whole file. */
+const MAX_RANGES_PER_REQUEST = 100;
+
 const axisSchema = z.object({
   name: z.string(),
   groups: z.array(z.string()).min(1),
@@ -52,6 +55,7 @@ export type LfpSummaryIndex = z.infer<typeof lfpSummaryIndexSchema>;
 export type LfpDataset = z.infer<typeof datasetSchema>;
 export type LfpAxis = z.infer<typeof axisSchema>;
 export type LfpSummaryRequest = { url: string; headers: Record<string, string> };
+export type ByteRange = { offset: number; length: number };
 
 /** One group's field over every contact, at one level: µV = data × scale. */
 export type LfpField = {
@@ -123,23 +127,97 @@ export function isLfpSummaryChanged(error: unknown) {
   );
 }
 
+const rangeHeader = (ranges: readonly ByteRange[]) =>
+  `bytes=${ranges.map(({ offset, length }) => `${offset}-${offset + length - 1}`).join(',')}`;
+
+async function readByRange(
+  request: LfpSummaryRequest,
+  ranges: readonly ByteRange[],
+  signal?: AbortSignal
+): Promise<Response> {
+  const response = await fetch(request.url, {
+    headers: { ...request.headers, Range: rangeHeader(ranges) },
+    signal,
+  });
+  if (response.status === 412) throw new LfpSummaryChangedError();
+  if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
+  if (response.status !== 206) {
+    // Else the whole file would be downloaded.
+    response.body?.cancel();
+    throw new Error('The LFP summary was not read by range');
+  }
+  return response;
+}
+
 async function readRange(
   request: LfpSummaryRequest,
   offset: number,
   length: number,
   signal?: AbortSignal
 ): Promise<ArrayBuffer> {
-  const response = await fetch(request.url, {
-    headers: { ...request.headers, Range: `bytes=${offset}-${offset + length - 1}` },
-    signal,
-  });
-  if (response.status === 412) throw new LfpSummaryChangedError();
-  if (!response.ok) throw new Error(`Reading the LFP summary failed (${response.status})`);
-  // Else every read would download the whole file.
-  if (response.status !== 206) throw new Error('The LFP summary was not read by range');
+  const response = await readByRange(request, [{ offset, length }], signal);
   const bytes = await response.arrayBuffer();
   if (bytes.byteLength !== length) throw new Error('The LFP summary was cut short');
   return bytes;
+}
+
+type Part = { start: number; bytes: Uint8Array<ArrayBuffer> };
+
+/** The parts of a multipart/byteranges answer, each by the range its header gives. */
+function multipartParts(bytes: Uint8Array<ArrayBuffer>, boundary: string): Part[] {
+  // One character per byte, so that positions in the text are positions in the bytes.
+  const text = new TextDecoder('latin1').decode(bytes);
+  const delimiter = `--${boundary}`;
+  const parts: Part[] = [];
+  let at = text.indexOf(delimiter);
+  while (at >= 0 && !text.startsWith('--', at + delimiter.length)) {
+    const headersEnd = text.indexOf('\r\n\r\n', at);
+    const range = /content-range:\s*bytes (\d+)-(\d+)/i.exec(text.slice(at, headersEnd));
+    if (headersEnd < 0 || !range) throw new Error('The LFP summary was not read by range');
+    const start = Number(range[1]);
+    const from = headersEnd + 4;
+    const length = Number(range[2]) - start + 1;
+    parts.push({ start, bytes: bytes.subarray(from, from + length) });
+    at = text.indexOf(delimiter, from + length);
+  }
+  return parts;
+}
+
+async function readSomeRanges(
+  request: LfpSummaryRequest,
+  ranges: readonly ByteRange[]
+): Promise<Uint8Array<ArrayBuffer>[]> {
+  const response = await readByRange(request, ranges);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  const boundary = /boundary="?([^";\s]+)/.exec(response.headers.get('content-type') ?? '')?.[1];
+  // A server may answer ranges that touch as one part, and all of them as one range.
+  const parts = boundary
+    ? multipartParts(bytes, boundary)
+    : [
+        {
+          start: Number(/bytes (\d+)-/.exec(response.headers.get('content-range') ?? '')?.[1]),
+          bytes,
+        },
+      ];
+  return ranges.map(({ offset, length }) => {
+    const part = parts.find(
+      (p) => p.start <= offset && offset + length <= p.start + p.bytes.length
+    );
+    if (!part) throw new Error('The LFP summary was cut short');
+    return part.bytes.subarray(offset - part.start, offset - part.start + length);
+  });
+}
+
+/** Ranges' bytes, in the order given, with as few requests as the server takes. */
+export async function readRanges(
+  request: LfpSummaryRequest,
+  ranges: readonly ByteRange[]
+): Promise<Uint8Array<ArrayBuffer>[]> {
+  const requests = [];
+  for (let i = 0; i < ranges.length; i += MAX_RANGES_PER_REQUEST) {
+    requests.push(readSomeRanges(request, ranges.slice(i, i + MAX_RANGES_PER_REQUEST)));
+  }
+  return (await Promise.all(requests)).flat();
 }
 
 /** A slice of a dataset's bytes, read with one range request. */
@@ -154,7 +232,9 @@ export function readSlice(
 }
 
 /** A chunk's int16 values: HDF5's deflate and shuffle filters undone. */
-export async function inflateRow(chunk: ArrayBuffer): Promise<Int16Array> {
+export async function inflateRow(
+  chunk: ArrayBuffer | Uint8Array<ArrayBuffer>
+): Promise<Int16Array> {
   const stream = new Response(chunk).body?.pipeThrough(new DecompressionStream('deflate'));
   const shuffled = new Uint8Array(await new Response(stream).arrayBuffer());
   const steps = shuffled.length / 2;
@@ -216,18 +296,23 @@ export async function readGroupStats(
   return { stats: new Float32Array(stats), psd: new Float32Array(psd) };
 }
 
-/** A contact's full-resolution values, with one range request. */
-export async function readRow(
-  request: LfpSummaryRequest,
+/** Where a contact's row lies, deflated, by its axis's chunk table. */
+export function rowRange(
   index: LfpSummaryIndex,
-  group: number,
-  contact: number,
   table: BigUint64Array,
-  signal?: AbortSignal
-): Promise<Int16Array> {
+  group: number,
+  contact: number
+): ByteRange {
   const at = (group * index.contacts + contact) * 2;
-  const chunk = await readRange(request, Number(table[at]), Number(table[at + 1]), signal);
-  return inflateRow(chunk);
+  return { offset: Number(table[at]), length: Number(table[at + 1]) };
+}
+
+/** Rows' full-resolution values, read together. */
+export async function readRows(
+  request: LfpSummaryRequest,
+  ranges: readonly ByteRange[]
+): Promise<Int16Array[]> {
+  return Promise.all((await readRanges(request, ranges)).map(inflateRow));
 }
 
 /** Contacts' full-resolution rows as one field, a row each in the order given. */
