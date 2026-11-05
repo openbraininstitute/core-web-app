@@ -30,6 +30,10 @@ import { SpeciesSelectionMode } from '@/features/brain-region-hierarchy/types';
 // whose body imports THIS host; going through the barrel would form a module-init
 // cycle (the registry's definitions would see `undefined` for the circuit entry).
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
+import {
+  withoutScopeColumn,
+  withScopeColumn,
+} from '@/features/data-grid/bindings/entitycore/columns/scope';
 import { createEntitycorePagedDataSource } from '@/features/data-grid/bindings/entitycore/data-source.paged';
 import {
   createDefaultOperatorRegistry,
@@ -50,7 +54,6 @@ import {
   useGridStateSlice,
 } from '@/features/data-grid/react';
 import { AgGridRenderer } from '@/features/data-grid/renderers/aggrid';
-import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { GenericError } from '@/ui/molecules/generic-error';
 import { EntityDeleteButton } from '@/ui/segments/data-table/elements/delete-button';
@@ -58,17 +61,21 @@ import { EntityDownloadButton } from '@/ui/segments/data-table/elements/download
 import { EntityTypeSelector } from '@/ui/segments/data-table/elements/entity-selector';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import { DownloadPanel } from '@/ui/segments/explore/circuit/elements/download-panel';
+import { UploadDataButton } from '@/ui/segments/explore/upload-data-button';
 import { MiniDetailView } from '@/ui/segments/mini-detail-view';
 import {
   makeSelectEntityClickEvent,
   useMiniDetailView,
   useSelectEntityClickEvent,
 } from '@/ui/segments/mini-detail-view/event';
-import { WorkflowScopeTabs } from '@/ui/segments/workflows/elements/scope-selector';
 import { keyBuilder as workspaceKeyBuilder } from '@/ui/use-query-keys/workspace';
 import { cn } from '@/utils/css-class';
 import { log } from '@/utils/logger';
-import { getWorkspaceScopeFilters, isProjectPrivateRecord } from '@/utils/workspace-scope';
+import {
+  getWorkspaceScopeFilters,
+  isProjectPrivateRecord,
+  listingScope,
+} from '@/utils/workspace-scope';
 
 import type { FC, ReactNode } from 'react';
 import type { EntityCoreObjectTypes } from '@/api/entitycore/types';
@@ -125,6 +132,8 @@ export interface IEntityDataGridOverrides {
    * object identity rebuilds the controller.
    */
   extraFactors?: Readonly<Record<string, TGridContextValue>>;
+  /** replaces the bulk Download's archive with the page's own download of the picks */
+  onDownloadSelection?: (rows: EntityCoreIdentifiableNamed[]) => void;
 }
 
 export type TEntityDataGridProps = IBrowseEntityGridProps & IEntityDataGridOverrides;
@@ -152,6 +161,8 @@ export function EntityDataGrid({
   allowQuery = true,
   allowDownload,
   allowDelete,
+  allowUpload,
+  framed,
   requireSpeciesSelector,
   requireScopeSelector,
   requireEntityTypeSelector,
@@ -166,10 +177,11 @@ export function EntityDataGrid({
   expandColumn,
   extraEnabled,
   extraFactors,
+  onDownloadSelection,
 }: TEntityDataGridProps) {
   const { virtualLabId, projectId } = useWorkspace();
   const pathname = usePathname();
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const scope = listingScope({ scope: defaultScope, requireScopeSelector });
   const { selectedBrainRegion } = useWorkspaceHierarchyRegistry();
   const speciesSelectionMode = useAtomValue(speciesSelectionModeAtom);
   const workspaceSpecies = useAtomValue(workspaceHierarchySpeciesAtom);
@@ -383,7 +395,7 @@ export function EntityDataGrid({
     return {
       ...brainRegionQuery,
       ...extras,
-      ...getWorkspaceScopeFilters(scope, { virtualLabId, projectId }),
+      ...(requireScopeSelector ? {} : getWorkspaceScopeFilters(scope, { virtualLabId, projectId })),
       // Merged last so a plugin can override; these participate in the query key.
       ...extraParams,
     };
@@ -393,6 +405,7 @@ export function EntityDataGrid({
     hasBrainRegion,
     brainRegionId,
     extraQueryParams,
+    requireScopeSelector,
     scope,
     virtualLabId,
     projectId,
@@ -455,12 +468,6 @@ export function EntityDataGrid({
   }, [definition, entity, virtualLabId, projectId]);
   const detail = detailOverride ?? schemaDetail;
 
-  // `compact` is the grid-scoped height opt-in: both pickers are taller than the
-  // h-10 search pill elsewhere, and inside one toolbar row they must agree with it.
-  const toolbarScope = useMemo<ReactNode>(
-    () => (requireScopeSelector ? <WorkflowScopeTabs compact className="max-w-max" /> : undefined),
-    [requireScopeSelector]
-  );
   const toolbarBrainRegion = useMemo<ReactNode>(
     () =>
       requireSpeciesSelector ? (
@@ -479,7 +486,9 @@ export function EntityDataGrid({
         id={`data-table-container-${dataType}`}
         data-testid="data-table-container"
         className={cn(
-          'h-full min-h-0 w-full min-w-0 overflow-hidden rounded-2xl [grid-area:body]',
+          'h-full min-h-0 w-full min-w-0 rounded-2xl [grid-area:body]',
+          // a framed table clips itself, and clipping here would cut off its card's edge
+          framed ? 'overflow-visible' : 'overflow-hidden',
           classNames?.container
         )}
       >
@@ -502,8 +511,9 @@ export function EntityDataGrid({
           getRowTestId={(row) => `data-grid-row-${row.name}`}
           activeRowId={activeRowId}
           selection={pickerSelection}
+          framed={framed}
           toolbarSlots={{
-            scope: toolbarScope,
+            action: allowUpload ? <UploadDataButton compact entityType={dataType} /> : undefined,
             brainRegion: toolbarBrainRegion,
             entityType: requireEntityTypeSelector?.enabled ? (
               <EntityTypeSelector
@@ -520,7 +530,8 @@ export function EntityDataGrid({
             ...extraToolbarSlots,
           }}
           renderBulkActions={({ selectedRows, selectedCount, clearSelection, deselectRows }) => (
-            // Buttons only — the "N selected" count and Clear live in the footer. Each
+            // Buttons only: framed, the grid keeps them beside Upload data with a clear icon,
+            // otherwise the "N selected" count and Clear live in the footer. Each
             // badge shows what ITS action will touch: Download takes the whole basket, so
             // it gets `selectedCount`; Delete can only reach this project's rows, so it
             // counts those itself rather than promising a number it will not deliver.
@@ -533,6 +544,7 @@ export function EntityDataGrid({
                   dataType={dataType}
                   clearSelectedRows={clearSelection}
                   workspace={{ virtualLabId, projectId }}
+                  onDownload={onDownloadSelection}
                 />
               )}
               {allowDelete && (
@@ -605,12 +617,15 @@ export function EntityDataGrid({
  * selection); workflow surfaces and pickers get the plain shared template.
  */
 export function BrowseEntityGrid(props: IBrowseEntityGridProps) {
-  const { plugin } = props.definition;
+  const definition = props.requireScopeSelector
+    ? withScopeColumn(props.definition)
+    : withoutScopeColumn(props.definition);
   const isExplore =
     (props.section ?? WorkspaceSection.Data) === WorkspaceSection.Data &&
     !props.mainTableProps?.selectionType;
-  const Body: FC<IBrowseEntityGridProps> = plugin && isExplore ? plugin.Body : EntityDataGrid;
-  return <Body {...props} />;
+  const Body: FC<IBrowseEntityGridProps> =
+    definition.plugin && isExplore ? definition.plugin.Body : EntityDataGrid;
+  return <Body {...props} definition={definition} />;
 }
 
 /** Listing-level error UX, with a dedicated NOT_AUTHORIZED message. */

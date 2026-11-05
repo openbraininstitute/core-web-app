@@ -1,7 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useCallback, useMemo } from 'react';
 
 import { WorkspaceSection } from '@/constants';
@@ -13,13 +13,13 @@ import {
 import { getCellRenderers } from '@/features/data-grid/bindings/entitycore/cell-renderers';
 import { Align } from '@/features/data-grid/core';
 import { EntityDataGrid } from '@/features/data-grid/host/browse-entity-grid';
-import { useScope } from '@/ui/hooks/use-scope';
 import { useWorkspace } from '@/ui/hooks/use-workspace';
 import { makeDataKey } from '@/ui/segments/data-table/elements/helpers';
 import {
   CircuitRecursiveGrid,
   SubcircuitsDetail,
 } from '@/ui/segments/explore/circuit/elements/circuit-recursive-grid';
+import { downloadPanelCircuitAtom } from '@/ui/segments/explore/circuit/elements/download-panel';
 import { CircuitViewToggle } from '@/ui/segments/explore/circuit/elements/view-toggle';
 import {
   CIRCUIT_VIEW_FACTOR,
@@ -28,6 +28,7 @@ import {
   circuitRepresentationViewAtom,
 } from '@/ui/segments/explore/circuit/helpers';
 import { makeSelectEntityClickEvent } from '@/ui/segments/mini-detail-view/event';
+import { listingScope } from '@/utils/workspace-scope';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { EntityCoreIdentifiableNamed } from '@/api/entitycore/types/shared/global';
@@ -60,7 +61,11 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   // A variant pins a subset of the tree, and the hierarchy is built from ALL circuits
   // (`/circuit/hierarchy` + every id), so it is neither meaningful nor cheap there.
   const view = props.variant ? CircuitRepresentationView.Flat : atomView;
-  const { scope } = useScope({ defaultScope, clearOnDefault: false });
+  const setDownloadPanelCircuit = useSetAtom(downloadPanelCircuitAtom);
+  const scope = listingScope({
+    scope: defaultScope,
+    requireScopeSelector: props.requireScopeSelector,
+  });
 
   const { dataKey } = makeDataKey({ virtualLabId, projectId, section, dataType, scope, id });
 
@@ -132,7 +137,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
   );
 
   const toolbarSlots = useMemo(
-    () => (props.variant ? undefined : { left: <CircuitViewToggle dataKey={dataKey} /> }),
+    // a scale shows the toggle on the flat list, greyed out, rather than hiding it
+    () => ({ left: <CircuitViewToggle dataKey={dataKey} disabled={!!props.variant} /> }),
     [dataKey, props.variant]
   );
 
@@ -149,6 +155,8 @@ export function CircuitGridBody(props: IBrowseEntityGridProps) {
       extraToolbarSlots={toolbarSlots}
       extraFactors={gridFactors}
       getRowClass={getRowClass}
+      // a circuit downloads through its panel of parts, not as one archive
+      onDownloadSelection={(rows) => setDownloadPanelCircuit((rows[0] as ICircuit) ?? null)}
       detailOverride={isHierarchy ? detailOverride : undefined}
       expandColumn={
         isHierarchy

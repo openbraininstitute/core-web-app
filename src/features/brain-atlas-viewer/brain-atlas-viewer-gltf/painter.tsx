@@ -2,6 +2,7 @@ import {
   type TgdCamera,
   TgdContext,
   TgdDataGlb,
+  type TgdGeometry,
   TgdGeometryGltf,
   TgdPainterClear,
   TgdPainterGroup,
@@ -52,6 +53,37 @@ function isMeshNotAvailableError(ex: unknown): boolean {
   return ex instanceof RegionMeshNotAvailableError;
 }
 
+/** A viewer shows two meshes, its region's and the root's: this keeps a few regions' worth. */
+const DECODED_MESHES_KEPT = 8;
+
+/** By the downloaded GLB, which the services keep one of per region; most recently used last. */
+const decodedMeshes = new Map<ArrayBuffer, Promise<{ asset: TgdDataGlb; geometry: TgdGeometry }>>();
+
+/**
+ * A region's mesh, decoded once for every viewer of it. Its Draco decoding holds the main
+ * thread for hundreds of milliseconds, and the geometry holds no WebGL state, so the mini and
+ * the full atlas (and each remount) share it; each context still uploads its own buffers.
+ */
+function decodeMesh(data: ArrayBuffer) {
+  let mesh = decodedMeshes.get(data);
+  if (mesh) {
+    decodedMeshes.delete(data);
+  } else {
+    const decoding = TgdDataGlb.parse(data).then((asset) => ({
+      asset,
+      geometry: new TgdGeometryGltf({ data: asset }),
+    }));
+    decoding.catch(() => {
+      if (decodedMeshes.get(data) === decoding) decodedMeshes.delete(data);
+    });
+    mesh = decoding;
+  }
+  decodedMeshes.set(data, mesh);
+  const [oldest] = decodedMeshes.keys();
+  if (decodedMeshes.size > DECODED_MESHES_KEPT && oldest) decodedMeshes.delete(oldest);
+  return mesh;
+}
+
 let globalId = 1;
 export class Painter {
   public readonly AtlasID: string;
@@ -65,6 +97,9 @@ export class Painter {
   public readonly eventLoading = new GenericEvent<boolean>();
 
   public resetCamera: () => void = () => {};
+
+  /** Initial camera zoom, read when a canvas starts. */
+  public cameraZoom = 1;
 
   private cameraController: CameraController | null = null;
 
@@ -148,7 +183,7 @@ export class Painter {
         premultipliedAlpha: false,
       });
       this.context = context;
-      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID);
+      const camCtrl = setCamera(context, this.eventCameraChange, this.AtlasID, this.cameraZoom);
       this.cameraController = camCtrl;
       this.resetCamera = camCtrl.resetCamera;
       this.hasFittedCamera = false;
@@ -342,6 +377,7 @@ export class Painter {
         });
         currentGroup.add(painter);
         this.pointCloudPainter = painter;
+        currentContext.paint();
       }
     } catch (ex) {
       if (
@@ -393,13 +429,12 @@ export class Painter {
     const { context, group, regionPainters } = this;
     if (!context || !group || !data || regionPainters.has(region.id)) return null;
     try {
-      const asset = await TgdDataGlb.parse(data);
+      const { asset, geometry } = await decodeMesh(data);
       // start() ran during parse(): the captured `context` is now a deleted
       // TgdContext. Bail before touching it so we never throw
       // "[TgdContext] This context has been deleted:" (the popup's real cause).
       if (contextVersion !== this.contextVersion) return null;
 
-      const geometry = new TgdGeometryGltf({ data: asset });
       const meshBounds = this.extractBoundsFromGltf(asset);
       const painterXRay = new TgdPainterXRay(context, {
         geometry,

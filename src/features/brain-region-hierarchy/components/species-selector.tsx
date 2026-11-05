@@ -3,6 +3,10 @@
 import { RiArrowDownSLine, RiCheckboxCircleFill } from '@remixicon/react';
 import { kebabCase } from 'es-toolkit/compat';
 
+import {
+  AllSpeciesIcon,
+  SpeciesIcon,
+} from '@/features/brain-region-hierarchy/components/species-icon';
 import { AllSpeciesDisplayName } from '@/features/brain-region-hierarchy/context';
 import { orderHierarchiesBySpeciesDisplayNames } from '@/features/brain-region-hierarchy/helpers';
 import {
@@ -129,19 +133,25 @@ export function SpeciesSelector({
               data-testid="species-selector-option__all"
               key={SpeciesSelectionMode.All}
               value={SpeciesSelectionMode.All}
-              className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}
+              className={cn(
+                'group/option cursor-pointer py-2.5 px-3',
+                '[&_.select-icon-wrapper]:top-4'
+              )}
               checkIconClassName="text-primary-8 size-5 ite"
               checkIcon={<RiCheckboxCircleFill className="text-primary-8" />}
             >
-              <div className="flex flex-col">
-                <span
-                  className={cn('text-base font-medium text-primary-8', {
-                    'font-bold': isAllMode,
-                  })}
-                >
-                  All
-                </span>
-                <span className="text-xs text-gray-400">All species</span>
+              <div className="flex items-center gap-3">
+                <AllSpeciesIcon className="group-data-highlighted/option:text-primary-6 group-hover/option:text-primary-6 size-6 text-gray-400 transition-colors duration-150" />
+                <div className="flex flex-col">
+                  <span
+                    className={cn('text-base font-medium text-primary-8', {
+                      'font-bold': isAllMode,
+                    })}
+                  >
+                    All
+                  </span>
+                  <span className="text-xs text-gray-400">All species</span>
+                </div>
               </div>
             </SelectItem>
           )}
@@ -152,21 +162,32 @@ export function SpeciesSelector({
               data-hierarchy-id={species.hierarchId}
               key={species.hierarchId}
               value={species.hierarchId}
-              className={cn('cursor-pointer py-2.5 px-3', '[&_.select-icon-wrapper]:top-4')}
+              className={cn(
+                'group/option cursor-pointer py-2.5 px-3',
+                '[&_.select-icon-wrapper]:top-4'
+              )}
               checkIconClassName="text-primary-8 size-5 ite"
               checkIcon={<RiCheckboxCircleFill className="text-primary-8" />}
             >
-              <div className="flex flex-col">
-                <span
-                  className={cn('text-base font-medium text-primary-8', {
-                    'font-bold': !isAllMode && selectedHierarchyId === species.hierarchId,
-                  })}
-                >
-                  {species.displayName}
+              <div className="flex items-center gap-3">
+                <span className="flex size-6 shrink-0 items-center justify-center">
+                  <SpeciesIcon
+                    taxonomyId={species.taxonomyId}
+                    className="group-data-highlighted/option:text-primary-6 group-hover/option:text-primary-6 size-6 text-gray-400 transition-colors duration-150"
+                  />
                 </span>
-                <span className="text-xs text-gray-400">
-                  {SPECIES_SUBTITLES[species.name] ?? species.name}
-                </span>
+                <div className="flex flex-col">
+                  <span
+                    className={cn('text-base font-medium text-primary-8', {
+                      'font-bold': !isAllMode && selectedHierarchyId === species.hierarchId,
+                    })}
+                  >
+                    {species.displayName}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {SPECIES_SUBTITLES[species.name] ?? species.name}
+                  </span>
+                </div>
               </div>
             </SelectItem>
           ))}

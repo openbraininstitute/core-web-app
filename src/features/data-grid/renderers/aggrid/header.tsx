@@ -4,7 +4,7 @@ import {
   RiExpandUpDownLine,
   RiFilter3Fill,
 } from '@remixicon/react';
-import { useState } from 'react';
+import { createElement, useState } from 'react';
 
 import { GridActionType, SortDirection, summarizeFilter } from '@/features/data-grid/core';
 import { FilterEditor } from '@/features/data-grid/react/filters/filter-editor';
@@ -28,6 +28,8 @@ interface HeaderParams {
   filter?: {
     targets: ReadonlyArray<IFilterTarget>;
   };
+  /** registry key of a header that replaces all of the above */
+  headerRenderer?: string;
 }
 
 /**
@@ -36,6 +38,18 @@ interface HeaderParams {
  * popover from an icon button, so there is no AG floating-filter row.
  */
 export function AgHeader(props: CustomHeaderProps) {
+  const ctx = props.context as IAgGridContext;
+  const { columnId, headerRenderer } = props as CustomHeaderProps & HeaderParams;
+  // a registered header replaces the default one; the registry hands out stable components
+  const registered = headerRenderer ? ctx.cellRenderers.getHeader(headerRenderer) : undefined;
+  if (registered) {
+    return createElement(registered, { columnId, label: props.displayName ?? '', ctx });
+  }
+  return <DefaultHeader {...props} />;
+}
+
+/** The label, sort toggle and filter popover of a column with no registered header. */
+function DefaultHeader(props: CustomHeaderProps) {
   const ctx = props.context as IAgGridContext;
   const { columnId, unit, sortable, filter, headerNode } = props as CustomHeaderProps &
     HeaderParams;

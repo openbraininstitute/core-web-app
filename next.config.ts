@@ -158,13 +158,13 @@ const config: NextConfig = {
       {
         source: '/app/virtual-lab/:vlabId/:projectId/notebooks/public',
         destination:
-          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template?scope=public',
+          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template',
         permanent: false,
       },
       {
         source: '/app/virtual-lab/:vlabId/:projectId/notebooks/private',
         destination:
-          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template?scope=project',
+          '/app/virtual-lab/:vlabId/:projectId/notebooks/browse/analysis-notebook-template',
         permanent: false,
       },
       {
