@@ -151,6 +151,26 @@ export function LivingHero({
           </AnimatePresence>
         </div>
       </div>
+      <button
+        type="button"
+        className={styles.nextChapter}
+        aria-label="Next screen"
+        onClick={onContinue}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          width="26"
+          height="26"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
       <nav className={THEME_NAV_RAIL} aria-label="Platform sections">
         <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
       </nav>

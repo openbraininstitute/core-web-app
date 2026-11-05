@@ -93,6 +93,7 @@ const FINISH_MS = 800;
 export function Walkthrough<C extends IWalkthroughChapter>({
   chapters,
   stage,
+  stageScrolls = false,
   fullscreen = false,
   bold = false,
   intro,
@@ -112,7 +113,14 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 }: {
   chapters: readonly C[];
   /** The right of the page for the chapter on, with where that chapter puts colour-by, and a way to another chapter. */
-  stage: (chapter: C, colorSlot: HTMLElement | null, goTo: (id: string) => void) => ReactNode;
+  stage: (
+    chapter: C,
+    colorSlot: HTMLElement | null,
+    goTo: (id: string) => void,
+    active: boolean
+  ) => ReactNode;
+  /** Keep the media in each chapter's scroll container so it travels exactly with its words. */
+  stageScrolls?: boolean;
   /** Over the whole window, the platform's menus included, with its own way into the platform. */
   fullscreen?: boolean;
   /** The titles in bold, rather than light. */
@@ -170,6 +178,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // The scroller's height, a chapter's: until it is measured, the screen less the top menu.
   const [height, setHeight] = useState<number | null>(null);
   const [active, setActive] = useState(0);
+  const navigationUntil = useRef(0);
   const [finishing, setFinishing] = useState(false);
   const [colorSlot, setColorSlot] = useState<HTMLElement | null>(null);
   // Over the whole window, it is laid over the page's body once in the browser.
@@ -291,6 +300,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
 
   const go = useCallback(
     (index: number) => {
+      navigationUntil.current = Date.now() + 1000;
       if (index >= chapters.length) {
         finish();
         return;
@@ -308,10 +318,10 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     [chapters, go]
   );
 
-  // Over the whole window, a screen at a time: a scroll let go of part way between two settles on the nearer,
-  // once it has come to rest, momentum and all; the runway past the last is one.
+  // The fixed-stage tour settles on a screen. Media that scrolls with its text must remain free to scroll:
+  // snapping to the nearest stop would undo short gestures, especially when scrolling back up.
   useEffect(() => {
-    if (!fullscreen || !root) return;
+    if (!fullscreen || !root || stageScrolls) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const settle = () => {
       const now = root.scrollTop;
@@ -340,7 +350,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
       root.removeEventListener('scroll', onScroll);
       clearTimeout(timer);
     };
-  }, [fullscreen, root]);
+  }, [fullscreen, root, stageScrolls]);
 
   // ← and → go a chapter back and on, as on everyneuron; up and down scroll as ever.
   useEffect(() => {
@@ -363,8 +373,17 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   const on = Math.min(active, chapters.length - 1);
   const chapter = chapters[on];
   const advanceChapter = useCallback(() => {
+    if (Date.now() < navigationUntil.current) return;
+    if (stageScrolls && root) {
+      const section = sections.current[on];
+      if (
+        !section ||
+        Math.abs(section.getBoundingClientRect().top - root.getBoundingClientRect().top) > 4
+      )
+        return;
+    }
     if (on < chapters.length - 1) go(on + 1);
-  }, [on, chapters.length, go]);
+  }, [on, chapters.length, go, stageScrolls, root]);
   const playback = useChapterPlayback({
     stage: stageRef,
     chapterId: chapter.id,
@@ -383,6 +402,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
         <BareViewers>
           <div
             ref={setRoot}
+            onWheelCapture={() => {
+              navigationUntil.current = Date.now() + 1000;
+            }}
+            onTouchStartCapture={() => {
+              navigationUntil.current = Date.now() + 1000;
+            }}
+            onKeyDownCapture={() => {
+              navigationUntil.current = Date.now() + 1000;
+            }}
             className={cn(
               'text-primary-9 bg-white transition-[opacity,scale] ease-in-out',
               fullscreen
@@ -444,11 +472,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               })}
             {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
             <div
-              ref={stageRef}
+              ref={stageScrolls ? undefined : stageRef}
               className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
               style={underIntro}
             >
-              {stage(chapter, colorSlot, goTo)}
+              {!stageScrolls && stage(chapter, colorSlot, goTo, true)}
               {!fullscreen && (
                 <div className="pointer-events-auto">
                   <Progress chapters={chapters} active={on} onGo={go} />
@@ -533,6 +561,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               </div>
             )}
             <div
+              ref={stageScrolls ? stageRef : undefined}
               className="pointer-events-none relative z-10"
               style={{ marginTop: 'calc(var(--chapter-h) * -1)', ...underIntro }}
             >
@@ -545,7 +574,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                     sections.current[index] = section;
                   }}
                   className={cn(
-                    'flex min-h-(--chapter-h)',
+                    'relative flex min-h-(--chapter-h)',
                     chapter.wide
                       ? 'items-start'
                       : chapter.top
@@ -553,6 +582,11 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                         : 'items-end beside:items-center'
                   )}
                 >
+                  {stageScrolls && Math.abs(index - on) <= 1 && (
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                      {stage(chapter, index === on ? colorSlot : null, goTo, index === on)}
+                    </div>
+                  )}
                   <ChapterText
                     chapter={chapter}
                     on={index === on}
@@ -561,6 +595,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                     firstClass={firstTitleClass}
                     onColorSlot={setColorSlot}
                     publicOpening={!!introContent}
+                    scrollsWithStage={stageScrolls}
                   />
                 </section>
               ))}
@@ -638,6 +673,7 @@ function ChapterText({
   firstClass,
   onColorSlot,
   publicOpening = false,
+  scrollsWithStage = false,
 }: {
   chapter: IWalkthroughChapter;
   on: boolean;
@@ -648,20 +684,28 @@ function ChapterText({
   firstClass?: string;
   onColorSlot: (slot: HTMLElement | null) => void;
   publicOpening?: boolean;
+  scrollsWithStage?: boolean;
 }) {
   const { kicker, title, hero, body, colorBy, after, wide, titleClass, column } = chapter;
   return (
     <div
       inert={!on || undefined}
       className={cn(
-        'flex w-full flex-col gap-[18px] transition-[opacity,translate] duration-700 ease-out',
+        'relative flex w-full flex-col gap-[18px]',
+        !scrollsWithStage && 'transition-[opacity,translate] duration-700 ease-out',
         wide
           ? 'px-[clamp(20px,5vw,88px)] pt-[clamp(100px,14vh,150px)] beside:max-w-[1400px]'
           : cn(
               'bg-white/90 px-[20px] pt-[20px] pb-[88px]',
               'beside:w-[38%] beside:max-w-[540px] beside:bg-transparent beside:py-[72px] beside:pr-0 beside:pl-[clamp(32px,5vw,88px)]'
             ),
-        on ? 'pointer-events-auto translate-y-0 opacity-100' : 'translate-y-[24px] opacity-0',
+        scrollsWithStage
+          ? on
+            ? 'pointer-events-auto'
+            : 'pointer-events-none'
+          : on
+            ? 'pointer-events-auto translate-y-0 opacity-100'
+            : 'translate-y-[24px] opacity-0',
         column,
         publicOpening && publicTour.publicText
       )}
@@ -1094,8 +1138,8 @@ const ARROW =
 
 /**
  * A screen back, up at the top of the page, and a screen on, down at its foot, both in the middle: back from
- * the first to the intro where there is one, and on from the last to where the walkthrough leads. Not over
- * the intro. On a phone, the way back gives way to the top bar: a finger takes the page back.
+ * the first to the intro where there is one, and on from the last to where the walkthrough leads.
+ * The upper chevron sits below the header so its white background cannot hide it.
  */
 function SlideArrows({
   onUp,
@@ -1130,7 +1174,7 @@ function SlideArrows({
     <div
       inert={!shown || undefined}
       className={cn(
-        'pointer-events-none fixed inset-x-0 top-[clamp(16px,2.6vh,26px)] bottom-[var(--arrows-foot,clamp(16px,2.6vh,26px))] z-[66] flex flex-col items-center justify-between transition-opacity duration-500 stacked:bottom-[36px] squat:hidden max-sm:items-end max-sm:pr-[10px]',
+        'pointer-events-none fixed inset-x-0 top-[clamp(84px,12vh,100px)] bottom-[var(--arrows-foot,clamp(16px,2.6vh,26px))] z-[66] flex flex-col items-center justify-between transition-opacity duration-500 stacked:bottom-[36px] max-sm:top-[70px] squat:top-[58px]',
         shown ? 'opacity-100' : 'opacity-0'
       )}
       style={bottom ? ({ '--arrows-foot': bottom } as CSSProperties) : undefined}
@@ -1139,7 +1183,7 @@ function SlideArrows({
         type="button"
         aria-label="Previous screen"
         onClick={() => onUp?.()}
-        className={cn(ARROW, 'max-sm:invisible', !onUp && 'pointer-events-none invisible')}
+        className={cn(ARROW, !onUp && 'pointer-events-none invisible')}
       >
         {chevron('M6 15l6-6 6 6')}
       </button>

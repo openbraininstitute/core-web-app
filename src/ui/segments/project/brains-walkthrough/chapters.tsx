@@ -124,7 +124,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     theme: 'Simulate',
     label: 'Simulate',
     scene: 'configuration',
-    title: 'Configure simulations & neuroscience workflows',
+    title: 'Configure simulations & workflows',
     hero: true,
     column: VIDEO_CHAPTER,
     body: (

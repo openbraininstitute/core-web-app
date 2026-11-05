@@ -86,16 +86,18 @@ describe('public science opening', () => {
     );
   });
 
-  it('opens the chosen chapter and lets visitors continue by scroll', () => {
+  it('opens the chosen chapter and lets visitors continue by arrow or scroll', () => {
     const onChapter = vi.fn();
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={onChapter} />);
     fireEvent.click(screen.getByRole('button', { name: /^Explore$/ }));
     expect(onChapter).toHaveBeenCalledWith('analysis');
     expect(screen.queryByRole('button', { name: /Discover Virtual Labs/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Next screen' }));
+    expect(onContinue).toHaveBeenCalledTimes(1);
     fireEvent.wheel(screen.getByRole('region', { name: 'Discover the Open Brain Platform' }), {
       deltaY: 30,
     });
-    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onContinue).toHaveBeenCalledTimes(2);
   });
 });

@@ -73,6 +73,9 @@ export function useChapterPlayback({
       elapsed = 0;
       const originalLoop = candidate.loop;
       candidate.loop = false;
+      // A neighbouring scene stays mounted while scrolling. Re-entering an ended video must
+      // start a fresh viewing, rather than immediately sending the visitor forward again.
+      candidate.currentTime = 0;
       const play = () => {
         paused = false;
         update();
@@ -86,12 +89,14 @@ export function useChapterPlayback({
       candidate.addEventListener('play', play);
       candidate.addEventListener('pause', pause);
       if (paused || !visible || preference.matches) candidate.pause();
+      else void candidate.play().catch(() => {});
       detachVideo = () => {
         candidate.removeEventListener('timeupdate', update);
         candidate.removeEventListener('ended', complete);
         candidate.removeEventListener('play', play);
         candidate.removeEventListener('pause', pause);
         candidate.loop = originalLoop;
+        candidate.pause();
       };
       update();
     };

@@ -1,3 +1,8 @@
+.publicTour {
+  --chapter-title-size: clamp(38px, 4.1vw, 66px);
+  --chapter-copy-size: clamp(16px, 1.3vw, 19px);
+  --chapter-copy-leading: 1.55;
+}
 .publicText {
   align-items: flex-start;
   text-align: left;
@@ -8,7 +13,7 @@
 .publicTour .publicText h2 {
   font-family: var(--font-gabarito), sans-serif;
   font-weight: 400;
-  font-size: clamp(38px, 4.1vw, 66px);
+  font-size: var(--chapter-title-size);
   line-height: 1.06;
   letter-spacing: -0.025em;
   color: #082d63;
@@ -35,7 +40,13 @@
 }
 .publicText [data-chapter-body] {
   color: #365479;
-  font-size: 16px;
+  font-size: var(--chapter-copy-size);
+  line-height: var(--chapter-copy-leading);
+}
+.publicText [data-chapter-body] > p,
+.publicText [data-chapter-introduction] {
+  font-size: var(--chapter-copy-size);
+  line-height: var(--chapter-copy-leading);
 }
 .publicText [data-chapter-body] p {
   color: #365479;
@@ -44,14 +55,110 @@
   align-items: flex-start;
 }
 @media (max-width: 760px) {
-  .publicTour .publicText h1,
-  .publicTour .publicText h2 {
-    font-size: clamp(36px, 9.5vw, 50px);
+  .publicTour {
+    --chapter-title-size: clamp(36px, 9.5vw, 50px);
+  }
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .publicTour {
+    --chapter-copy-size: 15px;
+    --chapter-copy-leading: 1.45;
   }
 }
 .publicTour [data-fly] {
   font-family: var(--font-gabarito), sans-serif;
   font-style: normal;
+}
+.chapterTimeline {
+  display: flex;
+  align-items: flex-start;
+  width: max-content;
+  margin-inline: auto;
+  padding-inline: 20px;
+  font-family: var(--font-gabarito), sans-serif;
+  font-size: clamp(14px, 1.15vw, 18px);
+  line-height: 1.4;
+  color: #737373;
+}
+.timelineChapters {
+  position: relative;
+  display: flex;
+}
+.timelinePlayback {
+  position: absolute;
+  bottom: 8px;
+  height: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+.timelinePlayback > span {
+  display: block;
+  height: 100%;
+  background: #082d63;
+  transform-origin: left;
+  transition: transform 100ms linear;
+}
+.timelineChapter {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+.timelineChapter > :first-child {
+  padding-inline: 16px;
+  white-space: nowrap;
+}
+.timelineTrack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 16px;
+  margin-top: 8px;
+}
+.timelineTrack::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  height: 1px;
+  background: #183f8b26;
+}
+.timelineChapter:first-child .timelineTrack::before {
+  left: 50%;
+}
+.timelineChapter:last-child .timelineTrack::before {
+  right: 50%;
+}
+.timelineDot {
+  position: relative;
+  z-index: 2;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #c6cdd8;
+  transition:
+    background-color 200ms,
+    transform 200ms;
+}
+.timelineChapter[aria-current="location"],
+.timelineChapter:hover {
+  color: #082d63;
+}
+.timelineChapter[aria-current="location"] .timelineDot {
+  background: #082d63;
+  transform: scale(1.5);
+}
+.timelineChapter:hover .timelineDot {
+  background: #526782;
+}
+.timelineChapter:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 .navWord {
   position: relative;
@@ -104,8 +211,14 @@
   outline: 2px solid #183f8b;
   outline-offset: 3px;
 }
+.chapterTimeline .navPause,
+.chapterTimeline .navPauseSpace {
+  margin-top: -8px;
+  margin-bottom: 0;
+}
 @media (prefers-reduced-motion: reduce) {
-  .navProgress > span {
+  .navProgress > span,
+  .timelinePlayback > span {
     transition: none;
   }
 }

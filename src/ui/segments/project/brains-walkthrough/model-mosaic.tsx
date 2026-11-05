@@ -11,7 +11,6 @@ export function ModelMosaic() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [visible, setVisible] = useState(false);
   const [motionAllowed, setMotionAllowed] = useState(false);
-  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -34,7 +33,7 @@ export function ModelMosaic() {
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (visible && motionAllowed) void video.play().catch(() => setPlaying(false));
+    if (visible && motionAllowed) void video.play().catch(() => {});
     else video.pause();
   }, [visible, motionAllowed]);
 
@@ -50,24 +49,8 @@ export function ModelMosaic() {
           loop
           playsInline
           preload="none"
-          onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
           aria-label="Animated mosaic of brain models, including a cortical microcircuit, FlyWire, a reconstructed neuron and MICrONS"
         />
-        <figcaption className={styles.controls}>
-          <span>Models across species and scales</span>
-          <button
-            type="button"
-            onClick={() => {
-              const video = videoRef.current;
-              if (!video) return;
-              if (video.paused) void video.play().catch(() => setPlaying(false));
-              else video.pause();
-            }}
-          >
-            {playing ? 'Pause movie' : 'Play movie'}
-          </button>
-        </figcaption>
       </figure>
     </div>
   );

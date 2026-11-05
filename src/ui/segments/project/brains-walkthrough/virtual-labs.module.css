@@ -136,14 +136,10 @@
   border-radius: 0;
   box-shadow: none;
   background: white;
-  mask-image:
-    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
-    linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
-  mask-composite: intersect;
 }
 .video {
   aspect-ratio: 1512 / 850;
-  object-fit: cover;
+  object-fit: contain;
 }
 .blendedVideo {
   max-height: 100%;

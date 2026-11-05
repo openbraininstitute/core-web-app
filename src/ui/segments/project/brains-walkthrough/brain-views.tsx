@@ -1,6 +1,5 @@
 'use client';
 
-import { RiPauseFill, RiPlayFill } from '@remixicon/react';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -275,16 +274,14 @@ export const VIRTUAL_LABS_VIDEO = {
   poster: '/images/start/walkthrough/virtual-labs.jpg',
 };
 
-/** A large, borderless platform recording whose edges blend into the page. */
+/** A large, crisp platform recording, presented without a frame or edge effects. */
 export function VirtualLabsPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [paused, setPaused] = useState(false);
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
     const update = () => {
       if (preference.matches) {
         videoRef.current?.pause();
-        setPaused(true);
       }
     };
     update();
@@ -293,23 +290,6 @@ export function VirtualLabsPreview() {
   }, []);
   return (
     <figure className={labs.preview}>
-      <div className={labs.previewHeader}>
-        <span className={labs.previewLabel}>Your Virtual Lab</span>
-        <button
-          type="button"
-          className={labs.playback}
-          aria-label={paused ? 'Play preview' : 'Pause preview'}
-          title={paused ? 'Play preview' : 'Pause preview'}
-          onClick={() => {
-            const video = videoRef.current;
-            if (!video) return;
-            if (video.paused) void video.play().catch(() => setPaused(true));
-            else video.pause();
-          }}
-        >
-          {paused ? <RiPlayFill size={16} /> : <RiPauseFill size={16} />}
-        </button>
-      </div>
       <video
         ref={videoRef}
         src={VIRTUAL_LABS_VIDEO.src}
@@ -318,8 +298,6 @@ export function VirtualLabsPreview() {
         muted
         loop
         playsInline
-        onPlay={() => setPaused(false)}
-        onPause={() => setPaused(true)}
         aria-label="Virtual Labs platform walkthrough"
         className={labs.video}
       />
@@ -374,7 +352,7 @@ export function VirtualLabsPoints() {
   const actions = useWalkthroughActions();
   return (
     <div className={labs.content}>
-      <p className={labs.introduction}>
+      <p className={labs.introduction} data-chapter-introduction>
         A shared workspace for exploring, building and simulating the brain.
       </p>
       <ul className={labs.benefits}>

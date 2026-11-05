@@ -137,6 +137,34 @@
 .hero button {
   cursor: pointer;
 }
+.nextChapter {
+  position: fixed;
+  bottom: clamp(64px, 9.5vh, 88px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 67;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--ink);
+  transition: opacity 200ms;
+}
+.nextChapter:hover {
+  opacity: 0.6;
+}
+.nextChapter:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .nextChapter {
+    bottom: 36px;
+    border-radius: 50%;
+    background: #ffffffd9;
+  }
+}
 @media (min-width: 1700px) {
   .copy {
     width: 36%;

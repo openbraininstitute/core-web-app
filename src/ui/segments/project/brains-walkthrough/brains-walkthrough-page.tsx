@@ -99,11 +99,12 @@ export function BrainsWalkthroughPage({
       }
       // The landing's words along the foot are its way between the screens, the way on above them.
       pager={false}
+      stageScrolls
       footer="clamp(64px,9.5vh,88px)"
-      stage={(chapter) => (
+      stage={(chapter, _colorSlot, _goTo, active) => (
         <SlidingStage
           scene={chapter.scene}
-          order={BRAIN_CHAPTERS.map((chapter) => chapter.scene)}
+          active={active}
           // The first screen, on its grid.
           full={(scene) => CNS_ON_FIRST_SCREEN && scene === 'opening'}
           // The first screen's fly brain, under its recording, is turned by hand through it.

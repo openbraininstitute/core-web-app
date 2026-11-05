@@ -1,38 +1,30 @@
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { SlidingStage } from './sliding-stage';
 
-beforeEach(() => {
-  vi.stubGlobal(
-    'matchMedia',
-    vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }))
-  );
-});
-afterEach(() => {
-  cleanup();
-  vi.unstubAllGlobals();
-});
+afterEach(cleanup);
 
 describe('sliding chapter media', () => {
-  it('hands playback to the selected scene immediately and disables media that is sliding away', () => {
-    const order = ['labs', 'teach', 'simulate'] as const;
+  it('hands playback and interaction to the current chapter while retaining its neighbour', () => {
     const draw = (scene: string) => <button type="button">{scene}</button>;
-    const { container, rerender } = render(<SlidingStage scene="labs" order={order} draw={draw} />);
-    rerender(<SlidingStage scene="simulate" order={order} draw={draw} />);
-    expect(container.querySelector('[data-stage-current="true"]')).toHaveAttribute(
-      'data-stage-scene',
-      'simulate'
+    const pair = (active: string) => (
+      <>
+        <SlidingStage scene="labs" active={active === 'labs'} draw={draw} />
+        <SlidingStage scene="teach" active={active === 'teach'} draw={draw} />
+      </>
     );
-    expect(container.querySelector('[data-stage-scene="labs"]')).toHaveAttribute('inert');
-
-    // Reverse direction before the previous transition has finished.
-    rerender(<SlidingStage scene="teach" order={order} draw={draw} />);
-    expect(container.querySelectorAll('[data-stage-current="true"]')).toHaveLength(1);
-    expect(container.querySelector('[data-stage-current="true"]')).toHaveAttribute(
-      'data-stage-scene',
-      'teach'
-    );
-    expect(container.querySelector('[data-stage-scene="simulate"]')).toHaveAttribute('inert');
+    const { container, rerender } = render(pair('labs'));
+    const labs = container.querySelector('[data-stage-scene="labs"]');
+    const teach = container.querySelector('[data-stage-scene="teach"]');
+    expect(labs).not.toHaveAttribute('inert');
+    expect(teach).toHaveAttribute('inert');
+    rerender(pair('teach'));
+    expect(container.querySelector('[data-stage-scene="labs"]')).toBe(labs);
+    expect(container.querySelector('[data-stage-current="true"]')).toBe(teach);
+    expect(labs).toHaveAttribute('inert');
+    expect(teach).not.toHaveAttribute('inert');
+    rerender(pair('labs'));
+    expect(container.querySelector('[data-stage-current="true"]')).toBe(labs);
   });
 });

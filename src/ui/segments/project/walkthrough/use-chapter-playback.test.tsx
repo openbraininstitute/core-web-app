@@ -39,13 +39,13 @@ describe('chapter playback', () => {
     layer.append(video);
     host.append(layer);
     Object.defineProperty(video, 'duration', { value: 20 });
-    video.currentTime = 10;
     const onComplete = vi.fn();
     const stage = { current: host };
     const { result, unmount } = renderHook(() =>
       useChapterPlayback({ stage, chapterId: 'labs', enabled: true, onComplete })
     );
     expect(video.loop).toBe(false);
+    video.currentTime = 10;
     fireEvent.timeUpdate(video);
     expect(result.current.progress).toBe(0.5);
     fireEvent.ended(video);
@@ -72,6 +72,37 @@ describe('chapter playback', () => {
     fireEvent(document, new Event('visibilitychange'));
     act(() => vi.advanceTimersByTime(12000));
     expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it('restarts an ended video when returning to its chapter instead of advancing forward again', () => {
+    const layer = document.createElement('div');
+    layer.dataset.stageCurrent = 'true';
+    const video = document.createElement('video');
+    Object.defineProperty(video, 'duration', { value: 20 });
+    Object.defineProperty(video, 'ended', { get: () => video.currentTime >= 20 });
+    layer.append(video);
+    host.append(layer);
+    const stage = { current: host };
+    const onComplete = vi.fn();
+    const { rerender } = renderHook(
+      ({ chapterId }) => useChapterPlayback({ stage, chapterId, enabled: true, onComplete }),
+      { initialProps: { chapterId: 'labs' } }
+    );
+    video.currentTime = 20;
+    fireEvent.ended(video);
+    expect(onComplete).toHaveBeenCalledTimes(1);
+
+    layer.dataset.stageCurrent = 'false';
+    rerender({ chapterId: 'models' });
+    layer.dataset.stageCurrent = 'true';
+    rerender({ chapterId: 'labs' });
+    expect(video.currentTime).toBe(0);
+    expect(video.play).toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(1000));
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    video.currentTime = 20;
+    fireEvent.ended(video);
+    expect(onComplete).toHaveBeenCalledTimes(2);
   });
 
   it('supports explicit pause and resume', () => {

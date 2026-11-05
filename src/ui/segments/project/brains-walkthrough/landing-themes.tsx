@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { cn } from '@/utils/css-class';
 
 import { BRAIN_THEMES } from './chapters';
 
+import type { RefObject } from 'react';
 import type { ChapterPlayback } from '@/ui/segments/project/walkthrough/use-chapter-playback';
 
 import progressStyles from '@/ui/segments/project/walkthrough/public-tour.module.css';
@@ -37,6 +38,49 @@ export function ThemeLine({
   playback?: ChapterPlayback;
   publicAppearance?: boolean;
 }) {
+  const timeline = useRef<HTMLDivElement>(null);
+  if (publicAppearance) {
+    return (
+      <div className={progressStyles.chapterTimeline}>
+        <div ref={timeline} className={progressStyles.timelineChapters}>
+          {BRAIN_THEMES.map((theme) => (
+            <button
+              key={theme}
+              type="button"
+              className={progressStyles.timelineChapter}
+              aria-current={theme === underlined ? 'location' : undefined}
+              onClick={() => {
+                const to = links?.[theme];
+                if (to) goTo?.(to);
+              }}
+            >
+              <span data-fly={theme}>{theme}</span>
+              <span className={progressStyles.timelineTrack} aria-hidden="true">
+                <span className={progressStyles.timelineDot} />
+              </span>
+            </button>
+          ))}
+          {playback && (
+            <TimelineProgress rail={timeline} chapter={underlined} progress={playback.progress} />
+          )}
+        </div>
+        {playback ? (
+          <button
+            type="button"
+            className={progressStyles.navPause}
+            onClick={playback.toggle}
+            aria-label={playback.playing ? 'Pause chapter playback' : 'Play chapter playback'}
+            title={playback.playing ? 'Pause' : 'Play'}
+            aria-pressed={playback.playing}
+          >
+            <span aria-hidden="true">{playback.playing ? 'Ⅱ' : '▷'}</span>
+          </button>
+        ) : (
+          <span className={progressStyles.navPauseSpace} aria-hidden="true" />
+        )}
+      </div>
+    );
+  }
   return (
     <p
       className={cn(
@@ -118,6 +162,58 @@ export function ThemeLine({
         <span className={progressStyles.navPauseSpace} aria-hidden="true" />
       )}
     </p>
+  );
+}
+
+/** Measure dot centres so the playback line stays accurate with unequal chapter-label widths. */
+function TimelineProgress({
+  rail,
+  chapter,
+  progress,
+}: {
+  rail: RefObject<HTMLDivElement | null>;
+  chapter?: string;
+  progress: number;
+}) {
+  const [segment, setSegment] = useState({ chapter, left: 0, width: 0 });
+  useLayoutEffect(() => {
+    const row = rail.current;
+    if (!row) return;
+    const measure = () => {
+      const buttons = Array.from(row.querySelectorAll<HTMLButtonElement>('button'));
+      const index = buttons.findIndex(
+        (button) => button.getAttribute('aria-current') === 'location'
+      );
+      const start = buttons[index]?.getBoundingClientRect();
+      const end = buttons[index + 1]?.getBoundingClientRect();
+      if (!start || !end || index < 0) {
+        setSegment({ chapter, left: 0, width: 0 });
+        return;
+      }
+      const centre = start.left + start.width / 2;
+      setSegment({
+        chapter,
+        left: centre - row.getBoundingClientRect().left,
+        width: end.left + end.width / 2 - centre,
+      });
+    };
+    const resized = new ResizeObserver(measure);
+    resized.observe(row);
+    for (const button of row.querySelectorAll('button')) resized.observe(button);
+    measure();
+    return () => resized.disconnect();
+  }, [chapter, rail]);
+
+  if (segment.chapter !== chapter || !segment.width) return null;
+  return (
+    <span
+      key={chapter}
+      className={progressStyles.timelinePlayback}
+      style={{ left: segment.left, width: segment.width }}
+      aria-hidden="true"
+    >
+      <span style={{ transform: `scaleX(${Math.max(0, Math.min(1, progress))})` }} />
+    </span>
   );
 }
 
