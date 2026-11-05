@@ -16,6 +16,7 @@ import {
   defaultGrouping,
   lineMembers,
   sameSquare,
+  sameWindow,
   selectionApplies,
   sideWindow,
   squareOf,
@@ -66,19 +67,15 @@ const StatisticsPlot = dynamic(
 const BY_NEURON = '__neuron';
 /** The order-by that keeps the matrix's own order. */
 const MATRIX_ORDER = '__matrix';
-/** Neuron by neuron, the most rows or columns in view: past it, neurons next in the order share one. */
-const MAX_NEURON_ROWS = 300;
+/** The most rows or columns in view: past it, neurons next in the order, or values, share one. */
+const MAX_ROWS = 300;
 /** How long a click waits to see if it is half of a double click, as long as Plotly gives one. */
 const DOUBLE_CLICK_MS = 300;
 
 function requestOf(groupBy: string, orderBy: string): ConnectivityRequest {
   return groupBy === BY_NEURON
-    ? {
-        by: 'neuron',
-        orderBy: orderBy === MATRIX_ORDER ? null : orderBy,
-        maxRows: MAX_NEURON_ROWS,
-      }
-    : { by: 'property', property: groupBy };
+    ? { by: 'neuron', orderBy: orderBy === MATRIX_ORDER ? null : orderBy, maxRows: MAX_ROWS }
+    : { by: 'property', property: groupBy, maxRows: MAX_ROWS };
 }
 
 /** A pathway of the matrix: the node ids of the neurons it starts from, and of those it ends at. */
@@ -115,22 +112,19 @@ function selectionId(cells: Uint32Array | null): number {
   return id;
 }
 
-function sameWindow(a: SideWindow, b: SideWindow): boolean {
-  return a.start === b.start && a.end === b.end && a.step === b.step;
-}
-
-function neuronsEach(n: number): string {
-  return n === 1 ? 'one neuron' : `${n.toLocaleString()} neurons`;
-}
-
-/** What each row and column holds, while neurons share them. */
-function sharingNote({ pre, post }: ConnectivityGroups): string | null {
+/** What each row and column holds, while neurons, or a property's values, share them. */
+function sharingNote({ by, pre, post }: ConnectivityGroups, axis: string): string | null {
   if (pre.step === 1 && post.step === 1) return null;
+  const [one, many, single] =
+    by === 'neuron'
+      ? ['one neuron', 'neurons', 'neurons']
+      : [`one ${axis} value`, `${axis} values`, 'values'];
+  const of = (n: number) => (n === 1 ? one : `${n.toLocaleString()} ${many}`);
   const each =
     pre.step === post.step
-      ? `Each row and column is ${neuronsEach(pre.step)}`
-      : `Each row is ${neuronsEach(pre.step)} and each column ${neuronsEach(post.step)}`;
-  return `${each}. Zoom in for single neurons`;
+      ? `Each row and column is ${of(pre.step)}`
+      : `Each row is ${of(pre.step)} and each column ${of(post.step)}`;
+  return `${each}. Zoom in for single ${single}`;
 }
 
 /**
@@ -438,7 +432,7 @@ function ReadyMatrix({
     .filter((read): read is NodeProperty => !!read && !(read instanceof Error));
   const requestKey = `${JSON.stringify(request)}/${selectionId(cells)}/${missing.length}`;
 
-  // What of the order is in view, neuron by neuron, kept with the matrix it is of.
+  // What of each side is in view, kept with the matrix it is of.
   const [zoom, setZoom] = useState<{
     key: string;
     window: { pre: SideWindow; post: SideWindow };
@@ -456,11 +450,7 @@ function ReadyMatrix({
   useEffect(() => {
     if (missing.length > 0) return;
     let live = true;
-    group(
-      zoomedTo && request.by === 'neuron' ? { ...request, window: zoomedTo } : request,
-      cells,
-      outsideProperties
-    )
+    group(zoomedTo ? { ...request, window: zoomedTo } : request, cells, outsideProperties)
       .then((groups) => live && setAnswer({ key: requestKey, groups }))
       .catch((error: unknown) => {
         if (live) {
@@ -479,9 +469,9 @@ function ReadyMatrix({
   const zoomMatrix = ({ x, y }: PlotRanges) => {
     const places = current?.groups?.places;
     if (places === undefined) return;
-    const whole = sideWindow([-0.5, places - 0.5], places, MAX_NEURON_ROWS);
-    const pre = sideWindow(y, places, MAX_NEURON_ROWS);
-    const post = sideWindow(x, places, MAX_NEURON_ROWS);
+    const whole = sideWindow([-0.5, places - 0.5], places, MAX_ROWS);
+    const pre = sideWindow(y, places, MAX_ROWS);
+    const post = sideWindow(x, places, MAX_ROWS);
     setZoom(
       sameWindow(pre, whole) && sameWindow(post, whole)
         ? null
@@ -544,13 +534,19 @@ function ReadyMatrix({
     });
   };
   const pickable = ofTable && pin !== undefined;
-  // A double click zooms out, and its first press is not a pick.
+  // A double click zooms out, and neither of its presses is a pick: Plotly tells the first as a
+  // click before it, and the second as a click after it.
   const pickTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const doubleClickedAt = useRef(Number.NEGATIVE_INFINITY);
   const pickAfterClick = (point: HoverPoint) => {
     clearTimeout(pickTimer.current);
+    if (performance.now() - doubleClickedAt.current < DOUBLE_CLICK_MS) return;
     pickTimer.current = setTimeout(() => pinPathway(point), DOUBLE_CLICK_MS);
   };
-  const dropPick = () => clearTimeout(pickTimer.current);
+  const dropPick = () => {
+    clearTimeout(pickTimer.current);
+    doubleClickedAt.current = performance.now();
+  };
   useEffect(() => () => clearTimeout(pickTimer.current), []);
 
   const byNeuron = groupBy === BY_NEURON;
@@ -568,7 +564,7 @@ function ReadyMatrix({
       }),
     [current, measure, axis, pinnedSquare, pickable, requestKey]
   );
-  const sharing = current?.groups ? sharingNote(current.groups) : null;
+  const sharing = current?.groups ? sharingNote(current.groups, axis) : null;
   const measures = MEASURES.filter(
     (m) =>
       summary.synapses !== null || (m.value !== 'synapses' && m.value !== 'synapsesPerConnection')
@@ -602,7 +598,7 @@ function ReadyMatrix({
             onChange={(value) => {
               setGroupBy(value);
               // A neuron to a neuron is connected or not: how many synapses says more.
-              if (value === BY_NEURON && neurons <= MAX_NEURON_ROWS && measure === 'probability') {
+              if (value === BY_NEURON && neurons <= MAX_ROWS && measure === 'probability') {
                 setMeasure(summary.synapses === null ? 'connections' : 'synapses');
               }
             }}
@@ -646,7 +642,11 @@ function ReadyMatrix({
           {sharing && (
             <span
               className="text-xs text-neutral-400"
-              title="Too many neurons in view for a row each, so neurons next to each other in the Order by order share one. Zooming in counts the matrix again, down to one neuron a row."
+              title={
+                byNeuron
+                  ? 'Too many neurons in view for a row each, so neurons next to each other in the Order by order share one. Zooming in counts the matrix again, down to one neuron a row.'
+                  : 'Too many values in view for a row each, so values next to each other share one. Zooming in counts the matrix again, down to one value a row.'
+              }
             >
               {sharing}
             </span>
@@ -678,7 +678,7 @@ function ReadyMatrix({
             onPointHover={pathwayTo && hoverPathway}
             onPointClick={pickable ? pickAfterClick : undefined}
             onPointDoubleClick={pickable ? dropPick : undefined}
-            onRangesChange={byNeuron ? zoomMatrix : undefined}
+            onRangesChange={zoomMatrix}
           />
         ) : (
           <div className="flex h-full items-center justify-center">

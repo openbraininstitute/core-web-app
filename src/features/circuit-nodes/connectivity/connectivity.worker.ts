@@ -54,6 +54,7 @@ const api = {
       [
         groups.connections,
         groups.synapses,
+        groups.neuronsBefore,
         ...[groups.pre, groups.post].flatMap((side) => [
           side.sizes,
           side.members.offsets,

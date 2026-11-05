@@ -30,6 +30,7 @@ const GROUPS: ConnectivityGroups = {
   synapses: Float64Array.from([5, 9, 0, 0]),
   totals: { connections: 5, synapses: 14 },
   runs: null,
+  neuronsBefore: Float64Array.from([0, 2, 5]),
 };
 
 /** A stretch of neurons in a row each, whose node ids are their places times ten. */
@@ -64,6 +65,7 @@ function neuronGroups(
     synapses: null,
     totals: { connections: 0, synapses: null },
     runs,
+    neuronsBefore: null,
   };
 }
 
@@ -113,7 +115,7 @@ describe('connectivityFigure', () => {
     ]);
   });
 
-  it('rings a pinned square, in two colours, leaving the plot zoomed as it is', () => {
+  it('rings a pinned square and washes out the rest, leaving the plot zoomed as it is', () => {
     const plain = connectivityFigure({ groups: GROUPS, measure: 'connections', axis: 'mtype' });
     const ringed = connectivityFigure({
       groups: GROUPS,
@@ -125,6 +127,12 @@ describe('connectivityFigure', () => {
     expect(plain.layout.shapes).toEqual([]);
     const box = { type: 'rect', x0: 0.5, x1: 1.5, y0: -0.5, y1: 0.5 };
     expect(ringed.layout.shapes).toEqual([
+      expect.objectContaining({
+        type: 'path',
+        // The square is a hole in it, so it alone keeps its colour.
+        path: expect.stringContaining('M 0.5,-0.5 L 1.5,-0.5 L 1.5,0.5 L 0.5,0.5 Z'),
+        fillcolor: expect.any(String),
+      }),
       expect.objectContaining(box),
       expect.objectContaining(box),
     ]);
@@ -258,7 +266,10 @@ describe('connectivityFigure', () => {
         pinned: { pre: { start: 0, end: 17 }, post: { start: 34, end: 51 } },
       });
 
-      expect(ringed.layout.shapes?.[0]).toMatchObject({
+      const [veil, ring] = ringed.layout.shapes ?? [];
+      // Washed out across the whole matrix, not only the lines drawn.
+      expect(veil.path).toContain('M -0.5,-0.5 L 4869.5,-0.5');
+      expect(ring).toMatchObject({
         x0: 33.5,
         x1: 50.5,
         y0: -0.5,
@@ -297,5 +308,84 @@ describe('connectivityFigure', () => {
       expect(inside.layout.yaxis?.ticktext?.slice(0, 2)).toEqual(['1000', '1020']);
       expect(inside.layout.shapes).toEqual([]);
     });
+  });
+
+  describe('with a property of more values than rows', () => {
+    /** Lines of `step` values each, from a value per place named v0, v1 and so on. */
+    function valueSide(start: number, end: number, step: number): MatrixSide {
+      const lines = Math.ceil((end - start) / step);
+      const firstValues = Array.from({ length: lines }, (_, line) => `v${start + line * step}`);
+      return {
+        start,
+        end,
+        step,
+        firstValues,
+        labels: firstValues.map((first) => `${first} – last`),
+        sizes: new Float64Array(lines).fill(1),
+        members: {
+          offsets: Uint32Array.from({ length: lines + 1 }, (_, line) => line),
+          nodeIds: new Uint32Array(lines),
+        },
+      };
+    }
+    const figureOf = (side: MatrixSide, places: number) =>
+      connectivityFigure({
+        groups: {
+          ...GROUPS,
+          places,
+          pre: side,
+          post: side,
+          connections: new Float64Array(side.labels.length ** 2),
+          synapses: null,
+          neuronsBefore: Float64Array.from({ length: places + 1 }, (_, place) => place),
+        },
+        measure: 'connections',
+        axis: 'mtype',
+      });
+
+    it('names a few lines by their first value, where they are on the axis', () => {
+      const { layout } = figureOf(valueSide(0, 11752, 40), 11752);
+
+      expect(layout.xaxis?.ticktext).toHaveLength(6);
+      expect(layout.xaxis?.ticktext?.[0]).toBe('v0');
+      // The middle of the 40 places the first line takes.
+      expect(layout.xaxis?.tickvals?.[0]).toBe(19.5);
+      expect(layout.xaxis?.range).toEqual([-0.5, 11751.5]);
+    });
+
+    it('names single values where they are, zoomed in, a few of them', () => {
+      const { layout } = figureOf(valueSide(100, 110, 1), 11752);
+
+      expect(layout.xaxis?.ticktext).toEqual(['v100', 'v102', 'v104', 'v106', 'v108']);
+      expect(layout.xaxis?.tickvals).toEqual([100, 102, 104, 106, 108]);
+    });
+
+    it('names up to 60 values of a property that fits', () => {
+      const { layout } = figureOf(valueSide(0, 120, 1), 120);
+
+      expect(layout.xaxis?.ticktext).toHaveLength(60);
+    });
+  });
+
+  it('draws no rules between values of an order where they are too many to read', () => {
+    const runs = Array.from({ length: 150 }, (_, i) => ({
+      label: `v${i}`,
+      start: i * 20,
+      end: i * 20 + 19,
+    }));
+    const whole = connectivityFigure({
+      groups: neuronGroups(neurons(0, 3000, 10), neurons(0, 3000, 10), 3000, runs),
+      measure: 'connections',
+      axis: 'neurons by mtype',
+    });
+    const zoomed = connectivityFigure({
+      groups: neuronGroups(neurons(0, 100), neurons(0, 100), 3000, runs),
+      measure: 'connections',
+      axis: 'neurons by mtype',
+    });
+
+    expect(whole.layout.shapes).toEqual([]);
+    // Five values in view, so four rules each way.
+    expect(zoomed.layout.shapes).toHaveLength(8);
   });
 });

@@ -1,3 +1,5 @@
+import { MAX_GROUPS } from '@/features/circuit-nodes/connectivity/node-properties';
+
 import type {
   ConnectivityMatrix,
   VertexProperty,
@@ -9,18 +11,22 @@ export type PlaceSpan = { start: number; end: number };
 /** A stretch of a side, drawn as lines (rows or columns) of `step` places each. */
 export type SideWindow = PlaceSpan & { step: number };
 
-/** How the matrix is drawn: its neurons grouped by a property, or one by one in an order. */
-export type ConnectivityRequest =
+/**
+ * How the matrix is drawn: its neurons grouped by a property, or one by one in an order. `maxRows`
+ * is the most lines a side has, past which places next to each other share one, and `window` the
+ * stretch of each side zoomed to, else all of it.
+ */
+export type ConnectivityRequest = {
+  maxRows?: number;
+  window?: { pre: SideWindow; post: SideWindow };
+} & (
   | { by: 'property'; property: string }
   | {
       by: 'neuron';
       /** A property whose values order the neurons, else their order in the matrix. */
       orderBy: string | null;
-      /** The most lines a side has: past it, neurons next to each other in the order share one. */
-      maxRows: number;
-      /** The stretch of each side zoomed to, else all of it. */
-      window?: { pre: SideWindow; post: SideWindow };
-    };
+    }
+);
 
 /** The places a value of the order takes, both ends included. */
 export type RowRun = { label: string; start: number; end: number };
@@ -28,6 +34,8 @@ export type RowRun = { label: string; start: number; end: number };
 /** One side of the matrix, its rows or its columns: what is in view, and what each line holds. */
 export type MatrixSide = SideWindow & {
   labels: string[];
+  /** Grouped by a property: the first value each line holds, which its ticks name. */
+  firstValues?: string[];
   sizes: Float64Array;
   /** The node ids of each line's neurons: line l's run from `offsets[l]` to `offsets[l + 1]`. */
   members: { offsets: Uint32Array; nodeIds: Uint32Array };
@@ -52,6 +60,8 @@ export type ConnectivityGroups = {
   totals: { connections: number; synapses: number | null };
   /** Neuron by neuron, in an order: the places each of its values takes. */
   runs: RowRun[] | null;
+  /** Grouped by a property: the neurons in all the places before each, one more than there are. */
+  neuronsBefore: Float64Array | null;
 };
 
 /** A square of the matrix, by the places its row and column take. */
@@ -137,8 +147,9 @@ function rankedValues(
   included: Uint8Array | null
 ) {
   const values = valuesInUse(property, included);
-  const rankOfCode = property.library.map((value) => values.indexOf(value));
-  const none = values.indexOf(NO_VALUE);
+  const rankOf = new Map(values.map((value, rank) => [value, rank]));
+  const rankOfCode = property.library.map((value) => rankOf.get(value) ?? -1);
+  const none = rankOf.get(NO_VALUE) ?? -1;
   const ranks = Int32Array.from(property.codes, (code, neuron) => {
     if (included && !included[neuron]) return LEFT_OUT;
     return code < 0 ? none : rankOfCode[code];
@@ -180,7 +191,7 @@ function countRows(rowOf: Int32Array, rows: number): Float64Array {
 }
 
 /**
- * What of a side to draw while it shows `visible`, in its places: lines of as few neurons as
+ * What of a side to draw while it shows `visible`, in its places: lines of as few places as
  * `maxRows` lets, lined up on multiples of their size, so a pan moves whole squares.
  */
 export function sideWindow(
@@ -199,6 +210,10 @@ export function sideWindow(
     end: Math.min(places, Math.ceil(to / step) * step),
     step,
   };
+}
+
+export function sameWindow(a: SideWindow, b: SideWindow): boolean {
+  return a.start === b.start && a.end === b.end && a.step === b.step;
 }
 
 /** The neurons in the order asked for, and the places each value of that order takes. */
@@ -250,6 +265,35 @@ function neuronSide(window: SideWindow, order: readonly number[], nodeIds: Float
       offsets: Uint32Array.from({ length: lines + 1 }, (_, line) => Math.min(line * step, count)),
       nodeIds: ids,
     },
+  };
+}
+
+/**
+ * A stretch of a property's values as lines of values next to each other, with each neuron's line
+ * or why it has none. A line of several is named by its first and last value, as the last can be
+ * of fewer than the rest.
+ */
+function valueSide(
+  window: SideWindow,
+  values: readonly string[],
+  ranks: Int32Array,
+  nodeIds: Float64Array
+): { side: MatrixSide; lineOf: Int32Array } {
+  const { start, end, step } = window;
+  const lines = Math.ceil((end - start) / step);
+  const lineOf = Int32Array.from(ranks, (rank) => {
+    if (rank < 0) return rank;
+    return rank >= start && rank < end ? Math.floor((rank - start) / step) : OUT_OF_VIEW;
+  });
+  const sizes = countRows(lineOf, lines);
+  const firstValues = Array.from({ length: lines }, (_, line) => values[start + line * step]);
+  const labels = firstValues.map((first, line) => {
+    const last = values[Math.min(start + (line + 1) * step, end) - 1];
+    return last === first ? first : `${first} – ${last}`;
+  });
+  return {
+    side: { ...window, labels, firstValues, sizes, members: membersOf(lineOf, sizes, nodeIds) },
+    lineOf,
   };
 }
 
@@ -307,34 +351,43 @@ export function groupConnectivity(
   outside: readonly NodeProperty[] = []
 ): ConnectivityGroups {
   const included = cells ? includedNeurons(matrix, cells) : null;
+  const maxRows = request.maxRows ?? Number.POSITIVE_INFINITY;
 
   if (request.by === 'property') {
     const property = categorical(matrix, request.property, outside);
     if (!property) throw new Error(`The matrix has no property ${request.property} to group by`);
     const { values, ranks } = rankedValues(property, included);
-    const n = values.length;
-    const sizes = countRows(ranks, n);
-    const side: MatrixSide = {
-      start: 0,
-      end: n,
-      step: 1,
-      labels: values,
-      sizes,
-      members: membersOf(ranks, sizes, matrix.nodeIds),
-    };
+    const places = values.length;
+    const whole = sideWindow([-0.5, places - 0.5], places, maxRows);
+    const pre = valueSide(request.window?.pre ?? whole, values, ranks, matrix.nodeIds);
+    const post =
+      request.window && !sameWindow(request.window.pre, request.window.post)
+        ? valueSide(request.window.post, values, ranks, matrix.nodeIds)
+        : pre;
+    const neuronsBefore = new Float64Array(places + 1);
+    countRows(ranks, places).forEach((size, place) => {
+      neuronsBefore[place + 1] = neuronsBefore[place] + size;
+    });
     return {
       by: 'property',
-      places: n,
-      pre: side,
-      post: side,
+      places,
+      pre: pre.side,
+      post: post.side,
       runs: null,
-      ...countLines(matrix, ranks, ranks, n, n),
+      neuronsBefore,
+      ...countLines(
+        matrix,
+        pre.lineOf,
+        post.lineOf,
+        pre.side.labels.length,
+        post.side.labels.length
+      ),
     };
   }
 
   const { order, runs } = neuronsInOrder(matrix, request.orderBy, included, outside);
   const places = order.length;
-  const whole = sideWindow([-0.5, places - 0.5], places, request.maxRows);
+  const whole = sideWindow([-0.5, places - 0.5], places, maxRows);
   const pre = neuronSide(request.window?.pre ?? whole, order, matrix.nodeIds);
   const post = neuronSide(request.window?.post ?? whole, order, matrix.nodeIds);
   return {
@@ -343,6 +396,7 @@ export function groupConnectivity(
     pre,
     post,
     runs,
+    neuronsBefore: null,
     ...countLines(
       matrix,
       linesOf(pre, order, matrix.size),
@@ -395,10 +449,13 @@ export function sameSquare(a: PathwaySquare, b: PathwaySquare): boolean {
 
 /** How many neurons a row and column have in common: a neuron makes no pair with itself. */
 function sharedNeurons(groups: ConnectivityGroups, row: number, column: number): number {
-  // Each value of a property is one place, however many neurons it holds.
-  if (groups.by === 'property') return row === column ? groups.pre.sizes[row] : 0;
   const { pre, post } = squareOf(groups, row, column);
-  return Math.max(0, Math.min(pre.end, post.end) - Math.max(pre.start, post.start));
+  const from = Math.max(pre.start, post.start);
+  const to = Math.min(pre.end, post.end);
+  if (to <= from) return 0;
+  // A value of a property is one place, however many neurons it holds; a neuron in an order is one.
+  const { neuronsBefore } = groups;
+  return neuronsBefore ? neuronsBefore[to] - neuronsBefore[from] : to - from;
 }
 
 /** The pairs of distinct neurons from a row to a column. */
@@ -406,9 +463,14 @@ export function possiblePairs(groups: ConnectivityGroups, row: number, column: n
   return groups.pre.sizes[row] * groups.post.sizes[column] - sharedNeurons(groups, row, column);
 }
 
-/** The property a matrix is first grouped by: the finest of the usual ones it has. */
+/**
+ * The property a matrix is first grouped by: the finest of the usual ones with few enough values to
+ * read. The 11,752 mtypes of a fly brain would open as rows of 40 values each.
+ */
 export function defaultGrouping(properties: readonly PropertySummary[]): string | null {
-  const names = properties.filter((p) => p.kind === 'categorical').map((p) => p.name);
+  const names = properties
+    .filter((p) => p.kind === 'categorical' && (p.values?.length ?? 0) <= MAX_GROUPS)
+    .map((p) => p.name);
   return (
     ['mtype', 'layer', 'synapse_class', 'etype'].find((n) => names.includes(n)) ?? names[0] ?? null
   );

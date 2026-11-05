@@ -42,12 +42,16 @@ const SCALE: [number, string][] = [
 const RULE = '#94a3b8';
 /** Past this many rows, every few are named, or the names run into each other. */
 const MAX_TICKS = 60;
+/** The most values named along a side of more values than it has lines for. */
+const MAX_SHARED_TICKS = 6;
 /** The share of an axis a run takes to be named on it: one in this many of its rows. */
 const MAX_RUN_NAMES = 25;
 /** Up to this many lines, a hairline between cells keeps them apart. */
 const GAPPED_ROWS = 40;
 /** The most node ids named along a side. */
 const MAX_NODE_ID_TICKS = 10;
+/** The most rules down or across between values of the order: past it they are a solid block, and a shape each. */
+const MAX_RULES = 100;
 
 /** The value of the cell from row `pre` to `post`: NaN where it has none to give. */
 export function cellValue(
@@ -98,10 +102,16 @@ function roundPlaces(start: number, end: number): number[] {
 function ticks(groups: ConnectivityGroups, side: MatrixSide) {
   const n = side.labels.length;
   if (groups.by === 'property') {
-    if (n > MAX_TICKS * 4) return null;
-    const step = Math.ceil(n / MAX_TICKS);
-    const rows = Array.from({ length: n }, (_, i) => i).filter((i) => i % step === 0);
-    return { tickvals: rows, ticktext: rows.map((i) => side.labels[i]) };
+    // Past the rows' limit, a few are named, each line by its first value, as an index runs: a
+    // side's lines change with the zoom, and a card names any of them exactly.
+    const every = Math.ceil(
+      n / (n < groups.places || side.step > 1 ? MAX_SHARED_TICKS : MAX_TICKS)
+    );
+    const lines = Array.from({ length: n }, (_, i) => i).filter((i) => i % every === 0);
+    return {
+      tickvals: lines.map((line) => side.start + line * side.step + (side.step - 1) / 2),
+      ticktext: lines.map((line) => side.firstValues?.[line] ?? side.labels[line]),
+    };
   }
   const inView = (groups.runs ?? []).flatMap(({ label, start, end }) => {
     const from = Math.max(start, side.start);
@@ -126,19 +136,41 @@ function ticks(groups: ConnectivityGroups, side: MatrixSide) {
 
 /** Rules across and down the matrix between one value of the order and the next, where in view. */
 function runRules(groups: ConnectivityGroups): Partial<Shape>[] {
-  const inView = (side: MatrixSide, place: number) => place >= side.start && place < side.end;
   const line = { color: RULE, width: 1 };
-  return (groups.runs ?? []).slice(1).flatMap((run) => {
-    const at = run.start - 0.5;
-    const rules: Partial<Shape>[] = [];
-    if (inView(groups.post, run.start)) {
-      rules.push({ type: 'line', xref: 'x', yref: 'paper', x0: at, x1: at, y0: 0, y1: 1, line });
-    }
-    if (inView(groups.pre, run.start)) {
-      rules.push({ type: 'line', xref: 'paper', yref: 'y', x0: 0, x1: 1, y0: at, y1: at, line });
-    }
-    return rules;
-  });
+  /** Where rules fall on a side, none where there are too many to read. */
+  const startsOn = ({ start, end }: MatrixSide) => {
+    const starts = (groups.runs ?? [])
+      .slice(1)
+      .map((run) => run.start)
+      .filter((place) => place >= start && place < end);
+    return starts.length > MAX_RULES ? [] : starts;
+  };
+  return [
+    ...startsOn(groups.post).map(
+      (place): Partial<Shape> => ({
+        type: 'line',
+        xref: 'x',
+        yref: 'paper',
+        x0: place - 0.5,
+        x1: place - 0.5,
+        y0: 0,
+        y1: 1,
+        line,
+      })
+    ),
+    ...startsOn(groups.pre).map(
+      (place): Partial<Shape> => ({
+        type: 'line',
+        xref: 'paper',
+        yref: 'y',
+        x0: 0,
+        x1: 1,
+        y0: place - 0.5,
+        y1: place - 0.5,
+        line,
+      })
+    ),
+  ];
 }
 
 /** A pathway's row and column, as a person reads them. */
@@ -151,20 +183,33 @@ export function pathwayName(groups: ConnectivityGroups, pre: number, post: numbe
   return `${name(groups.pre, pre)} → ${name(groups.post, post)}`;
 }
 
-/** A ring round a square, in two colours so it reads over all of the scale's blues. */
-function squareRing({ pre, post }: PathwaySquare): Partial<Shape>[] {
-  const box = {
-    type: 'rect' as const,
-    xref: 'x' as const,
-    yref: 'y' as const,
-    x0: post.start - 0.5,
-    x1: post.end - 0.5,
-    y0: pre.start - 0.5,
-    y1: pre.end - 0.5,
-  };
+/** What the rest of the matrix is washed out with while a square is pinned: still readable, plainly not the one. */
+const VEIL = 'rgba(255, 255, 255, 0.7)';
+
+/** A path round a box of the matrix. */
+const pathRound = (x0: number, y0: number, x1: number, y1: number) =>
+  `M ${x0},${y0} L ${x1},${y0} L ${x1},${y1} L ${x0},${y1} Z`;
+
+/**
+ * Marks a pinned square, however few pixels it takes: the rest of the matrix washed out round it, by one
+ * shape with the square as a hole, so that no seam shows, and a ring round it, in two colours so it reads
+ * over all of the scale's blues. Shapes take no pointer, so every square can still be hovered and clicked.
+ */
+function squareMarks({ pre, post }: PathwaySquare, places: number): Partial<Shape>[] {
+  const [x0, x1] = [post.start - 0.5, post.end - 0.5];
+  const [y0, y1] = [pre.start - 0.5, pre.end - 0.5];
+  const axes = { xref: 'x' as const, yref: 'y' as const };
+  const box = { ...axes, type: 'rect' as const, x0, x1, y0, y1 };
   return [
-    { ...box, line: { color: '#ffffff', width: 4 } },
-    { ...box, line: { color: '#111827', width: 1.5 } },
+    {
+      ...axes,
+      type: 'path',
+      path: `${pathRound(-0.5, -0.5, places - 0.5, places - 0.5)} ${pathRound(x0, y0, x1, y1)}`,
+      fillcolor: VEIL,
+      line: { width: 0 },
+    },
+    { ...box, line: { color: '#ffffff', width: 5 } },
+    { ...box, line: { color: '#111827', width: 2.5 } },
   ];
 }
 
@@ -193,7 +238,7 @@ export function connectivityFigure({
   measure: ConnectivityMeasure;
   /** What the rows are: a property's values, or neurons in its order. */
   axis: string;
-  /** The square pinned, ringed. */
+  /** The square pinned, ringed, and the rest of the matrix washed out. */
   pinned?: PathwaySquare | null;
   /** Whether a click on a square does anything, which its card then says. */
   pickable?: boolean;
@@ -259,7 +304,7 @@ export function connectivityFigure({
       title: axisTitle(`Presynaptic ${axis}`),
       range: [places - 0.5, -0.5],
     },
-    shapes: [...runRules(groups), ...(pinned ? squareRing(pinned) : [])],
+    shapes: [...runRules(groups), ...(pinned ? squareMarks(pinned, places) : [])],
     // New lines for a zoom, or a square pinned or let go of, leave the matrix zoomed as it is.
     uirevision: revision ?? `${axis}/${places}`,
   };

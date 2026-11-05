@@ -74,6 +74,7 @@ const GROUPS: ConnectivityGroups = {
   synapses: Float64Array.from([5, 9, 0, 0]),
   totals: { connections: 5, synapses: 14 },
   runs: null,
+  neuronsBefore: Float64Array.from([0, 2, 5]),
 };
 const CELLS = Uint32Array.from([0, 1, 2]);
 const STOP = 'Stop filtering to this pathway';
@@ -144,7 +145,8 @@ describe('a square clicked in the matrix', () => {
     expect(pick.name).toBe('A → B');
     expect(pick.square).toMatchObject({ pre: { start: 0, end: 1 }, post: { start: 1, end: 2 } });
     expect(screen.getByText('A → B').parentElement).toHaveTextContent(/^Filtered to\s*A → B$/);
-    expect(h.plot?.figure.layout.shapes).toHaveLength(2);
+    // The rest of the matrix washed out, and the ring's two colours.
+    expect(h.plot?.figure.layout.shapes).toHaveLength(3);
   });
 
   it('leaves the matrix over the neurons it was over, whatever the table’s selection does', async () => {
@@ -231,6 +233,25 @@ describe('a square clicked in the matrix', () => {
     vi.useRealTimers();
 
     expect(onPick).not.toHaveBeenCalled();
+  });
+
+  it('pins nothing on the second press, which Plotly tells as a click after the double one', async () => {
+    const onPick = vi.fn();
+    render(<Matrix onPick={onPick} />);
+    await drawn();
+
+    vi.useFakeTimers();
+    act(() => h.plot?.onPointClick?.({ pointNumber: [0, 1] }));
+    act(() => h.plot?.onPointDoubleClick?.());
+    act(() => h.plot?.onPointClick?.({ pointNumber: [0, 1] }));
+    act(() => vi.advanceTimersByTime(1000));
+    expect(onPick).not.toHaveBeenCalled();
+
+    // A click some time after is a click.
+    act(() => h.plot?.onPointClick?.({ pointNumber: [0, 1] }));
+    act(() => vi.advanceTimersByTime(1000));
+    vi.useRealTimers();
+    expect(onPick).toHaveBeenCalledOnce();
   });
 });
 
@@ -419,10 +440,68 @@ describe('the matrix zoomed in, neuron by neuron', () => {
 });
 
 describe('zooming a matrix grouped by a property', () => {
-  it('asks for nothing: its lines are all already drawn', async () => {
+  it('asks for nothing where its lines are all already drawn', async () => {
     render(<Matrix />);
     await drawn();
+    const asked = h.group.mock.calls.length;
 
-    expect(h.plot?.onRangesChange).toBeUndefined();
+    act(() => h.plot?.onRangesChange?.({ x: [0, 0.5], y: [0, 0.5] }));
+
+    expect(h.group).toHaveBeenCalledTimes(asked);
+  });
+
+  it('counts the view again where it has more values than rows', async () => {
+    const PLACES = 11752;
+    const side = ({ start, end, step }: SideWindow): MatrixSide => {
+      const lines = Math.ceil((end - start) / step);
+      return {
+        start,
+        end,
+        step,
+        labels: Array.from({ length: lines }, (_, line) => `line ${line}`),
+        sizes: new Float64Array(lines).fill(1),
+        members: {
+          offsets: Uint32Array.from({ length: lines + 1 }, (_, line) => line),
+          nodeIds: new Uint32Array(lines),
+        },
+      };
+    };
+    h.properties = [{ name: 'cell_type', kind: 'categorical', values: ['a', 'b'] }];
+    h.group = vi.fn(async (request: { window?: { pre: SideWindow; post: SideWindow } }) => {
+      const whole = { start: 0, end: PLACES, step: 40 };
+      const pre = side(request.window?.pre ?? whole);
+      const post = side(request.window?.post ?? whole);
+      return {
+        by: 'property',
+        places: PLACES,
+        pre,
+        post,
+        connections: new Float64Array(pre.labels.length * post.labels.length),
+        synapses: null,
+        totals: { connections: 5, synapses: null },
+        runs: null,
+        neuronsBefore: Float64Array.from({ length: PLACES + 1 }, (_, place) => place),
+      } as ConnectivityGroups;
+    });
+    render(<Matrix />);
+
+    expect(await screen.findByText(/Each row and column is 40 cell_type values/)).toHaveTextContent(
+      'Zoom in for single values'
+    );
+    expect(h.group.mock.lastCall?.[0]).toMatchObject({
+      by: 'property',
+      property: 'cell_type',
+      maxRows: 300,
+    });
+
+    act(() => h.plot?.onRangesChange?.({ x: [100, 200], y: [300, 400] }));
+
+    await waitFor(() =>
+      expect(h.group.mock.lastCall?.[0].window).toEqual({
+        pre: { start: 300, end: 401, step: 1 },
+        post: { start: 100, end: 201, step: 1 },
+      })
+    );
+    await waitFor(() => expect(screen.queryByText(/Each row/)).toBeNull());
   });
 });

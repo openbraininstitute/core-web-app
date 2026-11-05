@@ -46,6 +46,96 @@ const MATRIX: ConnectivityMatrix = {
 /** The cell from row `pre` to row `post`. */
 const at = (n: number, pre: number, post: number) => pre * n + post;
 
+describe('groupConnectivity by a property of more values than rows', () => {
+  /**
+   * Eight neurons, a value each but for v0, which has two: v0 v0 v1 v2 v3 v4 v5 v6. Each connects
+   * to the next one along, one synapse each.
+   */
+  const CODES = [0, 0, 1, 2, 3, 4, 5, 6];
+  const MANY: ConnectivityMatrix = {
+    size: 8,
+    nodeIds: Float64Array.from(CODES, (_, neuron) => neuron * 10),
+    properties: [
+      {
+        name: 'mtype',
+        kind: 'categorical',
+        library: ['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6'],
+        codes: Int32Array.from(CODES),
+      },
+    ],
+    pre: Uint32Array.from([0, 1, 2, 3, 4, 5, 6]),
+    post: Uint32Array.from([1, 2, 3, 4, 5, 6, 7]),
+    synapses: Float32Array.from([1, 1, 1, 1, 1, 1, 1]),
+  };
+  type Sides = { pre: [number, number, number]; post: [number, number, number] };
+  const by = ({ maxRows, window }: { maxRows?: number; window?: Sides }) =>
+    groupConnectivity(MANY, {
+      by: 'property',
+      property: 'mtype',
+      maxRows,
+      window: window && { pre: side(window.pre), post: side(window.post) },
+    });
+  const side = ([start, end, step]: [number, number, number]) => ({ start, end, step });
+
+  it('keeps a line per value where they fit', () => {
+    const groups = by({ maxRows: 7 });
+    expect(groups.pre.step).toBe(1);
+    expect(groups.pre.labels).toEqual(['v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']);
+  });
+
+  it('shares lines between values next to each other, named by the first and last', () => {
+    const groups = by({ maxRows: 3 });
+    expect(groups.places).toBe(7);
+    expect(groups.pre).toMatchObject({ start: 0, end: 7, step: 3 });
+    expect(groups.pre.labels).toEqual(['v0 – v2', 'v3 – v5', 'v6']);
+    expect(groups.pre.firstValues).toEqual(['v0', 'v3', 'v6']);
+    expect([...groups.pre.sizes]).toEqual([4, 3, 1]);
+    expect([...lineMembers(groups.pre, 0)]).toEqual([0, 10, 20, 30]);
+    expect(groups.post).toBe(groups.pre);
+    // v0 → v0, v0 → v1, v1 → v2, v2 → v3 from the first line: three stay in it, one leaves.
+    expect(groups.connections[at(3, 0, 0)]).toBe(3);
+    expect(groups.connections[at(3, 0, 1)]).toBe(1);
+  });
+
+  it('never holds more cells than the rows asked for, however many values', () => {
+    const groups = by({ maxRows: 2 });
+    expect(groups.connections).toHaveLength(4);
+    expect(groups.synapses).toHaveLength(4);
+  });
+
+  it('counts only the stretch zoomed to, with totals of all of it', () => {
+    const groups = by({ window: { pre: [0, 2, 1], post: [2, 4, 1] } });
+    expect(groups.pre.labels).toEqual(['v0', 'v1']);
+    expect(groups.post.labels).toEqual(['v2', 'v3']);
+    expect(groups.post).not.toBe(groups.pre);
+    // v1 → v2 is the one connection in view.
+    expect(groups.connections[at(2, 1, 0)]).toBe(1);
+    expect([...groups.connections].reduce((sum, n) => sum + n)).toBe(1);
+    expect(groups.totals.connections).toBe(7);
+    expect(groups.totals.synapses).toBe(7);
+  });
+
+  it('takes the neurons a row and column share out of the possible pairs', () => {
+    // The same two neurons of v0 on both sides make 2 × 2 − 2 pairs.
+    const same = by({ window: { pre: [0, 2, 1], post: [0, 2, 1] } });
+    expect(possiblePairs(same, 0, 0)).toBe(2);
+    expect(possiblePairs(same, 0, 1)).toBe(2);
+    // Lines of different sizes: v0 against v0 and v1 share v0's two neurons.
+    const uneven = by({ window: { pre: [0, 2, 1], post: [0, 4, 2] } });
+    expect(possiblePairs(uneven, 0, 0)).toBe(2 * 3 - 2);
+    expect(possiblePairs(uneven, 1, 0)).toBe(1 * 3 - 1);
+    expect(possiblePairs(uneven, 0, 1)).toBe(2 * 2);
+  });
+
+  it('rings a square by the places it takes, whichever lines it is seen through', () => {
+    const groups = by({ maxRows: 3 });
+    expect(squareOf(groups, 1, 2)).toEqual({
+      pre: { start: 3, end: 6 },
+      post: { start: 6, end: 7 },
+    });
+  });
+});
+
 describe('groupConnectivity by a property', () => {
   const groups = groupConnectivity(MATRIX, { by: 'property', property: 'mtype' });
 
@@ -340,6 +430,15 @@ describe('summarizeConnectivity', () => {
     expect(defaultGrouping(properties)).toBe('mtype');
     expect(defaultGrouping(properties.slice(1))).toBe('synapse_class');
     expect(defaultGrouping(properties.slice(2))).toBeNull();
+  });
+
+  it('first groups by a usual property with few enough values to read', () => {
+    const values = (n: number) => Array.from({ length: n }, (_, i) => `v${i}`);
+    const mtype = { name: 'mtype', kind: 'categorical' as const, values: values(11752) };
+    const synapseClass = { name: 'synapse_class', kind: 'categorical' as const, values: values(3) };
+
+    expect(defaultGrouping([mtype, synapseClass])).toBe('synapse_class');
+    expect(defaultGrouping([mtype])).toBeNull();
   });
 });
 
