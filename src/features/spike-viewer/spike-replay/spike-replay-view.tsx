@@ -51,6 +51,8 @@ import { SpikeStatisticsView } from '@/features/spike-viewer/spike-statistics/sp
 import {
   OpenPanelButton,
   PANEL_FLOORS,
+  PaneSpinner,
+  PlotsSlot,
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { SPIKE_STATISTICS } from '@/features/spike-viewer/spike-statistics/statistics';
@@ -784,7 +786,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                   content: (
                     <div id="spike-replay-scene" className="relative flex min-h-0 flex-1 flex-col">
                       <div className="relative min-h-0 flex-1">
-                        {scene}
+                        {scene || <PaneSpinner />}
                         {replayable && (
                           <SceneTime
                             labelRef={sceneTime.ref}
@@ -805,7 +807,7 @@ export function SpikeReplayView({ data, subject, reportPath, session }: SpikeRep
                 }}
                 bottom={{
                   title: 'Statistics',
-                  content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+                  content: <PlotsSlot slotRef={setPlotsSlot} />,
                 }}
               />,
               sidePanel.target

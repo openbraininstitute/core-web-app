@@ -69,6 +69,8 @@ import {
   LoadingFilePanes,
   OpenPanelButton,
   PANEL_FLOORS,
+  PaneSpinner,
+  PlotsSlot,
   StackedPanes,
 } from '@/features/spike-viewer/spike-statistics/stacked-panes';
 import { TABLE_BOX_CLASS } from '@/features/spike-viewer/spike-statistics/statistics-plots';
@@ -141,7 +143,12 @@ export default function SonataViewer({
   if (isLoading || !metadata || !worker) {
     // Docked, as the view will be, with the table of the report before still in place.
     if (withStatistics && circuit && sidePanel?.target) {
-      return <LoadingFilePanes title={variableName ? 'Traces' : 'Voltage traces'} />;
+      return (
+        <LoadingFilePanes
+          title={variableName ? 'Traces' : 'Voltage traces'}
+          panelTitles={variableName ? ['Statistics'] : ['3D Player', 'Statistics']}
+        />
+      );
     }
     return <SonataViewerSkeleton />;
   }
@@ -974,7 +981,7 @@ export function SonataReportView({
     const tracesTitle = voltage ? 'Voltage traces' : 'Traces';
     const plotsPane = {
       title: 'Statistics',
-      content: <div ref={setPlotsSlot} className="flex h-full min-h-0 flex-col" />,
+      content: <PlotsSlot slotRef={setPlotsSlot} />,
     };
     const panelTitles = voltage ? ['3D Player', 'Statistics'] : ['Statistics'];
     return (
@@ -1064,7 +1071,7 @@ export function SonataReportView({
                       title: '3D Player',
                       keepsSize: true,
                       boxClassName: 'overflow-hidden',
-                      content: scene,
+                      content: scene ?? <PaneSpinner />,
                     }
                   : plotsPane
               }

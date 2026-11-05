@@ -4,6 +4,7 @@ import { RiArrowRightLine } from '@remixicon/react';
 import { Spin } from 'antd';
 import { atom, useAtom } from 'jotai';
 import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { KeptNodesGridPlaceholder } from '@/features/circuit-nodes/components/kept-nodes-grid';
 import {
@@ -196,38 +197,93 @@ export function StackedPanes({
   );
 }
 
+/** A pane's wait for what it will hold: a spinner in the middle of its box. */
+export function PaneSpinner() {
+  return (
+    <div className="flex h-full min-h-0 flex-1 items-center justify-center">
+      <Spin />
+    </div>
+  );
+}
+
+/** Where a panel's plots are put from elsewhere, a spinner until they are. */
+export function PlotsSlot({ slotRef }: { slotRef: (slot: HTMLDivElement | null) => void }) {
+  return (
+    <>
+      <div ref={slotRef} className="peer flex h-full min-h-0 flex-col" />
+      <div className="absolute inset-0 hidden items-center justify-center peer-empty:flex">
+        <Spin />
+      </div>
+    </>
+  );
+}
+
 /**
- * A results view's file column while its report loads, laid out as it will be:
- * the plot's box waiting, and the nodes table the view before kept in its own,
- * so a table over the same cells stays where it is.
+ * A results view's panes while its report loads, laid out as they will be: the plot's box
+ * waiting, the nodes table the view before kept in its own, so a table over the same cells
+ * stays where it is, and the button to the panel, whose panes wait beside them once it is up.
  */
 export function LoadingFilePanes({
   title,
+  panelTitles,
 }: {
   /** What the plot over the table is called, for its bar if it is shut. */
   title: string;
+  /** The panes the panel will hold, the top one first. */
+  panelTitles: readonly string[];
 }) {
+  const sidePanel = useResultsSidePanel();
+  const [panelTop, panelBottom] = panelTitles;
   return (
-    <StackedPanes
-      split="file"
-      top={{
-        title,
-        content: (
-          <div className="flex min-h-0 flex-1 items-center justify-center">
-            <Spin />
-          </div>
-        ),
-      }}
-      bottom={{
-        title: 'Neuron Table',
-        boxClassName: 'px-3 pt-1 pb-2',
-        content: (
-          <KeptNodesGridPlaceholder
-            fallback={<Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />}
-          />
-        ),
-      }}
-    />
+    <>
+      <StackedPanes
+        split="file"
+        top={{
+          title,
+          boxClassName: 'p-2',
+          content: (
+            <>
+              {sidePanel && !sidePanel.open && (
+                <div className="flex shrink-0 justify-end px-1 pb-1">
+                  <OpenPanelButton titles={panelTitles} onOpen={() => sidePanel.setOpen(true)} />
+                </div>
+              )}
+              <PaneSpinner />
+            </>
+          ),
+        }}
+        bottom={{
+          title: 'Neuron Table',
+          boxClassName: 'px-3 pt-1 pb-2',
+          content: (
+            <KeptNodesGridPlaceholder
+              fallback={<Skeleton className="my-2 min-h-0 flex-1 rounded-lg" />}
+            />
+          ),
+        }}
+      />
+      {sidePanel?.open &&
+        sidePanel.target &&
+        createPortal(
+          <StackedPanes
+            split="panel"
+            floors={PANEL_FLOORS}
+            top={{ title: panelTop, content: <PaneSpinner /> }}
+            bottom={panelBottom ? { title: panelBottom, content: <PaneSpinner /> } : null}
+          />,
+          sidePanel.target
+        )}
+      {sidePanel?.fileStrip &&
+        createPortal(
+          <ShutPaneBar upright title={[title, 'Neuron Table']} onOpen={sidePanel.openColumns} />,
+          sidePanel.fileStrip
+        )}
+      {sidePanel?.panelStrip &&
+        createPortal(
+          <ShutPaneBar upright title={panelTitles} onOpen={sidePanel.openColumns} />,
+          sidePanel.panelStrip
+        )}
+    </>
   );
 }
 
