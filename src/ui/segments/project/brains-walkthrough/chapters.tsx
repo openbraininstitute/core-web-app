@@ -72,6 +72,93 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         }),
   },
   {
+    id: 'analysis',
+    theme: 'Explore',
+    label: 'Analysis',
+    scene: 'analysis',
+    title: 'Interactive tools for analysis',
+    hero: true,
+    column: VIDEO_CHAPTER,
+    body: (
+      <>
+        <p>
+          Explore a simulation&apos;s results as soon as they are in: voltage traces, spike rasters,
+          PSTHs and spike statistics, beside the circuit in 3D.
+        </p>
+        <p>
+          Filter the neurons in the table and every plot follows, ordered and grouped by cell type
+          or by any property of the circuit.
+        </p>
+      </>
+    ),
+    after: <ChapterAction label="Get Started" destination="data" />,
+  },
+  {
+    id: 'build',
+    theme: 'Build',
+    label: 'Build',
+    scene: 'models',
+    title: 'Build brain models, across scales',
+    hero: true,
+    titleClass: SERIF_TITLE,
+    column: `${VIDEO_CHAPTER} ${mosaic.chapter}`,
+    body: (
+      <>
+        <p>
+          Explore models across species: rat, mouse, human and fruit fly (FlyWire), from single
+          neurons and small circuits to brain regions and whole brains.
+        </p>
+        <p>Customize models for hypothesis testing and disease modelling.</p>
+        <p>
+          Create neuronal skeletons from H01 and MICrONS electron microscopy reconstructions as a
+          starting point for new models.
+        </p>
+      </>
+    ),
+    after: <ChapterAction label="Get Started" destination="workflows" />,
+  },
+  {
+    id: 'simulate',
+    theme: 'Simulate',
+    label: 'Simulate',
+    scene: 'configuration',
+    title: 'Configure simulations & workflows',
+    hero: true,
+    column: VIDEO_CHAPTER,
+    body: (
+      <>
+        <p>
+          Set up a simulation campaign on any circuit in the platform: its stimuli, recordings and
+          neuron sets, chosen beside the circuit in 3D and its table of neurons.
+        </p>
+        <p>
+          Give any parameter a list of values to scan it, then generate and launch the whole
+          campaign at once.
+        </p>
+      </>
+    ),
+    after: <ChapterAction label="Get Started" destination="workflows" />,
+  },
+  {
+    id: 'notebooks',
+    theme: 'Notebooks',
+    label: 'Notebooks',
+    scene: 'notebooks',
+    title: 'Jupyter notebooks for interacting with data',
+    hero: true,
+    column: VIDEO_CHAPTER,
+    body: (
+      <>
+        <p>
+          Open models, data and simulation results in Jupyter notebooks in the cloud: query them
+          with Python, analyse them and plot them, with nothing to install.
+        </p>
+        <p>Start from the platform&apos;s own notebooks, or write your own and share them.</p>
+      </>
+    ),
+    after: <ChapterAction label="Get Started" destination="notebooks" />,
+  },
+  {
     id: 'agents',
     theme: 'Leverage AI',
     label: 'AI',
@@ -120,96 +207,9 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     after: <ChapterAction label="Get Started" destination="learn" />,
   },
   {
-    id: 'simulate',
-    theme: 'Simulate',
-    label: 'Simulate',
-    scene: 'configuration',
-    title: 'Configure simulations & workflows',
-    hero: true,
-    column: VIDEO_CHAPTER,
-    body: (
-      <>
-        <p>
-          Set up a simulation campaign on any circuit in the platform: its stimuli, recordings and
-          neuron sets, chosen beside the circuit in 3D and its table of neurons.
-        </p>
-        <p>
-          Give any parameter a list of values to scan it, then generate and launch the whole
-          campaign at once.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Get Started" destination="workflows" />,
-  },
-  {
-    id: 'analysis',
-    theme: 'Explore',
-    label: 'Analysis',
-    scene: 'analysis',
-    title: 'Interactive tools for analysis',
-    hero: true,
-    column: VIDEO_CHAPTER,
-    body: (
-      <>
-        <p>
-          Explore a simulation&apos;s results as soon as they are in: voltage traces, spike rasters,
-          PSTHs and spike statistics, beside the circuit in 3D.
-        </p>
-        <p>
-          Filter the neurons in the table and every plot follows, ordered and grouped by cell type
-          or by any property of the circuit.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Get Started" destination="data" />,
-  },
-  {
-    id: 'notebooks',
-    theme: 'Notebooks',
-    label: 'Notebooks',
-    scene: 'notebooks',
-    title: 'Jupyter notebooks for interacting with data',
-    hero: true,
-    column: VIDEO_CHAPTER,
-    body: (
-      <>
-        <p>
-          Open models, data and simulation results in Jupyter notebooks in the cloud: query them
-          with Python, analyse them and plot them, with nothing to install.
-        </p>
-        <p>Start from the platform&apos;s own notebooks, or write your own and share them.</p>
-      </>
-    ),
-    after: <ChapterAction label="Get Started" destination="notebooks" />,
-  },
-  {
-    id: 'build',
-    theme: 'Build',
-    label: 'Build',
-    scene: 'models',
-    title: 'Build brain models, across scales',
-    hero: true,
-    titleClass: SERIF_TITLE,
-    column: `${VIDEO_CHAPTER} ${mosaic.chapter}`,
-    body: (
-      <>
-        <p>
-          Explore models across species: rat, mouse, human and fruit fly (FlyWire), from single
-          neurons and small circuits to brain regions and whole brains.
-        </p>
-        <p>Customize models for hypothesis testing and disease modelling.</p>
-        <p>
-          Create neuronal skeletons from H01 and MICrONS electron microscopy reconstructions as a
-          starting point for new models.
-        </p>
-      </>
-    ),
-    after: <ChapterAction label="Get Started" destination="workflows" />,
-  },
-  {
     id: 'join',
-    theme: 'Get started',
-    label: 'Get started',
+    theme: 'Get Started',
+    label: 'Get Started',
     scene: 'join',
     title: 'Get started',
     hero: true,
