@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { SERIF } from '@/features/learn/components/heuristics/shared';
 import { cn } from '@/utils/css-class';
@@ -176,7 +176,9 @@ function TimelineProgress({
   progress: number;
 }) {
   const [segment, setSegment] = useState({ chapter, left: 0, width: 0 });
-  useLayoutEffect(() => {
+  // The row is the parent of this component; its ref is attached after child layout effects.
+  // A passive effect measures it on the first entry as well as subsequent chapter changes.
+  useEffect(() => {
     const row = rail.current;
     if (!row) return;
     const measure = () => {

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   createContext,
@@ -520,15 +521,23 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                   introContent && 'bg-white pb-[14px]'
                 )}
               >
-                <span
+                <Link
+                  href="/"
+                  aria-label="Open Brain Institute homepage"
                   data-walkthrough-logo
+                  onClick={(event) => {
+                    if (!introContent) return;
+                    event.preventDefault();
+                    root?.scrollTo({ top: 0, behavior: 'instant' });
+                    backToIntro();
+                  }}
                   className={cn(
-                    'shrink-0 transition-opacity duration-500',
+                    'pointer-events-auto shrink-0 rounded-sm transition-opacity duration-500 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#183f8b]',
                     introDone || introContent ? 'opacity-100' : 'opacity-0'
                   )}
                 >
                   <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
-                </span>
+                </Link>
                 <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
                   <FindOutMore shown={introDone || !!introContent} />
                   {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
