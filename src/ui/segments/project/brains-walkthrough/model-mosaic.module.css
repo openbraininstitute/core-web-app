@@ -2,8 +2,8 @@
 .gallery {
   position: absolute;
   inset-block: 10vh;
-  left: 2%;
-  right: clamp(110px, 12vw, 210px);
+  left: -5%;
+  right: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,12 +17,11 @@
 
 .movie video {
   display: block;
-  width: 100%;
+  width: 92%;
   max-height: calc(80vh - 36px);
   aspect-ratio: 16 / 9;
   object-fit: contain;
-  border-radius: 14px;
-  background: #08054a;
+  background: transparent;
 }
 
 .controls {
@@ -61,7 +60,7 @@
   }
 
   .gallery {
-    inset-inline: 16px;
+    inset-inline: 0;
     top: var(--stage-video-top);
     bottom: auto;
     height: var(--stage-video-h);

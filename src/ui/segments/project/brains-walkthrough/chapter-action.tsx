@@ -25,18 +25,12 @@ export function ChapterAction({ label, destination }: { label: string; destinati
   const actions = useWalkthroughActions();
   const learn = useFlag(learnFlag.key) === true;
   const home = projectId ? `${config.ROOT_ROUTE}/${virtualLabId}/${projectId}` : '/';
-  const content = (
-    <>
-      {label}
-      <span aria-hidden="true">↗</span>
-    </>
-  );
 
   if (destination === 'platform') {
     return (
-      <div className={labs.chapterAction}>
+      <div className={labs.chapterAction} data-chapter-action>
         <button type="button" onClick={actions?.enter} className={labs.button}>
-          {content}
+          {label}
         </button>
       </div>
     );
@@ -52,9 +46,9 @@ export function ChapterAction({ label, destination }: { label: string; destinati
         : config.ROOT_ROUTE;
 
   return (
-    <div className={labs.chapterAction}>
+    <div className={labs.chapterAction} data-chapter-action>
       <Link href={href} className={labs.button}>
-        {content}
+        {label}
       </Link>
     </div>
   );

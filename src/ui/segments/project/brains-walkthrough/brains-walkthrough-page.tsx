@@ -83,6 +83,7 @@ export function BrainsWalkthroughPage({
               underlines={BRAIN_THEME_UNDERLINES}
               links={BRAIN_THEME_LINKS}
               goTo={state.goTo}
+              playback={enterHref ? state.playback : undefined}
             />
           )}
         </>

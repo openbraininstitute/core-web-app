@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import styles from './model-mosaic.module.css';
+import labs from './virtual-labs.module.css';
 
 /** The supplied mosaic film, with additional models tracked into its moving grid. */
 export function ModelMosaic() {
@@ -42,6 +43,7 @@ export function ModelMosaic() {
       <figure className={styles.movie}>
         <video
           ref={videoRef}
+          className={labs.blendedVideo}
           src={visible ? '/images/start/walkthrough/models-mosaic.mp4' : undefined}
           poster="/images/start/walkthrough/models-mosaic.jpg"
           muted

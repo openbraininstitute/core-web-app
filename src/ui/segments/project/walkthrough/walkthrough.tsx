@@ -22,10 +22,13 @@ import { HOME_DESIGNS } from '@/ui/segments/project/home-designs';
 import { cn } from '@/utils/css-class';
 
 import { AccountFlow, Initials, readDummyAccount } from './account-flow';
+import { type ChapterPlayback, useChapterPlayback } from './use-chapter-playback';
 
 import type { CSSProperties, ReactNode } from 'react';
 import type { THomeDesign } from '@/ui/segments/project/home-designs';
 import type { IDummyAccount } from './account-flow';
+
+import publicTour from './public-tour.module.css';
 
 /** A screen of a walkthrough: its words, and what its stage shows, which each walkthrough says. */
 export interface IWalkthroughChapter {
@@ -144,6 +147,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
     enter: () => void;
     ready: () => void;
     goTo: (id: string) => void;
+    playback: ChapterPlayback;
   }) => ReactNode;
   /** Words after the intro's, in italics, coming a beat after them. */
   introTail?: string;
@@ -161,6 +165,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   firstTitleClass?: string;
 }) {
   const [root, setRoot] = useState<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const sections = useRef<Array<HTMLElement | null>>([]);
   // The scroller's height, a chapter's: until it is measured, the screen less the top menu.
   const [height, setHeight] = useState<number | null>(null);
@@ -357,6 +362,15 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   // The runway past the end is no chapter: the last one stays on while it is crossed.
   const on = Math.min(active, chapters.length - 1);
   const chapter = chapters[on];
+  const advanceChapter = useCallback(() => {
+    if (on < chapters.length - 1) go(on + 1);
+  }, [on, chapters.length, go]);
+  const playback = useChapterPlayback({
+    stage: stageRef,
+    chapterId: chapter.id,
+    enabled: !!introContent && introDone,
+    onComplete: advanceChapter,
+  });
   // While the intro is up, the first screen waits a page below it, and scrolls up as it leaves.
   const underIntro: CSSProperties = {
     transform: intro && !introDone && !introLeft ? 'translateY(100vh)' : 'none',
@@ -376,7 +390,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 : 'relative min-h-full',
               // Lifted away, the home under it uncovered.
               finishing && 'pointer-events-none scale-[1.04] opacity-0',
-              learnFonts
+              learnFonts,
+              introContent && publicTour.publicTour
             )}
             style={
               {
@@ -397,6 +412,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               enter: askEnter,
               ready: floatReady,
               goTo,
+              playback,
             })}
             {intro && !introDone && !introContent && (
               <Intro
@@ -428,6 +444,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               })}
             {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
             <div
+              ref={stageRef}
               className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
               style={underIntro}
             >
@@ -543,6 +560,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                     first={index === 0}
                     firstClass={firstTitleClass}
                     onColorSlot={setColorSlot}
+                    publicOpening={!!introContent}
                   />
                 </section>
               ))}
@@ -619,6 +637,7 @@ function ChapterText({
   first,
   firstClass,
   onColorSlot,
+  publicOpening = false,
 }: {
   chapter: IWalkthroughChapter;
   on: boolean;
@@ -628,6 +647,7 @@ function ChapterText({
   /** The class its title is set in, where it is the first chapter's. */
   firstClass?: string;
   onColorSlot: (slot: HTMLElement | null) => void;
+  publicOpening?: boolean;
 }) {
   const { kicker, title, hero, body, colorBy, after, wide, titleClass, column } = chapter;
   return (
@@ -642,7 +662,8 @@ function ChapterText({
               'beside:w-[38%] beside:max-w-[540px] beside:bg-transparent beside:py-[72px] beside:pr-0 beside:pl-[clamp(32px,5vw,88px)]'
             ),
         on ? 'pointer-events-auto translate-y-0 opacity-100' : 'translate-y-[24px] opacity-0',
-        column
+        column,
+        publicOpening && publicTour.publicText
       )}
     >
       {kicker && (
@@ -673,7 +694,10 @@ function ChapterText({
         </h2>
       )}
       {body && (
-        <div className="flex flex-col gap-[12px] text-[14px] leading-[1.6] text-neutral-600">
+        <div
+          data-chapter-body
+          className="flex flex-col gap-[12px] text-[14px] leading-[1.6] text-neutral-600"
+        >
           {body}
         </div>
       )}

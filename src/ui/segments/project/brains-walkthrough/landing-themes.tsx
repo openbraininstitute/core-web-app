@@ -5,8 +5,17 @@ import { cn } from '@/utils/css-class';
 
 import { BRAIN_THEMES } from './chapters';
 
+import type { ChapterPlayback } from '@/ui/segments/project/walkthrough/use-chapter-playback';
+
+import progressStyles from '@/ui/segments/project/walkthrough/public-tour.module.css';
+
 /** Where the line of the platform's uses runs along the foot of the page: the landing's, and the screens' after. */
 export const THEMES_FOOT = 'inset-x-0 bottom-[clamp(20px,4.5vh,44px)] flex justify-center';
+export const THEME_NAV_RAIL = cn(
+  'pointer-events-none fixed z-[66] transition-opacity duration-500',
+  THEMES_FOOT,
+  'stacked:pointer-events-auto stacked:bottom-0 stacked:block stacked:overflow-x-auto stacked:bg-white/90 stacked:pt-[8px] stacked:pb-[12px] stacked:[mask-image:linear-gradient(90deg,transparent,#000_20px,#000_calc(100%-20px),transparent)] stacked:[scrollbar-width:none] squat:bottom-0 squat:bg-white/90 squat:pt-[6px] squat:pb-[8px]'
+);
 
 /**
  * The platform's uses in a line, in grey italics, set apart by dots, in the course's serif: on the landing as
@@ -15,14 +24,18 @@ export const THEMES_FOOT = 'inset-x-0 bottom-[clamp(20px,4.5vh,44px)] flex justi
  * Each word is marked to be flown from the landing's line to the screens', which, laid out alike, it does
  * without moving while the landing scrolls away.
  */
-function ThemeLine({
+export function ThemeLine({
   underlined,
   links,
   goTo,
+  playback,
+  publicAppearance = false,
 }: {
   underlined?: string;
   links?: Record<string, string>;
   goTo?: (id: string) => void;
+  playback?: ChapterPlayback;
+  publicAppearance?: boolean;
 }) {
   return (
     <p
@@ -33,7 +46,11 @@ function ThemeLine({
           ? 'stacked:mx-auto stacked:w-max stacked:flex-nowrap stacked:whitespace-nowrap'
           : 'stacked:gap-x-[8px] stacked:text-[13px]'
       )}
-      style={{ fontFamily: SERIF }}
+      style={
+        publicAppearance
+          ? { fontFamily: 'var(--font-gabarito), sans-serif', fontStyle: 'normal' }
+          : { fontFamily: SERIF }
+      }
     >
       {BRAIN_THEMES.map((theme, i) => {
         const word = (
@@ -41,15 +58,22 @@ function ThemeLine({
             data-fly={theme}
             className={cn(
               links &&
-                'underline decoration-[1.5px] underline-offset-[0.2em] transition-[text-decoration-color,color] duration-500'
+                !playback &&
+                'underline decoration-[1.5px] underline-offset-[0.2em] transition-[text-decoration-color,color] duration-500',
+              (playback || publicAppearance) && progressStyles.navWord
             )}
             style={
-              links
+              links && !playback
                 ? { textDecorationColor: theme === underlined ? 'currentColor' : 'transparent' }
                 : undefined
             }
           >
             {theme}
+            {playback && theme === underlined && (
+              <span className={progressStyles.navProgress} aria-hidden="true">
+                <span style={{ transform: `scaleX(${playback.progress})` }} />
+              </span>
+            )}
           </span>
         );
         const to = links?.[theme];
@@ -65,7 +89,10 @@ function ThemeLine({
                 type="button"
                 onClick={() => goTo(to)}
                 aria-current={theme === underlined ? 'location' : undefined}
-                className="pointer-events-auto cursor-pointer italic hover:text-[#002766] stacked:-my-[8px] stacked:py-[8px]"
+                className={cn(
+                  'pointer-events-auto cursor-pointer hover:text-[#002766] stacked:-my-[8px] stacked:py-[8px]',
+                  !publicAppearance && 'italic'
+                )}
               >
                 {word}
               </button>
@@ -75,6 +102,21 @@ function ThemeLine({
           </Fragment>
         );
       })}
+      {playback && (
+        <button
+          type="button"
+          className={progressStyles.navPause}
+          onClick={playback.toggle}
+          aria-label={playback.playing ? 'Pause chapter playback' : 'Play chapter playback'}
+          title={playback.playing ? 'Pause' : 'Play'}
+          aria-pressed={playback.playing}
+        >
+          <span aria-hidden="true">{playback.playing ? 'Ⅱ' : '▷'}</span>
+        </button>
+      )}
+      {publicAppearance && !playback && (
+        <span className={progressStyles.navPauseSpace} aria-hidden="true" />
+      )}
     </p>
   );
 }
@@ -95,12 +137,14 @@ export function ThemeNav({
   underlines,
   links,
   goTo,
+  playback,
 }: {
   entered: boolean;
   chapter: number;
   underlines: Record<number, string>;
   links: Record<string, string>;
   goTo: (id: string) => void;
+  playback?: ChapterPlayback;
 }) {
   const rail = useRef<HTMLDivElement>(null);
   const underlined = entered ? underlines[chapter] : undefined;
@@ -130,15 +174,16 @@ export function ThemeNav({
       ref={rail}
       aria-hidden={!entered}
       inert={!entered || undefined}
-      className={cn(
-        'pointer-events-none fixed z-[66] transition-opacity duration-500',
-        THEMES_FOOT,
-        // Upright on a phone, a band along the foot, for a screen's words to pass under, its ends fading.
-        'stacked:pointer-events-auto stacked:bottom-0 stacked:block stacked:overflow-x-auto stacked:bg-white/90 stacked:pt-[8px] stacked:pb-[12px] stacked:[mask-image:linear-gradient(90deg,transparent,#000_20px,#000_calc(100%-20px),transparent)] stacked:[scrollbar-width:none] squat:bottom-0 squat:bg-white/90 squat:pt-[6px] squat:pb-[8px]'
-      )}
+      className={THEME_NAV_RAIL}
       style={{ opacity: entered ? 1 : 0 }}
     >
-      <ThemeLine underlined={underlined} links={links} goTo={goTo} />
+      <ThemeLine
+        underlined={underlined}
+        links={links}
+        goTo={goTo}
+        playback={playback}
+        publicAppearance={!!playback}
+      />
     </div>
   );
 }

@@ -1,0 +1,111 @@
+.publicText {
+  align-items: flex-start;
+  text-align: left;
+  font-family: var(--font-gabarito), sans-serif;
+  color: #082d63;
+}
+.publicTour .publicText h1,
+.publicTour .publicText h2 {
+  font-family: var(--font-gabarito), sans-serif;
+  font-weight: 400;
+  font-size: clamp(38px, 4.1vw, 66px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  color: #082d63;
+  text-align: left;
+}
+.publicText > div {
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+.publicText ul {
+  list-style: none;
+  padding-inline: 0;
+}
+.publicText [data-agent-prompts] {
+  text-align: left;
+  width: 100%;
+}
+.publicText [data-agent-prompt] {
+  align-items: stretch;
+}
+.publicText [data-chapter-action] {
+  justify-content: flex-start;
+}
+.publicText [data-chapter-body] {
+  color: #365479;
+  font-size: 16px;
+}
+.publicText [data-chapter-body] p {
+  color: #365479;
+}
+.publicText [data-chapter-body] > div {
+  align-items: flex-start;
+}
+@media (max-width: 760px) {
+  .publicTour .publicText h1,
+  .publicTour .publicText h2 {
+    font-size: clamp(36px, 9.5vw, 50px);
+  }
+}
+.publicTour [data-fly] {
+  font-family: var(--font-gabarito), sans-serif;
+  font-style: normal;
+}
+.navWord {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 9px;
+}
+.navProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  overflow: hidden;
+  background: #183f8b26;
+}
+.navProgress > span {
+  display: block;
+  height: 100%;
+  background: #183f8b;
+  transform-origin: left;
+  transition: transform 0.15s linear;
+}
+.navPause,
+.navPauseSpace {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  margin-left: 6px;
+  margin-bottom: 9px;
+}
+.navPause {
+  pointer-events: auto;
+  border-radius: 50%;
+  background: #183f8b0d;
+  font-family: var(--font-gabarito), sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  font-style: normal;
+  color: #365479;
+  cursor: pointer;
+}
+.navPause:hover {
+  background: #183f8b1a;
+}
+.navPause:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .navProgress > span {
+    transition: none;
+  }
+}

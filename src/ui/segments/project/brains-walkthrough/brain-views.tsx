@@ -339,7 +339,8 @@ export function ConfigurationRecording({ className }: { className?: string }) {
       loop
       playsInline
       className={cn(
-        'rounded-[12px] border border-neutral-200 shadow-[0_18px_44px_rgba(0,39,102,0.14)] transition-opacity duration-700 ease-out',
+        labs.blendedVideo,
+        'transition-opacity duration-700 ease-out',
         entered ? 'opacity-100' : 'opacity-0',
         className
       )}
@@ -396,7 +397,7 @@ export function VirtualLabsPoints() {
       </ul>
       <div className={labs.action}>
         <button type="button" onClick={actions?.enter} className={labs.button}>
-          Explore the platform <span aria-hidden="true">↗</span>
+          Get Started
         </button>
         <span className={labs.note}>In your browser. Nothing to install.</span>
       </div>
@@ -506,9 +507,9 @@ export function StageVideo({
   return (
     <div
       className={cn(
-        'absolute inset-y-[10vh] right-[clamp(110px,12vw,210px)] left-[2%] flex items-center justify-center',
+        'absolute inset-y-[10vh] right-[24px] left-[-5%] flex items-center justify-center',
         // Upright, across the page, for a screen's words to start under it (`UNDER_VIDEO`).
-        'stacked:inset-x-[16px] stacked:top-(--stage-video-top) stacked:bottom-auto stacked:h-(--stage-video-h)',
+        'stacked:inset-x-0 stacked:top-(--stage-video-top) stacked:bottom-auto stacked:h-(--stage-video-h)',
         className
       )}
     >
@@ -519,7 +520,7 @@ export function StageVideo({
         muted
         loop
         playsInline
-        className="max-h-full max-w-full rounded-[14px] border border-neutral-200 object-contain shadow-[0_24px_60px_rgba(0,39,102,0.14)] stacked:shadow-[0_10px_30px_rgba(0,39,102,0.12)]"
+        className={labs.blendedVideo}
       />
     </div>
   );
@@ -531,7 +532,7 @@ export function StartNow() {
   return (
     <div className="pt-[10px]">
       <button type="button" onClick={actions?.enter} className={labs.button}>
-        Try the platform <span aria-hidden="true">↗</span>
+        Get Started
       </button>
     </div>
   );

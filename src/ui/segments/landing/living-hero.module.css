@@ -30,6 +30,7 @@
   width: 36%;
   margin-left: 26%;
   padding-right: 25px;
+  text-align: left;
 }
 .headline {
   font-size: clamp(42px, 4.6vw, 74px);
@@ -76,32 +77,6 @@
   font-size: 12px;
   margin-top: 15px;
 }
-.playback {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  margin-top: 34px;
-}
-.playback button {
-  color: var(--secondary);
-  font-size: 12px;
-  min-height: 44px;
-  padding-inline: 4px;
-}
-.progress {
-  display: block;
-  width: 84px;
-  height: 2px;
-  background: color-mix(in srgb, var(--ink) 18%, transparent);
-  overflow: hidden;
-}
-.progress > span {
-  display: block;
-  height: 100%;
-  background: var(--ink);
-  transform-origin: left;
-  animation: progress linear both;
-}
 .showcase {
   position: absolute;
   inset: 110px -4% 140px 61%;
@@ -112,7 +87,10 @@
 .cubeBackdrop {
   position: absolute;
   inset: 88px 16% 110px -16%;
-  mask-image: linear-gradient(to right, #000 0%, #000 45%, #00000055 76%, transparent 100%);
+  mask-image:
+    linear-gradient(to right, #000 0%, #000 45%, #00000055 76%, transparent 100%),
+    linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
+  mask-composite: intersect;
 }
 .cubeBackdrop > div > div {
   transform: scaleX(-1);
@@ -156,49 +134,8 @@
 .liveSimulation > img {
   object-fit: contain;
 }
-.chapters {
-  position: relative;
-  z-index: 3;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 4px 25px;
-  border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
-  margin-top: 16px;
-  padding-top: 15px;
-}
-.chapters button {
-  padding-block: 10px;
-  color: var(--secondary);
-  font-size: 14px;
-}
 .hero button {
   cursor: pointer;
-}
-.chapters button:hover {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 6px;
-}
-.discover {
-  position: relative;
-  z-index: 3;
-  align-self: flex-start;
-  padding: 7px 0;
-  margin-top: 8px;
-  color: var(--secondary);
-  font-size: 12px;
-}
-.discover span {
-  margin-left: 18px;
-}
-@keyframes progress {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
 }
 @media (min-width: 1700px) {
   .copy {
@@ -230,9 +167,6 @@
     font-size: 28px;
     margin-bottom: 24px;
   }
-  .playback {
-    margin-top: 12px;
-  }
   .showcase {
     inset: 565px 0 155px;
     min-height: 250px;
@@ -240,15 +174,9 @@
   .cubeBackdrop {
     inset: 100px 5% 250px -75%;
     opacity: 0.3;
-    mask-image: linear-gradient(to right, #000 0%, transparent 82%);
-  }
-  .chapters {
-    gap: 0 18px;
-    margin-top: 14px;
-  }
-  .chapters button {
-    min-height: 44px;
-    font-size: 13px;
+    mask-image:
+      linear-gradient(to right, #000 0%, transparent 82%),
+      linear-gradient(to bottom, #000 0%, #000 62%, transparent 100%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -257,8 +185,5 @@
   .liveCanvas,
   .cta {
     transition: none;
-  }
-  .progress > span {
-    animation: none;
   }
 }

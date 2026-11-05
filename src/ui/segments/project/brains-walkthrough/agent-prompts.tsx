@@ -56,8 +56,8 @@ function ObiMark() {
 /**
  * Three prompt boxes, as Claude's, ChatGPT's and the platform's own OBI Assistant's, each in turn connecting to
  * the platform, by its OBI connector or plugin, or built in, typing what someone asks of it, sending it, and
- * handing over to the next, round and round; from the start each time they come into view. On a phone, one at a
- * time in one place, whose turn it is: three, with room for what is typed, are taller than the screen.
+ * handing over to the next, round and round; from the start each time they come into view.
+ * All three boxes remain visible while the active prompt animates.
  */
 export function AgentPrompts() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -122,7 +122,7 @@ export function AgentPrompts() {
       data-agent-prompts
       // Beside the stage, ending a gutter short of the multiplying brains' canvas (the stage's 62% of the page,
       // that canvas inset from it), less the column's own left padding.
-      className="flex flex-col gap-[12px] pt-[4px] pb-[6px] beside:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)] stacked:grid squat:grid"
+      className="flex flex-col gap-[12px] pt-[4px] pb-[6px] beside:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)]"
     >
       {PROMPTS.map((prompt, i) => {
         const on = i === state.box;
@@ -137,10 +137,9 @@ export function AgentPrompts() {
           <div
             key={prompt.agent}
             data-agent-prompt
+            data-active={on}
             className={cn(
-              'flex flex-col gap-[8px] border bg-white px-[16px] pt-[12px] pb-[10px] shadow-[0_6px_22px_rgba(0,39,102,0.07)] transition-[border-color,box-shadow,opacity] duration-300',
-              'stacked:col-start-1 stacked:row-start-1 squat:col-start-1 squat:row-start-1',
-              !on && 'stacked:opacity-0 squat:opacity-0',
+              'flex h-[100px] w-full shrink-0 flex-col gap-[8px] border bg-white px-[16px] pt-[12px] pb-[10px] shadow-[0_6px_22px_rgba(0,39,102,0.07)] transition-[border-color,box-shadow,opacity] duration-300',
               claude
                 ? 'rounded-[16px] border-[#e8e3d9]'
                 : obi
@@ -167,7 +166,7 @@ export function AgentPrompts() {
             </div>
             <p
               className={cn(
-                'min-h-[20px] text-[14px] leading-[20px] transition-opacity duration-300 stacked:min-h-[60px] squat:min-h-[60px]',
+                'min-h-0 flex-1 overflow-y-auto text-[14px] leading-[20px] transition-opacity duration-300',
                 typed ? 'text-[#1f1e1d]' : 'text-neutral-400',
                 sending && 'opacity-40'
               )}

@@ -53,15 +53,12 @@ describe('public science opening', () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 
-  it('pauses rotation and replaces the animated neuron with its still poster', () => {
+  it('keeps rotating without a homepage pause control or playback line', () => {
     render(<LivingHero onContinue={vi.fn()} onChapter={vi.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Inspect neuron meshes' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Pause scientific visuals' }));
-    expect(screen.getByTestId('inspect-mesh').getAttribute('src')).toContain(
-      'em-cell-mesh-poster.png'
-    );
-    act(() => vi.advanceTimersByTime(18000));
-    expect(screen.getByTestId('science-caption')).toHaveTextContent('Inspect neurons');
+    expect(screen.queryByRole('button', { name: /Pause/ })).not.toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(SCIENCE_SCENES[2].duration));
+    expect(screen.getByTestId('science-caption')).toHaveTextContent('Simulate activity');
   });
 
   it('shows stills and does not auto-rotate for reduced motion', () => {
@@ -89,17 +86,16 @@ describe('public science opening', () => {
     );
   });
 
-  it('opens the chosen chapter and lets visitors continue by button or scroll', () => {
+  it('opens the chosen chapter and lets visitors continue by scroll', () => {
     const onChapter = vi.fn();
     const onContinue = vi.fn();
     render(<LivingHero onContinue={onContinue} onChapter={onChapter} />);
     fireEvent.click(screen.getByRole('button', { name: /^Explore$/ }));
     expect(onChapter).toHaveBeenCalledWith('analysis');
-    fireEvent.click(screen.getByRole('button', { name: /Discover Virtual Labs/ }));
-    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: /Discover Virtual Labs/ })).not.toBeInTheDocument();
     fireEvent.wheel(screen.getByRole('region', { name: 'Discover the Open Brain Platform' }), {
       deltaY: 30,
     });
-    expect(onContinue).toHaveBeenCalledTimes(2);
+    expect(onContinue).toHaveBeenCalledTimes(1);
   });
 });

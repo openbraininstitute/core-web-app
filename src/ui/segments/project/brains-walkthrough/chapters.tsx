@@ -85,7 +85,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     hero: true,
     titleClass: SERIF_TITLE,
     // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
-    column: `${labs.chapter} ${labs.aiChapter} beside:w-[52%] beside:max-w-[720px]`,
+    column: `${labs.chapter} ${labs.aiChapter} beside:w-[60%] beside:max-w-[860px]`,
     body: (
       <>
         <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">
@@ -94,7 +94,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <AgentPrompts />
       </>
     ),
-    after: <ChapterAction label="Try the platform with AI" destination="platform" />,
+    after: <ChapterAction label="Get Started" destination="platform" />,
   },
   {
     id: 'teach',
@@ -117,7 +117,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
-    after: <ChapterAction label="Start learning" destination="learn" />,
+    after: <ChapterAction label="Get Started" destination="learn" />,
   },
   {
     id: 'simulate',
@@ -139,7 +139,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
-    after: <ChapterAction label="Configure a simulation" destination="workflows" />,
+    after: <ChapterAction label="Get Started" destination="workflows" />,
   },
   {
     id: 'analysis',
@@ -161,7 +161,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
-    after: <ChapterAction label="Explore simulation results" destination="data" />,
+    after: <ChapterAction label="Get Started" destination="data" />,
   },
   {
     id: 'notebooks',
@@ -180,7 +180,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         <p>Start from the platform&apos;s own notebooks, or write your own and share them.</p>
       </>
     ),
-    after: <ChapterAction label="Browse notebooks" destination="notebooks" />,
+    after: <ChapterAction label="Get Started" destination="notebooks" />,
   },
   {
     id: 'build',
@@ -204,7 +204,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
         </p>
       </>
     ),
-    after: <ChapterAction label="Build a brain model" destination="workflows" />,
+    after: <ChapterAction label="Get Started" destination="workflows" />,
   },
   {
     id: 'join',

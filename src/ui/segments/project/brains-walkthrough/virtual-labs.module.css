@@ -127,16 +127,27 @@
   color: #002766;
 }
 
-.video {
+.video,
+.blendedVideo {
   display: block;
-  width: 100%;
-  aspect-ratio: 1512 / 850;
-  object-fit: cover;
+  width: 92%;
+  margin-inline: auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   background: white;
   mask-image:
-    linear-gradient(to right, transparent, #000 2.5%, #000 97.5%, transparent),
-    linear-gradient(to bottom, transparent, #000 2.5%, #000 97.5%, transparent);
+    linear-gradient(to right, transparent, #000 8%, #000 92%, transparent),
+    linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
   mask-composite: intersect;
+}
+.video {
+  aspect-ratio: 1512 / 850;
+  object-fit: cover;
+}
+.blendedVideo {
+  max-height: 100%;
+  object-fit: contain;
 }
 
 @media (max-width: 63.999rem) and (orientation: portrait) {
@@ -292,7 +303,7 @@
   min-height: 0;
   padding-top: 0;
   padding-bottom: 0;
-  gap: 14px;
+  gap: 8px;
   overflow-y: auto;
   scrollbar-width: thin;
 }
@@ -301,12 +312,15 @@
   line-height: 1.08;
 }
 .aiChapter :global([data-agent-prompts]) {
-  gap: 8px;
+  gap: 6px;
   padding-block: 0;
 }
 .aiChapter :global([data-agent-prompt]) {
-  gap: 5px;
-  padding: 8px 12px;
+  gap: 4px;
+  padding: 6px 12px;
+}
+.aiChapter :global([data-chapter-body]) {
+  gap: 6px;
 }
 @media (max-width: 63.999rem) and (orientation: portrait) {
   .aiChapter {

@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 
-import { BRAIN_THEME_LINKS, BRAIN_THEMES } from '@/ui/segments/project/brains-walkthrough/chapters';
+import { BRAIN_THEME_LINKS } from '@/ui/segments/project/brains-walkthrough/chapters';
+import { THEME_NAV_RAIL, ThemeLine } from '@/ui/segments/project/brains-walkthrough/landing-themes';
 
 import { FeaturedCubeModel, ModelCubeField } from './model-cube-field';
 
@@ -120,27 +121,9 @@ export function LivingHero({
             </AnimatePresence>
           </p>
           <Link className={styles.cta} href="/app/virtual-lab">
-            Try it now <span aria-hidden>↗</span>
+            Try it now
           </Link>
           <p className={styles.reassurance}>In your browser. Nothing to install.</p>
-          <div className={styles.playback}>
-            <span className={styles.progress} aria-hidden="true">
-              <span
-                key={scene}
-                style={{
-                  animationDuration: `${active.duration}ms`,
-                  animationPlayState: animate ? 'running' : 'paused',
-                }}
-              />
-            </span>
-            <button
-              type="button"
-              onClick={() => setPlaying((current) => !current)}
-              aria-label={playing ? 'Pause scientific visuals' : 'Play scientific visuals'}
-            >
-              {playing ? 'Pause' : 'Play'}
-            </button>
-          </div>
         </div>
         <div className={styles.cubeBackdrop}>
           <ModelCubeField
@@ -168,16 +151,9 @@ export function LivingHero({
           </AnimatePresence>
         </div>
       </div>
-      <nav className={styles.chapters} aria-label="Platform sections">
-        {BRAIN_THEMES.map((label) => (
-          <button type="button" key={label} onClick={() => onChapter(BRAIN_THEME_LINKS[label])}>
-            {label}
-          </button>
-        ))}
+      <nav className={THEME_NAV_RAIL} aria-label="Platform sections">
+        <ThemeLine links={BRAIN_THEME_LINKS} goTo={onChapter} publicAppearance />
       </nav>
-      <button className={styles.discover} type="button" onClick={onContinue}>
-        Discover Virtual Labs <span aria-hidden>↓</span>
-      </button>
     </section>
   );
 }
