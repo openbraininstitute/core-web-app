@@ -67,17 +67,22 @@ interface TestWorker extends WorkerHandle<PackApi> {
 
 let storage: FakeCacheStorage;
 let workers: TestWorker[];
+/** What the test's workers are still keeping: run in this thread, they carry on past `terminate`. */
+let keeping: Promise<void>[];
 let progress: [number, number][];
 
 beforeEach(() => {
   storage = new FakeCacheStorage();
   workers = [];
+  keeping = [];
   progress = [];
   vi.stubGlobal('caches', storage);
 });
 
-afterEach(() => {
+afterEach(async () => {
   for (const worker of workers) worker.terminate();
+  // A pack still being kept would land in the next test's cache, which then fetches nothing.
+  await Promise.allSettled(keeping);
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -95,6 +100,7 @@ function inProcess(): TestWorker {
   const exposed: PackApi = {
     async open(...args) {
       const opened = await api.open(...args);
+      keeping.push(api.whole());
       handedOver.push(opened.data.somas.buffer);
       return opened;
     },
