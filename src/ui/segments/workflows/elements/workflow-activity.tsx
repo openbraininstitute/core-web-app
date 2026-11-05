@@ -85,15 +85,19 @@ export function WorkflowActivity() {
     }
   );
 
-  // All on either side lists every workflow: a type cannot narrow All, nor All a category
-  const all = activityType === ALL_WORKFLOWS || entityType === ALL_WORKFLOWS;
-  const listedActivity = all ? undefined : (activityType as TActivityValue);
-  const listedType = all ? undefined : (entityType as TExtendedEntitiesTypeDict);
+  // All as the Category lists every workflow, as a type cannot narrow it; All as the Type lists
+  // every workflow of the category
+  const allCategories = activityType === ALL_WORKFLOWS;
+  const listedActivity = allCategories ? undefined : (activityType as TActivityValue);
+  const listedType =
+    allCategories || entityType === ALL_WORKFLOWS
+      ? undefined
+      : (entityType as TExtendedEntitiesTypeDict);
 
   const workspace = useMemo(() => ({ virtualLabId, projectId }), [projectId, virtualLabId]);
 
-  const gridKey = all ? ALL_WORKFLOWS : `${listedActivity}-${listedType}`;
   const layoutType = listedType ?? ALL_WORKFLOWS;
+  const gridKey = `${listedActivity ?? ALL_WORKFLOWS}-${layoutType}`;
 
   const activityName = listedActivity ? (getActivity(listedActivity)?.name ?? '') : '';
 
@@ -148,12 +152,12 @@ export function WorkflowActivity() {
             transformParams: withWorkflowIdSearch,
           })
         : createAllWorkflowsDataSource({
-            sources: allWorkflowsSources(flags),
+            sources: allWorkflowsSources(flags, listedActivity),
             schema,
             context: { virtualLabId, projectId },
             transformParams: withWorkflowIdSearch,
           }),
-    [listedType, schema, virtualLabId, projectId, flags]
+    [listedType, listedActivity, schema, virtualLabId, projectId, flags]
   );
 
   const params = useMemo(
@@ -181,7 +185,7 @@ export function WorkflowActivity() {
           cellRenderers={CELL_RENDERERS}
           queryKey={[WORKFLOW_ACTIVITY_QUERY_KEY, virtualLabId, projectId, gridKey]}
           params={params}
-          enabled={all || Boolean(listedActivity && listedType)}
+          enabled={allCategories || Boolean(listedActivity)}
           loadingLabel="activities"
           rowHoverCard={renderHoverCard}
           className="min-h-0 flex-1"
@@ -189,12 +193,12 @@ export function WorkflowActivity() {
           toolbarSlots={{
             entityType: (
               <ActivityAndTypeSelectors
-                activity={all ? ALL_WORKFLOWS : activityType}
-                entityType={all ? ALL_WORKFLOWS : entityType}
+                activity={listedActivity ?? ALL_WORKFLOWS}
+                entityType={layoutType}
                 onActivityChange={(activityType) => updateActivityState({ activityType })}
                 onEntityTypeChange={(entityType) => updateActivityState({ entityType })}
-                onAllSelect={() =>
-                  updateActivityState({ activityType: ALL_WORKFLOWS, entityType: ALL_WORKFLOWS })
+                onAllSelect={(activityType) =>
+                  updateActivityState({ activityType, entityType: ALL_WORKFLOWS })
                 }
               />
             ),

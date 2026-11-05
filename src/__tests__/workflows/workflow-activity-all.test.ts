@@ -134,6 +134,22 @@ describe('allWorkflowsSources', () => {
     expect(listed).not.toContain(ExtendedEntitiesTypeDict.RegionCircuitSimulation);
   });
 
+  it('narrows to a category: the types of its menu but the legacy ones', () => {
+    for (const { value: activity } of listActivities(ALL_FLAGS)) {
+      const listed = allWorkflowsSources(ALL_FLAGS, activity);
+      const expected = listWorkflows({
+        activity,
+        flags: ALL_FLAGS,
+        context: WorkflowListContextDict.Browse,
+      })
+        .filter((w) => !w.disabled && !w.legacy)
+        .map((w) => w.targetType);
+
+      expect(new Set(listed.map((s) => s.targetType))).toEqual(new Set(expected));
+      for (const { activity: own } of listed) expect(own).toBe(activity);
+    }
+  });
+
   it("asks each workflow's endpoint with the filter of its own listing", async () => {
     getTaskConfigs.mockResolvedValue({ data: [], pagination: { total_items: 0 } });
     getSimulationCampaigns.mockResolvedValue({ data: [], pagination: { total_items: 0 } });

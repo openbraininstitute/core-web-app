@@ -26,10 +26,12 @@ interface WorkflowMenuProps {
   onEntityTypeChange: (entityType: TExtendedEntitiesTypeDict | null) => void;
   onNavigate?: (entityType: TExtendedEntitiesTypeDict | null) => void;
   /**
-   * Offers All / All first, every workflow's runs at once (legacy ones aside), and is called
-   * instead of the two above when it is picked. Without it the menus hold no All.
+   * Offers All first in both menus and is called, in place of the two above, whenever the listing
+   * becomes one of all its types: every workflow's runs under the Category's All, legacy ones
+   * aside, or a category's, which is where picking a category lands. Without it the menus hold no
+   * All, and picking a category lands on its first type.
    */
-  onAllSelect?: () => void;
+  onAllSelect?: (activity: TActivityValue | TAllWorkflows) => void;
 }
 
 export function ActivityAndTypeSelectors({
@@ -43,10 +45,11 @@ export function ActivityAndTypeSelectors({
   const featureFlags = useFlags();
 
   const handleActivitySelect = (v: TActivityValue | TAllWorkflows | null) => {
-    if (v === ALL_WORKFLOWS) {
-      onAllSelect?.();
+    if (v && onAllSelect) {
+      onAllSelect(v);
       return;
     }
+    if (v === ALL_WORKFLOWS) return;
     onActivityChange(v);
     if (v) {
       const type =
@@ -61,7 +64,11 @@ export function ActivityAndTypeSelectors({
     }
   };
 
-  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | null) => {
+  const handleEntityTypeSelect = (v: TExtendedEntitiesTypeDict | TAllWorkflows | null) => {
+    if (v === ALL_WORKFLOWS) {
+      if (activity) onAllSelect?.(activity);
+      return;
+    }
     onEntityTypeChange(v);
     onNavigate?.(v);
   };
@@ -87,8 +94,9 @@ export function ActivityAndTypeSelectors({
             Type
             <EntityTypeSelectScrollable
               category={activity}
-              value={entityType === ALL_WORKFLOWS ? null : entityType}
+              value={entityType}
               onSelect={handleEntityTypeSelect}
+              includeAll={Boolean(onAllSelect)}
             />
           </>
         )}

@@ -34,7 +34,10 @@ import type { FeatureFlags } from '@/features/feature-flags/flags';
 import type { WorkspaceContext } from '@/types/common';
 import type { TActivityValue } from '@/ui/segments/workflows/config';
 
-/** The table's catch-all Category and Type: the runs of every workflow but the legacy ones. */
+/**
+ * The table's catch-all Category and Type: the runs of every workflow but the legacy ones, or of
+ * every such workflow in the chosen category.
+ */
 export const ALL_WORKFLOWS = 'all';
 export type TAllWorkflows = typeof ALL_WORKFLOWS;
 
@@ -138,10 +141,17 @@ export const ALL_WORKFLOWS_SOURCES: Partial<Record<TExtendedEntitiesTypeDict, TS
   }),
 };
 
-/** Every workflow the Type menus offer, legacy ones aside, with the listing of its runs. */
-export function allWorkflowsSources(flags: FeatureFlags): IAllWorkflowsSource[] {
+/**
+ * Every workflow the Type menus offer, legacy ones aside, with the listing of its runs: those of
+ * one category, or of them all.
+ */
+export function allWorkflowsSources(
+  flags: FeatureFlags,
+  category?: TActivityValue
+): IAllWorkflowsSource[] {
   const seen = new Set<TExtendedEntitiesTypeDict>();
-  return listActivities(flags).flatMap(({ value: activity }) =>
+  const categories = category ? [category] : listActivities(flags).map(({ value }) => value);
+  return categories.flatMap((activity) =>
     listWorkflows({ activity, flags, context: WorkflowListContextDict.Browse }).flatMap(
       ({ targetType, label, disabled, legacy }) => {
         const list = ALL_WORKFLOWS_SOURCES[targetType];
