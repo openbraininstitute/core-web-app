@@ -4,6 +4,7 @@ import { Slider } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
 
 import { CircuitScene } from '@/features/circuit-viewer/circuit-scene';
+import { DEFAULT_SPIKE_GLOW } from '@/features/circuit-viewer/spike-clock';
 import {
   formatUv,
   hexAt,
@@ -22,21 +23,28 @@ import {
 import { binAt, fieldValue } from '@/features/lfp-viewer/summary';
 import { useCircuitDrawsEachCell } from '@/features/scan-config/components/circuit-viz/sources/draws-morphologies';
 import { NEUTRAL_NEURON_COLOR } from '@/features/scan-config/components/color-by/palette';
+import { useViewerSpikes } from '@/features/spike-viewer/hooks/use-session-spikes';
+import useSpikeTrace from '@/features/spike-viewer/hooks/use-spike-trace';
 import { PillGroup, PillSelect } from '@/ui/molecules/select/pill-select';
 
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
 import type { IEntityViewerFeatures } from '@/entity-configuration/domain/viewer-config';
+import type { CircuitSpikes, ISpikeReplayBinding } from '@/features/circuit-viewer/types';
 import type { ColourScale } from '@/features/lfp-viewer/colour-scale';
 import type { ContactGrid } from '@/features/lfp-viewer/contact-grid';
 import type { LfpField } from '@/features/lfp-viewer/summary';
 import type { ContactPositions } from '@/features/lfp-viewer/use-lfp-summary';
 import type { ICircuitOverlayGroup } from '@/features/scan-config/components/model-preview/electrode-locations-overlay';
+import type { TAssetBackedFile } from '@/features/scan-config/types';
 import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+import type { WorkspaceContext } from '@/types/common';
 
 const SCENE_FEATURES: Partial<IEntityViewerFeatures> = { nodesTable: false };
 /** Colours change at most this often while playing. */
 const RECOLOR_MS = 50;
 const SELECTED_COLOR = '#000000';
+/** Shorter than a replay's: at the usual fade, most cells of a busy circuit are lit at any moment, hiding the field. */
+const SPIKE_AFTERGLOW_IN_SECONDS = 0.1;
 const CONTACT_VIEWS = [
   { value: 'voxels', label: 'Voxels' },
   { value: 'slice', label: 'Slice' },
@@ -60,6 +68,40 @@ function sameLevels(a: Uint8Array, b: Uint8Array): boolean {
   return a.length === b.length && a.every((level, c) => level === b[c]);
 }
 
+type SpikeRead = { spikes: CircuitSpikes | null; problem: string | null };
+
+/** A spike file read for the scene, for as long as this is mounted. */
+function SpikeFile({
+  file,
+  ctx,
+  population,
+  timeRange,
+  onRead,
+}: {
+  file: TAssetBackedFile;
+  ctx: WorkspaceContext;
+  population: string;
+  timeRange: { min: number; max: number };
+  onRead: (read: SpikeRead | null) => void;
+}) {
+  const [data, error, session] = useSpikeTrace({
+    entityId: file.entity.id,
+    entityType: file.entity.type,
+    asset: file.asset,
+    ctx,
+  });
+  const spikes = useViewerSpikes(session, population, undefined, timeRange);
+  const absent = data !== null && !data.populations.some((p) => p.name === population);
+  let problem: string | null = null;
+  if (error) problem = 'The spikes could not be read';
+  else if (absent) problem = `The spike file holds no spikes of ${population}`;
+  useEffect(() => {
+    onRead({ spikes, problem });
+    return () => onRead(null);
+  }, [spikes, problem, onRead]);
+  return null;
+}
+
 type Props = {
   circuit: ICircuit;
   populationName: string | undefined;
@@ -71,6 +113,10 @@ type Props = {
   hideBelow: number;
   selectedContact: number | null;
   timeCursor: TimeCursor;
+  speed: number;
+  spikeFiles: readonly TAssetBackedFile[];
+  ctx: WorkspaceContext;
+  timeRange: { min: number; max: number };
   active: boolean;
 };
 
@@ -88,6 +134,10 @@ export function LfpScene({
   hideBelow,
   selectedContact,
   timeCursor,
+  speed,
+  spikeFiles,
+  ctx,
+  timeRange,
   active,
 }: Props) {
   const { positions } = contacts;
@@ -178,6 +228,28 @@ export function LfpScene({
   );
   const electrodes = useMemo(() => ({ drawn, voxels }), [drawn, voxels]);
 
+  const [spikesOn, setSpikesOn] = useState(false);
+  const [spikeRead, setSpikeRead] = useState<SpikeRead | null>(null);
+  const [afterglowInSeconds, setAfterglowInSeconds] = useState(SPIKE_AFTERGLOW_IN_SECONDS);
+  const [glow, setGlow] = useState(DEFAULT_SPIKE_GLOW);
+  const spikeFile = populationName ? spikeFiles[0] : undefined;
+  const shownSpikes = spikesOn ? (spikeRead?.spikes ?? undefined) : undefined;
+  // Follows the player only while on screen, and finds its place again when back.
+  const spikes = useMemo<ISpikeReplayBinding | undefined>(
+    () =>
+      shownSpikes && {
+        data: shownSpikes,
+        timeCursor: active ? timeCursor : undefined,
+        speed,
+        afterglowInSeconds,
+        onAfterglowChange: setAfterglowInSeconds,
+        glow,
+        onGlowChange: setGlow,
+      },
+    [shownSpikes, active, timeCursor, speed, afterglowInSeconds, glow]
+  );
+  const spikesLoading = spikesOn && !shownSpikes && !spikeRead?.problem;
+
   return (
     <div className="relative h-full min-h-0 overflow-hidden rounded-2xl">
       {drawsEachCell !== undefined && (
@@ -188,6 +260,7 @@ export function LfpScene({
           populationName={populationName}
           showUnselectedPopulations={false}
           electrodes={electrodes}
+          spikes={spikes}
           active={active}
           colorByNoneLabel="Uniform"
           uncolouredCells={NEUTRAL_NEURON_COLOR}
@@ -203,15 +276,44 @@ export function LfpScene({
           }
         />
       )}
-      {grid && (
+      {spikesOn && spikeFile && populationName && (
+        <SpikeFile
+          file={spikeFile}
+          ctx={ctx}
+          population={populationName}
+          timeRange={timeRange}
+          onRead={setSpikeRead}
+        />
+      )}
+      {(grid || spikeFiles.length > 0) && (
         <div className="absolute top-3 left-12 flex flex-col items-start gap-2">
-          <PillSelect
-            label="Contacts"
-            value={view}
-            options={[...CONTACT_VIEWS]}
-            onChange={(v) => setChosenView(v as ContactView)}
-          />
-          {slice && (
+          <div className="flex items-center gap-2">
+            {grid && (
+              <PillSelect
+                label="Contacts"
+                value={view}
+                options={[...CONTACT_VIEWS]}
+                onChange={(v) => setChosenView(v as ContactView)}
+              />
+            )}
+            {spikeFiles.length > 0 && (
+              <PillSelect
+                label="Spikes"
+                value={spikesOn ? 'on' : 'off'}
+                options={[
+                  { value: 'off', label: 'Off' },
+                  {
+                    value: 'on',
+                    label: spikesLoading ? 'Loading…' : 'On',
+                    disabled: !spikeFile,
+                    detail: spikeFile ? undefined : 'Needs a report of one population',
+                  },
+                ]}
+                onChange={(v) => setSpikesOn(v === 'on')}
+              />
+            )}
+          </div>
+          {grid && slice && (
             <PillGroup>
               <PillSelect
                 segment
@@ -241,6 +343,11 @@ export function LfpScene({
               </div>
             </PillGroup>
           )}
+        </div>
+      )}
+      {spikesOn && spikeRead?.problem && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-8 text-center text-xs text-neutral-500">
+          {spikeRead.problem}
         </div>
       )}
       {(contacts.state === 'absent' || contacts.state === 'failed') && (

@@ -254,6 +254,7 @@ export function CircuitCells({
   const {
     data: spikeData,
     timeInMs,
+    timeCursor,
     playing = false,
     speed = DEFAULT_SPIKE_SPEED,
     afterglowInSeconds = DEFAULT_SPIKE_AFTERGLOW_IN_SECONDS,
@@ -267,6 +268,13 @@ export function CircuitCells({
     if (timeInMs !== undefined) viewer?.seekSpikes(timeInMs);
   }, [viewer, timeInMs]);
   useEffect(() => viewer?.setSpikesPlaying(playing), [viewer, playing]);
+  // After the spikes are handed over, as they start the replay again: subscribing brings it back to the cursor.
+  useEffect(() => {
+    if (!viewer || !timeCursor || !spikeData) return;
+    return timeCursor.subscribe((t) => {
+      if (t !== null) viewer.seekSpikes(t);
+    });
+  }, [viewer, timeCursor, spikeData]);
 
   const [electrodeTracker, setElectrodeTracker] = useState<ElectrodeTracker | null>(null);
   const transformed = useLatest(onElectrodeTransform);

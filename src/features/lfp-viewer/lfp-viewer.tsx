@@ -169,6 +169,7 @@ function LfpReportView({
   const { spikeFiles, timeline } = useSimulation();
   const start = index.time.start;
   const end = start + index.time.steps * index.time.dt;
+  const sceneTimeRange = useMemo(() => ({ min: start, max: end }), [start, end]);
   const structure = useMemo(() => describeField(total), [total]);
   const grid = useMemo(() => (positions ? contactGrid(positions) : null), [positions]);
   const direction = useMemo(
@@ -472,6 +473,10 @@ function LfpReportView({
                   hideBelow={hideBelowShare * scale.limit}
                   selectedContact={selectedContact}
                   timeCursor={timeCursor}
+                  speed={speed}
+                  spikeFiles={spikeFiles}
+                  ctx={source.ctx}
+                  timeRange={sceneTimeRange}
                   active={sceneUp}
                 />
               ),

@@ -1,3 +1,5 @@
+import type { TimeCursor } from '@/features/sonata-viewer/time-cursor';
+
 /** A replay's spikes: the `i`th fires cell `cellIndices[i]` at `times[i]`, in ms and in ascending order. */
 export interface CircuitSpikes {
   cellIndices: Uint32Array;
@@ -12,7 +14,8 @@ export interface CircuitSpikes {
  * The viewer owns the clock: it advances simulated time on every painted frame
  * and reports where it got to through {@link ISpikeReplayBinding.onTimeChange}.
  * `timeInMs` is therefore a seek, not a mirror — feeding the reported time
- * straight back would fight the animation.
+ * straight back would fight the animation. A host with a clock of its own gives
+ * {@link ISpikeReplayBinding.timeCursor} instead, and the viewer's stays paused.
  *
  * Lives here rather than in `circuit-scene.tsx` so the viz surfaces under
  * `scan-config` can name the type without importing a module that imports
@@ -22,6 +25,8 @@ export interface ISpikeReplayBinding {
   data?: CircuitSpikes;
   /** Move the playhead here. Only read when it changes. */
   timeInMs?: number;
+  /** A clock outside the viewer to follow, moved outside React. Takes the place of `timeInMs` and `playing`. */
+  timeCursor?: Pick<TimeCursor, 'subscribe'>;
   /** The playhead on every painted frame. Throttle before putting it in state. */
   onTimeChange?(timeInMs: number): void;
   playing?: boolean;
