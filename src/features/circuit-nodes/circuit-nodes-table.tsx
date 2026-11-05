@@ -25,7 +25,7 @@ import { logError } from '@/utils/logger';
 
 import type { ComponentProps } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
-import type { NeuronSetBlock } from '@/features/circuit-nodes/neuron-set-block';
+import type { NeuronSetBlock, OfferedProperties } from '@/features/circuit-nodes/neuron-set-block';
 import type { ViewMode } from '@/features/circuit-nodes/types';
 
 import styles from '@/features/circuit-nodes/circuit-nodes-table.module.css';
@@ -56,6 +56,8 @@ export type TableCells = {
    * neuron set: a property set where their values say exactly which they are, else their ids.
    */
   onCreateNeuronSet?: (block: NeuronSetBlock) => void;
+  /** What the form's property neuron sets can show, by population; only those go in a property set. */
+  neuronSetProperties?: Readonly<Record<string, OfferedProperties>>;
   /** Told the connectivity matrix's pathway under the pointer, and null once it leaves. */
   onPathwayChange?: (pathway: TablePathway | null) => void;
   /** Told what the table shows, its nodes or the connectivity matrix: nodes once it is gone. */
@@ -191,6 +193,7 @@ export default function CircuitNodesTable({
             ticked: ticks.ticked.size > 0,
             filterModel: ticks.filterModel,
             columns,
+            offered: cells?.neuronSetProperties?.[population.name] ?? {},
             getColumn,
           })
             .then(({ block }) => onCreateNeuronSet(block))

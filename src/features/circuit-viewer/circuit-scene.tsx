@@ -291,6 +291,7 @@ export function CircuitScene({
     onCreateEntry,
     explicitLocationsBlockTypes,
     singleMorphology,
+    neuronSetProperties,
   } = form ?? {};
   const { arrayEntity, visibleIds: visibleOverlayIds } = electrodes ?? {};
   const enableElectrodes = features?.electrodes ?? false;
@@ -924,6 +925,7 @@ export function CircuitScene({
               heldCell: focus.focusedCell?.nodeId ?? null,
               resetRequest: tableResetRequest,
               onCreateNeuronSet: createNeuronSet,
+              neuronSetProperties,
               onPathwayChange: setTablePathway,
               onViewChange: setTableView,
             }}

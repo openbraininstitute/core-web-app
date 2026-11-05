@@ -90,6 +90,7 @@ export function DefaultConfigColumns({ props, state }: Props) {
           config={state.config}
           setConfig={state.setConfig}
           schema={props.schema}
+          schemaMappingConfig={props.schemaMappingConfig}
           locked={state.editingLocked}
           inset={boxed}
         />

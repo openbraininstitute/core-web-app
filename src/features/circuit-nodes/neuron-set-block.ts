@@ -7,6 +7,13 @@ import type { ColumnMeta, ColumnValues, FilterModel, NodePopulation } from './ty
 /** A block for a scan config's neuron sets, as obi-one's schema has it. */
 export type NeuronSetBlock = Record<string, unknown>;
 
+/**
+ * What a property neuron set's form can show of a population: each property it offers, with the
+ * values it offers (`NodePropertyUniqueValuesByPopulation`). obi-one leaves out a property with too
+ * many values, so a set saying it would open empty.
+ */
+export type OfferedProperties = Readonly<Record<string, readonly string[]>>;
+
 /** The properties kept longest when a selection is said by its cells' values, the most telling first. */
 const TELLING = [
   'mtype',
@@ -56,10 +63,20 @@ function idBlock(population: NodePopulation, cells: Uint32Array) {
   };
 }
 
-/** A filter made only of value lists on categorical columns, as a property filter: the same cells by definition. */
+/** Whether the form can show `property` with all of `values`; it drops blank values. */
+function canShow(offered: OfferedProperties, property: string, values: readonly string[]): boolean {
+  const listed = offered[property];
+  return listed !== undefined && values.every((v) => v.trim() !== '' && listed.includes(v));
+}
+
+/**
+ * A filter made only of value lists on categorical columns the form can show, as a property
+ * filter: the same cells by definition.
+ */
 function filterAsProperties(
   filterModel: FilterModel,
-  columns: readonly ColumnMeta[]
+  columns: readonly ColumnMeta[],
+  offered: OfferedProperties
 ): Record<string, string[]> | null {
   const entries = Object.entries(filterModel);
   if (entries.length === 0) return null;
@@ -69,6 +86,7 @@ function filterAsProperties(
   const dict: Record<string, string[]> = {};
   for (const [column, filter] of entries) {
     if (filter.filterType !== 'set' || !categorical.has(column)) return null;
+    if (!canShow(offered, column, filter.values)) return null;
     dict[column] = [...filter.values];
   }
   return dict;
@@ -96,11 +114,11 @@ function countKept(narrowings: readonly Narrowing[], rowCount: number, limit: nu
 }
 
 /**
- * The neuron set for the cells a table leaves on show, a property set wherever their values can
- * say exactly which cells they are, else their ids. Where the table's filter is only lists of
- * values, those are the property set. Otherwise each categorical property is narrowed to the
- * values the cells have; where nothing else has those values, the properties that add nothing
- * are dropped, the least telling first, and the rest are the set.
+ * The neuron set for the cells a table leaves on show, a property set wherever the values the form
+ * can show say exactly which cells they are, else their ids. Where the table's filter is only lists
+ * of those values, they are the property set. Otherwise each categorical property on offer is
+ * narrowed to the values the cells have; where nothing else has those values, the properties that
+ * add nothing are dropped, the least telling first, and the rest are the set.
  */
 export async function neuronSetBlock({
   population,
@@ -109,6 +127,7 @@ export async function neuronSetBlock({
   ticked,
   filterModel,
   columns,
+  offered,
   getColumn,
 }: {
   population: NodePopulation;
@@ -119,13 +138,16 @@ export async function neuronSetBlock({
   ticked: boolean;
   filterModel: FilterModel;
   columns: readonly ColumnMeta[];
+  offered: OfferedProperties;
   getColumn: (name: string) => Promise<ColumnValues>;
 }): Promise<{ block: NeuronSetBlock; by: 'property' | 'id' }> {
-  const asFiltered = ticked ? null : filterAsProperties(filterModel, columns);
+  const asFiltered = ticked ? null : filterAsProperties(filterModel, columns, offered);
   if (asFiltered) return { block: propertyBlock(population, asFiltered), by: 'property' };
 
   const narrowings: Narrowing[] = [];
-  for (const meta of columns.filter((c) => c.kind === ColumnKindDict.Categorical)) {
+  for (const meta of columns.filter(
+    (c) => c.kind === ColumnKindDict.Categorical && c.name in offered
+  )) {
     const values = await getColumn(meta.name);
     if (values.kind !== 'categorical') continue;
     const kept = new Uint8Array(values.library.length);
@@ -138,7 +160,12 @@ export async function neuronSetBlock({
       }
     }
     // A property the cells take every value of says nothing; one they take most of, too much.
-    if (count < values.library.length && count <= MOST_VALUES) {
+    const taken = values.library.filter((_, code) => kept[code] === 1);
+    if (
+      count < values.library.length &&
+      count <= MOST_VALUES &&
+      canShow(offered, meta.name, taken)
+    ) {
       narrowings.push({
         name: meta.name,
         library: values.library,
