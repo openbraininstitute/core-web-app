@@ -229,8 +229,8 @@ export function ScopeCell({ row }: ICellRendererProps<IScopeRow>): ReactNode | n
  * label and filter: the globe for public data from other projects, the people for the
  * project's private data, and the globe with a badge for the project's data made public.
  * Each is coloured when its rows are shown and grey when not. All on (the default) filters
- * nothing, and a click then keeps only that kind. After that a click switches a kind alone,
- * and the last one on stays on.
+ * nothing, and a click then keeps only that kind. A click on the only one on brings them all
+ * back; otherwise a click switches a kind alone.
  */
 export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
   const state = useGridState(ctx.controller);
@@ -240,22 +240,19 @@ export function ScopeHeader({ columnId, ctx }: IHeaderRendererProps) {
     <div className="flex h-full w-full items-center justify-center gap-0.5">
       {SCOPE_KINDS.map((kind) => {
         const isOn = shown.has(kind);
-        const next = toggled(shown, kind);
         return (
           <ScopeTooltip key={kind} kind={kind} canChangeProject>
             <button
               type="button"
               aria-pressed={isOn}
-              aria-disabled={!next}
               aria-label={SCOPE_LABELS[kind]}
               data-testid={`scope-header-${kind}`}
-              onClick={() => next && showScope(ctx.controller, columnId, next)}
+              onClick={() => showScope(ctx.controller, columnId, toggled(shown, kind))}
               className={cn(
                 'flex size-6 items-center justify-center rounded-full text-lg transition-colors',
-                'focus-visible:ring-primary-6 outline-none focus-visible:ring-2',
+                'hover:bg-gray-100 focus-visible:ring-primary-6 outline-none focus-visible:ring-2',
                 // an on mark carries its own colour; an off one takes this grey
-                !isOn && 'text-gray-300 hover:text-gray-500',
-                next ? 'hover:bg-gray-100' : 'cursor-default'
+                !isOn && 'text-gray-300 hover:text-gray-500'
               )}
             >
               <ScopeMark kind={kind} muted={!isOn} />

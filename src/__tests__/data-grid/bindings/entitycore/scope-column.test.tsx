@@ -186,13 +186,18 @@ describe('scope header', () => {
     expect(filter()).toBeUndefined();
   });
 
-  it('keeps the last kind on', () => {
+  it.each([
+    'public',
+    'project',
+    'published',
+  ])('brings everything back from a click on %s when only it is on', (kind) => {
     const { filter, pressed } = renderHeader();
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Private);
-    fireEvent.click(screen.getByTestId('scope-header-project'));
-    expect(filter()).toBe(ScopeFilter.Private);
-    expect(pressed('scope-header-project')).toBe('true');
+    fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
+    fireEvent.click(screen.getByTestId(`scope-header-${kind}`));
+    expect(filter()).toBeUndefined();
+    for (const other of ['public', 'project', 'published']) {
+      expect(pressed(`scope-header-${other}`)).toBe('true');
+    }
   });
 
   it('keeps the selection while switching, so a picker keeps its picks', () => {

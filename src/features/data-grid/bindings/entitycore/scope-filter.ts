@@ -139,14 +139,14 @@ export function filterShowing(kinds: Set<TScopeKind>): TScopeFilter | null {
 }
 
 /**
- * What a click on `kind` shows. With everything on, only that kind; after that, that kind
- * switched alone, or null for the last one on.
+ * What a click on `kind` shows. With everything on, only that kind; with only that kind on,
+ * everything; otherwise that kind switched alone.
  */
-export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> | null {
+export function toggled(shown: Set<TScopeKind>, kind: TScopeKind): Set<TScopeKind> {
   if (shown.size === SCOPE_KINDS.length) return new Set([kind]);
   const next = new Set(shown);
   if (!next.delete(kind)) next.add(kind);
-  return next.size ? next : null;
+  return next.size ? next : new Set(SCOPE_KINDS);
 }
 
 /** Filters the scope column to show exactly `kinds`. */
