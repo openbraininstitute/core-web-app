@@ -101,6 +101,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   introFoot,
   introBase,
   introStay,
+  introContent,
   introFloats = 1,
   firstTitleClass,
   pager = true,
@@ -152,6 +153,8 @@ export function Walkthrough<C extends IWalkthroughChapter>({
   introBase?: ReactNode;
   /** How long the intro stands once its words are out before going on to the first screen by itself, ms. */
   introStay?: number;
+  /** A public landing may supply its own opening while keeping the chapter walkthrough. */
+  introContent?: (actions: { continue: () => void; goTo: (id: string) => void }) => ReactNode;
   /** How many of what floats over the intro call `ready`: it waits for them all. */
   introFloats?: number;
   /** The first chapter's title, where the intro's words come to rest, set apart from the others: a class, such as a face. */
@@ -395,7 +398,7 @@ export function Walkthrough<C extends IWalkthroughChapter>({
               ready: floatReady,
               goTo,
             })}
-            {intro && !introDone && (
+            {intro && !introDone && !introContent && (
               <Intro
                 key={introState}
                 title={intro}
@@ -410,6 +413,19 @@ export function Walkthrough<C extends IWalkthroughChapter>({
                 onDone={finishIntro}
               />
             )}
+            {intro &&
+              !introDone &&
+              introContent?.({
+                continue: () => {
+                  setIntroLeft(true);
+                  finishIntro();
+                },
+                goTo: (id) => {
+                  setIntroLeft(true);
+                  finishIntro();
+                  requestAnimationFrame(() => requestAnimationFrame(() => goTo(id)));
+                },
+              })}
             {/* The stage's scenes take the pointer, unless one lets it through to what floats under it. */}
             <div
               className="pointer-events-none sticky top-0 h-(--chapter-h) overflow-hidden"
@@ -453,23 +469,33 @@ export function Walkthrough<C extends IWalkthroughChapter>({
             )}
             {/* Over the intro too: the ways in are there from the first. */}
             {fullscreen && (
-              <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]">
+              <div
+                className={cn(
+                  'pointer-events-none fixed inset-x-0 top-0 z-[70] flex items-start justify-between px-[clamp(20px,3vw,40px)] pt-[22px] max-sm:px-[16px] max-sm:pt-[14px] squat:pt-[10px]',
+                  introContent && 'bg-white pb-[14px]'
+                )}
+              >
                 <span
                   data-walkthrough-logo
                   className={cn(
                     'shrink-0 transition-opacity duration-500',
-                    introDone ? 'opacity-100' : 'opacity-0'
+                    introDone || introContent ? 'opacity-100' : 'opacity-0'
                   )}
                 >
                   <ObiLogo className="block h-[clamp(44px,5vh,56px)] w-auto text-[#002766] max-sm:h-[38px] squat:h-[36px]" />
                 </span>
                 <div className="pointer-events-auto flex items-center gap-[20px] max-sm:gap-[10px]">
-                  <FindOutMore shown={introDone} />
+                  <FindOutMore shown={introDone || !!introContent} />
                   {/* For now, the home it leads to, uncovered as the walkthrough lifts away. */}
                   <button
                     type="button"
                     onClick={finish}
-                    className="bg-green-main rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white shadow-[0_4px_14px_rgba(0,140,5,0.25)] transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]"
+                    className={cn(
+                      'rounded-full px-[22px] py-[10px] text-[14px] leading-[18px] font-semibold whitespace-nowrap text-white transition-[filter] hover:brightness-110 max-sm:px-[16px] max-sm:py-[8px] max-sm:text-[13px] squat:py-[8px]',
+                      introContent
+                        ? 'bg-[#183f8b]'
+                        : 'bg-green-main shadow-[0_4px_14px_rgba(0,140,5,0.25)]'
+                    )}
                   >
                     Enter the platform
                   </button>

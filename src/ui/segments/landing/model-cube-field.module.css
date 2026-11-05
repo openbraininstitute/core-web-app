@@ -1,0 +1,158 @@
+.field {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.featured {
+  position: absolute;
+  inset: 0;
+}
+.featured > img {
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.cluster {
+  position: relative;
+  width: min(100%, 84vh);
+  aspect-ratio: 1;
+}
+.leftTrail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.raisedLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.raisedCube {
+  position: absolute;
+  display: block;
+  aspect-ratio: 0.87;
+  filter: drop-shadow(7px 14px 9px #193c612b);
+}
+.trailCube {
+  position: absolute;
+  display: block;
+  aspect-ratio: 0.87;
+  filter: drop-shadow(3px 7px 5px #193c6120);
+}
+.cube,
+.empty {
+  position: absolute;
+  aspect-ratio: 0.87;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.cube {
+  z-index: 3;
+  filter: drop-shadow(4px 9px 7px #193c6120);
+  transform: translateY(0) scale(1);
+  transition:
+    transform 1.25s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1.25s;
+  cursor: pointer;
+}
+.cube[data-active="true"] {
+  z-index: 10;
+  transform: translateY(-18px) scale(1.4);
+  filter: drop-shadow(9px 23px 15px #193c6138);
+}
+.shell {
+  position: absolute;
+  inset: 0;
+  display: block;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: #f9fafc;
+}
+.faces {
+  position: absolute;
+  inset: 0;
+  background: #f1f4f7;
+  clip-path: polygon(50% 50%, 100% 25%, 100% 75%, 50% 100%);
+}
+.shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  clip-path: polygon(50% 0, 100% 25%, 50% 50%, 0 25%);
+}
+.shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #e8edf3;
+  clip-path: polygon(49.7% 50%, 50.3% 50%, 50.3% 100%, 49.7% 100%);
+  opacity: 0.7;
+}
+.content {
+  display: block;
+  position: absolute;
+  inset: 14% 7%;
+  mix-blend-mode: multiply;
+  filter: grayscale(1);
+  opacity: 0.25;
+  transition:
+    filter 1.2s,
+    opacity 1.2s;
+}
+.cube[data-active="true"] .content {
+  filter: grayscale(0);
+  opacity: 1;
+}
+.content img {
+  object-fit: contain;
+}
+.cube[data-playing="true"][data-active="true"] .content > img {
+  animation: model-breathe 8s ease-in-out infinite alternate;
+}
+.live {
+  position: absolute;
+  inset: 0;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.8s;
+}
+.live[data-ready="true"] {
+  opacity: 1;
+}
+.empty {
+  background: #fbfcfd;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  filter: drop-shadow(3px 5px 4px #193c6115);
+}
+.cube:focus-visible {
+  outline: 2px solid #183f8b;
+  outline-offset: 8px;
+}
+@keyframes model-breathe {
+  from {
+    transform: translateY(1%) rotate(-3deg) scale(0.96);
+  }
+  to {
+    transform: translateY(-2%) rotate(3deg) scale(1.04);
+  }
+}
+@media (max-width: 760px) {
+  .cluster {
+    width: min(100%, 470px);
+  }
+  .cube[data-active="true"] {
+    transform: translateY(-10px) scale(1.28);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cube,
+  .content,
+  .live {
+    transition: none;
+  }
+  .cube[data-playing="true"][data-active="true"] .content > img {
+    animation: none;
+  }
+}

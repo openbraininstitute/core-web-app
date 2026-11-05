@@ -9,9 +9,7 @@ import { FLY_PACK } from '@/ui/segments/project/models/repo-packs';
 import { cn } from '@/utils/css-class';
 
 import { CNS_FRAME, CNS_ON_FIRST_SCREEN, FLY_FRAME } from './brains';
-import styles from './floating-model.module.css';
 import { NeuronSkeleton } from './neuron-skeleton';
-import grid from './opening-grid.module.css';
 import { FlyBody, FlyStageProvider } from './walking-fly';
 
 import type { CSSProperties, ReactNode } from 'react';
@@ -19,6 +17,9 @@ import type { CircuitSpikes, ISpikeReplayBinding } from '@/features/circuit-view
 import type { FramedView } from '@/features/viewer-3d/bare';
 import type { FrameBox } from '@/features/viewer-3d/engine/scene-view';
 import type { RepoPack } from '@/ui/segments/project/models/repo-packs';
+
+import styles from './floating-model.module.css';
+import grid from './opening-grid.module.css';
 
 /**
  * Where a floating model is, by when: in its place but not shown while its view builds it, off the page
@@ -159,8 +160,18 @@ const stillView = (set: string, sizes: string, at: CSSProperties) =>
   };
 const WHOLE_BOX: CSSProperties = { left: 0, top: 0, width: '100%', height: '100%' };
 /** Where each was in the square of the view it was made from, tilted as it was: on a large screen, that same square. */
-const L6_IN_VIEW: CSSProperties = { left: '15.18%', top: '18.21%', width: '64.14%', height: '71.71%' };
-const CNS_IN_VIEW: CSSProperties = { left: '22.18%', top: '11.29%', width: '53.64%', height: '74.29%' };
+const L6_IN_VIEW: CSSProperties = {
+  left: '15.18%',
+  top: '18.21%',
+  width: '64.14%',
+  height: '71.71%',
+};
+const CNS_IN_VIEW: CSSProperties = {
+  left: '22.18%',
+  top: '11.29%',
+  width: '53.64%',
+  height: '74.29%',
+};
 const L6_STILL = stillView(L6_SET, '93vh', L6_IN_VIEW);
 const CNS_STILL = stillView(CNS_SET, '48vh', CNS_IN_VIEW);
 const L6_STILL_PHONE = stillView(L6_SET, '95vw', WHOLE_BOX);
@@ -176,7 +187,10 @@ function useSmallScreen(): boolean {
 
 /** The images' way in on a phone, where the landing is on a little while. */
 const STILL_IN = 'transform 6s cubic-bezier(0.2, 0.55, 0.3, 1)';
-const L6_STILL_MOVES: Moves = { ...L6_MOVES, off: { transform: 'translate(-60%, -60%)', opacity: 1 } };
+const L6_STILL_MOVES: Moves = {
+  ...L6_MOVES,
+  off: { transform: 'translate(-60%, -60%)', opacity: 1 },
+};
 const CNS_STILL_MOVES: Moves = {
   building: BUILDING,
   off: { transform: 'translate(70%, 30%)', opacity: 1 },
@@ -277,7 +291,8 @@ function Floating({
   const place = move === 'in' && on === 'both' && !entered && landing ? landing : moves[move];
   // Turned by hand while on show, over the landing as `turnsOverLanding` says. Otherwise inert, so that what is under
   // it has the pointer.
-  const live = chapter === 0 && move === 'in' && (entered || (turnsOverLanding ?? on === 'landing'));
+  const live =
+    chapter === 0 && move === 'in' && (entered || (turnsOverLanding ?? on === 'landing'));
   const transition =
     move === 'building' || move === 'off'
       ? 'none'
@@ -365,7 +380,11 @@ function flashes(cells: number): CircuitSpikes {
   for (let t = 300; t < FLASH_SECONDS * 1000; t += 700 + random() * 900) {
     const centre = Math.floor(random() * cells);
     const reach = 2 + Math.floor(random() * 4);
-    for (let cell = Math.max(0, centre - reach); cell <= Math.min(cells - 1, centre + reach); cell++) {
+    for (
+      let cell = Math.max(0, centre - reach);
+      cell <= Math.min(cells - 1, centre + reach);
+      cell++
+    ) {
       spikes.push([cell, t + random() * 80]);
     }
   }
@@ -420,7 +439,10 @@ function FlashingCircuit({
   const [picked, setPicked] = useState<number | null>(null);
   // The view, to draw the picked neuron over from out here, where the view's own fading does not reach.
   const [view, setView] = useState<FramedView | null>(null);
-  const catchView = useCallback((seen: FramedView) => <ViewCatcher view={seen} onView={setView} />, []);
+  const catchView = useCallback(
+    (seen: FramedView) => <ViewCatcher view={seen} onView={setView} />,
+    []
+  );
   const body = picked !== null && table ? table[picked] : null;
   // From the top again each time it runs out: a seek is read only when it changes, and so is playing, which
   // the end stops in the view and not here, so it is let go of for a frame to be started again.
@@ -589,7 +611,7 @@ const CNS_BODIES = '/static/walkthrough/male-cns-bodies.bin';
  * The Male CNS, lit as its model's neurons fire, some sixteen times slower than they did, round and round;
  * with picking, a click on a neuron picks it, drawn whole over the rest gone faint.
  */
-function ActiveMaleCns({
+export function ActiveMaleCns({
   started,
   onBuilt,
   over,
@@ -621,7 +643,15 @@ const CNS_VIEW = (started: boolean, onBuilt: () => void) => (
 );
 
 /** The Male CNS in NeuroMechFly's body over the landing, walking in and turning to face the page. */
-function CnsInFly({ started, onBuilt, entered }: { started: boolean; onBuilt: () => void; entered: boolean }) {
+function CnsInFly({
+  started,
+  onBuilt,
+  entered,
+}: {
+  started: boolean;
+  onBuilt: () => void;
+  entered: boolean;
+}) {
   const walk = useRef<HTMLDivElement>(null);
   const stage = useMemo(() => ({ entered, started, walk }), [entered, started]);
   return (

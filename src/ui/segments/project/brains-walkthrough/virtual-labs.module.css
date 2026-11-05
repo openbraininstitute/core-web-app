@@ -94,13 +94,12 @@
 .preview {
   position: absolute;
   top: 50%;
-  left: 2%;
-  right: clamp(110px, 12vw, 210px);
+  left: -5%;
+  right: 24px;
   transform: translateY(-50%);
   margin: 0;
-  padding: 10px;
-  border-radius: 14px;
-  background: #edf2f8;
+  padding: 0;
+  background: transparent;
 }
 
 .previewHeader {
@@ -134,8 +133,11 @@
   width: 100%;
   aspect-ratio: 1512 / 850;
   object-fit: cover;
-  border-radius: 7px;
   background: white;
+  mask-image:
+    linear-gradient(to right, transparent, #000 2.5%, #000 97.5%, transparent),
+    linear-gradient(to bottom, transparent, #000 2.5%, #000 97.5%, transparent);
+  mask-composite: intersect;
 }
 
 .previewCaption {
@@ -195,12 +197,12 @@
 
   .preview {
     top: var(--stage-video-top);
-    left: 16px;
-    right: 16px;
+    left: 0;
+    right: 0;
     max-width: 600px;
     margin-inline: auto;
     transform: none;
-    padding: 7px;
+    padding: 0;
   }
 
   .previewHeader {
@@ -284,8 +286,8 @@
 
   .preview {
     top: calc(50% + 6px);
-    right: clamp(110px, 18vw, 210px);
-    padding: 7px;
+    right: 24px;
+    padding: 0;
   }
 
   .previewHeader {
@@ -297,6 +299,38 @@
 .chapterAction {
   display: flex;
   padding-top: 6px;
+}
+.aiChapter {
+  max-height: calc(var(--chapter-h) - 184px);
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  gap: 14px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.aiChapter h1 {
+  font-size: clamp(32px, 3.1vw, 48px);
+  line-height: 1.08;
+}
+.aiChapter :global([data-agent-prompts]) {
+  gap: 8px;
+  padding-block: 0;
+}
+.aiChapter :global([data-agent-prompt]) {
+  gap: 5px;
+  padding: 8px 12px;
+}
+@media (max-width: 63.999rem) and (orientation: portrait) {
+  .aiChapter {
+    max-height: calc(var(--chapter-h) - 170px);
+    padding-top: 16px;
+    padding-bottom: 110px;
+    gap: 12px;
+  }
+  .aiChapter h1 {
+    font-size: clamp(28px, 6vw, 38px);
+  }
 }
 
 @media (max-width: 63.999rem) and (orientation: portrait) {

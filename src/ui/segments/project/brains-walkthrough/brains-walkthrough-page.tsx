@@ -1,5 +1,6 @@
 'use client';
 
+import { LivingHero } from '@/ui/segments/landing/living-hero';
 import { OriginalHomePage } from '@/ui/segments/project/original-home';
 import { FadingStage } from '@/ui/segments/project/walkthrough/stage';
 import { Walkthrough } from '@/ui/segments/project/walkthrough/walkthrough';
@@ -57,6 +58,11 @@ export function BrainsWalkthroughPage({
       introBase={<LandingThemes />}
       // On to the first screen by itself, but not ahead of the fly, whose walk takes longer.
       introStay={walking ? undefined : LANDING_STAY_MS}
+      introContent={
+        enterHref
+          ? (actions) => <LivingHero onContinue={actions.continue} onChapter={actions.goTo} />
+          : undefined
+      }
       // The microcircuit, and the Male CNS where it is the landing's alone: neither would be seen again.
       introFloats={CNS_ON_FIRST_SCREEN ? 1 : 2}
       // The first screen's title, as the intro's words rise into it.
@@ -67,19 +73,29 @@ export function BrainsWalkthroughPage({
       endUnder={enterHref ? undefined : <OriginalHomePage />}
       floating={(state) => (
         <>
-          <FloatingMicrocircuit {...state} />
-          <FloatingMaleCns {...state} walking={walking} />
+          {(!enterHref || state.entered) && <FloatingMicrocircuit {...state} />}
+          {(!enterHref || state.entered) && <FloatingMaleCns {...state} walking={walking} />}
           <CnsBackdrop {...state} at={ANALYSIS_AT} />
-          <ThemeNav
-            entered={state.entered}
-            chapter={state.chapter}
-            underlines={BRAIN_THEME_UNDERLINES}
-            links={BRAIN_THEME_LINKS}
-            goTo={state.goTo}
-          />
+          {(!enterHref || state.entered) && (
+            <ThemeNav
+              entered={state.entered}
+              chapter={state.chapter}
+              underlines={BRAIN_THEME_UNDERLINES}
+              links={BRAIN_THEME_LINKS}
+              goTo={state.goTo}
+            />
+          )}
         </>
       )}
-      chapters={BRAIN_CHAPTERS}
+      chapters={
+        enterHref
+          ? BRAIN_CHAPTERS.map((chapter, index) =>
+              index === 0
+                ? { ...chapter, kicker: 'The era of brain simulation has arrived. For everyone.' }
+                : chapter
+            )
+          : BRAIN_CHAPTERS
+      }
       // The landing's words along the foot are its way between the screens, the way on above them.
       pager={false}
       footer="clamp(64px,9.5vh,88px)"

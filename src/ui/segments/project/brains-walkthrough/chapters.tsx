@@ -85,7 +85,7 @@ export const BRAIN_CHAPTERS: IBrainChapter[] = [
     hero: true,
     titleClass: SERIF_TITLE,
     // Wide enough for its title in two lines, its prompts ending above the bar of words at the foot.
-    column: `${labs.chapter} beside:w-[52%] beside:max-w-[720px] squat:py-[56px]`,
+    column: `${labs.chapter} ${labs.aiChapter} beside:w-[52%] beside:max-w-[720px]`,
     body: (
       <>
         <p className="-mt-[4px] text-[15px] leading-[1.4] text-neutral-500">

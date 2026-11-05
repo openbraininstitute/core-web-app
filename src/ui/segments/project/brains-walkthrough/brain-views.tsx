@@ -52,13 +52,20 @@ import '@/styles/learn.css';
  * The FlyWire neurons nearest the surface of the fly's brain, turning together: their pack in the repo, framed on the
  * brain, with the course's fly brain as glass over it.
  */
-export function FlyInBrain() {
+export function FlyInBrain({
+  spinning = true,
+  onReady,
+}: {
+  spinning?: boolean;
+  onReady?: () => void;
+} = {}) {
   return (
     <ViewOverlay
       frame={FLY_FRAME}
+      onBuilt={onReady}
       render={(view) => <BrainGlass view={view} brain="fly" place={FLY_PLACE} />}
     >
-      <PackView pack={FLY_PACK} color={FLY_COLOR} frameZoom={1} spin />
+      <PackView pack={FLY_PACK} color={FLY_COLOR} frameZoom={1} spin={spinning} />
     </ViewOverlay>
   );
 }
@@ -267,7 +274,7 @@ export const VIRTUAL_LABS_VIDEO = {
   poster: '/images/start/walkthrough/virtual-labs.jpg',
 };
 
-/** The platform recording, framed as the product itself rather than a floating thumbnail. */
+/** A large, borderless platform recording whose edges blend into the page. */
 export function VirtualLabsPreview() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);

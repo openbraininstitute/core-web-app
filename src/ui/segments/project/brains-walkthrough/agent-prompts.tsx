@@ -106,7 +106,10 @@ export function AgentPrompts() {
         }
         return [HOLD_MS, () => setState({ box, phase: 'sent', typed })];
       }
-      return [SENT_MS, () => setState({ box: (box + 1) % PROMPTS.length, phase: 'connecting', typed: 0 })];
+      return [
+        SENT_MS,
+        () => setState({ box: (box + 1) % PROMPTS.length, phase: 'connecting', typed: 0 }),
+      ];
     };
     const [wait, then] = step();
     const timer = setTimeout(then, wait);
@@ -116,6 +119,7 @@ export function AgentPrompts() {
   return (
     <div
       ref={rootRef}
+      data-agent-prompts
       // Beside the stage, ending a gutter short of the multiplying brains' canvas (the stage's 62% of the page,
       // that canvas inset from it), less the column's own left padding.
       className="flex flex-col gap-[12px] pt-[4px] pb-[6px] beside:max-w-[calc(38vw_+_clamp(16px,4vw,72px)_-_clamp(32px,5vw,88px)_-_24px)] stacked:grid squat:grid"
@@ -132,6 +136,7 @@ export function AgentPrompts() {
         return (
           <div
             key={prompt.agent}
+            data-agent-prompt
             className={cn(
               'flex flex-col gap-[8px] border bg-white px-[16px] pt-[12px] pb-[10px] shadow-[0_6px_22px_rgba(0,39,102,0.07)] transition-[border-color,box-shadow,opacity] duration-300',
               'stacked:col-start-1 stacked:row-start-1 squat:col-start-1 squat:row-start-1',
@@ -154,6 +159,7 @@ export function AgentPrompts() {
                   className="size-[16px]"
                   fill={claude ? '#D97757' : '#0d0d0d'}
                 >
+                  <title>{prompt.label}</title>
                   <path d={path} fillRule={evenOdd ? 'evenodd' : undefined} />
                 </svg>
               )}
@@ -213,6 +219,7 @@ export function AgentPrompts() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
+                  <title>Send prompt</title>
                   <path d="M12 19V5M6 11l6-6 6 6" />
                 </svg>
               </span>
