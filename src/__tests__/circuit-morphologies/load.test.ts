@@ -82,7 +82,7 @@ beforeEach(() => {
 afterEach(async () => {
   for (const worker of workers) worker.terminate();
   // A pack still being kept would land in the next test's cache, which then fetches nothing.
-  await Promise.allSettled(keeping);
+  await Promise.all(keeping);
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -100,7 +100,7 @@ function inProcess(): TestWorker {
   const exposed: PackApi = {
     async open(...args) {
       const opened = await api.open(...args);
-      keeping.push(api.whole());
+      keeping.push(api.whole().catch(() => {}));
       handedOver.push(opened.data.somas.buffer);
       return opened;
     },
