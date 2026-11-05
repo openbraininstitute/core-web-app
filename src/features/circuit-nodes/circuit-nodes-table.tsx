@@ -12,7 +12,10 @@ import {
   connectivityAsset,
   useConnectivityEntries,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
-import { useMatrixPin } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
+import {
+  letGoOnBlankClick,
+  useMatrixPin,
+} from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 import { useCircuitConfig } from '@/features/circuit-nodes/hooks/use-circuit-config';
 import { useNodesWorker } from '@/features/circuit-nodes/hooks/use-nodes-worker';
 import { useTableTicks } from '@/features/circuit-nodes/hooks/use-table-ticks';
@@ -256,7 +259,12 @@ export default function CircuitNodesTable({
   }, [gridColumns]);
 
   return (
-    <div className={cn(styles.root, className)}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: a shortcut for the mouse: the keyboard has the note's X
+    // biome-ignore lint/a11y/useKeyWithClickEvents: a shortcut for the mouse: the keyboard has the note's X
+    <div
+      className={cn(styles.root, className)}
+      onClick={view === 'connectivity' ? (event) => letGoOnBlankClick(matrixPin, event) : undefined}
+    >
       <NodesToolbar
         view={view}
         onViewChange={setView}

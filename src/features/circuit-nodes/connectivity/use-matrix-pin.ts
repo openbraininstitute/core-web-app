@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 import { logError } from '@/utils/logger';
 
+import type { MouseEvent } from 'react';
 import type { PathwaySquare } from '@/features/circuit-nodes/connectivity/connectivity-groups';
 import type { MatrixPathway } from '@/features/circuit-nodes/connectivity/connectivity-view';
 import type {
@@ -37,6 +38,22 @@ export type MatrixPin = {
   pinned: PinnedPathway | null;
   onPick: (next: PinnedPathway | null) => void;
 };
+
+/** What a click around the matrix is for already: its controls, and its squares, which pin. */
+const NOT_BLANK = 'a, button, input, [role="button"], [role="combobox"], .modebar, .nsewdrag';
+
+/**
+ * Lets the pinned pathway go on a click on nothing in `event.currentTarget`, the matrix's pane: the
+ * way out that is nearest to hand, beside its X. A menu's options bubble here through React from
+ * outside the pane, and text just selected, as a pathway's name to copy, is no click on nothing.
+ */
+export function letGoOnBlankClick(pin: MatrixPin | undefined, event: MouseEvent<HTMLElement>) {
+  if (!pin?.pinned) return;
+  const target = event.target as Element;
+  if (!event.currentTarget.contains(target) || target.closest(NOT_BLANK)) return;
+  if (window.getSelection()?.isCollapsed === false) return;
+  pin.onPick(null);
+}
 
 function pathwayColumn({ pre, post }: MatrixPathway, rowCount: number): DerivedColumn {
   const indices = new Uint32Array(rowCount);

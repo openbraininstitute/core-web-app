@@ -11,6 +11,7 @@ import {
   connectivityAsset,
   useConnectivityEntries,
 } from '@/features/circuit-nodes/connectivity/use-connectivity';
+import { letGoOnBlankClick } from '@/features/circuit-nodes/connectivity/use-matrix-pin';
 
 import type { ReactNode } from 'react';
 import type { ICircuit } from '@/api/entitycore/types/entities/circuit';
@@ -82,7 +83,7 @@ export function TableOrMatrix({
   children,
   ...matrix
 }: MatrixProps & { view: TableMatrixView; children: ReactNode }) {
-  const { onMatrixChange } = matrix;
+  const { onMatrixChange, pin } = matrix;
   useEffect(() => {
     if (!view.on) return;
     onMatrixChange?.({ pathway: null });
@@ -90,7 +91,12 @@ export function TableOrMatrix({
   }, [view.on, onMatrixChange]);
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col">
+    // biome-ignore lint/a11y/noStaticElementInteractions: a shortcut for the mouse: the keyboard has the note's X
+    // biome-ignore lint/a11y/useKeyWithClickEvents: a shortcut for the mouse: the keyboard has the note's X
+    <div
+      className="relative flex h-full min-h-0 flex-col"
+      onClick={view.on ? (event) => letGoOnBlankClick(pin, event) : undefined}
+    >
       <div className={view.on ? 'invisible absolute inset-0 flex flex-col' : 'contents'}>
         {children}
       </div>
